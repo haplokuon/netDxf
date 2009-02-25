@@ -1,0 +1,102 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="3.5" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>9.0.30729</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{785380E0-CEB9-4C34-82E5-60D0E33E848E}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>netDxf</RootNamespace>
+    <AssemblyName>netDxf</AssemblyName>
+    <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <TargetFrameworkSubset>
+    </TargetFrameworkSubset>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <DebugSymbols>true</DebugSymbols>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="AciColor.cs" />
+    <Compile Include="Blocks\EndBlock.cs" />
+    <Compile Include="CodeValuePair.cs" />
+    <Compile Include="Entities\Ellipse.cs" />
+    <Compile Include="Entities\Solid.cs" />
+    <Compile Include="Header\HeaderVariable.cs" />
+    <Compile Include="StringEnum.cs" />
+    <Compile Include="SubclassMarker.cs" />
+    <Compile Include="Symbols.cs" />
+    <Compile Include="TextAligment.cs" />
+    <Compile Include="DxfDocument.cs" />
+    <Compile Include="DxfException.cs" />
+    <Compile Include="Entities\Arc.cs" />
+    <Compile Include="Entities\Attribute.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Entities\AttributeDefinition.cs" />
+    <Compile Include="Entities\Vertex.cs" />
+    <Compile Include="Entities\Polyline3dVertex.cs" />
+    <Compile Include="Entities\IPolyline.cs" />
+    <Compile Include="Entities\IVertex.cs" />
+    <Compile Include="Entities\Point.cs" />
+    <Compile Include="Entities\PolyfaceMeshFace.cs" />
+    <Compile Include="Entities\PolyfaceMeshVertex.cs" />
+    <Compile Include="Entities\Polyline3d.cs" />
+    <Compile Include="Entities\IEntityObject.cs" />
+    <Compile Include="Entities\Insert.cs" />
+    <Compile Include="Entities\Line.cs" />
+    <Compile Include="Blocks\Block.cs" />
+    <Compile Include="Entities\Circle.cs" />
+    <Compile Include="Entities\Face3D.cs" />
+    <Compile Include="Entities\PolyfaceMesh.cs" />
+    <Compile Include="Entities\Polyline.cs" />
+    <Compile Include="Entities\Text.cs" />
+    <Compile Include="Entities\PolylineVertex.cs" />
+    <Compile Include="Reader.cs" />
+    <Compile Include="Tables\ITableObject.cs" />
+    <Compile Include="Tables\Layer.cs" />
+    <Compile Include="MathHelper.cs" />
+    <Compile Include="Matrix3.cs" />
+    <Compile Include="Tables\LineType.cs" />
+    <Compile Include="Tables\TextStyle.cs" />
+    <Compile Include="Vector2.cs" />
+    <Compile Include="Vector3.cs" />
+    <Compile Include="XData.cs" />
+    <Compile Include="StringCode.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Writer.cs">
+      <SubType>Code</SubType>
+    </Compile>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

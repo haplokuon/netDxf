@@ -1,0 +1,130 @@
+#region netDxf, Copyright(C) 2009 Daniel Carvajal, Licensed under LGPL.
+
+//                        netDxf library
+// Copyright (C) 2009 Daniel Carvajal (haplokuon@gmail.com)
+// 
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2.1 of the License, or (at your option) any later version.
+// 
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+// FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+// COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+// IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+// CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. 
+
+#endregion
+
+namespace netDxf
+{
+    /// <summary>
+    /// Dxf sections.
+    /// </summary>
+    public static class StringCode
+    {
+        /// <summary>
+        /// not defined.
+        /// </summary>
+        public const string Unknown = "";
+
+        /// <summary>
+        /// header.
+        /// </summary>
+        public const string HeaderSection = "HEADER";
+
+        /// <summary>
+        /// clases.
+        /// </summary>
+        public const string ClassesSection = "CLASSES";
+
+        /// <summary>
+        /// tables.
+        /// </summary>
+        public const string TablesSection = "TABLES";
+
+        /// <summary>
+        /// blocks.
+        /// </summary>
+        public const string BlocksSection = "BLOCKS";
+
+        /// <summary>
+        /// entities.
+        /// </summary>
+        public const string EntitiesSection = "ENTITIES";
+
+        /// <summary>
+        /// objects.
+        /// </summary>
+        public const string ObjectsSection = "OBJECTS";
+
+        /// <summary>
+        /// dxf name string.
+        /// </summary>
+        public const string BeginSection = "SECTION";
+
+        /// <summary>
+        /// end secction code.
+        /// </summary>
+        public const string EndSection = "ENDSEC";
+
+        /// <summary>
+        /// layers.
+        /// </summary>
+        public const string LayerTable = "LAYER";
+
+        /// <summary>
+        /// line types.
+        /// </summary>
+        public const string LineTypeTable = "LTYPE";
+
+        /// <summary>
+        /// text styles.
+        /// </summary>
+        public const string TextStyleTable = "STYLE";
+
+        /// <summary>
+        /// dim styles.
+        /// </summary>
+        public const string DimStyleTable = "DIMSTYLE";
+
+        /// <summary>
+        /// extended data application registry.
+        /// </summary>
+        public const string ApplicationIDTable = "APPID";
+
+        /// <summary>
+        /// end table code.
+        /// </summary>
+        public const string EndTable = "ENDTAB";
+
+        /// <summary>
+        /// dxf name string.
+        /// </summary>
+        public const string Table = "TABLE";
+
+        /// <summary>
+        /// dxf name string.
+        /// </summary>
+        public const string BegionBlock = "BLOCK";
+
+        /// <summary>
+        /// end table code.
+        /// </summary>
+        public const string EndBlock = "ENDBLK";
+
+        /// <summary>
+        /// end of an element sequence
+        /// </summary>
+        public const string EndSequence = "SEQEND";
+
+        /// <summary>
+        /// end of file
+        /// </summary>
+        public const string EndOfFile = "EOF";
+    }
+}
