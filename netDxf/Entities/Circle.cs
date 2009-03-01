@@ -27,7 +27,7 @@ using netDxf.Tables;
 namespace netDxf.Entities
 {
     /// <summary>
-    /// Represents a circle.
+    /// Represents a circle <see cref="netDxf.Entities.IEntityObject">entity</see>.
     /// </summary>
     public class Circle :
         IEntityObject
@@ -50,22 +50,25 @@ namespace netDxf.Entities
         #region constructors
 
         /// <summary>
-        /// Initializes a new instance of the circle class.
+        /// Initializes a new instance of the <c>Circle</c> class.
         /// </summary>
+        /// <param name="center">Circle <see cref="Vector3">center</see> in object coordinates.</param>
+        /// <param name="radius">Circle radius.</param>
+        /// <remarks>The center Z coordinate represents the elevation of the arc along the normal.</remarks>
         public Circle(Vector3 center, float radius)
         {
             this.center = center;
             this.radius = radius;
             this.thickness = 0.0f;
             this.layer = Layer.Default;
-            this.color = AciColor.Bylayer;
+            this.color = AciColor.ByLayer;
             this.lineType = LineType.ByLayer;
             this.normal = Vector3.UnitZ;
             this.xData = new List<XData>();
         }
 
         /// <summary>
-        /// Initializes a new instance of the circle class.
+        /// Initializes a new instance of the <c>Circle</c> class.
         /// </summary>
         public Circle()
         {
@@ -73,7 +76,7 @@ namespace netDxf.Entities
             this.radius = 1.0f;
             this.thickness = 0.0f;
             this.layer = Layer.Default;
-            this.color = AciColor.Bylayer;
+            this.color = AciColor.ByLayer;
             this.lineType = LineType.ByLayer;
             this.normal = Vector3.UnitZ;
             this.xData = new List<XData>();
@@ -84,8 +87,9 @@ namespace netDxf.Entities
         #region public properties
 
         /// <summary>
-        /// Gets or sets the circle center.
+        /// Gets or sets the circle <see cref="netDxf.Vector3">center</see>.
         /// </summary>
+        /// <remarks>The center Z coordinate represents the elevation of the arc along the normal.</remarks>
         public Vector3 Center
         {
             get { return this.center; }
@@ -101,12 +105,18 @@ namespace netDxf.Entities
             set { this.radius = value; }
         }
 
+        /// <summary>
+        /// Gets or sets the arc thickness.
+        /// </summary>
         public float Thickness
         {
             get { return this.thickness; }
             set { this.thickness = value; }
         }
 
+        /// <summary>
+        /// Gets or sets the circle <see cref="netDxf.Vector3">normal</see>.
+        /// </summary>
         public Vector3 Normal
         {
             get { return this.normal; }
@@ -130,7 +140,7 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets the entity type.
+        /// Gets the entity <see cref="netDxf.Entities.EntityType">type</see>.
         /// </summary>
         public EntityType Type
         {
@@ -138,7 +148,7 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets or sets the entity color.
+        /// Gets or sets the entity <see cref="netDxf.AciColor">color</see>.
         /// </summary>
         public AciColor Color
         {
@@ -152,7 +162,7 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets or sets the entity layer.
+        /// Gets or sets the entity <see cref="netDxf.Tables.Layer">layer</see>.
         /// </summary>
         public Layer Layer
         {
@@ -166,7 +176,7 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets or sets the entity line type.
+        /// Gets or sets the entity <see cref="netDxf.Tables.LineType">line type</see>.
         /// </summary>
         public LineType LineType
         {
@@ -180,7 +190,7 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets or sets the entity extended data.
+        /// Gets or sets the entity <see cref="netDxf.XData">extende data</see>.
         /// </summary>
         public List<XData> XData
         {
@@ -195,7 +205,7 @@ namespace netDxf.Entities
         /// Converts the circle in a list of vertexes.
         /// </summary>
         /// <param name="precision">Number of vertexes generated.</param>
-        /// <returns>The vertexes are expresed in object coordinate system.</returns>
+        /// <returns>A list vertexes that represents the circle expresed in object coordinate system.</returns>
         public List<Vector2> PoligonalVertexes(byte precision)
         {
             if (precision < 3)
@@ -220,7 +230,7 @@ namespace netDxf.Entities
         /// </summary>
         /// <param name="precision">Number of vertexes generated.</param>
         /// <param name="weldThreshold">Tolerance to consider if two new generated vertexes are equal.</param>
-        /// <returns>The vertexes are expresed in object coordinate system.</returns>
+        /// <returns>A list vertexes that represents the circle expresed in object coordinate system.</returns>
         public List<Vector2> PoligonalVertexes(byte precision, float weldThreshold)
         {
             if (precision < 3)
@@ -262,6 +272,10 @@ namespace netDxf.Entities
 
         #region overrides
 
+        /// <summary>
+        /// Converts the value of this instance to its equivalent string representation.
+        /// </summary>
+        /// <returns>The string representation.</returns>
         public override string ToString()
         {
             return TYPE.ToString();

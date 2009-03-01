@@ -26,7 +26,7 @@ using System.Collections.Generic;
 namespace netDxf
 {
     /// <summary>
-    /// Extended data type.
+    /// Defines the extended data code.
     /// </summary>
     public sealed class XDataCode
     {
@@ -253,7 +253,7 @@ namespace netDxf
         #region constructors
 
         /// <summary>
-        /// Initialize a new instance of the class XData.
+        /// Initialize a new instance of the <c>XData</c> class .
         /// </summary>
         /// <param name="appReg">Name of the application associated with the list of extended data records.</param>
         public XData(string appReg)
@@ -287,15 +287,17 @@ namespace netDxf
             set
             {
                 if (value == null)
-                {
                     throw new NullReferenceException("value");
-                }
                 this.xData = value;
             }
         }
 
         #endregion
 
+        /// <summary>
+        /// Converts the value of this instance to its equivalent string representation.
+        /// </summary>
+        /// <returns>The string representation.</returns>
         public override string ToString()
         {
             return this.ApplicationRegistry.Value.ToString();

@@ -24,6 +24,9 @@ using System;
 
 namespace netDxf.Entities
 {
+    /// <summary>
+    /// Defines the vertex type.
+    /// </summary>
     [Flags]
     public enum VertexTypeFlags
     {
@@ -66,9 +69,15 @@ namespace netDxf.Entities
         PolyfaceMeshVertex = 128
     }
 
+    /// <summary>
+    /// Represents a generic vertex.
+    /// </summary>
     internal interface IVertex :
         IEntityObject
     {
+        /// <summary>
+        /// Gets the Vertex type.
+        /// </summary>
         VertexTypeFlags Flags { get; }
     }
 }

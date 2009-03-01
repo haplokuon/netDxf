@@ -26,6 +26,9 @@ using netDxf.Tables;
 
 namespace netDxf.Entities
 {
+    /// <summary>
+    /// Represents a polyline vertex.
+    /// </summary>
     public class PolylineVertex :
         IVertex
     {
@@ -56,7 +59,7 @@ namespace netDxf.Entities
             this.flags = VertexTypeFlags.PolylineVertex;
             this.location = Vector2.Zero;
             this.layer = Layer.Default;
-            this.color = AciColor.Bylayer;
+            this.color = AciColor.ByLayer;
             this.lineType = LineType.ByLayer;
             this.bulge = 0.0f;
             this.beginThickness = 0.0f;
@@ -73,7 +76,7 @@ namespace netDxf.Entities
             this.flags = VertexTypeFlags.PolylineVertex;
             this.location = location;
             this.layer = Layer.Default;
-            this.color = AciColor.Bylayer;
+            this.color = AciColor.ByLayer;
             this.lineType = LineType.ByLayer;
             this.bulge = 0.0f;
             this.beginThickness = 0.0f;
@@ -91,7 +94,7 @@ namespace netDxf.Entities
             this.flags = VertexTypeFlags.PolylineVertex;
             this.location = new Vector2(x, y);
             this.layer = Layer.Default;
-            this.color = AciColor.Bylayer;
+            this.color = AciColor.ByLayer;
             this.lineType = LineType.ByLayer;
             this.bulge = 0.0f;
             this.beginThickness = 0.0f;
@@ -103,13 +106,8 @@ namespace netDxf.Entities
 
         #region public properties
 
-        public VertexTypeFlags Flags
-        {
-            get { return this.flags; }
-        }
-
         /// <summary>
-        /// Gets or sets the polyline vertex coordinates.
+        /// Gets or sets the polyline vertex <see cref="netDxf.Vector2">location</see>.
         /// </summary>
         public Vector2 Location
         {
@@ -169,7 +167,7 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets the entity type.
+        /// Gets the entity <see cref="netDxf.Entities.EntityType">type</see>.
         /// </summary>
         public EntityType Type
         {
@@ -177,7 +175,7 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets or sets the entity color.
+        /// Gets or sets the entity <see cref="netDxf.AciColor">color</see>.
         /// </summary>
         public AciColor Color
         {
@@ -191,7 +189,7 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets or sets the entity layer.
+        /// Gets or sets the entity <see cref="netDxf.Tables.Layer">layer</see>.
         /// </summary>
         public Layer Layer
         {
@@ -205,7 +203,7 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets or sets the entity line type.
+        /// Gets or sets the entity <see cref="netDxf.Tables.LineType">line type</see>.
         /// </summary>
         public LineType LineType
         {
@@ -219,11 +217,23 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets or sets the entity extended data.
+        /// Gets or sets the entity <see cref="netDxf.XData">extende data</see>.
         /// </summary>
         public List<XData> XData
         {
             get { return this.xData; }
+        }
+
+        #endregion
+
+        #region IVertex Members
+
+        /// <summary>
+        /// Gets the vertex type.
+        /// </summary>
+        public VertexTypeFlags Flags
+        {
+            get { return this.flags; }
         }
 
         #endregion

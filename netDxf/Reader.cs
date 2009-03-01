@@ -494,7 +494,7 @@ namespace netDxf
             Vector3 firstAlignmentPoint = Vector3.Zero;
             Vector3 secondAlignmentPoint = Vector3.Zero;
             Layer layer = Layer.Default;
-            AciColor color = AciColor.Bylayer;
+            AciColor color = AciColor.ByLayer;
             LineType lineType = LineType.ByLayer;
             TextStyle style = TextStyle.Default;
             float height = 0;
@@ -606,7 +606,7 @@ namespace netDxf
         {
             AttributeDefinition attdef = null;
             Layer layer = Layer.Default;
-            AciColor color = AciColor.Bylayer;
+            AciColor color = AciColor.ByLayer;
             LineType lineType = LineType.ByLayer;
             Object value = null;
             code = this.ReadCodePair();
@@ -1409,7 +1409,7 @@ namespace netDxf
             float rotation = 0.0f;
             Block block = null;
             Layer layer = Layer.Default;
-            AciColor color = AciColor.Bylayer;
+            AciColor color = AciColor.ByLayer;
             LineType lineType = LineType.ByLayer;
             List<Attribute> attributes = new List<Attribute>();
             List<XData> xData = new List<XData>();
@@ -1721,7 +1721,7 @@ namespace netDxf
         private IPolyline ReadPolyline(ref CodeValuePair code)
         {
             Layer layer = Layer.Default;
-            AciColor color = AciColor.Bylayer;
+            AciColor color = AciColor.ByLayer;
             LineType lineType = LineType.ByLayer;
             PolylineTypeFlags flags = PolylineTypeFlags.OpenPolyline;
             float elevation = 0.0f;
@@ -2061,7 +2061,7 @@ namespace netDxf
         private Vertex ReadVertex(ref CodeValuePair code)
         {
             Layer layer = Layer.Default;
-            AciColor color = AciColor.Bylayer;
+            AciColor color = AciColor.ByLayer;
             LineType lineType = LineType.ByLayer;
             Vector3 location = new Vector3();
             List<XData> xData = new List<XData>();

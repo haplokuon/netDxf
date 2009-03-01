@@ -41,15 +41,15 @@ namespace netDxf
         #region constants
 
         /// <summary>
-        /// Defines a color by layer.
+        /// Gets the ByLayer color.
         /// </summary>
-        public static AciColor Bylayer
+        public static AciColor ByLayer
         {
             get { return new AciColor(256); }
         }
 
         /// <summary>
-        /// Defines a color by layer.
+        /// Gets the ByBlock color.
         /// </summary>
         public static AciColor ByBlock
         {
@@ -69,40 +69,40 @@ namespace netDxf
         #region constructors
 
         /// <summary>
-        /// Initializes a color.
+        /// Initializes a new instance of the <c>AciColor</c> class.
         /// </summary>
         ///<param name="r">Red component.</param>
         ///<param name="g">Green component.</param>
         ///<param name="b">Blue component.</param>
-        /// <remarks>Since only 256 colors are posible the conversion won't be exact.</remarks>
+        /// <remarks>Since only 255 indexed colors are posible the conversion won't be exact.</remarks>
         public AciColor(byte r, byte g, byte b)
         {
             this.index = RGBtoACI(r, g, b);
         }
 
         /// <summary>
-        /// Initializes a color.
+        /// Initializes a new instance of the <c>AciColor</c> class.
         /// </summary>
         ///<param name="r">Red component.</param>
         ///<param name="g">Green component.</param>
         ///<param name="b">Blue component.</param>
-        /// <remarks>Since only 256 colors are posible the conversion won't be exact.</remarks>
+        /// <remarks>Since only 255 indexed are posible the conversion won't be exact.</remarks>
         public AciColor(float r, float g, float b)
         {
             this.index = RGBtoACI((byte) (r*255), (byte) (g*255), (byte) (b*255));
         }
 
         /// <summary>
-        /// Initializes a color.
+        /// Initializes a new instance of the <c>AciColor</c> class.
         /// </summary>
-        ///<param name="color">System.Drawing.Color.</param>
+        ///<param name="color">A <see cref="Color">color</see>.</param>
         public AciColor(Color color)
         {
             this.index = RGBtoACI(color.R, color.G, color.B);
         }
 
         /// <summary>
-        /// Initializes a color.
+        /// Initializes a new instance of the <c>AciColor</c> class.
         /// </summary>
         /// <param name="index">Color index.</param>
         /// <remarks>
@@ -146,6 +146,10 @@ namespace netDxf
 
         #region overrides
 
+        /// <summary>
+        /// Converts the value of this instance to its equivalent string representation.
+        /// </summary>
+        /// <returns>The string representation.</returns>
         public override string ToString()
         {
             return this.index.ToString();
@@ -156,7 +160,7 @@ namespace netDxf
         #region public methods
 
         /// <summary>
-        /// Converts the AciColor to System.Drawing.Color.
+        /// Converts the AciColor to a <see cref="Color">color</see>.
         /// </summary>
         /// <returns>A default color white will be used for byblock and bylayer colors.</returns>
         public Color ToColor()

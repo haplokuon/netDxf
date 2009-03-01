@@ -55,7 +55,7 @@ namespace netDxf.Entities
     }
 
     /// <summary>
-    /// Represents a 3DFace.
+    /// Represents a 3DFace <see cref="netDxf.Entities.IEntityObject">entity</see>.
     /// </summary>
     public class Face3D :
         IEntityObject
@@ -79,8 +79,12 @@ namespace netDxf.Entities
         #region constructors
 
         /// <summary>
-        /// Initializes a new instance of the Face3D class.
+        /// Initializes a new instance of the <c>Face3D</c> class.
         /// </summary>
+        /// <param name="firstVertex">3d face <see cref="Vector3">first vertex</see>.</param>
+        /// <param name="secondVertex">3d face <see cref="Vector3">second vertex</see>.</param>
+        /// <param name="thirdVertex">3d face <see cref="Vector3">third vertex</see>.</param>
+        /// <param name="fourthVertex">3d face <see cref="Vector3">fourth vertex</see>.</param>
         public Face3D(Vector3 firstVertex, Vector3 secondVertex, Vector3 thirdVertex, Vector3 fourthVertex)
         {
             this.firstVertex = firstVertex;
@@ -89,13 +93,13 @@ namespace netDxf.Entities
             this.fourthVertex = fourthVertex;
             this.edgeFlags = EdgeFlags.Visibles;
             this.layer = Layer.Default;
-            this.color = AciColor.Bylayer;
+            this.color = AciColor.ByLayer;
             this.lineType = LineType.ByLayer;
             this.xData = new List<XData>();
         }
 
         /// <summary>
-        /// Initializes a new instance of the Face3D class.
+        /// Initializes a new instance of the <c>Face3D</c> class.
         /// </summary>
         public Face3D()
         {
@@ -105,7 +109,7 @@ namespace netDxf.Entities
             this.fourthVertex = Vector3.Zero;
             this.edgeFlags = EdgeFlags.Visibles;
             this.layer = Layer.Default;
-            this.color = AciColor.Bylayer;
+            this.color = AciColor.ByLayer;
             this.lineType = LineType.ByLayer;
             this.xData = new List<XData>();
         }
@@ -115,7 +119,7 @@ namespace netDxf.Entities
         #region public properties
 
         /// <summary>
-        /// Gets or sets the first 3D face vertex.
+        /// Gets or sets the first 3d face <see cref="netDxf.Vector3">vertex</see>.
         /// </summary>
         public Vector3 FirstVertex
         {
@@ -124,7 +128,7 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets or sets the second 3D face vertex.
+        /// Gets or sets the second 3d face <see cref="netDxf.Vector3">vertex</see>.
         /// </summary>
         public Vector3 SecondVertex
         {
@@ -133,7 +137,7 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets or sets the third 3D face vertex.
+        /// Gets or sets the third 3d face <see cref="netDxf.Vector3">vertex</see>.
         /// </summary>
         public Vector3 ThirdVertex
         {
@@ -142,7 +146,7 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets or sets the fourth 3D face vertex.
+        /// Gets or sets the fourth 3d face <see cref="netDxf.Vector3">vertex</see>.
         /// </summary>
         public Vector3 FourthVertex
         {
@@ -172,7 +176,7 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets the entity type.
+        /// Gets the entity <see cref="netDxf.Entities.EntityType">type</see>.
         /// </summary>
         public EntityType Type
         {
@@ -180,7 +184,7 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets or sets the entity color.
+        /// Gets or sets the entity <see cref="netDxf.AciColor">color</see>.
         /// </summary>
         public AciColor Color
         {
@@ -194,7 +198,7 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets or sets the entity layer.
+        /// Gets or sets the entity <see cref="netDxf.Tables.Layer">layer</see>.
         /// </summary>
         public Layer Layer
         {
@@ -208,7 +212,7 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets or sets the entity line type.
+        /// Gets or sets the entity <see cref="netDxf.Tables.LineType">line type</see>.
         /// </summary>
         public LineType LineType
         {
@@ -222,7 +226,7 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets or sets the entity extended data.
+        /// Gets or sets the entity <see cref="netDxf.XData">extende data</see>.
         /// </summary>
         public List<XData> XData
         {
@@ -233,6 +237,10 @@ namespace netDxf.Entities
 
         #region overrides
 
+        /// <summary>
+        /// Converts the value of this instance to its equivalent string representation.
+        /// </summary>
+        /// <returns>The string representation.</returns>
         public override string ToString()
         {
             return TYPE.ToString();

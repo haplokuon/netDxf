@@ -42,7 +42,7 @@ namespace netDxf.Tables
         #region constants
 
         /// <summary>
-        /// Obtains the ByLayer line type.
+        /// Gets the ByLayer line type.
         /// </summary>
         public static LineType ByLayer
         {
@@ -50,7 +50,7 @@ namespace netDxf.Tables
         }
 
         /// <summary>
-        /// Obtains the ByBlock line type.
+        /// Gets the ByBlock line type.
         /// </summary>
         public static LineType ByBlock
         {
@@ -58,7 +58,7 @@ namespace netDxf.Tables
         }
 
         /// <summary>
-        /// Obtains a predefined continuous line.
+        /// Gets a predefined continuous line.
         /// </summary>
         public static LineType Continuous
         {
@@ -73,7 +73,7 @@ namespace netDxf.Tables
         }
 
         /// <summary>
-        /// Obtains a predefined center line.
+        /// Gets a predefined center line.
         /// </summary>
         public static LineType Center
         {
@@ -89,7 +89,7 @@ namespace netDxf.Tables
         }
 
         /// <summary>
-        /// Obtains a predefined dash dot line.
+        /// Gets a predefined dash dot line.
         /// </summary>
         public static LineType DashDot
         {
@@ -105,7 +105,7 @@ namespace netDxf.Tables
         }
 
         /// <summary>
-        /// Obtains a predefined dashed line
+        /// Gets a predefined dashed line
         /// </summary>
         public static LineType Dashed
         {
@@ -121,7 +121,7 @@ namespace netDxf.Tables
         }
 
         /// <summary>
-        /// Obtains a predefined dot line
+        /// Gets a predefined dot line
         /// </summary>
         public static LineType Dot
         {
@@ -141,7 +141,7 @@ namespace netDxf.Tables
         #region constructors
 
         /// <summary>
-        /// Initializes a new line type.
+        /// Initializes a new instance of the <c>LineType</c> class.
         /// </summary>
         /// <param name="name">Line type name.</param>
         public LineType(string name)
@@ -170,7 +170,7 @@ namespace netDxf.Tables
         /// Gets or stes the list of line type segments.
         /// </summary>
         /// <remarks>
-        /// Dash, dot or space length (one entry per element)
+        /// Positive values means solid segments and negative values means spaces (one entry per element)
         /// </remarks>
         public List<float> Segments
         {
@@ -188,7 +188,7 @@ namespace netDxf.Tables
         #region public methods
 
         /// <summary>
-        /// Obtains the length of the line type.
+        /// Gets the total length of the line type.
         /// </summary>
         public float Legth()
         {
@@ -216,6 +216,10 @@ namespace netDxf.Tables
 
         #region overrides
 
+        /// <summary>
+        /// Converts the value of this instance to its equivalent string representation.
+        /// </summary>
+        /// <returns>The string representation.</returns>
         public override string ToString()
         {
             return this.name;

@@ -27,6 +27,10 @@ using netDxf.Tables;
 
 namespace netDxf.Entities
 {
+
+    /// <summary>
+    /// Represents a block insertion <see cref="IEntityObject">entity.
+    /// </summary>
     public class Insert :
         IEntityObject
     {
@@ -49,6 +53,11 @@ namespace netDxf.Entities
 
         #region constructors
 
+        /// <summary>
+        /// Initializes a new instance of the <c>Insert</c> class.
+        /// </summary>
+        /// <param name="block">Insert block definition.</param>
+        /// <param name="insertionPoint">Insert <see cref="Vector3">point</see>.</param>
         public Insert(Block block, Vector3 insertionPoint)
         {
             if (block == null)
@@ -60,7 +69,7 @@ namespace netDxf.Entities
             this.rotation = 0.0f;
             this.normal = Vector3.UnitZ;
             this.layer = Layer.Default;
-            this.color = AciColor.Bylayer;
+            this.color = AciColor.ByLayer;
             this.lineType = LineType.ByLayer;
             this.attributes = new List<Attribute>();
             foreach (AttributeDefinition attdef in block.Attributes.Values)
@@ -70,6 +79,10 @@ namespace netDxf.Entities
             this.xData = new List<XData>();
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <c>Insert</c> class.
+        /// </summary>
+        /// <param name="block">Insert block definition.</param>
         public Insert(Block block)
         {
             if (block == null)
@@ -81,7 +94,7 @@ namespace netDxf.Entities
             this.rotation = 0.0f;
             this.normal = Vector3.UnitZ;
             this.layer = Layer.Default;
-            this.color = AciColor.Bylayer;
+            this.color = AciColor.ByLayer;
             this.lineType = LineType.ByLayer;
             this.attributes = new List<Attribute>();
             foreach (AttributeDefinition attdef in block.Attributes.Values)
@@ -95,40 +108,52 @@ namespace netDxf.Entities
 
         #region public properties
 
+        /// <summary>
+        /// Gets the insert list of <see cref="Attribute">attributes</see>.
+        /// </summary>
         public List<Attribute> Attributes
         {
             get { return this.attributes; }
         }
 
+        /// <summary>
+        /// Gets the insert block definition.
+        /// </summary>
         public Block Block
         {
             get { return this.block; }
-            set
-            {
-                if (value == null)
-                    throw new ArgumentNullException("value");
-                this.block = value;
-            }
         }
 
+        /// <summary>
+        /// Gets or sets the insert point.
+        /// </summary>
         public Vector3 InsertionPoint
         {
             get { return this.insertionPoint; }
             set { this.insertionPoint = value; }
         }
 
+        /// <summary>
+        /// Gets or sets the insert scale.
+        /// </summary>
         public Vector3 Scale
         {
             get { return this.scale; }
             set { this.scale = value; }
         }
 
+        /// <summary>
+        /// Gets or sets the insert rotation along the normal vector.
+        /// </summary>
         public float Rotation
         {
             get { return this.rotation; }
             set { this.rotation = value; }
         }
 
+        /// <summary>
+        /// Gets or sets the insert normal.
+        /// </summary>
         public Vector3 Normal
         {
             get { return this.normal; }
@@ -154,7 +179,7 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets the entity type.
+        /// Gets the entity <see cref="netDxf.Entities.EntityType">type</see>.
         /// </summary>
         public EntityType Type
         {
@@ -162,7 +187,7 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets or sets the entity color.
+        /// Gets or sets the entity <see cref="netDxf.AciColor">color</see>.
         /// </summary>
         public AciColor Color
         {
@@ -176,7 +201,7 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets or sets the entity layer.
+        /// Gets or sets the entity <see cref="netDxf.Tables.Layer">layer</see>.
         /// </summary>
         public Layer Layer
         {
@@ -190,7 +215,7 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets or sets the entity line type.
+        /// Gets or sets the entity <see cref="netDxf.Tables.LineType">line type</see>.
         /// </summary>
         public LineType LineType
         {
@@ -204,7 +229,7 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets or sets the entity extended data.
+        /// Gets or sets the entity <see cref="netDxf.XData">extende data</see>.
         /// </summary>
         public List<XData> XData
         {
@@ -215,6 +240,10 @@ namespace netDxf.Entities
 
         #region overrides
 
+        /// <summary>
+        /// Converts the value of this instance to its equivalent string representation.
+        /// </summary>
+        /// <returns>The string representation.</returns>
         public override string ToString()
         {
             return TYPE.ToString();

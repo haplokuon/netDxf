@@ -47,7 +47,7 @@ namespace netDxf.Tables
         #region constants
 
         /// <summary>
-        /// Obtains the default text style.
+        /// Gets the default text style.
         /// </summary>
         public static TextStyle Default
         {
@@ -59,10 +59,10 @@ namespace netDxf.Tables
         #region constructors
 
         /// <summary>
-        /// Initializes a new text style.
+        /// Initializes a new instance of the <c>TextStyle</c> class.
         /// </summary>
         /// <param name="name">Text style name.</param>
-        /// <param name="font">Font name.</param>
+        /// <param name="font">Text style font name.</param>
         public TextStyle(string name, string font)
         {
             if (string.IsNullOrEmpty(name))
@@ -88,10 +88,7 @@ namespace netDxf.Tables
         /// </summary>
         public string Font
         {
-            get
-            {
-                return this.font;
-            }
+            get{return this.font;}
         }
 
         /// <summary>
@@ -175,6 +172,10 @@ namespace netDxf.Tables
 
         #region overrides
 
+        /// <summary>
+        /// Converts the value of this instance to its equivalent string representation.
+        /// </summary>
+        /// <returns>The string representation.</returns>
         public override string ToString()
         {
             return this.name;

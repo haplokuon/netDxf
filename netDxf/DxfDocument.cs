@@ -34,6 +34,10 @@ using Attribute=netDxf.Entities.Attribute;
 
 namespace netDxf
 {
+
+    /// <summary>
+    /// Represents a document to read and write dxf ASCII files.
+    /// </summary>
     public class DxfDocument
     {
         #region private fields
@@ -66,6 +70,7 @@ namespace netDxf
         private List<Arc> arcs;
         private List<Circle> circles;
         private readonly List<Ellipse> ellipses;
+        private readonly List<NurbsCurve> nurbsCurves;
         private List<Solid> solids;
         private List<Face3D> faces3d;
         private List<Insert> inserts;
@@ -80,6 +85,9 @@ namespace netDxf
 
         #region constructor
 
+        /// <summary>
+        /// Initalizes a new instance of the <c>DxfDocument</c> class.
+        /// </summary>
         public DxfDocument()
         {
            this.version = version;
@@ -92,6 +100,7 @@ namespace netDxf
 
             this.arcs = new List<Arc>();
             this.ellipses = new List<Ellipse>();
+            this.nurbsCurves = new List<NurbsCurve>();
             this.faces3d = new List<Face3D>();
             this.solids = new List<Solid>();
             this.inserts = new List<Insert>();
@@ -109,7 +118,7 @@ namespace netDxf
         #region header
 
         /// <summary>
-        /// Optional comments to be added at the dxf file beginning beginning.
+        /// Gets or sets the optional comments to be added at the dxf file beginning beginning.
         /// </summary>
         public string Comments
         {
@@ -118,7 +127,7 @@ namespace netDxf
         }
 
         /// <summary>
-        /// Dxf file version.
+        /// Gets the dxf file <see cref="DxfVersion">version</see>.
         /// </summary>
         /// <remarks>The only allowed option is AutoCad12.</remarks>
         public DxfVersion Version
@@ -130,11 +139,17 @@ namespace netDxf
 
         #region table public properties
 
+        /// <summary>
+        /// Gets the application registered names.
+        /// </summary>
         public ReadOnlyCollection<string> AppRegisterNames
         {
             get { return this.appRegisterNames.AsReadOnly(); }
         }
 
+        /// <summary>
+        /// Gets the <see cref="Layer">layer</see> list.
+        /// </summary>
         public ReadOnlyCollection<Layer> Layers
         {
             get
@@ -145,6 +160,9 @@ namespace netDxf
             }
         }
 
+        /// <summary>
+        /// Gets the <see cref="LineType">linetype</see> list.
+        /// </summary>
         public ReadOnlyCollection<LineType> LineTypes
         {
             get
@@ -155,6 +173,9 @@ namespace netDxf
             }
         }
 
+        /// <summary>
+        /// Gets the <see cref="TextStyle">text style</see> list.
+        /// </summary>
         public ReadOnlyCollection<TextStyle> TextStyle
         {
             get
@@ -165,6 +186,9 @@ namespace netDxf
             }
         }
 
+        /// <summary>
+        /// Gets the <see cref="Block">block</see> list.
+        /// </summary>
         public ReadOnlyCollection<Block> Blocks
         {
             get
@@ -179,51 +203,93 @@ namespace netDxf
 
         #region entities public properties
 
+        /// <summary>
+        /// Gets the <see cref="Arc">arc</see> list.
+        /// </summary>
         public ReadOnlyCollection<Arc> Arcs
         {
             get { return this.arcs.AsReadOnly(); }
         }
 
+        /// <summary>
+        /// Gets the <see cref="Ellipse">ellipse</see> list.
+        /// </summary>
         public ReadOnlyCollection<Ellipse> Ellipses
         {
             get { return this.ellipses.AsReadOnly(); }
         }
 
+        /// <summary>
+        /// Gets the <see cref="NurbsCurve">NURBS Curve</see> list.
+        /// </summary>
+        public ReadOnlyCollection<NurbsCurve > NurbsCurves 
+        {
+            get { return this.nurbsCurves.AsReadOnly(); }
+        }
+
+        /// <summary>
+        /// Gets the <see cref="Circle">circle</see> list.
+        /// </summary>
         public ReadOnlyCollection<Circle> Circles
         {
             get { return this.circles.AsReadOnly(); }
         }
 
+        /// <summary>
+        /// Gets the <see cref="Face3D">3d face</see> list.
+        /// </summary>
         public ReadOnlyCollection<Face3D> Faces3d
         {
             get { return this.faces3d.AsReadOnly(); }
         }
 
+        /// <summary>
+        /// Gets the <see cref="Solid">solid</see> list.
+        /// </summary>
         public ReadOnlyCollection<Solid> Solids
         {
             get { return this.solids.AsReadOnly(); }
         }
 
+        /// <summary>
+        /// Gets the <see cref="Insert">insert</see> list.
+        /// </summary>
         public ReadOnlyCollection<Insert> Inserts
         {
             get { return this.inserts.AsReadOnly(); }
         }
 
+        /// <summary>
+        /// Gets the <see cref="Line">line</see> list.
+        /// </summary>
         public ReadOnlyCollection<Line> Lines
         {
             get { return this.lines.AsReadOnly(); }
         }
 
+        /// <summary>
+        /// Gets the <see cref="IPolyline">polyline</see> list.
+        /// </summary>
+        /// <remarks>
+        /// The polyline list contains all entities that are considered polylines in the dxf, they are:
+        /// <see cref="Polyline">polylines</see>, <see cref="Polyline3d">3d polylines</see> and <see cref="PolyfaceMesh">polyface meshes</see>
+        /// </remarks>
         public ReadOnlyCollection<IPolyline> Polylines
         {
             get { return this.polylines.AsReadOnly(); }
         }
 
+        /// <summary>
+        /// Gets the <see cref="Point">point</see> list.
+        /// </summary>
         public ReadOnlyCollection<Point> Points
         {
             get { return this.points.AsReadOnly(); }
         }
 
+        /// <summary>
+        /// Gets the <see cref="Text">text</see> list.
+        /// </summary>
         public ReadOnlyCollection<Text> Texts
         {
             get { return this.texts.AsReadOnly(); }
@@ -319,6 +385,10 @@ namespace netDxf
 
         #region public methods
 
+        /// <summary>
+        /// Adds a new <see cref="IEntityObject">entity</see> to the document.
+        /// </summary>
+        /// <param name="entity">An <see cref="IEntityObject">entity</see></param>
         public void AddEntity(IEntityObject entity)
         {
             foreach (XData xDataRecord in entity.XData)
@@ -334,13 +404,13 @@ namespace netDxf
                 this.layers.Add(entity.Layer.Name, entity.Layer);
             }
 
-            //if (entity.LineType.Name != LineType.ByLayer.Name && entity.LineType.Name != LineType.ByBlock.Name)
-            //{
+            if (entity.LineType.Name != LineType.ByLayer.Name && entity.LineType.Name != LineType.ByBlock.Name)
+            {
                 if (!this.lineTypes.ContainsKey(entity.LineType.Name))
                 {
                     this.lineTypes.Add(entity.LineType.Name, entity.LineType);
                 }
-            //}
+            }
             switch (entity.Type)
             {
                 case EntityType.Arc:
@@ -351,6 +421,9 @@ namespace netDxf
                     break;
                 case EntityType.Ellipse:
                     this.ellipses.Add((Ellipse)entity);
+                    break;
+                case EntityType.NurbsCurve :
+                    this.nurbsCurves.Add((NurbsCurve)entity);
                     break;
                 case EntityType.Point:
                     this.points.Add((Point) entity);
@@ -446,6 +519,10 @@ namespace netDxf
             }
         }
 
+        /// <summary>
+        /// Loads a dxf ASCII file.
+        /// </summary>
+        /// <param name="file">File name.</param>
         public void Load(string file)
         {
             if (!File.Exists(file))
@@ -480,6 +557,12 @@ namespace netDxf
             Thread.CurrentThread.CurrentCulture = cultureInfo;
         }
 
+        /// <summary>
+        /// Saves the database of the actual DxfDocument to a dxf ASCII file.
+        /// </summary>
+        /// <param name="file">File name.</param>
+        /// <param name="dxfVersion">Dxf file <see cref="DxfVersion">version</see>.</param>
+        /// <remarks>At the moment only the AutoCad12 version is allowed.</remarks>
         public void Save(string file, DxfVersion dxfVersion)
         {
             if (dxfVersion != DxfVersion.AutoCad12)
@@ -561,6 +644,10 @@ namespace netDxf
             foreach (Ellipse ellipse  in this.ellipses )
             {
                 dxfWriter.WriteEntity(ellipse);
+            }
+            foreach (NurbsCurve nurbsCurve  in this.nurbsCurves )
+            {
+                dxfWriter.WriteEntity(nurbsCurve);
             }
             foreach (Point point in this.points)
             {

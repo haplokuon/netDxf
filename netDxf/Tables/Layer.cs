@@ -42,7 +42,7 @@ namespace netDxf.Tables
         #region constructors
 
         /// <summary>
-        /// Initializes a new layer.
+        /// Initializes a new instance of the <c>Layer</c> class.
         /// </summary>
         /// <param name="name">Layer name.</param>
         public Layer(string name)
@@ -60,7 +60,7 @@ namespace netDxf.Tables
         #region constants
 
         /// <summary>
-        /// Default Layer.
+        /// Gets the default Layer.
         /// </summary>
         public static Layer Default
         {
@@ -72,7 +72,7 @@ namespace netDxf.Tables
         #region public properties
 
         /// <summary>
-        /// Gets or sets the layer line type.
+        /// Gets or sets the layer <see cref="LineType"line type></see>.
         /// </summary>
         public LineType LineType
         {
@@ -86,7 +86,7 @@ namespace netDxf.Tables
         }
 
         /// <summary>
-        /// Gets or sets the layer color.
+        /// Gets or sets the layer <see cref="AciColor">color</see>.
         /// </summary>
         public AciColor Color
         {
@@ -124,6 +124,10 @@ namespace netDxf.Tables
 
         #region overrides
 
+        /// <summary>
+        /// Converts the value of this instance to its equivalent string representation.
+        /// </summary>
+        /// <returns>The string representation.</returns>
         public override string ToString()
         {
             return this.name;

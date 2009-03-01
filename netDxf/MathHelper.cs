@@ -225,7 +225,7 @@ namespace netDxf
         }
 
         /// <summary>
-        /// Gets the rotation matriz from the normal vector (extrusion direction) of an object.
+        /// Gets the rotation matrix from the normal vector (extrusion direction) of an entity.
         /// </summary>
         /// <param name="zAxis">Normal vector.</param>
         /// <returns>Rotation matriz.</returns>

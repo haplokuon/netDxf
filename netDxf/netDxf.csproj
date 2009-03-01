@@ -23,6 +23,8 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <DocumentationFile>
+    </DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -32,6 +34,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <DebugSymbols>true</DebugSymbols>
+    <DocumentationFile>bin\Release\netDxf.xml</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -41,9 +44,10 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AciColor.cs" />
-    <Compile Include="Blocks\EndBlock.cs" />
     <Compile Include="CodeValuePair.cs" />
     <Compile Include="Entities\Ellipse.cs" />
+    <Compile Include="Entities\NURBSCurve.cs" />
+    <Compile Include="Entities\NurbsVertex.cs" />
     <Compile Include="Entities\Solid.cs" />
     <Compile Include="Header\HeaderVariable.cs" />
     <Compile Include="StringEnum.cs" />

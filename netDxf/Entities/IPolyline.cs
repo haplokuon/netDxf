@@ -25,7 +25,7 @@ using System;
 namespace netDxf.Entities
 {
     /// <summary>
-    /// Enumera los distintos tipos de polilíneas de un dxf.
+    /// Defines the polyline type.
     /// </summary>
     /// <remarks>Bit flag.</remarks>
     [Flags]
@@ -42,6 +42,9 @@ namespace netDxf.Entities
         ContinuousLineTypePatter = 128
     }
 
+    /// <summary>
+    /// Defines the curves and smooth surface type.
+    /// </summary>
     public enum SmoothType
     {
         /// <summary>
@@ -62,9 +65,15 @@ namespace netDxf.Entities
         Bezier=8
     }
   
+    /// <summary>
+    /// Represents a generic polyline.
+    /// </summary>
     public interface IPolyline :
         IEntityObject
     {
+        /// <summary>
+        /// Gets the polyline type.
+        /// </summary>
         PolylineTypeFlags Flags { get; }
     }
 }

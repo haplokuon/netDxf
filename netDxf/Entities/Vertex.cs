@@ -55,14 +55,14 @@ namespace netDxf.Entities
         #region constructors
 
         /// <summary>
-        /// Initializes a new instance of the PolylineVertex class.
+        /// Initializes a new instance of the <c>Vertex</c> class.
         /// </summary>
         public Vertex()
         {
             this.flags = VertexTypeFlags.PolylineVertex;
             this.location = Vector3.Zero;
             this.layer = Layer.Default;
-            this.color = AciColor.Bylayer;
+            this.color = AciColor.ByLayer;
             this.lineType = LineType.ByLayer;
             this.bulge = 0.0f;
             this.beginThickness = 0.0f;
@@ -71,15 +71,15 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Initializes a new instance of the PolylineVertex class.
+        /// Initializes a new instance of the <c>Vertex</c> class.
         /// </summary>
-        /// <param name="location">Polyline vertex coordinates.</param>
+        /// <param name="location">Vertex <see cref="netDxf.Vector3">location</see>.</param>
         public Vertex(Vector3 location)
         {
             this.flags = VertexTypeFlags.PolylineVertex;
             this.location = location;
             this.layer = Layer.Default;
-            this.color = AciColor.Bylayer;
+            this.color = AciColor.ByLayer;
             this.lineType = LineType.ByLayer;
             this.bulge = 0.0f;
             this.beginThickness = 0.0f;
@@ -88,15 +88,15 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Initializes a new instance of the PolylineVertex class.
+        /// Initializes a new instance of the <c>Vertex</c> class.
         /// </summary>
-        /// <param name="location">Polyline vertex coordinates.</param>
+        /// <param name="location">Vertex <see cref="netDxf.Vector2">location</see>.</param>
         public Vertex(Vector2 location)
         {
             this.flags = VertexTypeFlags.PolylineVertex;
             this.location = new Vector3(location.X, location.Y, 0.0f);
             this.layer = Layer.Default;
-            this.color = AciColor.Bylayer;
+            this.color = AciColor.ByLayer;
             this.lineType = LineType.ByLayer;
             this.bulge = 0.0f;
             this.beginThickness = 0.0f;
@@ -105,7 +105,7 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Initializes a new instance of the PolylineVertex class.
+        /// Initializes a new instance of the <c>Vertex</c> class.
         /// </summary>
         /// <param name="x">X coordinate.</param>
         /// <param name="y">Y coordinate.</param>
@@ -115,7 +115,7 @@ namespace netDxf.Entities
             this.flags = VertexTypeFlags.PolylineVertex;
             this.location = new Vector3(x, y, z);
             this.layer = Layer.Default;
-            this.color = AciColor.Bylayer;
+            this.color = AciColor.ByLayer;
             this.lineType = LineType.ByLayer;
             this.bulge = 0.0f;
             this.beginThickness = 0.0f;
@@ -124,7 +124,7 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Initializes a new instance of the PolylineVertex class.
+        /// Initializes a new instance of the <c>Vertex</c> class.
         /// </summary>
         /// <param name="x">X coordinate.</param>
         /// <param name="y">Y coordinate.</param>
@@ -133,7 +133,7 @@ namespace netDxf.Entities
             this.flags = VertexTypeFlags.PolylineVertex;
             this.location = new Vector3(x, y, 0.0f);
             this.layer = Layer.Default;
-            this.color = AciColor.Bylayer;
+            this.color = AciColor.ByLayer;
             this.lineType = LineType.ByLayer;
             this.bulge = 0.0f;
             this.beginThickness = 0.0f;
@@ -146,7 +146,7 @@ namespace netDxf.Entities
         #region public properties
         
         /// <summary>
-        /// Gets or sets the polyline vertex coordinates.
+        /// Gets or sets the polyline vertex <see cref="netDxf.Vector3">location</see>.
         /// </summary>
         public Vector3 Location
         {
@@ -199,6 +199,9 @@ namespace netDxf.Entities
             }
         }
 
+        /// <summary>
+        /// Gets or sets the vertyex type.
+        /// </summary>
         public VertexTypeFlags Flags
         {
             get { return this.flags; }

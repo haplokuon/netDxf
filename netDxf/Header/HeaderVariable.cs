@@ -46,7 +46,7 @@ namespace netDxf.Header
     /// <summary>
     /// Defines de dxf file version.
     /// </summary>
-    public class HeaderVariable
+    internal class HeaderVariable
     {
         public const int NAME_CODE_GROUP = 9;
         public static readonly Dictionary<string, int> Allowed = InitializeSystemVariables();

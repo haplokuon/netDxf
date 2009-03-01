@@ -26,7 +26,7 @@ using netDxf.Tables;
 namespace netDxf.Entities
 {
     /// <summary>
-    /// Entity type.
+    /// Defines the entity type.
     /// </summary>
     public enum EntityType
     {
@@ -59,6 +59,11 @@ namespace netDxf.Entities
         /// circle.
         /// </summary>
         Circle,
+
+        /// <summary>
+        /// nurbs curve
+        /// </summary>
+        NurbsCurve,
 
         /// <summary>
         /// ellipse.
@@ -227,10 +232,13 @@ namespace netDxf.Entities
         public const string Dimension = "DIMENSION";
     }
 
+    /// <summary>
+    /// Represents a generic entity.
+    /// </summary>
     public interface IEntityObject
     {
         /// <summary>
-        /// Gets the entity type.
+        /// Gets the entity <see cref="EntityType">type</see>.
         /// </summary>
         EntityType Type { get; }
 
@@ -240,22 +248,22 @@ namespace netDxf.Entities
         string DxfName { get; }
 
         /// <summary>
-        /// Gets or sets the entity color.
+        /// Gets or sets the entity <see cref="AciColor">color</see>.
         /// </summary>
         AciColor Color { get; set; }
 
         /// <summary>
-        /// Gets or sets the entity layer.
+        /// Gets or sets the entity <see cref="Layer">layer</see>.
         /// </summary>
         Layer Layer { get; set; }
 
         /// <summary>
-        /// Gets or sets the entity line type.
+        /// Gets or sets the entity <see cref="LineType">line type</see.
         /// </summary>
         LineType LineType { get; set; }
 
         /// <summary>
-        /// Gets or sets the entity extended data.
+        /// Gets or sets the entity <see cref="XData">extended data</see.
         /// </summary>
         List<XData> XData { get; }
     }

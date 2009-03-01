@@ -39,15 +39,49 @@ namespace TestDxfDocument
         private static void Main()
         {
             
-           WriteDxfFile();
+           //WriteDxfFile();
             //BlockAttributes();
             //WritePolyfaceMesh();
             //ReadDxfFile();
             //Ellipse();
             //Solid();
             //Polyline();
+            NurbsCurve();
         }
 
+        private static void NurbsCurve()
+        {
+            DxfDocument dxf = new DxfDocument();
+
+            NurbsCurve nurbs  = new NurbsCurve();
+            nurbs.ControlPoints .Add(new NurbsVertex( 0, 0));
+            nurbs.ControlPoints.Add(new NurbsVertex(10, 10));
+            nurbs.ControlPoints.Add(new NurbsVertex(20, 0));
+            nurbs.ControlPoints.Add(new NurbsVertex(30, 10));
+            nurbs.ControlPoints.Add(new NurbsVertex(40, 0));
+            nurbs.ControlPoints.Add(new NurbsVertex(50, 10));
+            nurbs.ControlPoints.Add(new NurbsVertex(60, 0));
+            nurbs.ControlPoints.Add(new NurbsVertex(70, 10));
+
+           dxf.AddEntity(nurbs);
+
+           NurbsCurve nurbs2 = new NurbsCurve();
+           nurbs2.ControlPoints.Add(new NurbsVertex(5, 0));
+           nurbs2.ControlPoints.Add(new NurbsVertex(10, 0));
+           nurbs2.ControlPoints.Add(new NurbsVertex(10, 5));
+           nurbs2.ControlPoints.Add(new NurbsVertex(10, 10));
+           nurbs2.ControlPoints.Add(new NurbsVertex(5, 10));
+           nurbs2.ControlPoints.Add(new NurbsVertex(0, 10));
+           nurbs2.ControlPoints.Add(new NurbsVertex(0, 5));
+           nurbs2.ControlPoints.Add(new NurbsVertex(0, 0));
+           nurbs2.ControlPoints.Add(new NurbsVertex(5, 0));
+
+            nurbs2.SetUniformWeights((float) Math.Cos(MathHelper.HalfPI));
+           dxf.AddEntity(nurbs2);
+
+            dxf.Save("nurbs.dxf", DxfVersion.AutoCad12);
+
+        }
         private static void Polyline()
         {
 

@@ -27,7 +27,7 @@ using netDxf.Tables;
 namespace netDxf.Entities
 {
     /// <summary>
-    /// Represents a polyline.
+    /// Represents a polyline <see cref="netDxf.Entities.IEntityObject">entity</see>.
     /// </summary>
     public class Polyline :
         IPolyline
@@ -52,16 +52,16 @@ namespace netDxf.Entities
         #region constructors
 
         /// <summary>
-        /// Initializes a new instance of the Polyline class.
+        /// Initializes a new instance of the <c>Polyline</c> class.
         /// </summary>
-        /// <param name="vertexes">Polyline vertex list.</param>
+        /// <param name="vertexes">Polyline vertex list in object coordinates.</param>
         /// <param name="isClosed">Sets if the polyline is closed</param>
         public Polyline(List<PolylineVertex> vertexes, bool isClosed)
         {
             this.vertexes = vertexes;
             this.isClosed = isClosed;
             this.layer = Layer.Default;
-            this.color = AciColor.Bylayer;
+            this.color = AciColor.ByLayer;
             this.lineType = LineType.ByLayer;
             this.normal = Vector3.UnitZ;
             this.elevation = 0.0f;
@@ -70,15 +70,15 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Initializes a new instance of the Polyline class.
+        /// Initializes a new instance of the <c>Polyline</c> class.
         /// </summary>
-        /// <param name="vertexes">Polyline vertex list.</param>
+        /// <param name="vertexes">Polyline <see cref="PolylineVertex">vertex</see> list in object coordinates.</param>
         public Polyline(List<PolylineVertex> vertexes)
         {
             this.vertexes = vertexes;
             this.isClosed = false;
             this.layer = Layer.Default;
-            this.color = AciColor.Bylayer;
+            this.color = AciColor.ByLayer;
             this.lineType = LineType.ByLayer;
             this.normal = Vector3.UnitZ;
             this.elevation = 0.0f;
@@ -87,14 +87,14 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Initializes a new instance of the Polyline class.
+        /// Initializes a new instance of the <c>Polyline</c> class.
         /// </summary>
         public Polyline()
         {
             this.vertexes = new List<PolylineVertex>();
             this.isClosed = false;
             this.layer = Layer.Default;
-            this.color = AciColor.Bylayer;
+            this.color = AciColor.ByLayer;
             this.lineType = LineType.ByLayer;
             this.normal = Vector3.UnitZ;
             this.elevation = 0.0f;
@@ -107,7 +107,7 @@ namespace netDxf.Entities
         #region public properties
 
         /// <summary>
-        /// Gets or sets the polyline vertexes.
+        /// Gets or sets the polyline <see cref="netDxf.Entities.PolylineVertex">vertex</see> list.
         /// </summary>
         public List<PolylineVertex> Vertexes
         {
@@ -133,6 +133,9 @@ namespace netDxf.Entities
             }
         }
 
+        /// <summary>
+        /// Gets or sets the polyline <see cref="netDxf.Vector3">normal</see>.
+        /// </summary>
         public Vector3 Normal
         {
             get { return this.normal; }
@@ -145,12 +148,18 @@ namespace netDxf.Entities
             }
         }
 
+        /// <summary>
+        /// Gets or sets the polyline thickness.
+        /// </summary>
         public float Thickness
         {
             get { return this.thickness; }
             set { this.thickness = value; }
         }
 
+        /// <summary>
+        /// Gets or sets the polyline elevation.
+        /// </summary>
         public float Elevation
         {
             get { return this.elevation; }
@@ -161,6 +170,9 @@ namespace netDxf.Entities
 
         #region IPolyline Members
 
+        /// <summary>
+        /// Gets the polyline type.
+        /// </summary>
         public PolylineTypeFlags Flags
         {
             get { return this.flags; }
@@ -179,7 +191,7 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets the entity type.
+        /// Gets the entity <see cref="netDxf.Entities.EntityType">type</see>.
         /// </summary>
         public EntityType Type
         {
@@ -187,7 +199,7 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets or sets the entity color.
+        /// Gets or sets the entity <see cref="netDxf.AciColor">color</see>.
         /// </summary>
         public AciColor Color
         {
@@ -201,7 +213,7 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets or sets the entity layer.
+        /// Gets or sets the entity <see cref="netDxf.Tables.Layer">layer</see>.
         /// </summary>
         public Layer Layer
         {
@@ -215,7 +227,7 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets or sets the entity line type.
+        /// Gets or sets the entity <see cref="netDxf.Tables.LineType">line type</see>.
         /// </summary>
         public LineType LineType
         {
@@ -229,7 +241,7 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets or sets the entity extended data.
+        /// Gets or sets the entity <see cref="netDxf.XData">extende data</see>.
         /// </summary>
         public List<XData> XData
         {
@@ -240,6 +252,10 @@ namespace netDxf.Entities
 
         #region public methods
 
+        /// <summary>
+        /// Sets a constant width for all the polyline segments.
+        /// </summary>
+        /// <param name="width">Polyline width.</param>
         public void SetConstantWidth(float width)
         {
             foreach (PolylineVertex v in this.vertexes)
@@ -255,11 +271,11 @@ namespace netDxf.Entities
         /// <param name="bulgePrecision">Curve segments precision (a value of zero means that no approximation will be made).</param>
         /// <param name="weldThreshold">Tolerance to consider if two new generated vertexes are equal.</param>
         /// <param name="bulgeThreshold">Minimun distance from which approximate curved segments of the polyline.</param>
-        /// <returns>The vertexes are expresed in world coordinate system.</returns>
-        public List<Vector3> PoligonalVertexes(byte bulgePrecision, float weldThreshold, float bulgeThreshold)
+        /// <returns>The vertexes are expresed in object coordinate system.</returns>
+        public List<Vector2> PoligonalVertexes(byte bulgePrecision, float weldThreshold, float bulgeThreshold)
         {
-            List<Vector3> wcsVertexes = new List<Vector3>();
-            Matrix3 rotation = MathHelper.ArbitraryAxis(this.normal);
+            List<Vector2> ocsVertexes = new List<Vector2>();
+
             int index = 0;
 
             foreach (PolylineVertex vertex in this.Vertexes)
@@ -283,7 +299,7 @@ namespace netDxf.Entities
                 {
                     if (bulge == 0 || bulgePrecision == 0)
                     {
-                        wcsVertexes.Add(rotation*new Vector3(p1.X, p1.Y, this.elevation));
+                        ocsVertexes.Add(p1);
                     }
                     else
                     {
@@ -309,7 +325,7 @@ namespace netDxf.Entities
                             Vector2 a1 = p1 - center;
                             float angle = 4*((float) (Math.Atan(bulge)))/(bulgePrecision + 1);
 
-                            wcsVertexes.Add(rotation*new Vector3(p1.X, p1.Y, this.elevation));
+                            ocsVertexes.Add(p1);
                             for (int i = 1; i <= bulgePrecision; i++)
                             {
                                 Vector2 curvePoint = new Vector2();
@@ -320,26 +336,30 @@ namespace netDxf.Entities
                                 if (!curvePoint.Equals(prevCurvePoint, weldThreshold) &&
                                     !curvePoint.Equals(p2, weldThreshold))
                                 {
-                                    wcsVertexes.Add(rotation*new Vector3(curvePoint.X, curvePoint.Y, this.elevation));
+                                    ocsVertexes.Add(curvePoint);
                                 }
                             }
                         }
                         else
                         {
-                            wcsVertexes.Add(rotation*new Vector3(p1.X, p1.Y, this.elevation));
+                            ocsVertexes.Add(p1);
                         }
                     }
                 }
                 index++;
             }
 
-            return wcsVertexes;
+            return ocsVertexes;
         }
 
         #endregion
 
         #region overrides
 
+        /// <summary>
+        /// Converts the value of this instance to its equivalent string representation.
+        /// </summary>
+        /// <returns>The string representation.</returns>
         public override string ToString()
         {
             return TYPE.ToString();

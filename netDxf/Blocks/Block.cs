@@ -46,7 +46,7 @@ namespace netDxf.Blocks
         #region constructors
 
         /// <summary>
-        /// Initialize a new block definition.
+        /// Initializes a new instance of the <c>Block</c> class.
         /// </summary>
         /// <param name="name">Block name.</param>
         public Block(string name)
@@ -82,7 +82,7 @@ namespace netDxf.Blocks
         }
 
         /// <summary>
-        /// Gets or sets the block layer.
+        /// Gets or sets the block <see cref="Layer">layer</see>.
         /// </summary>
         public Layer Layer
         {
@@ -96,7 +96,7 @@ namespace netDxf.Blocks
         }
 
         /// <summary>
-        /// Gets or sets the block attributes.
+        /// Gets or sets the block <see cref="AttributeDefinition">attribute definition</see> list.
         /// </summary>
         public Dictionary<string, AttributeDefinition> Attributes
         {
@@ -110,7 +110,7 @@ namespace netDxf.Blocks
         }
 
         /// <summary>
-        /// Gets or sets the entities that make the block.
+        /// Gets or sets the <see cref="IEntityObject">entity</see> list that makes the block.
         /// </summary>
         public List<IEntityObject> Entities
         {
@@ -127,6 +127,10 @@ namespace netDxf.Blocks
 
         #region overrides
 
+        /// <summary>
+        /// Converts the value of this instance to its equivalent string representation.
+        /// </summary>
+        /// <returns>The string representation.</returns>
         public override string ToString()
         {
             return this.name;

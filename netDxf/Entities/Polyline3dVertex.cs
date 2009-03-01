@@ -26,6 +26,10 @@ using netDxf.Tables;
 
 namespace netDxf.Entities
 {
+
+    /// <summary>
+    /// Represents a 3d polyline vertex.
+    /// </summary>
     public class Polyline3dVertex :
         IVertex
     {
@@ -46,34 +50,34 @@ namespace netDxf.Entities
         #region constructors
 
         /// <summary>
-        /// Initializes a new instance of the Polyline3dVertex class.
+        /// Initializes a new instance of the <c><Polyline3dVertex/c> class.
         /// </summary>
         public Polyline3dVertex()
         {
             this.flags = VertexTypeFlags.Polyline3dVertex;
             this.location = Vector3.Zero;
             this.layer = Layer.Default;
-            this.color = AciColor.Bylayer;
+            this.color = AciColor.ByLayer;
             this.lineType = LineType.ByLayer;
             this.xData = new List<XData>();
         }
 
         /// <summary>
-        /// Initializes a new instance of the Polyline3dVertex class.
+        /// Initializes a new instance of the <c>Polyline3dVertex</c> class.
         /// </summary>
-        /// <param name="location">Polyline vertex coordinates.</param>
+        /// <param name="location">Polyline <see cref="Vector3">vertex</see> coordinates.</param>
         public Polyline3dVertex(Vector3 location)
         {
             this.flags = VertexTypeFlags.Polyline3dVertex;
             this.location = location;
             this.layer = Layer.Default;
-            this.color = AciColor.Bylayer;
+            this.color = AciColor.ByLayer;
             this.lineType = LineType.ByLayer;
             this.xData = new List<XData>();
         }
 
         /// <summary>
-        /// Initializes a new instance of the PolylineVertex class.
+        /// Initializes a new instance of the <c>PolylineVertex</c> class.
         /// </summary>
         /// <param name="x">X coordinate.</param>
         /// <param name="y">Y coordinate.</param>
@@ -83,7 +87,7 @@ namespace netDxf.Entities
             this.flags = VertexTypeFlags.Polyline3dVertex;
             this.location = new Vector3(x, y, z);
             this.layer = Layer.Default;
-            this.color = AciColor.Bylayer;
+            this.color = AciColor.ByLayer;
             this.lineType = LineType.ByLayer;
             this.xData = new List<XData>();
         }
@@ -92,13 +96,8 @@ namespace netDxf.Entities
 
         #region public properties
 
-        public VertexTypeFlags Flags
-        {
-            get { return this.flags; }
-        }
-
-        /// <summary>
-        /// Gets or sets the polyline vertex coordinates.
+       /// <summary>
+        /// Gets or sets the vertex <see cref="netDxf.Vector3">location</see>.
         /// </summary>
         public Vector3 Location
         {
@@ -119,7 +118,7 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets the entity type.
+        /// Gets the entity <see cref="netDxf.Entities.EntityType">type</see>.
         /// </summary>
         public EntityType Type
         {
@@ -127,7 +126,7 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets or sets the entity color.
+        /// Gets or sets the entity <see cref="netDxf.AciColor">color</see>.
         /// </summary>
         public AciColor Color
         {
@@ -141,7 +140,7 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets or sets the entity layer.
+        /// Gets or sets the entity <see cref="netDxf.Tables.Layer">layer</see>.
         /// </summary>
         public Layer Layer
         {
@@ -155,7 +154,7 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets or sets the entity line type.
+        /// Gets or sets the entity <see cref="netDxf.Tables.LineType">line type</see>.
         /// </summary>
         public LineType LineType
         {
@@ -169,7 +168,7 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets or sets the entity extended data.
+        /// Gets or sets the entity <see cref="netDxf.XData">extende data</see>.
         /// </summary>
         public List<XData> XData
         {
@@ -178,8 +177,24 @@ namespace netDxf.Entities
 
         #endregion
 
+        #region IVertex Members
+
+        /// <summary>
+        /// Gets the vertex type.
+        /// </summary>
+        public VertexTypeFlags Flags
+        {
+            get { return this.flags; }
+        }
+
+        #endregion
+
         #region overrides
 
+        /// <summary>
+        /// Converts the value of this instance to its equivalent string representation.
+        /// </summary>
+        /// <returns>The string representation.</returns>
         public override string ToString()
         {
             return String.Format("{0} {1}", TYPE, this.location);

@@ -30,51 +30,31 @@ namespace netDxf
         private readonly int code;
         private readonly string value;
 
+        /// <summary>
+        /// Initalizes a new instance of the <c>CodeValuePair</c> class.
+        /// </summary>
+        /// <param name="code">Dxf code.</param>
+        /// <param name="value">Value for the specified code.</param>
         public CodeValuePair(int code, string value)
         {
             this.code = code;
             this.value = value;
         }
 
+        /// <summary>
+        /// Gets the dxf code.
+        /// </summary>
         public int Code
         {
             get { return this.code; }
         }
 
+        /// <summary>
+        /// Gets the value.
+        /// </summary>
         public string Value
         {
             get { return this.value; }
         }
-
-        //public static void Write(TextWriter writer, int codigo, object valor)
-        //{
-        //    CultureInfo cInfo = CultureInfo.CurrentCulture;
-        //    Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
-        //    writer.WriteLine(codigo);
-        //    writer.WriteLine(valor);
-        //    Thread.CurrentThread.CurrentCulture = cInfo;
-        //}
-
-        //public static CodePair Read<T>(TextReader reader)
-        //{
-        //    CultureInfo cInfo = CultureInfo.CurrentCulture;
-        //    Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
-        //    int code;
-        //    string readCode = reader.ReadLine();
-        //    if (!int.TryParse(readCode, out code))
-        //    {
-        //        throw (new DxfException("Invalid group code " + readCode));
-        //    }
-        //    Type type = typeof (T);
-            
-        //    //if (type is short)
-
-        //    string value = reader.ReadLine();
-
-            
-        //    Thread.CurrentThread.CurrentCulture = cInfo;
-        //    return new CodePair(code, value);
-        //}
-
     }
 }

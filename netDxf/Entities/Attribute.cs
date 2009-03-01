@@ -27,7 +27,7 @@ using netDxf.Tables;
 namespace netDxf.Entities
 {
     /// <summary>
-    /// Represents a attribute entity.
+    /// Represents a attribute <see cref="netDxf.Entities.IEntityObject">entity</see>.
     /// </summary>
     public class Attribute :
         IEntityObject
@@ -48,12 +48,28 @@ namespace netDxf.Entities
         #region constructor
 
         /// <summary>
-        /// Intitializes a new attribute entity.
+        /// Intitializes a new instance of the <c>Attribute</c> class.
         /// </summary>
-        /// <param name="definition">Attribute definition.</param>
+        /// <param name="definition"><see cref="AttributeDefinition">Attribute definition</see>.</param>
         public Attribute(AttributeDefinition definition)
         {
             this.definition = definition;
+            this.value = null;
+            this.color = definition.Color;
+            this.layer = definition.Layer;
+            this.lineType = definition.LineType;
+            this.xData = new List<XData>();
+        }
+
+        /// <summary>
+        /// Intitializes a new instance of the <c>Attribute</c> class.
+        /// </summary>
+        /// <param name="definition"><see cref="AttributeDefinition">Attribute definition</see>.</param>
+        /// <param name="value">Attribute value.</param>
+        public Attribute(AttributeDefinition definition, object value)
+        {
+            this.definition = definition;
+            this.value = value;
             this.color = definition.Color;
             this.layer = definition.Layer;
             this.lineType = definition.LineType;
@@ -64,13 +80,16 @@ namespace netDxf.Entities
 
         #region public property
 
+        /// <summary>
+        /// Gets the attribute definition.
+        /// </summary>
         public AttributeDefinition Definition
         {
             get { return this.definition; }
         }
 
         /// <summary>
-        /// Gets or sets the attribute layer.
+        /// Gets or sets the attribute value.
         /// </summary>
         public object Value
         {
@@ -91,7 +110,7 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets the entity type.
+        /// Gets the entity <see cref="netDxf.Entities.EntityType">type</see>.
         /// </summary>
         public EntityType Type
         {
@@ -99,7 +118,7 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets or sets the entity color.
+        /// Gets or sets the entity <see cref="netDxf.AciColor">color</see>.
         /// </summary>
         public AciColor Color
         {
@@ -113,7 +132,7 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets or sets the entity layer.
+        /// Gets or sets the entity <see cref="netDxf.Tables.Layer">layer</see>.
         /// </summary>
         public Layer Layer
         {
@@ -127,7 +146,7 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets or sets the entity line type.
+        /// Gets or sets the entity <see cref="netDxf.Tables.LineType">line type</see>.
         /// </summary>
         public LineType LineType
         {
@@ -141,7 +160,7 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets or sets the entity extended data.
+        /// Gets or sets the entity <see cref="netDxf.XData">extende data</see>.
         /// </summary>
         public List<XData> XData
         {
@@ -152,6 +171,10 @@ namespace netDxf.Entities
 
         #region overrides
 
+        /// <summary>
+        /// Converts the value of this instance to its equivalent string representation.
+        /// </summary>
+        /// <returns>The string representation.</returns>
         public override string ToString()
         {
             return TYPE.ToString();

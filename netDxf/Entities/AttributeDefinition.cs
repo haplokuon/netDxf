@@ -53,7 +53,7 @@ namespace netDxf.Entities
     }
 
     /// <summary>
-    /// Represents a attribute entity.
+    /// Represents a attribute definition <see cref="netDxf.Entities.IEntityObject">entity</see>.
     /// </summary>
     public class AttributeDefinition :
         IEntityObject
@@ -83,24 +83,51 @@ namespace netDxf.Entities
         #region constructor
 
         /// <summary>
-        /// Intitializes a new attribute entity.
+        /// Intitializes a new instance of the <c>AttributeDefiniton</c> class.
         /// </summary>
-        /// <param name="id">Attribute identifier.</param>
-        /// <remarks>The id cannot contains spaces.</remarks>
+        /// <param name="id">Attribute identifier, the parameter <c>id</c> string cannot contain spaces.</param>
         public AttributeDefinition(string id)
         {
-            this.flags = AttributeFlags.Visible;
+            if (id.Contains(" "))
+                throw new ArgumentException("The id string cannot contain spaces", "id");
             this.id = id;
+            this.flags = AttributeFlags.Visible;
             this.text = string.Empty;
-            this.value = 0;
+            this.value = null;
             this.basePoint = Vector3.Zero;
             this.layer = Layer.Default;
-            this.color = AciColor.Bylayer;
+            this.color = AciColor.ByLayer;
             this.lineType = LineType.ByLayer;
             this.style = TextStyle.Default;
             this.alignment = TextAlignment.BaselineLeft;
-            this.height = this.style.Height;
+            this.height = this.style.Height == 0 ? 1.0f : this.style.Height;
             this.widthFactor = this.style.WidthFactor;
+            this.rotation = 0.0f;
+            this.normal = Vector3.UnitZ;
+            this.xData = new List<XData>();
+        }
+
+        /// <summary>
+        /// Intitializes a new instance of the <c>AttributeDefiniton</c> class.
+        /// </summary>
+        /// <param name="id">Attribute identifier, the parameter <c>id</c> string cannot contain spaces.</param>
+        /// <param name="style">Attribute <see cref="netDxf.Tables.TextStyle">text style.</see></param>
+        public AttributeDefinition(string id, TextStyle style)
+        {
+            if (id.Contains(" "))
+                throw new ArgumentException("The id string cannot contain spaces", "id");
+            this.id = id;
+            this.flags = AttributeFlags.Visible;
+            this.text = string.Empty;
+            this.value = null;
+            this.basePoint = Vector3.Zero;
+            this.layer = Layer.Default;
+            this.color = AciColor.ByLayer;
+            this.lineType = LineType.ByLayer;
+            this.style = style;
+            this.alignment = TextAlignment.BaselineLeft;
+            this.height = style.Height == 0 ? 1.0f : style.Height;
+            this.widthFactor = style.WidthFactor;
             this.rotation = 0.0f;
             this.normal = Vector3.UnitZ;
             this.xData = new List<XData>();
@@ -113,7 +140,6 @@ namespace netDxf.Entities
         /// <summary>
         /// Gets the attribute identifier.
         /// </summary>
-        /// <remarks>The id cannot contains spaces.</remarks>
         public string Id
         {
             get { return this.id; }
@@ -128,12 +154,18 @@ namespace netDxf.Entities
             set { this.text = value; }
         }
 
+        /// <summary>
+        /// Gets or sets the <see cref="netDxf.TextAlignment">text alignment.</see>
+        /// </summary>
         public TextAlignment Alignment
         {
             get { return this.alignment; }
             set { this.alignment = value; }
         }
 
+        /// <summary>
+        /// Gets or sets the attribute text height.
+        /// </summary>
         public float Height
         {
             get { return this.height; }
@@ -145,6 +177,9 @@ namespace netDxf.Entities
             }
         }
 
+        /// <summary>
+        /// Gets or sets the attribute text width factor.
+        /// </summary>
         public float WidthFactor
         {
             get { return this.widthFactor; }
@@ -156,6 +191,9 @@ namespace netDxf.Entities
             }
         }
 
+        /// <summary>
+        /// Gets or sets the attribute text rotation in degrees.
+        /// </summary>
         public float Rotation
         {
             get { return this.rotation; }
@@ -163,7 +201,7 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets or sets the attribute layer.
+        /// Gets or sets the attribute default value.
         /// </summary>
         public object Value
         {
@@ -174,6 +212,9 @@ namespace netDxf.Entities
         /// <summary>
         /// Gets or sets  the attribute text style.
         /// </summary>
+        /// <remarks>
+        /// The <see cref="netDxf.Tables.TextStyle">text style</see> defines the basic properties of the information text.
+        /// </remarks>
         public TextStyle Style
         {
             get { return this.style; }
@@ -181,12 +222,12 @@ namespace netDxf.Entities
             {
                 if (value == null)
                     throw new NullReferenceException("value");
-                this.style = value;
+               this.style = value;
             }
         }
 
         /// <summary>
-        /// Gets or sets the attribute insertion point.
+        /// Gets or sets the attribute <see cref="netDxf.Vector3">insertion point</see>.
         /// </summary>
         public Vector3 BasePoint
         {
@@ -203,6 +244,9 @@ namespace netDxf.Entities
             set { this.flags = value; }
         }
 
+        /// <summary>
+        /// Gets or sets the attribute <see cref="netDxf.Vector3">normal</see>.
+        /// </summary>
         public Vector3 Normal
         {
             get { return this.normal; }
@@ -228,7 +272,7 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets the entity type.
+        /// Gets the entity <see cref="netDxf.Entities.EntityType">type</see>.
         /// </summary>
         public EntityType Type
         {
@@ -236,7 +280,7 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets or sets the entity color.
+        /// Gets or sets the entity <see cref="netDxf.AciColor">color</see>.
         /// </summary>
         public AciColor Color
         {
@@ -250,7 +294,7 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets or sets the entity layer.
+        /// Gets or sets the entity <see cref="netDxf.Tables.Layer">layer</see>.
         /// </summary>
         public Layer Layer
         {
@@ -264,7 +308,7 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets or sets the entity line type.
+        /// Gets or sets the entity <see cref="netDxf.Tables.LineType">line type</see>.
         /// </summary>
         public LineType LineType
         {
@@ -278,7 +322,7 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets or sets the entity extended data.
+        /// Gets or sets the entity <see cref="netDxf.XData">extende data</see>.
         /// </summary>
         public List<XData> XData
         {
@@ -289,6 +333,10 @@ namespace netDxf.Entities
 
         #region overrides
 
+        /// <summary>
+        /// Converts the value of this instance to its equivalent string representation.
+        /// </summary>
+        /// <returns>The string representation.</returns>
         public override string ToString()
         {
             return TYPE.ToString();

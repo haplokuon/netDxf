@@ -26,6 +26,9 @@ using netDxf.Tables;
 
 namespace netDxf.Entities
 {
+    /// <summary>
+    /// Represents a Text <see cref="IEntityObject">entity</see>.
+    /// </summary>
     public class Text :
         IEntityObject
     {
@@ -51,13 +54,16 @@ namespace netDxf.Entities
 
         #region constructors
 
+        /// <summary>
+        /// Initializes a new instance of the <c>Text</c> class.
+        /// </summary>
         public Text()
         {
             this.value = string.Empty;
             this.basePoint = Vector3.Zero;
             this.alignment = TextAlignment.BaselineLeft;
             this.layer = Layer.Default;
-            this.color = AciColor.Bylayer;
+            this.color = AciColor.ByLayer;
             this.lineType = LineType.ByLayer;
             this.normal = Vector3.UnitZ;
             this.style = TextStyle.Default;
@@ -68,13 +74,19 @@ namespace netDxf.Entities
             this.xData = new List<XData>();
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <c>Text</c> class.
+        /// </summary>
+        /// <param name="text">Text string.</param>
+        /// <param name="basePoint">Text base <see cref="Vector3">point</see>.</param>
+        /// <param name="height">Text height.</param>
         public Text(string text, Vector3 basePoint, float height)
         {
             this.value = text;
             this.basePoint = basePoint;
             this.alignment = TextAlignment.BaselineLeft;
             this.layer = Layer.Default;
-            this.color = AciColor.Bylayer;
+            this.color = AciColor.ByLayer;
             this.lineType = LineType.ByLayer;
             this.normal = Vector3.UnitZ;
             this.style = TextStyle.Default;
@@ -85,13 +97,20 @@ namespace netDxf.Entities
             this.xData = new List<XData>();
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <c>Text</c> class.
+        /// </summary>
+        /// <param name="text">Text string.</param>
+        /// <param name="basePoint">Text base <see cref="Vector3">point</see>.</param>
+        /// <param name="height">Text height.</param>
+        /// <param name="style">Text <see cref="TextStyle">style</see>.</param>
         public Text(string text, Vector3 basePoint, float height, TextStyle style)
         {
             this.value = text;
             this.basePoint = basePoint;
             this.alignment = TextAlignment.BaselineLeft;
             this.layer = Layer.Default;
-            this.color = AciColor.Bylayer;
+            this.color = AciColor.ByLayer;
             this.lineType = LineType.ByLayer;
             this.normal = Vector3.UnitZ;
             this.style = style;
@@ -106,6 +125,9 @@ namespace netDxf.Entities
 
         #region public properties
 
+        /// <summary>
+        /// Gets or sets the text rotation.
+        /// </summary>
         public float Rotation
         {
             get { return this.rotation; }
@@ -149,25 +171,36 @@ namespace netDxf.Entities
             set { this.obliqueAngle = value; }
         }
 
-
+        /// <summary>
+        /// Gets or sets the <see cref="netDxf.Tables.TextStyle">text style</see>.
+        /// </summary>
         public TextStyle Style
         {
             get { return this.style; }
             set { this.style = value; }
         }
 
+        /// <summary>
+        /// Gets or sets the text base <see cref="netDxf.Vector3">point</see>.
+        /// </summary>
         public Vector3 BasePoint
         {
             get { return this.basePoint; }
             set { this.basePoint = value; }
         }
 
+        /// <summary>
+        /// Gets or sets the text alignment.
+        /// </summary>
         public TextAlignment Alignment
         {
             get { return this.alignment; }
             set { this.alignment = value; }
         }
 
+        /// <summary>
+        /// Gets or sets the text <see cref="netDxf.Vector3">normal</see>.
+        /// </summary>
         public Vector3 Normal
         {
             get { return this.normal; }
@@ -178,6 +211,9 @@ namespace netDxf.Entities
             }
         }
 
+        /// <summary>
+        /// Gets or sets the text string.
+        /// </summary>
         public string Value
         {
             get { return this.value; }
@@ -197,7 +233,7 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets the entity type.
+        /// Gets the entity <see cref="netDxf.Entities.EntityType">type</see>.
         /// </summary>
         public EntityType Type
         {
@@ -205,7 +241,7 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets or sets the entity color.
+        /// Gets or sets the entity <see cref="netDxf.AciColor">color</see>.
         /// </summary>
         public AciColor Color
         {
@@ -219,7 +255,7 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets or sets the entity layer.
+        /// Gets or sets the entity <see cref="netDxf.Tables.Layer">layer</see>.
         /// </summary>
         public Layer Layer
         {
@@ -233,7 +269,7 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets or sets the entity line type.
+        /// Gets or sets the entity <see cref="netDxf.Tables.LineType">line type</see>.
         /// </summary>
         public LineType LineType
         {
@@ -247,7 +283,7 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets or sets the entity extended data.
+        /// Gets or sets the entity <see cref="netDxf.XData">extende data</see>.
         /// </summary>
         public List<XData> XData
         {
@@ -258,6 +294,10 @@ namespace netDxf.Entities
 
         #region overrides
 
+        /// <summary>
+        /// Converts the value of this instance to its equivalent string representation.
+        /// </summary>
+        /// <returns>The string representation.</returns>
         public override string ToString()
         {
             return TYPE.ToString();

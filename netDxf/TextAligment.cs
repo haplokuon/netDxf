@@ -23,7 +23,7 @@
 namespace netDxf
 {
     /// <summary>
-    /// Text alignment.
+    /// Defines the text alignment.
     /// </summary>
     public enum TextAlignment
     {

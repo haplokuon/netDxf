@@ -27,7 +27,7 @@ using netDxf.Tables;
 namespace netDxf.Entities
 {
     /// <summary>
-    /// Represents an ellipse.
+    /// Represents an ellipse <see cref="netDxf.Entities.IEntityObject">entity</see>.
     /// </summary>
     public class Ellipse :
         IEntityObject
@@ -53,11 +53,12 @@ namespace netDxf.Entities
         #region constructors
 
         /// <summary>
-        /// Initializes a new instance of the ellipse class.
+        /// Initializes a new instance of the <c>Ellipse</c> class.
         /// </summary>
-        /// <param name="center">Center of the ellipse.</param>
-        /// <param name="majorAxis">Major axis of the ellipse.</param>
-        /// <param name="minorAxis">Minor axis of the ellipse.</param>
+        /// <param name="center">Ellipse <see cref="Vector3">center</see> in object coordinates.</param>
+        /// <param name="majorAxis">Ellipse major axis.</param>
+        /// <param name="minorAxis">Ellipse minor axis.</param>
+        /// <remarks>The center Z coordinate represents the elevation of the arc along the normal.</remarks>
         public Ellipse(Vector3 center, float majorAxis, float minorAxis)
         {
             this.center = center;
@@ -67,14 +68,14 @@ namespace netDxf.Entities
             this.endAngle = 360.0f;
             this.rotation = 0.0f;
             this.layer = Layer.Default;
-            this.color = AciColor.Bylayer;
+            this.color = AciColor.ByLayer;
             this.lineType = LineType.ByLayer;
             this.normal = Vector3.UnitZ;
             this.xData = new List<XData>();
         }
 
         /// <summary>
-        /// Initializes a new instance of the ellipse class.
+        /// Initializes a new instance of the <c>ellipse</c> class.
         /// </summary>
         public Ellipse()
         {
@@ -86,7 +87,7 @@ namespace netDxf.Entities
             this.endAngle = 360.0f;
             this.rotation = 0.0f;
             this.layer = Layer.Default;
-            this.color = AciColor.Bylayer;
+            this.color = AciColor.ByLayer;
             this.lineType = LineType.ByLayer;
             this.normal = Vector3.UnitZ;
             this.xData = new List<XData>();
@@ -97,44 +98,75 @@ namespace netDxf.Entities
         #region public properties
 
         /// <summary>
-        /// Gets or sets the ellipse center.
+        /// Gets or sets the ellipse <see cref="netDxf.Vector3">center</see>.
         /// </summary>
+        /// <remarks>The center Z coordinate represents the elevation of the arc along the normal.</remarks>
         public Vector3 Center
         {
             get { return this.center; }
             set { this.center = value; }
         }
 
+        /// <summary>
+        /// Gets or sets the ellipse mayor axis.
+        /// </summary>
         public float MajorAxis
         {
             get { return this.majorAxis; }
-            set { this.majorAxis = value; }
+            set
+            {
+                if(value<=0)
+                    throw new ArgumentOutOfRangeException("value",value,"The major axis value must be greater than zero.");
+                this.majorAxis = value;
+            }
         }
 
+        /// <summary>
+        /// Gets or sets the ellipse minor axis.
+        /// </summary>
         public float MinorAxis
         {
             get { return this.minorAxis; }
-            set { this.minorAxis = value; }
+            set
+            {
+                if (value <= 0)
+                    throw new ArgumentOutOfRangeException("value", value, "The minor axis value must be greater than zero.");
+                this.minorAxis = value;
+            }
         }
 
+        /// <summary>
+        /// Gets or sets the ellipse rotation along its normal.
+        /// </summary>
         public float Rotation
         {
             get { return this.rotation; }
             set { this.rotation = value; }
         }
 
+        /// <summary>
+        /// Gets or sets the ellipse start angle in degrees.
+        /// </summary>
+        /// <remarks><c>StartAngle</c> equals 0 and <c>EndAngle</c> equals 360 for a full ellipse.</remarks>
         public float StartAngle
         {
             get { return this.startAngle; }
             set { this.startAngle = value; }
         }
 
+        /// <summary>
+        /// Gets or sets the ellipse end angle in degrees.
+        /// </summary>
+        /// <remarks><c>StartAngle</c> equals 0 and <c>EndAngle</c> equals 360 for a full ellipse.</remarks>
         public float EndAngle
         {
             get { return this.endAngle; }
             set { this.endAngle = value; }
         }
 
+        /// <summary>
+        /// Gets or sets the ellipse <see cref="netDxf.Vector3">normal</see>.
+        /// </summary>
         public Vector3 Normal
         {
             get { return this.normal; }
@@ -158,7 +190,7 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets the entity type.
+        /// Gets the entity <see cref="netDxf.Entities.EntityType">type</see>.
         /// </summary>
         public EntityType Type
         {
@@ -166,7 +198,7 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets or sets the entity color.
+        /// Gets or sets the entity <see cref="netDxf.AciColor">color</see>.
         /// </summary>
         public AciColor Color
         {
@@ -180,7 +212,7 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets or sets the entity layer.
+        /// Gets or sets the entity <see cref="netDxf.Tables.Layer">layer</see>.
         /// </summary>
         public Layer Layer
         {
@@ -194,7 +226,7 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets or sets the entity line type.
+        /// Gets or sets the entity <see cref="netDxf.Tables.LineType">line type</see>.
         /// </summary>
         public LineType LineType
         {
@@ -207,9 +239,8 @@ namespace netDxf.Entities
             }
         }
 
-
         /// <summary>
-        /// Gets or sets the entity extended data.
+        /// Gets or sets the entity <see cref="netDxf.XData">extende data</see>.
         /// </summary>
         public List<XData> XData
         {
@@ -220,6 +251,11 @@ namespace netDxf.Entities
 
         #region public methods
 
+        /// <summary>
+        /// Converts the ellipse in a list of vertexes.
+        /// </summary>
+        /// <param name="precision">Number of vertexes generated.</param>
+        /// <returns>A list vertexes that represents the ellipse expresed in object coordinate system.</returns>
         public List<Vector2> PolygonalVertexes(byte precision)
         {
             List<Vector2> points = new List<Vector2>();
@@ -284,6 +320,10 @@ namespace netDxf.Entities
 
         #region overrides
 
+        /// <summary>
+        /// Converts the value of this instance to its equivalent string representation.
+        /// </summary>
+        /// <returns>The string representation.</returns>
         public override string ToString()
         {
             return TYPE.ToString();

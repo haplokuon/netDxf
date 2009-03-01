@@ -481,6 +481,9 @@ namespace netDxf
                 case EntityType.Ellipse :
                     this.WriteEllipse((Ellipse)entity);
                     break;
+                case EntityType.NurbsCurve:
+                    this.WriteNurbsCurve((NurbsCurve)entity);
+                    break;
                 case EntityType.Point:
                     this.WritePoint((Point) entity);
                     break;
@@ -631,6 +634,49 @@ namespace netDxf
             {
                 this.WriteCodePair(0, DxfEntityCode.Vertex);
                 this.WriteCodePair(8, ellipse.Layer.Name);
+                this.WriteCodePair(70, 0);
+                this.WriteCodePair(10, v.X);
+                this.WriteCodePair(20, v.Y);
+            }
+            this.WriteCodePair(0, StringCode.EndSequence);
+        }
+
+        private void WriteNurbsCurve(NurbsCurve  nurbsCurve )
+        {
+            if (this.activeSection != StringCode.EntitiesSection && !this.isBlockEntities)
+            {
+                throw new InvalidDxfSectionException(this.activeSection, this.file);
+            }
+
+
+            //we will draw the nurbsCurve as a polyline, it is not supported in AutoCad12 dxf files
+            this.WriteCodePair(0, DxfEntityCode.Polyline);
+
+            this.WriteEntityCommonCodes(nurbsCurve);
+
+            //open polyline
+            this.WriteCodePair(70, 0);
+
+            //dummy point
+            this.WriteCodePair(10, 0.0f);
+            this.WriteCodePair(20, 0.0f);
+            this.WriteCodePair(30, 0.0f);
+
+            this.WriteCodePair(210, nurbsCurve.Normal.X);
+            this.WriteCodePair(220, nurbsCurve.Normal.Y);
+            this.WriteCodePair(230, nurbsCurve.Normal.Z);
+
+            //Obsolete; formerly an “entities follow flag” (optional; ignore if present)
+            //but its needed to load the dxf file in AutoCAD
+            this.WriteCodePair(66, "1");
+
+            this.WriteXData(nurbsCurve.XData);
+
+            List<Vector2> points = nurbsCurve.PolygonalVertexes(30);
+            foreach (Vector2 v in points)
+            {
+                this.WriteCodePair(0, DxfEntityCode.Vertex);
+                this.WriteCodePair(8, nurbsCurve.Layer.Name);
                 this.WriteCodePair(70, 0);
                 this.WriteCodePair(10, v.X);
                 this.WriteCodePair(20, v.Y);
