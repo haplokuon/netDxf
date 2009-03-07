@@ -25,7 +25,7 @@ namespace netDxf
     /// <summary>
     /// Dxf sections.
     /// </summary>
-    public static class StringCode
+    internal static class StringCode
     {
         /// <summary>
         /// not defined.
@@ -78,6 +78,26 @@ namespace netDxf
         public const string LayerTable = "LAYER";
 
         /// <summary>
+        /// view ports.
+        /// </summary>
+        public const string ViewPortTable = "VPORT";
+
+        /// <summary>
+        /// views.
+        /// </summary>
+        public const string ViewTable = "VIEW";
+
+        /// <summary>
+        /// ucs.
+        /// </summary>
+        public const string UcsTable = "UCS";
+        
+        /// <summary>
+        /// block records.
+        /// </summary>
+        public const string BlockRecordTable = "BLOCK_RECORD";
+
+        /// <summary>
         /// line types.
         /// </summary>
         public const string LineTypeTable = "LTYPE";
@@ -90,7 +110,7 @@ namespace netDxf
         /// <summary>
         /// dim styles.
         /// </summary>
-        public const string DimStyleTable = "DIMSTYLE";
+        public const string DimensionStyleTable = "DIMSTYLE";
 
         /// <summary>
         /// extended data application registry.
@@ -110,7 +130,7 @@ namespace netDxf
         /// <summary>
         /// dxf name string.
         /// </summary>
-        public const string BegionBlock = "BLOCK";
+        public const string BeginBlock = "BLOCK";
 
         /// <summary>
         /// end table code.
@@ -121,6 +141,11 @@ namespace netDxf
         /// end of an element sequence
         /// </summary>
         public const string EndSequence = "SEQEND";
+
+        /// <summary>
+        /// dictionary
+        /// </summary>
+        public const string Dictionary = "DICTIONARY";
 
         /// <summary>
         /// end of file

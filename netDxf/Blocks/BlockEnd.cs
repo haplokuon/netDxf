@@ -20,29 +20,34 @@
 
 #endregion
 
-namespace netDxf
+using netDxf.Tables;
+
+namespace netDxf.Blocks
 {
+
     /// <summary>
-    /// Symbols for dxf text strings.
+    /// Represents the termination element of the block definiton.
     /// </summary>
-    /// <remarks>
-    /// These special strings translates to symbols in AutoCad. 
-    /// </remarks>
-    public static class Symbols
+    internal class BlockEnd :
+        DxfObject
     {
-        /// <summary>
-        /// Text string that shows as a diameter 'Ø' character.
-        /// </summary>
-        public const string Diameter = "%%c";
+        private Layer layer;
 
         /// <summary>
-        /// Text string that shows as a degree '°' character.
+        /// Initializes a new instance of the <c>BlockEnd</c> class.
         /// </summary>
-        public const string Degree = "%%d";
+        public BlockEnd(Layer layer) : base(DxfObjectCode.BlockEnd)
+        {
+            this.layer = layer;
+        }
 
         /// <summary>
-        /// Text string that shows as a plus-minus '±' character.
+        /// Gets or sets the block end <see cref="netDxf.Tables.Layer">layer</see>
         /// </summary>
-        public const string PlusMinus = "%%p";
+        public Layer Layer
+        {
+            get { return this.layer; }
+            set { if (value != null) this.layer = value; }
+        }
     }
 }

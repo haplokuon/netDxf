@@ -205,11 +205,11 @@ namespace netDxf
 
     #region entity exceptions
 
-    public class EntityDxfException : DxfException
+    public class DxfEntityException : DxfException
     {
         private readonly string name;
 
-        public EntityDxfException(string name, string file, string message)
+        public DxfEntityException(string name, string file, string message)
             : base(file, message)
         {
             this.name = name;
@@ -221,19 +221,26 @@ namespace netDxf
         }
     }
 
-    public class InvalidCodeValueEntityDxfException : DxfException
+    public class DxfInvalidCodeValueEntityException : DxfException
     {
-        private readonly CodeValuePair codePair;
+        private readonly int code;
+        private readonly string value;
 
-        public InvalidCodeValueEntityDxfException(CodeValuePair codePair, string file, string message)
+        public DxfInvalidCodeValueEntityException(int code, string value, string file, string message)
             : base(file, message)
         {
-            this.codePair = codePair;
+            this.code = code;
+            this.value = value;
         }
 
-        public CodeValuePair CodePair
+        public int Code
         {
-            get { return this.codePair; }
+            get { return this.code; }
+        }
+
+        public string Value
+        {
+            get { return this.value; }
         }
     }
 

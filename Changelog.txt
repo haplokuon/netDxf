@@ -1,0 +1,17 @@
+[0.1.2.0 - 2009/03/07]
++ Added support for AutoCad12, AutoCad2000, AutoCad2004 and AutoCad2007 dxf files
++ The Ellipse entity will be exported as a true ellipse for dxf file version AutoCad2000 and higher
++ Due to the need of keeping unique handles for entities, duplicate objets will not be allowed
++ Added this change log information
++ Added Lightweight entity
++ Lots of internal changes and new classes
+- NurbsCurves will not be allowed temporally, it needs more work to be able to export them as true splines in AutoCad200 and higher dxf files
+
+[0.1.1.0 - 2009/03/01]
++ Added Ellipse entity that will be exported as a polyline in AutoCad12 dxf files
++ Added NubsCurve entity that will be exported as a polyline in AutoCad12 dxf files
++ Added many new comments
++ Added a chm library help file
+
+[0.1.0.0 - 2009/02/28]
++ First public release

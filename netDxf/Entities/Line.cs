@@ -30,20 +30,20 @@ namespace netDxf.Entities
     /// Represents a line <see cref="netDxf.Entities.IEntityObject">entity</see>.
     /// </summary>
     public class Line :
+        DxfObject,
         IEntityObject
     {
         #region private fields
 
-        private const string DXF_NAME = DxfEntityCode.Line;
         private const EntityType TYPE = EntityType.Line;
-        private Vector3 startPoint;
-        private Vector3 endPoint;
+        private Vector3f startPoint;
+        private Vector3f endPoint;
         private float thickness;
         private AciColor color;
         private Layer layer;
         private LineType lineType;
-        private Vector3 normal;
-        private readonly List<XData> xData;
+        private Vector3f normal;
+        private Dictionary<ApplicationRegistry, XData> xData;
 
         #endregion
 
@@ -52,9 +52,10 @@ namespace netDxf.Entities
         /// <summary>
         /// Initializes a new instance of the <c>Line</c> class.
         /// </summary>
-        /// <param name="startPoint">Line <see cref="Vector3">start point.</see></param>
-        /// <param name="endPoint">Line <see cref="Vector3">end point.</see></param>
-        public Line(Vector3 startPoint, Vector3 endPoint)
+        /// <param name="startPoint">Line <see cref="Vector3f">start point.</see></param>
+        /// <param name="endPoint">Line <see cref="Vector3f">end point.</see></param>
+        public Line(Vector3f startPoint, Vector3f endPoint) 
+            : base(DxfObjectCode.Line)
         {
             this.startPoint = startPoint;
             this.endPoint = endPoint;
@@ -62,23 +63,22 @@ namespace netDxf.Entities
             this.layer = Layer.Default;
             this.color = AciColor.ByLayer;
             this.lineType = LineType.ByLayer;
-            this.normal = Vector3.UnitZ;
-            this.xData = new List<XData>();
+            this.normal = Vector3f.UnitZ;
         }
 
         /// <summary>
         /// Initializes a new instance of the <c>Line</c> class.
         /// </summary>
         public Line()
+            : base(DxfObjectCode.Line)
         {
-            this.startPoint = Vector3.Zero;
-            this.endPoint = Vector3.Zero;
+            this.startPoint = Vector3f.Zero;
+            this.endPoint = Vector3f.Zero;
             this.thickness = 0.0f;
             this.layer = Layer.Default;
             this.color = AciColor.ByLayer;
             this.lineType = LineType.ByLayer;
-            this.normal = Vector3.UnitZ;
-            this.xData = new List<XData>();
+            this.normal = Vector3f.UnitZ;
         }
 
         #endregion
@@ -86,18 +86,18 @@ namespace netDxf.Entities
         #region public properties
 
         /// <summary>
-        /// Gets or sets the line <see cref="netDxf.Vector3">start point</see>.
+        /// Gets or sets the line <see cref="netDxf.Vector3f">start point</see>.
         /// </summary>
-        public Vector3 StartPoint
+        public Vector3f StartPoint
         {
             get { return this.startPoint; }
             set { this.startPoint = value; }
         }
 
         /// <summary>
-        /// Gets or sets the line <see cref="netDxf.Vector3">end point</see>.
+        /// Gets or sets the line <see cref="netDxf.Vector3f">end point</see>.
         /// </summary>
-        public Vector3 EndPoint
+        public Vector3f EndPoint
         {
             get { return this.endPoint; }
             set { this.endPoint = value; }
@@ -113,14 +113,14 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets or sets the line <see cref="netDxf.Vector3">normal</see>.
+        /// Gets or sets the line <see cref="netDxf.Vector3f">normal</see>.
         /// </summary>
-        public Vector3 Normal
+        public Vector3f Normal
         {
             get { return this.normal; }
             set
             {
-                if (Vector3.Zero == value)
+                if (Vector3f.Zero == value)
                     throw new ArgumentNullException("value","The normal can not be the zero vector");
                 value.Normalize();
                 this.normal = value;
@@ -131,15 +131,7 @@ namespace netDxf.Entities
 
         #region IEntityObject Members
 
-        /// <summary>
-        /// Gets the dxf code that represents the entity.
-        /// </summary>
-        public string DxfName
-        {
-            get { return DXF_NAME; }
-        }
-
-        /// <summary>
+       /// <summary>
         /// Gets the entity <see cref="netDxf.Entities.EntityType">type</see>.
         /// </summary>
         public EntityType Type
@@ -192,9 +184,10 @@ namespace netDxf.Entities
         /// <summary>
         /// Gets or sets the entity <see cref="netDxf.XData">extende data</see>.
         /// </summary>
-        public List<XData> XData
+        public Dictionary<ApplicationRegistry, XData> XData
         {
             get { return this.xData; }
+            set { this.xData = value; }
         }
 
         #endregion
@@ -211,5 +204,6 @@ namespace netDxf.Entities
         }
 
         #endregion
+
     }
 }

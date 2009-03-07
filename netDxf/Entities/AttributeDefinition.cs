@@ -56,18 +56,18 @@ namespace netDxf.Entities
     /// Represents a attribute definition <see cref="netDxf.Entities.IEntityObject">entity</see>.
     /// </summary>
     public class AttributeDefinition :
+        DxfObject,
         IEntityObject
     {
         #region private fields
 
-        private const string DXF_NAME = DxfEntityCode.AttributeDefinition;
         private const EntityType TYPE = EntityType.AttributeDefinition;
         private readonly string id;
         private string text;
         private object value;
         private TextStyle style;
         private AciColor color;
-        private Vector3 basePoint;
+        private Vector3f basePoint;
         private Layer layer;
         private LineType lineType;
         private AttributeFlags flags;
@@ -75,8 +75,8 @@ namespace netDxf.Entities
         private float height;
         private float widthFactor;
         private float rotation;
-        private Vector3 normal;
-        private readonly List<XData> xData;
+        private Vector3f normal;
+        private Dictionary<ApplicationRegistry, XData> xData;
 
         #endregion
 
@@ -87,6 +87,7 @@ namespace netDxf.Entities
         /// </summary>
         /// <param name="id">Attribute identifier, the parameter <c>id</c> string cannot contain spaces.</param>
         public AttributeDefinition(string id)
+            : base(DxfObjectCode.AttributeDefinition)
         {
             if (id.Contains(" "))
                 throw new ArgumentException("The id string cannot contain spaces", "id");
@@ -94,7 +95,7 @@ namespace netDxf.Entities
             this.flags = AttributeFlags.Visible;
             this.text = string.Empty;
             this.value = null;
-            this.basePoint = Vector3.Zero;
+            this.basePoint = Vector3f.Zero;
             this.layer = Layer.Default;
             this.color = AciColor.ByLayer;
             this.lineType = LineType.ByLayer;
@@ -103,8 +104,7 @@ namespace netDxf.Entities
             this.height = this.style.Height == 0 ? 1.0f : this.style.Height;
             this.widthFactor = this.style.WidthFactor;
             this.rotation = 0.0f;
-            this.normal = Vector3.UnitZ;
-            this.xData = new List<XData>();
+            this.normal = Vector3f.UnitZ;
         }
 
         /// <summary>
@@ -113,6 +113,7 @@ namespace netDxf.Entities
         /// <param name="id">Attribute identifier, the parameter <c>id</c> string cannot contain spaces.</param>
         /// <param name="style">Attribute <see cref="netDxf.Tables.TextStyle">text style.</see></param>
         public AttributeDefinition(string id, TextStyle style)
+            : base(DxfObjectCode.AttributeDefinition)
         {
             if (id.Contains(" "))
                 throw new ArgumentException("The id string cannot contain spaces", "id");
@@ -120,7 +121,7 @@ namespace netDxf.Entities
             this.flags = AttributeFlags.Visible;
             this.text = string.Empty;
             this.value = null;
-            this.basePoint = Vector3.Zero;
+            this.basePoint = Vector3f.Zero;
             this.layer = Layer.Default;
             this.color = AciColor.ByLayer;
             this.lineType = LineType.ByLayer;
@@ -129,8 +130,7 @@ namespace netDxf.Entities
             this.height = style.Height == 0 ? 1.0f : style.Height;
             this.widthFactor = style.WidthFactor;
             this.rotation = 0.0f;
-            this.normal = Vector3.UnitZ;
-            this.xData = new List<XData>();
+            this.normal = Vector3f.UnitZ;
         }
 
         #endregion
@@ -227,9 +227,9 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets or sets the attribute <see cref="netDxf.Vector3">insertion point</see>.
+        /// Gets or sets the attribute <see cref="netDxf.Vector3f">insertion point</see>.
         /// </summary>
-        public Vector3 BasePoint
+        public Vector3f BasePoint
         {
             get { return this.basePoint; }
             set { this.basePoint = value; }
@@ -245,14 +245,14 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets or sets the attribute <see cref="netDxf.Vector3">normal</see>.
+        /// Gets or sets the attribute <see cref="netDxf.Vector3f">normal</see>.
         /// </summary>
-        public Vector3 Normal
+        public Vector3f Normal
         {
             get { return this.normal; }
             set
             {
-                if (Vector3.Zero == value)
+                if (Vector3f.Zero == value)
                     throw new ArgumentNullException("value", "The normal can not be the zero vector");
                 value.Normalize();
                 this.normal = value;
@@ -262,14 +262,6 @@ namespace netDxf.Entities
         #endregion
 
         #region IEntityObject Members
-
-        /// <summary>
-        /// Gets the dxf code that represents the entity.
-        /// </summary>
-        public string DxfName
-        {
-            get { return DXF_NAME; }
-        }
 
         /// <summary>
         /// Gets the entity <see cref="netDxf.Entities.EntityType">type</see>.
@@ -324,9 +316,13 @@ namespace netDxf.Entities
         /// <summary>
         /// Gets or sets the entity <see cref="netDxf.XData">extende data</see>.
         /// </summary>
-        public List<XData> XData
+        public Dictionary<ApplicationRegistry, XData> XData
         {
             get { return this.xData; }
+            set
+            {
+                throw new ArgumentException("Extended data not avaliable for attribute definitions", "value");
+            }
         }
 
         #endregion

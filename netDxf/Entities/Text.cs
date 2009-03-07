@@ -30,25 +30,25 @@ namespace netDxf.Entities
     /// Represents a Text <see cref="IEntityObject">entity</see>.
     /// </summary>
     public class Text :
+        DxfObject,
         IEntityObject
     {
         #region private fields
 
-        private const string DXF_NAME = DxfEntityCode.Text;
         private const EntityType TYPE = EntityType.Text;
         private TextAlignment alignment;
-        private Vector3 basePoint;
+        private Vector3f basePoint;
         private AciColor color;
         private Layer layer;
         private LineType lineType;
-        private Vector3 normal;
+        private Vector3f normal;
         private float obliqueAngle;
         private TextStyle style;
         private string value;
         private float height;
         private float widthFactor;
         private float rotation;
-        private readonly List<XData> xData;
+        private Dictionary<ApplicationRegistry, XData> xData;
 
         #endregion
 
@@ -57,30 +57,31 @@ namespace netDxf.Entities
         /// <summary>
         /// Initializes a new instance of the <c>Text</c> class.
         /// </summary>
-        public Text()
+        public Text() 
+            : base(DxfObjectCode.Text)
         {
             this.value = string.Empty;
-            this.basePoint = Vector3.Zero;
+            this.basePoint = Vector3f.Zero;
             this.alignment = TextAlignment.BaselineLeft;
             this.layer = Layer.Default;
             this.color = AciColor.ByLayer;
             this.lineType = LineType.ByLayer;
-            this.normal = Vector3.UnitZ;
+            this.normal = Vector3f.UnitZ;
             this.style = TextStyle.Default;
             this.rotation = 0.0f;
             this.height = 0.0f;
             this.widthFactor = 1.0f;
             this.obliqueAngle = 0.0f;
-            this.xData = new List<XData>();
         }
 
         /// <summary>
         /// Initializes a new instance of the <c>Text</c> class.
         /// </summary>
         /// <param name="text">Text string.</param>
-        /// <param name="basePoint">Text base <see cref="Vector3">point</see>.</param>
+        /// <param name="basePoint">Text base <see cref="Vector3f">point</see>.</param>
         /// <param name="height">Text height.</param>
-        public Text(string text, Vector3 basePoint, float height)
+        public Text(string text, Vector3f basePoint, float height)
+            : base(DxfObjectCode.Text)
         {
             this.value = text;
             this.basePoint = basePoint;
@@ -88,23 +89,23 @@ namespace netDxf.Entities
             this.layer = Layer.Default;
             this.color = AciColor.ByLayer;
             this.lineType = LineType.ByLayer;
-            this.normal = Vector3.UnitZ;
+            this.normal = Vector3f.UnitZ;
             this.style = TextStyle.Default;
             this.rotation = 0.0f;
             this.height = height;
             this.widthFactor = 1.0f;
             this.obliqueAngle = 0.0f;
-            this.xData = new List<XData>();
         }
 
         /// <summary>
         /// Initializes a new instance of the <c>Text</c> class.
         /// </summary>
         /// <param name="text">Text string.</param>
-        /// <param name="basePoint">Text base <see cref="Vector3">point</see>.</param>
+        /// <param name="basePoint">Text base <see cref="Vector3f">point</see>.</param>
         /// <param name="height">Text height.</param>
         /// <param name="style">Text <see cref="TextStyle">style</see>.</param>
-        public Text(string text, Vector3 basePoint, float height, TextStyle style)
+        public Text(string text, Vector3f basePoint, float height, TextStyle style)
+            : base(DxfObjectCode.Text)
         {
             this.value = text;
             this.basePoint = basePoint;
@@ -112,13 +113,12 @@ namespace netDxf.Entities
             this.layer = Layer.Default;
             this.color = AciColor.ByLayer;
             this.lineType = LineType.ByLayer;
-            this.normal = Vector3.UnitZ;
+            this.normal = Vector3f.UnitZ;
             this.style = style;
             this.height = height;
             this.widthFactor = style.WidthFactor;
             this.obliqueAngle = style.ObliqueAngle;
             this.rotation = 0.0f;
-            this.xData = new List<XData>();
         }
 
         #endregion
@@ -181,9 +181,9 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets or sets the text base <see cref="netDxf.Vector3">point</see>.
+        /// Gets or sets the text base <see cref="netDxf.Vector3f">point</see>.
         /// </summary>
-        public Vector3 BasePoint
+        public Vector3f BasePoint
         {
             get { return this.basePoint; }
             set { this.basePoint = value; }
@@ -199,9 +199,9 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets or sets the text <see cref="netDxf.Vector3">normal</see>.
+        /// Gets or sets the text <see cref="netDxf.Vector3f">normal</see>.
         /// </summary>
-        public Vector3 Normal
+        public Vector3f Normal
         {
             get { return this.normal; }
             set
@@ -224,15 +224,7 @@ namespace netDxf.Entities
 
         #region IEntityObject Members
 
-        /// <summary>
-        /// Gets the dxf code that represents the entity.
-        /// </summary>
-        public string DxfName
-        {
-            get { return DXF_NAME; }
-        }
-
-        /// <summary>
+      /// <summary>
         /// Gets the entity <see cref="netDxf.Entities.EntityType">type</see>.
         /// </summary>
         public EntityType Type
@@ -285,9 +277,10 @@ namespace netDxf.Entities
         /// <summary>
         /// Gets or sets the entity <see cref="netDxf.XData">extende data</see>.
         /// </summary>
-        public List<XData> XData
+        public Dictionary<ApplicationRegistry, XData> XData
         {
             get { return this.xData; }
+            set { this.xData = value; }
         }
 
         #endregion

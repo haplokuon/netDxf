@@ -38,17 +38,17 @@ namespace netDxf.Entities
     /// The maximum number of vertex indexes in a face is 4.
     /// </remarks>
     public class PolyfaceMeshFace :
+        DxfObject,
         IVertex
     {
         #region private fields
-        protected const string DXF_NAME = DxfEntityCode.Vertex;
         protected const EntityType TYPE = EntityType.PolylineVertex;
         protected VertexTypeFlags flags;
         protected int[] vertexIndexes;
         protected AciColor color;
         protected Layer layer;
         protected LineType lineType;
-        protected readonly List<XData> xData;
+        protected Dictionary<ApplicationRegistry, XData> xData;
 
         #endregion
 
@@ -61,13 +61,13 @@ namespace netDxf.Entities
         /// By default the face is made up of three vertexes.
         /// </remarks>
         public PolyfaceMeshFace()
+            : base(DxfObjectCode.Vertex)
         {
             this.flags = VertexTypeFlags.PolyfaceMeshVertex;
             this.vertexIndexes = new int[3];
             this.layer = Layer.Default;
             this.color = AciColor.ByLayer;
             this.lineType = LineType.ByLayer;
-            this.xData = new List<XData>();
         }
 
         /// <summary>
@@ -75,6 +75,7 @@ namespace netDxf.Entities
         /// </summary>
         /// <param name="vertexIndexes">Array of indexes to the vertex list of a polyface mesh that makes up the face.</param>
         public PolyfaceMeshFace(int[] vertexIndexes)
+            : base(DxfObjectCode.Vertex)
         {
             if (vertexIndexes == null)
                 throw new ArgumentNullException("vertexIndexes");
@@ -86,7 +87,6 @@ namespace netDxf.Entities
             this.layer = Layer.Default;
             this.color = AciColor.ByLayer;
             this.lineType = LineType.ByLayer;
-            this.xData = new List<XData>();
         }
 
         #endregion
@@ -125,14 +125,6 @@ namespace netDxf.Entities
         #endregion
 
         #region IEntityObject Members
-
-        /// <summary>
-        /// Gets the dxf code that represents the entity.
-        /// </summary>
-        public string DxfName
-        {
-            get { return DXF_NAME; }
-        }
 
         /// <summary>
         /// Gets the entity <see cref="netDxf.Entities.EntityType">type</see>.
@@ -187,9 +179,10 @@ namespace netDxf.Entities
         /// <summary>
         /// Gets or sets the entity <see cref="netDxf.XData">extende data</see>.
         /// </summary>
-        public List<XData> XData
+        public Dictionary<ApplicationRegistry, XData> XData
         {
             get { return this.xData; }
+            set { this.xData = value; }
         }
 
         #endregion

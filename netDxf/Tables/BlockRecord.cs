@@ -20,29 +20,62 @@
 
 #endregion
 
-namespace netDxf
+using System;
+
+namespace netDxf.Tables
 {
     /// <summary>
-    /// Symbols for dxf text strings.
+    /// Represent the record of a block in the tables section.
     /// </summary>
-    /// <remarks>
-    /// These special strings translates to symbols in AutoCad. 
-    /// </remarks>
-    public static class Symbols
+    internal class BlockRecord :
+        DxfObject,
+        ITableObject
     {
-        /// <summary>
-        /// Text string that shows as a diameter 'Ø' character.
-        /// </summary>
-        public const string Diameter = "%%c";
+        #region private fields
+
+        private readonly string name;
+
+        #endregion
+
+        #region constructors
 
         /// <summary>
-        /// Text string that shows as a degree '°' character.
+        /// Initializes a new instance of the <c>BlockRecord</c> class.
         /// </summary>
-        public const string Degree = "%%d";
+        /// <param name="name">Block definition name.</param>
+        public BlockRecord(string name)
+            : base(DxfObjectCode.BlockRecord)
+        {
+            if (string.IsNullOrEmpty(name))
+                throw (new ArgumentNullException("name"));
+            this.name = name;
+        }
+
+        #endregion
+
+        #region ITableObject Members
 
         /// <summary>
-        /// Text string that shows as a plus-minus '±' character.
+        /// Gets the block record name.
         /// </summary>
-        public const string PlusMinus = "%%p";
+        public string Name
+        {
+            get { return this.name; }
+        }
+
+        #endregion
+
+        #region overrides
+
+        /// <summary>
+        /// Converts the value of this instance to its equivalent string representation.
+        /// </summary>
+        /// <returns>The string representation.</returns>
+        public override string ToString()
+        {
+            return this.name;
+        }
+
+        #endregion
     }
 }

@@ -1,4 +1,4 @@
-﻿#region netDxf, Copyright(C) 2009 Daniel Carvajal, Licensed under LGPL.
+#region netDxf, Copyright(C) 2009 Daniel Carvajal, Licensed under LGPL.
 
 //                        netDxf library
 // Copyright (C) 2009 Daniel Carvajal (haplokuon@gmail.com)
@@ -27,21 +27,48 @@ using netDxf.Tables;
 namespace netDxf.Entities
 {
     /// <summary>
-    /// Represents a solid <see cref="IEntityObject">entity</see>.
+    /// Defines which edges are hidden.
     /// </summary>
-    public class Solid :
+    [Flags]
+    public enum EdgeFlags
+    {
+        /// <summary>
+        /// All edges as visibles (default).
+        /// </summary>
+        Visibles = 0,
+        /// <summary>
+        /// First edge is invisible.
+        /// </summary>
+        First = 1,
+        /// <summary>
+        /// Second edge is invisible.
+        /// </summary>
+        Second = 2,
+        /// <summary>
+        /// Third edge is invisible.
+        /// </summary>
+        Third = 4,
+        /// <summary>
+        /// Fourth edge is invisible.
+        /// </summary>
+        Fourth = 8
+    }
+
+    /// <summary>
+    /// Represents a 3DFace <see cref="netDxf.Entities.IEntityObject">entity</see>.
+    /// </summary>
+    public class Face3d :
         DxfObject,
         IEntityObject
     {
         #region private fields
 
-        private const EntityType TYPE = EntityType.Solid;
+        private const EntityType TYPE = EntityType.Face3D;
         private Vector3f firstVertex;
         private Vector3f secondVertex;
         private Vector3f thirdVertex;
         private Vector3f fourthVertex;
-        private float thickness;
-        private Vector3f normal;
+        private EdgeFlags edgeFlags;
         private Layer layer;
         private AciColor color;
         private LineType lineType;
@@ -52,41 +79,41 @@ namespace netDxf.Entities
         #region constructors
 
         /// <summary>
-        /// Initializes a new instance of the <c>Solid</c> class.
+        /// Initializes a new instance of the <c>Face3D</c> class.
         /// </summary>
-        /// <param name="firstVertex">Solid <see cref="Vector3f">first vertex</see>.</param>
-        /// <param name="secondVertex">Solid <see cref="Vector3f">second vertex</see>.</param>
-        /// <param name="thirdVertex">Solid <see cref="Vector3f">third vertex</see>.</param>
-        /// <param name="fourthVertex">Solid <see cref="Vector3f">fourth vertex</see>.</param>
-        public Solid(Vector3f firstVertex, Vector3f secondVertex, Vector3f thirdVertex, Vector3f fourthVertex)
-            : base(DxfObjectCode.Solid)
+        /// <param name="firstVertex">3d face <see cref="Vector3f">first vertex</see>.</param>
+        /// <param name="secondVertex">3d face <see cref="Vector3f">second vertex</see>.</param>
+        /// <param name="thirdVertex">3d face <see cref="Vector3f">third vertex</see>.</param>
+        /// <param name="fourthVertex">3d face <see cref="Vector3f">fourth vertex</see>.</param>
+        public Face3d(Vector3f firstVertex, Vector3f secondVertex, Vector3f thirdVertex, Vector3f fourthVertex)
+            : base(DxfObjectCode.Face3D)
         {
             this.firstVertex = firstVertex;
             this.secondVertex = secondVertex;
             this.thirdVertex = thirdVertex;
             this.fourthVertex = fourthVertex;
-            this.thickness = 0.0f;
-            this.normal = Vector3f.UnitZ;
+            this.edgeFlags = EdgeFlags.Visibles;
             this.layer = Layer.Default;
             this.color = AciColor.ByLayer;
             this.lineType = LineType.ByLayer;
+            this.xData = new Dictionary<ApplicationRegistry, XData>();
         }
 
         /// <summary>
-        /// Initializes a new instance of the <c>Solid</c> class.
+        /// Initializes a new instance of the <c>Face3D</c> class.
         /// </summary>
-        public Solid()
-            : base(DxfObjectCode.Solid)
+        public Face3d()
+            : base(DxfObjectCode.Face3D)
         {
             this.firstVertex = Vector3f.Zero;
             this.secondVertex = Vector3f.Zero;
             this.thirdVertex = Vector3f.Zero;
             this.fourthVertex = Vector3f.Zero;
-            this.thickness = 0.0f;
-            this.normal = Vector3f.UnitZ;
+            this.edgeFlags = EdgeFlags.Visibles;
             this.layer = Layer.Default;
             this.color = AciColor.ByLayer;
             this.lineType = LineType.ByLayer;
+            this.xData = new Dictionary<ApplicationRegistry, XData>();
         }
 
         #endregion
@@ -94,7 +121,7 @@ namespace netDxf.Entities
         #region public properties
 
         /// <summary>
-        /// Gets or sets the first solid <see cref="netDxf.Vector3f">vertex</see>.
+        /// Gets or sets the first 3d face <see cref="netDxf.Vector3f">vertex</see>.
         /// </summary>
         public Vector3f FirstVertex
         {
@@ -103,7 +130,7 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets or sets the second solid <see cref="netDxf.Vector3f">vertex</see>.
+        /// Gets or sets the second 3d face <see cref="netDxf.Vector3f">vertex</see>.
         /// </summary>
         public Vector3f SecondVertex
         {
@@ -112,7 +139,7 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets or sets the third solid <see cref="netDxf.Vector3f">vertex</see>.
+        /// Gets or sets the third 3d face <see cref="netDxf.Vector3f">vertex</see>.
         /// </summary>
         public Vector3f ThirdVertex
         {
@@ -121,7 +148,7 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets or sets the fourth solid <see cref="netDxf.Vector3f">vertex</see>.
+        /// Gets or sets the fourth 3d face <see cref="netDxf.Vector3f">vertex</see>.
         /// </summary>
         public Vector3f FourthVertex
         {
@@ -130,34 +157,19 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets or sets the thickness of the solid.
+        /// Gets or set the 3d face edge visibility.
         /// </summary>
-        public float Thickness
+        public EdgeFlags EdgeFlags
         {
-            get { return this.thickness; }
-            set { this.thickness = value; }
-        }
-
-        /// <summary>
-        /// Gets or sets the solid <see cref="netDxf.Vector3f">normal</see>.
-        /// </summary>
-        public Vector3f Normal
-        {
-            get { return this.normal; }
-            set
-            {
-                if (Vector3f.Zero == value)
-                    throw new ArgumentNullException("value", "The normal can not be the zero vector");
-                value.Normalize();
-                this.normal = value;
-            }
+            get { return this.edgeFlags; }
+            set { this.edgeFlags = value; }
         }
 
         #endregion
 
         #region IEntityObject Members
 
-      /// <summary>
+        /// <summary>
         /// Gets the entity <see cref="netDxf.Entities.EntityType">type</see>.
         /// </summary>
         public EntityType Type

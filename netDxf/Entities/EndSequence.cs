@@ -20,29 +20,34 @@
 
 #endregion
 
-namespace netDxf
+using netDxf.Tables;
+
+namespace netDxf.Entities
 {
+
     /// <summary>
-    /// Symbols for dxf text strings.
+    /// Represents the terminator element of a vertex sequence in polylines or attributes in a block reference.
     /// </summary>
-    /// <remarks>
-    /// These special strings translates to symbols in AutoCad. 
-    /// </remarks>
-    public static class Symbols
+    internal class EndSequence :
+        DxfObject
     {
-        /// <summary>
-        /// Text string that shows as a diameter 'Ø' character.
-        /// </summary>
-        public const string Diameter = "%%c";
+        private Layer layer;
 
         /// <summary>
-        /// Text string that shows as a degree '°' character.
+        /// Initializes a new instance of the <c>EndSequence</c> class.
         /// </summary>
-        public const string Degree = "%%d";
+        public EndSequence() : base(DxfObjectCode.EndSequence)
+        {
+            this.layer = Layer.Default;
+        }
 
         /// <summary>
-        /// Text string that shows as a plus-minus '±' character.
+        /// Gets or sets the end sequence <see cref="netDxf.Tables.Layer">layer</see>
         /// </summary>
-        public const string PlusMinus = "%%p";
+        public Layer Layer
+        {
+            get { return this.layer; }
+            set { if (value != null) this.layer = value; }
+        }
     }
 }

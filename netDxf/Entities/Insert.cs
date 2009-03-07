@@ -29,25 +29,26 @@ namespace netDxf.Entities
 {
 
     /// <summary>
-    /// Represents a block insertion <see cref="IEntityObject">entity.
+    /// Represents a block insertion <see cref="netDxf.Entities.IEntityObject">entity</see>.
     /// </summary>
     public class Insert :
+        DxfObject,
         IEntityObject
     {
         #region private fields
 
-        private const string DXF_NAME = DxfEntityCode.Insert;
+        private readonly EndSequence endSequence;
         private const EntityType TYPE = EntityType.Insert;
         private AciColor color;
         private Layer layer;
         private LineType lineType;
-        private Block block;
-        private Vector3 insertionPoint;
-        private Vector3 scale;
+        private readonly Block block;
+        private Vector3f insertionPoint;
+        private Vector3f scale;
         private float rotation;
-        private Vector3 normal;
+        private Vector3f normal;
         private readonly List<Attribute> attributes;
-        private readonly List<XData> xData;
+        private Dictionary<ApplicationRegistry, XData> xData;
 
         #endregion
 
@@ -57,17 +58,18 @@ namespace netDxf.Entities
         /// Initializes a new instance of the <c>Insert</c> class.
         /// </summary>
         /// <param name="block">Insert block definition.</param>
-        /// <param name="insertionPoint">Insert <see cref="Vector3">point</see>.</param>
-        public Insert(Block block, Vector3 insertionPoint)
+        /// <param name="insertionPoint">Insert <see cref="Vector3f">point</see>.</param>
+        public Insert(Block block, Vector3f insertionPoint)
+            : base (DxfObjectCode.Insert)
         {
             if (block == null)
                 throw new ArgumentNullException("block");
 
             this.block = block;
             this.insertionPoint = insertionPoint;
-            this.scale = new Vector3(1.0f, 1.0f, 1.0f);
+            this.scale = new Vector3f(1.0f, 1.0f, 1.0f);
             this.rotation = 0.0f;
-            this.normal = Vector3.UnitZ;
+            this.normal = Vector3f.UnitZ;
             this.layer = Layer.Default;
             this.color = AciColor.ByLayer;
             this.lineType = LineType.ByLayer;
@@ -76,23 +78,24 @@ namespace netDxf.Entities
             {
                 this.attributes.Add(new Attribute(attdef));
             }
-            this.xData = new List<XData>();
+            this.endSequence = new EndSequence();
         }
 
         /// <summary>
         /// Initializes a new instance of the <c>Insert</c> class.
         /// </summary>
-        /// <param name="block">Insert block definition.</param>
+        /// <param name="block">Insert <see cref="Blocks.Block">block definition</see>.</param>
         public Insert(Block block)
+            : base(DxfObjectCode.Insert)
         {
             if (block == null)
                 throw new ArgumentNullException("block");
 
             this.block = block;
-            this.insertionPoint = Vector3.Zero;
-            this.scale = new Vector3(1.0f, 1.0f, 1.0f);
+            this.insertionPoint = Vector3f.Zero;
+            this.scale = new Vector3f(1.0f, 1.0f, 1.0f);
             this.rotation = 0.0f;
-            this.normal = Vector3.UnitZ;
+            this.normal = Vector3f.UnitZ;
             this.layer = Layer.Default;
             this.color = AciColor.ByLayer;
             this.lineType = LineType.ByLayer;
@@ -101,7 +104,7 @@ namespace netDxf.Entities
             {
                 this.attributes.Add(new Attribute(attdef));
             }
-            this.xData = new List<XData>();
+            this.endSequence = new EndSequence();
         }
 
         #endregion
@@ -117,7 +120,7 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets the insert block definition.
+        /// Gets the insert <see cref="Blocks.Block">block definition</see>.
         /// </summary>
         public Block Block
         {
@@ -125,25 +128,25 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets or sets the insert point.
+        /// Gets or sets the insert <see cref="Vector3f">point</see>.
         /// </summary>
-        public Vector3 InsertionPoint
+        public Vector3f InsertionPoint
         {
             get { return this.insertionPoint; }
             set { this.insertionPoint = value; }
         }
 
         /// <summary>
-        /// Gets or sets the insert scale.
+        /// Gets or sets the insert <see cref="Vector3f">scale</see>.
         /// </summary>
-        public Vector3 Scale
+        public Vector3f Scale
         {
             get { return this.scale; }
             set { this.scale = value; }
         }
 
         /// <summary>
-        /// Gets or sets the insert rotation along the normal vector.
+        /// Gets or sets the insert rotation along the normal vector in degrees.
         /// </summary>
         public float Rotation
         {
@@ -152,31 +155,28 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets or sets the insert normal.
+        /// Gets or sets the insert <see cref="Vector3f">normal</see>.
         /// </summary>
-        public Vector3 Normal
+        public Vector3f Normal
         {
             get { return this.normal; }
             set
             {
-                if (Vector3.Zero == value)
+                if (Vector3f.Zero == value)
                     throw new ArgumentNullException("value", "The normal can not be the zero vector");
                 value.Normalize();
                 this.normal = value;
             }
         }
 
+        internal EndSequence EndSequence
+        {
+            get { return this.endSequence; }
+        }
+
         #endregion
 
         #region IEntityObject Members
-
-        /// <summary>
-        /// Gets the dxf code that represents the entity.
-        /// </summary>
-        public string DxfName
-        {
-            get { return DXF_NAME; }
-        }
 
         /// <summary>
         /// Gets the entity <see cref="netDxf.Entities.EntityType">type</see>.
@@ -231,15 +231,35 @@ namespace netDxf.Entities
         /// <summary>
         /// Gets or sets the entity <see cref="netDxf.XData">extende data</see>.
         /// </summary>
-        public List<XData> XData
+        public Dictionary<ApplicationRegistry, XData> XData
         {
             get { return this.xData; }
+            set { this.xData = value; }
         }
 
         #endregion
 
         #region overrides
 
+        /// <summary>
+        /// Asigns a handle to the object based in a integer counter.
+        /// </summary>
+        /// <param name="entityNumber">Number to asign.</param>
+        /// <returns>Next avaliable entity number.</returns>
+        /// <remarks>
+        /// Some objects might consume more than one, is, for example, the case of polylines that will asign
+        /// automatically a handle to its vertexes. The entity number will be converted to an hexadecimal number.
+        /// </remarks>
+        internal override int AsignHandle(int entityNumber)
+        {
+            entityNumber = this.endSequence.AsignHandle(entityNumber);
+            foreach(Attribute attrib in this.attributes )
+            {
+                entityNumber = attrib.AsignHandle(entityNumber);
+            }
+            
+            return base.AsignHandle(entityNumber);
+        }
         /// <summary>
         /// Converts the value of this instance to its equivalent string representation.
         /// </summary>

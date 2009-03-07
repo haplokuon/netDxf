@@ -25,7 +25,7 @@ namespace netDxf
     /// <summary>
     /// Represents the minimun information element in a dxf file.
     /// </summary>
-    public struct CodeValuePair
+    internal struct CodeValuePair
     {
         private readonly int code;
         private readonly string value;

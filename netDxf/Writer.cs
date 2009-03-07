@@ -29,6 +29,7 @@ using System.Threading;
 using netDxf.Blocks;
 using netDxf.Entities;
 using netDxf.Header;
+using netDxf.Objects;
 using netDxf.Tables;
 using Attribute=netDxf.Entities.Attribute;
 
@@ -41,6 +42,7 @@ namespace netDxf
     {
         #region private fields
 
+        private int reservedHandles = 10;
         private readonly string file;
         private bool isFileOpen;
         private string activeSection = StringCode.Unknown;
@@ -54,14 +56,17 @@ namespace netDxf
         private bool isObjectsSection;
         private Stream output;
         private StreamWriter writer;
+        private readonly DxfVersion version;
+
         #endregion
 
         #region constructors
 
-        public DxfWriter(string file)
+        public DxfWriter(string file, DxfVersion version)
         {
             Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
             this.file = file;
+            this.version = version;
         }
 
         #endregion
@@ -255,6 +260,11 @@ namespace netDxf
             }
             this.WriteCodePair(0, StringCode.Table);
             this.WriteCodePair(2, table);
+            this.WriteCodePair(5, this.reservedHandles++);
+            this.WriteCodePair(100, SubclassMarker.Table);
+
+            if (table == StringCode.DimensionStyleTable)
+                this.WriteCodePair(100, SubclassMarker.DimensionStyleTable);
             this.activeTable = table;
         }
 
@@ -276,12 +286,10 @@ namespace netDxf
 
         #region methods for Header section
 
-        public void WriteComments(string comments)
+        public void WriteComment(string comment)
         {
-            //if (this.isHeader)
-            //    throw new DxfException(this.file,"Comments are only allowed at the beginning of the dxf file.");
-            if (!string.IsNullOrEmpty(comments))
-                this.WriteCodePair(999, comments);
+            if (!string.IsNullOrEmpty(comment))
+                this.WriteCodePair(999, comment);
         }
 
         public void WriteSystemVariable(HeaderVariable variable)
@@ -291,9 +299,9 @@ namespace netDxf
                 throw new InvalidDxfSectionException(this.activeSection, this.file);
             }
             this.WriteCodePair(HeaderVariable.NAME_CODE_GROUP, variable.Name);
-            this.WriteCodePair(variable.CodeGroup , variable.Value);
-
+            this.WriteCodePair(variable.CodeGroup, variable.Value);
         }
+
         #endregion
 
         #region methods for Table section
@@ -302,17 +310,107 @@ namespace netDxf
         /// Writes a new extended data application registry to the table section.
         /// </summary>
         /// <param name="appReg">Nombre del registro de aplicación.</param>
-        public void RegisterApplication(string appReg)
+        public void RegisterApplication(ApplicationRegistry appReg)
         {
             if (this.activeTable != StringCode.ApplicationIDTable)
             {
                 throw new InvalidDxfTableException(StringCode.ApplicationIDTable, this.file);
             }
-            
-            this.WriteCodePair(0, StringCode.ApplicationIDTable);
-            this.WriteCodePair(70, 0);
-            this.WriteCodePair(2, appReg);
 
+            this.WriteCodePair(0, StringCode.ApplicationIDTable);
+            this.WriteCodePair(5, appReg.Handle);
+            this.WriteCodePair(100, SubclassMarker.TableRecord);
+            this.WriteCodePair(100, SubclassMarker.ApplicationId);
+            this.WriteCodePair(2, appReg);
+            this.WriteCodePair(70, 0);
+        }
+
+        /// <summary>
+        /// Writes a new view port to the table section.
+        /// </summary>
+        /// <param name="vp">Viewport.</param>
+        public void WriteViewPort(ViewPort vp)
+        {
+            if (this.activeTable != StringCode.ViewPortTable)
+            {
+                throw new InvalidDxfTableException(this.activeTable, this.file);
+            }
+            this.WriteCodePair(0, vp.CodeName);
+            this.WriteCodePair(5, vp.Handle);
+            this.WriteCodePair(100, SubclassMarker.TableRecord);
+
+            this.WriteCodePair(100, SubclassMarker.ViewPort);
+            this.WriteCodePair(2, vp);
+            this.WriteCodePair(70, 0);
+
+            this.WriteCodePair(10, vp.LowerLeftCorner.X);
+            this.WriteCodePair(20, vp.LowerLeftCorner.Y);
+
+            this.WriteCodePair(11, vp.UpperRightCorner.X);
+            this.WriteCodePair(21, vp.UpperRightCorner.Y);
+
+            this.WriteCodePair(12, vp.LowerLeftCorner.X - vp.UpperRightCorner.X);
+            this.WriteCodePair(22, vp.UpperRightCorner.Y - vp.LowerLeftCorner.Y);
+
+            this.WriteCodePair(13, vp.SnapBasePoint.X);
+            this.WriteCodePair(23, vp.SnapBasePoint.Y);
+
+            this.WriteCodePair(14, vp.SnapSpacing.X);
+            this.WriteCodePair(24, vp.SnapSpacing.Y);
+
+            this.WriteCodePair(15, vp.GridSpacing.X);
+            this.WriteCodePair(25, vp.GridSpacing.Y);
+
+            Vector3f dir = vp.Camera - vp.Target;
+            this.WriteCodePair(16, dir.X);
+            this.WriteCodePair(26, dir.Y);
+            this.WriteCodePair(36, dir.Z);
+
+            this.WriteCodePair(17, vp.Target.X);
+            this.WriteCodePair(27, vp.Target.Y);
+            this.WriteCodePair(37, vp.Target.Z);
+        }
+
+        /// <summary>
+        /// Writes a new dimension style to the table section.
+        /// </summary>
+        /// <param name="dimStyle">DimensionStyle.</param>
+        public void WriteDimensionStyle(DimensionStyle dimStyle)
+        {
+            if (this.activeTable != StringCode.DimensionStyleTable)
+            {
+                throw new InvalidDxfTableException(this.activeTable, this.file);
+            }
+            this.WriteCodePair(0, dimStyle.CodeName);
+            this.WriteCodePair(105, dimStyle.Handle);
+
+            this.WriteCodePair(100, SubclassMarker.TableRecord);
+
+            this.WriteCodePair(100, SubclassMarker.DimensionStyle);
+
+            this.WriteCodePair(2, dimStyle);
+
+            // flags
+            this.WriteCodePair(70, 0);
+        }
+
+        /// <summary>
+        /// Writes a new block record to the table section.
+        /// </summary>
+        /// <param name="blockRecord">Block.</param>
+        public void WriteBlockRecord(BlockRecord blockRecord)
+        {
+            if (this.activeTable != StringCode.BlockRecordTable)
+            {
+                throw new InvalidDxfTableException(this.activeTable, this.file);
+            }
+            this.WriteCodePair(0, blockRecord.CodeName);
+            this.WriteCodePair(5, blockRecord.Handle);
+            this.WriteCodePair(100, SubclassMarker.TableRecord);
+
+            this.WriteCodePair(100, SubclassMarker.BlockRecord);
+
+            this.WriteCodePair(2, blockRecord);
         }
 
         /// <summary>
@@ -321,14 +419,23 @@ namespace netDxf
         /// <param name="tl">Line type.</param>
         public void WriteLineType(LineType tl)
         {
+            if (this.version == DxfVersion.AutoCad12)
+                if (tl.Name == "ByLayer" || tl.Name == "ByBlock")
+                    return;
+
             if (this.activeTable != StringCode.LineTypeTable)
             {
                 throw new InvalidDxfTableException(this.activeTable, this.file);
             }
-            this.WriteCodePair(0, StringCode.LineTypeTable);
+
+            this.WriteCodePair(0, tl.CodeName);
+            this.WriteCodePair(5, tl.Handle);
+            this.WriteCodePair(100, SubclassMarker.TableRecord);
+
+            this.WriteCodePair(100, SubclassMarker.LineType);
 
             this.WriteCodePair(70, 0);
-            this.WriteCodePair(2, tl.Name);
+            this.WriteCodePair(2, tl);
             this.WriteCodePair(3, tl.Description);
             this.WriteCodePair(72, 65);
             this.WriteCodePair(73, tl.Segments.Count);
@@ -336,6 +443,8 @@ namespace netDxf
             foreach (float s in tl.Segments)
             {
                 this.WriteCodePair(49, s);
+                if (this.version != DxfVersion.AutoCad12)
+                    this.WriteCodePair(74, 0);
             }
         }
 
@@ -350,10 +459,14 @@ namespace netDxf
                 throw new InvalidDxfTableException(this.activeTable, this.file);
             }
 
-            this.WriteCodePair(0, StringCode.LayerTable);
+            this.WriteCodePair(0, layer.CodeName);
+            this.WriteCodePair(5, layer.Handle);
+            this.WriteCodePair(100, SubclassMarker.TableRecord);
+
+            this.WriteCodePair(100, SubclassMarker.Layer);
             this.WriteCodePair(70, 0);
-            this.WriteCodePair(2, layer.Name);
-            
+            this.WriteCodePair(2, layer);
+
             //a negative color represents a hidden layer.
             if (layer.IsVisible)
             {
@@ -365,6 +478,8 @@ namespace netDxf
             }
 
             this.WriteCodePair(6, layer.LineType.Name);
+            if (this.version != DxfVersion.AutoCad12)
+                this.WriteCodePair(390, Layer.PlotStyleHandle);
         }
 
         /// <summary>
@@ -378,9 +493,13 @@ namespace netDxf
                 throw new InvalidDxfTableException(this.activeTable, this.file);
             }
 
-            this.WriteCodePair(0, StringCode.TextStyleTable);
+            this.WriteCodePair(0, style.CodeName);
+            this.WriteCodePair(5, style.Handle);
+            this.WriteCodePair(100, SubclassMarker.TableRecord);
 
-            this.WriteCodePair(2, style.Name);
+            this.WriteCodePair(100, SubclassMarker.TextStyle);
+
+            this.WriteCodePair(2, style);
             this.WriteCodePair(3, style.Font);
 
             if (style.IsVertical)
@@ -419,18 +538,25 @@ namespace netDxf
 
         #region methods for Block section
 
-        public void WriteBlock(Block block)
+        public void WriteBlock(Block block, List<IEntityObject> entityObjects)
         {
+            if (this.version == DxfVersion.AutoCad12)
+                if (block.Name == "*Model_Space" || block.Name == "*Paper_Space")
+                    return;
+
             if (this.activeSection != StringCode.BlocksSection)
             {
                 throw new InvalidDxfSectionException(this.activeSection, this.file);
             }
 
-            this.WriteCodePair(0, StringCode.BegionBlock);
+            this.WriteCodePair(0, block.CodeName);
+            this.WriteCodePair(5, block.Handle);
+            this.WriteCodePair(100, SubclassMarker.Entity);
+            this.WriteCodePair(8, block.Layer);
 
-            this.WriteCodePair(8, block.Layer.Name);
+            this.WriteCodePair(100, SubclassMarker.BlockBegin);
 
-            this.WriteCodePair(2, block.Name);
+            this.WriteCodePair(2, block);
 
             //flags
             if (block.Attributes.Count == 0)
@@ -446,22 +572,32 @@ namespace netDxf
             this.WriteCodePair(20, block.BasePoint.Y);
             this.WriteCodePair(30, block.BasePoint.Z);
 
-            this.WriteCodePair(3, block.Name);
+            this.WriteCodePair(3, block);
 
             foreach (AttributeDefinition attdef in block.Attributes.Values)
             {
                 this.WriteAttributeDefinition(attdef);
             }
 
-            //block entities
+            //block entities, if version is AutoCad12 we will write the converted entities
             this.isBlockEntities = true;
-            foreach (IEntityObject entity in block.Entities)
+            foreach (IEntityObject entity in entityObjects)
             {
                 this.WriteEntity(entity);
             }
             this.isBlockEntities = false;
 
-            this.WriteCodePair(0, StringCode.EndBlock);
+            this.WriteBlockEnd(block.End);
+        }
+
+        public void WriteBlockEnd(BlockEnd blockEnd)
+        {
+            this.WriteCodePair(0, blockEnd.CodeName);
+            this.WriteCodePair(5, blockEnd.Handle);
+            this.WriteCodePair(100, SubclassMarker.Entity);
+            this.WriteCodePair(8, blockEnd.Layer);
+
+            this.WriteCodePair(100, SubclassMarker.BlockEnd);
         }
 
         #endregion
@@ -478,20 +614,20 @@ namespace netDxf
                 case EntityType.Circle:
                     this.WriteCircle((Circle) entity);
                     break;
-                case EntityType.Ellipse :
-                    this.WriteEllipse((Ellipse)entity);
+                case EntityType.Ellipse:
+                    this.WriteEllipse((Ellipse) entity);
                     break;
                 case EntityType.NurbsCurve:
-                    this.WriteNurbsCurve((NurbsCurve)entity);
+                    this.WriteNurbsCurve((NurbsCurve) entity);
                     break;
                 case EntityType.Point:
                     this.WritePoint((Point) entity);
                     break;
                 case EntityType.Face3D:
-                    this.WriteFace3D((Face3D) entity);
+                    this.WriteFace3D((Face3d) entity);
                     break;
                 case EntityType.Solid:
-                    this.WriteSolid((Solid)entity);
+                    this.WriteSolid((Solid) entity);
                     break;
                 case EntityType.Insert:
                     this.WriteInsert((Insert) entity);
@@ -499,8 +635,11 @@ namespace netDxf
                 case EntityType.Line:
                     this.WriteLine((Line) entity);
                     break;
+                case EntityType.LightWeightPolyline:
+                    this.WriteLightWeightPolyline((LightWeightPolyline) entity);
+                    break;
                 case EntityType.Polyline:
-                    this.WritePolyline((Polyline) entity);
+                    this.WritePolyline2d((Polyline) entity);
                     break;
                 case EntityType.Polyline3d:
                     this.WritePolyline3d((Polyline3d) entity);
@@ -523,9 +662,13 @@ namespace netDxf
                 throw new InvalidDxfSectionException(this.activeSection, this.file);
             }
 
-            this.WriteCodePair(0, arc.DxfName);
-
+            this.WriteCodePair(0, arc.CodeName);
+            this.WriteCodePair(5, arc.Handle);
+            this.WriteCodePair(100, SubclassMarker.Entity);
             this.WriteEntityCommonCodes(arc);
+            this.WriteCodePair(100, SubclassMarker.Circle);
+
+            this.WriteCodePair(39, arc.Thickness);
 
             this.WriteCodePair(10, arc.Center.X);
             this.WriteCodePair(20, arc.Center.Y);
@@ -533,15 +676,13 @@ namespace netDxf
 
             this.WriteCodePair(40, arc.Radius);
 
-            this.WriteCodePair(50, arc.StartAngle);
-            this.WriteCodePair(51, arc.EndAngle);
-
-            this.WriteCodePair(39, arc.Thickness);
-
             this.WriteCodePair(210, arc.Normal.X);
             this.WriteCodePair(220, arc.Normal.Y);
             this.WriteCodePair(230, arc.Normal.Z);
 
+            this.WriteCodePair(100, SubclassMarker.Arc);
+            this.WriteCodePair(50, arc.StartAngle);
+            this.WriteCodePair(51, arc.EndAngle);
 
             this.WriteXData(arc.XData);
         }
@@ -553,9 +694,12 @@ namespace netDxf
                 throw new InvalidDxfSectionException(this.activeSection, this.file);
             }
 
-            this.WriteCodePair(0, circle.DxfName);
-
+            this.WriteCodePair(0, circle.CodeName);
+            this.WriteCodePair(5, circle.Handle);
+            this.WriteCodePair(100, SubclassMarker.Entity);
             this.WriteEntityCommonCodes(circle);
+            this.WriteCodePair(100, SubclassMarker.Circle);
+
 
             this.WriteCodePair(10, circle.Center.X);
             this.WriteCodePair(20, circle.Center.Y);
@@ -579,35 +723,50 @@ namespace netDxf
                 throw new InvalidDxfSectionException(this.activeSection, this.file);
             }
 
-            //this.WriteCodePair(0, ellipse.DxfName);
+            if (this.version == DxfVersion.AutoCad12)
+            {
+                this.WriteEllipseAsPolyline(ellipse);
+                return;
+            }
 
-            //this.WriteEntityCommonCodes(ellipse);
+            this.WriteCodePair(0, ellipse.CodeName);
+            this.WriteCodePair(5, ellipse.Handle);
+            this.WriteCodePair(100, SubclassMarker.Entity);
+            this.WriteEntityCommonCodes(ellipse);
+            this.WriteCodePair(100, SubclassMarker.Ellipse);
 
-            //// the ellipse is expressed in ocs
-            //Vector3 center = MathHelper.Transform(ellipse.Center, ellipse.Normal, MathHelper.CoordinateSystem.Object , MathHelper.CoordinateSystem.World );
-            //this.WriteCodePair(10, center.X );
-            //this.WriteCodePair(20, center.Y);
-            //this.WriteCodePair(30, center.Z);
 
-            //// XAxis WCS point
-            //float sine = (float) (ellipse.MajorAxis*0.5f*Math.Sin(ellipse.Rotation));
-            //float cosine = (float) (ellipse.MajorAxis*0.5f*Math.Cos(ellipse.Rotation));
-            //Vector3 ocsPoint = new Vector3(cosine + ellipse.Center.X, sine + ellipse.Center.Y,ellipse.Center.Z);
-            //Vector3 point = MathHelper.Transform(ocsPoint, ellipse.Normal, MathHelper.CoordinateSystem.Object , MathHelper.CoordinateSystem.World );
-            //this.WriteCodePair(11, point.X);
-            //this.WriteCodePair(21, point.Y);
-            //this.WriteCodePair(31, point.Z);
+            this.WriteCodePair(10, ellipse.Center.X);
+            this.WriteCodePair(20, ellipse.Center.Y);
+            this.WriteCodePair(30, ellipse.Center.Z);
 
-            //this.WriteCodePair(210, ellipse.Normal.X);
-            //this.WriteCodePair(220, ellipse.Normal.Y);
-            //this.WriteCodePair(230, ellipse.Normal.Z);
 
-            //this.WriteCodePair(40, ellipse.MinorAxis/ellipse.MajorAxis);
-            //this.WriteCodePair(41, ellipse.StartAngle*MathHelper.DEG_TO_RAD );
-            //this.WriteCodePair(42, ellipse.EndAngle *MathHelper.DEG_TO_RAD);
+            float sine = (float) (0.5*ellipse.MajorAxis*Math.Sin(ellipse.Rotation*MathHelper.DegToRad));
+            float cosine = (float) (0.5*ellipse.MajorAxis*Math.Cos(ellipse.Rotation*MathHelper.DegToRad));
+            Vector3d axisPoint = MathHelper.Transform((Vector3d) new Vector3f(cosine, sine, 0),
+                                                      (Vector3d) ellipse.Normal,
+                                                      MathHelper.CoordinateSystem.Object,
+                                                      MathHelper.CoordinateSystem.World);
 
+            this.WriteCodePair(11, axisPoint.X);
+            this.WriteCodePair(21, axisPoint.Y);
+            this.WriteCodePair(31, axisPoint.Z);
+
+            this.WriteCodePair(210, ellipse.Normal.X);
+            this.WriteCodePair(220, ellipse.Normal.Y);
+            this.WriteCodePair(230, ellipse.Normal.Z);
+
+            this.WriteCodePair(40, ellipse.MinorAxis/ellipse.MajorAxis);
+            this.WriteCodePair(41, ellipse.StartAngle*MathHelper.DegToRad);
+            this.WriteCodePair(42, ellipse.EndAngle*MathHelper.DegToRad);
+
+            this.WriteXData(ellipse.XData);
+        }
+
+        private void WriteEllipseAsPolyline(Ellipse ellipse)
+        {
             //we will draw the ellipse as a polyline, it is not supported in AutoCad12 dxf files
-            this.WriteCodePair(0, DxfEntityCode.Polyline);
+            this.WriteCodePair(0, DxfObjectCode.Polyline);
 
             this.WriteEntityCommonCodes(ellipse);
 
@@ -619,6 +778,8 @@ namespace netDxf
             this.WriteCodePair(20, 0.0f);
             this.WriteCodePair(30, ellipse.Center.Z);
 
+            this.WriteCodePair(39, ellipse.Thickness);
+
             this.WriteCodePair(210, ellipse.Normal.X);
             this.WriteCodePair(220, ellipse.Normal.Y);
             this.WriteCodePair(230, ellipse.Normal.Z);
@@ -629,11 +790,11 @@ namespace netDxf
 
             this.WriteXData(ellipse.XData);
 
-            List<Vector2> points = ellipse.PolygonalVertexes(32);
-            foreach (Vector2 v in points)
+            List<Vector2f> points = ellipse.PolygonalVertexes(ellipse.CurvePoints);
+            foreach (Vector2f v in points)
             {
-                this.WriteCodePair(0, DxfEntityCode.Vertex);
-                this.WriteCodePair(8, ellipse.Layer.Name);
+                this.WriteCodePair(0, DxfObjectCode.Vertex);
+                this.WriteCodePair(8, ellipse.Layer);
                 this.WriteCodePair(70, 0);
                 this.WriteCodePair(10, v.X);
                 this.WriteCodePair(20, v.Y);
@@ -641,7 +802,7 @@ namespace netDxf
             this.WriteCodePair(0, StringCode.EndSequence);
         }
 
-        private void WriteNurbsCurve(NurbsCurve  nurbsCurve )
+        private void WriteNurbsCurve(NurbsCurve nurbsCurve)
         {
             if (this.activeSection != StringCode.EntitiesSection && !this.isBlockEntities)
             {
@@ -650,7 +811,7 @@ namespace netDxf
 
 
             //we will draw the nurbsCurve as a polyline, it is not supported in AutoCad12 dxf files
-            this.WriteCodePair(0, DxfEntityCode.Polyline);
+            this.WriteCodePair(0, DxfObjectCode.Polyline);
 
             this.WriteEntityCommonCodes(nurbsCurve);
 
@@ -660,7 +821,9 @@ namespace netDxf
             //dummy point
             this.WriteCodePair(10, 0.0f);
             this.WriteCodePair(20, 0.0f);
-            this.WriteCodePair(30, 0.0f);
+            this.WriteCodePair(30, nurbsCurve.Elevation);
+
+            this.WriteCodePair(39, nurbsCurve.Thickness);
 
             this.WriteCodePair(210, nurbsCurve.Normal.X);
             this.WriteCodePair(220, nurbsCurve.Normal.Y);
@@ -672,11 +835,11 @@ namespace netDxf
 
             this.WriteXData(nurbsCurve.XData);
 
-            List<Vector2> points = nurbsCurve.PolygonalVertexes(30);
-            foreach (Vector2 v in points)
+            List<Vector2f> points = nurbsCurve.PolygonalVertexes(nurbsCurve.CurvePoints);
+            foreach (Vector2f v in points)
             {
-                this.WriteCodePair(0, DxfEntityCode.Vertex);
-                this.WriteCodePair(8, nurbsCurve.Layer.Name);
+                this.WriteCodePair(0, DxfObjectCode.Vertex);
+                this.WriteCodePair(8, nurbsCurve.Layer);
                 this.WriteCodePair(70, 0);
                 this.WriteCodePair(10, v.X);
                 this.WriteCodePair(20, v.Y);
@@ -691,9 +854,11 @@ namespace netDxf
                 throw new InvalidDxfSectionException(this.activeSection, this.file);
             }
 
-            this.WriteCodePair(0, solid.DxfName);
-
+            this.WriteCodePair(0, solid.CodeName);
+            this.WriteCodePair(5, solid.Handle);
+            this.WriteCodePair(100, SubclassMarker.Entity);
             this.WriteEntityCommonCodes(solid);
+            this.WriteCodePair(100, SubclassMarker.Solid);
 
             this.WriteCodePair(10, solid.FirstVertex.X);
             this.WriteCodePair(20, solid.FirstVertex.Y);
@@ -716,20 +881,22 @@ namespace netDxf
             this.WriteCodePair(210, solid.Normal.X);
             this.WriteCodePair(220, solid.Normal.Y);
             this.WriteCodePair(230, solid.Normal.Z);
-            
+
             this.WriteXData(solid.XData);
         }
 
-        private void WriteFace3D(Face3D face)
+        private void WriteFace3D(Face3d face)
         {
             if (this.activeSection != StringCode.EntitiesSection && !this.isBlockEntities)
             {
                 throw new InvalidDxfSectionException(this.activeSection, this.file);
             }
 
-            this.WriteCodePair(0, face.DxfName);
-
+            this.WriteCodePair(0, face.CodeName);
+            this.WriteCodePair(5, face.Handle);
+            this.WriteCodePair(100, SubclassMarker.Entity);
             this.WriteEntityCommonCodes(face);
+            this.WriteCodePair(100, SubclassMarker.Face3d);
 
             this.WriteCodePair(10, face.FirstVertex.X);
             this.WriteCodePair(20, face.FirstVertex.Y);
@@ -759,11 +926,13 @@ namespace netDxf
                 throw new InvalidDxfSectionException(this.activeSection, this.file);
             }
 
-            this.WriteCodePair(0, insert.DxfName);
-
+            this.WriteCodePair(0, insert.CodeName);
+            this.WriteCodePair(5, insert.Handle);
+            this.WriteCodePair(100, SubclassMarker.Entity);
             this.WriteEntityCommonCodes(insert);
+            this.WriteCodePair(100, SubclassMarker.Insert);
 
-            this.WriteCodePair(2, insert.Block.Name);
+            this.WriteCodePair(2, insert.Block);
 
             this.WriteCodePair(10, insert.InsertionPoint.X);
             this.WriteCodePair(20, insert.InsertionPoint.Y);
@@ -792,7 +961,10 @@ namespace netDxf
                     this.WriteAttribute(attrib, insert.InsertionPoint);
                 }
 
-                this.WriteCodePair(0, StringCode.EndSequence);
+                this.WriteCodePair(0, insert.EndSequence.CodeName);
+                this.WriteCodePair(5, insert.EndSequence.Handle);
+                this.WriteCodePair(100, SubclassMarker.Entity);
+                this.WriteCodePair(8, insert.EndSequence.Layer);
             }
             else
             {
@@ -807,9 +979,11 @@ namespace netDxf
                 throw new InvalidDxfSectionException(this.activeSection, this.file);
             }
 
-            this.WriteCodePair(0, line.DxfName);
-
+            this.WriteCodePair(0, line.CodeName);
+            this.WriteCodePair(100, SubclassMarker.Entity);
             this.WriteEntityCommonCodes(line);
+            this.WriteCodePair(5, line.Handle);
+            this.WriteCodePair(100, SubclassMarker.Line);
 
             this.WriteCodePair(10, line.StartPoint.X);
             this.WriteCodePair(20, line.StartPoint.Y);
@@ -828,16 +1002,18 @@ namespace netDxf
             this.WriteXData(line.XData);
         }
 
-        private void WritePolyline(Polyline polyline)
+        private void WritePolyline2d(Polyline polyline)
         {
             if (this.activeSection != StringCode.EntitiesSection && !this.isBlockEntities)
             {
                 throw new InvalidDxfSectionException(this.activeSection, this.file);
             }
 
-            this.WriteCodePair(0, polyline.DxfName);
-
+            this.WriteCodePair(0, polyline.CodeName);
+            this.WriteCodePair(100, SubclassMarker.Entity);
             this.WriteEntityCommonCodes(polyline);
+            this.WriteCodePair(5, polyline.Handle);
+            this.WriteCodePair(100, SubclassMarker.Polyline);
 
             this.WriteCodePair(70, (int) polyline.Flags);
 
@@ -860,8 +1036,13 @@ namespace netDxf
 
             foreach (PolylineVertex v in polyline.Vertexes)
             {
-                this.WriteCodePair(0, v.DxfName);
-                this.WriteCodePair(8, v.Layer.Name);
+               
+                this.WriteCodePair(0, v.CodeName);
+                this.WriteCodePair(5, v.Handle);
+                this.WriteCodePair(100, SubclassMarker.Entity);
+                this.WriteCodePair(8, v.Layer);
+                this.WriteCodePair(100, SubclassMarker.Vertex);
+                this.WriteCodePair(100, SubclassMarker.PolylineVertex);
                 this.WriteCodePair(70, (int) v.Flags);
                 this.WriteCodePair(10, v.Location.X);
                 this.WriteCodePair(20, v.Location.Y);
@@ -871,7 +1052,46 @@ namespace netDxf
 
                 this.WriteXData(v.XData);
             }
-            this.WriteCodePair(0, StringCode.EndSequence);
+
+            this.WriteCodePair(0, polyline.EndSequence.CodeName);
+            this.WriteCodePair(5, polyline.EndSequence.Handle);
+            this.WriteCodePair(100, SubclassMarker.Entity);
+            this.WriteCodePair(8, polyline.EndSequence.Layer);
+        }
+
+        private void WriteLightWeightPolyline(LightWeightPolyline polyline)
+        {
+            if (this.activeSection != StringCode.EntitiesSection && !this.isBlockEntities)
+            {
+                throw new InvalidDxfSectionException(this.activeSection, this.file);
+            }
+
+            this.WriteCodePair(0, DxfObjectCode.LightWeightPolyline);
+            this.WriteCodePair(100, SubclassMarker.Entity);
+            this.WriteEntityCommonCodes(polyline);
+            this.WriteCodePair(5, polyline.Handle);
+            this.WriteCodePair(100, SubclassMarker.LightWeightPolyline);
+            this.WriteCodePair(90, polyline.Vertexes.Count);
+            this.WriteCodePair(70, (int) polyline.Flags);
+
+            this.WriteCodePair(38, polyline.Elevation);
+            this.WriteCodePair(39, polyline.Thickness);
+
+
+            foreach (LightWeightPolylineVertex v in polyline.Vertexes)
+            {
+                this.WriteCodePair(10, v.Location.X);
+                this.WriteCodePair(20, v.Location.Y);
+                this.WriteCodePair(40, v.BeginThickness);
+                this.WriteCodePair(41, v.EndThickness);
+                this.WriteCodePair(42, v.Bulge);
+            }
+
+            this.WriteCodePair(210, polyline.Normal.X);
+            this.WriteCodePair(220, polyline.Normal.Y);
+            this.WriteCodePair(230, polyline.Normal.Z);
+
+            this.WriteXData(polyline.XData);
         }
 
         private void WritePolyline3d(Polyline3d polyline)
@@ -881,18 +1101,20 @@ namespace netDxf
                 throw new InvalidDxfSectionException(this.activeSection, this.file);
             }
 
-            this.WriteCodePair(0, polyline.DxfName);
-
+            this.WriteCodePair(0, polyline.CodeName);
+            this.WriteCodePair(100, SubclassMarker.Entity);
             this.WriteEntityCommonCodes(polyline);
+            this.WriteCodePair(5, polyline.Handle);
+            this.WriteCodePair(100, SubclassMarker.Polyline3d);
 
-            this.WriteCodePair(70, (int)polyline.Flags);
+            this.WriteCodePair(70, (int) polyline.Flags);
 
             //dummy point
             this.WriteCodePair(10, 0.0);
             this.WriteCodePair(20, 0.0);
             this.WriteCodePair(30, 0.0);
 
-           //Obsolete; formerly an “entities follow flag” (optional; ignore if present)
+            //Obsolete; formerly an “entities follow flag” (optional; ignore if present)
             //but its needed to load the dxf file in AutoCAD
             this.WriteCodePair(66, "1");
 
@@ -900,16 +1122,23 @@ namespace netDxf
 
             foreach (Polyline3dVertex v in polyline.Vertexes)
             {
-                this.WriteCodePair(0, v.DxfName);
-                this.WriteCodePair(8, v.Layer.Name);
-                this.WriteCodePair(70, (int)v.Flags);
+                this.WriteCodePair(0, v.CodeName);
+                this.WriteCodePair(5, v.Handle);
+                this.WriteCodePair(100, SubclassMarker.Entity);
+                this.WriteCodePair(8, v.Layer);
+                this.WriteCodePair(100, SubclassMarker.Vertex);
+                this.WriteCodePair(100, SubclassMarker.Polyline3dVertex);
+                this.WriteCodePair(70, (int) v.Flags);
                 this.WriteCodePair(10, v.Location.X);
                 this.WriteCodePair(20, v.Location.Y);
                 this.WriteCodePair(30, v.Location.Z);
-                
+
                 this.WriteXData(v.XData);
             }
-            this.WriteCodePair(0, StringCode.EndSequence);
+            this.WriteCodePair(0, polyline.EndSequence.CodeName);
+            this.WriteCodePair(5, polyline.EndSequence.Handle);
+            this.WriteCodePair(100, SubclassMarker.Entity);
+            this.WriteCodePair(8, polyline.EndSequence.Layer);
         }
 
         private void WritePolyfaceMesh(PolyfaceMesh mesh)
@@ -919,9 +1148,11 @@ namespace netDxf
                 throw new InvalidDxfSectionException(this.activeSection, this.file);
             }
 
-            this.WriteCodePair(0, mesh.DxfName);
-
+            this.WriteCodePair(0, mesh.CodeName);
+            this.WriteCodePair(100, SubclassMarker.Entity);
             this.WriteEntityCommonCodes(mesh);
+            this.WriteCodePair(5, mesh.Handle);
+            this.WriteCodePair(100, SubclassMarker.PolyfaceMesh);
 
             this.WriteCodePair(70, (int) mesh.Flags);
 
@@ -945,8 +1176,12 @@ namespace netDxf
 
             foreach (PolyfaceMeshVertex v in mesh.Vertexes)
             {
-                this.WriteCodePair(0, v.DxfName);
+                this.WriteCodePair(0, v.CodeName);
+                this.WriteCodePair(5, v.Handle);
+                this.WriteCodePair(100, SubclassMarker.Entity);
                 this.WriteCodePair(8, v.Layer);
+                this.WriteCodePair(100, SubclassMarker.Vertex);
+                this.WriteCodePair(100, SubclassMarker.PolyfaceMeshVertex);
                 this.WriteCodePair(70, (int) v.Flags);
                 this.WriteCodePair(10, v.Location.X);
                 this.WriteCodePair(20, v.Location.Y);
@@ -957,8 +1192,11 @@ namespace netDxf
 
             foreach (PolyfaceMeshFace face in mesh.Faces)
             {
-                this.WriteCodePair(0, DxfEntityCode.Vertex);
-                this.WriteCodePair(8, mesh.Layer);
+                this.WriteCodePair(0, face.CodeName);
+                this.WriteCodePair(5, face.Handle);
+                this.WriteCodePair(100, SubclassMarker.Entity);
+                this.WriteCodePair(8, face.Layer);
+                this.WriteCodePair(100, SubclassMarker.PolyfaceMeshFace);
                 this.WriteCodePair(70, (int) VertexTypeFlags.PolyfaceMeshVertex);
                 this.WriteCodePair(10, 0);
                 this.WriteCodePair(20, 0);
@@ -969,7 +1207,10 @@ namespace netDxf
                 this.WriteCodePair(73, face.VertexIndexes[2]);
             }
 
-            this.WriteCodePair(0, StringCode.EndSequence);
+            this.WriteCodePair(0, mesh.EndSequence.CodeName);
+            this.WriteCodePair(5, mesh.EndSequence.Handle);
+            this.WriteCodePair(100, SubclassMarker.Entity);
+            this.WriteCodePair(8, mesh.EndSequence.Layer);
         }
 
         private void WritePoint(Point point)
@@ -979,9 +1220,11 @@ namespace netDxf
                 throw new InvalidDxfSectionException(this.activeSection, this.file);
             }
 
-            this.WriteCodePair(0, point.DxfName);
-
+            this.WriteCodePair(0, point.CodeName);
+            this.WriteCodePair(5, point.Handle);
+            this.WriteCodePair(100, SubclassMarker.Entity);
             this.WriteEntityCommonCodes(point);
+            this.WriteCodePair(100, SubclassMarker.Point);
 
             this.WriteCodePair(10, point.Location.X);
             this.WriteCodePair(20, point.Location.Y);
@@ -1003,9 +1246,11 @@ namespace netDxf
                 throw new InvalidDxfSectionException(this.activeSection, this.file);
             }
 
-            this.WriteCodePair(0, text.DxfName);
-
+            this.WriteCodePair(0, text.CodeName);
+            this.WriteCodePair(100, SubclassMarker.Entity);
             this.WriteEntityCommonCodes(text);
+            this.WriteCodePair(5, text.Handle);
+            this.WriteCodePair(100, SubclassMarker.Text);
 
             this.WriteCodePair(1, text.Value);
 
@@ -1015,83 +1260,13 @@ namespace netDxf
 
             this.WriteCodePair(40, text.Height);
 
+            this.WriteCodePair(41, text.WidthFactor);
+
             this.WriteCodePair(50, text.Rotation);
 
             this.WriteCodePair(51, text.ObliqueAngle);
 
-            this.WriteCodePair(7, text.Style.Name);
-
-
-            switch (text.Alignment)
-            {
-                case TextAlignment.TopLeft:
-
-                    this.WriteCodePair(72, 0);
-                    this.WriteCodePair(73, 3);
-                    break;
-
-                case TextAlignment.TopCenter:
-
-                    this.WriteCodePair(72, 1);
-                    this.WriteCodePair(73, 3);
-                    break;
-
-                case TextAlignment.TopRight:
-
-                    this.WriteCodePair(72, 2);
-                    this.WriteCodePair(73, 3);
-                    break;
-
-                case TextAlignment.MiddleLeft:
-
-                    this.WriteCodePair(72, 0);
-                    this.WriteCodePair(73, 2);
-                    break;
-
-                case TextAlignment.MiddleCenter:
-
-                    this.WriteCodePair(72, 1);
-                    this.WriteCodePair(73, 2);
-                    break;
-
-                case TextAlignment.MiddleRight:
-
-                    this.WriteCodePair(72, 2);
-                    this.WriteCodePair(73, 2);
-                    break;
-
-                case TextAlignment.BottomLeft:
-
-                    this.WriteCodePair(72, 0);
-                    this.WriteCodePair(73, 1);
-                    break;
-                case TextAlignment.BottomCenter:
-
-                    this.WriteCodePair(72, 1);
-                    this.WriteCodePair(73, 1);
-                    break;
-
-                case TextAlignment.BottomRight:
-
-                    this.WriteCodePair(72, 2);
-                    this.WriteCodePair(73, 1);
-                    break;
-
-                case TextAlignment.BaselineLeft:
-                    this.WriteCodePair(72, 0);
-                    this.WriteCodePair(73, 0);
-                    break;
-
-                case TextAlignment.BaselineCenter:
-                    this.WriteCodePair(72, 1);
-                    this.WriteCodePair(73, 0);
-                    break;
-
-                case TextAlignment.BaselineRight:
-                    this.WriteCodePair(72, 2);
-                    this.WriteCodePair(73, 0);
-                    break;
-            }
+            this.WriteCodePair(7, text.Style);
 
             this.WriteCodePair(11, text.BasePoint.X);
             this.WriteCodePair(21, text.BasePoint.Y);
@@ -1101,7 +1276,114 @@ namespace netDxf
             this.WriteCodePair(220, text.Normal.Y);
             this.WriteCodePair(230, text.Normal.Z);
 
+            switch (text.Alignment)
+            {
+                case TextAlignment.TopLeft:
+
+                    this.WriteCodePair(72, 0);
+                    this.WriteCodePair(100, SubclassMarker.Text);
+                    this.WriteCodePair(73, 3);
+                    break;
+
+                case TextAlignment.TopCenter:
+
+                    this.WriteCodePair(72, 1);
+                    this.WriteCodePair(100, SubclassMarker.Text);
+                    this.WriteCodePair(73, 3);
+                    break;
+
+                case TextAlignment.TopRight:
+
+                    this.WriteCodePair(72, 2);
+                    this.WriteCodePair(100, SubclassMarker.Text);
+                    this.WriteCodePair(73, 3);
+                    break;
+
+                case TextAlignment.MiddleLeft:
+
+                    this.WriteCodePair(72, 0);
+                    this.WriteCodePair(100, SubclassMarker.Text);
+                    this.WriteCodePair(73, 2);
+                    break;
+
+                case TextAlignment.MiddleCenter:
+
+                    this.WriteCodePair(72, 1);
+                    this.WriteCodePair(100, SubclassMarker.Text);
+                    this.WriteCodePair(73, 2);
+                    break;
+
+                case TextAlignment.MiddleRight:
+
+                    this.WriteCodePair(72, 2);
+                    this.WriteCodePair(100, SubclassMarker.Text);
+                    this.WriteCodePair(73, 2);
+                    break;
+
+                case TextAlignment.BottomLeft:
+
+                    this.WriteCodePair(72, 0);
+                    this.WriteCodePair(100, SubclassMarker.Text);
+                    this.WriteCodePair(73, 1);
+                    break;
+                case TextAlignment.BottomCenter:
+
+                    this.WriteCodePair(72, 1);
+                    this.WriteCodePair(100, SubclassMarker.Text);
+                    this.WriteCodePair(73, 1);
+                    break;
+
+                case TextAlignment.BottomRight:
+
+                    this.WriteCodePair(72, 2);
+                    this.WriteCodePair(100, SubclassMarker.Text);
+                    this.WriteCodePair(73, 1);
+                    break;
+
+                case TextAlignment.BaselineLeft:
+                    this.WriteCodePair(72, 0);
+                    this.WriteCodePair(100, SubclassMarker.Text);
+                    this.WriteCodePair(73, 0);
+                    break;
+
+                case TextAlignment.BaselineCenter:
+                    this.WriteCodePair(72, 1);
+                    this.WriteCodePair(100, SubclassMarker.Text);
+                    this.WriteCodePair(73, 0);
+                    break;
+
+                case TextAlignment.BaselineRight:
+                    this.WriteCodePair(72, 2);
+                    this.WriteCodePair(100, SubclassMarker.Text);
+                    this.WriteCodePair(73, 0);
+                    break;
+            }
+
             this.WriteXData(text.XData);
+        }
+
+        #endregion
+
+        #region methods for Entity section
+
+        public void WriteDictionary(Dictionary dictionary)
+        {
+            //if (this.activeTable != StringCode.ObjectsSection)
+            //{
+            //    throw new InvalidDxfTableException(this.activeTable, this.file);
+            //}
+
+            this.WriteCodePair(0, StringCode.Dictionary);
+            this.WriteCodePair(5, Convert.ToString(10, 16));
+            this.WriteCodePair(100, SubclassMarker.Dictionary);
+            this.WriteCodePair(281, 1);
+            this.WriteCodePair(3, dictionary);
+            this.WriteCodePair(350, Convert.ToString(11, 16));
+
+            this.WriteCodePair(0, StringCode.Dictionary);
+            this.WriteCodePair(5, Convert.ToString(11, 16));
+            this.WriteCodePair(100, SubclassMarker.Dictionary);
+            this.WriteCodePair(281, 1);
         }
 
         #endregion
@@ -1110,29 +1392,30 @@ namespace netDxf
 
         private void WriteAttributeDefinition(AttributeDefinition def)
         {
-            this.WriteCodePair(0, DxfEntityCode.AttributeDefinition);
+            this.WriteCodePair(0, DxfObjectCode.AttributeDefinition);
+            this.WriteCodePair(5, def.Handle);
 
-            this.WriteCodePair(2, def.Id);
-
-            this.WriteCodePair(3, def.Text);
-
-            this.WriteCodePair(1, def.Value);
-
-            this.WriteCodePair(70, (int) def.Flags);
-
+            this.WriteCodePair(100, SubclassMarker.Entity);
             this.WriteEntityCommonCodes(def);
-
+            this.WriteCodePair(100, SubclassMarker.Text);
             this.WriteCodePair(10, def.BasePoint.X);
             this.WriteCodePair(20, def.BasePoint.Y);
             this.WriteCodePair(30, def.BasePoint.Z);
-
-            this.WriteCodePair(7, def.Style.Name);
-
             this.WriteCodePair(40, def.Height);
+            this.WriteCodePair(1, def.Value);
+
+            this.WriteCodePair(7, def.Style);
 
             this.WriteCodePair(41, def.WidthFactor);
 
             this.WriteCodePair(50, def.Rotation);
+
+            this.WriteCodePair(100, SubclassMarker.AttributeDefinition);
+            this.WriteCodePair(2, def.Id);
+
+            this.WriteCodePair(3, def.Text);
+
+            this.WriteCodePair(70, (int) def.Flags);
 
             switch (def.Alignment)
             {
@@ -1203,21 +1486,19 @@ namespace netDxf
             this.WriteCodePair(31, def.BasePoint.Z);
         }
 
-        private void WriteAttribute(Attribute attrib, Vector3 puntoInsercion)
+        private void WriteAttribute(Attribute attrib, Vector3f puntoInsercion)
         {
-            this.WriteCodePair(0, DxfEntityCode.Attribute);
-
-            this.WriteCodePair(2, attrib.Definition.Id);
-
-            this.WriteCodePair(1, attrib.Value);
-
-            this.WriteCodePair(70, (int) attrib.Definition.Flags);
-
+            this.WriteCodePair(0, DxfObjectCode.Attribute);
+            this.WriteCodePair(5, attrib.Handle);
+            this.WriteCodePair(100, SubclassMarker.Entity);
             this.WriteEntityCommonCodes(attrib);
 
+            this.WriteCodePair(100, SubclassMarker.Text);
             this.WriteCodePair(10, attrib.Definition.BasePoint.X + puntoInsercion.X);
             this.WriteCodePair(20, attrib.Definition.BasePoint.Y + puntoInsercion.Y);
             this.WriteCodePair(30, attrib.Definition.BasePoint.Z + puntoInsercion.Z);
+
+            this.WriteCodePair(1, attrib.Value);
 
             this.WriteCodePair(40, attrib.Definition.Height);
 
@@ -1225,37 +1506,51 @@ namespace netDxf
 
             this.WriteCodePair(50, attrib.Definition.Rotation);
 
-            this.WriteCodePair(7, attrib.Definition.Style.Name);
+            this.WriteCodePair(7, attrib.Definition.Style);
+
+            this.WriteCodePair(100, SubclassMarker.Attribute);
+
+            this.WriteCodePair(2, attrib.Definition.Id);
+
+            this.WriteCodePair(70, (int) attrib.Definition.Flags);
+
 
             this.WriteCodePair(11, attrib.Definition.BasePoint.X + puntoInsercion.X);
             this.WriteCodePair(21, attrib.Definition.BasePoint.Y + puntoInsercion.Y);
             this.WriteCodePair(31, attrib.Definition.BasePoint.Z + puntoInsercion.Z);
         }
 
-        private void WriteXData(IEnumerable<XData> xData)
+        private void WriteXData(Dictionary<ApplicationRegistry, XData> xData)
         {
-            foreach (XData xDataEntry in xData)
+            if (xData == null)
+                return;
+
+            foreach (ApplicationRegistry appReg in xData.Keys)
             {
-                this.WriteCodePair(xDataEntry.ApplicationRegistry.Code, xDataEntry.ApplicationRegistry.Value.ToString());
-                foreach (XDataRecord x in xDataEntry.XDataRecord)
+                this.WriteCodePair(XDataCode.AppReg, appReg);
+                foreach (XDataRecord x in xData[appReg].XDataRecord)
                 {
-                    if (x.Code != XDataCode.AppReg)
-                        this.WriteCodePair(x.Code, x.Value.ToString());
+                    this.WriteCodePair(x.Code, x.Value.ToString());
                 }
             }
         }
 
         private void WriteEntityCommonCodes(IEntityObject entity)
         {
-            this.WriteCodePair(8, entity.Layer.Name);
+            this.WriteCodePair(8, entity.Layer);
             this.WriteCodePair(62, entity.Color.Index);
-            this.WriteCodePair(6, entity.LineType.Name);
+            this.WriteCodePair(6, entity.LineType);
         }
 
         private void WriteCodePair(int codigo, object valor)
         {
+            // AutoCad12 does not allow strings with spaces
+            string nameConversion;
+            nameConversion = valor == null ? string.Empty : valor.ToString();
+
+            if (this.version == DxfVersion.AutoCad12 && valor is DxfObject) nameConversion = nameConversion.Replace(' ', '_');
             this.writer.WriteLine(codigo);
-            this.writer.WriteLine(valor);
+            this.writer.WriteLine(nameConversion);
         }
 
         #endregion

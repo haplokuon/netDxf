@@ -30,19 +30,19 @@ namespace netDxf.Entities
     /// Represents a point <see cref="netDxf.Entities.IEntityObject">entity</see>.
     /// </summary>
     public class Point :
+        DxfObject,
         IEntityObject
     {
         #region private fields
 
-        private const string DXF_NAME = DxfEntityCode.Point;
         private const EntityType TYPE = EntityType.Point;
-        private Vector3 location;
+        private Vector3f location;
         private float thickness;
         private Layer layer;
         private AciColor color;
         private LineType lineType;
-        private Vector3 normal;
-        private readonly List<XData> xData;
+        private Vector3f normal;
+        private Dictionary<ApplicationRegistry, XData> xData;
 
         #endregion
 
@@ -51,30 +51,30 @@ namespace netDxf.Entities
         /// <summary>
         /// Initializes a new instance of the <c>Point</c> class.
         /// </summary>
-        /// <param name="location">Point <see cref="Vector3">location</see>.</param>
-        public Point(Vector3 location)
+        /// <param name="location">Point <see cref="Vector3f">location</see>.</param>
+        public Point(Vector3f location)
+            : base(DxfObjectCode.Point)
         {
             this.location = location;
             this.thickness = 0.0f;
             this.layer = Layer.Default;
             this.color = AciColor.ByLayer;
             this.lineType = LineType.ByLayer;
-            this.normal = Vector3.UnitZ;
-            this.xData = new List<XData>();
+            this.normal = Vector3f.UnitZ;
         }
 
         /// <summary>
         /// Initializes a new instance of the <c>Point</c> class.
         /// </summary>
         public Point()
+            : base(DxfObjectCode.Point)
         {
-            this.location = Vector3.Zero;
+            this.location = Vector3f.Zero;
             this.thickness = 0.0f;
             this.layer = Layer.Default;
             this.color = AciColor.ByLayer;
             this.lineType = LineType.ByLayer;
-            this.normal = Vector3.UnitZ;
-            this.xData = new List<XData>();
+            this.normal = Vector3f.UnitZ;
         }
 
         #endregion
@@ -82,9 +82,9 @@ namespace netDxf.Entities
         #region public properties
 
         /// <summary>
-        /// Gets or sets the point <see cref="netDxf.Vector3">location</see>.
+        /// Gets or sets the point <see cref="netDxf.Vector3f">location</see>.
         /// </summary>
-        public Vector3 Location
+        public Vector3f Location
         {
             get { return this.location; }
             set { this.location = value; }
@@ -100,9 +100,9 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets or sets the point <see cref="netDxf.Vector3">normal</see>.
+        /// Gets or sets the point <see cref="netDxf.Vector3f">normal</see>.
         /// </summary>
-        public Vector3 Normal
+        public Vector3f Normal
         {
             get { return this.normal; }
             set
@@ -115,14 +115,6 @@ namespace netDxf.Entities
         #endregion
 
         #region IEntityObject Members
-
-        /// <summary>
-        /// Gets the dxf code that represents the entity.
-        /// </summary>
-        public string DxfName
-        {
-            get { return DXF_NAME; }
-        }
 
         /// <summary>
         /// Gets the entity <see cref="netDxf.Entities.EntityType">type</see>.
@@ -177,9 +169,10 @@ namespace netDxf.Entities
         /// <summary>
         /// Gets or sets the entity <see cref="netDxf.XData">extende data</see>.
         /// </summary>
-        public List<XData> XData
+        public Dictionary<ApplicationRegistry, XData> XData
         {
             get { return this.xData; }
+            set { this.xData = value; }
         }
 
         #endregion

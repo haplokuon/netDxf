@@ -28,14 +28,14 @@ namespace netDxf.Entities
 {
 
     /// <summary>
-    /// Represents a polyface mesh <see cref="netDxf.Entities.IEntityObject">entity.
+    /// Represents a polyface mesh <see cref="netDxf.Entities.IEntityObject">entity</see>.
     /// </summary>
     public class PolyfaceMesh :
+        DxfObject,
         IPolyline
     {
         #region private fields
-
-        private const string DXF_NAME = DxfEntityCode.Polyline;
+        private readonly EndSequence endSequence;
         protected const EntityType TYPE = EntityType.PolyfaceMesh;
         private List<PolyfaceMeshFace> faces;
         private List<PolyfaceMeshVertex> vertexes;
@@ -43,7 +43,7 @@ namespace netDxf.Entities
         protected Layer layer;
         protected AciColor color;
         protected LineType lineType;
-        protected readonly List<XData> xData;
+        protected Dictionary<ApplicationRegistry, XData> xData;
         #endregion
 
         #region constructurs
@@ -54,6 +54,7 @@ namespace netDxf.Entities
         /// <param name="vertexes">Polyface mesh <see cref="PolyfaceMeshVertex">vertex</see> list.</param>
         /// <param name="faces">Polyface mesh <see cref="PolyfaceMeshFace">faces</see> list.</param>
         public PolyfaceMesh(List<PolyfaceMeshVertex> vertexes, List<PolyfaceMeshFace> faces)
+            : base(DxfObjectCode.Polyline)
         {
             this.flags = PolylineTypeFlags.PolyfaceMesh;
             this.vertexes = vertexes;
@@ -61,22 +62,21 @@ namespace netDxf.Entities
             this.layer = Layer.Default;
             this.color = AciColor.ByLayer;
             this.lineType = LineType.ByLayer;
-            this.xData = new List<XData>();
-
+            this.endSequence = new EndSequence();
         }
 
         /// <summary>
         /// Initializes a new instance of the <c>PolyfaceMesh</c> class.
         /// </summary>
         public PolyfaceMesh()
+            : base(DxfObjectCode.Polyline)
         {
             this.flags = PolylineTypeFlags.PolyfaceMesh;
             this.faces = new List<PolyfaceMeshFace>();
             this.layer = Layer.Default;
             this.color = AciColor.ByLayer;
             this.lineType = LineType.ByLayer;
-            this.xData = new List<XData>();
-
+            this.endSequence = new EndSequence();
         }
 
         #endregion
@@ -111,6 +111,11 @@ namespace netDxf.Entities
             }
         }
 
+        internal EndSequence EndSequence
+        {
+            get { return this.endSequence; }
+        }
+
         #endregion
 
         #region IPolyline Members
@@ -127,15 +132,7 @@ namespace netDxf.Entities
 
         #region IEntityObject Members
 
-        /// <summary>
-        /// Gets the dxf code that represents the entity.
-        /// </summary>
-        public string DxfName
-        {
-            get { return DXF_NAME; }
-        }
-
-        /// <summary>
+      /// <summary>
         /// Gets the entity <see cref="netDxf.Entities.EntityType">type</see>.
         /// </summary>
         public EntityType Type
@@ -188,14 +185,38 @@ namespace netDxf.Entities
         /// <summary>
         /// Gets or sets the entity <see cref="netDxf.XData">extende data</see>.
         /// </summary>
-        public List<XData> XData
+        public Dictionary<ApplicationRegistry, XData> XData
         {
             get { return this.xData; }
+            set { this.xData = value; }
         }
 
         #endregion
 
         #region overrides
+
+        /// <summary>
+        /// Asigns a handle to the object based in a integer counter.
+        /// </summary>
+        /// <param name="entityNumber">Number to asign.</param>
+        /// <returns>Next avaliable entity number.</returns>
+        /// <remarks>
+        /// Some objects might consume more than one, is, for example, the case of polylines that will asign
+        /// automatically a handle to its vertexes. The entity number will be converted to an hexadecimal number.
+        /// </remarks>
+        internal override int AsignHandle(int entityNumber)
+        {
+            entityNumber = this.endSequence.AsignHandle(entityNumber);
+            foreach (PolyfaceMeshVertex v in this.vertexes)
+            {
+                entityNumber = v.AsignHandle(entityNumber);
+            }
+            foreach(PolyfaceMeshFace f in this.faces)
+            {
+                entityNumber = f.AsignHandle(entityNumber);
+            }
+            return base.AsignHandle(entityNumber);
+        }
 
         /// <summary>
         /// Converts the value of this instance to its equivalent string representation.

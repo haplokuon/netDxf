@@ -27,24 +27,27 @@ using netDxf.Tables;
 namespace netDxf.Entities
 {
     /// <summary>
-    /// Represents a nurbs curve <see cref="netDxf.Entities.IEntityObject">entity.
+    /// Represents a nurbs curve <see cref="netDxf.Entities.IEntityObject">entity</see>.
     /// </summary>
+    /// <remarks>The nurbs curve uses a default open uniform knot vector.</remarks>
     public class NurbsCurve :
         IEntityObject
     {
         #region private fields
 
         private const EntityType TYPE = EntityType.NurbsCurve;
-        private const string DXF_NAME = DxfEntityCode.Polyline;
+        private const string DXF_NAME = DxfObjectCode.Polyline;
         private AciColor color;
         private Layer layer;
         private LineType lineType;
-        private readonly List<XData> xData;
-
-        private readonly List<NurbsVertex> controlPoints;
+        private Dictionary<ApplicationRegistry, XData> xData;
+        private List<NurbsVertex> controlPoints;
         private float[] knotVector;
-        private byte degree;
-        private Vector3 normal;
+        private int order;
+        private float elevation;
+        private float thickness;
+        private Vector3f normal;
+        private int curvePoints;
 
         #endregion
 
@@ -56,14 +59,38 @@ namespace netDxf.Entities
         public NurbsCurve()
         {
             this.controlPoints = new List<NurbsVertex>();
-            this.normal = Vector3.UnitZ;
+            this.normal = Vector3f.UnitZ;
             this.layer = Layer.Default;
             this.color = AciColor.ByLayer;
             this.lineType = LineType.ByLayer;
-            this.degree = 3;
-            this.normal = Vector3.UnitZ;
-            this.xData = new List<XData>();
+            this.order = 0;
+            this.curvePoints = 30;
+            this.elevation = 0.0f;
+            this.thickness = 0.0f;
+            this.normal = Vector3f.UnitZ;
         }
+
+        /// <summary>
+        /// Initializes a new instance of the <c>NurbsCurve</c> class.
+        /// </summary>
+        /// <param name="controlPoints">The nurbs curve <see cref="netDxf.Entities.NurbsVertex">control point</see> list.</param>
+        /// <param name="order">The nurbs curve order.</param>
+        public NurbsCurve(List<NurbsVertex> controlPoints, int order)
+        {
+            if (controlPoints.Count<order)
+                throw new ArgumentOutOfRangeException("order",order,"The order of the curve must be less or equal the number of control points.");
+            this.controlPoints = controlPoints;
+            this.normal = Vector3f.UnitZ;
+            this.layer = Layer.Default;
+            this.color = AciColor.ByLayer;
+            this.lineType = LineType.ByLayer;
+            this.order = order;
+            this.curvePoints = 30;
+            this.elevation = 0.0f;
+            this.thickness = 0.0f;
+            this.normal = Vector3f.UnitZ;
+        }
+
 
         #endregion
 
@@ -75,21 +102,27 @@ namespace netDxf.Entities
         public List<NurbsVertex> ControlPoints
         {
             get { return this.controlPoints; }
+            set 
+            {
+                if (value == null)
+                    throw new ArgumentNullException("value"); 
+                this.controlPoints = value;
+            }
         }
 
         /// <summary>
-        /// Gets or sets the nurbs curve degree.
+        /// Gets or sets the nurbs curve order.
         /// </summary>
-        public byte Degree
+        public int Order
         {
-            get { return this.degree; }
-            set { this.degree = value; }
+            get { return this.order; }
+            set { this.order = value; }
         }
 
         /// <summary>
-        /// Gets or sets the nurbs curve <see cref="netDxf.Vector3">normal</see>.
+        /// Gets or sets the nurbs curve <see cref="netDxf.Vector3f">normal</see>.
         /// </summary>
-        public Vector3 Normal
+        public Vector3f Normal
         {
             get { return this.normal; }
             set
@@ -99,6 +132,32 @@ namespace netDxf.Entities
             }
         }
 
+        /// <summary>
+        /// Gets or sets the number of points generated along the nurbs curve during the conversion to a polyline.
+        /// </summary>
+        public int CurvePoints
+        {
+            get { return this.curvePoints; }
+            set { this.curvePoints = value; }
+        }
+
+        /// <summary>
+        /// Gets or sets the nurbs curve thickness.
+        /// </summary>
+        public float Thickness
+        {
+            get { return this.thickness; }
+            set { this.thickness = value; }
+        }
+
+        /// <summary>
+        /// Gets or sets the nurbs curve elevation.
+        /// </summary>
+        public float Elevation
+        {
+            get { return this.elevation; }
+            set { this.elevation = value; }
+        }
         #endregion
 
         #region IEntityObject Members
@@ -164,9 +223,10 @@ namespace netDxf.Entities
         /// <summary>
         /// Gets or sets the entity <see cref="netDxf.XData">extende data</see>.
         /// </summary>
-        public List<XData> XData
+        public Dictionary<ApplicationRegistry, XData> XData
         {
             get { return this.xData; }
+            set { this.xData = value; }
         }
 
         #endregion
@@ -178,12 +238,15 @@ namespace netDxf.Entities
         /// </summary>
         /// <param name="precision">Number of point to approximate the curve to a polyline.</param>
         /// <returns>The vertexes are expresed in object coordinate system.</returns>
-        public List<Vector2> PolygonalVertexes(byte precision)
+        public List<Vector2f> PolygonalVertexes(int precision)
         {
+            if (this.controlPoints.Count < this.order)
+                throw new ArithmeticException("The order of the curve must be less or equal the number of control points.");
+
             this.knotVector = this.SetKnotVector();
             float[][][] nurbsBasisFunctions = this.DefineBasisFunctions(precision);
 
-            List<Vector2> vertexes = new List<Vector2>();
+            List<Vector2f> vertexes = new List<Vector2f>();
 
             for (int i = 0; i < precision; i++)
             {
@@ -191,11 +254,11 @@ namespace netDxf.Entities
                 float y = 0.0f;
                 for (int ctrlPointIndex = 0; ctrlPointIndex < this.controlPoints.Count; ctrlPointIndex++)
                 {
-                    x += this.controlPoints[ctrlPointIndex].Location.X*nurbsBasisFunctions[i][ctrlPointIndex][this.degree - 1];
-                    y += this.controlPoints[ctrlPointIndex].Location.Y*nurbsBasisFunctions[i][ctrlPointIndex][this.degree - 1];
+                    x += this.controlPoints[ctrlPointIndex].Location.X*nurbsBasisFunctions[i][ctrlPointIndex][this.order - 1];
+                    y += this.controlPoints[ctrlPointIndex].Location.Y*nurbsBasisFunctions[i][ctrlPointIndex][this.order - 1];
                 }
 
-                vertexes.Add(new Vector2(x, y));
+                vertexes.Add(new Vector2f(x, y));
             }
 
             return vertexes;
@@ -217,7 +280,7 @@ namespace netDxf.Entities
 
         #region private methods
 
-        private float[][][] DefineBasisFunctions(byte precision)
+        private float[][][] DefineBasisFunctions(int precision)
         {
             float[][][] nurbsBasisFunctions;
             float[][][] basisFunctions;
@@ -237,8 +300,8 @@ namespace netDxf.Entities
 
                 for (int ctrlPointIndex = 0; ctrlPointIndex < this.controlPoints.Count + 1; ctrlPointIndex++)
                 {
-                    basisFunctions[vertexIndex][ctrlPointIndex] = new float[this.degree];
-                    nurbsBasisFunctions[vertexIndex][ctrlPointIndex] = new float[this.degree];
+                    basisFunctions[vertexIndex][ctrlPointIndex] = new float[this.order];
+                    nurbsBasisFunctions[vertexIndex][ctrlPointIndex] = new float[this.order];
 
                     if (t >= this.knotVector[ctrlPointIndex] && t < this.knotVector[ctrlPointIndex + 1])
                         basisFunctions[vertexIndex][ctrlPointIndex][0] = 1.0f;
@@ -247,7 +310,7 @@ namespace netDxf.Entities
                 }
             }
 
-            for (int order = 1; order < this.degree; order++)
+            for (int orderIndex = 1; orderIndex < this.order; orderIndex++)
             {
                 for (int ctrlPointIndex = 0; ctrlPointIndex < this.controlPoints.Count; ctrlPointIndex++)
                 {
@@ -255,12 +318,12 @@ namespace netDxf.Entities
                     {
                         float t = vertexIndex/(float) (precision - 1);
 
-                        float Nikm1 = basisFunctions[vertexIndex][ctrlPointIndex][order - 1];
-                        float Nip1km1 = basisFunctions[vertexIndex][ctrlPointIndex + 1][order - 1];
+                        float Nikm1 = basisFunctions[vertexIndex][ctrlPointIndex][orderIndex - 1];
+                        float Nip1km1 = basisFunctions[vertexIndex][ctrlPointIndex + 1][orderIndex - 1];
 
                         float xi = this.knotVector[ctrlPointIndex];
-                        float xikm1 = this.knotVector[ctrlPointIndex + order - 1 + 1];
-                        float xik = this.knotVector[ctrlPointIndex + order + 1];
+                        float xikm1 = this.knotVector[ctrlPointIndex + orderIndex - 1 + 1];
+                        float xik = this.knotVector[ctrlPointIndex + orderIndex + 1];
                         float xip1 = this.knotVector[ctrlPointIndex + 1];
 
                         float FirstTermBasis;
@@ -275,26 +338,26 @@ namespace netDxf.Entities
                         else
                             SecondTermBasis = ((xik - t)*Nip1km1)/(xik - xip1);
 
-                        basisFunctions[vertexIndex][ctrlPointIndex][order] = FirstTermBasis + SecondTermBasis;
+                        basisFunctions[vertexIndex][ctrlPointIndex][orderIndex] = FirstTermBasis + SecondTermBasis;
                     }
                 }
             }
 
-            for (int Order = 1; Order < this.degree; Order++)
+            for (int orderIndex = 1; orderIndex < this.order; orderIndex++)
             {
-                for (int ControlPoint = 0; ControlPoint < this.controlPoints.Count; ControlPoint++)
+                for (int ctrlPointIndex = 0; ctrlPointIndex < this.controlPoints.Count; ctrlPointIndex++)
                 {
-                    for (int Vertex = 0; Vertex < precision; Vertex++)
+                    for (int vertexIndex = 0; vertexIndex < precision; vertexIndex++)
                     {
-                        float Denominator = 0.0f;
-                        for (int ControlWeight = 0; ControlWeight < this.controlPoints.Count; ControlWeight++)
+                        float denominator = 0.0f;
+                        for (int controlWeight = 0; controlWeight < this.controlPoints.Count; controlWeight++)
                         {
-                            Denominator += this.controlPoints[ControlWeight].Weight*basisFunctions[Vertex][ControlWeight][Order];
+                            denominator += this.controlPoints[controlWeight].Weight*basisFunctions[vertexIndex][controlWeight][orderIndex];
                         }
 
-                        nurbsBasisFunctions[Vertex][ControlPoint][Order] = this.controlPoints[ControlPoint].Weight*
-                                                                           basisFunctions[Vertex][ControlPoint][Order]/
-                                                                           Denominator;
+                        nurbsBasisFunctions[vertexIndex][ctrlPointIndex][orderIndex] = this.controlPoints[ctrlPointIndex].Weight*
+                                                                           basisFunctions[vertexIndex][ctrlPointIndex][orderIndex]/
+                                                                           denominator;
                     }
                 }
             }
@@ -305,14 +368,14 @@ namespace netDxf.Entities
         private float[] SetKnotVector()
         {
             //This code creates an open uniform knot vector
-            float[] knots = new float[this.controlPoints.Count + this.degree];
+            float[] knots = new float[this.controlPoints.Count + this.order];
             int knotValue = 0;
-            for (int i = 0; i < this.degree + this.controlPoints.Count; i++)
+            for (int i = 0; i < this.order + this.controlPoints.Count; i++)
             {
-                if (i <= this.controlPoints.Count && i >= this.degree)
+                if (i <= this.controlPoints.Count && i >= this.order)
                     knotValue++;
 
-                knots[i] = knotValue/(float) (this.controlPoints.Count - this.degree + 1);
+                knots[i] = knotValue/(float) (this.controlPoints.Count - this.order + 1);
             }
             return knots;
         }

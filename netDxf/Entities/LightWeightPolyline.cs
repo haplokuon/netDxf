@@ -35,15 +35,14 @@ namespace netDxf.Entities
     /// When a AutoCad12 file is saved all lightweight polylines will be converted to polylines, while for AutoCad2000 and later versions all
     /// polylines will be converted to lightweight polylines.
     /// </remarks>
-    public class Polyline :
+    public class LightWeightPolyline :
         DxfObject,
         IPolyline
     {
         #region private fields
 
-        private readonly EndSequence endSequence;
-        private const EntityType TYPE = EntityType.Polyline;
-        private List<PolylineVertex> vertexes;
+        private const EntityType TYPE = EntityType.LightWeightPolyline;
+        private List<LightWeightPolylineVertex> vertexes;
         private bool isClosed;
         private PolylineTypeFlags flags;
         private Layer layer;
@@ -61,10 +60,10 @@ namespace netDxf.Entities
         /// <summary>
         /// Initializes a new instance of the <c>Polyline</c> class.
         /// </summary>
-        /// <param name="vertexes">Polyline vertex list in object coordinates.</param>
+        /// <param name="vertexes">Polyline <see cref="LightWeightPolylineVertex">vertex</see> list in object coordinates.</param>
         /// <param name="isClosed">Sets if the polyline is closed</param>
-        public Polyline(List<PolylineVertex> vertexes, bool isClosed)
-            : base(DxfObjectCode.Polyline)
+        public LightWeightPolyline(List<LightWeightPolylineVertex> vertexes, bool isClosed)
+            : base(DxfObjectCode.LightWeightPolyline)
         {
             this.vertexes = vertexes;
             this.isClosed = isClosed;
@@ -75,15 +74,14 @@ namespace netDxf.Entities
             this.elevation = 0.0f;
             this.thickness = 0.0f;
             this.flags = isClosed ? PolylineTypeFlags.ClosedPolylineOrClosedPolygonMeshInM : PolylineTypeFlags.OpenPolyline;
-            this.endSequence = new EndSequence();
         }
 
         /// <summary>
         /// Initializes a new instance of the <c>Polyline</c> class.
         /// </summary>
-        /// <param name="vertexes">Polyline <see cref="PolylineVertex">vertex</see> list in object coordinates.</param>
-        public Polyline(List<PolylineVertex> vertexes)
-            : base(DxfObjectCode.Polyline)
+        /// <param name="vertexes">Polyline <see cref="LightWeightPolylineVertex">vertex</see> list in object coordinates.</param>
+        public LightWeightPolyline(List<LightWeightPolylineVertex> vertexes)
+            : base(DxfObjectCode.LightWeightPolyline)
         {
             this.vertexes = vertexes;
             this.isClosed = false;
@@ -94,16 +92,15 @@ namespace netDxf.Entities
             this.elevation = 0.0f;
             this.thickness = 0.0f;
             this.flags = PolylineTypeFlags.OpenPolyline;
-            this.endSequence = new EndSequence();
         }
 
         /// <summary>
         /// Initializes a new instance of the <c>Polyline</c> class.
         /// </summary>
-        public Polyline()
-            : base(DxfObjectCode.Polyline)
+        public LightWeightPolyline()
+            : base(DxfObjectCode.LightWeightPolyline)
         {
-            this.vertexes = new List<PolylineVertex>();
+            this.vertexes = new List<LightWeightPolylineVertex>();
             this.isClosed = false;
             this.layer = Layer.Default;
             this.color = AciColor.ByLayer;
@@ -111,7 +108,6 @@ namespace netDxf.Entities
             this.normal = Vector3f.UnitZ;
             this.elevation = 0.0f;
             this.flags = PolylineTypeFlags.OpenPolyline;
-            this.endSequence = new EndSequence();
         }
 
         #endregion
@@ -121,7 +117,7 @@ namespace netDxf.Entities
         /// <summary>
         /// Gets or sets the polyline <see cref="netDxf.Entities.PolylineVertex">vertex</see> list.
         /// </summary>
-        public List<PolylineVertex> Vertexes
+        public List<LightWeightPolylineVertex> Vertexes
         {
             get { return this.vertexes; }
             set
@@ -176,11 +172,6 @@ namespace netDxf.Entities
         {
             get { return this.elevation; }
             set { this.elevation = value; }
-        }
-
-        internal EndSequence EndSequence
-        {
-            get { return this.endSequence; }
         }
 
         #endregion
@@ -268,7 +259,7 @@ namespace netDxf.Entities
         /// <param name="width">Polyline width.</param>
         public void SetConstantWidth(float width)
         {
-            foreach (PolylineVertex v in this.vertexes)
+            foreach (LightWeightPolylineVertex v in this.vertexes)
             {
                 v.BeginThickness = width;
                 v.EndThickness = width;
@@ -276,24 +267,28 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Converts the polyline in a <see cref="netDxf.Entities.LightWeightPolyline">LightWeightPolyline</see>.
+        /// Converts the lightweight polyline in a <see cref="Polyline">Polyline</see>.
         /// </summary>
-        /// <returns>A new instance of <see cref="LightWeightPolyline">LightWeightPolyline</see> that represents the lightweight polyline.</returns>
-        public LightWeightPolyline ToLightWeightPolyline()
+        /// <returns>A new instance of <see cref="Polyline">Polyline</see> that represents the lightweight polyline.</returns>
+        public Polyline ToPolyline()
         {
-            List<LightWeightPolylineVertex> polyVertexes = new List<LightWeightPolylineVertex>();
-            foreach (PolylineVertex v in this.vertexes)
+            List<PolylineVertex> polyVertexes = new List<PolylineVertex>();
+            
+            foreach (LightWeightPolylineVertex v in this.vertexes)
             {
-                polyVertexes.Add(new LightWeightPolylineVertex(v.Location)
+                polyVertexes.Add(new PolylineVertex(v.Location)
                                      {
                                          BeginThickness = v.BeginThickness,
                                          Bulge = v.Bulge,
+                                         Color = this.Color,
                                          EndThickness = v.EndThickness,
+                                         Layer = this.Layer,
+                                         LineType = this.LineType,
                                      }
                     );
             }
 
-            return new LightWeightPolyline(polyVertexes, this.isClosed)
+            return new Polyline(polyVertexes, this.isClosed)
                        {
                            Color = this.color,
                            Layer = this.layer,
@@ -304,6 +299,7 @@ namespace netDxf.Entities
                            XData = this.xData
                        };
         }
+
 
         /// <summary>
         /// Obtains a list of vertexes that represent the polyline approximating the curve segments as necessary.
@@ -318,7 +314,7 @@ namespace netDxf.Entities
 
             int index = 0;
 
-            foreach (PolylineVertex vertex in this.Vertexes)
+            foreach (LightWeightPolylineVertex vertex in this.Vertexes)
             {
                 float bulge = vertex.Bulge;
                 Vector2f p1;
@@ -395,25 +391,6 @@ namespace netDxf.Entities
         #endregion
 
         #region overrides
-
-        /// <summary>
-        /// Asigns a handle to the object based in a integer counter.
-        /// </summary>
-        /// <param name="entityNumber">Number to asign.</param>
-        /// <returns>Next avaliable entity number.</returns>
-        /// <remarks>
-        /// Some objects might consume more than one, is, for example, the case of polylines that will asign
-        /// automatically a handle to its vertexes. The entity number will be converted to an hexadecimal number.
-        /// </remarks>
-        internal override int AsignHandle(int entityNumber)
-        {
-            foreach (PolylineVertex v in this.vertexes)
-            {
-                entityNumber = v.AsignHandle(entityNumber);
-            }
-            entityNumber = this.endSequence.AsignHandle(entityNumber);
-            return base.AsignHandle(entityNumber);
-        }
 
         /// <summary>
         /// Converts the value of this instance to its equivalent string representation.

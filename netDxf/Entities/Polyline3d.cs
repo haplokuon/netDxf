@@ -30,18 +30,19 @@ namespace netDxf.Entities
     /// Represents a 3d polyline <see cref="IEntityObject">entity</see>.
     /// </summary>
     public class Polyline3d :
+        DxfObject,
         IPolyline
     {
         #region private fields
 
-        private const string DXF_NAME = DxfEntityCode.Polyline;
+        private readonly EndSequence endSequence;
         protected const EntityType TYPE = EntityType.Polyline3d;
         protected List<Polyline3dVertex> vertexes;
         protected PolylineTypeFlags flags;
         protected Layer layer;
         protected AciColor color;
         protected LineType lineType;
-        protected readonly List<XData> xData;
+        protected Dictionary<ApplicationRegistry, XData> xData;
 
         #endregion
 
@@ -52,14 +53,15 @@ namespace netDxf.Entities
         /// </summary>
         /// <param name="vertexes">3d polyline <see cref="Polyline3dVertex">vertex</see> list.</param>
         /// <param name="isClosed">Sets if the polyline is closed</param>
-        public Polyline3d(List<Polyline3dVertex> vertexes, bool isClosed)
+        public Polyline3d(List<Polyline3dVertex> vertexes, bool isClosed) 
+            : base (DxfObjectCode.Polyline)
         {
             this.flags = isClosed ? PolylineTypeFlags.ClosedPolylineOrClosedPolygonMeshInM | PolylineTypeFlags.Polyline3D : PolylineTypeFlags.Polyline3D;
             this.vertexes = vertexes;
             this.layer = Layer.Default;
             this.color = AciColor.ByLayer;
             this.lineType = LineType.ByLayer;
-            this.xData = new List<XData>();
+            this.endSequence = new EndSequence();
         }
 
         /// <summary>
@@ -67,26 +69,28 @@ namespace netDxf.Entities
         /// </summary>
         /// <param name="vertexes">3d polyline <see cref="Polyline3dVertex">vertex</see> list.</param>
         public Polyline3d(List<Polyline3dVertex> vertexes)
+            : base(DxfObjectCode.Polyline)
         {
             this.flags = PolylineTypeFlags.Polyline3D;
             this.vertexes = vertexes;
             this.layer = Layer.Default;
             this.color = AciColor.ByLayer;
             this.lineType = LineType.ByLayer;
-            this.xData = new List<XData>();
+            this.endSequence = new EndSequence();
         }
 
         /// <summary>
         /// Initializes a new instance of the <c>Polyline3d</c> class.
         /// </summary>
         public Polyline3d()
+            : base(DxfObjectCode.Polyline)
         {
             this.flags = PolylineTypeFlags.Polyline3D;
             this.vertexes = new List<Polyline3dVertex>();
             this.layer = Layer.Default;
             this.color = AciColor.ByLayer;
             this.lineType = LineType.ByLayer;
-            this.xData = new List<XData>();
+            this.endSequence = new EndSequence();
         }
 
         #endregion
@@ -107,6 +111,11 @@ namespace netDxf.Entities
             }
         }
 
+        internal EndSequence EndSequence
+        {
+            get { return this.endSequence; }
+        }
+
         #endregion
 
         #region IPolyline Members
@@ -122,14 +131,6 @@ namespace netDxf.Entities
         #endregion
 
         #region IEntityObject Members
-
-        /// <summary>
-        /// Gets the dxf code that represents the entity.
-        /// </summary>
-        public string DxfName
-        {
-            get { return DXF_NAME; }
-        }
 
         /// <summary>
         /// Gets the entity <see cref="netDxf.Entities.EntityType">type</see>.
@@ -184,14 +185,35 @@ namespace netDxf.Entities
         /// <summary>
         /// Gets or sets the entity <see cref="netDxf.XData">extende data</see>.
         /// </summary>
-        public List<XData> XData
+        public Dictionary<ApplicationRegistry, XData> XData
         {
             get { return this.xData; }
+            set { this.xData = value; }
         }
 
         #endregion
 
         #region overrides
+
+        /// <summary>
+        /// Asigns a handle to the object based in a integer counter.
+        /// </summary>
+        /// <param name="entityNumber">Number to asign.</param>
+        /// <returns>Next avaliable entity number.</returns>
+        /// <remarks>
+        /// Some objects might consume more than one, is, for example, the case of polylines that will asign
+        /// automatically a handle to its vertexes. The entity number will be converted to an hexadecimal number.
+        /// </remarks>
+        internal override int AsignHandle(int entityNumber)
+        {
+            foreach( Polyline3dVertex v in this.vertexes )
+            {
+                entityNumber = v.AsignHandle(entityNumber);
+            }
+            entityNumber = this.endSequence.AsignHandle(entityNumber);
+
+            return base.AsignHandle(entityNumber);
+        }
 
         /// <summary>
         /// Converts the value of this instance to its equivalent string representation.

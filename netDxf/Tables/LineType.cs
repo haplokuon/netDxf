@@ -29,6 +29,7 @@ namespace netDxf.Tables
     /// Represents a line type.
     /// </summary>
     public class LineType :
+        DxfObject,
         ITableObject
     {
         #region private fields
@@ -66,7 +67,7 @@ namespace netDxf.Tables
             {
                 var result = new LineType("Continuous")
                                  {
-                                     Description = "Continuous, _____________________________________"
+                                     Description = "Solid line"
                                  };
                 return result;
             }
@@ -79,7 +80,7 @@ namespace netDxf.Tables
         {
             get
             {
-                var result = new LineType("CENTER")
+                var result = new LineType("Center")
                                  {
                                      Description = "Center, ____ _ ____ _ ____ _ ____ _ ____ _ ____"
                                  };
@@ -95,7 +96,7 @@ namespace netDxf.Tables
         {
             get
             {
-                var result = new LineType("DASHDOT")
+                var result = new LineType("Dashdot")
                                  {
                                      Description = "Dash dot, __ . __ . __ . __ . __ . __ . __ . __"
                                  };
@@ -111,7 +112,7 @@ namespace netDxf.Tables
         {
             get
             {
-                var result = new LineType("DASHED")
+                var result = new LineType("Dashed")
                                  {
                                      Description = "Dashed, __ __ __ __ __ __ __ __ __ __ __ __ __ _"
                                  };
@@ -127,7 +128,7 @@ namespace netDxf.Tables
         {
             get
             {
-                var result = new LineType("DOT")
+                var result = new LineType("Dot")
                                  {
                                      Description = "Dot, . . . . . . . . . . . . . . . . . . . . . . . ."
                                  };
@@ -145,11 +146,12 @@ namespace netDxf.Tables
         /// </summary>
         /// <param name="name">Line type name.</param>
         public LineType(string name)
+            : base(DxfObjectCode.LineType)
         {
             if (string.IsNullOrEmpty(name))
                 throw (new ArgumentNullException("name"));
             this.name = name;
-            this.description = name;
+            this.description = string.Empty;
             this.segments = new List<float>();
         }
 

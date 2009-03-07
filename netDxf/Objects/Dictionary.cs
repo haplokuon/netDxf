@@ -20,29 +20,69 @@
 
 #endregion
 
-namespace netDxf
+using netDxf.Tables;
+
+namespace netDxf.Objects
 {
-    /// <summary>
-    /// Symbols for dxf text strings.
-    /// </summary>
-    /// <remarks>
-    /// These special strings translates to symbols in AutoCad. 
-    /// </remarks>
-    public static class Symbols
+    internal class Dictionary :
+        DxfObject,
+        ITableObject
     {
-        /// <summary>
-        /// Text string that shows as a diameter 'Ø' character.
-        /// </summary>
-        public const string Diameter = "%%c";
+        #region private fields
+
+        private readonly string name;
+
+        #endregion
+
+        #region constants
+
+        internal static Dictionary Default
+        {
+            get { return new Dictionary("ACAD_GROUP"); }
+        }
+
+        #endregion
+
+        #region constructors
 
         /// <summary>
-        /// Text string that shows as a degree '°' character.
+        /// Initializes a new instance of the <c>View</c> class.
         /// </summary>
-        public const string Degree = "%%d";
+        public Dictionary(string name)
+            : base(DxfObjectCode.Dictionary)
+        {
+            this.name = name;
+        }
+
+        #endregion
+
+        #region public properties
+
+        #endregion
+
+        #region ITableObject Members
 
         /// <summary>
-        /// Text string that shows as a plus-minus '±' character.
+        /// Gets the table name.
         /// </summary>
-        public const string PlusMinus = "%%p";
+        public string Name
+        {
+            get { return this.name; }
+        }
+
+        #endregion
+
+        #region overrides
+
+        /// <summary>
+        /// Converts the value of this instance to its equivalent string representation.
+        /// </summary>
+        /// <returns>The string representation.</returns>
+        public override string ToString()
+        {
+            return this.name;
+        }
+
+        #endregion
     }
 }

@@ -30,18 +30,18 @@ namespace netDxf.Entities
     /// Represents a polyface mesh vertex. 
     /// </summary>
     public class PolyfaceMeshVertex :
+        DxfObject,
         IVertex
     {
         #region private fields
 
-        protected const string DXF_NAME = DxfEntityCode.Vertex;
         protected const EntityType TYPE = EntityType.PolyfaceMeshVertex;
         protected VertexTypeFlags flags;
-        protected Vector3 location;
+        protected Vector3f location;
         protected AciColor color;
         protected Layer layer;
         protected LineType lineType;
-        protected readonly List<XData> xData;
+        protected Dictionary<ApplicationRegistry, XData> xData;
 
         #endregion
 
@@ -51,29 +51,27 @@ namespace netDxf.Entities
         /// Initializes a new instance of the <c>PolylineVertex</c> class.
         /// </summary>
         public PolyfaceMeshVertex()
+            : base(DxfObjectCode.Vertex)
         {
             this.flags = VertexTypeFlags.PolyfaceMeshVertex | VertexTypeFlags.Polygon3dMesh;
-            this.location = Vector3.Zero;
+            this.location = Vector3f.Zero;
             this.layer = Layer.Default;
             this.color = AciColor.ByLayer;
             this.lineType = LineType.ByLayer;
-            this.xData = new List<XData>();
-
         }
 
         /// <summary>
         /// Initializes a new instance of the <c>PolylineVertex</c> class.
         /// </summary>
-        /// <param name="location">Polyface mesh vertex <see cref="Vector3">location</see>.</param>
-        public PolyfaceMeshVertex(Vector3 location)
+        /// <param name="location">Polyface mesh vertex <see cref="Vector3f">location</see>.</param>
+        public PolyfaceMeshVertex(Vector3f location)
+            : base(DxfObjectCode.Vertex)
         {
             this.flags = VertexTypeFlags.PolyfaceMeshVertex | VertexTypeFlags.Polygon3dMesh;
             this.location = location;
             this.layer = Layer.Default;
             this.color = AciColor.ByLayer;
             this.lineType = LineType.ByLayer;
-            this.xData = new List<XData>();
-
         }
 
         /// <summary>
@@ -83,14 +81,13 @@ namespace netDxf.Entities
         /// <param name="y">Y coordinate.</param>
         /// <param name="z">Z coordinate.</param>
         public PolyfaceMeshVertex(float x, float y, float z)
+            : base(DxfObjectCode.Vertex)
         {
             this.flags = VertexTypeFlags.PolyfaceMeshVertex | VertexTypeFlags.Polygon3dMesh;
-            this.location = new Vector3(x, y, z);
+            this.location = new Vector3f(x, y, z);
             this.layer = Layer.Default;
             this.color = AciColor.ByLayer;
             this.lineType = LineType.ByLayer;
-            this.xData = new List<XData>();
-
         }
 
         #endregion
@@ -98,9 +95,9 @@ namespace netDxf.Entities
         #region public properties
 
         /// <summary>
-        /// Gets or sets the polyface mesh vertex <see cref="netDxf.Vector3">location</see>.
+        /// Gets or sets the polyface mesh vertex <see cref="netDxf.Vector3f">location</see>.
         /// </summary>
-        public Vector3 Location
+        public Vector3f Location
         {
             get { return this.location; }
             set { this.location = value; }
@@ -121,14 +118,6 @@ namespace netDxf.Entities
         #endregion
 
         #region IEntityObject Members
-
-        /// <summary>
-        /// Gets the dxf code that represents the entity.
-        /// </summary>
-        public string DxfName
-        {
-            get { return DXF_NAME; }
-        }
 
         /// <summary>
         /// Gets the entity <see cref="netDxf.Entities.EntityType">type</see>.
@@ -183,9 +172,10 @@ namespace netDxf.Entities
         /// <summary>
         /// Gets or sets the entity <see cref="netDxf.XData">extende data</see>.
         /// </summary>
-        public List<XData> XData
+        public Dictionary<ApplicationRegistry, XData> XData
         {
             get { return this.xData; }
+            set { this.xData = value; }
         }
 
         #endregion

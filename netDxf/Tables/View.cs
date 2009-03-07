@@ -20,100 +20,68 @@
 
 #endregion
 
-using System;
-
 namespace netDxf.Tables
 {
-    /// <summary>
-    /// Represents a layer.
-    /// </summary>
-    public class Layer :
+    internal class View :
         DxfObject,
         ITableObject
     {
         #region private fields
-        private static string plotStyleHandle;
+
         private readonly string name;
-        private AciColor color;
-        private bool isVisible;
-        private LineType lineType;
+        private Vector2f lowerLeftCorner = Vector2f.Zero;
+        private Vector2f upperRightCorner = new Vector2f(1, 1);
+        private Vector3f target = Vector3f.Zero;
+        private Vector3f camera = Vector3f.UnitZ;
+
+        #endregion
+
+        #region constants
+
+        internal static View Default
+        {
+            get { return new View("default"); }
+        }
 
         #endregion
 
         #region constructors
 
         /// <summary>
-        /// Initializes a new instance of the <c>Layer</c> class.
+        /// Initializes a new instance of the <c>View</c> class.
         /// </summary>
-        /// <param name="name">Layer name.</param>
-        public Layer(string name)
-            : base(DxfObjectCode.Layer)
+        public View(string name)
+            : base(DxfObjectCode.View)
         {
-            if (string.IsNullOrEmpty(name))
-                throw (new ArgumentNullException("name"));
             this.name = name;
-            this.color = AciColor.Default;
-            this.lineType = LineType.Continuous;
-            this.isVisible = true;
-        }
-
-        #endregion
-
-        #region constants
-
-        /// <summary>
-        /// Gets the default Layer.
-        /// </summary>
-        public static Layer Default
-        {
-            get { return new Layer("0"); }
         }
 
         #endregion
 
         #region public properties
 
-        internal static string PlotStyleHandle
+        public Vector2f LowerLeftCorner
         {
-            set { plotStyleHandle = value; }
-            get { return plotStyleHandle; }
+            get { return this.lowerLeftCorner; }
+            set { this.lowerLeftCorner = value; }
         }
 
-        /// <summary>
-        /// Gets or sets the layer <see cref="LineType"line type></see>.
-        /// </summary>
-        public LineType LineType
+        public Vector2f UpperRightCorner
         {
-            get { return this.lineType; }
-            set
-            {
-                if (value == null)
-                    throw new NullReferenceException("value"); 
-                this.lineType = value;
-            }
+            get { return this.upperRightCorner; }
+            set { this.upperRightCorner = value; }
         }
 
-        /// <summary>
-        /// Gets or sets the layer <see cref="AciColor">color</see>.
-        /// </summary>
-        public AciColor Color
+        public Vector3f Target
         {
-            get { return this.color; }
-            set
-            {
-                if (value == null)
-                    throw new NullReferenceException("value"); 
-                this.color = value;
-            }
+            get { return this.target; }
+            set { this.target = value; }
         }
 
-        /// <summary>
-        /// Gets or sets if the layer is visible.
-        /// </summary>
-        public bool IsVisible
+        public Vector3f Camera
         {
-            get { return this.isVisible; }
-            set { this.isVisible = value; }
+            get { return this.camera; }
+            set { this.camera = value; }
         }
 
         #endregion

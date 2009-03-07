@@ -33,14 +33,15 @@ namespace netDxf.Entities
     /// The Vertex class holds all the information read from the dxf file even if its needed or not.
     /// For internal use only.
     /// </remarks>
-    internal class Vertex
+    internal class Vertex :
+        DxfObject 
+        
     {
       
         #region private fields
 
-        private const string DXF_NAME = DxfEntityCode.Vertex;
         private VertexTypeFlags flags;
-        private Vector3 location;
+        private Vector3f location;
         private int[] vertexIndexes;
         private float beginThickness;
         private float endThickness;
@@ -48,7 +49,7 @@ namespace netDxf.Entities
         private AciColor color;
         private Layer layer;
         private LineType lineType;
-        private List<XData> xData;
+        private Dictionary<ApplicationRegistry, XData> xData;
 
         #endregion
 
@@ -58,23 +59,24 @@ namespace netDxf.Entities
         /// Initializes a new instance of the <c>Vertex</c> class.
         /// </summary>
         public Vertex()
+            : base(DxfObjectCode.Vertex)
         {
             this.flags = VertexTypeFlags.PolylineVertex;
-            this.location = Vector3.Zero;
+            this.location = Vector3f.Zero;
             this.layer = Layer.Default;
             this.color = AciColor.ByLayer;
             this.lineType = LineType.ByLayer;
             this.bulge = 0.0f;
             this.beginThickness = 0.0f;
             this.endThickness = 0.0f;
-            this.xData = new List<XData>();
         }
 
         /// <summary>
         /// Initializes a new instance of the <c>Vertex</c> class.
         /// </summary>
-        /// <param name="location">Vertex <see cref="netDxf.Vector3">location</see>.</param>
-        public Vertex(Vector3 location)
+        /// <param name="location">Vertex <see cref="netDxf.Vector3f">location</see>.</param>
+        public Vertex(Vector3f location)
+            : base(DxfObjectCode.Vertex)
         {
             this.flags = VertexTypeFlags.PolylineVertex;
             this.location = location;
@@ -84,24 +86,23 @@ namespace netDxf.Entities
             this.bulge = 0.0f;
             this.beginThickness = 0.0f;
             this.endThickness = 0.0f;
-            this.xData = new List<XData>();
         }
 
         /// <summary>
         /// Initializes a new instance of the <c>Vertex</c> class.
         /// </summary>
-        /// <param name="location">Vertex <see cref="netDxf.Vector2">location</see>.</param>
-        public Vertex(Vector2 location)
+        /// <param name="location">Vertex <see cref="netDxf.Vector2f">location</see>.</param>
+        public Vertex(Vector2f location)
+            : base(DxfObjectCode.Vertex)
         {
             this.flags = VertexTypeFlags.PolylineVertex;
-            this.location = new Vector3(location.X, location.Y, 0.0f);
+            this.location = new Vector3f(location.X, location.Y, 0.0f);
             this.layer = Layer.Default;
             this.color = AciColor.ByLayer;
             this.lineType = LineType.ByLayer;
             this.bulge = 0.0f;
             this.beginThickness = 0.0f;
             this.endThickness = 0.0f;
-            this.xData = new List<XData>();
         }
 
         /// <summary>
@@ -111,16 +112,16 @@ namespace netDxf.Entities
         /// <param name="y">Y coordinate.</param>
         /// <param name="z">Z coordinate.</param>
         public Vertex(float x, float y, float z)
+            : base(DxfObjectCode.Vertex)
         {
             this.flags = VertexTypeFlags.PolylineVertex;
-            this.location = new Vector3(x, y, z);
+            this.location = new Vector3f(x, y, z);
             this.layer = Layer.Default;
             this.color = AciColor.ByLayer;
             this.lineType = LineType.ByLayer;
             this.bulge = 0.0f;
             this.beginThickness = 0.0f;
             this.endThickness = 0.0f;
-            this.xData = new List<XData>();
         }
 
         /// <summary>
@@ -129,16 +130,16 @@ namespace netDxf.Entities
         /// <param name="x">X coordinate.</param>
         /// <param name="y">Y coordinate.</param>
         public Vertex(float x, float y)
+            : base(DxfObjectCode.Vertex)
         {
             this.flags = VertexTypeFlags.PolylineVertex;
-            this.location = new Vector3(x, y, 0.0f);
+            this.location = new Vector3f(x, y, 0.0f);
             this.layer = Layer.Default;
             this.color = AciColor.ByLayer;
             this.lineType = LineType.ByLayer;
             this.bulge = 0.0f;
             this.beginThickness = 0.0f;
             this.endThickness = 0.0f;
-            this.xData = new List<XData>();
         }
 
         #endregion
@@ -146,9 +147,9 @@ namespace netDxf.Entities
         #region public properties
         
         /// <summary>
-        /// Gets or sets the polyline vertex <see cref="netDxf.Vector3">location</see>.
+        /// Gets or sets the polyline vertex <see cref="netDxf.Vector3f">location</see>.
         /// </summary>
-        public Vector3 Location
+        public Vector3f Location
         {
             get { return this.location; }
             set { this.location = value; }
@@ -208,14 +209,6 @@ namespace netDxf.Entities
             set { this.flags = value;}
         }
 
-        /// <summary>
-        /// Gets the dxf code that represents the entity.
-        /// </summary>
-        public string DxfName
-        {
-            get { return DXF_NAME; }
-        }
-
        /// <summary>
         /// Gets or sets the entity color.
         /// </summary>
@@ -246,10 +239,10 @@ namespace netDxf.Entities
         /// <summary>
         /// Gets or sets the entity extended data.
         /// </summary>
-        public List<XData> XData
+        public Dictionary<ApplicationRegistry, XData> XData
         {
             get { return this.xData; }
-            set { this.xData = value;}
+            set { this.xData = value; }
         }
 
         #endregion
@@ -258,7 +251,7 @@ namespace netDxf.Entities
 
         public override string ToString()
         {
-            return DXF_NAME;
+            return this.CodeName;
         }
 
         #endregion

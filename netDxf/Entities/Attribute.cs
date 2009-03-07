@@ -30,18 +30,18 @@ namespace netDxf.Entities
     /// Represents a attribute <see cref="netDxf.Entities.IEntityObject">entity</see>.
     /// </summary>
     public class Attribute :
+        DxfObject,
         IEntityObject
     {
         #region private fields
 
-        private const string DXF_NAME = DxfEntityCode.Attribute;
         private const EntityType TYPE = EntityType.Attribute;
         private readonly AttributeDefinition definition;
         private object value;
         private AciColor color;
         private Layer layer;
         private LineType lineType;
-        private readonly List<XData> xData;
+        private Dictionary<ApplicationRegistry, XData> xData;
 
         #endregion
 
@@ -52,13 +52,13 @@ namespace netDxf.Entities
         /// </summary>
         /// <param name="definition"><see cref="AttributeDefinition">Attribute definition</see>.</param>
         public Attribute(AttributeDefinition definition)
+            : base(DxfObjectCode.Attribute)
         {
             this.definition = definition;
             this.value = null;
             this.color = definition.Color;
             this.layer = definition.Layer;
             this.lineType = definition.LineType;
-            this.xData = new List<XData>();
         }
 
         /// <summary>
@@ -67,13 +67,13 @@ namespace netDxf.Entities
         /// <param name="definition"><see cref="AttributeDefinition">Attribute definition</see>.</param>
         /// <param name="value">Attribute value.</param>
         public Attribute(AttributeDefinition definition, object value)
+            : base(DxfObjectCode.Attribute)
         {
             this.definition = definition;
             this.value = value;
             this.color = definition.Color;
             this.layer = definition.Layer;
             this.lineType = definition.LineType;
-            this.xData = new List<XData>();
         }
 
         #endregion
@@ -101,15 +101,7 @@ namespace netDxf.Entities
 
         #region IEntityObject Members
 
-        /// <summary>
-        /// Gets the dxf code that represents the entity.
-        /// </summary>
-        public string DxfName
-        {
-            get { return DXF_NAME; }
-        }
-
-        /// <summary>
+       /// <summary>
         /// Gets the entity <see cref="netDxf.Entities.EntityType">type</see>.
         /// </summary>
         public EntityType Type
@@ -162,9 +154,13 @@ namespace netDxf.Entities
         /// <summary>
         /// Gets or sets the entity <see cref="netDxf.XData">extende data</see>.
         /// </summary>
-        public List<XData> XData
+        public Dictionary<ApplicationRegistry, XData> XData
         {
             get { return this.xData; }
+            set
+            {
+                throw new ArgumentException("Extended data not avaliable for attributes","value");
+            }
         }
 
         #endregion

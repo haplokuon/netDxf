@@ -38,21 +38,36 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
-    <Reference Include="System.Data" />
     <Reference Include="System.Drawing" />
-    <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AciColor.cs" />
+    <Compile Include="Blocks\BlockEnd.cs" />
     <Compile Include="CodeValuePair.cs" />
+    <Compile Include="Entities\LightWeightPolyline.cs" />
+    <Compile Include="Entities\LightWeightPolylineVertex.cs" />
+    <Compile Include="Header\DxfVersion.cs" />
+    <Compile Include="Header\SystemVariable.cs" />
+    <Compile Include="Vector2d.cs" />
+    <Compile Include="Vector3d.cs" />
+    <Compile Include="Matrix3d.cs" />
+    <Compile Include="DxfObjectCode.cs" />
     <Compile Include="Entities\Ellipse.cs" />
+    <Compile Include="Entities\EndSequence.cs" />
     <Compile Include="Entities\NURBSCurve.cs" />
     <Compile Include="Entities\NurbsVertex.cs" />
     <Compile Include="Entities\Solid.cs" />
     <Compile Include="Header\HeaderVariable.cs" />
+    <Compile Include="DxfObject.cs" />
+    <Compile Include="Objects\Dictionary.cs" />
     <Compile Include="StringEnum.cs" />
     <Compile Include="SubclassMarker.cs" />
     <Compile Include="Symbols.cs" />
+    <Compile Include="Tables\ApplicationRegistry.cs" />
+    <Compile Include="Tables\BlockRecord.cs" />
+    <Compile Include="Tables\View.cs" />
+    <Compile Include="Tables\DimensionStyle.cs" />
+    <Compile Include="Tables\ViewPort.cs" />
     <Compile Include="TextAligment.cs" />
     <Compile Include="DxfDocument.cs" />
     <Compile Include="DxfException.cs" />
@@ -74,7 +89,7 @@
     <Compile Include="Entities\Line.cs" />
     <Compile Include="Blocks\Block.cs" />
     <Compile Include="Entities\Circle.cs" />
-    <Compile Include="Entities\Face3D.cs" />
+    <Compile Include="Entities\Face3d.cs" />
     <Compile Include="Entities\PolyfaceMesh.cs" />
     <Compile Include="Entities\Polyline.cs" />
     <Compile Include="Entities\Text.cs" />
@@ -83,17 +98,19 @@
     <Compile Include="Tables\ITableObject.cs" />
     <Compile Include="Tables\Layer.cs" />
     <Compile Include="MathHelper.cs" />
-    <Compile Include="Matrix3.cs" />
+    <Compile Include="Matrix3f.cs" />
     <Compile Include="Tables\LineType.cs" />
     <Compile Include="Tables\TextStyle.cs" />
-    <Compile Include="Vector2.cs" />
-    <Compile Include="Vector3.cs" />
+    <Compile Include="Vector2f.cs" />
+    <Compile Include="Vector3f.cs" />
     <Compile Include="XData.cs" />
     <Compile Include="StringCode.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Writer.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="XDataCode.cs" />
+    <Compile Include="XDataRecord.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

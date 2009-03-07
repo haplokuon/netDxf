@@ -1,4 +1,4 @@
-﻿#region netDxf, Copyright(C) 2009 Daniel Carvajal, Licensed under LGPL.
+#region netDxf, Copyright(C) 2009 Daniel Carvajal, Licensed under LGPL.
 
 //                        netDxf library
 // Copyright (C) 2009 Daniel Carvajal (haplokuon@gmail.com)
@@ -20,29 +20,18 @@
 
 #endregion
 
-namespace netDxf
+namespace netDxf.Header
 {
     /// <summary>
-    /// Symbols for dxf text strings.
+    /// Defines de dxf file version.
     /// </summary>
-    /// <remarks>
-    /// These special strings translates to symbols in AutoCad. 
-    /// </remarks>
-    public static class Symbols
+    public enum DxfVersion
     {
-        /// <summary>
-        /// Text string that shows as a diameter 'Ø' character.
-        /// </summary>
-        public const string Diameter = "%%c";
-
-        /// <summary>
-        /// Text string that shows as a degree '°' character.
-        /// </summary>
-        public const string Degree = "%%d";
-
-        /// <summary>
-        /// Text string that shows as a plus-minus '±' character.
-        /// </summary>
-        public const string PlusMinus = "%%p";
+        [StringValue("AC1009")] AutoCad12,
+        //[StringValue("AC1012")] AutoCad13,
+        //[StringValue("AC1014")] AutoCad14,
+        [StringValue("AC1015")] AutoCad2000,
+        [StringValue("AC1018")] AutoCad2004,
+        [StringValue("AC1021")] AutoCad2007,
     }
 }

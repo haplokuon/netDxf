@@ -27,8 +27,11 @@ namespace netDxf.Tables
     /// <summary>
     /// Represents a text style.
     /// </summary>
-    /// <remarks></remarks>
+    /// <remarks>
+    /// AutoCad12 does not support true type fonts.
+    /// </remarks>
     public class TextStyle :
+        DxfObject,
         ITableObject
     {
         #region private fields
@@ -51,7 +54,7 @@ namespace netDxf.Tables
         /// </summary>
         public static TextStyle Default
         {
-            get { return new TextStyle("STANDARD", "simplex"); }
+            get { return new TextStyle("Standard", "simplex"); }
         }
 
         #endregion
@@ -64,6 +67,7 @@ namespace netDxf.Tables
         /// <param name="name">Text style name.</param>
         /// <param name="font">Text style font name.</param>
         public TextStyle(string name, string font)
+            : base(DxfObjectCode.TextStyle)
         {
             if (string.IsNullOrEmpty(name))
                 throw (new ArgumentNullException("name"));

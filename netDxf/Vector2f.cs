@@ -25,9 +25,9 @@ using System;
 namespace netDxf
 {
     /// <summary>
-    /// Representa un vector bidimensional de números de coma flotante de simple precisión.
+    /// Represent a two component vector of single precision.
     /// </summary>
-    public struct Vector2
+    public struct Vector2f
     {
         #region private fields
 
@@ -43,7 +43,7 @@ namespace netDxf
         /// </summary>
         /// <param name="x">X component.</param>
         /// <param name="y">Y component.</param>
-        public Vector2(float x, float y)
+        public Vector2f(float x, float y)
         {
             this.x = x;
             this.y = y;
@@ -53,7 +53,7 @@ namespace netDxf
         /// Initializes a new instance of Vector2f.
         /// </summary>
         /// <param name="array">Array of two elements that represents the vector.</param>
-        public Vector2(float[] array)
+        public Vector2f(float[] array)
         {
             if (array.Length != 2)
                 throw new ArgumentOutOfRangeException("array", array.Length, "The dimension of the array must be two");
@@ -68,25 +68,25 @@ namespace netDxf
         /// <summary>
         /// Zero vector.
         /// </summary>
-        public static Vector2 Zero
+        public static Vector2f Zero
         {
-            get { return new Vector2(0, 0); }
+            get { return new Vector2f(0, 0); }
         }
 
         /// <summary>
         /// Unit X vector.
         /// </summary>
-        public static Vector2 UnitX
+        public static Vector2f UnitX
         {
-            get { return new Vector2(1, 0); }
+            get { return new Vector2f(1, 0); }
         }
 
         /// <summary>
         /// Unit Y vector.
         /// </summary>
-        public static Vector2 UnitY
+        public static Vector2f UnitY
         {
-            get { return new Vector2(0, 1); }
+            get { return new Vector2f(0, 1); }
         }
 
         #endregion
@@ -159,7 +159,7 @@ namespace netDxf
         /// <param name="u">Vector2f.</param>
         /// <param name="v">Vector2f.</param>
         /// <returns>The dot product.</returns>
-        public static float DotProduct(Vector2 u, Vector2 v)
+        public static float DotProduct(Vector2f u, Vector2f v)
         {
             return (u.X*v.X) + (u.Y*v.Y);
         }
@@ -170,7 +170,7 @@ namespace netDxf
         /// <param name="u">Vector2f.</param>
         /// <param name="v">Vector2f.</param>
         /// <returns>Vector2f.</returns>
-        public static float CrossProduct(Vector2 u, Vector2 v)
+        public static float CrossProduct(Vector2f u, Vector2f v)
         {
             return (u.X*v.Y) - (u.Y*v.X);
         }
@@ -180,9 +180,9 @@ namespace netDxf
         /// </summary>
         /// <param name="u">Vector2f.</param>
         /// <returns>Vector2f.</returns>
-        public static Vector2 Perpendicular(Vector2 u)
+        public static Vector2f Perpendicular(Vector2f u)
         {
-            return new Vector2(-u.Y, u.X);
+            return new Vector2f(-u.Y, u.X);
         }
 
         /// <summary>
@@ -191,7 +191,7 @@ namespace netDxf
         /// <param name="u">Vector2f.</param>
         /// <param name="v">Vector2f.</param>
         /// <returns>Distancie.</returns>
-        public static float Distance(Vector2 u, Vector2 v)
+        public static float Distance(Vector2f u, Vector2f v)
         {
             return (float) (Math.Sqrt((u.X - v.X)*(u.X - v.X) + (u.Y - v.Y)*(u.Y - v.Y)));
         }
@@ -202,7 +202,7 @@ namespace netDxf
         /// <param name="u">Vector2f.</param>
         /// <param name="v">Vector2f.</param>
         /// <returns>Square distance.</returns>
-        public static float SquareDistance(Vector2 u, Vector2 v)
+        public static float SquareDistance(Vector2f u, Vector2f v)
         {
             return (u.X - v.X)*(u.X - v.X) + (u.Y - v.Y)*(u.Y - v.Y);
         }
@@ -213,7 +213,7 @@ namespace netDxf
         /// <param name="u">Vector2f.</param>
         /// <param name="v">Vector2f.</param>
         /// <returns>Angle in radians.</returns>
-        public static float AngleBetween(Vector2 u, Vector2 v)
+        public static float AngleBetween(Vector2f u, Vector2f v)
         {
             float cos = DotProduct(u, v)/(u.Modulus()*v.Modulus());
             if (MathHelper.IsOne(cos))
@@ -250,9 +250,9 @@ namespace netDxf
         /// <param name="u">Vector2f.</param>
         /// <param name="v">Vector2f.</param>
         /// <returns>Vector2f.</returns>
-        public static Vector2 MidPoint(Vector2 u, Vector2 v)
+        public static Vector2f MidPoint(Vector2f u, Vector2f v)
         {
-            return new Vector2((v.X + u.X)*0.5F, (v.Y + u.Y)*0.5F);
+            return new Vector2f((v.X + u.X)*0.5F, (v.Y + u.Y)*0.5F);
         }
 
         /// <summary>
@@ -262,7 +262,7 @@ namespace netDxf
         /// <param name="v">Vector2f.</param>
         /// <param name="threshold">Tolerance used.</param>
         /// <returns>True if are penpendicular or false in anyother case.</returns>
-        public static bool ArePerpendicular(Vector2 u, Vector2 v, float threshold)
+        public static bool ArePerpendicular(Vector2f u, Vector2f v, float threshold)
         {
             return MathHelper.IsZero(DotProduct(u, v), threshold);
         }
@@ -274,7 +274,7 @@ namespace netDxf
         /// <param name="v">Vector2f.</param>
         /// <param name="threshold">Tolerance used.</param>
         /// <returns>True if are parallel or false in anyother case.</returns>
-        public static bool AreParallel(Vector2 u, Vector2 v, float threshold)
+        public static bool AreParallel(Vector2f u, Vector2f v, float threshold)
         {
             float a = u.X*v.Y - u.Y*v.X;
             return MathHelper.IsZero(a, threshold);
@@ -286,60 +286,60 @@ namespace netDxf
         /// <param name="u">Vector2f.</param>
         /// <param name="numDigits">Number of significative defcimal digits.</param>
         /// <returns>Vector2f.</returns>
-        public static Vector2 Round(Vector2 u, int numDigits)
+        public static Vector2f Round(Vector2f u, int numDigits)
         {
-            return new Vector2((float) Math.Round(u.X, numDigits), (float) Math.Round(u.Y, numDigits));
+            return new Vector2f((float) Math.Round(u.X, numDigits), (float) Math.Round(u.Y, numDigits));
         }
 
         #endregion
 
         #region overloaded operators
 
-        public static bool operator ==(Vector2 u, Vector2 v)
+        public static bool operator ==(Vector2f u, Vector2f v)
         {
             return ((v.X == u.X) && (v.Y == u.Y));
         }
 
-        public static bool operator !=(Vector2 u, Vector2 v)
+        public static bool operator !=(Vector2f u, Vector2f v)
         {
             return ((v.X != u.X) || (v.Y != u.Y));
         }
 
-        public static Vector2 operator +(Vector2 u, Vector2 v)
+        public static Vector2f operator +(Vector2f u, Vector2f v)
         {
-            return new Vector2(u.X + v.X, u.Y + v.Y);
+            return new Vector2f(u.X + v.X, u.Y + v.Y);
         }
 
-        public static Vector2 operator -(Vector2 u, Vector2 v)
+        public static Vector2f operator -(Vector2f u, Vector2f v)
         {
-            return new Vector2(u.X - v.X, u.Y - v.Y);
+            return new Vector2f(u.X - v.X, u.Y - v.Y);
         }
 
-        public static Vector2 operator -(Vector2 u)
+        public static Vector2f operator -(Vector2f u)
         {
-            return new Vector2(-u.X, -u.Y);
+            return new Vector2f(-u.X, -u.Y);
         }
 
-        public static Vector2 operator *(Vector2 u, float a)
+        public static Vector2f operator *(Vector2f u, float a)
         {
-            return new Vector2(u.X*a, u.Y*a);
+            return new Vector2f(u.X*a, u.Y*a);
         }
 
-        public static Vector2 operator *(float a, Vector2 u)
+        public static Vector2f operator *(float a, Vector2f u)
         {
-            return new Vector2(u.X*a, u.Y*a);
+            return new Vector2f(u.X*a, u.Y*a);
         }
 
-        public static Vector2 operator /(Vector2 u, float a)
+        public static Vector2f operator /(Vector2f u, float a)
         {
             float invEscalar = 1/a;
-            return new Vector2(u.X*invEscalar, u.Y*invEscalar);
+            return new Vector2f(u.X*invEscalar, u.Y*invEscalar);
         }
 
-        public static Vector2 operator /(float a, Vector2 u)
+        public static Vector2f operator /(float a, Vector2f u)
         {
             float invEscalar = 1/a;
-            return new Vector2(u.X*invEscalar, u.Y*invEscalar);
+            return new Vector2f(u.X*invEscalar, u.Y*invEscalar);
         }
 
         #endregion
@@ -387,7 +387,7 @@ namespace netDxf
         /// <param name="obj">Vector2f.</param>
         /// <param name="threshold">Maximun tolerance.</param>
         /// <returns>True if the three components are almost equal or false in anyother case.</returns>
-        public bool Equals(Vector2 obj, float threshold)
+        public bool Equals(Vector2f obj, float threshold)
         {
             if (Math.Abs(obj.X - this.x) > threshold)
             {
@@ -401,15 +401,15 @@ namespace netDxf
             return true;
         }
 
-        public bool Equals(Vector2 obj)
+        public bool Equals(Vector2f obj)
         {
             return obj.x == this.x && obj.y == this.y;
         }
 
         public override bool Equals(object obj)
         {
-            if (obj is Vector2)
-                return this.Equals((Vector2) obj);
+            if (obj is Vector2f)
+                return this.Equals((Vector2f) obj);
             return false;
             
         }

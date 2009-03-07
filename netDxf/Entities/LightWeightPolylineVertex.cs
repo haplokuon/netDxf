@@ -21,82 +21,57 @@
 #endregion
 
 using System;
-using System.Collections.Generic;
-using netDxf.Tables;
 
 namespace netDxf.Entities
 {
     /// <summary>
-    /// Represents a polyline vertex.
+    /// Represents a lightweight polyline vertex.
     /// </summary>
-    public class PolylineVertex :
-        DxfObject,
-        IVertex
+    public class LightWeightPolylineVertex
     {
-      
         #region private fields
 
-        protected const EntityType TYPE = EntityType.PolylineVertex;
-        protected VertexTypeFlags flags;
+        protected const EntityType TYPE = EntityType.LightWeightPolylineVertex;
         protected Vector2f location;
         protected float beginThickness;
         protected float endThickness;
         protected float bulge;
-        protected AciColor color;
-        protected Layer layer;
-        protected LineType lineType;
-        protected Dictionary<ApplicationRegistry, XData> xData;
 
         #endregion
 
         #region constructors
 
         /// <summary>
-        /// Initializes a new instance of the <c>PolylineVertex</c> class.
+        /// Initializes a new instance of the <c>LightWeightPolylineVertex</c> class.
         /// </summary>
-        public PolylineVertex()
-            : base(DxfObjectCode.Vertex)
+        public LightWeightPolylineVertex()
         {
-            this.flags = VertexTypeFlags.PolylineVertex;
             this.location = Vector2f.Zero;
-            this.layer = Layer.Default;
-            this.color = AciColor.ByLayer;
-            this.lineType = LineType.ByLayer;
             this.bulge = 0.0f;
             this.beginThickness = 0.0f;
             this.endThickness = 0.0f;
         }
 
         /// <summary>
-        /// Initializes a new instance of the <c>PolylineVertex</c> class.
+        /// Initializes a new instance of the <c>LightWeightPolylineVertex</c> class.
         /// </summary>
-        /// <param name="location">Polyline <see cref="Vector2f">vertex</see> coordinates.</param>
-        public PolylineVertex(Vector2f location)
-            : base(DxfObjectCode.Vertex)
+        /// <param name="location">Lightweight polyline <see cref="netDxf.Vector2f">vertex</see> coordinates.</param>
+        public LightWeightPolylineVertex(Vector2f location)
         {
-            this.flags = VertexTypeFlags.PolylineVertex;
             this.location = location;
-            this.layer = Layer.Default;
-            this.color = AciColor.ByLayer;
-            this.lineType = LineType.ByLayer;
             this.bulge = 0.0f;
             this.beginThickness = 0.0f;
             this.endThickness = 0.0f;
         }
 
-       /// <summary>
-        /// Initializes a new instance of the <c>PolylineVertex</c> class.
+        /// <summary>
+        /// Initializes a new instance of the <c>LightWeightPolylineVertex</c> class.
         /// </summary>
         /// <param name="x">X coordinate.</param>
         /// <param name="y">Y coordinate.</param>
-        public PolylineVertex(float x, float y)
-            : base(DxfObjectCode.Vertex)
+        public LightWeightPolylineVertex(float x, float y)
         {
-            this.flags = VertexTypeFlags.PolylineVertex;
             this.location = new Vector2f(x, y);
-            this.layer = Layer.Default;
-            this.color = AciColor.ByLayer;
-            this.lineType = LineType.ByLayer;
             this.bulge = 0.0f;
             this.beginThickness = 0.0f;
             this.endThickness = 0.0f;
@@ -154,79 +129,12 @@ namespace netDxf.Entities
             }
         }
 
-        #endregion
-
-        #region IEntityObject Members
-
         /// <summary>
         /// Gets the entity <see cref="netDxf.Entities.EntityType">type</see>.
         /// </summary>
         public EntityType Type
         {
             get { return TYPE; }
-        }
-
-        /// <summary>
-        /// Gets or sets the entity <see cref="netDxf.AciColor">color</see>.
-        /// </summary>
-        public AciColor Color
-        {
-            get { return this.color; }
-            set
-            {
-                if (value == null)
-                    throw new ArgumentNullException("value");
-                this.color = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the entity <see cref="netDxf.Tables.Layer">layer</see>.
-        /// </summary>
-        public Layer Layer
-        {
-            get { return this.layer; }
-            set
-            {
-                if (value == null)
-                    throw new ArgumentNullException("value");
-                this.layer = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the entity <see cref="netDxf.Tables.LineType">line type</see>.
-        /// </summary>
-        public LineType LineType
-        {
-            get { return this.lineType; }
-            set
-            {
-                if (value == null)
-                    throw new ArgumentNullException("value");
-                this.lineType = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the entity <see cref="netDxf.XData">extende data</see>.
-        /// </summary>
-        public Dictionary<ApplicationRegistry, XData> XData
-        {
-            get { return this.xData; }
-            set { this.xData = value; }
-        }
-
-        #endregion
-
-        #region IVertex Members
-
-        /// <summary>
-        /// Gets the vertex type.
-        /// </summary>
-        public VertexTypeFlags Flags
-        {
-            get { return this.flags; }
         }
 
         #endregion

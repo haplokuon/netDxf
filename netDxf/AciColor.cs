@@ -27,7 +27,7 @@ using System.Drawing;
 namespace netDxf
 {
     /// <summary>
-    /// Represents a color.
+    /// Represents an indexed color.
     /// </summary>
     public class AciColor
     {
@@ -57,11 +57,75 @@ namespace netDxf
         }
 
         /// <summary>
+        /// Defines a default red color.
+        /// </summary>
+        public static AciColor Red
+        {
+            get { return new AciColor(1); }
+        }
+
+        /// <summary>
+        /// Defines a default yellow color.
+        /// </summary>
+        public static AciColor Yellow
+        {
+            get { return new AciColor(2); }
+        }
+
+        /// <summary>
+        /// Defines a default green color.
+        /// </summary>
+        public static AciColor Green
+        {
+            get { return new AciColor(3); }
+        }
+
+        /// <summary>
+        /// Defines a default cyan color.
+        /// </summary>
+        public static AciColor Cyan
+        {
+            get { return new AciColor(4); }
+        }
+
+        /// <summary>
+        /// Defines a default blue color.
+        /// </summary>
+        public static AciColor Blue
+        {
+            get { return new AciColor(5); }
+        }
+
+        /// <summary>
+        /// Defines a default magenta color.
+        /// </summary>
+        public static AciColor Magenta
+        {
+            get { return new AciColor(6); }
+        }
+
+        /// <summary>
         /// Defines a default white/black color.
         /// </summary>
         public static AciColor Default
         {
             get { return new AciColor(7); }
+        }
+
+        /// <summary>
+        /// Defines a default dark grey color.
+        /// </summary>
+        public static AciColor DarkGrey
+        {
+            get { return new AciColor(8); }
+        }
+
+        /// <summary>
+        /// Defines a default light grey color.
+        /// </summary>
+        public static AciColor LightGrey
+        {
+            get { return new AciColor(9); }
         }
 
         #endregion
@@ -152,6 +216,10 @@ namespace netDxf
         /// <returns>The string representation.</returns>
         public override string ToString()
         {
+            if (this.index == 0)
+                return "ByBlock";
+            if (this.index == 256)
+                return "ByLayer";
             return this.index.ToString();
         }
 

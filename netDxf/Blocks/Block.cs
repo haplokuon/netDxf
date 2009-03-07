@@ -31,15 +31,32 @@ namespace netDxf.Blocks
     /// <summary>
     /// Represents a block definition.
     /// </summary>
-    public class Block
+    public class Block :
+        DxfObject 
     {
         #region private fields
 
+        private readonly BlockRecord record;
+        private readonly BlockEnd end;
         private readonly string name;
         private Layer layer;
-        private Vector3 basePoint;
+        private Vector3f basePoint;
         private Dictionary<string, AttributeDefinition> attributes;
         private List<IEntityObject> entities;
+
+        #endregion
+
+        #region constants
+
+        internal static Block  ModelSpace
+        {
+            get{ return new Block("*Model_Space");}
+        }
+
+        internal static Block PaperSpace
+        {
+            get { return new Block("*Paper_Space"); }
+        }
 
         #endregion
 
@@ -49,15 +66,18 @@ namespace netDxf.Blocks
         /// Initializes a new instance of the <c>Block</c> class.
         /// </summary>
         /// <param name="name">Block name.</param>
-        public Block(string name)
+        public Block(string name) : base (DxfObjectCode.Block)
         {
             if (string.IsNullOrEmpty(name))
                 throw (new ArgumentNullException("name"));
+            
             this.name = name;
-            this.basePoint = Vector3.Zero;
+            this.basePoint = Vector3f.Zero;
             this.layer = Layer.Default;
             this.attributes = new Dictionary<string, AttributeDefinition>();
             this.entities = new List<IEntityObject>();
+            this.record=new BlockRecord(name);
+            this.end = new BlockEnd(this.layer);          
         }
 
         #endregion
@@ -75,7 +95,7 @@ namespace netDxf.Blocks
         /// <summary>
         /// Gets or sets the block base point.
         /// </summary>
-        public Vector3 BasePoint
+        public Vector3f BasePoint
         {
             get { return this.basePoint; }
             set { this.basePoint = value; }
@@ -92,6 +112,7 @@ namespace netDxf.Blocks
                 if (value == null)
                     throw new ArgumentNullException("value"); 
                 this.layer = value;
+                this.end.Layer = value;
             }
         }
 
@@ -123,9 +144,44 @@ namespace netDxf.Blocks
             }
         }
 
+        internal BlockRecord Record
+        {
+            get { return this.record; }
+        }
+
+        internal BlockEnd End
+        {
+            get { return this.end; }
+        }
+
+        
         #endregion
 
         #region overrides
+
+        /// <summary>
+        /// Asigns a handle to the object based in a integer counter.
+        /// </summary>
+        /// <param name="entityNumber">Number to asign.</param>
+        /// <returns>Next avaliable entity number.</returns>
+        /// <remarks>
+        /// Some objects might consume more than one, is, for example, the case of polylines that will asign
+        /// automatically a handle to its vertexes. The entity number will be converted to an hexadecimal number.
+        /// </remarks>
+        internal override int AsignHandle(int entityNumber)
+        {
+            entityNumber = this.record.AsignHandle(entityNumber);
+            entityNumber = this.end.AsignHandle(entityNumber);
+            foreach(AttributeDefinition attDef in this.attributes.Values )
+            {
+                entityNumber = attDef.AsignHandle(entityNumber);
+            }
+            foreach (IEntityObject entity in this.entities )
+            {
+                entityNumber = ((DxfObject) entity).AsignHandle(entityNumber);
+            }
+            return base.AsignHandle(entityNumber);
+        }
 
         /// <summary>
         /// Converts the value of this instance to its equivalent string representation.

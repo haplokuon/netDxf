@@ -30,20 +30,20 @@ namespace netDxf.Entities
     /// Represents a circle <see cref="netDxf.Entities.IEntityObject">entity</see>.
     /// </summary>
     public class Circle :
+        DxfObject,
         IEntityObject
     {
         #region private fields
 
-        private const string DXF_NAME = DxfEntityCode.Circle;
         private const EntityType TYPE = EntityType.Circle;
-        private Vector3 center;
+        private Vector3f center;
         private float radius;
         private float thickness;
         private Layer layer;
         private AciColor color;
         private LineType lineType;
-        private Vector3 normal;
-        private readonly List<XData> xData;
+        private Vector3f normal;
+        private Dictionary<ApplicationRegistry, XData> xData;
 
         #endregion
 
@@ -52,10 +52,10 @@ namespace netDxf.Entities
         /// <summary>
         /// Initializes a new instance of the <c>Circle</c> class.
         /// </summary>
-        /// <param name="center">Circle <see cref="Vector3">center</see> in object coordinates.</param>
+        /// <param name="center">Circle <see cref="Vector3f">center</see> in object coordinates.</param>
         /// <param name="radius">Circle radius.</param>
         /// <remarks>The center Z coordinate represents the elevation of the arc along the normal.</remarks>
-        public Circle(Vector3 center, float radius)
+        public Circle(Vector3f center, float radius) : base(DxfObjectCode.Circle)
         {
             this.center = center;
             this.radius = radius;
@@ -63,23 +63,21 @@ namespace netDxf.Entities
             this.layer = Layer.Default;
             this.color = AciColor.ByLayer;
             this.lineType = LineType.ByLayer;
-            this.normal = Vector3.UnitZ;
-            this.xData = new List<XData>();
+            this.normal = Vector3f.UnitZ;
         }
 
         /// <summary>
         /// Initializes a new instance of the <c>Circle</c> class.
         /// </summary>
-        public Circle()
+        public Circle() : base(DxfObjectCode.Circle)
         {
-            this.center = Vector3.Zero;
+            this.center = Vector3f.Zero;
             this.radius = 1.0f;
             this.thickness = 0.0f;
             this.layer = Layer.Default;
             this.color = AciColor.ByLayer;
             this.lineType = LineType.ByLayer;
-            this.normal = Vector3.UnitZ;
-            this.xData = new List<XData>();
+            this.normal = Vector3f.UnitZ;
         }
 
         #endregion
@@ -87,10 +85,10 @@ namespace netDxf.Entities
         #region public properties
 
         /// <summary>
-        /// Gets or sets the circle <see cref="netDxf.Vector3">center</see>.
+        /// Gets or sets the circle <see cref="netDxf.Vector3f">center</see>.
         /// </summary>
         /// <remarks>The center Z coordinate represents the elevation of the arc along the normal.</remarks>
-        public Vector3 Center
+        public Vector3f Center
         {
             get { return this.center; }
             set { this.center = value; }
@@ -115,9 +113,9 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets or sets the circle <see cref="netDxf.Vector3">normal</see>.
+        /// Gets or sets the circle <see cref="netDxf.Vector3f">normal</see>.
         /// </summary>
-        public Vector3 Normal
+        public Vector3f Normal
         {
             get { return this.normal; }
             set
@@ -131,15 +129,7 @@ namespace netDxf.Entities
 
         #region IEntityObject Members
 
-        /// <summary>
-        /// Gets the dxf code that represents the entity.
-        /// </summary>
-        public string DxfName
-        {
-            get { return DXF_NAME; }
-        }
-
-        /// <summary>
+       /// <summary>
         /// Gets the entity <see cref="netDxf.Entities.EntityType">type</see>.
         /// </summary>
         public EntityType Type
@@ -192,9 +182,10 @@ namespace netDxf.Entities
         /// <summary>
         /// Gets or sets the entity <see cref="netDxf.XData">extende data</see>.
         /// </summary>
-        public List<XData> XData
+        public Dictionary<ApplicationRegistry, XData> XData
         {
             get { return this.xData; }
+            set { this.xData = value; }
         }
 
         #endregion
@@ -206,21 +197,21 @@ namespace netDxf.Entities
         /// </summary>
         /// <param name="precision">Number of vertexes generated.</param>
         /// <returns>A list vertexes that represents the circle expresed in object coordinate system.</returns>
-        public List<Vector2> PoligonalVertexes(byte precision)
+        public List<Vector2f> PoligonalVertexes(int precision)
         {
             if (precision < 3)
                 throw new ArgumentOutOfRangeException("precision", precision, "The circle precision must be greater or equal to three");
 
-            List<Vector2> ocsVertexes = new List<Vector2>();
+            List<Vector2f> ocsVertexes = new List<Vector2f>();
 
-            float angle = (float)(MathHelper.TwoPI / precision);
+            float angle = (float) (MathHelper.TwoPI/precision);
 
-                for (int i = 0; i < precision; i++)
-                {
-                    float sine = (float)(this.radius * Math.Sin(MathHelper.HalfPI + angle * i));
-                    float cosine = (float)(this.radius * Math.Cos(MathHelper.HalfPI + angle * i));
-                    ocsVertexes.Add(new Vector2(cosine + this.center.X, sine + this.center.Y));
-                }
+            for (int i = 0; i < precision; i++)
+            {
+                float sine = (float) (this.radius*Math.Sin(MathHelper.HalfPI + angle*i));
+                float cosine = (float) (this.radius*Math.Cos(MathHelper.HalfPI + angle*i));
+                ocsVertexes.Add(new Vector2f(cosine + this.center.X, sine + this.center.Y));
+            }
 
             return ocsVertexes;
         }
@@ -231,32 +222,32 @@ namespace netDxf.Entities
         /// <param name="precision">Number of vertexes generated.</param>
         /// <param name="weldThreshold">Tolerance to consider if two new generated vertexes are equal.</param>
         /// <returns>A list vertexes that represents the circle expresed in object coordinate system.</returns>
-        public List<Vector2> PoligonalVertexes(byte precision, float weldThreshold)
+        public List<Vector2f> PoligonalVertexes(int precision, float weldThreshold)
         {
             if (precision < 3)
                 throw new ArgumentOutOfRangeException("precision", precision, "The circle precision must be greater or equal to three");
 
-            List<Vector2> ocsVertexes = new List<Vector2>();
+            List<Vector2f> ocsVertexes = new List<Vector2f>();
 
             if (2*this.radius >= weldThreshold)
             {
-                float angulo = (float)(MathHelper.TwoPI / precision);
-                Vector2 prevPoint;
-                Vector2 firstPoint;
+                float angulo = (float) (MathHelper.TwoPI/precision);
+                Vector2f prevPoint;
+                Vector2f firstPoint;
 
-                float sine = (float)(this.radius * Math.Sin(MathHelper.HalfPI * 0.5));
-                float cosine = (float)(this.radius * Math.Cos(MathHelper.HalfPI * 0.5));
-                firstPoint = new Vector2(cosine + this.center.X, sine + this.center.Y);
+                float sine = (float) (this.radius*Math.Sin(MathHelper.HalfPI*0.5));
+                float cosine = (float) (this.radius*Math.Cos(MathHelper.HalfPI*0.5));
+                firstPoint = new Vector2f(cosine + this.center.X, sine + this.center.Y);
                 ocsVertexes.Add(firstPoint);
                 prevPoint = firstPoint;
 
                 for (int i = 1; i < precision; i++)
                 {
                     sine = (float) (this.radius*Math.Sin(MathHelper.HalfPI + angulo*i));
-                    cosine = (float)(this.radius * Math.Cos(MathHelper.HalfPI + angulo * i));
-                    Vector2 point = new Vector2(cosine + this.center.X, sine + this.center.Y);
+                    cosine = (float) (this.radius*Math.Cos(MathHelper.HalfPI + angulo*i));
+                    Vector2f point = new Vector2f(cosine + this.center.X, sine + this.center.Y);
 
-                    if (!point.Equals(prevPoint, weldThreshold) && 
+                    if (!point.Equals(prevPoint, weldThreshold) &&
                         !point.Equals(firstPoint, weldThreshold))
                     {
                         ocsVertexes.Add(point);

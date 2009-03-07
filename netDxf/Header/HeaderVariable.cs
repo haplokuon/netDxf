@@ -28,24 +28,6 @@ namespace netDxf.Header
     /// <summary>
     /// Defines de dxf file version.
     /// </summary>
-    public enum DxfVersion
-    {
-        [StringValue("AC1009")] AutoCad12,
-        [StringValue("AC1015")] AutoCad2000,
-        [StringValue("AC1018")] AutoCad2004,
-    }
-
-   /// <summary>
-   /// Strings system variables
-   /// </summary>
-    public static class SystemVariable
-    {
-        public const string DabaseVersion = "$ACADVER";
-    }
-
-    /// <summary>
-    /// Defines de dxf file version.
-    /// </summary>
     internal class HeaderVariable
     {
         public const int NAME_CODE_GROUP = 9;
@@ -87,7 +69,8 @@ namespace netDxf.Header
         {
             return new Dictionary<string, int>
                        {
-                           {SystemVariable.DabaseVersion, 1}
+                           {SystemVariable.DabaseVersion, 1},
+                           {SystemVariable.HandSeed, 5}
                        };
         }
     }

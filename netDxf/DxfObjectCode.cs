@@ -20,165 +20,156 @@
 
 #endregion
 
-using System.Collections.Generic;
-using netDxf.Tables;
-
-namespace netDxf.Entities
+namespace netDxf
 {
     /// <summary>
-    /// Defines the entity type.
+    /// Dxf entities codes.
     /// </summary>
-    public enum EntityType
+    public sealed class DxfObjectCode
     {
+        /// <summary>
+        /// application registry.
+        /// </summary>
+        public const string AppId = "APPID";
+
+        /// <summary>
+        /// dimension style.
+        /// </summary>
+        public const string DimStyle = "DIMSTYLE";
+
+        /// <summary>
+        /// block record.
+        /// </summary>
+        public const string BlockRecord = "BLOCK_RECORD";
+
+        /// <summary>
+        /// line type.
+        /// </summary>
+        public const string LineType = "LTYPE";
+
+        /// <summary>
+        /// layer.
+        /// </summary>
+        public const string Layer = "LAYER";
+
+        /// <summary>
+        /// viewport.
+        /// </summary>
+        public const string ViewPort = "VPORT";
+
+        /// <summary>
+        /// text style.
+        /// </summary>
+        public const string TextStyle = "STYLE";
+
+        /// <summary>
+        /// view.
+        /// </summary>
+        public const string View = "VIEW";
+
+        /// <summary>
+        /// ucs.
+        /// </summary>
+        public const string Ucs = "UCS";
+
+        /// <summary>
+        /// block.
+        /// </summary>
+        public const string Block = "BLOCK";
+
+        /// <summary>
+        /// block.
+        /// </summary>
+        public const string BlockEnd = "ENDBLK";
+
         /// <summary>
         /// line.
         /// </summary>
-        Line,
-
-        /// <summary>
-        /// polyline.
-        /// </summary>
-        Polyline,
-
-        /// <summary>
-        /// 3d polyline .
-        /// </summary>
-        Polyline3d,
-
-        /// <summary>
-        /// lightweight polyline.
-        /// </summary>
-        LightWeightPolyline,
-
-        /// <summary>
-        /// polyface mesh.
-        /// </summary>
-        PolyfaceMesh,
-
-        /// <summary>
-        /// circle.
-        /// </summary>
-        Circle,
-
-        /// <summary>
-        /// nurbs curve
-        /// </summary>
-        NurbsCurve,
+        public const string Line = "LINE";
 
         /// <summary>
         /// ellipse.
         /// </summary>
-        Ellipse,
+        public const string Ellipse = "ELLIPSE";
+
+        /// <summary>
+        /// polyline.
+        /// </summary>
+        public const string Polyline = "POLYLINE";
+
+        /// <summary>
+        /// light weight polyline.
+        /// </summary>
+        public const string LightWeightPolyline = "LWPOLYLINE";
+
+        /// <summary>
+        /// circle.
+        /// </summary>
+        public const string Circle = "CIRCLE";
 
         /// <summary>
         /// point.
         /// </summary>
-        Point,
+        public const string Point = "POINT";
 
         /// <summary>
         /// arc.
         /// </summary>
-        Arc,
-
-        /// <summary>
-        /// text string.
-        /// </summary>
-        Text,
-
-        /// <summary>
-        /// 3d face.
-        /// </summary>
-        Face3D,
+        public const string Arc = "ARC";
 
         /// <summary>
         /// solid.
         /// </summary>
-        Solid,
+        public const string Solid = "SOLID";
+
+        /// <summary>
+        /// text string.
+        /// </summary>
+        public const string Text = "TEXT";
+
+        /// <summary>
+        /// 3d face.
+        /// </summary>
+        public const string Face3D = "3DFACE";
 
         /// <summary>
         /// block insertion.
         /// </summary>
-        Insert,
+        public const string Insert = "INSERT";
 
         /// <summary>
         /// hatch.
         /// </summary>
-        Hatch,
-
-        /// <summary>
-        /// attribute.
-        /// </summary>
-        Attribute,
+        public const string Hatch = "HATCH";
 
         /// <summary>
         /// attribute definition.
         /// </summary>
-        AttributeDefinition,
+        public const string AttributeDefinition = "ATTDEF";
 
         /// <summary>
-        /// lightweight polyline vertex.
+        /// attribute.
         /// </summary>
-        LightWeightPolylineVertex,
+        public const string Attribute = "ATTRIB";
 
         /// <summary>
-        /// polyline vertex.
+        /// vertex.
         /// </summary>
-        PolylineVertex,
+        public const string Vertex = "VERTEX";
 
         /// <summary>
-        /// polyline 3d vertex.
+        /// end sequence.
         /// </summary>
-        Polyline3dVertex,
-
-        /// <summary>
-        /// polyface mesh vertex.
-        /// </summary>
-        PolyfaceMeshVertex,
-
-        /// <summary>
-        /// polyface mesh face.
-        /// </summary>
-        PolyfaceMeshFace,
+        public const string EndSequence = "SEQEND";
 
         /// <summary>
         /// dim.
         /// </summary>
-        Dimension,
+        public const string Dimension = "DIMENSION";
 
         /// <summary>
-        /// A generi Vertex
+        /// dictionary.
         /// </summary>
-        Vertex
-    }
-    
-    /// <summary>
-    /// Represents a generic entity.
-    /// </summary>
-    public interface IEntityObject
-    {
-        /// <summary>
-        /// Gets the entity <see cref="EntityType">type</see>.
-        /// </summary>
-        EntityType Type { get; }
-        
-        /// <summary>
-        /// Gets or sets the entity <see cref="AciColor">color</see>.
-        /// </summary>
-        AciColor Color { get; set; }
-
-        /// <summary>
-        /// Gets or sets the entity <see cref="Layer">layer</see>.
-        /// </summary>
-        Layer Layer { get; set; }
-
-        /// <summary>
-        /// Gets or sets the entity <see cref="LineType">line type</see.
-        /// </summary>
-        LineType LineType { get; set; }
-
-        /// <summary>
-        /// Gets or sets the entity <see cref="XData">extended data</see.
-        /// </summary>
-        Dictionary<ApplicationRegistry, XData> XData { get; set; }
+        public const string Dictionary = "DICTIONARY";
     }
 }
