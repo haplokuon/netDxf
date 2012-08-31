@@ -38,10 +38,10 @@ namespace netDxf.Entities
 
         protected const EntityType TYPE = EntityType.PolylineVertex;
         protected VertexTypeFlags flags;
-        protected Vector2f location;
+        protected Vector2d location;
         protected float beginThickness;
         protected float endThickness;
-        protected float bulge;
+        protected double bulge;
         protected AciColor color;
         protected Layer layer;
         protected LineType lineType;
@@ -58,11 +58,11 @@ namespace netDxf.Entities
             : base(DxfObjectCode.Vertex)
         {
             this.flags = VertexTypeFlags.PolylineVertex;
-            this.location = Vector2f.Zero;
+            this.location = Vector2d.Zero;
             this.layer = Layer.Default;
             this.color = AciColor.ByLayer;
             this.lineType = LineType.ByLayer;
-            this.bulge = 0.0f;
+            this.bulge = 0.0;
             this.beginThickness = 0.0f;
             this.endThickness = 0.0f;
         }
@@ -70,8 +70,8 @@ namespace netDxf.Entities
         /// <summary>
         /// Initializes a new instance of the <c>PolylineVertex</c> class.
         /// </summary>
-        /// <param name="location">Polyline <see cref="Vector2f">vertex</see> coordinates.</param>
-        public PolylineVertex(Vector2f location)
+        /// <param name="location">Polyline <see cref="Vector2d">vertex</see> coordinates.</param>
+        public PolylineVertex(Vector2d location)
             : base(DxfObjectCode.Vertex)
         {
             this.flags = VertexTypeFlags.PolylineVertex;
@@ -89,11 +89,11 @@ namespace netDxf.Entities
         /// </summary>
         /// <param name="x">X coordinate.</param>
         /// <param name="y">Y coordinate.</param>
-        public PolylineVertex(float x, float y)
+        public PolylineVertex(double x, double y)
             : base(DxfObjectCode.Vertex)
         {
             this.flags = VertexTypeFlags.PolylineVertex;
-            this.location = new Vector2f(x, y);
+            this.location = new Vector2d(x, y);
             this.layer = Layer.Default;
             this.color = AciColor.ByLayer;
             this.lineType = LineType.ByLayer;
@@ -107,9 +107,9 @@ namespace netDxf.Entities
         #region public properties
 
         /// <summary>
-        /// Gets or sets the polyline vertex <see cref="netDxf.Vector2f">location</see>.
+        /// Gets or sets the polyline vertex <see cref="netDxf.Vector2d">location</see>.
         /// </summary>
-        public Vector2f Location
+        public Vector2d Location
         {
             get { return this.location; }
             set { this.location = value; }
@@ -141,12 +141,12 @@ namespace netDxf.Entities
         /// made negative if the arc goes clockwise from the start point to the endpoint. 
         /// A bulge of 0 indicates a straight segment, and a bulge of 1 is a semicircle.
         /// </remarks>
-        public float Bulge
+        public double Bulge
         {
             get { return this.bulge; }
             set
             {
-                if (this.bulge < -1.0 || this.bulge > 1.0f)
+                if (this.bulge < -1.0 || this.bulge > 1.0)
                 {
                     throw new ArgumentOutOfRangeException("value", value, "The bulge must be a value between minus one and plus one");
                 }

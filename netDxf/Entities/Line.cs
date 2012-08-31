@@ -36,13 +36,13 @@ namespace netDxf.Entities
         #region private fields
 
         private const EntityType TYPE = EntityType.Line;
-        private Vector3f startPoint;
-        private Vector3f endPoint;
+        private Vector3d startPoint;
+        private Vector3d endPoint;
         private float thickness;
         private AciColor color;
         private Layer layer;
         private LineType lineType;
-        private Vector3f normal;
+        private Vector3d normal;
         private Dictionary<ApplicationRegistry, XData> xData;
 
         #endregion
@@ -52,9 +52,9 @@ namespace netDxf.Entities
         /// <summary>
         /// Initializes a new instance of the <c>Line</c> class.
         /// </summary>
-        /// <param name="startPoint">Line <see cref="Vector3f">start point.</see></param>
-        /// <param name="endPoint">Line <see cref="Vector3f">end point.</see></param>
-        public Line(Vector3f startPoint, Vector3f endPoint) 
+        /// <param name="startPoint">Line <see cref="Vector3d">start point.</see></param>
+        /// <param name="endPoint">Line <see cref="Vector3d">end point.</see></param>
+        public Line(Vector3d startPoint, Vector3d endPoint) 
             : base(DxfObjectCode.Line)
         {
             this.startPoint = startPoint;
@@ -63,7 +63,7 @@ namespace netDxf.Entities
             this.layer = Layer.Default;
             this.color = AciColor.ByLayer;
             this.lineType = LineType.ByLayer;
-            this.normal = Vector3f.UnitZ;
+            this.normal = Vector3d.UnitZ;
         }
 
         /// <summary>
@@ -72,13 +72,13 @@ namespace netDxf.Entities
         public Line()
             : base(DxfObjectCode.Line)
         {
-            this.startPoint = Vector3f.Zero;
-            this.endPoint = Vector3f.Zero;
+            this.startPoint = Vector3d.Zero;
+            this.endPoint = Vector3d.Zero;
             this.thickness = 0.0f;
             this.layer = Layer.Default;
             this.color = AciColor.ByLayer;
             this.lineType = LineType.ByLayer;
-            this.normal = Vector3f.UnitZ;
+            this.normal = Vector3d.UnitZ;
         }
 
         #endregion
@@ -86,18 +86,18 @@ namespace netDxf.Entities
         #region public properties
 
         /// <summary>
-        /// Gets or sets the line <see cref="netDxf.Vector3f">start point</see>.
+        /// Gets or sets the line <see cref="netDxf.Vector3d">start point</see>.
         /// </summary>
-        public Vector3f StartPoint
+        public Vector3d StartPoint
         {
             get { return this.startPoint; }
             set { this.startPoint = value; }
         }
 
         /// <summary>
-        /// Gets or sets the line <see cref="netDxf.Vector3f">end point</see>.
+        /// Gets or sets the line <see cref="netDxf.Vector3d">end point</see>.
         /// </summary>
-        public Vector3f EndPoint
+        public Vector3d EndPoint
         {
             get { return this.endPoint; }
             set { this.endPoint = value; }
@@ -113,14 +113,14 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets or sets the line <see cref="netDxf.Vector3f">normal</see>.
+        /// Gets or sets the line <see cref="netDxf.Vector3d">normal</see>.
         /// </summary>
-        public Vector3f Normal
+        public Vector3d Normal
         {
             get { return this.normal; }
             set
             {
-                if (Vector3f.Zero == value)
+                if (Vector3d.Zero == value)
                     throw new ArgumentNullException("value","The normal can not be the zero vector");
                 value.Normalize();
                 this.normal = value;

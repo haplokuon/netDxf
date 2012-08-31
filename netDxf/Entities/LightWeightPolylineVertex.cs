@@ -32,10 +32,10 @@ namespace netDxf.Entities
         #region private fields
 
         protected const EntityType TYPE = EntityType.LightWeightPolylineVertex;
-        protected Vector2f location;
+        protected Vector2d location;
         protected float beginThickness;
         protected float endThickness;
-        protected float bulge;
+        protected double bulge;
 
         #endregion
 
@@ -46,7 +46,7 @@ namespace netDxf.Entities
         /// </summary>
         public LightWeightPolylineVertex()
         {
-            this.location = Vector2f.Zero;
+            this.location = Vector2d.Zero;
             this.bulge = 0.0f;
             this.beginThickness = 0.0f;
             this.endThickness = 0.0f;
@@ -55,8 +55,8 @@ namespace netDxf.Entities
         /// <summary>
         /// Initializes a new instance of the <c>LightWeightPolylineVertex</c> class.
         /// </summary>
-        /// <param name="location">Lightweight polyline <see cref="netDxf.Vector2f">vertex</see> coordinates.</param>
-        public LightWeightPolylineVertex(Vector2f location)
+        /// <param name="location">Lightweight polyline <see cref="netDxf.Vector2d">vertex</see> coordinates.</param>
+        public LightWeightPolylineVertex(Vector2d location)
         {
             this.location = location;
             this.bulge = 0.0f;
@@ -69,9 +69,9 @@ namespace netDxf.Entities
         /// </summary>
         /// <param name="x">X coordinate.</param>
         /// <param name="y">Y coordinate.</param>
-        public LightWeightPolylineVertex(float x, float y)
+        public LightWeightPolylineVertex(double x, double y)
         {
-            this.location = new Vector2f(x, y);
+            this.location = new Vector2d(x, y);
             this.bulge = 0.0f;
             this.beginThickness = 0.0f;
             this.endThickness = 0.0f;
@@ -82,9 +82,9 @@ namespace netDxf.Entities
         #region public properties
 
         /// <summary>
-        /// Gets or sets the polyline vertex <see cref="netDxf.Vector2f">location</see>.
+        /// Gets or sets the polyline vertex <see cref="netDxf.Vector2d">location</see>.
         /// </summary>
-        public Vector2f Location
+        public Vector2d Location
         {
             get { return this.location; }
             set { this.location = value; }
@@ -116,12 +116,12 @@ namespace netDxf.Entities
         /// made negative if the arc goes clockwise from the start point to the endpoint. 
         /// A bulge of 0 indicates a straight segment, and a bulge of 1 is a semicircle.
         /// </remarks>
-        public float Bulge
+        public double Bulge
         {
             get { return this.bulge; }
             set
             {
-                if (this.bulge < -1.0 || this.bulge > 1.0f)
+                if (this.bulge < -1.0 || this.bulge > 1.0)
                 {
                     throw new ArgumentOutOfRangeException("value", value, "The bulge must be a value between minus one and plus one");
                 }

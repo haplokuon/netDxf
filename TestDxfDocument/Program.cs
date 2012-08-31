@@ -56,7 +56,7 @@ namespace TestDxfDocument
         {
             DxfDocument dxf = new DxfDocument();
            //line
-            Line line = new Line(new Vector3f(0, 0, 0), new Vector3f(5, 5, 5));
+            Line line = new Line(new Vector3d(0, 0, 0), new Vector3d(5, 5, 5));
             line.Layer = new Layer("line");
             line.Layer.Color.Index = 6;
 
@@ -159,19 +159,19 @@ namespace TestDxfDocument
             DxfDocument dxf = new DxfDocument();
 
 
-            Line line = new Line(new Vector3f(0, 0, 0), new Vector3f((float)(2 * Math.Cos(Math.PI / 4)), (float)(2 * Math.Cos(Math.PI / 4)), 0));
+            Line line = new Line(new Vector3d(0, 0, 0), new Vector3d(2 * Math.Cos(Math.PI / 4), 2 * Math.Cos(Math.PI / 4), 0));
             dxf.AddEntity(line);
 
-            Line line2 = new Line(new Vector3f(0, 0, 0), new Vector3f(0, -2, 0));
+            Line line2 = new Line(new Vector3d(0, 0, 0), new Vector3d(0, -2, 0));
             dxf.AddEntity(line2);
 
             Arc arc=new Arc(Vector3f.Zero,2,45,270);
             dxf.AddEntity(arc);
 
             // ellipses are saved as polylines
-            Ellipse ellipse = new Ellipse(new Vector3f(2,2,0), 5,3);
+            Ellipse ellipse = new Ellipse(new Vector3d(2,2,0), 5,3);
             ellipse.Rotation = 30;
-            ellipse.Normal=new Vector3f(1,1,1);
+            ellipse.Normal=new Vector3d(1,1,1);
             ellipse.Thickness = 2;
             dxf.AddEntity(ellipse);
 
@@ -192,7 +192,7 @@ namespace TestDxfDocument
             for (int i=0; i<100000;i++)
             {
                  //line
-                Line line = new Line(new Vector3f(0, i, 0), new Vector3f(5, i, 0));
+                Line line = new Line(new Vector3d(0, i, 0), new Vector3d(5, i, 0));
                 line.Layer = new Layer("line");
                 line.Layer.Color.Index = 6;
                 dxf.AddEntity(line);
@@ -231,8 +231,8 @@ namespace TestDxfDocument
             attdef.Rotation = 45;
 
             block.Attributes.Add(attdef.Id, attdef);
-            block.Entities.Add(new Line(new Vector3f(-5, -5, 0), new Vector3f(5, 5, 0)));
-            block.Entities.Add(new Line(new Vector3f(5, -5, 0), new Vector3f(-5, 5, 0)));
+            block.Entities.Add(new Line(new Vector3d(-5, -5, 0), new Vector3d(5, 5, 0)));
+            block.Entities.Add(new Line(new Vector3d(5, -5, 0), new Vector3d(-5, 5, 0)));
 
             Insert insert = new Insert(block, new Vector3f(5, 5, 5));
             insert.Layer = new Layer("insert");
@@ -266,7 +266,7 @@ namespace TestDxfDocument
             dxf.AddEntity(insert);
             dxf.AddEntity(insert2);
 
-            Circle circle = new Circle(Vector3f.Zero, 5);
+            Circle circle = new Circle(Vector3d.Zero, 5);
             circle.Layer = new Layer("circle");
             circle.Layer.Color.Index = 2;
             circle.XData = new Dictionary<ApplicationRegistry, XData>
@@ -344,14 +344,14 @@ namespace TestDxfDocument
             xdata2.XDataRecord.Add(XDataRecord.CloseControlString);
 
             //circle
-            Vector3f extrusion = new Vector3f(1, 1, 1);
+            Vector3d extrusion = new Vector3d(1, 1, 1);
             Vector3f centerWCS = new Vector3f(1, 1, 1);
             Vector3d centerOCS = MathHelper.Transform((Vector3d) centerWCS,
                                                       (Vector3d)extrusion,
                                                       MathHelper.CoordinateSystem.World,
                                                       MathHelper.CoordinateSystem.Object);
 
-            Circle circle = new Circle((Vector3f) centerOCS, 5);
+            Circle circle = new Circle(centerOCS, 5);
             circle.Layer = new Layer("circle with spaces");
             circle.Layer.Color=AciColor.Yellow;
             circle.LineType = LineType.Dashed;
@@ -365,13 +365,13 @@ namespace TestDxfDocument
             dxf.AddEntity(circle);
 
             //points
-            Point point1 = new Point(new Vector3f(-3, -3, 0));
+            Point point1 = new Point(new Vector3d(-3, -3, 0));
             point1.Layer = new Layer("point");
             point1.Color = new AciColor(30);
-            Point point2 = new Point(new Vector3f(1, 1, 1));
+            Point point2 = new Point(new Vector3d(1, 1, 1));
             point2.Layer = point1.Layer;
             point2.Layer.Color.Index = 9;
-            point2.Normal = new Vector3f(1, 1, 1);
+            point2.Normal = new Vector3d(1, 1, 1);
             dxf.AddEntity(point1);
             dxf.AddEntity(point2);
 
@@ -387,47 +387,47 @@ namespace TestDxfDocument
             //polyline
             PolylineVertex polyVertex;
             List<PolylineVertex> polyVertexes = new List<PolylineVertex>();
-            polyVertex = new PolylineVertex(new Vector2f(-50, -50));
+            polyVertex = new PolylineVertex(new Vector2d(-50, -50));
             polyVertex.BeginThickness = 2;
             polyVertexes.Add(polyVertex);
-            polyVertex = new PolylineVertex(new Vector2f(50, -50));
+            polyVertex = new PolylineVertex(new Vector2d(50, -50));
             polyVertex.BeginThickness = 1;
             polyVertexes.Add(polyVertex);
-            polyVertex = new PolylineVertex(new Vector2f(50, 50));
+            polyVertex = new PolylineVertex(new Vector2d(50, 50));
             polyVertex.Bulge = 1;
             polyVertexes.Add(polyVertex);
-            polyVertex = new PolylineVertex(new Vector2f(-50, 50));
+            polyVertex = new PolylineVertex(new Vector2d(-50, 50));
             polyVertexes.Add(polyVertex);
             Polyline polyline2d = new Polyline(polyVertexes, true);
             polyline2d.Layer = new Layer("polyline2d");
             polyline2d.Layer.Color.Index = 5;
-            polyline2d.Normal = new Vector3f(1, 1, 1);
+            polyline2d.Normal = new Vector3d(1, 1, 1);
             polyline2d.Elevation = 100.0f;
             dxf.AddEntity(polyline2d);
 
             //lightweight polyline
             LightWeightPolylineVertex lwVertex;
             List<LightWeightPolylineVertex> lwVertexes = new List<LightWeightPolylineVertex>();
-            lwVertex = new LightWeightPolylineVertex(new Vector2f(-25, -25));
+            lwVertex = new LightWeightPolylineVertex(new Vector2d(-25, -25));
             lwVertex.BeginThickness = 2;
             lwVertexes.Add(lwVertex);
-            lwVertex = new LightWeightPolylineVertex(new Vector2f(25, -25));
+            lwVertex = new LightWeightPolylineVertex(new Vector2d(25, -25));
             lwVertex.BeginThickness = 1;
             lwVertexes.Add(lwVertex);
-            lwVertex = new LightWeightPolylineVertex(new Vector2f(25, 25));
+            lwVertex = new LightWeightPolylineVertex(new Vector2d(25, 25));
             lwVertex.Bulge = 1;
             lwVertexes.Add(lwVertex);
-            lwVertex = new LightWeightPolylineVertex(new Vector2f(-25, 25));
+            lwVertex = new LightWeightPolylineVertex(new Vector2d(-25, 25));
             lwVertexes.Add(lwVertex);
             LightWeightPolyline lwPolyline = new LightWeightPolyline(lwVertexes, true);
             lwPolyline.Layer = new Layer("lwpolyline");
             lwPolyline.Layer.Color.Index = 5;
-            lwPolyline.Normal = new Vector3f(1, 1, 1);
+            lwPolyline.Normal = new Vector3d(1, 1, 1);
             lwPolyline.Elevation = 100.0f;
             dxf.AddEntity(lwPolyline);
 
             //line
-            Line line = new Line(new Vector3f(0, 0, 0), new Vector3f(10, 10, 10));
+            Line line = new Line(new Vector3d(0, 0, 0), new Vector3d(10, 10, 10));
             line.Layer = new Layer("line");
             line.Layer.Color.Index = 6;
             dxf.AddEntity(line);
@@ -450,8 +450,8 @@ namespace TestDxfDocument
 
             //block definition
             Block block = new Block("TestBlock");
-            block.Entities.Add(new Line(new Vector3f(-5, -5, 5), new Vector3f(5, 5, 5)));
-            block.Entities.Add(new Line(new Vector3f(5, -5, 5), new Vector3f(-5, 5, 5)));
+            block.Entities.Add(new Line(new Vector3d(-5, -5, 5), new Vector3d(5, 5, 5)));
+            block.Entities.Add(new Line(new Vector3d(5, -5, 5), new Vector3d(-5, 5, 5)));
            
             //insert
             Insert insert = new Insert(block, new Vector3f(5, 5, 5));

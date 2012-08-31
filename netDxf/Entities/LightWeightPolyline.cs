@@ -48,8 +48,8 @@ namespace netDxf.Entities
         private Layer layer;
         private AciColor color;
         private LineType lineType;
-        private Vector3f normal;
-        private float elevation;
+        private Vector3d normal;
+        private double elevation;
         private float thickness;
         private Dictionary<ApplicationRegistry, XData> xData;
 
@@ -70,7 +70,7 @@ namespace netDxf.Entities
             this.layer = Layer.Default;
             this.color = AciColor.ByLayer;
             this.lineType = LineType.ByLayer;
-            this.normal = Vector3f.UnitZ;
+            this.normal = Vector3d.UnitZ;
             this.elevation = 0.0f;
             this.thickness = 0.0f;
             this.flags = isClosed ? PolylineTypeFlags.ClosedPolylineOrClosedPolygonMeshInM : PolylineTypeFlags.OpenPolyline;
@@ -88,7 +88,7 @@ namespace netDxf.Entities
             this.layer = Layer.Default;
             this.color = AciColor.ByLayer;
             this.lineType = LineType.ByLayer;
-            this.normal = Vector3f.UnitZ;
+            this.normal = Vector3d.UnitZ;
             this.elevation = 0.0f;
             this.thickness = 0.0f;
             this.flags = PolylineTypeFlags.OpenPolyline;
@@ -105,7 +105,7 @@ namespace netDxf.Entities
             this.layer = Layer.Default;
             this.color = AciColor.ByLayer;
             this.lineType = LineType.ByLayer;
-            this.normal = Vector3f.UnitZ;
+            this.normal = Vector3d.UnitZ;
             this.elevation = 0.0f;
             this.flags = PolylineTypeFlags.OpenPolyline;
         }
@@ -142,14 +142,14 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets or sets the polyline <see cref="netDxf.Vector3f">normal</see>.
+        /// Gets or sets the polyline <see cref="netDxf.Vector3d">normal</see>.
         /// </summary>
-        public Vector3f Normal
+        public Vector3d Normal
         {
             get { return this.normal; }
             set
             {
-                if (Vector3f.Zero == value)
+                if (Vector3d.Zero == value)
                     throw new ArgumentNullException("value", "The normal can not be the zero vector");
                 value.Normalize();
                 this.normal = value;
@@ -168,7 +168,7 @@ namespace netDxf.Entities
         /// <summary>
         /// Gets or sets the polyline elevation.
         /// </summary>
-        public float Elevation
+        public double Elevation
         {
             get { return this.elevation; }
             set { this.elevation = value; }
@@ -308,27 +308,27 @@ namespace netDxf.Entities
         /// <param name="weldThreshold">Tolerance to consider if two new generated vertexes are equal.</param>
         /// <param name="bulgeThreshold">Minimun distance from which approximate curved segments of the polyline.</param>
         /// <returns>The return vertexes are expresed in object coordinate system.</returns>
-        public List<Vector2f> PoligonalVertexes(int bulgePrecision, float weldThreshold, float bulgeThreshold)
+        public List<Vector2d> PoligonalVertexes(int bulgePrecision, double weldThreshold, double bulgeThreshold)
         {
-            List<Vector2f> ocsVertexes = new List<Vector2f>();
+            List<Vector2d> ocsVertexes = new List<Vector2d>();
 
             int index = 0;
 
             foreach (LightWeightPolylineVertex vertex in this.Vertexes)
             {
-                float bulge = vertex.Bulge;
-                Vector2f p1;
-                Vector2f p2;
+                double bulge = vertex.Bulge;
+                Vector2d p1;
+                Vector2d p2;
 
                 if (index == this.Vertexes.Count - 1)
                 {
-                    p1 = new Vector2f(vertex.Location.X, vertex.Location.Y);
-                    p2 = new Vector2f(this.vertexes[0].Location.X, this.vertexes[0].Location.Y);
+                    p1 = new Vector2d(vertex.Location.X, vertex.Location.Y);
+                    p2 = new Vector2d(this.vertexes[0].Location.X, this.vertexes[0].Location.Y);
                 }
                 else
                 {
-                    p1 = new Vector2f(vertex.Location.X, vertex.Location.Y);
-                    p2 = new Vector2f(this.vertexes[index + 1].Location.X, this.vertexes[index + 1].Location.Y);
+                    p1 = new Vector2d(vertex.Location.X, vertex.Location.Y);
+                    p2 = new Vector2d(this.vertexes[index + 1].Location.X, this.vertexes[index + 1].Location.Y);
                 }
 
                 if (!p1.Equals(p2, weldThreshold))
@@ -339,35 +339,35 @@ namespace netDxf.Entities
                     }
                     else
                     {
-                        float c = Vector2f.Distance(p1, p2);
+                        double c = Vector2d.Distance(p1, p2);
                         if (c >= bulgeThreshold)
                         {
-                            float s = (c/2)*Math.Abs(bulge);
-                            float r = ((c/2)*(c/2) + s*s)/(2*s);
-                            float theta = (float) (4*Math.Atan(Math.Abs(bulge)));
-                            float gamma = (float) ((Math.PI - theta)/2);
-                            float phi;
+                            double s = (c/2)*Math.Abs(bulge);
+                            double r = ((c / 2) * (c / 2) + s * s) / (2 * s);
+                            double theta = 4 * Math.Atan(Math.Abs(bulge));
+                            double gamma = (Math.PI - theta) / 2;
+                            double phi;
 
                             if (bulge > 0)
                             {
-                                phi = Vector2f.AngleBetween(Vector2f.UnitX, p2 - p1) + gamma;
+                                phi = Vector2d.AngleBetween(Vector2d.UnitX, p2 - p1) + gamma;
                             }
                             else
                             {
-                                phi = Vector2f.AngleBetween(Vector2f.UnitX, p2 - p1) - gamma;
+                                phi = Vector2d.AngleBetween(Vector2d.UnitX, p2 - p1) - gamma;
                             }
 
-                            Vector2f center = new Vector2f((float) (p1.X + r*Math.Cos(phi)), (float) (p1.Y + r*Math.Sin(phi)));
-                            Vector2f a1 = p1 - center;
-                            float angle = 4*((float) (Math.Atan(bulge)))/(bulgePrecision + 1);
+                            Vector2d center = new Vector2d(p1.X + r*Math.Cos(phi), p1.Y + r*Math.Sin(phi));
+                            Vector2d a1 = p1 - center;
+                            double angle = 4*(Math.Atan(bulge))/(bulgePrecision + 1);
 
                             ocsVertexes.Add(p1);
                             for (int i = 1; i <= bulgePrecision; i++)
                             {
-                                Vector2f curvePoint = new Vector2f();
-                                Vector2f prevCurvePoint = new Vector2f(this.vertexes[this.vertexes.Count - 1].Location.X, this.vertexes[this.vertexes.Count - 1].Location.Y);
-                                curvePoint.X = center.X + (float) (Math.Cos(i*angle)*a1.X - Math.Sin(i*angle)*a1.Y);
-                                curvePoint.Y = center.Y + (float) (Math.Sin(i*angle)*a1.X + Math.Cos(i*angle)*a1.Y);
+                                Vector2d curvePoint = new Vector2d();
+                                Vector2d prevCurvePoint = new Vector2d(this.vertexes[this.vertexes.Count - 1].Location.X, this.vertexes[this.vertexes.Count - 1].Location.Y);
+                                curvePoint.X = center.X + Math.Cos(i*angle)*a1.X - Math.Sin(i*angle)*a1.Y;
+                                curvePoint.Y = center.Y + Math.Sin(i*angle)*a1.X + Math.Cos(i*angle)*a1.Y;
 
                                 if (!curvePoint.Equals(prevCurvePoint, weldThreshold) &&
                                     !curvePoint.Equals(p2, weldThreshold))

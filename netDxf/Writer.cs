@@ -790,8 +790,8 @@ namespace netDxf
 
             this.WriteXData(ellipse.XData);
 
-            List<Vector2f> points = ellipse.PolygonalVertexes(ellipse.CurvePoints);
-            foreach (Vector2f v in points)
+            List<Vector2d> points = ellipse.PolygonalVertexes(ellipse.CurvePoints);
+            foreach (Vector2d v in points)
             {
                 this.WriteCodePair(0, DxfObjectCode.Vertex);
                 this.WriteCodePair(8, ellipse.Layer);
