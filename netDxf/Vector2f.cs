@@ -352,7 +352,7 @@ namespace netDxf
         public void Normalize()
         {
             float mod = this.Modulus();
-            if (mod == 0)
+            if (MathHelper.IsZero(mod))
                 throw new ArithmeticException("Cannot normalize a zero vector");
             float modInv = 1 / mod;
             this.x *= modInv;
@@ -382,8 +382,9 @@ namespace netDxf
 
         #region comparision methods
 
-        /// </summary>
+        /// <summary>
         /// Check if the components of two vectors are approximate equals.
+        /// </summary>
         /// <param name="obj">Vector2f.</param>
         /// <param name="threshold">Maximun tolerance.</param>
         /// <returns>True if the three components are almost equal or false in anyother case.</returns>
