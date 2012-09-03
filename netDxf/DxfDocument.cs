@@ -99,7 +99,7 @@ namespace netDxf
         public DxfDocument()
         {
             this.addedObjects = new Hashtable(); // keeps track of the added object to avoid duplicates
-            this.version = this.version;
+            //this.version = this.version;
             this.viewports = new Dictionary<string, ViewPort>();
             this.layers = new Dictionary<string, Layer>();
             this.lineTypes = new Dictionary<string, LineType>();
