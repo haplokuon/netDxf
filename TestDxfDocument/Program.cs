@@ -42,7 +42,7 @@ namespace TestDxfDocument
            WriteDxfFile();
            
            //WritePolyfaceMesh();
-           //ReadDxfFile();
+           ReadDxfFile();
            //Ellipse();
            //Solid();
             //Face3d();
@@ -95,7 +95,7 @@ namespace TestDxfDocument
 
            nurbs2.Order = 3;
 
-           nurbs2.SetUniformWeights((float)Math.Cos(MathHelper.HalfPI));
+           nurbs2.SetUniformWeights(Math.Cos(MathHelper.HalfPI));
            dxf.AddEntity(nurbs2);
 
             dxf.Save("nurbs.dxf", DxfVersion.AutoCad12);
@@ -123,10 +123,10 @@ namespace TestDxfDocument
             DxfDocument dxf = new DxfDocument();
 
             Solid solid = new Solid();
-            solid.FirstVertex=new Vector3f(0,0,0);
-            solid.SecondVertex  = new Vector3f(1, 0, 0);
-            solid.ThirdVertex  = new Vector3f(0, 1, 0);
-            solid.FourthVertex  = new Vector3f(1, 1, 0);
+            solid.FirstVertex=new Vector3d(0,0,0);
+            solid.SecondVertex  = new Vector3d(1, 0, 0);
+            solid.ThirdVertex  = new Vector3d(0, 1, 0);
+            solid.FourthVertex  = new Vector3d(1, 1, 0);
             dxf.AddEntity(solid);
 
             dxf.Save("solid.dxf", DxfVersion.AutoCad2000);
@@ -141,10 +141,10 @@ namespace TestDxfDocument
             DxfDocument dxf = new DxfDocument();
 
             Face3d face3d = new Face3d();
-            face3d.FirstVertex = new Vector3f(0, 0, 0);
-            face3d.SecondVertex = new Vector3f(1, 0, 0);
-            face3d.ThirdVertex = new Vector3f(1, 1, 0);
-            face3d.FourthVertex = new Vector3f(0, 1, 0);
+            face3d.FirstVertex = new Vector3d(0, 0, 0);
+            face3d.SecondVertex = new Vector3d(1, 0, 0);
+            face3d.ThirdVertex = new Vector3d(1, 1, 0);
+            face3d.FourthVertex = new Vector3d(0, 1, 0);
             dxf.AddEntity(face3d);
 
             dxf.Save("face.dxf", DxfVersion.AutoCad2000);
@@ -158,14 +158,14 @@ namespace TestDxfDocument
            
             DxfDocument dxf = new DxfDocument();
 
+            Line line = new Line(new Vector3d(0, 0, 0), new Vector3d(2 * Math.Cos(Math.PI / 4),2 * Math.Cos(Math.PI / 4), 0));
 
-            Line line = new Line(new Vector3d(0, 0, 0), new Vector3d(2 * Math.Cos(Math.PI / 4), 2 * Math.Cos(Math.PI / 4), 0));
             dxf.AddEntity(line);
 
             Line line2 = new Line(new Vector3d(0, 0, 0), new Vector3d(0, -2, 0));
             dxf.AddEntity(line2);
 
-            Arc arc=new Arc(Vector3f.Zero,2,45,270);
+            Arc arc=new Arc(Vector3d.Zero,2,45,270);
             dxf.AddEntity(arc);
 
             // ellipses are saved as polylines
@@ -226,7 +226,7 @@ namespace TestDxfDocument
 
             AttributeDefinition attdef = new AttributeDefinition("NewAttribute");
             attdef.Text = "InfoText";
-            attdef.BasePoint = new Vector3f(1, 1, 1);
+            attdef.BasePoint = new Vector3d(1, 1, 1);
             attdef.Style.IsVertical = true;
             attdef.Rotation = 45;
 
@@ -234,13 +234,13 @@ namespace TestDxfDocument
             block.Entities.Add(new Line(new Vector3d(-5, -5, 0), new Vector3d(5, 5, 0)));
             block.Entities.Add(new Line(new Vector3d(5, -5, 0), new Vector3d(-5, 5, 0)));
 
-            Insert insert = new Insert(block, new Vector3f(5, 5, 5));
+            Insert insert = new Insert(block, new Vector3d(5, 5, 5));
             insert.Layer = new Layer("insert");
             insert.Rotation = 45;
             insert.Layer.Color.Index = 4;
             insert.Attributes[0].Value = 24;
 
-            Insert insert2 = new Insert(block, new Vector3f(-5, -5, -5));
+            Insert insert2 = new Insert(block, new Vector3d(-5, -5, -5));
             insert2.Attributes[0].Value = 34;
 
             XData xdata1 = new XData(new ApplicationRegistry("netDxf"));
@@ -321,7 +321,7 @@ namespace TestDxfDocument
             DxfDocument dxf = new DxfDocument();
 
             //arc
-            Arc arc = new Arc(new Vector3f(10, 10, 0), 10, 45, 135);
+            Arc arc = new Arc(new Vector3d(10, 10, 0), 10, 45, 135);
             arc.Layer = new Layer("arc");
             arc.Layer.Color.Index = 1;
             dxf.AddEntity(arc);
@@ -345,9 +345,9 @@ namespace TestDxfDocument
 
             //circle
             Vector3d extrusion = new Vector3d(1, 1, 1);
-            Vector3f centerWCS = new Vector3f(1, 1, 1);
-            Vector3d centerOCS = MathHelper.Transform((Vector3d) centerWCS,
-                                                      (Vector3d)extrusion,
+            Vector3d centerWCS = new Vector3d(1, 1, 1);
+            Vector3d centerOCS = MathHelper.Transform(centerWCS,
+                                                      extrusion,
                                                       MathHelper.CoordinateSystem.World,
                                                       MathHelper.CoordinateSystem.Object);
 
@@ -376,10 +376,10 @@ namespace TestDxfDocument
             dxf.AddEntity(point2);
 
             //3dface
-            Face3d face3D = new Face3d(new Vector3f(-5, -5, 5),
-                                       new Vector3f(5, -5, 5),
-                                       new Vector3f(5, 5, 5),
-                                       new Vector3f(-5, 5, 5));
+            Face3d face3D = new Face3d(new Vector3d(-5, -5, 5),
+                                       new Vector3d(5, -5, 5),
+                                       new Vector3d(5, 5, 5),
+                                       new Vector3d(-5, 5, 5));
             face3D.Layer = new Layer("3dface");
             face3D.Layer.Color.Index = 3;
             dxf.AddEntity(face3D);
@@ -435,13 +435,13 @@ namespace TestDxfDocument
             //3d polyline
             Polyline3dVertex vertex;
             List<Polyline3dVertex> vertexes = new List<Polyline3dVertex>();
-            vertex = new Polyline3dVertex(new Vector3f(-50, -50, 0));
+            vertex = new Polyline3dVertex(new Vector3d(-50, -50, 0));
             vertexes.Add(vertex);
-            vertex = new Polyline3dVertex(new Vector3f(50, -50, 10));
+            vertex = new Polyline3dVertex(new Vector3d(50, -50, 10));
             vertexes.Add(vertex);
-            vertex = new Polyline3dVertex(new Vector3f(50, 50, 25));
+            vertex = new Polyline3dVertex(new Vector3d(50, 50, 25));
             vertexes.Add(vertex);
-            vertex = new Polyline3dVertex(new Vector3f(-50, 50, 50));
+            vertex = new Polyline3dVertex(new Vector3d(-50, 50, 50));
             vertexes.Add(vertex);
             Polyline3d polyline = new Polyline3d(vertexes, true);
             polyline.Layer = new Layer("polyline3d");
@@ -454,14 +454,14 @@ namespace TestDxfDocument
             block.Entities.Add(new Line(new Vector3d(5, -5, 5), new Vector3d(-5, 5, 5)));
            
             //insert
-            Insert insert = new Insert(block, new Vector3f(5, 5, 5));
+            Insert insert = new Insert(block, new Vector3d(5, 5, 5));
             insert.Layer = new Layer("insert");
             insert.Layer.Color.Index = 4;
             dxf.AddEntity(insert);
 
             //text
             TextStyle style=new TextStyle("True type font","Arial.ttf");
-            Text text = new Text("Hello world!", Vector3f.Zero, 10.0f,style);
+            Text text = new Text("Hello world!", Vector3d.Zero, 10.0f,style);
             text.Layer = new Layer("text");
             text.Layer.Color.Index = 8;
             text.Alignment = TextAlignment.TopRight;
