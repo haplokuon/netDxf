@@ -258,7 +258,7 @@ namespace netDxf
         {
             double det = this.Determinant();
             var resultado = new Matrix3d();
-            if (det == 0)
+            if (MathHelper.IsZero(det))
             {
                 throw (new ArithmeticException("The matrix is not invertible"));
             }
