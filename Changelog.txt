@@ -1,3 +1,7 @@
+[0.1.3.0 - 2012/09/03]
++ Changed all numeric data of the library to use doubles instead of floats
++ Solution updated to Visual Studio 2010
+
 [0.1.2.0 - 2009/03/07]
 + Added support for AutoCad12, AutoCad2000, AutoCad2004 and AutoCad2007 dxf files
 + The Ellipse entity will be exported as a true ellipse for dxf file version AutoCad2000 and higher
