@@ -42,11 +42,11 @@ namespace netDxf.Entities
         private LineType lineType;
         private Dictionary<ApplicationRegistry, XData> xData;
         private List<NurbsVertex> controlPoints;
-        private float[] knotVector;
+        private double[] knotVector;
         private int order;
-        private float elevation;
-        private float thickness;
-        private Vector3f normal;
+        private double elevation;
+        private double thickness;
+        private Vector3d normal;
         private int curvePoints;
 
         #endregion
@@ -59,15 +59,15 @@ namespace netDxf.Entities
         public NurbsCurve()
         {
             this.controlPoints = new List<NurbsVertex>();
-            this.normal = Vector3f.UnitZ;
+            this.normal = Vector3d.UnitZ;
             this.layer = Layer.Default;
             this.color = AciColor.ByLayer;
             this.lineType = LineType.ByLayer;
             this.order = 0;
             this.curvePoints = 30;
-            this.elevation = 0.0f;
-            this.thickness = 0.0f;
-            this.normal = Vector3f.UnitZ;
+            this.elevation = 0.0;
+            this.thickness = 0.0;
+            this.normal = Vector3d.UnitZ;
         }
 
         /// <summary>
@@ -80,15 +80,15 @@ namespace netDxf.Entities
             if (controlPoints.Count<order)
                 throw new ArgumentOutOfRangeException("order",order,"The order of the curve must be less or equal the number of control points.");
             this.controlPoints = controlPoints;
-            this.normal = Vector3f.UnitZ;
+            this.normal = Vector3d.UnitZ;
             this.layer = Layer.Default;
             this.color = AciColor.ByLayer;
             this.lineType = LineType.ByLayer;
             this.order = order;
             this.curvePoints = 30;
-            this.elevation = 0.0f;
-            this.thickness = 0.0f;
-            this.normal = Vector3f.UnitZ;
+            this.elevation = 0.0;
+            this.thickness = 0.0;
+            this.normal = Vector3d.UnitZ;
         }
 
 
@@ -120,9 +120,9 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets or sets the nurbs curve <see cref="netDxf.Vector3f">normal</see>.
+        /// Gets or sets the nurbs curve <see cref="netDxf.Vector3d">normal</see>.
         /// </summary>
-        public Vector3f Normal
+        public Vector3d Normal
         {
             get { return this.normal; }
             set
@@ -144,7 +144,7 @@ namespace netDxf.Entities
         /// <summary>
         /// Gets or sets the nurbs curve thickness.
         /// </summary>
-        public float Thickness
+        public double Thickness
         {
             get { return this.thickness; }
             set { this.thickness = value; }
@@ -153,7 +153,7 @@ namespace netDxf.Entities
         /// <summary>
         /// Gets or sets the nurbs curve elevation.
         /// </summary>
-        public float Elevation
+        public double Elevation
         {
             get { return this.elevation; }
             set { this.elevation = value; }
@@ -238,27 +238,27 @@ namespace netDxf.Entities
         /// </summary>
         /// <param name="precision">Number of point to approximate the curve to a polyline.</param>
         /// <returns>The vertexes are expresed in object coordinate system.</returns>
-        public List<Vector2f> PolygonalVertexes(int precision)
+        public List<Vector2d> PolygonalVertexes(int precision)
         {
             if (this.controlPoints.Count < this.order)
                 throw new ArithmeticException("The order of the curve must be less or equal the number of control points.");
 
             this.knotVector = this.SetKnotVector();
-            float[][][] nurbsBasisFunctions = this.DefineBasisFunctions(precision);
+            double[][][] nurbsBasisFunctions = this.DefineBasisFunctions(precision);
 
-            List<Vector2f> vertexes = new List<Vector2f>();
+            List<Vector2d> vertexes = new List<Vector2d>();
 
             for (int i = 0; i < precision; i++)
             {
-                float x = 0.0f;
-                float y = 0.0f;
+                double x = 0.0;
+                double y = 0.0;
                 for (int ctrlPointIndex = 0; ctrlPointIndex < this.controlPoints.Count; ctrlPointIndex++)
                 {
                     x += this.controlPoints[ctrlPointIndex].Location.X*nurbsBasisFunctions[i][ctrlPointIndex][this.order - 1];
                     y += this.controlPoints[ctrlPointIndex].Location.Y*nurbsBasisFunctions[i][ctrlPointIndex][this.order - 1];
                 }
 
-                vertexes.Add(new Vector2f(x, y));
+                vertexes.Add(new Vector2d(x, y));
             }
 
             return vertexes;
@@ -268,7 +268,7 @@ namespace netDxf.Entities
         /// Sets a constant weight for all the nurbs curve <see cref="NurbsVertex">vertex</see> list.
         /// </summary>
         /// <param name="weight">Nurbs vertex weight.</param>
-        public void SetUniformWeights(float weight)
+        public void SetUniformWeights(double weight)
         {
             foreach (NurbsVertex v in this.controlPoints)
             {
@@ -280,33 +280,33 @@ namespace netDxf.Entities
 
         #region private methods
 
-        private float[][][] DefineBasisFunctions(int precision)
+        private double[][][] DefineBasisFunctions(int precision)
         {
-            float[][][] nurbsBasisFunctions;
-            float[][][] basisFunctions;
+            double[][][] nurbsBasisFunctions;
+            double[][][] basisFunctions;
 
-            basisFunctions = new float[precision][][];
+            basisFunctions = new double[precision][][];
 
-            nurbsBasisFunctions = new float[precision][][];
+            nurbsBasisFunctions = new double[precision][][];
 
             for (int vertexIndex = 0; vertexIndex < precision; vertexIndex++)
             {
-                basisFunctions[vertexIndex] = new float[this.controlPoints.Count + 1][];
-                nurbsBasisFunctions[vertexIndex] = new float[this.controlPoints.Count + 1][];
+                basisFunctions[vertexIndex] = new double[this.controlPoints.Count + 1][];
+                nurbsBasisFunctions[vertexIndex] = new double[this.controlPoints.Count + 1][];
 
-                float t = vertexIndex/(float) (precision - 1);
+                double t = vertexIndex / (precision - 1.0);
 
-                if (t == 1.0f) t = 1.0f - MathHelper.EpsilonF;
+                if (t == 1.0) t = 1.0 - double.Epsilon;
 
                 for (int ctrlPointIndex = 0; ctrlPointIndex < this.controlPoints.Count + 1; ctrlPointIndex++)
                 {
-                    basisFunctions[vertexIndex][ctrlPointIndex] = new float[this.order];
-                    nurbsBasisFunctions[vertexIndex][ctrlPointIndex] = new float[this.order];
+                    basisFunctions[vertexIndex][ctrlPointIndex] = new double[this.order];
+                    nurbsBasisFunctions[vertexIndex][ctrlPointIndex] = new double[this.order];
 
                     if (t >= this.knotVector[ctrlPointIndex] && t < this.knotVector[ctrlPointIndex + 1])
-                        basisFunctions[vertexIndex][ctrlPointIndex][0] = 1.0f;
+                        basisFunctions[vertexIndex][ctrlPointIndex][0] = 1.0;
                     else
-                        basisFunctions[vertexIndex][ctrlPointIndex][0] = 0.0f;
+                        basisFunctions[vertexIndex][ctrlPointIndex][0] = 0.0;
                 }
             }
 
@@ -316,25 +316,25 @@ namespace netDxf.Entities
                 {
                     for (int vertexIndex = 0; vertexIndex < precision; vertexIndex++)
                     {
-                        float t = vertexIndex/(float) (precision - 1);
+                        double t = vertexIndex / (precision - 1.0);
 
-                        float Nikm1 = basisFunctions[vertexIndex][ctrlPointIndex][orderIndex - 1];
-                        float Nip1km1 = basisFunctions[vertexIndex][ctrlPointIndex + 1][orderIndex - 1];
+                        double Nikm1 = basisFunctions[vertexIndex][ctrlPointIndex][orderIndex - 1];
+                        double Nip1km1 = basisFunctions[vertexIndex][ctrlPointIndex + 1][orderIndex - 1];
 
-                        float xi = this.knotVector[ctrlPointIndex];
-                        float xikm1 = this.knotVector[ctrlPointIndex + orderIndex - 1 + 1];
-                        float xik = this.knotVector[ctrlPointIndex + orderIndex + 1];
-                        float xip1 = this.knotVector[ctrlPointIndex + 1];
+                        double xi = this.knotVector[ctrlPointIndex];
+                        double xikm1 = this.knotVector[ctrlPointIndex + orderIndex - 1 + 1];
+                        double xik = this.knotVector[ctrlPointIndex + orderIndex + 1];
+                        double xip1 = this.knotVector[ctrlPointIndex + 1];
 
-                        float FirstTermBasis;
-                        if (Math.Abs(xikm1 - xi) < MathHelper.EpsilonF)
-                            FirstTermBasis = 0.0f;
+                        double FirstTermBasis;
+                        if (Math.Abs(xikm1 - xi) < double.Epsilon)
+                            FirstTermBasis = 0.0;
                         else
                             FirstTermBasis = ((t - xi)*Nikm1)/(xikm1 - xi);
 
-                        float SecondTermBasis;
-                        if (Math.Abs(xik - xip1) < MathHelper.EpsilonF)
-                            SecondTermBasis = 0.0f;
+                        double SecondTermBasis;
+                        if (Math.Abs(xik - xip1) < double.Epsilon)
+                            SecondTermBasis = 0.0;
                         else
                             SecondTermBasis = ((xik - t)*Nip1km1)/(xik - xip1);
 
@@ -349,7 +349,7 @@ namespace netDxf.Entities
                 {
                     for (int vertexIndex = 0; vertexIndex < precision; vertexIndex++)
                     {
-                        float denominator = 0.0f;
+                        double denominator = 0.0;
                         for (int controlWeight = 0; controlWeight < this.controlPoints.Count; controlWeight++)
                         {
                             denominator += this.controlPoints[controlWeight].Weight*basisFunctions[vertexIndex][controlWeight][orderIndex];
@@ -365,17 +365,17 @@ namespace netDxf.Entities
             return nurbsBasisFunctions;
         }
 
-        private float[] SetKnotVector()
+        private double[] SetKnotVector()
         {
             //This code creates an open uniform knot vector
-            float[] knots = new float[this.controlPoints.Count + this.order];
+            double[] knots = new double[this.controlPoints.Count + this.order];
             int knotValue = 0;
             for (int i = 0; i < this.order + this.controlPoints.Count; i++)
             {
                 if (i <= this.controlPoints.Count && i >= this.order)
                     knotValue++;
 
-                knots[i] = knotValue/(float) (this.controlPoints.Count - this.order + 1);
+                knots[i] = knotValue/(this.controlPoints.Count - this.order + 1.0);
             }
             return knots;
         }

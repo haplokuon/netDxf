@@ -38,7 +38,7 @@ namespace netDxf.Entities
         private const EntityType TYPE = EntityType.Circle;
         private Vector3d center;
         private double radius;
-        private float thickness;
+        private double thickness;
         private Layer layer;
         private AciColor color;
         private LineType lineType;
@@ -55,11 +55,12 @@ namespace netDxf.Entities
         /// <param name="center">Circle <see cref="Vector3d">center</see> in object coordinates.</param>
         /// <param name="radius">Circle radius.</param>
         /// <remarks>The center Z coordinate represents the elevation of the arc along the normal.</remarks>
-        public Circle(Vector3d center, double radius) : base(DxfObjectCode.Circle)
+        public Circle(Vector3d center, double radius)
+            : base(DxfObjectCode.Circle)
         {
             this.center = center;
             this.radius = radius;
-            this.thickness = 0.0f;
+            this.thickness = 0.0;
             this.layer = Layer.Default;
             this.color = AciColor.ByLayer;
             this.lineType = LineType.ByLayer;
@@ -73,7 +74,7 @@ namespace netDxf.Entities
         {
             this.center = Vector3d.Zero;
             this.radius = 1.0;
-            this.thickness = 0.0f;
+            this.thickness = 0.0;
             this.layer = Layer.Default;
             this.color = AciColor.ByLayer;
             this.lineType = LineType.ByLayer;
@@ -106,7 +107,7 @@ namespace netDxf.Entities
         /// <summary>
         /// Gets or sets the arc thickness.
         /// </summary>
-        public float Thickness
+        public double Thickness
         {
             get { return this.thickness; }
             set { this.thickness = value; }
@@ -204,13 +205,14 @@ namespace netDxf.Entities
 
             List<Vector2d> ocsVertexes = new List<Vector2d>();
 
-            double angle = MathHelper.TwoPI/precision;
+            double angle = MathHelper.TwoPI / precision;
 
             for (int i = 0; i < precision; i++)
             {
-                double sine = this.radius*Math.Sin(MathHelper.HalfPI + angle*i);
-                double cosine = this.radius*Math.Cos(MathHelper.HalfPI + angle*i);
+                double sine = this.radius * Math.Sin(MathHelper.HalfPI + angle * i);
+                double cosine = this.radius * Math.Cos(MathHelper.HalfPI + angle * i);
                 ocsVertexes.Add(new Vector2d(cosine + this.center.X, sine + this.center.Y));
+
             }
 
             return ocsVertexes;
@@ -222,7 +224,7 @@ namespace netDxf.Entities
         /// <param name="precision">Number of vertexes generated.</param>
         /// <param name="weldThreshold">Tolerance to consider if two new generated vertexes are equal.</param>
         /// <returns>A list vertexes that represents the circle expresed in object coordinate system.</returns>
-        public List<Vector2d> PoligonalVertexes(int precision, float weldThreshold)
+        public List<Vector2d> PoligonalVertexes(int precision, double weldThreshold)
         {
             if (precision < 3)
                 throw new ArgumentOutOfRangeException("precision", precision, "The circle precision must be greater or equal to three");
@@ -231,20 +233,21 @@ namespace netDxf.Entities
 
             if (2*this.radius >= weldThreshold)
             {
-                double angulo = MathHelper.TwoPI/precision;
+                double angle = MathHelper.TwoPI / precision;
                 Vector2d prevPoint;
                 Vector2d firstPoint;
 
-                double sine = this.radius*Math.Sin(MathHelper.HalfPI*0.5);
-                double cosine = this.radius*Math.Cos(MathHelper.HalfPI*0.5);
+                double sine = this.radius * Math.Sin(MathHelper.HalfPI * 0.5);
+                double cosine = this.radius * Math.Cos(MathHelper.HalfPI * 0.5);
                 firstPoint = new Vector2d(cosine + this.center.X, sine + this.center.Y);
+
                 ocsVertexes.Add(firstPoint);
                 prevPoint = firstPoint;
 
                 for (int i = 1; i < precision; i++)
                 {
-                    sine = this.radius*Math.Sin(MathHelper.HalfPI + angulo*i);
-                    cosine = this.radius*Math.Cos(MathHelper.HalfPI + angulo*i);
+                    sine = this.radius*Math.Sin(MathHelper.HalfPI + angle*i);
+                    cosine = this.radius*Math.Cos(MathHelper.HalfPI + angle*i);
                     Vector2d point = new Vector2d(cosine + this.center.X, sine + this.center.Y);
 
                     if (!point.Equals(prevPoint, weldThreshold) &&

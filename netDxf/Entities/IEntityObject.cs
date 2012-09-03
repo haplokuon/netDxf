@@ -172,12 +172,12 @@ namespace netDxf.Entities
         Layer Layer { get; set; }
 
         /// <summary>
-        /// Gets or sets the entity <see cref="LineType">line type</see.
+        /// Gets or sets the entity <see cref="LineType">line type</see>.
         /// </summary>
         LineType LineType { get; set; }
 
         /// <summary>
-        /// Gets or sets the entity <see cref="XData">extended data</see.
+        /// Gets or sets the entity <see cref="XData">extended data</see>.
         /// </summary>
         Dictionary<ApplicationRegistry, XData> XData { get; set; }
     }

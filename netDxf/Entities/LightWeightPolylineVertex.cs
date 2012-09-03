@@ -33,8 +33,8 @@ namespace netDxf.Entities
 
         protected const EntityType TYPE = EntityType.LightWeightPolylineVertex;
         protected Vector2d location;
-        protected float beginThickness;
-        protected float endThickness;
+        protected double beginThickness;
+        protected double endThickness;
         protected double bulge;
 
         #endregion
@@ -47,9 +47,9 @@ namespace netDxf.Entities
         public LightWeightPolylineVertex()
         {
             this.location = Vector2d.Zero;
-            this.bulge = 0.0f;
-            this.beginThickness = 0.0f;
-            this.endThickness = 0.0f;
+            this.bulge = 0.0;
+            this.beginThickness = 0.0;
+            this.endThickness = 0.0;
         }
 
         /// <summary>
@@ -59,9 +59,9 @@ namespace netDxf.Entities
         public LightWeightPolylineVertex(Vector2d location)
         {
             this.location = location;
-            this.bulge = 0.0f;
-            this.beginThickness = 0.0f;
-            this.endThickness = 0.0f;
+            this.bulge = 0.0;
+            this.beginThickness = 0.0;
+            this.endThickness = 0.0;
         }
 
         /// <summary>
@@ -72,9 +72,9 @@ namespace netDxf.Entities
         public LightWeightPolylineVertex(double x, double y)
         {
             this.location = new Vector2d(x, y);
-            this.bulge = 0.0f;
-            this.beginThickness = 0.0f;
-            this.endThickness = 0.0f;
+            this.bulge = 0.0;
+            this.beginThickness = 0.0;
+            this.endThickness = 0.0;
         }
 
         #endregion
@@ -93,7 +93,7 @@ namespace netDxf.Entities
         /// <summary>
         /// Gets or sets the light weight polyline begin thickness.
         /// </summary>
-        public float BeginThickness
+        public double BeginThickness
         {
             get { return this.beginThickness; }
             set { this.beginThickness = value; }
@@ -102,7 +102,7 @@ namespace netDxf.Entities
         /// <summary>
         /// Gets or sets the light weight polyline end thickness.
         /// </summary>
-        public float EndThickness
+        public double EndThickness
         {
             get { return this.endThickness; }
             set { this.endThickness = value; }

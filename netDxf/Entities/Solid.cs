@@ -36,12 +36,12 @@ namespace netDxf.Entities
         #region private fields
 
         private const EntityType TYPE = EntityType.Solid;
-        private Vector3f firstVertex;
-        private Vector3f secondVertex;
-        private Vector3f thirdVertex;
-        private Vector3f fourthVertex;
-        private float thickness;
-        private Vector3f normal;
+        private Vector3d firstVertex;
+        private Vector3d secondVertex;
+        private Vector3d thirdVertex;
+        private Vector3d fourthVertex;
+        private double thickness;
+        private Vector3d normal;
         private Layer layer;
         private AciColor color;
         private LineType lineType;
@@ -54,19 +54,19 @@ namespace netDxf.Entities
         /// <summary>
         /// Initializes a new instance of the <c>Solid</c> class.
         /// </summary>
-        /// <param name="firstVertex">Solid <see cref="Vector3f">first vertex</see>.</param>
-        /// <param name="secondVertex">Solid <see cref="Vector3f">second vertex</see>.</param>
-        /// <param name="thirdVertex">Solid <see cref="Vector3f">third vertex</see>.</param>
-        /// <param name="fourthVertex">Solid <see cref="Vector3f">fourth vertex</see>.</param>
-        public Solid(Vector3f firstVertex, Vector3f secondVertex, Vector3f thirdVertex, Vector3f fourthVertex)
+        /// <param name="firstVertex">Solid <see cref="Vector3d">first vertex</see>.</param>
+        /// <param name="secondVertex">Solid <see cref="Vector3d">second vertex</see>.</param>
+        /// <param name="thirdVertex">Solid <see cref="Vector3d">third vertex</see>.</param>
+        /// <param name="fourthVertex">Solid <see cref="Vector3d">fourth vertex</see>.</param>
+        public Solid(Vector3d firstVertex, Vector3d secondVertex, Vector3d thirdVertex, Vector3d fourthVertex)
             : base(DxfObjectCode.Solid)
         {
             this.firstVertex = firstVertex;
             this.secondVertex = secondVertex;
             this.thirdVertex = thirdVertex;
             this.fourthVertex = fourthVertex;
-            this.thickness = 0.0f;
-            this.normal = Vector3f.UnitZ;
+            this.thickness = 0.0;
+            this.normal = Vector3d.UnitZ;
             this.layer = Layer.Default;
             this.color = AciColor.ByLayer;
             this.lineType = LineType.ByLayer;
@@ -78,12 +78,12 @@ namespace netDxf.Entities
         public Solid()
             : base(DxfObjectCode.Solid)
         {
-            this.firstVertex = Vector3f.Zero;
-            this.secondVertex = Vector3f.Zero;
-            this.thirdVertex = Vector3f.Zero;
-            this.fourthVertex = Vector3f.Zero;
+            this.firstVertex = Vector3d.Zero;
+            this.secondVertex = Vector3d.Zero;
+            this.thirdVertex = Vector3d.Zero;
+            this.fourthVertex = Vector3d.Zero;
             this.thickness = 0.0f;
-            this.normal = Vector3f.UnitZ;
+            this.normal = Vector3d.UnitZ;
             this.layer = Layer.Default;
             this.color = AciColor.ByLayer;
             this.lineType = LineType.ByLayer;
@@ -94,36 +94,36 @@ namespace netDxf.Entities
         #region public properties
 
         /// <summary>
-        /// Gets or sets the first solid <see cref="netDxf.Vector3f">vertex</see>.
+        /// Gets or sets the first solid <see cref="netDxf.Vector3d">vertex</see>.
         /// </summary>
-        public Vector3f FirstVertex
+        public Vector3d FirstVertex
         {
             get { return this.firstVertex; }
             set { this.firstVertex = value; }
         }
 
         /// <summary>
-        /// Gets or sets the second solid <see cref="netDxf.Vector3f">vertex</see>.
+        /// Gets or sets the second solid <see cref="netDxf.Vector3d">vertex</see>.
         /// </summary>
-        public Vector3f SecondVertex
+        public Vector3d SecondVertex
         {
             get { return this.secondVertex; }
             set { this.secondVertex = value; }
         }
 
         /// <summary>
-        /// Gets or sets the third solid <see cref="netDxf.Vector3f">vertex</see>.
+        /// Gets or sets the third solid <see cref="netDxf.Vector3d">vertex</see>.
         /// </summary>
-        public Vector3f ThirdVertex
+        public Vector3d ThirdVertex
         {
             get { return this.thirdVertex; }
             set { this.thirdVertex = value; }
         }
 
         /// <summary>
-        /// Gets or sets the fourth solid <see cref="netDxf.Vector3f">vertex</see>.
+        /// Gets or sets the fourth solid <see cref="netDxf.Vector3d">vertex</see>.
         /// </summary>
-        public Vector3f FourthVertex
+        public Vector3d FourthVertex
         {
             get { return this.fourthVertex; }
             set { this.fourthVertex = value; }
@@ -132,21 +132,21 @@ namespace netDxf.Entities
         /// <summary>
         /// Gets or sets the thickness of the solid.
         /// </summary>
-        public float Thickness
+        public double Thickness
         {
             get { return this.thickness; }
             set { this.thickness = value; }
         }
 
         /// <summary>
-        /// Gets or sets the solid <see cref="netDxf.Vector3f">normal</see>.
+        /// Gets or sets the solid <see cref="netDxf.Vector3d">normal</see>.
         /// </summary>
-        public Vector3f Normal
+        public Vector3d Normal
         {
             get { return this.normal; }
             set
             {
-                if (Vector3f.Zero == value)
+                if (Vector3d.Zero == value)
                     throw new ArgumentNullException("value", "The normal can not be the zero vector");
                 value.Normalize();
                 this.normal = value;

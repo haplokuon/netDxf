@@ -50,7 +50,7 @@ namespace netDxf.Entities
         private LineType lineType;
         private Vector3d normal;
         private double elevation;
-        private float thickness;
+        private double thickness;
         private Dictionary<ApplicationRegistry, XData> xData;
 
         #endregion
@@ -71,8 +71,8 @@ namespace netDxf.Entities
             this.color = AciColor.ByLayer;
             this.lineType = LineType.ByLayer;
             this.normal = Vector3d.UnitZ;
-            this.elevation = 0.0f;
-            this.thickness = 0.0f;
+            this.elevation = 0.0;
+            this.thickness = 0.0;
             this.flags = isClosed ? PolylineTypeFlags.ClosedPolylineOrClosedPolygonMeshInM : PolylineTypeFlags.OpenPolyline;
         }
 
@@ -89,8 +89,8 @@ namespace netDxf.Entities
             this.color = AciColor.ByLayer;
             this.lineType = LineType.ByLayer;
             this.normal = Vector3d.UnitZ;
-            this.elevation = 0.0f;
-            this.thickness = 0.0f;
+            this.elevation = 0.0;
+            this.thickness = 0.0;
             this.flags = PolylineTypeFlags.OpenPolyline;
         }
 
@@ -106,7 +106,8 @@ namespace netDxf.Entities
             this.color = AciColor.ByLayer;
             this.lineType = LineType.ByLayer;
             this.normal = Vector3d.UnitZ;
-            this.elevation = 0.0f;
+            this.elevation = 0.0;
+            this.thickness = 0.0;
             this.flags = PolylineTypeFlags.OpenPolyline;
         }
 
@@ -159,7 +160,7 @@ namespace netDxf.Entities
         /// <summary>
         /// Gets or sets the polyline thickness.
         /// </summary>
-        public float Thickness
+        public double Thickness
         {
             get { return this.thickness; }
             set { this.thickness = value; }
@@ -257,7 +258,7 @@ namespace netDxf.Entities
         /// Sets a constant width for all the polyline segments.
         /// </summary>
         /// <param name="width">Polyline width.</param>
-        public void SetConstantWidth(float width)
+        public void SetConstantWidth(double width)
         {
             foreach (LightWeightPolylineVertex v in this.vertexes)
             {
@@ -342,7 +343,7 @@ namespace netDxf.Entities
                         double c = Vector2d.Distance(p1, p2);
                         if (c >= bulgeThreshold)
                         {
-                            double s = (c/2)*Math.Abs(bulge);
+                            double s = (c / 2) * Math.Abs(bulge);
                             double r = ((c / 2) * (c / 2) + s * s) / (2 * s);
                             double theta = 4 * Math.Atan(Math.Abs(bulge));
                             double gamma = (Math.PI - theta) / 2;
@@ -359,7 +360,7 @@ namespace netDxf.Entities
 
                             Vector2d center = new Vector2d(p1.X + r*Math.Cos(phi), p1.Y + r*Math.Sin(phi));
                             Vector2d a1 = p1 - center;
-                            double angle = 4*(Math.Atan(bulge))/(bulgePrecision + 1);
+                            double angle = 4 * (Math.Atan(bulge)) / (bulgePrecision + 1);
 
                             ocsVertexes.Add(p1);
                             for (int i = 1; i <= bulgePrecision; i++)

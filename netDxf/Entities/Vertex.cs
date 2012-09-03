@@ -34,18 +34,16 @@ namespace netDxf.Entities
     /// For internal use only.
     /// </remarks>
     internal class Vertex :
-        DxfObject 
-        
+        DxfObject   
     {
-      
         #region private fields
 
         private VertexTypeFlags flags;
-        private Vector3f location;
+        private Vector3d location;
         private int[] vertexIndexes;
-        private float beginThickness;
-        private float endThickness;
-        private float bulge;
+        private double beginThickness;
+        private double endThickness;
+        private double bulge;
         private AciColor color;
         private Layer layer;
         private LineType lineType;
@@ -62,20 +60,20 @@ namespace netDxf.Entities
             : base(DxfObjectCode.Vertex)
         {
             this.flags = VertexTypeFlags.PolylineVertex;
-            this.location = Vector3f.Zero;
+            this.location = Vector3d.Zero;
             this.layer = Layer.Default;
             this.color = AciColor.ByLayer;
             this.lineType = LineType.ByLayer;
-            this.bulge = 0.0f;
-            this.beginThickness = 0.0f;
-            this.endThickness = 0.0f;
+            this.bulge = 0.0;
+            this.beginThickness = 0.0;
+            this.endThickness = 0.0;
         }
 
         /// <summary>
         /// Initializes a new instance of the <c>Vertex</c> class.
         /// </summary>
-        /// <param name="location">Vertex <see cref="netDxf.Vector3f">location</see>.</param>
-        public Vertex(Vector3f location)
+        /// <param name="location">Vertex <see cref="netDxf.Vector3d">location</see>.</param>
+        public Vertex(Vector3d location)
             : base(DxfObjectCode.Vertex)
         {
             this.flags = VertexTypeFlags.PolylineVertex;
@@ -83,26 +81,26 @@ namespace netDxf.Entities
             this.layer = Layer.Default;
             this.color = AciColor.ByLayer;
             this.lineType = LineType.ByLayer;
-            this.bulge = 0.0f;
-            this.beginThickness = 0.0f;
-            this.endThickness = 0.0f;
+            this.bulge = 0.0;
+            this.beginThickness = 0.0;
+            this.endThickness = 0.0;
         }
 
         /// <summary>
         /// Initializes a new instance of the <c>Vertex</c> class.
         /// </summary>
-        /// <param name="location">Vertex <see cref="netDxf.Vector2f">location</see>.</param>
-        public Vertex(Vector2f location)
+        /// <param name="location">Vertex <see cref="netDxf.Vector2d">location</see>.</param>
+        public Vertex(Vector2d location)
             : base(DxfObjectCode.Vertex)
         {
             this.flags = VertexTypeFlags.PolylineVertex;
-            this.location = new Vector3f(location.X, location.Y, 0.0f);
+            this.location = new Vector3d(location.X, location.Y, 0.0);
             this.layer = Layer.Default;
             this.color = AciColor.ByLayer;
             this.lineType = LineType.ByLayer;
-            this.bulge = 0.0f;
-            this.beginThickness = 0.0f;
-            this.endThickness = 0.0f;
+            this.bulge = 0.0;
+            this.beginThickness = 0.0;
+            this.endThickness = 0.0;
         }
 
         /// <summary>
@@ -111,17 +109,17 @@ namespace netDxf.Entities
         /// <param name="x">X coordinate.</param>
         /// <param name="y">Y coordinate.</param>
         /// <param name="z">Z coordinate.</param>
-        public Vertex(float x, float y, float z)
+        public Vertex(double x, double y, double z)
             : base(DxfObjectCode.Vertex)
         {
             this.flags = VertexTypeFlags.PolylineVertex;
-            this.location = new Vector3f(x, y, z);
+            this.location = new Vector3d(x, y, z);
             this.layer = Layer.Default;
             this.color = AciColor.ByLayer;
             this.lineType = LineType.ByLayer;
-            this.bulge = 0.0f;
-            this.beginThickness = 0.0f;
-            this.endThickness = 0.0f;
+            this.bulge = 0.0;
+            this.beginThickness = 0.0;
+            this.endThickness = 0.0;
         }
 
         /// <summary>
@@ -129,17 +127,17 @@ namespace netDxf.Entities
         /// </summary>
         /// <param name="x">X coordinate.</param>
         /// <param name="y">Y coordinate.</param>
-        public Vertex(float x, float y)
+        public Vertex(double x, double y)
             : base(DxfObjectCode.Vertex)
         {
             this.flags = VertexTypeFlags.PolylineVertex;
-            this.location = new Vector3f(x, y, 0.0f);
+            this.location = new Vector3d(x, y, 0.0f);
             this.layer = Layer.Default;
             this.color = AciColor.ByLayer;
             this.lineType = LineType.ByLayer;
-            this.bulge = 0.0f;
-            this.beginThickness = 0.0f;
-            this.endThickness = 0.0f;
+            this.bulge = 0.0;
+            this.beginThickness = 0.0;
+            this.endThickness = 0.0;
         }
 
         #endregion
@@ -147,9 +145,9 @@ namespace netDxf.Entities
         #region public properties
         
         /// <summary>
-        /// Gets or sets the polyline vertex <see cref="netDxf.Vector3f">location</see>.
+        /// Gets or sets the polyline vertex <see cref="netDxf.Vector3d">location</see>.
         /// </summary>
-        public Vector3f Location
+        public Vector3d Location
         {
             get { return this.location; }
             set { this.location = value; }
@@ -164,7 +162,7 @@ namespace netDxf.Entities
         /// <summary>
         /// Gets or sets the light weight polyline begin thickness.
         /// </summary>
-        public float BeginThickness
+        public double BeginThickness
         {
             get { return this.beginThickness; }
             set { this.beginThickness = value; }
@@ -173,7 +171,7 @@ namespace netDxf.Entities
         /// <summary>
         /// Gets or sets the light weight polyline end thickness.
         /// </summary>
-        public float EndThickness
+        public double EndThickness
         {
             get { return this.endThickness; }
             set { this.endThickness = value; }
@@ -187,7 +185,7 @@ namespace netDxf.Entities
         /// made negative if the arc goes clockwise from the start point to the endpoint. 
         /// A bulge of 0 indicates a straight segment, and a bulge of 1 is a semicircle.
         /// </remarks>
-        public float Bulge
+        public double Bulge
         {
             get { return this.bulge; }
             set

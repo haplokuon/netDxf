@@ -42,7 +42,7 @@ namespace netDxf.Entities
         private double rotation;
         private double startAngle;
         private double endAngle;
-        private float thickness;
+        private double thickness;
         private Layer layer;
         private AciColor color;
         private LineType lineType;
@@ -67,11 +67,11 @@ namespace netDxf.Entities
             this.center = center;
             this.majorAxis = majorAxis;
             this.minorAxis = minorAxis;
-            this.startAngle = 0.0f;
-            this.endAngle = 360.0f;
-            this.rotation = 0.0f;
+            this.startAngle = 0.0;
+            this.endAngle = 360.0;
+            this.rotation = 0.0;
             this.curvePoints = 30;
-            this.thickness = 0.0f;
+            this.thickness = 0.0;
             this.layer = Layer.Default;
             this.color = AciColor.ByLayer;
             this.lineType = LineType.ByLayer;
@@ -85,14 +85,14 @@ namespace netDxf.Entities
             : base(DxfObjectCode.Ellipse)
         {
             this.center = Vector3d.Zero;
-            this.majorAxis = 1.0f;
-            this.minorAxis = 0.5f;
-            this.rotation = 0.0f;
-            this.startAngle = 0.0f;
-            this.endAngle = 360.0f;
-            this.rotation = 0.0f;
+            this.majorAxis = 1.0;
+            this.minorAxis = 0.5;
+            this.rotation = 0.0;
+            this.startAngle = 0.0;
+            this.endAngle = 360.0;
+            this.rotation = 0.0;
             this.curvePoints = 30;
-            this.thickness = 0.0f;
+            this.thickness = 0.0;
             this.layer = Layer.Default;
             this.color = AciColor.ByLayer;
             this.lineType = LineType.ByLayer;
@@ -195,7 +195,7 @@ namespace netDxf.Entities
         /// <summary>
         /// Gets or sets the ellipse thickness.
         /// </summary>
-        public float Thickness
+        public double Thickness
         {
             get { return this.thickness; }
             set { this.thickness = value; }
@@ -284,8 +284,9 @@ namespace netDxf.Entities
         public Polyline ToPolyline(int precision)
         {
             List<Vector2d> vertexes = this.PolygonalVertexes(precision);
-            Vector3d ocsCenter = MathHelper.Transform((Vector3d) this.center,
-                                                      (Vector3d) this.normal, MathHelper.CoordinateSystem.World, MathHelper.CoordinateSystem.Object);
+            Vector3d ocsCenter = MathHelper.Transform(this.center,
+                                                      this.normal, MathHelper.CoordinateSystem.World, MathHelper.CoordinateSystem.Object);
+
             Polyline poly = new Polyline
             {
                 Color = this.color,
@@ -315,7 +316,7 @@ namespace netDxf.Entities
         public List<Vector2d> PolygonalVertexes(int precision)
         {
             List<Vector2d> points = new List<Vector2d>();
-            double beta = this.rotation*MathHelper.DegToRad;
+            double beta = this.rotation * MathHelper.DegToRad;
             double sinbeta = Math.Sin(beta);
             double cosbeta = Math.Cos(beta);
 
@@ -323,12 +324,12 @@ namespace netDxf.Entities
             {
                 for (int i = 0; i < 360; i += 360/precision)
                 {
-                    double alpha = i*MathHelper.DegToRad;
+                    double alpha = i * MathHelper.DegToRad;
                     double sinalpha = Math.Sin(alpha);
                     double cosalpha = Math.Cos(alpha);
 
-                    double pointX = 0.5f * (this.majorAxis*cosalpha*cosbeta - this.minorAxis*sinalpha*sinbeta);
-                    double pointY =  0.5f * (this.majorAxis * cosalpha * sinbeta + this.minorAxis * sinalpha * cosbeta);
+                    double pointX = 0.5f * (this.majorAxis * cosalpha * cosbeta - this.minorAxis * sinalpha * sinbeta);
+                    double pointY = 0.5f * (this.majorAxis * cosalpha * sinbeta + this.minorAxis * sinalpha * cosbeta);
 
                     points.Add(new Vector2d(pointX, pointY));
                 }
@@ -337,7 +338,8 @@ namespace netDxf.Entities
             {
                 for (int i = 0; i <= precision; i++)
                 {
-                    double angle = this.startAngle + i*(this.endAngle - this.startAngle)/precision;
+
+                    double angle = this.startAngle + i * (this.endAngle - this.startAngle) / precision;
                     points.Add(this.PointFromEllipse(angle));
                 }
             }
@@ -348,7 +350,7 @@ namespace netDxf.Entities
         {
             // Convert the basic input into something more usable
             Vector2d ptCenter = new Vector2d(this.center.X, this.center.Y);
-            double radians = degrees*MathHelper.DegToRad;
+            double radians = degrees * MathHelper.DegToRad;
 
             // Calculate the radius of the ellipse for the given angle
             double a = this.majorAxis;

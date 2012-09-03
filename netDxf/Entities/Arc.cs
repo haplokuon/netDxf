@@ -37,12 +37,12 @@ namespace netDxf.Entities
         #region private fields
 
         private const EntityType TYPE = EntityType.Arc;
-        private Vector3f center;
-        private float radius;
-        private float startAngle;
-        private float endAngle;
-        private float thickness;
-        private Vector3f normal;
+        private Vector3d center;
+        private double radius;
+        private double startAngle;
+        private double endAngle;
+        private double thickness;
+        private Vector3d normal;
         private AciColor color;
         private Layer layer;
         private LineType lineType;
@@ -55,22 +55,23 @@ namespace netDxf.Entities
         /// <summary>
         /// Initializes a new instance of the <c>Arc</c> class.
         /// </summary>
-        /// <param name="center">Arc <see cref="netDxf.Vector3f">center</see> in object coordinates.</param>
+        /// <param name="center">Arc <see cref="netDxf.Vector3d">center</see> in object coordinates.</param>
         /// <param name="radius">Arc radius.</param>
         /// <param name="startAngle">Arc start angle in degrees.</param>
         /// <param name="endAngle">Arc end angle in degrees.</param>
         /// <remarks>The center Z coordinate represents the elevation of the arc along the normal.</remarks>
-        public Arc(Vector3f center, float radius, float startAngle, float endAngle) : base (DxfObjectCode.Arc)
+        public Arc(Vector3d center, double radius, double startAngle, double endAngle)
+            : base(DxfObjectCode.Arc)
         {
             this.center = center;
             this.radius = radius;
             this.startAngle = startAngle;
             this.endAngle = endAngle;
-            this.thickness = 0.0f;
+            this.thickness = 0.0;
             this.layer = Layer.Default;
             this.color = AciColor.ByLayer;
             this.lineType = LineType.ByLayer;
-            this.normal = Vector3f.UnitZ;
+            this.normal = Vector3d.UnitZ;
         }
 
         /// <summary>
@@ -79,15 +80,15 @@ namespace netDxf.Entities
         public Arc() :
             base(DxfObjectCode.Arc)
         {
-            this.center = Vector3f.Zero;
-            this.radius = 0.0f;
-            this.startAngle = 0.0f;
-            this.endAngle = 0.0f;
-            this.thickness = 0.0f;
+            this.center = Vector3d.Zero;
+            this.radius = 0.0;
+            this.startAngle = 0.0;
+            this.endAngle = 0.0;
+            this.thickness = 0.0;
             this.layer = Layer.Default;
             this.color = AciColor.ByLayer;
             this.lineType = LineType.ByLayer;
-            this.normal = Vector3f.UnitZ;
+            this.normal = Vector3d.UnitZ;
         }
 
         #endregion
@@ -95,10 +96,10 @@ namespace netDxf.Entities
         #region public properties
 
         /// <summary>
-        /// Gets or sets the arc <see cref="netDxf.Vector3f">center</see>.
+        /// Gets or sets the arc <see cref="netDxf.Vector3d">center</see>.
         /// </summary>
         /// <remarks>The center Z coordinate represents the elevation of the arc along the normal.</remarks>
-        public Vector3f Center
+        public Vector3d Center
         {
             get { return this.center; }
             set { this.center = value; }
@@ -107,7 +108,7 @@ namespace netDxf.Entities
         /// <summary>
         /// Gets or sets the arc radius.
         /// </summary>
-        public float Radius
+        public double Radius
         {
             get { return this.radius; }
             set
@@ -121,7 +122,7 @@ namespace netDxf.Entities
         /// <summary>
         /// Gets or sets the arc start angle in degrees.
         /// </summary>
-        public float StartAngle
+        public double StartAngle
         {
             get { return this.startAngle; }
             set { this.startAngle = value; }
@@ -130,7 +131,7 @@ namespace netDxf.Entities
         /// <summary>
         /// Gets or sets the arc end angle in degrees.
         /// </summary>
-        public float EndAngle
+        public double EndAngle
         {
             get { return this.endAngle; }
             set { this.endAngle = value; }
@@ -139,21 +140,21 @@ namespace netDxf.Entities
         /// <summary>
         /// Gets or sets the arc thickness.
         /// </summary>
-        public float Thickness
+        public double Thickness
         {
             get { return this.thickness; }
             set { this.thickness = value; }
         }
 
         /// <summary>
-        /// Gets or sets the arc <see cref="netDxf.Vector3f">normal</see>.
+        /// Gets or sets the arc <see cref="netDxf.Vector3d">normal</see>.
         /// </summary>
-        public Vector3f Normal
+        public Vector3d Normal
         {
             get { return this.normal; }
             set
             {
-                if (Vector3f.Zero == value)
+                if (Vector3d.Zero == value)
                     throw new ArgumentNullException("value", "The normal can not be the zero vector");
                 value.Normalize();
                 this.normal = value;
@@ -232,21 +233,21 @@ namespace netDxf.Entities
         /// </summary>
         /// <param name="precision">Number of vertexes generated.</param>
         /// <returns>A list vertexes that represents the arc expresed in object coordinate system.</returns>
-        public List<Vector2f> PoligonalVertexes(int precision)
+        public List<Vector2d> PoligonalVertexes(int precision)
         {
             if (precision < 2)
                 throw new ArgumentOutOfRangeException("precision", precision, "The arc precision must be greater or equal to two");
 
-            List<Vector2f> ocsVertexes = new List<Vector2f>();
-            float start = (float) (this.startAngle*MathHelper.DegToRad);
-            float end = (float) (this.endAngle*MathHelper.DegToRad);
-            float angle = (end - start) / precision;
+            List<Vector2d> ocsVertexes = new List<Vector2d>();
+            double start = this.startAngle * MathHelper.DegToRad;
+            double end = this.endAngle * MathHelper.DegToRad;
+            double angle = (end - start) / precision;
 
             for (int i = 0; i <= precision; i++)
             {
-                float sine = (float)(this.radius * Math.Sin(start + angle * i));
-                float cosine = (float)(this.radius * Math.Cos(start + angle * i));
-                ocsVertexes.Add(new Vector2f(cosine + this.center.X, sine + this.center.Y));
+                double sine = this.radius * Math.Sin(start + angle * i);
+                double cosine = this.radius * Math.Cos(start + angle * i);
+                ocsVertexes.Add(new Vector2d(cosine + this.center.X, sine + this.center.Y));
             }
 
             return ocsVertexes;
@@ -258,32 +259,32 @@ namespace netDxf.Entities
         /// <param name="precision">Number of vertexes generated.</param>
         /// <param name="weldThreshold">Tolerance to consider if two new generated vertexes are equal.</param>
         /// <returns>A list vertexes that represents the arc expresed in object coordinate system.</returns>
-        public List<Vector2f> PoligonalVertexes(int precision, float weldThreshold)
+        public List<Vector2d> PoligonalVertexes(int precision, double weldThreshold)
         {
             if (precision < 2)
                 throw new ArgumentOutOfRangeException("precision", precision, "The arc precision must be greater or equal to two");
 
-            List<Vector2f> ocsVertexes = new List<Vector2f>();
-            float start = (float)(this.startAngle * MathHelper.DegToRad);
-            float end = (float)(this.endAngle * MathHelper.DegToRad);
+            List<Vector2d> ocsVertexes = new List<Vector2d>();
+            double start = this.startAngle * MathHelper.DegToRad;
+            double end = this.endAngle * MathHelper.DegToRad;
 
             if (2*this.radius >= weldThreshold)
             {
-                float angulo = (end - start)/precision;
-                Vector2f prevPoint;
-                Vector2f firstPoint;
+                double angle = (end - start) / precision;
+                Vector2d prevPoint;
+                Vector2d firstPoint;
 
-                float sine = (float) (this.radius*Math.Sin(start));
-                float cosine = (float) (this.radius*Math.Cos(start));
-                firstPoint = new Vector2f(cosine + this.center.X, sine + this.center.Y);
+                double sine = this.radius * Math.Sin(start);
+                double cosine = this.radius * Math.Cos(start);
+                firstPoint = new Vector2d(cosine + this.center.X, sine + this.center.Y);
                 ocsVertexes.Add(firstPoint);
                 prevPoint = firstPoint;
 
                 for (int i = 1; i <= precision; i++)
                 {
-                    sine = (float) (this.radius*Math.Sin(start + angulo*i));
-                    cosine = (float) (this.radius*Math.Cos(start + angulo*i));
-                    Vector2f point = new Vector2f(cosine + this.center.X, sine + this.center.Y);
+                    sine = this.radius*Math.Sin(start + angle*i);
+                    cosine = this.radius*Math.Cos(start + angle*i);
+                    Vector2d point = new Vector2d(cosine + this.center.X, sine + this.center.Y);
 
                     if (!point.Equals(prevPoint, weldThreshold) && !point.Equals(firstPoint, weldThreshold))
                     {

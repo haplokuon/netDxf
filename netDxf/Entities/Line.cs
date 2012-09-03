@@ -38,7 +38,7 @@ namespace netDxf.Entities
         private const EntityType TYPE = EntityType.Line;
         private Vector3d startPoint;
         private Vector3d endPoint;
-        private float thickness;
+        private double thickness;
         private AciColor color;
         private Layer layer;
         private LineType lineType;
@@ -59,7 +59,7 @@ namespace netDxf.Entities
         {
             this.startPoint = startPoint;
             this.endPoint = endPoint;
-            this.thickness = 0.0f;
+            this.thickness = 0.0;
             this.layer = Layer.Default;
             this.color = AciColor.ByLayer;
             this.lineType = LineType.ByLayer;
@@ -74,7 +74,7 @@ namespace netDxf.Entities
         {
             this.startPoint = Vector3d.Zero;
             this.endPoint = Vector3d.Zero;
-            this.thickness = 0.0f;
+            this.thickness = 0.0;
             this.layer = Layer.Default;
             this.color = AciColor.ByLayer;
             this.lineType = LineType.ByLayer;
@@ -106,7 +106,7 @@ namespace netDxf.Entities
         /// <summary>
         /// Gets or sets the line thickness.
         /// </summary>
-        public float Thickness
+        public double Thickness
         {
             get { return this.thickness ; }
             set { this.thickness = value; }

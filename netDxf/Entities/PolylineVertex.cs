@@ -39,8 +39,8 @@ namespace netDxf.Entities
         protected const EntityType TYPE = EntityType.PolylineVertex;
         protected VertexTypeFlags flags;
         protected Vector2d location;
-        protected float beginThickness;
-        protected float endThickness;
+        protected double beginThickness;
+        protected double endThickness;
         protected double bulge;
         protected AciColor color;
         protected Layer layer;
@@ -63,8 +63,8 @@ namespace netDxf.Entities
             this.color = AciColor.ByLayer;
             this.lineType = LineType.ByLayer;
             this.bulge = 0.0;
-            this.beginThickness = 0.0f;
-            this.endThickness = 0.0f;
+            this.beginThickness = 0.0;
+            this.endThickness = 0.0;
         }
 
         /// <summary>
@@ -79,9 +79,9 @@ namespace netDxf.Entities
             this.layer = Layer.Default;
             this.color = AciColor.ByLayer;
             this.lineType = LineType.ByLayer;
-            this.bulge = 0.0f;
-            this.beginThickness = 0.0f;
-            this.endThickness = 0.0f;
+            this.bulge = 0.0;
+            this.beginThickness = 0.0;
+            this.endThickness = 0.0;
         }
 
        /// <summary>
@@ -97,9 +97,9 @@ namespace netDxf.Entities
             this.layer = Layer.Default;
             this.color = AciColor.ByLayer;
             this.lineType = LineType.ByLayer;
-            this.bulge = 0.0f;
-            this.beginThickness = 0.0f;
-            this.endThickness = 0.0f;
+            this.bulge = 0.0;
+            this.beginThickness = 0.0;
+            this.endThickness = 0.0;
         }
 
         #endregion
@@ -118,7 +118,7 @@ namespace netDxf.Entities
         /// <summary>
         /// Gets or sets the light weight polyline begin thickness.
         /// </summary>
-        public float BeginThickness
+        public double BeginThickness
         {
             get { return this.beginThickness; }
             set { this.beginThickness = value; }
@@ -127,7 +127,7 @@ namespace netDxf.Entities
         /// <summary>
         /// Gets or sets the light weight polyline end thickness.
         /// </summary>
-        public float EndThickness
+        public double EndThickness
         {
             get { return this.endThickness; }
             set { this.endThickness = value; }

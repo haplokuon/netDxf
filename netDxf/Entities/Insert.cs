@@ -43,10 +43,10 @@ namespace netDxf.Entities
         private Layer layer;
         private LineType lineType;
         private readonly Block block;
-        private Vector3f insertionPoint;
-        private Vector3f scale;
-        private float rotation;
-        private Vector3f normal;
+        private Vector3d insertionPoint;
+        private Vector3d scale;
+        private double rotation;
+        private Vector3d normal;
         private readonly List<Attribute> attributes;
         private Dictionary<ApplicationRegistry, XData> xData;
 
@@ -58,8 +58,8 @@ namespace netDxf.Entities
         /// Initializes a new instance of the <c>Insert</c> class.
         /// </summary>
         /// <param name="block">Insert block definition.</param>
-        /// <param name="insertionPoint">Insert <see cref="Vector3f">point</see>.</param>
-        public Insert(Block block, Vector3f insertionPoint)
+        /// <param name="insertionPoint">Insert <see cref="Vector3d">point</see>.</param>
+        public Insert(Block block, Vector3d insertionPoint)
             : base (DxfObjectCode.Insert)
         {
             if (block == null)
@@ -67,9 +67,9 @@ namespace netDxf.Entities
 
             this.block = block;
             this.insertionPoint = insertionPoint;
-            this.scale = new Vector3f(1.0f, 1.0f, 1.0f);
+            this.scale = new Vector3d(1.0, 1.0, 1.0);
             this.rotation = 0.0f;
-            this.normal = Vector3f.UnitZ;
+            this.normal = Vector3d.UnitZ;
             this.layer = Layer.Default;
             this.color = AciColor.ByLayer;
             this.lineType = LineType.ByLayer;
@@ -92,10 +92,10 @@ namespace netDxf.Entities
                 throw new ArgumentNullException("block");
 
             this.block = block;
-            this.insertionPoint = Vector3f.Zero;
-            this.scale = new Vector3f(1.0f, 1.0f, 1.0f);
+            this.insertionPoint = Vector3d.Zero;
+            this.scale = new Vector3d(1.0, 1.0, 1.0);
             this.rotation = 0.0f;
-            this.normal = Vector3f.UnitZ;
+            this.normal = Vector3d.UnitZ;
             this.layer = Layer.Default;
             this.color = AciColor.ByLayer;
             this.lineType = LineType.ByLayer;
@@ -128,18 +128,18 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets or sets the insert <see cref="Vector3f">point</see>.
+        /// Gets or sets the insert <see cref="Vector3d">point</see>.
         /// </summary>
-        public Vector3f InsertionPoint
+        public Vector3d InsertionPoint
         {
             get { return this.insertionPoint; }
             set { this.insertionPoint = value; }
         }
 
         /// <summary>
-        /// Gets or sets the insert <see cref="Vector3f">scale</see>.
+        /// Gets or sets the insert <see cref="Vector3d">scale</see>.
         /// </summary>
-        public Vector3f Scale
+        public Vector3d Scale
         {
             get { return this.scale; }
             set { this.scale = value; }
@@ -148,21 +148,21 @@ namespace netDxf.Entities
         /// <summary>
         /// Gets or sets the insert rotation along the normal vector in degrees.
         /// </summary>
-        public float Rotation
+        public double Rotation
         {
             get { return this.rotation; }
             set { this.rotation = value; }
         }
 
         /// <summary>
-        /// Gets or sets the insert <see cref="Vector3f">normal</see>.
+        /// Gets or sets the insert <see cref="Vector3d">normal</see>.
         /// </summary>
-        public Vector3f Normal
+        public Vector3d Normal
         {
             get { return this.normal; }
             set
             {
-                if (Vector3f.Zero == value)
+                if (Vector3d.Zero == value)
                     throw new ArgumentNullException("value", "The normal can not be the zero vector");
                 value.Normalize();
                 this.normal = value;
