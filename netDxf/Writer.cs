@@ -361,7 +361,7 @@ namespace netDxf
             this.WriteCodePair(15, vp.GridSpacing.X);
             this.WriteCodePair(25, vp.GridSpacing.Y);
 
-            Vector3f dir = vp.Camera - vp.Target;
+            Vector3d dir = vp.Camera - vp.Target;
             this.WriteCodePair(16, dir.X);
             this.WriteCodePair(26, dir.Y);
             this.WriteCodePair(36, dir.Z);
@@ -440,7 +440,7 @@ namespace netDxf
             this.WriteCodePair(72, 65);
             this.WriteCodePair(73, tl.Segments.Count);
             this.WriteCodePair(40, tl.Legth());
-            foreach (float s in tl.Segments)
+            foreach (double s in tl.Segments)
             {
                 this.WriteCodePair(49, s);
                 if (this.version != DxfVersion.AutoCad12)
@@ -741,10 +741,10 @@ namespace netDxf
             this.WriteCodePair(30, ellipse.Center.Z);
 
 
-            float sine = (float) (0.5*ellipse.MajorAxis*Math.Sin(ellipse.Rotation*MathHelper.DegToRad));
-            float cosine = (float) (0.5*ellipse.MajorAxis*Math.Cos(ellipse.Rotation*MathHelper.DegToRad));
-            Vector3d axisPoint = MathHelper.Transform((Vector3d) new Vector3f(cosine, sine, 0),
-                                                      (Vector3d) ellipse.Normal,
+            double sine = 0.5*ellipse.MajorAxis*Math.Sin(ellipse.Rotation*MathHelper.DegToRad);
+            double cosine = 0.5 * ellipse.MajorAxis * Math.Cos(ellipse.Rotation * MathHelper.DegToRad);
+            Vector3d axisPoint = MathHelper.Transform(new Vector3d(cosine, sine, 0),
+                                                      ellipse.Normal,
                                                       MathHelper.CoordinateSystem.Object,
                                                       MathHelper.CoordinateSystem.World);
 
@@ -835,8 +835,8 @@ namespace netDxf
 
             this.WriteXData(nurbsCurve.XData);
 
-            List<Vector2f> points = nurbsCurve.PolygonalVertexes(nurbsCurve.CurvePoints);
-            foreach (Vector2f v in points)
+            List<Vector2d> points = nurbsCurve.PolygonalVertexes(nurbsCurve.CurvePoints);
+            foreach (Vector2d v in points)
             {
                 this.WriteCodePair(0, DxfObjectCode.Vertex);
                 this.WriteCodePair(8, nurbsCurve.Layer);
@@ -1486,7 +1486,7 @@ namespace netDxf
             this.WriteCodePair(31, def.BasePoint.Z);
         }
 
-        private void WriteAttribute(Attribute attrib, Vector3f puntoInsercion)
+        private void WriteAttribute(Attribute attrib, Vector3d puntoInsercion)
         {
             this.WriteCodePair(0, DxfObjectCode.Attribute);
             this.WriteCodePair(5, attrib.Handle);
