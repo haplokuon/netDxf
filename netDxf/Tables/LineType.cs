@@ -36,7 +36,7 @@ namespace netDxf.Tables
 
         private readonly string name;
         private string description;
-        private List<float> segments;
+        private List<double> segments;
 
         #endregion
 
@@ -84,7 +84,7 @@ namespace netDxf.Tables
                                  {
                                      Description = "Center, ____ _ ____ _ ____ _ ____ _ ____ _ ____"
                                  };
-                result.Segments.AddRange(new[] {1.25f, -0.25f, 0.25f, -0.25f});
+                result.Segments.AddRange(new[] {1.25, -0.25, 0.25, -0.25});
                 return result;
             }
         }
@@ -100,7 +100,7 @@ namespace netDxf.Tables
                                  {
                                      Description = "Dash dot, __ . __ . __ . __ . __ . __ . __ . __"
                                  };
-                result.Segments.AddRange(new[] {0.5f, -0.25f, 0.0f, -0.25f});
+                result.Segments.AddRange(new[] {0.5, -0.25, 0.0, -0.25});
                 return result;
             }
         }
@@ -116,7 +116,7 @@ namespace netDxf.Tables
                                  {
                                      Description = "Dashed, __ __ __ __ __ __ __ __ __ __ __ __ __ _"
                                  };
-                result.Segments.AddRange(new[] {0.5f, -0.25f});
+                result.Segments.AddRange(new[] {0.5, -0.25});
                 return result;
             }
         }
@@ -132,7 +132,7 @@ namespace netDxf.Tables
                                  {
                                      Description = "Dot, . . . . . . . . . . . . . . . . . . . . . . . ."
                                  };
-                result.Segments.AddRange(new[] {0.0f, - 0.25f});
+                result.Segments.AddRange(new[] {0.0, - 0.25});
                 return result;
             }
         }
@@ -152,7 +152,7 @@ namespace netDxf.Tables
                 throw (new ArgumentNullException("name"));
             this.name = name;
             this.description = string.Empty;
-            this.segments = new List<float>();
+            this.segments = new List<double>();
         }
 
         #endregion
@@ -174,7 +174,7 @@ namespace netDxf.Tables
         /// <remarks>
         /// Positive values means solid segments and negative values means spaces (one entry per element)
         /// </remarks>
-        public List<float> Segments
+        public List<double> Segments
         {
             get { return this.segments; }
             set
@@ -192,10 +192,10 @@ namespace netDxf.Tables
         /// <summary>
         /// Gets the total length of the line type.
         /// </summary>
-        public float Legth()
+        public double Legth()
         {
-            float result = 0;
-            foreach (float s in this.segments)
+            double result = 0.0;
+            foreach (double s in this.segments)
             {
                 result += Math.Abs(s);
             }

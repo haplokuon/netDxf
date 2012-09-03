@@ -80,7 +80,7 @@ namespace netDxf.Tables
         }
 
         /// <summary>
-        /// Gets or sets the layer <see cref="LineType"line type></see>.
+        /// Gets or sets the layer <see cref="LineType"></see>.
         /// </summary>
         public LineType LineType
         {

@@ -38,12 +38,12 @@ namespace netDxf.Tables
 
         private readonly string font;
         private readonly string name;
-        private float height;
+        private double height;
         private bool isBackward;
         private bool isUpsideDown;
         private bool isVertical;
-        private float obliqueAngle;
-        private float widthFactor;
+        private double obliqueAngle;
+        private double widthFactor;
 
         #endregion
 
@@ -99,7 +99,7 @@ namespace netDxf.Tables
         /// Gets or sets the text height.
         /// </summary>
         /// <remarks>Fixed text height; 0 if not fixed.</remarks>
-        public float Height
+        public double Height
         {
             get { return this.height; }
             set
@@ -113,7 +113,7 @@ namespace netDxf.Tables
         /// <summary>
         /// Gets or sets the width factor.
         /// </summary>
-        public float WidthFactor
+        public double WidthFactor
         {
             get { return this.widthFactor; }
             set
@@ -127,7 +127,7 @@ namespace netDxf.Tables
         /// <summary>
         /// Gets or sets the font oblique angle.
         /// </summary>
-        public float ObliqueAngle
+        public double ObliqueAngle
         {
             get { return this.obliqueAngle; }
             set { this.obliqueAngle = value; }
