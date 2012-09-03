@@ -314,12 +314,12 @@ namespace netDxf
         #endregion
 
         #region overloaded operators
-
+        /*
         public static explicit operator Vector3f(Vector3d u)
         {
             return new Vector3f((float) u.X, (float) u.Y, (float) u.Z);
         }
-
+        */
         public static bool operator ==(Vector3d u, Vector3d v)
         {
             return ((v.X == u.X) && (v.Y == u.Y) && (v.Z == u.Z));
@@ -379,7 +379,7 @@ namespace netDxf
         public void Normalize()
         {
             double mod = this.Modulus();
-            if (mod == 0)
+            if (MathHelper.IsZero(mod))
                 throw new ArithmeticException("Cannot normalize a zero vector.");
             double modInv = 1/mod;
             this.x *= modInv;
@@ -410,8 +410,9 @@ namespace netDxf
 
         #region comparision methods
 
-        /// </summary>
+        /// <summary>
         /// Check if the components of two vectors are approximate equals.
+        /// </summary>
         /// <param name="obj">Vector3d.</param>
         /// <param name="threshold">Maximun tolerance.</param>
         /// <returns>True if the three components are almost equal or false in anyother case.</returns>
