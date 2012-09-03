@@ -49,17 +49,7 @@ namespace netDxf
 
         #endregion
 
-        /// <summary>
-        /// A doble precision number close to zero.
-        /// </summary>
-        public const double EpsilonD = 0.000000001d;
-
-        /// <summary>
-        /// A simple precision number close to zero.
-        /// </summary>
-        public const float EpsilonF = 0.00001f;
-
-        /// <summary>
+       /// <summary>
         /// Constant to transform an angle between degrees and radians.
         /// </summary>
         public const double DegToRad = Math.PI/180.0;
@@ -72,7 +62,7 @@ namespace netDxf
         /// <summary>
         /// PI/2 (90 degrees)
         /// </summary>
-        public const double HalfPI = Math.PI*0.5f;
+        public const double HalfPI = Math.PI*0.5;
 
         /// <summary>
         /// 2*PI (360 degrees)
@@ -95,7 +85,7 @@ namespace netDxf
         /// </summary>
         /// <param name="number">Simple precision number.</param>
         /// <returns>True if its close to one or false in anyother case.</returns>
-        /// <remarks>By default a tolerance of the constant EPSILON_F will be used.</remarks>
+        /// <remarks>By default a tolerance of the constant float.Epsilon will be used.</remarks>
         public static bool IsOne(float number)
         {
             return IsZero(number - 1);
@@ -117,7 +107,7 @@ namespace netDxf
         /// </summary>
         /// <param name="number">Double precision number.</param>
         /// <returns>True if its close to one or false in anyother case.</returns>
-        /// <remarks>By default a tolerance of the constant EPSILON_D will be used.</remarks>
+        /// <remarks>By default a tolerance of the constant double.Epsilon will be used.</remarks>
         public static bool IsOne(double number)
         {
             return IsZero(number - 1);
@@ -139,10 +129,10 @@ namespace netDxf
         /// </summary>
         /// <param name="number">Simple precision number.</param>
         /// <returns>True if its close to one or false in anyother case.</returns>
-        /// <remarks>By default a tolerance of the constant EPSILON_F will be used.</remarks>
+        /// <remarks>By default a tolerance of the constant float.Epsilon will be used.</remarks>
         public static bool IsZero(float number)
         {
-            return IsZero(number, EpsilonF);
+            return IsZero(number, float.Epsilon);
         }
 
         /// <summary>
@@ -161,10 +151,10 @@ namespace netDxf
         /// </summary>
         /// <param name="number">Double precision number.</param>
         /// <returns>True if its close to one or false in anyother case.</returns>
-        /// <remarks>By default a tolerance of the constant EPSILON_D will be used.</remarks>
+        /// <remarks>By default a tolerance of the constant double.Epsilon will be used.</remarks>
         public static bool IsZero(double number)
         {
-            return IsZero(number, EpsilonD);
+            return IsZero(number, float.Epsilon);
         }
 
         /// <summary>
