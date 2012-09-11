@@ -64,10 +64,10 @@ namespace netDxf.Entities
         #region private fields
 
         private const EntityType TYPE = EntityType.Face3D;
-        private Vector3d firstVertex;
-        private Vector3d secondVertex;
-        private Vector3d thirdVertex;
-        private Vector3d fourthVertex;
+        private Vector3 firstVertex;
+        private Vector3 secondVertex;
+        private Vector3 thirdVertex;
+        private Vector3 fourthVertex;
         private EdgeFlags edgeFlags;
         private Layer layer;
         private AciColor color;
@@ -81,11 +81,11 @@ namespace netDxf.Entities
         /// <summary>
         /// Initializes a new instance of the <c>Face3D</c> class.
         /// </summary>
-        /// <param name="firstVertex">3d face <see cref="Vector3d">first vertex</see>.</param>
-        /// <param name="secondVertex">3d face <see cref="Vector3d">second vertex</see>.</param>
-        /// <param name="thirdVertex">3d face <see cref="Vector3d">third vertex</see>.</param>
-        /// <param name="fourthVertex">3d face <see cref="Vector3d">fourth vertex</see>.</param>
-        public Face3d(Vector3d firstVertex, Vector3d secondVertex, Vector3d thirdVertex, Vector3d fourthVertex)
+        /// <param name="firstVertex">3d face <see cref="Vector3">first vertex</see>.</param>
+        /// <param name="secondVertex">3d face <see cref="Vector3">second vertex</see>.</param>
+        /// <param name="thirdVertex">3d face <see cref="Vector3">third vertex</see>.</param>
+        /// <param name="fourthVertex">3d face <see cref="Vector3">fourth vertex</see>.</param>
+        public Face3d(Vector3 firstVertex, Vector3 secondVertex, Vector3 thirdVertex, Vector3 fourthVertex)
             : base(DxfObjectCode.Face3D)
         {
             this.firstVertex = firstVertex;
@@ -105,10 +105,10 @@ namespace netDxf.Entities
         public Face3d()
             : base(DxfObjectCode.Face3D)
         {
-            this.firstVertex = Vector3d.Zero;
-            this.secondVertex = Vector3d.Zero;
-            this.thirdVertex = Vector3d.Zero;
-            this.fourthVertex = Vector3d.Zero;
+            this.firstVertex = Vector3.Zero;
+            this.secondVertex = Vector3.Zero;
+            this.thirdVertex = Vector3.Zero;
+            this.fourthVertex = Vector3.Zero;
             this.edgeFlags = EdgeFlags.Visibles;
             this.layer = Layer.Default;
             this.color = AciColor.ByLayer;
@@ -121,36 +121,36 @@ namespace netDxf.Entities
         #region public properties
 
         /// <summary>
-        /// Gets or sets the first 3d face <see cref="netDxf.Vector3d">vertex</see>.
+        /// Gets or sets the first 3d face <see cref="netDxf.Vector3">vertex</see>.
         /// </summary>
-        public Vector3d FirstVertex
+        public Vector3 FirstVertex
         {
             get { return this.firstVertex; }
             set { this.firstVertex = value; }
         }
 
         /// <summary>
-        /// Gets or sets the second 3d face <see cref="netDxf.Vector3d">vertex</see>.
+        /// Gets or sets the second 3d face <see cref="netDxf.Vector3">vertex</see>.
         /// </summary>
-        public Vector3d SecondVertex
+        public Vector3 SecondVertex
         {
             get { return this.secondVertex; }
             set { this.secondVertex = value; }
         }
 
         /// <summary>
-        /// Gets or sets the third 3d face <see cref="netDxf.Vector3d">vertex</see>.
+        /// Gets or sets the third 3d face <see cref="netDxf.Vector3">vertex</see>.
         /// </summary>
-        public Vector3d ThirdVertex
+        public Vector3 ThirdVertex
         {
             get { return this.thirdVertex; }
             set { this.thirdVertex = value; }
         }
 
         /// <summary>
-        /// Gets or sets the fourth 3d face <see cref="netDxf.Vector3d">vertex</see>.
+        /// Gets or sets the fourth 3d face <see cref="netDxf.Vector3">vertex</see>.
         /// </summary>
-        public Vector3d FourthVertex
+        public Vector3 FourthVertex
         {
             get { return this.fourthVertex; }
             set { this.fourthVertex = value; }

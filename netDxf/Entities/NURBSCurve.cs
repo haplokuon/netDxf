@@ -46,7 +46,7 @@ namespace netDxf.Entities
         private int order;
         private double elevation;
         private double thickness;
-        private Vector3d normal;
+        private Vector3 normal;
         private int curvePoints;
 
         #endregion
@@ -59,7 +59,7 @@ namespace netDxf.Entities
         public NurbsCurve()
         {
             this.controlPoints = new List<NurbsVertex>();
-            this.normal = Vector3d.UnitZ;
+            this.normal = Vector3.UnitZ;
             this.layer = Layer.Default;
             this.color = AciColor.ByLayer;
             this.lineType = LineType.ByLayer;
@@ -67,7 +67,7 @@ namespace netDxf.Entities
             this.curvePoints = 30;
             this.elevation = 0.0;
             this.thickness = 0.0;
-            this.normal = Vector3d.UnitZ;
+            this.normal = Vector3.UnitZ;
         }
 
         /// <summary>
@@ -80,7 +80,7 @@ namespace netDxf.Entities
             if (controlPoints.Count<order)
                 throw new ArgumentOutOfRangeException("order",order,"The order of the curve must be less or equal the number of control points.");
             this.controlPoints = controlPoints;
-            this.normal = Vector3d.UnitZ;
+            this.normal = Vector3.UnitZ;
             this.layer = Layer.Default;
             this.color = AciColor.ByLayer;
             this.lineType = LineType.ByLayer;
@@ -88,7 +88,7 @@ namespace netDxf.Entities
             this.curvePoints = 30;
             this.elevation = 0.0;
             this.thickness = 0.0;
-            this.normal = Vector3d.UnitZ;
+            this.normal = Vector3.UnitZ;
         }
 
 
@@ -120,9 +120,9 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets or sets the nurbs curve <see cref="netDxf.Vector3d">normal</see>.
+        /// Gets or sets the nurbs curve <see cref="netDxf.Vector3">normal</see>.
         /// </summary>
-        public Vector3d Normal
+        public Vector3 Normal
         {
             get { return this.normal; }
             set
@@ -238,7 +238,7 @@ namespace netDxf.Entities
         /// </summary>
         /// <param name="precision">Number of point to approximate the curve to a polyline.</param>
         /// <returns>The vertexes are expresed in object coordinate system.</returns>
-        public List<Vector2d> PolygonalVertexes(int precision)
+        public List<Vector2> PolygonalVertexes(int precision)
         {
             if (this.controlPoints.Count < this.order)
                 throw new ArithmeticException("The order of the curve must be less or equal the number of control points.");
@@ -246,7 +246,7 @@ namespace netDxf.Entities
             this.knotVector = this.SetKnotVector();
             double[][][] nurbsBasisFunctions = this.DefineBasisFunctions(precision);
 
-            List<Vector2d> vertexes = new List<Vector2d>();
+            List<Vector2> vertexes = new List<Vector2>();
 
             for (int i = 0; i < precision; i++)
             {
@@ -258,7 +258,7 @@ namespace netDxf.Entities
                     y += this.controlPoints[ctrlPointIndex].Location.Y*nurbsBasisFunctions[i][ctrlPointIndex][this.order - 1];
                 }
 
-                vertexes.Add(new Vector2d(x, y));
+                vertexes.Add(new Vector2(x, y));
             }
 
             return vertexes;

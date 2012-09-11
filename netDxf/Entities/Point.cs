@@ -36,12 +36,12 @@ namespace netDxf.Entities
         #region private fields
 
         private const EntityType TYPE = EntityType.Point;
-        private Vector3d location;
+        private Vector3 location;
         private double thickness;
         private Layer layer;
         private AciColor color;
         private LineType lineType;
-        private Vector3d normal;
+        private Vector3 normal;
         private Dictionary<ApplicationRegistry, XData> xData;
 
         #endregion
@@ -49,7 +49,7 @@ namespace netDxf.Entities
         #region constructors
 
         public Point(double x, double y, double z)
-            : this(new Vector3d(x, y, z))
+            : this(new Vector3(x, y, z))
         {
 
         }
@@ -57,8 +57,8 @@ namespace netDxf.Entities
         /// <summary>
         /// Initializes a new instance of the <c>Point</c> class.
         /// </summary>
-        /// <param name="location">Point <see cref="Vector3d">location</see>.</param>
-        public Point(Vector3d location)
+        /// <param name="location">Point <see cref="Vector3">location</see>.</param>
+        public Point(Vector3 location)
             : base(DxfObjectCode.Point)
         {
             this.location = location;
@@ -66,7 +66,7 @@ namespace netDxf.Entities
             this.layer = Layer.Default;
             this.color = AciColor.ByLayer;
             this.lineType = LineType.ByLayer;
-            this.normal = Vector3d.UnitZ;
+            this.normal = Vector3.UnitZ;
         }
 
         /// <summary>
@@ -75,12 +75,12 @@ namespace netDxf.Entities
         public Point()
             : base(DxfObjectCode.Point)
         {
-            this.location = Vector3d.Zero;
+            this.location = Vector3.Zero;
             this.thickness = 0.0f;
             this.layer = Layer.Default;
             this.color = AciColor.ByLayer;
             this.lineType = LineType.ByLayer;
-            this.normal = Vector3d.UnitZ;
+            this.normal = Vector3.UnitZ;
         }
 
         #endregion
@@ -88,9 +88,9 @@ namespace netDxf.Entities
         #region public properties
 
         /// <summary>
-        /// Gets or sets the point <see cref="netDxf.Vector3d">location</see>.
+        /// Gets or sets the point <see cref="netDxf.Vector3">location</see>.
         /// </summary>
-        public Vector3d Location
+        public Vector3 Location
         {
             get { return this.location; }
             set { this.location = value; }
@@ -106,9 +106,9 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets or sets the point <see cref="netDxf.Vector3d">normal</see>.
+        /// Gets or sets the point <see cref="netDxf.Vector3">normal</see>.
         /// </summary>
-        public Vector3d Normal
+        public Vector3 Normal
         {
             get { return this.normal; }
             set

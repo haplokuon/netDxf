@@ -52,7 +52,7 @@ namespace netDxf
 
         #endregion
 
-        #region public propertyes
+        #region public properties
 
         /// <summary>
         /// Gets the name of the application associated with the list of extended data records.

@@ -37,11 +37,11 @@ namespace netDxf.Entities
 
         private const EntityType TYPE = EntityType.Text;
         private TextAlignment alignment;
-        private Vector3d basePoint;
+        private Vector3 basePoint;
         private AciColor color;
         private Layer layer;
         private LineType lineType;
-        private Vector3d normal;
+        private Vector3 normal;
         private double obliqueAngle;
         private TextStyle style;
         private string value;
@@ -61,12 +61,12 @@ namespace netDxf.Entities
             : base(DxfObjectCode.Text)
         {
             this.value = string.Empty;
-            this.basePoint = Vector3d.Zero;
+            this.basePoint = Vector3.Zero;
             this.alignment = TextAlignment.BaselineLeft;
             this.layer = Layer.Default;
             this.color = AciColor.ByLayer;
             this.lineType = LineType.ByLayer;
-            this.normal = Vector3d.UnitZ;
+            this.normal = Vector3.UnitZ;
             this.style = TextStyle.Default;
             this.rotation = 0.0;
             this.height = 0.0;
@@ -78,9 +78,9 @@ namespace netDxf.Entities
         /// Initializes a new instance of the <c>Text</c> class.
         /// </summary>
         /// <param name="text">Text string.</param>
-        /// <param name="basePoint">Text base <see cref="Vector3d">point</see>.</param>
+        /// <param name="basePoint">Text base <see cref="Vector3">point</see>.</param>
         /// <param name="height">Text height.</param>
-        public Text(string text, Vector3d basePoint, double height)
+        public Text(string text, Vector3 basePoint, double height)
             : base(DxfObjectCode.Text)
         {
             this.value = text;
@@ -89,7 +89,7 @@ namespace netDxf.Entities
             this.layer = Layer.Default;
             this.color = AciColor.ByLayer;
             this.lineType = LineType.ByLayer;
-            this.normal = Vector3d.UnitZ;
+            this.normal = Vector3.UnitZ;
             this.style = TextStyle.Default;
             this.rotation = 0.0;
             this.height = height;
@@ -101,10 +101,10 @@ namespace netDxf.Entities
         /// Initializes a new instance of the <c>Text</c> class.
         /// </summary>
         /// <param name="text">Text string.</param>
-        /// <param name="basePoint">Text base <see cref="Vector3d">point</see>.</param>
+        /// <param name="basePoint">Text base <see cref="Vector3">point</see>.</param>
         /// <param name="height">Text height.</param>
         /// <param name="style">Text <see cref="TextStyle">style</see>.</param>
-        public Text(string text, Vector3d basePoint, double height, TextStyle style)
+        public Text(string text, Vector3 basePoint, double height, TextStyle style)
             : base(DxfObjectCode.Text)
         {
             this.value = text;
@@ -113,7 +113,7 @@ namespace netDxf.Entities
             this.layer = Layer.Default;
             this.color = AciColor.ByLayer;
             this.lineType = LineType.ByLayer;
-            this.normal = Vector3d.UnitZ;
+            this.normal = Vector3.UnitZ;
             this.style = style;
             this.height = height;
             this.widthFactor = style.WidthFactor;
@@ -181,9 +181,9 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets or sets the text base <see cref="netDxf.Vector3d">point</see>.
+        /// Gets or sets the text base <see cref="netDxf.Vector3">point</see>.
         /// </summary>
-        public Vector3d BasePoint
+        public Vector3 BasePoint
         {
             get { return this.basePoint; }
             set { this.basePoint = value; }
@@ -199,9 +199,9 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets or sets the text <see cref="netDxf.Vector3d">normal</see>.
+        /// Gets or sets the text <see cref="netDxf.Vector3">normal</see>.
         /// </summary>
-        public Vector3d Normal
+        public Vector3 Normal
         {
             get { return this.normal; }
             set

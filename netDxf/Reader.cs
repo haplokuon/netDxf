@@ -415,7 +415,7 @@ namespace netDxf
             Layer layer = null;
             string name = string.Empty;
             string handle = string.Empty;
-            Vector3d basePoint = Vector3d.Zero;
+            Vector3 basePoint = Vector3.Zero;
             List<IEntityObject> entities = new List<IEntityObject>();
             Dictionary<string, AttributeDefinition> attdefs = new Dictionary<string, AttributeDefinition>();
 
@@ -554,8 +554,8 @@ namespace netDxf
             string text = string.Empty;
             object value = null;
             AttributeFlags flags = AttributeFlags.Visible;
-            Vector3d firstAlignmentPoint = Vector3d.Zero;
-            Vector3d secondAlignmentPoint = Vector3d.Zero;
+            Vector3 firstAlignmentPoint = Vector3.Zero;
+            Vector3 secondAlignmentPoint = Vector3.Zero;
             Layer layer = Layer.Default;
             AciColor color = AciColor.ByLayer;
             LineType lineType = LineType.ByLayer;
@@ -565,7 +565,7 @@ namespace netDxf
             int horizontalAlignment = 0;
             int verticalAlignment = 0;
             double rotation = 0.0;
-            Vector3d normal = Vector3d.UnitZ;
+            Vector3 normal = Vector3.UnitZ;
 
             code = this.ReadCodePair();
             while (code.Code != 0)
@@ -1062,8 +1062,8 @@ namespace netDxf
         private Arc ReadArc(ref CodeValuePair code)
         {
             var arc = new Arc();
-            Vector3d center = Vector3d.Zero;
-            Vector3d normal = Vector3d.UnitZ;
+            Vector3 center = Vector3.Zero;
+            Vector3 normal = Vector3.UnitZ;
             Dictionary<ApplicationRegistry, XData> xData = new Dictionary<ApplicationRegistry, XData>();
             code = this.ReadCodePair();
             while (code.Code != 0)
@@ -1148,8 +1148,8 @@ namespace netDxf
         private Circle ReadCircle(ref CodeValuePair code)
         {
             var circle = new Circle();
-            Vector3d center = Vector3d.Zero;
-            Vector3d normal = Vector3d.UnitZ;
+            Vector3 center = Vector3.Zero;
+            Vector3 normal = Vector3.UnitZ;
             Dictionary<ApplicationRegistry, XData> xData = new Dictionary<ApplicationRegistry, XData>();
 
             code = this.ReadCodePair();
@@ -1227,9 +1227,9 @@ namespace netDxf
         private Ellipse ReadEllipse(ref CodeValuePair code)
         {
             Ellipse ellipse = new Ellipse();
-            Vector3d center = Vector3d.Zero;
-            Vector3d axisPoint = Vector3d.Zero;
-            Vector3d normal = Vector3d.UnitZ;
+            Vector3 center = Vector3.Zero;
+            Vector3 axisPoint = Vector3.Zero;
+            Vector3 normal = Vector3.UnitZ;
             double ratio = 0.0;
 
             Dictionary<ApplicationRegistry, XData> xData = new Dictionary<ApplicationRegistry, XData>();
@@ -1316,11 +1316,11 @@ namespace netDxf
                 }
             }
 
-            Vector3d ocsAxisPoint = MathHelper.Transform(axisPoint,
+            Vector3 ocsAxisPoint = MathHelper.Transform(axisPoint,
                                                          normal,
                                                          MathHelper.CoordinateSystem.World,
                                                          MathHelper.CoordinateSystem.Object);
-            double rotation = Vector2d.AngleBetween(Vector2d.UnitX, new Vector2d(ocsAxisPoint.X, ocsAxisPoint.Y));
+            double rotation = Vector2.AngleBetween(Vector2.UnitX, new Vector2(ocsAxisPoint.X, ocsAxisPoint.Y));
 
             ellipse.MajorAxis = 2*axisPoint.Modulus();
             ellipse.MinorAxis = ellipse.MajorAxis*ratio;
@@ -1334,8 +1334,8 @@ namespace netDxf
         private Point ReadPoint(ref CodeValuePair code)
         {
             var point = new Point();
-            Vector3d location = Vector3d.Zero;
-            Vector3d normal = Vector3d.UnitZ;
+            Vector3 location = Vector3.Zero;
+            Vector3 normal = Vector3.UnitZ;
             Dictionary<ApplicationRegistry, XData> xData = new Dictionary<ApplicationRegistry, XData>();
 
             code = this.ReadCodePair();
@@ -1409,10 +1409,10 @@ namespace netDxf
         private Face3d ReadFace3D(ref CodeValuePair code)
         {
             var face = new Face3d();
-            Vector3d v0 = Vector3d.Zero;
-            Vector3d v1 = Vector3d.Zero;
-            Vector3d v2 = Vector3d.Zero;
-            Vector3d v3 = Vector3d.Zero;
+            Vector3 v0 = Vector3.Zero;
+            Vector3 v1 = Vector3.Zero;
+            Vector3 v2 = Vector3.Zero;
+            Vector3 v3 = Vector3.Zero;
             Dictionary<ApplicationRegistry, XData> xData = new Dictionary<ApplicationRegistry, XData>();
 
             code = this.ReadCodePair();
@@ -1513,11 +1513,11 @@ namespace netDxf
         private Solid ReadSolid(ref CodeValuePair code)
         {
             var solid = new Solid();
-            Vector3d v0 = Vector3d.Zero;
-            Vector3d v1 = Vector3d.Zero;
-            Vector3d v2 = Vector3d.Zero;
-            Vector3d v3 = Vector3d.Zero;
-            Vector3d normal = Vector3d.UnitZ;
+            Vector3 v0 = Vector3.Zero;
+            Vector3 v1 = Vector3.Zero;
+            Vector3 v2 = Vector3.Zero;
+            Vector3 v3 = Vector3.Zero;
+            Vector3 normal = Vector3.UnitZ;
             Dictionary<ApplicationRegistry, XData> xData = new Dictionary<ApplicationRegistry, XData>();
 
             code = this.ReadCodePair();
@@ -1631,9 +1631,9 @@ namespace netDxf
         private Insert ReadInsert(ref CodeValuePair code)
         {
             string handle = string.Empty;
-            Vector3d basePoint = Vector3d.Zero;
-            Vector3d normal = Vector3d.UnitZ;
-            Vector3d scale = new Vector3d(1.0, 1.0, 1.0);
+            Vector3 basePoint = Vector3.Zero;
+            Vector3 normal = Vector3.UnitZ;
+            Vector3 scale = new Vector3(1.0, 1.0, 1.0);
             double rotation = 0.0;
             Block block = null;
             Layer layer = Layer.Default;
@@ -1782,9 +1782,9 @@ namespace netDxf
         private Line ReadLine(ref CodeValuePair code)
         {
             var line = new Line();
-            Vector3d start = Vector3d.Zero;
-            Vector3d end = Vector3d.Zero;
-            Vector3d normal = Vector3d.UnitZ;
+            Vector3 start = Vector3.Zero;
+            Vector3 end = Vector3.Zero;
+            Vector3 normal = Vector3.UnitZ;
             Dictionary<ApplicationRegistry, XData> xData = new Dictionary<ApplicationRegistry, XData>();
 
             code = this.ReadCodePair();
@@ -1877,7 +1877,7 @@ namespace netDxf
             double constantWidth = 0.0;
             LightWeightPolylineVertex v = new LightWeightPolylineVertex();
             double vX = 0.0;
-            Vector3d normal = Vector3d.UnitZ;
+            Vector3 normal = Vector3.UnitZ;
 
             Dictionary<ApplicationRegistry, XData> xData = new Dictionary<ApplicationRegistry, XData>();
 
@@ -1941,7 +1941,7 @@ namespace netDxf
                         break;
                     case 20:
                         double vY = double.Parse(code.Value);
-                        v.Location = new Vector2d(vX, vY);
+                        v.Location = new Vector2(vX, vY);
                         pol.Vertexes.Add(v);
                         code = this.ReadCodePair();
                         break;
@@ -1998,7 +1998,7 @@ namespace netDxf
             PolylineTypeFlags flags = PolylineTypeFlags.OpenPolyline;
             double elevation = 0.0;
             double thickness = 0.0;
-            Vector3d normal = Vector3d.UnitZ;
+            Vector3 normal = Vector3.UnitZ;
 
             List<Vertex> vertexes = new List<Vertex>();
             Dictionary<ApplicationRegistry, XData> xData = new Dictionary<ApplicationRegistry, XData>();
@@ -2218,7 +2218,7 @@ namespace netDxf
                 {
                     PolylineVertex vertex = new PolylineVertex
                                                 {
-                                                    Location = new Vector2d(v.Location.X, v.Location.Y),
+                                                    Location = new Vector2(v.Location.X, v.Location.Y),
                                                     BeginThickness = v.BeginThickness,
                                                     Bulge = v.Bulge,
                                                     Color = v.Color,
@@ -2265,9 +2265,9 @@ namespace netDxf
         {
             var text = new Text();
 
-            Vector3d firstAlignmentPoint = Vector3d.Zero;
-            Vector3d secondAlignmentPoint = Vector3d.Zero;
-            Vector3d normal = Vector3d.UnitZ;
+            Vector3 firstAlignmentPoint = Vector3.Zero;
+            Vector3 secondAlignmentPoint = Vector3.Zero;
+            Vector3 normal = Vector3.UnitZ;
             int horizontalAlignment = 0;
             int verticalAlignment = 0;
             Dictionary<ApplicationRegistry, XData> xData = new Dictionary<ApplicationRegistry, XData>();
@@ -2391,7 +2391,7 @@ namespace netDxf
             Layer layer = Layer.Default;
             AciColor color = AciColor.ByLayer;
             LineType lineType = LineType.ByLayer;
-            Vector3d location = new Vector3d();
+            Vector3 location = new Vector3();
             Dictionary<ApplicationRegistry, XData> xData = new Dictionary<ApplicationRegistry, XData>();
             double endThickness = 0.0;
             double beginThickness = 0.0;
@@ -2472,7 +2472,8 @@ namespace netDxf
                     default:
                         if (code.Code >= 1000 && code.Code <= 1071)
                             throw new DxfInvalidCodeValueEntityException(code.Code, code.Value, this.file,
-                                                                         "The extended data of an entity must start with the application registry code " + this.fileLine);
+                                "The extended data of an entity must start with the application registry code " 
+                                + this.fileLine);
 
                         code = this.ReadCodePair();
                         break;
@@ -2493,7 +2494,10 @@ namespace netDxf
                            XData = xData,
                            Handle = handle
                        };
-
+            //
+            //TODO: Is it usable for somewhat? Is any reason to keep this in code? 
+            //      Version controls remeber it...
+            //
             //IVertex vertex;
             //if ((flags & (VertexTypeFlags.PolyfaceMeshVertex | VertexTypeFlags.Polygon3dMesh)) == (VertexTypeFlags.PolyfaceMeshVertex | VertexTypeFlags.Polygon3dMesh))
             //{

@@ -165,9 +165,9 @@ namespace netDxf
         /// <param name="from">Point coordinate system.</param>
         /// <param name="to">Coordinate system of the transformed point.</param>
         /// <returns>Transormed point.</returns>
-        public static Vector3d Transform(Vector3d point, Vector3d zAxis, CoordinateSystem from, CoordinateSystem to)
+        public static Vector3 Transform(Vector3 point, Vector3 zAxis, CoordinateSystem from, CoordinateSystem to)
         {
-            Matrix3d trans = ArbitraryAxis(zAxis);
+            Matrix3 trans = ArbitraryAxis(zAxis);
             if (from == CoordinateSystem.World && to == CoordinateSystem.Object)
             {
                 trans = trans.Traspose();
@@ -188,15 +188,15 @@ namespace netDxf
         /// <param name="from">Points coordinate system.</param>
         /// <param name="to">Coordinate system of the transformed points.</param>
         /// <returns>Transormed point list.</returns>
-        public static IList<Vector3d> Transform(IList<Vector3d> points, Vector3d zAxis, CoordinateSystem from, CoordinateSystem to)
+        public static IList<Vector3> Transform(IList<Vector3> points, Vector3 zAxis, CoordinateSystem from, CoordinateSystem to)
         {
-            Matrix3d trans = ArbitraryAxis(zAxis);
-            List<Vector3d> transPoints;
+            Matrix3 trans = ArbitraryAxis(zAxis);
+            List<Vector3> transPoints;
             if (from == CoordinateSystem.World && to == CoordinateSystem.Object)
             {
-                transPoints = new List<Vector3d>();
+                transPoints = new List<Vector3>();
                 trans = trans.Traspose();
-                foreach (Vector3d p in points)
+                foreach (Vector3 p in points)
                 {
                     transPoints.Add(trans*p);
                 }
@@ -204,8 +204,8 @@ namespace netDxf
             }
             if (from == CoordinateSystem.Object && to == CoordinateSystem.World)
             {
-                transPoints = new List<Vector3d>();
-                foreach (Vector3d p in points)
+                transPoints = new List<Vector3>();
+                foreach (Vector3 p in points)
                 {
                     transPoints.Add(trans*p);
                 }
@@ -219,24 +219,24 @@ namespace netDxf
         /// </summary>
         /// <param name="zAxis">Normal vector.</param>
         /// <returns>Rotation matriz.</returns>
-        public static Matrix3d ArbitraryAxis(Vector3d zAxis)
+        public static Matrix3 ArbitraryAxis(Vector3 zAxis)
         {
             zAxis.Normalize();
-            Vector3d wY = Vector3d.UnitY;
-            Vector3d wZ = Vector3d.UnitZ;
-            Vector3d aX;
+            Vector3 wY = Vector3.UnitY;
+            Vector3 wZ = Vector3.UnitZ;
+            Vector3 aX;
 
             if ((Math.Abs(zAxis.X) < 1/64.0) && (Math.Abs(zAxis.Y) < 1/64.0))
-                aX = Vector3d.CrossProduct(wY, zAxis);
+                aX = Vector3.CrossProduct(wY, zAxis);
             else
-                aX = Vector3d.CrossProduct(wZ, zAxis);
+                aX = Vector3.CrossProduct(wZ, zAxis);
 
             aX.Normalize();
 
-            Vector3d aY = Vector3d.CrossProduct(zAxis, aX);
+            Vector3 aY = Vector3.CrossProduct(zAxis, aX);
             aY.Normalize();
 
-            return new Matrix3d(aX.X, aY.X, zAxis.X, aX.Y, aY.Y, zAxis.Y, aX.Z, aY.Z, zAxis.Z);
+            return new Matrix3(aX.X, aY.X, zAxis.X, aX.Y, aY.Y, zAxis.Y, aX.Z, aY.Z, zAxis.Z);
         }
     }
 }

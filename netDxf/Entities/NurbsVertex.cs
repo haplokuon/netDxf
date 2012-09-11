@@ -29,7 +29,7 @@ namespace netDxf.Entities
     {
         #region private fields
 
-        private Vector2d location;
+        private Vector2 location;
         private double weight;
 
         #endregion
@@ -41,7 +41,7 @@ namespace netDxf.Entities
         /// </summary>
         public NurbsVertex()
         {
-            this.location = Vector2d.Zero;
+            this.location = Vector2.Zero;
             this.weight = 1.0;
         }
 
@@ -52,7 +52,7 @@ namespace netDxf.Entities
         /// <param name="y">Y coordinate.</param>
         public NurbsVertex(double x, double y)
         {
-            this.location = new Vector2d(x, y);
+            this.location = new Vector2(x, y);
             this.weight = 1.0;
         }
 
@@ -64,7 +64,7 @@ namespace netDxf.Entities
         /// <param name="weight">Nurbs vertex weight.</param>
         public NurbsVertex(double x, double y, double weight)
         {
-            this.location = new Vector2d(x, y);
+            this.location = new Vector2(x, y);
             this.weight = weight;
         }
 
@@ -72,7 +72,7 @@ namespace netDxf.Entities
         /// Initializes a new instance of the <c>NurbsVertex</c> class.
         /// </summary>
         /// <param name="location">Nurbs vertex <see cref="Vector2d">location</see>.
-        public NurbsVertex(Vector2d location)
+        public NurbsVertex(Vector2 location)
         {
             this.location = location;
             this.weight = 1.0;
@@ -83,7 +83,7 @@ namespace netDxf.Entities
         /// </summary>
         /// <param name="location">Nurbs vertex <see cref="Vector2d">location</see>.
         /// <param name="weight">Nurbs vertex weight.</param>
-        public NurbsVertex(Vector2d location, double weight)
+        public NurbsVertex(Vector2 location, double weight)
         {
             this.location = location;
             this.weight = weight;
@@ -94,9 +94,9 @@ namespace netDxf.Entities
         #region public properties
 
         /// <summary>
-        /// Gets or sets the vertex <see cref="netDxf.Vector2d">location</see>.
+        /// Gets or sets the vertex <see cref="netDxf.Vector2">location</see>.
         /// </summary>
-        public Vector2d Location
+        public Vector2 Location
         {
             get { return this.location; }
             set { this.location = value; }

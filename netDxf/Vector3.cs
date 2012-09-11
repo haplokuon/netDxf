@@ -27,7 +27,7 @@ namespace netDxf
     /// <summary>
     /// Represent a three component vector of double precision.
     /// </summary>
-    public struct Vector3d
+    public struct Vector3
     {
         #region private fields
 
@@ -45,7 +45,7 @@ namespace netDxf
         /// <param name="x">X component.</param>
         /// <param name="y">Y component.</param>
         /// <param name="z">Z component.</param>
-        public Vector3d(double x, double y, double z)
+        public Vector3(double x, double y, double z)
         {
             this.x = x;
             this.y = y;
@@ -56,7 +56,7 @@ namespace netDxf
         /// Initializes a new instance of Vector3d.
         /// </summary>
         /// <param name="array">Array of three elements that represents the vector.</param>
-        public Vector3d(double[] array)
+        public Vector3(double[] array)
         {
             if (array.Length != 3)
                 throw new ArgumentOutOfRangeException("array", array.Length, "The dimension of the array must be three.");
@@ -72,33 +72,33 @@ namespace netDxf
         /// <summary>
         /// Zero vector.
         /// </summary>
-        public static Vector3d Zero
+        public static Vector3 Zero
         {
-            get { return new Vector3d(0, 0, 0); }
+            get { return new Vector3(0, 0, 0); }
         }
 
         /// <summary>
         /// Unit X vector.
         /// </summary>
-        public static Vector3d UnitX
+        public static Vector3 UnitX
         {
-            get { return new Vector3d(1, 0, 0); }
+            get { return new Vector3(1, 0, 0); }
         }
 
         /// <summary>
         /// Unit Y vector.
         /// </summary>
-        public static Vector3d UnitY
+        public static Vector3 UnitY
         {
-            get { return new Vector3d(0, 1, 0); }
+            get { return new Vector3(0, 1, 0); }
         }
 
         /// <summary>
         /// Unit Z vector.
         /// </summary>
-        public static Vector3d UnitZ
+        public static Vector3 UnitZ
         {
-            get { return new Vector3d(0, 0, 1); }
+            get { return new Vector3(0, 0, 1); }
         }
 
         #endregion
@@ -187,7 +187,7 @@ namespace netDxf
         /// <param name="u">Vector3d.</param>
         /// <param name="v">Vector3d.</param>
         /// <returns>The dot product.</returns>
-        public static double DotProduct(Vector3d u, Vector3d v)
+        public static double DotProduct(Vector3 u, Vector3 v)
         {
             return (u.X*v.X) + (u.Y*v.Y) + (u.Z*v.Z);
         }
@@ -198,12 +198,12 @@ namespace netDxf
         /// <param name="u">Vector3d.</param>
         /// <param name="v">Vector3d.</param>
         /// <returns>Vector3d.</returns>
-        public static Vector3d CrossProduct(Vector3d u, Vector3d v)
+        public static Vector3 CrossProduct(Vector3 u, Vector3 v)
         {
             double a = u.Y*v.Z - u.Z*v.Y;
             double b = u.Z*v.X - u.X*v.Z;
             double c = u.X*v.Y - u.Y*v.X;
-            return new Vector3d(a, b, c);
+            return new Vector3(a, b, c);
         }
 
         /// <summary>
@@ -212,7 +212,7 @@ namespace netDxf
         /// <param name="u">Vector3d.</param>
         /// <param name="v">Vector3d.</param>
         /// <returns>Distancie.</returns>
-        public static double Distance(Vector3d u, Vector3d v)
+        public static double Distance(Vector3 u, Vector3 v)
         {
             return (Math.Sqrt((u.X - v.X)*(u.X - v.X) + (u.Y - v.Y)*(u.Y - v.Y) + (u.Z - v.Z)*(u.Z - v.Z)));
         }
@@ -223,7 +223,7 @@ namespace netDxf
         /// <param name="u">Vector3d.</param>
         /// <param name="v">Vector3d.</param>
         /// <returns>Square distance.</returns>
-        public static double SquareDistance(Vector3d u, Vector3d v)
+        public static double SquareDistance(Vector3 u, Vector3 v)
         {
             return (u.X - v.X)*(u.X - v.X) + (u.Y - v.Y)*(u.Y - v.Y) + (u.Z - v.Z)*(u.Z - v.Z);
         }
@@ -234,7 +234,7 @@ namespace netDxf
         /// <param name="u">Vector3d.</param>
         /// <param name="v">Vector3d.</param>
         /// <returns>Angle in radians.</returns>
-        public static double AngleBetween(Vector3d u, Vector3d v)
+        public static double AngleBetween(Vector3 u, Vector3 v)
         {
             double cos = DotProduct(u, v)/(u.Modulus()*v.Modulus());
             if (MathHelper.IsOne(cos))
@@ -254,9 +254,9 @@ namespace netDxf
         /// <param name="u">Vector3d.</param>
         /// <param name="v">Vector3d.</param>
         /// <returns>Vector3d.</returns>
-        public static Vector3d MidPoint(Vector3d u, Vector3d v)
+        public static Vector3 MidPoint(Vector3 u, Vector3 v)
         {
-            return new Vector3d((v.X + u.X)*0.5F, (v.Y + u.Y)*0.5F, (v.Z + u.Z)*0.5F);
+            return new Vector3((v.X + u.X)*0.5F, (v.Y + u.Y)*0.5F, (v.Z + u.Z)*0.5F);
         }
 
         /// <summary>
@@ -266,7 +266,7 @@ namespace netDxf
         /// <param name="v">Vector3d.</param>
         /// <param name="threshold">Tolerance used.</param>
         /// <returns>True if are penpendicular or false in anyother case.</returns>
-        public static bool ArePerpendicular(Vector3d u, Vector3d v, double threshold)
+        public static bool ArePerpendicular(Vector3 u, Vector3 v, double threshold)
         {
             return MathHelper.IsZero(DotProduct(u, v), threshold);
         }
@@ -278,7 +278,7 @@ namespace netDxf
         /// <param name="v">Vector3d.</param>
         /// <param name="threshold">Tolerance used.</param>
         /// <returns>True if are parallel or false in anyother case.</returns>
-        public static bool AreParallel(Vector3d u, Vector3d v, double threshold)
+        public static bool AreParallel(Vector3 u, Vector3 v, double threshold)
         {
             double a = u.Y*v.Z - u.Z*v.Y;
             double b = u.Z*v.X - u.X*v.Z;
@@ -304,9 +304,9 @@ namespace netDxf
         /// <param name="u">Vector3d.</param>
         /// <param name="numDigits">Number of significative defcimal digits.</param>
         /// <returns>Vector3d.</returns>
-        public static Vector3d Round(Vector3d u, int numDigits)
+        public static Vector3 Round(Vector3 u, int numDigits)
         {
-            return new Vector3d((Math.Round(u.X, numDigits)),
+            return new Vector3((Math.Round(u.X, numDigits)),
                                 (Math.Round(u.Y, numDigits)),
                                 (Math.Round(u.Z, numDigits)));
         }
@@ -314,59 +314,53 @@ namespace netDxf
         #endregion
 
         #region overloaded operators
-        /*
-        public static explicit operator Vector3f(Vector3d u)
-        {
-            return new Vector3f((float) u.X, (float) u.Y, (float) u.Z);
-        }
-        */
-        public static bool operator ==(Vector3d u, Vector3d v)
+        public static bool operator ==(Vector3 u, Vector3 v)
         {
             return ((v.X == u.X) && (v.Y == u.Y) && (v.Z == u.Z));
         }
 
-        public static bool operator !=(Vector3d u, Vector3d v)
+        public static bool operator !=(Vector3 u, Vector3 v)
         {
             return ((v.X != u.X) || (v.Y != u.Y) || (v.Z != u.Z));
         }
 
 
-        public static Vector3d operator +(Vector3d u, Vector3d v)
+        public static Vector3 operator +(Vector3 u, Vector3 v)
         {
-            return new Vector3d(u.X + v.X, u.Y + v.Y, u.Z + v.Z);
+            return new Vector3(u.X + v.X, u.Y + v.Y, u.Z + v.Z);
         }
 
-        public static Vector3d operator -(Vector3d u, Vector3d v)
+        public static Vector3 operator -(Vector3 u, Vector3 v)
         {
-            return new Vector3d(u.X - v.X, u.Y - v.Y, u.Z - v.Z);
+            return new Vector3(u.X - v.X, u.Y - v.Y, u.Z - v.Z);
         }
 
-        public static Vector3d operator -(Vector3d u)
+        public static Vector3 operator -(Vector3 u)
         {
-            return new Vector3d(- u.X, - u.Y, - u.Z);
+            return new Vector3(- u.X, - u.Y, - u.Z);
         }
 
-        public static Vector3d operator *(Vector3d u, double a)
+        public static Vector3 operator *(Vector3 u, double a)
         {
-            return new Vector3d(u.X*a, u.Y*a, u.Z*a);
+            return new Vector3(u.X*a, u.Y*a, u.Z*a);
         }
 
-        public static Vector3d operator *(double a, Vector3d u)
+        public static Vector3 operator *(double a, Vector3 u)
         {
-            return new Vector3d(u.X*a, u.Y*a, u.Z*a);
+            return new Vector3(u.X*a, u.Y*a, u.Z*a);
         }
 
-        public static Vector3d operator /(Vector3d u, double a)
+        public static Vector3 operator /(Vector3 u, double a)
         {
             double invEscalar = 1/a;
-            return new Vector3d(u.X*invEscalar, u.Y*invEscalar, u.Z*invEscalar);
+            return new Vector3(u.X*invEscalar, u.Y*invEscalar, u.Z*invEscalar);
         }
 
 
-        public static Vector3d operator /(double a, Vector3d u)
+        public static Vector3 operator /(double a, Vector3 u)
         {
             double invEscalar = 1/a;
-            return new Vector3d(u.X*invEscalar, u.Y*invEscalar, u.Z*invEscalar);
+            return new Vector3(u.X*invEscalar, u.Y*invEscalar, u.Z*invEscalar);
         }
 
         #endregion
@@ -416,7 +410,7 @@ namespace netDxf
         /// <param name="obj">Vector3d.</param>
         /// <param name="threshold">Maximun tolerance.</param>
         /// <returns>True if the three components are almost equal or false in anyother case.</returns>
-        public bool Equals(Vector3d obj, double threshold)
+        public bool Equals(Vector3 obj, double threshold)
         {
             if (Math.Abs(obj.X - this.x) > threshold)
             {
@@ -434,15 +428,15 @@ namespace netDxf
             return true;
         }
 
-        public bool Equals(Vector3d obj)
+        public bool Equals(Vector3 obj)
         {
             return obj.x == this.x && obj.y == this.y && obj.z == this.z;
         }
 
         public override bool Equals(object obj)
         {
-            if (obj is Vector3d)
-                return this.Equals((Vector3d) obj);
+            if (obj is Vector3)
+                return this.Equals((Vector3) obj);
             return false;
         }
 

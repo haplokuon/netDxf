@@ -28,7 +28,7 @@ namespace netDxf
     /// <summary>
     /// Represents a 3x3 double precision matrix.
     /// </summary>
-    public struct Matrix3d
+    public struct Matrix3
     {
         #region private fields
 
@@ -47,7 +47,7 @@ namespace netDxf
         #region constructors
 
         /// <summary>
-        /// Initializes a new instance of Matrix3d.
+        /// Initializes a new instance of Matrix3.
         /// </summary>
         /// <param name="m11">Element [0,0].</param>
         /// <param name="m12">Element [0,1].</param>
@@ -58,7 +58,7 @@ namespace netDxf
         /// <param name="m31">Element [2,0].</param>
         /// <param name="m32">Element [2,1].</param>
         /// <param name="m33">Element [2,2].</param>
-        public Matrix3d(double m11, double m12, double m13, double m21, double m22, double m23, double m31, double m32, double m33)
+        public Matrix3(double m11, double m12, double m13, double m21, double m22, double m23, double m31, double m32, double m33)
         {
             this.mM11 = m11;
             this.mM12 = m12;
@@ -80,17 +80,17 @@ namespace netDxf
         /// <summary>
         /// Gets the zero matrix.
         /// </summary>
-        public static Matrix3d Zero
+        public static Matrix3 Zero
         {
-            get { return new Matrix3d(0, 0, 0, 0, 0, 0, 0, 0, 0); }
+            get { return new Matrix3(0, 0, 0, 0, 0, 0, 0, 0, 0); }
         }
 
         /// <summary>
         /// Getx the identity matrix.
         /// </summary>
-        public static Matrix3d Identity
+        public static Matrix3 Identity
         {
-            get { return new Matrix3d(1, 0, 0, 0, 1, 0, 0, 0, 1); }
+            get { return new Matrix3(1, 0, 0, 0, 1, 0, 0, 0, 1); }
         }
 
         #endregion
@@ -185,56 +185,56 @@ namespace netDxf
         /// <summary>
         /// Matrix addition.
         /// </summary>
-        /// <param name="a">Matrix3d.</param>
-        /// <param name="b">Matrix3d.</param>
-        /// <returns>Matrix3d.</returns>
-        public static Matrix3d operator +(Matrix3d a, Matrix3d b)
+        /// <param name="a">Matrix3.</param>
+        /// <param name="b">Matrix3.</param>
+        /// <returns>Matrix3.</returns>
+        public static Matrix3 operator +(Matrix3 a, Matrix3 b)
         {
-            return new Matrix3d(a.M11 + b.M11, a.M12 + b.M12, a.M13 + b.M13, a.M21 + b.M21, a.M22 + b.M22, a.M23 + b.M23, a.M31 + b.M31, a.M32 + b.M32, a.M33 + b.M33);
+            return new Matrix3(a.M11 + b.M11, a.M12 + b.M12, a.M13 + b.M13, a.M21 + b.M21, a.M22 + b.M22, a.M23 + b.M23, a.M31 + b.M31, a.M32 + b.M32, a.M33 + b.M33);
         }
 
         /// <summary>
         /// Matrix substraction.
         /// </summary>
-        /// <param name="a">Matrix3d.</param>
-        /// <param name="b">Matrix3d.</param>
-        /// <returns>Matrix3d.</returns>
-        public static Matrix3d operator -(Matrix3d a, Matrix3d b)
+        /// <param name="a">Matrix3.</param>
+        /// <param name="b">Matrix3.</param>
+        /// <returns>Matrix3.</returns>
+        public static Matrix3 operator -(Matrix3 a, Matrix3 b)
         {
-            return new Matrix3d(a.M11 - b.M11, a.M12 - b.M12, a.M13 - b.M13, a.M21 - b.M21, a.M22 - b.M22, a.M23 - b.M23, a.M31 - b.M31, a.M32 - b.M32, a.M33 - b.M33);
+            return new Matrix3(a.M11 - b.M11, a.M12 - b.M12, a.M13 - b.M13, a.M21 - b.M21, a.M22 - b.M22, a.M23 - b.M23, a.M31 - b.M31, a.M32 - b.M32, a.M33 - b.M33);
         }
 
         /// <summary>
         /// Product of two matrices.
         /// </summary>
-        /// <param name="a">Matrix3d.</param>
-        /// <param name="b">Matrix3d.</param>
-        /// <returns>Matrix3d.</returns>
-        public static Matrix3d operator *(Matrix3d a, Matrix3d b)
+        /// <param name="a">Matrix3.</param>
+        /// <param name="b">Matrix3.</param>
+        /// <returns>Matrix3.</returns>
+        public static Matrix3 operator *(Matrix3 a, Matrix3 b)
         {
-            return new Matrix3d(a.M11*b.M11 + a.M12*b.M21 + a.M13*b.M31, a.M11*b.M12 + a.M12*b.M22 + a.M13*b.M32, a.M11*b.M13 + a.M12*b.M23 + a.M13*b.M33, a.M21*b.M11 + a.M22*b.M21 + a.M23*b.M31, a.M21*b.M12 + a.M22*b.M22 + a.M23*b.M32, a.M21*b.M13 + a.M22*b.M23 + a.M23*b.M33, a.M31*b.M11 + a.M32*b.M21 + a.M33*b.M31, a.M31*b.M12 + a.M32*b.M22 + a.M33*b.M32, a.M31*b.M13 + a.M32*b.M23 + a.M33*b.M33);
+            return new Matrix3(a.M11*b.M11 + a.M12*b.M21 + a.M13*b.M31, a.M11*b.M12 + a.M12*b.M22 + a.M13*b.M32, a.M11*b.M13 + a.M12*b.M23 + a.M13*b.M33, a.M21*b.M11 + a.M22*b.M21 + a.M23*b.M31, a.M21*b.M12 + a.M22*b.M22 + a.M23*b.M32, a.M21*b.M13 + a.M22*b.M23 + a.M23*b.M33, a.M31*b.M11 + a.M32*b.M21 + a.M33*b.M31, a.M31*b.M12 + a.M32*b.M22 + a.M33*b.M32, a.M31*b.M13 + a.M32*b.M23 + a.M33*b.M33);
         }
 
         /// <summary>
         /// Product of a matrix with a vector.
         /// </summary>
-        /// <param name="a">Matrix3d.</param>
-        /// <param name="u">Vector3f.</param>
-        /// <returns>Matrix3d.</returns>
-        public static Vector3d operator *(Matrix3d a, Vector3d u)
+        /// <param name="a">Matrix3.</param>
+        /// <param name="u">Vector3d.</param>
+        /// <returns>Matrix3.</returns>
+        public static Vector3 operator *(Matrix3 a, Vector3 u)
         {
-            return new Vector3d(a.M11*u.X + a.M12*u.Y + a.M13*u.Z, a.M21*u.X + a.M22*u.Y + a.M23*u.Z, a.M31*u.X + a.M32*u.Y + a.M33*u.Z);
+            return new Vector3(a.M11*u.X + a.M12*u.Y + a.M13*u.Z, a.M21*u.X + a.M22*u.Y + a.M23*u.Z, a.M31*u.X + a.M32*u.Y + a.M33*u.Z);
         }
 
         /// <summary>
         /// Product of a matrix with a scalar.
         /// </summary>
-        /// <param name="m">Matrix3d.</param>
+        /// <param name="m">Matrix3.</param>
         /// <param name="a">Scalar.</param>
-        /// <returns>Matrix3d.</returns>
-        public static Matrix3d operator *(Matrix3d m, double a)
+        /// <returns>Matrix3.</returns>
+        public static Matrix3 operator *(Matrix3 m, double a)
         {
-            return new Matrix3d(m.M11*a, m.M12*a, m.M13*a, m.M21*a, m.M22*a, m.M23*a, m.M31*a, m.M32*a, m.M33*a);
+            return new Matrix3(m.M11*a, m.M12*a, m.M13*a, m.M21*a, m.M22*a, m.M23*a, m.M31*a, m.M32*a, m.M33*a);
         }
 
         #endregion
@@ -253,11 +253,11 @@ namespace netDxf
         /// <summary>
         /// Calculates the inverse matrix.
         /// </summary>
-        /// <returns>Inverse Matrix3d.</returns>
-        public Matrix3d Inverse()
+        /// <returns>Inverse Matrix3.</returns>
+        public Matrix3 Inverse()
         {
             double det = this.Determinant();
-            var resultado = new Matrix3d();
+            var resultado = new Matrix3();
             if (MathHelper.IsZero(det))
             {
                 throw (new ArithmeticException("The matrix is not invertible"));
@@ -283,9 +283,9 @@ namespace netDxf
         /// Obtains the traspose matrix.
         /// </summary>
         /// <returns>Transpose matrix.</returns>
-        public Matrix3d Traspose()
+        public Matrix3 Traspose()
         {
-            return new Matrix3d(this.mM11, this.mM21, this.mM31, this.mM12, this.mM22, this.mM32, this.mM13, this.mM23, this.mM33);
+            return new Matrix3(this.mM11, this.mM21, this.mM31, this.mM12, this.mM22, this.mM32, this.mM13, this.mM23, this.mM33);
         }
 
 #endregion

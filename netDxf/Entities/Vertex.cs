@@ -39,7 +39,7 @@ namespace netDxf.Entities
         #region private fields
 
         private VertexTypeFlags flags;
-        private Vector3d location;
+        private Vector3 location;
         private int[] vertexIndexes;
         private double beginThickness;
         private double endThickness;
@@ -60,7 +60,7 @@ namespace netDxf.Entities
             : base(DxfObjectCode.Vertex)
         {
             this.flags = VertexTypeFlags.PolylineVertex;
-            this.location = Vector3d.Zero;
+            this.location = Vector3.Zero;
             this.layer = Layer.Default;
             this.color = AciColor.ByLayer;
             this.lineType = LineType.ByLayer;
@@ -72,8 +72,8 @@ namespace netDxf.Entities
         /// <summary>
         /// Initializes a new instance of the <c>Vertex</c> class.
         /// </summary>
-        /// <param name="location">Vertex <see cref="netDxf.Vector3d">location</see>.</param>
-        public Vertex(Vector3d location)
+        /// <param name="location">Vertex <see cref="netDxf.Vector3">location</see>.</param>
+        public Vertex(Vector3 location)
             : base(DxfObjectCode.Vertex)
         {
             this.flags = VertexTypeFlags.PolylineVertex;
@@ -89,12 +89,12 @@ namespace netDxf.Entities
         /// <summary>
         /// Initializes a new instance of the <c>Vertex</c> class.
         /// </summary>
-        /// <param name="location">Vertex <see cref="netDxf.Vector2d">location</see>.</param>
-        public Vertex(Vector2d location)
+        /// <param name="location">Vertex <see cref="netDxf.Vector2">location</see>.</param>
+        public Vertex(Vector2 location)
             : base(DxfObjectCode.Vertex)
         {
             this.flags = VertexTypeFlags.PolylineVertex;
-            this.location = new Vector3d(location.X, location.Y, 0.0);
+            this.location = new Vector3(location.X, location.Y, 0.0);
             this.layer = Layer.Default;
             this.color = AciColor.ByLayer;
             this.lineType = LineType.ByLayer;
@@ -113,7 +113,7 @@ namespace netDxf.Entities
             : base(DxfObjectCode.Vertex)
         {
             this.flags = VertexTypeFlags.PolylineVertex;
-            this.location = new Vector3d(x, y, z);
+            this.location = new Vector3(x, y, z);
             this.layer = Layer.Default;
             this.color = AciColor.ByLayer;
             this.lineType = LineType.ByLayer;
@@ -131,7 +131,7 @@ namespace netDxf.Entities
             : base(DxfObjectCode.Vertex)
         {
             this.flags = VertexTypeFlags.PolylineVertex;
-            this.location = new Vector3d(x, y, 0.0f);
+            this.location = new Vector3(x, y, 0.0f);
             this.layer = Layer.Default;
             this.color = AciColor.ByLayer;
             this.lineType = LineType.ByLayer;
@@ -145,9 +145,9 @@ namespace netDxf.Entities
         #region public properties
         
         /// <summary>
-        /// Gets or sets the polyline vertex <see cref="netDxf.Vector3d">location</see>.
+        /// Gets or sets the polyline vertex <see cref="netDxf.Vector3">location</see>.
         /// </summary>
-        public Vector3d Location
+        public Vector3 Location
         {
             get { return this.location; }
             set { this.location = value; }

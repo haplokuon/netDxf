@@ -32,7 +32,7 @@ namespace netDxf.Entities
         #region private fields
 
         protected const EntityType TYPE = EntityType.LightWeightPolylineVertex;
-        protected Vector2d location;
+        protected Vector2 location;
         protected double beginThickness;
         protected double endThickness;
         protected double bulge;
@@ -46,7 +46,7 @@ namespace netDxf.Entities
         /// </summary>
         public LightWeightPolylineVertex()
         {
-            this.location = Vector2d.Zero;
+            this.location = Vector2.Zero;
             this.bulge = 0.0;
             this.beginThickness = 0.0;
             this.endThickness = 0.0;
@@ -55,8 +55,8 @@ namespace netDxf.Entities
         /// <summary>
         /// Initializes a new instance of the <c>LightWeightPolylineVertex</c> class.
         /// </summary>
-        /// <param name="location">Lightweight polyline <see cref="netDxf.Vector2d">vertex</see> coordinates.</param>
-        public LightWeightPolylineVertex(Vector2d location)
+        /// <param name="location">Lightweight polyline <see cref="netDxf.Vector2">vertex</see> coordinates.</param>
+        public LightWeightPolylineVertex(Vector2 location)
         {
             this.location = location;
             this.bulge = 0.0;
@@ -71,7 +71,7 @@ namespace netDxf.Entities
         /// <param name="y">Y coordinate.</param>
         public LightWeightPolylineVertex(double x, double y)
         {
-            this.location = new Vector2d(x, y);
+            this.location = new Vector2(x, y);
             this.bulge = 0.0;
             this.beginThickness = 0.0;
             this.endThickness = 0.0;
@@ -82,9 +82,9 @@ namespace netDxf.Entities
         #region public properties
 
         /// <summary>
-        /// Gets or sets the polyline vertex <see cref="netDxf.Vector2d">location</see>.
+        /// Gets or sets the polyline vertex <see cref="netDxf.Vector2">location</see>.
         /// </summary>
-        public Vector2d Location
+        public Vector2 Location
         {
             get { return this.location; }
             set { this.location = value; }

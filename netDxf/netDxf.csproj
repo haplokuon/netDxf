@@ -71,9 +71,9 @@
     <Compile Include="Entities\LightWeightPolylineVertex.cs" />
     <Compile Include="Header\DxfVersion.cs" />
     <Compile Include="Header\SystemVariable.cs" />
-    <Compile Include="Vector2d.cs" />
-    <Compile Include="Vector3d.cs" />
-    <Compile Include="Matrix3d.cs" />
+    <Compile Include="Vector2.cs" />
+    <Compile Include="Vector3.cs" />
+    <Compile Include="Matrix3.cs" />
     <Compile Include="DxfObjectCode.cs" />
     <Compile Include="Entities\Ellipse.cs" />
     <Compile Include="Entities\EndSequence.cs" />
@@ -121,11 +121,8 @@
     <Compile Include="Tables\ITableObject.cs" />
     <Compile Include="Tables\Layer.cs" />
     <Compile Include="MathHelper.cs" />
-    <Compile Include="Matrix3f.cs" />
     <Compile Include="Tables\LineType.cs" />
     <Compile Include="Tables\TextStyle.cs" />
-    <Compile Include="Vector2f.cs" />
-    <Compile Include="Vector3f.cs" />
     <Compile Include="XData.cs" />
     <Compile Include="StringCode.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

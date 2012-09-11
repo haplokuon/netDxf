@@ -361,7 +361,7 @@ namespace netDxf
             this.WriteCodePair(15, vp.GridSpacing.X);
             this.WriteCodePair(25, vp.GridSpacing.Y);
 
-            Vector3d dir = vp.Camera - vp.Target;
+            Vector3 dir = vp.Camera - vp.Target;
             this.WriteCodePair(16, dir.X);
             this.WriteCodePair(26, dir.Y);
             this.WriteCodePair(36, dir.Z);
@@ -743,7 +743,7 @@ namespace netDxf
 
             double sine = 0.5*ellipse.MajorAxis*Math.Sin(ellipse.Rotation*MathHelper.DegToRad);
             double cosine = 0.5 * ellipse.MajorAxis * Math.Cos(ellipse.Rotation * MathHelper.DegToRad);
-            Vector3d axisPoint = MathHelper.Transform(new Vector3d(cosine, sine, 0),
+            Vector3 axisPoint = MathHelper.Transform(new Vector3(cosine, sine, 0),
                                                       ellipse.Normal,
                                                       MathHelper.CoordinateSystem.Object,
                                                       MathHelper.CoordinateSystem.World);
@@ -790,8 +790,8 @@ namespace netDxf
 
             this.WriteXData(ellipse.XData);
 
-            List<Vector2d> points = ellipse.PolygonalVertexes(ellipse.CurvePoints);
-            foreach (Vector2d v in points)
+            List<Vector2> points = ellipse.PolygonalVertexes(ellipse.CurvePoints);
+            foreach (Vector2 v in points)
             {
                 this.WriteCodePair(0, DxfObjectCode.Vertex);
                 this.WriteCodePair(8, ellipse.Layer);
@@ -835,8 +835,8 @@ namespace netDxf
 
             this.WriteXData(nurbsCurve.XData);
 
-            List<Vector2d> points = nurbsCurve.PolygonalVertexes(nurbsCurve.CurvePoints);
-            foreach (Vector2d v in points)
+            List<Vector2> points = nurbsCurve.PolygonalVertexes(nurbsCurve.CurvePoints);
+            foreach (Vector2 v in points)
             {
                 this.WriteCodePair(0, DxfObjectCode.Vertex);
                 this.WriteCodePair(8, nurbsCurve.Layer);
@@ -1486,7 +1486,7 @@ namespace netDxf
             this.WriteCodePair(31, def.BasePoint.Z);
         }
 
-        private void WriteAttribute(Attribute attrib, Vector3d puntoInsercion)
+        private void WriteAttribute(Attribute attrib, Vector3 puntoInsercion)
         {
             this.WriteCodePair(0, DxfObjectCode.Attribute);
             this.WriteCodePair(5, attrib.Handle);

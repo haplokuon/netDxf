@@ -40,7 +40,7 @@ namespace netDxf.Blocks
         private readonly BlockEnd end;
         private readonly string name;
         private Layer layer;
-        private Vector3d basePoint;
+        private Vector3 basePoint;
         private Dictionary<string, AttributeDefinition> attributes;
         private List<IEntityObject> entities;
 
@@ -72,7 +72,7 @@ namespace netDxf.Blocks
                 throw (new ArgumentNullException("name"));
             
             this.name = name;
-            this.basePoint = Vector3d.Zero;
+            this.basePoint = Vector3.Zero;
             this.layer = Layer.Default;
             this.attributes = new Dictionary<string, AttributeDefinition>();
             this.entities = new List<IEntityObject>();
@@ -95,7 +95,7 @@ namespace netDxf.Blocks
         /// <summary>
         /// Gets or sets the block base point.
         /// </summary>
-        public Vector3d BasePoint
+        public Vector3 BasePoint
         {
             get { return this.basePoint; }
             set { this.basePoint = value; }

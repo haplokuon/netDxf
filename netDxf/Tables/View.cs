@@ -29,10 +29,10 @@ namespace netDxf.Tables
         #region private fields
 
         private readonly string name;
-        private Vector2d lowerLeftCorner = Vector2d.Zero;
-        private Vector2d upperRightCorner = new Vector2d(1.0, 1.0);
-        private Vector3d target = Vector3d.Zero;
-        private Vector3d camera = Vector3d.UnitZ;
+        private Vector2 lowerLeftCorner = Vector2.Zero;
+        private Vector2 upperRightCorner = new Vector2(1.0, 1.0);
+        private Vector3 target = Vector3.Zero;
+        private Vector3 camera = Vector3.UnitZ;
 
         #endregion
 
@@ -60,25 +60,25 @@ namespace netDxf.Tables
 
         #region public properties
 
-        public Vector2d LowerLeftCorner
+        public Vector2 LowerLeftCorner
         {
             get { return this.lowerLeftCorner; }
             set { this.lowerLeftCorner = value; }
         }
 
-        public Vector2d UpperRightCorner
+        public Vector2 UpperRightCorner
         {
             get { return this.upperRightCorner; }
             set { this.upperRightCorner = value; }
         }
 
-        public Vector3d Target
+        public Vector3 Target
         {
             get { return this.target; }
             set { this.target = value; }
         }
 
-        public Vector3d Camera
+        public Vector3 Camera
         {
             get { return this.camera; }
             set { this.camera = value; }

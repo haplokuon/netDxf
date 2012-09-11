@@ -39,7 +39,7 @@ namespace netDxf.Entities
 
         protected const EntityType TYPE = EntityType.Polyline3dVertex;
         protected VertexTypeFlags flags;
-        protected Vector3d location;
+        protected Vector3 location;
         protected AciColor color;
         protected Layer layer;
         protected LineType lineType;
@@ -56,7 +56,7 @@ namespace netDxf.Entities
             : base(DxfObjectCode.Vertex)
         {
             this.flags = VertexTypeFlags.Polyline3dVertex;
-            this.location = Vector3d.Zero;
+            this.location = Vector3.Zero;
             this.layer = Layer.Default;
             this.color = AciColor.ByLayer;
             this.lineType = LineType.ByLayer;
@@ -65,8 +65,8 @@ namespace netDxf.Entities
         /// <summary>
         /// Initializes a new instance of the <c>Polyline3dVertex</c> class.
         /// </summary>
-        /// <param name="location">Polyline <see cref="Vector3d">vertex</see> coordinates.</param>
-        public Polyline3dVertex(Vector3d location)
+        /// <param name="location">Polyline <see cref="Vector3">vertex</see> coordinates.</param>
+        public Polyline3dVertex(Vector3 location)
             : base(DxfObjectCode.Vertex)
         {
             this.flags = VertexTypeFlags.Polyline3dVertex;
@@ -86,7 +86,7 @@ namespace netDxf.Entities
             : base(DxfObjectCode.Vertex)
         {
             this.flags = VertexTypeFlags.Polyline3dVertex;
-            this.location = new Vector3d(x, y, z);
+            this.location = new Vector3(x, y, z);
             this.layer = Layer.Default;
             this.color = AciColor.ByLayer;
             this.lineType = LineType.ByLayer;
@@ -97,9 +97,9 @@ namespace netDxf.Entities
         #region public properties
 
        /// <summary>
-        /// Gets or sets the vertex <see cref="netDxf.Vector3d">location</see>.
+        /// Gets or sets the vertex <see cref="netDxf.Vector3">location</see>.
         /// </summary>
-        public Vector3d Location
+        public Vector3 Location
         {
             get { return this.location; }
             set { this.location = value; }
