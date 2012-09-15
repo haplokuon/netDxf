@@ -158,6 +158,54 @@ namespace netDxf
         }
 
         /// <summary>
+        /// Checks if a number is equal to another.
+        /// </summary>
+        /// <param name="a">Simple precision number.</param>
+        /// <param name="b">Simple precision number.</param>
+        /// <param name="threshold">Tolerance.</param>
+        /// <returns>True if its close to one or false in anyother case.</returns>
+        public static bool IsEqual(float a, float b, float threshold)
+        {
+            return IsZero(a - b, threshold);
+        }
+
+        /// <summary>
+        /// Checks if a number is equal to another.
+        /// </summary>
+        /// <param name="a">Double precision number.</param>
+        /// <param name="b">Double precision number.</param>
+        /// <returns>True if its close to one or false in anyother case.</returns>
+        /// <remarks>By default a tolerance of the constant float.Epsilon will be used.</remarks>
+        public static bool IsEqual(float a, float b)
+        {
+            return IsZero(a - b);
+        }
+
+        /// <summary>
+        /// Checks if a number is equal to another.
+        /// </summary>
+        /// <param name="a">Double precision number.</param>
+        /// <param name="b">Double precision number.</param>
+        /// <param name="threshold">Tolerance.</param>
+        /// <returns>True if its close to one or false in anyother case.</returns>
+        public static bool IsEqual(double a, double b, double threshold)
+        {
+            return IsZero(a - b, threshold);
+        }
+
+        /// <summary>
+        /// Checks if a number is equal to another.
+        /// </summary>
+        /// <param name="a">Double precision number.</param>
+        /// <param name="b">Double precision number.</param>
+        /// <returns>True if its close to one or false in anyother case.</returns>
+        /// <remarks>By default a tolerance of the constant float.Epsilon will be used.</remarks>
+        public static bool IsEqual(double a, double b)
+        {
+            return IsZero(a - b);
+        }
+
+        /// <summary>
         /// Transforms a point between coordinate systems.
         /// </summary>
         /// <param name="point">Point to transform.</param>

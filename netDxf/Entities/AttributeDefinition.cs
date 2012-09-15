@@ -76,7 +76,6 @@ namespace netDxf.Entities
         private double widthFactor;
         private double rotation;
         private Vector3 normal;
-        private Dictionary<ApplicationRegistry, XData> xData;
 
         #endregion
 
@@ -101,7 +100,7 @@ namespace netDxf.Entities
             this.lineType = LineType.ByLayer;
             this.style = TextStyle.Default;
             this.alignment = TextAlignment.BaselineLeft;
-            this.height = this.style.Height == 0 ? 1.0f : this.style.Height;
+            this.height = this.style.Height == 0.0 ? 1.0f : this.style.Height;
             this.widthFactor = this.style.WidthFactor;
             this.rotation = 0.0f;
             this.normal = Vector3.UnitZ;
@@ -127,7 +126,7 @@ namespace netDxf.Entities
             this.lineType = LineType.ByLayer;
             this.style = style;
             this.alignment = TextAlignment.BaselineLeft;
-            this.height = style.Height == 0 ? 1.0f : style.Height;
+            this.height = style.Height == 0.0 ? 1.0f : style.Height;
             this.widthFactor = style.WidthFactor;
             this.rotation = 0.0f;
             this.normal = Vector3.UnitZ;
@@ -318,7 +317,7 @@ namespace netDxf.Entities
         /// </summary>
         public Dictionary<ApplicationRegistry, XData> XData
         {
-            get { return this.xData; }
+            get { return null; }
             set
             {
                 throw new ArgumentException("Extended data not avaliable for attribute definitions", "value");

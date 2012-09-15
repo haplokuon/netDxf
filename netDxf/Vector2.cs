@@ -39,7 +39,7 @@ namespace netDxf
         #region constructors
 
         /// <summary>
-        /// Initializes a new instance of Vector2d.
+        /// Initializes a new instance of Vector2.
         /// </summary>
         /// <param name="x">X component.</param>
         /// <param name="y">Y component.</param>
@@ -50,7 +50,7 @@ namespace netDxf
         }
 
         /// <summary>
-        /// Initializes a new instance of Vector2d.
+        /// Initializes a new instance of Vector2.
         /// </summary>
         /// <param name="array">Array of two elements that represents the vector.</param>
         public Vector2(double[] array)
@@ -156,8 +156,8 @@ namespace netDxf
         /// <summary>
         /// Obtains the dot product of two vectors.
         /// </summary>
-        /// <param name="u">Vector2d.</param>
-        /// <param name="v">Vector2d.</param>
+        /// <param name="u">Vector2.</param>
+        /// <param name="v">Vector2.</param>
         /// <returns>The dot product.</returns>
         public static double DotProduct(Vector2 u, Vector2 v)
         {
@@ -167,9 +167,9 @@ namespace netDxf
         /// <summary>
         /// Obtains the cross product of two vectors.
         /// </summary>
-        /// <param name="u">Vector2d.</param>
-        /// <param name="v">Vector2d.</param>
-        /// <returns>Vector2d.</returns>
+        /// <param name="u">Vector2.</param>
+        /// <param name="v">Vector2.</param>
+        /// <returns>Vector2.</returns>
         public static double CrossProduct(Vector2 u, Vector2 v)
         {
             return (u.X*v.Y) - (u.Y*v.X);
@@ -178,8 +178,8 @@ namespace netDxf
         /// <summary>
         /// Obtains the counter clockwise perpendicular vector .
         /// </summary>
-        /// <param name="u">Vector2d.</param>
-        /// <returns>Vector2d.</returns>
+        /// <param name="u">Vector2.</param>
+        /// <returns>Vector2.</returns>
         public static Vector2 Perpendicular(Vector2 u)
         {
             return new Vector2(-u.Y, u.X);
@@ -188,8 +188,8 @@ namespace netDxf
         /// <summary>
         /// Obtains the distance between two points.
         /// </summary>
-        /// <param name="u">Vector2d.</param>
-        /// <param name="v">Vector2d.</param>
+        /// <param name="u">Vector2.</param>
+        /// <param name="v">Vector2.</param>
         /// <returns>Distancie.</returns>
         public static double Distance(Vector2 u, Vector2 v)
         {
@@ -199,8 +199,8 @@ namespace netDxf
         /// <summary>
         /// Obtains the square distance between two points.
         /// </summary>
-        /// <param name="u">Vector2d.</param>
-        /// <param name="v">Vector2d.</param>
+        /// <param name="u">Vector2.</param>
+        /// <param name="v">Vector2.</param>
         /// <returns>Square distance.</returns>
         public static double SquareDistance(Vector2 u, Vector2 v)
         {
@@ -210,8 +210,8 @@ namespace netDxf
         /// <summary>
         /// Obtains the angle between two vectors.
         /// </summary>
-        /// <param name="u">Vector2d.</param>
-        /// <param name="v">Vector2d.</param>
+        /// <param name="u">Vector2.</param>
+        /// <param name="v">Vector2.</param>
         /// <returns>Angle in radians.</returns>
         public static double AngleBetween(Vector2 u, Vector2 v)
         {
@@ -225,34 +225,15 @@ namespace netDxf
                 return Math.PI;
             }
             return Math.Acos(cos);
-
-            //
-            //TODO: Is any reason to keep this? Version controls remeber it.
-            //
-            //if (AreParallel(u, v))
-            //{
-            //    if (Math.Sign(u.X) == Math.Sign(v.X) && Math.Sign(u.Y) == Math.Sign(v.Y))
-            //    {
-            //        return 0;
-            //    }
-            //    return (double)Math.PI;
-            //}
-            //Vector3f normal = Vector3f.CrossProduct(new Vector3f(u.X, u.Y, 0), new Vector3f(v.X, v.Y, 0));
-
-            //if (normal.Z < 0)
-            //{
-            //    return (double)(2 * Math.PI - Math.Acos(DotProduct(u, v) / (u.Modulus() * v.Modulus())));
-            //}
-            //return (double)(Math.Acos(DotProduct(u, v) / (u.Modulus() * v.Modulus())));
         }
 
 
         /// <summary>
         /// Obtains the midpoint.
         /// </summary>
-        /// <param name="u">Vector2d.</param>
-        /// <param name="v">Vector2d.</param>
-        /// <returns>Vector2d.</returns>
+        /// <param name="u">Vector2.</param>
+        /// <param name="v">Vector2.</param>
+        /// <returns>Vector2.</returns>
         public static Vector2 MidPoint(Vector2 u, Vector2 v)
         {
             return new Vector2((v.X + u.X)*0.5F, (v.Y + u.Y)*0.5F);
@@ -261,8 +242,8 @@ namespace netDxf
         /// <summary>
         /// Checks if two vectors are perpendicular.
         /// </summary>
-        /// <param name="u">Vector2d.</param>
-        /// <param name="v">Vector2d.</param>
+        /// <param name="u">Vector2.</param>
+        /// <param name="v">Vector2.</param>
         /// <param name="threshold">Tolerance used.</param>
         /// <returns>True if are penpendicular or false in anyother case.</returns>
         public static bool ArePerpendicular(Vector2 u, Vector2 v, double threshold)
@@ -273,8 +254,8 @@ namespace netDxf
         /// <summary>
         /// Checks if two vectors are parallel.
         /// </summary>
-        /// <param name="u">Vector2d.</param>
-        /// <param name="v">Vector2d.</param>
+        /// <param name="u">Vector2.</param>
+        /// <param name="v">Vector2.</param>
         /// <param name="threshold">Tolerance used.</param>
         /// <returns>True if are parallel or false in anyother case.</returns>
         public static bool AreParallel(Vector2 u, Vector2 v, double threshold)
@@ -286,9 +267,9 @@ namespace netDxf
         /// <summary>
         /// Rounds the components of a vector.
         /// </summary>
-        /// <param name="u">Vector2d.</param>
+        /// <param name="u">Vector2.</param>
         /// <param name="numDigits">Number of significative defcimal digits.</param>
-        /// <returns>Vector2d.</returns>
+        /// <returns>Vector2.</returns>
         public static Vector2 Round(Vector2 u, int numDigits)
         {
             return new Vector2(Math.Round(u.X, numDigits), Math.Round(u.Y, numDigits));
@@ -300,12 +281,12 @@ namespace netDxf
 
         public static bool operator ==(Vector2 u, Vector2 v)
         {
-            return ((v.X == u.X) && (v.Y == u.Y));
+            return ((MathHelper.IsEqual(v.X, u.X)) && (MathHelper.IsEqual(v.Y, u.Y)));
         }
 
         public static bool operator !=(Vector2 u, Vector2 v)
         {
-            return ((v.X != u.X) || (v.Y != u.Y));
+            return ((!MathHelper.IsEqual(v.X, u.X)) || (!MathHelper.IsEqual(v.Y, u.Y)));
         }
 
         public static Vector2 operator +(Vector2 u, Vector2 v)
@@ -388,26 +369,17 @@ namespace netDxf
         /// <summary>
         /// Check if the components of two vectors are approximate equals.
         /// </summary>
-        /// <param name="obj">Vector2d.</param>
+        /// <param name="obj">Vector2.</param>
         /// <param name="threshold">Maximun tolerance.</param>
         /// <returns>True if the three components are almost equal or false in anyother case.</returns>
         public bool Equals(Vector2 obj, double threshold)
         {
-            if (Math.Abs(obj.X - this.x) > threshold)
-            {
-                return false;
-            }
-            if (Math.Abs(obj.Y - this.y) > threshold)
-            {
-                return false;
-            }
-
-            return true;
+            return ((MathHelper.IsEqual(obj.X, this.x, threshold)) && (MathHelper.IsEqual(obj.Y, this.y, threshold)));
         }
 
         public bool Equals(Vector2 obj)
         {
-            return obj.x == this.x && obj.y == this.y;
+            return ((MathHelper.IsEqual(obj.X, this.x)) && (MathHelper.IsEqual(obj.Y, this.y)));
         }
 
         public override bool Equals(object obj)
@@ -419,7 +391,7 @@ namespace netDxf
 
         public override int GetHashCode()
         {
-            return unchecked(this.x.GetHashCode() ^ this.y.GetHashCode());
+            return unchecked(this.X.GetHashCode() ^ this.Y.GetHashCode());
         }
 
         #endregion

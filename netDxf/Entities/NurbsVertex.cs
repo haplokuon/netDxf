@@ -71,7 +71,7 @@ namespace netDxf.Entities
         /// <summary>
         /// Initializes a new instance of the <c>NurbsVertex</c> class.
         /// </summary>
-        /// <param name="location">Nurbs vertex <see cref="Vector2d">location</see>.
+        /// <param name="location">Nurbs vertex <see cref="Vector2">location</see>.</param>
         public NurbsVertex(Vector2 location)
         {
             this.location = location;
@@ -81,7 +81,7 @@ namespace netDxf.Entities
         /// <summary>
         /// Initializes a new instance of the <c>NurbsVertex</c> class.
         /// </summary>
-        /// <param name="location">Nurbs vertex <see cref="Vector2d">location</see>.
+        /// <param name="location">Nurbs vertex <see cref="Vector2">location</see>.</param>
         /// <param name="weight">Nurbs vertex weight.</param>
         public NurbsVertex(Vector2 location, double weight)
         {

@@ -40,8 +40,8 @@ namespace netDxf
     /// Represents a document to read and write dxf ASCII files.
     /// </summary>
     /// <remarks>
-    /// The dxf object names (application registries, layers, text styles, blocks, line types,...) for AutoCad12 can not contain spaces,
-    /// if this situation happens all spaces will be replaced by an underscore character '_'.
+    /// The AutoCad12 dxf object names (application registries, layers, text styles, blocks, line types,...) can not contain spaces,
+    /// so if this situation happens all spaces will be replaced by an underscore character '_'.
     /// </remarks>
     public class DxfDocument
     {
@@ -99,7 +99,6 @@ namespace netDxf
         public DxfDocument()
         {
             this.addedObjects = new Hashtable(); // keeps track of the added object to avoid duplicates
-            //this.version = this.version;
             this.viewports = new Dictionary<string, ViewPort>();
             this.layers = new Dictionary<string, Layer>();
             this.lineTypes = new Dictionary<string, LineType>();
@@ -107,49 +106,7 @@ namespace netDxf
             this.blocks = new Dictionary<string, Block>();
             this.appRegisterNames = new Dictionary<string, ApplicationRegistry>();
             this.dimStyles = new Dictionary<string, DimensionStyle>();
-
-            ////add default viewports
-            //ViewPort active = ViewPort.Active;
-            //this.viewports.Add(active.Name, active);
-            //this.handleCount = active.AsignHandle(this.handleCount);
-
-            ////add default layer
-            //Layer.PlotStyleHandle = Conversion.Hex(this.handleCount++);
-            //Layer byDefault = Layer.Default;
-            //this.layers.Add(byDefault.Name, byDefault);
-            //this.handleCount = byDefault.AsignHandle(this.handleCount);
-
-            //// add default line types
-            //LineType byLayer = LineType.ByLayer;
-            //LineType byBlock = LineType.ByBlock;
-            //this.lineTypes.Add(byLayer.Name, byLayer);
-            //this.handleCount = byLayer.AsignHandle(this.handleCount);
-            //this.lineTypes.Add(byBlock.Name, byBlock);
-            //this.handleCount = byBlock.AsignHandle(this.handleCount);
-
-            //// add default text style
-            //TextStyle defaultStyle = TextStyle.Default;
-            //this.textStyles.Add(defaultStyle.Name, defaultStyle);
-            //this.handleCount = defaultStyle.AsignHandle(this.handleCount);
-
-            //// add default blocks
-            //Block modelSpace = Block.ModelSpace;
-            //Block paperSpace = Block.PaperSpace;
-            //this.blocks.Add(modelSpace.Name, modelSpace);
-            //this.handleCount = modelSpace.AsignHandle(this.handleCount);
-            //this.blocks.Add(paperSpace.Name, paperSpace);
-            //this.handleCount = paperSpace.AsignHandle(this.handleCount);
-
-            //// add default application registry
-            //ApplicationRegistry defaultAppId = ApplicationRegistry.Default;
-            //this.appRegisterNames.Add(defaultAppId.Name, defaultAppId);
-            //this.handleCount = defaultAppId.AsignHandle(this.handleCount);
-
-            ////add default dimension style
-            //DimensionStyle defaultDimStyle = DimensionStyle.Default;
-            //this.dimStyles.Add(defaultDimStyle.Name, defaultDimStyle);
-            //this.handleCount = defaultDimStyle.AsignHandle(this.handleCount);
-
+            
             this.arcs = new List<Arc>();
             this.ellipses = new List<Ellipse>();
             this.nurbsCurves = new List<NurbsCurve>();
@@ -490,8 +447,8 @@ namespace netDxf
                     break;
                 case EntityType.NurbsCurve:
                     throw new NotImplementedException("Nurbs curves not avaliable at the moment.");
-                    this.nurbsCurves.Add((NurbsCurve) entity);
-                    break;
+                    //this.nurbsCurves.Add((NurbsCurve) entity);
+                    //break;
                 case EntityType.Point:
                     this.points.Add((Point) entity);
                     break;
@@ -656,57 +613,6 @@ namespace netDxf
 
             Thread.CurrentThread.CurrentCulture = cultureInfo;
 
-            #region reasign handles
-            //add default viewports
-            //foreach (ViewPort viewPort in this.viewports.Values )
-            //{
-            //    this.handleCount = viewPort.AsignHandle(this.handleCount);
-            //}
-           
-            ////add default layer
-            //Layer.PlotStyleHandle = Conversion.Hex(this.handleCount++);
-            //Layer byDefault = Layer.Default;
-            //this.layers.Add(byDefault.Name, byDefault);
-            //this.handleCount = byDefault.AsignHandle(this.handleCount);
-
-            //// add default line types
-            //LineType byLayer = LineType.ByLayer;
-            //LineType byBlock = LineType.ByBlock;
-            //this.lineTypes.Add(byLayer.Name, byLayer);
-            //this.handleCount = byLayer.AsignHandle(this.handleCount);
-            //this.lineTypes.Add(byBlock.Name, byBlock);
-            //this.handleCount = byBlock.AsignHandle(this.handleCount);
-
-            //// add default text style
-            //TextStyle defaultStyle = TextStyle.Default;
-            //this.textStyles.Add(defaultStyle.Name, defaultStyle);
-            //this.handleCount = defaultStyle.AsignHandle(this.handleCount);
-
-            //// add default blocks
-            //Block modelSpace = Block.ModelSpace;
-            //Block paperSpace = Block.PaperSpace;
-            //this.blocks.Add(modelSpace.Name, modelSpace);
-            //this.handleCount = modelSpace.AsignHandle(this.handleCount);
-            //this.blocks.Add(paperSpace.Name, paperSpace);
-            //this.handleCount = paperSpace.AsignHandle(this.handleCount);
-
-            //// add default application registry
-            //ApplicationRegistry defaultAppId = ApplicationRegistry.Default;
-            //this.appRegisterNames.Add(defaultAppId.Name, defaultAppId);
-            //this.handleCount = defaultAppId.AsignHandle(this.handleCount);
-
-            //add default dimension style
-            //foreach (DimensionStyle dimStyle in this.dimStyles.Values)
-            //{
-            //    this.handleCount = dimStyle.AsignHandle(this.handleCount);
-            //}
-
-            //foreach (Block block in this.blocks.Values)
-            //{
-            //    this.handleCount = block.AsignHandle(this.handleCount);
-            //}
-           
-            #endregion
         }
 
         /// <summary>
@@ -819,7 +725,7 @@ namespace netDxf
 
             //HEADER SECTION
             dxfWriter.BeginSection(StringCode.HeaderSection);
-            dxfWriter.WriteSystemVariable(new HeaderVariable(SystemVariable.DabaseVersion, StringEnum.GetStringValue(this.version)));
+            dxfWriter.WriteSystemVariable(new HeaderVariable(SystemVariable.DatabaseVersion, StringEnum.GetStringValue(this.version)));
             dxfWriter.WriteSystemVariable(new HeaderVariable(SystemVariable.HandSeed, Convert.ToString(this.handleCount, 16)));
             dxfWriter.EndSection();
 
@@ -915,9 +821,7 @@ namespace netDxf
 
             //ENTITIES SECTION
             dxfWriter.BeginSection(StringCode.EntitiesSection);
-
-            #region writting entities
-
+            
             foreach (Arc arc in this.arcs)
             {
                 dxfWriter.WriteEntity(arc);
@@ -969,26 +873,15 @@ namespace netDxf
             }
 
             // lwpolyline in Acad12 are written as polylines
-            
             foreach (IPolyline pol in lwPolys)
             {
                dxfWriter.WriteEntity(pol);
             }
-            
-            //foreach (IPolyline polyline in this.polylines)
-            //{
-            //    // avoid write lwpolylines in Acad12
-            //    if (this.version != DxfVersion.AutoCad12 || !(polyline is LightWeightPolyline))
-            //    {
-            //        dxfWriter.WriteEntity(polyline);
-            //    }
-            //}
 
             foreach (Text text in this.texts)
             {
                 dxfWriter.WriteEntity(text);
             }
-            #endregion
 
             dxfWriter.EndSection(); //End section entities
 
@@ -1004,8 +897,6 @@ namespace netDxf
          
         private void ReAsignHandlersAndDefaultObjects()
         {
-            this.handleCount = 100;
-
             //add default viewports
             ViewPort active = ViewPort.Active;
             if (!this.viewports.ContainsKey(active.Name))
@@ -1067,7 +958,7 @@ namespace netDxf
                 this.handleCount = appId.AsignHandle(this.handleCount);
             }
             
-            //add default dimension style
+            // add default dimension style
             DimensionStyle defaultDimStyle = DimensionStyle.Default;
             if (!this.dimStyles.ContainsKey(defaultDimStyle.Name))
                 this.dimStyles.Add(defaultDimStyle.Name, defaultDimStyle);

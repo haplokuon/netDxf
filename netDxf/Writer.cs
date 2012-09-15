@@ -1368,11 +1368,6 @@ namespace netDxf
 
         public void WriteDictionary(Dictionary dictionary)
         {
-            //if (this.activeTable != StringCode.ObjectsSection)
-            //{
-            //    throw new InvalidDxfTableException(this.activeTable, this.file);
-            //}
-
             this.WriteCodePair(0, StringCode.Dictionary);
             this.WriteCodePair(5, Convert.ToString(10, 16));
             this.WriteCodePair(100, SubclassMarker.Dictionary);
@@ -1545,8 +1540,7 @@ namespace netDxf
         private void WriteCodePair(int codigo, object valor)
         {
             // AutoCad12 does not allow strings with spaces
-            string nameConversion;
-            nameConversion = valor == null ? string.Empty : valor.ToString();
+            string nameConversion = valor == null ? string.Empty : valor.ToString();
 
             if (this.version == DxfVersion.AutoCad12 && valor is DxfObject) nameConversion = nameConversion.Replace(' ', '_');
             this.writer.WriteLine(codigo);

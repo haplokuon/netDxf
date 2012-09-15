@@ -339,7 +339,7 @@ namespace netDxf.Entities
 
                 if (!p1.Equals(p2, weldThreshold))
                 {
-                    if (bulge == 0 || bulgePrecision == 0)
+                    if (MathHelper.IsZero(bulge) || bulgePrecision == 0)
                     {
                         ocsVertexes.Add(p1);
                     }
@@ -374,8 +374,7 @@ namespace netDxf.Entities
                                 curvePoint.X = center.X + Math.Cos(i*angle)*a1.X - Math.Sin(i*angle)*a1.Y;
                                 curvePoint.Y = center.Y + Math.Sin(i*angle)*a1.X + Math.Cos(i*angle)*a1.Y;
 
-                                if (!curvePoint.Equals(prevCurvePoint, weldThreshold) &&
-                                    !curvePoint.Equals(p2, weldThreshold))
+                                if (!curvePoint.Equals(prevCurvePoint, weldThreshold) && !curvePoint.Equals(p2, weldThreshold))
                                 {
                                     ocsVertexes.Add(curvePoint);
                                 }

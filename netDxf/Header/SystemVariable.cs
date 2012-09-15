@@ -30,7 +30,7 @@ namespace netDxf.Header
         /// <summary>
         /// The AutoCAD drawing database version number.
         /// </summary>
-        public const string DabaseVersion = "$ACADVER";
+        public const string DatabaseVersion = "$ACADVER";
 
         /// <summary>
         /// Next available handle (this variable must be present in the header section)

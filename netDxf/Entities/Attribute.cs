@@ -41,7 +41,6 @@ namespace netDxf.Entities
         private AciColor color;
         private Layer layer;
         private LineType lineType;
-        private Dictionary<ApplicationRegistry, XData> xData;
 
         #endregion
 
@@ -151,17 +150,19 @@ namespace netDxf.Entities
             }
         }
 
+        
         /// <summary>
         /// Gets or sets the entity <see cref="netDxf.XData">extende data</see>.
         /// </summary>
         public Dictionary<ApplicationRegistry, XData> XData
         {
-            get { return this.xData; }
+            get { return null; }
             set
             {
                 throw new ArgumentException("Extended data not avaliable for attributes","value");
             }
         }
+        
 
         #endregion
 

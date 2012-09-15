@@ -40,7 +40,7 @@ namespace netDxf
         #region constructors
 
         /// <summary>
-        /// Initializes a new instance of Vector3d.
+        /// Initializes a new instance of Vector3.
         /// </summary>
         /// <param name="x">X component.</param>
         /// <param name="y">Y component.</param>
@@ -53,7 +53,7 @@ namespace netDxf
         }
 
         /// <summary>
-        /// Initializes a new instance of Vector3d.
+        /// Initializes a new instance of Vector3.
         /// </summary>
         /// <param name="array">Array of three elements that represents the vector.</param>
         public Vector3(double[] array)
@@ -184,8 +184,8 @@ namespace netDxf
         /// <summary>
         /// Obtains the dot product of two vectors.
         /// </summary>
-        /// <param name="u">Vector3d.</param>
-        /// <param name="v">Vector3d.</param>
+        /// <param name="u">Vector3.</param>
+        /// <param name="v">Vector3.</param>
         /// <returns>The dot product.</returns>
         public static double DotProduct(Vector3 u, Vector3 v)
         {
@@ -195,9 +195,9 @@ namespace netDxf
         /// <summary>
         /// Obtains the cross product of two vectors.
         /// </summary>
-        /// <param name="u">Vector3d.</param>
-        /// <param name="v">Vector3d.</param>
-        /// <returns>Vector3d.</returns>
+        /// <param name="u">Vector3.</param>
+        /// <param name="v">Vector3.</param>
+        /// <returns>Vector3.</returns>
         public static Vector3 CrossProduct(Vector3 u, Vector3 v)
         {
             double a = u.Y*v.Z - u.Z*v.Y;
@@ -209,8 +209,8 @@ namespace netDxf
         /// <summary>
         /// Obtains the distance between two points.
         /// </summary>
-        /// <param name="u">Vector3d.</param>
-        /// <param name="v">Vector3d.</param>
+        /// <param name="u">Vector3.</param>
+        /// <param name="v">Vector3.</param>
         /// <returns>Distancie.</returns>
         public static double Distance(Vector3 u, Vector3 v)
         {
@@ -220,8 +220,8 @@ namespace netDxf
         /// <summary>
         /// Obtains the square distance between two points.
         /// </summary>
-        /// <param name="u">Vector3d.</param>
-        /// <param name="v">Vector3d.</param>
+        /// <param name="u">Vector3.</param>
+        /// <param name="v">Vector3.</param>
         /// <returns>Square distance.</returns>
         public static double SquareDistance(Vector3 u, Vector3 v)
         {
@@ -231,8 +231,8 @@ namespace netDxf
         /// <summary>
         /// Obtains the angle between two vectors.
         /// </summary>
-        /// <param name="u">Vector3d.</param>
-        /// <param name="v">Vector3d.</param>
+        /// <param name="u">Vector3.</param>
+        /// <param name="v">Vector3.</param>
         /// <returns>Angle in radians.</returns>
         public static double AngleBetween(Vector3 u, Vector3 v)
         {
@@ -251,9 +251,9 @@ namespace netDxf
         /// <summary>
         /// Obtains the midpoint.
         /// </summary>
-        /// <param name="u">Vector3d.</param>
-        /// <param name="v">Vector3d.</param>
-        /// <returns>Vector3d.</returns>
+        /// <param name="u">Vector3.</param>
+        /// <param name="v">Vector3.</param>
+        /// <returns>Vector3.</returns>
         public static Vector3 MidPoint(Vector3 u, Vector3 v)
         {
             return new Vector3((v.X + u.X)*0.5F, (v.Y + u.Y)*0.5F, (v.Z + u.Z)*0.5F);
@@ -262,8 +262,8 @@ namespace netDxf
         /// <summary>
         /// Checks if two vectors are perpendicular.
         /// </summary>
-        /// <param name="u">Vector3d.</param>
-        /// <param name="v">Vector3d.</param>
+        /// <param name="u">Vector3.</param>
+        /// <param name="v">Vector3.</param>
         /// <param name="threshold">Tolerance used.</param>
         /// <returns>True if are penpendicular or false in anyother case.</returns>
         public static bool ArePerpendicular(Vector3 u, Vector3 v, double threshold)
@@ -274,8 +274,8 @@ namespace netDxf
         /// <summary>
         /// Checks if two vectors are parallel.
         /// </summary>
-        /// <param name="u">Vector3d.</param>
-        /// <param name="v">Vector3d.</param>
+        /// <param name="u">Vector3.</param>
+        /// <param name="v">Vector3.</param>
         /// <param name="threshold">Tolerance used.</param>
         /// <returns>True if are parallel or false in anyother case.</returns>
         public static bool AreParallel(Vector3 u, Vector3 v, double threshold)
@@ -301,9 +301,9 @@ namespace netDxf
         /// <summary>
         /// Rounds the components of a vector.
         /// </summary>
-        /// <param name="u">Vector3d.</param>
+        /// <param name="u">Vector3.</param>
         /// <param name="numDigits">Number of significative defcimal digits.</param>
-        /// <returns>Vector3d.</returns>
+        /// <returns>Vector3.</returns>
         public static Vector3 Round(Vector3 u, int numDigits)
         {
             return new Vector3((Math.Round(u.X, numDigits)),
@@ -316,12 +316,12 @@ namespace netDxf
         #region overloaded operators
         public static bool operator ==(Vector3 u, Vector3 v)
         {
-            return ((v.X == u.X) && (v.Y == u.Y) && (v.Z == u.Z));
+            return ((MathHelper.IsEqual(v.X, u.X)) && (MathHelper.IsEqual(v.Y, u.Y)) && (MathHelper.IsEqual(v.Z, u.Z)));
         }
 
         public static bool operator !=(Vector3 u, Vector3 v)
         {
-            return ((v.X != u.X) || (v.Y != u.Y) || (v.Z != u.Z));
+            return ((!MathHelper.IsEqual(v.X, u.X)) || (!MathHelper.IsEqual(v.Y, u.Y)) || (!MathHelper.IsEqual(v.Z, u.Z)));
         }
 
 
@@ -407,30 +407,17 @@ namespace netDxf
         /// <summary>
         /// Check if the components of two vectors are approximate equals.
         /// </summary>
-        /// <param name="obj">Vector3d.</param>
+        /// <param name="obj">Vector3.</param>
         /// <param name="threshold">Maximun tolerance.</param>
         /// <returns>True if the three components are almost equal or false in anyother case.</returns>
         public bool Equals(Vector3 obj, double threshold)
         {
-            if (Math.Abs(obj.X - this.x) > threshold)
-            {
-                return false;
-            }
-            if (Math.Abs(obj.Y - this.y) > threshold)
-            {
-                return false;
-            }
-            if (Math.Abs(obj.Z - this.z) > threshold)
-            {
-                return false;
-            }
-
-            return true;
+            return ((MathHelper.IsEqual(obj.X, this.x, threshold)) && (MathHelper.IsEqual(obj.Y, this.y, threshold)) && (MathHelper.IsEqual(obj.Z, this.z, threshold)));
         }
 
         public bool Equals(Vector3 obj)
         {
-            return obj.x == this.x && obj.y == this.y && obj.z == this.z;
+            return ((MathHelper.IsEqual(obj.X, this.x)) && (MathHelper.IsEqual(obj.Y, this.y)) && (MathHelper.IsEqual(obj.Z, this.z)));
         }
 
         public override bool Equals(object obj)
@@ -442,7 +429,7 @@ namespace netDxf
 
         public override int GetHashCode()
         {
-            return unchecked(this.x.GetHashCode() ^ this.y.GetHashCode() ^ this.z.GetHashCode());
+            return unchecked(this.X.GetHashCode() ^ this.Y.GetHashCode() ^ this.Z.GetHashCode());
         }
 
         #endregion

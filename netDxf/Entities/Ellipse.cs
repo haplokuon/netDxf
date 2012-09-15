@@ -206,7 +206,7 @@ namespace netDxf.Entities
         /// </summary>
         public bool IsFullEllipse
         {
-            get { return (this.startAngle + this.endAngle == 360); }
+            get { return (MathHelper.IsEqual(this.startAngle + this.endAngle, 360.0)); }
         }
 
         #endregion

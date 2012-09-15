@@ -69,7 +69,7 @@ namespace netDxf.Header
         {
             return new Dictionary<string, int>
                        {
-                           {SystemVariable.DabaseVersion, 1},
+                           {SystemVariable.DatabaseVersion, 1},
                            {SystemVariable.HandSeed, 5}
                        };
         }
