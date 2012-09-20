@@ -1,3 +1,7 @@
+[0.1.5.0 - 2012/09/18]
++ Preliminary work on hatches, with limitations now you can write hatches in dxf files.
+- Removed the limitations of the bulge in polyline vertexes, it can actually be greater than 1 and lower than -1 (1 represents the semicircle and the negative sign if the arc goes in or out.
+
 [0.1.4.0 - 2012/09/11]
 - Vector2f, Vector3f, Matrix3f are no loger needed - removed
 + Vector2d renamed to Vector2

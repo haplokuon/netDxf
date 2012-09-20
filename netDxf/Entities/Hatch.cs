@@ -26,91 +26,100 @@ using netDxf.Tables;
 
 namespace netDxf.Entities
 {
+    
     /// <summary>
-    /// Represents a 3d polyline <see cref="IEntityObject">entity</see>.
+    /// Represents a hatch <see cref="netDxf.Entities.IEntityObject">entity</see>.
     /// </summary>
-    public class Polyline3d :
+    public class Hatch :
         DxfObject,
-        IPolyline
+        IEntityObject
     {
+
         #region private fields
 
-        private readonly EndSequence endSequence;
-        protected const EntityType TYPE = EntityType.Polyline3d;
-        protected List<Polyline3dVertex> vertexes;
-        protected PolylineTypeFlags flags;
-        protected Layer layer;
-        protected AciColor color;
-        protected LineType lineType;
-        protected Dictionary<ApplicationRegistry, XData> xData;
+        private const EntityType TYPE = EntityType.Hatch;
+        private List<HatchBoundaryPath> boundaryPaths;
+        private HatchPattern pattern;
+        private double elevation;
+        private Vector3 normal; 
+        private AciColor color;
+        private Layer layer;
+        private LineType lineType;
+        private Dictionary<ApplicationRegistry, XData> xData;
 
         #endregion
 
         #region constructors
-
         /// <summary>
-        /// Initializes a new instance of the <c>Polyline3d</c> class.
+        /// Initializes a new instance of the <c>Hatch</c> class.
         /// </summary>
-        /// <param name="vertexes">3d polyline <see cref="Polyline3dVertex">vertex</see> list.</param>
-        /// <param name="isClosed">Sets if the polyline is closed</param>
-        public Polyline3d(List<Polyline3dVertex> vertexes, bool isClosed = false) 
-            : base (DxfObjectCode.Polyline)
+        /// <remarks>
+        /// The hatch boundary paths must be on the same plane as the hatch.
+        /// The normal and the elevation of the boundary paths will be omited (the hatch elevation and normal will be used instead).
+        /// Only the x and y coordinates for the center of the line, ellipse, circle and arc will be used.
+        /// </remarks>
+        /// <param name="pattern"><see cref="HatchPattern">Hatch pattern</see>.</param>
+        /// <param name="boundaryPaths">A list of <see cref="HatchBoundaryPath">boundary paths</see>.</param>
+        public Hatch(HatchPattern pattern, List<HatchBoundaryPath> boundaryPaths)
+            : base(DxfObjectCode.Hatch)
         {
-            this.vertexes = vertexes;
+            this.pattern = pattern;
+            this.boundaryPaths = boundaryPaths;
             this.layer = Layer.Default;
             this.color = AciColor.ByLayer;
             this.lineType = LineType.ByLayer;
-            this.flags = isClosed ? PolylineTypeFlags.ClosedPolylineOrClosedPolygonMeshInM | PolylineTypeFlags.Polyline3D : PolylineTypeFlags.Polyline3D;
-            this.endSequence = new EndSequence();
-        }
+            this.normal = Vector3.UnitZ;
 
-        /// <summary>
-        /// Initializes a new instance of the <c>Polyline3d</c> class.
-        /// </summary>
-        public Polyline3d()
-            : base(DxfObjectCode.Polyline)
-        {
-            this.flags = PolylineTypeFlags.Polyline3D;
-            this.vertexes = new List<Polyline3dVertex>();
-            this.layer = Layer.Default;
-            this.color = AciColor.ByLayer;
-            this.lineType = LineType.ByLayer;
-            this.endSequence = new EndSequence();
         }
-
         #endregion
 
         #region public properties
 
         /// <summary>
-        /// Gets or sets the polyline <see cref="netDxf.Entities.Polyline3dVertex">vertex</see> list.
+        /// Gets or sets the hatch pattern name.
         /// </summary>
-        public List<Polyline3dVertex> Vertexes
+        public HatchPattern Pattern
         {
-            get { return this.vertexes; }
+            get { return pattern; }
+            set { pattern = value; }
+        }
+
+        /// <summary>
+        /// Gets or sets the hatch boundary paths.
+        /// </summary>
+        public List<HatchBoundaryPath> BoundaryPaths
+        {
+            get { return boundaryPaths; }
             set
             {
                 if (value == null)
-                    throw new ArgumentNullException("value"); 
-                this.vertexes = value;
+                    throw new ArgumentNullException("value");
+                boundaryPaths = value;
             }
         }
 
-        internal EndSequence EndSequence
+        /// <summary>
+        /// Gets or sets the hatch elevation.
+        /// </summary>
+        public double Elevation
         {
-            get { return this.endSequence; }
+            get { return elevation; }
+            set { elevation = value; }
         }
 
-        #endregion
-
-        #region IPolyline Members
-
         /// <summary>
-        /// Gets the polyline type.
+        /// Gets or sets the hatch <see cref="netDxf.Vector3">normal</see>.
         /// </summary>
-        public PolylineTypeFlags Flags
+        public Vector3 Normal
         {
-            get { return this.flags; }
+            get { return this.normal; }
+            set
+            {
+                if (Vector3.Zero == value)
+                    throw new ArgumentNullException("value", "The normal can not be the zero vector");
+                value.Normalize();
+                this.normal = value;
+            }
         }
 
         #endregion
@@ -178,37 +187,5 @@ namespace netDxf.Entities
 
         #endregion
 
-        #region overrides
-
-        /// <summary>
-        /// Asigns a handle to the object based in a integer counter.
-        /// </summary>
-        /// <param name="entityNumber">Number to asign.</param>
-        /// <returns>Next avaliable entity number.</returns>
-        /// <remarks>
-        /// Some objects might consume more than one, is, for example, the case of polylines that will asign
-        /// automatically a handle to its vertexes. The entity number will be converted to an hexadecimal number.
-        /// </remarks>
-        internal override int AsignHandle(int entityNumber)
-        {
-            foreach( Polyline3dVertex v in this.vertexes )
-            {
-                entityNumber = v.AsignHandle(entityNumber);
-            }
-            entityNumber = this.endSequence.AsignHandle(entityNumber);
-
-            return base.AsignHandle(entityNumber);
-        }
-
-        /// <summary>
-        /// Converts the value of this instance to its equivalent string representation.
-        /// </summary>
-        /// <returns>The string representation.</returns>
-        public override string ToString()
-        {
-            return TYPE.ToString();
-        }
-
-        #endregion
     }
 }

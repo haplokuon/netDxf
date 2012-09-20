@@ -134,7 +134,7 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets or set the light weight polyline bulge. Accepted values range from -1 to 1.
+        /// Gets or set the light weight polyline bulge.
         /// </summary>
         /// <remarks>
         /// The bulge is the tangent of one fourth the included angle for an arc segment, 
@@ -146,10 +146,6 @@ namespace netDxf.Entities
             get { return this.bulge; }
             set
             {
-                if (this.bulge < -1.0 || this.bulge > 1.0)
-                {
-                    throw new ArgumentOutOfRangeException("value", value, "The bulge must be a value between minus one and plus one");
-                }
                 this.bulge = value;
             }
         }

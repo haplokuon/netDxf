@@ -215,16 +215,21 @@ namespace netDxf
         /// <returns>Angle in radians.</returns>
         public static double AngleBetween(Vector2 u, Vector2 v)
         {
-            double cos = DotProduct(u, v)/(u.Modulus()*v.Modulus());
-            if (MathHelper.IsOne(cos))
-            {
-                return 0;
-            }
-            if (MathHelper.IsOne(-cos))
-            {
-                return Math.PI;
-            }
-            return Math.Acos(cos);
+            //double cos = DotProduct(u, v)/(u.Modulus()*v.Modulus());
+            //if (MathHelper.IsOne(cos))
+            //{
+            //    return 0;
+            //}
+            //if (MathHelper.IsOne(-cos))
+            //{
+            //    return Math.PI;
+            //}
+            //return Math.Acos(cos);
+
+            double dx = v.X - u.X;
+            double dy = v.Y - u.Y;
+            return Math.Atan2(dy,dx);
+
         }
 
 

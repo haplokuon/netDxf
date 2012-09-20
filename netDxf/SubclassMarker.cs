@@ -59,6 +59,7 @@ namespace netDxf
         public const string PolyfaceMeshFace = "AcDbFaceRecord";
         public const string Solid = "AcDbTrace";
         public const string Text = "AcDbText";
+        public const string Hatch = "AcDbHatch";
         public const string Attribute = "AcDbAttribute";
         public const string AttributeDefinition = "AcDbAttributeDefinition";
         public const string Dictionary = "AcDbDictionary";

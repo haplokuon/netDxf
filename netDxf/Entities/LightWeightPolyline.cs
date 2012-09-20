@@ -1,7 +1,7 @@
-﻿#region netDxf, Copyright(C) 2009 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf, Copyright(C) 2012 Daniel Carvajal, Licensed under LGPL.
 
 //                        netDxf library
-// Copyright (C) 2009 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2012 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -62,7 +62,7 @@ namespace netDxf.Entities
         /// </summary>
         /// <param name="vertexes">Polyline <see cref="LightWeightPolylineVertex">vertex</see> list in object coordinates.</param>
         /// <param name="isClosed">Sets if the polyline is closed</param>
-        public LightWeightPolyline(List<LightWeightPolylineVertex> vertexes, bool isClosed)
+        public LightWeightPolyline(List<LightWeightPolylineVertex> vertexes, bool isClosed = false)
             : base(DxfObjectCode.LightWeightPolyline)
         {
             this.vertexes = vertexes;
@@ -74,24 +74,6 @@ namespace netDxf.Entities
             this.elevation = 0.0;
             this.thickness = 0.0;
             this.flags = isClosed ? PolylineTypeFlags.ClosedPolylineOrClosedPolygonMeshInM : PolylineTypeFlags.OpenPolyline;
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <c>Polyline</c> class.
-        /// </summary>
-        /// <param name="vertexes">Polyline <see cref="LightWeightPolylineVertex">vertex</see> list in object coordinates.</param>
-        public LightWeightPolyline(List<LightWeightPolylineVertex> vertexes)
-            : base(DxfObjectCode.LightWeightPolyline)
-        {
-            this.vertexes = vertexes;
-            this.isClosed = false;
-            this.layer = Layer.Default;
-            this.color = AciColor.ByLayer;
-            this.lineType = LineType.ByLayer;
-            this.normal = Vector3.UnitZ;
-            this.elevation = 0.0;
-            this.thickness = 0.0;
-            this.flags = PolylineTypeFlags.OpenPolyline;
         }
 
         /// <summary>
@@ -321,6 +303,7 @@ namespace netDxf.Entities
                 Vector2 p1;
                 Vector2 p2;
 
+                // Note: check if the polyline is closed of not
                 if (index == this.Vertexes.Count - 1)
                 {
                     p1 = new Vector2(vertex.Location.X, vertex.Location.Y);
@@ -334,7 +317,7 @@ namespace netDxf.Entities
 
                 if (!p1.Equals(p2, weldThreshold))
                 {
-                    if (bulge == 0 || bulgePrecision == 0)
+                    if (MathHelper.IsZero(bulge) || bulgePrecision == 0)
                     {
                         ocsVertexes.Add(p1);
                     }

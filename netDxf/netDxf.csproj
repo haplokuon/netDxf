@@ -67,6 +67,9 @@
     <Compile Include="AciColor.cs" />
     <Compile Include="Blocks\BlockEnd.cs" />
     <Compile Include="CodeValuePair.cs" />
+    <Compile Include="Entities\Hatch.cs" />
+    <Compile Include="Entities\HatchPattern.cs" />
+    <Compile Include="Entities\HatchPatternBoundary.cs" />
     <Compile Include="Entities\LightWeightPolyline.cs" />
     <Compile Include="Entities\LightWeightPolylineVertex.cs" />
     <Compile Include="Header\DxfVersion.cs" />

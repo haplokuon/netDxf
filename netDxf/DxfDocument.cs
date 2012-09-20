@@ -51,7 +51,7 @@ namespace netDxf
 
         private string fileName;
         private DxfVersion version;
-        private int handleCount = 100; //we will reserve the first handles for special cases
+        private int handleCount;
 
         #endregion
 
@@ -86,6 +86,7 @@ namespace netDxf
         private List<Point> points;
         private List<IPolyline> polylines;
         private List<Text> texts;
+        private List<Hatch> hatches;
 
         #endregion
 
@@ -118,6 +119,7 @@ namespace netDxf
             this.circles = new List<Circle>();
             this.points = new List<Point>();
             this.texts = new List<Text>();
+            this.hatches = new List<Hatch>();
         }
 
         #endregion
@@ -307,6 +309,14 @@ namespace netDxf
             get { return this.texts.AsReadOnly(); }
         }
 
+        /// <summary>
+        /// Gets the <see cref="netDxf.Entities.Hatch">hatch</see> list.
+        /// </summary>
+        public ReadOnlyCollection<Hatch> Hatches
+        {
+            get { return this.hatches.AsReadOnly(); }
+        }
+
         #endregion
 
         #endregion
@@ -396,6 +406,18 @@ namespace netDxf
         #endregion
 
         #region public methods
+
+         /// <summary>
+        /// Adds a new <see cref="IEntityObject">entity</see> to the document.
+        /// </summary>
+        /// <param name="entities">A list of <see cref="IEntityObject">entities</see></param>
+        public void AddEntity(IEnumerable<IEntityObject> entities)
+         {
+             foreach (IEntityObject entity in entities)
+             {
+                 this.AddEntity(entity);
+             }
+         }
 
         /// <summary>
         /// Adds a new <see cref="IEntityObject">entity</see> to the document.
@@ -542,6 +564,9 @@ namespace netDxf
                     }
                     this.texts.Add((Text) entity);
                     break;
+                case EntityType.Hatch:
+                    this.hatches.Add((Hatch) entity);
+                    break;
                 case EntityType.Vertex:
                     throw new ArgumentException("The entity " + entity.Type + " is only allowed as part of another entity", "entity");
 
@@ -622,6 +647,8 @@ namespace netDxf
         /// <param name="dxfVersion">Dxf file <see cref="DxfVersion">version</see>.</param>
         public void Save(string file, DxfVersion dxfVersion)
         {
+            this.handleCount = DxfWriter.ReservedHandles;
+
             ReAsignHandlersAndDefaultObjects();
             this.fileName = Path.GetFileNameWithoutExtension(file);
             this.version = dxfVersion;
@@ -883,6 +910,11 @@ namespace netDxf
                 dxfWriter.WriteEntity(text);
             }
 
+            foreach (Hatch hatch in this.hatches)
+            {
+                dxfWriter.WriteEntity(hatch);
+            }
+
             dxfWriter.EndSection(); //End section entities
 
             //OBJECTS SECTION
@@ -1004,6 +1036,10 @@ namespace netDxf
                 this.handleCount = entity.AsignHandle(this.handleCount);
             }
             foreach (Text entity in this.texts)
+            {
+                this.handleCount = entity.AsignHandle(this.handleCount);
+            }
+            foreach (Hatch entity in this.hatches)
             {
                 this.handleCount = entity.AsignHandle(this.handleCount);
             }

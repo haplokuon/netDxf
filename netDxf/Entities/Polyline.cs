@@ -1,7 +1,7 @@
-﻿#region netDxf, Copyright(C) 2009 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf, Copyright(C) 2012 Daniel Carvajal, Licensed under LGPL.
 
 //                        netDxf library
-// Copyright (C) 2009 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2012 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -61,9 +61,33 @@ namespace netDxf.Entities
         /// <summary>
         /// Initializes a new instance of the <c>Polyline</c> class.
         /// </summary>
+        /// <param name="vertexes">Polyline <see cref="Vector2">vertex</see> list in object coordinates.</param>
+        /// <param name="isClosed">Sets if the polyline is closed.</param>
+        public Polyline(IEnumerable<Vector2> vertexes, bool isClosed = false)
+            : base(DxfObjectCode.Polyline)
+        {
+            this.vertexes = new List<PolylineVertex>();
+            foreach (Vector2 vertex in vertexes)
+            {
+                this.vertexes.Add(new PolylineVertex(vertex));
+            }
+            this.isClosed = isClosed;
+            this.layer = Layer.Default;
+            this.color = AciColor.ByLayer;
+            this.lineType = LineType.ByLayer;
+            this.normal = Vector3.UnitZ;
+            this.elevation = 0.0;
+            this.thickness = 0.0;
+            this.flags = isClosed ? PolylineTypeFlags.ClosedPolylineOrClosedPolygonMeshInM : PolylineTypeFlags.OpenPolyline;
+            this.endSequence = new EndSequence();
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <c>Polyline</c> class.
+        /// </summary>
         /// <param name="vertexes">Polyline vertex list in object coordinates.</param>
-        /// <param name="isClosed">Sets if the polyline is closed</param>
-        public Polyline(List<PolylineVertex> vertexes, bool isClosed)
+        /// <param name="isClosed">Sets if the polyline is closed.</param>
+        public Polyline(List<PolylineVertex> vertexes, bool isClosed = false)
             : base(DxfObjectCode.Polyline)
         {
             this.vertexes = vertexes;
@@ -78,26 +102,7 @@ namespace netDxf.Entities
             this.flags = isClosed ? PolylineTypeFlags.ClosedPolylineOrClosedPolygonMeshInM : PolylineTypeFlags.OpenPolyline;
             this.endSequence = new EndSequence();
         }
-
-        /// <summary>
-        /// Initializes a new instance of the <c>Polyline</c> class.
-        /// </summary>
-        /// <param name="vertexes">Polyline <see cref="PolylineVertex">vertex</see> list in object coordinates.</param>
-        public Polyline(List<PolylineVertex> vertexes)
-            : base(DxfObjectCode.Polyline)
-        {
-            this.vertexes = vertexes;
-            this.isClosed = false;
-            this.layer = Layer.Default;
-            this.color = AciColor.ByLayer;
-            this.lineType = LineType.ByLayer;
-            this.normal = Vector3.UnitZ;
-            this.elevation = 0.0;
-            this.thickness = 0.0;
-            this.flags = PolylineTypeFlags.OpenPolyline;
-            this.endSequence = new EndSequence();
-        }
-
+        
         /// <summary>
         /// Initializes a new instance of the <c>Polyline</c> class.
         /// </summary>
@@ -308,12 +313,94 @@ namespace netDxf.Entities
         }
 
         /// <summary>
+        /// Decompose the actual polyline in its internal entities: lines and arcs.
+        /// </summary>
+        /// <returns>A list of <see cref="IEntityObject">entities</see>: lines and arcs.</returns>
+        public List<IEntityObject> Explode()
+        {
+            List<IEntityObject> entities = new List<IEntityObject>();
+            int index = 0;  
+            foreach (PolylineVertex vertex in this.Vertexes)
+            {
+                double bulge = vertex.Bulge;
+                Vector2 p1;
+                Vector2 p2;
+                
+                if (index == this.Vertexes.Count - 1)
+                {
+                    if (!this.isClosed) break;
+                    p1 = new Vector2(vertex.Location.X, vertex.Location.Y);
+                    p2 = new Vector2(this.vertexes[0].Location.X, this.vertexes[0].Location.Y);
+                }
+                else
+                {
+                    p1 = new Vector2(vertex.Location.X, vertex.Location.Y);
+                    p2 = new Vector2(this.vertexes[index + 1].Location.X, this.vertexes[index + 1].Location.Y);
+                }
+                if (MathHelper.IsZero(bulge))
+                {
+                    // the polyline edge is a line
+                    Vector3 start = MathHelper.Transform(new Vector3(p1.X, p1.Y, this.elevation), this.normal,
+                                                            MathHelper.CoordinateSystem.Object,
+                                                            MathHelper.CoordinateSystem.World);
+                    Vector3 end = MathHelper.Transform(new Vector3(p2.X, p2.Y, this.elevation), this.normal,
+                                                        MathHelper.CoordinateSystem.Object,
+                                                        MathHelper.CoordinateSystem.World);
+
+                    entities.Add(new Line(start, end)
+                                        {
+                                            Color = this.color,
+                                            Layer = this.layer,
+                                            LineType = this.lineType,
+                                            Normal = this.normal,
+                                            Thickness = this.thickness,
+                                            XData = this.xData
+                                        });
+                }
+                else
+                {
+                    // the polyline edge is an arc
+                    double theta = 4 * Math.Atan(Math.Abs(bulge));
+                    double c = Vector2.Distance(p1, p2);
+                    double r = (c/2) / Math.Sin(theta/2);
+                    double gamma = (Math.PI - theta) / 2;
+                    double phi = Vector2.AngleBetween(p1, p2) + Math.Sign(bulge) * gamma;
+                    Vector2 center = new Vector2(p1.X + r * Math.Cos(phi), p1.Y + r * Math.Sin(phi));
+                    double startAngle;
+                    double endAngle;
+                    if (bulge>0)
+                    {
+                        startAngle = MathHelper.RadToDeg * Vector2.AngleBetween(Vector2.UnitX, p1 - center);
+                        endAngle = startAngle + MathHelper.RadToDeg * theta;
+                    }
+                    else
+                    {
+                        endAngle = MathHelper.RadToDeg * Vector2.AngleBetween(Vector2.UnitX, p1 - center);
+                        startAngle = endAngle - MathHelper.RadToDeg * theta;
+                    }
+                    entities.Add(new Arc(new Vector3(center.X, center.Y, this.elevation), r, startAngle, endAngle)
+                                     {
+                                         Color = this.color,
+                                         Layer = this.layer,
+                                         LineType = this.lineType,
+                                         Normal = this.normal,
+                                         Thickness = this.thickness,
+                                         XData = this.xData 
+                                     });
+                }
+                index++;
+            }
+
+            return entities;
+        }
+
+        /// <summary>
         /// Obtains a list of vertexes that represent the polyline approximating the curve segments as necessary.
         /// </summary>
         /// <param name="bulgePrecision">Curve segments precision (a value of zero means that no approximation will be made).</param>
         /// <param name="weldThreshold">Tolerance to consider if two new generated vertexes are equal.</param>
         /// <param name="bulgeThreshold">Minimun distance from which approximate curved segments of the polyline.</param>
-        /// <returns>The return vertexes are expresed in object coordinate system.</returns>
+        /// <returns>A list of vertexes expresed in object coordinate system.</returns>
         public List<Vector2> PoligonalVertexes(int bulgePrecision, double weldThreshold, double bulgeThreshold)
         {
             List<Vector2> ocsVertexes = new List<Vector2>();
@@ -352,20 +439,10 @@ namespace netDxf.Entities
                             double r = ((c / 2) * (c / 2) + s * s) / (2 * s);
                             double theta = 4 * Math.Atan(Math.Abs(bulge));
                             double gamma = (Math.PI - theta) / 2;
-                            double phi;
-
-                            if (bulge > 0)
-                            {
-                                phi = Vector2.AngleBetween(Vector2.UnitX, p2 - p1) + gamma;
-                            }
-                            else
-                            {
-                                phi = Vector2.AngleBetween(Vector2.UnitX, p2 - p1) - gamma;
-                            }
-                            Vector2 center = new Vector2(p1.X + r*Math.Cos(phi), p1.Y + r*Math.Sin(phi));
+                            double phi = Vector2.AngleBetween(p1, p2) + Math.Sign(bulge) * gamma;
+                            Vector2 center = new Vector2(p1.X + r * Math.Cos(phi), p1.Y + r * Math.Sin(phi));
                             Vector2 a1 = p1 - center;
-                            double angle = 4*(Math.Atan(bulge))/(bulgePrecision + 1);
-
+                            double angle = Math.Sign(bulge) * theta / (bulgePrecision + 1);
                             ocsVertexes.Add(p1);
                             for (int i = 1; i <= bulgePrecision; i++)
                             {

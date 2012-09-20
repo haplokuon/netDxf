@@ -1,7 +1,7 @@
-#region netDxf, Copyright(C) 2009 Daniel Carvajal, Licensed under LGPL.
+#region netDxf, Copyright(C) 2012 Daniel Carvajal, Licensed under LGPL.
 
 //                        netDxf library
-// Copyright (C) 2009 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2012 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -42,7 +42,8 @@ namespace netDxf
     {
         #region private fields
 
-        private int reservedHandles = 10;
+        internal const int ReservedHandles = 100;  //we will reserve the first handles for special cases
+        private int handleCount;
         private readonly string file;
         private bool isFileOpen;
         private string activeSection = StringCode.Unknown;
@@ -67,6 +68,7 @@ namespace netDxf
             Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
             this.file = file;
             this.version = version;
+            this.handleCount = ReservedHandles;
         }
 
         #endregion
@@ -260,7 +262,7 @@ namespace netDxf
             }
             this.WriteCodePair(0, StringCode.Table);
             this.WriteCodePair(2, table);
-            this.WriteCodePair(5, this.reservedHandles++);
+            this.WriteCodePair(5, this.handleCount++);
             this.WriteCodePair(100, SubclassMarker.Table);
 
             if (table == StringCode.DimensionStyleTable)
@@ -650,6 +652,9 @@ namespace netDxf
                 case EntityType.Text:
                     this.WriteText((Text) entity);
                     break;
+                case EntityType.Hatch:
+                    this.WriteHatch((Hatch)entity);
+                    break;
                 default:
                     throw new NotImplementedException(entity.Type.ToString());
             }
@@ -699,8 +704,7 @@ namespace netDxf
             this.WriteCodePair(100, SubclassMarker.Entity);
             this.WriteEntityCommonCodes(circle);
             this.WriteCodePair(100, SubclassMarker.Circle);
-
-
+            
             this.WriteCodePair(10, circle.Center.X);
             this.WriteCodePair(20, circle.Center.Y);
             this.WriteCodePair(30, circle.Center.Z);
@@ -980,9 +984,10 @@ namespace netDxf
             }
 
             this.WriteCodePair(0, line.CodeName);
+            this.WriteCodePair(5, line.Handle); 
             this.WriteCodePair(100, SubclassMarker.Entity);
             this.WriteEntityCommonCodes(line);
-            this.WriteCodePair(5, line.Handle);
+            
             this.WriteCodePair(100, SubclassMarker.Line);
 
             this.WriteCodePair(10, line.StartPoint.X);
@@ -1010,9 +1015,10 @@ namespace netDxf
             }
 
             this.WriteCodePair(0, polyline.CodeName);
+            this.WriteCodePair(5, polyline.Handle); 
             this.WriteCodePair(100, SubclassMarker.Entity);
             this.WriteEntityCommonCodes(polyline);
-            this.WriteCodePair(5, polyline.Handle);
+            
             this.WriteCodePair(100, SubclassMarker.Polyline);
 
             this.WriteCodePair(70, (int) polyline.Flags);
@@ -1029,7 +1035,7 @@ namespace netDxf
             this.WriteCodePair(230, polyline.Normal.Z);
 
             //Obsolete; formerly an “entities follow flag” (optional; ignore if present)
-            //but its needed to load the dxf file in AutoCAD
+            //but its needed to load the dxf file in AutoCAD even the documentation says it is OPTIONAL
             this.WriteCodePair(66, "1");
 
             this.WriteXData(polyline.XData);
@@ -1067,9 +1073,10 @@ namespace netDxf
             }
 
             this.WriteCodePair(0, DxfObjectCode.LightWeightPolyline);
+            this.WriteCodePair(5, polyline.Handle); 
             this.WriteCodePair(100, SubclassMarker.Entity);
             this.WriteEntityCommonCodes(polyline);
-            this.WriteCodePair(5, polyline.Handle);
+            
             this.WriteCodePair(100, SubclassMarker.LightWeightPolyline);
             this.WriteCodePair(90, polyline.Vertexes.Count);
             this.WriteCodePair(70, (int) polyline.Flags);
@@ -1102,9 +1109,9 @@ namespace netDxf
             }
 
             this.WriteCodePair(0, polyline.CodeName);
+            this.WriteCodePair(5, polyline.Handle);
             this.WriteCodePair(100, SubclassMarker.Entity);
             this.WriteEntityCommonCodes(polyline);
-            this.WriteCodePair(5, polyline.Handle);
             this.WriteCodePair(100, SubclassMarker.Polyline3d);
 
             this.WriteCodePair(70, (int) polyline.Flags);
@@ -1115,8 +1122,8 @@ namespace netDxf
             this.WriteCodePair(30, 0.0);
 
             //Obsolete; formerly an “entities follow flag” (optional; ignore if present)
-            //but its needed to load the dxf file in AutoCAD
-            this.WriteCodePair(66, "1");
+            //but its needed to load the dxf file in AutoCAD even the documentation says it is OPTIONAL
+            //this.WriteCodePair(66, "1");
 
             this.WriteXData(polyline.XData);
 
@@ -1132,13 +1139,13 @@ namespace netDxf
                 this.WriteCodePair(10, v.Location.X);
                 this.WriteCodePair(20, v.Location.Y);
                 this.WriteCodePair(30, v.Location.Z);
-
                 this.WriteXData(v.XData);
             }
             this.WriteCodePair(0, polyline.EndSequence.CodeName);
             this.WriteCodePair(5, polyline.EndSequence.Handle);
             this.WriteCodePair(100, SubclassMarker.Entity);
             this.WriteCodePair(8, polyline.EndSequence.Layer);
+
         }
 
         private void WritePolyfaceMesh(PolyfaceMesh mesh)
@@ -1149,9 +1156,9 @@ namespace netDxf
             }
 
             this.WriteCodePair(0, mesh.CodeName);
+            this.WriteCodePair(5, mesh.Handle);
             this.WriteCodePair(100, SubclassMarker.Entity);
             this.WriteEntityCommonCodes(mesh);
-            this.WriteCodePair(5, mesh.Handle);
             this.WriteCodePair(100, SubclassMarker.PolyfaceMesh);
 
             this.WriteCodePair(70, (int) mesh.Flags);
@@ -1247,9 +1254,9 @@ namespace netDxf
             }
 
             this.WriteCodePair(0, text.CodeName);
+            this.WriteCodePair(5, text.Handle);
             this.WriteCodePair(100, SubclassMarker.Entity);
             this.WriteEntityCommonCodes(text);
-            this.WriteCodePair(5, text.Handle);
             this.WriteCodePair(100, SubclassMarker.Text);
 
             this.WriteCodePair(1, text.Value);
@@ -1360,6 +1367,226 @@ namespace netDxf
             }
 
             this.WriteXData(text.XData);
+        }
+
+        private void WriteHatch(Hatch hatch)
+        {
+            if (this.activeSection != StringCode.EntitiesSection && !this.isBlockEntities)
+            {
+                throw new InvalidDxfSectionException(this.activeSection, this.file);
+            }
+
+            this.WriteCodePair(0, hatch.CodeName);
+            this.WriteCodePair(5, hatch.Handle);
+            this.WriteCodePair(100, SubclassMarker.Entity);
+
+            this.WriteEntityCommonCodes(hatch);
+            
+            this.WriteCodePair(100, SubclassMarker.Hatch);
+
+            this.WriteCodePair(10, 0.0f);
+            this.WriteCodePair(20, 0.0f);
+            this.WriteCodePair(30, hatch.Elevation);
+
+            this.WriteCodePair(210, hatch.Normal.X);
+            this.WriteCodePair(220, hatch.Normal.Y);
+            this.WriteCodePair(230, hatch.Normal.Z);
+
+            this.WriteCodePair(2, hatch.Pattern.Name);
+
+            this.WriteCodePair(70, (int)hatch.Pattern.Fill);
+
+            this.WriteCodePair(71, 0);  // Associativity flag (associative = 1; non-associative = 0); for MPolygon, solid-fill flag (has solid fill = 1; lacks solid fill = 0)
+
+            // boundary paths info
+            WriteHatchBoundaryPaths(hatch.BoundaryPaths);
+            
+            // pattern info
+            WriteHatchPattern(hatch.Pattern);
+            
+            this.WriteCodePair(47, 1.0);
+            this.WriteCodePair(98, 1);
+            this.WriteCodePair(10, 0.0);
+            this.WriteCodePair(20, 0.0);
+            
+            this.WriteXData(hatch.XData);   
+        }
+
+        private void WriteHatchBoundaryPaths(List<HatchBoundaryPath> boundaryPaths)
+        {
+            this.WriteCodePair(91, boundaryPaths.Count);
+            
+            // each hatch boundary paths are made of multiple closed loops
+            foreach (HatchBoundaryPath path in boundaryPaths)
+            {
+                this.WriteCodePair(92, (int)path.PathTypeFlag);
+                if (!path.IsPolyline) this.WriteCodePair(93, path.NumberOfEdges);
+                
+                foreach ( IEntityObject entity in path.Data)
+                {
+                    switch (entity.Type)
+                    {
+                        case EntityType.Arc:
+                            this.WriteCodePair(72, 2);  // Edge type (only if boundary is not a polyline): 1 = Line; 2 = Circular arc; 3 = Elliptic arc; 4 = Spline
+                            //this.WriteCodePair(73, 1);
+
+                            Arc arc = (Arc)entity;
+                            this.WriteCodePair(10, arc.Center.X);
+                            this.WriteCodePair(20, arc.Center.Y);
+                            this.WriteCodePair(40, arc.Radius);
+                            this.WriteCodePair(50, arc.StartAngle);
+                            this.WriteCodePair(51, arc.EndAngle);
+                            this.WriteCodePair(73, Math.Sign(arc.EndAngle-arc.StartAngle));   // Is counterclockwise flag   
+                            break;
+                        case EntityType.Circle:
+                            this.WriteCodePair(72, 2);  // Edge type (only if boundary is not a polyline): 1 = Line; 2 = Circular arc; 3 = Elliptic arc; 4 = Spline
+                            //this.WriteCodePair(73, 1);
+                            
+                            Circle circle = (Circle)entity;
+                            this.WriteCodePair(10, circle.Center.X);
+                            this.WriteCodePair(20, circle.Center.Y);
+                            this.WriteCodePair(40, circle.Radius);
+                            this.WriteCodePair(50, 0);
+                            this.WriteCodePair(51, 360);
+                            this.WriteCodePair(73, 1);   // Is counterclockwise flag   
+                            break;
+
+                        case EntityType.Ellipse:
+                            
+                            this.WriteCodePair(72, 3);  // Edge type (only if boundary is not a polyline): 1 = Line; 2 = Circular arc; 3 = Elliptic arc; 4 = Spline
+
+                            Ellipse ellipse = (Ellipse)entity;
+
+                            this.WriteCodePair(10, ellipse.Center.X);
+                            this.WriteCodePair(20, ellipse.Center.Y);
+                            double sine = 0.5 * ellipse.MajorAxis * Math.Sin(ellipse.Rotation * MathHelper.DegToRad);
+                            double cosine = 0.5 * ellipse.MajorAxis * Math.Cos(ellipse.Rotation * MathHelper.DegToRad);
+                            Vector3 axisPoint = MathHelper.Transform(new Vector3(cosine, sine, 0),
+                                                                      ellipse.Normal,
+                                                                      MathHelper.CoordinateSystem.Object,
+                                                                      MathHelper.CoordinateSystem.World);
+                            this.WriteCodePair(11, axisPoint.X);
+                            this.WriteCodePair(21, axisPoint.Y);
+
+                            this.WriteCodePair(40, ellipse.MinorAxis / ellipse.MajorAxis);
+                            this.WriteCodePair(50, ellipse.StartAngle);
+                            this.WriteCodePair(51, ellipse.EndAngle);
+
+                            this.WriteCodePair(73, Math.Sign(ellipse.EndAngle-ellipse.StartAngle));  // Is counterclockwise flag   
+                            break;
+
+                        case EntityType.Line:
+                            this.WriteCodePair(72, 1);  // Edge type (only if boundary is not a polyline): 1 = Line; 2 = Circular arc; 3 = Elliptic arc; 4 = Spline
+                            
+                            Line line = (Line)entity;
+                            this.WriteCodePair(10, line.StartPoint.X);
+                            this.WriteCodePair(20, line.StartPoint.Y);
+                            this.WriteCodePair(11, line.EndPoint.X);
+                            this.WriteCodePair(21, line.EndPoint.Y);
+                            
+                            break;
+
+                        case EntityType.Polyline:
+                            Polyline polyline = (Polyline)entity;   
+
+                            this.WriteCodePair(72, 1);  // Has bulge flag
+                            if (polyline.IsClosed)
+                            {
+                                this.WriteCodePair(73, 1);
+                                this.WriteCodePair(93, polyline.Vertexes.Count);    
+                            }
+                            
+                            foreach (PolylineVertex vertex in polyline.Vertexes)
+                            {
+                                this.WriteCodePair(10, vertex.Location.X);
+                                this.WriteCodePair(20, vertex.Location.Y);
+                                this.WriteCodePair(42, vertex.Bulge);
+                            }
+                            
+                            break;
+
+                        default:
+                            throw new NotSupportedException("Hatch boundary path not supported: " + entity.Type);
+                    }
+                    
+                }
+                this.WriteCodePair(97, 0);  
+
+            }
+
+        }
+
+        private void WriteHatchPattern(HatchPattern pattern)
+        {
+            this.WriteCodePair(75, (int)pattern.Style); 
+            this.WriteCodePair(76, (int)pattern.Type);
+
+            double scale = pattern.LineSeparation / 0.125;    
+            double angle = pattern.Angle * MathHelper.DegToRad;
+            double sin = Math.Sin(angle);
+            double cos = Math.Cos(angle);
+            Vector2 offset = new Vector2(cos * pattern.LineSeparation - sin * pattern.LineSeparation, sin * pattern.LineSeparation + cos * pattern.LineSeparation);
+            
+            switch (pattern.Name)
+            {
+                case PredefinedHatchPatternName.Solid:
+                    break;
+                case PredefinedHatchPatternName.Line:
+                    this.WriteCodePair(52, pattern.Angle);
+                    this.WriteCodePair(41, scale);
+
+                    this.WriteCodePair(77, 0);  // Hatch pattern double flag
+                    this.WriteCodePair(78, 1);  // Number of pattern definition lines
+
+                    this.WriteCodePair(53, pattern.Angle);
+                    this.WriteCodePair(43, pattern.LineBasePoint.X);
+                    this.WriteCodePair(44, pattern.LineBasePoint.Y);
+
+                    this.WriteCodePair(45, offset.X);
+                    this.WriteCodePair(46, offset.Y);
+                    this.WriteCodePair(79, 0);
+
+                    break;
+                case PredefinedHatchPatternName.Net:
+                    this.WriteCodePair(52, pattern.Angle);
+                    this.WriteCodePair(41, scale);
+
+                    this.WriteCodePair(77, 0);  // Hatch pattern double flag
+                    this.WriteCodePair(78, 2);  // Number of pattern definition lines
+
+                    this.WriteCodePair(53, pattern.Angle);
+                    this.WriteCodePair(43, pattern.LineBasePoint.X);
+                    this.WriteCodePair(44, pattern.LineBasePoint.Y);
+                    this.WriteCodePair(45, offset.X);
+                    this.WriteCodePair(46, offset.Y);
+                    this.WriteCodePair(79, 0);
+
+                    this.WriteCodePair(53, 90.0 + pattern.Angle);
+                    this.WriteCodePair(43, pattern.LineBasePoint.X);
+                    this.WriteCodePair(44, pattern.LineBasePoint.Y);
+                    this.WriteCodePair(45, offset.X );
+                    this.WriteCodePair(46, offset.Y);
+                    this.WriteCodePair(79, 0);
+
+                    break;
+                case PredefinedHatchPatternName.Dots:
+                    this.WriteCodePair(52, pattern.Angle);
+                    this.WriteCodePair(41, scale);
+
+                    this.WriteCodePair(77, 0);  // Hatch pattern double flag
+                    this.WriteCodePair(78, 1);  // Number of pattern definition lines
+
+                    this.WriteCodePair(53, pattern.Angle);
+                    this.WriteCodePair(43, pattern.LineBasePoint.X);
+                    this.WriteCodePair(44, pattern.LineBasePoint.Y);
+                    this.WriteCodePair(45, offset.X);
+                    this.WriteCodePair(46, offset.Y);
+
+                    this.WriteCodePair(79, 2);
+                    this.WriteCodePair(49, 0.0);
+                    this.WriteCodePair(49, -pattern.LineSeparation);
+                    break;
+            }
         }
 
         #endregion
