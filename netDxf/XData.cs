@@ -82,6 +82,7 @@ namespace netDxf
 
         #endregion
 
+        #region overrides
         /// <summary>
         /// Converts the value of this instance to its equivalent string representation.
         /// </summary>
@@ -90,5 +91,7 @@ namespace netDxf
         {
             return this.ApplicationRegistry.Name;
         }
+        #endregion
+
     }
 }

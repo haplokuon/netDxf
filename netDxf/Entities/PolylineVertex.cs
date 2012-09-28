@@ -39,8 +39,8 @@ namespace netDxf.Entities
         protected const EntityType TYPE = EntityType.PolylineVertex;
         protected VertexTypeFlags flags;
         protected Vector2 location;
-        protected double beginThickness;
-        protected double endThickness;
+        protected double beginWidth;
+        protected double endWidth;
         protected double bulge;
         protected AciColor color;
         protected Layer layer;
@@ -63,15 +63,16 @@ namespace netDxf.Entities
             this.color = AciColor.ByLayer;
             this.lineType = LineType.ByLayer;
             this.bulge = 0.0;
-            this.beginThickness = 0.0;
-            this.endThickness = 0.0;
+            this.beginWidth = 0.0;
+            this.endWidth = 0.0;
         }
 
         /// <summary>
         /// Initializes a new instance of the <c>PolylineVertex</c> class.
         /// </summary>
         /// <param name="location">Polyline <see cref="Vector2">vertex</see> coordinates.</param>
-        public PolylineVertex(Vector2 location)
+        /// <param name="bulge">Vertex bulge.</param>
+        public PolylineVertex(Vector2 location, double bulge = 0.0)
             : base(DxfObjectCode.Vertex)
         {
             this.flags = VertexTypeFlags.PolylineVertex;
@@ -79,17 +80,18 @@ namespace netDxf.Entities
             this.layer = Layer.Default;
             this.color = AciColor.ByLayer;
             this.lineType = LineType.ByLayer;
-            this.bulge = 0.0;
-            this.beginThickness = 0.0;
-            this.endThickness = 0.0;
+            this.bulge = bulge;
+            this.beginWidth = 0.0;
+            this.endWidth = 0.0;
         }
 
-       /// <summary>
+        /// <summary>
         /// Initializes a new instance of the <c>PolylineVertex</c> class.
         /// </summary>
         /// <param name="x">X coordinate.</param>
         /// <param name="y">Y coordinate.</param>
-        public PolylineVertex(double x, double y)
+        /// <param name="bulge">Vertex bulge.</param>
+        public PolylineVertex(double x, double y, double bulge = 0.0)
             : base(DxfObjectCode.Vertex)
         {
             this.flags = VertexTypeFlags.PolylineVertex;
@@ -97,9 +99,9 @@ namespace netDxf.Entities
             this.layer = Layer.Default;
             this.color = AciColor.ByLayer;
             this.lineType = LineType.ByLayer;
-            this.bulge = 0.0;
-            this.beginThickness = 0.0;
-            this.endThickness = 0.0;
+            this.bulge = bulge;
+            this.beginWidth = 0.0;
+            this.endWidth = 0.0;
         }
 
         #endregion
@@ -116,21 +118,21 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets or sets the light weight polyline begin thickness.
+        /// Gets or sets the light weight polyline begin width.
         /// </summary>
-        public double BeginThickness
+        public double BeginWidth
         {
-            get { return this.beginThickness; }
-            set { this.beginThickness = value; }
+            get { return this.beginWidth; }
+            set { this.beginWidth = value; }
         }
 
         /// <summary>
-        /// Gets or sets the light weight polyline end thickness.
+        /// Gets or sets the light weight polyline end width.
         /// </summary>
-        public double EndThickness
+        public double EndWidth
         {
-            get { return this.endThickness; }
-            set { this.endThickness = value; }
+            get { return this.endWidth; }
+            set { this.endWidth = value; }
         }
 
         /// <summary>
@@ -144,10 +146,7 @@ namespace netDxf.Entities
         public double Bulge
         {
             get { return this.bulge; }
-            set
-            {
-                this.bulge = value;
-            }
+            set { this.bulge = value; }
         }
 
         #endregion

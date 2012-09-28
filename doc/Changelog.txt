@@ -1,0 +1,41 @@
+[0.1.6.0 - 2012/09/21]
++ Read and write hatches to dxf, there are a few predefined patterns based on AutoCAD pat file. You can create your own providing the information needed for the HatchPatternLineDefinition class or load from a file (same rules as AutoCAD pat files are applied).
++ Line types can be loaded form a file but only simple line patterns are supported (same rules as AutoCAD lin files are applied).
++ Text files reorganization: changelog.txt and license.txt move to doc folder together with the compiled HTML help file.
++ Updated "netDxf Documentation.chm".
++ Added AutoCad2010 database version number.
+- (fixed) Renamed the PolylineVertex and LightweightPolylineVertex StartThickness and EndThickness as StartWidth and EndWidth, it should always be this way. Do not confuse Elevation, Width and Thickness of an entity. I try to follow the AutoCAD documentation as close as possible, please check it in case of doubt or as in this case I might be wrong. 
+- (fixed) Read and write ellipse entity
+- (fixed) To make it easier and to unify concepts, the center of a circle, an arc and an ellipse are always given in world coordinates, even though the dxf gives the center of the circle and the arc in object coordinates, and the center of the ellipse in world coordinates. The local (to the center) orientation of the entity will be given by the normal.
+
+[0.1.5.0 - 2012/09/21]
++ With limitations now you can write hatches in dxf files.
+- Removed the limitations of the bulge in polyline vertexes, it can actually be greater than 1 and lower than -1 (1 represents the semicircle and the negative sign if the arc goes in or out.
+
+[0.1.4.0 - 2012/09/11]
+- Vector2f, Vector3f, Matrix3f are no loger needed - removed
++ Vector2d renamed to Vector2
++ Vector3d renamed to Vector3
++ Matrix3d renamed to Matrix3
+
+[0.1.3.0 - 2012/09/03]
++ Changed all numeric data of the library to use doubles instead of floats
++ Solution updated to Visual Studio 2010
+
+[0.1.2.0 - 2009/03/07]
++ Added support for AutoCad12, AutoCad2000, AutoCad2004 and AutoCad2007 dxf files
++ The Ellipse entity will be exported as a true ellipse for dxf file version AutoCad2000 and higher
++ Due to the need of keeping unique handles for entities, duplicate objets will not be allowed
++ Added this change log information
++ Added Lightweight entity
++ Lots of internal changes and new classes
+- NurbsCurves will not be allowed temporally, it needs more work to be able to export them as true splines in AutoCad200 and higher dxf files
+
+[0.1.1.0 - 2009/03/01]
++ Added Ellipse entity that will be exported as a polyline in AutoCad12 dxf files
++ Added NubsCurve entity that will be exported as a polyline in AutoCad12 dxf files
++ Added many new comments
++ Added a chm library help file
+
+[0.1.0.0 - 2009/02/28]
++ First public release

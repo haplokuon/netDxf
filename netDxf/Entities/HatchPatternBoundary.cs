@@ -60,7 +60,6 @@ namespace netDxf.Entities
         private readonly List<IEntityObject> data;
         private BoundaryPathTypeFlag pathTypeFlag;
         private int numberOfEdges;
-        private bool isPolyline;
 
         #endregion
 
@@ -68,7 +67,7 @@ namespace netDxf.Entities
         /// <summary>
         /// Initializes a new instance of the <c>Hatch</c> class.
         /// </summary>
-        /// <param name="data">list of entities that makes a loop for the hatch boundary paths.</param>
+        /// <param name="data">List of entities that makes a loop for the hatch boundary paths.</param>
         public HatchBoundaryPath(List<IEntityObject> data)
         {
             if (data == null)
@@ -103,63 +102,55 @@ namespace netDxf.Entities
             get { return numberOfEdges; }
         }
 
-        /// <summary>
-        /// Defines if the boundary is a closed polyline.
-        /// </summary>
-        public bool IsPolyline
-        {
-            get { return isPolyline; }
-        }
-
         #endregion
 
         #region private methods
         private void SetInternalInfo()
         {
             numberOfEdges = 0;
+            pathTypeFlag = BoundaryPathTypeFlag.Derived | BoundaryPathTypeFlag.External;
+
             foreach (IEntityObject entity in data)
             {
                 switch (entity.Type)
                 {
                     case EntityType.Arc:
-                        if (data.Count <= 1) throw new ArgumentException("Only an arc does not make closed loop.");
-                        pathTypeFlag = BoundaryPathTypeFlag.Derived | BoundaryPathTypeFlag.External;
+                        // a single arc is not a closed path
+                        if (data.Count <= 1) throw new ArgumentException("A single arc does not make closed loop.");
                         numberOfEdges += 1;
-                        isPolyline = false;
                         break;
                     case EntityType.Circle:
                         // a circle is a closed loop
                         if (data.Count>1) throw new ArgumentException("A circle is a closed loop, there can be only per path.");
-                        pathTypeFlag = BoundaryPathTypeFlag.Derived | BoundaryPathTypeFlag.External;
                         numberOfEdges += 1;
-                        isPolyline = false;
                         break;
                     case EntityType.Ellipse:
                         // a full ellipse is a closed loop
-                        if (((Ellipse)entity).IsFullEllipse && data.Count > 1) throw new ArgumentException("A full ellipse is a closed loop, there can be only per path.");
-                        pathTypeFlag = BoundaryPathTypeFlag.Derived | BoundaryPathTypeFlag.External;
+                        if (((Ellipse)entity).IsFullEllipse && data.Count > 1) 
+                            throw new ArgumentException("A full ellipse is a closed loop, there can be only per path.");
+                        // a single ellipse arc is not a closed path
+                        if (!((Ellipse)entity).IsFullEllipse && data.Count <= 1)
+                            throw new ArgumentException("A single ellipse arc does not make closed loop.");
+                       
                         numberOfEdges += 1;
-                        isPolyline = false;
                         break;
                     case EntityType.Line:
+                        // a single line is not a closed path
                         if (data.Count <= 1) throw new ArgumentException("Only a line does not make closed loop.");
-                        pathTypeFlag = BoundaryPathTypeFlag.Derived | BoundaryPathTypeFlag.External;
                         numberOfEdges += 1;
-                        isPolyline = false;
                         break;
                     case EntityType.Polyline:
-                        
+                                               
                         if (((Polyline)entity).IsClosed)
                         {
-                            if (data.Count > 1) throw new ArgumentException("A closed polyline is a closed loop, there can be only per path.");
-                            // for a closed polyline the number of edges is equal the number of vertexes
                             pathTypeFlag = BoundaryPathTypeFlag.Derived | BoundaryPathTypeFlag.External | BoundaryPathTypeFlag.Polyline;
                             numberOfEdges += ((Polyline)entity).Vertexes.Count;
-                            isPolyline = true;
                         }
                         else
                         {
-                            throw new NotImplementedException("A polyline path can not be combined with any other type of entity." + "To combine polylines with arcs or ellipses first the polylines must be decomposed in its internal components: lines and arcs.");
+                            // open polylines will be exploded before being written in the dxf file 
+                            // for an open polyline the number of edges is equal the number of vertexes    
+                            numberOfEdges += ((Polyline)entity).Vertexes.Count - 1;
                         }
                         break;
                 }

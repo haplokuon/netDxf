@@ -1,7 +1,7 @@
-#region netDxf, Copyright(C) 2009 Daniel Carvajal, Licensed under LGPL.
+#region netDxf, Copyright(C) 2012 Daniel Carvajal, Licensed under LGPL.
 
 //                        netDxf library
-// Copyright (C) 2009 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2012 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -39,7 +39,7 @@ namespace netDxf
     internal sealed class DxfReader
     {
         #region private fields
-        //
+
         private CodeValuePair dxfPairInfo;
         private readonly string file;
         private int fileLine;
@@ -63,6 +63,7 @@ namespace netDxf
         private List<Line> lines;
         private List<IPolyline> polylines;
         private List<Text> texts;
+        private List<Hatch> hatches;
 
         //tables
         private Dictionary<string, ApplicationRegistry> appIds;
@@ -164,6 +165,11 @@ namespace netDxf
             get { return this.texts; }
         }
 
+        public List<Hatch> Hatches
+        {
+            get { return this.hatches; }
+        }
+
         #endregion
 
         #region public table properties
@@ -240,6 +246,7 @@ namespace netDxf
             this.polylines = new List<IPolyline>();
             this.points = new List<Point>();
             this.texts = new List<Text>();
+            this.hatches = new List<Hatch>();
             this.fileLine = -1;
 
             dxfPairInfo = this.ReadCodePair();
@@ -454,8 +461,7 @@ namespace netDxf
                         dxfPairInfo = this.ReadCodePair();
                         break;
                     case 0: // entity
-                        IEntityObject entity;
-                        entity = this.ReadBlockEntity();
+                        IEntityObject entity = this.ReadBlockEntity();
                         if (entity != null)
                             if (entity.Type == EntityType.AttributeDefinition)
                                 attdefs.Add(((AttributeDefinition) entity).Id, (AttributeDefinition) entity);
@@ -765,6 +771,10 @@ namespace netDxf
                         entity = this.ReadText();
                         this.texts.Add((Text) entity);
                         break;
+                    case DxfObjectCode.Hatch:
+                        entity = this.ReadHatch();
+                        this.hatches.Add((Hatch)entity);
+                        break;
                     default:
                         ReadUnknowEntity();
                         break;
@@ -793,8 +803,8 @@ namespace netDxf
                 if (dxfPairInfo.Value == StringCode.LayerTable)
                 {
                     Debug.Assert(dxfPairInfo.Code == 0);
-                    Layer capa = this.ReadLayer();
-                    this.layers.Add(capa.Name, capa);
+                    Layer layer = this.ReadLayer();
+                    this.layers.Add(layer.Name, layer);
                 }
                 else
                 {
@@ -1061,7 +1071,7 @@ namespace netDxf
 
         private Arc ReadArc()
         {
-            var arc = new Arc();
+            Arc arc = new Arc();
             Vector3 center = Vector3.Zero;
             Vector3 normal = Vector3.UnitZ;
             Dictionary<ApplicationRegistry, XData> xData = new Dictionary<ApplicationRegistry, XData>();
@@ -1103,11 +1113,11 @@ namespace netDxf
                         dxfPairInfo = this.ReadCodePair();
                         break;
                     case 50:
-                        arc.StartAngle = double.Parse(dxfPairInfo.Value);
+                        arc.StartAngle = Math.Round(double.Parse(dxfPairInfo.Value), MathHelper.MaxAngleDecimals);
                         dxfPairInfo = this.ReadCodePair();
                         break;
                     case 51:
-                        arc.EndAngle = double.Parse(dxfPairInfo.Value);
+                        arc.EndAngle = Math.Round(double.Parse(dxfPairInfo.Value), MathHelper.MaxAngleDecimals);
                         dxfPairInfo = this.ReadCodePair();
                         break;
                     case 39:
@@ -1139,15 +1149,20 @@ namespace netDxf
                 }
             }
 
+            // this is just an example of the stupid autodesk dxf way of doing things, while an ellipse the center is given in world coordinates,
+            // the center of an arc is given in object coordinates (different rules for the same concept).
+            // It is a lot more intuitive to give the center in world coordinates and then define the orientation with the normal..
+            Vector3 wcsCenter = MathHelper.Transform(center, normal, MathHelper.CoordinateSystem.Object, MathHelper.CoordinateSystem.World);
+
             arc.XData = xData;
-            arc.Center = center;
+            arc.Center = wcsCenter;
             arc.Normal = normal;
             return arc;
         }
 
         private Circle ReadCircle()
         {
-            var circle = new Circle();
+            Circle circle = new Circle();
             Vector3 center = Vector3.Zero;
             Vector3 normal = Vector3.UnitZ;
             Dictionary<ApplicationRegistry, XData> xData = new Dictionary<ApplicationRegistry, XData>();
@@ -1218,8 +1233,13 @@ namespace netDxf
                 }
             }
 
+            // this is just an example of the stupid autodesk dxf way of doing things, while an ellipse the center is given in world coordinates,
+            // the center of a circle is given in object coordinates (different rules for the same concept).
+            // It is a lot more intuitive to give the center in world coordinates and then define the orientation with the normal..
+            Vector3 wcsCenter = MathHelper.Transform(center, normal, MathHelper.CoordinateSystem.Object, MathHelper.CoordinateSystem.World);
+
             circle.XData = xData;
-            circle.Center = center;
+            circle.Center = wcsCenter;
             circle.Normal = normal;
             return circle;
         }
@@ -1230,6 +1250,7 @@ namespace netDxf
             Vector3 center = Vector3.Zero;
             Vector3 axisPoint = Vector3.Zero;
             Vector3 normal = Vector3.UnitZ;
+            double[] param = new double[2];
             double ratio = 0.0;
 
             Dictionary<ApplicationRegistry, XData> xData = new Dictionary<ApplicationRegistry, XData>();
@@ -1284,11 +1305,11 @@ namespace netDxf
                         dxfPairInfo = this.ReadCodePair();
                         break;
                     case 41:
-                        ellipse.StartAngle = double.Parse(dxfPairInfo.Value)*MathHelper.RadToDeg;
+                        param[0] = double.Parse(dxfPairInfo.Value);
                         dxfPairInfo = this.ReadCodePair();
                         break;
                     case 42:
-                        ellipse.EndAngle = double.Parse(dxfPairInfo.Value)*MathHelper.RadToDeg;
+                        param[1] = double.Parse(dxfPairInfo.Value);
                         dxfPairInfo = this.ReadCodePair();
                         break;
                     case 210:
@@ -1320,20 +1341,21 @@ namespace netDxf
                                                          normal,
                                                          MathHelper.CoordinateSystem.World,
                                                          MathHelper.CoordinateSystem.Object);
-            double rotation = Vector2.AngleBetween(Vector2.UnitX, new Vector2(ocsAxisPoint.X, ocsAxisPoint.Y));
-
+            double rotation = Vector2.AngleBetween(Vector2.Zero, new Vector2(ocsAxisPoint.X, ocsAxisPoint.Y));
             ellipse.MajorAxis = 2*axisPoint.Modulus();
             ellipse.MinorAxis = ellipse.MajorAxis*ratio;
-            ellipse.Rotation = rotation*MathHelper.RadToDeg;
+            ellipse.Rotation = Math.Round(rotation * MathHelper.RadToDeg, MathHelper.MaxAngleDecimals);
             ellipse.Center = center;
             ellipse.Normal = normal;
             ellipse.XData = xData;
+
+            ellipse.SetParameters(param);
             return ellipse;
         }
 
         private Point ReadPoint()
         {
-            var point = new Point();
+            Point point = new Point();
             Vector3 location = Vector3.Zero;
             Vector3 normal = Vector3.UnitZ;
             Dictionary<ApplicationRegistry, XData> xData = new Dictionary<ApplicationRegistry, XData>();
@@ -1400,15 +1422,15 @@ namespace netDxf
                 }
             }
 
-            point.XData = xData;
             point.Location = location;
             point.Normal = normal;
+            point.XData = xData;
             return point;
         }
 
         private Face3d ReadFace3D()
         {
-            var face = new Face3d();
+            Face3d face = new Face3d();
             Vector3 v0 = Vector3.Zero;
             Vector3 v1 = Vector3.Zero;
             Vector3 v2 = Vector3.Zero;
@@ -1512,7 +1534,7 @@ namespace netDxf
 
         private Solid ReadSolid()
         {
-            var solid = new Solid();
+            Solid solid = new Solid();
             Vector3 v0 = Vector3.Zero;
             Vector3 v1 = Vector3.Zero;
             Vector3 v2 = Vector3.Zero;
@@ -1781,7 +1803,7 @@ namespace netDxf
 
         private Line ReadLine()
         {
-            var line = new Line();
+            Line line = new Line();
             Vector3 start = Vector3.Zero;
             Vector3 end = Vector3.Zero;
             Vector3 normal = Vector3.UnitZ;
@@ -1872,7 +1894,7 @@ namespace netDxf
 
         private LightWeightPolyline ReadLightWeightPolyline()
         {
-            var pol = new LightWeightPolyline();
+            LightWeightPolyline pol = new LightWeightPolyline();
             //int numVertexes;
             double constantWidth = 0.0;
             LightWeightPolylineVertex v = new LightWeightPolylineVertex();
@@ -1916,14 +1938,7 @@ namespace netDxf
                         dxfPairInfo = this.ReadCodePair();
                         break;
                     case 70:
-                        if (int.Parse(dxfPairInfo.Value) == 0)
-                        {
-                            pol.IsClosed = false;
-                        }
-                        else if (int.Parse(dxfPairInfo.Value) == 1)
-                        {
-                            pol.IsClosed = true;
-                        }
+                        pol.IsClosed = int.Parse(dxfPairInfo.Value) != 0;
                         dxfPairInfo = this.ReadCodePair();
                         break;
                     case 90:
@@ -1933,8 +1948,8 @@ namespace netDxf
                     case 10:
                         v = new LightWeightPolylineVertex
                                 {
-                                    BeginThickness = constantWidth,
-                                    EndThickness = constantWidth
+                                    BeginWidth = constantWidth,
+                                    EndWidth = constantWidth
                                 };
                         vX = double.Parse(dxfPairInfo.Value);
                         dxfPairInfo = this.ReadCodePair();
@@ -1946,11 +1961,11 @@ namespace netDxf
                         dxfPairInfo = this.ReadCodePair();
                         break;
                     case 40:
-                        v.BeginThickness = double.Parse(dxfPairInfo.Value);
+                        v.BeginWidth = double.Parse(dxfPairInfo.Value);
                         dxfPairInfo = this.ReadCodePair();
                         break;
                     case 41:
-                        v.EndThickness = double.Parse(dxfPairInfo.Value);
+                        v.EndWidth = double.Parse(dxfPairInfo.Value);
                         dxfPairInfo = this.ReadCodePair();
                         break;
                     case 42:
@@ -2133,9 +2148,9 @@ namespace netDxf
                                                       Layer = v.Layer,
                                                       LineType = v.LineType,
                                                       Location = v.Location,
-                                                      Handle = v.Handle
+                                                      Handle = v.Handle,
+                                                      XData = v.XData
                                                   };
-                    vertex.XData = v.XData;
                     polyline3dVertexes.Add(vertex);
                 }
 
@@ -2161,9 +2176,9 @@ namespace netDxf
                                                             Layer = v.Layer,
                                                             LineType = v.LineType,
                                                             Location = v.Location,
-                                                            Handle = v.Handle
+                                                            Handle = v.Handle,
+                                                            XData = xData
                                                         };
-                        vertex.XData = xData;
                         polyfaceVertexes.Add(vertex);
                     }
                     else if ((v.Flags & (VertexTypeFlags.PolyfaceMeshVertex)) == (VertexTypeFlags.PolyfaceMeshVertex))
@@ -2174,9 +2189,9 @@ namespace netDxf
                                                           Layer = v.Layer,
                                                           LineType = v.LineType,
                                                           VertexIndexes = v.VertexIndexes,
-                                                          Handle = v.Handle
+                                                          Handle = v.Handle,
+                                                          XData = xData
                                                       };
-                        vertex.XData = xData;
                         polyfaceFaces.Add(vertex);
                     }
                 }
@@ -2195,15 +2210,15 @@ namespace netDxf
                     PolylineVertex vertex = new PolylineVertex
                                                 {
                                                     Location = new Vector2(v.Location.X, v.Location.Y),
-                                                    BeginThickness = v.BeginThickness,
+                                                    BeginWidth = v.BeginThickness,
                                                     Bulge = v.Bulge,
                                                     Color = v.Color,
-                                                    EndThickness = v.EndThickness,
+                                                    EndWidth = v.EndThickness,
                                                     Layer = v.Layer,
                                                     LineType = v.LineType,
-                                                    Handle = v.Handle
+                                                    Handle = v.Handle,
+                                                    XData = xData
                                                 };
-                    vertex.XData = xData;
 
                     polylineVertexes.Add(vertex);
                 }
@@ -2229,7 +2244,7 @@ namespace netDxf
 
         private Text ReadText()
         {
-            var text = new Text();
+            Text text = new Text();
 
             Vector3 firstAlignmentPoint = Vector3.Zero;
             Vector3 secondAlignmentPoint = Vector3.Zero;
@@ -2351,6 +2366,416 @@ namespace netDxf
             return text;
         }
 
+        private Hatch ReadHatch()
+        {
+            string name = string.Empty;
+            string handle = string.Empty;
+            Layer layer = Layer.Default;
+            AciColor color = AciColor.ByLayer;
+            LineType lineType = LineType.ByLayer;
+            FillFlag fill = FillFlag.SolidFill;
+            double elevation = 0.0;
+            Vector3 normal = Vector3.UnitZ;
+            HatchPattern pattern = HatchPattern.Line;
+            List<HatchBoundaryPath> paths = new List<HatchBoundaryPath>();
+            Dictionary<ApplicationRegistry, XData> xData = new Dictionary<ApplicationRegistry, XData>();
+
+            dxfPairInfo = this.ReadCodePair();
+
+            while (dxfPairInfo.Code != 0)
+            {
+                switch (dxfPairInfo.Code)
+                {
+                    case 2:
+                        name = dxfPairInfo.Value;
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 5:
+                        handle = dxfPairInfo.Value;
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 8:
+                        layer = this.GetLayer(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 62:
+                        color = new AciColor(short.Parse(dxfPairInfo.Value));
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 6:
+                        lineType = this.GetLineType(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 30:
+                        elevation = double.Parse(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 210:
+                        normal.X = double.Parse(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 220:
+                        normal.Y = double.Parse(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 230:
+                        normal.Z = double.Parse(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 91:
+                        // the next lines hold the information about the hatch boundary paths
+                        int numPaths = int.Parse(dxfPairInfo.Value);
+                        paths = ReadHatchBoundaryPaths(numPaths);
+                        break;
+                    case 70:
+                        // Solid fill flag
+                        fill = (FillFlag) int.Parse(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 71:
+                        // Associativity flag (associative = 1; non-associative = 0); for MPolygon, solid-fill flag (has solid fill = 1; lacks solid fill = 0)
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 75:
+                        // the next lines hold the information about the hatch pattern
+                        pattern = fill == FillFlag.SolidFill ? HatchPattern.Solid : ReadHatchPattern(name);
+                        break;
+                    case 1001:
+                        XData xDataItem = this.ReadXDataRecord(dxfPairInfo.Value);
+                        xData.Add(xDataItem.ApplicationRegistry, xDataItem);
+                        break;
+                    default:
+                        if (dxfPairInfo.Code >= 1000 && dxfPairInfo.Code <= 1071)
+                            throw new DxfInvalidCodeValueEntityException(dxfPairInfo.Code, dxfPairInfo.Value, this.file,
+                                                                         "The extended data of an entity must start with the application registry code " + this.fileLine);
+
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                }
+            }
+
+            Hatch hatch = new Hatch(pattern, paths)
+                              {
+                                  Handle = handle,
+                                  Layer = layer,
+                                  Color = color,
+                                  LineType = lineType,
+                                  Elevation = elevation,
+                                  Normal = normal,
+                                  XData = xData
+                              };
+
+            return hatch;
+        }
+
+        private List<HatchBoundaryPath> ReadHatchBoundaryPaths(int numPaths)
+        {
+            List<HatchBoundaryPath> paths = new List<HatchBoundaryPath>();
+
+            dxfPairInfo = this.ReadCodePair();
+
+            while (paths.Count < numPaths)
+            {
+                switch (dxfPairInfo.Code)
+                {
+                    case 92:
+                        BoundaryPathTypeFlag pathTypeFlag = (BoundaryPathTypeFlag) int.Parse(dxfPairInfo.Value);
+                        if ((pathTypeFlag & BoundaryPathTypeFlag.Polyline) == BoundaryPathTypeFlag.Polyline)
+                            paths.Add(ReadPolylineBoundaryPath());
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 93:
+                        int numEdges = int.Parse(dxfPairInfo.Value);
+                        paths.Add(ReadEdgeBoundaryPath(numEdges));
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                    default:
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                }
+            }
+            return paths;
+        }
+
+        private HatchBoundaryPath ReadPolylineBoundaryPath()
+        {
+            bool read = false;
+            bool hasBulge = false;
+            bool isClosed = false;
+            List<PolylineVertex> vertexes = new List<PolylineVertex>();
+            dxfPairInfo = this.ReadCodePair();
+
+            while (!read)
+            {
+                switch (dxfPairInfo.Code)
+                {
+                    case 72:
+                        hasBulge = int.Parse(dxfPairInfo.Value) != 0;
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 73:
+                        // is polyline closed
+                        isClosed = int.Parse(dxfPairInfo.Value) == 1;
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 93:
+                        int numVertexes = int.Parse(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
+                        for (int i = 0; i < numVertexes; i++)
+                        {
+                            double x = 0.0;
+                            double y = 0.0;
+                            double bulge = 0.0;
+                            if (dxfPairInfo.Code == 10) x = double.Parse(dxfPairInfo.Value);
+                            dxfPairInfo = this.ReadCodePair();
+                            if (dxfPairInfo.Code == 20) y = double.Parse(dxfPairInfo.Value);
+                            dxfPairInfo = this.ReadCodePair();
+                            if (hasBulge)
+                            {
+                                if (dxfPairInfo.Code == 42) bulge = double.Parse(dxfPairInfo.Value);
+                                dxfPairInfo = this.ReadCodePair();
+                            }
+                            vertexes.Add(new PolylineVertex(x, y, bulge));
+                        }
+                        break;
+                    default:
+                        // the way the information is written is quite strict, a none recognize code and the polyline reading is over.
+                        read = true;
+                        break;
+                }
+            }
+
+            Polyline polyline = new Polyline(vertexes, isClosed);
+            List<IEntityObject> entities = isClosed ? new List<IEntityObject> { polyline } : polyline.Explode();
+            return new HatchBoundaryPath(entities);
+
+        }
+
+        private HatchBoundaryPath ReadEdgeBoundaryPath(int numEdges)
+        {
+            List<IEntityObject> entities = new List<IEntityObject>();
+            dxfPairInfo = this.ReadCodePair();
+
+            while(entities.Count<numEdges)
+            {
+                switch (int.Parse(dxfPairInfo.Value))
+                {
+                    case 1:
+                        dxfPairInfo = this.ReadCodePair();
+                        // line
+                        double lX1 = 0.0, lX2 = 0.0, lY1 = 0.0, lY2 = 0.0;
+                        if (dxfPairInfo.Code == 10) lX1 = double.Parse(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
+                        if (dxfPairInfo.Code == 20) lY1 = double.Parse(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
+                        if (dxfPairInfo.Code == 11) lX2 = double.Parse(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
+                        if (dxfPairInfo.Code == 21) lY2 = double.Parse(dxfPairInfo.Value);
+                        
+                        entities.Add(new Line(new Vector3(lX1, lY1, 0.0), new Vector3(lX2, lY2, 0.0)));
+
+                        dxfPairInfo = this.ReadCodePair();  
+                        break;
+                    case 2:
+                        dxfPairInfo = this.ReadCodePair();
+                        // circular arc
+                        double aX = 0.0, aY = 0.0, aR = 0.0, aStart = 0.0, aEnd = 0.0;
+                        bool aCCW = true; 
+                        if (dxfPairInfo.Code == 10) aX = double.Parse(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
+                        if (dxfPairInfo.Code == 20) aY = double.Parse(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
+                        if (dxfPairInfo.Code == 40) aR = double.Parse(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
+                        if (dxfPairInfo.Code == 50) aStart = double.Parse(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
+                        if (dxfPairInfo.Code == 51) aEnd = double.Parse(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
+                        if (dxfPairInfo.Code == 73) aCCW = int.Parse(dxfPairInfo.Value) != 0;
+
+                        // a full circle will never happen AutoCAD exports circle boundary paths as two vertex polylines with bulges of 1 and -1
+                        entities.Add(aCCW
+                                        ? new Arc(new Vector3(aX, aY, 0.0), aR, aStart, aEnd)
+                                        : new Arc(new Vector3(aX, aY, 0.0), aR, 360 - aEnd, 360 - aStart));
+
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 3:
+                        dxfPairInfo = this.ReadCodePair();
+                        // elliptic arc
+                        double eX = 0.0, eY = 0.0, eAxisX = 0.0, eAxisY = 0.0, eAxisRatio = 0.0, eStart = 0.0, eEnd = 0.0;
+                        bool eCCW = true; 
+                        if (dxfPairInfo.Code == 10) eX = double.Parse(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
+                        if (dxfPairInfo.Code == 20) eY = double.Parse(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
+                        if (dxfPairInfo.Code == 11) eAxisX = double.Parse(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
+                        if (dxfPairInfo.Code == 21) eAxisY = double.Parse(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
+                        if (dxfPairInfo.Code == 40) eAxisRatio = double.Parse(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
+                         if (dxfPairInfo.Code == 50) eStart = double.Parse(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
+                         if (dxfPairInfo.Code == 51) eEnd = double.Parse(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
+                        if (dxfPairInfo.Code == 73) eCCW = int.Parse(dxfPairInfo.Value) != 0;
+
+                        Vector3 center = new Vector3(eX, eY, 0.0);
+                        Vector3 axisPoint = new Vector3(eAxisX, eAxisY, 0.0);
+                        Vector3 ocsAxisPoint = MathHelper.Transform(axisPoint,
+                                                         Vector3.UnitZ,
+                                                         MathHelper.CoordinateSystem.World,
+                                                         MathHelper.CoordinateSystem.Object);
+                        double rotation = Vector2.AngleBetween(Vector2.UnitX, new Vector2(ocsAxisPoint.X, ocsAxisPoint.Y));
+                        double majorAxis = 2 * axisPoint.Modulus();
+                        Ellipse ellipse = new Ellipse
+                                              {
+                                                  MajorAxis = majorAxis,
+                                                  MinorAxis = majorAxis*eAxisRatio,
+                                                  Rotation = rotation * MathHelper.RadToDeg,
+                                                  Center = center,
+                                                  StartAngle = eCCW ? eStart : 360 - eEnd,
+                                                  EndAngle = eCCW ? eEnd : 360 - eStart,
+                                                  Normal = Vector3.UnitZ
+                                              };
+
+                        dxfPairInfo = this.ReadCodePair();
+                        entities.Add(ellipse);
+                        break;
+                    case 4:
+                        // spline not implemented
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+
+                }
+            }
+ 
+            return new HatchBoundaryPath(entities);
+        }
+
+        private HatchPattern ReadHatchPattern(string name)
+        {
+            HatchPattern hatch = new HatchPattern(name);
+            double angle = 0.0;
+            double scale = 1.0;
+            bool read = false;
+            HatchType type = HatchType.UserDefined;
+
+            while (!read)
+            {
+                switch (dxfPairInfo.Code)
+                {
+                    case 52:
+                        angle = double.Parse(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 41:
+                        scale = double.Parse(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 75:
+                        // HatchStyle style = (HatchStyle) int.Parse(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 76:
+                        type = (HatchType)int.Parse(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 77:
+                        // hatch pattern double flag (not used)
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 78:
+                        // number of pattern definition lines
+                        int numLines = int.Parse(dxfPairInfo.Value);
+                        hatch.LineDefinitions = ReadHatchPatternDefinitionLine(scale, angle, numLines);
+                        read = true;
+                        break;
+                    default:
+                        // the way the information is written is quite strict, a none recognize code and the hatch reading is over.
+                        read = true;
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                }
+            }
+
+            hatch.Scale = scale;
+            hatch.Angle = angle;
+            hatch.Type = type;
+            return hatch;
+        }
+
+        private List<HatchPatternLineDefinition> ReadHatchPatternDefinitionLine(double hatchScale, double hatchAngle, int numLines)
+        {
+            List<HatchPatternLineDefinition> lineDefinitions = new List<HatchPatternLineDefinition>();
+
+            dxfPairInfo = this.ReadCodePair();
+            for (int i = 0; i < numLines; i++)
+            {
+                double angle = 0.0;
+                Vector2 origin = Vector2.Zero;
+                Vector2 offset = Vector2.Zero;
+                List<double> dashPattern = new List<double>();
+
+
+                if (dxfPairInfo.Code == 53) angle = double.Parse(dxfPairInfo.Value);
+                dxfPairInfo = this.ReadCodePair();
+
+                if (dxfPairInfo.Code == 43) origin.X = double.Parse(dxfPairInfo.Value);
+                dxfPairInfo = this.ReadCodePair();
+
+                if (dxfPairInfo.Code == 44) origin.Y = double.Parse(dxfPairInfo.Value);
+                dxfPairInfo = this.ReadCodePair();
+
+                if (dxfPairInfo.Code == 45) offset.X = double.Parse(dxfPairInfo.Value);
+                dxfPairInfo = this.ReadCodePair();
+
+                if (dxfPairInfo.Code == 46) offset.Y = double.Parse(dxfPairInfo.Value);
+                dxfPairInfo = this.ReadCodePair();
+
+                if (dxfPairInfo.Code == 79)
+                {
+                    int numSegments = int.Parse(dxfPairInfo.Value);
+                    dashPattern = ReadHatchLineSegments(hatchScale, numSegments);
+                }
+
+                // Pattern fill data. In theory this should hold the same information as the pat file but for unkown reason the dxf requires global data instead of local.
+                // what it means is that we need to apply the scale and rotation of the hatch to the pattern definiton lines, it's a guess the documentation is kind of obscure.
+                // What seems to work is to read the data in global coordinates and then convert it in local, this means we have to apply the pattern rotation and scale to the line definitions
+                double lineAngle = angle - hatchAngle;
+                double sin = Math.Sin(hatchAngle * MathHelper.DegToRad);
+                double cos = Math.Cos(hatchAngle * MathHelper.DegToRad);
+                Vector2 delta = new Vector2(cos * offset.X / hatchScale + sin * offset.Y / hatchScale, -sin * offset.X / hatchScale + cos * offset.Y / hatchScale);
+
+                lineDefinitions.Add(new HatchPatternLineDefinition
+                                        {
+                                            Angle = lineAngle,
+                                            Origin = origin,
+                                            Delta = delta,
+                                            DashPattern = dashPattern
+                                        });
+            }
+
+            return lineDefinitions;
+        }
+
+        private List<double> ReadHatchLineSegments(double scale, int numSegments)
+        {
+            List<double> dashPattern = new List<double>();
+
+            dxfPairInfo = this.ReadCodePair();
+            for (int i = 0; i < numSegments; i++)
+            {
+                // Positive values means solid segments and negative values means spaces (one entry per element)
+                if (dxfPairInfo.Code == 49)
+                    dashPattern.Add(double.Parse(dxfPairInfo.Value) / scale);
+                
+                dxfPairInfo = this.ReadCodePair();
+            }
+            return dashPattern;
+        }
+
         private Vertex ReadVertex()
         {
             string handle = string.Empty;
@@ -2465,6 +2890,7 @@ namespace netDxf
 
         private void ReadUnknowEntity()
         {
+            // if the entity is unknown keep reading until an end of section or a new entity is found
             dxfPairInfo = this.ReadCodePair();
             while (dxfPairInfo.Code != 0)
             {
@@ -2536,7 +2962,7 @@ namespace netDxf
             }
 
             //just in case the layer has not been defined in the table section
-            var layer = new Layer(name);
+            Layer layer = new Layer(name);
             this.layers.Add(layer.Name, layer);
             return layer;
         }
@@ -2549,7 +2975,7 @@ namespace netDxf
             }
 
             //just in case the line type has not been defined in the table section
-            var lineType = new LineType(name);
+            LineType lineType = new LineType(name);
             this.lineTypes.Add(lineType.Name, lineType);
             return lineType;
         }
@@ -2562,7 +2988,7 @@ namespace netDxf
             }
 
             //just in case the text style has not been defined in the table section
-            var textStyle = new TextStyle(name, "Arial");
+            TextStyle textStyle = new TextStyle(name, "Arial");
             this.textStyles.Add(textStyle.Name, textStyle);
             return textStyle;
         }

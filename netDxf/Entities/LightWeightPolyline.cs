@@ -30,8 +30,8 @@ namespace netDxf.Entities
     /// Represents a polyline <see cref="netDxf.Entities.IEntityObject">entity</see>.
     /// </summary>
     /// <remarks>
-    /// The <see cref="netDxf.Entities.LightWeightPolyline">LightWeightPolyline</see> and
-    /// the <see cref="netDxf.Entities.Polyline">Polyline</see> are essentially the same entity, they are both here for compatibility reasons.
+    /// The <see cref="netDxf.Entities.LightWeightPolyline">LightWeightPolyline</see> and the <see cref="netDxf.Entities.Polyline">Polyline</see> are essentially the same entity,
+    /// they are both here for compatibility reasons.
     /// When a AutoCad12 file is saved all lightweight polylines will be converted to polylines, while for AutoCad2000 and later versions all
     /// polylines will be converted to lightweight polylines.
     /// </remarks>
@@ -244,8 +244,8 @@ namespace netDxf.Entities
         {
             foreach (LightWeightPolylineVertex v in this.vertexes)
             {
-                v.BeginThickness = width;
-                v.EndThickness = width;
+                v.BeginWidth = width;
+                v.EndWidth = width;
             }
         }
 
@@ -261,10 +261,10 @@ namespace netDxf.Entities
             {
                 polyVertexes.Add(new PolylineVertex(v.Location)
                                      {
-                                         BeginThickness = v.BeginThickness,
+                                         BeginWidth = v.BeginWidth,
                                          Bulge = v.Bulge,
                                          Color = this.Color,
-                                         EndThickness = v.EndThickness,
+                                         EndWidth = v.EndWidth,
                                          Layer = this.Layer,
                                          LineType = this.LineType,
                                      }
@@ -281,6 +281,91 @@ namespace netDxf.Entities
                            Thickness = this.thickness,
                            XData = this.xData
                        };
+        }
+
+        /// <summary>
+        /// Decompose the actual polyline in its internal entities, <see cref="Line">lines</see> and <see cref="Arc">arcs</see>.
+        /// </summary>
+        /// <remarks>
+        /// Makes the opposite function as the Join() method.
+        /// </remarks>
+        /// <returns>A list of <see cref="Line">lines</see>see> and <see cref="Arc">arcs</see> that made up the polyline.</returns>
+        public List<IEntityObject> Explode()
+        {
+            List<IEntityObject> entities = new List<IEntityObject>();
+            int index = 0;
+            foreach (LightWeightPolylineVertex vertex in this.Vertexes)
+            {
+                double bulge = vertex.Bulge;
+                Vector2 p1;
+                Vector2 p2;
+
+                if (index == this.Vertexes.Count - 1)
+                {
+                    if (!this.isClosed) break;
+                    p1 = new Vector2(vertex.Location.X, vertex.Location.Y);
+                    p2 = new Vector2(this.vertexes[0].Location.X, this.vertexes[0].Location.Y);
+                }
+                else
+                {
+                    p1 = new Vector2(vertex.Location.X, vertex.Location.Y);
+                    p2 = new Vector2(this.vertexes[index + 1].Location.X, this.vertexes[index + 1].Location.Y);
+                }
+                if (MathHelper.IsZero(bulge))
+                {
+                    // the polyline edge is a line
+                    Vector3 start = MathHelper.Transform(new Vector3(p1.X, p1.Y, this.elevation), this.normal,
+                                                            MathHelper.CoordinateSystem.Object,
+                                                            MathHelper.CoordinateSystem.World);
+                    Vector3 end = MathHelper.Transform(new Vector3(p2.X, p2.Y, this.elevation), this.normal,
+                                                        MathHelper.CoordinateSystem.Object,
+                                                        MathHelper.CoordinateSystem.World);
+
+                    entities.Add(new Line(start, end)
+                    {
+                        Color = this.color,
+                        Layer = this.layer,
+                        LineType = this.lineType,
+                        Normal = this.normal,
+                        Thickness = this.thickness,
+                        XData = this.xData
+                    });
+                }
+                else
+                {
+                    // the polyline edge is an arc
+                    double theta = 4 * Math.Atan(Math.Abs(bulge));
+                    double c = Vector2.Distance(p1, p2);
+                    double r = (c / 2) / Math.Sin(theta / 2);
+                    double gamma = (Math.PI - theta) / 2;
+                    double phi = Vector2.AngleBetween(p1, p2) + Math.Sign(bulge) * gamma;
+                    Vector2 center = new Vector2(p1.X + r * Math.Cos(phi), p1.Y + r * Math.Sin(phi));
+                    double startAngle;
+                    double endAngle;
+                    if (bulge > 0)
+                    {
+                        startAngle = MathHelper.RadToDeg * Vector2.AngleBetween(Vector2.UnitX, p1 - center);
+                        endAngle = startAngle + MathHelper.RadToDeg * theta;
+                    }
+                    else
+                    {
+                        endAngle = MathHelper.RadToDeg * Vector2.AngleBetween(Vector2.UnitX, p1 - center);
+                        startAngle = endAngle - MathHelper.RadToDeg * theta;
+                    }
+                    entities.Add(new Arc(new Vector3(center.X, center.Y, this.elevation), r, startAngle, endAngle)
+                    {
+                        Color = this.color,
+                        Layer = this.layer,
+                        LineType = this.lineType,
+                        Normal = this.normal,
+                        Thickness = this.thickness,
+                        XData = this.xData
+                    });
+                }
+                index++;
+            }
+
+            return entities;
         }
 
 

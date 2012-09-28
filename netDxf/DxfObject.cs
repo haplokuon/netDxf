@@ -59,9 +59,9 @@ namespace netDxf
         }
 
         /// <summary>
-        /// Gets or sets the handle asigned of the dxf object.
+        /// Gets or sets the handle asigned to the dxf object.
         /// </summary>
-        /// <remarks>Only the getter is public.</remarks>
+        /// <remarks>It is a unique hexadecimal number asigned automatically to every dxf object. Only the getter is public.</remarks>
         public string Handle
         {
             get { return this.handle; }

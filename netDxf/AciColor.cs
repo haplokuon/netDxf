@@ -269,7 +269,7 @@ namespace netDxf
 
         private static Dictionary<byte, byte[]> AciColors()
         {
-            var lista = new Dictionary<byte, byte[]>
+            Dictionary<byte, byte[]> lista = new Dictionary<byte, byte[]>
                             {
                                 {1, new byte[] {255, 0, 0}},
                                 {2, new byte[] {255, 255, 0}},

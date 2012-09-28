@@ -20,6 +20,7 @@
 
 #endregion
 
+using System;
 using netDxf.Tables;
 
 namespace netDxf.Blocks
@@ -42,12 +43,17 @@ namespace netDxf.Blocks
         }
 
         /// <summary>
-        /// Gets or sets the block end <see cref="netDxf.Tables.Layer">layer</see>
+        /// Gets or sets the block end <see cref="netDxf.Tables.Layer">layer</see>.
         /// </summary>
         public Layer Layer
         {
             get { return this.layer; }
-            set { if (value != null) this.layer = value; }
+            set
+            {
+                if (value == null)
+                    throw new ArgumentNullException("value");
+                this.layer = value;
+            }
         }
     }
 }

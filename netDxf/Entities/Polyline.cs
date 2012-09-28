@@ -277,8 +277,8 @@ namespace netDxf.Entities
         {
             foreach (PolylineVertex v in this.vertexes)
             {
-                v.BeginThickness = width;
-                v.EndThickness = width;
+                v.BeginWidth = width;
+                v.EndWidth = width;
             }
         }
 
@@ -293,9 +293,9 @@ namespace netDxf.Entities
             {
                 polyVertexes.Add(new LightWeightPolylineVertex(v.Location)
                                      {
-                                         BeginThickness = v.BeginThickness,
+                                         BeginWidth = v.BeginWidth,
                                          Bulge = v.Bulge,
-                                         EndThickness = v.EndThickness,
+                                         EndWidth = v.EndWidth,
                                      }
                     );
             }
@@ -313,9 +313,12 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Decompose the actual polyline in its internal entities: lines and arcs.
+        /// Decompose the actual polyline in its internal entities, <see cref="Line">lines</see> and <see cref="Arc">arcs</see>.
         /// </summary>
-        /// <returns>A list of <see cref="IEntityObject">entities</see>: lines and arcs.</returns>
+        /// <remarks>
+        /// Makes the opposite function as the Join() method.
+        /// </remarks>
+        /// <returns>A list of <see cref="Line">lines</see>see> and <see cref="Arc">arcs</see> that made up the polyline.</returns>
         public List<IEntityObject> Explode()
         {
             List<IEntityObject> entities = new List<IEntityObject>();
@@ -392,6 +395,19 @@ namespace netDxf.Entities
             }
 
             return entities;
+        }
+
+        /// <summary>
+        /// Builds a polyline from a list of <see cref="Line">lines</see> and <see cref="Arc">arcs</see>.
+        /// </summary>
+        /// <remarks>
+        /// Makes the opposite function as the Explode() method.
+        /// </remarks>
+        /// <param name="entities">List of <see cref="Line">lines</see> and <see cref="Arc">arcs</see> to join.</param>
+        /// <returns>A polyline made up of the <see cref="Line">lines</see> and <see cref="Arc">arcs</see> of the entities list.</returns>
+        public static Polyline Join(List<IEntityObject> entities)
+        {
+            throw new NotImplementedException();
         }
 
         /// <summary>

@@ -257,7 +257,7 @@ namespace netDxf
         public Matrix3 Inverse()
         {
             double det = this.Determinant();
-            var resultado = new Matrix3();
+            Matrix3 resultado = new Matrix3();
             if (MathHelper.IsZero(det))
             {
                 throw (new ArithmeticException("The matrix is not invertible"));
@@ -298,7 +298,7 @@ namespace netDxf
         /// <returns>A string text.</returns>
         public override string ToString()
         {
-            var s = new StringBuilder();
+            StringBuilder s = new StringBuilder();
             s.Append(string.Format("|{0};{1};{2}|" + Environment.NewLine, this.mM11, this.mM12, this.mM13));
             s.Append(string.Format("|{0};{1};{2}|" + Environment.NewLine, this.mM21, this.mM22, this.mM23));
             s.Append(string.Format("|{0};{1};{2}|" + Environment.NewLine, this.mM31, this.mM32, this.mM33));
@@ -313,7 +313,7 @@ namespace netDxf
         /// <returns>A string text.</returns>
         public string ToString(IFormatProvider provider)
         {
-            var s = new StringBuilder();
+            StringBuilder s = new StringBuilder();
             s.Append(string.Format("|{0};{1};{2}|" + Environment.NewLine, this.mM11.ToString(provider), this.mM12.ToString(provider), this.mM13.ToString(provider)));
             s.Append(string.Format("|{0};{1};{2}|" + Environment.NewLine, this.mM21.ToString(provider), this.mM22.ToString(provider), this.mM23.ToString(provider)));
             s.Append(string.Format("|{0};{1};{2}|" + Environment.NewLine, this.mM31.ToString(provider), this.mM32.ToString(provider), this.mM33.ToString(provider)));

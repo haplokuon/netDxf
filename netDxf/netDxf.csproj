@@ -16,10 +16,14 @@
     </FileUpgradeFlags>
     <OldToolsVersion>4.0</OldToolsVersion>
     <UpgradeBackupLocation />
-    <SccProjectName>SAK</SccProjectName>
-    <SccLocalPath>SAK</SccLocalPath>
-    <SccAuxPath>SAK</SccAuxPath>
-    <SccProvider>SAK</SccProvider>
+    <SccProjectName>
+    </SccProjectName>
+    <SccLocalPath>
+    </SccLocalPath>
+    <SccAuxPath>
+    </SccAuxPath>
+    <SccProvider>
+    </SccProvider>
     <PublishUrl>publish\</PublishUrl>
     <Install>true</Install>
     <InstallFrom>Disk</InstallFrom>
@@ -44,9 +48,9 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <DocumentationFile>
-    </DocumentationFile>
+    <DocumentationFile>bin\Debug\netDxf.xml</DocumentationFile>
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+    <PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -70,6 +74,7 @@
     <Compile Include="Entities\Hatch.cs" />
     <Compile Include="Entities\HatchPattern.cs" />
     <Compile Include="Entities\HatchPatternBoundary.cs" />
+    <Compile Include="Entities\HatchPatternLineDefinition.cs" />
     <Compile Include="Entities\LightWeightPolyline.cs" />
     <Compile Include="Entities\LightWeightPolylineVertex.cs" />
     <Compile Include="Header\DxfVersion.cs" />
@@ -80,7 +85,7 @@
     <Compile Include="DxfObjectCode.cs" />
     <Compile Include="Entities\Ellipse.cs" />
     <Compile Include="Entities\EndSequence.cs" />
-    <Compile Include="Entities\NURBSCurve.cs" />
+    <Compile Include="Entities\NurbsCurve.cs" />
     <Compile Include="Entities\NurbsVertex.cs" />
     <Compile Include="Entities\Solid.cs" />
     <Compile Include="Header\HeaderVariable.cs" />

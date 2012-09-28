@@ -142,8 +142,11 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets or sets the ellipse rotation along its normal.
+        /// Gets or sets the ellipse local rotation along its normal.
         /// </summary>
+        /// <remarks>
+        /// The rotation axis it is defined by the 
+        /// </remarks>
         public double Rotation
         {
             get { return this.rotation; }
@@ -206,7 +209,7 @@ namespace netDxf.Entities
         /// </summary>
         public bool IsFullEllipse
         {
-            get { return (MathHelper.IsEqual(this.startAngle + this.endAngle, 360.0)); }
+            get { return (MathHelper.IsEqual(Math.Abs(this.endAngle - this.startAngle), 360.0)); }
         }
 
         #endregion
@@ -274,7 +277,7 @@ namespace netDxf.Entities
 
         #endregion
 
-        #region public methods
+        #region methods
 
         /// <summary>
         /// Converts the ellipse in a Polyline.
@@ -283,29 +286,92 @@ namespace netDxf.Entities
         /// <returns>A new instance of <see cref="Polyline">Polyline</see> that represents the ellipse.</returns>
         public Polyline ToPolyline(int precision)
         {
-            List<Vector2> vertexes = this.PolygonalVertexes(precision);
-            Vector3 ocsCenter = MathHelper.Transform(this.center,
-                                                      this.normal, MathHelper.CoordinateSystem.World, MathHelper.CoordinateSystem.Object);
-
+            IEnumerable<Vector2> vertexes = this.PolygonalVertexes(precision);
+            Vector3 ocsCenter = MathHelper.Transform(this.center, this.normal, MathHelper.CoordinateSystem.World, MathHelper.CoordinateSystem.Object);
             Polyline poly = new Polyline
-            {
-                Color = this.color,
-                Layer = this.layer,
-                LineType = this.lineType,
-                Normal = this.normal,
-                Elevation = ocsCenter.Z,
-                Thickness = this.thickness
-            };
-            poly.XData=this.xData;
+                                {
+                                    Color = this.color,
+                                    Layer = this.layer,
+                                    LineType = this.lineType,
+                                    Normal = this.normal,
+                                    Elevation = ocsCenter.Z,
+                                    Thickness = this.thickness,
+                                    XData = this.xData,
+                                    IsClosed = this.IsFullEllipse
+                                };
 
             foreach (Vector2 v in vertexes)
             {
                 poly.Vertexes.Add(new PolylineVertex(v.X + ocsCenter.X, v.Y + ocsCenter.Y));
             }
-            if (this.IsFullEllipse)
-                poly.IsClosed = true;
-
             return poly;
+        }
+
+        internal double[] GetParameters()
+        {
+            double atan1;
+            double atan2;
+            if (this.IsFullEllipse)
+            {
+                atan1 = 0.0;
+                atan2 = MathHelper.TwoPI;
+            }
+            else
+            {
+                Vector2 startPoint = new Vector2(this.Center.X, this.Center.Y) + this.PolarCoordinateRelativeToCenter(this.StartAngle);
+                Vector2 endPoint = new Vector2(this.Center.X, this.Center.Y) + this.PolarCoordinateRelativeToCenter(this.EndAngle);
+                double a = this.MajorAxis * 0.5;
+                double b = this.MinorAxis * 0.5;
+                double px1 = ((startPoint.X - this.Center.X) / a);
+                double py1 = ((startPoint.Y - this.Center.Y) / b);
+                double px2 = ((endPoint.X - this.Center.X) / a);
+                double py2 = ((endPoint.Y - this.Center.Y) / b);
+
+                atan1 = Math.Atan2(py1, px1);
+                atan2 = Math.Atan2(py2, px2);
+            }
+            return new[]{atan1, atan2};
+        }
+
+        internal void SetParameters(double[] param)
+        {
+            double a = this.MajorAxis * 0.5;
+            double b = this.MinorAxis * 0.5;
+
+            Vector2 c = new Vector2(this.center.X, this.center.Y);
+            Vector2 start = new Vector2(a * Math.Cos(param[0]), b * Math.Sin(param[0]));
+            Vector2 end = new Vector2(a * Math.Cos(param[1]), b * Math.Sin(param[1]));
+            // trigonometry functions are very prone to round off errors
+            if (start.Equals(end, MathHelper.Epsilon))
+            {
+                this.startAngle = 0.0;
+                this.endAngle = 360.0;
+            }
+            else
+            {
+                this.startAngle = Math.Round(Vector2.AngleBetween(Vector2.Zero, start) * MathHelper.RadToDeg, MathHelper.MaxAngleDecimals);
+                this.endAngle = Math.Round(Vector2.AngleBetween(Vector2.Zero, end) * MathHelper.RadToDeg, MathHelper.MaxAngleDecimals);
+            }            
+        }
+
+        /// <summary>
+        /// Calculate the local point on the ellipse for a given angle relative to the center.
+        /// </summary>
+        /// <param name="angle">Angle in degrees.</param>
+        /// <returns>A local point on the ellipse for the given angle relative to the center.</returns>
+        private Vector2 PolarCoordinateRelativeToCenter(double angle)
+        {
+            double a = this.MajorAxis * 0.5;
+            double b = this.MinorAxis * 0.5;
+            double radians = angle * MathHelper.DegToRad;
+
+            double a1 = a * Math.Sin(radians);
+            double b1 = b * Math.Cos(radians);
+
+            double radius = (a * b) / Math.Sqrt(b1 * b1 + a1 * a1);
+
+            // convert the radius back to cartesian coordinates
+            return new Vector2(radius * Math.Cos(radians), radius * Math.Sin(radians));
         }
 
         /// <summary>
@@ -313,7 +379,7 @@ namespace netDxf.Entities
         /// </summary>
         /// <param name="precision">Number of vertexes generated.</param>
         /// <returns>A list vertexes that represents the ellipse expresed in object coordinate system.</returns>
-        public List<Vector2> PolygonalVertexes(int precision)
+        private IEnumerable<Vector2> PolygonalVertexes(int precision)
         {
             List<Vector2> points = new List<Vector2>();
             double beta = this.rotation * MathHelper.DegToRad;
@@ -338,28 +404,15 @@ namespace netDxf.Entities
             {
                 for (int i = 0; i <= precision; i++)
                 {
-
                     double angle = this.startAngle + i * (this.endAngle - this.startAngle) / precision;
-                    points.Add(this.PointFromEllipse(angle));
+                    Vector2 point = this.PolarCoordinateRelativeToCenter(angle);
+                    // we need to apply the ellipse rotation to the local point
+                    double pointX = point.X * cosbeta - point.Y * sinbeta;
+                    double pointY = point.X * sinbeta + point.Y * cosbeta;
+                    points.Add(new Vector2(pointX, pointY));
                 }
             }
             return points;
-        }
-
-        private Vector2 PointFromEllipse(double degrees)
-        {
-            // Convert the basic input into something more usable
-            Vector2 ptCenter = new Vector2(this.center.X, this.center.Y);
-            double radians = degrees * MathHelper.DegToRad;
-
-            // Calculate the radius of the ellipse for the given angle
-            double a = this.majorAxis;
-            double b = this.minorAxis;
-            double eccentricity = Math.Sqrt(1 - (b * b) / (a * a));
-            double radiusAngle = b / Math.Sqrt(1 - (eccentricity * eccentricity) * Math.Pow(Math.Cos(radians), 2));
-
-            // Convert the radius back to Cartesian coordinates
-            return new Vector2(ptCenter.X + radiusAngle*Math.Cos(radians), ptCenter.Y + radiusAngle*Math.Sin(radians));
         }
 
         #endregion

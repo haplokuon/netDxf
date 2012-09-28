@@ -1,7 +1,7 @@
-﻿#region netDxf, Copyright(C) 2009 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf, Copyright(C) 2012 Daniel Carvajal, Licensed under LGPL.
 
 //                        netDxf library
-// Copyright (C) 2009 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2012 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -96,9 +96,8 @@ namespace netDxf.Entities
         #region public properties
 
         /// <summary>
-        /// Gets or sets the arc <see cref="netDxf.Vector3">center</see>.
+        /// Gets or sets the arc <see cref="netDxf.Vector3">center</see> in world coordinates.
         /// </summary>
-        /// <remarks>The center Z coordinate represents the elevation of the arc along the normal.</remarks>
         public Vector3 Center
         {
             get { return this.center; }
@@ -226,14 +225,14 @@ namespace netDxf.Entities
 
         #endregion
 
-        #region public methods
+        #region methods
 
         /// <summary>
         /// Converts the arc in a list of vertexes.
         /// </summary>
         /// <param name="precision">Number of vertexes generated.</param>
         /// <returns>A list vertexes that represents the arc expresed in object coordinate system.</returns>
-        public List<Vector2> PoligonalVertexes(int precision)
+        private IEnumerable<Vector2> PolygonalVertexes(int precision)
         {
             if (precision < 2)
                 throw new ArgumentOutOfRangeException("precision", precision, "The arc precision must be greater or equal to two");
@@ -247,54 +246,38 @@ namespace netDxf.Entities
             {
                 double sine = this.radius * Math.Sin(start + angle * i);
                 double cosine = this.radius * Math.Cos(start + angle * i);
-                ocsVertexes.Add(new Vector2(cosine + this.center.X, sine + this.center.Y));
+                ocsVertexes.Add(new Vector2(cosine, sine));
             }
 
             return ocsVertexes;
         }
 
         /// <summary>
-        /// Converts the arc in a list of vertexes.
+        /// Converts the arc in a Polyline.
         /// </summary>
         /// <param name="precision">Number of vertexes generated.</param>
-        /// <param name="weldThreshold">Tolerance to consider if two new generated vertexes are equal.</param>
-        /// <returns>A list vertexes that represents the arc expresed in object coordinate system.</returns>
-        public List<Vector2> PoligonalVertexes(int precision, double weldThreshold)
+        /// <returns>A new instance of <see cref="Polyline">Polyline</see> that represents the arc.</returns>
+        public Polyline ToPolyline(int precision)
         {
-            if (precision < 2)
-                throw new ArgumentOutOfRangeException("precision", precision, "The arc precision must be greater or equal to two");
+            IEnumerable<Vector2> vertexes = this.PolygonalVertexes(precision);
+            Vector3 ocsCenter = MathHelper.Transform(this.center, this.normal, MathHelper.CoordinateSystem.World, MathHelper.CoordinateSystem.Object);
 
-            List<Vector2> ocsVertexes = new List<Vector2>();
-            double start = this.startAngle * MathHelper.DegToRad;
-            double end = this.endAngle * MathHelper.DegToRad;
-
-            if (2*this.radius >= weldThreshold)
+            Polyline poly = new Polyline
             {
-                double angle = (end - start) / precision;
-                Vector2 prevPoint;
-                Vector2 firstPoint;
-
-                double sine = this.radius * Math.Sin(start);
-                double cosine = this.radius * Math.Cos(start);
-                firstPoint = new Vector2(cosine + this.center.X, sine + this.center.Y);
-                ocsVertexes.Add(firstPoint);
-                prevPoint = firstPoint;
-
-                for (int i = 1; i <= precision; i++)
-                {
-                    sine = this.radius*Math.Sin(start + angle*i);
-                    cosine = this.radius*Math.Cos(start + angle*i);
-                    Vector2 point = new Vector2(cosine + this.center.X, sine + this.center.Y);
-
-                    if (!point.Equals(prevPoint, weldThreshold) && !point.Equals(firstPoint, weldThreshold))
-                    {
-                        ocsVertexes.Add(point);
-                        prevPoint = point;
-                    }
-                }
+                Color = this.color,
+                Layer = this.layer,
+                LineType = this.lineType,
+                Normal = this.normal,
+                Elevation = ocsCenter.Z,
+                Thickness = this.thickness,
+                XData = this.xData,
+                IsClosed = false
+            };
+            foreach (Vector2 v in vertexes)
+            {
+                poly.Vertexes.Add(new PolylineVertex(v.X + ocsCenter.X, v.Y + ocsCenter.Y));
             }
-
-            return ocsVertexes;
+            return poly;
         }
 
         #endregion

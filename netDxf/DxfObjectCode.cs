@@ -28,102 +28,102 @@ namespace netDxf
     public sealed class DxfObjectCode
     {
         /// <summary>
-        /// application registry.
+        /// Application registry.
         /// </summary>
         public const string AppId = "APPID";
 
         /// <summary>
-        /// dimension style.
+        /// Dimension style.
         /// </summary>
         public const string DimStyle = "DIMSTYLE";
 
         /// <summary>
-        /// block record.
+        /// Block record.
         /// </summary>
         public const string BlockRecord = "BLOCK_RECORD";
 
         /// <summary>
-        /// line type.
+        /// Line type.
         /// </summary>
         public const string LineType = "LTYPE";
 
         /// <summary>
-        /// layer.
+        /// Layer.
         /// </summary>
         public const string Layer = "LAYER";
 
         /// <summary>
-        /// viewport.
+        /// Viewport.
         /// </summary>
         public const string ViewPort = "VPORT";
 
         /// <summary>
-        /// text style.
+        /// Text style.
         /// </summary>
         public const string TextStyle = "STYLE";
 
         /// <summary>
-        /// view.
+        /// View.
         /// </summary>
         public const string View = "VIEW";
 
         /// <summary>
-        /// ucs.
+        /// Ucs.
         /// </summary>
         public const string Ucs = "UCS";
 
         /// <summary>
-        /// block.
+        /// Block.
         /// </summary>
         public const string Block = "BLOCK";
 
         /// <summary>
-        /// block.
+        /// End block.
         /// </summary>
         public const string BlockEnd = "ENDBLK";
 
         /// <summary>
-        /// line.
+        /// Line.
         /// </summary>
         public const string Line = "LINE";
 
         /// <summary>
-        /// ellipse.
+        /// Ellipse.
         /// </summary>
         public const string Ellipse = "ELLIPSE";
 
         /// <summary>
-        /// polyline.
+        /// Polyline.
         /// </summary>
         public const string Polyline = "POLYLINE";
 
         /// <summary>
-        /// light weight polyline.
+        /// Lightweight polyline.
         /// </summary>
         public const string LightWeightPolyline = "LWPOLYLINE";
 
         /// <summary>
-        /// circle.
+        /// Circle.
         /// </summary>
         public const string Circle = "CIRCLE";
 
         /// <summary>
-        /// point.
+        /// Point.
         /// </summary>
         public const string Point = "POINT";
 
         /// <summary>
-        /// arc.
+        /// Arc.
         /// </summary>
         public const string Arc = "ARC";
 
         /// <summary>
-        /// solid.
+        /// Solid.
         /// </summary>
         public const string Solid = "SOLID";
 
         /// <summary>
-        /// text string.
+        /// Text string.
         /// </summary>
         public const string Text = "TEXT";
 
@@ -133,42 +133,42 @@ namespace netDxf
         public const string Face3D = "3DFACE";
 
         /// <summary>
-        /// block insertion.
+        /// Block insertion.
         /// </summary>
         public const string Insert = "INSERT";
 
         /// <summary>
-        /// hatch.
+        /// Hatch.
         /// </summary>
         public const string Hatch = "HATCH";
 
         /// <summary>
-        /// attribute definition.
+        /// Attribute definition.
         /// </summary>
         public const string AttributeDefinition = "ATTDEF";
 
         /// <summary>
-        /// attribute.
+        /// Attribute.
         /// </summary>
         public const string Attribute = "ATTRIB";
 
         /// <summary>
-        /// vertex.
+        /// Vertex.
         /// </summary>
         public const string Vertex = "VERTEX";
 
         /// <summary>
-        /// end sequence.
+        /// End sequence.
         /// </summary>
         public const string EndSequence = "SEQEND";
 
         /// <summary>
-        /// dim.
+        /// Dimension.
         /// </summary>
         public const string Dimension = "DIMENSION";
 
         /// <summary>
-        /// dictionary.
+        /// Dictionary.
         /// </summary>
         public const string Dictionary = "DICTIONARY";
     }

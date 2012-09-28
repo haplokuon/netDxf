@@ -31,23 +31,23 @@ namespace netDxf.Entities
     public enum AttributeFlags
     {
         /// <summary>
-        /// Attribute is visible 
+        /// Attribute is visible.
         /// </summary>
         Visible = 0,
         /// <summary>
-        /// Attribute is invisible (does not appear)
+        /// Attribute is invisible (does not appear).
         /// </summary>
         Hidden = 1,
         /// <summary>
-        /// This is a constant attribute
+        /// This is a constant attribute.
         /// </summary>
         Constant = 2,
         /// <summary>
-        /// Verification is required on input of this attribute
+        /// Verification is required on input of this attribute.
         /// </summary>
         Verify = 4,
         /// <summary>
-        /// Attribute is preset (no prompt during insertion)
+        /// Attribute is preset (no prompt during insertion).
         /// </summary>
         Predefined = 8
     }
@@ -100,7 +100,7 @@ namespace netDxf.Entities
             this.lineType = LineType.ByLayer;
             this.style = TextStyle.Default;
             this.alignment = TextAlignment.BaselineLeft;
-            this.height = this.style.Height == 0.0 ? 1.0f : this.style.Height;
+            this.height = MathHelper.IsZero(this.style.Height) ? 1.0f : this.style.Height;
             this.widthFactor = this.style.WidthFactor;
             this.rotation = 0.0f;
             this.normal = Vector3.UnitZ;
@@ -110,7 +110,7 @@ namespace netDxf.Entities
         /// Intitializes a new instance of the <c>AttributeDefiniton</c> class.
         /// </summary>
         /// <param name="id">Attribute identifier, the parameter <c>id</c> string cannot contain spaces.</param>
-        /// <param name="style">Attribute <see cref="netDxf.Tables.TextStyle">text style.</see></param>
+        /// <param name="style">Attribute <see cref="netDxf.Tables.TextStyle">text style</see>.</param>
         public AttributeDefinition(string id, TextStyle style)
             : base(DxfObjectCode.AttributeDefinition)
         {
@@ -126,7 +126,7 @@ namespace netDxf.Entities
             this.lineType = LineType.ByLayer;
             this.style = style;
             this.alignment = TextAlignment.BaselineLeft;
-            this.height = style.Height == 0.0 ? 1.0f : style.Height;
+            this.height = MathHelper.IsZero(this.style.Height) ? 1.0f : style.Height;
             this.widthFactor = style.WidthFactor;
             this.rotation = 0.0f;
             this.normal = Vector3.UnitZ;

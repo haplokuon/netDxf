@@ -1,7 +1,7 @@
-﻿#region netDxf, Copyright(C) 2009 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf, Copyright(C) 2012 Daniel Carvajal, Licensed under LGPL.
 
 //                        netDxf library
-// Copyright (C) 2009 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2012 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -38,11 +38,16 @@ namespace TestDxfDocument
     {
         private static void Main()
         {
+            LineWidth();
+            HatchCircleBoundary();
+
+            //ToPolyline();
+            //FilesTest();
+            //CustomHatchPattern();
+            //LoadSaveHatchTest();
             //WriteDxfFile();
             //ReadDxfFile();
-
             //ExplodeTest();
-            HatchTestCircleBoundary();
             //HatchTestLinesBoundary();
             //HatchTest3();
             //BlockAttributes();
@@ -55,6 +60,201 @@ namespace TestDxfDocument
             //Dxf2000();
             //SpeedTest();
             //WritePolyline3d();
+        }
+
+
+        private static void HatchCircleBoundary()
+        {
+            DxfDocument dxf = new DxfDocument();
+
+            // create a circle that will be our hatch boundary in this case it is a circle with center (5.5, -5.5, 0.0) and a radius 10.0
+            Circle circle = new Circle(new Vector3(5.5, -5.5, 0), 10);
+
+            // create the hatch boundary path with only the circle (a circle is already a closed loop it is all we need to define a valid boundary path)
+            // a hatch can have many boundaries (closed loops) and every boundary path can be made of several entities (lines, polylines, arcs, circles and ellipses)
+            List<HatchBoundaryPath> boundary = new List<HatchBoundaryPath>
+                                                        {
+                                                            new HatchBoundaryPath(new List<IEntityObject>{circle})
+                                                        };  
+
+            // create the hatch in this case we will use the predefined Solid hatch pattern and our circle as the boundary path
+            Hatch hatch = new Hatch(HatchPattern.Solid, boundary);
+
+            // to give a color to the hatch, we have to options:
+
+            // create a new layer with a color for the hatch (in this case by default the hatch will have a ByLayer color)
+            //Layer hatchLayer = new Layer("HathLayer") {Color = AciColor.Green};
+            //hatch.Layer = hatchLayer;
+
+            // or give the hatch a color just for it
+            // old AutoCAD versions only had 255 colors (indexed color), now in AutoCAD you can use true colors (8 bits per channel) but at the moment this is not supported.
+            // if you try to give r, g, b values to define a color it will be converted to an indexed color
+            // (I haven't tested this code a lot, so errors might appear and the result might not be what you expected).
+            hatch.Color = AciColor.Red;
+
+            // the hatch by itself will not show the boundary, but we can use the same entity to show the limits of the hatch, adding it to the document 
+            dxf.AddEntity(circle);
+
+            // add the hatch to the document
+            dxf.AddEntity(hatch);
+
+            dxf.Save("circle solid fill.dxf", DxfVersion.AutoCad2000);
+        }
+
+        private static void LineWidth()
+        {
+            // the line thickness works as expected, according to the AutoCAD way of doing things
+            Line thickLine = new Line(new Vector3(0,10,0),  new Vector3(10,20,0));
+
+            // when you assign a thickness to a line, the result is like a wall, it is like a 3d face whose vertexes are defined by the
+            // start and end points of the line and the thickness along the normal of the line.
+            thickLine.Thickness = 5;
+
+            // maybe what you are trying to do is create a line with a width (something that we can read it as a line with thickness), the only way to do this is to create a polyline
+            // the kind of result you will get if you give a width to a 2d polyline 
+            // you can only give a width to a vertex of a Polyline or a LightweigthPolyline
+            // I am planning to drop support to AutoCAD 12 dxf files, so to define a bidimensional polyline the only way will be to use lightweight polyline
+            // (the Polyline class and the LightWeightPolyline are basically the same).
+            Polyline widthLine = new Polyline();
+            PolylineVertex startVertex = new PolylineVertex(new Vector2(0, 0));
+            PolylineVertex endVertex = new PolylineVertex(new Vector2(10, 10));
+            widthLine.Vertexes = new List<PolylineVertex>{startVertex,endVertex};
+
+            // the easy way to give a constant width to a polyline, but you can also give a polyline width by vertex
+            // there is a mistake on my part, following the AutoCAD documentation I should have called the PolylineVertex.StartThickness and PolylineVertex.EndThickness as
+            // PolylineVertex.StartWidth and PolylineVertex.EndWidth
+            // SetConstantWidth is a sort cut that will asign the given value to every start width and end width of every vertex of the polyline
+            widthLine.SetConstantWidth(0.5);
+
+            DxfDocument dxf = new DxfDocument();
+
+            // add the entities to the document (both of them to see the difference)
+            dxf.AddEntity(thickLine);
+            dxf.AddEntity(widthLine);
+
+            dxf.Save("line width.dxf", DxfVersion.AutoCad2000);
+
+        }
+
+        private static void ToPolyline()
+        {
+            DxfDocument dxf = new DxfDocument();
+
+            Vector3 center = new Vector3(1, 8, -7);
+            Vector3 normal = new Vector3(1, 1, 1);
+
+            Circle circle = new Circle(center, 7.5);
+            circle.Normal = normal;
+
+            Arc arc = new Arc(center, 5, 30, 215);
+            arc.Normal = normal;
+
+
+            Ellipse ellipse = new Ellipse(center, 15, 7.5);
+            ellipse.Rotation = 35;
+            ellipse.Normal = normal;
+
+            Ellipse ellipseArc = new Ellipse(center, 10, 5);
+            ellipseArc.StartAngle = 30;
+            ellipseArc.EndAngle = 325;
+            ellipseArc.Rotation = 35;
+            ellipseArc.Normal = normal;
+
+            dxf.AddEntity(circle);
+            dxf.AddEntity(circle.ToPolyline(10));
+
+            dxf.AddEntity(arc);
+            dxf.AddEntity(arc.ToPolyline(10));
+
+            dxf.AddEntity(ellipse);
+            dxf.AddEntity(ellipse.ToPolyline(10));
+
+            dxf.AddEntity(ellipseArc);
+            dxf.AddEntity(ellipseArc.ToPolyline(10));
+
+            dxf.Save("to polyline.dxf", DxfVersion.AutoCad2000);
+
+            dxf.Load("to polyline.dxf");
+
+            dxf.Save("to polyline2.dxf", DxfVersion.AutoCad2000);
+        }
+        private static void CustomHatchPattern()
+        {
+            DxfDocument dxf = new DxfDocument();
+
+            Polyline poly = new Polyline();
+            poly.Vertexes.Add(new PolylineVertex(-10, -10));
+            poly.Vertexes.Add(new PolylineVertex(10, -10));
+            poly.Vertexes.Add(new PolylineVertex(10, 10));
+            poly.Vertexes.Add(new PolylineVertex(-10, 10));
+            poly.Vertexes[2].Bulge = 1;
+            poly.IsClosed = true;
+
+            Polyline poly2 = new Polyline();
+            poly2.Vertexes.Add(new PolylineVertex(-5, -5));
+            poly2.Vertexes.Add(new PolylineVertex(5, -5));
+            poly2.Vertexes.Add(new PolylineVertex(5, 5));
+            poly2.Vertexes.Add(new PolylineVertex(-5, 5));
+            poly2.Vertexes[1].Bulge = -0.25;
+            poly2.IsClosed = true;
+
+            Polyline poly3 = new Polyline();
+            poly3.Vertexes.Add(new PolylineVertex(-8, -8));
+            poly3.Vertexes.Add(new PolylineVertex(-6, -8));
+            poly3.Vertexes.Add(new PolylineVertex(-6, -6));
+            poly3.Vertexes.Add(new PolylineVertex(-8, -6));
+            poly3.IsClosed = true;
+
+            List<HatchBoundaryPath> boundary = new List<HatchBoundaryPath>{
+                                                                            new HatchBoundaryPath(new List<IEntityObject>{poly}),
+                                                                            new HatchBoundaryPath(new List<IEntityObject>{poly2}),
+                                                                            new HatchBoundaryPath(new List<IEntityObject>{poly3}),
+                                                                          };
+
+            HatchPattern pattern = new HatchPattern("MyPattern", "A custom hatch pattern");
+
+            HatchPatternLineDefinition line1 = new HatchPatternLineDefinition();
+            line1.Angle = 45;
+            line1.Origin = Vector2.Zero;
+            line1.Delta=new Vector2(4,4);
+            line1.DashPattern.Add(12);
+            line1.DashPattern.Add(-4);
+            pattern.LineDefinitions.Add(line1);
+
+            HatchPatternLineDefinition line2 = new HatchPatternLineDefinition();
+            line2.Angle = 135;
+            line2.Origin = new Vector2(2.828427125, 2.828427125);
+            line2.Delta = new Vector2(4,-4);
+            line2.DashPattern.Add(12);
+            line2.DashPattern.Add(-4);
+            pattern.LineDefinitions.Add(line2);
+
+            Hatch hatch = new Hatch(pattern, boundary);
+            hatch.Layer = new Layer("hatch")
+            {
+                Color = AciColor.Red,
+                LineType = LineType.Continuous
+            };
+            hatch.Pattern.Angle = 0;
+            hatch.Pattern.Scale = 1;
+            dxf.AddEntity(poly);
+            dxf.AddEntity(poly2);
+            dxf.AddEntity(poly3);
+            dxf.AddEntity(hatch);
+
+            dxf.Save("hatchTest.dxf", DxfVersion.AutoCad2000);
+        }
+        private static void FilesTest()
+        {
+            LineType lineType = LineType.FromFile("acad.lin", "ACAD_ISO15W100");
+            HatchPattern hatch = HatchPattern.FromFile("acad.pat", "zigzag");
+
+        }
+        private static void LoadSaveHatchTest()
+        {
+            DxfDocument dxf = new DxfDocument();
+            dxf.Load("Hatch2.dxf");
+            dxf.Save("HatchTest.dxf", DxfVersion.AutoCad2000);
         }
         private static void ExplodeTest()
         {
@@ -114,7 +314,7 @@ namespace TestDxfDocument
             xdata.XDataRecord.Add(new XDataRecord(XDataCode.String, "extended data with netDxf"));
             xdata.XDataRecord.Add(XDataRecord.OpenControlString);
             xdata.XDataRecord.Add(new XDataRecord(XDataCode.String, "netDxf hatch"));
-            xdata.XDataRecord.Add(new XDataRecord(XDataCode.Distance, hatch.Pattern.LineSeparation));
+            xdata.XDataRecord.Add(new XDataRecord(XDataCode.Distance, hatch.Pattern.Scale));
             xdata.XDataRecord.Add(new XDataRecord(XDataCode.Real, hatch.Pattern.Angle));
             xdata.XDataRecord.Add(XDataRecord.CloseControlString);
 
@@ -127,23 +327,6 @@ namespace TestDxfDocument
             dxf.AddEntity(line2);
             dxf.AddEntity(line3);
             dxf.AddEntity(line4);
-            dxf.AddEntity(hatch);
-
-            dxf.Save("hatchTest.dxf", DxfVersion.AutoCad2000);
-        }
-        private static void HatchTestCircleBoundary()
-        {
-            DxfDocument dxf = new DxfDocument();
-
-            Circle circle = new Circle(new Vector3(5.5,-5.5,0), 10);
-            circle.Normal = new Vector3(1,1,1);
-            List<HatchBoundaryPath> boundary = new List<HatchBoundaryPath>{
-                                                                            new HatchBoundaryPath(new List<IEntityObject>{circle})
-                                                                          };
-            Hatch hatch = new Hatch(HatchPattern.Line, boundary);
-            hatch.Pattern.Angle = 45;
-            hatch.Normal = circle.Normal;
-            dxf.AddEntity(circle);
             dxf.AddEntity(hatch);
 
             dxf.Save("hatchTest.dxf", DxfVersion.AutoCad2000);
@@ -180,20 +363,22 @@ namespace TestDxfDocument
                                                                             new HatchBoundaryPath(new List<IEntityObject>{poly2}),
                                                                             new HatchBoundaryPath(new List<IEntityObject>{poly3}),
                                                                           };
-            Hatch hatch = new Hatch(HatchPattern.Line, boundary);
+            Hatch hatch = new Hatch(HatchPattern.Net, boundary);
             hatch.Layer = new Layer("hatch")
                               {
                                   Color = AciColor.Red,
                                   LineType = LineType.Continuous
                               };
             hatch.Pattern.Angle = 30;
-            hatch.Pattern.LineSeparation = 0.25;
+
+            hatch.Pattern.Scale = 1 / hatch.Pattern.LineDefinitions[0].Delta.Y;
             dxf.AddEntity(poly);
             dxf.AddEntity(poly2);
             dxf.AddEntity(poly3);
             dxf.AddEntity(hatch);
 
             dxf.Save("hatchTest.dxf", DxfVersion.AutoCad2000);
+            dxf.Load("hatchTest.dxf");
         }
         private static void HatchTest2()
         {
@@ -249,13 +434,10 @@ namespace TestDxfDocument
 
             Arc arc = new Arc(Vector3.Zero,8,180,0);
             Line line =new Line(new Vector3(8,0,0), new Vector3(-8,0,0));
-            // To combine an open polyline with another type of entity it must be exploded first into its internal components.
-            List<IEntityObject> explodedPoly2 = poly2.Explode();
-            // This time we want to combine poly2 with an ellipse arc.
-            explodedPoly2.Add(ellipse);
+
             List<HatchBoundaryPath> boundary = new List<HatchBoundaryPath>{
                                                                             new HatchBoundaryPath(new List<IEntityObject>{poly}),
-                                                                            new HatchBoundaryPath(explodedPoly2)
+                                                                            new HatchBoundaryPath(new List<IEntityObject>{poly2, ellipse})
                                                                           };
 
             Hatch hatch = new Hatch(HatchPattern.Line, boundary);
@@ -267,7 +449,7 @@ namespace TestDxfDocument
             dxf.AddEntity(poly2);
             dxf.AddEntity(hatch);
 
-            dxf.Save("hatchTest.dxf", DxfVersion.AutoCad2000);
+            dxf.Save("hatchTest.dxf", DxfVersion.AutoCad2010);
         }
         private static void Dxf2000()
         {
@@ -603,10 +785,10 @@ namespace TestDxfDocument
             PolylineVertex polyVertex;
             List<PolylineVertex> polyVertexes = new List<PolylineVertex>();
             polyVertex = new PolylineVertex(new Vector2(-50, -50));
-            polyVertex.BeginThickness = 2;
+            polyVertex.BeginWidth = 2;
             polyVertexes.Add(polyVertex);
             polyVertex = new PolylineVertex(new Vector2(50, -50));
-            polyVertex.BeginThickness = 1;
+            polyVertex.BeginWidth = 1;
             polyVertexes.Add(polyVertex);
             polyVertex = new PolylineVertex(new Vector2(50, 50));
             polyVertex.Bulge = 1;
@@ -624,10 +806,10 @@ namespace TestDxfDocument
             LightWeightPolylineVertex lwVertex;
             List<LightWeightPolylineVertex> lwVertexes = new List<LightWeightPolylineVertex>();
             lwVertex = new LightWeightPolylineVertex(new Vector2(-25, -25));
-            lwVertex.BeginThickness = 2;
+            lwVertex.BeginWidth = 2;
             lwVertexes.Add(lwVertex);
             lwVertex = new LightWeightPolylineVertex(new Vector2(25, -25));
-            lwVertex.BeginThickness = 1;
+            lwVertex.BeginWidth = 1;
             lwVertexes.Add(lwVertex);
             lwVertex = new LightWeightPolylineVertex(new Vector2(25, 25));
             lwVertex.Bulge = 1;
@@ -681,11 +863,11 @@ namespace TestDxfDocument
             text.Layer.Color.Index = 8;
             text.Alignment = TextAlignment.TopRight;
             dxf.AddEntity(text);
-
+            
+            dxf.Save("AutoCad2010.dxf", DxfVersion.AutoCad2010);
             dxf.Save("AutoCad2007.dxf", DxfVersion.AutoCad2007);
             dxf.Save("AutoCad2004.dxf", DxfVersion.AutoCad2004);
             dxf.Save("AutoCad2000.dxf", DxfVersion.AutoCad2000);
-            dxf.Save("AutoCad12.dxf", DxfVersion.AutoCad12);
         }
         private static void WritePolyline3d()
         {

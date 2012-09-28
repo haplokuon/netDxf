@@ -1,7 +1,7 @@
-#region netDxf, Copyright(C) 2009 Daniel Carvajal, Licensed under LGPL.
+#region netDxf, Copyright(C) 2012 Daniel Carvajal, Licensed under LGPL.
 
 //                        netDxf library
-// Copyright (C) 2009 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2012 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -23,15 +23,29 @@
 namespace netDxf.Header
 {
     /// <summary>
-    /// Defines de dxf file version.
+    /// The AutoCAD drawing database version number.
     /// </summary>
     public enum DxfVersion
     {
+        /// <summary>
+        /// AutoCAD 12 DXF file.
+        /// </summary>
         [StringValue("AC1009")] AutoCad12,
-        //[StringValue("AC1012")] AutoCad13,
-        //[StringValue("AC1014")] AutoCad14,
+        /// <summary>
+        /// AutoCAD 2000 DXF file.
+        /// </summary>
         [StringValue("AC1015")] AutoCad2000,
+        /// <summary>
+        /// AutoCAD 2004 DXF file.
+        /// </summary>
         [StringValue("AC1018")] AutoCad2004,
+        /// <summary>
+        /// AutoCAD 2007 DXF file.
+        /// </summary>
         [StringValue("AC1021")] AutoCad2007,
+        /// <summary>
+        /// AutoCAD 2010 DXF file.
+        /// </summary>
+        [StringValue("AC1024")] AutoCad2010
     }
 }

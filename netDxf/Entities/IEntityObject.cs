@@ -31,122 +31,122 @@ namespace netDxf.Entities
     public enum EntityType
     {
         /// <summary>
-        /// line.
+        /// Line entity.
         /// </summary>
         Line,
 
         /// <summary>
-        /// polyline.
+        /// Polyline entity.
         /// </summary>
         Polyline,
 
         /// <summary>
-        /// 3d polyline .
+        /// 3d polyline entity.
         /// </summary>
         Polyline3d,
 
         /// <summary>
-        /// lightweight polyline.
+        /// Lightweight polyline entity.
         /// </summary>
         LightWeightPolyline,
 
         /// <summary>
-        /// polyface mesh.
+        /// Polyface mesh entity.
         /// </summary>
         PolyfaceMesh,
 
         /// <summary>
-        /// circle.
+        /// Circle entity.
         /// </summary>
         Circle,
 
         /// <summary>
-        /// nurbs curve
+        /// Nurbs curve entity.
         /// </summary>
         NurbsCurve,
 
         /// <summary>
-        /// ellipse.
+        /// Ellipse entity.
         /// </summary>
         Ellipse,
 
         /// <summary>
-        /// point.
+        /// Point entity.
         /// </summary>
         Point,
 
         /// <summary>
-        /// arc.
+        /// Arc entity.
         /// </summary>
         Arc,
 
         /// <summary>
-        /// text string.
+        /// Text string entity.
         /// </summary>
         Text,
 
         /// <summary>
-        /// 3d face.
+        /// 3d face entity.
         /// </summary>
         Face3D,
 
         /// <summary>
-        /// solid.
+        /// Solid .
         /// </summary>
         Solid,
 
         /// <summary>
-        /// block insertion.
+        /// Block insertion entity.
         /// </summary>
         Insert,
 
         /// <summary>
-        /// hatch.
+        /// Hatch entity.
         /// </summary>
         Hatch,
 
         /// <summary>
-        /// attribute.
+        /// Attribute entity.
         /// </summary>
         Attribute,
 
         /// <summary>
-        /// attribute definition.
+        /// Attribute definition entity.
         /// </summary>
         AttributeDefinition,
 
         /// <summary>
-        /// lightweight polyline vertex.
+        /// Lightweight polyline vertex entity.
         /// </summary>
         LightWeightPolylineVertex,
 
         /// <summary>
-        /// polyline vertex.
+        /// Polyline vertex entity.
         /// </summary>
         PolylineVertex,
 
         /// <summary>
-        /// polyline 3d vertex.
+        /// Polyline 3d vertex entity.
         /// </summary>
         Polyline3dVertex,
 
         /// <summary>
-        /// polyface mesh vertex.
+        /// Polyface mesh vertex entity.
         /// </summary>
         PolyfaceMeshVertex,
 
         /// <summary>
-        /// polyface mesh face.
+        /// Polyface mesh face entity.
         /// </summary>
         PolyfaceMeshFace,
 
         /// <summary>
-        /// dim.
+        /// Dimension entity.
         /// </summary>
         Dimension,
 
         /// <summary>
-        /// A generi Vertex
+        /// A generic vertex entity.
         /// </summary>
         Vertex
     }

@@ -22,12 +22,17 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Text;
 
 namespace netDxf.Tables
 {
     /// <summary>
     /// Represents a line type.
     /// </summary>
+    /// <remarks>
+    /// Only simple line types are supported.
+    /// </remarks>
     public class LineType :
         DxfObject,
         ITableObject
@@ -65,7 +70,7 @@ namespace netDxf.Tables
         {
             get
             {
-                var result = new LineType("Continuous")
+                LineType result = new LineType("Continuous")
                                  {
                                      Description = "Solid line"
                                  };
@@ -80,7 +85,7 @@ namespace netDxf.Tables
         {
             get
             {
-                var result = new LineType("Center")
+                LineType result = new LineType("Center")
                                  {
                                      Description = "Center, ____ _ ____ _ ____ _ ____ _ ____ _ ____"
                                  };
@@ -96,7 +101,7 @@ namespace netDxf.Tables
         {
             get
             {
-                var result = new LineType("Dashdot")
+                LineType result = new LineType("Dashdot")
                                  {
                                      Description = "Dash dot, __ . __ . __ . __ . __ . __ . __ . __"
                                  };
@@ -112,7 +117,7 @@ namespace netDxf.Tables
         {
             get
             {
-                var result = new LineType("Dashed")
+                LineType result = new LineType("Dashed")
                                  {
                                      Description = "Dashed, __ __ __ __ __ __ __ __ __ __ __ __ __ _"
                                  };
@@ -128,7 +133,7 @@ namespace netDxf.Tables
         {
             get
             {
-                var result = new LineType("Dot")
+                LineType result = new LineType("Dot")
                                  {
                                      Description = "Dot, . . . . . . . . . . . . . . . . . . . . . . . ."
                                  };
@@ -145,13 +150,14 @@ namespace netDxf.Tables
         /// Initializes a new instance of the <c>LineType</c> class.
         /// </summary>
         /// <param name="name">Line type name.</param>
-        public LineType(string name)
+        /// <param name="description">Line type description.</param>
+        public LineType(string name, string description = null)
             : base(DxfObjectCode.LineType)
         {
             if (string.IsNullOrEmpty(name))
                 throw (new ArgumentNullException("name"));
             this.name = name;
-            this.description = string.Empty;
+            this.description = description;
             this.segments = new List<double>();
         }
 
@@ -172,7 +178,9 @@ namespace netDxf.Tables
         /// Gets or stes the list of line type segments.
         /// </summary>
         /// <remarks>
-        /// Positive values means solid segments and negative values means spaces (one entry per element)
+        /// A positive decimal number denotes a pen-down (dash) segment of that length. 
+        /// A negative decimal number denotes a pen-up (space) segment of that length. 
+        /// A dash length of 0 draws a dot. 
         /// </remarks>
         public List<double> Segments
         {
@@ -228,5 +236,76 @@ namespace netDxf.Tables
         }
 
         #endregion
+
+        #region public methods
+
+        /// <summary>
+        /// Creates a new line type from the definition in a lin file.
+        /// </summary>
+        /// <remarks>Only simple line types are supported.</remarks>
+        /// <param name="file">Lin file where the definition is located.</param>
+        /// <param name="lineTypeName">Name of the line type definition that wants to be read (ignore case).</param>
+        /// <returns>A line type defined by the lin file.</returns>
+        public static LineType FromFile(string file, string lineTypeName)
+        {
+            LineType lineType = null;
+            StreamReader reader;
+            try
+            {
+                reader = new StreamReader(File.OpenRead(file), Encoding.ASCII);
+            }
+            catch (Exception ex)
+            {
+                throw (new FileLoadException("Unknown error reading lin file.", file, ex));
+            }
+
+            while (!reader.EndOfStream)
+            {
+                string line = reader.ReadLine();
+                if (line == null) throw new FileLoadException("Unknown error reading lin file.", file);
+                // lines starting with semicolons are comments
+                if (line.StartsWith(";")) continue;
+                // every line type definition starts with '*'
+                if (!line.StartsWith("*")) continue;
+
+                // reading line type name and description
+                int endName = line.IndexOf(','); // the first semicolon divides the name from the description that might contain more semicolons
+                string name = line.Substring(1, endName - 1);
+                string description = line.Substring(endName + 1, line.Length - endName - 1);
+
+                // remove start and end spaces
+                description = description.Trim();
+                
+                if (!name.Equals(lineTypeName, StringComparison.InvariantCultureIgnoreCase)) continue;
+
+                // we have found the line type name, the next line of the file contains the line type definition
+                line = reader.ReadLine();
+                if (line == null) throw new FileLoadException("Unknown error reading lin file.", file); 
+                lineType = new LineType(name, description);
+
+                string[] tokens = line.Split(',');
+
+                // the index 0 is always A (alignment field)
+                for (int i = 1; i < tokens.Length; i++)
+                {
+                    double segment;
+                    if (double.TryParse(tokens[i], out segment))
+                        lineType.Segments.Add(segment);
+                    else
+                    {
+                        // only simple linetypes are supported.
+                        lineType = null;
+                        break;
+                    }
+                }
+                break;
+            }
+
+            reader.Close();
+            return lineType;
+        }
+
+        #endregion
+
     }
 }

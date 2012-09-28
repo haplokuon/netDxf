@@ -33,8 +33,8 @@ namespace netDxf.Entities
 
         protected const EntityType TYPE = EntityType.LightWeightPolylineVertex;
         protected Vector2 location;
-        protected double beginThickness;
-        protected double endThickness;
+        protected double beginWidth;
+        protected double endWidth;
         protected double bulge;
 
         #endregion
@@ -48,8 +48,8 @@ namespace netDxf.Entities
         {
             this.location = Vector2.Zero;
             this.bulge = 0.0;
-            this.beginThickness = 0.0;
-            this.endThickness = 0.0;
+            this.beginWidth = 0.0;
+            this.endWidth = 0.0;
         }
 
         /// <summary>
@@ -60,8 +60,8 @@ namespace netDxf.Entities
         {
             this.location = location;
             this.bulge = 0.0;
-            this.beginThickness = 0.0;
-            this.endThickness = 0.0;
+            this.beginWidth = 0.0;
+            this.endWidth = 0.0;
         }
 
         /// <summary>
@@ -73,8 +73,8 @@ namespace netDxf.Entities
         {
             this.location = new Vector2(x, y);
             this.bulge = 0.0;
-            this.beginThickness = 0.0;
-            this.endThickness = 0.0;
+            this.beginWidth = 0.0;
+            this.endWidth = 0.0;
         }
 
         #endregion
@@ -91,21 +91,21 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets or sets the light weight polyline begin thickness.
+        /// Gets or sets the light weight polyline begin width.
         /// </summary>
-        public double BeginThickness
+        public double BeginWidth
         {
-            get { return this.beginThickness; }
-            set { this.beginThickness = value; }
+            get { return this.beginWidth; }
+            set { this.beginWidth = value; }
         }
 
         /// <summary>
-        /// Gets or sets the light weight polyline end thickness.
+        /// Gets or sets the light weight polyline end width.
         /// </summary>
-        public double EndThickness
+        public double EndWidth
         {
-            get { return this.endThickness; }
-            set { this.endThickness = value; }
+            get { return this.endWidth; }
+            set { this.endWidth = value; }
         }
 
         /// <summary>

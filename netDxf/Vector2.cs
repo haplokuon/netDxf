@@ -210,28 +210,18 @@ namespace netDxf
         /// <summary>
         /// Obtains the angle between two vectors.
         /// </summary>
-        /// <param name="u">Vector2.</param>
-        /// <param name="v">Vector2.</param>
+        /// <param name="u">A normalized Vector2.</param>
+        /// <param name="v">A normalized Vector2.</param>
         /// <returns>Angle in radians.</returns>
         public static double AngleBetween(Vector2 u, Vector2 v)
         {
-            //double cos = DotProduct(u, v)/(u.Modulus()*v.Modulus());
-            //if (MathHelper.IsOne(cos))
-            //{
-            //    return 0;
-            //}
-            //if (MathHelper.IsOne(-cos))
-            //{
-            //    return Math.PI;
-            //}
-            //return Math.Acos(cos);
-
             double dx = v.X - u.X;
             double dy = v.Y - u.Y;
-            return Math.Atan2(dy,dx);
-
+            double angle = Math.Atan2(dy, dx);
+            if (angle<0)
+                return MathHelper.TwoPI + angle;
+            return angle;
         }
-
 
         /// <summary>
         /// Obtains the midpoint.
@@ -284,47 +274,100 @@ namespace netDxf
 
         #region overloaded operators
 
+        /// <summary>
+        /// Check if the components of two vectors are equal.
+        /// </summary>
+        /// <param name="u">Vector2.</param>
+        /// <param name="v">Vector2.</param>
+        /// <returns>True if the two components are equal or false in anyother case.</returns>
         public static bool operator ==(Vector2 u, Vector2 v)
         {
             return ((MathHelper.IsEqual(v.X, u.X)) && (MathHelper.IsEqual(v.Y, u.Y)));
         }
 
+        /// <summary>
+        /// Check if the components of two vectors are different.
+        /// </summary>
+        /// <param name="u">Vector2.</param>
+        /// <param name="v">Vector2.</param>
+        /// <returns>True if the two components are different or false in anyother case.</returns>
         public static bool operator !=(Vector2 u, Vector2 v)
         {
             return ((!MathHelper.IsEqual(v.X, u.X)) || (!MathHelper.IsEqual(v.Y, u.Y)));
         }
 
+        /// <summary>
+        /// Adds two vectors.
+        /// </summary>
+        /// <param name="u">Vector2.</param>
+        /// <param name="v">Vector2.</param>
+        /// <returns>The addition of u plus v.</returns>
         public static Vector2 operator +(Vector2 u, Vector2 v)
         {
             return new Vector2(u.X + v.X, u.Y + v.Y);
         }
 
+        /// <summary>
+        /// Substracts two vectors.
+        /// </summary>
+        /// <param name="u">Vector3.</param>
+        /// <param name="v">Vector3.</param>
+        /// <returns>The substraction of u minus v.</returns>
         public static Vector2 operator -(Vector2 u, Vector2 v)
         {
             return new Vector2(u.X - v.X, u.Y - v.Y);
         }
 
+        /// <summary>
+        /// Negates a vector.
+        /// </summary>
+        /// <param name="u">Vector2.</param>
+        /// <returns>The negative vector of u.</returns>
         public static Vector2 operator -(Vector2 u)
         {
             return new Vector2(-u.X, -u.Y);
         }
 
+        /// <summary>
+        /// Multuplies a vector with an scalar (same as a*u, conmutative property).
+        /// </summary>
+        /// <param name="u">Vector2.</param>
+        /// <param name="a">Scalar.</param>
+        /// <returns>The multiplication of u times a.</returns>
         public static Vector2 operator *(Vector2 u, double a)
         {
             return new Vector2(u.X*a, u.Y*a);
         }
 
+        /// <summary>
+        /// Multuplies an scalar with a vector (same as u*a, conmutative property).
+        /// </summary>
+        /// <param name="a">Scalar.</param>
+        /// <param name="u">Vector3.</param>
+        /// <returns>The multiplication of a times u.</returns>
         public static Vector2 operator *(double a, Vector2 u)
         {
             return new Vector2(u.X*a, u.Y*a);
         }
 
+        /// <summary>
+        /// Divides a vector with an scalar (not same as a/v).
+        /// </summary>
+        /// <param name="a">Vector3.</param>
+        /// <param name="u">Scalar.</param>
+        /// <returns>The multiplication of a times u.</returns>
         public static Vector2 operator /(Vector2 u, double a)
         {
             double invEscalar = 1/a;
             return new Vector2(u.X*invEscalar, u.Y*invEscalar);
         }
 
+        /// <summary>
+        /// Divides an scalar with a vector (not same as v/a).
+        /// </summary>
+        /// <param name="a">Vector3.</param>
+        /// <param name="u">Scalar.</param>
+        /// <returns>The multiplication of a times u.</returns>
         public static Vector2 operator /(double a, Vector2 u)
         {
             double invEscalar = 1/a;
@@ -363,7 +406,7 @@ namespace netDxf
         /// <returns>Array.</returns>
         public double[] ToArray()
         {
-            var u = new[] {this.x, this.y};
+            double[] u = new[] {this.x, this.y};
             return u;
         }
 
@@ -382,6 +425,11 @@ namespace netDxf
             return ((MathHelper.IsEqual(obj.X, this.x, threshold)) && (MathHelper.IsEqual(obj.Y, this.y, threshold)));
         }
 
+        /// <summary>
+        /// Check if the components of two vectors are equals (uses double.Epsilon the tolerance).
+        /// </summary>
+        /// <param name="obj">Vector2.</param>
+        /// <returns>True if the three components are almost equal or false in anyother case.</returns>
         public bool Equals(Vector2 obj)
         {
             return ((MathHelper.IsEqual(obj.X, this.x)) && (MathHelper.IsEqual(obj.Y, this.y)));

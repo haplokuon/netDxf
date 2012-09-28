@@ -237,14 +237,6 @@ namespace netDxf
         public static double AngleBetween(Vector3 u, Vector3 v)
         {
             double cos = DotProduct(u, v)/(u.Modulus()*v.Modulus());
-            if (MathHelper.IsOne(cos))
-            {
-                return 0;
-            }
-            if (MathHelper.IsOne(-cos))
-            {
-                return Math.PI;
-            }
             return Math.Acos(cos);
         }
 
@@ -314,53 +306,103 @@ namespace netDxf
         #endregion
 
         #region overloaded operators
+        /// <summary>
+        /// Check if the components of two vectors are equal.
+        /// </summary>
+        /// <param name="u">Vector3.</param>
+        /// <param name="v">Vector3.</param>
+        /// <returns>True if the three components are equal or false in anyother case.</returns>
         public static bool operator ==(Vector3 u, Vector3 v)
         {
             return ((MathHelper.IsEqual(v.X, u.X)) && (MathHelper.IsEqual(v.Y, u.Y)) && (MathHelper.IsEqual(v.Z, u.Z)));
         }
 
+        /// <summary>
+        /// Check if the components of two vectors are different.
+        /// </summary>
+        /// <param name="u">Vector3.</param>
+        /// <param name="v">Vector3.</param>
+        /// <returns>True if the three components are different or false in anyother case.</returns>
         public static bool operator !=(Vector3 u, Vector3 v)
         {
             return ((!MathHelper.IsEqual(v.X, u.X)) || (!MathHelper.IsEqual(v.Y, u.Y)) || (!MathHelper.IsEqual(v.Z, u.Z)));
         }
 
-
+        /// <summary>
+        /// Adds two vectors.
+        /// </summary>
+        /// <param name="u">Vector3.</param>
+        /// <param name="v">Vector3.</param>
+        /// <returns>The addition of u plus v.</returns>
         public static Vector3 operator +(Vector3 u, Vector3 v)
         {
             return new Vector3(u.X + v.X, u.Y + v.Y, u.Z + v.Z);
         }
 
+        /// <summary>
+        /// Substracts two vectors.
+        /// </summary>
+        /// <param name="u">Vector3.</param>
+        /// <param name="v">Vector3.</param>
+        /// <returns>The substraction of u minus v.</returns>
         public static Vector3 operator -(Vector3 u, Vector3 v)
         {
             return new Vector3(u.X - v.X, u.Y - v.Y, u.Z - v.Z);
         }
 
+        /// <summary>
+        /// Negates a vector.
+        /// </summary>
+        /// <param name="u">Vector3.</param>
+        /// <returns>The negative vector of u.</returns>
         public static Vector3 operator -(Vector3 u)
         {
             return new Vector3(- u.X, - u.Y, - u.Z);
         }
 
+        /// <summary>
+        /// Multuplies a vector with an scalar (same as a*u, conmutative property).
+        /// </summary>
+        /// <param name="u">Vector3.</param>
+        /// <param name="a">Scalar.</param>
+        /// <returns>The multiplication of u times a.</returns>
         public static Vector3 operator *(Vector3 u, double a)
         {
             return new Vector3(u.X*a, u.Y*a, u.Z*a);
         }
 
+        /// <summary>
+        /// Multuplies an scalar with a vector (same as u*a, conmutative property).
+        /// </summary>
+        /// <param name="a">Scalar.</param>
+        /// <param name="u">Vector3.</param>
+        /// <returns>The multiplication of a times u.</returns>
         public static Vector3 operator *(double a, Vector3 u)
         {
             return new Vector3(u.X*a, u.Y*a, u.Z*a);
         }
 
+        /// <summary>
+        /// Divides a vector with an scalar (not same as a/v).
+        /// </summary>
+        /// <param name="a">Vector3.</param>
+        /// <param name="u">Scalar.</param>
+        /// <returns>The multiplication of a times u.</returns>
         public static Vector3 operator /(Vector3 u, double a)
         {
             double invEscalar = 1/a;
             return new Vector3(u.X*invEscalar, u.Y*invEscalar, u.Z*invEscalar);
         }
 
-
+        /// <summary>
+        /// Divides an scalar with a vector (not same as v/a).
+        /// </summary>
+        /// <param name="a">Vector3.</param>
+        /// <param name="u">Scalar.</param>
+        /// <returns>The multiplication of a times u.</returns>
         public static Vector3 operator /(double a, Vector3 u)
         {
-            double invEscalar = 1/a;
-            return new Vector3(u.X*invEscalar, u.Y*invEscalar, u.Z*invEscalar);
+            return new Vector3(a / u.X, a / u.Y, a / u.Z);
         }
 
         #endregion
@@ -405,7 +447,7 @@ namespace netDxf
         #region comparision methods
 
         /// <summary>
-        /// Check if the components of two vectors are approximate equals.
+        /// Check if the components of two vectors are approximate equal.
         /// </summary>
         /// <param name="obj">Vector3.</param>
         /// <param name="threshold">Maximun tolerance.</param>
@@ -415,6 +457,11 @@ namespace netDxf
             return ((MathHelper.IsEqual(obj.X, this.x, threshold)) && (MathHelper.IsEqual(obj.Y, this.y, threshold)) && (MathHelper.IsEqual(obj.Z, this.z, threshold)));
         }
 
+        /// <summary>
+        /// Check if the components of two vectors are approximate equal (uses double.Epsilon as the tolerance).
+        /// </summary>
+        /// <param name="obj">Vector3.</param>
+        /// <returns>True if the three components are almost equal or false in anyother case.</returns>
         public bool Equals(Vector3 obj)
         {
             return ((MathHelper.IsEqual(obj.X, this.x)) && (MathHelper.IsEqual(obj.Y, this.y)) && (MathHelper.IsEqual(obj.Z, this.z)));

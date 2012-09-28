@@ -26,7 +26,7 @@ using System.Collections.Generic;
 namespace netDxf.Header
 {
     /// <summary>
-    /// Defines de dxf file version.
+    /// Defines a header variable.
     /// </summary>
     internal class HeaderVariable
     {
