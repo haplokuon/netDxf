@@ -38,14 +38,14 @@ namespace TestDxfDocument
     {
         private static void Main()
         {
-            LineWidth();
-            HatchCircleBoundary();
+            //LineWidth();
+            //HatchCircleBoundary();
 
             //ToPolyline();
             //FilesTest();
             //CustomHatchPattern();
             //LoadSaveHatchTest();
-            //WriteDxfFile();
+            WriteDxfFile();
             //ReadDxfFile();
             //ExplodeTest();
             //HatchTestLinesBoundary();
@@ -61,7 +61,6 @@ namespace TestDxfDocument
             //SpeedTest();
             //WritePolyline3d();
         }
-
 
         private static void HatchCircleBoundary()
         {
@@ -115,10 +114,10 @@ namespace TestDxfDocument
             // you can only give a width to a vertex of a Polyline or a LightweigthPolyline
             // I am planning to drop support to AutoCAD 12 dxf files, so to define a bidimensional polyline the only way will be to use lightweight polyline
             // (the Polyline class and the LightWeightPolyline are basically the same).
-            Polyline widthLine = new Polyline();
-            PolylineVertex startVertex = new PolylineVertex(new Vector2(0, 0));
-            PolylineVertex endVertex = new PolylineVertex(new Vector2(10, 10));
-            widthLine.Vertexes = new List<PolylineVertex>{startVertex,endVertex};
+            LwPolyline widthLine = new LwPolyline();
+            LwPolylineVertex startVertex = new LwPolylineVertex(new Vector2(0, 0));
+            LwPolylineVertex endVertex = new LwPolylineVertex(new Vector2(10, 10));
+            widthLine.Vertexes = new List<LwPolylineVertex> { startVertex, endVertex };
 
             // the easy way to give a constant width to a polyline, but you can also give a polyline width by vertex
             // there is a mistake on my part, following the AutoCAD documentation I should have called the PolylineVertex.StartThickness and PolylineVertex.EndThickness as
@@ -182,27 +181,27 @@ namespace TestDxfDocument
         {
             DxfDocument dxf = new DxfDocument();
 
-            Polyline poly = new Polyline();
-            poly.Vertexes.Add(new PolylineVertex(-10, -10));
-            poly.Vertexes.Add(new PolylineVertex(10, -10));
-            poly.Vertexes.Add(new PolylineVertex(10, 10));
-            poly.Vertexes.Add(new PolylineVertex(-10, 10));
+            LwPolyline poly = new LwPolyline();
+            poly.Vertexes.Add(new LwPolylineVertex(-10, -10));
+            poly.Vertexes.Add(new LwPolylineVertex(10, -10));
+            poly.Vertexes.Add(new LwPolylineVertex(10, 10));
+            poly.Vertexes.Add(new LwPolylineVertex(-10, 10));
             poly.Vertexes[2].Bulge = 1;
             poly.IsClosed = true;
 
-            Polyline poly2 = new Polyline();
-            poly2.Vertexes.Add(new PolylineVertex(-5, -5));
-            poly2.Vertexes.Add(new PolylineVertex(5, -5));
-            poly2.Vertexes.Add(new PolylineVertex(5, 5));
-            poly2.Vertexes.Add(new PolylineVertex(-5, 5));
+            LwPolyline poly2 = new LwPolyline();
+            poly2.Vertexes.Add(new LwPolylineVertex(-5, -5));
+            poly2.Vertexes.Add(new LwPolylineVertex(5, -5));
+            poly2.Vertexes.Add(new LwPolylineVertex(5, 5));
+            poly2.Vertexes.Add(new LwPolylineVertex(-5, 5));
             poly2.Vertexes[1].Bulge = -0.25;
             poly2.IsClosed = true;
 
-            Polyline poly3 = new Polyline();
-            poly3.Vertexes.Add(new PolylineVertex(-8, -8));
-            poly3.Vertexes.Add(new PolylineVertex(-6, -8));
-            poly3.Vertexes.Add(new PolylineVertex(-6, -6));
-            poly3.Vertexes.Add(new PolylineVertex(-8, -6));
+            LwPolyline poly3 = new LwPolyline();
+            poly3.Vertexes.Add(new LwPolylineVertex(-8, -8));
+            poly3.Vertexes.Add(new LwPolylineVertex(-6, -8));
+            poly3.Vertexes.Add(new LwPolylineVertex(-6, -6));
+            poly3.Vertexes.Add(new LwPolylineVertex(-8, -6));
             poly3.IsClosed = true;
 
             List<HatchBoundaryPath> boundary = new List<HatchBoundaryPath>{
@@ -260,19 +259,19 @@ namespace TestDxfDocument
         {
             DxfDocument dxf = new DxfDocument();
             //polyline
-            PolylineVertex polyVertex;
-            List<PolylineVertex> polyVertexes = new List<PolylineVertex>();
-            polyVertex = new PolylineVertex(new Vector2(-50, -23.5));
+            LwPolylineVertex polyVertex;
+            List<LwPolylineVertex> polyVertexes = new List<LwPolylineVertex>();
+            polyVertex = new LwPolylineVertex(new Vector2(-50, -23.5));
             polyVertex.Bulge = 1.33;
             polyVertexes.Add(polyVertex);
-            polyVertex = new PolylineVertex(new Vector2(34.8, -42.7));
+            polyVertex = new LwPolylineVertex(new Vector2(34.8, -42.7));
             polyVertexes.Add(polyVertex);
-            polyVertex = new PolylineVertex(new Vector2(65.3, 54.7));
+            polyVertex = new LwPolylineVertex(new Vector2(65.3, 54.7));
             polyVertex.Bulge = -0.47;
             polyVertexes.Add(polyVertex);
-            polyVertex = new PolylineVertex(new Vector2(-48.2, 42.5));
+            polyVertex = new LwPolylineVertex(new Vector2(-48.2, 42.5));
             polyVertexes.Add(polyVertex);
-            Polyline polyline2d = new Polyline(polyVertexes);
+            LwPolyline polyline2d = new LwPolyline(polyVertexes);
             polyline2d.Layer = new Layer("polyline2d");
             polyline2d.Layer.Color.Index = 5;
             polyline2d.Normal = new Vector3(1, 1, 1);
@@ -280,12 +279,6 @@ namespace TestDxfDocument
 
             dxf.AddEntity(polyline2d);
             dxf.AddEntity(polyline2d.Explode());
-            
-            Polyline polyline = new Polyline(polyline2d.PoligonalVertexes(10, 0.001,0.001));
-            polyline.Normal = polyline2d.Normal;
-            polyline.Elevation = polyline2d.Elevation;
-            polyline.IsClosed = false;
-            dxf.AddEntity(polyline);
 
             dxf.Save("explode.dxf", DxfVersion.AutoCad2000);
         }
@@ -335,27 +328,27 @@ namespace TestDxfDocument
         {
             DxfDocument dxf = new DxfDocument();
 
-            Polyline poly = new Polyline();
-            poly.Vertexes.Add(new PolylineVertex(-10, -10));
-            poly.Vertexes.Add(new PolylineVertex(10, -10));
-            poly.Vertexes.Add(new PolylineVertex(10, 10));
-            poly.Vertexes.Add(new PolylineVertex(-10, 10));
+            LwPolyline poly = new LwPolyline();
+            poly.Vertexes.Add(new LwPolylineVertex(-10, -10));
+            poly.Vertexes.Add(new LwPolylineVertex(10, -10));
+            poly.Vertexes.Add(new LwPolylineVertex(10, 10));
+            poly.Vertexes.Add(new LwPolylineVertex(-10, 10));
             poly.Vertexes[2].Bulge = 1;
             poly.IsClosed = true;
-            
-            Polyline poly2 = new Polyline();
-            poly2.Vertexes.Add(new PolylineVertex(-5, -5));
-            poly2.Vertexes.Add(new PolylineVertex(5, -5));
-            poly2.Vertexes.Add(new PolylineVertex(5, 5));
-            poly2.Vertexes.Add(new PolylineVertex(-5, 5));
+
+            LwPolyline poly2 = new LwPolyline();
+            poly2.Vertexes.Add(new LwPolylineVertex(-5, -5));
+            poly2.Vertexes.Add(new LwPolylineVertex(5, -5));
+            poly2.Vertexes.Add(new LwPolylineVertex(5, 5));
+            poly2.Vertexes.Add(new LwPolylineVertex(-5, 5));
             poly2.Vertexes[1].Bulge = -0.25;
             poly2.IsClosed = true;
 
-            Polyline poly3 = new Polyline();
-            poly3.Vertexes.Add(new PolylineVertex(-8, -8));
-            poly3.Vertexes.Add(new PolylineVertex(-6, -8));
-            poly3.Vertexes.Add(new PolylineVertex(-6, -6));
-            poly3.Vertexes.Add(new PolylineVertex(-8, -6));
+            LwPolyline poly3 = new LwPolyline();
+            poly3.Vertexes.Add(new LwPolylineVertex(-8, -8));
+            poly3.Vertexes.Add(new LwPolylineVertex(-6, -8));
+            poly3.Vertexes.Add(new LwPolylineVertex(-6, -6));
+            poly3.Vertexes.Add(new LwPolylineVertex(-8, -6));
             poly3.IsClosed = true;
 
             List<HatchBoundaryPath> boundary = new List<HatchBoundaryPath>{
@@ -384,11 +377,11 @@ namespace TestDxfDocument
         {
             DxfDocument dxf = new DxfDocument();
 
-            Polyline poly = new Polyline();
-            poly.Vertexes.Add(new PolylineVertex(-10, -10));
-            poly.Vertexes.Add(new PolylineVertex(10, -10));
-            poly.Vertexes.Add(new PolylineVertex(10, 10));
-            poly.Vertexes.Add(new PolylineVertex(-10, 10));
+            LwPolyline poly = new LwPolyline();
+            poly.Vertexes.Add(new LwPolylineVertex(-10, -10));
+            poly.Vertexes.Add(new LwPolylineVertex(10, -10));
+            poly.Vertexes.Add(new LwPolylineVertex(10, 10));
+            poly.Vertexes.Add(new LwPolylineVertex(-10, 10));
             poly.Vertexes[2].Bulge = 1;
             poly.IsClosed = true;
 
@@ -414,11 +407,11 @@ namespace TestDxfDocument
         {
             DxfDocument dxf = new DxfDocument();
 
-            Polyline poly = new Polyline();
-            poly.Vertexes.Add(new PolylineVertex(-10, -10));
-            poly.Vertexes.Add(new PolylineVertex(10, -10));
-            poly.Vertexes.Add(new PolylineVertex(10, 10));
-            poly.Vertexes.Add(new PolylineVertex(-10, 10));
+            LwPolyline poly = new LwPolyline();
+            poly.Vertexes.Add(new LwPolylineVertex(-10, -10));
+            poly.Vertexes.Add(new LwPolylineVertex(10, -10));
+            poly.Vertexes.Add(new LwPolylineVertex(10, 10));
+            poly.Vertexes.Add(new LwPolylineVertex(-10, 10));
             poly.Vertexes[2].Bulge = 1;
             poly.IsClosed = true;
 
@@ -427,10 +420,10 @@ namespace TestDxfDocument
             ellipse.StartAngle = 0;
             ellipse.EndAngle = 180;
 
-            Polyline poly2 = new Polyline();
-            poly2.Vertexes.Add(new PolylineVertex(-8, 0));
-            poly2.Vertexes.Add(new PolylineVertex(0, -4));
-            poly2.Vertexes.Add(new PolylineVertex(8, 0));
+            LwPolyline poly2 = new LwPolyline();
+            poly2.Vertexes.Add(new LwPolylineVertex(-8, 0));
+            poly2.Vertexes.Add(new LwPolylineVertex(0, -4));
+            poly2.Vertexes.Add(new LwPolylineVertex(8, 0));
 
             Arc arc = new Arc(Vector3.Zero,8,180,0);
             Line line =new Line(new Vector3(8,0,0), new Vector3(-8,0,0));
@@ -497,7 +490,7 @@ namespace TestDxfDocument
            nurbs2.SetUniformWeights(Math.Cos(MathHelper.HalfPI));
            dxf.AddEntity(nurbs2);
 
-            dxf.Save("nurbs.dxf", DxfVersion.AutoCad12);
+            dxf.Save("nurbs.dxf", DxfVersion.AutoCad2000);
 
         }
         private static void Polyline()
@@ -505,11 +498,11 @@ namespace TestDxfDocument
 
             DxfDocument dxf = new DxfDocument();
 
-            Polyline poly = new Polyline();
-            poly.Vertexes.Add(new PolylineVertex(0,0));
-            poly.Vertexes.Add(new PolylineVertex(10, 10));
-            poly.Vertexes.Add(new PolylineVertex(20, 0));
-            poly.Vertexes.Add(new PolylineVertex(30, 10));
+            LwPolyline poly = new LwPolyline();
+            poly.Vertexes.Add(new LwPolylineVertex(0, 0));
+            poly.Vertexes.Add(new LwPolylineVertex(10, 10));
+            poly.Vertexes.Add(new LwPolylineVertex(20, 0));
+            poly.Vertexes.Add(new LwPolylineVertex(30, 10));
 
             dxf.AddEntity(poly);
 
@@ -600,7 +593,7 @@ namespace TestDxfDocument
             crono.Reset();
 
             crono.Start();
-            dxf.Save("speedtest.dxf", DxfVersion.AutoCad12);
+            dxf.Save("speedtest.dxf", DxfVersion.AutoCad2000);
             Console.WriteLine("Time saving file : " + crono.ElapsedMilliseconds / 1000.0f);
            totalTime += crono.ElapsedMilliseconds;
             crono.Reset();
@@ -706,9 +699,9 @@ namespace TestDxfDocument
             DxfDocument dxf = new DxfDocument();
             //dxf.Load("AutoCad2007.dxf");
             //dxf.Load("AutoCad2004.dxf");
-            dxf.Load("AutoCad2000.dxf");
-            dxf.Save("AutoCad2000 result.dxf", DxfVersion.AutoCad2000);
-            //dxf.Load("AutoCad12.dxf");
+            //dxf.Load("AutoCad2000.dxf");
+            //dxf.Save("AutoCad2000 result.dxf", DxfVersion.AutoCad2000);
+            dxf.Load("AutoCad12.dxf");
             //dxf.Load("Tablet.dxf");
 
             //dxf.Save("Tablet result.dxf", DxfVersion.AutoCad2000);
@@ -782,20 +775,20 @@ namespace TestDxfDocument
             dxf.AddEntity(face3D);
             
             //polyline
-            PolylineVertex polyVertex;
-            List<PolylineVertex> polyVertexes = new List<PolylineVertex>();
-            polyVertex = new PolylineVertex(new Vector2(-50, -50));
+            LwPolylineVertex polyVertex;
+            List<LwPolylineVertex> polyVertexes = new List<LwPolylineVertex>();
+            polyVertex = new LwPolylineVertex(new Vector2(-50, -50));
             polyVertex.BeginWidth = 2;
             polyVertexes.Add(polyVertex);
-            polyVertex = new PolylineVertex(new Vector2(50, -50));
+            polyVertex = new LwPolylineVertex(new Vector2(50, -50));
             polyVertex.BeginWidth = 1;
             polyVertexes.Add(polyVertex);
-            polyVertex = new PolylineVertex(new Vector2(50, 50));
+            polyVertex = new LwPolylineVertex(new Vector2(50, 50));
             polyVertex.Bulge = 1;
             polyVertexes.Add(polyVertex);
-            polyVertex = new PolylineVertex(new Vector2(-50, 50));
+            polyVertex = new LwPolylineVertex(new Vector2(-50, 50));
             polyVertexes.Add(polyVertex);
-            Polyline polyline2d = new Polyline(polyVertexes, true);
+            LwPolyline polyline2d = new LwPolyline(polyVertexes, true);
             polyline2d.Layer = new Layer("polyline2d");
             polyline2d.Layer.Color.Index = 5;
             polyline2d.Normal = new Vector3(1, 1, 1);
@@ -803,25 +796,44 @@ namespace TestDxfDocument
             dxf.AddEntity(polyline2d);
 
             //lightweight polyline
-            LightWeightPolylineVertex lwVertex;
-            List<LightWeightPolylineVertex> lwVertexes = new List<LightWeightPolylineVertex>();
-            lwVertex = new LightWeightPolylineVertex(new Vector2(-25, -25));
+            LwPolylineVertex lwVertex;
+            List<LwPolylineVertex> lwVertexes = new List<LwPolylineVertex>();
+            lwVertex = new LwPolylineVertex(new Vector2(-25, -25));
             lwVertex.BeginWidth = 2;
             lwVertexes.Add(lwVertex);
-            lwVertex = new LightWeightPolylineVertex(new Vector2(25, -25));
+            lwVertex = new LwPolylineVertex(new Vector2(25, -25));
             lwVertex.BeginWidth = 1;
             lwVertexes.Add(lwVertex);
-            lwVertex = new LightWeightPolylineVertex(new Vector2(25, 25));
+            lwVertex = new LwPolylineVertex(new Vector2(25, 25));
             lwVertex.Bulge = 1;
             lwVertexes.Add(lwVertex);
-            lwVertex = new LightWeightPolylineVertex(new Vector2(-25, 25));
+            lwVertex = new LwPolylineVertex(new Vector2(-25, 25));
             lwVertexes.Add(lwVertex);
-            LightWeightPolyline lwPolyline = new LightWeightPolyline(lwVertexes, true);
+            LwPolyline lwPolyline = new LwPolyline(lwVertexes, true);
             lwPolyline.Layer = new Layer("lwpolyline");
             lwPolyline.Layer.Color.Index = 5;
             lwPolyline.Normal = new Vector3(1, 1, 1);
             lwPolyline.Elevation = 100.0f;
             dxf.AddEntity(lwPolyline);
+
+            // polyfaceMesh
+            List<PolyfaceMeshVertex> meshVertexes = new List<PolyfaceMeshVertex>
+                                                    {
+                                                        new PolyfaceMeshVertex(0, 0, 0),
+                                                        new PolyfaceMeshVertex(10, 0, 0),
+                                                        new PolyfaceMeshVertex(10, 10, 0),
+                                                        new PolyfaceMeshVertex(5, 15, 0),
+                                                        new PolyfaceMeshVertex(0, 10, 0)
+                                                    };
+            List<PolyfaceMeshFace> faces = new List<PolyfaceMeshFace>
+                                               {
+                                                   new PolyfaceMeshFace(new[] {1, 2, -3}),
+                                                   new PolyfaceMeshFace(new[] {-1, 3, -4}),
+                                                   new PolyfaceMeshFace(new[] {-1, 4, 5})
+                                               };
+
+            PolyfaceMesh mesh = new PolyfaceMesh(meshVertexes, faces);
+            dxf.AddEntity(mesh);
 
             //line
             Line line = new Line(new Vector3(0, 0, 0), new Vector3(10, 10, 10));
@@ -830,17 +842,17 @@ namespace TestDxfDocument
             dxf.AddEntity(line);
 
             //3d polyline
-            Polyline3dVertex vertex;
-            List<Polyline3dVertex> vertexes = new List<Polyline3dVertex>();
-            vertex = new Polyline3dVertex(new Vector3(-50, -50, 0));
+            PolylineVertex vertex;
+            List<PolylineVertex> vertexes = new List<PolylineVertex>();
+            vertex = new PolylineVertex(new Vector3(-50, -50, 0));
             vertexes.Add(vertex);
-            vertex = new Polyline3dVertex(new Vector3(50, -50, 10));
+            vertex = new PolylineVertex(new Vector3(50, -50, 10));
             vertexes.Add(vertex);
-            vertex = new Polyline3dVertex(new Vector3(50, 50, 25));
+            vertex = new PolylineVertex(new Vector3(50, 50, 25));
             vertexes.Add(vertex);
-            vertex = new Polyline3dVertex(new Vector3(-50, 50, 50));
+            vertex = new PolylineVertex(new Vector3(-50, 50, 50));
             vertexes.Add(vertex);
-            Polyline3d polyline = new Polyline3d(vertexes, true);
+            Polyline polyline = new Polyline(vertexes, true);
             polyline.Layer = new Layer("polyline3d");
             polyline.Layer.Color.Index = 24;
             dxf.AddEntity(polyline);
@@ -868,19 +880,22 @@ namespace TestDxfDocument
             dxf.Save("AutoCad2007.dxf", DxfVersion.AutoCad2007);
             dxf.Save("AutoCad2004.dxf", DxfVersion.AutoCad2004);
             dxf.Save("AutoCad2000.dxf", DxfVersion.AutoCad2000);
+
+            dxf.Load("AutoCad2000.dxf");
+            dxf.Save("AutoCad2000 result.dxf", DxfVersion.AutoCad2000);
         }
         private static void WritePolyline3d()
         {
             DxfDocument dxf = new DxfDocument();
 
-            List<Polyline3dVertex> vertexes = new List<Polyline3dVertex>{
-                                                                        new Polyline3dVertex(0, 0, 0), 
-                                                                        new Polyline3dVertex(10, 0, 10), 
-                                                                        new Polyline3dVertex(10, 10, 20), 
-                                                                        new Polyline3dVertex(0, 10, 30)
+            List<PolylineVertex> vertexes = new List<PolylineVertex>{
+                                                                        new PolylineVertex(0, 0, 0), 
+                                                                        new PolylineVertex(10, 0, 10), 
+                                                                        new PolylineVertex(10, 10, 20), 
+                                                                        new PolylineVertex(0, 10, 30)
                                                                         };
 
-            Polyline3d poly = new Polyline3d(vertexes, true);
+            Polyline poly = new Polyline(vertexes, true);
 
             XData xdata = new XData(new ApplicationRegistry("netDxf"));
             xdata.XDataRecord.Add(new XDataRecord(XDataCode.String, "extended data with netDxf"));

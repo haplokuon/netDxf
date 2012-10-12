@@ -1,7 +1,7 @@
-﻿#region netDxf, Copyright(C) 2009 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf, Copyright(C) 2012 Daniel Carvajal, Licensed under LGPL.
 
 //                        netDxf library
-// Copyright (C) 2009 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2012 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -26,22 +26,18 @@ using netDxf.Tables;
 
 namespace netDxf.Entities
 {
+
     /// <summary>
-    /// Represents a polyline vertex.
+    /// Represents a <see cref="Polyline">polyline</see> vertex.
     /// </summary>
     public class PolylineVertex :
-        DxfObject,
-        IVertex
-    {
-      
+        DxfObject
+    { 
         #region private fields
 
-        protected const EntityType TYPE = EntityType.PolylineVertex;
+        protected const EntityType TYPE = EntityType.Polyline3dVertex;
         protected VertexTypeFlags flags;
-        protected Vector2 location;
-        protected double beginWidth;
-        protected double endWidth;
-        protected double bulge;
+        protected Vector3 location;
         protected AciColor color;
         protected Layer layer;
         protected LineType lineType;
@@ -57,32 +53,25 @@ namespace netDxf.Entities
         public PolylineVertex()
             : base(DxfObjectCode.Vertex)
         {
-            this.flags = VertexTypeFlags.PolylineVertex;
-            this.location = Vector2.Zero;
+            this.flags = VertexTypeFlags.Polyline3dVertex;
+            this.location = Vector3.Zero;
             this.layer = Layer.Default;
             this.color = AciColor.ByLayer;
             this.lineType = LineType.ByLayer;
-            this.bulge = 0.0;
-            this.beginWidth = 0.0;
-            this.endWidth = 0.0;
         }
 
         /// <summary>
         /// Initializes a new instance of the <c>PolylineVertex</c> class.
         /// </summary>
-        /// <param name="location">Polyline <see cref="Vector2">vertex</see> coordinates.</param>
-        /// <param name="bulge">Vertex bulge.</param>
-        public PolylineVertex(Vector2 location, double bulge = 0.0)
+        /// <param name="location">Polyline <see cref="Vector3">vertex</see> coordinates.</param>
+        public PolylineVertex(Vector3 location)
             : base(DxfObjectCode.Vertex)
         {
-            this.flags = VertexTypeFlags.PolylineVertex;
+            this.flags = VertexTypeFlags.Polyline3dVertex;
             this.location = location;
             this.layer = Layer.Default;
             this.color = AciColor.ByLayer;
             this.lineType = LineType.ByLayer;
-            this.bulge = bulge;
-            this.beginWidth = 0.0;
-            this.endWidth = 0.0;
         }
 
         /// <summary>
@@ -90,65 +79,37 @@ namespace netDxf.Entities
         /// </summary>
         /// <param name="x">X coordinate.</param>
         /// <param name="y">Y coordinate.</param>
-        /// <param name="bulge">Vertex bulge.</param>
-        public PolylineVertex(double x, double y, double bulge = 0.0)
+        /// <param name="z">Z coordinate.</param>
+        public PolylineVertex(double x, double y, double z)
             : base(DxfObjectCode.Vertex)
         {
-            this.flags = VertexTypeFlags.PolylineVertex;
-            this.location = new Vector2(x, y);
+            this.flags = VertexTypeFlags.Polyline3dVertex;
+            this.location = new Vector3(x, y, z);
             this.layer = Layer.Default;
             this.color = AciColor.ByLayer;
             this.lineType = LineType.ByLayer;
-            this.bulge = bulge;
-            this.beginWidth = 0.0;
-            this.endWidth = 0.0;
         }
 
         #endregion
 
         #region public properties
 
-        /// <summary>
-        /// Gets or sets the polyline vertex <see cref="netDxf.Vector2">location</see>.
+       /// <summary>
+        /// Gets or sets the vertex <see cref="Vector3">location</see>.
         /// </summary>
-        public Vector2 Location
+        public Vector3 Location
         {
             get { return this.location; }
             set { this.location = value; }
         }
 
         /// <summary>
-        /// Gets or sets the light weight polyline begin width.
+        /// Gets the vertex type.
         /// </summary>
-        public double BeginWidth
+        public VertexTypeFlags Flags
         {
-            get { return this.beginWidth; }
-            set { this.beginWidth = value; }
+            get { return this.flags; }
         }
-
-        /// <summary>
-        /// Gets or sets the light weight polyline end width.
-        /// </summary>
-        public double EndWidth
-        {
-            get { return this.endWidth; }
-            set { this.endWidth = value; }
-        }
-
-        /// <summary>
-        /// Gets or set the light weight polyline bulge.
-        /// </summary>
-        /// <remarks>
-        /// The bulge is the tangent of one fourth the included angle for an arc segment, 
-        /// made negative if the arc goes clockwise from the start point to the endpoint. 
-        /// A bulge of 0 indicates a straight segment, and a bulge of 1 is a semicircle.
-        /// </remarks>
-        public double Bulge
-        {
-            get { return this.bulge; }
-            set { this.bulge = value; }
-        }
-
         #endregion
 
         #region IEntityObject Members
@@ -214,20 +175,8 @@ namespace netDxf.Entities
 
         #endregion
 
-        #region IVertex Members
-
-        /// <summary>
-        /// Gets the vertex type.
-        /// </summary>
-        public VertexTypeFlags Flags
-        {
-            get { return this.flags; }
-        }
-
-        #endregion
-
         #region overrides
-
+        
         /// <summary>
         /// Converts the value of this instance to its equivalent string representation.
         /// </summary>

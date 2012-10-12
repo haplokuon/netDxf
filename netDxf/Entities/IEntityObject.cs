@@ -148,7 +148,12 @@ namespace netDxf.Entities
         /// <summary>
         /// A generic vertex entity.
         /// </summary>
-        Vertex
+        Vertex,
+
+        /// <summary>
+        /// A raster image entity.
+        /// </summary>
+        Image
     }
     
     /// <summary>

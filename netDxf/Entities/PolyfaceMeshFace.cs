@@ -38,8 +38,7 @@ namespace netDxf.Entities
     /// The maximum number of vertex indexes in a face is 4.
     /// </remarks>
     public class PolyfaceMeshFace :
-        DxfObject,
-        IVertex
+        DxfObject
     {
         #region private fields
         protected const EntityType TYPE = EntityType.PolylineVertex;
@@ -109,10 +108,6 @@ namespace netDxf.Entities
                 this.vertexIndexes = value;
             }
         }
-
-        #endregion
-
-        #region IVertex Members
 
         /// <summary>
         /// Gets the vertex type.

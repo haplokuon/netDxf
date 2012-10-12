@@ -1,7 +1,7 @@
-﻿#region netDxf, Copyright(C) 2009 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf, Copyright(C) 2012 Daniel Carvajal, Licensed under LGPL.
 
 //                        netDxf library
-// Copyright (C) 2009 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2012 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -23,7 +23,7 @@
 namespace netDxf
 {
     /// <summary>
-    /// Dxf entities codes.
+    /// Dxf entities codes (code 0).
     /// </summary>
     public sealed class DxfObjectCode
     {
@@ -171,5 +171,20 @@ namespace netDxf
         /// Dictionary.
         /// </summary>
         public const string Dictionary = "DICTIONARY";
+
+        /// <summary>
+        /// Raster image.
+        /// </summary>
+        public const string Image = "IMAGE";
+
+        /// <summary>
+        /// Image definition.
+        /// </summary>
+        public const string ImageDef = "IMAGEDEF";
+
+        /// <summary>
+        /// Image definition reactor.
+        /// </summary>
+        public const string ImageDefReactor = "IMAGEDEF_REACTOR";
     }
 }

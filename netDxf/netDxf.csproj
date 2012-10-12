@@ -75,8 +75,8 @@
     <Compile Include="Entities\HatchPattern.cs" />
     <Compile Include="Entities\HatchPatternBoundary.cs" />
     <Compile Include="Entities\HatchPatternLineDefinition.cs" />
-    <Compile Include="Entities\LightWeightPolyline.cs" />
-    <Compile Include="Entities\LightWeightPolylineVertex.cs" />
+    <Compile Include="Entities\LwPolyline.cs" />
+    <Compile Include="Entities\LwPolylineVertex.cs" />
     <Compile Include="Header\DxfVersion.cs" />
     <Compile Include="Header\SystemVariable.cs" />
     <Compile Include="Vector2.cs" />
@@ -108,13 +108,11 @@
     </Compile>
     <Compile Include="Entities\AttributeDefinition.cs" />
     <Compile Include="Entities\Vertex.cs" />
-    <Compile Include="Entities\Polyline3dVertex.cs" />
-    <Compile Include="Entities\IPolyline.cs" />
-    <Compile Include="Entities\IVertex.cs" />
+    <Compile Include="Entities\PolylineVertex.cs" />
     <Compile Include="Entities\Point.cs" />
     <Compile Include="Entities\PolyfaceMeshFace.cs" />
     <Compile Include="Entities\PolyfaceMeshVertex.cs" />
-    <Compile Include="Entities\Polyline3d.cs" />
+    <Compile Include="Entities\Polyline.cs" />
     <Compile Include="Entities\IEntityObject.cs" />
     <Compile Include="Entities\Insert.cs" />
     <Compile Include="Entities\Line.cs" />
@@ -122,9 +120,7 @@
     <Compile Include="Entities\Circle.cs" />
     <Compile Include="Entities\Face3d.cs" />
     <Compile Include="Entities\PolyfaceMesh.cs" />
-    <Compile Include="Entities\Polyline.cs" />
     <Compile Include="Entities\Text.cs" />
-    <Compile Include="Entities\PolylineVertex.cs" />
     <Compile Include="Reader.cs" />
     <Compile Include="Tables\ITableObject.cs" />
     <Compile Include="Tables\Layer.cs" />

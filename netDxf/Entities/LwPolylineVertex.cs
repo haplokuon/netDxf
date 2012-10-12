@@ -1,7 +1,7 @@
-﻿#region netDxf, Copyright(C) 2009 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf, Copyright(C) 2012 Daniel Carvajal, Licensed under LGPL.
 
 //                        netDxf library
-// Copyright (C) 2009 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2012 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -25,9 +25,9 @@ using System;
 namespace netDxf.Entities
 {
     /// <summary>
-    /// Represents a lightweight polyline vertex.
+    /// Represents a <see cref="LwPolyline">LwPolyline</see> vertex.
     /// </summary>
-    public class LightWeightPolylineVertex
+    public class LwPolylineVertex
     {
         #region private fields
 
@@ -42,9 +42,9 @@ namespace netDxf.Entities
         #region constructors
 
         /// <summary>
-        /// Initializes a new instance of the <c>LightWeightPolylineVertex</c> class.
+        /// Initializes a new instance of the <c>LwPolylineVertex</c> class.
         /// </summary>
-        public LightWeightPolylineVertex()
+        public LwPolylineVertex()
         {
             this.location = Vector2.Zero;
             this.bulge = 0.0;
@@ -53,26 +53,28 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Initializes a new instance of the <c>LightWeightPolylineVertex</c> class.
+        /// Initializes a new instance of the <c>LwPolylineVertex</c> class.
         /// </summary>
-        /// <param name="location">Lightweight polyline <see cref="netDxf.Vector2">vertex</see> coordinates.</param>
-        public LightWeightPolylineVertex(Vector2 location)
+        /// <param name="location">Lightweight polyline <see cref="Vector2">vertex</see> coordinates.</param>
+        /// <param name="bulge">Vertex bulge.</param>
+        public LwPolylineVertex(Vector2 location, double bulge = 0.0)
         {
             this.location = location;
-            this.bulge = 0.0;
+            this.bulge = bulge;
             this.beginWidth = 0.0;
             this.endWidth = 0.0;
         }
 
         /// <summary>
-        /// Initializes a new instance of the <c>LightWeightPolylineVertex</c> class.
+        /// Initializes a new instance of the <c>LwPolylineVertex</c> class.
         /// </summary>
         /// <param name="x">X coordinate.</param>
         /// <param name="y">Y coordinate.</param>
-        public LightWeightPolylineVertex(double x, double y)
+        /// <param name="bulge">Vertex bulge.</param>
+        public LwPolylineVertex(double x, double y, double bulge = 0.0)
         {
             this.location = new Vector2(x, y);
-            this.bulge = 0.0;
+            this.bulge = bulge;
             this.beginWidth = 0.0;
             this.endWidth = 0.0;
         }
@@ -82,7 +84,7 @@ namespace netDxf.Entities
         #region public properties
 
         /// <summary>
-        /// Gets or sets the polyline vertex <see cref="netDxf.Vector2">location</see>.
+        /// Gets or sets the light weight polyline vertex <see cref="Vector2">location</see>.
         /// </summary>
         public Vector2 Location
         {
@@ -123,7 +125,7 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets the entity <see cref="netDxf.Entities.EntityType">type</see>.
+        /// Gets the entity <see cref="EntityType">type</see>.
         /// </summary>
         public EntityType Type
         {

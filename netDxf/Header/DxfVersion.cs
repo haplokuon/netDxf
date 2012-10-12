@@ -26,11 +26,7 @@ namespace netDxf.Header
     /// The AutoCAD drawing database version number.
     /// </summary>
     public enum DxfVersion
-    {
-        /// <summary>
-        /// AutoCAD 12 DXF file.
-        /// </summary>
-        [StringValue("AC1009")] AutoCad12,
+    { 
         /// <summary>
         /// AutoCAD 2000 DXF file.
         /// </summary>
@@ -46,6 +42,6 @@ namespace netDxf.Header
         /// <summary>
         /// AutoCAD 2010 DXF file.
         /// </summary>
-        [StringValue("AC1024")] AutoCad2010
+        [StringValue("AC1024")] AutoCad2010,
     }
 }

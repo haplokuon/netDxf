@@ -30,8 +30,7 @@ namespace netDxf.Entities
     /// Represents a polyface mesh vertex. 
     /// </summary>
     public class PolyfaceMeshVertex :
-        DxfObject,
-        IVertex
+        DxfObject
     {
         #region private fields
 
@@ -102,10 +101,6 @@ namespace netDxf.Entities
             get { return this.location; }
             set { this.location = value; }
         }
-
-        #endregion
-
-        #region IVertex Members
 
         /// <summary>
         /// Gets the vertex type.

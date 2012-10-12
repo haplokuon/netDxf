@@ -139,18 +139,18 @@ namespace netDxf.Entities
                         if (data.Count <= 1) throw new ArgumentException("Only a line does not make closed loop.");
                         numberOfEdges += 1;
                         break;
-                    case EntityType.Polyline:
-                                               
-                        if (((Polyline)entity).IsClosed)
+                    case EntityType.LightWeightPolyline:
+
+                        if (((LwPolyline)entity).IsClosed)
                         {
                             pathTypeFlag = BoundaryPathTypeFlag.Derived | BoundaryPathTypeFlag.External | BoundaryPathTypeFlag.Polyline;
-                            numberOfEdges += ((Polyline)entity).Vertexes.Count;
+                            numberOfEdges += ((LwPolyline)entity).Vertexes.Count;
                         }
                         else
                         {
                             // open polylines will be exploded before being written in the dxf file 
                             // for an open polyline the number of edges is equal the number of vertexes    
-                            numberOfEdges += ((Polyline)entity).Vertexes.Count - 1;
+                            numberOfEdges += ((LwPolyline)entity).Vertexes.Count - 1;
                         }
                         break;
                 }

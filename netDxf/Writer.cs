@@ -86,13 +86,20 @@ namespace netDxf
         }
 
         /// <summary>
-        /// Gets if the file is opent.
+        /// Gets if the file is open.
         /// </summary>
         public bool IsFileOpen
         {
             get { return this.isFileOpen; }
         }
 
+        /// <summary>
+        /// Gets the dxf file version.
+        /// </summary>
+        public DxfVersion Version
+        {
+            get { return this.version; }
+        }
         #endregion
 
         #region public methods
@@ -426,10 +433,6 @@ namespace netDxf
         /// <param name="tl">Line type.</param>
         public void WriteLineType(LineType tl)
         {
-            if (this.version == DxfVersion.AutoCad12)
-                if (tl.Name == "ByLayer" || tl.Name == "ByBlock")
-                    return;
-
             if (this.activeTable != StringCode.LineTypeTable)
             {
                 throw new InvalidDxfTableException(this.activeTable, this.file);
@@ -450,8 +453,7 @@ namespace netDxf
             foreach (double s in tl.Segments)
             {
                 this.WriteCodePair(49, s);
-                if (this.version != DxfVersion.AutoCad12)
-                    this.WriteCodePair(74, 0);
+                this.WriteCodePair(74, 0);
             }
         }
 
@@ -485,8 +487,7 @@ namespace netDxf
             }
 
             this.WriteCodePair(6, layer.LineType.Name);
-            if (this.version != DxfVersion.AutoCad12)
-                this.WriteCodePair(390, Layer.PlotStyleHandle);
+            this.WriteCodePair(390, Layer.PlotStyleHandle);
         }
 
         /// <summary>
@@ -540,10 +541,6 @@ namespace netDxf
 
         public void WriteBlock(Block block, List<IEntityObject> entityObjects)
         {
-            if (this.version == DxfVersion.AutoCad12)
-                if (block.Name == "*Model_Space" || block.Name == "*Paper_Space")
-                    return;
-
             if (this.activeSection != StringCode.BlocksSection)
             {
                 throw new InvalidDxfSectionException(this.activeSection, this.file);
@@ -629,13 +626,10 @@ namespace netDxf
                     this.WriteLine((Line) entity);
                     break;
                 case EntityType.LightWeightPolyline:
-                    this.WriteLightWeightPolyline((LightWeightPolyline) entity);
-                    break;
-                case EntityType.Polyline:
-                    this.WritePolyline2d((Polyline) entity);
+                    this.WriteLightWeightPolyline((LwPolyline) entity);
                     break;
                 case EntityType.Polyline3d:
-                    this.WritePolyline3d((Polyline3d) entity);
+                    this.WritePolyline3d((Polyline) entity);
                     break;
                 case EntityType.PolyfaceMesh:
                     this.WritePolyfaceMesh((PolyfaceMesh) entity);
@@ -645,6 +639,9 @@ namespace netDxf
                     break;
                 case EntityType.Hatch:
                     this.WriteHatch((Hatch)entity);
+                    break;
+                case EntityType.Image:
+                    //this.WriteImage((Image)entity);
                     break;
                 default:
                     throw new DxfEntityException(entity.Type.ToString(), file, "Entity unknown." );
@@ -729,12 +726,6 @@ namespace netDxf
                 throw new InvalidDxfSectionException(this.activeSection, this.file);
             }
 
-            if (this.version == DxfVersion.AutoCad12)
-            {
-                this.WriteEllipseAsPolyline(ellipse);
-                return;
-            }
-
             this.WriteCodePair(0, ellipse.CodeName);
             this.WriteCodePair(5, ellipse.Handle);
             this.WriteCodePair(100, SubclassMarker.Entity);
@@ -769,45 +760,6 @@ namespace netDxf
             this.WriteCodePair(42, paramaters[1]);
 
             this.WriteXData(ellipse.XData);
-        }
-
-        private void WriteEllipseAsPolyline(Ellipse ellipse)
-        {
-            //we will draw the ellipse as a polyline, it is not supported in AutoCad12 dxf files
-            this.WriteCodePair(0, DxfObjectCode.Polyline);
-
-            this.WriteEntityCommonCodes(ellipse);
-
-            //closed polyline
-            this.WriteCodePair(70, 1);
-
-            //dummy point
-            this.WriteCodePair(10, 0.0f);
-            this.WriteCodePair(20, 0.0f);
-            this.WriteCodePair(30, ellipse.Center.Z);
-
-            this.WriteCodePair(39, ellipse.Thickness);
-
-            this.WriteCodePair(210, ellipse.Normal.X);
-            this.WriteCodePair(220, ellipse.Normal.Y);
-            this.WriteCodePair(230, ellipse.Normal.Z);
-
-            //Obsolete; formerly an “entities follow flag” (optional; ignore if present)
-            //but its needed to load the dxf file in AutoCAD
-            this.WriteCodePair(66, "1");
-
-            this.WriteXData(ellipse.XData);
-            Polyline ellipsePoly = ellipse.ToPolyline(ellipse.CurvePoints);
-           
-            foreach (PolylineVertex v in ellipsePoly.Vertexes)
-            {
-                this.WriteCodePair(0, DxfObjectCode.Vertex);
-                this.WriteCodePair(8, ellipse.Layer);
-                this.WriteCodePair(70, 0);
-                this.WriteCodePair(10, v.Location.X);
-                this.WriteCodePair(20, v.Location.Y);
-            }
-            this.WriteCodePair(0, StringCode.EndSequence);
         }
 
         private void WriteNurbsCurve(NurbsCurve nurbsCurve)
@@ -1011,65 +963,7 @@ namespace netDxf
             this.WriteXData(line.XData);
         }
 
-        private void WritePolyline2d(Polyline polyline)
-        {
-            if (this.activeSection != StringCode.EntitiesSection && !this.isBlockEntities)
-            {
-                throw new InvalidDxfSectionException(this.activeSection, this.file);
-            }
-
-            this.WriteCodePair(0, polyline.CodeName);
-            this.WriteCodePair(5, polyline.Handle); 
-            this.WriteCodePair(100, SubclassMarker.Entity);
-            this.WriteEntityCommonCodes(polyline);
-            
-            this.WriteCodePair(100, SubclassMarker.Polyline);
-
-            this.WriteCodePair(70, (int) polyline.Flags);
-
-            //dummy point
-            this.WriteCodePair(10, 0.0);
-            this.WriteCodePair(20, 0.0);
-
-            this.WriteCodePair(30, polyline.Elevation);
-            this.WriteCodePair(39, polyline.Thickness);
-
-            this.WriteCodePair(210, polyline.Normal.X);
-            this.WriteCodePair(220, polyline.Normal.Y);
-            this.WriteCodePair(230, polyline.Normal.Z);
-
-            //Obsolete; formerly an “entities follow flag” (optional; ignore if present)
-            //but its needed to load the dxf file in AutoCAD even the documentation says it is OPTIONAL
-            this.WriteCodePair(66, "1");
-
-            this.WriteXData(polyline.XData);
-
-            foreach (PolylineVertex v in polyline.Vertexes)
-            {
-               
-                this.WriteCodePair(0, v.CodeName);
-                this.WriteCodePair(5, v.Handle);
-                this.WriteCodePair(100, SubclassMarker.Entity);
-                this.WriteCodePair(8, v.Layer);
-                this.WriteCodePair(100, SubclassMarker.Vertex);
-                this.WriteCodePair(100, SubclassMarker.PolylineVertex);
-                this.WriteCodePair(70, (int) v.Flags);
-                this.WriteCodePair(10, v.Location.X);
-                this.WriteCodePair(20, v.Location.Y);
-                this.WriteCodePair(40, v.BeginWidth);
-                this.WriteCodePair(41, v.EndWidth);
-                this.WriteCodePair(42, v.Bulge);
-
-                this.WriteXData(v.XData);
-            }
-
-            this.WriteCodePair(0, polyline.EndSequence.CodeName);
-            this.WriteCodePair(5, polyline.EndSequence.Handle);
-            this.WriteCodePair(100, SubclassMarker.Entity);
-            this.WriteCodePair(8, polyline.EndSequence.Layer);
-        }
-
-        private void WriteLightWeightPolyline(LightWeightPolyline polyline)
+        private void WriteLightWeightPolyline(LwPolyline polyline)
         {
             if (this.activeSection != StringCode.EntitiesSection && !this.isBlockEntities)
             {
@@ -1089,7 +983,7 @@ namespace netDxf
             this.WriteCodePair(39, polyline.Thickness);
 
 
-            foreach (LightWeightPolylineVertex v in polyline.Vertexes)
+            foreach (LwPolylineVertex v in polyline.Vertexes)
             {
                 this.WriteCodePair(10, v.Location.X);
                 this.WriteCodePair(20, v.Location.Y);
@@ -1105,7 +999,7 @@ namespace netDxf
             this.WriteXData(polyline.XData);
         }
 
-        private void WritePolyline3d(Polyline3d polyline)
+        private void WritePolyline3d(Polyline polyline)
         {
             if (this.activeSection != StringCode.EntitiesSection && !this.isBlockEntities)
             {
@@ -1131,7 +1025,7 @@ namespace netDxf
 
             this.WriteXData(polyline.XData);
 
-            foreach (Polyline3dVertex v in polyline.Vertexes)
+            foreach (PolylineVertex v in polyline.Vertexes)
             {
                 this.WriteCodePair(0, v.CodeName);
                 this.WriteCodePair(5, v.Handle);
@@ -1498,15 +1392,15 @@ namespace netDxf
 
                         break;
 
-                    case EntityType.Polyline:
-                        Polyline polyline = (Polyline)entity;
+                    case EntityType.LightWeightPolyline:
+                        LwPolyline polyline = (LwPolyline)entity;
                         if (polyline.IsClosed)
                         {
                             this.WriteCodePair(72, 1);  // Has bulge flag
                             this.WriteCodePair(73, polyline.IsClosed ? 1 : 0);
                             this.WriteCodePair(93, polyline.Vertexes.Count);
 
-                            foreach (PolylineVertex vertex in polyline.Vertexes)
+                            foreach (LwPolylineVertex vertex in polyline.Vertexes)
                             {
                                 this.WriteCodePair(10, vertex.Location.X);
                                 this.WriteCodePair(20, vertex.Location.Y);
@@ -1763,10 +1657,7 @@ namespace netDxf
 
         private void WriteCodePair(int codigo, object valor)
         {
-            // AutoCad12 does not allow strings with spaces
             string nameConversion = valor == null ? string.Empty : valor.ToString();
-
-            if (this.version == DxfVersion.AutoCad12 && valor is DxfObject) nameConversion = nameConversion.Replace(' ', '_');
             this.writer.WriteLine(codigo);
             this.writer.WriteLine(nameConversion);
         }

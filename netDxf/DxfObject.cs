@@ -41,6 +41,7 @@ namespace netDxf
         /// <summary>
         /// Initializes a new instance of the <c>DxfObject</c> class.
         /// </summary>
+        /// <param name="codeName">Object name.</param>
         public DxfObject(string codeName)
         {
             this.codeName = codeName;

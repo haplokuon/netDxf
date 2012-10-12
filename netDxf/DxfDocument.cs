@@ -50,7 +50,7 @@ namespace netDxf
         #region header
 
         private string fileName;
-        private DxfVersion version;
+        private string version;
         private int handleCount;
 
         #endregion
@@ -84,9 +84,15 @@ namespace netDxf
         private List<Insert> inserts;
         private List<Line> lines;
         private List<Point> points;
-        private List<IPolyline> polylines;
+        private List<PolyfaceMesh> polyfaceMeshes;
+        private List<LwPolyline> lightWeightPolylines;
+        private List<Polyline> polylines;
         private List<Text> texts;
         private List<Hatch> hatches;
+
+        #endregion
+
+        #region objects
 
         #endregion
 
@@ -114,7 +120,9 @@ namespace netDxf
             this.faces3d = new List<Face3d>();
             this.solids = new List<Solid>();
             this.inserts = new List<Insert>();
-            this.polylines = new List<IPolyline>();
+            this.lightWeightPolylines = new List<LwPolyline>(); 
+            this.polylines = new List<Polyline>();
+            this.polyfaceMeshes=new List<PolyfaceMesh>();
             this.lines = new List<Line>();
             this.circles = new List<Circle>();
             this.points = new List<Point>();
@@ -131,7 +139,7 @@ namespace netDxf
         /// <summary>
         /// Gets the dxf file <see cref="DxfVersion">version</see>.
         /// </summary>
-        public DxfVersion Version
+        public string Version
         {
             get { return this.version; }
         }
@@ -218,7 +226,7 @@ namespace netDxf
         #region entities public properties
 
         /// <summary>
-        /// Gets the <see cref="netDxf.Entities.Arc">arc</see> list.
+        /// Gets the <see cref="Arc">arc</see> list.
         /// </summary>
         public ReadOnlyCollection<Arc> Arcs
         {
@@ -226,7 +234,7 @@ namespace netDxf
         }
 
         /// <summary>
-        /// Gets the <see cref="netDxf.Entities.Ellipse">ellipse</see> list.
+        /// Gets the <see cref="Ellipse">ellipse</see> list.
         /// </summary>
         public ReadOnlyCollection<Ellipse> Ellipses
         {
@@ -234,7 +242,7 @@ namespace netDxf
         }
 
         /// <summary>
-        /// Gets the <see cref="netDxf.Entities.NurbsCurve">NURBS Curve</see> list.
+        /// Gets the <see cref="NurbsCurve">NURBS Curve</see> list.
         /// </summary>
         public ReadOnlyCollection<NurbsCurve> NurbsCurves
         {
@@ -242,7 +250,7 @@ namespace netDxf
         }
 
         /// <summary>
-        /// Gets the <see cref="netDxf.Entities.Circle">circle</see> list.
+        /// Gets the <see cref="Circle">circle</see> list.
         /// </summary>
         public ReadOnlyCollection<Circle> Circles
         {
@@ -250,7 +258,7 @@ namespace netDxf
         }
 
         /// <summary>
-        /// Gets the <see cref="netDxf.Entities.Face3d">3d face</see> list.
+        /// Gets the <see cref="Face3d">3d face</see> list.
         /// </summary>
         public ReadOnlyCollection<Face3d> Faces3d
         {
@@ -258,7 +266,7 @@ namespace netDxf
         }
 
         /// <summary>
-        /// Gets the <see cref="netDxf.Entities.Solid">solid</see> list.
+        /// Gets the <see cref="Solid">solid</see> list.
         /// </summary>
         public ReadOnlyCollection<Solid> Solids
         {
@@ -266,7 +274,7 @@ namespace netDxf
         }
 
         /// <summary>
-        /// Gets the <see cref="netDxf.Entities.Insert">insert</see> list.
+        /// Gets the <see cref="Insert">insert</see> list.
         /// </summary>
         public ReadOnlyCollection<Insert> Inserts
         {
@@ -274,7 +282,7 @@ namespace netDxf
         }
 
         /// <summary>
-        /// Gets the <see cref="netDxf.Entities.Line">line</see> list.
+        /// Gets the <see cref="Line">line</see> list.
         /// </summary>
         public ReadOnlyCollection<Line> Lines
         {
@@ -282,15 +290,31 @@ namespace netDxf
         }
 
         /// <summary>
-        /// Gets the <see cref="netDxf.Entities.IPolyline">polyline</see> list.
+        /// Gets the <see cref="Polyline">polyline</see> list.
         /// </summary>
         /// <remarks>
         /// The polyline list contains all entities that are considered polylines in the dxf, they are:
-        /// <see cref="Polyline">polylines</see>, <see cref="Polyline3d">3d polylines</see> and <see cref="PolyfaceMesh">polyface meshes</see>
+        /// <see cref="Polyline">polylines</see>, <see cref="Polyline">3d polylines</see> and <see cref="PolyfaceMesh">polyface meshes</see>
         /// </remarks>
-        public ReadOnlyCollection<IPolyline> Polylines
+        public ReadOnlyCollection<Polyline> Polylines
         {
             get { return this.polylines.AsReadOnly(); }
+        }
+
+        /// <summary>
+        /// Gets the <see cref="LightWeightPolyline">LightWeightPolyline</see> list.
+        /// </summary>
+        public ReadOnlyCollection<LwPolyline> LightWeightPolyline
+        {
+            get { return this.lightWeightPolylines.AsReadOnly(); }
+        }
+
+        /// <summary>
+        /// Gets the <see cref="PolyfaceMesh">PolyfaceMesh</see> list.
+        /// </summary>
+        public ReadOnlyCollection<PolyfaceMesh> PolyfaceMesh
+        {
+            get { return this.polyfaceMeshes.AsReadOnly(); }
         }
 
         /// <summary>
@@ -546,16 +570,13 @@ namespace netDxf
                     this.lines.Add((Line) entity);
                     break;
                 case EntityType.LightWeightPolyline:
-                    this.polylines.Add((IPolyline) entity);
-                    break;
-                case EntityType.Polyline:
-                    this.polylines.Add((IPolyline) entity);
+                    this.lightWeightPolylines.Add((LwPolyline)entity);
                     break;
                 case EntityType.Polyline3d:
-                    this.polylines.Add((IPolyline) entity);
+                    this.polylines.Add((Polyline) entity);
                     break;
                 case EntityType.PolyfaceMesh:
-                    this.polylines.Add((IPolyline) entity);
+                    this.polyfaceMeshes.Add((PolyfaceMesh)entity);
                     break;
                 case EntityType.Text:
                     if (!this.textStyles.ContainsKey(((Text) entity).Style.Name))
@@ -632,7 +653,9 @@ namespace netDxf
             this.points = dxfReader.Points;
             this.faces3d = dxfReader.Faces3d;
             this.solids = dxfReader.Solids;
+            this.lightWeightPolylines = dxfReader.LightWeightPolyline;
             this.polylines = dxfReader.Polylines;
+            this.polyfaceMeshes = dxfReader.PolyfaceMeshes;
             this.lines = dxfReader.Lines;
             this.inserts = dxfReader.Inserts;
             this.texts = dxfReader.Texts;
@@ -654,95 +677,16 @@ namespace netDxf
 
             ReAsignHandlersAndDefaultObjects();
             this.fileName = Path.GetFileNameWithoutExtension(file);
-            this.version = dxfVersion;
+            this.version = StringEnum.GetStringValue(dxfVersion);
 
-            List<Polyline> ellipsePolys = null;
-            List<IPolyline> lwPolys;
-            Dictionary<string, List<IEntityObject>> blockEntities;
-            if (this.version == DxfVersion.AutoCad12)
+            // create the list for the block record table
+            Dictionary<string, List<IEntityObject>> blockEntities = new Dictionary<string, List<IEntityObject>>();
+            foreach (Block block in this.blocks.Values)
             {
-                // since AutoCad dxf Version 12 doesn't support ellipses, we will transform them in polylines
-                ellipsePolys = new List<Polyline>();
-                foreach (Ellipse ellipse in this.ellipses)
+                blockEntities.Add(block.Name, new List<IEntityObject>());
+                foreach (IEntityObject entity in block.Entities)
                 {
-                    Polyline poly = ellipse.ToPolyline(ellipse.CurvePoints);
-                    this.handleCount = poly.AsignHandle(this.handleCount);
-                    ellipsePolys.Add(poly);
-                }
-
-                // since AutoCad dxf Version 12 doesn't support lwpolylines, we will transform them in polylines
-                lwPolys = new List<IPolyline>();
-                foreach (IPolyline lwPoly in this.polylines)
-                {
-                    if (lwPoly is LightWeightPolyline)
-                    {
-                        Polyline poly = ((LightWeightPolyline) lwPoly).ToPolyline();
-                        this.handleCount = poly.AsignHandle(this.handleCount);
-                        lwPolys.Add(poly);
-                    }
-                    else
-                    {
-                        lwPolys.Add(lwPoly);
-                    }
-                    
-                }
-
-                // since AutoCad dxf Version 12 doesn't support lwpolylines in blocks, we will transform them in polylines
-                blockEntities = new Dictionary<string, List<IEntityObject>>();
-                foreach (Block block in this.blocks.Values)
-                {
-                    blockEntities.Add(block.Name, new List<IEntityObject>());
-                    foreach (IEntityObject entity in block.Entities)
-                    {
-                        if (entity is LightWeightPolyline)
-                        {
-                            Polyline poly = ((LightWeightPolyline) entity).ToPolyline();
-                            this.handleCount = poly.AsignHandle(this.handleCount);
-                            blockEntities[block.Name].Add(poly);
-                        }
-                        else
-                        {
-                            blockEntities[block.Name].Add(entity);
-                        }
-                    }
-                }
-            }
-            else
-            {
-                // since AutoCad dxf Version 12 doesn't support lwpolylines, we will transform them in polylines
-                lwPolys = new List<IPolyline>();
-                foreach (IPolyline lwPoly in this.polylines)
-                {
-                    if ((lwPoly is Polyline))
-                    {
-                        LightWeightPolyline poly = ((Polyline)lwPoly).ToLightWeightPolyline();
-                        this.handleCount = poly.AsignHandle(this.handleCount);
-                        lwPolys.Add(poly);
-                    }
-                    else
-                    {
-                        lwPolys.Add(lwPoly);
-                    }
-                }
-
-                // since latter AutoCad dxf Version doesn't support polylines in blocks, we will transform them in lightweightpolylines
-                blockEntities = new Dictionary<string, List<IEntityObject>>();
-                foreach (Block block in this.blocks.Values)
-                {
-                    blockEntities.Add(block.Name, new List<IEntityObject>());
-                    foreach (IEntityObject entity in block.Entities)
-                    {
-                        if (entity is Polyline)
-                        {
-                            LightWeightPolyline poly = ((Polyline) entity).ToLightWeightPolyline();
-                            this.handleCount = poly.AsignHandle(this.handleCount);
-                            blockEntities[block.Name].Add(poly);
-                        }
-                        else
-                        {
-                            blockEntities[block.Name].Add(entity);
-                        }
-                    }
+                    blockEntities[block.Name].Add(entity);
                 }
             }
 
@@ -756,7 +700,7 @@ namespace netDxf
 
             //HEADER SECTION
             dxfWriter.BeginSection(StringCode.HeaderSection);
-            dxfWriter.WriteSystemVariable(new HeaderVariable(SystemVariable.DatabaseVersion, StringEnum.GetStringValue(this.version)));
+            dxfWriter.WriteSystemVariable(new HeaderVariable(SystemVariable.DatabaseVersion, this.version));
             dxfWriter.WriteSystemVariable(new HeaderVariable(SystemVariable.HandSeed, Convert.ToString(this.handleCount, 16)));
             dxfWriter.EndSection();
 
@@ -768,15 +712,12 @@ namespace netDxf
             dxfWriter.BeginSection(StringCode.TablesSection);
 
             //viewport tables
-            if (this.version != DxfVersion.AutoCad12)
+            dxfWriter.BeginTable(StringCode.ViewPortTable);
+            foreach (ViewPort vport in this.viewports.Values)
             {
-                dxfWriter.BeginTable(StringCode.ViewPortTable);
-                foreach (ViewPort vport in this.viewports.Values)
-                {
-                    dxfWriter.WriteViewPort(vport);
-                }
-                dxfWriter.EndTable();
+                dxfWriter.WriteViewPort(vport);
             }
+            dxfWriter.EndTable();
 
             //line type tables
             dxfWriter.BeginTable(StringCode.LineTypeTable);
@@ -819,26 +760,20 @@ namespace netDxf
             dxfWriter.EndTable();
 
             //dimension style tables
-            if (this.version != DxfVersion.AutoCad12)
+            dxfWriter.BeginTable(StringCode.DimensionStyleTable);
+            foreach (DimensionStyle style in this.dimStyles.Values)
             {
-                dxfWriter.BeginTable(StringCode.DimensionStyleTable);
-                foreach (DimensionStyle style in this.dimStyles.Values)
-                {
-                    dxfWriter.WriteDimensionStyle(style);
-                }
-                dxfWriter.EndTable();
+                dxfWriter.WriteDimensionStyle(style);
             }
+            dxfWriter.EndTable();
 
-            //block record tables, this table is not recognized by AutoCad12
-            if (this.version != DxfVersion.AutoCad12)
+            //block reacord table
+            dxfWriter.BeginTable(StringCode.BlockRecordTable);
+            foreach (Block block in this.blocks.Values)
             {
-                dxfWriter.BeginTable(StringCode.BlockRecordTable);
-                foreach (Block block in this.blocks.Values)
-                {
-                    dxfWriter.WriteBlockRecord(block.Record);
-                }
-                dxfWriter.EndTable();
+                dxfWriter.WriteBlockRecord(block.Record);
             }
+            dxfWriter.EndTable();
 
             dxfWriter.EndSection(); //End section tables
 
@@ -861,22 +796,9 @@ namespace netDxf
             {
                 dxfWriter.WriteEntity(circle);
             }
-
-            // only for version 12 draw polylines instead of ellipses
-            if (this.version == DxfVersion.AutoCad12)
+            foreach (Ellipse ellipse  in this.ellipses)
             {
-                if (ellipsePolys != null)
-                    foreach (Polyline ellipse in ellipsePolys)
-                    {
-                        dxfWriter.WriteEntity(ellipse);
-                    }
-            }
-            else
-            {
-                foreach (Ellipse ellipse  in this.ellipses)
-                {
-                    dxfWriter.WriteEntity(ellipse);
-                }
+                dxfWriter.WriteEntity(ellipse);
             }
             foreach (NurbsCurve nurbsCurve  in this.nurbsCurves)
             {
@@ -902,13 +824,18 @@ namespace netDxf
             {
                 dxfWriter.WriteEntity(line);
             }
-
-            // lwpolyline in Acad12 are written as polylines
-            foreach (IPolyline pol in lwPolys)
+            foreach (LwPolyline pol in this.lightWeightPolylines)
+            {
+                dxfWriter.WriteEntity(pol);
+            }
+            foreach (PolyfaceMesh pol in this.polyfaceMeshes)
+            {
+                dxfWriter.WriteEntity(pol);
+            }
+            foreach (Polyline pol in this.polylines)
             {
                dxfWriter.WriteEntity(pol);
             }
-
             foreach (Text text in this.texts)
             {
                 dxfWriter.WriteEntity(text);
@@ -1024,9 +951,17 @@ namespace netDxf
             {
                 this.handleCount = entity.AsignHandle(this.handleCount);
             }
-            foreach (IPolyline entity in this.polylines)
+            foreach (LwPolyline entity in this.lightWeightPolylines)
             {
-                this.handleCount = ((DxfObject)entity).AsignHandle(this.handleCount);
+                this.handleCount = (entity).AsignHandle(this.handleCount);
+            }
+            foreach (PolyfaceMesh entity in this.polyfaceMeshes)
+            {
+                this.handleCount = (entity).AsignHandle(this.handleCount);
+            }
+            foreach (Polyline entity in this.polylines)
+            {
+                this.handleCount = (entity).AsignHandle(this.handleCount);
             }
             foreach (Line entity in this.lines)
             {
@@ -1048,7 +983,6 @@ namespace netDxf
             {
                 this.handleCount = entity.AsignHandle(this.handleCount);
             }
-
         }
         #endregion
     }

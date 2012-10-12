@@ -37,7 +37,6 @@ namespace netDxf.Tables
         private AciColor color;
         private bool isVisible;
         private LineType lineType;
-
         #endregion
 
         #region constructors

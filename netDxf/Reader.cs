@@ -49,7 +49,7 @@ namespace netDxf
 
         //header
         private List<string> comments;
-        private DxfVersion version;
+        private string version;
         private string handleSeed;
 
         //entities
@@ -61,7 +61,9 @@ namespace netDxf
         private List<Solid> solids;
         private List<Insert> inserts;
         private List<Line> lines;
-        private List<IPolyline> polylines;
+        private List<PolyfaceMesh> polyfaceMeshes;
+        private List<LwPolyline> lightWeightPolylines;
+        private List<Polyline> polylines;
         private List<Text> texts;
         private List<Hatch> hatches;
 
@@ -106,7 +108,7 @@ namespace netDxf
             get { return this.handleSeed; }
         }
 
-        public DxfVersion Version
+        public string Version
         {
             get { return this.version; }
         }
@@ -150,11 +152,20 @@ namespace netDxf
             get { return this.lines; }
         }
 
-        public List<IPolyline> Polylines
+        public List<LwPolyline> LightWeightPolyline
+        {
+            get { return this.lightWeightPolylines; }
+        }
+
+        public List<Polyline> Polylines
         {
             get { return this.polylines; }
         }
 
+        public List<PolyfaceMesh> PolyfaceMeshes
+        {
+            get { return this.polyfaceMeshes; }
+        }
         public List<Insert> Inserts
         {
             get { return this.inserts; }
@@ -243,7 +254,9 @@ namespace netDxf
             this.solids = new List<Solid>();
             this.inserts = new List<Insert>();
             this.lines = new List<Line>();
-            this.polylines = new List<IPolyline>();
+            this.polyfaceMeshes = new List<PolyfaceMesh>();
+            this.lightWeightPolylines = new List<LwPolyline>();
+            this.polylines = new List<Polyline>();
             this.points = new List<Point>();
             this.texts = new List<Text>();
             this.hatches = new List<Hatch>();
@@ -302,7 +315,7 @@ namespace netDxf
                     switch (variableName)
                     {
                         case SystemVariable.DatabaseVersion:
-                            this.version = (DxfVersion) StringEnum.Parse(typeof (DxfVersion), dxfPairInfo.Value);
+                            this.version = dxfPairInfo.Value;
                             break;
                         case SystemVariable.HandSeed :
                             this.handleSeed = dxfPairInfo.Value;
@@ -761,11 +774,16 @@ namespace netDxf
                         break;
                     case DxfObjectCode.LightWeightPolyline:
                         entity = this.ReadLightWeightPolyline();
-                        this.polylines.Add((IPolyline) entity);
+                        this.lightWeightPolylines.Add((LwPolyline)entity);
                         break;
                     case DxfObjectCode.Polyline:
                         entity = this.ReadPolyline();
-                        this.polylines.Add((IPolyline) entity);
+                        if (entity is LwPolyline)
+                            this.lightWeightPolylines.Add((LwPolyline)entity);
+                        if (entity is PolyfaceMesh)
+                            this.polyfaceMeshes.Add((PolyfaceMesh)entity);
+                        if (entity is Polyline)
+                            this.polylines.Add((Polyline)entity);
                         break;
                     case DxfObjectCode.Text:
                         entity = this.ReadText();
@@ -1892,12 +1910,12 @@ namespace netDxf
             return line;
         }
 
-        private LightWeightPolyline ReadLightWeightPolyline()
+        private LwPolyline ReadLightWeightPolyline()
         {
-            LightWeightPolyline pol = new LightWeightPolyline();
+            LwPolyline pol = new LwPolyline();
             //int numVertexes;
             double constantWidth = 0.0;
-            LightWeightPolylineVertex v = new LightWeightPolylineVertex();
+            LwPolylineVertex v = new LwPolylineVertex();
             double vX = 0.0;
             Vector3 normal = Vector3.UnitZ;
 
@@ -1946,7 +1964,7 @@ namespace netDxf
                         dxfPairInfo = this.ReadCodePair();
                         break;
                     case 10:
-                        v = new LightWeightPolylineVertex
+                        v = new LwPolylineVertex
                                 {
                                     BeginWidth = constantWidth,
                                     EndWidth = constantWidth
@@ -2004,8 +2022,13 @@ namespace netDxf
             return pol;
         }
 
-        private IPolyline ReadPolyline()
+        private IEntityObject ReadPolyline()
         {
+            // the entity Polyline in dxf can actually hold three kinds of entities
+            // polyline 3d is the generic polyline
+            // polyface mesh
+            // polylines 2d is the old way of writing polylines the AutoCAD2000 and newer always use LightweightPolylines to define a polyline 2d
+            // this way of reading polylines 2d is here for compatibility reasons with older dxf version.
             string handle = string.Empty;
             Layer layer = Layer.Default;
             AciColor color = AciColor.ByLayer;
@@ -2127,7 +2150,7 @@ namespace netDxf
                 }
             }
 
-            IPolyline pol;
+            IEntityObject pol;
             bool isClosed = false;
 
             if ((flags & PolylineTypeFlags.ClosedPolylineOrClosedPolygonMeshInM) == PolylineTypeFlags.ClosedPolylineOrClosedPolygonMeshInM)
@@ -2139,10 +2162,10 @@ namespace netDxf
             //the polyline type will decide which information to use from the read vertex
             if ((flags & PolylineTypeFlags.Polyline3D) == PolylineTypeFlags.Polyline3D)
             {
-                List<Polyline3dVertex> polyline3dVertexes = new List<Polyline3dVertex>();
+                List<PolylineVertex> polyline3dVertexes = new List<PolylineVertex>();
                 foreach (Vertex v in vertexes)
                 {
-                    Polyline3dVertex vertex = new Polyline3dVertex
+                    PolylineVertex vertex = new PolylineVertex
                                                   {
                                                       Color = v.Color,
                                                       Layer = v.Layer,
@@ -2154,12 +2177,12 @@ namespace netDxf
                     polyline3dVertexes.Add(vertex);
                 }
 
-                pol = new Polyline3d(polyline3dVertexes, isClosed)
+                pol = new Polyline(polyline3dVertexes, isClosed)
                           {
                               Handle = handle
                           };
-                ((Polyline3d) pol).EndSequence.Handle = endSequenceHandle;
-                ((Polyline3d) pol).EndSequence.Layer = endSequenceLayer;
+                ((Polyline) pol).EndSequence.Handle = endSequenceHandle;
+                ((Polyline) pol).EndSequence.Layer = endSequenceLayer;
             }
             else if ((flags & PolylineTypeFlags.PolyfaceMesh) == PolylineTypeFlags.PolyfaceMesh)
             {
@@ -2204,34 +2227,27 @@ namespace netDxf
             }
             else
             {
-                List<PolylineVertex> polylineVertexes = new List<PolylineVertex>();
+                List<LwPolylineVertex> polylineVertexes = new List<LwPolylineVertex>();
                 foreach (Vertex v in vertexes)
                 {
-                    PolylineVertex vertex = new PolylineVertex
+                    LwPolylineVertex vertex = new LwPolylineVertex
                                                 {
                                                     Location = new Vector2(v.Location.X, v.Location.Y),
                                                     BeginWidth = v.BeginThickness,
                                                     Bulge = v.Bulge,
-                                                    Color = v.Color,
                                                     EndWidth = v.EndThickness,
-                                                    Layer = v.Layer,
-                                                    LineType = v.LineType,
-                                                    Handle = v.Handle,
-                                                    XData = xData
                                                 };
 
                     polylineVertexes.Add(vertex);
                 }
 
-                pol = new Polyline(polylineVertexes, isClosed)
+                pol = new LwPolyline(polylineVertexes, isClosed)
                           {
                               Thickness = thickness,
                               Elevation = elevation,
                               Normal = normal,
                               Handle = handle
                           };
-                ((Polyline) pol).EndSequence.Handle = endSequenceHandle;
-                ((Polyline) pol).EndSequence.Layer = endSequenceLayer;
             }
 
             pol.Color = color;
@@ -2502,7 +2518,7 @@ namespace netDxf
             bool read = false;
             bool hasBulge = false;
             bool isClosed = false;
-            List<PolylineVertex> vertexes = new List<PolylineVertex>();
+            List<LwPolylineVertex> vertexes = new List<LwPolylineVertex>();
             dxfPairInfo = this.ReadCodePair();
 
             while (!read)
@@ -2535,7 +2551,7 @@ namespace netDxf
                                 if (dxfPairInfo.Code == 42) bulge = double.Parse(dxfPairInfo.Value);
                                 dxfPairInfo = this.ReadCodePair();
                             }
-                            vertexes.Add(new PolylineVertex(x, y, bulge));
+                            vertexes.Add(new LwPolylineVertex(x, y, bulge));
                         }
                         break;
                     default:
@@ -2545,7 +2561,7 @@ namespace netDxf
                 }
             }
 
-            Polyline polyline = new Polyline(vertexes, isClosed);
+            LwPolyline polyline = new LwPolyline(vertexes, isClosed);
             List<IEntityObject> entities = isClosed ? new List<IEntityObject> { polyline } : polyline.Explode();
             return new HatchBoundaryPath(entities);
 

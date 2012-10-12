@@ -1,4 +1,12 @@
-[0.1.6.0 - 2012/09/21]
+[0.2.0 - 2012/10/12] 
+- Dropped support for AutoCAD12 dxf files this will brake your program if you are using polylines. Important, following the way the dxf calls the polyline entities:
+1. - LightWeightPolyline has been renamed LwPolyline for short.
+2. - All Polylines are now LwPolylines.
+3. - All Polylines3d are now Polylines.
+Also the entities LwPolyline, Polyline and PolyfaceMesh have their own list in the DxfDocument, before they all were included in the same list "Polylines".
++ Updated "netDxf Documentation.chm".
+
+[0.1.6.0 - 2012/09/28]
 + Read and write hatches to dxf, there are a few predefined patterns based on AutoCAD pat file. You can create your own providing the information needed for the HatchPatternLineDefinition class or load from a file (same rules as AutoCAD pat files are applied).
 + Line types can be loaded form a file but only simple line patterns are supported (same rules as AutoCAD lin files are applied).
 + Text files reorganization: changelog.txt and license.txt move to doc folder together with the compiled HTML help file.

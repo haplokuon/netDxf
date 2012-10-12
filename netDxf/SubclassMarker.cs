@@ -1,7 +1,7 @@
-﻿#region netDxf, Copyright(C) 2009 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf, Copyright(C) 2012 Daniel Carvajal, Licensed under LGPL.
 
 //                        netDxf library
-// Copyright (C) 2009 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2012 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -23,7 +23,7 @@
 namespace netDxf
 {
     /// <summary>
-    /// Dxf object subclass string markers.
+    /// Dxf object subclass string markers (code 100).
     /// </summary>
     internal static class SubclassMarker
     {
@@ -63,5 +63,8 @@ namespace netDxf
         public const string Attribute = "AcDbAttribute";
         public const string AttributeDefinition = "AcDbAttributeDefinition";
         public const string Dictionary = "AcDbDictionary";
+        public const string RasterImage = "AcDbRasterImage";
+        public const string RasterImageDef = "AcDbRasterImageDef";
+        public const string RasterImageDefReactor = "AcDbRasterImageDefReactor";
     }
 }

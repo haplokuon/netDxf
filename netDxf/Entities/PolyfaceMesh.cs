@@ -26,13 +26,12 @@ using netDxf.Tables;
 
 namespace netDxf.Entities
 {
-
     /// <summary>
     /// Represents a polyface mesh <see cref="netDxf.Entities.IEntityObject">entity</see>.
     /// </summary>
     public class PolyfaceMesh :
         DxfObject,
-        IPolyline
+        IEntityObject
     {
         #region private fields
         private readonly EndSequence endSequence;
@@ -116,12 +115,8 @@ namespace netDxf.Entities
             get { return this.endSequence; }
         }
 
-        #endregion
-
-        #region IPolyline Members
-
         /// <summary>
-        /// Gets the polyline type.
+        /// Gets the polyface mesh flag type.
         /// </summary>
         public PolylineTypeFlags Flags
         {

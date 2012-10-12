@@ -256,13 +256,13 @@ namespace netDxf.Entities
         /// Converts the arc in a Polyline.
         /// </summary>
         /// <param name="precision">Number of vertexes generated.</param>
-        /// <returns>A new instance of <see cref="Polyline">Polyline</see> that represents the arc.</returns>
-        public Polyline ToPolyline(int precision)
+        /// <returns>A new instance of <see cref="LwPolyline">LightWeightPolyline</see> that represents the arc.</returns>
+        public LwPolyline ToPolyline(int precision)
         {
             IEnumerable<Vector2> vertexes = this.PolygonalVertexes(precision);
             Vector3 ocsCenter = MathHelper.Transform(this.center, this.normal, MathHelper.CoordinateSystem.World, MathHelper.CoordinateSystem.Object);
 
-            Polyline poly = new Polyline
+            LwPolyline poly = new LwPolyline
             {
                 Color = this.color,
                 Layer = this.layer,
@@ -275,7 +275,7 @@ namespace netDxf.Entities
             };
             foreach (Vector2 v in vertexes)
             {
-                poly.Vertexes.Add(new PolylineVertex(v.X + ocsCenter.X, v.Y + ocsCenter.Y));
+                poly.Vertexes.Add(new LwPolylineVertex(v.X + ocsCenter.X, v.Y + ocsCenter.Y));
             }
             return poly;
         }

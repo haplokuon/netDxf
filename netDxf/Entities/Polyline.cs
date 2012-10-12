@@ -27,97 +27,122 @@ using netDxf.Tables;
 namespace netDxf.Entities
 {
     /// <summary>
-    /// Represents a polyline <see cref="netDxf.Entities.IEntityObject">entity</see>.
+    /// Defines the polyline type.
     /// </summary>
-    /// <remarks>
-    /// The <see cref="netDxf.Entities.LightWeightPolyline">LightWeightPolyline</see> and
-    /// the <see cref="netDxf.Entities.Polyline">Polyline</see> are essentially the same entity, they are both here for compatibility reasons.
-    /// When a AutoCad12 file is saved all lightweight polylines will be converted to polylines, while for AutoCad2000 and later versions all
-    /// polylines will be converted to lightweight polylines.
-    /// </remarks>
+    /// <remarks>Bit flag.</remarks>
+    [Flags]
+    public enum PolylineTypeFlags
+    {
+        /// <summary>
+        /// Default, open polyline.
+        /// </summary>
+        OpenPolyline = 0,
+        /// <summary>
+        /// This is a closed polyline (or a polygon mesh closed in the M direction).
+        /// </summary>
+        ClosedPolylineOrClosedPolygonMeshInM = 1,
+        /// <summary>
+        /// Curve-fit vertices have been added.
+        /// </summary>
+        CurveFit = 2,
+        /// <summary>
+        /// Spline-fit vertices have been added.
+        /// </summary>
+        SplineFit = 4,
+        /// <summary>
+        /// This is a 3D polyline.
+        /// </summary>
+        Polyline3D = 8,
+        /// <summary>
+        /// This is a 3D polygon mesh.
+        /// </summary>
+        PolygonMesh = 16,
+        /// <summary>
+        /// The polygon mesh is closed in the N direction.
+        /// </summary>
+        ClosedPolygonMeshInN = 32,
+        /// <summary>
+        /// The polyline is a polyface mesh.
+        /// </summary>
+        PolyfaceMesh = 64,
+        /// <summary>
+        /// The linetype pattern is generated continuously around the vertices of this polyline.
+        /// </summary>
+        ContinuousLineTypePatter = 128
+    }
+
+    /// <summary>
+    /// Defines the curves and smooth surface type.
+    /// </summary>
+    public enum SmoothType
+    {
+        /// <summary>
+        /// No smooth surface fitted
+        /// </summary>
+        NoSmooth = 0,
+        /// <summary>
+        /// Quadratic B-spline surface
+        /// </summary>
+        Quadratic = 5,
+        /// <summary>
+        /// Cubic B-spline surface
+        /// </summary>
+        Cubic = 6,
+        /// <summary>
+        /// Bezier surface
+        /// </summary>
+        Bezier = 8
+    }
+
+    /// <summary>
+    /// Represents a generic polyline <see cref="IEntityObject">entity</see>.
+    /// </summary>
     public class Polyline :
         DxfObject,
-        IPolyline
+        IEntityObject
     {
         #region private fields
 
         private readonly EndSequence endSequence;
-        private const EntityType TYPE = EntityType.Polyline;
-        private List<PolylineVertex> vertexes;
-        private bool isClosed;
-        private PolylineTypeFlags flags;
-        private Layer layer;
-        private AciColor color;
-        private LineType lineType;
-        private Vector3 normal;
-        private double elevation;
-        private double thickness;
-        private Dictionary<ApplicationRegistry, XData> xData;
+        protected const EntityType TYPE = EntityType.Polyline3d;
+        protected List<PolylineVertex> vertexes;
+        protected PolylineTypeFlags flags;
+        protected Layer layer;
+        protected AciColor color;
+        protected LineType lineType;
+        protected Dictionary<ApplicationRegistry, XData> xData;
 
         #endregion
 
         #region constructors
 
         /// <summary>
-        /// Initializes a new instance of the <c>Polyline</c> class.
+        /// Initializes a new instance of the <c>Polyline3d</c> class.
         /// </summary>
-        /// <param name="vertexes">Polyline <see cref="Vector2">vertex</see> list in object coordinates.</param>
-        /// <param name="isClosed">Sets if the polyline is closed.</param>
-        public Polyline(IEnumerable<Vector2> vertexes, bool isClosed = false)
-            : base(DxfObjectCode.Polyline)
-        {
-            this.vertexes = new List<PolylineVertex>();
-            foreach (Vector2 vertex in vertexes)
-            {
-                this.vertexes.Add(new PolylineVertex(vertex));
-            }
-            this.isClosed = isClosed;
-            this.layer = Layer.Default;
-            this.color = AciColor.ByLayer;
-            this.lineType = LineType.ByLayer;
-            this.normal = Vector3.UnitZ;
-            this.elevation = 0.0;
-            this.thickness = 0.0;
-            this.flags = isClosed ? PolylineTypeFlags.ClosedPolylineOrClosedPolygonMeshInM : PolylineTypeFlags.OpenPolyline;
-            this.endSequence = new EndSequence();
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <c>Polyline</c> class.
-        /// </summary>
-        /// <param name="vertexes">Polyline vertex list in object coordinates.</param>
-        /// <param name="isClosed">Sets if the polyline is closed.</param>
-        public Polyline(List<PolylineVertex> vertexes, bool isClosed = false)
-            : base(DxfObjectCode.Polyline)
+        /// <param name="vertexes">3d polyline <see cref="PolylineVertex">vertex</see> list.</param>
+        /// <param name="isClosed">Sets if the polyline is closed</param>
+        public Polyline(List<PolylineVertex> vertexes, bool isClosed = false) 
+            : base (DxfObjectCode.Polyline)
         {
             this.vertexes = vertexes;
-            this.isClosed = isClosed;
             this.layer = Layer.Default;
             this.color = AciColor.ByLayer;
             this.lineType = LineType.ByLayer;
-
-            this.normal = Vector3.UnitZ;
-            this.elevation = 0.0;
-            this.thickness = 0.0;
-            this.flags = isClosed ? PolylineTypeFlags.ClosedPolylineOrClosedPolygonMeshInM : PolylineTypeFlags.OpenPolyline;
+            this.flags = isClosed ? PolylineTypeFlags.ClosedPolylineOrClosedPolygonMeshInM | PolylineTypeFlags.Polyline3D : PolylineTypeFlags.Polyline3D;
             this.endSequence = new EndSequence();
         }
-        
+
         /// <summary>
-        /// Initializes a new instance of the <c>Polyline</c> class.
+        /// Initializes a new instance of the <c>Polyline3d</c> class.
         /// </summary>
         public Polyline()
             : base(DxfObjectCode.Polyline)
         {
+            this.flags = PolylineTypeFlags.Polyline3D;
             this.vertexes = new List<PolylineVertex>();
-            this.isClosed = false;
             this.layer = Layer.Default;
             this.color = AciColor.ByLayer;
             this.lineType = LineType.ByLayer;
-            this.normal = Vector3.UnitZ;
-            this.elevation = 0.0f;
-            this.thickness = 0.0;   
-            this.flags = PolylineTypeFlags.OpenPolyline;
             this.endSequence = new EndSequence();
         }
 
@@ -126,7 +151,7 @@ namespace netDxf.Entities
         #region public properties
 
         /// <summary>
-        /// Gets or sets the polyline <see cref="netDxf.Entities.PolylineVertex">vertex</see> list.
+        /// Gets or sets the polyline <see cref="PolylineVertex">vertex</see> list.
         /// </summary>
         public List<PolylineVertex> Vertexes
         {
@@ -134,65 +159,15 @@ namespace netDxf.Entities
             set
             {
                 if (value == null)
-                    throw new ArgumentNullException("value");
+                    throw new ArgumentNullException("value"); 
                 this.vertexes = value;
             }
-        }
-
-        /// <summary>
-        /// Gets or sets if the polyline is closed.
-        /// </summary>
-        public virtual bool IsClosed
-        {
-            get { return this.isClosed; }
-            set
-            {
-                this.flags |= value ? PolylineTypeFlags.ClosedPolylineOrClosedPolygonMeshInM : PolylineTypeFlags.OpenPolyline;
-                this.isClosed = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the polyline <see cref="netDxf.Vector3">normal</see>.
-        /// </summary>
-        public Vector3 Normal
-        {
-            get { return this.normal; }
-            set
-            {
-                if (Vector3.Zero == value)
-                    throw new ArgumentNullException("value", "The normal can not be the zero vector");
-                value.Normalize();
-                this.normal = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the polyline thickness.
-        /// </summary>
-        public double Thickness
-        {
-            get { return this.thickness; }
-            set { this.thickness = value; }
-        }
-
-        /// <summary>
-        /// Gets or sets the polyline elevation.
-        /// </summary>
-        public double Elevation
-        {
-            get { return this.elevation; }
-            set { this.elevation = value; }
         }
 
         internal EndSequence EndSequence
         {
             get { return this.endSequence; }
         }
-
-        #endregion
-
-        #region IPolyline Members
 
         /// <summary>
         /// Gets the polyline type.
@@ -267,226 +242,6 @@ namespace netDxf.Entities
 
         #endregion
 
-        #region public methods
-
-        /// <summary>
-        /// Sets a constant width for all the polyline segments.
-        /// </summary>
-        /// <param name="width">Polyline width.</param>
-        public void SetConstantWidth(double width)
-        {
-            foreach (PolylineVertex v in this.vertexes)
-            {
-                v.BeginWidth = width;
-                v.EndWidth = width;
-            }
-        }
-
-        /// <summary>
-        /// Converts the polyline in a <see cref="netDxf.Entities.LightWeightPolyline">LightWeightPolyline</see>.
-        /// </summary>
-        /// <returns>A new instance of <see cref="LightWeightPolyline">LightWeightPolyline</see> that represents the lightweight polyline.</returns>
-        public LightWeightPolyline ToLightWeightPolyline()
-        {
-            List<LightWeightPolylineVertex> polyVertexes = new List<LightWeightPolylineVertex>();
-            foreach (PolylineVertex v in this.vertexes)
-            {
-                polyVertexes.Add(new LightWeightPolylineVertex(v.Location)
-                                     {
-                                         BeginWidth = v.BeginWidth,
-                                         Bulge = v.Bulge,
-                                         EndWidth = v.EndWidth,
-                                     }
-                    );
-            }
-
-            return new LightWeightPolyline(polyVertexes, this.isClosed)
-                       {
-                           Color = this.color,
-                           Layer = this.layer,
-                           LineType = this.lineType,
-                           Normal = this.normal,
-                           Elevation = this.elevation,
-                           Thickness = this.thickness,
-                           XData = this.xData
-                       };
-        }
-
-        /// <summary>
-        /// Decompose the actual polyline in its internal entities, <see cref="Line">lines</see> and <see cref="Arc">arcs</see>.
-        /// </summary>
-        /// <remarks>
-        /// Makes the opposite function as the Join() method.
-        /// </remarks>
-        /// <returns>A list of <see cref="Line">lines</see>see> and <see cref="Arc">arcs</see> that made up the polyline.</returns>
-        public List<IEntityObject> Explode()
-        {
-            List<IEntityObject> entities = new List<IEntityObject>();
-            int index = 0;  
-            foreach (PolylineVertex vertex in this.Vertexes)
-            {
-                double bulge = vertex.Bulge;
-                Vector2 p1;
-                Vector2 p2;
-                
-                if (index == this.Vertexes.Count - 1)
-                {
-                    if (!this.isClosed) break;
-                    p1 = new Vector2(vertex.Location.X, vertex.Location.Y);
-                    p2 = new Vector2(this.vertexes[0].Location.X, this.vertexes[0].Location.Y);
-                }
-                else
-                {
-                    p1 = new Vector2(vertex.Location.X, vertex.Location.Y);
-                    p2 = new Vector2(this.vertexes[index + 1].Location.X, this.vertexes[index + 1].Location.Y);
-                }
-                if (MathHelper.IsZero(bulge))
-                {
-                    // the polyline edge is a line
-                    Vector3 start = MathHelper.Transform(new Vector3(p1.X, p1.Y, this.elevation), this.normal,
-                                                            MathHelper.CoordinateSystem.Object,
-                                                            MathHelper.CoordinateSystem.World);
-                    Vector3 end = MathHelper.Transform(new Vector3(p2.X, p2.Y, this.elevation), this.normal,
-                                                        MathHelper.CoordinateSystem.Object,
-                                                        MathHelper.CoordinateSystem.World);
-
-                    entities.Add(new Line(start, end)
-                                        {
-                                            Color = this.color,
-                                            Layer = this.layer,
-                                            LineType = this.lineType,
-                                            Normal = this.normal,
-                                            Thickness = this.thickness,
-                                            XData = this.xData
-                                        });
-                }
-                else
-                {
-                    // the polyline edge is an arc
-                    double theta = 4 * Math.Atan(Math.Abs(bulge));
-                    double c = Vector2.Distance(p1, p2);
-                    double r = (c/2) / Math.Sin(theta/2);
-                    double gamma = (Math.PI - theta) / 2;
-                    double phi = Vector2.AngleBetween(p1, p2) + Math.Sign(bulge) * gamma;
-                    Vector2 center = new Vector2(p1.X + r * Math.Cos(phi), p1.Y + r * Math.Sin(phi));
-                    double startAngle;
-                    double endAngle;
-                    if (bulge>0)
-                    {
-                        startAngle = MathHelper.RadToDeg * Vector2.AngleBetween(Vector2.UnitX, p1 - center);
-                        endAngle = startAngle + MathHelper.RadToDeg * theta;
-                    }
-                    else
-                    {
-                        endAngle = MathHelper.RadToDeg * Vector2.AngleBetween(Vector2.UnitX, p1 - center);
-                        startAngle = endAngle - MathHelper.RadToDeg * theta;
-                    }
-                    entities.Add(new Arc(new Vector3(center.X, center.Y, this.elevation), r, startAngle, endAngle)
-                                     {
-                                         Color = this.color,
-                                         Layer = this.layer,
-                                         LineType = this.lineType,
-                                         Normal = this.normal,
-                                         Thickness = this.thickness,
-                                         XData = this.xData 
-                                     });
-                }
-                index++;
-            }
-
-            return entities;
-        }
-
-        /// <summary>
-        /// Builds a polyline from a list of <see cref="Line">lines</see> and <see cref="Arc">arcs</see>.
-        /// </summary>
-        /// <remarks>
-        /// Makes the opposite function as the Explode() method.
-        /// </remarks>
-        /// <param name="entities">List of <see cref="Line">lines</see> and <see cref="Arc">arcs</see> to join.</param>
-        /// <returns>A polyline made up of the <see cref="Line">lines</see> and <see cref="Arc">arcs</see> of the entities list.</returns>
-        public static Polyline Join(List<IEntityObject> entities)
-        {
-            throw new NotImplementedException();
-        }
-
-        /// <summary>
-        /// Obtains a list of vertexes that represent the polyline approximating the curve segments as necessary.
-        /// </summary>
-        /// <param name="bulgePrecision">Curve segments precision (a value of zero means that no approximation will be made).</param>
-        /// <param name="weldThreshold">Tolerance to consider if two new generated vertexes are equal.</param>
-        /// <param name="bulgeThreshold">Minimun distance from which approximate curved segments of the polyline.</param>
-        /// <returns>A list of vertexes expresed in object coordinate system.</returns>
-        public List<Vector2> PoligonalVertexes(int bulgePrecision, double weldThreshold, double bulgeThreshold)
-        {
-            List<Vector2> ocsVertexes = new List<Vector2>();
-
-            int index = 0;
-
-            foreach (PolylineVertex vertex in this.Vertexes)
-            {
-                double bulge = vertex.Bulge;
-                Vector2 p1;
-                Vector2 p2;
-
-                if (index == this.Vertexes.Count - 1)
-                {
-                    p1 = new Vector2(vertex.Location.X, vertex.Location.Y);
-                    p2 = new Vector2(this.vertexes[0].Location.X, this.vertexes[0].Location.Y);
-                }
-                else
-                {
-                    p1 = new Vector2(vertex.Location.X, vertex.Location.Y);
-                    p2 = new Vector2(this.vertexes[index + 1].Location.X, this.vertexes[index + 1].Location.Y);
-                }
-
-                if (!p1.Equals(p2, weldThreshold))
-                {
-                    if (MathHelper.IsZero(bulge) || bulgePrecision == 0)
-                    {
-                        ocsVertexes.Add(p1);
-                    }
-                    else
-                    {
-                        double c = Vector2.Distance(p1, p2);
-                        if (c >= bulgeThreshold)
-                        {
-                            double s = (c / 2) * Math.Abs(bulge);
-                            double r = ((c / 2) * (c / 2) + s * s) / (2 * s);
-                            double theta = 4 * Math.Atan(Math.Abs(bulge));
-                            double gamma = (Math.PI - theta) / 2;
-                            double phi = Vector2.AngleBetween(p1, p2) + Math.Sign(bulge) * gamma;
-                            Vector2 center = new Vector2(p1.X + r * Math.Cos(phi), p1.Y + r * Math.Sin(phi));
-                            Vector2 a1 = p1 - center;
-                            double angle = Math.Sign(bulge) * theta / (bulgePrecision + 1);
-                            ocsVertexes.Add(p1);
-                            for (int i = 1; i <= bulgePrecision; i++)
-                            {
-                                Vector2 curvePoint = new Vector2();
-                                Vector2 prevCurvePoint = new Vector2(this.vertexes[this.vertexes.Count - 1].Location.X, this.vertexes[this.vertexes.Count - 1].Location.Y);
-                                curvePoint.X = center.X + Math.Cos(i*angle)*a1.X - Math.Sin(i*angle)*a1.Y;
-                                curvePoint.Y = center.Y + Math.Sin(i*angle)*a1.X + Math.Cos(i*angle)*a1.Y;
-
-                                if (!curvePoint.Equals(prevCurvePoint, weldThreshold) && !curvePoint.Equals(p2, weldThreshold))
-                                {
-                                    ocsVertexes.Add(curvePoint);
-                                }
-                            }
-                        }
-                        else
-                        {
-                            ocsVertexes.Add(p1);
-                        }
-                    }
-                }
-                index++;
-            }
-
-            return ocsVertexes;
-        }
-
-        #endregion
-
         #region overrides
 
         /// <summary>
@@ -500,11 +255,12 @@ namespace netDxf.Entities
         /// </remarks>
         internal override int AsignHandle(int entityNumber)
         {
-            foreach (PolylineVertex v in this.vertexes)
+            foreach( PolylineVertex v in this.vertexes )
             {
                 entityNumber = v.AsignHandle(entityNumber);
             }
             entityNumber = this.endSequence.AsignHandle(entityNumber);
+
             return base.AsignHandle(entityNumber);
         }
 
