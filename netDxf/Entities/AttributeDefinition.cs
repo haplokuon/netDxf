@@ -154,7 +154,7 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets or sets the <see cref="netDxf.TextAlignment">text alignment.</see>
+        /// Gets or sets the <see cref="TextAlignment">text alignment.</see>
         /// </summary>
         public TextAlignment Alignment
         {

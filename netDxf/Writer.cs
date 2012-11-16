@@ -508,7 +508,7 @@ namespace netDxf
             this.WriteCodePair(100, SubclassMarker.TextStyle);
 
             this.WriteCodePair(2, style);
-            this.WriteCodePair(3, style.Font);
+            this.WriteCodePair(3, style.FontName);
 
             this.WriteCodePair(70, style.IsVertical ? 4 : 0);
 
@@ -636,6 +636,9 @@ namespace netDxf
                     break;
                 case EntityType.Text:
                     this.WriteText((Text) entity);
+                    break;
+                case EntityType.MText:
+                    this.WriteMText((MText) entity);
                     break;
                 case EntityType.Hatch:
                     this.WriteHatch((Hatch)entity);
@@ -1012,17 +1015,17 @@ namespace netDxf
             this.WriteEntityCommonCodes(polyline);
             this.WriteCodePair(100, SubclassMarker.Polyline3d);
 
-            this.WriteCodePair(70, (int) polyline.Flags);
-
             //dummy point
             this.WriteCodePair(10, 0.0);
             this.WriteCodePair(20, 0.0);
             this.WriteCodePair(30, 0.0);
 
             //Obsolete; formerly an “entities follow flag” (optional; ignore if present)
-            //but its needed to load the dxf file in AutoCAD even the documentation says it is OPTIONAL
             //this.WriteCodePair(66, "1");
 
+            this.WriteCodePair(70, (int)polyline.Flags);
+            this.WriteCodePair(75, (int)polyline.SmoothType); 
+  
             this.WriteXData(polyline.XData);
 
             foreach (PolylineVertex v in polyline.Vertexes)
@@ -1032,11 +1035,11 @@ namespace netDxf
                 this.WriteCodePair(100, SubclassMarker.Entity);
                 this.WriteCodePair(8, v.Layer);
                 this.WriteCodePair(100, SubclassMarker.Vertex);
-                this.WriteCodePair(100, SubclassMarker.Polyline3dVertex);
-                this.WriteCodePair(70, (int) v.Flags);
+                this.WriteCodePair(100, SubclassMarker.Polyline3dVertex);             
                 this.WriteCodePair(10, v.Location.X);
                 this.WriteCodePair(20, v.Location.Y);
                 this.WriteCodePair(30, v.Location.Z);
+                this.WriteCodePair(70, (int) v.Flags);
                 this.WriteXData(v.XData);
             }
             this.WriteCodePair(0, polyline.EndSequence.CodeName);
@@ -1267,6 +1270,62 @@ namespace netDxf
             this.WriteXData(text.XData);
         }
 
+        private void WriteMText(MText mText)
+        {
+            if (this.activeSection != StringCode.EntitiesSection && !this.isBlockEntities)
+            {
+                throw new InvalidDxfSectionException(this.activeSection, this.file);
+            }
+
+            this.WriteCodePair(0, mText.CodeName);
+            this.WriteCodePair(5, mText.Handle);
+            this.WriteCodePair(100, SubclassMarker.Entity);
+            this.WriteEntityCommonCodes(mText);
+            this.WriteCodePair(100, SubclassMarker.MText);
+
+            this.WriteCodePair(10, mText.InsertionPoint.X);
+            this.WriteCodePair(20, mText.InsertionPoint.Y);
+            this.WriteCodePair(30, mText.InsertionPoint.Z);
+
+            this.WriteCodePair(210, mText.Normal.X);
+            this.WriteCodePair(220, mText.Normal.Y);
+            this.WriteCodePair(230, mText.Normal.Z);
+
+            WriteMTextChunks(mText.Value);
+
+            this.WriteCodePair(40, mText.Height);
+            this.WriteCodePair(41, mText.RectangleWidth);
+            this.WriteCodePair(44, mText.LineSpacingFactor);
+
+            // even if the AutoCAD dxf documentation says that the rotation is in radians, this is wrong this value must be saved in degrees
+            this.WriteCodePair(50, mText.Rotation);
+
+            this.WriteCodePair(71, (int)mText.AttachmentPoint);
+
+            // By style (the flow direction is inherited from the associated text style)
+            this.WriteCodePair(72, 5);
+
+            this.WriteCodePair(7, mText.Style);
+
+            this.WriteXData(mText.XData);
+        }
+
+        private void WriteMTextChunks(string text)
+        {
+            //Text string. If the text string is less than 250 characters, all characters
+            //appear in group 1. If the text string is greater than 250 characters, the
+            //string is divided into 250 character chunks, which appear in one or
+            //more group 3 codes. If group 3 codes are used, the last group is a
+            //group 1 and has fewer than 250 characters
+            while(text.Length>250)
+            {
+                string chunk = text.Substring(0, 250);
+                this.WriteCodePair(3, chunk);
+                text = text.Remove(0, 250);
+            }
+            this.WriteCodePair(1, text);
+        }
+
         private void WriteHatch(Hatch hatch)
         {
             if (this.activeSection != StringCode.EntitiesSection && !this.isBlockEntities)
@@ -1482,7 +1541,7 @@ namespace netDxf
         }
         #endregion
 
-        #region methods for Entity section
+        #region methods for Dictionary section
 
         public void WriteDictionary(Dictionary dictionary)
         {

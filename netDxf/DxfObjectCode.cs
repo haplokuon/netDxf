@@ -128,6 +128,11 @@ namespace netDxf
         public const string Text = "TEXT";
 
         /// <summary>
+        /// Multiline text string.
+        /// </summary>
+        public const string MText = "MTEXT";
+
+        /// <summary>
         /// 3d face.
         /// </summary>
         public const string Face3D = "3DFACE";

@@ -1,7 +1,7 @@
-﻿#region netDxf, Copyright(C) 2009 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf, Copyright(C) 2012 Daniel Carvajal, Licensed under LGPL.
 
 //                        netDxf library
-// Copyright (C) 2009 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2012 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -21,15 +21,13 @@
 #endregion
 
 using System;
+using System.IO;
 
 namespace netDxf.Tables
 {
     /// <summary>
     /// Represents a text style.
     /// </summary>
-    /// <remarks>
-    /// AutoCad12 does not support true type fonts.
-    /// </remarks>
     public class TextStyle :
         DxfObject,
         ITableObject
@@ -54,7 +52,7 @@ namespace netDxf.Tables
         /// </summary>
         public static TextStyle Default
         {
-            get { return new TextStyle("Standard", "simplex"); }
+            get { return new TextStyle("Standard", "simplex.shx"); }
         }
 
         #endregion
@@ -65,7 +63,7 @@ namespace netDxf.Tables
         /// Initializes a new instance of the <c>TextStyle</c> class.
         /// </summary>
         /// <param name="name">Text style name.</param>
-        /// <param name="font">Text style font name.</param>
+        /// <param name="font">Text style font file name.</param>
         public TextStyle(string name, string font)
             : base(DxfObjectCode.TextStyle)
         {
@@ -73,7 +71,7 @@ namespace netDxf.Tables
                 throw (new ArgumentNullException("name"));
             this.name = name;
             if (string.IsNullOrEmpty(font))
-                font = "simplex";
+                throw (new ArgumentNullException("font"));
             this.font = font;
             this.widthFactor = 1.0f;
             this.obliqueAngle = 0.0f;
@@ -83,18 +81,32 @@ namespace netDxf.Tables
             this.isUpsideDown = false;
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <c>TextStyle</c> class. The font file name, without the extension, will be used as the TextStyle name.
+        /// </summary>
+        /// <param name="font">Text style font file name.</param>
+        public TextStyle(string font)
+            : this(Path.GetFileNameWithoutExtension(font),font)
+        {
+        }
         #endregion
 
         #region public properties
 
         /// <summary>
-        /// Gets the text style font name.
+        /// Gets the text style font file name.
         /// </summary>
-        public string Font
+        public string FontName
         {
             get{return this.font;}
         }
-
+        /// <summary>
+        /// Gets the style font file name without the extension.
+        /// </summary>
+        public string FontNameWithoutExtension
+        {
+            get { return Path.GetFileNameWithoutExtension(this.font); }
+        }
         /// <summary>
         /// Gets or sets the text height.
         /// </summary>

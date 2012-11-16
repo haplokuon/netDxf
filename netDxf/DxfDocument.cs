@@ -39,10 +39,6 @@ namespace netDxf
     /// <summary>
     /// Represents a document to read and write dxf ASCII files.
     /// </summary>
-    /// <remarks>
-    /// The AutoCad12 dxf object names (application registries, layers, text styles, blocks, line types,...) can not contain spaces,
-    /// so if this situation happens all spaces will be replaced by an underscore character '_'.
-    /// </remarks>
     public class DxfDocument
     {
         #region private fields
@@ -88,6 +84,7 @@ namespace netDxf
         private List<LwPolyline> lightWeightPolylines;
         private List<Polyline> polylines;
         private List<Text> texts;
+        private List<MText> mTexts;
         private List<Hatch> hatches;
 
         #endregion
@@ -113,7 +110,9 @@ namespace netDxf
             this.blocks = new Dictionary<string, Block>();
             this.appRegisterNames = new Dictionary<string, ApplicationRegistry>();
             this.dimStyles = new Dictionary<string, DimensionStyle>();
-            
+
+            AddDefaultObjects();
+
             this.arcs = new List<Arc>();
             this.ellipses = new List<Ellipse>();
             this.nurbsCurves = new List<NurbsCurve>();
@@ -127,6 +126,7 @@ namespace netDxf
             this.circles = new List<Circle>();
             this.points = new List<Point>();
             this.texts = new List<Text>();
+            this.mTexts = new List<MText>();
             this.hatches = new List<Hatch>();
         }
 
@@ -331,6 +331,14 @@ namespace netDxf
         public ReadOnlyCollection<Text> Texts
         {
             get { return this.texts.AsReadOnly(); }
+        }
+
+        /// <summary>
+        /// Gets the <see cref="netDxf.Entities.MText">multiline text</see> list.
+        /// </summary>
+        public ReadOnlyCollection<MText> MTexts
+        {
+            get { return this.mTexts.AsReadOnly(); }
         }
 
         /// <summary>
@@ -585,6 +593,13 @@ namespace netDxf
                     }
                     this.texts.Add((Text) entity);
                     break;
+                case EntityType.MText:
+                    if (!this.textStyles.ContainsKey(((MText) entity).Style.Name))
+                    {
+                        this.textStyles.Add(((MText) entity).Style.Name, ((MText) entity).Style);
+                    }
+                    this.mTexts.Add((MText) entity);
+                    break;
                 case EntityType.Hatch:
                     this.hatches.Add((Hatch) entity);
                     break;
@@ -659,6 +674,7 @@ namespace netDxf
             this.lines = dxfReader.Lines;
             this.inserts = dxfReader.Inserts;
             this.texts = dxfReader.Texts;
+            this.mTexts = dxfReader.MTexts;
             this.hatches = dxfReader.Hatches;
 
             Thread.CurrentThread.CurrentCulture = cultureInfo;
@@ -675,7 +691,7 @@ namespace netDxf
             // we will start counting the handles of the document elements after the few reserved by the writer for internal use
             this.handleCount = DxfWriter.ReservedHandles;
 
-            ReAsignHandlersAndDefaultObjects();
+            AsignHandlers();
             this.fileName = Path.GetFileNameWithoutExtension(file);
             this.version = StringEnum.GetStringValue(dxfVersion);
 
@@ -840,7 +856,10 @@ namespace netDxf
             {
                 dxfWriter.WriteEntity(text);
             }
-
+            foreach (MText mText in this.mTexts)
+            {
+                dxfWriter.WriteEntity(mText);
+            }
             foreach (Hatch hatch in this.hatches)
             {
                 dxfWriter.WriteEntity(hatch);
@@ -858,79 +877,81 @@ namespace netDxf
             Thread.CurrentThread.CurrentCulture = cultureInfo;
         }
          
-        private void ReAsignHandlersAndDefaultObjects()
+        #endregion
+
+        #region private methods
+		 
+        private void AddDefaultObjects()
         {
             //add default viewports
             ViewPort active = ViewPort.Active;
-            if (!this.viewports.ContainsKey(active.Name))
-                this.viewports.Add(active.Name, active);
-            foreach (ViewPort viewPort in this.viewports.Values)
-            {
-                this.handleCount = viewPort.AsignHandle(this.handleCount);
-            }
+            this.viewports.Add(active.Name, active);
 
             //add default layer
-            Layer.PlotStyleHandle = Convert.ToString(this.handleCount++, 16);
             Layer byDefault = Layer.Default;
-            if (!this.layers.ContainsKey(byDefault.Name))
-                this.layers.Add(byDefault.Name, byDefault);
-            foreach (Layer layer in this.layers.Values)
-            {
-                this.handleCount = layer.AsignHandle(this.handleCount);
-            }
-            
+            this.layers.Add(byDefault.Name, byDefault);
+
             // add default line types
             LineType byLayer = LineType.ByLayer;
             LineType byBlock = LineType.ByBlock;
-            if(!this.lineTypes.ContainsKey(byLayer.Name)) 
-                this.lineTypes.Add(byLayer.Name, byLayer);
-            if(!this.lineTypes.ContainsKey(byBlock.Name)) 
-                this.lineTypes.Add(byBlock.Name, byBlock);
-            foreach (LineType lineType in this.lineTypes.Values)
-            {
-                this.handleCount = lineType.AsignHandle(this.handleCount);
-            }
-
-            // add default text style
-            TextStyle defaultStyle = TextStyle.Default;
-            if (!this.textStyles.ContainsKey(defaultStyle.Name))
-                this.textStyles.Add(defaultStyle.Name, defaultStyle);
-            foreach (TextStyle textStyle in this.textStyles.Values)
-            {
-                this.handleCount = textStyle.AsignHandle(this.handleCount);
-            }
+            this.lineTypes.Add(byLayer.Name, byLayer);
+            this.lineTypes.Add(byBlock.Name, byBlock);
 
             // add default blocks
             Block modelSpace = Block.ModelSpace;
             Block paperSpace = Block.PaperSpace;
-            if (!this.blocks.ContainsKey(modelSpace.Name))
-                this.blocks.Add(modelSpace.Name, modelSpace);
-            if (!this.blocks.ContainsKey(paperSpace.Name))
-                this.blocks.Add(paperSpace.Name, paperSpace);
+            this.blocks.Add(modelSpace.Name, modelSpace);
+            this.blocks.Add(paperSpace.Name, paperSpace);
+
+            // add default text style
+            TextStyle defaultStyle = TextStyle.Default;
+            this.textStyles.Add(defaultStyle.Name, defaultStyle);
+
+            // add default application registry
+            ApplicationRegistry defaultAppId = ApplicationRegistry.Default;
+            this.appRegisterNames.Add(defaultAppId.Name, defaultAppId);
+
+            // add default dimension style
+            DimensionStyle defaultDimStyle = DimensionStyle.Default;
+            this.dimStyles.Add(defaultDimStyle.Name, defaultDimStyle);
+        }
+
+        private void AsignHandlers()
+        {
+            // assign handles to the document tables
+            foreach (ViewPort viewPort in this.viewports.Values)
+            {
+                this.handleCount = viewPort.AsignHandle(this.handleCount);
+            }
+            
+            Layer.PlotStyleHandle = Convert.ToString(this.handleCount++, 16);
+            
+            foreach (Layer layer in this.layers.Values)
+            {
+                this.handleCount = layer.AsignHandle(this.handleCount);
+            }
+            foreach (LineType lineType in this.lineTypes.Values)
+            {
+                this.handleCount = lineType.AsignHandle(this.handleCount);
+            }
+            foreach (TextStyle textStyle in this.textStyles.Values)
+            {
+                this.handleCount = textStyle.AsignHandle(this.handleCount);
+            }
             foreach (Block block in this.blocks.Values)
             {
                 this.handleCount = block.AsignHandle(this.handleCount);
             }
-
-            // add default application registry
-            ApplicationRegistry defaultAppId = ApplicationRegistry.Default;
-            if (!this.appRegisterNames.ContainsKey(defaultAppId.Name))
-                this.appRegisterNames.Add(defaultAppId.Name, defaultAppId);
             foreach (ApplicationRegistry appId in this.appRegisterNames.Values)
             {
                 this.handleCount = appId.AsignHandle(this.handleCount);
             }
-            
-            // add default dimension style
-            DimensionStyle defaultDimStyle = DimensionStyle.Default;
-            if (!this.dimStyles.ContainsKey(defaultDimStyle.Name))
-                this.dimStyles.Add(defaultDimStyle.Name, defaultDimStyle);
             foreach (DimensionStyle style in this.dimStyles.Values)
             {
                 this.handleCount = style.AsignHandle(this.handleCount);
             }
 
-            // add document entities
+            // assign handles to the document entities
             foreach (Arc entity in this.arcs)
             {
                 this.handleCount = entity.AsignHandle(this.handleCount);
@@ -976,6 +997,10 @@ namespace netDxf
                 this.handleCount = entity.AsignHandle(this.handleCount);
             }
             foreach (Text entity in this.texts)
+            {
+                this.handleCount = entity.AsignHandle(this.handleCount);
+            }
+            foreach (MText entity in this.mTexts)
             {
                 this.handleCount = entity.AsignHandle(this.handleCount);
             }

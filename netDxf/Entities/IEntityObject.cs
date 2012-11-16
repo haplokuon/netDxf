@@ -86,6 +86,11 @@ namespace netDxf.Entities
         Text,
 
         /// <summary>
+        /// Multiline text string entity.
+        /// </summary>
+        MText,
+
+        /// <summary>
         /// 3d face entity.
         /// </summary>
         Face3D,

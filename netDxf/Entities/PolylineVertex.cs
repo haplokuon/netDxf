@@ -109,6 +109,7 @@ namespace netDxf.Entities
         public VertexTypeFlags Flags
         {
             get { return this.flags; }
+            internal set { this.flags = value; }
         }
         #endregion
 

@@ -65,6 +65,7 @@ namespace netDxf
         private List<LwPolyline> lightWeightPolylines;
         private List<Polyline> polylines;
         private List<Text> texts;
+        private List<MText> mTexts;
         private List<Hatch> hatches;
 
         //tables
@@ -176,6 +177,11 @@ namespace netDxf
             get { return this.texts; }
         }
 
+        public List<MText> MTexts
+        {
+            get { return this.mTexts; }
+        }
+
         public List<Hatch> Hatches
         {
             get { return this.hatches; }
@@ -259,6 +265,7 @@ namespace netDxf
             this.polylines = new List<Polyline>();
             this.points = new List<Point>();
             this.texts = new List<Text>();
+            this.mTexts = new List<MText>();
             this.hatches = new List<Hatch>();
             this.fileLine = -1;
 
@@ -788,6 +795,10 @@ namespace netDxf
                     case DxfObjectCode.Text:
                         entity = this.ReadText();
                         this.texts.Add((Text) entity);
+                        break;
+                    case DxfObjectCode.MText:
+                        entity = this.ReadMText();
+                        this.mTexts.Add((MText)entity);
                         break;
                     case DxfObjectCode.Hatch:
                         entity = this.ReadHatch();
@@ -2380,6 +2391,147 @@ namespace netDxf
             text.XData = xData;
 
             return text;
+        }
+
+        private MText ReadMText()
+        {
+            string handle = string.Empty;
+            Vector3 insertionPoint = Vector3.Zero;
+            Vector2 direction = Vector2.UnitX;
+            Vector3 normal = Vector3.UnitZ;
+            Layer layer = Layer.Default;
+            AciColor color = AciColor.Default;
+            LineType lineType = LineType.ByLayer;
+            double height = 0.0;
+            double rectangleWidth = 0.0;
+            double lineSpacing = 1.0;
+            double rotation = 0.0;
+            bool isRotationDefined = false;
+            MTextAttachmentPoint attachmentPoint = MTextAttachmentPoint.TopLeft;
+            TextStyle style = TextStyle.Default;
+            string text = string.Empty;
+            Dictionary<ApplicationRegistry, XData> xData = new Dictionary<ApplicationRegistry, XData>();
+
+            dxfPairInfo = this.ReadCodePair();
+            while (dxfPairInfo.Code != 0)
+            {
+                switch (dxfPairInfo.Code)
+                {
+                    case 5:
+                        handle = dxfPairInfo.Value;
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 1:
+                        text += dxfPairInfo.Value;
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 3:
+                        text += dxfPairInfo.Value;
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 8: //layer code
+                        layer = this.GetLayer(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 62: //aci color code
+                        color = new AciColor(short.Parse(dxfPairInfo.Value));
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 6: //type line code
+                        lineType = this.GetLineType(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 10:
+                        insertionPoint.X = double.Parse(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 20:
+                        insertionPoint.Y = double.Parse(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 30:
+                        insertionPoint.Z = double.Parse(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 11:
+                        direction.X = double.Parse(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 21:
+                        direction.Y = double.Parse(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 31:
+                        //direction.Z = double.Parse(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 40:
+                        height = double.Parse(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 41:
+                        rectangleWidth = double.Parse(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 44:
+                        lineSpacing = double.Parse(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 50:
+                        isRotationDefined = true;
+                        rotation = double.Parse(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 7:
+                        style = this.GetTextStyle(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 71:
+                        attachmentPoint = (MTextAttachmentPoint) int.Parse(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 210:
+                        normal.X = double.Parse(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 220:
+                        normal.Y = double.Parse(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 230:
+                        normal.Z = double.Parse(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 1001:
+                        XData xDataItem = this.ReadXDataRecord(dxfPairInfo.Value);
+                        xData.Add(xDataItem.ApplicationRegistry, xDataItem);
+                        break;
+                    default:
+                        if (dxfPairInfo.Code >= 1000 && dxfPairInfo.Code <= 1071)
+                            throw new DxfInvalidCodeValueEntityException(dxfPairInfo.Code, dxfPairInfo.Value, this.file,
+                                                                         "The extended data of an entity must start with the application registry code " + this.fileLine);
+
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                }
+            }
+
+            MText mText= new MText(text, insertionPoint, height, rectangleWidth, style);
+            mText.Handle = handle;
+            mText.Layer = layer;
+            mText.Color = color;
+            mText.LineType = lineType;
+            mText.LineSpacingFactor = lineSpacing;
+            mText.AttachmentPoint = attachmentPoint;
+            mText.Rotation = isRotationDefined
+                                 ? rotation
+                                 : Math.Round(Vector2.AngleBetween(Vector2.Zero, direction) * MathHelper.RadToDeg, MathHelper.MaxAngleDecimals);
+
+            mText.Normal = normal;
+            mText.XData = xData;
+
+
+            return mText;
         }
 
         private Hatch ReadHatch()

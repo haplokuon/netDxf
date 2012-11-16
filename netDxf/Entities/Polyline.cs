@@ -27,74 +27,6 @@ using netDxf.Tables;
 namespace netDxf.Entities
 {
     /// <summary>
-    /// Defines the polyline type.
-    /// </summary>
-    /// <remarks>Bit flag.</remarks>
-    [Flags]
-    public enum PolylineTypeFlags
-    {
-        /// <summary>
-        /// Default, open polyline.
-        /// </summary>
-        OpenPolyline = 0,
-        /// <summary>
-        /// This is a closed polyline (or a polygon mesh closed in the M direction).
-        /// </summary>
-        ClosedPolylineOrClosedPolygonMeshInM = 1,
-        /// <summary>
-        /// Curve-fit vertices have been added.
-        /// </summary>
-        CurveFit = 2,
-        /// <summary>
-        /// Spline-fit vertices have been added.
-        /// </summary>
-        SplineFit = 4,
-        /// <summary>
-        /// This is a 3D polyline.
-        /// </summary>
-        Polyline3D = 8,
-        /// <summary>
-        /// This is a 3D polygon mesh.
-        /// </summary>
-        PolygonMesh = 16,
-        /// <summary>
-        /// The polygon mesh is closed in the N direction.
-        /// </summary>
-        ClosedPolygonMeshInN = 32,
-        /// <summary>
-        /// The polyline is a polyface mesh.
-        /// </summary>
-        PolyfaceMesh = 64,
-        /// <summary>
-        /// The linetype pattern is generated continuously around the vertices of this polyline.
-        /// </summary>
-        ContinuousLineTypePatter = 128
-    }
-
-    /// <summary>
-    /// Defines the curves and smooth surface type.
-    /// </summary>
-    public enum SmoothType
-    {
-        /// <summary>
-        /// No smooth surface fitted
-        /// </summary>
-        NoSmooth = 0,
-        /// <summary>
-        /// Quadratic B-spline surface
-        /// </summary>
-        Quadratic = 5,
-        /// <summary>
-        /// Cubic B-spline surface
-        /// </summary>
-        Cubic = 6,
-        /// <summary>
-        /// Bezier surface
-        /// </summary>
-        Bezier = 8
-    }
-
-    /// <summary>
     /// Represents a generic polyline <see cref="IEntityObject">entity</see>.
     /// </summary>
     public class Polyline :
@@ -104,14 +36,15 @@ namespace netDxf.Entities
         #region private fields
 
         private readonly EndSequence endSequence;
-        protected const EntityType TYPE = EntityType.Polyline3d;
-        protected List<PolylineVertex> vertexes;
-        protected PolylineTypeFlags flags;
-        protected Layer layer;
-        protected AciColor color;
-        protected LineType lineType;
-        protected Dictionary<ApplicationRegistry, XData> xData;
-
+        private const EntityType TYPE = EntityType.Polyline3d;
+        private List<PolylineVertex> vertexes;
+        private PolylineTypeFlags flags;
+        private Layer layer;
+        private AciColor color;
+        private LineType lineType;
+        private bool isClosed;
+        private Dictionary<ApplicationRegistry, XData> xData;
+        private readonly PolylineSmoothType smoothType;
         #endregion
 
         #region constructors
@@ -129,6 +62,7 @@ namespace netDxf.Entities
             this.color = AciColor.ByLayer;
             this.lineType = LineType.ByLayer;
             this.flags = isClosed ? PolylineTypeFlags.ClosedPolylineOrClosedPolygonMeshInM | PolylineTypeFlags.Polyline3D : PolylineTypeFlags.Polyline3D;
+            this.smoothType = PolylineSmoothType.NoSmooth;
             this.endSequence = new EndSequence();
         }
 
@@ -136,14 +70,8 @@ namespace netDxf.Entities
         /// Initializes a new instance of the <c>Polyline3d</c> class.
         /// </summary>
         public Polyline()
-            : base(DxfObjectCode.Polyline)
+            : this(new List<PolylineVertex>())
         {
-            this.flags = PolylineTypeFlags.Polyline3D;
-            this.vertexes = new List<PolylineVertex>();
-            this.layer = Layer.Default;
-            this.color = AciColor.ByLayer;
-            this.lineType = LineType.ByLayer;
-            this.endSequence = new EndSequence();
         }
 
         #endregion
@@ -164,9 +92,17 @@ namespace netDxf.Entities
             }
         }
 
-        internal EndSequence EndSequence
+        /// <summary>
+        /// Gets or sets if the light weight polyline is closed.
+        /// </summary>
+        public virtual bool IsClosed
         {
-            get { return this.endSequence; }
+            get { return this.isClosed; }
+            set
+            {
+                this.flags = value ? PolylineTypeFlags.ClosedPolylineOrClosedPolygonMeshInM | PolylineTypeFlags.Polyline3D : PolylineTypeFlags.Polyline3D;
+                this.isClosed = value;
+            }
         }
 
         /// <summary>
@@ -175,6 +111,19 @@ namespace netDxf.Entities
         public PolylineTypeFlags Flags
         {
             get { return this.flags; }
+        }
+
+        /// <summary>
+        /// Gets the curve smooth type.
+        /// </summary>
+        public PolylineSmoothType SmoothType
+        {
+            get { return smoothType; }
+        }
+
+        internal EndSequence EndSequence
+        {
+            get { return this.endSequence; }
         }
 
         #endregion

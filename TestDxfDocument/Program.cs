@@ -23,11 +23,13 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Drawing;
 using netDxf;
 using netDxf.Blocks;
 using netDxf.Entities;
 using netDxf.Header;
 using netDxf.Tables;
+using Point = netDxf.Entities.Point;
 
 namespace TestDxfDocument
 {
@@ -38,14 +40,14 @@ namespace TestDxfDocument
     {
         private static void Main()
         {
+            WriteMText();
             //LineWidth();
             //HatchCircleBoundary();
-
             //ToPolyline();
             //FilesTest();
             //CustomHatchPattern();
             //LoadSaveHatchTest();
-            WriteDxfFile();
+            //WriteDxfFile();
             //ReadDxfFile();
             //ExplodeTest();
             //HatchTestLinesBoundary();
@@ -55,13 +57,101 @@ namespace TestDxfDocument
             //Ellipse();
             //Solid();
             //Face3d();
+            //LwPolyline();
             //Polyline();
             //NurbsCurve();
             //Dxf2000();
             //SpeedTest();
             //WritePolyline3d();
         }
+        private static void WriteMText()
+        {
+            DxfDocument dxf = new DxfDocument();
 
+            //xData sample
+            XData xdata = new XData(new ApplicationRegistry("netDxf"));
+            xdata.XDataRecord.Add(new XDataRecord(XDataCode.String, "extended data with netDxf"));
+            xdata.XDataRecord.Add(XDataRecord.OpenControlString);
+            xdata.XDataRecord.Add(new XDataRecord(XDataCode.WorldSpacePositionX, 0));
+            xdata.XDataRecord.Add(new XDataRecord(XDataCode.WorldSpacePositionY, 0));
+            xdata.XDataRecord.Add(new XDataRecord(XDataCode.WorldSpacePositionZ, 0));
+            xdata.XDataRecord.Add(XDataRecord.CloseControlString);
+
+            //text
+            TextStyle style = new TextStyle("Times.ttf");
+            //TextStyle style = TextStyle.Default;
+            MText mText = new MText(new Vector3(3,2,0), 1.0f, 100.0f, style);
+            mText.Layer = new Layer("Multiline Text");
+            //mText.Layer.Color.Index = 8;
+            mText.Rotation = 0;
+            mText.LineSpacingFactor = 1.0;
+            mText.ParagraphHeightFactor = 1.0;
+
+            //mText.AttachmentPoint = MTextAttachmentPoint.TopCenter;
+            //mText.Write("Hello World!");
+            //mText.Write(" we keep writting on the same line.");
+            //mText.WriteLine("This text is in a new line");
+
+            //mText.Write("Hello World! ");
+            //for (int i = 0; i < 50; i++)
+            //{
+            //    mText.Write("1234567890");
+            //}
+            //mText.Write(" This text is over the limit of the 250 character chunk");
+            //mText.NewParagraph();
+            //mText.Write("This is a text in a new paragraph");
+            //mText.Write(" and we continue writing in the previous paragraph");
+            //mText.NewParagraph();
+            MTextFormattingOptions options = new MTextFormattingOptions(mText.Style);
+            options.Bold = true;
+            mText.Write("Bold text in mText.Style", options);
+            mText.EndParagraph();
+            options.Italic = true;
+            mText.Write("Bold and italic text in mText.Style", options);
+            mText.EndParagraph();
+            options.Bold = false;
+            options.FontName = "Arial";
+            options.Color = AciColor.Blue;
+            mText.ParagraphHeightFactor = 2;
+            mText.Write("Italic text in Arial", options);
+            mText.EndParagraph();
+            options.Italic = false;
+            options.Color = null; // back to the default text color
+            mText.Write("Normal text in Arial with the default paragraph height factor", options);
+            mText.EndParagraph();
+            mText.ParagraphHeightFactor = 1;
+            mText.Write("No formatted text uses mText.Style");
+            mText.Write(" and the text continues in the same paragraph.");
+            mText.EndParagraph();
+
+            //options.HeightPercentage = 2.5;
+            //options.Color = AciColor.Red;
+            //options.Overstrike = true;
+            //options.Underline = true;
+            //options.FontFile = "times.ttf";
+            //options.ObliqueAngle = 15;
+            //options.CharacterSpacePercentage = 2.35;
+            //options.WidthFactor = 1.8;
+            
+            //for unknown reasons the aligment doesn't seem to change anything
+            //mText.Write("Formatted text", options);
+            //options.Aligment = MTextFormattingOptions.TextAligment.Center;
+            //mText.Write("Center", options);
+            //options.Aligment = MTextFormattingOptions.TextAligment.Top;
+            //mText.Write("Top", options);
+            //options.Aligment = MTextFormattingOptions.TextAligment.Bottom;
+            //mText.Write("Bottom", options);
+
+            mText.XData = new Dictionary<ApplicationRegistry, XData>
+                             {
+                                 {xdata.ApplicationRegistry, xdata}
+                             };
+            
+            dxf.AddEntity(mText);
+
+            dxf.Save("MText sample.dxf", DxfVersion.AutoCad2000);
+
+        }
         private static void HatchCircleBoundary()
         {
             DxfDocument dxf = new DxfDocument();
@@ -99,7 +189,6 @@ namespace TestDxfDocument
 
             dxf.Save("circle solid fill.dxf", DxfVersion.AutoCad2000);
         }
-
         private static void LineWidth()
         {
             // the line thickness works as expected, according to the AutoCAD way of doing things
@@ -134,7 +223,6 @@ namespace TestDxfDocument
             dxf.Save("line width.dxf", DxfVersion.AutoCad2000);
 
         }
-
         private static void ToPolyline()
         {
             DxfDocument dxf = new DxfDocument();
@@ -493,7 +581,7 @@ namespace TestDxfDocument
             dxf.Save("nurbs.dxf", DxfVersion.AutoCad2000);
 
         }
-        private static void Polyline()
+        private static void LwPolyline()
         {
 
             DxfDocument dxf = new DxfDocument();
@@ -503,10 +591,24 @@ namespace TestDxfDocument
             poly.Vertexes.Add(new LwPolylineVertex(10, 10));
             poly.Vertexes.Add(new LwPolylineVertex(20, 0));
             poly.Vertexes.Add(new LwPolylineVertex(30, 10));
-
             dxf.AddEntity(poly);
 
             dxf.Save("polyline.dxf", DxfVersion.AutoCad2000);
+
+        }
+        private static void Polyline()
+        {
+
+            DxfDocument dxf = new DxfDocument();
+
+            Polyline poly = new Polyline();
+            poly.Vertexes.Add(new PolylineVertex(0, 0, 0));
+            poly.Vertexes.Add(new PolylineVertex(10, 10, 0));
+            poly.Vertexes.Add(new PolylineVertex(20, 0, 0));
+            poly.Vertexes.Add(new PolylineVertex(30, 10, 0));
+            dxf.AddEntity(poly);
+
+            //dxf.Save("polyline.dxf", DxfVersion.AutoCad2010);
 
         }
         private static void Solid()

@@ -1,5 +1,10 @@
+[0.2.1 - 2012/11/16] 
++ Added MTEXT entity, with basic text formatting.
++ Move TextAlligment to the netDxf.enties namespace.
+- (fixed) The default text style (Standard) must be the first on the table list.
+
 [0.2.0 - 2012/10/12] 
-- Dropped support for AutoCAD12 dxf files this will brake your program if you are using polylines. Important, following the way the dxf calls the polyline entities:
+- Dropped support for AutoCAD12 dxf files this will brake your program if you are using polylines. Important: following the way the dxf calls the polyline entities:
 1. - LightWeightPolyline has been renamed LwPolyline for short.
 2. - All Polylines are now LwPolylines.
 3. - All Polylines3d are now Polylines.
@@ -13,7 +18,7 @@ Also the entities LwPolyline, Polyline and PolyfaceMesh have their own list in t
 + Updated "netDxf Documentation.chm".
 + Added AutoCad2010 database version number.
 - (fixed) Renamed the PolylineVertex and LightweightPolylineVertex StartThickness and EndThickness as StartWidth and EndWidth, it should always be this way. Do not confuse Elevation, Width and Thickness of an entity. I try to follow the AutoCAD documentation as close as possible, please check it in case of doubt or as in this case I might be wrong. 
-- (fixed) Read and write ellipse entity
+- (fixed) Read and write ellipse entity.
 - (fixed) To make it easier and to unify concepts, the center of a circle, an arc and an ellipse are always given in world coordinates, even though the dxf gives the center of the circle and the arc in object coordinates, and the center of the ellipse in world coordinates. The local (to the center) orientation of the entity will be given by the normal.
 
 [0.1.5.0 - 2012/09/21]

@@ -77,17 +77,8 @@ namespace netDxf.Entities
         /// Initializes a new instance of the <c>LwPolyline</c> class.
         /// </summary>
         public LwPolyline()
-            : base(DxfObjectCode.LightWeightPolyline)
+            : this(new List<LwPolylineVertex>())
         {
-            this.vertexes = new List<LwPolylineVertex>();
-            this.isClosed = false;
-            this.layer = Layer.Default;
-            this.color = AciColor.ByLayer;
-            this.lineType = LineType.ByLayer;
-            this.normal = Vector3.UnitZ;
-            this.elevation = 0.0;
-            this.thickness = 0.0;
-            this.flags = PolylineTypeFlags.OpenPolyline;
         }
 
         #endregion
@@ -116,7 +107,7 @@ namespace netDxf.Entities
             get { return this.isClosed; }
             set
             {
-                this.flags |= value ? PolylineTypeFlags.ClosedPolylineOrClosedPolygonMeshInM : PolylineTypeFlags.OpenPolyline;
+                this.flags = value ? PolylineTypeFlags.ClosedPolylineOrClosedPolygonMeshInM : PolylineTypeFlags.OpenPolyline;
                 this.isClosed = value;
             }
         }

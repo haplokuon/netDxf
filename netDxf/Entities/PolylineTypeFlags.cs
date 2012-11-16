@@ -20,60 +20,52 @@
 
 #endregion
 
-namespace netDxf
+using System;
+
+namespace netDxf.Entities
 {
     /// <summary>
-    /// Defines the text alignment.
+    /// Defines the polyline type.
     /// </summary>
-    public enum TextAlignment
+    /// <remarks>Bit flag.</remarks>
+    [Flags]
+    public enum PolylineTypeFlags
     {
         /// <summary>
-        /// Top left.
+        /// Default, open polyline.
         /// </summary>
-        TopLeft,
+        OpenPolyline = 0,
         /// <summary>
-        /// Top center.
+        /// This is a closed polyline (or a polygon mesh closed in the M direction).
         /// </summary>
-        TopCenter,
+        ClosedPolylineOrClosedPolygonMeshInM = 1,
         /// <summary>
-        /// Top right.
+        /// Curve-fit vertices have been added.
         /// </summary>
-        TopRight,
+        CurveFit = 2,
         /// <summary>
-        /// Middle left.
+        /// Spline-fit vertices have been added.
         /// </summary>
-        MiddleLeft,
+        SplineFit = 4,
         /// <summary>
-        /// Middle center.
+        /// This is a 3D polyline.
         /// </summary>
-        MiddleCenter,
+        Polyline3D = 8,
         /// <summary>
-        /// Middle right.
+        /// This is a 3D polygon mesh.
         /// </summary>
-        MiddleRight,
+        PolygonMesh = 16,
         /// <summary>
-        /// Bottom left.
+        /// The polygon mesh is closed in the N direction.
         /// </summary>
-        BottomLeft,
+        ClosedPolygonMeshInN = 32,
         /// <summary>
-        /// Bottom center.
+        /// The polyline is a polyface mesh.
         /// </summary>
-        BottomCenter,
+        PolyfaceMesh = 64,
         /// <summary>
-        /// Bottom right.
+        /// The linetype pattern is generated continuously around the vertices of this polyline.
         /// </summary>
-        BottomRight,
-        /// <summary>
-        /// Baseline left.
-        /// </summary>
-        BaselineLeft,
-        /// <summary>
-        /// Baseline center.
-        /// </summary>
-        BaselineCenter,
-        /// <summary>
-        /// Baseline right.
-        /// </summary>
-        BaselineRight
+        ContinuousLineTypePatter = 128
     }
 }
