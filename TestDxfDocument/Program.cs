@@ -40,8 +40,9 @@ namespace TestDxfDocument
     {
         private static void Main()
         {
+            LoadLayerOff();
             //CleanDrawing();
-            TestDimensionDrawing();
+            //TestDimensionDrawing();
             //WriteMText();
             //LineWidth();
             //HatchCircleBoundary();
@@ -67,6 +68,11 @@ namespace TestDxfDocument
             //WritePolyline3d();
         }
 
+        private static void LoadLayerOff()
+        {
+            DxfDocument dxf = new DxfDocument();
+            dxf.Load("Layer off.dxf");
+        }
         private static void CleanDrawing()
         {
             DxfDocument dxf = new DxfDocument();

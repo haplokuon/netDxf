@@ -932,7 +932,7 @@ namespace netDxf
                                                                          "Invalid value " + dxfPairInfo.Value + " in code " + dxfPairInfo.Code + " line " + this.fileLine);
                         }
 
-                        color = new AciColor(short.Parse(dxfPairInfo.Value));
+                        color = new AciColor(index);
                         break;
                     case 6:
                         if (string.IsNullOrEmpty(dxfPairInfo.Value))
