@@ -1,7 +1,7 @@
-﻿#region netDxf, Copyright(C) 2009 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf, Copyright(C) 2012 Daniel Carvajal, Licensed under LGPL.
 
 //                        netDxf library
-// Copyright (C) 2009 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2012 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -84,27 +84,20 @@ namespace netDxf.Entities
         /// <summary>
         /// Initializes a new instance of the <c>Insert</c> class.
         /// </summary>
+        /// <param name="block">Insert block definition.</param>
+        /// <param name="insertionPoint">Insert <see cref="Vector2">point</see>.</param>
+        public Insert(Block block, Vector2 insertionPoint)
+            : this(block, new Vector3(insertionPoint.X, insertionPoint.Y, 0.0))
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <c>Insert</c> class.
+        /// </summary>
         /// <param name="block">Insert <see cref="Blocks.Block">block definition</see>.</param>
         public Insert(Block block)
-            : base(DxfObjectCode.Insert)
+            : this(block, Vector3.Zero)
         {
-            if (block == null)
-                throw new ArgumentNullException("block");
-
-            this.block = block;
-            this.insertionPoint = Vector3.Zero;
-            this.scale = new Vector3(1.0, 1.0, 1.0);
-            this.rotation = 0.0f;
-            this.normal = Vector3.UnitZ;
-            this.layer = Layer.Default;
-            this.color = AciColor.ByLayer;
-            this.lineType = LineType.ByLayer;
-            this.attributes = new List<Attribute>();
-            foreach (AttributeDefinition attdef in block.Attributes.Values)
-            {
-                this.attributes.Add(new Attribute(attdef));
-            }
-            this.endSequence = new EndSequence();
         }
 
         #endregion

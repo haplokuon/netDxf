@@ -60,6 +60,15 @@ namespace netDxf.Tables
         #region constructors
 
         /// <summary>
+        /// Initializes a new instance of the <c>TextStyle</c> class. The font file name, without the extension, will be used as the TextStyle name.
+        /// </summary>
+        /// <param name="font">Text style font file name.</param>
+        public TextStyle(string font)
+            : this(Path.GetFileNameWithoutExtension(font), font)
+        {
+        }
+
+        /// <summary>
         /// Initializes a new instance of the <c>TextStyle</c> class.
         /// </summary>
         /// <param name="name">Text style name.</param>
@@ -73,22 +82,14 @@ namespace netDxf.Tables
             if (string.IsNullOrEmpty(font))
                 throw (new ArgumentNullException("font"));
             this.font = font;
-            this.widthFactor = 1.0f;
-            this.obliqueAngle = 0.0f;
-            this.height = 0.0f;
+            this.widthFactor = 1.0;
+            this.obliqueAngle = 0.0;
+            this.height = 0.0;
             this.isVertical = false;
             this.isBackward = false;
             this.isUpsideDown = false;
         }
 
-        /// <summary>
-        /// Initializes a new instance of the <c>TextStyle</c> class. The font file name, without the extension, will be used as the TextStyle name.
-        /// </summary>
-        /// <param name="font">Text style font file name.</param>
-        public TextStyle(string font)
-            : this(Path.GetFileNameWithoutExtension(font),font)
-        {
-        }
         #endregion
 
         #region public properties

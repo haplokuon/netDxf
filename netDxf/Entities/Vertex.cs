@@ -1,7 +1,7 @@
-﻿#region netDxf, Copyright(C) 2009 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf, Copyright(C) 2012 Daniel Carvajal, Licensed under LGPL.
 
 //                        netDxf library
-// Copyright (C) 2009 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2012 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -57,16 +57,38 @@ namespace netDxf.Entities
         /// Initializes a new instance of the <c>Vertex</c> class.
         /// </summary>
         public Vertex()
-            : base(DxfObjectCode.Vertex)
+            : this(Vector3.Zero)
         {
-            this.flags = VertexTypeFlags.PolylineVertex;
-            this.location = Vector3.Zero;
-            this.layer = Layer.Default;
-            this.color = AciColor.ByLayer;
-            this.lineType = LineType.ByLayer;
-            this.bulge = 0.0;
-            this.beginThickness = 0.0;
-            this.endThickness = 0.0;
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <c>Vertex</c> class.
+        /// </summary>
+        /// <param name="location">Vertex <see cref="netDxf.Vector2">location</see>.</param>
+        public Vertex(Vector2 location)
+            : this(new Vector3(location.X, location.Y, 0.0))
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <c>Vertex</c> class.
+        /// </summary>
+        /// <param name="x">X coordinate.</param>
+        /// <param name="y">Y coordinate.</param>
+        /// <param name="z">Z coordinate.</param>
+        public Vertex(double x, double y, double z)
+            : this(new Vector3(x, y, z))
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <c>Vertex</c> class.
+        /// </summary>
+        /// <param name="x">X coordinate.</param>
+        /// <param name="y">Y coordinate.</param>
+        public Vertex(double x, double y)
+            : this(new Vector3(x, y, 0.0))
+        {
         }
 
         /// <summary>
@@ -86,59 +108,6 @@ namespace netDxf.Entities
             this.endThickness = 0.0;
         }
 
-        /// <summary>
-        /// Initializes a new instance of the <c>Vertex</c> class.
-        /// </summary>
-        /// <param name="location">Vertex <see cref="netDxf.Vector2">location</see>.</param>
-        public Vertex(Vector2 location)
-            : base(DxfObjectCode.Vertex)
-        {
-            this.flags = VertexTypeFlags.PolylineVertex;
-            this.location = new Vector3(location.X, location.Y, 0.0);
-            this.layer = Layer.Default;
-            this.color = AciColor.ByLayer;
-            this.lineType = LineType.ByLayer;
-            this.bulge = 0.0;
-            this.beginThickness = 0.0;
-            this.endThickness = 0.0;
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <c>Vertex</c> class.
-        /// </summary>
-        /// <param name="x">X coordinate.</param>
-        /// <param name="y">Y coordinate.</param>
-        /// <param name="z">Z coordinate.</param>
-        public Vertex(double x, double y, double z)
-            : base(DxfObjectCode.Vertex)
-        {
-            this.flags = VertexTypeFlags.PolylineVertex;
-            this.location = new Vector3(x, y, z);
-            this.layer = Layer.Default;
-            this.color = AciColor.ByLayer;
-            this.lineType = LineType.ByLayer;
-            this.bulge = 0.0;
-            this.beginThickness = 0.0;
-            this.endThickness = 0.0;
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <c>Vertex</c> class.
-        /// </summary>
-        /// <param name="x">X coordinate.</param>
-        /// <param name="y">Y coordinate.</param>
-        public Vertex(double x, double y)
-            : base(DxfObjectCode.Vertex)
-        {
-            this.flags = VertexTypeFlags.PolylineVertex;
-            this.location = new Vector3(x, y, 0.0f);
-            this.layer = Layer.Default;
-            this.color = AciColor.ByLayer;
-            this.lineType = LineType.ByLayer;
-            this.bulge = 0.0;
-            this.beginThickness = 0.0;
-            this.endThickness = 0.0;
-        }
 
         #endregion
 

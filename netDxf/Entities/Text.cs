@@ -1,7 +1,7 @@
-﻿#region netDxf, Copyright(C) 2009 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf, Copyright(C) 2012 Daniel Carvajal, Licensed under LGPL.
 
 //                        netDxf library
-// Copyright (C) 2009 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2012 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -58,20 +58,19 @@ namespace netDxf.Entities
         /// Initializes a new instance of the <c>Text</c> class.
         /// </summary>
         public Text() 
-            : base(DxfObjectCode.Text)
+            : this(string.Empty, Vector3.Zero, 1.0, TextStyle.Default)
         {
-            this.value = string.Empty;
-            this.basePoint = Vector3.Zero;
-            this.alignment = TextAlignment.BaselineLeft;
-            this.layer = Layer.Default;
-            this.color = AciColor.ByLayer;
-            this.lineType = LineType.ByLayer;
-            this.normal = Vector3.UnitZ;
-            this.style = TextStyle.Default;
-            this.rotation = 0.0;
-            this.height = 0.0;
-            this.widthFactor = 1.0;
-            this.obliqueAngle = 0.0;
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <c>Text</c> class.
+        /// </summary>
+        /// <param name="text">Text string.</param>
+        /// <param name="basePoint">Text base <see cref="Vector2">point</see>.</param>
+        /// <param name="height">Text height.</param>
+        public Text(string text, Vector2 basePoint, double height)
+            : this(text, new Vector3(basePoint.X, basePoint.Y, 0.0), height, TextStyle.Default)
+        {
         }
 
         /// <summary>
@@ -81,20 +80,21 @@ namespace netDxf.Entities
         /// <param name="basePoint">Text base <see cref="Vector3">point</see>.</param>
         /// <param name="height">Text height.</param>
         public Text(string text, Vector3 basePoint, double height)
-            : base(DxfObjectCode.Text)
+            : this(text, basePoint, height, TextStyle.Default)
         {
-            this.value = text;
-            this.basePoint = basePoint;
-            this.alignment = TextAlignment.BaselineLeft;
-            this.layer = Layer.Default;
-            this.color = AciColor.ByLayer;
-            this.lineType = LineType.ByLayer;
-            this.normal = Vector3.UnitZ;
-            this.style = TextStyle.Default;
-            this.rotation = 0.0;
-            this.height = height;
-            this.widthFactor = 1.0;
-            this.obliqueAngle = 0.0;
+        }
+
+
+        /// <summary>
+        /// Initializes a new instance of the <c>Text</c> class.
+        /// </summary>
+        /// <param name="text">Text string.</param>
+        /// <param name="basePoint">Text base <see cref="Vector2">point</see>.</param>
+        /// <param name="height">Text height.</param>
+        /// <param name="style">Text <see cref="TextStyle">style</see>.</param>
+        public Text(string text, Vector2 basePoint, double height, TextStyle style)
+            : this(text, new Vector3(basePoint.X, basePoint.Y, 0.0), height, style)
+        {
         }
 
         /// <summary>

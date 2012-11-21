@@ -55,7 +55,7 @@ namespace netDxf.Entities
         /// <summary>
         /// Initializes a new instance of the <c>Arc</c> class.
         /// </summary>
-        /// <param name="center">Arc <see cref="netDxf.Vector3">center</see> in object coordinates.</param>
+        /// <param name="center">Arc <see cref="Vector3">center</see> in object coordinates.</param>
         /// <param name="radius">Arc radius.</param>
         /// <param name="startAngle">Arc start angle in degrees.</param>
         /// <param name="endAngle">Arc end angle in degrees.</param>
@@ -77,18 +77,22 @@ namespace netDxf.Entities
         /// <summary>
         /// Initializes a new instance of the <c>Arc</c> class.
         /// </summary>
-        public Arc() :
-            base(DxfObjectCode.Arc)
+        /// <param name="center">Arc <see cref="Vector2">center</see> in object coordinates.</param>
+        /// <param name="radius">Arc radius.</param>
+        /// <param name="startAngle">Arc start angle in degrees.</param>
+        /// <param name="endAngle">Arc end angle in degrees.</param>
+        /// <remarks>The center Z coordinate represents the elevation of the arc along the normal.</remarks>
+        public Arc(Vector2 center, double radius, double startAngle, double endAngle)
+            : this(new Vector3(center.X, center.Y, 0.0), radius, startAngle, endAngle)
         {
-            this.center = Vector3.Zero;
-            this.radius = 0.0;
-            this.startAngle = 0.0;
-            this.endAngle = 0.0;
-            this.thickness = 0.0;
-            this.layer = Layer.Default;
-            this.color = AciColor.ByLayer;
-            this.lineType = LineType.ByLayer;
-            this.normal = Vector3.UnitZ;
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <c>Arc</c> class.
+        /// </summary>
+        public Arc()
+            : this(Vector3.Zero, 1.0, 0.0, 180.0)
+        {
         }
 
         #endregion

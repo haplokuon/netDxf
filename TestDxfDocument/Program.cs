@@ -40,7 +40,9 @@ namespace TestDxfDocument
     {
         private static void Main()
         {
-            WriteMText();
+            //CleanDrawing();
+            TestDimensionDrawing();
+            //WriteMText();
             //LineWidth();
             //HatchCircleBoundary();
             //ToPolyline();
@@ -63,6 +65,50 @@ namespace TestDxfDocument
             //Dxf2000();
             //SpeedTest();
             //WritePolyline3d();
+        }
+
+        private static void CleanDrawing()
+        {
+            DxfDocument dxf = new DxfDocument();
+            dxf.Save("clean drawing.dxf", DxfVersion.AutoCad2004);
+        }
+        private static void TestDimensionDrawing()
+        {
+            DxfDocument dxf = new DxfDocument();
+            double offset = 0.9;
+            Vector3 p1 = new Vector3(1, 2, 0);
+            Vector3 p2 = new Vector3(2, 6, 0);
+            Line line = new Line(p1, p2);
+            Vector3 l1;
+            Vector3 l2;
+            MathHelper.OffsetLine(line.StartPoint, line.EndPoint, line.Normal, offset, out l1, out l2);
+            Line parallel = new Line(l1,l2);
+            dxf.AddEntity(line);
+            dxf.AddEntity(parallel);
+
+            DimensionStyle myStyle = new DimensionStyle("MyStyle");
+            myStyle.DIMPOST = "<>mm";
+            AlignedDimension dim = new AlignedDimension(p1, p2, offset, myStyle);
+            Vector2 perp = Vector2.Perpendicular(new Vector2(p2.X, p2.Y) - new Vector2(p1.X, p1.Y));
+            dim.Normal = -new Vector3(perp.X, perp.Y, 0.0) ;
+
+            XData xdata = new XData(new ApplicationRegistry("other application"));
+            xdata.XDataRecord.Add(new XDataRecord(XDataCode.String, "extended data with netDxf"));
+            xdata.XDataRecord.Add(XDataRecord.OpenControlString);
+            xdata.XDataRecord.Add(new XDataRecord(XDataCode.String, "string record"));
+            xdata.XDataRecord.Add(new XDataRecord(XDataCode.Real, 15.5));
+            xdata.XDataRecord.Add(new XDataRecord(XDataCode.Long, 350));
+            xdata.XDataRecord.Add(XDataRecord.CloseControlString);
+            dim.XData = new Dictionary<ApplicationRegistry, XData>
+                             {
+                                 {xdata.ApplicationRegistry, xdata}
+                             };
+
+            dxf.AddEntity(dim);
+            dxf.Save("test drawing dimension.dxf", DxfVersion.AutoCad2000);
+
+            //dxf.Load("test drawing dimension from CAD 2004 - copia.dxf");
+
         }
         private static void WriteMText()
         {
@@ -768,8 +814,8 @@ namespace TestDxfDocument
             dxf.AddEntity(circle);
 
             dxf.Save("Block with attributes.dxf", DxfVersion.AutoCad2000);
-            dxf.Load("Block with attributes.dxf");
-            dxf.Save("Block with attributes result.dxf", DxfVersion.AutoCad2000); // both results must be equal only the handles might be different
+            //dxf.Load("Block with attributes.dxf");
+            //dxf.Save("Block with attributes result.dxf", DxfVersion.AutoCad2000); // both results must be equal only the handles might be different
         }
         private static void WritePolyfaceMesh()
         {
@@ -978,13 +1024,13 @@ namespace TestDxfDocument
             text.Alignment = TextAlignment.TopRight;
             dxf.AddEntity(text);
             
-            dxf.Save("AutoCad2010.dxf", DxfVersion.AutoCad2010);
-            dxf.Save("AutoCad2007.dxf", DxfVersion.AutoCad2007);
+            //dxf.Save("AutoCad2010.dxf", DxfVersion.AutoCad2010);
+            //dxf.Save("AutoCad2007.dxf", DxfVersion.AutoCad2007);
             dxf.Save("AutoCad2004.dxf", DxfVersion.AutoCad2004);
             dxf.Save("AutoCad2000.dxf", DxfVersion.AutoCad2000);
 
-            dxf.Load("AutoCad2000.dxf");
-            dxf.Save("AutoCad2000 result.dxf", DxfVersion.AutoCad2000);
+           // dxf.Load("AutoCad2000.dxf");
+            //dxf.Save("AutoCad2000 result.dxf", DxfVersion.AutoCad2000);
         }
         private static void WritePolyline3d()
         {

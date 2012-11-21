@@ -58,8 +58,8 @@ namespace netDxf
         private Dictionary<string, Layer> layers;
         private Dictionary<string, LineType> lineTypes;
         private Dictionary<string, TextStyle> textStyles;
-        private readonly Dictionary<string, DimensionStyle> dimStyles;
-
+        private Dictionary<string, DimensionStyle> dimStyles;
+        //private Dictionary<string, MLineStyle> mLineStyles;
         #endregion
 
         #region blocks
@@ -73,6 +73,7 @@ namespace netDxf
         private readonly Hashtable addedObjects;
         private List<Arc> arcs;
         private List<Circle> circles;
+        private List<Dimension> dimensions; 
         private List<Ellipse> ellipses;
         private List<NurbsCurve> nurbsCurves;
         private List<Solid> solids;
@@ -110,11 +111,13 @@ namespace netDxf
             this.blocks = new Dictionary<string, Block>();
             this.appRegisterNames = new Dictionary<string, ApplicationRegistry>();
             this.dimStyles = new Dictionary<string, DimensionStyle>();
+            //this.mLineStyles = new Dictionary<string, MLineStyle>();
 
             AddDefaultObjects();
 
             this.arcs = new List<Arc>();
             this.ellipses = new List<Ellipse>();
+            this.dimensions = new List<Dimension>();
             this.nurbsCurves = new List<NurbsCurve>();
             this.faces3d = new List<Face3d>();
             this.solids = new List<Solid>();
@@ -496,27 +499,41 @@ namespace netDxf
                 case EntityType.Circle:
                     this.circles.Add((Circle) entity);
                     break;
+                case EntityType.Dimension:
+                    this.dimensions.Add((Dimension) entity);
+                    Block dimBlock = ((Dimension) entity).BuildBlock("*D" + this.dimensions.Count);
+                    if (this.blocks.ContainsKey(dimBlock.Name))
+                        throw new ArgumentException("The list already contains the block: " + dimBlock.Name + ". The block names that start with *D are reserverd for dimensions");
+                    
+                    // very important the styles must be unique, if we do not find one we add one, if we do we pickup the one on the list and assign it to the entity
+                    if (!this.dimStyles.ContainsKey(((Dimension)entity).Style.Name))
+                        this.dimStyles.Add(((Dimension)entity).Style.Name, ((Dimension)entity).Style);
+                    else
+                        ((Dimension) entity).Style = this.dimStyles[((Dimension) entity).Style.Name];
+
+                    // very important the styles must be unique, if we do not find one we add one, if we do we pickup the one on the list and assign it to the entity
+                    if (!this.textStyles.ContainsKey(((Dimension)entity).Style.TextStyle.Name))
+                        this.textStyles.Add(((Dimension)entity).Style.TextStyle.Name, ((Dimension)entity).Style.TextStyle);
+                    else
+                        ((Dimension)entity).Style.TextStyle = this.textStyles[((Dimension)entity).Style.TextStyle.Name];
+
+                    this.blocks.Add(dimBlock.Name, dimBlock);
+
+                    break;
                 case EntityType.Ellipse:
                     this.ellipses.Add((Ellipse) entity);
-                    break;
-                case EntityType.NurbsCurve:
-                    throw new NotImplementedException("Nurbs curves not avaliable at the moment.");
-                    //this.nurbsCurves.Add((NurbsCurve) entity);
-                    //break;
-                case EntityType.Point:
-                    this.points.Add((Point) entity);
                     break;
                 case EntityType.Face3D:
                     this.faces3d.Add((Face3d) entity);
                     break;
-                case EntityType.Solid:
-                    this.solids.Add((Solid) entity);
+                case EntityType.Hatch:
+                    this.hatches.Add((Hatch)entity);
                     break;
                 case EntityType.Insert:
                     // if the block definition has already been added, we do not need to do anything else
-                    if (!this.blocks.ContainsKey(((Insert) entity).Block.Name))
+                    if (!this.blocks.ContainsKey(((Insert)entity).Block.Name))
                     {
-                        this.blocks.Add(((Insert) entity).Block.Name, ((Insert) entity).Block);
+                        this.blocks.Add(((Insert)entity).Block.Name, ((Insert)entity).Block);
 
                         if (!this.layers.ContainsKey(((Insert)entity).Block.Layer.Name))
                         {
@@ -524,12 +541,12 @@ namespace netDxf
                         }
 
                         //for new block definitions configure its entities
-                        foreach (IEntityObject blockEntity in ((Insert) entity).Block.Entities)
+                        foreach (IEntityObject blockEntity in ((Insert)entity).Block.Entities)
                         {
                             // check if the entity has not been added to the document
                             if (this.addedObjects.ContainsKey(blockEntity))
                                 throw new ArgumentException("The entity " + blockEntity.Type +
-                                                            " object of the block " + ((Insert) entity).Block.Name +
+                                                            " object of the block " + ((Insert)entity).Block.Name +
                                                             " has already been added to the document.", "entity");
                             this.addedObjects.Add(blockEntity, blockEntity);
 
@@ -543,7 +560,7 @@ namespace netDxf
                             }
                         }
                         //for new block definitions configure its attributes
-                        foreach (Attribute attribute in ((Insert) entity).Attributes)
+                        foreach (Attribute attribute in ((Insert)entity).Attributes)
                         {
                             if (!this.layers.ContainsKey(attribute.Layer.Name))
                             {
@@ -571,37 +588,40 @@ namespace netDxf
                             }
                         }
                     }
-
-                    this.inserts.Add((Insert) entity);
-                    break;
-                case EntityType.Line:
-                    this.lines.Add((Line) entity);
+                    this.inserts.Add((Insert)entity);
                     break;
                 case EntityType.LightWeightPolyline:
                     this.lightWeightPolylines.Add((LwPolyline)entity);
                     break;
-                case EntityType.Polyline3d:
-                    this.polylines.Add((Polyline) entity);
+                case EntityType.Line:
+                    this.lines.Add((Line) entity);
+                    break;
+
+                case EntityType.NurbsCurve:
+                    throw new NotImplementedException("Nurbs curves not avaliable at the moment.");
+                    //this.nurbsCurves.Add((NurbsCurve) entity);
+                    //break;
+                case EntityType.Point:
+                    this.points.Add((Point) entity);
                     break;
                 case EntityType.PolyfaceMesh:
                     this.polyfaceMeshes.Add((PolyfaceMesh)entity);
                     break;
+                case EntityType.Polyline3d:
+                    this.polylines.Add((Polyline) entity);
+                    break;
+                case EntityType.Solid:
+                    this.solids.Add((Solid) entity);
+                    break;
                 case EntityType.Text:
                     if (!this.textStyles.ContainsKey(((Text) entity).Style.Name))
-                    {
                         this.textStyles.Add(((Text) entity).Style.Name, ((Text) entity).Style);
-                    }
                     this.texts.Add((Text) entity);
                     break;
                 case EntityType.MText:
                     if (!this.textStyles.ContainsKey(((MText) entity).Style.Name))
-                    {
                         this.textStyles.Add(((MText) entity).Style.Name, ((MText) entity).Style);
-                    }
                     this.mTexts.Add((MText) entity);
-                    break;
-                case EntityType.Hatch:
-                    this.hatches.Add((Hatch) entity);
                     break;
                 case EntityType.Vertex:
                     throw new ArgumentException("The entity " + entity.Type + " is only allowed as part of another entity", "entity");
@@ -676,6 +696,7 @@ namespace netDxf
             this.texts = dxfReader.Texts;
             this.mTexts = dxfReader.MTexts;
             this.hatches = dxfReader.Hatches;
+            this.dimensions = dxfReader.Dimensions;
 
             Thread.CurrentThread.CurrentCulture = cultureInfo;
 
@@ -759,6 +780,14 @@ namespace netDxf
             }
             dxfWriter.EndTable();
 
+            //dimension style tables
+            dxfWriter.BeginTable(StringCode.DimensionStyleTable);
+            foreach (DimensionStyle style in this.dimStyles.Values)
+            {
+                dxfWriter.WriteDimensionStyle(style);
+            }
+            dxfWriter.EndTable();   
+
             //view
             dxfWriter.BeginTable(StringCode.ViewTable);
             dxfWriter.EndTable();
@@ -772,14 +801,6 @@ namespace netDxf
             foreach (ApplicationRegistry id in this.appRegisterNames.Values)
             {
                 dxfWriter.RegisterApplication(id);
-            }
-            dxfWriter.EndTable();
-
-            //dimension style tables
-            dxfWriter.BeginTable(StringCode.DimensionStyleTable);
-            foreach (DimensionStyle style in this.dimStyles.Values)
-            {
-                dxfWriter.WriteDimensionStyle(style);
             }
             dxfWriter.EndTable();
 
@@ -864,12 +885,21 @@ namespace netDxf
             {
                 dxfWriter.WriteEntity(hatch);
             }
-
+            foreach (Dimension dim in this.dimensions)
+            {
+                dxfWriter.WriteEntity(dim);
+            }
             dxfWriter.EndSection(); //End section entities
 
             //OBJECTS SECTION
             dxfWriter.BeginSection(StringCode.ObjectsSection);
             dxfWriter.WriteDictionary(Dictionary.Default);
+
+            //foreach (MLineStyle mLineStyle in this.mLineStyles.Values)
+            //{
+            //    dxfWriter.WriteMLineStyle(mLineStyle);
+            //}
+
             dxfWriter.EndSection();
 
             dxfWriter.Close();
@@ -913,7 +943,12 @@ namespace netDxf
 
             // add default dimension style
             DimensionStyle defaultDimStyle = DimensionStyle.Default;
+            defaultDimStyle.TextStyle = defaultStyle;
             this.dimStyles.Add(defaultDimStyle.Name, defaultDimStyle);
+
+            // add default MLine style
+            //MLineStyle defaultMLineStyle = MLineStyle.Default;
+            //this.mLineStyles.Add(defaultMLineStyle.Name, defaultMLineStyle);
         }
 
         private void AsignHandlers()
@@ -950,6 +985,10 @@ namespace netDxf
             {
                 this.handleCount = style.AsignHandle(this.handleCount);
             }
+            //foreach (MLineStyle style in this.mLineStyles.Values)
+            //{
+            //    this.handleCount = style.AsignHandle(this.handleCount);
+            //}
 
             // assign handles to the document entities
             foreach (Arc entity in this.arcs)
@@ -1005,6 +1044,10 @@ namespace netDxf
                 this.handleCount = entity.AsignHandle(this.handleCount);
             }
             foreach (Hatch entity in this.hatches)
+            {
+                this.handleCount = entity.AsignHandle(this.handleCount);
+            }
+            foreach (Dimension entity in this.dimensions)
             {
                 this.handleCount = entity.AsignHandle(this.handleCount);
             }

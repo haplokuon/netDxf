@@ -1,7 +1,7 @@
-#region netDxf, Copyright(C) 2009 Daniel Carvajal, Licensed under LGPL.
+#region netDxf, Copyright(C) 2012 Daniel Carvajal, Licensed under LGPL.
 
 //                        netDxf library
-// Copyright (C) 2009 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2012 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -96,24 +96,29 @@ namespace netDxf.Entities
             this.layer = Layer.Default;
             this.color = AciColor.ByLayer;
             this.lineType = LineType.ByLayer;
-            this.xData = new Dictionary<ApplicationRegistry, XData>();
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <c>Face3D</c> class.
+        /// </summary>
+        /// <param name="firstVertex">3d face <see cref="Vector2">first vertex</see>.</param>
+        /// <param name="secondVertex">3d face <see cref="Vector2">second vertex</see>.</param>
+        /// <param name="thirdVertex">3d face <see cref="Vector2">third vertex</see>.</param>
+        /// <param name="fourthVertex">3d face <see cref="Vector2">fourth vertex</see>.</param>
+        public Face3d(Vector2 firstVertex, Vector2 secondVertex, Vector2 thirdVertex, Vector2 fourthVertex)
+            : this(new Vector3(firstVertex.X, firstVertex.Y, 0.0),
+                   new Vector3(secondVertex.X, secondVertex.Y, 0.0),
+                   new Vector3(thirdVertex.X, thirdVertex.Y, 0.0),
+                   new Vector3(fourthVertex.X, fourthVertex.Y, 0.0))
+        {
         }
 
         /// <summary>
         /// Initializes a new instance of the <c>Face3D</c> class.
         /// </summary>
         public Face3d()
-            : base(DxfObjectCode.Face3D)
+            : this(Vector3.Zero, Vector3.Zero, Vector3.Zero, Vector3.Zero)
         {
-            this.firstVertex = Vector3.Zero;
-            this.secondVertex = Vector3.Zero;
-            this.thirdVertex = Vector3.Zero;
-            this.fourthVertex = Vector3.Zero;
-            this.edgeFlags = EdgeFlags.Visibles;
-            this.layer = Layer.Default;
-            this.color = AciColor.ByLayer;
-            this.lineType = LineType.ByLayer;
-            this.xData = new Dictionary<ApplicationRegistry, XData>();
         }
 
         #endregion

@@ -104,6 +104,17 @@ namespace netDxf.Entities
         /// <summary>
         /// Initializes a new instance of the <c>MText</c> class.
         /// </summary>
+        /// <param name="insertionPoint">Text insertion <see cref="Vector2">point</see>.</param>
+        /// <param name="height">Text height.</param>
+        /// <param name="rectangleWidth">Reference rectangle width.</param>
+        public MText(Vector2 insertionPoint, double height, double rectangleWidth)
+            : this(string.Empty, new Vector3(insertionPoint.X, insertionPoint.Y, 0.0), height, rectangleWidth, TextStyle.Default)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <c>MText</c> class.
+        /// </summary>
         /// <param name="insertionPoint">Text insertion <see cref="Vector3">point</see>.</param>
         /// <param name="height">Text height.</param>
         /// <param name="rectangleWidth">Reference rectangle width.</param>
@@ -116,12 +127,36 @@ namespace netDxf.Entities
         /// <summary>
         /// Initializes a new instance of the <c>MText</c> class.
         /// </summary>
+        /// <param name="insertionPoint">Text insertion <see cref="Vector2">point</see>.</param>
+        /// <param name="height">Text height.</param>
+        /// <param name="rectangleWidth">Reference rectangle width.</param>
+        /// <param name="style">Text <see cref="TextStyle">style</see>.</param>
+        public MText(Vector2 insertionPoint, double height, double rectangleWidth, TextStyle style)
+            : this(string.Empty, new Vector3(insertionPoint.X, insertionPoint.Y, 0.0), height, rectangleWidth, style)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <c>MText</c> class.
+        /// </summary>
         /// <param name="text">Text string.</param>
         /// <param name="insertionPoint">Text insertion <see cref="Vector3">point</see>.</param>
         /// <param name="height">Text height.</param>
         /// <param name="rectangleWidth">Reference rectangle width.</param>
         public MText(string text, Vector3 insertionPoint, double height, double rectangleWidth)
             : this(text, insertionPoint, height, rectangleWidth, TextStyle.Default)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <c>MText</c> class.
+        /// </summary>
+        /// <param name="text">Text string.</param>
+        /// <param name="insertionPoint">Text insertion <see cref="Vector2">point</see>.</param>
+        /// <param name="height">Text height.</param>
+        /// <param name="rectangleWidth">Reference rectangle width.</param>
+        public MText(string text, Vector2 insertionPoint, double height, double rectangleWidth)
+            : this(text, new Vector3(insertionPoint.X, insertionPoint.Y, 0.0), height, rectangleWidth, TextStyle.Default)
         {
         }
 
@@ -150,6 +185,19 @@ namespace netDxf.Entities
             this.paragraphHeightFactor = 1.0;
             this.lineSpacingStyle = MTextLineSpacingStyle.AtLeast;
             this.rotation = 0.0;
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <c>MText</c> class.
+        /// </summary>
+        /// <param name="text">Text string.</param>
+        /// <param name="insertionPoint">Text insertion <see cref="Vector2">point</see>.</param>
+        /// <param name="height">Text height.</param>
+        /// <param name="rectangleWidth">Reference rectangle width.</param>
+        /// <param name="style">Text <see cref="TextStyle">style</see>.</param>
+        public MText(string text, Vector2 insertionPoint, double height, double rectangleWidth, TextStyle style)
+            : this(text, new Vector3(insertionPoint.X, insertionPoint.Y, 0.0), height, rectangleWidth, style)
+        {
         }
 
         #endregion
@@ -195,6 +243,7 @@ namespace netDxf.Entities
                 lineSpacing = value;
             }
         }
+
         /// <summary>
         /// Gets or sets the paragraph height factor.
         /// </summary>
@@ -211,6 +260,7 @@ namespace netDxf.Entities
                 paragraphHeightFactor = value;
             }
         }
+
         /// <summary>
         /// Get or sets the <see cref="MTextLineSpacingStyle">line spacing style</see>.
         /// </summary>

@@ -45,11 +45,20 @@ namespace netDxf.Entities
         /// Initializes a new instance of the <c>LwPolylineVertex</c> class.
         /// </summary>
         public LwPolylineVertex()
+            : this(Vector2.Zero, 0.0)
         {
-            this.location = Vector2.Zero;
-            this.bulge = 0.0;
-            this.beginWidth = 0.0;
-            this.endWidth = 0.0;
+        }
+
+
+        /// <summary>
+        /// Initializes a new instance of the <c>LwPolylineVertex</c> class.
+        /// </summary>
+        /// <param name="x">X coordinate.</param>
+        /// <param name="y">Y coordinate.</param>
+        /// <param name="bulge">Vertex bulge.</param>
+        public LwPolylineVertex(double x, double y, double bulge = 0.0)
+            : this(new Vector2(x, y), bulge)
+        {
         }
 
         /// <summary>
@@ -60,20 +69,6 @@ namespace netDxf.Entities
         public LwPolylineVertex(Vector2 location, double bulge = 0.0)
         {
             this.location = location;
-            this.bulge = bulge;
-            this.beginWidth = 0.0;
-            this.endWidth = 0.0;
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <c>LwPolylineVertex</c> class.
-        /// </summary>
-        /// <param name="x">X coordinate.</param>
-        /// <param name="y">Y coordinate.</param>
-        /// <param name="bulge">Vertex bulge.</param>
-        public LwPolylineVertex(double x, double y, double bulge = 0.0)
-        {
-            this.location = new Vector2(x, y);
             this.bulge = bulge;
             this.beginWidth = 0.0;
             this.endWidth = 0.0;

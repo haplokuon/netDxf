@@ -35,8 +35,16 @@ namespace netDxf
         public const string View = "AcDbViewTableRecord";
         public const string LineType = "AcDbLinetypeTableRecord";
         public const string TextStyle = "AcDbTextStyleTableRecord";
+        public const string MLineStyle = "AcDbMlineStyle";
         public const string DimensionStyleTable = "AcDbDimStyleTable";
         public const string DimensionStyle = "AcDbDimStyleTableRecord";
+        public const string Dimension = "AcDbDimension";
+        public const string AlignedDimension = "AcDbAlignedDimension";
+        public const string LinearDimension = "AcDbRotatedDimension";
+        public const string RadialDimension = "AcDbRadialDimension";
+        public const string DiameterDimension = "AcDbDiametricDimension";
+        public const string AngularDimension = "AcDb3PointAngularDimension";
+        public const string OrdinateDimension = "AcDbOrdinateDimension";
         public const string BlockRecord = "AcDbBlockTableRecord";
         public const string BlockBegin = "AcDbBlockBegin";
         public const string BlockEnd = "AcDbBlockEnd";

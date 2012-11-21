@@ -33,11 +33,29 @@ namespace netDxf.Entities
     [Flags]
     public enum BoundaryPathTypeFlag
     {
+        /// <summary>
+        /// Default.
+        /// </summary>
         Default = 0,
+        /// <summary>
+        /// External.
+        /// </summary>
         External = 1,
+        /// <summary>
+        /// Polyline.
+        /// </summary>
         Polyline = 2,
+        /// <summary>
+        /// Derived.
+        /// </summary>
         Derived = 4,
+        /// <summary>
+        /// Textbox.
+        /// </summary>
         Textbox = 8,
+        /// <summary>
+        /// Outermost.
+        /// </summary>
         Outermost = 16
     }
 

@@ -71,6 +71,10 @@
     <Compile Include="AciColor.cs" />
     <Compile Include="Blocks\BlockEnd.cs" />
     <Compile Include="CodeValuePair.cs" />
+    <Compile Include="Entities\AlignedDimension.cs" />
+    <Compile Include="Entities\Dimension.cs" />
+    <Compile Include="Entities\DimensionType.cs" />
+    <Compile Include="Entities\LinearDimension.cs" />
     <Compile Include="Entities\PolylineSmoothType.cs" />
     <Compile Include="Entities\MTextAttachmentPoint.cs" />
     <Compile Include="Entities\MText.cs" />
@@ -86,6 +90,7 @@
     <Compile Include="Header\DxfVersion.cs" />
     <Compile Include="Header\SystemVariable.cs" />
     <Compile Include="Entities\MTextLineSpacingStyle.cs" />
+    <Compile Include="Objects\MLineStyle.cs" />
     <Compile Include="Vector2.cs" />
     <Compile Include="Vector3.cs" />
     <Compile Include="Matrix3.cs" />

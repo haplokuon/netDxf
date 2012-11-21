@@ -51,13 +51,19 @@ namespace netDxf.Entities
         /// Initializes a new instance of the <c>PolylineVertex</c> class.
         /// </summary>
         public PolylineVertex()
-            : base(DxfObjectCode.Vertex)
+            : this(Vector3.Zero)
         {
-            this.flags = VertexTypeFlags.Polyline3dVertex;
-            this.location = Vector3.Zero;
-            this.layer = Layer.Default;
-            this.color = AciColor.ByLayer;
-            this.lineType = LineType.ByLayer;
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <c>PolylineVertex</c> class.
+        /// </summary>
+        /// <param name="x">X coordinate.</param>
+        /// <param name="y">Y coordinate.</param>
+        /// <param name="z">Z coordinate.</param>
+        public PolylineVertex(double x, double y, double z)
+            : this(new Vector3(x, y, z))
+        {
         }
 
         /// <summary>
@@ -69,22 +75,6 @@ namespace netDxf.Entities
         {
             this.flags = VertexTypeFlags.Polyline3dVertex;
             this.location = location;
-            this.layer = Layer.Default;
-            this.color = AciColor.ByLayer;
-            this.lineType = LineType.ByLayer;
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <c>PolylineVertex</c> class.
-        /// </summary>
-        /// <param name="x">X coordinate.</param>
-        /// <param name="y">Y coordinate.</param>
-        /// <param name="z">Z coordinate.</param>
-        public PolylineVertex(double x, double y, double z)
-            : base(DxfObjectCode.Vertex)
-        {
-            this.flags = VertexTypeFlags.Polyline3dVertex;
-            this.location = new Vector3(x, y, z);
             this.layer = Layer.Default;
             this.color = AciColor.ByLayer;
             this.lineType = LineType.ByLayer;

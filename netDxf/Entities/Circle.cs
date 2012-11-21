@@ -1,7 +1,7 @@
-#region netDxf, Copyright(C) 2009 Daniel Carvajal, Licensed under LGPL.
+#region netDxf, Copyright(C) 2012 Daniel Carvajal, Licensed under LGPL.
 
 //                        netDxf library
-// Copyright (C) 2009 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2012 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -70,15 +70,20 @@ namespace netDxf.Entities
         /// <summary>
         /// Initializes a new instance of the <c>Circle</c> class.
         /// </summary>
-        public Circle() : base(DxfObjectCode.Circle)
+        /// <param name="center">Circle <see cref="Vector2">center</see> in object coordinates.</param>
+        /// <param name="radius">Circle radius.</param>
+        /// <remarks>The center Z coordinate represents the elevation of the arc along the normal.</remarks>
+        public Circle(Vector2 center, double radius)
+            : this(new Vector3(center.X, center.Y, 0.0), radius)
         {
-            this.center = Vector3.Zero;
-            this.radius = 1.0;
-            this.thickness = 0.0;
-            this.layer = Layer.Default;
-            this.color = AciColor.ByLayer;
-            this.lineType = LineType.ByLayer;
-            this.normal = Vector3.UnitZ;
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <c>Circle</c> class.
+        /// </summary>
+        public Circle() 
+            : this(Vector3.Zero, 1.0)
+        {
         }
 
         #endregion

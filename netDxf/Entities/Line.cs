@@ -1,7 +1,7 @@
-﻿#region netDxf, Copyright(C) 2009 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf, Copyright(C) 2012 Daniel Carvajal, Licensed under LGPL.
 
 //                        netDxf library
-// Copyright (C) 2009 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2012 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -69,16 +69,19 @@ namespace netDxf.Entities
         /// <summary>
         /// Initializes a new instance of the <c>Line</c> class.
         /// </summary>
-        public Line()
-            : base(DxfObjectCode.Line)
+        /// <param name="startPoint">Line <see cref="Vector2">start point.</see></param>
+        /// <param name="endPoint">Line <see cref="Vector2">end point.</see></param>
+        public Line(Vector2 startPoint, Vector2 endPoint)
+            : this(new Vector3(startPoint.X, startPoint.Y, 0.0), new Vector3(endPoint.X, endPoint.Y, 0.0))
         {
-            this.startPoint = Vector3.Zero;
-            this.endPoint = Vector3.Zero;
-            this.thickness = 0.0;
-            this.layer = Layer.Default;
-            this.color = AciColor.ByLayer;
-            this.lineType = LineType.ByLayer;
-            this.normal = Vector3.UnitZ;
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <c>Line</c> class.
+        /// </summary>
+        public Line()
+            : this (Vector3.Zero,Vector3.Zero)
+        {
         }
 
         #endregion

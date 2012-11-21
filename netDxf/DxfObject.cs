@@ -27,12 +27,12 @@ namespace netDxf
     /// <summary>
     /// Represents the base class for all dxf objects.
     /// </summary>
-    public class DxfObject
+    public abstract class DxfObject
     {
-        #region private fields
+        #region protected fields
 
-        private readonly string codeName;
-        private string handle;
+        protected readonly string codeName;
+        protected string handle;
 
         #endregion
 
@@ -42,7 +42,7 @@ namespace netDxf
         /// Initializes a new instance of the <c>DxfObject</c> class.
         /// </summary>
         /// <param name="codeName">Object name.</param>
-        public DxfObject(string codeName)
+        protected DxfObject(string codeName)
         {
             this.codeName = codeName;
         }

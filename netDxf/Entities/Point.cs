@@ -1,7 +1,7 @@
-﻿#region netDxf, Copyright(C) 2009 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf, Copyright(C) 2012 Daniel Carvajal, Licensed under LGPL.
 
 //                        netDxf library
-// Copyright (C) 2009 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2012 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -48,12 +48,6 @@ namespace netDxf.Entities
 
         #region constructors
 
-        public Point(double x, double y, double z)
-            : this(new Vector3(x, y, z))
-        {
-
-        }
-
         /// <summary>
         /// Initializes a new instance of the <c>Point</c> class.
         /// </summary>
@@ -72,15 +66,30 @@ namespace netDxf.Entities
         /// <summary>
         /// Initializes a new instance of the <c>Point</c> class.
         /// </summary>
-        public Point()
-            : base(DxfObjectCode.Point)
+        /// <param name="location">Point <see cref="Vector2">location</see>.</param>
+        public Point(Vector2 location)
+            : this(new Vector3(location.X, location.Y, 0.0))
         {
-            this.location = Vector3.Zero;
-            this.thickness = 0.0f;
-            this.layer = Layer.Default;
-            this.color = AciColor.ByLayer;
-            this.lineType = LineType.ByLayer;
-            this.normal = Vector3.UnitZ;
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <c>Point</c> class.
+        /// </summary>
+        /// <param name="x">X coordinate.</param>
+        /// <param name="y">Y coordinate.</param>
+        /// <param name="z">Z coordinate.</param>
+        public Point(double x, double y, double z)
+            : this(new Vector3(x, y, z))
+        {
+
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <c>Point</c> class.
+        /// </summary>
+        public Point()
+            : this(Vector3.Zero)
+        {
         }
 
         #endregion

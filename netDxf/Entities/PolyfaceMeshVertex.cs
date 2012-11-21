@@ -1,7 +1,7 @@
-﻿#region netDxf, Copyright(C) 2009 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf, Copyright(C) 2012 Daniel Carvajal, Licensed under LGPL.
 
 //                        netDxf library
-// Copyright (C) 2009 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2012 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -50,13 +50,19 @@ namespace netDxf.Entities
         /// Initializes a new instance of the <c>PolylineVertex</c> class.
         /// </summary>
         public PolyfaceMeshVertex()
-            : base(DxfObjectCode.Vertex)
+            : this(Vector3.Zero)
         {
-            this.flags = VertexTypeFlags.PolyfaceMeshVertex | VertexTypeFlags.Polygon3dMesh;
-            this.location = Vector3.Zero;
-            this.layer = Layer.Default;
-            this.color = AciColor.ByLayer;
-            this.lineType = LineType.ByLayer;
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the PolylineVertex class.
+        /// </summary>
+        /// <param name="x">X coordinate.</param>
+        /// <param name="y">Y coordinate.</param>
+        /// <param name="z">Z coordinate.</param>
+        public PolyfaceMeshVertex(double x, double y, double z)
+            : this(new Vector3(x, y, z))
+        {
         }
 
         /// <summary>
@@ -73,21 +79,6 @@ namespace netDxf.Entities
             this.lineType = LineType.ByLayer;
         }
 
-        /// <summary>
-        /// Initializes a new instance of the PolylineVertex class.
-        /// </summary>
-        /// <param name="x">X coordinate.</param>
-        /// <param name="y">Y coordinate.</param>
-        /// <param name="z">Z coordinate.</param>
-        public PolyfaceMeshVertex(double x, double y, double z)
-            : base(DxfObjectCode.Vertex)
-        {
-            this.flags = VertexTypeFlags.PolyfaceMeshVertex | VertexTypeFlags.Polygon3dMesh;
-            this.location = new Vector3(x, y, z);
-            this.layer = Layer.Default;
-            this.color = AciColor.ByLayer;
-            this.lineType = LineType.ByLayer;
-        }
 
         #endregion
         

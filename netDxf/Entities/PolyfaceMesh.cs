@@ -50,6 +50,14 @@ namespace netDxf.Entities
         /// <summary>
         /// Initializes a new instance of the <c>PolyfaceMesh</c> class.
         /// </summary>
+        public PolyfaceMesh()
+            : this(new List<PolyfaceMeshVertex>(), new List<PolyfaceMeshFace>())
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <c>PolyfaceMesh</c> class.
+        /// </summary>
         /// <param name="vertexes">Polyface mesh <see cref="PolyfaceMeshVertex">vertex</see> list.</param>
         /// <param name="faces">Polyface mesh <see cref="PolyfaceMeshFace">faces</see> list.</param>
         public PolyfaceMesh(List<PolyfaceMeshVertex> vertexes, List<PolyfaceMeshFace> faces)
@@ -64,26 +72,13 @@ namespace netDxf.Entities
             this.endSequence = new EndSequence();
         }
 
-        /// <summary>
-        /// Initializes a new instance of the <c>PolyfaceMesh</c> class.
-        /// </summary>
-        public PolyfaceMesh()
-            : base(DxfObjectCode.Polyline)
-        {
-            this.flags = PolylineTypeFlags.PolyfaceMesh;
-            this.faces = new List<PolyfaceMeshFace>();
-            this.layer = Layer.Default;
-            this.color = AciColor.ByLayer;
-            this.lineType = LineType.ByLayer;
-            this.endSequence = new EndSequence();
-        }
 
         #endregion
 
         #region public properties
 
         /// <summary>
-        /// Gets or sets the polyface mesh <see cref="netDxf.Entities.PolyfaceMeshVertex">vertexes</see>.
+        /// Gets or sets the polyface mesh <see cref="PolyfaceMeshVertex">vertexes</see>.
         /// </summary>
         public List<PolyfaceMeshVertex> Vertexes
         {
@@ -97,7 +92,7 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets or sets the polyface mesh <see cref="netDxf.Entities.PolyfaceMeshFace">faces</see>.
+        /// Gets or sets the polyface mesh <see cref="PolyfaceMeshFace">faces</see>.
         /// </summary>
         public List<PolyfaceMeshFace> Faces
         {

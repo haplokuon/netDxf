@@ -63,6 +63,11 @@ namespace netDxf
         public const string TextStyle = "STYLE";
 
         /// <summary>
+        /// MLine style.
+        /// </summary>
+        public const string MLineStyle = "MLINESTYLE";
+
+        /// <summary>
         /// View.
         /// </summary>
         public const string View = "VIEW";

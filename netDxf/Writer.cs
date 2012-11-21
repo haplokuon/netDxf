@@ -388,21 +388,52 @@ namespace netDxf
         /// <summary>
         /// Writes a new dimension style to the table section.
         /// </summary>
-        /// <param name="dimStyle">DimensionStyle.</param>
-        public void WriteDimensionStyle(DimensionStyle dimStyle)
+        /// <param name="style">DimensionStyle.</param>
+        public void WriteDimensionStyle(DimensionStyle style)
         {
             if (this.activeTable != StringCode.DimensionStyleTable)
             {
                 throw new InvalidDxfTableException(this.activeTable, this.file);
             }
-            this.WriteCodePair(0, dimStyle.CodeName);
-            this.WriteCodePair(105, dimStyle.Handle);
+            this.WriteCodePair(0, style.CodeName);
+            this.WriteCodePair(105, style.Handle);
 
             this.WriteCodePair(100, SubclassMarker.TableRecord);
 
             this.WriteCodePair(100, SubclassMarker.DimensionStyle);
 
-            this.WriteCodePair(2, dimStyle);
+            this.WriteCodePair(2, style);
+
+            // flags
+            this.WriteCodePair(70, 0);
+
+            this.WriteCodePair(3, style.DIMPOST);
+            this.WriteCodePair(41, style.DIMASZ);
+            this.WriteCodePair(42, style.DIMEXO);
+            this.WriteCodePair(44, style.DIMEXE);
+            this.WriteCodePair(140, style.DIMTXT);
+            this.WriteCodePair(147, style.DIMGAP);
+            this.WriteCodePair(73, style.DIMTIH);
+            this.WriteCodePair(74, style.DIMTOH);
+            this.WriteCodePair(77, style.DIMTAD);
+            this.WriteCodePair(271, style.DIMDEC);
+            this.WriteCodePair(280, style.DIMJUST);
+
+            this.WriteCodePair(340, style.TextStyle.Handle);
+        }
+
+        /// <summary>
+        /// Writes a new dimension style to the table section.
+        /// </summary>
+        /// <param name="style">DimensionStyle.</param>
+        public void WriteMLineStyle(MLineStyle style)
+        {
+            this.WriteCodePair(0, style.CodeName);
+            this.WriteCodePair(5, style.Handle);
+
+            this.WriteCodePair(100, SubclassMarker.MLineStyle);
+
+            this.WriteCodePair(2, style);
 
             // flags
             this.WriteCodePair(70, 0);
@@ -642,6 +673,9 @@ namespace netDxf
                     break;
                 case EntityType.Hatch:
                     this.WriteHatch((Hatch)entity);
+                    break;
+                case EntityType.Dimension:
+                    this.WriteDimension((Dimension) entity);
                     break;
                 case EntityType.Image:
                     //this.WriteImage((Image)entity);
@@ -1503,8 +1537,6 @@ namespace netDxf
 
         private void WriteHatchPatternDefinitonLines(HatchPattern pattern)
         {
-            
-
             foreach (HatchPatternLineDefinition line in pattern.LineDefinitions)
             {
                 double scale = pattern.Scale;
@@ -1539,6 +1571,68 @@ namespace netDxf
                 }
             }
         }
+
+        private void WriteDimension(Dimension dim)
+        {
+            if (this.activeSection != StringCode.EntitiesSection && !this.isBlockEntities)
+            {
+                throw new InvalidDxfSectionException(this.activeSection, this.file);
+            }
+
+            this.WriteCodePair(0, dim.CodeName);
+            this.WriteCodePair(5, dim.Handle);
+            this.WriteCodePair(100, SubclassMarker.Entity);
+            this.WriteEntityCommonCodes(dim);
+            this.WriteCodePair(100, SubclassMarker.Dimension);
+
+            this.WriteCodePair(2, dim.Block.Name);
+            this.WriteCodePair(10, dim.DefinitionPoint.X);
+            this.WriteCodePair(20, dim.DefinitionPoint.Y);
+            this.WriteCodePair(30, dim.DefinitionPoint.Z);
+            this.WriteCodePair(11, dim.MidTextPoint.X);
+            this.WriteCodePair(21, dim.MidTextPoint.Y);
+            this.WriteCodePair(31, dim.MidTextPoint.Z);
+
+            this.WriteCodePair(70, (int)dim.DimensionType);
+            this.WriteCodePair(71, (int)dim.AttachmentPoint);
+            this.WriteCodePair(72, (int)dim.LineSpacingStyle);
+            this.WriteCodePair(41, dim.LineSpacingFactor);
+            this.WriteCodePair(210, dim.Normal.X);
+            this.WriteCodePair(220, dim.Normal.Y);
+            this.WriteCodePair(230, dim.Normal.Z);
+
+            this.WriteCodePair(3, dim.Style.Name);
+
+            if ((dim.DimensionType & DimensionType.Aligned) == DimensionType.Aligned)
+                WriteAlignedDimension((AlignedDimension)dim);
+            //switch (dim.DimensionType)
+            //{
+            //    case(DimensionType.Aligned):
+            //        WriteAlignedDimension((AlignedDimension) dim);
+            //        break;
+            //    default:
+            //        throw new NotImplementedException("The dimension type: " + dim.Type + " is not implemented.");
+            //}
+        }
+
+        private void WriteAlignedDimension(AlignedDimension dim)
+        {
+            this.WriteCodePair(100, SubclassMarker.AlignedDimension);
+            //this.WriteCodePair(12, 0.0);
+            //this.WriteCodePair(22, 0.0);
+            //this.WriteCodePair(32, 0.0);
+
+            this.WriteCodePair(13, dim.FirstReferencePoint.X);
+            this.WriteCodePair(23, dim.FirstReferencePoint.Y);
+            this.WriteCodePair(33, dim.FirstReferencePoint.Z);
+
+            this.WriteCodePair(14, dim.SecondReferencePoint.X);
+            this.WriteCodePair(24, dim.SecondReferencePoint.Y);
+            this.WriteCodePair(34, dim.SecondReferencePoint.Z);
+
+            this.WriteXData(dim.XData);
+        }
+
         #endregion
 
         #region methods for Dictionary section
@@ -1576,86 +1670,93 @@ namespace netDxf
             this.WriteCodePair(40, def.Height);
             this.WriteCodePair(1, def.Value);
 
-            this.WriteCodePair(7, def.Style);
-
-            this.WriteCodePair(41, def.WidthFactor);
-
             this.WriteCodePair(50, def.Rotation);
-
-            this.WriteCodePair(100, SubclassMarker.AttributeDefinition);
-            this.WriteCodePair(2, def.Id);
-
-            this.WriteCodePair(3, def.Text);
-
-            this.WriteCodePair(70, (int) def.Flags);
-
-            switch (def.Alignment)
-            {
-                case TextAlignment.TopLeft:
-
-                    this.WriteCodePair(72, 0);
-                    this.WriteCodePair(74, 3);
-                    break;
-                case TextAlignment.TopCenter:
-
-                    this.WriteCodePair(72, 1);
-                    this.WriteCodePair(74, 3);
-                    break;
-                case TextAlignment.TopRight:
-
-                    this.WriteCodePair(72, 2);
-                    this.WriteCodePair(74, 3);
-                    break;
-                case TextAlignment.MiddleLeft:
-
-                    this.WriteCodePair(72, 0);
-                    this.WriteCodePair(74, 2);
-                    break;
-                case TextAlignment.MiddleCenter:
-
-                    this.WriteCodePair(72, 1);
-                    this.WriteCodePair(74, 2);
-                    break;
-                case TextAlignment.MiddleRight:
-
-                    this.WriteCodePair(72, 2);
-                    this.WriteCodePair(74, 2);
-                    break;
-                case TextAlignment.BottomLeft:
-
-                    this.WriteCodePair(72, 0);
-                    this.WriteCodePair(74, 1);
-                    break;
-                case TextAlignment.BottomCenter:
-
-                    this.WriteCodePair(72, 1);
-                    this.WriteCodePair(74, 1);
-                    break;
-                case TextAlignment.BottomRight:
-
-                    this.WriteCodePair(72, 2);
-                    this.WriteCodePair(74, 1);
-                    break;
-                case TextAlignment.BaselineLeft:
-
-                    this.WriteCodePair(72, 0);
-                    this.WriteCodePair(74, 0);
-                    break;
-                case TextAlignment.BaselineCenter:
-
-                    this.WriteCodePair(72, 1);
-                    this.WriteCodePair(74, 0);
-                    break;
-                case TextAlignment.BaselineRight:
-
-                    this.WriteCodePair(72, 2);
-                    this.WriteCodePair(74, 0);
-                    break;
-            }
+            this.WriteCodePair(41, def.WidthFactor);
+            this.WriteCodePair(7, def.Style);
 
             this.WriteCodePair(11, def.BasePoint.X);
             this.WriteCodePair(21, def.BasePoint.Y);
             this.WriteCodePair(31, def.BasePoint.Z);
+
+            this.WriteCodePair(210, def.Normal.X);
+            this.WriteCodePair(220, def.Normal.Y);
+            this.WriteCodePair(230, def.Normal.Z);
+
+            this.WriteCodePair(100, SubclassMarker.AttributeDefinition);
+
+            this.WriteCodePair(3, def.Text);
+            this.WriteCodePair(2, def.Id);
+            this.WriteCodePair(70, (int)def.Flags);
+
+            //switch (def.Alignment)
+            //{
+            //    case TextAlignment.TopLeft:
+
+            //        this.WriteCodePair(72, 0);
+            //        this.WriteCodePair(74, 3);
+            //        break;
+            //    case TextAlignment.TopCenter:
+
+            //        this.WriteCodePair(72, 1);
+            //        this.WriteCodePair(74, 3);
+            //        break;
+            //    case TextAlignment.TopRight:
+
+            //        this.WriteCodePair(72, 2);
+            //        this.WriteCodePair(74, 3);
+            //        break;
+            //    case TextAlignment.MiddleLeft:
+
+            //        this.WriteCodePair(72, 0);
+            //        this.WriteCodePair(74, 2);
+            //        break;
+            //    case TextAlignment.MiddleCenter:
+
+            //        this.WriteCodePair(72, 1);
+            //        this.WriteCodePair(74, 2);
+            //        break;
+            //    case TextAlignment.MiddleRight:
+
+            //        this.WriteCodePair(72, 2);
+            //        this.WriteCodePair(74, 2);
+            //        break;
+            //    case TextAlignment.BottomLeft:
+
+            //        this.WriteCodePair(72, 0);
+            //        this.WriteCodePair(74, 1);
+            //        break;
+            //    case TextAlignment.BottomCenter:
+
+            //        this.WriteCodePair(72, 1);
+            //        this.WriteCodePair(74, 1);
+            //        break;
+            //    case TextAlignment.BottomRight:
+
+            //        this.WriteCodePair(72, 2);
+            //        this.WriteCodePair(74, 1);
+            //        break;
+            //    case TextAlignment.BaselineLeft:
+
+            //        this.WriteCodePair(72, 0);
+            //        this.WriteCodePair(74, 0);
+            //        break;
+            //    case TextAlignment.BaselineCenter:
+
+            //        this.WriteCodePair(72, 1);
+            //        this.WriteCodePair(74, 0);
+            //        break;
+            //    case TextAlignment.BaselineRight:
+
+            //        this.WriteCodePair(72, 2);
+            //        this.WriteCodePair(74, 0);
+            //        break;
+            //}
+            
+
+
+
+            
+
         }
 
         private void WriteAttribute(Attribute attrib, Vector3 puntoInsercion)
@@ -1669,9 +1770,6 @@ namespace netDxf
             this.WriteCodePair(10, attrib.Definition.BasePoint.X + puntoInsercion.X);
             this.WriteCodePair(20, attrib.Definition.BasePoint.Y + puntoInsercion.Y);
             this.WriteCodePair(30, attrib.Definition.BasePoint.Z + puntoInsercion.Z);
-
-            this.WriteCodePair(1, attrib.Value);
-
             this.WriteCodePair(40, attrib.Definition.Height);
 
             this.WriteCodePair(41, attrib.Definition.WidthFactor);
@@ -1680,16 +1778,18 @@ namespace netDxf
 
             this.WriteCodePair(7, attrib.Definition.Style);
 
+            this.WriteCodePair(1, attrib.Value);
+
+            this.WriteCodePair(11, attrib.Definition.BasePoint.X + puntoInsercion.X);
+            this.WriteCodePair(21, attrib.Definition.BasePoint.Y + puntoInsercion.Y);
+            this.WriteCodePair(31, attrib.Definition.BasePoint.Z + puntoInsercion.Z);
+
             this.WriteCodePair(100, SubclassMarker.Attribute);
 
             this.WriteCodePair(2, attrib.Definition.Id);
 
             this.WriteCodePair(70, (int) attrib.Definition.Flags);
 
-
-            this.WriteCodePair(11, attrib.Definition.BasePoint.X + puntoInsercion.X);
-            this.WriteCodePair(21, attrib.Definition.BasePoint.Y + puntoInsercion.Y);
-            this.WriteCodePair(31, attrib.Definition.BasePoint.Z + puntoInsercion.Z);
         }
 
         private void WriteXData(Dictionary<ApplicationRegistry, XData> xData)

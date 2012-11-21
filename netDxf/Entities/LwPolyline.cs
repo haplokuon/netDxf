@@ -57,6 +57,14 @@ namespace netDxf.Entities
         /// <summary>
         /// Initializes a new instance of the <c>LwPolyline</c> class.
         /// </summary>
+        public LwPolyline()
+            : this(new List<LwPolylineVertex>())
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <c>LwPolyline</c> class.
+        /// </summary>
         /// <param name="vertexes">LwPolyline <see cref="LwPolylineVertex">vertex</see> list in object coordinates.</param>
         /// <param name="isClosed">Sets if the polyline is closed</param>
         public LwPolyline(List<LwPolylineVertex> vertexes, bool isClosed = false)
@@ -73,13 +81,6 @@ namespace netDxf.Entities
             this.flags = isClosed ? PolylineTypeFlags.ClosedPolylineOrClosedPolygonMeshInM : PolylineTypeFlags.OpenPolyline;
         }
 
-        /// <summary>
-        /// Initializes a new instance of the <c>LwPolyline</c> class.
-        /// </summary>
-        public LwPolyline()
-            : this(new List<LwPolylineVertex>())
-        {
-        }
 
         #endregion
 
@@ -288,21 +289,24 @@ namespace netDxf.Entities
                     double c = Vector2.Distance(p1, p2);
                     double r = (c / 2) / Math.Sin(theta / 2);
                     double gamma = (Math.PI - theta) / 2;
-                    double phi = Vector2.AngleBetween(p1, p2) + Math.Sign(bulge) * gamma;
+                    double phi = Vector2.Angle(p1, p2) + Math.Sign(bulge) * gamma;
                     Vector2 center = new Vector2(p1.X + r * Math.Cos(phi), p1.Y + r * Math.Sin(phi));
                     double startAngle;
                     double endAngle;
                     if (bulge > 0)
                     {
-                        startAngle = MathHelper.RadToDeg * Vector2.AngleBetween(Vector2.UnitX, p1 - center);
+                        startAngle = MathHelper.RadToDeg * Vector2.Angle(p1 - center);
                         endAngle = startAngle + MathHelper.RadToDeg * theta;
                     }
                     else
                     {
-                        endAngle = MathHelper.RadToDeg * Vector2.AngleBetween(Vector2.UnitX, p1 - center);
+                        endAngle = MathHelper.RadToDeg * Vector2.Angle(p1 - center);
                         startAngle = endAngle - MathHelper.RadToDeg * theta;
                     }
-                    entities.Add(new Arc(new Vector3(center.X, center.Y, this.elevation), r, startAngle, endAngle)
+                    Vector3 point = MathHelper.Transform(new Vector3(center.X, center.Y, this.elevation), this.normal,
+                                                            MathHelper.CoordinateSystem.Object,
+                                                            MathHelper.CoordinateSystem.World);
+                    entities.Add(new Arc(point, r, startAngle, endAngle)
                     {
                         Color = this.color,
                         Layer = this.layer,
@@ -364,7 +368,7 @@ namespace netDxf.Entities
                             double r = ((c / 2) * (c / 2) + s * s) / (2 * s);
                             double theta = 4 * Math.Atan(Math.Abs(bulge));
                             double gamma = (Math.PI - theta) / 2;
-                            double phi = Vector2.AngleBetween(p1, p2) + Math.Sign(bulge) * gamma;
+                            double phi = Vector2.Angle(p1, p2) + Math.Sign(bulge) * gamma;
                             Vector2 center = new Vector2(p1.X + r * Math.Cos(phi), p1.Y + r * Math.Sin(phi));
                             Vector2 a1 = p1 - center;
                             double angle = Math.Sign(bulge) * theta / (bulgePrecision + 1);

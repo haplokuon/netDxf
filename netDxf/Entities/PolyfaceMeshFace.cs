@@ -1,7 +1,7 @@
-﻿#region netDxf, Copyright(C) 2009 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf, Copyright(C) 2012 Daniel Carvajal, Licensed under LGPL.
 
 //                        netDxf library
-// Copyright (C) 2009 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2012 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -60,13 +60,8 @@ namespace netDxf.Entities
         /// By default the face is made up of three vertexes.
         /// </remarks>
         public PolyfaceMeshFace()
-            : base(DxfObjectCode.Vertex)
+            : this(new int[3])
         {
-            this.flags = VertexTypeFlags.PolyfaceMeshVertex;
-            this.vertexIndexes = new int[3];
-            this.layer = Layer.Default;
-            this.color = AciColor.ByLayer;
-            this.lineType = LineType.ByLayer;
         }
 
         /// <summary>

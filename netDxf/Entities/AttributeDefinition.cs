@@ -86,24 +86,8 @@ namespace netDxf.Entities
         /// </summary>
         /// <param name="id">Attribute identifier, the parameter <c>id</c> string cannot contain spaces.</param>
         public AttributeDefinition(string id)
-            : base(DxfObjectCode.AttributeDefinition)
+            : this(id, TextStyle.Default)
         {
-            if (id.Contains(" "))
-                throw new ArgumentException("The id string cannot contain spaces", "id");
-            this.id = id;
-            this.flags = AttributeFlags.Visible;
-            this.text = string.Empty;
-            this.value = null;
-            this.basePoint = Vector3.Zero;
-            this.layer = Layer.Default;
-            this.color = AciColor.ByLayer;
-            this.lineType = LineType.ByLayer;
-            this.style = TextStyle.Default;
-            this.alignment = TextAlignment.BaselineLeft;
-            this.height = MathHelper.IsZero(this.style.Height) ? 1.0f : this.style.Height;
-            this.widthFactor = this.style.WidthFactor;
-            this.rotation = 0.0f;
-            this.normal = Vector3.UnitZ;
         }
 
         /// <summary>
@@ -126,9 +110,9 @@ namespace netDxf.Entities
             this.lineType = LineType.ByLayer;
             this.style = style;
             this.alignment = TextAlignment.BaselineLeft;
-            this.height = MathHelper.IsZero(this.style.Height) ? 1.0f : style.Height;
+            this.height = MathHelper.IsZero(this.style.Height) ? 1.0 : style.Height;
             this.widthFactor = style.WidthFactor;
-            this.rotation = 0.0f;
+            this.rotation = 0.0;
             this.normal = Vector3.UnitZ;
         }
 
@@ -153,14 +137,15 @@ namespace netDxf.Entities
             set { this.text = value; }
         }
 
-        /// <summary>
-        /// Gets or sets the <see cref="TextAlignment">text alignment.</see>
-        /// </summary>
-        public TextAlignment Alignment
-        {
-            get { return this.alignment; }
-            set { this.alignment = value; }
-        }
+        ///// <summary>
+        ///// Gets or sets the <see cref="TextAlignment">text alignment.</see>
+        ///// </summary>
+        ///// <remarks></remarks>
+        //public TextAlignment Alignment
+        //{
+        //    get { return this.alignment; }
+        //    set { this.alignment = value; }
+        //}
 
         /// <summary>
         /// Gets or sets the attribute text height.

@@ -1,7 +1,7 @@
-#region netDxf, Copyright(C) 2009 Daniel Carvajal, Licensed under LGPL.
+#region netDxf, Copyright(C) 2012 Daniel Carvajal, Licensed under LGPL.
 
 //                        netDxf library
-// Copyright (C) 2009 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2012 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -79,24 +79,23 @@ namespace netDxf.Entities
         }
 
         /// <summary>
+        /// Initializes a new instance of the <c>Ellipse</c> class.
+        /// </summary>
+        /// <param name="center">Ellipse <see cref="Vector2">center</see> in object coordinates.</param>
+        /// <param name="majorAxis">Ellipse major axis.</param>
+        /// <param name="minorAxis">Ellipse minor axis.</param>
+        /// <remarks>The center Z coordinate represents the elevation of the arc along the normal.</remarks>
+        public Ellipse(Vector2 center, double majorAxis, double minorAxis)
+            : this (new Vector3(center.X, center.Y, 0.0), majorAxis, minorAxis)
+        {
+        }
+
+        /// <summary>
         /// Initializes a new instance of the <c>ellipse</c> class.
         /// </summary>
         public Ellipse()
-            : base(DxfObjectCode.Ellipse)
+            : this(Vector3.Zero, 1.0, 0.5)
         {
-            this.center = Vector3.Zero;
-            this.majorAxis = 1.0;
-            this.minorAxis = 0.5;
-            this.rotation = 0.0;
-            this.startAngle = 0.0;
-            this.endAngle = 360.0;
-            this.rotation = 0.0;
-            this.curvePoints = 30;
-            this.thickness = 0.0;
-            this.layer = Layer.Default;
-            this.color = AciColor.ByLayer;
-            this.lineType = LineType.ByLayer;
-            this.normal = Vector3.UnitZ;
         }
 
         #endregion
@@ -144,9 +143,7 @@ namespace netDxf.Entities
         /// <summary>
         /// Gets or sets the ellipse local rotation along its normal.
         /// </summary>
-        /// <remarks>
-        /// The rotation axis it is defined by the 
-        /// </remarks>
+        /// <remarks>The angle is measured in degrees.</remarks>
         public double Rotation
         {
             get { return this.rotation; }
@@ -349,8 +346,8 @@ namespace netDxf.Entities
             }
             else
             {
-                this.startAngle = Math.Round(Vector2.AngleBetween(Vector2.Zero, start) * MathHelper.RadToDeg, MathHelper.MaxAngleDecimals);
-                this.endAngle = Math.Round(Vector2.AngleBetween(Vector2.Zero, end) * MathHelper.RadToDeg, MathHelper.MaxAngleDecimals);
+                this.startAngle = Math.Round(Vector2.Angle(start) * MathHelper.RadToDeg, MathHelper.MaxAngleDecimals);
+                this.endAngle = Math.Round(Vector2.Angle(end) * MathHelper.RadToDeg, MathHelper.MaxAngleDecimals);
             }            
         }
 

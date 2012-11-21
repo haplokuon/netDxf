@@ -1,7 +1,7 @@
-#region netDxf, Copyright(C) 2009 Daniel Carvajal, Licensed under LGPL.
+#region netDxf, Copyright(C) 2012 Daniel Carvajal, Licensed under LGPL.
 
 //                        netDxf library
-// Copyright (C) 2009 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2012 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -186,6 +186,19 @@ namespace netDxf
         }
 
         /// <summary>
+        /// Obtains a the polar point of another point. 
+        /// </summary>
+        /// <param name="u">Reference point.</param>
+        /// <param name="distance">Distance from point u.</param>
+        /// <param name="angle">Angle in radians.</param>
+        /// <returns></returns>
+        public static Vector2 Polar(Vector2 u, double distance, double angle)
+        {
+            Vector2 dir = new Vector2(Math.Cos(angle), Math.Sin(angle));
+            return u + dir*distance;
+        }
+
+        /// <summary>
         /// Obtains the distance between two points.
         /// </summary>
         /// <param name="u">Vector2.</param>
@@ -208,17 +221,30 @@ namespace netDxf
         }
 
         /// <summary>
-        /// Obtains the angle between two vectors.
+        /// Obtains the angle of a vector.
         /// </summary>
-        /// <param name="u">A normalized Vector2.</param>
-        /// <param name="v">A normalized Vector2.</param>
+        /// <param name="u">A Vector2.</param>
         /// <returns>Angle in radians.</returns>
-        public static double AngleBetween(Vector2 u, Vector2 v)
+        public static double Angle(Vector2 u)
+        {
+            double angle = Math.Atan2(u.Y, u.X);
+            if (angle < 0)
+                return MathHelper.TwoPI + angle;
+            return angle;
+        }
+
+        /// <summary>
+        /// Obtains the angle of a line defined by two points.
+        /// </summary>
+        /// <param name="u">A Vector2.</param>
+        /// <param name="v">A Vector2.</param>
+        /// <returns>Angle in radians.</returns>
+        public static double Angle(Vector2 u, Vector2 v)
         {
             double dx = v.X - u.X;
             double dy = v.Y - u.Y;
             double angle = Math.Atan2(dy, dx);
-            if (angle<0)
+            if (angle < 0)
                 return MathHelper.TwoPI + angle;
             return angle;
         }
@@ -269,6 +295,7 @@ namespace netDxf
         {
             return new Vector2(Math.Round(u.X, numDigits), Math.Round(u.Y, numDigits));
         }
+
 
         #endregion
 
@@ -435,6 +462,11 @@ namespace netDxf
             return ((MathHelper.IsEqual(obj.X, this.x)) && (MathHelper.IsEqual(obj.Y, this.y)));
         }
 
+        /// <summary>
+        /// Indicates whether this instance and a specified object are equal.
+        /// </summary>
+        /// <param name="obj">Another object to compare to.</param>
+        /// <returns>True if obj and this instance are the same type and represent the same value; otherwise, false.</returns>
         public override bool Equals(object obj)
         {
             if (obj is Vector2)
@@ -442,6 +474,10 @@ namespace netDxf
             return false;
         }
 
+        /// <summary>
+        /// Returns the hash code for this instance.
+        /// </summary>
+        /// <returns>A 32-bit signed integer that is the hash code for this instance.</returns>
         public override int GetHashCode()
         {
             return unchecked(this.X.GetHashCode() ^ this.Y.GetHashCode());

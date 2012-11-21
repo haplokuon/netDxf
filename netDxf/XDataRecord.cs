@@ -1,7 +1,7 @@
-#region netDxf, Copyright(C) 2009 Daniel Carvajal, Licensed under LGPL.
+#region netDxf, Copyright(C) 2012 Daniel Carvajal, Licensed under LGPL.
 
 //                        netDxf library
-// Copyright (C) 2009 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2012 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -91,9 +91,17 @@ namespace netDxf
 
         #endregion
 
+        #region overrides
+
+        /// <summary>
+        /// Obtains a string that represents the XDataRecord.
+        /// </summary>
+        /// <returns>A string text.</returns>
         public override string ToString()
         {
             return string.Format("{0} - {1}", this.code, this.value);
         }
+
+        #endregion
     }
 }

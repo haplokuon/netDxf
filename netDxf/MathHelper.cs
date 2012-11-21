@@ -1,7 +1,7 @@
-﻿#region netDxf, Copyright(C) 2009 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf, Copyright(C) 2012 Daniel Carvajal, Licensed under LGPL.
 
 //                        netDxf library
-// Copyright (C) 2009 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2012 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -49,6 +49,7 @@ namespace netDxf
 
         #endregion
 
+        #region constants
         /// <summary>
         /// Represents the smallest number.
         /// </summary>
@@ -60,23 +61,25 @@ namespace netDxf
         /// <summary>
         /// Constant to transform an angle between degrees and radians.
         /// </summary>
-        public const double DegToRad = Math.PI/180.0;
+        public const double DegToRad = Math.PI / 180.0;
 
         /// <summary>
         /// Constant to transform an angle between degrees and radians.
         /// </summary>
-        public const double RadToDeg = 180.0/Math.PI;
+        public const double RadToDeg = 180.0 / Math.PI;
 
         /// <summary>
         /// PI/2 (90 degrees)
         /// </summary>
-        public const double HalfPI = Math.PI*0.5;
+        public const double HalfPI = Math.PI * 0.5;
 
         /// <summary>
         /// 2*PI (360 degrees)
         /// </summary>
-        public const double TwoPI = 2*Math.PI;
+        public const double TwoPI = 2 * Math.PI;
+        #endregion
 
+        #region static methods
         /// <summary>
         /// Checks if a number is close to one.
         /// </summary>
@@ -294,5 +297,26 @@ namespace netDxf
 
             return new Matrix3(aX.X, aY.X, zAxis.X, aX.Y, aY.Y, zAxis.Y, aX.Z, aY.Z, zAxis.Z);
         }
+
+        public static void OffsetLine(Vector3 start, Vector3 end, Vector3 normal, double offset, out Vector3 newStart, out Vector3 newEnd)
+        {
+            Vector3 dir = end - start;
+            dir.Normalize();
+            Vector3 perp = Vector3.CrossProduct(normal, dir);
+            newStart = start + perp * offset;
+            newEnd = end + perp * offset;
+        }
+
+        public static void OffsetLine(Vector2 start, Vector2 end, double offset, out Vector2 newStart, out Vector2 newEnd)
+        {
+            Vector2 dir = end - start;
+            dir.Normalize();
+            Vector2 perp = Vector2.Perpendicular(dir);
+            newStart = start + perp * offset;
+            newEnd = end + perp * offset;
+        }
+
+        #endregion
+
     }
 }
