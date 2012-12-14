@@ -46,7 +46,7 @@ namespace netDxf.Objects
         #region constructors
 
         /// <summary>
-        /// Initializes a new instance of the <c>View</c> class.
+        /// Initializes a new instance of the <c>Dictionary</c> class.
         /// </summary>
         public Dictionary(string name)
             : base(DxfObjectCode.Dictionary)

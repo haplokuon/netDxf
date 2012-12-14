@@ -21,6 +21,7 @@
 #endregion
 
 using System;
+using System.Collections.Generic;
 
 namespace netDxf
 {
@@ -56,10 +57,10 @@ namespace netDxf
         /// Initializes a new instance of Vector3.
         /// </summary>
         /// <param name="array">Array of three elements that represents the vector.</param>
-        public Vector3(double[] array)
+        public Vector3(IList<double> array)
         {
-            if (array.Length != 3)
-                throw new ArgumentOutOfRangeException("array", array.Length, "The dimension of the array must be three.");
+            if (array.Count != 3)
+                throw new ArgumentOutOfRangeException("array", array.Count, "The dimension of the array must be three.");
             this.x = array[0];
             this.y = array[1];
             this.z = array[2];
@@ -258,7 +259,7 @@ namespace netDxf
         /// <param name="v">Vector3.</param>
         /// <param name="threshold">Tolerance used.</param>
         /// <returns>True if are penpendicular or false in anyother case.</returns>
-        public static bool ArePerpendicular(Vector3 u, Vector3 v, double threshold)
+        public static bool ArePerpendicular(Vector3 u, Vector3 v, double threshold = MathHelper.Epsilon)
         {
             return MathHelper.IsZero(DotProduct(u, v), threshold);
         }
@@ -270,7 +271,7 @@ namespace netDxf
         /// <param name="v">Vector3.</param>
         /// <param name="threshold">Tolerance used.</param>
         /// <returns>True if are parallel or false in anyother case.</returns>
-        public static bool AreParallel(Vector3 u, Vector3 v, double threshold)
+        public static bool AreParallel(Vector3 u, Vector3 v, double threshold = MathHelper.Epsilon)
         {
             double a = u.Y*v.Z - u.Z*v.Y;
             double b = u.Z*v.X - u.X*v.Z;
@@ -452,19 +453,9 @@ namespace netDxf
         /// <param name="obj">Vector3.</param>
         /// <param name="threshold">Maximun tolerance.</param>
         /// <returns>True if the three components are almost equal or false in anyother case.</returns>
-        public bool Equals(Vector3 obj, double threshold)
+        public bool Equals(Vector3 obj, double threshold = MathHelper.Epsilon)
         {
             return ((MathHelper.IsEqual(obj.X, this.x, threshold)) && (MathHelper.IsEqual(obj.Y, this.y, threshold)) && (MathHelper.IsEqual(obj.Z, this.z, threshold)));
-        }
-
-        /// <summary>
-        /// Check if the components of two vectors are approximate equal (uses double.Epsilon as the tolerance).
-        /// </summary>
-        /// <param name="obj">Vector3.</param>
-        /// <returns>True if the three components are almost equal or false in anyother case.</returns>
-        public bool Equals(Vector3 obj)
-        {
-            return ((MathHelper.IsEqual(obj.X, this.x)) && (MathHelper.IsEqual(obj.Y, this.y)) && (MathHelper.IsEqual(obj.Z, this.z)));
         }
 
         /// <summary>

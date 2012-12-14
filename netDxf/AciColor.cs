@@ -23,6 +23,7 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Threading;
 
 namespace netDxf
 {
@@ -220,7 +221,7 @@ namespace netDxf
                 return "ByBlock";
             if (this.index == 256)
                 return "ByLayer";
-            return this.index.ToString();
+            return this.index.ToString(Thread.CurrentThread.CurrentCulture);
         }
 
         #endregion
@@ -269,7 +270,7 @@ namespace netDxf
 
         private static Dictionary<byte, byte[]> AciColors()
         {
-            Dictionary<byte, byte[]> lista = new Dictionary<byte, byte[]>
+            return new Dictionary<byte, byte[]>
                             {
                                 {1, new byte[] {255, 0, 0}},
                                 {2, new byte[] {255, 255, 0}},
@@ -528,7 +529,6 @@ namespace netDxf
                                 {255, new byte[] {255, 255, 255}}
                             };
 
-            return lista;
         }
 
         #endregion

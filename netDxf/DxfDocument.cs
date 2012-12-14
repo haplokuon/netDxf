@@ -75,7 +75,6 @@ namespace netDxf
         private List<Circle> circles;
         private List<Dimension> dimensions; 
         private List<Ellipse> ellipses;
-        private List<NurbsCurve> nurbsCurves;
         private List<Solid> solids;
         private List<Face3d> faces3d;
         private List<Insert> inserts;
@@ -118,7 +117,6 @@ namespace netDxf
             this.arcs = new List<Arc>();
             this.ellipses = new List<Ellipse>();
             this.dimensions = new List<Dimension>();
-            this.nurbsCurves = new List<NurbsCurve>();
             this.faces3d = new List<Face3d>();
             this.solids = new List<Solid>();
             this.inserts = new List<Insert>();
@@ -245,14 +243,6 @@ namespace netDxf
         }
 
         /// <summary>
-        /// Gets the <see cref="NurbsCurve">NURBS Curve</see> list.
-        /// </summary>
-        public ReadOnlyCollection<NurbsCurve> NurbsCurves
-        {
-            get { return this.nurbsCurves.AsReadOnly(); }
-        }
-
-        /// <summary>
         /// Gets the <see cref="Circle">circle</see> list.
         /// </summary>
         public ReadOnlyCollection<Circle> Circles
@@ -295,10 +285,6 @@ namespace netDxf
         /// <summary>
         /// Gets the <see cref="Polyline">polyline</see> list.
         /// </summary>
-        /// <remarks>
-        /// The polyline list contains all entities that are considered polylines in the dxf, they are:
-        /// <see cref="Polyline">polylines</see>, <see cref="Polyline">3d polylines</see> and <see cref="PolyfaceMesh">polyface meshes</see>
-        /// </remarks>
         public ReadOnlyCollection<Polyline> Polylines
         {
             get { return this.polylines.AsReadOnly(); }
@@ -446,6 +432,16 @@ namespace netDxf
         /// Adds a new <see cref="IEntityObject">entity</see> to the document.
         /// </summary>
         /// <param name="entities">A list of <see cref="IEntityObject">entities</see></param>
+        /// <remarks>
+        /// <para>
+        /// Once an entity has been added to the dxf document, it should not be modified.
+        /// </para>
+        /// <para>
+        /// This is specially true in the case of dimensions. The block that represents the drawing of the dimension is built
+        /// when it is added to the document. If a property is modified once it has been added this modifications will not be 
+        /// reflected in the saved dxf file.
+        /// </para>
+        /// </remarks>
         public void AddEntity(IEnumerable<IEntityObject> entities)
          {
              foreach (IEntityObject entity in entities)
@@ -458,6 +454,16 @@ namespace netDxf
         /// Adds a new <see cref="IEntityObject">entity</see> to the document.
         /// </summary>
         /// <param name="entity">An <see cref="IEntityObject">entity</see></param>
+        /// <remarks>
+        /// <para>
+        /// Once an entity has been added to the dxf document, it should not be modified.
+        /// </para>
+        /// <para>
+        /// This is specially true in the case of dimensions. The block that represents the drawing of the dimension is built
+        /// when it is added to the document. If a property is modified once it has been added this modifications will not be 
+        /// reflected in the saved dxf file.
+        /// </para>
+        /// </remarks>
         public void AddEntity(IEntityObject entity)
         {
             // check if the entity has not been added to the document
@@ -505,18 +511,19 @@ namespace netDxf
                     if (this.blocks.ContainsKey(dimBlock.Name))
                         throw new ArgumentException("The list already contains the block: " + dimBlock.Name + ". The block names that start with *D are reserverd for dimensions");
                     
-                    // very important the styles must be unique, if we do not find one we add one, if we do we pickup the one on the list and assign it to the entity
+                    // very important the dimension styles must be unique, if we do not find one we add one, if we do, we pickup the one on the list and assign it to the entity
                     if (!this.dimStyles.ContainsKey(((Dimension)entity).Style.Name))
                         this.dimStyles.Add(((Dimension)entity).Style.Name, ((Dimension)entity).Style);
                     else
                         ((Dimension) entity).Style = this.dimStyles[((Dimension) entity).Style.Name];
 
-                    // very important the styles must be unique, if we do not find one we add one, if we do we pickup the one on the list and assign it to the entity
+                    // very important the text styles must be unique, if we do not find one we add one; if we do, we pickup the one on the list and assign it to the entity
                     if (!this.textStyles.ContainsKey(((Dimension)entity).Style.TextStyle.Name))
                         this.textStyles.Add(((Dimension)entity).Style.TextStyle.Name, ((Dimension)entity).Style.TextStyle);
                     else
                         ((Dimension)entity).Style.TextStyle = this.textStyles[((Dimension)entity).Style.TextStyle.Name];
 
+                    dimBlock.TypeFlags = BlockTypeFlags.AnonymousBlock;
                     this.blocks.Add(dimBlock.Name, dimBlock);
 
                     break;
@@ -596,11 +603,6 @@ namespace netDxf
                 case EntityType.Line:
                     this.lines.Add((Line) entity);
                     break;
-
-                case EntityType.NurbsCurve:
-                    throw new NotImplementedException("Nurbs curves not avaliable at the moment.");
-                    //this.nurbsCurves.Add((NurbsCurve) entity);
-                    //break;
                 case EntityType.Point:
                     this.points.Add((Point) entity);
                     break;
@@ -645,9 +647,8 @@ namespace netDxf
                     throw new ArgumentException("The entity " + entity.Type + " is only allowed as part of another entity", "entity");
 
                 default:
-                    throw new NotImplementedException("The entity " + entity.Type + " is not implemented or unknown");
+                    throw new ArgumentException("The entity " + entity.Type + " is not implemented or unknown");
             }
-
         }
 
         /// <summary>
@@ -679,6 +680,7 @@ namespace netDxf
             this.layers = dxfReader.Layers;
             this.lineTypes = dxfReader.LineTypes;
             this.textStyles = dxfReader.TextStyles;
+            this.dimStyles = dxfReader.DimensionStyles;
             this.blocks = dxfReader.Blocks;
 
             //entities information
@@ -837,10 +839,6 @@ namespace netDxf
             {
                 dxfWriter.WriteEntity(ellipse);
             }
-            foreach (NurbsCurve nurbsCurve  in this.nurbsCurves)
-            {
-                dxfWriter.WriteEntity(nurbsCurve);
-            }
             foreach (Point point in this.points)
             {
                 dxfWriter.WriteEntity(point);
@@ -958,7 +956,6 @@ namespace netDxf
             {
                 this.handleCount = viewPort.AsignHandle(this.handleCount);
             }
-            
             Layer.PlotStyleHandle = Convert.ToString(this.handleCount++, 16);
             
             foreach (Layer layer in this.layers.Values)
@@ -1052,6 +1049,7 @@ namespace netDxf
                 this.handleCount = entity.AsignHandle(this.handleCount);
             }
         }
+
         #endregion
     }
 }

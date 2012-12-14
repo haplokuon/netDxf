@@ -81,7 +81,6 @@ namespace netDxf.Entities
             this.flags = isClosed ? PolylineTypeFlags.ClosedPolylineOrClosedPolygonMeshInM : PolylineTypeFlags.OpenPolyline;
         }
 
-
         #endregion
 
         #region public properties
@@ -149,7 +148,7 @@ namespace netDxf.Entities
         /// <summary>
         /// Gets the light weight polyline type.
         /// </summary>
-        public PolylineTypeFlags Flags
+        internal PolylineTypeFlags Flags
         {
             get { return this.flags; }
         }   

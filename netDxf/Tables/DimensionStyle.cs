@@ -41,16 +41,20 @@ namespace netDxf.Tables
 
         // symbols and arrows
         private double dimasz = 0.18;
+        private double dimcen = 0.09;
 
         // text
         private double dimtxt = 0.18;
         private int dimjust = 0;
         private int dimtad = 1;
         private double dimgap = 0.09;
+        private int dimadec = 0;
         private int dimdec = 2;
         private string dimpost = "<>";
         private int dimtih = 0;
         private int dimtoh = 0;
+        private string dimdsep = ".";
+        private int dimaunit = 0;
         #endregion
 
         #region constants
@@ -160,12 +164,40 @@ namespace netDxf.Tables
         }
 
         /// <summary>
+        /// Controls drawing of circle or arc center marks and centerlines.
+        /// </summary>
+        /// <remarks>
+        /// 0 - No center marks or lines are drawn.
+        /// greater than 0 - Centerlines are drawn.
+        /// lower than 0 - Center marks are drawn.
+        /// The absolute value specifies the size of the center mark or centerline. 
+        /// The size of the centerline is the length of the centerline segment that extends outside the circle or arc.
+        /// It is also the size of the gap between the center mark and the start of the centerline. 
+        /// The size of the center mark is the distance from the center of the circle or arc to the end of the center mark. 
+        /// </remarks>
+        public double DIMCEN
+        {
+            get { return dimcen; }
+            set { dimcen = value; }
+        }
+
+        /// <summary>
+        /// Controls the number of precision places displayed in angular dimensions.
+        /// </summary>
+        public int DIMADEC
+        {
+            get { return dimadec; }
+            set { dimadec = value; }
+        }
+
+        /// <summary>
         /// Specifies a text prefix or suffix (or both) to the dimension measurement.
         /// </summary>
         /// <remarks>
-        /// Use <> to indicate placement of the text in relation to the dimension value. 
-        /// For example, enter <> mm to display a 5.0 millimeter radial dimension as "5.0mm". 
-        /// If you entered mm <>, the dimension would be displayed as "mm 5.0". Use the <> mechanism for angular dimensions.
+        /// Use "&lt;&gt;" to indicate placement of the text in relation to the dimension value. 
+        /// For example, enter "&lt;&gt;mm" to display a 5.0 millimeter radial dimension as "5.0mm". 
+        /// If you entered "mm &lt;&gt;", the dimension would be displayed as "mm 5.0".
+        /// Use the "&lt;&gt;" mechanism for angular dimensions.
         /// </remarks>
         public string DIMPOST
         {
@@ -189,6 +221,30 @@ namespace netDxf.Tables
         {
             get { return dimtoh; }
             set { dimtoh = value; }
+        }
+
+        /// <summary>
+        /// Specifies a single-character decimal separator to use when creating dimensions whose unit format is decimal.
+        /// </summary>
+        public string DIMDSEP
+        {
+            get { return dimdsep; }
+            set { dimdsep = value; }
+        }
+
+        /// <summary>
+        /// Gets the units format for angular dimensions.
+        /// </summary>
+        /// <remarks>
+        /// 0 Decimal degrees
+        /// 1 Degrees/minutes/seconds
+        /// 2 Gradians
+        /// 3 Radians
+        /// </remarks>
+        public int DIMAUNIT
+        {
+            get { return dimaunit; }
+            set { dimaunit = value; }
         }
 
         #endregion

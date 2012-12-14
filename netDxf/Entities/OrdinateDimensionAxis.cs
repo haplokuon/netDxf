@@ -23,17 +23,17 @@
 namespace netDxf.Entities
 {
     /// <summary>
-    /// MText line spacing style.
+    /// Defines the axis that measures the ordinate dimension.
     /// </summary>
-    public enum MTextLineSpacingStyle
+    public enum OrdinateDimensionAxis
     {
         /// <summary>
-        /// At least (taller characters will override)
+        /// The ordinate dimension measure the X distance and the dimension line is aligned to the Y axis.
         /// </summary>
-        AtLeast = 1,
+        X,
         /// <summary>
-        /// Exact (taller characters will not override)
+        /// The ordinate dimension measure the Y distance and the dimension line is aligned to the X axis.
         /// </summary>
-        Exact = 2
+        Y
     }
 }

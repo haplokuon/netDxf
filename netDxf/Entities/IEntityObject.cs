@@ -61,11 +61,6 @@ namespace netDxf.Entities
         Circle,
 
         /// <summary>
-        /// Nurbs curve entity.
-        /// </summary>
-        NurbsCurve,
-
-        /// <summary>
         /// Ellipse entity.
         /// </summary>
         Ellipse,

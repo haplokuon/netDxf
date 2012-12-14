@@ -21,6 +21,7 @@
 #endregion
 
 using System;
+using System.Collections.Generic;
 
 namespace netDxf
 {
@@ -53,10 +54,10 @@ namespace netDxf
         /// Initializes a new instance of Vector2.
         /// </summary>
         /// <param name="array">Array of two elements that represents the vector.</param>
-        public Vector2(double[] array)
+        public Vector2(IList<double> array)
         {
-            if (array.Length != 2)
-                throw new ArgumentOutOfRangeException("array", array.Length, "The dimension of the array must be two");
+            if (array.Count != 2)
+                throw new ArgumentOutOfRangeException("array", array.Count, "The dimension of the array must be two");
             this.x = array[0];
             this.y = array[1];
         }
@@ -267,7 +268,7 @@ namespace netDxf
         /// <param name="v">Vector2.</param>
         /// <param name="threshold">Tolerance used.</param>
         /// <returns>True if are penpendicular or false in anyother case.</returns>
-        public static bool ArePerpendicular(Vector2 u, Vector2 v, double threshold)
+        public static bool ArePerpendicular(Vector2 u, Vector2 v, double threshold = MathHelper.Epsilon)
         {
             return MathHelper.IsZero(DotProduct(u, v), threshold);
         }
@@ -279,7 +280,7 @@ namespace netDxf
         /// <param name="v">Vector2.</param>
         /// <param name="threshold">Tolerance used.</param>
         /// <returns>True if are parallel or false in anyother case.</returns>
-        public static bool AreParallel(Vector2 u, Vector2 v, double threshold)
+        public static bool AreParallel(Vector2 u, Vector2 v, double threshold = MathHelper.Epsilon)
         {
             double a = u.X*v.Y - u.Y*v.X;
             return MathHelper.IsZero(a, threshold);
@@ -295,7 +296,6 @@ namespace netDxf
         {
             return new Vector2(Math.Round(u.X, numDigits), Math.Round(u.Y, numDigits));
         }
-
 
         #endregion
 
@@ -444,22 +444,12 @@ namespace netDxf
         /// <summary>
         /// Check if the components of two vectors are approximate equals.
         /// </summary>
-        /// <param name="obj">Vector2.</param>
+        /// <param name="obj">Another Vector2 to compare to.</param>
         /// <param name="threshold">Maximun tolerance.</param>
-        /// <returns>True if the three components are almost equal or false in anyother case.</returns>
-        public bool Equals(Vector2 obj, double threshold)
+        /// <returns>True if the three components are almost equal or false in any other case.</returns>
+        public bool Equals(Vector2 obj, double threshold = MathHelper.Epsilon)
         {
             return ((MathHelper.IsEqual(obj.X, this.x, threshold)) && (MathHelper.IsEqual(obj.Y, this.y, threshold)));
-        }
-
-        /// <summary>
-        /// Check if the components of two vectors are equals (uses double.Epsilon the tolerance).
-        /// </summary>
-        /// <param name="obj">Vector2.</param>
-        /// <returns>True if the three components are almost equal or false in anyother case.</returns>
-        public bool Equals(Vector2 obj)
-        {
-            return ((MathHelper.IsEqual(obj.X, this.x)) && (MathHelper.IsEqual(obj.Y, this.y)));
         }
 
         /// <summary>

@@ -22,7 +22,7 @@
 
 using System;
 using System.Collections.Generic;
-using System.Text;
+using System.Globalization;
 using netDxf.Blocks;
 using netDxf.Tables;
 
@@ -31,6 +31,9 @@ namespace netDxf.Entities
     /// <summary>
     /// Represents the base class for a dimension <see cref="IEntityObject">entity</see>.
     /// </summary>
+    /// <reamarks>
+    /// Once a dimension is added to the dxf document, its properties should not be modified or the changes will not be reflected in the saved dxf file.
+    /// </reamarks>
     public abstract class Dimension:
         DxfObject,
         IEntityObject
@@ -76,7 +79,7 @@ namespace netDxf.Entities
         }
         #endregion
 
-        #region public properties
+        #region internal properties
 
         /// <summary>
         /// Definition point (in WCS).
@@ -95,10 +98,15 @@ namespace netDxf.Entities
             get { return midTextPoint; }
             set { midTextPoint = value; }
         }
+
+        #endregion
+
+        #region public properties
+
         /// <summary>
         /// Gets or sets the dimension <see cref="Vector3">normal</see>.
         /// </summary>
-        public Vector3 Normal
+        public virtual Vector3 Normal
         {
             get { return normal; }
             set
@@ -120,7 +128,7 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Dimension type.
+        /// Gets the dimension type.
         /// </summary>
         public DimensionType DimensionType
         {
@@ -128,7 +136,7 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Actual measurement.
+        /// Gets the actual measurement.
         /// </summary>
         public abstract double Value
         {
@@ -173,6 +181,9 @@ namespace netDxf.Entities
         /// <summary>
         /// Gets the block that contains the entities that make up the dimension picture.
         /// </summary>
+        /// <remarks>
+        /// This value will be null until the dimension entity is added to the document.
+        /// </remarks>
         public Block Block
         {
             get { return block; }
@@ -257,11 +268,26 @@ namespace netDxf.Entities
         /// Format the value for the dimension text.
         /// </summary>
         /// <param name="dimValue">Dimension value.</param>
-        /// <returns>The formated text.</returns>
-        internal string FormatDimensionText(double dimValue)
+        /// <returns>The formatted text.</returns>
+        internal virtual string FormatDimensionText(double dimValue)
         {
-            return this.style.DIMPOST.Replace("<>", Math.Round(dimValue, this.style.DIMDEC).ToString());
+            string format;
+            string text;
+            NumberFormatInfo numberFormat = new NumberFormatInfo { NumberDecimalSeparator = this.style.DIMDSEP };
+            if (this is Angular3PointDimension || this is Angular2LineDimension)
+            {
+                format = "F" + this.style.DIMADEC;
+                text = dimValue.ToString(format, numberFormat) + Symbols.Degree;
+            }
+            else
+            {
+                format = "F" + this.style.DIMDEC;
+                text = dimValue.ToString(format, numberFormat);
+            }
+            text = this.style.DIMPOST.Replace("<>", text);
+            return text;
         }
+        
         #endregion
     }
 }

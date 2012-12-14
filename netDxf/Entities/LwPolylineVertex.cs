@@ -31,11 +31,11 @@ namespace netDxf.Entities
     {
         #region private fields
 
-        protected const EntityType TYPE = EntityType.LightWeightPolylineVertex;
-        protected Vector2 location;
-        protected double beginWidth;
-        protected double endWidth;
-        protected double bulge;
+        private const EntityType TYPE = EntityType.LightWeightPolylineVertex;
+        private Vector2 location;
+        private double beginWidth;
+        private double endWidth;
+        private double bulge;
 
         #endregion
 
@@ -45,7 +45,7 @@ namespace netDxf.Entities
         /// Initializes a new instance of the <c>LwPolylineVertex</c> class.
         /// </summary>
         public LwPolylineVertex()
-            : this(Vector2.Zero, 0.0)
+            : this(Vector2.Zero)
         {
         }
 

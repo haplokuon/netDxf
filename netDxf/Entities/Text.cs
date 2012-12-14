@@ -22,6 +22,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using netDxf.Tables;
 
 namespace netDxf.Entities
@@ -143,7 +144,7 @@ namespace netDxf.Entities
             set
             {
                 if (value < 0)
-                    throw new ArgumentOutOfRangeException("value",value.ToString());
+                    throw new ArgumentOutOfRangeException("value", value.ToString(Thread.CurrentThread.CurrentCulture));
                 this.height = value;
             }
         }
@@ -157,7 +158,7 @@ namespace netDxf.Entities
             set
             {
                 if (value <= 0)
-                    throw new ArgumentOutOfRangeException("value", value.ToString());
+                    throw new ArgumentOutOfRangeException("value", value.ToString(Thread.CurrentThread.CurrentCulture));
                 this.widthFactor = value;
             }
         }

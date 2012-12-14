@@ -39,6 +39,7 @@ namespace netDxf.Blocks
         private readonly BlockRecord record;
         private readonly BlockEnd end;
         private readonly string name;
+        private BlockTypeFlags typeFlags;
         private Layer layer;
         private Vector3 basePoint;
         private Dictionary<string, AttributeDefinition> attributes;
@@ -155,6 +156,19 @@ namespace netDxf.Blocks
         }
 
         
+        #endregion
+
+        #region internal properties
+
+        /// <summary>
+        /// Gets or sets the block-type flags (bit-coded values, may be combined).
+        /// </summary>
+        internal BlockTypeFlags TypeFlags
+        {
+            get { return typeFlags; }
+            set { typeFlags = value; }
+        }
+
         #endregion
 
         #region overrides

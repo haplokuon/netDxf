@@ -20,7 +20,6 @@
 
 #endregion
 
-using netDxf;
 using netDxf.Tables;
 
 namespace netDxf.Objects

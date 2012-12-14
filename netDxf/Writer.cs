@@ -323,7 +323,7 @@ namespace netDxf
         /// <summary>
         /// Writes a new extended data application registry to the table section.
         /// </summary>
-        /// <param name="appReg">Nombre del registro de aplicación.</param>
+        /// <param name="appReg">Name of the application registry.</param>
         public void RegisterApplication(ApplicationRegistry appReg)
         {
             if (this.activeTable != StringCode.ApplicationIDTable)
@@ -417,6 +417,8 @@ namespace netDxf
             this.WriteCodePair(74, style.DIMTOH);
             this.WriteCodePair(77, style.DIMTAD);
             this.WriteCodePair(271, style.DIMDEC);
+            this.WriteCodePair(275, style.DIMAUNIT);
+            this.WriteCodePair(278, (int)style.DIMDSEP[0]);
             this.WriteCodePair(280, style.DIMJUST);
 
             this.WriteCodePair(340, style.TextStyle.Handle);
@@ -425,7 +427,7 @@ namespace netDxf
         /// <summary>
         /// Writes a new dimension style to the table section.
         /// </summary>
-        /// <param name="style">DimensionStyle.</param>
+        /// <param name="style">MLineStyle.</param>
         public void WriteMLineStyle(MLineStyle style)
         {
             this.WriteCodePair(0, style.CodeName);
@@ -587,7 +589,7 @@ namespace netDxf
             this.WriteCodePair(2, block);
 
             //flags
-            this.WriteCodePair(70, block.Attributes.Count == 0 ? 0 : 2);
+            this.WriteCodePair(70, block.Attributes.Count == 0 ? (int)block.TypeFlags : (int)(block.TypeFlags | BlockTypeFlags.NonConstantAttributeDefinitions));
 
             this.WriteCodePair(10, block.BasePoint.X);
             this.WriteCodePair(20, block.BasePoint.Y);
@@ -600,7 +602,6 @@ namespace netDxf
                 this.WriteAttributeDefinition(attdef);
             }
 
-            //block entities, if version is AutoCad12 we will write the converted entities
             this.isBlockEntities = true;
             foreach (IEntityObject entity in entityObjects)
             {
@@ -637,9 +638,6 @@ namespace netDxf
                     break;
                 case EntityType.Ellipse:
                     this.WriteEllipse((Ellipse) entity);
-                    break;
-                case EntityType.NurbsCurve:
-                    this.WriteNurbsCurve((NurbsCurve) entity);
                     break;
                 case EntityType.Point:
                     this.WritePoint((Point) entity);
@@ -797,51 +795,6 @@ namespace netDxf
             this.WriteCodePair(42, paramaters[1]);
 
             this.WriteXData(ellipse.XData);
-        }
-
-        private void WriteNurbsCurve(NurbsCurve nurbsCurve)
-        {
-            if (this.activeSection != StringCode.EntitiesSection && !this.isBlockEntities)
-            {
-                throw new InvalidDxfSectionException(this.activeSection, this.file);
-            }
-
-
-            //we will draw the nurbsCurve as a polyline, it is not supported in AutoCad12 dxf files
-            this.WriteCodePair(0, DxfObjectCode.Polyline);
-
-            this.WriteEntityCommonCodes(nurbsCurve);
-
-            //open polyline
-            this.WriteCodePair(70, 0);
-
-            //dummy point
-            this.WriteCodePair(10, 0.0f);
-            this.WriteCodePair(20, 0.0f);
-            this.WriteCodePair(30, nurbsCurve.Elevation);
-
-            this.WriteCodePair(39, nurbsCurve.Thickness);
-
-            this.WriteCodePair(210, nurbsCurve.Normal.X);
-            this.WriteCodePair(220, nurbsCurve.Normal.Y);
-            this.WriteCodePair(230, nurbsCurve.Normal.Z);
-
-            //Obsolete; formerly an “entities follow flag” (optional; ignore if present)
-            //but its needed to load the dxf file in AutoCAD
-            this.WriteCodePair(66, "1");
-
-            this.WriteXData(nurbsCurve.XData);
-
-            List<Vector2> points = nurbsCurve.PolygonalVertexes(nurbsCurve.CurvePoints);
-            foreach (Vector2 v in points)
-            {
-                this.WriteCodePair(0, DxfObjectCode.Vertex);
-                this.WriteCodePair(8, nurbsCurve.Layer);
-                this.WriteCodePair(70, 0);
-                this.WriteCodePair(10, v.X);
-                this.WriteCodePair(20, v.Y);
-            }
-            this.WriteCodePair(0, StringCode.EndSequence);
         }
 
         private void WriteSolid(Solid solid)
@@ -1593,7 +1546,16 @@ namespace netDxf
             this.WriteCodePair(21, dim.MidTextPoint.Y);
             this.WriteCodePair(31, dim.MidTextPoint.Z);
 
-            this.WriteCodePair(70, (int)dim.DimensionType);
+            int flags = (int) dim.DimensionType + (int) DimensionTypeFlag.BlockReference;
+            if(dim.DimensionType==DimensionType.Ordinate)
+            {
+                // even if the documentation says that code 51 is optional, rotated ordinate dimensions will not work correctly is this value is not provided
+                this.WriteCodePair(51, 360-((OrdinateDimension)dim).Rotation);
+                if (((OrdinateDimension)dim).Axis==OrdinateDimensionAxis.X)
+                    flags += (int)DimensionTypeFlag.OrdinteType;
+            }
+               
+            this.WriteCodePair(70, flags);
             this.WriteCodePair(71, (int)dim.AttachmentPoint);
             this.WriteCodePair(72, (int)dim.LineSpacingStyle);
             this.WriteCodePair(41, dim.LineSpacingFactor);
@@ -1603,24 +1565,35 @@ namespace netDxf
 
             this.WriteCodePair(3, dim.Style.Name);
 
-            if ((dim.DimensionType & DimensionType.Aligned) == DimensionType.Aligned)
-                WriteAlignedDimension((AlignedDimension)dim);
-            //switch (dim.DimensionType)
-            //{
-            //    case(DimensionType.Aligned):
-            //        WriteAlignedDimension((AlignedDimension) dim);
-            //        break;
-            //    default:
-            //        throw new NotImplementedException("The dimension type: " + dim.Type + " is not implemented.");
-            //}
+            switch (dim.DimensionType)
+            {
+                case (DimensionType.Aligned):
+                    WriteAlignedDimension((AlignedDimension)dim);
+                    break;
+                case (DimensionType.Linear):
+                    WriteLinearDimension((LinearDimension)dim);
+                    break;
+                case (DimensionType.Radius):
+                    WriteRadialDimension((RadialDimension)dim);
+                    break;
+                case (DimensionType.Diameter):
+                    WriteDiametricDimension((DiametricDimension)dim);
+                    break;
+                case (DimensionType.Angular3Point):
+                    WriteAngular3PointDimension((Angular3PointDimension)dim);
+                    break;
+                case (DimensionType.Angular):
+                    WriteAngular2LineDimension((Angular2LineDimension)dim);
+                    break;
+                case (DimensionType.Ordinate):
+                    WriteOrdinateDimension((OrdinateDimension)dim);
+                    break;
+            }
         }
 
         private void WriteAlignedDimension(AlignedDimension dim)
         {
             this.WriteCodePair(100, SubclassMarker.AlignedDimension);
-            //this.WriteCodePair(12, 0.0);
-            //this.WriteCodePair(22, 0.0);
-            //this.WriteCodePair(32, 0.0);
 
             this.WriteCodePair(13, dim.FirstReferencePoint.X);
             this.WriteCodePair(23, dim.FirstReferencePoint.Y);
@@ -1629,6 +1602,116 @@ namespace netDxf
             this.WriteCodePair(14, dim.SecondReferencePoint.X);
             this.WriteCodePair(24, dim.SecondReferencePoint.Y);
             this.WriteCodePair(34, dim.SecondReferencePoint.Z);
+
+            this.WriteXData(dim.XData);
+        }
+
+        private void WriteLinearDimension(LinearDimension dim)
+        {
+            this.WriteCodePair(100, SubclassMarker.AlignedDimension);
+
+            this.WriteCodePair(13, dim.FirstReferencePoint.X);
+            this.WriteCodePair(23, dim.FirstReferencePoint.Y);
+            this.WriteCodePair(33, dim.FirstReferencePoint.Z);
+
+            this.WriteCodePair(14, dim.SecondReferencePoint.X);
+            this.WriteCodePair(24, dim.SecondReferencePoint.Y);
+            this.WriteCodePair(34, dim.SecondReferencePoint.Z);
+
+            this.WriteCodePair(50, dim.Rotation);
+
+            // AutoCAD is unable to recognized code 52 for oblique dimension line even though it appears as valid in the dxf documentation
+            // this.WriteCodePair(52, dim.ObliqueAngle);
+
+            this.WriteCodePair(100, SubclassMarker.LinearDimension);
+            
+            this.WriteXData(dim.XData);
+        }
+
+        private void WriteRadialDimension(RadialDimension dim)
+        {
+            this.WriteCodePair(100, SubclassMarker.RadialDimension);
+
+            this.WriteCodePair(15, dim.CircunferencePoint.X);
+            this.WriteCodePair(25, dim.CircunferencePoint.Y);
+            this.WriteCodePair(35, dim.CircunferencePoint.Z);
+
+            this.WriteCodePair(40, 0.0);
+
+            this.WriteXData(dim.XData);
+        }
+
+        private void WriteDiametricDimension(DiametricDimension dim)
+        {
+
+            this.WriteCodePair(100, SubclassMarker.DiametricDimension);
+
+            this.WriteCodePair(15, dim.CircunferencePoint.X);
+            this.WriteCodePair(25, dim.CircunferencePoint.Y);
+            this.WriteCodePair(35, dim.CircunferencePoint.Z);
+
+            this.WriteCodePair(40, 0.0);
+
+            this.WriteXData(dim.XData);
+        }
+
+        private void WriteAngular3PointDimension(Angular3PointDimension dim)
+        {
+            this.WriteCodePair(100, SubclassMarker.Angular3PointDimension);
+
+            this.WriteCodePair(13, dim.FirstPoint.X);
+            this.WriteCodePair(23, dim.FirstPoint.Y);
+            this.WriteCodePair(33, dim.FirstPoint.Z);
+
+            this.WriteCodePair(14, dim.SecondPoint.X);
+            this.WriteCodePair(24, dim.SecondPoint.Y);
+            this.WriteCodePair(34, dim.SecondPoint.Z);
+
+            this.WriteCodePair(15, dim.CenterPoint.X);
+            this.WriteCodePair(25, dim.CenterPoint.Y);
+            this.WriteCodePair(35, dim.CenterPoint.Z);
+
+            this.WriteCodePair(40, 0.0);
+
+            this.WriteXData(dim.XData);
+        }
+
+        private void WriteAngular2LineDimension(Angular2LineDimension dim)
+        {
+            this.WriteCodePair(100, SubclassMarker.Angular2LineDimension);
+
+            this.WriteCodePair(13, dim.StartFirstLine.X);
+            this.WriteCodePair(23, dim.StartFirstLine.Y);
+            this.WriteCodePair(33, dim.StartFirstLine.Z);
+
+            this.WriteCodePair(14, dim.EndFirstLine.X);
+            this.WriteCodePair(24, dim.EndFirstLine.Y);
+            this.WriteCodePair(34, dim.EndFirstLine.Z);
+
+            this.WriteCodePair(15, dim.StartSecondLine.X);
+            this.WriteCodePair(25, dim.StartSecondLine.Y);
+            this.WriteCodePair(35, dim.StartSecondLine.Z);
+
+            this.WriteCodePair(16, dim.ArcDefinitionPoint.X);
+            this.WriteCodePair(26, dim.ArcDefinitionPoint.Y);
+            this.WriteCodePair(36, dim.ArcDefinitionPoint.Z);
+
+            this.WriteCodePair(40, 0.0);
+
+            this.WriteXData(dim.XData);
+        }
+
+        private void WriteOrdinateDimension(OrdinateDimension dim)
+        {
+            this.WriteCodePair(100, SubclassMarker.OrdinateDimension);
+
+            this.WriteCodePair(13, dim.FirstPoint.X);
+            this.WriteCodePair(23, dim.FirstPoint.Y);
+            this.WriteCodePair(33, dim.FirstPoint.Z);
+
+            this.WriteCodePair(14, dim.SecondPoint.X);
+            this.WriteCodePair(24, dim.SecondPoint.Y);
+            this.WriteCodePair(34, dim.SecondPoint.Z);
 
             this.WriteXData(dim.XData);
         }

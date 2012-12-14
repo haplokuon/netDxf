@@ -335,11 +335,10 @@ namespace netDxf.Entities
             double a = this.MajorAxis * 0.5;
             double b = this.MinorAxis * 0.5;
 
-            Vector2 c = new Vector2(this.center.X, this.center.Y);
             Vector2 start = new Vector2(a * Math.Cos(param[0]), b * Math.Sin(param[0]));
             Vector2 end = new Vector2(a * Math.Cos(param[1]), b * Math.Sin(param[1]));
             // trigonometry functions are very prone to round off errors
-            if (start.Equals(end, MathHelper.Epsilon))
+            if (start.Equals(end))
             {
                 this.startAngle = 0.0;
                 this.endAngle = 360.0;

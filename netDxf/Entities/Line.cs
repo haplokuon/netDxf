@@ -52,8 +52,8 @@ namespace netDxf.Entities
         /// <summary>
         /// Initializes a new instance of the <c>Line</c> class.
         /// </summary>
-        /// <param name="startPoint">Line <see cref="Vector3">start point.</see></param>
-        /// <param name="endPoint">Line <see cref="Vector3">end point.</see></param>
+        /// <param name="startPoint">Line start <see cref="Vector3">point.</see></param>
+        /// <param name="endPoint">Line end <see cref="Vector3">point.</see></param>
         public Line(Vector3 startPoint, Vector3 endPoint) 
             : base(DxfObjectCode.Line)
         {

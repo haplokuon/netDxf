@@ -35,14 +35,14 @@ namespace netDxf.Entities
     {
         #region private fields
         private readonly EndSequence endSequence;
-        protected const EntityType TYPE = EntityType.PolyfaceMesh;
+        private const EntityType TYPE = EntityType.PolyfaceMesh;
         private List<PolyfaceMeshFace> faces;
         private List<PolyfaceMeshVertex> vertexes;
-        protected PolylineTypeFlags flags;
-        protected Layer layer;
-        protected AciColor color;
-        protected LineType lineType;
-        protected Dictionary<ApplicationRegistry, XData> xData;
+        private PolylineTypeFlags flags;
+        private Layer layer;
+        private AciColor color;
+        private LineType lineType;
+        private Dictionary<ApplicationRegistry, XData> xData;
         #endregion
 
         #region constructurs
@@ -113,7 +113,7 @@ namespace netDxf.Entities
         /// <summary>
         /// Gets the polyface mesh flag type.
         /// </summary>
-        public PolylineTypeFlags Flags
+        internal PolylineTypeFlags Flags
         {
             get { return this.flags; }
         }

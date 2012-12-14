@@ -71,7 +71,6 @@ namespace netDxf.Entities
         private Layer layer;
         private LineType lineType;
         private AttributeFlags flags;
-        private TextAlignment alignment;
         private double height;
         private double widthFactor;
         private double rotation;
@@ -109,7 +108,6 @@ namespace netDxf.Entities
             this.color = AciColor.ByLayer;
             this.lineType = LineType.ByLayer;
             this.style = style;
-            this.alignment = TextAlignment.BaselineLeft;
             this.height = MathHelper.IsZero(this.style.Height) ? 1.0 : style.Height;
             this.widthFactor = style.WidthFactor;
             this.rotation = 0.0;
@@ -136,16 +134,6 @@ namespace netDxf.Entities
             get { return this.text; }
             set { this.text = value; }
         }
-
-        ///// <summary>
-        ///// Gets or sets the <see cref="TextAlignment">text alignment.</see>
-        ///// </summary>
-        ///// <remarks></remarks>
-        //public TextAlignment Alignment
-        //{
-        //    get { return this.alignment; }
-        //    set { this.alignment = value; }
-        //}
 
         /// <summary>
         /// Gets or sets the attribute text height.

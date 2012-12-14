@@ -21,15 +21,12 @@
 #endregion
 
 using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace netDxf.Entities
 {
     /// <summary>
     /// Dimension type.
     /// </summary>
-    [Flags]
     public enum DimensionType
     {
         /// <summary>
@@ -41,7 +38,7 @@ namespace netDxf.Entities
         /// </summary>
         Aligned = 1,
         /// <summary>
-        /// Angular.
+        /// Angular 2 lines.
         /// </summary>
         Angular = 2,
         /// <summary>
@@ -53,9 +50,45 @@ namespace netDxf.Entities
         /// </summary>
         Radius = 4,
         /// <summary>
-        /// Angular 3 point.
+        /// Angular 3 points.
         /// </summary>
-        Angular3Points = 5,
+        Angular3Point = 5,
+        /// <summary>
+        /// Ordinate.
+        /// </summary>
+        Ordinate = 6,
+    }
+
+    /// <summary>
+    /// Dimension type.
+    /// </summary>
+    [Flags]
+    internal enum DimensionTypeFlag
+    {
+        /// <summary>
+        /// Rotated, horizontal, or vertical.
+        /// </summary>
+        Linear = 0,
+        /// <summary>
+        /// Aligned.
+        /// </summary>
+        Aligned = 1,
+        /// <summary>
+        /// Angular 2 lines.
+        /// </summary>
+        Angular = 2,
+        /// <summary>
+        /// Diameter.
+        /// </summary>
+        Diameter = 3,
+        /// <summary>
+        /// Radius.
+        /// </summary>
+        Radius = 4,
+        /// <summary>
+        /// Angular 3 points.
+        /// </summary>
+        Angular3Point = 5,
         /// <summary>
         /// Ordinate.
         /// </summary>

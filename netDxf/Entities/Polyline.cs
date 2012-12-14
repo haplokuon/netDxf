@@ -108,7 +108,7 @@ namespace netDxf.Entities
         /// <summary>
         /// Gets the polyline type.
         /// </summary>
-        public PolylineTypeFlags Flags
+        internal PolylineTypeFlags Flags
         {
             get { return this.flags; }
         }

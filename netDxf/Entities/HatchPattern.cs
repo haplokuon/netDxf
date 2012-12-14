@@ -24,6 +24,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using System.Threading;
 
 namespace netDxf.Entities
 {
@@ -90,9 +91,9 @@ namespace netDxf.Entities
     }
 
     /// <summary>
-    /// Solid fill flag (solid fill = 1; pattern fill = 0); for MPolygon, the version of MPolygon.
+    /// Solid fill (solid fill = 1; pattern fill = 0); for MPolygon, the version of MPolygon.
     /// </summary>
-    public enum FillFlag
+    public enum FillType
     {  
         /// <summary>
         /// Pattern fill.
@@ -111,8 +112,8 @@ namespace netDxf.Entities
     {
         #region private fields
         private readonly string name;
-        private readonly HatchStyle style;
-        private readonly FillFlag fill;
+        private HatchStyle style;
+        private FillType fill;
         private HatchType type;
         private double angle;
         private double scale;
@@ -133,7 +134,7 @@ namespace netDxf.Entities
             this.name = name.ToUpper();
             this.description = description;
             this.style = HatchStyle.Normal;
-            this.fill = this.name == PredefinedHatchPatternName.Solid ? FillFlag.SolidFill : FillFlag.PatternFill;
+            this.fill = this.name == PredefinedHatchPatternName.Solid ? FillType.SolidFill : FillType.PatternFill;
             this.type = HatchType.UserDefined;
             this.angle = 0.0;
             this.scale = 1.0;
@@ -151,15 +152,15 @@ namespace netDxf.Entities
         {
             get
             {
-                HatchPattern pattern = new HatchPattern("SOLID", "Solid fill");
-                HatchPatternLineDefinition lineDefinition = new HatchPatternLineDefinition
-                                                                {
-                                                                    Angle = 45,
-                                                                    Origin = Vector2.Zero,
-                                                                    Delta = new Vector2(0.0, 0.125)
-                                                                };
-                pattern.LineDefinitions.Add(lineDefinition);
-                pattern.type = HatchType.Predefined;
+                HatchPattern pattern = new HatchPattern("SOLID", "Solid fill") {type = HatchType.Predefined};
+                // this is the pattern line definition for solid fills as defined in the acad.pat, but it is not needed
+                //HatchPatternLineDefinition lineDefinition = new HatchPatternLineDefinition
+                //                                                {
+                //                                                    Angle = 45,
+                //                                                    Origin = Vector2.Zero,
+                //                                                    Delta = new Vector2(0.0, 0.125)
+                //                                                };
+                //pattern.LineDefinitions.Add(lineDefinition);
                 return pattern;
             }
         }
@@ -173,11 +174,11 @@ namespace netDxf.Entities
             {
                 HatchPattern pattern = new HatchPattern("LINE", "Parallel horizontal lines");
                 HatchPatternLineDefinition lineDefinition = new HatchPatternLineDefinition
-                {
-                    Angle = 0,
-                    Origin = Vector2.Zero,
-                    Delta = new Vector2(0.0, 0.125)
-                };
+                                                                {
+                                                                    Angle = 0,
+                                                                    Origin = Vector2.Zero,
+                                                                    Delta = new Vector2(0.0, 0.125)
+                                                                };
                 pattern.LineDefinitions.Add(lineDefinition);
                 pattern.type = HatchType.Predefined;
                 return pattern;
@@ -192,22 +193,20 @@ namespace netDxf.Entities
             get
             {
                 HatchPattern pattern = new HatchPattern("NET", "Horizontal / vertical grid");
-                HatchPatternLineDefinition lineDefinition;
-
-                lineDefinition = new HatchPatternLineDefinition
-                {
-                    Angle = 0,
-                    Origin = Vector2.Zero,
-                    Delta = new Vector2(0.0, 0.125)
-                };
+                HatchPatternLineDefinition lineDefinition = new HatchPatternLineDefinition
+                                                                {
+                                                                    Angle = 0,
+                                                                    Origin = Vector2.Zero,
+                                                                    Delta = new Vector2(0.0, 0.125)
+                                                                };
                 pattern.LineDefinitions.Add(lineDefinition);
 
                 lineDefinition = new HatchPatternLineDefinition
-                {
-                    Angle = 90,
-                    Origin = Vector2.Zero,
-                    Delta = new Vector2(0.0, 0.125)
-                };
+                                     {
+                                         Angle = 90,
+                                         Origin = Vector2.Zero,
+                                         Delta = new Vector2(0.0, 0.125)
+                                     };
                 pattern.LineDefinitions.Add(lineDefinition);
                 pattern.type = HatchType.Predefined;
                 return pattern;
@@ -223,12 +222,12 @@ namespace netDxf.Entities
             {
                 HatchPattern pattern = new HatchPattern("DOTS", "A series of dots");
                 HatchPatternLineDefinition lineDefinition = new HatchPatternLineDefinition
-                {
-                    Angle = 0,
-                    Origin = Vector2.Zero,
-                    Delta = new Vector2(0.03125, 0.0625),
-                    DashPattern = new List<double>{0, -0.0625}
-                };
+                                                                {
+                                                                    Angle = 0,
+                                                                    Origin = Vector2.Zero,
+                                                                    Delta = new Vector2(0.03125, 0.0625),
+                                                                    DashPattern = new List<double>{0, -0.0625}
+                                                                };
                 pattern.LineDefinitions.Add(lineDefinition);
                 pattern.type = HatchType.Predefined;
                 return pattern;
@@ -258,9 +257,11 @@ namespace netDxf.Entities
         /// <summary>
         /// Gets the hatch style (always Normal).
         /// </summary>
+        /// <remarks>Only normal style is implemented.</remarks>
         public HatchStyle Style
         {
             get { return style; }
+            internal set { style = value; }
         }
 
         /// <summary>
@@ -273,11 +274,12 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Solid fill flag.
+        /// Gets the solid fill flag.
         /// </summary>
-        public FillFlag Fill
+        public FillType Fill
         {
             get { return fill; }
+            internal set {fill = value;}
         }
 
         /// <summary>
@@ -289,7 +291,7 @@ namespace netDxf.Entities
             set
             {
                 if (value < 0 || value > 180)
-                    throw new ArgumentOutOfRangeException("value", value.ToString(), "The angle must be between 0 and 180 degrees");
+                    throw new ArgumentOutOfRangeException("value", value.ToString(Thread.CurrentThread.CurrentCulture), "The angle must be between 0 and 180 degrees");
                 angle = value;
             }
         }

@@ -41,13 +41,13 @@ namespace netDxf.Entities
         DxfObject
     {
         #region private fields
-        protected const EntityType TYPE = EntityType.PolylineVertex;
-        protected VertexTypeFlags flags;
-        protected int[] vertexIndexes;
-        protected AciColor color;
-        protected Layer layer;
-        protected LineType lineType;
-        protected Dictionary<ApplicationRegistry, XData> xData;
+        private const EntityType TYPE = EntityType.PolylineVertex;
+        private VertexTypeFlags flags;
+        private int[] vertexIndexes;
+        private AciColor color;
+        private Layer layer;
+        private LineType lineType;
+        private Dictionary<ApplicationRegistry, XData> xData;
 
         #endregion
 
@@ -107,7 +107,7 @@ namespace netDxf.Entities
         /// <summary>
         /// Gets the vertex type.
         /// </summary>
-        public VertexTypeFlags Flags
+        internal VertexTypeFlags Flags
         {
             get { return this.flags; }
         }

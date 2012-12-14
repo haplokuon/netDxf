@@ -34,13 +34,13 @@ namespace netDxf.Entities
     {
         #region private fields
 
-        protected const EntityType TYPE = EntityType.PolyfaceMeshVertex;
-        protected VertexTypeFlags flags;
-        protected Vector3 location;
-        protected AciColor color;
-        protected Layer layer;
-        protected LineType lineType;
-        protected Dictionary<ApplicationRegistry, XData> xData;
+        private const EntityType TYPE = EntityType.PolyfaceMeshVertex;
+        private VertexTypeFlags flags;
+        private Vector3 location;
+        private AciColor color;
+        private Layer layer;
+        private LineType lineType;
+        private Dictionary<ApplicationRegistry, XData> xData;
 
         #endregion
 
@@ -96,7 +96,7 @@ namespace netDxf.Entities
         /// <summary>
         /// Gets the vertex type.
         /// </summary>
-        public VertexTypeFlags Flags
+        internal VertexTypeFlags Flags
         {
             get { return this.flags; }
         }

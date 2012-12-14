@@ -23,7 +23,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Drawing;
 using netDxf;
 using netDxf.Blocks;
 using netDxf.Entities;
@@ -40,9 +39,15 @@ namespace TestDxfDocument
     {
         private static void Main()
         {
-            LoadLayerOff();
+            //Fixes();
             //CleanDrawing();
-            //TestDimensionDrawing();
+            OrdinateDimensionDrawing();
+            Angular2LineDimensionDrawing();
+            Angular3PointDimensionDrawing();
+            DiametricDimensionDrawing();
+            RadialDimensionDrawing();
+            LinearDimensionDrawing();
+            AlignedDimensionDrawing();
             //WriteMText();
             //LineWidth();
             //HatchCircleBoundary();
@@ -54,6 +59,7 @@ namespace TestDxfDocument
             //ReadDxfFile();
             //ExplodeTest();
             //HatchTestLinesBoundary();
+            //HatchTest1();
             //HatchTest3();
             //BlockAttributes();
             //WritePolyfaceMesh();
@@ -62,58 +68,217 @@ namespace TestDxfDocument
             //Face3d();
             //LwPolyline();
             //Polyline();
-            //NurbsCurve();
             //Dxf2000();
             //SpeedTest();
             //WritePolyline3d();
         }
-
-        private static void LoadLayerOff()
+        private static void Fixes()
         {
             DxfDocument dxf = new DxfDocument();
-            dxf.Load("Layer off.dxf");
+            dxf.Load("solid hatch sample.dxf");
         }
         private static void CleanDrawing()
         {
             DxfDocument dxf = new DxfDocument();
             dxf.Save("clean drawing.dxf", DxfVersion.AutoCad2004);
         }
-        private static void TestDimensionDrawing()
+        private static void OrdinateDimensionDrawing()
         {
             DxfDocument dxf = new DxfDocument();
-            double offset = 0.9;
-            Vector3 p1 = new Vector3(1, 2, 0);
-            Vector3 p2 = new Vector3(2, 6, 0);
+
+            Vector3 origin = new Vector3(2, 1, 0);
+            Vector2 refX = new Vector2(1, 0);
+            Vector2 refY = new Vector2(0, 2);
+            double length = 3;
+            double angle = 30;
+            DimensionStyle myStyle = new DimensionStyle("MyStyle");
+            myStyle.DIMPOST = "<>mm";
+            myStyle.DIMDEC = 2;
+
+            OrdinateDimension dimX1 = new OrdinateDimension(origin, refX, length, OrdinateDimensionAxis.X, 0, myStyle);
+            OrdinateDimension dimX2 = new OrdinateDimension(origin, refX, length, OrdinateDimensionAxis.X, angle, myStyle);
+            OrdinateDimension dimY1 = new OrdinateDimension(origin, refY, length, OrdinateDimensionAxis.Y, 0, myStyle);
+            OrdinateDimension dimY2 = new OrdinateDimension(origin, refY, length, OrdinateDimensionAxis.Y, angle, myStyle);
+
+            dxf.AddEntity(dimX1);
+            dxf.AddEntity(dimY1);
+            dxf.AddEntity(dimX2);
+            dxf.AddEntity(dimY2);
+
+            Line lineX = new Line(origin, origin+5 * Vector3.UnitX);
+            Line lineY = new Line(origin, origin+5 * Vector3.UnitY);
+
+            Vector2 point = Vector2.Polar(new Vector2(origin.X, origin.Y), 5, angle * MathHelper.DegToRad);
+            Line lineXRotate = new Line(origin, new Vector3(point.X, point.Y, 0));
+
+            point = Vector2.Polar(new Vector2(origin.X, origin.Y), 5, angle * MathHelper.DegToRad + MathHelper.HalfPI);
+            Line lineYRotate = new Line(origin, new Vector3(point.X, point.Y, 0));
+
+            dxf.AddEntity(lineX);
+            dxf.AddEntity(lineY);
+            dxf.AddEntity(lineXRotate);
+            dxf.AddEntity(lineYRotate);
+
+            dxf.Save("ordinate dimension.dxf", DxfVersion.AutoCad2000);
+
+            dxf.Load("ordinate dimension.dxf");
+        }
+        private static void Angular2LineDimensionDrawing()
+        {
+            double offset = 7.5;
+            
+            Line line1 = new Line(new Vector2(1, 2), new Vector2(6, 0));
+            Line line2 = new Line(new Vector2(2, 1), new Vector2(4,5));
+
+            Angular2LineDimension dim = new Angular2LineDimension(line1, line2, offset);
+            
+            DxfDocument dxf = new DxfDocument();
+            dxf.AddEntity(line1);
+            dxf.AddEntity(line2);
+            dxf.AddEntity(dim);
+
+            dxf.Save("angular 2 line dimension.dxf", DxfVersion.AutoCad2000);
+            dxf.Load("angular 2 line dimension.dxf");
+        }
+        private static void Angular3PointDimensionDrawing()
+        {
+            DxfDocument dxf = new DxfDocument();
+
+            Vector3 center = new Vector3(1, 2, 0);
+            double radius = 2.42548;
+            Arc arc = new Arc(center, radius, -30, 60);
+            //arc.Normal = new Vector3(1, 1, 1);
+            DimensionStyle myStyle = new DimensionStyle("MyStyle");
+
+            Angular3PointDimension dim = new Angular3PointDimension(arc, 5, myStyle);
+            dxf.AddEntity(arc);
+            dxf.AddEntity(dim);
+            dxf.Save("angular 3 point dimension.dxf", DxfVersion.AutoCad2000);
+
+            dxf.Load("angular 3 point dimension.dxf");
+        }
+        private static void DiametricDimensionDrawing()
+        {
+            DxfDocument dxf = new DxfDocument();
+
+            Vector3 center = new Vector3(1, 2, 0);
+            double radius = 2.42548;
+            Circle circle = new Circle(center, radius);
+            //circle.Normal = new Vector3(1, 1, 1);
+            DimensionStyle myStyle = new DimensionStyle("MyStyle");
+            myStyle.DIMPOST = "<>mm";
+            myStyle.DIMDEC = 2;
+            myStyle.DIMDSEP = ",";
+
+            DiametricDimension dim = new DiametricDimension(circle, 30, myStyle);
+            dxf.AddEntity(circle);
+            dxf.AddEntity(dim);
+            dxf.Save("diametric dimension.dxf", DxfVersion.AutoCad2000);
+
+            dxf.Load("diametric dimension.dxf");
+        }
+        private static void RadialDimensionDrawing()
+        {
+            DxfDocument dxf = new DxfDocument();
+
+            Vector3 center = new Vector3(1, 2, 0);
+            double radius = 2.42548;
+            Circle circle = new Circle(center, radius);
+            circle.Normal = new Vector3(1, 1, 1);
+            DimensionStyle myStyle = new DimensionStyle("MyStyle");
+            myStyle.DIMPOST = "<>mm";
+            myStyle.DIMDEC = 2;
+            myStyle.DIMDSEP = ",";
+            
+            RadialDimension dim = new RadialDimension(circle, 30, myStyle);
+            dxf.AddEntity(circle);
+            dxf.AddEntity(dim);
+            dxf.Save("radial dimension.dxf", DxfVersion.AutoCad2000);
+
+            dxf.Load("radial dimension.dxf");
+        }
+        private static void LinearDimensionDrawing()
+        {
+            DxfDocument dxf = new DxfDocument();
+            
+            Vector3 p1 = new Vector3(0, 0, 0);
+            Vector3 p2 = new Vector3(5, 5, 0);
             Line line = new Line(p1, p2);
-            Vector3 l1;
-            Vector3 l2;
-            MathHelper.OffsetLine(line.StartPoint, line.EndPoint, line.Normal, offset, out l1, out l2);
-            Line parallel = new Line(l1,l2);
+
             dxf.AddEntity(line);
-            dxf.AddEntity(parallel);
 
             DimensionStyle myStyle = new DimensionStyle("MyStyle");
             myStyle.DIMPOST = "<>mm";
-            AlignedDimension dim = new AlignedDimension(p1, p2, offset, myStyle);
-            Vector2 perp = Vector2.Perpendicular(new Vector2(p2.X, p2.Y) - new Vector2(p1.X, p1.Y));
-            dim.Normal = -new Vector3(perp.X, perp.Y, 0.0) ;
+            myStyle.DIMDEC = 2;
+            double offset = 7;
+            LinearDimension dimX = new LinearDimension(line, offset,0.0, myStyle);
+            dimX.Rotation += 30.0;
+            LinearDimension dimY = new LinearDimension(line, offset, 90.0, myStyle);
+            dimY.Rotation += 30.0;
 
             XData xdata = new XData(new ApplicationRegistry("other application"));
             xdata.XDataRecord.Add(new XDataRecord(XDataCode.String, "extended data with netDxf"));
             xdata.XDataRecord.Add(XDataRecord.OpenControlString);
-            xdata.XDataRecord.Add(new XDataRecord(XDataCode.String, "string record"));
+            xdata.XDataRecord.Add(new XDataRecord(XDataCode.String, "Linear Dimension"));
             xdata.XDataRecord.Add(new XDataRecord(XDataCode.Real, 15.5));
             xdata.XDataRecord.Add(new XDataRecord(XDataCode.Long, 350));
             xdata.XDataRecord.Add(XDataRecord.CloseControlString);
-            dim.XData = new Dictionary<ApplicationRegistry, XData>
+            dimX.XData = new Dictionary<ApplicationRegistry, XData>
+                             {
+                                 {xdata.ApplicationRegistry, xdata}
+                             };
+            dimY.XData = new Dictionary<ApplicationRegistry, XData>
+                             {
+                                 {xdata.ApplicationRegistry, xdata}
+                             };
+            dxf.AddEntity(dimX);
+            dxf.AddEntity(dimY);
+            dxf.Save("linear dimension.dxf", DxfVersion.AutoCad2000);
+            dxf.Load("linear dimension.dxf");
+        }
+        private static void AlignedDimensionDrawing()
+        {
+            DxfDocument dxf = new DxfDocument();
+            double offset = -0.9;
+            Vector3 p1 = new Vector3(1, 2, 0);
+            Vector3 p2 = new Vector3(2, 6, 0);
+            Line line1 = new Line(p1, p2);
+            Vector3 l1;
+            Vector3 l2;
+            MathHelper.OffsetLine(line1.StartPoint, line1.EndPoint, line1.Normal, offset, out l1, out l2);
+
+            DimensionStyle myStyle = new DimensionStyle("MyStyle");
+            myStyle.DIMPOST = "<>mm";
+            AlignedDimension dim1 = new AlignedDimension(p1, p2, offset, myStyle);
+
+            Vector3 p3 = p1 + new Vector3(4, 0, 0);
+            Vector3 p4 = p2 + new Vector3(4, 0, 0);
+            Line line2 = new Line(p3, p4);
+            AlignedDimension dim2 = new AlignedDimension(p3, p4, -offset, myStyle);
+
+
+            Vector2 perp = Vector2.Perpendicular(new Vector2(p2.X, p2.Y) - new Vector2(p1.X, p1.Y));
+            //dim.Normal = -new Vector3(perp.X, perp.Y, 0.0) ;
+
+            XData xdata = new XData(new ApplicationRegistry("other application"));
+            xdata.XDataRecord.Add(new XDataRecord(XDataCode.String, "extended data with netDxf"));
+            xdata.XDataRecord.Add(XDataRecord.OpenControlString);
+            xdata.XDataRecord.Add(new XDataRecord(XDataCode.String, "Aligned Dimension"));
+            xdata.XDataRecord.Add(new XDataRecord(XDataCode.Real, 15.5));
+            xdata.XDataRecord.Add(new XDataRecord(XDataCode.Long, 350));
+            xdata.XDataRecord.Add(XDataRecord.CloseControlString);
+            dim1.XData = new Dictionary<ApplicationRegistry, XData>
                              {
                                  {xdata.ApplicationRegistry, xdata}
                              };
 
-            dxf.AddEntity(dim);
-            dxf.Save("test drawing dimension.dxf", DxfVersion.AutoCad2000);
+            dxf.AddEntity(line1);
+            dxf.AddEntity(line2);
+            dxf.AddEntity(dim1);
+            dxf.AddEntity(dim2);
+            dxf.Save("aligned dimension.dxf", DxfVersion.AutoCad2000);
 
-            //dxf.Load("test drawing dimension from CAD 2004 - copia.dxf");
+            dxf.Load("aligned dimension.dxf");
 
         }
         private static void WriteMText()
@@ -510,7 +675,7 @@ namespace TestDxfDocument
             dxf.AddEntity(poly3);
             dxf.AddEntity(hatch);
 
-            dxf.Save("hatchTest.dxf", DxfVersion.AutoCad2000);
+            dxf.Save("hatchTest.dxf", DxfVersion.AutoCad2010);
             dxf.Load("hatchTest.dxf");
         }
         private static void HatchTest2()
@@ -596,43 +761,6 @@ namespace TestDxfDocument
 
             dxf.Save("test2000.dxf",DxfVersion.AutoCad2000);
         }
-        private static void NurbsCurve()
-        {
-            DxfDocument dxf = new DxfDocument();
-
-            NurbsCurve nurbs  = new NurbsCurve();
-            nurbs.ControlPoints .Add(new NurbsVertex( 0, 0));
-            nurbs.ControlPoints.Add(new NurbsVertex(10, 10));
-            nurbs.ControlPoints.Add(new NurbsVertex(20, 0));
-            nurbs.ControlPoints.Add(new NurbsVertex(30, 10));
-            nurbs.ControlPoints.Add(new NurbsVertex(40, 0));
-            nurbs.ControlPoints.Add(new NurbsVertex(50, 10));
-            nurbs.ControlPoints.Add(new NurbsVertex(60, 0));
-            nurbs.ControlPoints.Add(new NurbsVertex(70, 10));
-
-            nurbs.Order = 3;
-
-           dxf.AddEntity(nurbs);
-
-           NurbsCurve nurbs2 = new NurbsCurve();
-           nurbs2.ControlPoints.Add(new NurbsVertex(5, 0));
-           nurbs2.ControlPoints.Add(new NurbsVertex(10, 0));
-           nurbs2.ControlPoints.Add(new NurbsVertex(10, 5));
-           nurbs2.ControlPoints.Add(new NurbsVertex(10, 10));
-           nurbs2.ControlPoints.Add(new NurbsVertex(5, 10));
-           nurbs2.ControlPoints.Add(new NurbsVertex(0, 10));
-           nurbs2.ControlPoints.Add(new NurbsVertex(0, 5));
-           nurbs2.ControlPoints.Add(new NurbsVertex(0, 0));
-           nurbs2.ControlPoints.Add(new NurbsVertex(5, 0));
-
-           nurbs2.Order = 3;
-
-           nurbs2.SetUniformWeights(Math.Cos(MathHelper.HalfPI));
-           dxf.AddEntity(nurbs2);
-
-            dxf.Save("nurbs.dxf", DxfVersion.AutoCad2000);
-
-        }
         private static void LwPolyline()
         {
 
@@ -643,10 +771,12 @@ namespace TestDxfDocument
             poly.Vertexes.Add(new LwPolylineVertex(10, 10));
             poly.Vertexes.Add(new LwPolylineVertex(20, 0));
             poly.Vertexes.Add(new LwPolylineVertex(30, 10));
+            //poly.IsClosed = true;
             dxf.AddEntity(poly);
 
             dxf.Save("polyline.dxf", DxfVersion.AutoCad2000);
 
+            dxf.Load("polyline.dxf");
         }
         private static void Polyline()
         {
@@ -773,6 +903,7 @@ namespace TestDxfDocument
             attdef.BasePoint = new Vector3(1, 1, 1);
             attdef.Style.IsVertical = true;
             attdef.Rotation = 45;
+            attdef.WidthFactor = 2;
 
             block.Attributes.Add(attdef.Id, attdef);
             block.Entities.Add(new Line(new Vector3(-5, -5, 0), new Vector3(5, 5, 0)));
@@ -820,7 +951,7 @@ namespace TestDxfDocument
             dxf.AddEntity(circle);
 
             dxf.Save("Block with attributes.dxf", DxfVersion.AutoCad2000);
-            //dxf.Load("Block with attributes.dxf");
+            dxf.Load("Block with attributes.dxf");
             //dxf.Save("Block with attributes result.dxf", DxfVersion.AutoCad2000); // both results must be equal only the handles might be different
         }
         private static void WritePolyfaceMesh()

@@ -29,7 +29,7 @@ namespace netDxf.Entities
     /// </summary>
     /// <remarks>Bit flag.</remarks>
     [Flags]
-    public enum PolylineTypeFlags
+    internal enum PolylineTypeFlags
     {
         /// <summary>
         /// Default, open polyline.

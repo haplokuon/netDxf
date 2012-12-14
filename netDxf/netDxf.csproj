@@ -70,8 +70,15 @@
   <ItemGroup>
     <Compile Include="AciColor.cs" />
     <Compile Include="Blocks\BlockEnd.cs" />
+    <Compile Include="Blocks\BlockTypeFlags.cs" />
     <Compile Include="CodeValuePair.cs" />
     <Compile Include="Entities\AlignedDimension.cs" />
+    <Compile Include="Entities\Angular3PointDimension.cs" />
+    <Compile Include="Entities\Angular2LineDimension.cs" />
+    <Compile Include="Entities\DiametricDimension.cs" />
+    <Compile Include="Entities\OrdinateDimension.cs" />
+    <Compile Include="Entities\OrdinateDimensionAxis.cs" />
+    <Compile Include="Entities\RadialDimension.cs" />
     <Compile Include="Entities\Dimension.cs" />
     <Compile Include="Entities\DimensionType.cs" />
     <Compile Include="Entities\LinearDimension.cs" />
@@ -97,8 +104,6 @@
     <Compile Include="DxfObjectCode.cs" />
     <Compile Include="Entities\Ellipse.cs" />
     <Compile Include="Entities\EndSequence.cs" />
-    <Compile Include="Entities\NurbsCurve.cs" />
-    <Compile Include="Entities\NurbsVertex.cs" />
     <Compile Include="Entities\Solid.cs" />
     <Compile Include="Header\HeaderVariable.cs" />
     <Compile Include="DxfObject.cs" />
@@ -164,6 +169,9 @@
       <ProductName>Windows Installer 3.1</ProductName>
       <Install>true</Install>
     </BootstrapperPackage>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="ClassDiagram.cd" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

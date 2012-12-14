@@ -29,7 +29,7 @@ using netDxf.Blocks;
 using netDxf.Entities;
 using netDxf.Header;
 using netDxf.Tables;
-using Attribute=netDxf.Entities.Attribute;
+using Attribute = netDxf.Entities.Attribute;
 
 namespace netDxf
 {
@@ -174,6 +174,7 @@ namespace netDxf
         {
             get { return this.polyfaceMeshes; }
         }
+
         public List<Insert> Inserts
         {
             get { return this.inserts; }
@@ -218,7 +219,7 @@ namespace netDxf
             get { return this.textStyles; }
         }
 
-        public Dictionary<string, DimensionStyle> DimensionStyle
+        public Dictionary<string, DimensionStyle> DimensionStyles
         {
             get { return this.dimStyles; }
         }
@@ -339,10 +340,9 @@ namespace netDxf
                         case SystemVariable.DatabaseVersion:
                             this.version = dxfPairInfo.Value;
                             break;
-                        case SystemVariable.HandSeed :
+                        case SystemVariable.HandSeed:
                             this.handleSeed = dxfPairInfo.Value;
                             break;
-
                     }
                 }
                 dxfPairInfo = this.ReadCodePair();
@@ -573,8 +573,7 @@ namespace netDxf
                     entity = this.ReadHatch();
                     break;
                 case DxfObjectCode.Insert:
-                    // the block reference of a nested block will have to be defined first.
-                    entity = this.ReadInsert();
+                    entity = this.ReadInsert(); // the block reference of a nested block will have to be defined first.
                     break;
                 case DxfObjectCode.Line:
                     entity = this.ReadLine();
@@ -590,13 +589,13 @@ namespace netDxf
                     break;
                 case DxfObjectCode.Polyline:
                     entity = this.ReadPolyline();
-                        if (entity is LwPolyline)
-                            this.lightWeightPolylines.Add((LwPolyline)entity);
-                        if (entity is PolyfaceMesh)
-                            this.polyfaceMeshes.Add((PolyfaceMesh)entity);
-                        if (entity is Polyline)
-                            this.polylines.Add((Polyline)entity);
-                        break;
+                    if (entity is LwPolyline)
+                        this.lightWeightPolylines.Add((LwPolyline) entity);
+                    if (entity is PolyfaceMesh)
+                        this.polyfaceMeshes.Add((PolyfaceMesh) entity);
+                    if (entity is Polyline)
+                        this.polylines.Add((Polyline) entity);
+                    break;
                 case DxfObjectCode.Solid:
                     entity = this.ReadSolid();
                     break;
@@ -714,7 +713,6 @@ namespace netDxf
             }
 
             TextAlignment alignment = ObtainAlignment(horizontalAlignment, verticalAlignment);
-
             return new AttributeDefinition(id)
                        {
                            BasePoint = (alignment == TextAlignment.BaselineLeft ? firstAlignmentPoint : secondAlignmentPoint),
@@ -728,7 +726,7 @@ namespace netDxf
                            LineType = lineType,
                            Style = style,
                            Height = height,
-                           WidthFactor = widthFactor,
+                           WidthFactor = MathHelper.IsZero(widthFactor) ? style.WidthFactor : widthFactor,
                            Rotation = rotation,
                            Handle = handle
                        };
@@ -797,7 +795,7 @@ namespace netDxf
                         break;
                     case DxfObjectCode.Dimension:
                         entity = this.ReadDimension();
-                        this.dimensions.Add((Dimension)entity);
+                        this.dimensions.Add((Dimension) entity);
                         break;
                     case DxfObjectCode.Point:
                         entity = this.ReadPoint();
@@ -825,16 +823,16 @@ namespace netDxf
                         break;
                     case DxfObjectCode.LightWeightPolyline:
                         entity = this.ReadLightWeightPolyline();
-                        this.lightWeightPolylines.Add((LwPolyline)entity);
+                        this.lightWeightPolylines.Add((LwPolyline) entity);
                         break;
                     case DxfObjectCode.Polyline:
                         entity = this.ReadPolyline();
                         if (entity is LwPolyline)
-                            this.lightWeightPolylines.Add((LwPolyline)entity);
+                            this.lightWeightPolylines.Add((LwPolyline) entity);
                         if (entity is PolyfaceMesh)
-                            this.polyfaceMeshes.Add((PolyfaceMesh)entity);
+                            this.polyfaceMeshes.Add((PolyfaceMesh) entity);
                         if (entity is Polyline)
-                            this.polylines.Add((Polyline)entity);
+                            this.polylines.Add((Polyline) entity);
                         break;
                     case DxfObjectCode.Text:
                         entity = this.ReadText();
@@ -842,11 +840,11 @@ namespace netDxf
                         break;
                     case DxfObjectCode.MText:
                         entity = this.ReadMText();
-                        this.mTexts.Add((MText)entity);
+                        this.mTexts.Add((MText) entity);
                         break;
                     case DxfObjectCode.Hatch:
                         entity = this.ReadHatch();
-                        this.hatches.Add((Hatch)entity);
+                        this.hatches.Add((Hatch) entity);
                         break;
                     default:
                         ReadUnknowEntity();
@@ -1162,7 +1160,6 @@ namespace netDxf
 
         private DimensionStyle ReadDimensionStyle()
         {
-
             string handle = string.Empty;
             string name = string.Empty;
             string txtStyleHandle = string.Empty;
@@ -1183,6 +1180,7 @@ namespace netDxf
             string dimpost = "<>";
             int dimtih = 0;
             int dimtoh = 0;
+            int dimaunit = 0;
 
             dxfPairInfo = this.ReadCodePair();
 
@@ -1231,33 +1229,36 @@ namespace netDxf
                     case 271:
                         dimdec = int.Parse(dxfPairInfo.Value);
                         break;
+                    case 275:
+                        dimaunit = int.Parse(dxfPairInfo.Value);
+                        break;
                     case 280:
                         dimjust = int.Parse(dxfPairInfo.Value);
                         break;
                     case 340:
                         txtStyleHandle = dxfPairInfo.Value;
                         break;
-
                 }
                 dxfPairInfo = this.ReadCodePair();
             }
 
             return new DimensionStyle(name)
-            {
-                Handle = handle,
-                DIMEXO = dimexo,
-                DIMEXE = dimexe,
-                DIMASZ = dimasz,
-                DIMTXT = dimtxt,
-                DIMJUST = dimjust,
-                DIMTAD = dimtad,
-                DIMGAP = dimgap,
-                DIMDEC = dimdec,
-                DIMPOST = dimpost,
-                DIMTIH = dimtih,
-                DIMTOH = dimtoh,
-                TextStyle = GetTextStyleByHandle(txtStyleHandle)
-            };
+                       {
+                           Handle = handle,
+                           DIMEXO = dimexo,
+                           DIMEXE = dimexe,
+                           DIMASZ = dimasz,
+                           DIMTXT = dimtxt,
+                           DIMJUST = dimjust,
+                           DIMTAD = dimtad,
+                           DIMGAP = dimgap,
+                           DIMDEC = dimdec,
+                           DIMPOST = dimpost,
+                           DIMTIH = dimtih,
+                           DIMTOH = dimtoh,
+                           DIMAUNIT = dimaunit,
+                           TextStyle = GetTextStyleByHandle(txtStyleHandle)
+                       };
         }
 
         #endregion
@@ -1449,16 +1450,23 @@ namespace netDxf
             Vector3 defPoint = Vector3.Zero;
             Vector3 midtxtPoint = Vector3.Zero;
             Vector3 normal = Vector3.UnitZ;
-            DimensionType type = DimensionType.Linear;
+            DimensionTypeFlag dimType = DimensionTypeFlag.Linear;
             MTextAttachmentPoint attachmentPoint = MTextAttachmentPoint.BottomCenter;
             MTextLineSpacingStyle lineSpacingStyle = MTextLineSpacingStyle.AtLeast;
+            DimensionStyle style = DimensionStyle.Default;
+            double dimRot = 0.0;
             double lineSpacingFactor = 1.0;
             bool dimInfo = false;
+
             dxfPairInfo = this.ReadCodePair();
             while (!dimInfo)
             {
                 switch (dxfPairInfo.Code)
                 {
+                    case 3:
+                        style = this.GetDimensionStyle(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
                     case 5:
                         handle = dxfPairInfo.Value;
                         dxfPairInfo = this.ReadCodePair();
@@ -1476,7 +1484,7 @@ namespace netDxf
                         dxfPairInfo = this.ReadCodePair();
                         break;
                     case 2:
-                        drawingBlock  = this.GetBlock(dxfPairInfo.Value);
+                        drawingBlock = this.GetBlock(dxfPairInfo.Value);
                         dxfPairInfo = this.ReadCodePair();
                         break;
                     case 10:
@@ -1504,19 +1512,24 @@ namespace netDxf
                         dxfPairInfo = this.ReadCodePair();
                         break;
                     case 70:
-                        type = (DimensionType) int.Parse(dxfPairInfo.Value);
+                        dimType = (DimensionTypeFlag)int.Parse(dxfPairInfo.Value);
                         dxfPairInfo = this.ReadCodePair();
                         break;
                     case 71:
-                        attachmentPoint = (MTextAttachmentPoint)int.Parse(dxfPairInfo.Value);
+                        attachmentPoint = (MTextAttachmentPoint) int.Parse(dxfPairInfo.Value);
                         dxfPairInfo = this.ReadCodePair();
                         break;
                     case 72:
-                        lineSpacingStyle = (MTextLineSpacingStyle)int.Parse(dxfPairInfo.Value);
+                        lineSpacingStyle = (MTextLineSpacingStyle) int.Parse(dxfPairInfo.Value);
                         dxfPairInfo = this.ReadCodePair();
                         break;
                     case 41:
                         lineSpacingFactor = double.Parse(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 51:
+                        // even if the documentation says that code 51 is optional, rotated ordinate dimensions will not work correctly is this value is not provided
+                        dimRot = 360-double.Parse(dxfPairInfo.Value);
                         dxfPairInfo = this.ReadCodePair();
                         break;
                     case 210:
@@ -1532,8 +1545,13 @@ namespace netDxf
                         dxfPairInfo = this.ReadCodePair();
                         break;
                     case 100:
-                        if (dxfPairInfo.Value == SubclassMarker.AlignedDimension)
-                            dimInfo = true;
+                        if (dxfPairInfo.Value == SubclassMarker.AlignedDimension ||
+                            dxfPairInfo.Value == SubclassMarker.RadialDimension ||
+                            dxfPairInfo.Value == SubclassMarker.DiametricDimension ||
+                            dxfPairInfo.Value == SubclassMarker.Angular3PointDimension ||
+                            dxfPairInfo.Value == SubclassMarker.Angular2LineDimension ||
+                            dxfPairInfo.Value == SubclassMarker.OrdinateDimension)
+                            dimInfo = true; // we have finished reading the basic dimension info
                         dxfPairInfo = this.ReadCodePair();
                         break;
                     default:
@@ -1542,11 +1560,45 @@ namespace netDxf
                 }
             }
 
-            Dimension dim = null;
-            if ((type & DimensionType.Aligned) == DimensionType.Aligned)
+            Dimension dim;
+            OrdinateDimensionAxis axis = OrdinateDimensionAxis.X;
+            // this is the result of the way the dxf use the DimensionTypeFlag enum, it is a mixture of a regular enum with flags
+            DimensionTypeFlag type = dimType;
+            if ((type & DimensionTypeFlag.BlockReference) == DimensionTypeFlag.BlockReference)
+                type -= DimensionTypeFlag.BlockReference;
+            if ((type & DimensionTypeFlag.OrdinteType) == DimensionTypeFlag.OrdinteType)
             {
-                dim = ReadAlignedDimension();
-                ((AlignedDimension) dim).Offset = Vector3.Distance(((AlignedDimension) dim).SecondReferencePoint, defPoint);
+                axis = OrdinateDimensionAxis.X;
+                type -= DimensionTypeFlag.OrdinteType;
+            }
+            if ((type & DimensionTypeFlag.UserTextPosition) == DimensionTypeFlag.UserTextPosition)
+                type -= DimensionTypeFlag.UserTextPosition;
+
+            switch (type)
+            {
+                case (DimensionTypeFlag.Aligned):
+                    dim = ReadAlignedDimension(defPoint);
+                    break;
+                case (DimensionTypeFlag.Linear):
+                    dim = ReadLinearDimension(defPoint);
+                    break;
+                case (DimensionTypeFlag.Radius):
+                    dim = ReadRadialDimension(defPoint, normal);
+                    break;
+                case (DimensionTypeFlag.Diameter):
+                    dim = ReadDiametricDimension(defPoint, normal);
+                    break;
+                case (DimensionTypeFlag.Angular3Point):
+                    dim = ReadAngular3PointDimension(defPoint);
+                    break;
+                case (DimensionTypeFlag.Angular):
+                    dim = ReadAngular2LineDimension(defPoint);
+                    break;
+                case (DimensionTypeFlag.Ordinate):
+                    dim = ReadOrdinateDimension(defPoint, axis, normal, dimRot);
+                    break;
+                default:
+                    throw new ArgumentException("The dimension type: " + type + " is not implemented or unknown.");
             }
 
             if (dim != null)
@@ -1555,6 +1607,7 @@ namespace netDxf
                 dim.Layer = layer;
                 dim.Color = color;
                 dim.LineType = lineType;
+                dim.Style = style;
                 dim.Block = drawingBlock;
                 dim.DefinitionPoint = defPoint;
                 dim.MidTextPoint = midtxtPoint;
@@ -1567,26 +1620,26 @@ namespace netDxf
             return dim;
         }
 
-        private AlignedDimension ReadAlignedDimension()
+        private AlignedDimension ReadAlignedDimension(Vector3 defPoint)
         {
-            Vector3 firtRef = Vector3.Zero;
+            Vector3 firstRef = Vector3.Zero;
             Vector3 secondRef = Vector3.Zero;
             Dictionary<ApplicationRegistry, XData> xData = new Dictionary<ApplicationRegistry, XData>();
 
-             while (dxfPairInfo.Code != 0)
-             {
-                 switch (dxfPairInfo.Code)
-                 {
-                     case 13:
-                         firtRef.X = double.Parse(dxfPairInfo.Value);
+            while (dxfPairInfo.Code != 0)
+            {
+                switch (dxfPairInfo.Code)
+                {
+                    case 13:
+                        firstRef.X = double.Parse(dxfPairInfo.Value);
                         dxfPairInfo = this.ReadCodePair();
                         break;
                     case 23:
-                        firtRef.Y = double.Parse(dxfPairInfo.Value);
+                        firstRef.Y = double.Parse(dxfPairInfo.Value);
                         dxfPairInfo = this.ReadCodePair();
                         break;
                     case 33:
-                        firtRef.Z = double.Parse(dxfPairInfo.Value);
+                        firstRef.Z = double.Parse(dxfPairInfo.Value);
                         dxfPairInfo = this.ReadCodePair();
                         break;
                     case 14:
@@ -1611,10 +1664,374 @@ namespace netDxf
                                                                          "The extended data of an entity must start with the application registry code " + this.fileLine);
                         dxfPairInfo = this.ReadCodePair();
                         break;
-                 }
-             }
+                }
+            }
+            double offset = Vector3.Distance(secondRef, defPoint);
+            return new AlignedDimension(firstRef, secondRef, offset) {XData = xData};
+        }
 
-            return new AlignedDimension(firtRef, secondRef, 0.0) {XData = xData};
+        private LinearDimension ReadLinearDimension(Vector3 defPoint)
+        {
+            Vector3 firtRef = Vector3.Zero;
+            Vector3 secondRef = Vector3.Zero;
+            double rot = 0.0;
+            Dictionary<ApplicationRegistry, XData> xData = new Dictionary<ApplicationRegistry, XData>();
+
+            while (dxfPairInfo.Code != 0)
+            {
+                switch (dxfPairInfo.Code)
+                {
+                    case 13:
+                        firtRef.X = double.Parse(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 23:
+                        firtRef.Y = double.Parse(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 33:
+                        firtRef.Z = double.Parse(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 14:
+                        secondRef.X = double.Parse(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 24:
+                        secondRef.Y = double.Parse(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 34:
+                        secondRef.Z = double.Parse(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 50:
+                        rot = double.Parse(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 52:
+                        // AutoCAD is unable to recognized code 52 for oblique dimension line even though it appears as valid in the dxf documentation
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 1001:
+                        XData xDataItem = this.ReadXDataRecord(dxfPairInfo.Value);
+                        xData.Add(xDataItem.ApplicationRegistry, xDataItem);
+                        break;
+                    default:
+                        if (dxfPairInfo.Code >= 1000 && dxfPairInfo.Code <= 1071)
+                            throw new DxfInvalidCodeValueEntityException(dxfPairInfo.Code, dxfPairInfo.Value, this.file,
+                                                                         "The extended data of an entity must start with the application registry code " + this.fileLine);
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                }
+            }
+
+            Vector3 midPoint = Vector3.MidPoint(firtRef, secondRef);
+            Vector3 origin = defPoint;
+            Vector3 dir = new Vector3(Math.Cos(rot*MathHelper.DegToRad), Math.Sin(rot*MathHelper.DegToRad), 0.0);
+            dir.Normalize();
+            double offset = MathHelper.PointLineDistance(midPoint, origin, dir);
+
+            return new LinearDimension(firtRef, secondRef, offset, rot) {XData = xData};
+        }
+
+        private RadialDimension ReadRadialDimension(Vector3 defPoint, Vector3 normal)
+        {
+            Vector3 circunferenceRef = Vector3.Zero;
+            Dictionary<ApplicationRegistry, XData> xData = new Dictionary<ApplicationRegistry, XData>();
+
+            while (dxfPairInfo.Code != 0)
+            {
+                switch (dxfPairInfo.Code)
+                {
+                    case 15:
+                        circunferenceRef.X = double.Parse(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 25:
+                        circunferenceRef.Y = double.Parse(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 35:
+                        circunferenceRef.Z = double.Parse(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 40:
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 1001:
+                        XData xDataItem = this.ReadXDataRecord(dxfPairInfo.Value);
+                        xData.Add(xDataItem.ApplicationRegistry, xDataItem);
+                        break;
+                    default:
+                        if (dxfPairInfo.Code >= 1000 && dxfPairInfo.Code <= 1071)
+                            throw new DxfInvalidCodeValueEntityException(dxfPairInfo.Code, dxfPairInfo.Value, this.file,
+                                                                         "The extended data of an entity must start with the application registry code " + this.fileLine);
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                }
+            }
+
+            double radius = Vector3.Distance(defPoint, circunferenceRef);
+            Vector3 refPoint = MathHelper.Transform(defPoint, normal, MathHelper.CoordinateSystem.World, MathHelper.CoordinateSystem.Object);
+            Vector2 firstPoint = new Vector2(refPoint.X, refPoint.Y);
+
+            refPoint = MathHelper.Transform(circunferenceRef, normal, MathHelper.CoordinateSystem.World, MathHelper.CoordinateSystem.Object);
+            Vector2 seconPoint = new Vector2(refPoint.X, refPoint.Y);
+
+            double rotation = Math.Round(Vector2.Angle(firstPoint, seconPoint) * MathHelper.RadToDeg, MathHelper.MaxAngleDecimals);
+            return new RadialDimension(defPoint, radius, rotation ) { XData = xData };
+        }
+
+        private DiametricDimension ReadDiametricDimension(Vector3 defPoint, Vector3 normal)
+        {
+            Vector3 circunferenceRef = Vector3.Zero;
+            Dictionary<ApplicationRegistry, XData> xData = new Dictionary<ApplicationRegistry, XData>();
+
+            while (dxfPairInfo.Code != 0)
+            {
+                switch (dxfPairInfo.Code)
+                {
+                    case 15:
+                        circunferenceRef.X = double.Parse(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 25:
+                        circunferenceRef.Y = double.Parse(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 35:
+                        circunferenceRef.Z = double.Parse(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 40:
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 1001:
+                        XData xDataItem = this.ReadXDataRecord(dxfPairInfo.Value);
+                        xData.Add(xDataItem.ApplicationRegistry, xDataItem);
+                        break;
+                    default:
+                        if (dxfPairInfo.Code >= 1000 && dxfPairInfo.Code <= 1071)
+                            throw new DxfInvalidCodeValueEntityException(dxfPairInfo.Code, dxfPairInfo.Value, this.file,
+                                                                         "The extended data of an entity must start with the application registry code " + this.fileLine);
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                }
+            }
+
+            double diameter = Vector3.Distance(defPoint, circunferenceRef);
+            Vector3 refPoint = MathHelper.Transform(defPoint, normal, MathHelper.CoordinateSystem.World, MathHelper.CoordinateSystem.Object);
+            Vector2 firstPoint = new Vector2(refPoint.X, refPoint.Y);
+
+            refPoint = MathHelper.Transform(circunferenceRef, normal, MathHelper.CoordinateSystem.World, MathHelper.CoordinateSystem.Object);
+            Vector2 seconPoint = new Vector2(refPoint.X, refPoint.Y);
+
+            double rotation = Math.Round(Vector2.Angle(firstPoint, seconPoint) * MathHelper.RadToDeg, MathHelper.MaxAngleDecimals);
+            return new DiametricDimension(Vector3.MidPoint(defPoint, circunferenceRef), diameter, rotation) { XData = xData };
+        }
+
+        private Angular3PointDimension ReadAngular3PointDimension(Vector3 defPoint)
+        {
+            Vector3 center = Vector3.Zero;
+            Vector3 firstRef = Vector3.Zero;
+            Vector3 secondRef = Vector3.Zero;
+
+            Dictionary<ApplicationRegistry, XData> xData = new Dictionary<ApplicationRegistry, XData>();
+
+            while (dxfPairInfo.Code != 0)
+            {
+                switch (dxfPairInfo.Code)
+                {
+                    case 13:
+                        firstRef.X = double.Parse(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 23:
+                        firstRef.Y = double.Parse(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 33:
+                        firstRef.Z = double.Parse(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 14:
+                        secondRef.X = double.Parse(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 24:
+                        secondRef.Y = double.Parse(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 34:
+                        secondRef.Z = double.Parse(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 15:
+                        center.X = double.Parse(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 25:
+                        center.Y = double.Parse(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 35:
+                        center.Z = double.Parse(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 1001:
+                        XData xDataItem = this.ReadXDataRecord(dxfPairInfo.Value);
+                        xData.Add(xDataItem.ApplicationRegistry, xDataItem);
+                        break;
+                    default:
+                        if (dxfPairInfo.Code >= 1000 && dxfPairInfo.Code <= 1071)
+                            throw new DxfInvalidCodeValueEntityException(dxfPairInfo.Code, dxfPairInfo.Value, this.file,
+                                                                         "The extended data of an entity must start with the application registry code " + this.fileLine);
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                }
+            }
+
+            return new Angular3PointDimension(center, firstRef, secondRef, Vector3.Distance(center, defPoint));
+
+        }
+
+        private Angular2LineDimension ReadAngular2LineDimension(Vector3 defPoint)
+        {
+            
+            Vector3 startFirstLine = Vector3.Zero;
+            Vector3 endFirstLine = Vector3.Zero;
+            Vector3 startSecondLine = Vector3.Zero;
+            Vector3 arcDefinitionPoint = Vector3.Zero;
+
+            Dictionary<ApplicationRegistry, XData> xData = new Dictionary<ApplicationRegistry, XData>();
+
+            while (dxfPairInfo.Code != 0)
+            {
+                switch (dxfPairInfo.Code)
+                {
+                    case 13:
+                        startFirstLine.X = double.Parse(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 23:
+                        startFirstLine.Y = double.Parse(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 33:
+                        startFirstLine.Z = double.Parse(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 14:
+                        endFirstLine.X = double.Parse(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 24:
+                        endFirstLine.Y = double.Parse(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 34:
+                        endFirstLine.Z = double.Parse(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 15:
+                        startSecondLine.X = double.Parse(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 25:
+                        startSecondLine.Y = double.Parse(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 35:
+                        startSecondLine.Z = double.Parse(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 16:
+                        arcDefinitionPoint.X = double.Parse(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 26:
+                        arcDefinitionPoint.Y = double.Parse(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 36:
+                        arcDefinitionPoint.Z = double.Parse(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 1001:
+                        XData xDataItem = this.ReadXDataRecord(dxfPairInfo.Value);
+                        xData.Add(xDataItem.ApplicationRegistry, xDataItem);
+                        break;
+                    default:
+                        if (dxfPairInfo.Code >= 1000 && dxfPairInfo.Code <= 1071)
+                            throw new DxfInvalidCodeValueEntityException(dxfPairInfo.Code, dxfPairInfo.Value, this.file,
+                                                                         "The extended data of an entity must start with the application registry code " + this.fileLine);
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                }
+            }
+            return new Angular2LineDimension(startFirstLine, endFirstLine, startSecondLine, defPoint, Vector3.Distance(startSecondLine, defPoint)) { ArcDefinitionPoint = arcDefinitionPoint };
+        }
+
+        private OrdinateDimension ReadOrdinateDimension(Vector3 defPoint, OrdinateDimensionAxis axis, Vector3 normal, double rotation)
+        {
+            Vector3 firstPoint = Vector3.Zero;
+            Vector3 secondPoint = Vector3.Zero;
+
+            Dictionary<ApplicationRegistry, XData> xData = new Dictionary<ApplicationRegistry, XData>();
+
+            while (dxfPairInfo.Code != 0)
+            {
+                switch (dxfPairInfo.Code)
+                {
+                    case 13:
+                        firstPoint.X = double.Parse(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 23:
+                        firstPoint.Y = double.Parse(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 33:
+                        firstPoint.Z = double.Parse(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 14:
+                        secondPoint.X = double.Parse(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 24:
+                        secondPoint.Y = double.Parse(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 34:
+                        secondPoint.Z = double.Parse(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 1001:
+                        XData xDataItem = this.ReadXDataRecord(dxfPairInfo.Value);
+                        xData.Add(xDataItem.ApplicationRegistry, xDataItem);
+                        break;
+                    default:
+                        if (dxfPairInfo.Code >= 1000 && dxfPairInfo.Code <= 1071)
+                            throw new DxfInvalidCodeValueEntityException(dxfPairInfo.Code, dxfPairInfo.Value, this.file,
+                                                                         "The extended data of an entity must start with the application registry code " + this.fileLine);
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                }
+            }
+            Vector3 localPoint = MathHelper.Transform(defPoint, normal, MathHelper.CoordinateSystem.World, MathHelper.CoordinateSystem.Object);
+            Vector2 refCenter = new Vector2(localPoint.X, localPoint.Y);
+
+            localPoint = MathHelper.Transform(firstPoint, normal, MathHelper.CoordinateSystem.World, MathHelper.CoordinateSystem.Object);
+            Vector2 firstRef = MathHelper.Transform(new Vector2(localPoint.X, localPoint.Y) - refCenter, rotation * MathHelper.DegToRad, MathHelper.CoordinateSystem.World, MathHelper.CoordinateSystem.Object);
+
+            localPoint = MathHelper.Transform(secondPoint, normal, MathHelper.CoordinateSystem.World, MathHelper.CoordinateSystem.Object);
+            Vector2 secondRef = MathHelper.Transform(new Vector2(localPoint.X, localPoint.Y) - refCenter, rotation * MathHelper.DegToRad, MathHelper.CoordinateSystem.World, MathHelper.CoordinateSystem.Object);
+
+            double length = axis == OrdinateDimensionAxis.X ? secondRef.Y - firstRef.Y : secondRef.X - firstRef.X;
+
+            return new OrdinateDimension(defPoint, firstRef, length, rotation, axis);
         }
 
         private Ellipse ReadEllipse()
@@ -1711,13 +2128,13 @@ namespace netDxf
             }
 
             Vector3 ocsAxisPoint = MathHelper.Transform(axisPoint,
-                                                         normal,
-                                                         MathHelper.CoordinateSystem.World,
-                                                         MathHelper.CoordinateSystem.Object);
+                                                        normal,
+                                                        MathHelper.CoordinateSystem.World,
+                                                        MathHelper.CoordinateSystem.Object);
             double rotation = Vector2.Angle(new Vector2(ocsAxisPoint.X, ocsAxisPoint.Y));
             ellipse.MajorAxis = 2*axisPoint.Modulus();
             ellipse.MinorAxis = ellipse.MajorAxis*ratio;
-            ellipse.Rotation = Math.Round(rotation * MathHelper.RadToDeg, MathHelper.MaxAngleDecimals);
+            ellipse.Rotation = Math.Round(rotation*MathHelper.RadToDeg, MathHelper.MaxAngleDecimals);
             ellipse.Center = center;
             ellipse.Normal = normal;
             ellipse.XData = xData;
@@ -2268,7 +2685,6 @@ namespace netDxf
         private LwPolyline ReadLightWeightPolyline()
         {
             LwPolyline pol = new LwPolyline();
-            //int numVertexes;
             double constantWidth = 0.0;
             LwPolylineVertex v = new LwPolylineVertex();
             double vX = 0.0;
@@ -2307,11 +2723,13 @@ namespace netDxf
                         dxfPairInfo = this.ReadCodePair();
                         break;
                     case 43:
+                        // constant width (optional; default = 0). Not used if variable width (codes 40 and/or 41) is set
                         constantWidth = double.Parse(dxfPairInfo.Value);
                         dxfPairInfo = this.ReadCodePair();
                         break;
                     case 70:
-                        pol.IsClosed = int.Parse(dxfPairInfo.Value) != 0;
+                        PolylineTypeFlags flags = (PolylineTypeFlags) int.Parse(dxfPairInfo.Value);
+                        pol.IsClosed = (flags & PolylineTypeFlags.ClosedPolylineOrClosedPolygonMeshInM) == PolylineTypeFlags.ClosedPolylineOrClosedPolygonMeshInM;
                         dxfPairInfo = this.ReadCodePair();
                         break;
                     case 90:
@@ -2395,8 +2813,6 @@ namespace netDxf
 
             List<Vertex> vertexes = new List<Vertex>();
             Dictionary<ApplicationRegistry, XData> xData = new Dictionary<ApplicationRegistry, XData>();
-            //int numVertexes = -1;
-            //int numFaces = -1;
 
             dxfPairInfo = this.ReadCodePair();
 
@@ -2506,12 +2922,7 @@ namespace netDxf
             }
 
             IEntityObject pol;
-            bool isClosed = false;
-
-            if ((flags & PolylineTypeFlags.ClosedPolylineOrClosedPolygonMeshInM) == PolylineTypeFlags.ClosedPolylineOrClosedPolygonMeshInM)
-            {
-                isClosed = true;
-            }
+            bool isClosed = (flags & PolylineTypeFlags.ClosedPolylineOrClosedPolygonMeshInM) == PolylineTypeFlags.ClosedPolylineOrClosedPolygonMeshInM;
 
             //to avoid possible error between the vertex type and the polyline type
             //the polyline type will decide which information to use from the read vertex
@@ -2521,14 +2932,14 @@ namespace netDxf
                 foreach (Vertex v in vertexes)
                 {
                     PolylineVertex vertex = new PolylineVertex
-                                                  {
-                                                      Color = v.Color,
-                                                      Layer = v.Layer,
-                                                      LineType = v.LineType,
-                                                      Location = v.Location,
-                                                      Handle = v.Handle,
-                                                      XData = v.XData
-                                                  };
+                                                {
+                                                    Color = v.Color,
+                                                    Layer = v.Layer,
+                                                    LineType = v.LineType,
+                                                    Location = v.Location,
+                                                    Handle = v.Handle,
+                                                    XData = v.XData
+                                                };
                     polyline3dVertexes.Add(vertex);
                 }
 
@@ -2586,12 +2997,12 @@ namespace netDxf
                 foreach (Vertex v in vertexes)
                 {
                     LwPolylineVertex vertex = new LwPolylineVertex
-                                                {
-                                                    Location = new Vector2(v.Location.X, v.Location.Y),
-                                                    BeginWidth = v.BeginThickness,
-                                                    Bulge = v.Bulge,
-                                                    EndWidth = v.EndThickness,
-                                                };
+                                                  {
+                                                      Location = new Vector2(v.Location.X, v.Location.Y),
+                                                      BeginWidth = v.BeginThickness,
+                                                      Bulge = v.Bulge,
+                                                      EndWidth = v.EndThickness,
+                                                  };
 
                     polylineVertexes.Add(vertex);
                 }
@@ -2806,7 +3217,8 @@ namespace netDxf
                         dxfPairInfo = this.ReadCodePair();
                         break;
                     case 31:
-                        //direction.Z = double.Parse(dxfPairInfo.Value);
+                        // Z direction value (direction.Z = double.Parse(dxfPairInfo.Value);)
+                        // we will alway defined the angle of the text on the plane where it is defined so Z value will be zero.
                         dxfPairInfo = this.ReadCodePair();
                         break;
                     case 40:
@@ -2860,22 +3272,22 @@ namespace netDxf
                 }
             }
 
-            MText mText= new MText(text, insertionPoint, height, rectangleWidth, style);
-            mText.Handle = handle;
-            mText.Layer = layer;
-            mText.Color = color;
-            mText.LineType = lineType;
-            mText.LineSpacingFactor = lineSpacing;
-            mText.AttachmentPoint = attachmentPoint;
-            mText.Rotation = isRotationDefined
-                                 ? rotation
-                                 : Math.Round(Vector2.Angle(direction) * MathHelper.RadToDeg, MathHelper.MaxAngleDecimals);
+            return new MText(text, insertionPoint, height, rectangleWidth, style)
+                              {
+                                  Handle = handle,
+                                  Layer = layer,
+                                  Color = color,
+                                  LineType = lineType,
+                                  LineSpacingFactor = lineSpacing,
+                                  AttachmentPoint = attachmentPoint,
+                                  Rotation = isRotationDefined
+                                                 ? rotation
+                                                 : Math.Round(Vector2.Angle(direction)*MathHelper.RadToDeg, MathHelper.MaxAngleDecimals),
+                                  Normal = normal,
+                                  XData = xData
+                              };
 
-            mText.Normal = normal;
-            mText.XData = xData;
 
-
-            return mText;
         }
 
         private Hatch ReadHatch()
@@ -2885,7 +3297,7 @@ namespace netDxf
             Layer layer = Layer.Default;
             AciColor color = AciColor.ByLayer;
             LineType lineType = LineType.ByLayer;
-            FillFlag fill = FillFlag.SolidFill;
+            FillType fill = FillType.SolidFill;
             double elevation = 0.0;
             Vector3 normal = Vector3.UnitZ;
             HatchPattern pattern = HatchPattern.Line;
@@ -2941,7 +3353,7 @@ namespace netDxf
                         break;
                     case 70:
                         // Solid fill flag
-                        fill = (FillFlag) int.Parse(dxfPairInfo.Value);
+                        fill = (FillType) int.Parse(dxfPairInfo.Value);
                         dxfPairInfo = this.ReadCodePair();
                         break;
                     case 71:
@@ -2950,7 +3362,8 @@ namespace netDxf
                         break;
                     case 75:
                         // the next lines hold the information about the hatch pattern
-                        pattern = fill == FillFlag.SolidFill ? HatchPattern.Solid : ReadHatchPattern(name);
+                        pattern = ReadHatchPattern(name);
+                        pattern.Fill = fill; // just in case, as far as I know only the pattern name "SOLID" has pattern fill = 1, the rest of patterns have pattern fill = 0 
                         break;
                     case 1001:
                         XData xDataItem = this.ReadXDataRecord(dxfPairInfo.Value);
@@ -3058,9 +3471,8 @@ namespace netDxf
             }
 
             LwPolyline polyline = new LwPolyline(vertexes, isClosed);
-            List<IEntityObject> entities = isClosed ? new List<IEntityObject> { polyline } : polyline.Explode();
+            List<IEntityObject> entities = isClosed ? new List<IEntityObject> {polyline} : polyline.Explode();
             return new HatchBoundaryPath(entities);
-
         }
 
         private HatchBoundaryPath ReadEdgeBoundaryPath(int numEdges)
@@ -3068,7 +3480,7 @@ namespace netDxf
             List<IEntityObject> entities = new List<IEntityObject>();
             dxfPairInfo = this.ReadCodePair();
 
-            while(entities.Count<numEdges)
+            while (entities.Count < numEdges)
             {
                 switch (int.Parse(dxfPairInfo.Value))
                 {
@@ -3083,16 +3495,16 @@ namespace netDxf
                         if (dxfPairInfo.Code == 11) lX2 = double.Parse(dxfPairInfo.Value);
                         dxfPairInfo = this.ReadCodePair();
                         if (dxfPairInfo.Code == 21) lY2 = double.Parse(dxfPairInfo.Value);
-                        
+
                         entities.Add(new Line(new Vector3(lX1, lY1, 0.0), new Vector3(lX2, lY2, 0.0)));
 
-                        dxfPairInfo = this.ReadCodePair();  
+                        dxfPairInfo = this.ReadCodePair();
                         break;
                     case 2:
                         dxfPairInfo = this.ReadCodePair();
                         // circular arc
                         double aX = 0.0, aY = 0.0, aR = 0.0, aStart = 0.0, aEnd = 0.0;
-                        bool aCCW = true; 
+                        bool aCCW = true;
                         if (dxfPairInfo.Code == 10) aX = double.Parse(dxfPairInfo.Value);
                         dxfPairInfo = this.ReadCodePair();
                         if (dxfPairInfo.Code == 20) aY = double.Parse(dxfPairInfo.Value);
@@ -3107,8 +3519,8 @@ namespace netDxf
 
                         // a full circle will never happen AutoCAD exports circle boundary paths as two vertex polylines with bulges of 1 and -1
                         entities.Add(aCCW
-                                        ? new Arc(new Vector3(aX, aY, 0.0), aR, aStart, aEnd)
-                                        : new Arc(new Vector3(aX, aY, 0.0), aR, 360 - aEnd, 360 - aStart));
+                                         ? new Arc(new Vector3(aX, aY, 0.0), aR, aStart, aEnd)
+                                         : new Arc(new Vector3(aX, aY, 0.0), aR, 360 - aEnd, 360 - aStart));
 
                         dxfPairInfo = this.ReadCodePair();
                         break;
@@ -3116,7 +3528,7 @@ namespace netDxf
                         dxfPairInfo = this.ReadCodePair();
                         // elliptic arc
                         double eX = 0.0, eY = 0.0, eAxisX = 0.0, eAxisY = 0.0, eAxisRatio = 0.0, eStart = 0.0, eEnd = 0.0;
-                        bool eCCW = true; 
+                        bool eCCW = true;
                         if (dxfPairInfo.Code == 10) eX = double.Parse(dxfPairInfo.Value);
                         dxfPairInfo = this.ReadCodePair();
                         if (dxfPairInfo.Code == 20) eY = double.Parse(dxfPairInfo.Value);
@@ -3127,25 +3539,25 @@ namespace netDxf
                         dxfPairInfo = this.ReadCodePair();
                         if (dxfPairInfo.Code == 40) eAxisRatio = double.Parse(dxfPairInfo.Value);
                         dxfPairInfo = this.ReadCodePair();
-                         if (dxfPairInfo.Code == 50) eStart = double.Parse(dxfPairInfo.Value);
+                        if (dxfPairInfo.Code == 50) eStart = double.Parse(dxfPairInfo.Value);
                         dxfPairInfo = this.ReadCodePair();
-                         if (dxfPairInfo.Code == 51) eEnd = double.Parse(dxfPairInfo.Value);
+                        if (dxfPairInfo.Code == 51) eEnd = double.Parse(dxfPairInfo.Value);
                         dxfPairInfo = this.ReadCodePair();
                         if (dxfPairInfo.Code == 73) eCCW = int.Parse(dxfPairInfo.Value) != 0;
 
                         Vector3 center = new Vector3(eX, eY, 0.0);
                         Vector3 axisPoint = new Vector3(eAxisX, eAxisY, 0.0);
                         Vector3 ocsAxisPoint = MathHelper.Transform(axisPoint,
-                                                         Vector3.UnitZ,
-                                                         MathHelper.CoordinateSystem.World,
-                                                         MathHelper.CoordinateSystem.Object);
+                                                                    Vector3.UnitZ,
+                                                                    MathHelper.CoordinateSystem.World,
+                                                                    MathHelper.CoordinateSystem.Object);
                         double rotation = Vector2.Angle(new Vector2(ocsAxisPoint.X, ocsAxisPoint.Y));
-                        double majorAxis = 2 * axisPoint.Modulus();
+                        double majorAxis = 2*axisPoint.Modulus();
                         Ellipse ellipse = new Ellipse
                                               {
                                                   MajorAxis = majorAxis,
                                                   MinorAxis = majorAxis*eAxisRatio,
-                                                  Rotation = rotation * MathHelper.RadToDeg,
+                                                  Rotation = rotation*MathHelper.RadToDeg,
                                                   Center = center,
                                                   StartAngle = eCCW ? eStart : 360 - eEnd,
                                                   EndAngle = eCCW ? eEnd : 360 - eStart,
@@ -3159,10 +3571,9 @@ namespace netDxf
                         // spline not implemented
                         dxfPairInfo = this.ReadCodePair();
                         break;
-
                 }
             }
- 
+
             return new HatchBoundaryPath(entities);
         }
 
@@ -3173,6 +3584,7 @@ namespace netDxf
             double scale = 1.0;
             bool read = false;
             HatchType type = HatchType.UserDefined;
+            HatchStyle style = HatchStyle.Normal;
 
             while (!read)
             {
@@ -3187,11 +3599,11 @@ namespace netDxf
                         dxfPairInfo = this.ReadCodePair();
                         break;
                     case 75:
-                        // HatchStyle style = (HatchStyle) int.Parse(dxfPairInfo.Value);
+                        style = (HatchStyle) int.Parse(dxfPairInfo.Value);
                         dxfPairInfo = this.ReadCodePair();
                         break;
                     case 76:
-                        type = (HatchType)int.Parse(dxfPairInfo.Value);
+                        type = (HatchType) int.Parse(dxfPairInfo.Value);
                         dxfPairInfo = this.ReadCodePair();
                         break;
                     case 77:
@@ -3205,13 +3617,15 @@ namespace netDxf
                         read = true;
                         break;
                     default:
-                        // the way the information is written is quite strict, a none recognize code and the hatch reading is over.
+                        // the way the information is written is quite strict, a none recognized code and the hatch reading is over
+                        // there are more codes associated with a hatch pattern but only these ones are recognized
                         read = true;
                         dxfPairInfo = this.ReadCodePair();
                         break;
                 }
             }
 
+            hatch.Style = style;
             hatch.Scale = scale;
             hatch.Angle = angle;
             hatch.Type = type;
@@ -3256,9 +3670,9 @@ namespace netDxf
                 // what it means is that we need to apply the scale and rotation of the hatch to the pattern definiton lines, it's a guess the documentation is kind of obscure.
                 // What seems to work is to read the data in global coordinates and then convert it in local, this means we have to apply the pattern rotation and scale to the line definitions
                 double lineAngle = angle - hatchAngle;
-                double sin = Math.Sin(hatchAngle * MathHelper.DegToRad);
-                double cos = Math.Cos(hatchAngle * MathHelper.DegToRad);
-                Vector2 delta = new Vector2(cos * offset.X / hatchScale + sin * offset.Y / hatchScale, -sin * offset.X / hatchScale + cos * offset.Y / hatchScale);
+                double sin = Math.Sin(hatchAngle*MathHelper.DegToRad);
+                double cos = Math.Cos(hatchAngle*MathHelper.DegToRad);
+                Vector2 delta = new Vector2(cos*offset.X/hatchScale + sin*offset.Y/hatchScale, -sin*offset.X/hatchScale + cos*offset.Y/hatchScale);
 
                 lineDefinitions.Add(new HatchPatternLineDefinition
                                         {
@@ -3281,8 +3695,8 @@ namespace netDxf
             {
                 // Positive values means solid segments and negative values means spaces (one entry per element)
                 if (dxfPairInfo.Code == 49)
-                    dashPattern.Add(double.Parse(dxfPairInfo.Value) / scale);
-                
+                    dashPattern.Add(double.Parse(dxfPairInfo.Value)/scale);
+
                 dxfPairInfo = this.ReadCodePair();
             }
             return dashPattern;
@@ -3375,8 +3789,8 @@ namespace netDxf
                     default:
                         if (dxfPairInfo.Code >= 1000 && dxfPairInfo.Code <= 1071)
                             throw new DxfInvalidCodeValueEntityException(dxfPairInfo.Code, dxfPairInfo.Value, this.file,
-                                "The extended data of an entity must start with the application registry code " 
-                                + this.fileLine);
+                                                                         "The extended data of an entity must start with the application registry code "
+                                                                         + this.fileLine);
 
                         dxfPairInfo = this.ReadCodePair();
                         break;
@@ -3397,7 +3811,6 @@ namespace netDxf
                            XData = xData,
                            Handle = handle
                        };
-           
         }
 
         private void ReadUnknowEntity()
@@ -3513,7 +3926,20 @@ namespace netDxf
                     return style;
             }
 
-            throw new DxfTableException(StringCode.TextStyleTable, this.file, "The text style with handle " + handle + " does not exist.");    
+            throw new DxfTableException(StringCode.TextStyleTable, this.file, "The text style with handle " + handle + " does not exist.");
+        }
+
+        private DimensionStyle GetDimensionStyle(string name)
+        {
+            if (this.dimStyles.ContainsKey(name))
+            {
+                return this.dimStyles[name];
+            }
+
+            //just in case the text style has not been defined in the table section
+            DimensionStyle style = new DimensionStyle(name);
+            this.dimStyles.Add(style.Name, style);
+            return style;
         }
 
         private CodeValuePair ReadCodePair()

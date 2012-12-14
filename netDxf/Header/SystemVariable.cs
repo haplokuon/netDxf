@@ -33,7 +33,7 @@ namespace netDxf.Header
         public const string DatabaseVersion = "$ACADVER";
 
         /// <summary>
-        /// Next available handle (this variable must be present in the header section)
+        /// Next available handle (this variable must be present in the header section).
         /// </summary>
         public const string HandSeed = "$HANDSEED";
     }

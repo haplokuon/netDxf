@@ -31,8 +31,8 @@ namespace netDxf
     {
         #region protected fields
 
-        protected readonly string codeName;
-        protected string handle;
+        private readonly string codeName;
+        private string handle;
 
         #endregion
 
