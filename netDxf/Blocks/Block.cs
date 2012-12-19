@@ -36,7 +36,7 @@ namespace netDxf.Blocks
     {
         #region private fields
 
-        private readonly BlockRecord record;
+        private BlockRecord record;
         private readonly BlockEnd end;
         private readonly string name;
         private BlockTypeFlags typeFlags;
@@ -59,6 +59,10 @@ namespace netDxf.Blocks
             get { return new Block("*Paper_Space"); }
         }
 
+        internal static Block PaperSpace0
+        {
+            get { return new Block("*Paper_Space0"); }
+        }
         #endregion
 
         #region constructors
@@ -148,6 +152,7 @@ namespace netDxf.Blocks
         internal BlockRecord Record
         {
             get { return this.record; }
+            set { this.record = value; }
         }
 
         internal BlockEnd End

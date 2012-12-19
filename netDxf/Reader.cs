@@ -71,6 +71,7 @@ namespace netDxf
 
         //tables
         private Dictionary<string, ApplicationRegistry> appIds;
+        private Dictionary<string, BlockRecord> blockRecords;
         private Dictionary<string, Layer> layers;
         private Dictionary<string, LineType> lineTypes;
         private Dictionary<string, TextStyle> textStyles;
@@ -78,6 +79,8 @@ namespace netDxf
 
         //blocks
         private Dictionary<string, Block> blocks;
+        // keeps track of the dimension blocks generated
+        private int dimCount;
 
         #endregion
 
@@ -100,6 +103,11 @@ namespace netDxf
         public List<string> Comments
         {
             get { return this.comments; }
+        }
+
+        public int DimBlockCount
+        {
+            get { return this.dimCount; }
         }
 
         #endregion
@@ -261,6 +269,7 @@ namespace netDxf
         {
             this.comments = new List<string>();
             this.appIds = new Dictionary<string, ApplicationRegistry>();
+            this.blockRecords = new Dictionary<string, BlockRecord>();
             this.layers = new Dictionary<string, Layer>();
             this.lineTypes = new Dictionary<string, LineType>();
             this.textStyles = new Dictionary<string, TextStyle>();
@@ -370,6 +379,10 @@ namespace netDxf
                         Debug.Assert(dxfPairInfo.Code == 2);
                         this.ReadApplicationsId();
                         break;
+                    case StringCode.BlockRecordTable:
+                        Debug.Assert(dxfPairInfo.Code == 2);
+                        this.ReadBlockRecords();
+                        break;
                     case StringCode.LayerTable:
                         Debug.Assert(dxfPairInfo.Code == 2);
                         this.ReadLayers();
@@ -459,9 +472,11 @@ namespace netDxf
 
         private Block ReadBlock()
         {
+            BlockRecord blockRecord = null;
             Layer layer = null;
             string name = string.Empty;
             string handle = string.Empty;
+            BlockTypeFlags type = BlockTypeFlags.None;
             Vector3 basePoint = Vector3.Zero;
             List<IEntityObject> entities = new List<IEntityObject>();
             Dictionary<string, AttributeDefinition> attdefs = new Dictionary<string, AttributeDefinition>();
@@ -481,6 +496,12 @@ namespace netDxf
                         break;
                     case 2:
                         name = dxfPairInfo.Value;
+                        if (!this.blockRecords.TryGetValue(name, out blockRecord))
+                            throw new ClosedDxfTableException(StringCode.BlockRecordTable, "The block record " + name + " is not defined");
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 70:
+                        type = (BlockTypeFlags) int.Parse(dxfPairInfo.Value);
                         dxfPairInfo = this.ReadCodePair();
                         break;
                     case 10:
@@ -536,11 +557,13 @@ namespace netDxf
             }
             Block block = new Block(name)
                               {
+                                  Record = blockRecord,
                                   BasePoint = basePoint,
                                   Layer = layer,
                                   Entities = entities,
                                   Attributes = attdefs,
                                   Handle = handle,
+                                  TypeFlags = type
                               };
             block.End.Handle = endBlockHandle;
             block.End.Layer = endBlockLayer;
@@ -579,7 +602,7 @@ namespace netDxf
                     entity = this.ReadLine();
                     break;
                 case DxfObjectCode.LightWeightPolyline:
-                    entity = this.ReadLightWeightPolyline();
+                    entity = this.ReadLwPolyline();
                     break;
                 case DxfObjectCode.MText:
                     entity = this.ReadMText();
@@ -822,7 +845,7 @@ namespace netDxf
                         this.lines.Add((Line) entity);
                         break;
                     case DxfObjectCode.LightWeightPolyline:
-                        entity = this.ReadLightWeightPolyline();
+                        entity = this.ReadLwPolyline();
                         this.lightWeightPolylines.Add((LwPolyline) entity);
                         break;
                     case DxfObjectCode.Polyline:
@@ -864,6 +887,60 @@ namespace netDxf
 
         #endregion
 
+        #region blockrecord methods
+
+        private void ReadBlockRecords()
+        {
+            dxfPairInfo = this.ReadCodePair();
+            while (dxfPairInfo.Value != StringCode.EndTable)
+            {
+                if (dxfPairInfo.Value == StringCode.BlockRecordTable)
+                {
+                    Debug.Assert(dxfPairInfo.Code == 0);
+                    BlockRecord blockRecord = this.ReadBlockRecord();
+                    this.blockRecords.Add(blockRecord.Name, blockRecord);
+                }
+                else
+                {
+                    dxfPairInfo = this.ReadCodePair();
+                }
+            }
+        }
+
+        private BlockRecord ReadBlockRecord()
+        {
+            string handle = string.Empty;
+            string name = string.Empty;
+
+            dxfPairInfo = this.ReadCodePair();
+
+            while (dxfPairInfo.Code != 0)
+            {
+                switch (dxfPairInfo.Code)
+                {
+                    case 5:
+                        handle = dxfPairInfo.Value;
+                        break;
+                    case 2:
+                        if (string.IsNullOrEmpty(dxfPairInfo.Value))
+                            throw new DxfInvalidCodeValueEntityException(dxfPairInfo.Code, dxfPairInfo.Value, this.file,
+                                                                         "Invalid value " + dxfPairInfo.Value + " in code " + dxfPairInfo.Code + " line " + this.fileLine);
+                        name = dxfPairInfo.Value;
+                        break;
+                }
+
+
+                dxfPairInfo = this.ReadCodePair();
+            }
+
+            // we need to check for generated blocks by dimensions, even if the dimension was deleted the block might persist in the drawing.
+            CheckDimBlockName(name);
+
+            return new BlockRecord(name){Handle = handle};
+        }
+
+        #endregion
+
         #region layer methods
 
         private void ReadLayers()
@@ -889,6 +966,7 @@ namespace netDxf
             string handle = string.Empty;
             string name = string.Empty;
             bool isVisible = true;
+            bool plot = true;
             AciColor color = null;
             LineType lineType = null;
 
@@ -940,8 +1018,11 @@ namespace netDxf
                         }
                         lineType = this.GetLineType(dxfPairInfo.Value);
                         break;
+                    case 290:
+                        if(int.Parse(dxfPairInfo.Value)==0)
+                            plot = false;
+                        break;
                 }
-
 
                 dxfPairInfo = this.ReadCodePair();
             }
@@ -951,6 +1032,7 @@ namespace netDxf
                            Color = color,
                            LineType = lineType,
                            IsVisible = isVisible,
+                           Plot = plot,
                            Handle = handle
                        };
         }
@@ -1897,8 +1979,7 @@ namespace netDxf
         }
 
         private Angular2LineDimension ReadAngular2LineDimension(Vector3 defPoint)
-        {
-            
+        {      
             Vector3 startFirstLine = Vector3.Zero;
             Vector3 endFirstLine = Vector3.Zero;
             Vector3 startSecondLine = Vector3.Zero;
@@ -2682,7 +2763,7 @@ namespace netDxf
             return line;
         }
 
-        private LwPolyline ReadLightWeightPolyline()
+        private LwPolyline ReadLwPolyline()
         {
             LwPolyline pol = new LwPolyline();
             double constantWidth = 0.0;
@@ -2801,7 +2882,7 @@ namespace netDxf
             // polyline 3d is the generic polyline
             // polyface mesh
             // polylines 2d is the old way of writing polylines the AutoCAD2000 and newer always use LightweightPolylines to define a polyline 2d
-            // this way of reading polylines 2d is here for compatibility reasons with older dxf version.
+            // this way of reading polylines 2d is here for compatibility reasons with older dxf versions.
             string handle = string.Empty;
             Layer layer = Layer.Default;
             AciColor color = AciColor.ByLayer;
@@ -2897,7 +2978,7 @@ namespace netDxf
                 }
             }
 
-            // read the end end sequence object until a new element is found
+            // read the end sequence object until a new element is found
             if (dxfPairInfo.Value != StringCode.EndSequence)
                 throw new DxfEntityException(DxfObjectCode.Polyline, this.file, "End sequence entity not found in line " + this.fileLine);
             dxfPairInfo = this.ReadCodePair();
@@ -2933,9 +3014,6 @@ namespace netDxf
                 {
                     PolylineVertex vertex = new PolylineVertex
                                                 {
-                                                    Color = v.Color,
-                                                    Layer = v.Layer,
-                                                    LineType = v.LineType,
                                                     Location = v.Location,
                                                     Handle = v.Handle,
                                                     XData = v.XData
@@ -2961,9 +3039,6 @@ namespace netDxf
                     {
                         PolyfaceMeshVertex vertex = new PolyfaceMeshVertex
                                                         {
-                                                            Color = v.Color,
-                                                            Layer = v.Layer,
-                                                            LineType = v.LineType,
                                                             Location = v.Location,
                                                             Handle = v.Handle,
                                                             XData = xData
@@ -2974,9 +3049,6 @@ namespace netDxf
                     {
                         PolyfaceMeshFace vertex = new PolyfaceMeshFace
                                                       {
-                                                          Color = v.Color,
-                                                          Layer = v.Layer,
-                                                          LineType = v.LineType,
                                                           VertexIndexes = v.VertexIndexes,
                                                           Handle = v.Handle,
                                                           XData = xData
@@ -3826,6 +3898,17 @@ namespace netDxf
         #endregion
 
         #region private methods
+
+        private void CheckDimBlockName(string name)
+        {
+            // the autocad block names has the form *D#
+            // we need to find which is the last available number, in case more dimensions are added
+            int num;
+            string token = name.Remove(0, 2);
+            if (!int.TryParse(token, out num)) return;
+            if (num > this.dimCount)
+                this.dimCount = num;
+        }
 
         private static TextAlignment ObtainAlignment(int horizontal, int vertical)
         {

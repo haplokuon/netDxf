@@ -47,8 +47,13 @@ namespace netDxf
 
         private string fileName;
         private string version;
+        // keeps track of the number of handles generated
         private int handleCount;
-
+        // keeps track of the dimension blocks generated
+        private int dimCount;
+        // during the save process new handles are needed, this number should be enough
+        private const int ReservedHandles = 100;  
+        
         #endregion
 
         #region tables
@@ -65,7 +70,6 @@ namespace netDxf
         #region blocks
 
         private Dictionary<string, Block> blocks;
-
         #endregion
 
         #region entities
@@ -81,7 +85,7 @@ namespace netDxf
         private List<Line> lines;
         private List<Point> points;
         private List<PolyfaceMesh> polyfaceMeshes;
-        private List<LwPolyline> lightWeightPolylines;
+        private List<LwPolyline> lwPolylines;
         private List<Polyline> polylines;
         private List<Text> texts;
         private List<MText> mTexts;
@@ -102,6 +106,8 @@ namespace netDxf
         /// </summary>
         public DxfDocument()
         {
+            this.handleCount = 1;
+            this.dimCount = 0;
             this.addedObjects = new Hashtable(); // keeps track of the added object to avoid duplicates
             this.viewports = new Dictionary<string, ViewPort>();
             this.layers = new Dictionary<string, Layer>();
@@ -120,9 +126,9 @@ namespace netDxf
             this.faces3d = new List<Face3d>();
             this.solids = new List<Solid>();
             this.inserts = new List<Insert>();
-            this.lightWeightPolylines = new List<LwPolyline>(); 
+            this.lwPolylines = new List<LwPolyline>(); 
             this.polylines = new List<Polyline>();
-            this.polyfaceMeshes=new List<PolyfaceMesh>();
+            this.polyfaceMeshes = new List<PolyfaceMesh>();
             this.lines = new List<Line>();
             this.circles = new List<Circle>();
             this.points = new List<Point>();
@@ -291,11 +297,11 @@ namespace netDxf
         }
 
         /// <summary>
-        /// Gets the <see cref="LightWeightPolyline">LightWeightPolyline</see> list.
+        /// Gets the <see cref="LwPolyline">LightWeightPolyline</see> list.
         /// </summary>
-        public ReadOnlyCollection<LwPolyline> LightWeightPolyline
+        public ReadOnlyCollection<LwPolyline> LwPolylines
         {
-            get { return this.lightWeightPolylines.AsReadOnly(); }
+            get { return this.lwPolylines.AsReadOnly(); }
         }
 
         /// <summary>
@@ -307,7 +313,7 @@ namespace netDxf
         }
 
         /// <summary>
-        /// Gets the <see cref="netDxf.Entities.Point">point</see> list.
+        /// Gets the <see cref="Point">point</see> list.
         /// </summary>
         public ReadOnlyCollection<Point> Points
         {
@@ -315,7 +321,7 @@ namespace netDxf
         }
 
         /// <summary>
-        /// Gets the <see cref="netDxf.Entities.Text">text</see> list.
+        /// Gets the <see cref="Text">text</see> list.
         /// </summary>
         public ReadOnlyCollection<Text> Texts
         {
@@ -323,7 +329,7 @@ namespace netDxf
         }
 
         /// <summary>
-        /// Gets the <see cref="netDxf.Entities.MText">multiline text</see> list.
+        /// Gets the <see cref="MText">multiline text</see> list.
         /// </summary>
         public ReadOnlyCollection<MText> MTexts
         {
@@ -331,7 +337,7 @@ namespace netDxf
         }
 
         /// <summary>
-        /// Gets the <see cref="netDxf.Entities.Hatch">hatch</see> list.
+        /// Gets the <see cref="Hatch">hatch</see> list.
         /// </summary>
         public ReadOnlyCollection<Hatch> Hatches
         {
@@ -429,12 +435,12 @@ namespace netDxf
         #region public methods
 
          /// <summary>
-        /// Adds a new <see cref="IEntityObject">entity</see> to the document.
+        /// Adds a list of <see cref="IEntityObject">entities</see> to the document.
         /// </summary>
-        /// <param name="entities">A list of <see cref="IEntityObject">entities</see></param>
+        /// <param name="entities">A list of <see cref="IEntityObject">entities</see> to add to the document.</param>
         /// <remarks>
         /// <para>
-        /// Once an entity has been added to the dxf document, it should not be modified.
+        /// Once an entity has been added to the dxf document, it should not be modified. A unique handle identifier is assigned to every entity.
         /// </para>
         /// <para>
         /// This is specially true in the case of dimensions. The block that represents the drawing of the dimension is built
@@ -451,15 +457,15 @@ namespace netDxf
          }
 
         /// <summary>
-        /// Adds a new <see cref="IEntityObject">entity</see> to the document.
+        /// Adds an <see cref="IEntityObject">entity</see> to the document.
         /// </summary>
-        /// <param name="entity">An <see cref="IEntityObject">entity</see></param>
+        /// <param name="entity">An <see cref="IEntityObject">entity</see> to add to the document.</param>
         /// <remarks>
         /// <para>
-        /// Once an entity has been added to the dxf document, it should not be modified.
+        /// Once an entity has been added to the dxf document a unique handle identifier (hexadecimal number) is assigned to them.
         /// </para>
         /// <para>
-        /// This is specially true in the case of dimensions. The block that represents the drawing of the dimension is built
+        /// The entities should not be modified. This is specially true in the case of dimensions. The block that represents the drawing of the dimension is built
         /// when it is added to the document. If a property is modified once it has been added this modifications will not be 
         /// reflected in the saved dxf file.
         /// </para>
@@ -471,6 +477,7 @@ namespace netDxf
                 throw new ArgumentException("The entity " + entity.Type + " object has already been added to the document.", "entity");
 
             this.addedObjects.Add(entity, entity);
+            this.handleCount = ((DxfObject)entity).AsignHandle(this.handleCount);
 
             if (entity.XData != null)
             {
@@ -479,23 +486,13 @@ namespace netDxf
                     if (!this.appRegisterNames.ContainsKey(appReg.Name))
                     {
                         this.appRegisterNames.Add(appReg.Name, appReg);
+                        this.handleCount = appReg.AsignHandle(this.handleCount);
                     }
                 }
             }
 
-            if (!this.layers.ContainsKey(entity.Layer.Name))
-            {
-                if (!this.lineTypes.ContainsKey(entity.Layer.LineType.Name))
-                {
-                    this.lineTypes.Add(entity.Layer.LineType.Name, entity.Layer.LineType);
-                }
-                this.layers.Add(entity.Layer.Name, entity.Layer);
-            }
-
-            if (!this.lineTypes.ContainsKey(entity.LineType.Name))
-            {
-                this.lineTypes.Add(entity.LineType.Name, entity.LineType);
-            }
+            entity.Layer = AddLayer(entity.Layer);
+            entity.LineType = AddLineType(entity.LineType);
 
             switch (entity.Type)
             {
@@ -507,25 +504,16 @@ namespace netDxf
                     break;
                 case EntityType.Dimension:
                     this.dimensions.Add((Dimension) entity);
-                    Block dimBlock = ((Dimension) entity).BuildBlock("*D" + this.dimensions.Count);
+
+                    // create the block that represent the dimension drawing
+                    Block dimBlock = ((Dimension) entity).BuildBlock("*D" + ++dimCount);
                     if (this.blocks.ContainsKey(dimBlock.Name))
                         throw new ArgumentException("The list already contains the block: " + dimBlock.Name + ". The block names that start with *D are reserverd for dimensions");
-                    
-                    // very important the dimension styles must be unique, if we do not find one we add one, if we do, we pickup the one on the list and assign it to the entity
-                    if (!this.dimStyles.ContainsKey(((Dimension)entity).Style.Name))
-                        this.dimStyles.Add(((Dimension)entity).Style.Name, ((Dimension)entity).Style);
-                    else
-                        ((Dimension) entity).Style = this.dimStyles[((Dimension) entity).Style.Name];
-
-                    // very important the text styles must be unique, if we do not find one we add one; if we do, we pickup the one on the list and assign it to the entity
-                    if (!this.textStyles.ContainsKey(((Dimension)entity).Style.TextStyle.Name))
-                        this.textStyles.Add(((Dimension)entity).Style.TextStyle.Name, ((Dimension)entity).Style.TextStyle);
-                    else
-                        ((Dimension)entity).Style.TextStyle = this.textStyles[((Dimension)entity).Style.TextStyle.Name];
-
+                    ((Dimension) entity).Style = AddDimensionStyle(((Dimension) entity).Style);
                     dimBlock.TypeFlags = BlockTypeFlags.AnonymousBlock;
-                    this.blocks.Add(dimBlock.Name, dimBlock);
+                    this.handleCount = dimBlock.AsignHandle(this.handleCount);
 
+                    this.blocks.Add(dimBlock.Name, dimBlock);
                     break;
                 case EntityType.Ellipse:
                     this.ellipses.Add((Ellipse) entity);
@@ -537,68 +525,16 @@ namespace netDxf
                     this.hatches.Add((Hatch)entity);
                     break;
                 case EntityType.Insert:
-                    // if the block definition has already been added, we do not need to do anything else
-                    if (!this.blocks.ContainsKey(((Insert)entity).Block.Name))
+                    ((Insert) entity).Block = AddBlock(((Insert) entity).Block);
+                    foreach (Attribute attribute in ((Insert) entity).Attributes)
                     {
-                        this.blocks.Add(((Insert)entity).Block.Name, ((Insert)entity).Block);
-
-                        if (!this.layers.ContainsKey(((Insert)entity).Block.Layer.Name))
-                        {
-                            this.layers.Add(((Insert)entity).Block.Layer.Name, ((Insert)entity).Block.Layer);
-                        }
-
-                        //for new block definitions configure its entities
-                        foreach (IEntityObject blockEntity in ((Insert)entity).Block.Entities)
-                        {
-                            // check if the entity has not been added to the document
-                            if (this.addedObjects.ContainsKey(blockEntity))
-                                throw new ArgumentException("The entity " + blockEntity.Type +
-                                                            " object of the block " + ((Insert)entity).Block.Name +
-                                                            " has already been added to the document.", "entity");
-                            this.addedObjects.Add(blockEntity, blockEntity);
-
-                            if (!this.layers.ContainsKey(blockEntity.Layer.Name))
-                            {
-                                this.layers.Add(blockEntity.Layer.Name, blockEntity.Layer);
-                            }
-                            if (!this.lineTypes.ContainsKey(blockEntity.LineType.Name))
-                            {
-                                this.lineTypes.Add(blockEntity.LineType.Name, blockEntity.LineType);
-                            }
-                        }
-                        //for new block definitions configure its attributes
-                        foreach (Attribute attribute in ((Insert)entity).Attributes)
-                        {
-                            if (!this.layers.ContainsKey(attribute.Layer.Name))
-                            {
-                                this.layers.Add(attribute.Layer.Name, attribute.Layer);
-                            }
-                            if (!this.lineTypes.ContainsKey(attribute.LineType.Name))
-                            {
-                                this.lineTypes.Add(attribute.LineType.Name, attribute.LineType);
-                            }
-
-                            AttributeDefinition attDef = attribute.Definition;
-                            if (!this.layers.ContainsKey(attDef.Layer.Name))
-                            {
-                                this.layers.Add(attDef.Layer.Name, attDef.Layer);
-                            }
-
-                            if (!this.lineTypes.ContainsKey(attDef.LineType.Name))
-                            {
-                                this.lineTypes.Add(attDef.LineType.Name, attDef.LineType);
-                            }
-
-                            if (!this.textStyles.ContainsKey(attDef.Style.Name))
-                            {
-                                this.textStyles.Add(attDef.Style.Name, attDef.Style);
-                            }
-                        }
+                        attribute.Layer = AddLayer(attribute.Layer);
+                        attribute.LineType = AddLineType(attribute.LineType);
                     }
                     this.inserts.Add((Insert)entity);
                     break;
                 case EntityType.LightWeightPolyline:
-                    this.lightWeightPolylines.Add((LwPolyline)entity);
+                    this.lwPolylines.Add((LwPolyline)entity);
                     break;
                 case EntityType.Line:
                     this.lines.Add((Line) entity);
@@ -616,14 +552,113 @@ namespace netDxf
                     this.solids.Add((Solid) entity);
                     break;
                 case EntityType.Text:
-                    if (!this.textStyles.ContainsKey(((Text) entity).Style.Name))
-                        this.textStyles.Add(((Text) entity).Style.Name, ((Text) entity).Style);
+                    ((Text) entity).Style = AddTextStyle(((Text) entity).Style);
                     this.texts.Add((Text) entity);
                     break;
                 case EntityType.MText:
-                    if (!this.textStyles.ContainsKey(((MText) entity).Style.Name))
-                        this.textStyles.Add(((MText) entity).Style.Name, ((MText) entity).Style);
+                    ((MText)entity).Style = AddTextStyle(((MText)entity).Style);
                     this.mTexts.Add((MText) entity);
+                    break;
+                case EntityType.Vertex:
+                    throw new ArgumentException("The entity " + entity.Type + " is only allowed as part of another entity", "entity");
+
+                case EntityType.PolylineVertex:
+                    throw new ArgumentException("The entity " + entity.Type + " is only allowed as part of another entity", "entity");
+
+                case EntityType.Polyline3dVertex:
+                    throw new ArgumentException("The entity " + entity.Type + " is only allowed as part of another entity", "entity");
+
+                case EntityType.PolyfaceMeshVertex:
+                    throw new ArgumentException("The entity " + entity.Type + " is only allowed as part of another entity", "entity");
+
+                case EntityType.PolyfaceMeshFace:
+                    throw new ArgumentException("The entity " + entity.Type + " is only allowed as part of another entity", "entity");
+
+                case EntityType.AttributeDefinition:
+                    throw new ArgumentException("The entity " + entity.Type + " is only allowed as part of another entity", "entity");
+
+                case EntityType.Attribute:
+                    throw new ArgumentException("The entity " + entity.Type + " is only allowed as part of another entity", "entity");
+
+                default:
+                    throw new ArgumentException("The entity " + entity.Type + " is not implemented or unknown");
+            }
+        }
+
+        /// <summary>
+        /// Removes a list of <see cref="IEntityObject">entities</see> from the document.
+        /// </summary>
+        /// <param name="entities">A list of <see cref="IEntityObject">entities</see> to remove from the document.</param>
+        /// <remarks>
+        /// This function will not remove other tables objects that might be not in use as result from the elimination of the entity.
+        /// This includes empity layers, blocks not referenced anymore, line types, text styles, dimension styles, and application registries.
+        /// </remarks>
+        public void RemoveEntity(IEnumerable<IEntityObject> entities)
+        {
+            foreach (IEntityObject entity in entities)
+            {
+                this.RemoveEntity(entity);
+            }
+        }
+
+        /// <summary>
+        /// Removes an <see cref="IEntityObject">entity</see> from the document.
+        /// </summary>
+        /// <param name="entity">The <see cref="IEntityObject">entity</see> to remove from the document.</param>
+        /// <remarks>
+        /// This function will not remove other tables objects that might be not in use as result from the elimination of the entity.
+        /// This includes empity layers, blocks not referenced anymore, line types, text styles, dimension styles, and application registries.
+        /// </remarks>
+        public void RemoveEntity(IEntityObject entity)
+        {
+            this.addedObjects.Remove(entity);
+
+            switch (entity.Type)
+            {
+                case EntityType.Arc:
+                    this.arcs.Remove((Arc)entity);
+                    break;
+                case EntityType.Circle:
+                    this.circles.Remove((Circle)entity);
+                    break;
+                case EntityType.Dimension:
+                    this.dimensions.Remove((Dimension)entity);
+                    break;
+                case EntityType.Ellipse:
+                    this.ellipses.Remove((Ellipse)entity);
+                    break;
+                case EntityType.Face3D:
+                    this.faces3d.Remove((Face3d)entity);
+                    break;
+                case EntityType.Hatch:
+                    this.hatches.Remove((Hatch)entity);
+                    break;
+                case EntityType.Insert:
+                    this.inserts.Remove((Insert)entity);
+                    break;
+                case EntityType.LightWeightPolyline:
+                    this.lwPolylines.Remove((LwPolyline)entity);
+                    break;
+                case EntityType.Line:
+                    this.lines.Remove((Line)entity);
+                    break;
+                case EntityType.Point:
+                    this.points.Remove((Point)entity);
+                    break;
+                case EntityType.PolyfaceMesh:
+                    this.polyfaceMeshes.Remove((PolyfaceMesh)entity);
+                    break;
+                case EntityType.Polyline3d:
+                    this.polylines.Remove((Polyline)entity);
+                    break;
+                case EntityType.Solid:
+                    this.solids.Remove((Solid)entity);
+                    break;
+                case EntityType.Text:
+                    this.texts.Remove((Text)entity);
+                    break;
+                case EntityType.MText:
+                    this.mTexts.Remove((MText)entity);
                     break;
                 case EntityType.Vertex:
                     throw new ArgumentException("The entity " + entity.Type + " is only allowed as part of another entity", "entity");
@@ -682,6 +717,7 @@ namespace netDxf
             this.textStyles = dxfReader.TextStyles;
             this.dimStyles = dxfReader.DimensionStyles;
             this.blocks = dxfReader.Blocks;
+            this.dimCount = dxfReader.DimBlockCount;
 
             //entities information
             this.arcs = dxfReader.Arcs;
@@ -690,7 +726,7 @@ namespace netDxf
             this.points = dxfReader.Points;
             this.faces3d = dxfReader.Faces3d;
             this.solids = dxfReader.Solids;
-            this.lightWeightPolylines = dxfReader.LightWeightPolyline;
+            this.lwPolylines = dxfReader.LightWeightPolyline;
             this.polylines = dxfReader.Polylines;
             this.polyfaceMeshes = dxfReader.PolyfaceMeshes;
             this.lines = dxfReader.Lines;
@@ -711,10 +747,6 @@ namespace netDxf
         /// <param name="dxfVersion">Dxf file <see cref="DxfVersion">version</see>.</param>
         public void Save(string file, DxfVersion dxfVersion)
         {
-            // we will start counting the handles of the document elements after the few reserved by the writer for internal use
-            this.handleCount = DxfWriter.ReservedHandles;
-
-            AsignHandlers();
             this.fileName = Path.GetFileNameWithoutExtension(file);
             this.version = StringEnum.GetStringValue(dxfVersion);
 
@@ -734,13 +766,14 @@ namespace netDxf
             Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
 
             DxfWriter dxfWriter = new DxfWriter(file, dxfVersion);
+            dxfWriter.handleCount = this.handleCount;
             dxfWriter.Open();
             dxfWriter.WriteComment("Dxf file generated by netDxf, Copyright(C) 2012 Daniel Carvajal, Licensed under LGPL");
 
             //HEADER SECTION
             dxfWriter.BeginSection(StringCode.HeaderSection);
             dxfWriter.WriteSystemVariable(new HeaderVariable(SystemVariable.DatabaseVersion, this.version));
-            dxfWriter.WriteSystemVariable(new HeaderVariable(SystemVariable.HandSeed, Convert.ToString(this.handleCount, 16)));
+            dxfWriter.WriteSystemVariable(new HeaderVariable(SystemVariable.HandSeed, Convert.ToString(this.handleCount + ReservedHandles, 16)));
             dxfWriter.EndSection();
 
             ////CLASSES SECTION
@@ -859,7 +892,7 @@ namespace netDxf
             {
                 dxfWriter.WriteEntity(line);
             }
-            foreach (LwPolyline pol in this.lightWeightPolylines)
+            foreach (LwPolyline pol in this.lwPolylines)
             {
                 dxfWriter.WriteEntity(pol);
             }
@@ -908,146 +941,135 @@ namespace netDxf
         #endregion
 
         #region private methods
-		 
+		
+        private Layer AddLayer(Layer layer)
+        {
+            Layer add;
+            if (this.layers.TryGetValue(layer.Name, out add))
+                return add;
+                
+            this.layers.Add(layer.Name, layer);
+            layer.LineType = AddLineType(layer.LineType);
+            this.handleCount = layer.AsignHandle(this.handleCount);
+            return layer;
+        }
+
+        private LineType AddLineType(LineType lineType)
+        {
+            LineType add;
+            if(this.lineTypes.TryGetValue(lineType.Name, out add))
+                return add;
+
+            this.lineTypes.Add(lineType.Name, lineType);
+            this.handleCount = lineType.AsignHandle(this.handleCount);
+            return lineType;
+
+        }
+
+        private TextStyle AddTextStyle(TextStyle textStyle)
+        {
+            TextStyle add;
+            if (this.textStyles.TryGetValue(textStyle.Name, out add))
+                return add;
+
+            this.textStyles.Add(textStyle.Name, textStyle);
+            this.handleCount = textStyle.AsignHandle(this.handleCount);
+            return textStyle;
+        }
+
+        private DimensionStyle AddDimensionStyle(DimensionStyle dimensionStyle)
+        {
+            DimensionStyle add;
+            if (this.dimStyles.TryGetValue(dimensionStyle.Name, out add))
+                return add;
+
+            this.dimStyles.Add(dimensionStyle.Name, dimensionStyle);
+            dimensionStyle.TextStyle = AddTextStyle(dimensionStyle.TextStyle);
+            this.handleCount = dimensionStyle.AsignHandle(this.handleCount);
+            return dimensionStyle;
+        }
+
+        private Block AddBlock(Block block)
+        {
+            Block add;
+            if (this.blocks.TryGetValue(block.Name, out add))
+                return add;
+
+            // if the block definition has not been added
+            this.blocks.Add(block.Name, block);
+            block.Layer = AddLayer(block.Layer);
+
+            //for new block definitions configure its entities
+            foreach (IEntityObject blockEntity in block.Entities)
+            {
+                // check if the entity has not been added to the document
+                if (this.addedObjects.ContainsKey(blockEntity))
+                    throw new ArgumentException("The entity " + blockEntity.Type + " object of the block " + block.Name + " has already been added to the document.", "block");
+
+                this.addedObjects.Add(blockEntity, blockEntity);
+                blockEntity.Layer = AddLayer(blockEntity.Layer);
+                blockEntity.LineType = AddLineType(blockEntity.LineType);
+
+            }
+            //for new block definitions configure its attributes
+            foreach (AttributeDefinition attribute in block.Attributes.Values)
+            {
+                attribute.Layer = AddLayer(attribute.Layer);
+                attribute.LineType = AddLineType(attribute.LineType);
+                attribute.Style = AddTextStyle(attribute.Style);
+            }
+
+            this.handleCount = block.AsignHandle(this.handleCount);
+            return block;
+        }
+
         private void AddDefaultObjects()
         {
             //add default viewports
             ViewPort active = ViewPort.Active;
+            this.handleCount = active.AsignHandle(this.handleCount);
             this.viewports.Add(active.Name, active);
 
             //add default layer
             Layer byDefault = Layer.Default;
+            this.handleCount = byDefault.AsignHandle(this.handleCount);
             this.layers.Add(byDefault.Name, byDefault);
 
             // add default line types
             LineType byLayer = LineType.ByLayer;
+            this.handleCount = byLayer.AsignHandle(this.handleCount);
             LineType byBlock = LineType.ByBlock;
+            this.handleCount = byBlock.AsignHandle(this.handleCount);
             this.lineTypes.Add(byLayer.Name, byLayer);
             this.lineTypes.Add(byBlock.Name, byBlock);
 
             // add default blocks
             Block modelSpace = Block.ModelSpace;
+            this.handleCount = modelSpace.AsignHandle(this.handleCount);
             Block paperSpace = Block.PaperSpace;
+            this.handleCount = paperSpace.AsignHandle(this.handleCount);
             this.blocks.Add(modelSpace.Name, modelSpace);
             this.blocks.Add(paperSpace.Name, paperSpace);
 
             // add default text style
             TextStyle defaultStyle = TextStyle.Default;
+            this.handleCount = defaultStyle.AsignHandle(this.handleCount);
             this.textStyles.Add(defaultStyle.Name, defaultStyle);
 
             // add default application registry
             ApplicationRegistry defaultAppId = ApplicationRegistry.Default;
+            this.handleCount = defaultAppId.AsignHandle(this.handleCount);
             this.appRegisterNames.Add(defaultAppId.Name, defaultAppId);
 
             // add default dimension style
             DimensionStyle defaultDimStyle = DimensionStyle.Default;
+            this.handleCount = defaultDimStyle.AsignHandle(this.handleCount);
             defaultDimStyle.TextStyle = defaultStyle;
             this.dimStyles.Add(defaultDimStyle.Name, defaultDimStyle);
 
             // add default MLine style
             //MLineStyle defaultMLineStyle = MLineStyle.Default;
             //this.mLineStyles.Add(defaultMLineStyle.Name, defaultMLineStyle);
-        }
-
-        private void AsignHandlers()
-        {
-            // assign handles to the document tables
-            foreach (ViewPort viewPort in this.viewports.Values)
-            {
-                this.handleCount = viewPort.AsignHandle(this.handleCount);
-            }
-            Layer.PlotStyleHandle = Convert.ToString(this.handleCount++, 16);
-            
-            foreach (Layer layer in this.layers.Values)
-            {
-                this.handleCount = layer.AsignHandle(this.handleCount);
-            }
-            foreach (LineType lineType in this.lineTypes.Values)
-            {
-                this.handleCount = lineType.AsignHandle(this.handleCount);
-            }
-            foreach (TextStyle textStyle in this.textStyles.Values)
-            {
-                this.handleCount = textStyle.AsignHandle(this.handleCount);
-            }
-            foreach (Block block in this.blocks.Values)
-            {
-                this.handleCount = block.AsignHandle(this.handleCount);
-            }
-            foreach (ApplicationRegistry appId in this.appRegisterNames.Values)
-            {
-                this.handleCount = appId.AsignHandle(this.handleCount);
-            }
-            foreach (DimensionStyle style in this.dimStyles.Values)
-            {
-                this.handleCount = style.AsignHandle(this.handleCount);
-            }
-            //foreach (MLineStyle style in this.mLineStyles.Values)
-            //{
-            //    this.handleCount = style.AsignHandle(this.handleCount);
-            //}
-
-            // assign handles to the document entities
-            foreach (Arc entity in this.arcs)
-            {
-                this.handleCount = entity.AsignHandle(this.handleCount);
-            }
-            foreach (Ellipse entity in this.ellipses)
-            {
-                this.handleCount = entity.AsignHandle(this.handleCount);
-            }
-            foreach (Face3d entity in this.faces3d)
-            {
-                this.handleCount = entity.AsignHandle(this.handleCount);
-            }
-            foreach (Solid entity in this.solids )
-            {
-                this.handleCount = entity.AsignHandle(this.handleCount);
-            }
-            foreach (Insert entity in this.inserts )
-            {
-                this.handleCount = entity.AsignHandle(this.handleCount);
-            }
-            foreach (LwPolyline entity in this.lightWeightPolylines)
-            {
-                this.handleCount = (entity).AsignHandle(this.handleCount);
-            }
-            foreach (PolyfaceMesh entity in this.polyfaceMeshes)
-            {
-                this.handleCount = (entity).AsignHandle(this.handleCount);
-            }
-            foreach (Polyline entity in this.polylines)
-            {
-                this.handleCount = (entity).AsignHandle(this.handleCount);
-            }
-            foreach (Line entity in this.lines)
-            {
-                this.handleCount = entity.AsignHandle(this.handleCount);
-            }
-            foreach (Circle entity in this.circles)
-            {
-                this.handleCount = entity.AsignHandle(this.handleCount);
-            }
-            foreach (Point  entity in this.points)
-            {
-                this.handleCount = entity.AsignHandle(this.handleCount);
-            }
-            foreach (Text entity in this.texts)
-            {
-                this.handleCount = entity.AsignHandle(this.handleCount);
-            }
-            foreach (MText entity in this.mTexts)
-            {
-                this.handleCount = entity.AsignHandle(this.handleCount);
-            }
-            foreach (Hatch entity in this.hatches)
-            {
-                this.handleCount = entity.AsignHandle(this.handleCount);
-            }
-            foreach (Dimension entity in this.dimensions)
-            {
-                this.handleCount = entity.AsignHandle(this.handleCount);
-            }
         }
 
         #endregion

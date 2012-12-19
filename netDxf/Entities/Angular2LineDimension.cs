@@ -236,7 +236,7 @@ namespace netDxf.Entities
             MathHelper.FindIntersection(refStartFirst, refEndFirst - refStartFirst, refStartSecond, refEndSecond - refStartSecond, out centerRef);
 
             // reference points
-            Layer defPoints = new Layer("Defpoints");
+            Layer defPoints = new Layer("Defpoints") { Plot = false };
             Point startFirstPoint = new Point(refStartFirst) { Layer = defPoints };
             Point endFirstPoint = new Point(refEndFirst) { Layer = defPoints };
             Point startSecondPoint = new Point(refStartSecond) { Layer = defPoints };

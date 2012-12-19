@@ -44,9 +44,6 @@ namespace netDxf.Entities
         private const EntityType TYPE = EntityType.PolylineVertex;
         private VertexTypeFlags flags;
         private int[] vertexIndexes;
-        private AciColor color;
-        private Layer layer;
-        private LineType lineType;
         private Dictionary<ApplicationRegistry, XData> xData;
 
         #endregion
@@ -78,9 +75,6 @@ namespace netDxf.Entities
             
             this.flags = VertexTypeFlags.PolyfaceMeshVertex;
             this.vertexIndexes = vertexIndexes;
-            this.layer = Layer.Default;
-            this.color = AciColor.ByLayer;
-            this.lineType = LineType.ByLayer;
         }
 
         #endregion
@@ -122,48 +116,6 @@ namespace netDxf.Entities
         public EntityType Type
         {
             get { return TYPE; }
-        }
-
-        /// <summary>
-        /// Gets or sets the entity <see cref="netDxf.AciColor">color</see>.
-        /// </summary>
-        public AciColor Color
-        {
-            get { return this.color; }
-            set
-            {
-                if (value == null)
-                    throw new ArgumentNullException("value");
-                this.color = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the entity <see cref="netDxf.Tables.Layer">layer</see>.
-        /// </summary>
-        public Layer Layer
-        {
-            get { return this.layer; }
-            set
-            {
-                if (value == null)
-                    throw new ArgumentNullException("value");
-                this.layer = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the entity <see cref="netDxf.Tables.LineType">line type</see>.
-        /// </summary>
-        public LineType LineType
-        {
-            get { return this.lineType; }
-            set
-            {
-                if (value == null)
-                    throw new ArgumentNullException("value");
-                this.lineType = value;
-            }
         }
 
         /// <summary>

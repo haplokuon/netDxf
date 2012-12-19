@@ -165,7 +165,7 @@ namespace netDxf.Entities
             
 
             // reference points
-            Layer defPoints = new Layer("Defpoints");
+            Layer defPoints = new Layer("Defpoints") {Plot = false};
             Point startRef = new Point(firstRef) { Layer = defPoints };
             Point endRef = new Point(secondRef) { Layer = defPoints };
             Point defPoint = new Point(endDimLine) { Layer = defPoints };

@@ -35,19 +35,21 @@ namespace TestDxfDocument
     /// <summary>
     /// This is just a simple test of work in progress for the netDxf Library.
     /// </summary>
-    internal class Program
+    public class Program
     {
         private static void Main()
         {
+            AddAndRemove();
+            //LoadAndSave();
             //Fixes();
             //CleanDrawing();
-            OrdinateDimensionDrawing();
-            Angular2LineDimensionDrawing();
-            Angular3PointDimensionDrawing();
-            DiametricDimensionDrawing();
-            RadialDimensionDrawing();
-            LinearDimensionDrawing();
-            AlignedDimensionDrawing();
+            //OrdinateDimensionDrawing();
+            //Angular2LineDimensionDrawing();
+            //Angular3PointDimensionDrawing();
+            //DiametricDimensionDrawing();
+            //RadialDimensionDrawing();
+            //LinearDimensionDrawing();
+            //AlignedDimensionDrawing();
             //WriteMText();
             //LineWidth();
             //HatchCircleBoundary();
@@ -71,6 +73,92 @@ namespace TestDxfDocument
             //Dxf2000();
             //SpeedTest();
             //WritePolyline3d();
+        }
+
+        private static void AddAndRemove()
+        {
+            Layer layer1 = new Layer("layer1") { Color = AciColor.Blue };
+            Layer layer2 = new Layer("layer2") { Color = AciColor.Green };
+
+            Line line = new Line(new Vector2(0, 0), new Vector2(10, 10));
+            line.Layer = layer1;
+            Circle circle = new Circle(new Vector2(0, 0), 10);
+            circle.Layer = layer2;
+
+            double offset = -0.9;
+            Vector3 p1 = new Vector3(1, 2, 0);
+            Vector3 p2 = new Vector3(2, 6, 0);
+            Line line1 = new Line(p1, p2);
+            Vector3 l1;
+            Vector3 l2;
+            MathHelper.OffsetLine(line1.StartPoint, line1.EndPoint, line1.Normal, offset, out l1, out l2);
+
+            DimensionStyle myStyle = new DimensionStyle("MyDimStyle");
+            myStyle.DIMPOST = "<>mm";
+            AlignedDimension dim1 = new AlignedDimension(p1, p2, offset, myStyle);
+
+            //text
+            TextStyle style = new TextStyle("MyTextStyle", "Arial.ttf");
+            Text text = new Text("Hello world!", Vector3.Zero, 10.0f, style);
+            text.Layer = new Layer("text");
+            text.Layer.Color.Index = 8;
+            text.Alignment = TextAlignment.TopRight;
+
+
+            DxfDocument dxf = new DxfDocument();
+            dxf.AddEntity(new IEntityObject[] {line, circle, dim1, text});
+            dxf.Save("before remove.dxf", DxfVersion.AutoCad2004);
+
+            dxf.RemoveEntity(circle);
+            dxf.Save("after remove.dxf", DxfVersion.AutoCad2004);
+
+            dxf.AddEntity(circle);
+            dxf.Save("after remove and add.dxf", DxfVersion.AutoCad2004);
+
+            dxf.RemoveEntity(dim1);
+            dxf.Save("remove dim.dxf", DxfVersion.AutoCad2004);
+
+            dxf.AddEntity(dim1);
+            dxf.Save("add dim.dxf", DxfVersion.AutoCad2004);
+
+            DxfDocument dxf2 = new DxfDocument();
+            dxf2.Load("dim block names.dxf");
+            dxf2.AddEntity(dim1);
+            dxf2.Save("dim block names2.dxf", DxfVersion.AutoCad2000);
+        }
+        private static void LoadAndSave()
+        {
+            DxfDocument dxf=new DxfDocument();
+            dxf.Load("block sample.dxf");
+            dxf.Save("block sample1.dxf", DxfVersion.AutoCad2004);
+
+            DxfDocument dxf2 = new DxfDocument();
+            dxf2.AddEntity(dxf.Inserts[0]);
+            dxf2.Save("block sample2.dxf", DxfVersion.AutoCad2004);
+
+            dxf.Save("clean2.dxf", DxfVersion.AutoCad2000);
+            dxf.Load("clean.dxf");
+            dxf.Save("clean1.dxf", DxfVersion.AutoCad2000);
+
+            // open a dxf saved with autocad
+            dxf.Load("sample.dxf");
+            dxf.Save("sample4.dxf", DxfVersion.AutoCad2000);
+
+            Line cadLine = dxf.Lines[0];
+            Layer layer = new Layer("netLayer");
+            layer.Color = AciColor.Yellow;
+
+            Line line = new Line(new Vector2(20, 40), new Vector2(100, 200));
+            line.Layer = layer;
+            // add a new entity to the document
+            dxf.AddEntity(line);
+
+            dxf.Save("sample2.dxf", DxfVersion.AutoCad2010);
+
+            DxfDocument dxf3 = new DxfDocument();
+            dxf3.AddEntity(cadLine);
+            dxf3.AddEntity(line);
+            dxf3.Save("sample3.dxf", DxfVersion.AutoCad2010);
         }
         private static void Fixes()
         {
@@ -774,9 +862,9 @@ namespace TestDxfDocument
             //poly.IsClosed = true;
             dxf.AddEntity(poly);
 
-            dxf.Save("polyline.dxf", DxfVersion.AutoCad2000);
+            dxf.Save("lwpolyline.dxf", DxfVersion.AutoCad2000);
 
-            dxf.Load("polyline.dxf");
+            dxf.Load("lwpolyline.dxf");
         }
         private static void Polyline()
         {
@@ -790,7 +878,7 @@ namespace TestDxfDocument
             poly.Vertexes.Add(new PolylineVertex(30, 10, 0));
             dxf.AddEntity(poly);
 
-            //dxf.Save("polyline.dxf", DxfVersion.AutoCad2010);
+            dxf.Save("polyline.dxf", DxfVersion.AutoCad2010);
 
         }
         private static void Solid()
@@ -952,7 +1040,6 @@ namespace TestDxfDocument
 
             dxf.Save("Block with attributes.dxf", DxfVersion.AutoCad2000);
             dxf.Load("Block with attributes.dxf");
-            //dxf.Save("Block with attributes result.dxf", DxfVersion.AutoCad2000); // both results must be equal only the handles might be different
         }
         private static void WritePolyfaceMesh()
         {
@@ -1118,6 +1205,8 @@ namespace TestDxfDocument
                                                };
 
             PolyfaceMesh mesh = new PolyfaceMesh(meshVertexes, faces);
+            mesh.Layer = new Layer("polyfacemesh");
+            mesh.Layer.Color.Index = 104;
             dxf.AddEntity(mesh);
 
             //line
@@ -1166,8 +1255,8 @@ namespace TestDxfDocument
             dxf.Save("AutoCad2004.dxf", DxfVersion.AutoCad2004);
             dxf.Save("AutoCad2000.dxf", DxfVersion.AutoCad2000);
 
-           // dxf.Load("AutoCad2000.dxf");
-            //dxf.Save("AutoCad2000 result.dxf", DxfVersion.AutoCad2000);
+            dxf.Load("AutoCad2000.dxf");
+            dxf.Save("AutoCad2000 result.dxf", DxfVersion.AutoCad2000);
         }
         private static void WritePolyline3d()
         {

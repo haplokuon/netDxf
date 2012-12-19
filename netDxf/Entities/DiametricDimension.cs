@@ -189,7 +189,7 @@ namespace netDxf.Entities
                                                            MathHelper.CoordinateSystem.Object,
                                                            MathHelper.CoordinateSystem.World);
             // reference points
-            Layer defPoints = new Layer("Defpoints");
+            Layer defPoints = new Layer("Defpoints") { Plot = false };
             Point startRef = new Point(firstRef) { Layer = defPoints };
             Point endRef = new Point(secondRef) { Layer = defPoints };
 

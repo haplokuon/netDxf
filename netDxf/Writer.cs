@@ -41,11 +41,8 @@ namespace netDxf
     internal sealed class DxfWriter
     {
         #region private fields
-
-        // we will reserve the first handles for special cases, the handleCount cannot surpase this value should be more than enough
-        internal const int ReservedHandles = 100;  
         // handle count for internal elements of the dxf file
-        private int handleCount; 
+        internal int handleCount; 
         private readonly string file;
         private bool isFileOpen;
         private string activeSection = StringCode.Unknown;
@@ -109,19 +106,19 @@ namespace netDxf
         /// </summary>
         public void Open()
         {
-            if (this.isFileOpen)
-            {
-                throw new DxfException(this.file, "The file is already open");
-            }
             try
             {
                 this.output = File.Create(this.file);
                 this.writer = new StreamWriter(this.output, Encoding.ASCII);
                 this.isFileOpen = true;
             }
+            catch(IOException io)
+            {
+                throw (new DxfException(this.file, "File is already open.", io));
+            }
             catch (Exception ex)
             {
-                throw (new DxfException(this.file, "Error when trying to create the dxf file", ex));
+                throw (new DxfException(this.file, "Error when trying to create the dxf file.", ex));
             }
         }
 
@@ -274,7 +271,7 @@ namespace netDxf
             }
             this.WriteCodePair(0, StringCode.Table);
             this.WriteCodePair(2, table);
-            this.WriteCodePair(5, this.handleCount++);
+            this.WriteCodePair(5, Convert.ToString(this.handleCount++, 16));
             this.WriteCodePair(100, SubclassMarker.Table);
 
             if (table == StringCode.DimensionStyleTable)
@@ -458,6 +455,9 @@ namespace netDxf
             this.WriteCodePair(100, SubclassMarker.BlockRecord);
 
             this.WriteCodePair(2, blockRecord);
+
+            // Hard-pointer ID/handle to associated LAYOUT object
+            this.WriteCodePair(340, 0);
         }
 
         /// <summary>
@@ -511,16 +511,15 @@ namespace netDxf
 
             //a negative color represents a hidden layer.
             if (layer.IsVisible)
-            {
                 this.WriteCodePair(62, layer.Color.Index);
-            }
             else
-            {
                 this.WriteCodePair(62, -layer.Color.Index);
-            }
 
             this.WriteCodePair(6, layer.LineType.Name);
-            this.WriteCodePair(390, Layer.PlotStyleHandle);
+            if (!layer.Plot) this.WriteCodePair(290, 0);
+
+            // Hard pointer ID/handle of PlotStyleName object
+            this.WriteCodePair(390, 0);
         }
 
         /// <summary>
@@ -699,7 +698,7 @@ namespace netDxf
 
             this.WriteCodePair(39, arc.Thickness);
 
-            // this is just an example of the stupid autodesk dxf way of doing things, while an ellipse the center is given in world coordinates,
+            // this is just an example of the weird autodesk dxf way of doing things, while an ellipse the center is given in world coordinates,
             // the center of an arc is given in object coordinates (different rules for the same concept).
             // It is a lot more intuitive to give the center in world coordinates and then define the orientation with the normal..
             Vector3 ocsCenter = MathHelper.Transform(arc.Center, arc.Normal, MathHelper.CoordinateSystem.World, MathHelper.CoordinateSystem.Object);
@@ -1007,9 +1006,6 @@ namespace netDxf
             this.WriteCodePair(20, 0.0);
             this.WriteCodePair(30, 0.0);
 
-            //Obsolete; formerly an “entities follow flag” (optional; ignore if present)
-            //this.WriteCodePair(66, "1");
-
             this.WriteCodePair(70, (int)polyline.Flags);
             this.WriteCodePair(75, (int)polyline.SmoothType); 
   
@@ -1020,7 +1016,7 @@ namespace netDxf
                 this.WriteCodePair(0, v.CodeName);
                 this.WriteCodePair(5, v.Handle);
                 this.WriteCodePair(100, SubclassMarker.Entity);
-                this.WriteCodePair(8, v.Layer);
+                this.WriteCodePair(8, polyline.Layer); // the vertex layer should be the same as the polyline layer
                 this.WriteCodePair(100, SubclassMarker.Vertex);
                 this.WriteCodePair(100, SubclassMarker.Polyline3dVertex);             
                 this.WriteCodePair(10, v.Location.X);
@@ -1060,10 +1056,6 @@ namespace netDxf
             this.WriteCodePair(20, 0.0);
             this.WriteCodePair(30, 0.0);
 
-            //Obsolete; formerly an “entities follow flag” (optional; ignore if present)
-            //but its needed to load the dxf file in AutoCAD
-            this.WriteCodePair(66, "1");
-
             if (mesh.XData != null)
             {
                 this.WriteXData(mesh.XData);
@@ -1074,7 +1066,8 @@ namespace netDxf
                 this.WriteCodePair(0, v.CodeName);
                 this.WriteCodePair(5, v.Handle);
                 this.WriteCodePair(100, SubclassMarker.Entity);
-                this.WriteCodePair(8, v.Layer);
+                //this.WriteCodePair(8, v.Layer);
+                this.WriteCodePair(8, mesh.Layer);
                 this.WriteCodePair(100, SubclassMarker.Vertex);
                 this.WriteCodePair(100, SubclassMarker.PolyfaceMeshVertex);
                 this.WriteCodePair(70, (int) v.Flags);
@@ -1090,7 +1083,8 @@ namespace netDxf
                 this.WriteCodePair(0, face.CodeName);
                 this.WriteCodePair(5, face.Handle);
                 this.WriteCodePair(100, SubclassMarker.Entity);
-                this.WriteCodePair(8, face.Layer);
+                //this.WriteCodePair(8, face.Layer);
+                this.WriteCodePair(8, mesh.Layer);
                 this.WriteCodePair(100, SubclassMarker.PolyfaceMeshFace);
                 this.WriteCodePair(70, (int) VertexTypeFlags.PolyfaceMeshVertex);
                 this.WriteCodePair(10, 0);
@@ -1727,7 +1721,8 @@ namespace netDxf
             this.WriteCodePair(100, SubclassMarker.Dictionary);
             this.WriteCodePair(281, 1);
             this.WriteCodePair(3, dictionary);
-            this.WriteCodePair(350, Convert.ToString(11, 16));
+            int softIdOwner = this.handleCount;
+            this.WriteCodePair(350, Convert.ToString(softIdOwner, 16));
 
             this.WriteCodePair(0, StringCode.Dictionary);
             this.WriteCodePair(5, Convert.ToString(this.handleCount++, 16));
@@ -1834,15 +1829,9 @@ namespace netDxf
             //        this.WriteCodePair(74, 0);
             //        break;
             //}
-            
-
-
-
-            
-
         }
 
-        private void WriteAttribute(Attribute attrib, Vector3 puntoInsercion)
+        private void WriteAttribute(Attribute attrib, Vector3 insertPoint)
         {
             this.WriteCodePair(0, DxfObjectCode.Attribute);
             this.WriteCodePair(5, attrib.Handle);
@@ -1850,9 +1839,9 @@ namespace netDxf
             this.WriteEntityCommonCodes(attrib);
 
             this.WriteCodePair(100, SubclassMarker.Text);
-            this.WriteCodePair(10, attrib.Definition.BasePoint.X + puntoInsercion.X);
-            this.WriteCodePair(20, attrib.Definition.BasePoint.Y + puntoInsercion.Y);
-            this.WriteCodePair(30, attrib.Definition.BasePoint.Z + puntoInsercion.Z);
+            this.WriteCodePair(10, attrib.Definition.BasePoint.X + insertPoint.X);
+            this.WriteCodePair(20, attrib.Definition.BasePoint.Y + insertPoint.Y);
+            this.WriteCodePair(30, attrib.Definition.BasePoint.Z + insertPoint.Z);
             this.WriteCodePair(40, attrib.Definition.Height);
 
             this.WriteCodePair(41, attrib.Definition.WidthFactor);
@@ -1863,9 +1852,9 @@ namespace netDxf
 
             this.WriteCodePair(1, attrib.Value);
 
-            this.WriteCodePair(11, attrib.Definition.BasePoint.X + puntoInsercion.X);
-            this.WriteCodePair(21, attrib.Definition.BasePoint.Y + puntoInsercion.Y);
-            this.WriteCodePair(31, attrib.Definition.BasePoint.Z + puntoInsercion.Z);
+            this.WriteCodePair(11, attrib.Definition.BasePoint.X + insertPoint.X);
+            this.WriteCodePair(21, attrib.Definition.BasePoint.Y + insertPoint.Y);
+            this.WriteCodePair(31, attrib.Definition.BasePoint.Z + insertPoint.Z);
 
             this.WriteCodePair(100, SubclassMarker.Attribute);
 

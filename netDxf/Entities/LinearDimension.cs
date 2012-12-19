@@ -201,10 +201,10 @@ namespace netDxf.Entities
             Vector2 endDimLine = Vector2.Polar(midDimLine, measurement*0.5, dimRot);
 
             // reference points
-            Layer defPoints = new Layer("Defpoints");
-            Point startRef = new Point(firstRef) {Layer = defPoints};
-            Point endRef = new Point(secondRef) {Layer = defPoints};
-            Point defPoint = new Point(endDimLine) {Layer = defPoints};
+            Layer defPoints = new Layer("Defpoints") { Plot = false };
+            Point startRef = new Point(firstRef) { Layer = defPoints };
+            Point endRef = new Point(secondRef) { Layer = defPoints };
+            Point defPoint = new Point(endDimLine) { Layer = defPoints };
 
             // dimension lines
             Line startBorder = new Line(Vector2.Polar(firstRef, this.style.DIMEXO, dimRot + MathHelper.HalfPI),

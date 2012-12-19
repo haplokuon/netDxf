@@ -25,7 +25,7 @@ namespace netDxf.Tables
     /// <summary>
     /// Defines objects that are part of the dxf table section.
     /// </summary>
-    internal interface ITableObject
+    public interface ITableObject
     {
         /// <summary>
         /// Name of the object.

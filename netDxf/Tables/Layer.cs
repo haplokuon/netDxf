@@ -32,11 +32,13 @@ namespace netDxf.Tables
         ITableObject
     {
         #region private fields
-        private static string plotStyleHandle;
+
         private readonly string name;
         private AciColor color;
         private bool isVisible;
+        private bool plot;
         private LineType lineType;
+
         #endregion
 
         #region constructors
@@ -54,6 +56,7 @@ namespace netDxf.Tables
             this.color = AciColor.Default;
             this.lineType = LineType.Continuous;
             this.isVisible = true;
+            this.plot = true;
         }
 
         #endregion
@@ -72,14 +75,8 @@ namespace netDxf.Tables
 
         #region public properties
 
-        internal static string PlotStyleHandle
-        {
-            set { plotStyleHandle = value; }
-            get { return plotStyleHandle; }
-        }
-
         /// <summary>
-        /// Gets or sets the layer <see cref="LineType"></see>.
+        /// Gets or sets the layer <see cref="LineType">line type</see>.
         /// </summary>
         public LineType LineType
         {
@@ -107,12 +104,22 @@ namespace netDxf.Tables
         }
 
         /// <summary>
-        /// Gets or sets if the layer is visible.
+        /// Gets or sets the layer visibility.
         /// </summary>
         public bool IsVisible
         {
             get { return this.isVisible; }
             set { this.isVisible = value; }
+        }
+
+        /// <summary>
+        /// Gets or sets if the plotting flag.
+        /// </summary>
+        /// <remarks>If set to false, do not plot this layer.</remarks>
+        public bool Plot
+        {
+            get { return plot; }
+            set { plot = value; }
         }
 
         #endregion

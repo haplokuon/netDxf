@@ -177,7 +177,7 @@ namespace netDxf.Entities
             this.secondPoint = MathHelper.Transform(new Vector3(endPoint.X, endPoint.Y, elev), this.normal, MathHelper.CoordinateSystem.Object, MathHelper.CoordinateSystem.World);
 
             // reference points
-            Layer defPoints = new Layer("Defpoints");
+            Layer defPoints = new Layer("Defpoints") { Plot = false };
             Point startRef = new Point(startPoint) { Layer = defPoints };
             Point endRef = new Point(endPoint) { Layer = defPoints };
 

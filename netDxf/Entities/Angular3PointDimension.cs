@@ -207,7 +207,7 @@ namespace netDxf.Entities
             double elev = localPoint.Z;
 
             // reference points
-            Layer defPoints = new Layer("Defpoints");
+            Layer defPoints = new Layer("Defpoints") { Plot = false };
             Point startRef = new Point(refStart) { Layer = defPoints };
             Point endRef = new Point(refEnd) { Layer = defPoints };
             Point center = new Point(refCenter) { Layer = defPoints };
