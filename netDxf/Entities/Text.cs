@@ -38,7 +38,7 @@ namespace netDxf.Entities
 
         private const EntityType TYPE = EntityType.Text;
         private TextAlignment alignment;
-        private Vector3 basePoint;
+        private Vector3 position;
         private AciColor color;
         private Layer layer;
         private LineType lineType;
@@ -67,10 +67,10 @@ namespace netDxf.Entities
         /// Initializes a new instance of the <c>Text</c> class.
         /// </summary>
         /// <param name="text">Text string.</param>
-        /// <param name="basePoint">Text base <see cref="Vector2">point</see>.</param>
+        /// <param name="position">Text <see cref="Vector2">position</see> in world coordinates.</param>
         /// <param name="height">Text height.</param>
-        public Text(string text, Vector2 basePoint, double height)
-            : this(text, new Vector3(basePoint.X, basePoint.Y, 0.0), height, TextStyle.Default)
+        public Text(string text, Vector2 position, double height)
+            : this(text, new Vector3(position.X, position.Y, 0.0), height, TextStyle.Default)
         {
         }
 
@@ -78,10 +78,10 @@ namespace netDxf.Entities
         /// Initializes a new instance of the <c>Text</c> class.
         /// </summary>
         /// <param name="text">Text string.</param>
-        /// <param name="basePoint">Text base <see cref="Vector3">point</see>.</param>
+        /// <param name="position">Text <see cref="Vector2">position</see> in world coordinates.</param>
         /// <param name="height">Text height.</param>
-        public Text(string text, Vector3 basePoint, double height)
-            : this(text, basePoint, height, TextStyle.Default)
+        public Text(string text, Vector3 position, double height)
+            : this(text, position, height, TextStyle.Default)
         {
         }
 
@@ -90,11 +90,11 @@ namespace netDxf.Entities
         /// Initializes a new instance of the <c>Text</c> class.
         /// </summary>
         /// <param name="text">Text string.</param>
-        /// <param name="basePoint">Text base <see cref="Vector2">point</see>.</param>
+        /// <param name="position">Text <see cref="Vector2">position</see> in world coordinates.</param>
         /// <param name="height">Text height.</param>
         /// <param name="style">Text <see cref="TextStyle">style</see>.</param>
-        public Text(string text, Vector2 basePoint, double height, TextStyle style)
-            : this(text, new Vector3(basePoint.X, basePoint.Y, 0.0), height, style)
+        public Text(string text, Vector2 position, double height, TextStyle style)
+            : this(text, new Vector3(position.X, position.Y, 0.0), height, style)
         {
         }
 
@@ -102,14 +102,14 @@ namespace netDxf.Entities
         /// Initializes a new instance of the <c>Text</c> class.
         /// </summary>
         /// <param name="text">Text string.</param>
-        /// <param name="basePoint">Text base <see cref="Vector3">point</see>.</param>
+        /// <param name="position">Text <see cref="Vector2">position</see> in world coordinates.</param>
         /// <param name="height">Text height.</param>
         /// <param name="style">Text <see cref="TextStyle">style</see>.</param>
-        public Text(string text, Vector3 basePoint, double height, TextStyle style)
+        public Text(string text, Vector3 position, double height, TextStyle style)
             : base(DxfObjectCode.Text)
         {
             this.value = text;
-            this.basePoint = basePoint;
+            this.position = position;
             this.alignment = TextAlignment.BaselineLeft;
             this.layer = Layer.Default;
             this.color = AciColor.ByLayer;
@@ -182,12 +182,12 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets or sets the text base <see cref="netDxf.Vector3">point</see>.
+        /// Gets or sets Text <see cref="Vector2">position</see> in world coordinates..
         /// </summary>
-        public Vector3 BasePoint
+        public Vector3 Position
         {
-            get { return this.basePoint; }
-            set { this.basePoint = value; }
+            get { return this.position; }
+            set { this.position = value; }
         }
 
         /// <summary>

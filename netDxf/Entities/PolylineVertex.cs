@@ -35,7 +35,6 @@ namespace netDxf.Entities
     { 
         #region private fields
 
-        private const EntityType TYPE = EntityType.Polyline3dVertex;
         private VertexTypeFlags flags;
         private Vector3 location;
         private Dictionary<ApplicationRegistry, XData> xData;
@@ -94,17 +93,6 @@ namespace netDxf.Entities
         {
             get { return this.flags; }
         }
-        #endregion
-
-        #region IEntityObject Members
-
-        /// <summary>
-        /// Gets the entity <see cref="netDxf.Entities.EntityType">type</see>.
-        /// </summary>
-        public EntityType Type
-        {
-            get { return TYPE; }
-        }
 
         /// <summary>
         /// Gets or sets the entity <see cref="netDxf.XData">extende data</see>.
@@ -125,7 +113,7 @@ namespace netDxf.Entities
         /// <returns>The string representation.</returns>
         public override string ToString()
         {
-            return String.Format("{0} ({1})", TYPE, this.location);
+            return String.Format("{0}: ({1})", "PolylineVertex", this.location);
         }
 
         #endregion

@@ -53,6 +53,7 @@ namespace netDxf
         public const string Arc = "AcDbArc";
         public const string Circle = "AcDbCircle";
         public const string Ellipse = "AcDbEllipse";
+        public const string Spline = "AcDbSpline";
         public const string Face3d = "AcDbFace";
         public const string Insert = "AcDbBlockReference";
         public const string Line = "AcDbLine";

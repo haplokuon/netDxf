@@ -67,7 +67,7 @@ namespace netDxf.Entities
         private object value;
         private TextStyle style;
         private AciColor color;
-        private Vector3 basePoint;
+        private Vector3 position;
         private Layer layer;
         private LineType lineType;
         private AttributeFlags flags;
@@ -75,7 +75,7 @@ namespace netDxf.Entities
         private double widthFactor;
         private double rotation;
         private Vector3 normal;
-
+        private TextAlignment alignment;
         #endregion
 
         #region constructor
@@ -103,7 +103,7 @@ namespace netDxf.Entities
             this.flags = AttributeFlags.Visible;
             this.text = string.Empty;
             this.value = null;
-            this.basePoint = Vector3.Zero;
+            this.position = Vector3.Zero;
             this.layer = Layer.Default;
             this.color = AciColor.ByLayer;
             this.lineType = LineType.ByLayer;
@@ -112,6 +112,7 @@ namespace netDxf.Entities
             this.widthFactor = style.WidthFactor;
             this.rotation = 0.0;
             this.normal = Vector3.UnitZ;
+            this.alignment = TextAlignment.BaselineLeft;
         }
 
         #endregion
@@ -164,15 +165,6 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets or sets the attribute text rotation in degrees.
-        /// </summary>
-        public double Rotation
-        {
-            get { return this.rotation; }
-            set { this.rotation = value; }
-        }
-
-        /// <summary>
         /// Gets or sets the attribute default value.
         /// </summary>
         public object Value
@@ -185,7 +177,7 @@ namespace netDxf.Entities
         /// Gets or sets  the attribute text style.
         /// </summary>
         /// <remarks>
-        /// The <see cref="netDxf.Tables.TextStyle">text style</see> defines the basic properties of the information text.
+        /// The <see cref="TextStyle">text style</see> defines the basic properties of the information text.
         /// </remarks>
         public TextStyle Style
         {
@@ -199,12 +191,12 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets or sets the attribute <see cref="netDxf.Vector3">insertion point</see>.
+        /// Gets or sets the attribute <see cref="Vector3">position</see> in world coordinates.
         /// </summary>
-        public Vector3 BasePoint
+        public Vector3 Position
         {
-            get { return this.basePoint; }
-            set { this.basePoint = value; }
+            get { return this.position; }
+            set { this.position = value; }
         }
 
         /// <summary>
@@ -217,9 +209,9 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets or sets the attribute <see cref="netDxf.Vector3">normal</see>.
+        /// Gets or sets the attribute <see cref="Vector3">normal</see>.
         /// </summary>
-        public Vector3 Normal
+        internal Vector3 Normal
         {
             get { return this.normal; }
             set
@@ -229,6 +221,24 @@ namespace netDxf.Entities
                 value.Normalize();
                 this.normal = value;
             }
+        }
+
+        /// <summary>
+        /// Gets or sets the attribute text rotation in degrees.
+        /// </summary>
+        public double Rotation
+        {
+            get { return this.rotation; }
+            set { this.rotation = value; }
+        }
+
+        /// <summary>
+        /// Gets or sets the text alignment.
+        /// </summary>
+        public TextAlignment Alignment
+        {
+            get { return alignment; }
+            set { alignment = value; }
         }
 
         #endregion

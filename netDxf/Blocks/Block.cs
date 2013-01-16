@@ -41,7 +41,7 @@ namespace netDxf.Blocks
         private readonly string name;
         private BlockTypeFlags typeFlags;
         private Layer layer;
-        private Vector3 basePoint;
+        private Vector3 position;
         private Dictionary<string, AttributeDefinition> attributes;
         private List<IEntityObject> entities;
 
@@ -77,7 +77,7 @@ namespace netDxf.Blocks
                 throw (new ArgumentNullException("name"));
             
             this.name = name;
-            this.basePoint = Vector3.Zero;
+            this.position = Vector3.Zero;
             this.layer = Layer.Default;
             this.attributes = new Dictionary<string, AttributeDefinition>();
             this.entities = new List<IEntityObject>();
@@ -98,12 +98,12 @@ namespace netDxf.Blocks
         }
 
         /// <summary>
-        /// Gets or sets the block base point.
+        /// Gets or sets the block position in world coordinates.
         /// </summary>
-        public Vector3 BasePoint
+        public Vector3 Position
         {
-            get { return this.basePoint; }
-            set { this.basePoint = value; }
+            get { return this.position; }
+            set { this.position = value; }
         }
 
         /// <summary>

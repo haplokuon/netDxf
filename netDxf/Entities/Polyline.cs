@@ -53,7 +53,7 @@ namespace netDxf.Entities
         /// Initializes a new instance of the <c>Polyline3d</c> class.
         /// </summary>
         /// <param name="vertexes">3d polyline <see cref="PolylineVertex">vertex</see> list.</param>
-        /// <param name="isClosed">Sets if the polyline is closed</param>
+        /// <param name="isClosed">Sets if the polyline is closed.</param>
         public Polyline(List<PolylineVertex> vertexes, bool isClosed = false) 
             : base (DxfObjectCode.Polyline)
         {
@@ -95,7 +95,7 @@ namespace netDxf.Entities
         /// <summary>
         /// Gets or sets if the light weight polyline is closed.
         /// </summary>
-        public virtual bool IsClosed
+        public bool IsClosed
         {
             get { return this.isClosed; }
             set
@@ -106,6 +106,18 @@ namespace netDxf.Entities
         }
 
         /// <summary>
+        /// Gets the curve smooth type.
+        /// </summary>
+        public PolylineSmoothType SmoothType
+        {
+            get { return smoothType; }
+        }
+
+        #endregion
+
+        #region internal properties
+
+        /// <summary>
         /// Gets the polyline type.
         /// </summary>
         internal PolylineTypeFlags Flags
@@ -114,13 +126,8 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets the curve smooth type.
+        /// Gets the end vertex sequence.
         /// </summary>
-        public PolylineSmoothType SmoothType
-        {
-            get { return smoothType; }
-        }
-
         internal EndSequence EndSequence
         {
             get { return this.endSequence; }

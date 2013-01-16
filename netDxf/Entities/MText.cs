@@ -62,7 +62,7 @@ namespace netDxf.Entities
         #region private fields
 
         private const EntityType TYPE = EntityType.MText;
-        private Vector3 insertionPoint;        
+        private Vector3 position;        
         private AciColor color;
         private Layer layer;
         private LineType lineType;
@@ -94,46 +94,46 @@ namespace netDxf.Entities
         /// <summary>
         /// Initializes a new instance of the <c>MText</c> class.
         /// </summary>
-        /// <param name="insertionPoint">Text insertion <see cref="Vector3">point</see>.</param>
+        /// <param name="position">Text <see cref="Vector2">position</see> in world coordinates.</param>
         /// <param name="height">Text height.</param>
         /// <param name="rectangleWidth">Reference rectangle width.</param>
-        public MText(Vector3 insertionPoint, double height, double rectangleWidth)
-            : this(string.Empty, insertionPoint, height, rectangleWidth, TextStyle.Default)
+        public MText(Vector3 position, double height, double rectangleWidth)
+            : this(string.Empty, position, height, rectangleWidth, TextStyle.Default)
         {
         }
 
         /// <summary>
         /// Initializes a new instance of the <c>MText</c> class.
         /// </summary>
-        /// <param name="insertionPoint">Text insertion <see cref="Vector2">point</see>.</param>
+        /// <param name="position">Text <see cref="Vector2">position</see> in world coordinates.</param>
         /// <param name="height">Text height.</param>
         /// <param name="rectangleWidth">Reference rectangle width.</param>
-        public MText(Vector2 insertionPoint, double height, double rectangleWidth)
-            : this(string.Empty, new Vector3(insertionPoint.X, insertionPoint.Y, 0.0), height, rectangleWidth, TextStyle.Default)
+        public MText(Vector2 position, double height, double rectangleWidth)
+            : this(string.Empty, new Vector3(position.X, position.Y, 0.0), height, rectangleWidth, TextStyle.Default)
         {
         }
 
         /// <summary>
         /// Initializes a new instance of the <c>MText</c> class.
         /// </summary>
-        /// <param name="insertionPoint">Text insertion <see cref="Vector3">point</see>.</param>
+        /// <param name="position">Text <see cref="Vector2">position</see> in world coordinates.</param>
         /// <param name="height">Text height.</param>
         /// <param name="rectangleWidth">Reference rectangle width.</param>
         /// <param name="style">Text <see cref="TextStyle">style</see>.</param>
-        public MText(Vector3 insertionPoint, double height, double rectangleWidth, TextStyle style)
-            : this(string.Empty, insertionPoint, height, rectangleWidth, style)
+        public MText(Vector3 position, double height, double rectangleWidth, TextStyle style)
+            : this(string.Empty, position, height, rectangleWidth, style)
         {
         }
 
         /// <summary>
         /// Initializes a new instance of the <c>MText</c> class.
         /// </summary>
-        /// <param name="insertionPoint">Text insertion <see cref="Vector2">point</see>.</param>
+        /// <param name="position">Text <see cref="Vector2">position</see> in world coordinates.</param>
         /// <param name="height">Text height.</param>
         /// <param name="rectangleWidth">Reference rectangle width.</param>
         /// <param name="style">Text <see cref="TextStyle">style</see>.</param>
-        public MText(Vector2 insertionPoint, double height, double rectangleWidth, TextStyle style)
-            : this(string.Empty, new Vector3(insertionPoint.X, insertionPoint.Y, 0.0), height, rectangleWidth, style)
+        public MText(Vector2 position, double height, double rectangleWidth, TextStyle style)
+            : this(string.Empty, new Vector3(position.X, position.Y, 0.0), height, rectangleWidth, style)
         {
         }
 
@@ -141,39 +141,52 @@ namespace netDxf.Entities
         /// Initializes a new instance of the <c>MText</c> class.
         /// </summary>
         /// <param name="text">Text string.</param>
-        /// <param name="insertionPoint">Text insertion <see cref="Vector3">point</see>.</param>
-        /// <param name="height">Text height.</param>
-        /// <param name="rectangleWidth">Reference rectangle width.</param>
-        public MText(string text, Vector3 insertionPoint, double height, double rectangleWidth)
-            : this(text, insertionPoint, height, rectangleWidth, TextStyle.Default)
-        {
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <c>MText</c> class.
-        /// </summary>
-        /// <param name="text">Text string.</param>
-        /// <param name="insertionPoint">Text insertion <see cref="Vector2">point</see>.</param>
-        /// <param name="height">Text height.</param>
-        /// <param name="rectangleWidth">Reference rectangle width.</param>
-        public MText(string text, Vector2 insertionPoint, double height, double rectangleWidth)
-            : this(text, new Vector3(insertionPoint.X, insertionPoint.Y, 0.0), height, rectangleWidth, TextStyle.Default)
-        {
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <c>MText</c> class.
-        /// </summary>
-        /// <param name="text">Text string.</param>
-        /// <param name="insertionPoint">Text insertion <see cref="Vector3">point</see>.</param>
+        /// <param name="position">Text <see cref="Vector2">position</see> in world coordinates.</param>
         /// <param name="height">Text height.</param>
         /// <param name="rectangleWidth">Reference rectangle width.</param>
         /// <param name="style">Text <see cref="TextStyle">style</see>.</param>
-        public MText(string text, Vector3 insertionPoint, double height, double rectangleWidth, TextStyle style)
+        public MText(string text, Vector2 position, double height, double rectangleWidth, TextStyle style)
+            : this(text, new Vector3(position.X, position.Y, 0.0), height, rectangleWidth, style)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <c>MText</c> class.
+        /// </summary>
+        /// <param name="text">Text string.</param>
+        /// <param name="position">Text <see cref="Vector2">position</see> in world coordinates.</param>
+        /// <param name="height">Text height.</param>
+        /// <param name="rectangleWidth">Reference rectangle width.</param>
+        public MText(string text, Vector2 position, double height, double rectangleWidth)
+            : this(text, new Vector3(position.X, position.Y, 0.0), height, rectangleWidth, TextStyle.Default)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <c>MText</c> class.
+        /// </summary>
+        /// <param name="text">Text string.</param>
+        /// <param name="position">Text <see cref="Vector2">position</see> in world coordinates.</param>
+        /// <param name="height">Text height.</param>
+        /// <param name="rectangleWidth">Reference rectangle width.</param>
+        public MText(string text, Vector3 position, double height, double rectangleWidth)
+            : this(text, position, height, rectangleWidth, TextStyle.Default)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <c>MText</c> class.
+        /// </summary>
+        /// <param name="text">Text string.</param>
+        /// <param name="position">Text <see cref="Vector2">position</see> in world coordinates.</param>
+        /// <param name="height">Text height.</param>
+        /// <param name="rectangleWidth">Reference rectangle width.</param>
+        /// <param name="style">Text <see cref="TextStyle">style</see>.</param>
+        public MText(string text, Vector3 position, double height, double rectangleWidth, TextStyle style)
             : base(DxfObjectCode.MText)
         {
             this.value = text;
-            this.insertionPoint = insertionPoint;
+            this.position = position;
             this.attachmentPoint = MTextAttachmentPoint.TopLeft;
             this.layer = Layer.Default;
             this.color = AciColor.ByLayer;
@@ -186,19 +199,6 @@ namespace netDxf.Entities
             this.paragraphHeightFactor = 1.0;
             this.lineSpacingStyle = MTextLineSpacingStyle.AtLeast;
             this.rotation = 0.0;
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <c>MText</c> class.
-        /// </summary>
-        /// <param name="text">Text string.</param>
-        /// <param name="insertionPoint">Text insertion <see cref="Vector2">point</see>.</param>
-        /// <param name="height">Text height.</param>
-        /// <param name="rectangleWidth">Reference rectangle width.</param>
-        /// <param name="style">Text <see cref="TextStyle">style</see>.</param>
-        public MText(string text, Vector2 insertionPoint, double height, double rectangleWidth, TextStyle style)
-            : this(text, new Vector3(insertionPoint.X, insertionPoint.Y, 0.0), height, rectangleWidth, style)
-        {
         }
 
         #endregion
@@ -303,12 +303,12 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets or sets the text base <see cref="netDxf.Vector3">point</see>.
+        /// Gets or sets the Text <see cref="Vector2">position</see> in world coordinates..
         /// </summary>
-        public Vector3 InsertionPoint
+        public Vector3 Position
         {
-            get { return this.insertionPoint; }
-            set { this.insertionPoint = value; }
+            get { return this.position; }
+            set { this.position = value; }
         }
 
         /// <summary>

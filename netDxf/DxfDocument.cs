@@ -90,6 +90,7 @@ namespace netDxf
         private List<Text> texts;
         private List<MText> mTexts;
         private List<Hatch> hatches;
+        private List<Spline> splines;
 
         #endregion
 
@@ -135,6 +136,7 @@ namespace netDxf
             this.texts = new List<Text>();
             this.mTexts = new List<MText>();
             this.hatches = new List<Hatch>();
+            this.splines = new List<Spline>();
         }
 
         #endregion
@@ -351,84 +353,181 @@ namespace netDxf
         #region public table methods
 
         /// <summary>
-        /// Gets a text style from the the table.
+        /// Adds a layer to the table.
         /// </summary>
-        /// <param name="name">TextStyle name</param>
-        /// <returns>TextStyle.</returns>
-        public TextStyle GetTextStyle(string name)
+        /// <param name="layer"><see cref="Layer">Layer</see> to add to the dictionary.</param>
+        /// <returns>
+        /// If a layer already exists with the same name as the layer that is being added the method returns the existing layer,
+        /// if not it will return the new layer.
+        /// </returns>
+        public Layer AddLayer(Layer layer)
         {
-            return this.textStyles[name];
-        }
+            Layer add;
+            if (this.layers.TryGetValue(layer.Name, out add))
+                return add;
 
-        /// <summary>
-        /// Determines if a specified text style exists in the table.
-        /// </summary>
-        /// <param name="textStyle">Text style to locate.</param>
-        /// <returns>True if the specified text style exists or false in any other case.</returns>
-        public bool ContainsTextStyle(TextStyle textStyle)
-        {
-            return this.textStyles.ContainsKey(textStyle.Name);
-        }
-
-        /// <summary>
-        /// Gets a block from the the table.
-        /// </summary>
-        /// <param name="name">Block name</param>
-        /// <returns>Block.</returns>
-        public Block GetBlock(string name)
-        {
-            return this.blocks[name];
-        }
-
-        /// <summary>
-        /// Determines if a specified block exists in the table.
-        /// </summary>
-        /// <param name="block">Block to locate.</param>
-        /// <returns>True if the specified block exists or false in any other case.</returns>
-        public bool ContainsBlock(Block block)
-        {
-            return this.blocks.ContainsKey(block.Name);
-        }
-
-        /// <summary>
-        /// Gets a line type from the the table.
-        /// </summary>
-        /// <param name="name">LineType name</param>
-        /// <returns>LineType.</returns>
-        public LineType GetLineType(string name)
-        {
-            return this.lineTypes[name];
-        }
-
-        /// <summary>
-        /// Determines if a specified line type exists in the table.
-        /// </summary>
-        /// <param name="lineType">Line type to locate.</param>
-        /// <returns>True if the specified line type exists or false in any other case.</returns>
-        public bool ContainsLineType(LineType lineType)
-        {
-            return this.lineTypes.ContainsKey(lineType.Name);
+            this.layers.Add(layer.Name, layer);
+            layer.LineType = AddLineType(layer.LineType);
+            this.handleCount = layer.AsignHandle(this.handleCount);
+            return layer;
         }
 
         /// <summary>
         /// Gets a layer from the the table.
         /// </summary>
-        /// <param name="name">Layer name</param>
-        /// <returns>Layer.</returns>
+        /// <param name="name"><see cref="Layer">Layer</see> name.</param>
+        /// <returns>Layer with the actual name, null if it does not exists.</returns>
         public Layer GetLayer(string name)
         {
-            return this.layers[name];
+            Layer add;
+            return this.layers.TryGetValue(name, out add) ? add : null;
         }
 
         /// <summary>
-        /// Determines if a specified layer exists in the table.
+        /// Adds a line type to the table.
         /// </summary>
-        /// <param name="layer">Layer to locate.</param>
-        /// <returns>True if the specified layer exists or false in any other case.</returns>
-        public bool ContainsLayer(Layer layer)
+        /// <param name="lineType"><see cref="LineType">Line type</see> to add to the dictionary.</param>
+        /// <returns>
+        /// If a line type already exists with the same name as the line type that is being added the method returns the existing line type,
+        /// if not it will return the new line type.
+        /// </returns>
+        public LineType AddLineType(LineType lineType)
         {
-            return this.layers.ContainsKey(layer.Name);
+            LineType add;
+            if (this.lineTypes.TryGetValue(lineType.Name, out add))
+                return add;
+
+            this.lineTypes.Add(lineType.Name, lineType);
+            this.handleCount = lineType.AsignHandle(this.handleCount);
+            return lineType;
+
         }
+
+        /// <summary>
+        /// Gets a line type from the the table.
+        /// </summary>
+        /// <param name="name"><see cref="LineType">Line type</see> name.</param>
+        /// <returns>Line type with the actual name, null if it does not exists.</returns>
+        public LineType GetLineType(string name)
+        {
+            LineType add;
+            return this.lineTypes.TryGetValue(name, out add) ? add : null;
+        }
+
+        /// <summary>
+        /// Adds a text style to the table.
+        /// </summary>
+        /// <param name="textStyle"><see cref="TextStyle">Text style</see> to add to the dictionary.</param>
+        /// <returns>
+        /// If a text style already exists with the same name as the text style that is being added the method returns the existing text style,
+        /// if not it will return the new text style.
+        /// </returns>
+        public TextStyle AddTextStyle(TextStyle textStyle)
+        {
+            TextStyle add;
+            if (this.textStyles.TryGetValue(textStyle.Name, out add))
+                return add;
+
+            this.textStyles.Add(textStyle.Name, textStyle);
+            this.handleCount = textStyle.AsignHandle(this.handleCount);
+            return textStyle;
+        }
+
+        /// <summary>
+        /// Gets a text style from the the table.
+        /// </summary>
+        /// <param name="name"><see cref="TextStyle">Text style</see> name.</param>
+        /// <returns>Text style with the actual name, null if it does not exists.</returns>
+        public TextStyle GetTextStyle(string name)
+        {
+            TextStyle add;
+            return this.textStyles.TryGetValue(name, out add) ? add : null;
+        }
+
+        /// <summary>
+        /// Adds a dimension style to the table.
+        /// </summary>
+        /// <param name="dimensionStyle"><see cref="DimensionStyle">Dimension style</see> to add to the dictionary.</param>
+        /// <returns>
+        /// If a dimension style already exists with the same name as the dimension style that is being added the method returns the existing dimension style,
+        /// if not it will return the new dimension style.
+        /// </returns>
+        public DimensionStyle AddDimensionStyle(DimensionStyle dimensionStyle)
+        {
+            DimensionStyle add;
+            if (this.dimStyles.TryGetValue(dimensionStyle.Name, out add))
+                return add;
+
+            this.dimStyles.Add(dimensionStyle.Name, dimensionStyle);
+            dimensionStyle.TextStyle = AddTextStyle(dimensionStyle.TextStyle);
+            this.handleCount = dimensionStyle.AsignHandle(this.handleCount);
+            return dimensionStyle;
+        }
+
+        /// <summary>
+        /// Gets a dimension style from the the table.
+        /// </summary>
+        /// <param name="name"><see cref="DimensionStyle">Dimension style</see> name.</param>
+        /// <returns>Dimension style with the actual name, null if it does not exists.</returns>
+        public DimensionStyle GetDimensionStyle(string name)
+        {
+            DimensionStyle add;
+            return this.dimStyles.TryGetValue(name, out add) ? add : null;
+        }
+
+        /// <summary>
+        /// Adds a block to the table.
+        /// </summary>
+        /// <param name="block"><see cref="Block">Block</see> to add to the dictionary.</param>
+        /// <returns>
+        /// If a block already exists with the same name as the block that is being added the method returns the existing block,
+        /// if not it will return the new block.
+        /// </returns>
+        public Block AddBlock(Block block)
+        {
+            Block add;
+            if (this.blocks.TryGetValue(block.Name, out add))
+                return add;
+
+            // if the block definition has not been added
+            this.blocks.Add(block.Name, block);
+            block.Layer = AddLayer(block.Layer);
+
+            //for new block definitions configure its entities
+            foreach (IEntityObject blockEntity in block.Entities)
+            {
+                // check if the entity has not been added to the document
+                if (this.addedObjects.ContainsKey(blockEntity))
+                    throw new ArgumentException("The entity " + blockEntity.Type + " object of the block " + block.Name + " has already been added to the document.", "block");
+
+                this.addedObjects.Add(blockEntity, blockEntity);
+                blockEntity.Layer = AddLayer(blockEntity.Layer);
+                blockEntity.LineType = AddLineType(blockEntity.LineType);
+
+            }
+            //for new block definitions configure its attributes
+            foreach (AttributeDefinition attribute in block.Attributes.Values)
+            {
+                attribute.Layer = AddLayer(attribute.Layer);
+                attribute.LineType = AddLineType(attribute.LineType);
+                attribute.Style = AddTextStyle(attribute.Style);
+            }
+
+            this.handleCount = block.AsignHandle(this.handleCount);
+            return block;
+        }
+
+        /// <summary>
+        /// Gets a block from the the table.
+        /// </summary>
+        /// <param name="name"><see cref="Block">Block</see> name.</param>
+        /// <returns>Block with the actual name, null if it does not exists.</returns>
+        public Block GetBlock(string name)
+        {
+            Block add;
+            return this.blocks.TryGetValue(name, out add) ? add : null;
+        }
+
 
         #endregion
 
@@ -521,6 +620,9 @@ namespace netDxf
                 case EntityType.Face3D:
                     this.faces3d.Add((Face3d) entity);
                     break;
+                case EntityType.Spline:
+                    this.splines.Add((Spline)entity);
+                    break;
                 case EntityType.Hatch:
                     this.hatches.Add((Hatch)entity);
                     break;
@@ -559,20 +661,6 @@ namespace netDxf
                     ((MText)entity).Style = AddTextStyle(((MText)entity).Style);
                     this.mTexts.Add((MText) entity);
                     break;
-                case EntityType.Vertex:
-                    throw new ArgumentException("The entity " + entity.Type + " is only allowed as part of another entity", "entity");
-
-                case EntityType.PolylineVertex:
-                    throw new ArgumentException("The entity " + entity.Type + " is only allowed as part of another entity", "entity");
-
-                case EntityType.Polyline3dVertex:
-                    throw new ArgumentException("The entity " + entity.Type + " is only allowed as part of another entity", "entity");
-
-                case EntityType.PolyfaceMeshVertex:
-                    throw new ArgumentException("The entity " + entity.Type + " is only allowed as part of another entity", "entity");
-
-                case EntityType.PolyfaceMeshFace:
-                    throw new ArgumentException("The entity " + entity.Type + " is only allowed as part of another entity", "entity");
 
                 case EntityType.AttributeDefinition:
                     throw new ArgumentException("The entity " + entity.Type + " is only allowed as part of another entity", "entity");
@@ -630,6 +718,9 @@ namespace netDxf
                 case EntityType.Face3D:
                     this.faces3d.Remove((Face3d)entity);
                     break;
+                case EntityType.Spline:
+                    this.splines.Remove((Spline) entity);
+                    break;
                 case EntityType.Hatch:
                     this.hatches.Remove((Hatch)entity);
                     break;
@@ -660,20 +751,6 @@ namespace netDxf
                 case EntityType.MText:
                     this.mTexts.Remove((MText)entity);
                     break;
-                case EntityType.Vertex:
-                    throw new ArgumentException("The entity " + entity.Type + " is only allowed as part of another entity", "entity");
-
-                case EntityType.PolylineVertex:
-                    throw new ArgumentException("The entity " + entity.Type + " is only allowed as part of another entity", "entity");
-
-                case EntityType.Polyline3dVertex:
-                    throw new ArgumentException("The entity " + entity.Type + " is only allowed as part of another entity", "entity");
-
-                case EntityType.PolyfaceMeshVertex:
-                    throw new ArgumentException("The entity " + entity.Type + " is only allowed as part of another entity", "entity");
-
-                case EntityType.PolyfaceMeshFace:
-                    throw new ArgumentException("The entity " + entity.Type + " is only allowed as part of another entity", "entity");
 
                 case EntityType.AttributeDefinition:
                     throw new ArgumentException("The entity " + entity.Type + " is only allowed as part of another entity", "entity");
@@ -735,6 +812,7 @@ namespace netDxf
             this.mTexts = dxfReader.MTexts;
             this.hatches = dxfReader.Hatches;
             this.dimensions = dxfReader.Dimensions;
+            this.splines = dxfReader.Splines;
 
             Thread.CurrentThread.CurrentCulture = cultureInfo;
 
@@ -880,6 +958,10 @@ namespace netDxf
             {
                 dxfWriter.WriteEntity(face);
             }
+            foreach (Spline spline in this.splines)
+            {
+                dxfWriter.WriteEntity(spline);
+            }
             foreach (Solid solid in this.solids)
             {
                 dxfWriter.WriteEntity(solid);
@@ -937,91 +1019,10 @@ namespace netDxf
 
             Thread.CurrentThread.CurrentCulture = cultureInfo;
         }
-         
+         		
         #endregion
 
         #region private methods
-		
-        private Layer AddLayer(Layer layer)
-        {
-            Layer add;
-            if (this.layers.TryGetValue(layer.Name, out add))
-                return add;
-                
-            this.layers.Add(layer.Name, layer);
-            layer.LineType = AddLineType(layer.LineType);
-            this.handleCount = layer.AsignHandle(this.handleCount);
-            return layer;
-        }
-
-        private LineType AddLineType(LineType lineType)
-        {
-            LineType add;
-            if(this.lineTypes.TryGetValue(lineType.Name, out add))
-                return add;
-
-            this.lineTypes.Add(lineType.Name, lineType);
-            this.handleCount = lineType.AsignHandle(this.handleCount);
-            return lineType;
-
-        }
-
-        private TextStyle AddTextStyle(TextStyle textStyle)
-        {
-            TextStyle add;
-            if (this.textStyles.TryGetValue(textStyle.Name, out add))
-                return add;
-
-            this.textStyles.Add(textStyle.Name, textStyle);
-            this.handleCount = textStyle.AsignHandle(this.handleCount);
-            return textStyle;
-        }
-
-        private DimensionStyle AddDimensionStyle(DimensionStyle dimensionStyle)
-        {
-            DimensionStyle add;
-            if (this.dimStyles.TryGetValue(dimensionStyle.Name, out add))
-                return add;
-
-            this.dimStyles.Add(dimensionStyle.Name, dimensionStyle);
-            dimensionStyle.TextStyle = AddTextStyle(dimensionStyle.TextStyle);
-            this.handleCount = dimensionStyle.AsignHandle(this.handleCount);
-            return dimensionStyle;
-        }
-
-        private Block AddBlock(Block block)
-        {
-            Block add;
-            if (this.blocks.TryGetValue(block.Name, out add))
-                return add;
-
-            // if the block definition has not been added
-            this.blocks.Add(block.Name, block);
-            block.Layer = AddLayer(block.Layer);
-
-            //for new block definitions configure its entities
-            foreach (IEntityObject blockEntity in block.Entities)
-            {
-                // check if the entity has not been added to the document
-                if (this.addedObjects.ContainsKey(blockEntity))
-                    throw new ArgumentException("The entity " + blockEntity.Type + " object of the block " + block.Name + " has already been added to the document.", "block");
-
-                this.addedObjects.Add(blockEntity, blockEntity);
-                blockEntity.Layer = AddLayer(blockEntity.Layer);
-                blockEntity.LineType = AddLineType(blockEntity.LineType);
-
-            }
-            //for new block definitions configure its attributes
-            foreach (AttributeDefinition attribute in block.Attributes.Values)
-            {
-                attribute.Layer = AddLayer(attribute.Layer);
-                attribute.LineType = AddLineType(attribute.LineType);
-                attribute.Style = AddTextStyle(attribute.Style);
-            }
-
-            this.handleCount = block.AsignHandle(this.handleCount);
-            return block;
-        }
 
         private void AddDefaultObjects()
         {

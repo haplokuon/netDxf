@@ -31,7 +31,6 @@ namespace netDxf.Entities
     {
         #region private fields
 
-        private const EntityType TYPE = EntityType.LightWeightPolylineVertex;
         private Vector2 location;
         private double beginWidth;
         private double endWidth;
@@ -119,14 +118,6 @@ namespace netDxf.Entities
             set { this.bulge = value; }
         }
 
-        /// <summary>
-        /// Gets the entity <see cref="EntityType">type</see>.
-        /// </summary>
-        public EntityType Type
-        {
-            get { return TYPE; }
-        }
-
         #endregion
 
         #region overrides
@@ -137,7 +128,7 @@ namespace netDxf.Entities
         /// <returns>The string representation.</returns>
         public override string ToString()
         {
-            return String.Format("{0} ({1})", TYPE, this.location);
+            return String.Format("{0}: ({1})", "LwPolylineVertex", this.location);
         }
 
         #endregion

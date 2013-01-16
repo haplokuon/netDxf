@@ -52,9 +52,8 @@ namespace netDxf.Entities
         /// <summary>
         /// Initializes a new instance of the <c>Circle</c> class.
         /// </summary>
-        /// <param name="center">Circle <see cref="Vector3">center</see> in object coordinates.</param>
+        /// <param name="center">Circle <see cref="Vector3">center</see> in world coordinates.</param>
         /// <param name="radius">Circle radius.</param>
-        /// <remarks>The center Z coordinate represents the elevation of the arc along the normal.</remarks>
         public Circle(Vector3 center, double radius)
             : base(DxfObjectCode.Circle)
         {
@@ -70,9 +69,8 @@ namespace netDxf.Entities
         /// <summary>
         /// Initializes a new instance of the <c>Circle</c> class.
         /// </summary>
-        /// <param name="center">Circle <see cref="Vector2">center</see> in object coordinates.</param>
+        /// <param name="center">Circle <see cref="Vector2">center</see> in world coordinates.</param>
         /// <param name="radius">Circle radius.</param>
-        /// <remarks>The center Z coordinate represents the elevation of the arc along the normal.</remarks>
         public Circle(Vector2 center, double radius)
             : this(new Vector3(center.X, center.Y, 0.0), radius)
         {

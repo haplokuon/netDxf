@@ -105,10 +105,9 @@ namespace netDxf.Entities
             }
         }
 
-        internal EndSequence EndSequence
-        {
-            get { return this.endSequence; }
-        }
+        #endregion
+
+        #region internal properties
 
         /// <summary>
         /// Gets the polyface mesh flag type.
@@ -118,11 +117,19 @@ namespace netDxf.Entities
             get { return this.flags; }
         }
 
+        /// <summary>
+        /// Gets the end vertex sequence.
+        /// </summary>
+        internal EndSequence EndSequence
+        {
+            get { return this.endSequence; }
+        }
+
         #endregion
 
         #region IEntityObject Members
 
-      /// <summary>
+        /// <summary>
         /// Gets the entity <see cref="netDxf.Entities.EntityType">type</see>.
         /// </summary>
         public EntityType Type

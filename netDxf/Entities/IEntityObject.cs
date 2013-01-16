@@ -91,9 +91,14 @@ namespace netDxf.Entities
         Face3D,
 
         /// <summary>
-        /// Solid .
+        /// Solid.
         /// </summary>
         Solid,
+
+        /// <summary>
+        /// Spline (nonuniform rational B-splines NURBS).
+        /// </summary>
+        Spline,
 
         /// <summary>
         /// Block insertion entity.
@@ -116,39 +121,9 @@ namespace netDxf.Entities
         AttributeDefinition,
 
         /// <summary>
-        /// Lightweight polyline vertex entity.
-        /// </summary>
-        LightWeightPolylineVertex,
-
-        /// <summary>
-        /// Polyline vertex entity.
-        /// </summary>
-        PolylineVertex,
-
-        /// <summary>
-        /// Polyline 3d vertex entity.
-        /// </summary>
-        Polyline3dVertex,
-
-        /// <summary>
-        /// Polyface mesh vertex entity.
-        /// </summary>
-        PolyfaceMeshVertex,
-
-        /// <summary>
-        /// Polyface mesh face entity.
-        /// </summary>
-        PolyfaceMeshFace,
-
-        /// <summary>
         /// Dimension entity.
         /// </summary>
         Dimension,
-
-        /// <summary>
-        /// A generic vertex entity.
-        /// </summary>
-        Vertex,
 
         /// <summary>
         /// A raster image entity.

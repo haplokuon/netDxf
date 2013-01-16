@@ -123,6 +123,11 @@ namespace netDxf
         public const string Arc = "ARC";
 
         /// <summary>
+        /// Spline (nonuniform rational B-splines NURBS).
+        /// </summary>
+        public const string Spline = "SPLINE";
+
+        /// <summary>
         /// Solid.
         /// </summary>
         public const string Solid = "SOLID";

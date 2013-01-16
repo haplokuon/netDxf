@@ -102,7 +102,7 @@ namespace netDxf.Entities
         /// <summary>
         /// Gets or sets if the light weight polyline is closed.
         /// </summary>
-        public virtual bool IsClosed
+        public bool IsClosed
         {
             get { return this.isClosed; }
             set
@@ -145,6 +145,10 @@ namespace netDxf.Entities
             set { this.elevation = value; }
         }
 
+        #endregion
+
+        #region internal properties
+
         /// <summary>
         /// Gets the light weight polyline type.
         /// </summary>
@@ -154,7 +158,6 @@ namespace netDxf.Entities
         }   
 
         #endregion
-
         #region IEntityObject Members
 
         /// <summary>

@@ -68,6 +68,7 @@ namespace netDxf
         private List<MText> mTexts;
         private List<Hatch> hatches;
         private List<Dimension> dimensions;
+        private List<Spline> splines;
 
         //tables
         private Dictionary<string, ApplicationRegistry> appIds;
@@ -161,6 +162,11 @@ namespace netDxf
         public List<Solid> Solids
         {
             get { return this.solids; }
+        }
+
+        public List<Spline> Splines
+        {
+            get { return this.splines; }
         }
 
         public List<Line> Lines
@@ -291,6 +297,7 @@ namespace netDxf
             this.mTexts = new List<MText>();
             this.hatches = new List<Hatch>();
             this.dimensions = new List<Dimension>();
+            this.splines = new List<Spline>();
 
             this.fileLine = -1;
 
@@ -558,7 +565,7 @@ namespace netDxf
             Block block = new Block(name)
                               {
                                   Record = blockRecord,
-                                  BasePoint = basePoint,
+                                  Position = basePoint,
                                   Layer = layer,
                                   Entities = entities,
                                   Attributes = attdefs,
@@ -736,11 +743,13 @@ namespace netDxf
             }
 
             TextAlignment alignment = ObtainAlignment(horizontalAlignment, verticalAlignment);
+            Vector3 ocsBasePoint = alignment == TextAlignment.BaselineLeft ? firstAlignmentPoint : secondAlignmentPoint;
+
             return new AttributeDefinition(id)
                        {
-                           BasePoint = (alignment == TextAlignment.BaselineLeft ? firstAlignmentPoint : secondAlignmentPoint),
+                           Position = MathHelper.Transform(ocsBasePoint, normal, MathHelper.CoordinateSystem.Object, MathHelper.CoordinateSystem.World),
                            Normal = normal,
-                           //Alignment = alignment,
+                           Alignment = alignment,
                            Text = text,
                            Value = value,
                            Flags = flags,
@@ -835,6 +844,10 @@ namespace netDxf
                     case DxfObjectCode.Solid:
                         entity = this.ReadSolid();
                         this.solids.Add((Solid) entity);
+                        break;
+                    case DxfObjectCode.Spline:
+                        entity = this.ReadSpline();
+                        this.splines.Add((Spline)entity);
                         break;
                     case DxfObjectCode.Insert:
                         entity = this.ReadInsert();
@@ -2521,6 +2534,232 @@ namespace netDxf
             return solid;
         }
 
+        private Spline ReadSpline()
+        {
+            string handle = string.Empty;
+            Layer layer = Layer.Default;
+            AciColor color = AciColor.ByLayer;
+            LineType lineType = LineType.ByLayer;
+            SplineTypeFlags flags = SplineTypeFlags.None;
+            Vector3 normal = Vector3.UnitZ;
+            short degree = 3;
+            int numKnots = 0;
+            int numCtrlPoints = 0;
+            int ctrlPointIndex = -1;
+            
+            double[] knots = null;
+            List<SplineVertex> ctrlPoints = new List<SplineVertex>();
+            double ctrlX = 0;
+            double ctrlY = 0;
+            double ctrlZ = 0;
+            double ctrlWeigth = -1;
+
+            // tolerances (not used)
+            double knotTolerance = 0.0000001;
+            double ctrlPointTolerance = 0.0000001;
+            double fitTolerance = 0.0000000001;
+
+            // start and end tangents (not used)
+            double stX = 0;
+            double stY = 0;
+            double stZ = 0;
+            Vector3? startTangent = null;
+            double etX = 0;
+            double etY = 0;
+            double etZ = 0;
+            Vector3? endTangent = null;
+
+            // fit points variable (not used)
+            int numFitPoints = 0;
+            List<Vector3> fitPoints = new List<Vector3>();
+            double fitX = 0;
+            double fitY = 0;
+            double fitZ = 0;
+
+            Dictionary<ApplicationRegistry, XData> xData = new Dictionary<ApplicationRegistry, XData>();
+
+            dxfPairInfo = this.ReadCodePair();
+            while (dxfPairInfo.Code != 0)
+            {
+                switch (dxfPairInfo.Code)
+                {
+                    case 5:
+                        handle = dxfPairInfo.Value;
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 8:
+                        layer = this.GetLayer(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 62:
+                        color = new AciColor(short.Parse(dxfPairInfo.Value));
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 6:
+                        lineType = this.GetLineType(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 210:
+                        normal.X = double.Parse(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 220:
+                        normal.Y = double.Parse(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 230:
+                        normal.Z = double.Parse(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 70:
+                        flags = (SplineTypeFlags)(int.Parse(dxfPairInfo.Value));
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 71:
+                        degree = short.Parse(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 72:
+                        numKnots = int.Parse(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 73:
+                        numCtrlPoints = int.Parse(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 74:
+                        numFitPoints = int.Parse(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 42:
+                        knotTolerance = double.Parse(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 43:
+                        ctrlPointTolerance = double.Parse(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 44:
+                        fitTolerance = double.Parse(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 12:
+                        stX = double.Parse(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 22:
+                        stY = double.Parse(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 32:
+                        stZ = double.Parse(dxfPairInfo.Value);
+                        startTangent = new Vector3(stX, stY, stZ);
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 13:
+                        etX = double.Parse(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 23:
+                        etY = double.Parse(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 33:
+                        etZ = double.Parse(dxfPairInfo.Value);
+                        endTangent = new Vector3(stX, stY, stZ);
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 40:
+                        // multiple code 40 entries, one per knot value
+                        knots = ReadSplineKnots(numKnots);
+                        break;
+                    case 10:
+                        ctrlX = double.Parse(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 20:
+                        ctrlY = double.Parse(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 30:
+                        ctrlZ = double.Parse(dxfPairInfo.Value);
+                        
+                        if (ctrlWeigth.Equals(-1))
+                        {
+                            ctrlPoints.Add(new SplineVertex(ctrlX, ctrlY, ctrlZ));
+                            ctrlPointIndex = ctrlPoints.Count - 1;
+                        }
+                        else
+                        {
+                            ctrlPoints.Add(new SplineVertex(ctrlX, ctrlY, ctrlZ, ctrlWeigth));
+                            ctrlPointIndex = -1;
+                        }
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 41:
+                        // code 41 might appear before or after the control point coordiantes.
+                        // I am open to better ways to handling this.
+                        if (ctrlPointIndex == -1)
+                        {
+                            ctrlWeigth = double.Parse(dxfPairInfo.Value);
+                        }
+                        else
+                        {
+                            ctrlPoints[ctrlPointIndex].Weigth = double.Parse(dxfPairInfo.Value);
+                            ctrlWeigth = -1;
+                        }
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 11:
+                        fitX = double.Parse(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 21:
+                        fitY = double.Parse(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 31:
+                        fitZ = double.Parse(dxfPairInfo.Value);
+                        fitPoints.Add(new Vector3(fitX, fitY, fitZ));
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 1001:
+                        XData xDataItem = this.ReadXDataRecord(dxfPairInfo.Value);
+                        xData.Add(xDataItem.ApplicationRegistry, xDataItem);
+                        break;
+                    default:
+                        if (dxfPairInfo.Code >= 1000 && dxfPairInfo.Code <= 1071)
+                            throw new DxfInvalidCodeValueEntityException(dxfPairInfo.Code, dxfPairInfo.Value, this.file,
+                                                                         "The extended data of an entity must start with the application registry code " + this.fileLine);
+
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                }
+            }
+
+            Spline spline = new Spline(ctrlPoints, knots, degree)
+                                {
+                                    Handle = handle,
+                                    Layer = layer,
+                                    Color = color,
+                                    LineType = lineType
+                                };
+            return spline;
+        }
+
+        private double[] ReadSplineKnots(int numKnots)
+        {
+            double[] knots = new double[numKnots];
+            for (int i = 0; i < numKnots; i++)
+            {
+                if (dxfPairInfo.Code != 40)
+                    throw new DxfException("The knot vector must have " + numKnots + " code 40 entries.");
+                knots[i] = double.Parse(dxfPairInfo.Value);
+                dxfPairInfo = this.ReadCodePair();
+            }
+            return knots;
+        }
+
         private Insert ReadInsert()
         {
             string handle = string.Empty;
@@ -2651,12 +2890,15 @@ namespace netDxf
                 }
             }
 
+            // It is a lot more intuitive to give the center in world coordinates and then define the orientation with the normal.
+            Vector3 wcsBasePoint = MathHelper.Transform(basePoint, normal, MathHelper.CoordinateSystem.Object, MathHelper.CoordinateSystem.World);
+
             Insert insert = new Insert(block)
                                 {
                                     Color = color,
                                     Layer = layer,
                                     LineType = lineType,
-                                    InsertionPoint = basePoint,
+                                    Position = wcsBasePoint,
                                     Rotation = rotation,
                                     Scale = scale,
                                     Normal = normal,
@@ -3211,8 +3453,11 @@ namespace netDxf
             }
 
             TextAlignment alignment = ObtainAlignment(horizontalAlignment, verticalAlignment);
+            Vector3 ocsBasePoint = alignment == TextAlignment.BaselineLeft ? firstAlignmentPoint : secondAlignmentPoint;
 
-            text.BasePoint = alignment == TextAlignment.BaselineLeft ? firstAlignmentPoint : secondAlignmentPoint;
+            // another example of this ocs vs wcs non sense.
+            // while the MText position is written in WCS the position of the Text is written in OCS (different rules for the same concept).
+            text.Position = MathHelper.Transform(ocsBasePoint, normal, MathHelper.CoordinateSystem.Object, MathHelper.CoordinateSystem.World);
             text.Normal = normal;
             text.Alignment = alignment;
             text.XData = xData;

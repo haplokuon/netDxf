@@ -1,6 +1,15 @@
+[0.2.5 - 2013/01/16]
++ Added Spline entity.
++ Added public methods to add and get table objects (Layers, LineTypes, TextStyles, DimensionStyles, and Blocks).
++ Rename Text.BasePoint, MText.InsertionPoint and AttributeDefinition.BasePoint, Block.BasePoint, and Insert.InsertionPoint to .Position.
++ The attribute normal will use the ones applied to the Insert entity to which it belongs, this is subject to change if I find a way to get predictable results.
++ Updated "netDxf Documentation.chm".
+- (fixed) Insertions, Attributes and Text entities follows the same rules as the Circle, Arc, Ellipse and MText entities. The insertion point (position), defines the placement in world coordinates and the normal defines the orientation of the insertion at that point (this will only affect to entities which normal is not the default ZAxis).
+- (fixed) Text aligment in block attributes.
+
 [0.2.4 - 2012/12/19]
 + Now the entity handles are assigned when the entity is added to the document. This should allow to open an existing dxf and add more entities to the same document, while maintaining the old entity handles once the document is saved again.
-+ Added plot property to layers, If set to false, do not plot this layer.
++ Added Plot property to layers, If set to false, do not plot this layer.
 + Added RemoveEntity method to the DxfDocument.
 - Deleted Layer, Color, and LineType properties from PolyfaceMeshFace, PolyfaceMeshVertex, and PolylineVertex.
 

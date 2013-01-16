@@ -43,7 +43,7 @@ namespace netDxf.Entities
         private Layer layer;
         private LineType lineType;
         private Block block;
-        private Vector3 insertionPoint;
+        private Vector3 position;
         private Vector3 scale;
         private double rotation;
         private Vector3 normal;
@@ -58,15 +58,15 @@ namespace netDxf.Entities
         /// Initializes a new instance of the <c>Insert</c> class.
         /// </summary>
         /// <param name="block">Insert block definition.</param>
-        /// <param name="insertionPoint">Insert <see cref="Vector3">point</see>.</param>
-        public Insert(Block block, Vector3 insertionPoint)
+        /// <param name="position">Insert <see cref="Vector3">point</see> in world coordinates.</param>
+        public Insert(Block block, Vector3 position)
             : base (DxfObjectCode.Insert)
         {
             if (block == null)
                 throw new ArgumentNullException("block");
 
             this.block = block;
-            this.insertionPoint = insertionPoint;
+            this.position = position;
             this.scale = new Vector3(1.0, 1.0, 1.0);
             this.rotation = 0.0f;
             this.normal = Vector3.UnitZ;
@@ -85,9 +85,9 @@ namespace netDxf.Entities
         /// Initializes a new instance of the <c>Insert</c> class.
         /// </summary>
         /// <param name="block">Insert block definition.</param>
-        /// <param name="insertionPoint">Insert <see cref="Vector2">point</see>.</param>
-        public Insert(Block block, Vector2 insertionPoint)
-            : this(block, new Vector3(insertionPoint.X, insertionPoint.Y, 0.0))
+        /// <param name="position">Insert <see cref="Vector2">position</see> in world coordinates.</param>
+        public Insert(Block block, Vector2 position)
+            : this(block, new Vector3(position.X, position.Y, 0.0))
         {
         }
 
@@ -122,12 +122,12 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets or sets the insert <see cref="Vector3">point</see>.
+        /// Gets or sets the <see cref="Vector3">position</see> in world coordinates.
         /// </summary>
-        public Vector3 InsertionPoint
+        public Vector3 Position
         {
-            get { return this.insertionPoint; }
-            set { this.insertionPoint = value; }
+            get { return this.position; }
+            set { this.position = value; }
         }
 
         /// <summary>

@@ -29,7 +29,7 @@ namespace netDxf.Entities
 {
 
     /// <summary>
-    /// Represents a circular arc <see cref="netDxf.Entities.IEntityObject">entity</see>.
+    /// Represents a circular arc <see cref="IEntityObject">entity</see>.
     /// </summary>
     public class Arc :
         DxfObject,
@@ -56,11 +56,10 @@ namespace netDxf.Entities
         /// <summary>
         /// Initializes a new instance of the <c>Arc</c> class.
         /// </summary>
-        /// <param name="center">Arc <see cref="Vector3">center</see> in object coordinates.</param>
+        /// <param name="center">Arc <see cref="Vector3">center</see> in world coordinates.</param>
         /// <param name="radius">Arc radius.</param>
         /// <param name="startAngle">Arc start angle in degrees.</param>
         /// <param name="endAngle">Arc end angle in degrees.</param>
-        /// <remarks>The center Z coordinate represents the elevation of the arc along the normal.</remarks>
         public Arc(Vector3 center, double radius, double startAngle, double endAngle)
             : base(DxfObjectCode.Arc)
         {
@@ -78,11 +77,10 @@ namespace netDxf.Entities
         /// <summary>
         /// Initializes a new instance of the <c>Arc</c> class.
         /// </summary>
-        /// <param name="center">Arc <see cref="Vector2">center</see> in object coordinates.</param>
+        /// <param name="center">Arc <see cref="Vector2">center</see> in world coordinates.</param>
         /// <param name="radius">Arc radius.</param>
         /// <param name="startAngle">Arc start angle in degrees.</param>
         /// <param name="endAngle">Arc end angle in degrees.</param>
-        /// <remarks>The center Z coordinate represents the elevation of the arc along the normal.</remarks>
         public Arc(Vector2 center, double radius, double startAngle, double endAngle)
             : this(new Vector3(center.X, center.Y, 0.0), radius, startAngle, endAngle)
         {
@@ -101,7 +99,7 @@ namespace netDxf.Entities
         #region public properties
 
         /// <summary>
-        /// Gets or sets the arc <see cref="netDxf.Vector3">center</see> in world coordinates.
+        /// Gets or sets the arc <see cref="Vector3">center</see> in world coordinates.
         /// </summary>
         public Vector3 Center
         {
@@ -151,7 +149,7 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets or sets the arc <see cref="netDxf.Vector3">normal</see>.
+        /// Gets or sets the arc <see cref="Vector3">normal</see>.
         /// </summary>
         public Vector3 Normal
         {

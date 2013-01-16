@@ -27,8 +27,9 @@ using netDxf.Tables;
 namespace netDxf.Entities
 {
     /// <summary>
-    /// Represents a attribute <see cref="netDxf.Entities.IEntityObject">entity</see>.
+    /// Represents a attribute <see cref="IEntityObject">entity</see>.
     /// </summary>
+    /// <remarks>The attribute position and orientation are expressed in local coordinates of the <see cref="Insert">Insert</see> entity to which it belongs.</remarks>
     public class Attribute :
         DxfObject,
         IEntityObject
@@ -41,7 +42,8 @@ namespace netDxf.Entities
         private AciColor color;
         private Layer layer;
         private LineType lineType;
-
+        private double rotation;
+        private Vector3 normal;
         #endregion
 
         #region constructor
@@ -50,14 +52,12 @@ namespace netDxf.Entities
         /// Intitializes a new instance of the <c>Attribute</c> class.
         /// </summary>
         /// <param name="definition"><see cref="AttributeDefinition">Attribute definition</see>.</param>
+        /// <remarks>
+        /// Althought the attribute entity could override values defined in its definiton for simplicity the implementation has restricted this posibility.
+        /// </remarks>
         public Attribute(AttributeDefinition definition)
-            : base(DxfObjectCode.Attribute)
+            : this(definition, null)
         {
-            this.definition = definition;
-            this.value = null;
-            this.color = definition.Color;
-            this.layer = definition.Layer;
-            this.lineType = definition.LineType;
         }
 
         /// <summary>
@@ -73,6 +73,8 @@ namespace netDxf.Entities
             this.color = definition.Color;
             this.layer = definition.Layer;
             this.lineType = definition.LineType;
+            this.rotation = definition.Rotation;
+            this.normal = definition.Normal;
         }
 
         #endregion
@@ -85,6 +87,30 @@ namespace netDxf.Entities
         public AttributeDefinition Definition
         {
             get { return this.definition; }
+        }
+
+        /// <summary>
+        /// Gets or sets the attribute text rotation in degrees.
+        /// </summary>
+        internal double Rotation
+        {
+            get { return this.rotation; }
+            set { this.rotation = value; }
+        }
+
+        /// <summary>
+        /// Gets or sets the attribute <see cref="netDxf.Vector3">normal</see>.
+        /// </summary>
+        internal Vector3 Normal
+        {
+            get { return this.normal; }
+            set
+            {
+                if (Vector3.Zero == value)
+                    throw new ArgumentNullException("value", "The normal can not be the zero vector");
+                value.Normalize();
+                this.normal = value;
+            }
         }
 
         /// <summary>

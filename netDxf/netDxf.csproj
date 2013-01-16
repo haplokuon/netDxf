@@ -93,6 +93,9 @@
     <Compile Include="Entities\LwPolylineVertex.cs" />
     <Compile Include="Entities\MTextFormattingOptions.cs" />
     <Compile Include="Entities\PolylineTypeFlags.cs" />
+    <Compile Include="Entities\Spline.cs" />
+    <Compile Include="Entities\SplineTypeFlags.cs" />
+    <Compile Include="Entities\SplineVertex.cs" />
     <Compile Include="Entities\VertexTypeFlags.cs" />
     <Compile Include="Header\DxfVersion.cs" />
     <Compile Include="Header\SystemVariable.cs" />

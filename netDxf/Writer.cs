@@ -590,9 +590,9 @@ namespace netDxf
             //flags
             this.WriteCodePair(70, block.Attributes.Count == 0 ? (int)block.TypeFlags : (int)(block.TypeFlags | BlockTypeFlags.NonConstantAttributeDefinitions));
 
-            this.WriteCodePair(10, block.BasePoint.X);
-            this.WriteCodePair(20, block.BasePoint.Y);
-            this.WriteCodePair(30, block.BasePoint.Z);
+            this.WriteCodePair(10, block.Position.X);
+            this.WriteCodePair(20, block.Position.Y);
+            this.WriteCodePair(30, block.Position.Z);
 
             this.WriteCodePair(3, block);
 
@@ -643,6 +643,9 @@ namespace netDxf
                     break;
                 case EntityType.Face3D:
                     this.WriteFace3D((Face3d) entity);
+                    break;
+                case EntityType.Spline:
+                    this.WriteSpline((Spline)entity);
                     break;
                 case EntityType.Solid:
                     this.WriteSolid((Solid) entity);
@@ -868,6 +871,47 @@ namespace netDxf
             this.WriteXData(face.XData);
         }
 
+        private void WriteSpline(Spline spline)
+        {
+            if (this.activeSection != StringCode.EntitiesSection && !this.isBlockEntities)
+            {
+                throw new InvalidDxfSectionException(this.activeSection, this.file);
+            }
+
+            this.WriteCodePair(0, spline.CodeName);
+            this.WriteCodePair(5, spline.Handle);
+            this.WriteCodePair(100, SubclassMarker.Entity);
+            this.WriteEntityCommonCodes(spline);
+            this.WriteCodePair(100, SubclassMarker.Spline);
+
+            int flag = (int) spline.Flags;
+            if (spline.IsClosed) flag += (int)SplineTypeFlags.Unknown4;
+            this.WriteCodePair(70, flag);
+            this.WriteCodePair(71, spline.Degree);
+            this.WriteCodePair(72, spline.Knots.Length);
+            this.WriteCodePair(73, spline.ControlPoints.Count);
+
+            //this.WriteCodePair(74, 0); Number of fit points (if any).
+
+            //this.WriteCodePair(42, 0); 42 Knot tolerance (default = 0.0000001)
+            //this.WriteCodePair(43, 0); 43 Control-point tolerance (default = 0.0000001)
+            //this.WriteCodePair(44, 0); 44 Fit tolerance (default = 0.0000000001)
+
+
+            foreach (double knot in spline.Knots)
+                this.WriteCodePair(40, knot);
+
+            foreach (SplineVertex point in spline.ControlPoints)
+            {
+                this.WriteCodePair(41, point.Weigth);
+                this.WriteCodePair(10, point.Location.X);
+                this.WriteCodePair(20, point.Location.Y);
+                this.WriteCodePair(30, point.Location.Z);
+            }
+            
+            this.WriteXData(spline.XData);
+        }
+
         private void WriteInsert(Insert insert)
         {
             if (this.activeSection != StringCode.EntitiesSection && ! this.isBlockEntities)
@@ -883,9 +927,12 @@ namespace netDxf
 
             this.WriteCodePair(2, insert.Block);
 
-            this.WriteCodePair(10, insert.InsertionPoint.X);
-            this.WriteCodePair(20, insert.InsertionPoint.Y);
-            this.WriteCodePair(30, insert.InsertionPoint.Z);
+            // It is a lot more intuitive to give the center in world coordinates and then define the orientation with the normal.
+            Vector3 ocsInsertion = MathHelper.Transform(insert.Position, insert.Normal, MathHelper.CoordinateSystem.World, MathHelper.CoordinateSystem.Object);
+
+            this.WriteCodePair(10, ocsInsertion.X);
+            this.WriteCodePair(20, ocsInsertion.Y);
+            this.WriteCodePair(30, ocsInsertion.Z);
 
             this.WriteCodePair(41, insert.Scale.X);
             this.WriteCodePair(42, insert.Scale.Y);
@@ -907,7 +954,7 @@ namespace netDxf
 
                 foreach (Attribute attrib in insert.Attributes)
                 {
-                    this.WriteAttribute(attrib, insert.InsertionPoint);
+                    this.WriteAttribute(attrib, insert);
                 }
 
                 this.WriteCodePair(0, insert.EndSequence.CodeName);
@@ -1143,9 +1190,13 @@ namespace netDxf
 
             this.WriteCodePair(1, text.Value);
 
-            this.WriteCodePair(10, text.BasePoint.X);
-            this.WriteCodePair(20, text.BasePoint.Y);
-            this.WriteCodePair(30, text.BasePoint.Z);
+            // another example of this ocs vs wcs non sense.
+            // while the MText position is written in WCS the position of the Text is written in OCS (different rules for the same concept).
+            Vector3 ocsBasePoint = MathHelper.Transform(text.Position, text.Normal, MathHelper.CoordinateSystem.World, MathHelper.CoordinateSystem.Object);
+
+            this.WriteCodePair(10, ocsBasePoint.X);
+            this.WriteCodePair(20, ocsBasePoint.Y);
+            this.WriteCodePair(30, ocsBasePoint.Z);
 
             this.WriteCodePair(40, text.Height);
 
@@ -1157,9 +1208,9 @@ namespace netDxf
 
             this.WriteCodePair(7, text.Style);
 
-            this.WriteCodePair(11, text.BasePoint.X);
-            this.WriteCodePair(21, text.BasePoint.Y);
-            this.WriteCodePair(31, text.BasePoint.Z);
+            this.WriteCodePair(11, ocsBasePoint.X);
+            this.WriteCodePair(21, ocsBasePoint.Y);
+            this.WriteCodePair(31, ocsBasePoint.Z);
 
             this.WriteCodePair(210, text.Normal.X);
             this.WriteCodePair(220, text.Normal.Y);
@@ -1264,9 +1315,9 @@ namespace netDxf
             this.WriteEntityCommonCodes(mText);
             this.WriteCodePair(100, SubclassMarker.MText);
 
-            this.WriteCodePair(10, mText.InsertionPoint.X);
-            this.WriteCodePair(20, mText.InsertionPoint.Y);
-            this.WriteCodePair(30, mText.InsertionPoint.Z);
+            this.WriteCodePair(10, mText.Position.X);
+            this.WriteCodePair(20, mText.Position.Y);
+            this.WriteCodePair(30, mText.Position.Z);
 
             this.WriteCodePair(210, mText.Normal.X);
             this.WriteCodePair(220, mText.Normal.Y);
@@ -1742,19 +1793,64 @@ namespace netDxf
             this.WriteCodePair(100, SubclassMarker.Entity);
             this.WriteEntityCommonCodes(def);
             this.WriteCodePair(100, SubclassMarker.Text);
-            this.WriteCodePair(10, def.BasePoint.X);
-            this.WriteCodePair(20, def.BasePoint.Y);
-            this.WriteCodePair(30, def.BasePoint.Z);
+
+            // at the moment the attribute definition normal is always (0,0,1) and this transformation is not really necessary, it is here in case this changes
+            Vector3 ocsPosition = MathHelper.Transform(def.Position, def.Normal, MathHelper.CoordinateSystem.World, MathHelper.CoordinateSystem.Object);
+
+            this.WriteCodePair(10, ocsPosition.X);
+            this.WriteCodePair(20, ocsPosition.Y);
+            this.WriteCodePair(30, ocsPosition.Z);
             this.WriteCodePair(40, def.Height);
+
             this.WriteCodePair(1, def.Value);
+
+            switch (def.Alignment)
+            {
+                case TextAlignment.TopLeft:
+                    this.WriteCodePair(72, 0);
+                    break;
+                case TextAlignment.TopCenter:
+                    this.WriteCodePair(72, 1);
+                    break;
+                case TextAlignment.TopRight:
+                    this.WriteCodePair(72, 2);
+                    break;
+                case TextAlignment.MiddleLeft:
+                    this.WriteCodePair(72, 0);
+                    break;
+                case TextAlignment.MiddleCenter:
+                    this.WriteCodePair(72, 1);
+                    break;
+                case TextAlignment.MiddleRight:
+                    this.WriteCodePair(72, 2);
+                    break;
+                case TextAlignment.BottomLeft:
+                    this.WriteCodePair(72, 0);
+                    break;
+                case TextAlignment.BottomCenter:
+                    this.WriteCodePair(72, 1);
+                    break;
+                case TextAlignment.BottomRight:
+                    this.WriteCodePair(72, 2);
+                    break;
+                case TextAlignment.BaselineLeft:
+                    this.WriteCodePair(72, 0);
+                    break;
+                case TextAlignment.BaselineCenter:
+                    this.WriteCodePair(72, 1);
+                    break;
+                case TextAlignment.BaselineRight:
+                    this.WriteCodePair(72, 2);
+                    break;
+            }
 
             this.WriteCodePair(50, def.Rotation);
             this.WriteCodePair(41, def.WidthFactor);
             this.WriteCodePair(7, def.Style);
 
-            this.WriteCodePair(11, def.BasePoint.X);
-            this.WriteCodePair(21, def.BasePoint.Y);
-            this.WriteCodePair(31, def.BasePoint.Z);
+            this.WriteCodePair(11, def.Position.X);
+            this.WriteCodePair(21, def.Position.Y);
+            this.WriteCodePair(31, def.Position.Z);
 
             this.WriteCodePair(210, def.Normal.X);
             this.WriteCodePair(220, def.Normal.Y);
@@ -1766,95 +1862,122 @@ namespace netDxf
             this.WriteCodePair(2, def.Id);
             this.WriteCodePair(70, (int)def.Flags);
 
-            //switch (def.Alignment)
-            //{
-            //    case TextAlignment.TopLeft:
-
-            //        this.WriteCodePair(72, 0);
-            //        this.WriteCodePair(74, 3);
-            //        break;
-            //    case TextAlignment.TopCenter:
-
-            //        this.WriteCodePair(72, 1);
-            //        this.WriteCodePair(74, 3);
-            //        break;
-            //    case TextAlignment.TopRight:
-
-            //        this.WriteCodePair(72, 2);
-            //        this.WriteCodePair(74, 3);
-            //        break;
-            //    case TextAlignment.MiddleLeft:
-
-            //        this.WriteCodePair(72, 0);
-            //        this.WriteCodePair(74, 2);
-            //        break;
-            //    case TextAlignment.MiddleCenter:
-
-            //        this.WriteCodePair(72, 1);
-            //        this.WriteCodePair(74, 2);
-            //        break;
-            //    case TextAlignment.MiddleRight:
-
-            //        this.WriteCodePair(72, 2);
-            //        this.WriteCodePair(74, 2);
-            //        break;
-            //    case TextAlignment.BottomLeft:
-
-            //        this.WriteCodePair(72, 0);
-            //        this.WriteCodePair(74, 1);
-            //        break;
-            //    case TextAlignment.BottomCenter:
-
-            //        this.WriteCodePair(72, 1);
-            //        this.WriteCodePair(74, 1);
-            //        break;
-            //    case TextAlignment.BottomRight:
-
-            //        this.WriteCodePair(72, 2);
-            //        this.WriteCodePair(74, 1);
-            //        break;
-            //    case TextAlignment.BaselineLeft:
-
-            //        this.WriteCodePair(72, 0);
-            //        this.WriteCodePair(74, 0);
-            //        break;
-            //    case TextAlignment.BaselineCenter:
-
-            //        this.WriteCodePair(72, 1);
-            //        this.WriteCodePair(74, 0);
-            //        break;
-            //    case TextAlignment.BaselineRight:
-
-            //        this.WriteCodePair(72, 2);
-            //        this.WriteCodePair(74, 0);
-            //        break;
-            //}
+            switch (def.Alignment)
+            {
+                case TextAlignment.TopLeft:
+                    this.WriteCodePair(74, 3);
+                    break;
+                case TextAlignment.TopCenter:
+                    this.WriteCodePair(74, 3);
+                    break;
+                case TextAlignment.TopRight:
+                    this.WriteCodePair(74, 3);
+                    break;
+                case TextAlignment.MiddleLeft:
+                    this.WriteCodePair(74, 2);
+                    break;
+                case TextAlignment.MiddleCenter:
+                    this.WriteCodePair(74, 2);
+                    break;
+                case TextAlignment.MiddleRight:
+                    this.WriteCodePair(74, 2);
+                    break;
+                case TextAlignment.BottomLeft:
+                    this.WriteCodePair(74, 1);
+                    break;
+                case TextAlignment.BottomCenter:
+                    this.WriteCodePair(74, 1);
+                    break;
+                case TextAlignment.BottomRight:
+                    this.WriteCodePair(74, 1);
+                    break;
+                case TextAlignment.BaselineLeft:
+                    this.WriteCodePair(74, 0);
+                    break;
+                case TextAlignment.BaselineCenter:
+                    this.WriteCodePair(74, 0);
+                    break;
+                case TextAlignment.BaselineRight:
+                    this.WriteCodePair(74, 0);
+                    break;
+            }
         }
 
-        private void WriteAttribute(Attribute attrib, Vector3 insertPoint)
+        private void WriteAttribute(Attribute attrib, Insert insert)
         {
             this.WriteCodePair(0, DxfObjectCode.Attribute);
             this.WriteCodePair(5, attrib.Handle);
             this.WriteCodePair(100, SubclassMarker.Entity);
             this.WriteEntityCommonCodes(attrib);
 
+
             this.WriteCodePair(100, SubclassMarker.Text);
-            this.WriteCodePair(10, attrib.Definition.BasePoint.X + insertPoint.X);
-            this.WriteCodePair(20, attrib.Definition.BasePoint.Y + insertPoint.Y);
-            this.WriteCodePair(30, attrib.Definition.BasePoint.Z + insertPoint.Z);
+
+            // we apply the insert rotation to the attribute
+            double sine = attrib.Definition.Position.X * Math.Sin(insert.Rotation * MathHelper.DegToRad);
+            double cosine = attrib.Definition.Position.Y * Math.Cos(insert.Rotation * MathHelper.DegToRad);
+            Vector3 point = new Vector3(cosine - sine, cosine + sine, attrib.Definition.Position.Z);
+
+            Vector3 ocsPosition = point + MathHelper.Transform(insert.Position, insert.Normal, MathHelper.CoordinateSystem.World, MathHelper.CoordinateSystem.Object);
+
+            this.WriteCodePair(10, ocsPosition.X);
+            this.WriteCodePair(20, ocsPosition.Y);
+            this.WriteCodePair(30, ocsPosition.Z);
+
             this.WriteCodePair(40, attrib.Definition.Height);
-
             this.WriteCodePair(41, attrib.Definition.WidthFactor);
-
-            this.WriteCodePair(50, attrib.Definition.Rotation);
-
             this.WriteCodePair(7, attrib.Definition.Style);
-
             this.WriteCodePair(1, attrib.Value);
 
-            this.WriteCodePair(11, attrib.Definition.BasePoint.X + insertPoint.X);
-            this.WriteCodePair(21, attrib.Definition.BasePoint.Y + insertPoint.Y);
-            this.WriteCodePair(31, attrib.Definition.BasePoint.Z + insertPoint.Z);
+            switch (attrib.Definition.Alignment)
+            {
+                case TextAlignment.TopLeft:
+                    this.WriteCodePair(72, 0);
+                    break;
+                case TextAlignment.TopCenter:
+                    this.WriteCodePair(72, 1);
+                    break;
+                case TextAlignment.TopRight:
+                    this.WriteCodePair(72, 2);
+                    break;
+                case TextAlignment.MiddleLeft:
+                    this.WriteCodePair(72, 0);
+                    break;
+                case TextAlignment.MiddleCenter:
+                    this.WriteCodePair(72, 1);
+                    break;
+                case TextAlignment.MiddleRight:
+                    this.WriteCodePair(72, 2);
+                    break;
+                case TextAlignment.BottomLeft:
+                    this.WriteCodePair(72, 0);
+                    break;
+                case TextAlignment.BottomCenter:
+                    this.WriteCodePair(72, 1);
+                    break;
+                case TextAlignment.BottomRight:
+                    this.WriteCodePair(72, 2);
+                    break;
+                case TextAlignment.BaselineLeft:
+                    this.WriteCodePair(72, 0);
+                    break;
+                case TextAlignment.BaselineCenter:
+                    this.WriteCodePair(72, 1);
+                    break;
+                case TextAlignment.BaselineRight:
+                    this.WriteCodePair(72, 2);
+                    break;
+            }
+
+            this.WriteCodePair(11, ocsPosition.X);
+            this.WriteCodePair(21, ocsPosition.Y);
+            this.WriteCodePair(31, ocsPosition.Z);
+
+            this.WriteCodePair(50, attrib.Definition.Rotation + insert.Rotation);
+
+            this.WriteCodePair(210, insert.Normal.X);
+            this.WriteCodePair(220, insert.Normal.Y);
+            this.WriteCodePair(230, insert.Normal.Z);
 
             this.WriteCodePair(100, SubclassMarker.Attribute);
 
@@ -1862,6 +1985,45 @@ namespace netDxf
 
             this.WriteCodePair(70, (int) attrib.Definition.Flags);
 
+            switch (attrib.Definition.Alignment)
+            {
+                case TextAlignment.TopLeft:
+                    this.WriteCodePair(74, 3);
+                    break;
+                case TextAlignment.TopCenter:
+                    this.WriteCodePair(74, 3);
+                    break;
+                case TextAlignment.TopRight:
+                    this.WriteCodePair(74, 3);
+                    break;
+                case TextAlignment.MiddleLeft:
+                    this.WriteCodePair(74, 2);
+                    break;
+                case TextAlignment.MiddleCenter:
+                    this.WriteCodePair(74, 2);
+                    break;
+                case TextAlignment.MiddleRight:
+                    this.WriteCodePair(74, 2);
+                    break;
+                case TextAlignment.BottomLeft:
+                    this.WriteCodePair(74, 1);
+                    break;
+                case TextAlignment.BottomCenter:
+                    this.WriteCodePair(74, 1);
+                    break;
+                case TextAlignment.BottomRight:
+                    this.WriteCodePair(74, 1);
+                    break;
+                case TextAlignment.BaselineLeft:
+                    this.WriteCodePair(74, 0);
+                    break;
+                case TextAlignment.BaselineCenter:
+                    this.WriteCodePair(74, 0);
+                    break;
+                case TextAlignment.BaselineRight:
+                    this.WriteCodePair(74, 0);
+                    break;
+            }
         }
 
         private void WriteXData(Dictionary<ApplicationRegistry, XData> xData)

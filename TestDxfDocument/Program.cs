@@ -39,7 +39,8 @@ namespace TestDxfDocument
     {
         private static void Main()
         {
-            AddAndRemove();
+            //SplineDrawing();
+            //AddAndRemove();
             //LoadAndSave();
             //Fixes();
             //CleanDrawing();
@@ -63,7 +64,7 @@ namespace TestDxfDocument
             //HatchTestLinesBoundary();
             //HatchTest1();
             //HatchTest3();
-            //BlockAttributes();
+            BlockAttributes();
             //WritePolyfaceMesh();
             //Ellipse();
             //Solid();
@@ -75,6 +76,64 @@ namespace TestDxfDocument
             //WritePolyline3d();
         }
 
+        private static void SplineDrawing()
+        {
+            List<SplineVertex> ctrlPoints = new List<SplineVertex>
+                                                {
+                                                    new SplineVertex(new Vector3(0, 0, 0), 1),
+                                                    new SplineVertex(new Vector3(25, 50, 0), 2),
+                                                    new SplineVertex(new Vector3(50, 0, 0), 3),
+                                                    new SplineVertex(new Vector3(75, 50, 0), 4),
+                                                    new SplineVertex(new Vector3(100, 0, 0), 5)
+                                                };
+
+            // the constructor will generate a uniform knot vector 
+            Spline openSpline = new Spline(ctrlPoints, 3);
+
+            List<SplineVertex> ctrlPointsClosed = new List<SplineVertex>
+                                                {
+                                                    new SplineVertex(new Vector3(0, 0, 0), 1),
+                                                    new SplineVertex(new Vector3(25, 50, 0), 2),
+                                                    new SplineVertex(new Vector3(50, 0, 0), 3),
+                                                    new SplineVertex(new Vector3(75, 50, 0), 4),
+                                                    new SplineVertex(new Vector3(100, 0, 0), 5),
+                                                    new SplineVertex(new Vector3(0, 0, 0), 1) // closed spline non periodic we repeat the last control point
+                                                };
+            Spline closedNonPeriodicSpline = new Spline(ctrlPointsClosed, 3);
+
+            // the periodic spline will generate a periodic (unclamped) closed curve,
+            // as far as my tests have gone not all programs handle them correctly, most of them only handle clamped splines
+            // seems that AutoCAD imports periodic closed splines correclty if all control point weights are equal to one.
+            // seems that internally AutoCAD converts periodic closed splines to nonperiodic (clamped) closed splines.
+            // my knowledge on nurbs is limited
+            Spline closedPeriodicSpline = new Spline(ctrlPoints, 3, true);
+            closedPeriodicSpline.SetUniformWeights(1.0);
+
+            // manually defining the control points and the knot vector (example a circle created with nurbs)
+            List<SplineVertex> circle = new List<SplineVertex>
+                                                {
+                                                    new SplineVertex(new Vector3(50, 0, 0), 1.0),
+                                                    new SplineVertex(new Vector3(100, 0, 0), 1.0/2.0),
+                                                    new SplineVertex(new Vector3(100, 100, 0), 1.0/2.0),
+                                                    new SplineVertex(new Vector3(50, 100, 0), 1.0),
+                                                    new SplineVertex(new Vector3(0, 100, 0), 1.0/2.0),
+                                                    new SplineVertex(new Vector3(0, 0, 0), 1.0/2.0),
+                                                    new SplineVertex(new Vector3(50, 0, 0), 1.0) // repeat the first point to close the circle
+                                                };
+
+            // the number of knots must be control points number + degree + 1
+            // Conics are 2nd degree curves
+            double[] knots = new[] {0, 0, 0, 1.0/4.0, 1.0/2.0, 1.0/2.0, 3.0/4.0, 1.0, 1.0, 1.0};
+            Spline splineCircle = new Spline(circle, knots, 2);
+
+            DxfDocument dxf = new DxfDocument();
+            dxf.AddEntity(openSpline);
+            dxf.AddEntity(closedNonPeriodicSpline);
+            dxf.AddEntity(closedPeriodicSpline);
+            dxf.AddEntity(splineCircle);
+            dxf.Save("spline.dxf", DxfVersion.AutoCad2000);
+
+        }
         private static void AddAndRemove()
         {
             Layer layer1 = new Layer("layer1") { Color = AciColor.Blue };
@@ -988,10 +1047,24 @@ namespace TestDxfDocument
 
             AttributeDefinition attdef = new AttributeDefinition("NewAttribute");
             attdef.Text = "InfoText";
-            attdef.BasePoint = new Vector3(1, 1, 1);
-            attdef.Style.IsVertical = true;
-            attdef.Rotation = 45;
+            // the attribute position is in local coordinates to the Insert entity to which it belongs
+            attdef.Position = new Vector3(1, 1, 0);
+            // modifying directly the text style might not get the desired results. Create one or get one from the text style table, modify it and assign it to the attribute text style.
+            // one thing to note, if there is already a text style with the assigned name, the existing one in the text style table will override the new one.
+            //attdef.Style.IsVertical = true;
+
+            //TextStyle txt = dxf.GetTextStyle("Standard");
+            TextStyle txt = new TextStyle("MyStyle");
+            txt.IsVertical = true;
+            attdef.Style = txt;
+            
             attdef.WidthFactor = 2;
+            attdef.Alignment = TextAlignment.MiddleCenter;
+            attdef.Rotation = 0;
+
+            // the attribute normal will use the one applied to the Insert entity to which it belongs
+            // this is subject to change if I find a way to get predictable results even when inserting new blocks in AutoCAD
+            //attdef.Normal = new Vector3(1, 1, 1);
 
             block.Attributes.Add(attdef.Id, attdef);
             block.Entities.Add(new Line(new Vector3(-5, -5, 0), new Vector3(5, 5, 0)));
@@ -999,11 +1072,14 @@ namespace TestDxfDocument
 
             Insert insert = new Insert(block, new Vector3(5, 5, 5));
             insert.Layer = new Layer("insert");
-            insert.Rotation = 45;
+            //insert.Normal = new Vector3(1, 1, 1);
+            // the insert rotation will also affect the attributes.
+            insert.Rotation = 45; 
             insert.Layer.Color.Index = 4;
             insert.Attributes[0].Value = 24;
 
             Insert insert2 = new Insert(block, new Vector3(-5, -5, -5));
+            //insert2.Normal = new Vector3(1, 1, 1);
             insert2.Attributes[0].Value = 34;
 
             XData xdata1 = new XData(new ApplicationRegistry("netDxf"));
@@ -1040,6 +1116,7 @@ namespace TestDxfDocument
 
             dxf.Save("Block with attributes.dxf", DxfVersion.AutoCad2000);
             dxf.Load("Block with attributes.dxf");
+            dxf.Save("Block with attributes 2.dxf", DxfVersion.AutoCad2000);
         }
         private static void WritePolyfaceMesh()
         {
