@@ -29,7 +29,7 @@ namespace netDxf.Entities
 {
 
     /// <summary>
-    /// Represents a block insertion <see cref="netDxf.Entities.IEntityObject">entity</see>.
+    /// Represents a block insertion <see cref="IEntityObject">entity</see>.
     /// </summary>
     public class Insert :
         DxfObject,
@@ -37,7 +37,7 @@ namespace netDxf.Entities
     {
         #region private fields
 
-        private readonly EndSequence endSequence;
+        private readonly EndSequence endSequence = new EndSequence();
         private const EntityType TYPE = EntityType.Insert;
         private AciColor color;
         private Layer layer;
@@ -47,12 +47,16 @@ namespace netDxf.Entities
         private Vector3 scale;
         private double rotation;
         private Vector3 normal;
-        private readonly List<Attribute> attributes;
+        private List<Attribute> attributes = new List<Attribute>();
         private Dictionary<ApplicationRegistry, XData> xData;
 
         #endregion
 
         #region constructors
+        internal Insert()
+            : base (DxfObjectCode.Insert)
+        {
+        }
 
         /// <summary>
         /// Initializes a new instance of the <c>Insert</c> class.
@@ -73,12 +77,10 @@ namespace netDxf.Entities
             this.layer = Layer.Default;
             this.color = AciColor.ByLayer;
             this.lineType = LineType.ByLayer;
-            this.attributes = new List<Attribute>();
             foreach (AttributeDefinition attdef in block.Attributes.Values)
             {
                 this.attributes.Add(new Attribute(attdef));
             }
-            this.endSequence = new EndSequence();
         }
 
         /// <summary>
@@ -94,7 +96,7 @@ namespace netDxf.Entities
         /// <summary>
         /// Initializes a new instance of the <c>Insert</c> class.
         /// </summary>
-        /// <param name="block">Insert <see cref="Blocks.Block">block definition</see>.</param>
+        /// <param name="block">Insert <see cref="Block">block definition</see>.</param>
         public Insert(Block block)
             : this(block, Vector3.Zero)
         {
@@ -113,12 +115,23 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets the insert <see cref="Blocks.Block">block definition</see>.
+        /// Gets the insert <see cref="Block">block definition</see>.
         /// </summary>
         public Block Block
         {
             get { return this.block; }
-            internal set { this.block = value; }
+            internal set
+            {
+                //for (int i = 0; i < value.Attributes.Count; i++)
+                //{
+                //    this.attributes[i].Definition = value.Attributes.Values[i].
+                //}
+                //foreach (KeyValuePair<string, AttributeDefinition> attributeDefinition in value.Attributes)
+                //{
+                    
+                //}
+                this.block = value;
+            }
         }
 
         /// <summary>

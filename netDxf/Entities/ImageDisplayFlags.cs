@@ -1,4 +1,4 @@
-#region netDxf, Copyright(C) 2013 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf, Copyright(C) 2013 Daniel Carvajal, Licensed under LGPL.
 
 //                        netDxf library
 // Copyright (C) 2013 Daniel Carvajal (haplokuon@gmail.com)
@@ -20,42 +20,31 @@
 
 #endregion
 
-namespace netDxf.Header
+using System;
+
+namespace netDxf.Entities
 {
     /// <summary>
-    /// Strings system variables
+    /// Image display options.
     /// </summary>
-    public static class SystemVariable
+    [Flags]
+    public enum ImageDisplayFlags
     {
         /// <summary>
-        /// The AutoCAD drawing database version number.
+        /// Show image.
         /// </summary>
-        public const string DatabaseVersion = "$ACADVER";
-
+        ShowImage = 1,
         /// <summary>
-        /// Next available handle (this variable must be present in the header section).
+        /// Show image when not aligned with screen.
         /// </summary>
-        public const string HandSeed = "$HANDSEED";
-
+        ShowImageWhenNotAlignedWithScreen = 2,
         /// <summary>
-        /// Angle 0 direction.
+        /// Use clipping boundary.
         /// </summary>
-        public const string Angbase = "$ANGBASE";
-
+        UseClippingBoundary = 4,
         /// <summary>
-        /// 1 = Clockwise angles, 0 = Counterclockwise.
+        /// Transparency on.
         /// </summary>
-        public const string Angdir = "$ANGDIR";
-
-        /// <summary>
-        /// Controls symbol table naming.
-        /// </summary>
-        public const string Extnames = "$EXTNAMES";
-
-        /// <summary>
-        /// Default drawing units for AutoCAD DesignCenter blocks.
-        /// Also applies to raster image units, eventhought they have the RasterVariables object and units in ImageDef.
-        /// </summary>
-        public const string Insunits = "$INSUNITS";
+        TransparencyOn = 8
     }
 }

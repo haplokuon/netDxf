@@ -1,7 +1,7 @@
-﻿#region netDxf, Copyright(C) 2012 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf, Copyright(C) 2013 Daniel Carvajal, Licensed under LGPL.
 
 //                        netDxf library
-// Copyright (C) 2012 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2013 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -27,6 +27,7 @@ using netDxf;
 using netDxf.Blocks;
 using netDxf.Entities;
 using netDxf.Header;
+using netDxf.Objects;
 using netDxf.Tables;
 using Point = netDxf.Entities.Point;
 
@@ -39,6 +40,7 @@ namespace TestDxfDocument
     {
         private static void Main()
         {
+            WriteImage();
             //SplineDrawing();
             //AddAndRemove();
             //LoadAndSave();
@@ -64,7 +66,8 @@ namespace TestDxfDocument
             //HatchTestLinesBoundary();
             //HatchTest1();
             //HatchTest3();
-            BlockAttributes();
+            //BlockAttributes();
+            //WriteNestedInsert();
             //WritePolyfaceMesh();
             //Ellipse();
             //Solid();
@@ -76,6 +79,61 @@ namespace TestDxfDocument
             //WritePolyline3d();
         }
 
+        private static void WriteImage()
+        {
+            ImageDef imageDef = new ImageDef("image01.png");
+            Image image = new Image(imageDef, Vector3.Zero);
+            image.SetScale(2);
+
+            XData xdata1 = new XData(new ApplicationRegistry("netDxf"));
+            xdata1.XDataRecord.Add(new XDataRecord(XDataCode.String, "xData image position"));
+            xdata1.XDataRecord.Add(XDataRecord.OpenControlString);
+            xdata1.XDataRecord.Add(new XDataRecord(XDataCode.WorldSpacePositionX, image.Position.X));
+            xdata1.XDataRecord.Add(new XDataRecord(XDataCode.WorldSpacePositionY, image.Position.Y));
+            xdata1.XDataRecord.Add(new XDataRecord(XDataCode.WorldSpacePositionZ, image.Position.Z));
+            xdata1.XDataRecord.Add(XDataRecord.CloseControlString);
+            image.XData = new Dictionary<ApplicationRegistry, XData>
+                             {
+                                 {xdata1.ApplicationRegistry, xdata1},
+                             };
+
+            //image.Normal = new Vector3(1, 1, 1);
+            //image.Rotation = 30;
+
+            // you can pass a name that must be unique for the image definiton, by default it will use the file name without the extension
+            ImageDef imageDef2 = new ImageDef("img\\image02.jpg", "MyImage");
+            Image image2 = new Image(imageDef2, new Vector3(0, 150, 0));
+            Image image3 = new Image(imageDef2, new Vector3(150, 150, 0));
+
+            // clipping boundary definition in local coordinates
+            ImageClippingBoundary clip = new ImageClippingBoundary(100, 100, 500, 300);
+            image.ClippingBoundary = clip;
+            // set to null to restore the default clipping boundary (full image)
+            image.ClippingBoundary = null;
+
+            // images can be part of a block definition
+            Block block = new Block("ImageBlock");
+            block.Entities.Add(image2);
+            block.Entities.Add(image3);
+            Insert insert = new Insert(block, new Vector3(0, 100, 0));
+
+            DxfDocument dxf = new DxfDocument();
+
+            dxf.AddEntity(image);
+            //dxf.AddEntity(image2);
+            //dxf.AddEntity(image3);
+            dxf.AddEntity(insert);
+
+            dxf.Save("image.dxf", DxfVersion.AutoCad2000);
+            dxf.Load("image.dxf");
+            dxf.Save("image.dxf", DxfVersion.AutoCad2010);
+
+            //dxf.RemoveEntity(image2);
+            //dxf.Save("image2.dxf", DxfVersion.AutoCad2000);
+            //dxf.RemoveEntity(image3);
+            //dxf.RemoveEntity(image);
+            //dxf.Save("image3.dxf", DxfVersion.AutoCad2000);
+        }
         private static void SplineDrawing()
         {
             List<SplineVertex> ctrlPoints = new List<SplineVertex>
@@ -280,12 +338,21 @@ namespace TestDxfDocument
             Angular2LineDimension dim = new Angular2LineDimension(line1, line2, offset);
             
             DxfDocument dxf = new DxfDocument();
-            dxf.AddEntity(line1);
-            dxf.AddEntity(line2);
-            dxf.AddEntity(dim);
+            //dxf.AddEntity(line1);
+            //dxf.AddEntity(line2);
+            //dxf.AddEntity(dim);
+
+            Block block = new Block("DimensionBlock");
+            block.Entities.Add(line1);
+            block.Entities.Add(line2);
+            block.Entities.Add(dim);
+            Insert insert = new Insert(block);
+
+            dxf.AddEntity(insert);
 
             dxf.Save("angular 2 line dimension.dxf", DxfVersion.AutoCad2000);
             dxf.Load("angular 2 line dimension.dxf");
+            dxf.Save("angular 2 line dimension.dxf", DxfVersion.AutoCad2010);
         }
         private static void Angular3PointDimensionDrawing()
         {
@@ -419,10 +486,21 @@ namespace TestDxfDocument
                                  {xdata.ApplicationRegistry, xdata}
                              };
 
-            dxf.AddEntity(line1);
-            dxf.AddEntity(line2);
-            dxf.AddEntity(dim1);
-            dxf.AddEntity(dim2);
+            //dxf.AddEntity(line1);
+            //dxf.AddEntity(line2);
+            //dxf.AddEntity(dim1);
+            //dxf.AddEntity(dim2);
+
+
+
+            Block block = new Block("DimensionBlock");
+            block.Entities.Add(line1);
+            block.Entities.Add(line2);
+            block.Entities.Add(dim1);
+            block.Entities.Add(dim2);
+            Insert insert = new Insert(block);
+            dxf.AddEntity(insert);
+
             dxf.Save("aligned dimension.dxf", DxfVersion.AutoCad2000);
 
             dxf.Load("aligned dimension.dxf");
@@ -1117,6 +1195,43 @@ namespace TestDxfDocument
             dxf.Save("Block with attributes.dxf", DxfVersion.AutoCad2000);
             dxf.Load("Block with attributes.dxf");
             dxf.Save("Block with attributes 2.dxf", DxfVersion.AutoCad2000);
+        }
+        private static void WriteNestedInsert()
+        {
+            // nested blocks
+            DxfDocument dxf = new DxfDocument();
+            
+            Block nestedBlock = new Block("Nested block");
+            Circle circle = new Circle(Vector3.Zero, 5);
+            circle.Layer = new Layer("circle");
+            circle.Layer.Color.Index = 2;
+            nestedBlock.Entities.Add(circle);
+            
+            AttributeDefinition attdef = new AttributeDefinition("NewAttribute");
+            attdef.Text = "InfoText";
+            attdef.Alignment = TextAlignment.MiddleCenter;
+            nestedBlock.Attributes.Add(attdef.Id, attdef);
+            Insert nestedInsert = new Insert(nestedBlock, new Vector3(0, 0, 0)); // the position will be relative to the position of the insert that nest it
+            nestedInsert.Attributes[0].Value = 24;
+
+            Insert nestedInsert2 = new Insert(nestedBlock, new Vector3(-20, 0, 0)); // the position will be relative to the position of the insert that nest it
+            nestedInsert2.Attributes[0].Value = -20;
+
+            Block block = new Block("MyBlock");
+            block.Entities.Add(new Line(new Vector3(-5, -5, 0), new Vector3(5, 5, 0)));
+            block.Entities.Add(new Line(new Vector3(5, -5, 0), new Vector3(-5, 5, 0)));
+            block.Entities.Add(nestedInsert);
+            block.Entities.Add(nestedInsert2);
+
+            Insert insert = new Insert(block, new Vector3(5, 5, 5));
+            insert.Layer = new Layer("insert");
+
+            dxf.AddEntity(insert);
+
+            dxf.Save("insert.dxf", DxfVersion.AutoCad2000);
+            dxf.Load("insert.dxf");
+            dxf.Save("insert.dxf", DxfVersion.AutoCad2010);
+
         }
         private static void WritePolyfaceMesh()
         {

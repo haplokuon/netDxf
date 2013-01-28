@@ -1,7 +1,7 @@
-﻿#region netDxf, Copyright(C) 2009 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf, Copyright(C) 2013 Daniel Carvajal, Licensed under LGPL.
 
 //                        netDxf library
-// Copyright (C) 2009 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2013 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -70,7 +70,12 @@ namespace netDxf.Header
             return new Dictionary<string, int>
                        {
                            {SystemVariable.DatabaseVersion, 1},
-                           {SystemVariable.HandSeed, 5}
+                           {SystemVariable.HandSeed, 5},
+                           {SystemVariable.Angbase, 50},
+                           {SystemVariable.Angdir, 70},
+                           {SystemVariable.Extnames, 290},
+                           {SystemVariable.Insunits, 70}
+
                        };
         }
     }

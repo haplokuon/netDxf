@@ -138,6 +138,11 @@ namespace netDxf.Blocks
         /// <summary>
         /// Gets or sets the <see cref="IEntityObject">entity</see> list that makes the block.
         /// </summary>
+        /// <remarks>
+        /// The UCS in effect when a block definition is created becomes the WCS for all
+        /// entities in the block definition. The new origin for these entities is shifted to
+        /// match the base point defined for the block definition. All entity data is translated to fit this new WCS.
+        /// </remarks>
         public List<IEntityObject> Entities
         {
             get { return this.entities; }

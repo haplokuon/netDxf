@@ -37,7 +37,7 @@ namespace netDxf.Entities
         #region private fields
 
         private const EntityType TYPE = EntityType.Attribute;
-        private readonly AttributeDefinition definition;
+        private AttributeDefinition definition;
         private object value;
         private AciColor color;
         private Layer layer;
@@ -47,6 +47,11 @@ namespace netDxf.Entities
         #endregion
 
         #region constructor
+
+        internal Attribute()
+            : base(DxfObjectCode.Attribute)
+        {
+        }
 
         /// <summary>
         /// Intitializes a new instance of the <c>Attribute</c> class.
@@ -68,6 +73,8 @@ namespace netDxf.Entities
         public Attribute(AttributeDefinition definition, object value)
             : base(DxfObjectCode.Attribute)
         {
+            if (definition == null)
+                throw new ArgumentNullException("definition");
             this.definition = definition;
             this.value = value;
             this.color = definition.Color;
@@ -87,6 +94,7 @@ namespace netDxf.Entities
         public AttributeDefinition Definition
         {
             get { return this.definition; }
+            internal set { this.definition = value; }
         }
 
         /// <summary>

@@ -1,7 +1,7 @@
-#region netDxf, Copyright(C) 2012 Daniel Carvajal, Licensed under LGPL.
+#region netDxf, Copyright(C) 2013 Daniel Carvajal, Licensed under LGPL.
 
 //                        netDxf library
-// Copyright (C) 2012 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2013 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -42,7 +42,7 @@ namespace netDxf
     {
         #region private fields
         // handle count for internal elements of the dxf file
-        internal int handleCount; 
+        internal int handleCount;
         private readonly string file;
         private bool isFileOpen;
         private string activeSection = StringCode.Unknown;
@@ -311,6 +311,66 @@ namespace netDxf
             }
             this.WriteCodePair(HeaderVariable.NAME_CODE_GROUP, variable.Name);
             this.WriteCodePair(variable.CodeGroup, variable.Value);
+        }
+
+        #endregion
+
+        #region methods for Classes section
+
+        public void WriteImageClass(int count)
+        {
+            this.WriteCodePair(0, StringCode.Class);
+            this.WriteCodePair(1, DxfObjectCode.Image);
+            this.WriteCodePair(2, SubclassMarker.RasterImage);
+            this.WriteCodePair(3, "ISM");
+
+            // default codes as shown in the dxf documentation
+            this.WriteCodePair(90, 127);
+            if (this.version > DxfVersion.AutoCad2000) this.WriteCodePair(91, count);
+            this.WriteCodePair(280, 0);
+            this.WriteCodePair(281, 1);
+        }
+
+        public void WriteImageDefClass(int count)
+        {
+            this.WriteCodePair(0, StringCode.Class);
+            this.WriteCodePair(1, DxfObjectCode.ImageDef);
+            this.WriteCodePair(2, SubclassMarker.RasterImageDef);
+            this.WriteCodePair(3, "ISM");
+
+            // default codes as shown in the dxf documentation
+            this.WriteCodePair(90, 0);
+            if (this.version > DxfVersion.AutoCad2000) this.WriteCodePair(91, count);
+            this.WriteCodePair(280, 0);
+            this.WriteCodePair(281, 0);
+        }
+
+        public void WriteImageDefRectorClass(int count)
+        {
+            this.WriteCodePair(0, StringCode.Class);
+            this.WriteCodePair(1, DxfObjectCode.ImageDefReactor);
+            this.WriteCodePair(2, SubclassMarker.RasterImageDefReactor);
+            this.WriteCodePair(3, "ISM");
+
+            // default codes as shown in the dxf documentation
+            this.WriteCodePair(90, 1);
+            if (this.version > DxfVersion.AutoCad2000) this.WriteCodePair(91, count);
+            this.WriteCodePair(280, 0);
+            this.WriteCodePair(281, 0);
+        }
+
+        public void WriteRasterVariablesClass(int count)
+        {
+            this.WriteCodePair(0, StringCode.Class);
+            this.WriteCodePair(1, DxfObjectCode.RasterVariables);
+            this.WriteCodePair(2, SubclassMarker.RasterVariables);
+            this.WriteCodePair(3, "ISM");
+
+            // default codes as shown in the dxf documentation
+            this.WriteCodePair(90, 0);
+            if (this.version > DxfVersion.AutoCad2000) this.WriteCodePair(91, count);
+            this.WriteCodePair(280, 0);
+            this.WriteCodePair(281, 0);
         }
 
         #endregion
@@ -678,7 +738,7 @@ namespace netDxf
                     this.WriteDimension((Dimension) entity);
                     break;
                 case EntityType.Image:
-                    //this.WriteImage((Image)entity);
+                    this.WriteImage((Image)entity);
                     break;
                 default:
                     throw new DxfEntityException(entity.Type.ToString(), file, "Entity unknown." );
@@ -1761,24 +1821,127 @@ namespace netDxf
             this.WriteXData(dim.XData);
         }
 
+        private void WriteImage(Image image)
+        {
+            if (this.activeSection != StringCode.EntitiesSection && !this.isBlockEntities)
+            {
+                throw new InvalidDxfSectionException(this.activeSection, this.file);
+            }
+
+            this.WriteCodePair(0, image.CodeName);
+            this.WriteCodePair(5, image.Handle);
+            this.WriteCodePair(100, SubclassMarker.Entity);
+            this.WriteEntityCommonCodes(image);
+            this.WriteCodePair(100, SubclassMarker.RasterImage);
+
+            this.WriteCodePair(10, image.Position.X);
+            this.WriteCodePair(20, image.Position.Y);
+            this.WriteCodePair(30, image.Position.Z);
+
+            Vector2 u = MathHelper.Transform(new Vector2(image.Width / image.Definition.Width, 0.0), image.Rotation * MathHelper.DegToRad, MathHelper.CoordinateSystem.Object, MathHelper.CoordinateSystem.World);
+            Vector3 uWCS = MathHelper.Transform(new Vector3(u.X, u.Y, 0.0), image.Normal, MathHelper.CoordinateSystem.Object, MathHelper.CoordinateSystem.World);
+            this.WriteCodePair(11, uWCS.X);
+            this.WriteCodePair(21, uWCS.Y);
+            this.WriteCodePair(31, uWCS.Z);
+
+            Vector2 v = MathHelper.Transform(new Vector2(0.0, image.Height / image.Definition.Height), image.Rotation * MathHelper.DegToRad, MathHelper.CoordinateSystem.Object, MathHelper.CoordinateSystem.World);
+            Vector3 vWCS = MathHelper.Transform(new Vector3(v.X, v.Y, 0.0), image.Normal, MathHelper.CoordinateSystem.Object, MathHelper.CoordinateSystem.World);
+            this.WriteCodePair(12, vWCS.X);
+            this.WriteCodePair(22, vWCS.Y);
+            this.WriteCodePair(32, vWCS.Z);
+
+            this.WriteCodePair(13, image.Definition.Width);
+            this.WriteCodePair(23, image.Definition.Height);
+
+            this.WriteCodePair(340, image.Definition.Handle);
+
+            this.WriteCodePair(70, (int)image.DisplayOptions);
+            this.WriteCodePair(280, image.Clipping ? 1 : 0);
+            this.WriteCodePair(281, image.Brightness);
+            this.WriteCodePair(282, image.Contrast);
+            this.WriteCodePair(283, image.Fade);
+
+            this.WriteCodePair(71, (int)image.ClippingBoundary.Type);
+            this.WriteCodePair(91, image.ClippingBoundary.Vertexes.Count);
+            foreach (Vector2 vertex in image.ClippingBoundary.Vertexes)
+            {
+                this.WriteCodePair(14, vertex.X);
+                this.WriteCodePair(24, vertex.Y);
+            }
+
+            this.WriteXData(image.XData);
+
+        }
+
         #endregion
 
-        #region methods for Dictionary section
+        #region methods for Object section
 
-        public void WriteDictionary(Dictionary dictionary)
+        public void WriteDictionary(DictionaryObject dictionary)
         {
             this.WriteCodePair(0, StringCode.Dictionary);
-            this.WriteCodePair(5, Convert.ToString(this.handleCount++, 16));
+            this.WriteCodePair(5, dictionary.Handle);
+            this.WriteCodePair(330, 0);
             this.WriteCodePair(100, SubclassMarker.Dictionary);
-            this.WriteCodePair(281, 1);
-            this.WriteCodePair(3, dictionary);
-            int softIdOwner = this.handleCount;
-            this.WriteCodePair(350, Convert.ToString(softIdOwner, 16));
+            this.WriteCodePair(280, dictionary.IsHardOwner ? 1 : 0);
+            this.WriteCodePair(281, (int)dictionary.Clonning);
 
-            this.WriteCodePair(0, StringCode.Dictionary);
-            this.WriteCodePair(5, Convert.ToString(this.handleCount++, 16));
-            this.WriteCodePair(100, SubclassMarker.Dictionary);
-            this.WriteCodePair(281, 1);
+            foreach (DictionaryObjectEntry entry in dictionary.Entries)
+            {
+                this.WriteCodePair(3, entry.Name);
+                this.WriteCodePair(350, entry.HandleToOwner);
+            }
+        }
+
+        public void WriteImageDef(ImageDef imageDef, string ownerHandle)
+        {
+            this.WriteCodePair(0, imageDef.CodeName);
+            this.WriteCodePair(5, imageDef.Handle);
+
+            this.WriteCodePair(102, "{ACAD_REACTORS");
+            this.WriteCodePair(330, ownerHandle);
+            foreach (ImageDefReactor reactor in imageDef.Reactors.Values)
+            {
+                this.WriteCodePair(330, reactor.Handle);
+            }
+            this.WriteCodePair(102, "}");
+
+            this.WriteCodePair(330, ownerHandle);
+
+            this.WriteCodePair(100, SubclassMarker.RasterImageDef);
+            this.WriteCodePair(1, imageDef.FileName);
+
+            this.WriteCodePair(10, imageDef.Width);
+            this.WriteCodePair(20, imageDef.Height);
+
+            this.WriteCodePair(11, imageDef.OnePixelSize.X);
+            this.WriteCodePair(21, imageDef.OnePixelSize.Y);
+
+            this.WriteCodePair(280, 1);
+            this.WriteCodePair(281, (int)imageDef.ResolutionUnits);
+
+        }
+
+        public void WriteImageDefReactor(ImageDefReactor reactor)
+        {
+            this.WriteCodePair(0, reactor.CodeName);
+            this.WriteCodePair(5, reactor.Handle);
+
+            this.WriteCodePair(100, SubclassMarker.RasterImageDefReactor);
+            this.WriteCodePair(90, 2);
+            this.WriteCodePair(330, reactor.ImageHandle);
+        }
+
+        public void WriteRasterVariables(RasterVariables variables)
+        {
+            this.WriteCodePair(0, variables.CodeName);
+            this.WriteCodePair(5, variables.Handle);
+
+            this.WriteCodePair(100, SubclassMarker.RasterVariables);
+            this.WriteCodePair(90, 0);
+            this.WriteCodePair(70, variables.DisplayFrame ? 1 : 0);
+            this.WriteCodePair(71, (int)variables.DisplayQuality);
+            this.WriteCodePair(72, (int)variables.Units);
         }
 
         #endregion

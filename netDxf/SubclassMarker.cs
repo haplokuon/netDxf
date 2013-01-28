@@ -77,5 +77,6 @@ namespace netDxf
         public const string RasterImage = "AcDbRasterImage";
         public const string RasterImageDef = "AcDbRasterImageDef";
         public const string RasterImageDefReactor = "AcDbRasterImageDefReactor";
+        public const string RasterVariables = "AcDbRasterVariables";
     }
 }

@@ -173,7 +173,7 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets or sets the <see cref="netDxf.Tables.TextStyle">text style</see>.
+        /// Gets or sets the <see cref="TextStyle">text style</see>.
         /// </summary>
         public TextStyle Style
         {
@@ -200,7 +200,7 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets or sets the text <see cref="netDxf.Vector3">normal</see>.
+        /// Gets or sets the text <see cref="Vector3">normal</see>.
         /// </summary>
         public Vector3 Normal
         {

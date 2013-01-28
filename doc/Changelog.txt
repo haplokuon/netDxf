@@ -1,3 +1,7 @@
+[0.2.6 - 2013/01/28]
++ Added Image entity.
++ Blocks now supports all avaliable entities even inserts (nested blocks).
+
 [0.2.5 - 2013/01/16]
 + Added Spline entity.
 + Added public methods to add and get table objects (Layers, LineTypes, TextStyles, DimensionStyles, and Blocks).

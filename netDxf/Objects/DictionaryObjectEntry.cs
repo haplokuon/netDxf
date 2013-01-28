@@ -1,7 +1,7 @@
-#region netDxf, Copyright(C) 2012 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf, Copyright(C) 2013 Daniel Carvajal, Licensed under LGPL.
 
 //                        netDxf library
-// Copyright (C) 2012 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2013 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -20,28 +20,27 @@
 
 #endregion
 
-namespace netDxf.Header
+namespace netDxf.Objects
 {
-    /// <summary>
-    /// The AutoCAD drawing database version number.
-    /// </summary>
-    public enum DxfVersion
-    { 
-        /// <summary>
-        /// AutoCAD 2000 DXF file.
-        /// </summary>
-        [StringValue("AC1015")] AutoCad2000 = 0,
-        /// <summary>
-        /// AutoCAD 2004 DXF file.
-        /// </summary>
-        [StringValue("AC1018")] AutoCad2004 = 1,
-        /// <summary>
-        /// AutoCAD 2007 DXF file.
-        /// </summary>
-        [StringValue("AC1021")] AutoCad2007 = 2,
-        /// <summary>
-        /// AutoCAD 2010 DXF file.
-        /// </summary>
-        [StringValue("AC1024")] AutoCad2010 = 3
+    internal class DictionaryObjectEntry
+    {
+        private readonly string name;
+        private readonly string handleToOwner;
+
+        public DictionaryObjectEntry(string name, string handleToOwner)
+        {
+            this.name = name;
+            this.handleToOwner = handleToOwner;
+        }
+
+        public string Name
+        {
+            get { return name; }
+        }
+
+        public string HandleToOwner
+        {
+            get { return handleToOwner; }
+        }
     }
 }

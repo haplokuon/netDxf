@@ -93,7 +93,7 @@ namespace netDxf.Entities
         /// Intitializes a new instance of the <c>AttributeDefiniton</c> class.
         /// </summary>
         /// <param name="id">Attribute identifier, the parameter <c>id</c> string cannot contain spaces.</param>
-        /// <param name="style">Attribute <see cref="netDxf.Tables.TextStyle">text style</see>.</param>
+        /// <param name="style">Attribute <see cref="TextStyle">text style</see>.</param>
         public AttributeDefinition(string id, TextStyle style)
             : base(DxfObjectCode.AttributeDefinition)
         {

@@ -201,5 +201,10 @@ namespace netDxf
         /// Image definition reactor.
         /// </summary>
         public const string ImageDefReactor = "IMAGEDEF_REACTOR";
+
+        /// <summary>
+        /// Raster variables.
+        /// </summary>
+        public const string RasterVariables = "RASTERVARIABLES";
     }
 }
