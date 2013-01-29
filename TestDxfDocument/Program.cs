@@ -40,7 +40,10 @@ namespace TestDxfDocument
     {
         private static void Main()
         {
-            WriteImage();
+            WriteNoAsciiText();
+            //WriteSplineBoundaryHatch();
+            //WriteNoInsertBlock();
+            //WriteImage();
             //SplineDrawing();
             //AddAndRemove();
             //LoadAndSave();
@@ -78,7 +81,85 @@ namespace TestDxfDocument
             //SpeedTest();
             //WritePolyline3d();
         }
+        private static void WriteNoAsciiText()
+        {
+            DxfDocument dxf = new DxfDocument();
+            Text text = new Text("ÁÉÍÓÚ áéíóú Ññ àèìòù âêîôû", Vector2.Zero,10);
+            dxf.AddEntity(text);
 
+            // version prior to AutoCAD2007 do not accept strings with no ASCII characters
+            dxf.Save("text1.dxf", DxfVersion.AutoCad2000);
+            dxf.Load("text1.dxf");
+            dxf.Save("text2.dxf", DxfVersion.AutoCad2004);
+            // non ASCII characters will only work with version AutoCAD2007 and later versions
+            dxf.Save("text3.dxf", DxfVersion.AutoCad2007);
+            dxf.Save("text4.dxf", DxfVersion.AutoCad2010);
+
+        }
+        private static void WriteSplineBoundaryHatch()
+        {
+
+            List<SplineVertex> ctrlPoints = new List<SplineVertex>
+                                                {
+                                                    new SplineVertex(new Vector3(0, 0, 0)),
+                                                    new SplineVertex(new Vector3(25, 50, 0)),
+                                                    new SplineVertex(new Vector3(50, 0, 0)),
+                                                    new SplineVertex(new Vector3(75, 50, 0)),
+                                                    new SplineVertex(new Vector3(100, 0, 0))
+                                                };
+
+            // hatch with single closed spline boundary path
+            Spline spline = new Spline(ctrlPoints, 3, true); // closed periodic
+
+            List<HatchBoundaryPath> boundary = new List<HatchBoundaryPath>();
+
+            HatchBoundaryPath path = new HatchBoundaryPath(new List<IEntityObject> {spline});
+            boundary.Add(path);
+            Hatch hatch = new Hatch(HatchPattern.Line, boundary);
+            hatch.Pattern.Angle = 45;
+            hatch.Pattern.Scale = 10;
+
+            DxfDocument dxf = new DxfDocument();
+            dxf.AddEntity(hatch);
+            dxf.AddEntity(spline);
+            dxf.Save("hatch closed spline.dxf", DxfVersion.AutoCad2000);
+            dxf.Load("hatch closed spline.dxf");
+            dxf.Save("hatch closed spline 2010.dxf", DxfVersion.AutoCad2010);
+
+            // hatch boundary path with spline and line
+            Spline openSpline = new Spline(ctrlPoints, 3);
+            Line line = new Line(ctrlPoints[0].Location, ctrlPoints[ctrlPoints.Count - 1].Location);
+
+            List<HatchBoundaryPath> boundary2 = new List<HatchBoundaryPath>();
+            HatchBoundaryPath path2 = new HatchBoundaryPath(new List<IEntityObject> { openSpline, line });
+            boundary2.Add(path2);
+            Hatch hatch2 = new Hatch(HatchPattern.Line, boundary2);
+            hatch2.Pattern.Angle = 45;
+            hatch2.Pattern.Scale = 10;
+
+            DxfDocument dxf2 = new DxfDocument();
+            dxf2.AddEntity(hatch2);
+            dxf2.AddEntity(openSpline);
+            dxf2.AddEntity(line);
+            dxf2.Save("hatch open spline.dxf", DxfVersion.AutoCad2000);
+            dxf2.Load("hatch open spline.dxf");
+            dxf2.Save("hatch open spline 2010.dxf", DxfVersion.AutoCad2010);
+
+        }
+        private static void WriteNoInsertBlock()
+        {
+            // create the block definition
+            Block block = new Block("MyBlock");
+            // add the entities that you want in the block
+            block.Entities.Add(new Line(new Vector3(0, 0, 0), new Vector3(100, 100, 0)));
+            // create the document
+            DxfDocument dxf = new DxfDocument();
+            // add the block definition to the block table list (this is the function that was private in earlier versions, check the changelog.txt)
+            dxf.AddBlock(block);
+            // and save file, no visible entities will appear if you try to open the drawing but the block will be there
+            dxf.Save("Block definiton.dxf", DxfVersion.AutoCad2000);
+
+        }
         private static void WriteImage()
         {
             ImageDef imageDef = new ImageDef("image01.png");
@@ -185,10 +266,10 @@ namespace TestDxfDocument
             Spline splineCircle = new Spline(circle, knots, 2);
 
             DxfDocument dxf = new DxfDocument();
-            dxf.AddEntity(openSpline);
-            dxf.AddEntity(closedNonPeriodicSpline);
+            //dxf.AddEntity(openSpline);
+            //dxf.AddEntity(closedNonPeriodicSpline);
             dxf.AddEntity(closedPeriodicSpline);
-            dxf.AddEntity(splineCircle);
+            //dxf.AddEntity(splineCircle);
             dxf.Save("spline.dxf", DxfVersion.AutoCad2000);
 
         }
@@ -996,6 +1077,7 @@ namespace TestDxfDocument
             poly.Vertexes.Add(new LwPolylineVertex(10, 10));
             poly.Vertexes.Add(new LwPolylineVertex(20, 0));
             poly.Vertexes.Add(new LwPolylineVertex(30, 10));
+            poly.SetConstantWidth(2);
             //poly.IsClosed = true;
             dxf.AddEntity(poly);
 

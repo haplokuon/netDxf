@@ -298,7 +298,7 @@ namespace netDxf
             try
             {
                 this.input = File.OpenRead(this.file);
-                this.reader = new StreamReader(this.input, Encoding.ASCII);
+                this.reader = new StreamReader(this.input, Encoding.Default);
                 this.isFileOpen = true;
             }
             catch (Exception ex)
@@ -4119,73 +4119,67 @@ namespace netDxf
 
         private HatchBoundaryPath ReadEdgeBoundaryPath(int numEdges)
         {
+            // the information of the boundary path data always appear exactly as it is readed
             List<IEntityObject> entities = new List<IEntityObject>();
             dxfPairInfo = this.ReadCodePair();
 
             while (entities.Count < numEdges)
             {
+                // Edge type (only if boundary is not a polyline): 1 = Line; 2 = Circular arc; 3 = Elliptic arc; 4 = Spline
                 switch (int.Parse(dxfPairInfo.Value))
                 {
                     case 1:
                         dxfPairInfo = this.ReadCodePair();
                         // line
-                        double lX1 = 0.0, lX2 = 0.0, lY1 = 0.0, lY2 = 0.0;
-                        if (dxfPairInfo.Code == 10) lX1 = double.Parse(dxfPairInfo.Value);
+                        double lX1 = double.Parse(dxfPairInfo.Value);
                         dxfPairInfo = this.ReadCodePair();
-                        if (dxfPairInfo.Code == 20) lY1 = double.Parse(dxfPairInfo.Value);
+                        double lY1 = double.Parse(dxfPairInfo.Value);
                         dxfPairInfo = this.ReadCodePair();
-                        if (dxfPairInfo.Code == 11) lX2 = double.Parse(dxfPairInfo.Value);
+                        double lX2 = double.Parse(dxfPairInfo.Value);
                         dxfPairInfo = this.ReadCodePair();
-                        if (dxfPairInfo.Code == 21) lY2 = double.Parse(dxfPairInfo.Value);
-
+                        double lY2 = double.Parse(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
                         entities.Add(new Line(new Vector3(lX1, lY1, 0.0), new Vector3(lX2, lY2, 0.0)));
-
-                        dxfPairInfo = this.ReadCodePair();
                         break;
                     case 2:
                         dxfPairInfo = this.ReadCodePair();
                         // circular arc
-                        double aX = 0.0, aY = 0.0, aR = 0.0, aStart = 0.0, aEnd = 0.0;
-                        bool aCCW = true;
-                        if (dxfPairInfo.Code == 10) aX = double.Parse(dxfPairInfo.Value);
+                        double aX = double.Parse(dxfPairInfo.Value);
                         dxfPairInfo = this.ReadCodePair();
-                        if (dxfPairInfo.Code == 20) aY = double.Parse(dxfPairInfo.Value);
+                        double aY = double.Parse(dxfPairInfo.Value);
                         dxfPairInfo = this.ReadCodePair();
-                        if (dxfPairInfo.Code == 40) aR = double.Parse(dxfPairInfo.Value);
+                        double aR = double.Parse(dxfPairInfo.Value);
                         dxfPairInfo = this.ReadCodePair();
-                        if (dxfPairInfo.Code == 50) aStart = double.Parse(dxfPairInfo.Value);
+                        double aStart = double.Parse(dxfPairInfo.Value);
                         dxfPairInfo = this.ReadCodePair();
-                        if (dxfPairInfo.Code == 51) aEnd = double.Parse(dxfPairInfo.Value);
+                        double aEnd = double.Parse(dxfPairInfo.Value);
                         dxfPairInfo = this.ReadCodePair();
-                        if (dxfPairInfo.Code == 73) aCCW = int.Parse(dxfPairInfo.Value) != 0;
-
+                        bool aCCW = int.Parse(dxfPairInfo.Value) != 0;
+                        dxfPairInfo = this.ReadCodePair();
                         // a full circle will never happen AutoCAD exports circle boundary paths as two vertex polylines with bulges of 1 and -1
                         entities.Add(aCCW
                                          ? new Arc(new Vector3(aX, aY, 0.0), aR, aStart, aEnd)
                                          : new Arc(new Vector3(aX, aY, 0.0), aR, 360 - aEnd, 360 - aStart));
-
-                        dxfPairInfo = this.ReadCodePair();
                         break;
                     case 3:
                         dxfPairInfo = this.ReadCodePair();
                         // elliptic arc
-                        double eX = 0.0, eY = 0.0, eAxisX = 0.0, eAxisY = 0.0, eAxisRatio = 0.0, eStart = 0.0, eEnd = 0.0;
-                        bool eCCW = true;
-                        if (dxfPairInfo.Code == 10) eX = double.Parse(dxfPairInfo.Value);
+                        double eX = double.Parse(dxfPairInfo.Value);
                         dxfPairInfo = this.ReadCodePair();
-                        if (dxfPairInfo.Code == 20) eY = double.Parse(dxfPairInfo.Value);
+                        double eY = double.Parse(dxfPairInfo.Value);
                         dxfPairInfo = this.ReadCodePair();
-                        if (dxfPairInfo.Code == 11) eAxisX = double.Parse(dxfPairInfo.Value);
+                        double eAxisX = double.Parse(dxfPairInfo.Value);
                         dxfPairInfo = this.ReadCodePair();
-                        if (dxfPairInfo.Code == 21) eAxisY = double.Parse(dxfPairInfo.Value);
+                        double eAxisY = double.Parse(dxfPairInfo.Value);
                         dxfPairInfo = this.ReadCodePair();
-                        if (dxfPairInfo.Code == 40) eAxisRatio = double.Parse(dxfPairInfo.Value);
+                        double eAxisRatio = double.Parse(dxfPairInfo.Value);
                         dxfPairInfo = this.ReadCodePair();
-                        if (dxfPairInfo.Code == 50) eStart = double.Parse(dxfPairInfo.Value);
+                        double eStart = double.Parse(dxfPairInfo.Value);
                         dxfPairInfo = this.ReadCodePair();
-                        if (dxfPairInfo.Code == 51) eEnd = double.Parse(dxfPairInfo.Value);
+                        double eEnd = double.Parse(dxfPairInfo.Value);
                         dxfPairInfo = this.ReadCodePair();
-                        if (dxfPairInfo.Code == 73) eCCW = int.Parse(dxfPairInfo.Value) != 0;
+                        bool eCCW = int.Parse(dxfPairInfo.Value) != 0;
+                        dxfPairInfo = this.ReadCodePair();
 
                         Vector3 center = new Vector3(eX, eY, 0.0);
                         Vector3 axisPoint = new Vector3(eAxisX, eAxisY, 0.0);
@@ -4206,12 +4200,81 @@ namespace netDxf
                                                   Normal = Vector3.UnitZ
                                               };
 
-                        dxfPairInfo = this.ReadCodePair();
                         entities.Add(ellipse);
                         break;
                     case 4:
-                        // spline not implemented
+                         dxfPairInfo = this.ReadCodePair();
+                        // spline
+                        List<SplineVertex> controlPoints = new List<SplineVertex>();
+                        short degree = short.Parse(dxfPairInfo.Value);
                         dxfPairInfo = this.ReadCodePair();
+                        int isRational = int.Parse(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
+                        int isPeriodic = int.Parse(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
+                        int numKnots = int.Parse(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
+                        int numControlPoints = int.Parse(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
+                        double[] knots = new double[numKnots];
+                        for (int i = 0; i < numKnots; i++)
+                        {
+                            if (dxfPairInfo.Code == 40) knots[i] = double.Parse(dxfPairInfo.Value);
+                            dxfPairInfo = this.ReadCodePair();
+                        }
+
+                        for (int i = 0; i < numControlPoints; i++)
+                        {
+                            double w = 1.0;
+                            double x = double.Parse(dxfPairInfo.Value);
+                            dxfPairInfo = this.ReadCodePair();
+                            double y = double.Parse(dxfPairInfo.Value);
+                            dxfPairInfo = this.ReadCodePair();
+                            // control point weight might not be present
+                            if (dxfPairInfo.Code == 42)
+                            {
+                                w = double.Parse(dxfPairInfo.Value);
+                                dxfPairInfo = this.ReadCodePair();
+                            }
+                            
+                            controlPoints.Add(new SplineVertex(x, y, 0.0, w));
+                        }
+
+                        DxfVersion dxfVersion = (DxfVersion) StringEnum.Parse(typeof (DxfVersion), this.version);
+                        // this information is only required for AutoCAD version 2010
+                        // stores information about spline fit point (the spline entity does not make use of this information)
+                        if (dxfVersion >= DxfVersion.AutoCad2010)
+                        {
+                            int numFitData = int.Parse(dxfPairInfo.Value);
+                            dxfPairInfo = this.ReadCodePair();
+                            for (int i = 0; i < numFitData; i++)
+                            {
+                                double fitX = double.Parse(dxfPairInfo.Value);
+                                dxfPairInfo = this.ReadCodePair();
+                                double fitY = double.Parse(dxfPairInfo.Value);
+                                dxfPairInfo = this.ReadCodePair();
+                            }
+
+                            // the info on start tangent might not appear
+                            if (dxfPairInfo.Code == 12)
+                            {
+                                double startTanX = double.Parse(dxfPairInfo.Value);
+                                dxfPairInfo = this.ReadCodePair();
+                                double startTanY = double.Parse(dxfPairInfo.Value);
+                                dxfPairInfo = this.ReadCodePair();
+                            }
+                            // the info on end tangent might not appear
+                            if (dxfPairInfo.Code == 13)
+                            {
+                                double endTanX = double.Parse(dxfPairInfo.Value);
+                                dxfPairInfo = this.ReadCodePair();
+                                double endTanY = double.Parse(dxfPairInfo.Value);
+                                dxfPairInfo = this.ReadCodePair();
+                            }
+                        }
+
+                        Spline spline = new Spline(controlPoints, knots, degree);
+                        entities.Add(spline);
                         break;
                 }
             }

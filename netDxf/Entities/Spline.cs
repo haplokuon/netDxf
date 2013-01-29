@@ -47,6 +47,7 @@ namespace netDxf.Entities
         private short degree;
         private bool isClosed;
         private bool isPeriodic;
+
         #endregion
 
         #region contructors

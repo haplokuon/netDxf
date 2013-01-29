@@ -67,9 +67,9 @@ namespace netDxf.Entities
     /// The entities that define a loop must define a closed path and they have to be on the same plane as the hatch, 
     /// if these conditions are not met the result will be unpredictable.
     /// The normal and the elevation will be omited (the hatch elevation and normal will be used instead).
-    /// Only the x and y coordinates for the center of the line, ellipse and the circle will be used.
-    /// Circles, full ellipses and closed polylines are closed paths so only one must exist in the data list.
-    /// Lines, arcs, ellipse arcs and open polylines are open paths so more enties must exist to make a closed loop.
+    /// Only the x and y coordinates of the line, ellipse, the circle, and spline will be used.
+    /// Circles, full ellipses, closed polylines, closed splines are closed paths so only one must exist in the data list.
+    /// Lines, arcs, ellipse arcs, open polylines, and open splines are open paths so more enties must exist to make a closed loop.
     /// </remarks>
     public class HatchBoundaryPath
     {
@@ -96,6 +96,7 @@ namespace netDxf.Entities
         #endregion
 
         #region public properties
+
         /// <summary>
         /// Gets the list of entities that makes a loop for the hatch boundary paths.
         /// </summary>
@@ -123,6 +124,7 @@ namespace netDxf.Entities
         #endregion
 
         #region private methods
+
         private void SetInternalInfo()
         {
             numberOfEdges = 0;
@@ -158,7 +160,6 @@ namespace netDxf.Entities
                         numberOfEdges += 1;
                         break;
                     case EntityType.LightWeightPolyline:
-
                         if (((LwPolyline)entity).IsClosed)
                         {
                             pathTypeFlag = BoundaryPathTypeFlag.Derived | BoundaryPathTypeFlag.External | BoundaryPathTypeFlag.Polyline;
@@ -171,10 +172,22 @@ namespace netDxf.Entities
                             numberOfEdges += ((LwPolyline)entity).Vertexes.Count - 1;
                         }
                         break;
+                    case EntityType.Spline:
+                        // a closed spline is a closed loop
+                        if (((Spline)entity).IsClosed && data.Count > 1)
+                            throw new ArgumentException("A closed spline is a closed loop, there can be only per path.");
+                        // an open spline is not a closed path
+                        if (!((Spline)entity).IsClosed && data.Count <= 1)
+                            throw new ArgumentException("An open spline does not make closed loop.");
+                        numberOfEdges += 1;
+                        break;
+                    default:
+                        throw new ArgumentException("The entity type " + entity.Type + " unknown or not implemented as part of a hatch pattern.");
                 }
             }
 
         }
+
         #endregion
 
     }

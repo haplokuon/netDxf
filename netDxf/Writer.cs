@@ -109,7 +109,7 @@ namespace netDxf
             try
             {
                 this.output = File.Create(this.file);
-                this.writer = new StreamWriter(this.output, Encoding.ASCII);
+                this.writer = new StreamWriter(this.output, Encoding.Default);
                 this.isFileOpen = true;
             }
             catch(IOException io)
@@ -1476,7 +1476,6 @@ namespace netDxf
                     WriteHatchBoundaryPathData(entity);
                 }
                 this.WriteCodePair(97, 0);
-
             }
         }
 
@@ -1568,10 +1567,30 @@ namespace netDxf
                                 WriteHatchBoundaryPathData(o);
                             }
                         }
-                        
-
                         break;
+                    case EntityType.Spline:
+                        Spline spline = (Spline)entity;
+                        this.WriteCodePair(72, 4);  // Edge type (only if boundary is not a polyline): 1 = Line; 2 = Circular arc; 3 = Elliptic arc; 4 = Spline
+                        this.WriteCodePair(94, spline.Degree);
+                        this.WriteCodePair(73, (spline.Flags & SplineTypeFlags.Rational) == SplineTypeFlags.Rational ? 1 : 0);
+                        this.WriteCodePair(74, spline.IsPeriodic ? 1 : 0);
+                        this.WriteCodePair(95, spline.Knots.Length);
+                        this.WriteCodePair(96, spline.ControlPoints.Count);
+                        foreach (double knot in spline.Knots)
+                            this.WriteCodePair(40, knot);
 
+                        foreach (SplineVertex point in spline.ControlPoints)
+                        {
+                            this.WriteCodePair(10, point.Location.X);
+                            this.WriteCodePair(20, point.Location.Y);
+                            this.WriteCodePair(42, point.Weigth);
+                        }
+
+                        // this information is only required for AutoCAD version 2010
+                        // stores information about spline fit points (the spline entity has no fit points and no tangent info)
+                        if (this.version >= DxfVersion.AutoCad2010) this.WriteCodePair(97, 0);
+                        
+                        break;
                     default:
                         throw new NotSupportedException("Hatch boundary path not supported: " + entity.Type);
                 }

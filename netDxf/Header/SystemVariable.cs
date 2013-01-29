@@ -48,6 +48,11 @@ namespace netDxf.Header
         public const string Angdir = "$ANGDIR";
 
         /// <summary>
+        /// Drawing code page; set to the system code page when a new drawing is created, but not otherwise maintained by AutoCAD.
+        /// </summary>
+        public const string DwgCodePage = "$DWGCODEPAGE";
+
+        /// <summary>
         /// Controls symbol table naming.
         /// </summary>
         public const string Extnames = "$EXTNAMES";

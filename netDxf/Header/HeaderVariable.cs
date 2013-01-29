@@ -73,6 +73,7 @@ namespace netDxf.Header
                            {SystemVariable.HandSeed, 5},
                            {SystemVariable.Angbase, 50},
                            {SystemVariable.Angdir, 70},
+                           {SystemVariable.DwgCodePage, 3},
                            {SystemVariable.Extnames, 290},
                            {SystemVariable.Insunits, 70}
 

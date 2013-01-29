@@ -1004,7 +1004,14 @@ namespace netDxf
 
             // objects
             this.imageDefs = dxfReader.ImageDefs;
-            this.rasterVariables = dxfReader.RasterVariables;
+            // we will define a new RasterVariables object in case there is none in the dxf
+            if (dxfReader.RasterVariables == null)
+            {
+                this.rasterVariables = new RasterVariables();
+                this.handleCount = this.rasterVariables.AsignHandle(this.handleCount);
+            }
+            else
+                this.rasterVariables = dxfReader.RasterVariables;
 
             Thread.CurrentThread.CurrentCulture = cultureInfo;
 
@@ -1052,9 +1059,8 @@ namespace netDxf
             {
                 this.handleCount = imageDefDictionary.AsignHandle(this.handleCount);
                 foreach (ImageDef imageDef in this.imageDefs.Values)
-                {
                     imageDefDictionary.Entries.Add(new DictionaryObjectEntry(imageDef.Name, imageDef.Handle));
-                }
+
                 dictionaries.Add(imageDefDictionary);
 
                 namedObjectDictionary.Entries.Add(new DictionaryObjectEntry("ACAD_IMAGE_DICT", imageDefDictionary.Handle));
@@ -1073,6 +1079,7 @@ namespace netDxf
             //HEADER SECTION
             dxfWriter.BeginSection(StringCode.HeaderSection);
             dxfWriter.WriteSystemVariable(new HeaderVariable(SystemVariable.DatabaseVersion, this.version));
+            dxfWriter.WriteSystemVariable(new HeaderVariable(SystemVariable.DwgCodePage, "ANSI_1252"));
             dxfWriter.WriteSystemVariable(new HeaderVariable(SystemVariable.HandSeed, Convert.ToString(this.handleCount + ReservedHandles, 16)));
             dxfWriter.WriteSystemVariable(new HeaderVariable(SystemVariable.Angbase, 0));
             dxfWriter.WriteSystemVariable(new HeaderVariable(SystemVariable.Angdir, 0));

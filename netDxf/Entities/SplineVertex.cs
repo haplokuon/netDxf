@@ -46,11 +46,18 @@ namespace netDxf.Entities
         /// <param name="z">Control point z coordiante.</param>
         /// <param name="w">Control point weight (default 1.0).</param>
         public SplineVertex(double x, double y, double z, double w = 1.0)
+            : this(new Vector3(x, y, z), w)
         {
-            if (w <= 0)
-                throw new ArgumentException("The spline vertex weight must be greater than zero.");
-            this.location = new Vector3(x, y, z);
-            this.weigth = w;
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <c>SplineVertex</c> class.
+        /// </summary>
+        /// <param name="location">Spline control point <see cref="Vector2">vertex</see> coordinates.</param>
+        /// <param name="weigth">Weigth of the spline control point (default 1.0).</param>
+        public SplineVertex(Vector2 location, double weigth = 1.0)
+            : this(new Vector3(location.X, location.Y, 0.0), weigth)
+        {
         }
 
         /// <summary>
