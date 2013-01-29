@@ -68,6 +68,7 @@ namespace TestDxfDocument
             //ExplodeTest();
             //HatchTestLinesBoundary();
             //HatchTest1();
+            //HatchTest2();
             //HatchTest3();
             //BlockAttributes();
             //WriteNestedInsert();
@@ -86,12 +87,9 @@ namespace TestDxfDocument
             DxfDocument dxf = new DxfDocument();
             Text text = new Text("ÁÉÍÓÚ áéíóú Ññ àèìòù âêîôû", Vector2.Zero,10);
             dxf.AddEntity(text);
-
-            // version prior to AutoCAD2007 do not accept strings with no ASCII characters
             dxf.Save("text1.dxf", DxfVersion.AutoCad2000);
             dxf.Load("text1.dxf");
             dxf.Save("text2.dxf", DxfVersion.AutoCad2004);
-            // non ASCII characters will only work with version AutoCAD2007 and later versions
             dxf.Save("text3.dxf", DxfVersion.AutoCad2007);
             dxf.Save("text4.dxf", DxfVersion.AutoCad2010);
 
@@ -981,7 +979,7 @@ namespace TestDxfDocument
             dxf.AddEntity(poly3);
             dxf.AddEntity(hatch);
 
-            dxf.Save("hatchTest.dxf", DxfVersion.AutoCad2010);
+            dxf.Save("hatchTest1.dxf", DxfVersion.AutoCad2010);
             dxf.Load("hatchTest.dxf");
         }
         private static void HatchTest2()
@@ -1012,7 +1010,7 @@ namespace TestDxfDocument
             dxf.AddEntity(ellipse);
             dxf.AddEntity(hatch);
 
-            dxf.Save("hatchTest.dxf", DxfVersion.AutoCad2000);
+            dxf.Save("hatchTest2.dxf", DxfVersion.AutoCad2000);
         }
         private static void HatchTest3()
         {
@@ -1053,7 +1051,7 @@ namespace TestDxfDocument
             dxf.AddEntity(poly2);
             dxf.AddEntity(hatch);
 
-            dxf.Save("hatchTest.dxf", DxfVersion.AutoCad2010);
+            dxf.Save("hatchTest3.dxf", DxfVersion.AutoCad2010);
         }
         private static void Dxf2000()
         {

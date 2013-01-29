@@ -1,3 +1,8 @@
+[0.2.8 - 2013/01/29]
++ The Reader and the Writer now should be able to handle other Ansi code pages than the common 1252 Latin 1; Western European (Windows).
++ Added static function to the DxfDocument to get the string that represents the dxf database version number.
++ Clean up related hatch reader methods a little more.
+
 [0.2.7 - 2013/01/29]
 + Hatches now supports spline as boundary paths.
 + Added SplineVertex constructor with Vector2.

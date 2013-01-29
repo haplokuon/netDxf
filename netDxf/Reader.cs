@@ -48,6 +48,7 @@ namespace netDxf
         private bool isFileOpen;
         private Stream input;
         private StreamReader reader;
+        private int codepage;
 
         //header
         private List<string> comments;
@@ -111,6 +112,10 @@ namespace netDxf
         public DxfReader(string file)
         {
             this.file = file;
+            // in case of error trying to get the code page we will default to the most common one 1252 Latin 1; Western European (Windows)
+            string encoding = CheckHeaderVariable(file, SystemVariable.DwgCodePage) ?? "ANSI_1252";
+            if (!int.TryParse(encoding.Split('_')[1], out this.codepage))
+                this.codepage = 1252;
         }
 
         #endregion
@@ -149,6 +154,11 @@ namespace netDxf
         public DefaultDrawingUnits DrawingUnits
         {
             get { return drawingUnits; }
+        }
+
+        public int Codepage
+        {
+            get { return codepage; }
         }
 
         #endregion
@@ -298,12 +308,16 @@ namespace netDxf
             try
             {
                 this.input = File.OpenRead(this.file);
-                this.reader = new StreamReader(this.input, Encoding.Default);
+                this.reader = new StreamReader(this.input, Encoding.GetEncoding(this.codepage));
                 this.isFileOpen = true;
+            }
+            catch (IOException ex)
+            {
+                throw (new DxfException(this.file, "Error trying to open the file for reading.", ex));
             }
             catch (Exception ex)
             {
-                throw (new DxfException(this.file, "Error al intentar abrir el archivo.", ex));
+                throw (new DxfException(this.file, "Unknow error trying to open the file.", ex));
             }
         }
 
@@ -407,6 +421,44 @@ namespace netDxf
             }
         }
 
+        public static string CheckHeaderVariable(string fileName, string headerVariable)
+        {
+            Stream input = File.OpenRead(fileName);
+            StreamReader reader = new StreamReader(input, Encoding.ASCII); // use the basic encoding to read only the header info
+            CodeValuePair dxfPairInfo = ReadCodePair(reader);
+            while (dxfPairInfo.Value != StringCode.EndOfFile)
+            {
+                dxfPairInfo = ReadCodePair(reader);
+                if (dxfPairInfo.Value == StringCode.HeaderSection)
+                {
+                    dxfPairInfo = ReadCodePair(reader);
+                    while (dxfPairInfo.Value != StringCode.EndSection)
+                    {
+                        if (!HeaderVariable.Allowed.ContainsKey(dxfPairInfo.Value)) continue;
+
+                        int codeGroup = HeaderVariable.Allowed[dxfPairInfo.Value];
+                        string variableName = dxfPairInfo.Value;
+                        dxfPairInfo = ReadCodePair(reader);
+                        if (dxfPairInfo.Code != codeGroup)
+                            throw new DxfHeaderVariableException(variableName, fileName, "Invalid variable name and code group convination");
+                        if (variableName == headerVariable)
+                        {
+                            // we found the variable we are looking for
+                            string output = dxfPairInfo.Value;
+                            reader.Close();
+                            input.Close();
+                            return output;
+                        }
+                        dxfPairInfo = ReadCodePair(reader);
+                    }
+                }
+            }
+
+            reader.Close();
+            input.Close();
+            return null;
+        }
+
         #endregion
 
         #region sections methods
@@ -436,6 +488,8 @@ namespace netDxf
                         case SystemVariable.Angdir:
                             break;
                         case SystemVariable.Extnames:
+                            break;
+                        case SystemVariable.DwgCodePage:
                             break;
                         case SystemVariable.Insunits:
                             this.drawingUnits = (DefaultDrawingUnits) int.Parse(dxfPairInfo.Value);
@@ -4066,50 +4120,32 @@ namespace netDxf
 
         private HatchBoundaryPath ReadPolylineBoundaryPath()
         {
-            bool read = false;
-            bool hasBulge = false;
-            bool isClosed = false;
             List<LwPolylineVertex> vertexes = new List<LwPolylineVertex>();
             dxfPairInfo = this.ReadCodePair();
 
-            while (!read)
+            bool hasBulge = int.Parse(dxfPairInfo.Value) != 0;
+            dxfPairInfo = this.ReadCodePair();
+
+            // is polyline closed
+            bool isClosed = int.Parse(dxfPairInfo.Value) == 1;
+            dxfPairInfo = this.ReadCodePair();
+
+            int numVertexes = int.Parse(dxfPairInfo.Value); // code 93
+            dxfPairInfo = this.ReadCodePair();
+
+            for (int i = 0; i < numVertexes; i++)
             {
-                switch (dxfPairInfo.Code)
+                double bulge = 0.0;
+                double x = double.Parse(dxfPairInfo.Value); // code 10
+                dxfPairInfo = this.ReadCodePair();
+                double y = double.Parse(dxfPairInfo.Value); // code 20
+                dxfPairInfo = this.ReadCodePair();
+                if (hasBulge)
                 {
-                    case 72:
-                        hasBulge = int.Parse(dxfPairInfo.Value) != 0;
-                        dxfPairInfo = this.ReadCodePair();
-                        break;
-                    case 73:
-                        // is polyline closed
-                        isClosed = int.Parse(dxfPairInfo.Value) == 1;
-                        dxfPairInfo = this.ReadCodePair();
-                        break;
-                    case 93:
-                        int numVertexes = int.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
-                        for (int i = 0; i < numVertexes; i++)
-                        {
-                            double x = 0.0;
-                            double y = 0.0;
-                            double bulge = 0.0;
-                            if (dxfPairInfo.Code == 10) x = double.Parse(dxfPairInfo.Value);
-                            dxfPairInfo = this.ReadCodePair();
-                            if (dxfPairInfo.Code == 20) y = double.Parse(dxfPairInfo.Value);
-                            dxfPairInfo = this.ReadCodePair();
-                            if (hasBulge)
-                            {
-                                if (dxfPairInfo.Code == 42) bulge = double.Parse(dxfPairInfo.Value);
-                                dxfPairInfo = this.ReadCodePair();
-                            }
-                            vertexes.Add(new LwPolylineVertex(x, y, bulge));
-                        }
-                        break;
-                    default:
-                        // the way the information is written is quite strict, a none recognize code and the polyline reading is over.
-                        read = true;
-                        break;
+                    bulge = double.Parse(dxfPairInfo.Value);  // code 42
+                    dxfPairInfo = this.ReadCodePair();
                 }
+                vertexes.Add(new LwPolylineVertex(x, y, bulge));
             }
 
             LwPolyline polyline = new LwPolyline(vertexes, isClosed);
@@ -4131,32 +4167,32 @@ namespace netDxf
                     case 1:
                         dxfPairInfo = this.ReadCodePair();
                         // line
-                        double lX1 = double.Parse(dxfPairInfo.Value);
+                        double lX1 = double.Parse(dxfPairInfo.Value); // code 10
                         dxfPairInfo = this.ReadCodePair();
-                        double lY1 = double.Parse(dxfPairInfo.Value);
+                        double lY1 = double.Parse(dxfPairInfo.Value); // code 20
                         dxfPairInfo = this.ReadCodePair();
-                        double lX2 = double.Parse(dxfPairInfo.Value);
+                        double lX2 = double.Parse(dxfPairInfo.Value); // code 11
                         dxfPairInfo = this.ReadCodePair();
-                        double lY2 = double.Parse(dxfPairInfo.Value);
+                        double lY2 = double.Parse(dxfPairInfo.Value); // code 21
                         dxfPairInfo = this.ReadCodePair();
                         entities.Add(new Line(new Vector3(lX1, lY1, 0.0), new Vector3(lX2, lY2, 0.0)));
                         break;
                     case 2:
                         dxfPairInfo = this.ReadCodePair();
                         // circular arc
-                        double aX = double.Parse(dxfPairInfo.Value);
+                        double aX = double.Parse(dxfPairInfo.Value); // code 10
                         dxfPairInfo = this.ReadCodePair();
-                        double aY = double.Parse(dxfPairInfo.Value);
+                        double aY = double.Parse(dxfPairInfo.Value); // code 40
                         dxfPairInfo = this.ReadCodePair();
-                        double aR = double.Parse(dxfPairInfo.Value);
+                        double aR = double.Parse(dxfPairInfo.Value); // code 40
                         dxfPairInfo = this.ReadCodePair();
-                        double aStart = double.Parse(dxfPairInfo.Value);
+                        double aStart = double.Parse(dxfPairInfo.Value); // code 50
                         dxfPairInfo = this.ReadCodePair();
-                        double aEnd = double.Parse(dxfPairInfo.Value);
+                        double aEnd = double.Parse(dxfPairInfo.Value); // code 51
                         dxfPairInfo = this.ReadCodePair();
-                        bool aCCW = int.Parse(dxfPairInfo.Value) != 0;
+                        bool aCCW = int.Parse(dxfPairInfo.Value) != 0; // code 73
                         dxfPairInfo = this.ReadCodePair();
-                        // a full circle will never happen AutoCAD exports circle boundary paths as two vertex polylines with bulges of 1 and -1
+                        // a full circle will never happen, AutoCAD exports circle boundary paths as two vertex polylines with bulges of 1 and -1
                         entities.Add(aCCW
                                          ? new Arc(new Vector3(aX, aY, 0.0), aR, aStart, aEnd)
                                          : new Arc(new Vector3(aX, aY, 0.0), aR, 360 - aEnd, 360 - aStart));
@@ -4164,21 +4200,21 @@ namespace netDxf
                     case 3:
                         dxfPairInfo = this.ReadCodePair();
                         // elliptic arc
-                        double eX = double.Parse(dxfPairInfo.Value);
+                        double eX = double.Parse(dxfPairInfo.Value); // code 10
                         dxfPairInfo = this.ReadCodePair();
-                        double eY = double.Parse(dxfPairInfo.Value);
+                        double eY = double.Parse(dxfPairInfo.Value); // code 20
                         dxfPairInfo = this.ReadCodePair();
-                        double eAxisX = double.Parse(dxfPairInfo.Value);
+                        double eAxisX = double.Parse(dxfPairInfo.Value); // code 11
                         dxfPairInfo = this.ReadCodePair();
-                        double eAxisY = double.Parse(dxfPairInfo.Value);
+                        double eAxisY = double.Parse(dxfPairInfo.Value); // code 21
                         dxfPairInfo = this.ReadCodePair();
-                        double eAxisRatio = double.Parse(dxfPairInfo.Value);
+                        double eAxisRatio = double.Parse(dxfPairInfo.Value); // code 40
                         dxfPairInfo = this.ReadCodePair();
-                        double eStart = double.Parse(dxfPairInfo.Value);
+                        double eStart = double.Parse(dxfPairInfo.Value); // code 50
                         dxfPairInfo = this.ReadCodePair();
-                        double eEnd = double.Parse(dxfPairInfo.Value);
+                        double eEnd = double.Parse(dxfPairInfo.Value); // code 51
                         dxfPairInfo = this.ReadCodePair();
-                        bool eCCW = int.Parse(dxfPairInfo.Value) != 0;
+                        bool eCCW = int.Parse(dxfPairInfo.Value) != 0; // code 73
                         dxfPairInfo = this.ReadCodePair();
 
                         Vector3 center = new Vector3(eX, eY, 0.0);
@@ -4206,34 +4242,34 @@ namespace netDxf
                          dxfPairInfo = this.ReadCodePair();
                         // spline
                         List<SplineVertex> controlPoints = new List<SplineVertex>();
-                        short degree = short.Parse(dxfPairInfo.Value);
+                        short degree = short.Parse(dxfPairInfo.Value); // code 94
                         dxfPairInfo = this.ReadCodePair();
-                        int isRational = int.Parse(dxfPairInfo.Value);
+                        int isRational = int.Parse(dxfPairInfo.Value); // code 73
                         dxfPairInfo = this.ReadCodePair();
-                        int isPeriodic = int.Parse(dxfPairInfo.Value);
+                        int isPeriodic = int.Parse(dxfPairInfo.Value); // code 74
                         dxfPairInfo = this.ReadCodePair();
-                        int numKnots = int.Parse(dxfPairInfo.Value);
+                        int numKnots = int.Parse(dxfPairInfo.Value); // code 95
                         dxfPairInfo = this.ReadCodePair();
-                        int numControlPoints = int.Parse(dxfPairInfo.Value);
+                        int numControlPoints = int.Parse(dxfPairInfo.Value); // code 96
                         dxfPairInfo = this.ReadCodePair();
                         double[] knots = new double[numKnots];
                         for (int i = 0; i < numKnots; i++)
                         {
-                            if (dxfPairInfo.Code == 40) knots[i] = double.Parse(dxfPairInfo.Value);
+                            knots[i] = double.Parse(dxfPairInfo.Value);  // code 40
                             dxfPairInfo = this.ReadCodePair();
                         }
 
                         for (int i = 0; i < numControlPoints; i++)
                         {
                             double w = 1.0;
-                            double x = double.Parse(dxfPairInfo.Value);
+                            double x = double.Parse(dxfPairInfo.Value); // code 10
                             dxfPairInfo = this.ReadCodePair();
-                            double y = double.Parse(dxfPairInfo.Value);
+                            double y = double.Parse(dxfPairInfo.Value); // code 20
                             dxfPairInfo = this.ReadCodePair();
                             // control point weight might not be present
                             if (dxfPairInfo.Code == 42)
                             {
-                                w = double.Parse(dxfPairInfo.Value);
+                                w = double.Parse(dxfPairInfo.Value); // code 42
                                 dxfPairInfo = this.ReadCodePair();
                             }
                             
@@ -4245,30 +4281,30 @@ namespace netDxf
                         // stores information about spline fit point (the spline entity does not make use of this information)
                         if (dxfVersion >= DxfVersion.AutoCad2010)
                         {
-                            int numFitData = int.Parse(dxfPairInfo.Value);
+                            int numFitData = int.Parse(dxfPairInfo.Value); // code 97
                             dxfPairInfo = this.ReadCodePair();
                             for (int i = 0; i < numFitData; i++)
                             {
-                                double fitX = double.Parse(dxfPairInfo.Value);
+                                double fitX = double.Parse(dxfPairInfo.Value); // code 11
                                 dxfPairInfo = this.ReadCodePair();
-                                double fitY = double.Parse(dxfPairInfo.Value);
+                                double fitY = double.Parse(dxfPairInfo.Value); // code 21
                                 dxfPairInfo = this.ReadCodePair();
                             }
 
                             // the info on start tangent might not appear
                             if (dxfPairInfo.Code == 12)
                             {
-                                double startTanX = double.Parse(dxfPairInfo.Value);
+                                double startTanX = double.Parse(dxfPairInfo.Value); // code 12
                                 dxfPairInfo = this.ReadCodePair();
-                                double startTanY = double.Parse(dxfPairInfo.Value);
+                                double startTanY = double.Parse(dxfPairInfo.Value); // code 22
                                 dxfPairInfo = this.ReadCodePair();
                             }
                             // the info on end tangent might not appear
                             if (dxfPairInfo.Code == 13)
                             {
-                                double endTanX = double.Parse(dxfPairInfo.Value);
+                                double endTanX = double.Parse(dxfPairInfo.Value); // code 13
                                 dxfPairInfo = this.ReadCodePair();
-                                double endTanY = double.Parse(dxfPairInfo.Value);
+                                double endTanY = double.Parse(dxfPairInfo.Value); // code 23
                                 dxfPairInfo = this.ReadCodePair();
                             }
                         }
@@ -4344,31 +4380,33 @@ namespace netDxf
             dxfPairInfo = this.ReadCodePair();
             for (int i = 0; i < numLines; i++)
             {
-                double angle = 0.0;
                 Vector2 origin = Vector2.Zero;
                 Vector2 offset = Vector2.Zero;
+                
+                double angle = double.Parse(dxfPairInfo.Value); // code 53
+                dxfPairInfo = this.ReadCodePair();
+
+                origin.X = double.Parse(dxfPairInfo.Value); // code 43
+                dxfPairInfo = this.ReadCodePair();
+
+                origin.Y = double.Parse(dxfPairInfo.Value); // code 44
+                dxfPairInfo = this.ReadCodePair();
+
+                offset.X = double.Parse(dxfPairInfo.Value); // code 45
+                dxfPairInfo = this.ReadCodePair();
+
+                offset.Y = double.Parse(dxfPairInfo.Value); // code 46
+                dxfPairInfo = this.ReadCodePair();
+
+                int numSegments = int.Parse(dxfPairInfo.Value); // code 79
+                dxfPairInfo = this.ReadCodePair();
+
                 List<double> dashPattern = new List<double>();
-
-
-                if (dxfPairInfo.Code == 53) angle = double.Parse(dxfPairInfo.Value);
-                dxfPairInfo = this.ReadCodePair();
-
-                if (dxfPairInfo.Code == 43) origin.X = double.Parse(dxfPairInfo.Value);
-                dxfPairInfo = this.ReadCodePair();
-
-                if (dxfPairInfo.Code == 44) origin.Y = double.Parse(dxfPairInfo.Value);
-                dxfPairInfo = this.ReadCodePair();
-
-                if (dxfPairInfo.Code == 45) offset.X = double.Parse(dxfPairInfo.Value);
-                dxfPairInfo = this.ReadCodePair();
-
-                if (dxfPairInfo.Code == 46) offset.Y = double.Parse(dxfPairInfo.Value);
-                dxfPairInfo = this.ReadCodePair();
-
-                if (dxfPairInfo.Code == 79)
+                for (int j = 0; j < numSegments; j++)
                 {
-                    int numSegments = int.Parse(dxfPairInfo.Value);
-                    dashPattern = ReadHatchLineSegments(hatchScale, numSegments);
+                    // positive values means solid segments and negative values means spaces (one entry per element)
+                    dashPattern.Add(double.Parse(dxfPairInfo.Value) / hatchScale); // code 49
+                    dxfPairInfo = this.ReadCodePair();
                 }
 
                 // Pattern fill data. In theory this should hold the same information as the pat file but for unkown reason the dxf requires global data instead of local.
@@ -4389,22 +4427,6 @@ namespace netDxf
             }
 
             return lineDefinitions;
-        }
-
-        private List<double> ReadHatchLineSegments(double scale, int numSegments)
-        {
-            List<double> dashPattern = new List<double>();
-
-            dxfPairInfo = this.ReadCodePair();
-            for (int i = 0; i < numSegments; i++)
-            {
-                // Positive values means solid segments and negative values means spaces (one entry per element)
-                if (dxfPairInfo.Code == 49)
-                    dashPattern.Add(double.Parse(dxfPairInfo.Value)/scale);
-
-                dxfPairInfo = this.ReadCodePair();
-            }
-            return dashPattern;
         }
 
         private Vertex ReadVertex()
@@ -4833,15 +4855,23 @@ namespace netDxf
             throw new DxfTableException(StringCode.DimensionStyleTable, this.file, "The dimension style with name " + name + " does not exist.");
         }
 
+        private static CodeValuePair ReadCodePair(StreamReader reader)
+        {
+            int intCode;
+            string readCode = reader.ReadLine();
+            if (!int.TryParse(readCode, out intCode))
+                throw (new DxfException("Invalid group code " + readCode));
+            string value = reader.ReadLine();
+            return new CodeValuePair(intCode, value);
+        }
+
         private CodeValuePair ReadCodePair()
         {
             int intCode;
             string readCode = this.reader.ReadLine();
             this.fileLine += 1;
             if (!int.TryParse(readCode, out intCode))
-            {
                 throw (new DxfException("Invalid group code " + readCode + " in line " + this.fileLine));
-            }
             string value = this.reader.ReadLine();
             this.fileLine += 1;
             return new CodeValuePair(intCode, value);

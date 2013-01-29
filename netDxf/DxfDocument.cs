@@ -26,6 +26,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Globalization;
 using System.IO;
+using System.Text;
 using System.Threading;
 using netDxf.Blocks;
 using netDxf.Entities;
@@ -1079,7 +1080,7 @@ namespace netDxf
             //HEADER SECTION
             dxfWriter.BeginSection(StringCode.HeaderSection);
             dxfWriter.WriteSystemVariable(new HeaderVariable(SystemVariable.DatabaseVersion, this.version));
-            dxfWriter.WriteSystemVariable(new HeaderVariable(SystemVariable.DwgCodePage, "ANSI_1252"));
+            dxfWriter.WriteSystemVariable(new HeaderVariable(SystemVariable.DwgCodePage, "ANSI_" + Encoding.Default.WindowsCodePage));
             dxfWriter.WriteSystemVariable(new HeaderVariable(SystemVariable.HandSeed, Convert.ToString(this.handleCount + ReservedHandles, 16)));
             dxfWriter.WriteSystemVariable(new HeaderVariable(SystemVariable.Angbase, 0));
             dxfWriter.WriteSystemVariable(new HeaderVariable(SystemVariable.Angdir, 0));
@@ -1274,6 +1275,27 @@ namespace netDxf
             Thread.CurrentThread.CurrentCulture = cultureInfo;
         }
          		
+        /// <summary>
+        /// Checks the AutoCAD dxf file database version.
+        /// </summary>
+        /// <param name="file">File name.</param>
+        /// <returns>String that represents the dxf file version.</returns>
+        /// <remarks>
+        /// The AutoCAD drawing database version number:<br />
+        /// AC1006 = R10<br />
+        /// AC1009 = R11 and R12<br />
+        /// AC1012 = R13<br />
+        /// AC1014 = R14<br />
+        /// AC1015 = AutoCAD 2000<br />
+        /// AC1018 = AutoCAD 2004<br />
+        /// AC1021 = AutoCAD 2007<br />
+        /// AC1024 = AutoCAD 2010
+        /// </remarks>
+        public static string CheckDxfFileVersion(string file)
+        {
+            return DxfReader.CheckHeaderVariable(file, SystemVariable.DatabaseVersion);
+        }
+
         #endregion
 
         #region private methods
