@@ -434,7 +434,11 @@ namespace netDxf
                     dxfPairInfo = ReadCodePair(reader);
                     while (dxfPairInfo.Value != StringCode.EndSection)
                     {
-                        if (!HeaderVariable.Allowed.ContainsKey(dxfPairInfo.Value)) continue;
+                        if (!HeaderVariable.Allowed.ContainsKey(dxfPairInfo.Value))
+                        {
+                            dxfPairInfo = ReadCodePair(reader);
+                            continue;
+                        }
 
                         int codeGroup = HeaderVariable.Allowed[dxfPairInfo.Value];
                         string variableName = dxfPairInfo.Value;
