@@ -1,7 +1,7 @@
-﻿#region netDxf, Copyright(C) 2012 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf, Copyright(C) 2013 Daniel Carvajal, Licensed under LGPL.
 
 //                        netDxf library
-// Copyright (C) 2012 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2013 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -23,30 +23,23 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using netDxf.Tables;
 
 namespace netDxf.Entities
 {
     /// <summary>
-    /// Represents a spline curve <see cref="IEntityObject">entity</see> (NURBS Non-Uniform Rational B-Splines).
+    /// Represents a spline curve <see cref="EntityObject">entity</see> (NURBS Non-Uniform Rational B-Splines).
     /// </summary>
     public class Spline :
-        DxfObject,
-        IEntityObject
+        EntityObject
     {
         #region private fields
 
-        private const EntityType TYPE = EntityType.Spline;
-        private Layer layer;
-        private AciColor color;
-        private LineType lineType;
-        private Dictionary<ApplicationRegistry, XData> xData;
-        private SplineTypeFlags flags;
         private List<SplineVertex> controlPoints;
         private double[] knots;
-        private short degree;
-        private bool isClosed;
-        private bool isPeriodic;
+        private readonly SplineTypeFlags flags;
+        private readonly short degree;
+        private readonly bool isClosed;
+        private readonly bool isPeriodic;
 
         #endregion
 
@@ -59,7 +52,7 @@ namespace netDxf.Entities
         /// <param name="knots">Spline knot vector.</param>
         /// <param name="degree">Degree of the spline curve.</param>
         public Spline(List<SplineVertex> controlPoints, double[] knots, short degree)
-            : base(DxfObjectCode.Spline)
+            : base(EntityType.Spline, DxfObjectCode.Spline)
         {
             if (degree < 1)
                 throw new ArgumentException("The degree of the spline must be equal or greater than one.");
@@ -70,9 +63,6 @@ namespace netDxf.Entities
             if(knots.Length != controlPoints.Count + degree + 1)
                 throw new ArgumentException("The number of knots must be equals to the number of control points + spline degree + 1.");
 
-            this.layer = Layer.Default;
-            this.color = AciColor.ByLayer;
-            this.lineType = LineType.ByLayer;
             this.controlPoints = controlPoints;
             this.knots = knots;
             this.degree = degree;
@@ -87,6 +77,7 @@ namespace netDxf.Entities
                 this.isClosed = controlPoints[0].Location.Equals(controlPoints[controlPoints.Count - 1].Location);
                 this.flags = this.isClosed ? SplineTypeFlags.Closed | SplineTypeFlags.Rational : SplineTypeFlags.Rational;
             }
+
         }
 
         /// <summary>
@@ -107,7 +98,7 @@ namespace netDxf.Entities
         /// <param name="degree">Degree of the spline curve.</param>
         /// <param name="periodic">Sets if the spline as periodic closed (default false).</param>
         public Spline(List<SplineVertex> controlPoints, short degree, bool periodic = false)
-            : base(DxfObjectCode.Spline)
+            : base(EntityType.Spline, DxfObjectCode.Spline)
         {
             if (degree < 1)
                 throw new ArgumentException("The degree of the spline must be equal or greater than one.");
@@ -116,9 +107,6 @@ namespace netDxf.Entities
             if (controlPoints.Count < degree + 1)
                 throw new ArgumentException("The number of control points must be equal or greater than the spline degree + 1.");
 
-            this.layer = Layer.Default;
-            this.color = AciColor.ByLayer;
-            this.lineType = LineType.ByLayer;
             this.degree = degree;
             this.isPeriodic = periodic;
             if (this.isPeriodic)
@@ -131,6 +119,7 @@ namespace netDxf.Entities
                 this.isClosed = controlPoints[0].Location.Equals(controlPoints[controlPoints.Count - 1].Location);
                 this.flags = this.isClosed ? SplineTypeFlags.Closed | SplineTypeFlags.Rational : SplineTypeFlags.Rational;
             }
+
             Create(controlPoints); 
         }
 
@@ -208,69 +197,6 @@ namespace netDxf.Entities
         }
         #endregion
 
-        #region IEntityObject Members
-
-        /// <summary>
-        /// Gets the entity <see cref="netDxf.Entities.EntityType">type</see>.
-        /// </summary>
-        public EntityType Type
-        {
-            get { return TYPE; }
-        }
-
-        /// <summary>
-        /// Gets or sets the entity <see cref="netDxf.AciColor">color</see>.
-        /// </summary>
-        public AciColor Color
-        {
-            get { return this.color; }
-            set
-            {
-                if (value == null)
-                    throw new ArgumentNullException("value");
-                this.color = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the entity <see cref="netDxf.Tables.Layer">layer</see>.
-        /// </summary>
-        public Layer Layer
-        {
-            get { return this.layer; }
-            set
-            {
-                if (value == null)
-                    throw new ArgumentNullException("value");
-                this.layer = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the entity <see cref="netDxf.Tables.LineType">line type</see>.
-        /// </summary>
-        public LineType LineType
-        {
-            get { return this.lineType; }
-            set
-            {
-                if (value == null)
-                    throw new ArgumentNullException("value");
-                this.lineType = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the entity <see cref="netDxf.XData">extende data</see>.
-        /// </summary>
-        public Dictionary<ApplicationRegistry, XData> XData
-        {
-            get { return this.xData; }
-            set { this.xData = value; }
-        }
-
-        #endregion
-
         #region private methods
         
         private bool PeriodicTest(List<SplineVertex> points, short d)
@@ -323,19 +249,6 @@ namespace netDxf.Entities
                 for (int i = 0; i < numKnots; i++)
                     knots[i] = (i - this.degree) * factor;
             }
-        }
-
-        #endregion
-
-        #region overrides
-
-        /// <summary>
-        /// Converts the value of this instance to its equivalent string representation.
-        /// </summary>
-        /// <returns>The string representation.</returns>
-        public override string ToString()
-        {
-            return TYPE.ToString();
         }
 
         #endregion

@@ -1,7 +1,7 @@
-﻿#region netDxf, Copyright(C) 2012 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf, Copyright(C) 2013 Daniel Carvajal, Licensed under LGPL.
 
 //                        netDxf library
-// Copyright (C) 2012 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2013 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -23,38 +23,32 @@
 using System;
 using System.Collections.Generic;
 using netDxf.Blocks;
-using netDxf.Tables;
 
 namespace netDxf.Entities
 {
 
     /// <summary>
-    /// Represents a block insertion <see cref="IEntityObject">entity</see>.
+    /// Represents a block insertion <see cref="EntityObject">entity</see>.
     /// </summary>
     public class Insert :
-        DxfObject,
-        IEntityObject
+        EntityObject
     {
         #region private fields
 
         private readonly EndSequence endSequence = new EndSequence();
-        private const EntityType TYPE = EntityType.Insert;
-        private AciColor color;
-        private Layer layer;
-        private LineType lineType;
         private Block block;
         private Vector3 position;
         private Vector3 scale;
         private double rotation;
         private Vector3 normal;
-        private List<Attribute> attributes = new List<Attribute>();
-        private Dictionary<ApplicationRegistry, XData> xData;
+        private readonly List<Attribute> attributes = new List<Attribute>();
 
         #endregion
 
         #region constructors
+
         internal Insert()
-            : base (DxfObjectCode.Insert)
+            : base (EntityType.Insert, DxfObjectCode.Insert)
         {
         }
 
@@ -64,7 +58,7 @@ namespace netDxf.Entities
         /// <param name="block">Insert block definition.</param>
         /// <param name="position">Insert <see cref="Vector3">point</see> in world coordinates.</param>
         public Insert(Block block, Vector3 position)
-            : base (DxfObjectCode.Insert)
+            : base(EntityType.Insert, DxfObjectCode.Insert)
         {
             if (block == null)
                 throw new ArgumentNullException("block");
@@ -74,9 +68,6 @@ namespace netDxf.Entities
             this.scale = new Vector3(1.0, 1.0, 1.0);
             this.rotation = 0.0f;
             this.normal = Vector3.UnitZ;
-            this.layer = Layer.Default;
-            this.color = AciColor.ByLayer;
-            this.lineType = LineType.ByLayer;
             foreach (AttributeDefinition attdef in block.Attributes.Values)
             {
                 this.attributes.Add(new Attribute(attdef));
@@ -120,18 +111,7 @@ namespace netDxf.Entities
         public Block Block
         {
             get { return this.block; }
-            internal set
-            {
-                //for (int i = 0; i < value.Attributes.Count; i++)
-                //{
-                //    this.attributes[i].Definition = value.Attributes.Values[i].
-                //}
-                //foreach (KeyValuePair<string, AttributeDefinition> attributeDefinition in value.Attributes)
-                //{
-                    
-                //}
-                this.block = value;
-            }
+            internal set { this.block = value; }
         }
 
         /// <summary>
@@ -183,69 +163,6 @@ namespace netDxf.Entities
 
         #endregion
 
-        #region IEntityObject Members
-
-        /// <summary>
-        /// Gets the entity <see cref="netDxf.Entities.EntityType">type</see>.
-        /// </summary>
-        public EntityType Type
-        {
-            get { return TYPE; }
-        }
-
-        /// <summary>
-        /// Gets or sets the entity <see cref="netDxf.AciColor">color</see>.
-        /// </summary>
-        public AciColor Color
-        {
-            get { return this.color; }
-            set
-            {
-                if (value == null)
-                    throw new ArgumentNullException("value");
-                this.color = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the entity <see cref="netDxf.Tables.Layer">layer</see>.
-        /// </summary>
-        public Layer Layer
-        {
-            get { return this.layer; }
-            set
-            {
-                if (value == null)
-                    throw new ArgumentNullException("value");
-                this.layer = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the entity <see cref="netDxf.Tables.LineType">line type</see>.
-        /// </summary>
-        public LineType LineType
-        {
-            get { return this.lineType; }
-            set
-            {
-                if (value == null)
-                    throw new ArgumentNullException("value");
-                this.lineType = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the entity <see cref="netDxf.XData">extende data</see>.
-        /// </summary>
-        public Dictionary<ApplicationRegistry, XData> XData
-        {
-            get { return this.xData; }
-            set { this.xData = value; }
-        }
-
-        #endregion
-
         #region overrides
 
         /// <summary>
@@ -266,14 +183,6 @@ namespace netDxf.Entities
             }
             
             return base.AsignHandle(entityNumber);
-        }
-        /// <summary>
-        /// Converts the value of this instance to its equivalent string representation.
-        /// </summary>
-        /// <returns>The string representation.</returns>
-        public override string ToString()
-        {
-            return TYPE.ToString();
         }
 
         #endregion

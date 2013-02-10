@@ -1,7 +1,7 @@
-﻿#region netDxf, Copyright(C) 2012 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf, Copyright(C) 2013 Daniel Carvajal, Licensed under LGPL.
 
 //                        netDxf library
-// Copyright (C) 2012 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2013 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -22,30 +22,23 @@
 
 using System;
 using System.Collections.Generic;
-using netDxf.Tables;
 
 namespace netDxf.Entities
 {
     
     /// <summary>
-    /// Represents a hatch <see cref="netDxf.Entities.IEntityObject">entity</see>.
+    /// Represents a hatch <see cref="EntityObject">entity</see>.
     /// </summary>
     public class Hatch :
-        DxfObject,
-        IEntityObject
+        EntityObject
     {
 
         #region private fields
 
-        private const EntityType TYPE = EntityType.Hatch;
         private List<HatchBoundaryPath> boundaryPaths;
         private HatchPattern pattern;
         private double elevation;
         private Vector3 normal; 
-        private AciColor color;
-        private Layer layer;
-        private LineType lineType;
-        private Dictionary<ApplicationRegistry, XData> xData;
 
         #endregion
 
@@ -61,16 +54,13 @@ namespace netDxf.Entities
         /// <param name="pattern"><see cref="HatchPattern">Hatch pattern</see>.</param>
         /// <param name="boundaryPaths">A list of <see cref="HatchBoundaryPath">boundary paths</see>.</param>
         public Hatch(HatchPattern pattern, List<HatchBoundaryPath> boundaryPaths)
-            : base(DxfObjectCode.Hatch)
+            : base(EntityType.Hatch, DxfObjectCode.Hatch)
         {
             this.pattern = pattern;
             this.boundaryPaths = boundaryPaths;
-            this.layer = Layer.Default;
-            this.color = AciColor.ByLayer;
-            this.lineType = LineType.ByLayer;
             this.normal = Vector3.UnitZ;
-
         }
+
         #endregion
 
         #region public properties
@@ -108,7 +98,7 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets or sets the hatch <see cref="netDxf.Vector3">normal</see>.
+        /// Gets or sets the hatch <see cref="Vector3">normal</see>.
         /// </summary>
         public Vector3 Normal
         {
@@ -120,69 +110,6 @@ namespace netDxf.Entities
                 value.Normalize();
                 this.normal = value;
             }
-        }
-
-        #endregion
-
-        #region IEntityObject Members
-
-        /// <summary>
-        /// Gets the entity <see cref="netDxf.Entities.EntityType">type</see>.
-        /// </summary>
-        public EntityType Type
-        {
-            get { return TYPE; }
-        }
-
-        /// <summary>
-        /// Gets or sets the entity <see cref="netDxf.AciColor">color</see>.
-        /// </summary>
-        public AciColor Color
-        {
-            get { return this.color; }
-            set
-            {
-                if (value == null)
-                    throw new ArgumentNullException("value");
-                this.color = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the entity <see cref="netDxf.Tables.Layer">layer</see>.
-        /// </summary>
-        public Layer Layer
-        {
-            get { return this.layer; }
-            set
-            {
-                if (value == null)
-                    throw new ArgumentNullException("value");
-                this.layer = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the entity <see cref="netDxf.Tables.LineType">line type</see>.
-        /// </summary>
-        public LineType LineType
-        {
-            get { return this.lineType; }
-            set
-            {
-                if (value == null)
-                    throw new ArgumentNullException("value");
-                this.lineType = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the entity <see cref="netDxf.XData">extende data</see>.
-        /// </summary>
-        public Dictionary<ApplicationRegistry, XData> XData
-        {
-            get { return this.xData; }
-            set { this.xData = value; }
         }
 
         #endregion

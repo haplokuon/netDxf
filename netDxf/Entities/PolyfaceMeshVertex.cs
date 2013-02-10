@@ -1,7 +1,7 @@
-﻿#region netDxf, Copyright(C) 2012 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf, Copyright(C) 2013 Daniel Carvajal, Licensed under LGPL.
 
 //                        netDxf library
-// Copyright (C) 2012 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2013 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -21,8 +21,6 @@
 #endregion
 
 using System;
-using System.Collections.Generic;
-using netDxf.Tables;
 
 namespace netDxf.Entities
 {
@@ -34,9 +32,8 @@ namespace netDxf.Entities
     {
         #region private fields
 
-        private VertexTypeFlags flags;
+        private readonly VertexTypeFlags flags;
         private Vector3 location;
-        private Dictionary<ApplicationRegistry, XData> xData;
 
         #endregion
 
@@ -72,7 +69,6 @@ namespace netDxf.Entities
             this.location = location;
         }
 
-
         #endregion
         
         #region public properties
@@ -92,15 +88,6 @@ namespace netDxf.Entities
         internal VertexTypeFlags Flags
         {
             get { return this.flags; }
-        }
-
-        /// <summary>
-        /// Gets or sets the entity <see cref="netDxf.XData">extende data</see>.
-        /// </summary>
-        public Dictionary<ApplicationRegistry, XData> XData
-        {
-            get { return this.xData; }
-            set { this.xData = value; }
         }
 
         #endregion

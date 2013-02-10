@@ -1,7 +1,7 @@
-﻿#region netDxf, Copyright(C) 2012 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf, Copyright(C) 2013 Daniel Carvajal, Licensed under LGPL.
 
 //                        netDxf library
-// Copyright (C) 2012 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2013 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -21,27 +21,21 @@
 #endregion
 
 using System;
-using System.Collections.Generic;
 using System.Threading;
 using netDxf.Tables;
 
 namespace netDxf.Entities
 {
     /// <summary>
-    /// Represents a Text <see cref="IEntityObject">entity</see>.
+    /// Represents a Text <see cref="EntityObject">entity</see>.
     /// </summary>
     public class Text :
-        DxfObject,
-        IEntityObject
+        EntityObject
     {
         #region private fields
 
-        private const EntityType TYPE = EntityType.Text;
         private TextAlignment alignment;
         private Vector3 position;
-        private AciColor color;
-        private Layer layer;
-        private LineType lineType;
         private Vector3 normal;
         private double obliqueAngle;
         private TextStyle style;
@@ -49,7 +43,6 @@ namespace netDxf.Entities
         private double height;
         private double widthFactor;
         private double rotation;
-        private Dictionary<ApplicationRegistry, XData> xData;
 
         #endregion
 
@@ -106,14 +99,11 @@ namespace netDxf.Entities
         /// <param name="height">Text height.</param>
         /// <param name="style">Text <see cref="TextStyle">style</see>.</param>
         public Text(string text, Vector3 position, double height, TextStyle style)
-            : base(DxfObjectCode.Text)
+            : base(EntityType.Text, DxfObjectCode.Text)
         {
             this.value = text;
             this.position = position;
             this.alignment = TextAlignment.BaselineLeft;
-            this.layer = Layer.Default;
-            this.color = AciColor.ByLayer;
-            this.lineType = LineType.ByLayer;
             this.normal = Vector3.UnitZ;
             this.style = style;
             this.height = height;
@@ -182,7 +172,7 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets or sets Text <see cref="Vector2">position</see> in world coordinates..
+        /// Gets or sets Text <see cref="Vector2">position</see> in world coordinates.
         /// </summary>
         public Vector3 Position
         {
@@ -223,80 +213,5 @@ namespace netDxf.Entities
 
         #endregion
 
-        #region IEntityObject Members
-
-      /// <summary>
-        /// Gets the entity <see cref="netDxf.Entities.EntityType">type</see>.
-        /// </summary>
-        public EntityType Type
-        {
-            get { return TYPE; }
-        }
-
-        /// <summary>
-        /// Gets or sets the entity <see cref="netDxf.AciColor">color</see>.
-        /// </summary>
-        public AciColor Color
-        {
-            get { return this.color; }
-            set
-            {
-                if (value == null)
-                    throw new ArgumentNullException("value");
-                this.color = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the entity <see cref="netDxf.Tables.Layer">layer</see>.
-        /// </summary>
-        public Layer Layer
-        {
-            get { return this.layer; }
-            set
-            {
-                if (value == null)
-                    throw new ArgumentNullException("value");
-                this.layer = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the entity <see cref="netDxf.Tables.LineType">line type</see>.
-        /// </summary>
-        public LineType LineType
-        {
-            get { return this.lineType; }
-            set
-            {
-                if (value == null)
-                    throw new ArgumentNullException("value");
-                this.lineType = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the entity <see cref="netDxf.XData">extende data</see>.
-        /// </summary>
-        public Dictionary<ApplicationRegistry, XData> XData
-        {
-            get { return this.xData; }
-            set { this.xData = value; }
-        }
-
-        #endregion
-
-        #region overrides
-
-        /// <summary>
-        /// Converts the value of this instance to its equivalent string representation.
-        /// </summary>
-        /// <returns>The string representation.</returns>
-        public override string ToString()
-        {
-            return TYPE.ToString();
-        }
-
-        #endregion
     }
 }

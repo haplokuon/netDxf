@@ -1,7 +1,7 @@
-﻿#region netDxf, Copyright(C) 2012 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf, Copyright(C) 2013 Daniel Carvajal, Licensed under LGPL.
 
 //                        netDxf library
-// Copyright (C) 2012 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2013 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -61,7 +61,7 @@ namespace netDxf.Entities
 
     /// <summary>
     /// Represent a loop of a hatch boundary path.
-    /// The entities that make a loop can be any combination of lines, polylines, circles, arcs and ellipses.
+    /// The entities that make a loop can be any combination of lines, polylines, circles, arcs, ellipses, and splines.
     /// </summary>
     /// <remarks>
     /// The entities that define a loop must define a closed path and they have to be on the same plane as the hatch, 
@@ -75,7 +75,7 @@ namespace netDxf.Entities
     {
         #region private fields
 
-        private readonly List<IEntityObject> data;
+        private readonly List<EntityObject> data;
         private BoundaryPathTypeFlag pathTypeFlag;
         private int numberOfEdges;
 
@@ -86,7 +86,7 @@ namespace netDxf.Entities
         /// Initializes a new instance of the <c>Hatch</c> class.
         /// </summary>
         /// <param name="data">List of entities that makes a loop for the hatch boundary paths.</param>
-        public HatchBoundaryPath(List<IEntityObject> data)
+        public HatchBoundaryPath(List<EntityObject> data)
         {
             if (data == null)
                     throw new ArgumentNullException("data");
@@ -100,7 +100,7 @@ namespace netDxf.Entities
         /// <summary>
         /// Gets the list of entities that makes a loop for the hatch boundary paths.
         /// </summary>
-        public ReadOnlyCollection<IEntityObject> Data
+        public ReadOnlyCollection<EntityObject> Data
         {
             get { return data.AsReadOnly(); }
         }
@@ -130,33 +130,32 @@ namespace netDxf.Entities
             numberOfEdges = 0;
             pathTypeFlag = BoundaryPathTypeFlag.Derived | BoundaryPathTypeFlag.External;
 
-            foreach (IEntityObject entity in data)
+            foreach (EntityObject entity in data)
             {
+                // it seems that AutoCAD does not have problems on creating loops that theorically does not make sense, like, for example an internal loop that is made of a single arc.
+                // so if AutoCAD is ok with that I am too, the program that make use of this information will take care of this inconsistencies
                 switch (entity.Type)
                 {
                     case EntityType.Arc:
                         // a single arc is not a closed path
-                        if (data.Count <= 1) throw new ArgumentException("A single arc does not make closed loop.");
+                        //if (data.Count <= 1) throw new ArgumentException("A single arc does not make closed loop.");
                         numberOfEdges += 1;
                         break;
                     case EntityType.Circle:
                         // a circle is a closed loop
-                        if (data.Count>1) throw new ArgumentException("A circle is a closed loop, there can be only per path.");
+                        //if (data.Count>1) throw new ArgumentException("A circle is a closed loop, there can be only per path.");
                         numberOfEdges += 1;
                         break;
                     case EntityType.Ellipse:
                         // a full ellipse is a closed loop
-                        if (((Ellipse)entity).IsFullEllipse && data.Count > 1) 
-                            throw new ArgumentException("A full ellipse is a closed loop, there can be only per path.");
+                        //if (((Ellipse)entity).IsFullEllipse && data.Count > 1) throw new ArgumentException("A full ellipse is a closed loop, there can be only per path.");
                         // a single ellipse arc is not a closed path
-                        if (!((Ellipse)entity).IsFullEllipse && data.Count <= 1)
-                            throw new ArgumentException("A single ellipse arc does not make closed loop.");
-                       
+                        //if (!((Ellipse)entity).IsFullEllipse && data.Count <= 1) throw new ArgumentException("A single ellipse arc does not make closed loop.");
                         numberOfEdges += 1;
                         break;
                     case EntityType.Line:
                         // a single line is not a closed path
-                        if (data.Count <= 1) throw new ArgumentException("Only a line does not make closed loop.");
+                        //if (data.Count <= 1) throw new ArgumentException("Only a line does not make closed loop.");
                         numberOfEdges += 1;
                         break;
                     case EntityType.LightWeightPolyline:
@@ -174,15 +173,13 @@ namespace netDxf.Entities
                         break;
                     case EntityType.Spline:
                         // a closed spline is a closed loop
-                        if (((Spline)entity).IsClosed && data.Count > 1)
-                            throw new ArgumentException("A closed spline is a closed loop, there can be only per path.");
+                        //if (((Spline)entity).IsClosed && data.Count > 1) throw new ArgumentException("A closed spline is a closed loop, there can be only per path.");
                         // an open spline is not a closed path
-                        if (!((Spline)entity).IsClosed && data.Count <= 1)
-                            throw new ArgumentException("An open spline does not make closed loop.");
+                        //if (!((Spline)entity).IsClosed && data.Count <= 1) throw new ArgumentException("An open spline does not make closed loop.");
                         numberOfEdges += 1;
                         break;
                     default:
-                        throw new ArgumentException("The entity type " + entity.Type + " unknown or not implemented as part of a hatch pattern.");
+                        throw new ArgumentException("The entity type " + entity.Type + " unknown or not implemented as part of a hatch boundary.");
                 }
             }
 

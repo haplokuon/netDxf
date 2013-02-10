@@ -239,6 +239,13 @@ namespace netDxf
             return new Matrix3(aX.X, aY.X, zAxis.X, aX.Y, aY.Y, zAxis.Y, aX.Z, aY.Z, zAxis.Z);
         }
 
+        /// <summary>
+        /// Calculates the minimum distance between a point and a line.
+        /// </summary>
+        /// <param name="q">A point.</param>
+        /// <param name="origin">Line origin point.</param>
+        /// <param name="dir">Line direction.</param>
+        /// <returns>The minimum distance between the point and the line.</returns>
         public static double PointLineDistance(Vector3 q, Vector3 origin, Vector3 dir)
         {
             double t = Vector3.DotProduct(dir, q - origin);
@@ -266,6 +273,15 @@ namespace netDxf
             newEnd = end + perp * offset;
         }
 
+        /// <summary>
+        /// Calculates the intersection point of two lines.
+        /// </summary>
+        /// <param name="point0">First line origin point.</param>
+        /// <param name="dir0">First line direction.</param>
+        /// <param name="point1">Second line origin point.</param>
+        /// <param name="dir1">Second line direction.</param>
+        /// <param name="intersection">Intersection point of the two lines.</param>
+        /// <returns>0 if there is an intersection point, 1 if the lines are parallel or 2 if the lines are the same.</returns>
         public static int FindIntersection(Vector2 point0, Vector2 dir0, Vector2 point1, Vector2 dir1, out Vector2 intersection)
         {
             // Use a relative error test to test for parallelism. This effectively
@@ -279,7 +295,7 @@ namespace netDxf
                 // lines are not parallel
                 double s = (vect.X * dir1.Y - vect.Y * dir1.X) / cross;
                 intersection = point0 + s * dir0;
-                return 1;
+                return 0;
             }
             // lines are parallel
             double sqrLenE = vect.X * vect.X + vect.Y * vect.Y;
@@ -289,7 +305,7 @@ namespace netDxf
             {
                 // lines are different
                 intersection = Vector2.Zero;
-                return 0;
+                return 1;
             }
             // lines are the same
             intersection = Vector2.Zero;

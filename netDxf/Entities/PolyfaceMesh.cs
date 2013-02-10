@@ -1,7 +1,7 @@
-﻿#region netDxf, Copyright(C) 2009 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf, Copyright(C) 2013 Daniel Carvajal, Licensed under LGPL.
 
 //                        netDxf library
-// Copyright (C) 2009 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2013 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -22,27 +22,22 @@
 
 using System;
 using System.Collections.Generic;
-using netDxf.Tables;
 
 namespace netDxf.Entities
 {
     /// <summary>
-    /// Represents a polyface mesh <see cref="netDxf.Entities.IEntityObject">entity</see>.
+    /// Represents a polyface mesh <see cref="EntityObject">entity</see>.
     /// </summary>
     public class PolyfaceMesh :
-        DxfObject,
-        IEntityObject
+        EntityObject
     {
         #region private fields
+
         private readonly EndSequence endSequence;
-        private const EntityType TYPE = EntityType.PolyfaceMesh;
         private List<PolyfaceMeshFace> faces;
         private List<PolyfaceMeshVertex> vertexes;
-        private PolylineTypeFlags flags;
-        private Layer layer;
-        private AciColor color;
-        private LineType lineType;
-        private Dictionary<ApplicationRegistry, XData> xData;
+        private readonly PolylineTypeFlags flags;
+
         #endregion
 
         #region constructurs
@@ -61,17 +56,13 @@ namespace netDxf.Entities
         /// <param name="vertexes">Polyface mesh <see cref="PolyfaceMeshVertex">vertex</see> list.</param>
         /// <param name="faces">Polyface mesh <see cref="PolyfaceMeshFace">faces</see> list.</param>
         public PolyfaceMesh(List<PolyfaceMeshVertex> vertexes, List<PolyfaceMeshFace> faces)
-            : base(DxfObjectCode.Polyline)
+            : base(EntityType.PolyfaceMesh, DxfObjectCode.Polyline)
         {
             this.flags = PolylineTypeFlags.PolyfaceMesh;
             this.vertexes = vertexes;
             this.faces = faces;
-            this.layer = Layer.Default;
-            this.color = AciColor.ByLayer;
-            this.lineType = LineType.ByLayer;
             this.endSequence = new EndSequence();
         }
-
 
         #endregion
 
@@ -127,69 +118,6 @@ namespace netDxf.Entities
 
         #endregion
 
-        #region IEntityObject Members
-
-        /// <summary>
-        /// Gets the entity <see cref="netDxf.Entities.EntityType">type</see>.
-        /// </summary>
-        public EntityType Type
-        {
-            get { return TYPE; }
-        }
-
-        /// <summary>
-        /// Gets or sets the entity <see cref="netDxf.AciColor">color</see>.
-        /// </summary>
-        public AciColor Color
-        {
-            get { return this.color; }
-            set
-            {
-                if (value == null)
-                    throw new ArgumentNullException("value");
-                this.color = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the entity <see cref="netDxf.Tables.Layer">layer</see>.
-        /// </summary>
-        public Layer Layer
-        {
-            get { return this.layer; }
-            set
-            {
-                if (value == null)
-                    throw new ArgumentNullException("value");
-                this.layer = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the entity <see cref="netDxf.Tables.LineType">line type</see>.
-        /// </summary>
-        public LineType LineType
-        {
-            get { return this.lineType; }
-            set
-            {
-                if (value == null)
-                    throw new ArgumentNullException("value");
-                this.lineType = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the entity <see cref="netDxf.XData">extende data</see>.
-        /// </summary>
-        public Dictionary<ApplicationRegistry, XData> XData
-        {
-            get { return this.xData; }
-            set { this.xData = value; }
-        }
-
-        #endregion
-
         #region overrides
 
         /// <summary>
@@ -213,15 +141,6 @@ namespace netDxf.Entities
                 entityNumber = f.AsignHandle(entityNumber);
             }
             return base.AsignHandle(entityNumber);
-        }
-
-        /// <summary>
-        /// Converts the value of this instance to its equivalent string representation.
-        /// </summary>
-        /// <returns>The string representation.</returns>
-        public override string ToString()
-        {
-            return TYPE.ToString();
         }
 
         #endregion

@@ -1,7 +1,7 @@
-#region netDxf, Copyright(C) 2009 Daniel Carvajal, Licensed under LGPL.
+#region netDxf, Copyright(C) 2013 Daniel Carvajal, Licensed under LGPL.
 
 //                        netDxf library
-// Copyright (C) 2009 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2013 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -21,35 +21,29 @@
 #endregion
 
 using System;
-using System.Collections.Generic;
-using netDxf.Tables;
 
 namespace netDxf.Entities
 {
     /// <summary>
-    /// Represents a attribute <see cref="IEntityObject">entity</see>.
+    /// Represents a attribute <see cref="EntityObject">entity</see>.
     /// </summary>
     /// <remarks>The attribute position and orientation are expressed in local coordinates of the <see cref="Insert">Insert</see> entity to which it belongs.</remarks>
     public class Attribute :
-        DxfObject,
-        IEntityObject
+        EntityObject
     {
         #region private fields
 
-        private const EntityType TYPE = EntityType.Attribute;
         private AttributeDefinition definition;
         private object value;
-        private AciColor color;
-        private Layer layer;
-        private LineType lineType;
         private double rotation;
         private Vector3 normal;
+
         #endregion
 
         #region constructor
 
         internal Attribute()
-            : base(DxfObjectCode.Attribute)
+            : base(EntityType.Attribute, DxfObjectCode.Attribute)
         {
         }
 
@@ -71,15 +65,12 @@ namespace netDxf.Entities
         /// <param name="definition"><see cref="AttributeDefinition">Attribute definition</see>.</param>
         /// <param name="value">Attribute value.</param>
         public Attribute(AttributeDefinition definition, object value)
-            : base(DxfObjectCode.Attribute)
+            : base(EntityType.Attribute, DxfObjectCode.Attribute)
         {
             if (definition == null)
                 throw new ArgumentNullException("definition");
             this.definition = definition;
             this.value = value;
-            this.color = definition.Color;
-            this.layer = definition.Layer;
-            this.lineType = definition.LineType;
             this.rotation = definition.Rotation;
             this.normal = definition.Normal;
         }
@@ -107,7 +98,7 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets or sets the attribute <see cref="netDxf.Vector3">normal</see>.
+        /// Gets or sets the attribute <see cref="Vector3">normal</see>.
         /// </summary>
         internal Vector3 Normal
         {
@@ -132,85 +123,5 @@ namespace netDxf.Entities
 
         #endregion
 
-        #region IEntityObject Members
-
-       /// <summary>
-        /// Gets the entity <see cref="netDxf.Entities.EntityType">type</see>.
-        /// </summary>
-        public EntityType Type
-        {
-            get { return TYPE; }
-        }
-
-        /// <summary>
-        /// Gets or sets the entity <see cref="netDxf.AciColor">color</see>.
-        /// </summary>
-        public AciColor Color
-        {
-            get { return this.color; }
-            set
-            {
-                if (value == null)
-                    throw new ArgumentNullException("value");
-                this.color = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the entity <see cref="netDxf.Tables.Layer">layer</see>.
-        /// </summary>
-        public Layer Layer
-        {
-            get { return this.layer; }
-            set
-            {
-                if (value == null)
-                    throw new ArgumentNullException("value");
-                this.layer = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the entity <see cref="netDxf.Tables.LineType">line type</see>.
-        /// </summary>
-        public LineType LineType
-        {
-            get { return this.lineType; }
-            set
-            {
-                if (value == null)
-                    throw new ArgumentNullException("value");
-                this.lineType = value;
-            }
-        }
-
-        
-        /// <summary>
-        /// Gets or sets the entity <see cref="netDxf.XData">extende data</see>.
-        /// </summary>
-        public Dictionary<ApplicationRegistry, XData> XData
-        {
-            get { return null; }
-            set
-            {
-                throw new ArgumentException("Extended data not avaliable for attributes","value");
-            }
-        }
-        
-
-        #endregion
-
-        #region overrides
-
-        /// <summary>
-        /// Converts the value of this instance to its equivalent string representation.
-        /// </summary>
-        /// <returns>The string representation.</returns>
-        public override string ToString()
-        {
-            return TYPE.ToString();
-        }
-
-        #endregion
     }
 }

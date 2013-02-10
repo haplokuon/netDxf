@@ -1,7 +1,7 @@
-﻿#region netDxf, Copyright(C) 2012 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf, Copyright(C) 2013 Daniel Carvajal, Licensed under LGPL.
 
 //                        netDxf library
-// Copyright (C) 2012 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2013 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -23,31 +23,24 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
-using netDxf.Tables;
 
 namespace netDxf.Entities
 {
 
     /// <summary>
-    /// Represents a circular arc <see cref="IEntityObject">entity</see>.
+    /// Represents a circular arc <see cref="EntityObject">entity</see>.
     /// </summary>
     public class Arc :
-        DxfObject,
-        IEntityObject 
+        EntityObject 
     {
         #region private fields
 
-        private const EntityType TYPE = EntityType.Arc;
         private Vector3 center;
         private double radius;
         private double startAngle;
         private double endAngle;
         private double thickness;
         private Vector3 normal;
-        private AciColor color;
-        private Layer layer;
-        private LineType lineType;
-        private Dictionary<ApplicationRegistry, XData> xData;
 
         #endregion
 
@@ -56,22 +49,9 @@ namespace netDxf.Entities
         /// <summary>
         /// Initializes a new instance of the <c>Arc</c> class.
         /// </summary>
-        /// <param name="center">Arc <see cref="Vector3">center</see> in world coordinates.</param>
-        /// <param name="radius">Arc radius.</param>
-        /// <param name="startAngle">Arc start angle in degrees.</param>
-        /// <param name="endAngle">Arc end angle in degrees.</param>
-        public Arc(Vector3 center, double radius, double startAngle, double endAngle)
-            : base(DxfObjectCode.Arc)
+        public Arc()
+            : this(Vector3.Zero, 1.0, 0.0, 180.0)
         {
-            this.center = center;
-            this.radius = radius;
-            this.startAngle = startAngle;
-            this.endAngle = endAngle;
-            this.thickness = 0.0;
-            this.layer = Layer.Default;
-            this.color = AciColor.ByLayer;
-            this.lineType = LineType.ByLayer;
-            this.normal = Vector3.UnitZ;
         }
 
         /// <summary>
@@ -89,9 +69,19 @@ namespace netDxf.Entities
         /// <summary>
         /// Initializes a new instance of the <c>Arc</c> class.
         /// </summary>
-        public Arc()
-            : this(Vector3.Zero, 1.0, 0.0, 180.0)
+        /// <param name="center">Arc <see cref="Vector3">center</see> in world coordinates.</param>
+        /// <param name="radius">Arc radius.</param>
+        /// <param name="startAngle">Arc start angle in degrees.</param>
+        /// <param name="endAngle">Arc end angle in degrees.</param>
+        public Arc(Vector3 center, double radius, double startAngle, double endAngle)
+            : base(EntityType.Arc, DxfObjectCode.Arc)
         {
+            this.center = center;
+            this.radius = radius;
+            this.startAngle = startAngle;
+            this.endAngle = endAngle;
+            this.thickness = 0.0;
+            this.normal = Vector3.UnitZ;
         }
 
         #endregion
@@ -165,69 +155,6 @@ namespace netDxf.Entities
 
         #endregion
 
-        #region IEntityObject Members
-
-       /// <summary>
-        /// Gets the entity <see cref="netDxf.Entities.EntityType">type</see>.
-        /// </summary>
-        public EntityType Type
-        {
-            get { return TYPE; }
-        }
-
-        /// <summary>
-        /// Gets or sets the entity <see cref="netDxf.AciColor">color</see>.
-        /// </summary>
-        public AciColor Color
-        {
-            get { return this.color; }
-            set
-            {
-                if (value == null)
-                    throw new ArgumentNullException("value");
-                this.color = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the entity <see cref="netDxf.Tables.Layer">layer</see>.
-        /// </summary>
-        public Layer Layer
-        {
-            get { return this.layer; }
-            set
-            {
-                if (value == null)
-                    throw new ArgumentNullException("value");
-                this.layer = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the entity <see cref="netDxf.Tables.LineType">line type</see>.
-        /// </summary>
-        public LineType LineType
-        {
-            get { return this.lineType; }
-            set
-            {
-                if (value == null)
-                    throw new ArgumentNullException("value");
-                this.lineType = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the entity <see cref="netDxf.XData">extende data</see>.
-        /// </summary>
-        public Dictionary<ApplicationRegistry, XData> XData
-        {
-            get { return this.xData; }
-            set{ this.xData = value;}
-        }
-
-        #endregion
-
         #region methods
 
         /// <summary>
@@ -267,13 +194,14 @@ namespace netDxf.Entities
 
             LwPolyline poly = new LwPolyline
             {
-                Color = this.color,
-                Layer = this.layer,
-                LineType = this.lineType,
+                Color = (AciColor) this.Color.Clone(),
+                Layer = this.Layer,
+                LineType = this.LineType,
+                Lineweight = (Lineweight) this.Lineweight.Clone(),
+                XData = this.XData,
                 Normal = this.normal,
                 Elevation = ocsCenter.Z,
                 Thickness = this.thickness,
-                XData = this.xData,
                 IsClosed = false
             };
             foreach (Vector2 v in vertexes)
@@ -281,19 +209,6 @@ namespace netDxf.Entities
                 poly.Vertexes.Add(new LwPolylineVertex(v.X + ocsCenter.X, v.Y + ocsCenter.Y));
             }
             return poly;
-        }
-
-        #endregion
-
-        #region overrides
-
-        /// <summary>
-        /// Converts the value of this instance to its equivalent string representation.
-        /// </summary>
-        /// <returns>The string representation.</returns>
-        public override string ToString()
-        {
-            return TYPE.ToString();
         }
 
         #endregion

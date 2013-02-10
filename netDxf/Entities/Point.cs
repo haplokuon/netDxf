@@ -1,7 +1,7 @@
-﻿#region netDxf, Copyright(C) 2012 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf, Copyright(C) 2013 Daniel Carvajal, Licensed under LGPL.
 
 //                        netDxf library
-// Copyright (C) 2012 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2013 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -20,29 +20,20 @@
 
 #endregion
 
-using System;
-using System.Collections.Generic;
-using netDxf.Tables;
-
 namespace netDxf.Entities
 {
     /// <summary>
-    /// Represents a point <see cref="netDxf.Entities.IEntityObject">entity</see>.
+    /// Represents a point <see cref="EntityObject">entity</see>.
     /// </summary>
     public class Point :
-        DxfObject,
-        IEntityObject
+        EntityObject
     {
         #region private fields
 
-        private const EntityType TYPE = EntityType.Point;
         private Vector3 location;
         private double thickness;
-        private Layer layer;
-        private AciColor color;
-        private LineType lineType;
         private Vector3 normal;
-        private Dictionary<ApplicationRegistry, XData> xData;
+        private double rotation;
 
         #endregion
 
@@ -53,14 +44,12 @@ namespace netDxf.Entities
         /// </summary>
         /// <param name="location">Point <see cref="Vector3">location</see>.</param>
         public Point(Vector3 location)
-            : base(DxfObjectCode.Point)
+            : base(EntityType.Point, DxfObjectCode.Point)
         {
             this.location = location;
             this.thickness = 0.0f;
-            this.layer = Layer.Default;
-            this.color = AciColor.ByLayer;
-            this.lineType = LineType.ByLayer;
             this.normal = Vector3.UnitZ;
+            this.rotation = 0.0;
         }
 
         /// <summary>
@@ -127,82 +116,17 @@ namespace netDxf.Entities
             }
         }
 
-        #endregion
-
-        #region IEntityObject Members
-
         /// <summary>
-        /// Gets the entity <see cref="netDxf.Entities.EntityType">type</see>.
+        /// Gets or sets the point local rotation along its normal.
         /// </summary>
-        public EntityType Type
+        /// <remarks>The angle is measured in degrees.</remarks>
+        public double Rotation
         {
-            get { return TYPE; }
-        }
-
-        /// <summary>
-        /// Gets or sets the entity <see cref="netDxf.AciColor">color</see>.
-        /// </summary>
-        public AciColor Color
-        {
-            get { return this.color; }
-            set
-            {
-                if (value == null)
-                    throw new ArgumentNullException("value");
-                this.color = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the entity <see cref="netDxf.Tables.Layer">layer</see>.
-        /// </summary>
-        public Layer Layer
-        {
-            get { return this.layer; }
-            set
-            {
-                if (value == null)
-                    throw new ArgumentNullException("value");
-                this.layer = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the entity <see cref="netDxf.Tables.LineType">line type</see>.
-        /// </summary>
-        public LineType LineType
-        {
-            get { return this.lineType; }
-            set
-            {
-                if (value == null)
-                    throw new ArgumentNullException("value");
-                this.lineType = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the entity <see cref="netDxf.XData">extende data</see>.
-        /// </summary>
-        public Dictionary<ApplicationRegistry, XData> XData
-        {
-            get { return this.xData; }
-            set { this.xData = value; }
+            get { return this.rotation; }
+            set { this.rotation = value; }
         }
 
         #endregion
 
-        #region overrides
-
-        /// <summary>
-        /// Converts the value of this instance to its equivalent string representation.
-        /// </summary>
-        /// <returns>The string representation.</returns>
-        public override string ToString()
-        {
-            return TYPE.ToString();
-        }
-
-        #endregion
     }
 }

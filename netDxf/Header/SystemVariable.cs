@@ -62,5 +62,30 @@ namespace netDxf.Header
         /// Also applies to raster image units, eventhought they have the RasterVariables object and units in ImageDef.
         /// </summary>
         public const string Insunits = "$INSUNITS";
+
+        /// <summary>
+        /// Controls the display of lineweights on the Model or Layout tab:
+        /// 0 = Lineweight is not displayed
+        /// 1 = Lineweight is displayed
+        /// </summary>
+        public const string LwDisplay = "$LWDISPLAY";
+
+        /// <summary>
+        /// Global linetype scale.
+        /// </summary>
+        public const string LtScale = "$LTSCALE";
+
+        /// <summary>
+        /// Controls the <see cref="PointShape">shape</see> to draw a point entity.
+        /// </summary>
+        public const string PdMode = "$PDMODE";
+
+        /// <summary>
+        /// Controls the size of the point figures, except for PDMODE values 0 (Dot) and 1 (Empty).
+        /// A setting of 0 generates the point at 5 percent of the drawing area height.
+        /// A positive PDSIZE value specifies an absolute size for the point figures.
+        /// A negative value is interpreted as a percentage of the viewport size. 
+        /// </summary>
+        public const string PdSize = "$PDSIZE";
     }
 }

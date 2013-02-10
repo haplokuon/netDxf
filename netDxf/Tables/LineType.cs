@@ -1,7 +1,7 @@
-﻿#region netDxf, Copyright(C) 2009 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf, Copyright(C) 2013 Daniel Carvajal, Licensed under LGPL.
 
 //                        netDxf library
-// Copyright (C) 2009 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2013 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -34,12 +34,10 @@ namespace netDxf.Tables
     /// Only simple line types are supported.
     /// </remarks>
     public class LineType :
-        DxfObject,
-        ITableObject
+        TableObject
     {
         #region private fields
 
-        private readonly string name;
         private string description;
         private List<double> segments;
 
@@ -68,14 +66,7 @@ namespace netDxf.Tables
         /// </summary>
         public static LineType Continuous
         {
-            get
-            {
-                LineType result = new LineType("Continuous")
-                                 {
-                                     Description = "Solid line"
-                                 };
-                return result;
-            }
+            get { return new LineType("Continuous", "Solid line"); }
         }
 
         /// <summary>
@@ -150,13 +141,10 @@ namespace netDxf.Tables
         /// Initializes a new instance of the <c>LineType</c> class.
         /// </summary>
         /// <param name="name">Line type name.</param>
-        /// <param name="description">Line type description.</param>
+        /// <param name="description">Line type description (optional).</param>
         public LineType(string name, string description = null)
-            : base(DxfObjectCode.LineType)
+            : base(name, DxfObjectCode.LineType)
         {
-            if (string.IsNullOrEmpty(name))
-                throw (new ArgumentNullException("name"));
-            this.name = name;
             this.description = description;
             this.segments = new List<double>();
         }
@@ -166,7 +154,7 @@ namespace netDxf.Tables
         #region public properties
 
         /// <summary>
-        /// Gets or sets the line type description.
+        /// Gets or sets the line type description (optional).
         /// </summary>
         public string Description
         {
@@ -200,7 +188,7 @@ namespace netDxf.Tables
         /// <summary>
         /// Gets the total length of the line type.
         /// </summary>
-        public double Legth()
+        public double Length()
         {
             double result = 0.0;
             foreach (double s in this.segments)
@@ -209,35 +197,6 @@ namespace netDxf.Tables
             }
             return result;
         }
-
-        #endregion
-
-        #region ITableObject Members
-
-        /// <summary>
-        /// Gets the table name.
-        /// </summary>
-        public string Name
-        {
-            get { return this.name; }
-        }
-
-        #endregion
-
-        #region overrides
-
-        /// <summary>
-        /// Converts the value of this instance to its equivalent string representation.
-        /// </summary>
-        /// <returns>The string representation.</returns>
-        public override string ToString()
-        {
-            return this.name;
-        }
-
-        #endregion
-
-        #region public methods
 
         /// <summary>
         /// Creates a new line type from the definition in a lin file.

@@ -1,7 +1,7 @@
-﻿#region netDxf, Copyright(C) 2012 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf, Copyright(C) 2013 Daniel Carvajal, Licensed under LGPL.
 
 //                        netDxf library
-// Copyright (C) 2012 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2013 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -26,13 +26,11 @@ namespace netDxf.Tables
     /// Represents as dimension style.
     /// </summary>
     public class DimensionStyle :
-        DxfObject,
-        ITableObject
+        TableObject
     {
 
         #region private fields
 
-        private readonly string name;
         private TextStyle textStyle;
 
         // lines
@@ -72,9 +70,8 @@ namespace netDxf.Tables
         /// Initializes a new instance of the <c>DimensionStyle</c> class.
         /// </summary>
         public DimensionStyle(string name)
-            : base(DxfObjectCode.DimStyle)
+            : base(name, DxfObjectCode.DimStyle)
         {
-            this.name = name;
             this.textStyle = TextStyle.Default;
         }
 
@@ -249,29 +246,5 @@ namespace netDxf.Tables
 
         #endregion
 
-        #region ITableObject Members
-
-        /// <summary>
-        /// Gets the table name.
-        /// </summary>
-        public string Name
-        {
-            get { return this.name; }
-        }
-
-        #endregion
-
-        #region overrides
-
-        /// <summary>
-        /// Converts the value of this instance to its equivalent string representation.
-        /// </summary>
-        /// <returns>The string representation.</returns>
-        public override string ToString()
-        {
-            return this.name;
-        }
-
-        #endregion
     }
 }

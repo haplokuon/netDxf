@@ -1,7 +1,7 @@
-﻿#region netDxf, Copyright(C) 2009 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf, Copyright(C) 2013 Daniel Carvajal, Licensed under LGPL.
 
 //                        netDxf library
-// Copyright (C) 2009 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2013 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -20,74 +20,94 @@
 
 #endregion
 
-namespace netDxf.Entities
+namespace netDxf.Header
 {
+
     /// <summary>
-    /// Defines the text alignment.
+    /// Defines the shape of the point entities.
     /// </summary>
-    public enum TextAlignment
+    public enum PointShape
     {
         /// <summary>
-        /// Top left.
+        /// A dot.
         /// </summary>
-        TopLeft,
+        Dot = 0,
         /// <summary>
-        /// Top center.
+        /// No shape.
         /// </summary>
-        TopCenter,
+        Empty = 1,
         /// <summary>
-        /// Top right.
+        /// Plus sign.
         /// </summary>
-        TopRight,
+        Plus = 2,
         /// <summary>
-        /// Middle left.
+        /// Cross sign.
         /// </summary>
-        MiddleLeft,
+        Cross = 3,
         /// <summary>
-        /// Middle center.
+        /// A line going upwards.
         /// </summary>
-        MiddleCenter,
+        Line = 4,
         /// <summary>
-        /// Middle right.
+        /// A circle and a dot.
         /// </summary>
-        MiddleRight,
+        CircleDot = 32,
         /// <summary>
-        /// Bottom left.
+        /// Only a circle shape.
         /// </summary>
-        BottomLeft,
+        CircleEmpty = 33,
         /// <summary>
-        /// Bottom center.
+        /// A circle and a plus sign.
         /// </summary>
-        BottomCenter,
+        CirclePlus = 34,
         /// <summary>
-        /// Bottom right.
+        /// A circle and a cros sign.
         /// </summary>
-        BottomRight,
+        CircleCross = 35,
         /// <summary>
-        /// Baseline left.
+        /// A circle and a line.
         /// </summary>
-        BaselineLeft,
+        CircleLine = 36,
         /// <summary>
-        /// Baseline center.
+        /// A square and a dot.
         /// </summary>
-        BaselineCenter,
+        SquareDot = 64,
         /// <summary>
-        /// Baseline right.
+        /// Only a square shape.
         /// </summary>
-        BaselineRight,
+        SquareEmpty = 65,
         /// <summary>
-        /// Aligned (if vertical alignment = 0).
+        /// A square and a plus sign.
         /// </summary>
-        Aligned,
+        SquarePlus = 66,
         /// <summary>
-        /// Middle (if vertical alignment = 0)
+        /// A square and a cros sign.
         /// </summary>
-        Middle,
+        SquareCross = 67,
         /// <summary>
-        /// Fit (if vertical alignment = 0)
+        /// A square and a line.
         /// </summary>
-        Fit
-
+        SquareLine = 68,
+        /// <summary>
+        /// A circle, a square, and a dot.
+        /// </summary>
+        CircleSquareDot = 96,
+        /// <summary>
+        /// A circle and a square.
+        /// </summary>
+        CircleSquareEmpty = 97,
+        /// <summary>
+        /// A circle, a square, and a plus sign.
+        /// </summary>
+        CircleSquarePlus = 98,
+        /// <summary>
+        /// A circle, a square, and a cros sign.
+        /// </summary>
+        CircleSquareCross = 99,
+        /// <summary>
+        /// A circle, a square, and a line.
+        /// </summary>
+        CircleSquareLine = 100
 
     }
 }

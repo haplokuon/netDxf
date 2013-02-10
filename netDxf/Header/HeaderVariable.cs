@@ -75,7 +75,11 @@ namespace netDxf.Header
                            {SystemVariable.Angdir, 70},
                            {SystemVariable.DwgCodePage, 3},
                            {SystemVariable.Extnames, 290},
-                           {SystemVariable.Insunits, 70}
+                           {SystemVariable.Insunits, 70},
+                           {SystemVariable.LtScale, 40},
+                           {SystemVariable.LwDisplay, 290},
+                           {SystemVariable.PdMode, 70},
+                           {SystemVariable.PdSize, 40}
 
                        };
         }

@@ -27,7 +27,7 @@ using netDxf.Tables;
 namespace netDxf.Entities
 {
     /// <summary>
-    /// Represents a diametric dimension <see cref="IEntityObject">entity</see>.
+    /// Represents a diametric dimension <see cref="EntityObject">entity</see>.
     /// </summary>
     public class DiametricDimension :
         Dimension
@@ -152,6 +152,7 @@ namespace netDxf.Entities
         #endregion
 
         #region overrides
+
         /// <summary>
         /// Format the value for the dimension text.
         /// </summary>

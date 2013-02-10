@@ -322,5 +322,6 @@ namespace netDxf
         }
 
         #endregion
+
     }
 }

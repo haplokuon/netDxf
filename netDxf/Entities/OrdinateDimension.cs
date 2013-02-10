@@ -26,7 +26,7 @@ using netDxf.Tables;
 namespace netDxf.Entities
 {
     /// <summary>
-    /// Represents an ordinate dimension <see cref="IEntityObject">entity</see>.
+    /// Represents an ordinate dimension <see cref="EntityObject">entity</see>.
     /// </summary>
     public class OrdinateDimension
         : Dimension
@@ -154,7 +154,6 @@ namespace netDxf.Entities
             get { return this.axis == OrdinateDimensionAxis.X ? referencePoint.X : referencePoint.Y; }
         }
         #endregion
-
 
         #region overrides
 

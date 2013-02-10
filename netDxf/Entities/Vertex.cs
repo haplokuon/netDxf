@@ -1,7 +1,7 @@
-﻿#region netDxf, Copyright(C) 2012 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf, Copyright(C) 2013 Daniel Carvajal, Licensed under LGPL.
 
 //                        netDxf library
-// Copyright (C) 2012 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2013 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -21,7 +21,6 @@
 #endregion
 
 using System;
-using System.Collections.Generic;
 using netDxf.Tables;
 
 namespace netDxf.Entities
@@ -47,7 +46,6 @@ namespace netDxf.Entities
         private AciColor color;
         private Layer layer;
         private LineType lineType;
-        private Dictionary<ApplicationRegistry, XData> xData;
 
         #endregion
 
@@ -201,15 +199,6 @@ namespace netDxf.Entities
         {
             get { return this.lineType; }
             set { this.lineType = value; }
-        }
-
-        /// <summary>
-        /// Gets or sets the entity extended data.
-        /// </summary>
-        public Dictionary<ApplicationRegistry, XData> XData
-        {
-            get { return this.xData; }
-            set { this.xData = value; }
         }
 
         #endregion

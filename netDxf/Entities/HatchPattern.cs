@@ -1,7 +1,7 @@
-﻿#region netDxf, Copyright(C) 2012 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf, Copyright(C) 2013 Daniel Carvajal, Licensed under LGPL.
 
 //                        netDxf library
-// Copyright (C) 2012 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2013 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -32,7 +32,7 @@ namespace netDxf.Entities
     /// <summary>
     /// Predefined hatch pattern name.
     /// </summary>
-    public sealed class PredefinedHatchPatternName
+    internal sealed class PredefinedHatchPatternName
     {
         /// <summary>
         /// Solid.
@@ -110,7 +110,9 @@ namespace netDxf.Entities
     /// </summary>
     public class HatchPattern
     {
+
         #region private fields
+
         private readonly string name;
         private HatchStyle style;
         private FillType fill;
@@ -128,22 +130,23 @@ namespace netDxf.Entities
         /// Initializes a new instance of the <c>HatchPattern</c> class.
         /// </summary>
         /// <param name="name">Pattern name, always stored as uppercase.</param>
-        /// <param name="description">Description of the pattern (optional, this information is not saved in the dxf file).</param>
+        /// <param name="description">Description of the pattern (optional, this information is not saved in the dxf file). By default it will use the supplied name.</param>
         public HatchPattern(string name, string description = null)
         {
             this.name = name.ToUpper();
-            this.description = description;
+            this.description = string.IsNullOrEmpty(description) ? name : description;
             this.style = HatchStyle.Normal;
             this.fill = this.name == PredefinedHatchPatternName.Solid ? FillType.SolidFill : FillType.PatternFill;
             this.type = HatchType.UserDefined;
             this.angle = 0.0;
             this.scale = 1.0;
-
             this.lineDefinitions = new List<HatchPatternLineDefinition>();
         }
+
         #endregion
 
         #region predefined patterns
+
         /// <summary>
         /// Solid hatch pattern.
         /// </summary>
@@ -152,7 +155,7 @@ namespace netDxf.Entities
         {
             get
             {
-                HatchPattern pattern = new HatchPattern("SOLID", "Solid fill") {type = HatchType.Predefined};
+                HatchPattern pattern = new HatchPattern(PredefinedHatchPatternName.Solid, "Solid fill") { type = HatchType.Predefined };
                 // this is the pattern line definition for solid fills as defined in the acad.pat, but it is not needed
                 //HatchPatternLineDefinition lineDefinition = new HatchPatternLineDefinition
                 //                                                {
@@ -164,6 +167,7 @@ namespace netDxf.Entities
                 return pattern;
             }
         }
+
         /// <summary>
         /// Lines hatch pattern.
         /// </summary>
@@ -172,7 +176,7 @@ namespace netDxf.Entities
         {
             get
             {
-                HatchPattern pattern = new HatchPattern("LINE", "Parallel horizontal lines");
+                HatchPattern pattern = new HatchPattern(PredefinedHatchPatternName.Line, "Parallel horizontal lines");
                 HatchPatternLineDefinition lineDefinition = new HatchPatternLineDefinition
                                                                 {
                                                                     Angle = 0,
@@ -184,6 +188,7 @@ namespace netDxf.Entities
                 return pattern;
             }
         }
+
         /// <summary>
         /// Net or squares hatch pattern.
         /// </summary>
@@ -192,7 +197,7 @@ namespace netDxf.Entities
         {
             get
             {
-                HatchPattern pattern = new HatchPattern("NET", "Horizontal / vertical grid");
+                HatchPattern pattern = new HatchPattern(PredefinedHatchPatternName.Net, "Horizontal / vertical grid");
                 HatchPatternLineDefinition lineDefinition = new HatchPatternLineDefinition
                                                                 {
                                                                     Angle = 0,
@@ -212,6 +217,7 @@ namespace netDxf.Entities
                 return pattern;
             }
         }
+
         /// <summary>
         /// Dots hatch pattern.
         /// </summary>
@@ -220,7 +226,7 @@ namespace netDxf.Entities
         {
             get
             {
-                HatchPattern pattern = new HatchPattern("DOTS", "A series of dots");
+                HatchPattern pattern = new HatchPattern(PredefinedHatchPatternName.Dots, "A series of dots");
                 HatchPatternLineDefinition lineDefinition = new HatchPatternLineDefinition
                                                                 {
                                                                     Angle = 0,
@@ -233,6 +239,7 @@ namespace netDxf.Entities
                 return pattern;
             }
         }
+
         #endregion
 
         #region public properties
@@ -306,7 +313,7 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets or sets the definition of the lines that make up the pattern.
+        /// Gets or sets the definition of the lines that make up the pattern (not aplicable in Solid fills).
         /// </summary>
         public List<HatchPatternLineDefinition> LineDefinitions
         {
@@ -375,9 +382,7 @@ namespace netDxf.Entities
                     Vector2 delta = new Vector2(double.Parse(tokens[3]), double.Parse(tokens[4]));
                     // the rest of the info is optional if it exists define the dash pattern definition
                     for (int i = 5; i < tokens.Length; i++)
-                    {
                         dashPattern.Add(double.Parse(tokens[i]));
-                    }
 
                     HatchPatternLineDefinition lineDefinition = new HatchPatternLineDefinition
                                                                     {
@@ -402,5 +407,6 @@ namespace netDxf.Entities
         }
 
         #endregion
+
     }
 }

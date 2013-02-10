@@ -1,7 +1,7 @@
-﻿#region netDxf, Copyright(C) 2012 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf, Copyright(C) 2013 Daniel Carvajal, Licensed under LGPL.
 
 //                        netDxf library
-// Copyright (C) 2012 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2013 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -21,29 +21,21 @@
 #endregion
 
 using System;
-using System.Collections.Generic;
-using netDxf.Tables;
 
 namespace netDxf.Entities
 {
     /// <summary>
-    /// Represents a line <see cref="netDxf.Entities.IEntityObject">entity</see>.
+    /// Represents a line <see cref="EntityObject">entity</see>.
     /// </summary>
     public class Line :
-        DxfObject,
-        IEntityObject
+        EntityObject
     {
         #region private fields
 
-        private const EntityType TYPE = EntityType.Line;
         private Vector3 startPoint;
         private Vector3 endPoint;
         private double thickness;
-        private AciColor color;
-        private Layer layer;
-        private LineType lineType;
         private Vector3 normal;
-        private Dictionary<ApplicationRegistry, XData> xData;
 
         #endregion
 
@@ -52,18 +44,9 @@ namespace netDxf.Entities
         /// <summary>
         /// Initializes a new instance of the <c>Line</c> class.
         /// </summary>
-        /// <param name="startPoint">Line start <see cref="Vector3">point.</see></param>
-        /// <param name="endPoint">Line end <see cref="Vector3">point.</see></param>
-        public Line(Vector3 startPoint, Vector3 endPoint) 
-            : base(DxfObjectCode.Line)
+        public Line()
+            : this(Vector3.Zero, Vector3.Zero)
         {
-            this.startPoint = startPoint;
-            this.endPoint = endPoint;
-            this.thickness = 0.0;
-            this.layer = Layer.Default;
-            this.color = AciColor.ByLayer;
-            this.lineType = LineType.ByLayer;
-            this.normal = Vector3.UnitZ;
         }
 
         /// <summary>
@@ -79,9 +62,15 @@ namespace netDxf.Entities
         /// <summary>
         /// Initializes a new instance of the <c>Line</c> class.
         /// </summary>
-        public Line()
-            : this (Vector3.Zero,Vector3.Zero)
+        /// <param name="startPoint">Line start <see cref="Vector3">point.</see></param>
+        /// <param name="endPoint">Line end <see cref="Vector3">point.</see></param>
+        public Line(Vector3 startPoint, Vector3 endPoint) 
+            : base(EntityType.Line, DxfObjectCode.Line)
         {
+            this.startPoint = startPoint;
+            this.endPoint = endPoint;
+            this.thickness = 0.0;
+            this.normal = Vector3.UnitZ;
         }
 
         #endregion
@@ -128,82 +117,6 @@ namespace netDxf.Entities
                 value.Normalize();
                 this.normal = value;
             }
-        }
-
-        #endregion
-
-        #region IEntityObject Members
-
-       /// <summary>
-        /// Gets the entity <see cref="netDxf.Entities.EntityType">type</see>.
-        /// </summary>
-        public EntityType Type
-        {
-            get { return TYPE; }
-        }
-
-        /// <summary>
-        /// Gets or sets the entity <see cref="netDxf.AciColor">color</see>.
-        /// </summary>
-        public AciColor Color
-        {
-            get { return this.color; }
-            set
-            {
-                if (value == null)
-                    throw new ArgumentNullException("value");
-                this.color = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the entity <see cref="netDxf.Tables.Layer">layer</see>.
-        /// </summary>
-        public Layer Layer
-        {
-            get { return this.layer; }
-            set
-            {
-                if (value == null)
-                    throw new ArgumentNullException("value");
-                this.layer = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the entity <see cref="netDxf.Tables.LineType">line type</see>.
-        /// </summary>
-        public LineType LineType
-        {
-            get { return this.lineType; }
-            set
-            {
-                if (value == null)
-                    throw new ArgumentNullException("value");
-                this.lineType = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the entity <see cref="netDxf.XData">extende data</see>.
-        /// </summary>
-        public Dictionary<ApplicationRegistry, XData> XData
-        {
-            get { return this.xData; }
-            set { this.xData = value; }
-        }
-
-        #endregion
-
-        #region overrides
-
-        /// <summary>
-        /// Converts the value of this instance to its equivalent string representation.
-        /// </summary>
-        /// <returns>The string representation.</returns>
-        public override string ToString()
-        {
-            return TYPE.ToString();
         }
 
         #endregion

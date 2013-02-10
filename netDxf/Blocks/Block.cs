@@ -1,23 +1,22 @@
-#region netDxf, Copyright(C) 2009 Daniel Carvajal, Licensed under LGPL.
+#region netDxf, Copyright(C) 2013 Daniel Carvajal, Licensed under LGPL.
 
-// netDxf library
-// Copyright (C) 2009  
-// Daniel Carvajal
-// haplokuon@gmail.com
+//                        netDxf library
+// Copyright (C) 2013 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
 // License as published by the Free Software Foundation; either
 // version 2.1 of the License, or (at your option) any later version.
 // 
-// This library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-// Lesser General Public License for more details.
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
 // 
-// You should have received a copy of the GNU Lesser General Public
-// License along with this library; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+// FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+// COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+// IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+// CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. 
 
 #endregion
 
@@ -43,7 +42,7 @@ namespace netDxf.Blocks
         private Layer layer;
         private Vector3 position;
         private Dictionary<string, AttributeDefinition> attributes;
-        private List<IEntityObject> entities;
+        private List<EntityObject> entities;
 
         #endregion
 
@@ -63,6 +62,7 @@ namespace netDxf.Blocks
         {
             get { return new Block("*Paper_Space0"); }
         }
+
         #endregion
 
         #region constructors
@@ -71,7 +71,8 @@ namespace netDxf.Blocks
         /// Initializes a new instance of the <c>Block</c> class.
         /// </summary>
         /// <param name="name">Block name.</param>
-        public Block(string name) : base (DxfObjectCode.Block)
+        public Block(string name)
+            : base (DxfObjectCode.Block)
         {
             if (string.IsNullOrEmpty(name))
                 throw (new ArgumentNullException("name"));
@@ -80,7 +81,7 @@ namespace netDxf.Blocks
             this.position = Vector3.Zero;
             this.layer = Layer.Default;
             this.attributes = new Dictionary<string, AttributeDefinition>();
-            this.entities = new List<IEntityObject>();
+            this.entities = new List<EntityObject>();
             this.record = new BlockRecord(name);
             this.end = new BlockEnd(this.layer);          
         }
@@ -136,14 +137,14 @@ namespace netDxf.Blocks
         }
 
         /// <summary>
-        /// Gets or sets the <see cref="IEntityObject">entity</see> list that makes the block.
+        /// Gets or sets the <see cref="EntityObject">entity</see> list that makes the block.
         /// </summary>
         /// <remarks>
         /// The UCS in effect when a block definition is created becomes the WCS for all
         /// entities in the block definition. The new origin for these entities is shifted to
         /// match the base point defined for the block definition. All entity data is translated to fit this new WCS.
         /// </remarks>
-        public List<IEntityObject> Entities
+        public List<EntityObject> Entities
         {
             get { return this.entities; }
             set
@@ -153,6 +154,11 @@ namespace netDxf.Blocks
                 this.entities = value;
             }
         }
+
+        
+        #endregion
+
+        #region internal properties
 
         internal BlockRecord Record
         {
@@ -164,11 +170,6 @@ namespace netDxf.Blocks
         {
             get { return this.end; }
         }
-
-        
-        #endregion
-
-        #region internal properties
 
         /// <summary>
         /// Gets or sets the block-type flags (bit-coded values, may be combined).
@@ -200,9 +201,9 @@ namespace netDxf.Blocks
             {
                 entityNumber = attDef.AsignHandle(entityNumber);
             }
-            foreach (IEntityObject entity in this.entities )
+            foreach (EntityObject entity in this.entities )
             {
-                entityNumber = ((DxfObject) entity).AsignHandle(entityNumber);
+                entityNumber = entity.AsignHandle(entityNumber);
             }
             return base.AsignHandle(entityNumber);
         }
@@ -217,5 +218,6 @@ namespace netDxf.Blocks
         }
 
         #endregion
+
     }
 }

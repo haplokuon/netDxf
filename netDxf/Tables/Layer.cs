@@ -1,7 +1,7 @@
-﻿#region netDxf, Copyright(C) 2009 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf, Copyright(C) 2013 Daniel Carvajal, Licensed under LGPL.
 
 //                        netDxf library
-// Copyright (C) 2009 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2013 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -28,16 +28,15 @@ namespace netDxf.Tables
     /// Represents a layer.
     /// </summary>
     public class Layer :
-        DxfObject,
-        ITableObject
+        TableObject
     {
         #region private fields
 
-        private readonly string name;
         private AciColor color;
         private bool isVisible;
         private bool plot;
         private LineType lineType;
+        private Lineweight lineweight;
 
         #endregion
 
@@ -48,15 +47,13 @@ namespace netDxf.Tables
         /// </summary>
         /// <param name="name">Layer name.</param>
         public Layer(string name)
-            : base(DxfObjectCode.Layer)
+            : base(name, DxfObjectCode.Layer)
         {
-            if (string.IsNullOrEmpty(name))
-                throw (new ArgumentNullException("name"));
-            this.name = name;
             this.color = AciColor.Default;
             this.lineType = LineType.Continuous;
             this.isVisible = true;
             this.plot = true;
+            this.lineweight = Lineweight.Default;
         }
 
         #endregion
@@ -122,31 +119,21 @@ namespace netDxf.Tables
             set { plot = value; }
         }
 
-        #endregion
-
-        #region ITableObject Members
-
         /// <summary>
-        /// Gets the table name.
+        /// Gets or sets the entity line weight, one unit is always 1/100 mm (default = Default).
         /// </summary>
-        public string Name
+        public Lineweight Lineweight
         {
-            get { return this.name; }
+            get { return this.lineweight; }
+            set
+            {
+                if (value == null)
+                    throw new ArgumentNullException("value");
+                this.lineweight = value;
+            }
         }
 
         #endregion
 
-        #region overrides
-
-        /// <summary>
-        /// Converts the value of this instance to its equivalent string representation.
-        /// </summary>
-        /// <returns>The string representation.</returns>
-        public override string ToString()
-        {
-            return this.name;
-        }
-
-        #endregion
     }
 }

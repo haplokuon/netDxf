@@ -20,8 +20,6 @@
 
 #endregion
 
-using System;
-
 namespace netDxf.Tables
 {
 
@@ -29,14 +27,8 @@ namespace netDxf.Tables
     /// Represents a registered application name to which the <see cref="netDxf.XData">extended data</see> is associated.
     /// </summary>
     public class ApplicationRegistry :
-        DxfObject,
-        ITableObject
+        TableObject
     {
-        #region private fields
-
-        private readonly string name;
-
-        #endregion
 
         #region constructors
 
@@ -45,11 +37,8 @@ namespace netDxf.Tables
         /// </summary>
         /// <param name="name">Layer name.</param>
         public ApplicationRegistry(string name)
-            : base(DxfObjectCode.AppId)
+            : base(name, DxfObjectCode.AppId)
         {
-            if (string.IsNullOrEmpty(name))
-                throw (new ArgumentNullException("name"));
-            this.name = name;
         }
 
         #endregion
@@ -62,18 +51,6 @@ namespace netDxf.Tables
         internal static ApplicationRegistry Default
         {
             get { return new ApplicationRegistry("ACAD"); }
-        }
-
-        #endregion
-
-        #region ITableObject Members
-
-        /// <summary>
-        /// Gets the application registry name.
-        /// </summary>
-        public string Name
-        {
-            get { return this.name; }
         }
 
         #endregion
@@ -92,7 +69,7 @@ namespace netDxf.Tables
         /// </exception>
         public bool Equals(ApplicationRegistry obj)
         {
-            return obj.name == this.name;
+            return obj.Name == this.Name;
         }
 
         /// <summary>
@@ -120,16 +97,7 @@ namespace netDxf.Tables
         ///</returns>
         public override int GetHashCode()
         {
-            return this.name.GetHashCode();
-        }
-
-        /// <summary>
-        /// Converts the value of this instance to its equivalent string representation.
-        /// </summary>
-        /// <returns>The string representation.</returns>
-        public override string ToString()
-        {
-            return this.name;
+            return this.Name.GetHashCode();
         }
 
         #endregion

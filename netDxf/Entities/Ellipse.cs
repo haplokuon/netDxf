@@ -1,7 +1,7 @@
-#region netDxf, Copyright(C) 2012 Daniel Carvajal, Licensed under LGPL.
+#region netDxf, Copyright(C) 2013 Daniel Carvajal, Licensed under LGPL.
 
 //                        netDxf library
-// Copyright (C) 2012 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2013 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -22,20 +22,17 @@
 
 using System;
 using System.Collections.Generic;
-using netDxf.Tables;
 
 namespace netDxf.Entities
 {
     /// <summary>
-    /// Represents an ellipse <see cref="netDxf.Entities.IEntityObject">entity</see>.
+    /// Represents an ellipse <see cref="EntityObject">entity</see>.
     /// </summary>
     public class Ellipse :
-        DxfObject,
-        IEntityObject
+        EntityObject
     {
         #region private fields
 
-        private const EntityType TYPE = EntityType.Ellipse;
         private Vector3 center;
         private double majorAxis;
         private double minorAxis;
@@ -43,12 +40,8 @@ namespace netDxf.Entities
         private double startAngle;
         private double endAngle;
         private double thickness;
-        private Layer layer;
-        private AciColor color;
-        private LineType lineType;
         private Vector3 normal;
         private int curvePoints;
-        private Dictionary<ApplicationRegistry, XData> xData;
 
         #endregion
 
@@ -62,7 +55,7 @@ namespace netDxf.Entities
         /// <param name="minorAxis">Ellipse minor axis.</param>
         /// <remarks>The center Z coordinate represents the elevation of the arc along the normal.</remarks>
         public Ellipse(Vector3 center, double majorAxis, double minorAxis)
-            : base(DxfObjectCode.Ellipse)
+            : base(EntityType.Ellipse, DxfObjectCode.Ellipse)
         {
             this.center = center;
             this.majorAxis = majorAxis;
@@ -72,9 +65,6 @@ namespace netDxf.Entities
             this.rotation = 0.0;
             this.curvePoints = 30;
             this.thickness = 0.0;
-            this.layer = Layer.Default;
-            this.color = AciColor.ByLayer;
-            this.lineType = LineType.ByLayer;
             this.normal = Vector3.UnitZ;
         }
 
@@ -103,7 +93,7 @@ namespace netDxf.Entities
         #region public properties
 
         /// <summary>
-        /// Gets or sets the ellipse <see cref="netDxf.Vector3">center</see>.
+        /// Gets or sets the ellipse <see cref="Vector3">center</see>.
         /// </summary>
         /// <remarks>The center Z coordinate represents the elevation of the arc along the normal.</remarks>
         public Vector3 Center
@@ -171,7 +161,7 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets or sets the ellipse <see cref="netDxf.Vector3">normal</see>.
+        /// Gets or sets the ellipse <see cref="Vector3">normal</see>.
         /// </summary>
         public Vector3 Normal
         {
@@ -211,69 +201,6 @@ namespace netDxf.Entities
 
         #endregion
 
-        #region IEntityObject Members
-
-        /// <summary>
-        /// Gets the entity <see cref="netDxf.Entities.EntityType">type</see>.
-        /// </summary>
-        public EntityType Type
-        {
-            get { return TYPE; }
-        }
-
-        /// <summary>
-        /// Gets or sets the entity <see cref="netDxf.AciColor">color</see>.
-        /// </summary>
-        public AciColor Color
-        {
-            get { return this.color; }
-            set
-            {
-                if (value == null)
-                    throw new ArgumentNullException("value");
-                this.color = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the entity <see cref="netDxf.Tables.Layer">layer</see>.
-        /// </summary>
-        public Layer Layer
-        {
-            get { return this.layer; }
-            set
-            {
-                if (value == null)
-                    throw new ArgumentNullException("value");
-                this.layer = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the entity <see cref="netDxf.Tables.LineType">line type</see>.
-        /// </summary>
-        public LineType LineType
-        {
-            get { return this.lineType; }
-            set
-            {
-                if (value == null)
-                    throw new ArgumentNullException("value");
-                this.lineType = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the entity <see cref="netDxf.XData">extende data</see>.
-        /// </summary>
-        public Dictionary<ApplicationRegistry, XData> XData
-        {
-            get { return this.xData; }
-            set { this.xData = value; }
-        }
-
-        #endregion
-
         #region methods
 
         /// <summary>
@@ -287,13 +214,14 @@ namespace netDxf.Entities
             Vector3 ocsCenter = MathHelper.Transform(this.center, this.normal, MathHelper.CoordinateSystem.World, MathHelper.CoordinateSystem.Object);
             LwPolyline poly = new LwPolyline
                                 {
-                                    Color = this.color,
-                                    Layer = this.layer,
-                                    LineType = this.lineType,
+                                    Color = (AciColor) this.Color.Clone(),
+                                    Layer = this.Layer,
+                                    LineType = this.LineType,
+                                    XData = this.XData,
+                                    Lineweight = (Lineweight) Lineweight.Clone(),
                                     Normal = this.normal,
                                     Elevation = ocsCenter.Z,
                                     Thickness = this.thickness,
-                                    XData = this.xData,
                                     IsClosed = this.IsFullEllipse
                                 };
 
@@ -413,17 +341,5 @@ namespace netDxf.Entities
 
         #endregion
 
-        #region overrides
-
-        /// <summary>
-        /// Converts the value of this instance to its equivalent string representation.
-        /// </summary>
-        /// <returns>The string representation.</returns>
-        public override string ToString()
-        {
-            return TYPE.ToString();
-        }
-
-        #endregion
     }
 }

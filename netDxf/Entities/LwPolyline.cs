@@ -1,7 +1,7 @@
-﻿#region netDxf, Copyright(C) 2012 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf, Copyright(C) 2013 Daniel Carvajal, Licensed under LGPL.
 
 //                        netDxf library
-// Copyright (C) 2012 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2013 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -22,33 +22,26 @@
 
 using System;
 using System.Collections.Generic;
-using netDxf.Tables;
 
 namespace netDxf.Entities
 {
     /// <summary>
-    /// Represents a light weight polyline <see cref="IEntityObject">entity</see>.
+    /// Represents a light weight polyline <see cref="EntityObject">entity</see>.
     /// </summary>
     /// <remarks>
     /// Light weight polylines are bidimensional polylines that can hold information about the width of the lines and arcs that compose them.
     /// </remarks>
     public class LwPolyline :
-        DxfObject,
-        IEntityObject
+        EntityObject
     {
         #region private fields
 
-        private const EntityType TYPE = EntityType.LightWeightPolyline;
         private List<LwPolylineVertex> vertexes;
         private bool isClosed;
         private PolylineTypeFlags flags;
-        private Layer layer;
-        private AciColor color;
-        private LineType lineType;
         private Vector3 normal;
         private double elevation;
         private double thickness;
-        private Dictionary<ApplicationRegistry, XData> xData;
 
         #endregion
 
@@ -68,13 +61,10 @@ namespace netDxf.Entities
         /// <param name="vertexes">LwPolyline <see cref="LwPolylineVertex">vertex</see> list in object coordinates.</param>
         /// <param name="isClosed">Sets if the polyline is closed</param>
         public LwPolyline(List<LwPolylineVertex> vertexes, bool isClosed = false)
-            : base(DxfObjectCode.LightWeightPolyline)
+            : base(EntityType.LightWeightPolyline, DxfObjectCode.LightWeightPolyline)
         {
             this.vertexes = vertexes;
             this.isClosed = isClosed;
-            this.layer = Layer.Default;
-            this.color = AciColor.ByLayer;
-            this.lineType = LineType.ByLayer;
             this.normal = Vector3.UnitZ;
             this.elevation = 0.0;
             this.thickness = 0.0;
@@ -158,68 +148,6 @@ namespace netDxf.Entities
         }   
 
         #endregion
-        #region IEntityObject Members
-
-        /// <summary>
-        /// Gets the entity <see cref="netDxf.Entities.EntityType">type</see>.
-        /// </summary>
-        public EntityType Type
-        {
-            get { return TYPE; }
-        }
-
-        /// <summary>
-        /// Gets or sets the entity <see cref="netDxf.AciColor">color</see>.
-        /// </summary>
-        public AciColor Color
-        {
-            get { return this.color; }
-            set
-            {
-                if (value == null)
-                    throw new ArgumentNullException("value");
-                this.color = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the entity <see cref="netDxf.Tables.Layer">layer</see>.
-        /// </summary>
-        public Layer Layer
-        {
-            get { return this.layer; }
-            set
-            {
-                if (value == null)
-                    throw new ArgumentNullException("value");
-                this.layer = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the entity <see cref="netDxf.Tables.LineType">line type</see>.
-        /// </summary>
-        public LineType LineType
-        {
-            get { return this.lineType; }
-            set
-            {
-                if (value == null)
-                    throw new ArgumentNullException("value");
-                this.lineType = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the entity <see cref="netDxf.XData">extende data</see>.
-        /// </summary>
-        public Dictionary<ApplicationRegistry, XData> XData
-        {
-            get { return this.xData; }
-            set { this.xData = value; }
-        }
-
-        #endregion
 
         #region public methods
 
@@ -243,9 +171,9 @@ namespace netDxf.Entities
         /// Makes the opposite function as the Join() method.
         /// </remarks>
         /// <returns>A list of <see cref="Line">lines</see>see> and <see cref="Arc">arcs</see> that made up the polyline.</returns>
-        public List<IEntityObject> Explode()
+        public List<EntityObject> Explode()
         {
-            List<IEntityObject> entities = new List<IEntityObject>();
+            List<EntityObject> entities = new List<EntityObject>();
             int index = 0;
             foreach (LwPolylineVertex vertex in this.Vertexes)
             {
@@ -276,12 +204,13 @@ namespace netDxf.Entities
 
                     entities.Add(new Line(start, end)
                     {
-                        Color = this.color,
-                        Layer = this.layer,
-                        LineType = this.lineType,
-                        Normal = this.normal,
-                        Thickness = this.thickness,
-                        XData = this.xData
+                        Color = this.Color,
+                        Layer = this.Layer,
+                        LineType = this.LineType,
+                        Lineweight = this.Lineweight,
+                        XData = this.XData,
+                        Normal = this.Normal,
+                        Thickness = this.Thickness,
                     });
                 }
                 else
@@ -310,12 +239,13 @@ namespace netDxf.Entities
                                                             MathHelper.CoordinateSystem.World);
                     entities.Add(new Arc(point, r, startAngle, endAngle)
                     {
-                        Color = this.color,
-                        Layer = this.layer,
-                        LineType = this.lineType,
-                        Normal = this.normal,
-                        Thickness = this.thickness,
-                        XData = this.xData
+                        Color = this.Color,
+                        Layer = this.Layer,
+                        LineType = this.LineType,
+                        Lineweight = this.Lineweight,
+                        XData = this.XData,
+                        Normal = this.Normal,
+                        Thickness = this.Thickness,
                     });
                 }
                 index++;
@@ -402,17 +332,5 @@ namespace netDxf.Entities
 
         #endregion
 
-        #region overrides
-
-        /// <summary>
-        /// Converts the value of this instance to its equivalent string representation.
-        /// </summary>
-        /// <returns>The string representation.</returns>
-        public override string ToString()
-        {
-            return TYPE.ToString();
-        }
-
-        #endregion
     }
 }

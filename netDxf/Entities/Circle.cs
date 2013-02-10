@@ -1,7 +1,7 @@
-#region netDxf, Copyright(C) 2012 Daniel Carvajal, Licensed under LGPL.
+#region netDxf, Copyright(C) 2013 Daniel Carvajal, Licensed under LGPL.
 
 //                        netDxf library
-// Copyright (C) 2012 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2013 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -22,29 +22,22 @@
 
 using System;
 using System.Collections.Generic;
-using netDxf.Tables;
 
 namespace netDxf.Entities
 {
     /// <summary>
-    /// Represents a circle <see cref="netDxf.Entities.IEntityObject">entity</see>.
+    /// Represents a circle <see cref="EntityObject">entity</see>.
     /// </summary>
     public class Circle :
-        DxfObject,
-        IEntityObject
+        EntityObject
     {
         #region private fields
 
-        private const EntityType TYPE = EntityType.Circle;
         private Vector3 center;
         private double radius;
         private double thickness;
-        private Layer layer;
-        private AciColor color;
-        private LineType lineType;
         private Vector3 normal;
-        private Dictionary<ApplicationRegistry, XData> xData;
-
+        
         #endregion
 
         #region constructors
@@ -55,14 +48,11 @@ namespace netDxf.Entities
         /// <param name="center">Circle <see cref="Vector3">center</see> in world coordinates.</param>
         /// <param name="radius">Circle radius.</param>
         public Circle(Vector3 center, double radius)
-            : base(DxfObjectCode.Circle)
+            : base(EntityType.Circle, DxfObjectCode.Circle)
         {
             this.center = center;
             this.radius = radius;
             this.thickness = 0.0;
-            this.layer = Layer.Default;
-            this.color = AciColor.ByLayer;
-            this.lineType = LineType.ByLayer;
             this.normal = Vector3.UnitZ;
         }
 
@@ -133,69 +123,6 @@ namespace netDxf.Entities
 
         #endregion
 
-        #region IEntityObject Members
-
-       /// <summary>
-        /// Gets the entity <see cref="netDxf.Entities.EntityType">type</see>.
-        /// </summary>
-        public EntityType Type
-        {
-            get { return TYPE; }
-        }
-
-        /// <summary>
-        /// Gets or sets the entity <see cref="netDxf.AciColor">color</see>.
-        /// </summary>
-        public AciColor Color
-        {
-            get { return this.color; }
-            set
-            {
-                if (value == null)
-                    throw new ArgumentNullException("value");
-                this.color = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the entity <see cref="netDxf.Tables.Layer">layer</see>.
-        /// </summary>
-        public Layer Layer
-        {
-            get { return this.layer; }
-            set
-            {
-                if (value == null)
-                    throw new ArgumentNullException("value");
-                this.layer = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the entity <see cref="netDxf.Tables.LineType">line type</see>.
-        /// </summary>
-        public LineType LineType
-        {
-            get { return this.lineType; }
-            set
-            {
-                if (value == null)
-                    throw new ArgumentNullException("value");
-                this.lineType = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the entity <see cref="netDxf.XData">extende data</see>.
-        /// </summary>
-        public Dictionary<ApplicationRegistry, XData> XData
-        {
-            get { return this.xData; }
-            set { this.xData = value; }
-        }
-
-        #endregion
-
         #region public methods
 
         /// <summary>
@@ -234,13 +161,14 @@ namespace netDxf.Entities
 
             LwPolyline poly = new LwPolyline
                                 {
-                                    Color = this.color,
-                                    Layer = this.layer,
-                                    LineType = this.lineType,
+                                    Color = (AciColor) this.Color.Clone(),
+                                    Layer = this.Layer,
+                                    LineType = this.LineType,
+                                    Lineweight = (Lineweight) this.Lineweight.Clone(),
+                                    XData = this.XData,
                                     Normal = this.normal,
                                     Elevation = ocsCenter.Z,
                                     Thickness = this.thickness,
-                                    XData = this.xData,
                                     IsClosed = true
                                 };
             foreach (Vector2 v in vertexes)
@@ -252,17 +180,5 @@ namespace netDxf.Entities
 
         #endregion
 
-        #region overrides
-
-        /// <summary>
-        /// Converts the value of this instance to its equivalent string representation.
-        /// </summary>
-        /// <returns>The string representation.</returns>
-        public override string ToString()
-        {
-            return TYPE.ToString();
-        }
-
-        #endregion
     }
 }

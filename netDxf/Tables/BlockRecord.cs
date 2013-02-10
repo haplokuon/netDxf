@@ -20,22 +20,14 @@
 
 #endregion
 
-using System;
-
 namespace netDxf.Tables
 {
     /// <summary>
     /// Represent the record of a block in the tables section.
     /// </summary>
     internal class BlockRecord :
-        DxfObject,
-        ITableObject
+        TableObject
     {
-        #region private fields
-
-        private readonly string name;
-
-        #endregion
 
         #region constructors
 
@@ -44,38 +36,11 @@ namespace netDxf.Tables
         /// </summary>
         /// <param name="name">Block definition name.</param>
         public BlockRecord(string name)
-            : base(DxfObjectCode.BlockRecord)
+            : base(name, DxfObjectCode.BlockRecord)
         {
-            if (string.IsNullOrEmpty(name))
-                throw (new ArgumentNullException("name"));
-            this.name = name;
         }
 
         #endregion
 
-        #region ITableObject Members
-
-        /// <summary>
-        /// Gets the block record name.
-        /// </summary>
-        public string Name
-        {
-            get { return this.name; }
-        }
-
-        #endregion
-
-        #region overrides
-
-        /// <summary>
-        /// Converts the value of this instance to its equivalent string representation.
-        /// </summary>
-        /// <returns>The string representation.</returns>
-        public override string ToString()
-        {
-            return this.name;
-        }
-
-        #endregion
     }
 }

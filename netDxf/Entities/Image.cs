@@ -21,23 +21,19 @@
 #endregion
 
 using System;
-using System.Collections.Generic;
 using netDxf.Objects;
-using netDxf.Tables;
 
 namespace netDxf.Entities
 {
 
     /// <summary>
-    /// Represents a raster image <see cref="IEntityObject">entity</see>.
+    /// Represents a raster image <see cref="EntityObject">entity</see>.
     /// </summary>
     public class Image :
-        DxfObject,
-        IEntityObject 
+        EntityObject 
     {
         #region private fields
 
-        private const EntityType TYPE = EntityType.Image;
         private Vector3 position;
         private double width;
         private double height;
@@ -50,20 +46,14 @@ namespace netDxf.Entities
         private float fade;
         private ImageDisplayFlags displayOptions;
         private ImageClippingBoundary clippingBoundary;
-        private AciColor color;
-        private Layer layer;
-        private LineType lineType;
-        private Dictionary<ApplicationRegistry, XData> xData;
 
         #endregion
 
         #region contructors
 
-        internal Image(double width, double height)
-            : base(DxfObjectCode.Image)
+        internal Image()
+            : base(EntityType.Image, DxfObjectCode.Image)
         {
-            this.width = width;
-            this.height = height;
         }
 
         /// <summary>
@@ -71,8 +61,8 @@ namespace netDxf.Entities
         /// </summary>
         /// <param name="imageDefinition">Image definition.</param>
         /// <param name="position">Image <see cref="Vector3">position</see> in world coordinates.</param>
-        public Image(ImageDef imageDefinition, Vector3 position) 
-            : base(DxfObjectCode.Image)
+        public Image(ImageDef imageDefinition, Vector3 position)
+            : base(EntityType.Image, DxfObjectCode.Image)
         {
             this.imageDef = imageDefinition;
             this.position = position;
@@ -86,9 +76,6 @@ namespace netDxf.Entities
             this.fade = 0.0f;
             this.displayOptions = ImageDisplayFlags.ShowImage | ImageDisplayFlags.ShowImageWhenNotAlignedWithScreen | ImageDisplayFlags.UseClippingBoundary;
             this.clippingBoundary = new ImageClippingBoundary(-0.5, -0.5, imageDefinition.Width, imageDefinition.Height);
-            this.layer = Layer.Default;
-            this.color = AciColor.ByLayer;
-            this.lineType = LineType.ByLayer;
         }
 
         #endregion
@@ -110,6 +97,7 @@ namespace netDxf.Entities
         public double Height
         {
             get { return height; }
+            internal set { height = value; }
         }
 
         /// <summary>
@@ -118,6 +106,7 @@ namespace netDxf.Entities
         public double Width
         {
             get { return width; }
+            internal set { width = value; }
         }
 
         /// <summary>
@@ -253,82 +242,6 @@ namespace netDxf.Entities
             this.width = this.imageDef.Width * this.imageDef.OnePixelSize.X * scaleX;
             this.height = this.imageDef.Height * this.imageDef.OnePixelSize.Y * scaleY;
         }
-        #endregion
-
-        #region IEntityObject Members
-
-        /// <summary>
-        /// Gets the entity <see cref="netDxf.Entities.EntityType">type</see>.
-        /// </summary>
-        public EntityType Type
-        {
-            get { return TYPE; }
-        }
-
-        /// <summary>
-        /// Gets or sets the entity <see cref="netDxf.AciColor">color</see>.
-        /// </summary>
-        public AciColor Color
-        {
-            get { return this.color; }
-            set
-            {
-                if (value == null)
-                    throw new ArgumentNullException("value");
-                this.color = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the entity <see cref="netDxf.Tables.Layer">layer</see>.
-        /// </summary>
-        public Layer Layer
-        {
-            get { return this.layer; }
-            set
-            {
-                if (value == null)
-                    throw new ArgumentNullException("value");
-                this.layer = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the entity <see cref="netDxf.Tables.LineType">line type</see>.
-        /// </summary>
-        public LineType LineType
-        {
-            get { return this.lineType; }
-            set
-            {
-                if (value == null)
-                    throw new ArgumentNullException("value");
-                this.lineType = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the entity <see cref="netDxf.XData">extende data</see>.
-        /// </summary>
-        public Dictionary<ApplicationRegistry, XData> XData
-        {
-            get { return this.xData; }
-            set { this.xData = value; }
-        }
-
-        #endregion
-
-        #region overrides
-
-        /// <summary>
-        /// Converts the value of this instance to its equivalent string representation.
-        /// </summary>
-        /// <returns>The string representation.</returns>
-        public override string ToString()
-        {
-            return TYPE.ToString();
-        }
-
         #endregion
 
     }

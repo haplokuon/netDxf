@@ -34,6 +34,8 @@ namespace netDxf
 
         #endregion
 
+        #region constants
+
         /// <summary>
         /// An extended data control string can be either “{”or “}”.
         /// These braces enable applications to organize their data by subdividing the data into lists.
@@ -53,6 +55,8 @@ namespace netDxf
         {
             get { return new XDataRecord(XDataCode.ControlString, "}"); }
         }
+
+        #endregion
 
         #region constructors
 
@@ -103,5 +107,6 @@ namespace netDxf
         }
 
         #endregion
+
     }
 }

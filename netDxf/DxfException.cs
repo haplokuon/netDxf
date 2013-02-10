@@ -26,28 +26,18 @@ namespace netDxf
 {
     public class DxfException : Exception
     {
-        private readonly string file;
-
-        public DxfException(string file)
+        public DxfException()
         {
-            this.file = file;
         }
 
-        public DxfException(string file, string message)
+        public DxfException(string message)
             : base(message)
         {
-            this.file = file;
         }
 
-        public DxfException(string file, string message, Exception innerException)
+        public DxfException(string message, Exception innerException)
             : base(message, innerException)
         {
-            this.file = file;
-        }
-
-        public string File
-        {
-            get { return this.file; }
         }
     }
 
@@ -55,38 +45,31 @@ namespace netDxf
 
     public class DxfHeaderVariableException : DxfException
         {
-        private readonly string name;
 
-        public DxfHeaderVariableException(string name, string file)
-            : base(file)
+        public DxfHeaderVariableException(string name)
+            : base()
         {
-            this.name = name;
         }
 
-        public DxfHeaderVariableException(string name, string file, string message)
-            : base(file, message)
+        public DxfHeaderVariableException(string name, string message)
+            : base(message)
         {
-            this.name = name;
         }
 
-        public string Name
-        {
-            get { return this.name; }
-        }
     }
 
     public class DxfSectionException : DxfException
     {
         private readonly string section;
 
-        public DxfSectionException(string section, string file)
-            : base(file)
+        public DxfSectionException(string section)
+            : base()
         {
             this.section = section;
         }
 
-        public DxfSectionException(string section, string file, string message)
-            : base(file, message)
+        public DxfSectionException(string section, string message)
+            : base(message)
         {
             this.section = section;
         }
@@ -99,39 +82,39 @@ namespace netDxf
 
     public class InvalidDxfSectionException : DxfSectionException
     {
-        public InvalidDxfSectionException(string section, string file)
-            : base(section, file)
+        public InvalidDxfSectionException(string section)
+            : base(section)
         {
         }
 
-        public InvalidDxfSectionException(string section, string file, string message)
-            : base(section, file, message)
+        public InvalidDxfSectionException(string section, string message)
+            : base(section, message)
         {
         }
     }
 
     public class OpenDxfSectionException : DxfSectionException
     {
-        public OpenDxfSectionException(string section, string file)
-            : base(section, file)
+        public OpenDxfSectionException(string section)
+            : base(section)
         {
         }
 
-        public OpenDxfSectionException(string section, string file, string message)
-            : base(section, file, message)
+        public OpenDxfSectionException(string section, string message)
+            : base(section, message)
         {
         }
     }
 
     public class ClosedDxfSectionException : DxfSectionException
     {
-        public ClosedDxfSectionException(string section, string file)
-            : base(section, file)
+        public ClosedDxfSectionException(string section)
+            : base(section)
         {
         }
 
-        public ClosedDxfSectionException(string section, string file, string message)
-            : base(section, file, message)
+        public ClosedDxfSectionException(string section, string message)
+            : base(section, message)
         {
         }
     }
@@ -144,14 +127,14 @@ namespace netDxf
     {
         private readonly string table;
 
-        public DxfTableException(string table, string file)
-            : base(file)
+        public DxfTableException(string table)
+            : base()
         {
             this.table = table;
         }
 
-        public DxfTableException(string table, string file, string message)
-            : base(file, message)
+        public DxfTableException(string table, string message)
+            : base(message)
         {
             this.table = table;
         }
@@ -164,39 +147,39 @@ namespace netDxf
 
     public class InvalidDxfTableException : DxfTableException
     {
-        public InvalidDxfTableException(string table, string file)
-            : base(table, file)
+        public InvalidDxfTableException(string table)
+            : base(table)
         {
         }
 
-        public InvalidDxfTableException(string table, string file, string message)
-            : base(table, file, message)
+        public InvalidDxfTableException(string table, string message)
+            : base(table, message)
         {
         }
     }
 
     public class OpenDxfTableException : DxfTableException
     {
-        public OpenDxfTableException(string table, string file)
-            : base(table, file)
+        public OpenDxfTableException(string table)
+            : base(table)
         {
         }
 
-        public OpenDxfTableException(string table, string file, string message)
-            : base(table, file, message)
+        public OpenDxfTableException(string table, string message)
+            : base(table, message)
         {
         }
     }
 
     public class ClosedDxfTableException : DxfTableException
     {
-        public ClosedDxfTableException(string table, string file)
-            : base(table, file)
+        public ClosedDxfTableException(string table)
+            : base(table)
         {
         }
 
-        public ClosedDxfTableException(string table, string file, string message)
-            : base(table, file, message)
+        public ClosedDxfTableException(string table, string message)
+            : base(table, message)
         {
         }
     }
@@ -209,8 +192,8 @@ namespace netDxf
     {
         private readonly string name;
 
-        public DxfEntityException(string name, string file, string message)
-            : base(file, message)
+        public DxfEntityException(string name, string message)
+            : base(message)
         {
             this.name = name;
         }
@@ -226,8 +209,8 @@ namespace netDxf
         private readonly int code;
         private readonly string value;
 
-        public DxfInvalidCodeValueEntityException(int code, string value, string file, string message)
-            : base(file, message)
+        public DxfInvalidCodeValueEntityException(int code, string value, string message)
+            : base(message)
         {
             this.code = code;
             this.value = value;

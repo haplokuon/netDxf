@@ -21,7 +21,6 @@
 #endregion
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Globalization;
@@ -53,9 +52,9 @@ namespace netDxf
         private int handleCount;
         // keeps track of the dimension blocks generated
         private int dimCount;
-        // during the save process new handles are needed, this number should be enough
-        private const int ReservedHandles = 100;
-
+        // during the save process new handles are needed for the table sections, this number should be enough
+        private const int ReservedHandles = 10;
+        // default drawing units (do not change)
         private DefaultDrawingUnits drawingUnits = DefaultDrawingUnits.Millimeters;
 
         #endregion
@@ -79,7 +78,7 @@ namespace netDxf
 
         #region entities
 
-        private readonly Hashtable addedObjects;
+        private Dictionary<string, EntityObject> addedObjects;
         private List<Arc> arcs;
         private List<Circle> circles;
         private List<Dimension> dimensions; 
@@ -118,7 +117,7 @@ namespace netDxf
         {
             this.handleCount = 1;
             this.dimCount = 0;
-            this.addedObjects = new Hashtable(); // keeps track of the added object to avoid duplicates
+            this.addedObjects = new Dictionary<string, EntityObject>(); // keeps track of the added object to avoid duplicates
 
             // tables
             this.viewports = new Dictionary<string, ViewPort>();
@@ -551,16 +550,28 @@ namespace netDxf
             // if the block definition has not been added
             this.blocks.Add(block.Name, block);
             block.Layer = AddLayer(block.Layer);
-            this.handleCount = block.AsignHandle(this.handleCount);
-
+            
             //for new block definitions configure its entities
-            foreach (IEntityObject blockEntity in block.Entities)
+            foreach (EntityObject blockEntity in block.Entities)
             {
-                // check if the entity has not been added to the document
-                if (this.addedObjects.ContainsKey(blockEntity))
-                    throw new ArgumentException("The entity " + blockEntity.Type + " object of the block " + block.Name + " has already been added to the document.", "block");
+                // no null entities allowed
+                if (blockEntity == null)
+                    throw new ArgumentNullException("block", "A block entity cannot be null.");
 
-                this.addedObjects.Add(blockEntity, blockEntity);
+                if (blockEntity.Handle != null)
+                {
+                    // check if the entity handle has been assigned
+                    if (this.addedObjects.ContainsKey(blockEntity.Handle))
+                    {
+                        // if the handle is equals the entity might come from another document, check if it is exactly the same object
+                        EntityObject existing = this.addedObjects[blockEntity.Handle];
+                        if (existing.Equals(blockEntity))
+                            throw new ArgumentException("The entity " + blockEntity.Type + " object has already been added to the document.", "block");
+                    }
+                }
+
+                this.handleCount = block.AsignHandle(this.handleCount);
+                if (blockEntity.Handle != null) this.addedObjects.Add(blockEntity.Handle, blockEntity);
 
                 if (blockEntity.XData != null)
                 {
@@ -587,7 +598,7 @@ namespace netDxf
                             throw new ArgumentException("The list already contains the block: " + dimBlock.Name + ". The block names that start with *D are reserverd for dimensions");
                         ((Dimension)blockEntity).Style = AddDimensionStyle(((Dimension)blockEntity).Style);
                         dimBlock.TypeFlags = BlockTypeFlags.AnonymousBlock;
-                        foreach (IEntityObject entity in dimBlock.Entities)
+                        foreach (EntityObject entity in dimBlock.Entities)
                         {
                             entity.Layer = AddLayer(entity.Layer);
                             entity.LineType = AddLineType(entity.LineType);
@@ -619,7 +630,7 @@ namespace netDxf
                         break;
                     case EntityType.PolyfaceMesh:
                         break;
-                    case EntityType.Polyline3d:
+                    case EntityType.Polyline:
                         break;
                     case EntityType.Solid:
                         break;
@@ -685,7 +696,6 @@ namespace netDxf
 
             this.imageDefs.Add(imageDef.Name, imageDef);
             this.handleCount = imageDef.AsignHandle(this.handleCount);
-            //this.imageDefToReactors.Add(imageDef, new List<string>());
             return imageDef;
         }
 
@@ -700,15 +710,37 @@ namespace netDxf
             return this.imageDefs.TryGetValue(imageDefName, out add) ? add : null;
         }
 
-
         #endregion
 
-        #region public methods
+        #region public entity methods
 
-         /// <summary>
-        /// Adds a list of <see cref="IEntityObject">entities</see> to the document.
+        /// <summary>
+        /// Gets an entity provided its handle.
         /// </summary>
-        /// <param name="entities">A list of <see cref="IEntityObject">entities</see> to add to the document.</param>
+        /// <param name="handle">Entity object handle.</param>
+        /// <returns>The entity associated with the provided handle, null if there is not found.</returns>
+        /// <remarks>This method will also return entities that are part of a block, even if there is no insert for that block.</remarks>
+        //public EntityObject GetEntityByHandle(string handle)
+        //{
+        //    return this.addedObjects[handle];
+        //}
+
+        /// <summary>
+        /// Gets the complete collection of entities in the document.
+        /// </summary>
+        /// <returns>Collection of all entities in the document.</returns>
+        /// <remarks>The list will also include the entities that are part of a block, even if there is no insert for that block.</remarks>
+        //public ReadOnlyCollection<EntityObject> GetEntities()
+        //{
+        //    List<EntityObject> list = new List<EntityObject>();
+        //    list.AddRange(this.addedObjects.Values);
+        //    return list.AsReadOnly();
+        //}
+
+        /// <summary>
+        /// Adds a list of <see cref="EntityObject">entities</see> to the document.
+        /// </summary>
+        /// <param name="entities">A list of <see cref="EntityObject">entities</see> to add to the document.</param>
         /// <remarks>
         /// <para>
         /// Once an entity has been added to the dxf document, it should not be modified. A unique handle identifier is assigned to every entity.
@@ -719,18 +751,18 @@ namespace netDxf
         /// reflected in the saved dxf file.
         /// </para>
         /// </remarks>
-        public void AddEntity(IEnumerable<IEntityObject> entities)
-         {
-             foreach (IEntityObject entity in entities)
-             {
-                 this.AddEntity(entity);
-             }
-         }
+        public void AddEntity(IEnumerable<EntityObject> entities)
+        {
+            foreach (EntityObject entity in entities)
+            {
+                this.AddEntity(entity);
+            }
+        }
 
         /// <summary>
-        /// Adds an <see cref="IEntityObject">entity</see> to the document.
+        /// Adds an <see cref="EntityObject">entity</see> to the document.
         /// </summary>
-        /// <param name="entity">An <see cref="IEntityObject">entity</see> to add to the document.</param>
+        /// <param name="entity">An <see cref="EntityObject">entity</see> to add to the document.</param>
         /// <remarks>
         /// <para>
         /// Once an entity has been added to the dxf document a unique handle identifier (hexadecimal number) is assigned to them.
@@ -741,14 +773,26 @@ namespace netDxf
         /// reflected in the saved dxf file.
         /// </para>
         /// </remarks>
-        public void AddEntity(IEntityObject entity)
+        public void AddEntity(EntityObject entity)
         {
-            // check if the entity has not been added to the document
-            if (this.addedObjects.ContainsKey(entity))
-                throw new ArgumentException("The entity " + entity.Type + " object has already been added to the document.", "entity");
+            // no null entities allowed
+            if (entity == null)
+                throw new ArgumentNullException("entity", "The entity cannot be null.");
 
-            this.addedObjects.Add(entity, entity);
-            this.handleCount = ((DxfObject)entity).AsignHandle(this.handleCount);
+            if (entity.Handle != null)
+            {
+                // check if the entity handle has been assigned
+                if (this.addedObjects.ContainsKey(entity.Handle))
+                {
+                    // if the handle is equal the entity might come from another document, check if it is exactly the same object
+                    EntityObject existing = this.addedObjects[entity.Handle];
+                    if (existing.Equals(entity))
+                        throw new ArgumentException("The entity " + entity.Type + " object has already been added to the document.", "entity");
+                }
+            }
+
+            this.handleCount = entity.AsignHandle(this.handleCount);
+            this.addedObjects.Add(entity.Handle, entity);
 
             if (entity.XData != null)
             {
@@ -766,29 +810,29 @@ namespace netDxf
             switch (entity.Type)
             {
                 case EntityType.Arc:
-                    this.arcs.Add((Arc) entity);
+                    this.arcs.Add((Arc)entity);
                     break;
                 case EntityType.Circle:
-                    this.circles.Add((Circle) entity);
+                    this.circles.Add((Circle)entity);
                     break;
                 case EntityType.Dimension:
-                    this.dimensions.Add((Dimension) entity);
+                    this.dimensions.Add((Dimension)entity);
 
                     // create the block that represent the dimension drawing
-                    Block dimBlock = ((Dimension) entity).BuildBlock("*D" + ++dimCount);
+                    Block dimBlock = ((Dimension)entity).BuildBlock("*D" + ++dimCount);
                     if (this.blocks.ContainsKey(dimBlock.Name))
                         throw new ArgumentException("The list already contains the block: " + dimBlock.Name + ". The block names that start with *D are reserverd for dimensions");
-                    ((Dimension) entity).Style = AddDimensionStyle(((Dimension) entity).Style);
+                    ((Dimension)entity).Style = AddDimensionStyle(((Dimension)entity).Style);
                     dimBlock.TypeFlags = BlockTypeFlags.AnonymousBlock;
                     this.handleCount = dimBlock.AsignHandle(this.handleCount);
 
                     this.blocks.Add(dimBlock.Name, dimBlock);
                     break;
                 case EntityType.Ellipse:
-                    this.ellipses.Add((Ellipse) entity);
+                    this.ellipses.Add((Ellipse)entity);
                     break;
                 case EntityType.Face3D:
-                    this.faces3d.Add((Face3d) entity);
+                    this.faces3d.Add((Face3d)entity);
                     break;
                 case EntityType.Spline:
                     this.splines.Add((Spline)entity);
@@ -797,8 +841,8 @@ namespace netDxf
                     this.hatches.Add((Hatch)entity);
                     break;
                 case EntityType.Insert:
-                    ((Insert) entity).Block = AddBlock(((Insert) entity).Block);
-                    foreach (Attribute attribute in ((Insert) entity).Attributes)
+                    ((Insert)entity).Block = AddBlock(((Insert)entity).Block);
+                    foreach (Attribute attribute in ((Insert)entity).Attributes)
                     {
                         attribute.Layer = AddLayer(attribute.Layer);
                         attribute.LineType = AddLineType(attribute.LineType);
@@ -809,30 +853,30 @@ namespace netDxf
                     this.lwPolylines.Add((LwPolyline)entity);
                     break;
                 case EntityType.Line:
-                    this.lines.Add((Line) entity);
+                    this.lines.Add((Line)entity);
                     break;
                 case EntityType.Point:
-                    this.points.Add((Point) entity);
+                    this.points.Add((Point)entity);
                     break;
                 case EntityType.PolyfaceMesh:
                     this.polyfaceMeshes.Add((PolyfaceMesh)entity);
                     break;
-                case EntityType.Polyline3d:
-                    this.polylines.Add((Polyline) entity);
+                case EntityType.Polyline:
+                    this.polylines.Add((Polyline)entity);
                     break;
                 case EntityType.Solid:
-                    this.solids.Add((Solid) entity);
+                    this.solids.Add((Solid)entity);
                     break;
                 case EntityType.Text:
-                    ((Text) entity).Style = AddTextStyle(((Text) entity).Style);
-                    this.texts.Add((Text) entity);
+                    ((Text)entity).Style = AddTextStyle(((Text)entity).Style);
+                    this.texts.Add((Text)entity);
                     break;
                 case EntityType.MText:
                     ((MText)entity).Style = AddTextStyle(((MText)entity).Style);
-                    this.mTexts.Add((MText) entity);
+                    this.mTexts.Add((MText)entity);
                     break;
                 case EntityType.Image:
-                    Image image = (Image) entity;
+                    Image image = (Image)entity;
                     image.Definition = AddImageDef(image.Definition);
                     ImageDefReactor reactor = new ImageDefReactor(image.Handle);
                     this.handleCount = reactor.AsignHandle(this.handleCount);
@@ -851,35 +895,37 @@ namespace netDxf
         }
 
         /// <summary>
-        /// Removes a list of <see cref="IEntityObject">entities</see> from the document.
+        /// Removes a list of <see cref="EntityObject">entities</see> from the document.
         /// </summary>
-        /// <param name="entities">A list of <see cref="IEntityObject">entities</see> to remove from the document.</param>
+        /// <param name="entities">A list of <see cref="EntityObject">entities</see> to remove from the document.</param>
         /// <remarks>
         /// This function will not remove other tables objects that might be not in use as result from the elimination of the entity.
         /// This includes empity layers, blocks not referenced anymore, line types, text styles, dimension styles, and application registries.
+        /// The safe way of removing an entity that is part of a block is first remove it from the Block.Entities list and then from the DxfDocument.RemoveEntity().
         /// </remarks>
-        public void RemoveEntity(IEnumerable<IEntityObject> entities)
+        public void RemoveEntity(IEnumerable<EntityObject> entities)
         {
-            foreach (IEntityObject entity in entities)
+            foreach (EntityObject entity in entities)
             {
                 this.RemoveEntity(entity);
             }
         }
 
         /// <summary>
-        /// Removes an <see cref="IEntityObject">entity</see> from the document.
+        /// Removes an <see cref="EntityObject">entity</see> from the document.
         /// </summary>
-        /// <param name="entity">The <see cref="IEntityObject">entity</see> to remove from the document.</param>
+        /// <param name="entity">The <see cref="EntityObject">entity</see> to remove from the document.</param>
         /// <remarks>
         /// This function will not remove other tables objects that might be not in use as result from the elimination of the entity.
         /// This includes empity layers, blocks not referenced anymore, line types, text styles, dimension styles, and application registries.
+        /// The safe way of removing an entity that is part of a block is first remove it from the Block.Entities list and then from the DxfDocument.RemoveEntity().
         /// </remarks>
-        public void RemoveEntity(IEntityObject entity)
+        public void RemoveEntity(EntityObject entity)
         {
-            if (!this.addedObjects.ContainsKey(entity))
+            if (!this.addedObjects.ContainsKey(entity.Handle))
                 return;
 
-            this.addedObjects.Remove(entity);
+            this.addedObjects.Remove(entity.Handle);
 
             switch (entity.Type)
             {
@@ -899,7 +945,7 @@ namespace netDxf
                     this.faces3d.Remove((Face3d)entity);
                     break;
                 case EntityType.Spline:
-                    this.splines.Remove((Spline) entity);
+                    this.splines.Remove((Spline)entity);
                     break;
                 case EntityType.Hatch:
                     this.hatches.Remove((Hatch)entity);
@@ -919,7 +965,7 @@ namespace netDxf
                 case EntityType.PolyfaceMesh:
                     this.polyfaceMeshes.Remove((PolyfaceMesh)entity);
                     break;
-                case EntityType.Polyline3d:
+                case EntityType.Polyline:
                     this.polylines.Remove((Polyline)entity);
                     break;
                 case EntityType.Solid:
@@ -932,7 +978,7 @@ namespace netDxf
                     this.mTexts.Remove((MText)entity);
                     break;
                 case EntityType.Image:
-                    Image image = (Image) entity;
+                    Image image = (Image)entity;
                     image.Definition.Reactors.Remove(image.Handle);
                     if (image.Definition.Reactors.Count == 0)
                         this.imageDefs.Remove(image.Definition.Name);
@@ -949,11 +995,22 @@ namespace netDxf
             }
         }
 
+        #endregion
+
+        #region public methods
+
         /// <summary>
-        /// Loads a dxf ASCII file.
+        /// Loads a dxf file.
         /// </summary>
         /// <param name="file">File name.</param>
-        public void Load(string file)
+        /// <returns>Returns true if the file has been read succesfully, false otherwise.</returns>
+        /// <exception cref="FileNotFoundException"></exception>
+        /// <exception cref="IOException"></exception>
+        /// <remarks>
+        /// The Load method will still raise an exception if they are unable to create the FileStream.
+        /// On Debug mode they will raise any exception that migh occur during the whole process.
+        /// </remarks>
+        public bool Load(string file)
         {
             this.fileInfo = new FileInfo(file);
             if (!this.fileInfo.Exists)
@@ -961,18 +1018,202 @@ namespace netDxf
 
             this.name = Path.GetFileNameWithoutExtension(this.fileInfo.FullName);
 
+            Stream stream;
+            try
+            {
+                stream = File.OpenRead(file);
+            }
+            catch (DxfException ex)
+            {
+                throw (new IOException("Error trying to open the file " + this.fileInfo.FullName + " for reading.", ex));
+            }
+
+            bool ok = Load(stream);
+            stream.Close();
+            return ok;
+        }
+
+        /// <summary>
+        /// Loads a dxf file.
+        /// </summary>
+        /// <param name="stream">Stream.</param>
+        /// <returns>Returns true if the stream has been read succesfully, false otherwise.</returns>
+        /// <remarks>
+        /// On Debug mode they will raise any exception that migh occur during the whole process.
+        /// </remarks>
+        public bool Load(Stream stream)
+        {
+            // In dxf files the decimal point is always a dot. We have to make sure that this doesn't interfere with the system configuration.
+            CultureInfo cultureInfo = CultureInfo.CurrentCulture;
+            Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
+#if DEBUG
+            InternalLoad(stream);
+            Thread.CurrentThread.CurrentCulture = cultureInfo;
+#else
+            try
+            {
+                InternalLoad(stream);
+            }
+            catch (Exception ex)
+            {
+                return false;
+            }
+            finally
+            {
+                Thread.CurrentThread.CurrentCulture = cultureInfo;
+            }
+
+#endif
+            return true;
+        }
+
+        /// <summary>
+        /// Saves the database of the actual DxfDocument to a dxf file.
+        /// </summary>
+        /// <param name="file">File name.</param>
+        /// <param name="dxfVersion">Dxf file <see cref="DxfVersion">version</see>.</param>
+        /// <returns>Return true if the file has been succesfully save, false otherwise.</returns>
+        /// <exception cref="IOException"></exception>
+        /// <remarks>
+        /// If the file already exists it will be overwritten.
+        /// The Save method will still raise an exception if they are unable to create the FileStream.
+        /// On Debug mode they will raise any exception that migh occur during the whole process.
+        /// </remarks>
+        public bool Save(string file, DxfVersion dxfVersion)
+        {
+            this.fileInfo = new FileInfo(file);
+            this.name = Path.GetFileNameWithoutExtension(this.fileInfo.FullName);
+
+            Stream stream;
+            try
+            {
+                stream = File.Create(file);
+            }
+            catch (Exception ex)
+            {
+                throw new IOException("Error trying to create the file " + this.fileInfo.FullName + " for writing.", ex);
+            }
+
+            bool ok = Save(stream, dxfVersion);
+            stream.Close();
+            return ok;
+
+        }
+
+        /// <summary>
+        /// Saves the database of the actual DxfDocument to a stream.
+        /// </summary>
+        /// <param name="stream">Stream.</param>
+        /// <param name="dxfVersion">Dxf file <see cref="DxfVersion">version</see>.</param>
+        /// <returns>Return true if the stream has been succesfully saved, false otherwise.</returns>
+        /// <remarks>
+        /// On Debug mode they will raise any exception that migh occur during the whole process.
+        /// </remarks>
+        public bool Save(Stream stream, DxfVersion dxfVersion)
+        {
             // In dxf files the decimal point is always a dot. We have to make sure that this doesn't interfere with the system configuration.
             CultureInfo cultureInfo = CultureInfo.CurrentCulture;
             Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
 
-            DxfReader dxfReader = new DxfReader(this.fileInfo.FullName);
-            dxfReader.Open();
-            dxfReader.Read();
-            dxfReader.Close();
+#if DEBUG
+            InternalSave(stream, dxfVersion);
+            Thread.CurrentThread.CurrentCulture = cultureInfo;
+#else
+            try
+            {
+                InternalSave(stream, dxfVersion);
+            }
+            catch
+            {
+                return false;
+            }
+            finally
+            {
+                Thread.CurrentThread.CurrentCulture = cultureInfo;
+            }
+                
+#endif
+            return true;
+        }
+
+        /// <summary>
+        /// Checks the AutoCAD dxf file database version.
+        /// </summary>
+        /// <param name="stream">Stream</param>
+        /// <returns>String that represents the dxf file version.</returns>
+        /// <exception cref="FileNotFoundException"></exception>
+        /// <exception cref="IOException"></exception>
+        /// <remarks>
+        /// The AutoCAD drawing database version number:<br />
+        /// AC1006 = R10<br />
+        /// AC1009 = R11 and R12<br />
+        /// AC1012 = R13<br />
+        /// AC1014 = R14<br />
+        /// AC1015 = AutoCAD 2000<br />
+        /// AC1018 = AutoCAD 2004<br />
+        /// AC1021 = AutoCAD 2007<br />
+        /// AC1024 = AutoCAD 2010
+        /// </remarks>
+        public static string CheckDxfFileVersion(Stream stream)
+        {
+            return DxfReader.CheckHeaderVariable(stream, SystemVariable.DatabaseVersion);
+        }
+
+        /// <summary>
+        /// Checks the AutoCAD dxf file database version.
+        /// </summary>
+        /// <param name="file">File name.</param>
+        /// <returns>String that represents the dxf file version.</returns>
+        /// <exception cref="FileNotFoundException"></exception>
+        /// <exception cref="IOException"></exception>
+        /// <remarks>
+        /// The AutoCAD drawing database version number:<br />
+        /// AC1006 = R10<br />
+        /// AC1009 = R11 and R12<br />
+        /// AC1012 = R13<br />
+        /// AC1014 = R14<br />
+        /// AC1015 = AutoCAD 2000<br />
+        /// AC1018 = AutoCAD 2004<br />
+        /// AC1021 = AutoCAD 2007<br />
+        /// AC1024 = AutoCAD 2010
+        /// </remarks>
+        public static string CheckDxfFileVersion(string file)
+        {
+            FileInfo fileInfo = new FileInfo(file);
+            if (!fileInfo.Exists)
+                throw new FileNotFoundException("File " + fileInfo.FullName + " not found.", fileInfo.FullName);
+
+            Stream stream;
+            try
+            {
+                stream = File.OpenRead(file);
+            }
+            catch (DxfException ex)
+            {
+                throw new IOException("Error trying to open the file " + fileInfo.FullName + " for reading.", ex);
+            }
+
+            string value = DxfReader.CheckHeaderVariable(stream, SystemVariable.DatabaseVersion);
+            stream.Close();
+            return value;
+        }
+
+        #endregion
+
+        #region private methods
+
+        private void InternalLoad(Stream stream)
+        {
+
+            DxfReader dxfReader = new DxfReader();
+
+            dxfReader.Read(stream);
+
+            this.addedObjects = dxfReader.AddedObjects;
 
             //header information
             this.version = dxfReader.Version;
-            this.handleCount = Convert.ToInt32(dxfReader.HandleSeed,16);
+            this.handleCount = Convert.ToInt32(dxfReader.HandleSeed, 16);
             this.drawingUnits = dxfReader.DrawingUnits;
 
             //tables information
@@ -1014,34 +1255,11 @@ namespace netDxf
             else
                 this.rasterVariables = dxfReader.RasterVariables;
 
-            Thread.CurrentThread.CurrentCulture = cultureInfo;
-
         }
 
-        /// <summary>
-        /// Saves the database of the actual DxfDocument to a dxf ASCII file.
-        /// </summary>
-        /// <param name="file">File name.</param>
-        /// <param name="dxfVersion">Dxf file <see cref="DxfVersion">version</see>.</param>
-        /// <remarks>If the file already exists it will be overwritten.</remarks>
-        public void Save(string file, DxfVersion dxfVersion)
+        private void InternalSave(Stream stream, DxfVersion dxfVersion)
         {
-            this.fileInfo = new FileInfo(file);
-
-            this.name = Path.GetFileNameWithoutExtension(this.fileInfo.FullName);
-
             this.version = StringEnum.GetStringValue(dxfVersion);
-
-            // create the list for the block record table
-            Dictionary<string, List<IEntityObject>> blockEntities = new Dictionary<string, List<IEntityObject>>();
-            foreach (Block block in this.blocks.Values)
-            {
-                blockEntities.Add(block.Name, new List<IEntityObject>());
-                foreach (IEntityObject entity in block.Entities)
-                {
-                    blockEntities[block.Name].Add(entity);
-                }
-            }
 
             // dictionaries
             List<DictionaryObject> dictionaries = new List<DictionaryObject>();
@@ -1068,14 +1286,9 @@ namespace netDxf
                 namedObjectDictionary.Entries.Add(new DictionaryObjectEntry("ACAD_IMAGE_VARS", this.rasterVariables.Handle));
             }
 
-            // In dxf files the decimal point is always a dot. We have to make sure that this doesn't interfere with the system configuration.
-            CultureInfo cultureInfo = CultureInfo.CurrentCulture;
-            Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
-
-            DxfWriter dxfWriter = new DxfWriter(this.fileInfo.FullName, dxfVersion) {handleCount = this.handleCount};
-            dxfWriter.Open();
+            DxfWriter dxfWriter = new DxfWriter(dxfVersion);
+            dxfWriter.Open(stream);
             dxfWriter.WriteComment("Dxf file generated by netDxf http://netdxf.codeplex.com, Copyright(C) 2013 Daniel Carvajal, Licensed under LGPL");
-            dxfWriter.WriteComment(string.Format("File {0} created on {1} by {2}", this.fileInfo.FullName, DateTime.Now.ToString(cultureInfo), Environment.UserName));
 
             //HEADER SECTION
             dxfWriter.BeginSection(StringCode.HeaderSection);
@@ -1086,6 +1299,10 @@ namespace netDxf
             dxfWriter.WriteSystemVariable(new HeaderVariable(SystemVariable.Angdir, 0));
             dxfWriter.WriteSystemVariable(new HeaderVariable(SystemVariable.Extnames, 1));
             dxfWriter.WriteSystemVariable(new HeaderVariable(SystemVariable.Insunits, (int)this.drawingUnits));
+            dxfWriter.WriteSystemVariable(new HeaderVariable(SystemVariable.LtScale, 1.0));
+            dxfWriter.WriteSystemVariable(new HeaderVariable(SystemVariable.LwDisplay, 1));
+            dxfWriter.WriteSystemVariable(new HeaderVariable(SystemVariable.PdMode, (int)PointShape.CirclePlus));
+            dxfWriter.WriteSystemVariable(new HeaderVariable(SystemVariable.PdSize, 0));
             dxfWriter.EndSection();
 
             //CLASSES SECTION
@@ -1103,7 +1320,7 @@ namespace netDxf
             dxfWriter.BeginSection(StringCode.TablesSection);
 
             //viewport tables
-            dxfWriter.BeginTable(StringCode.ViewPortTable);
+            dxfWriter.BeginTable(StringCode.ViewPortTable, Convert.ToString(this.handleCount++, 16));
             foreach (ViewPort vport in this.viewports.Values)
             {
                 dxfWriter.WriteViewPort(vport);
@@ -1111,7 +1328,7 @@ namespace netDxf
             dxfWriter.EndTable();
 
             //line type tables
-            dxfWriter.BeginTable(StringCode.LineTypeTable);
+            dxfWriter.BeginTable(StringCode.LineTypeTable, Convert.ToString(this.handleCount++, 16));
             foreach (LineType lineType in this.lineTypes.Values)
             {
                 dxfWriter.WriteLineType(lineType);
@@ -1119,7 +1336,7 @@ namespace netDxf
             dxfWriter.EndTable();
 
             //layer tables
-            dxfWriter.BeginTable(StringCode.LayerTable);
+            dxfWriter.BeginTable(StringCode.LayerTable, Convert.ToString(this.handleCount++, 16));
             foreach (Layer layer in this.layers.Values)
             {
                 dxfWriter.WriteLayer(layer);
@@ -1127,7 +1344,7 @@ namespace netDxf
             dxfWriter.EndTable();
 
             //text style tables
-            dxfWriter.BeginTable(StringCode.TextStyleTable);
+            dxfWriter.BeginTable(StringCode.TextStyleTable, Convert.ToString(this.handleCount++, 16));
             foreach (TextStyle style in this.textStyles.Values)
             {
                 dxfWriter.WriteTextStyle(style);
@@ -1135,23 +1352,23 @@ namespace netDxf
             dxfWriter.EndTable();
 
             //dimension style tables
-            dxfWriter.BeginTable(StringCode.DimensionStyleTable);
+            dxfWriter.BeginTable(StringCode.DimensionStyleTable, Convert.ToString(this.handleCount++, 16));
             foreach (DimensionStyle style in this.dimStyles.Values)
             {
                 dxfWriter.WriteDimensionStyle(style);
             }
-            dxfWriter.EndTable();   
+            dxfWriter.EndTable();
 
             //view
-            dxfWriter.BeginTable(StringCode.ViewTable);
+            dxfWriter.BeginTable(StringCode.ViewTable, Convert.ToString(this.handleCount++, 16));
             dxfWriter.EndTable();
 
             //ucs
-            dxfWriter.BeginTable(StringCode.UcsTable);
+            dxfWriter.BeginTable(StringCode.UcsTable, Convert.ToString(this.handleCount++, 16));
             dxfWriter.EndTable();
 
             //registered application tables
-            dxfWriter.BeginTable(StringCode.ApplicationIDTable);
+            dxfWriter.BeginTable(StringCode.ApplicationIDTable, Convert.ToString(this.handleCount++, 16));
             foreach (ApplicationRegistry id in this.appRegisterNames.Values)
             {
                 dxfWriter.RegisterApplication(id);
@@ -1159,7 +1376,7 @@ namespace netDxf
             dxfWriter.EndTable();
 
             //block reacord table
-            dxfWriter.BeginTable(StringCode.BlockRecordTable);
+            dxfWriter.BeginTable(StringCode.BlockRecordTable, Convert.ToString(this.handleCount++, 16));
             foreach (Block block in this.blocks.Values)
             {
                 dxfWriter.WriteBlockRecord(block.Record);
@@ -1171,14 +1388,13 @@ namespace netDxf
             dxfWriter.BeginSection(StringCode.BlocksSection);
             foreach (Block block in this.blocks.Values)
             {
-                dxfWriter.WriteBlock(block, blockEntities[block.Name]);
+                dxfWriter.WriteBlock(block);
             }
-
             dxfWriter.EndSection(); //End section blocks
 
             //ENTITIES SECTION
             dxfWriter.BeginSection(StringCode.EntitiesSection);
-            
+
             foreach (Arc arc in this.arcs)
             {
                 dxfWriter.WriteEntity(arc);
@@ -1187,7 +1403,7 @@ namespace netDxf
             {
                 dxfWriter.WriteEntity(circle);
             }
-            foreach (Ellipse ellipse  in this.ellipses)
+            foreach (Ellipse ellipse in this.ellipses)
             {
                 dxfWriter.WriteEntity(ellipse);
             }
@@ -1225,7 +1441,7 @@ namespace netDxf
             }
             foreach (Polyline pol in this.polylines)
             {
-               dxfWriter.WriteEntity(pol);
+                dxfWriter.WriteEntity(pol);
             }
             foreach (Text text in this.texts)
             {
@@ -1251,7 +1467,7 @@ namespace netDxf
 
             //OBJECTS SECTION
             dxfWriter.BeginSection(StringCode.ObjectsSection);
-            
+
             foreach (DictionaryObject dictionary in dictionaries)
             {
                 dxfWriter.WriteDictionary(dictionary);
@@ -1267,38 +1483,12 @@ namespace netDxf
                 dxfWriter.WriteImageDef(imageDef, imageDefDictionary.Handle);
             }
 
-
-            dxfWriter.EndSection();
+            dxfWriter.EndSection(); //End section objects
 
             dxfWriter.Close();
 
-            Thread.CurrentThread.CurrentCulture = cultureInfo;
+            stream.Position = 0;
         }
-         		
-        /// <summary>
-        /// Checks the AutoCAD dxf file database version.
-        /// </summary>
-        /// <param name="file">File name.</param>
-        /// <returns>String that represents the dxf file version.</returns>
-        /// <remarks>
-        /// The AutoCAD drawing database version number:<br />
-        /// AC1006 = R10<br />
-        /// AC1009 = R11 and R12<br />
-        /// AC1012 = R13<br />
-        /// AC1014 = R14<br />
-        /// AC1015 = AutoCAD 2000<br />
-        /// AC1018 = AutoCAD 2004<br />
-        /// AC1021 = AutoCAD 2007<br />
-        /// AC1024 = AutoCAD 2010
-        /// </remarks>
-        public static string CheckDxfFileVersion(string file)
-        {
-            return DxfReader.CheckHeaderVariable(file, SystemVariable.DatabaseVersion);
-        }
-
-        #endregion
-
-        #region private methods
 
         private void AddDefaultObjects()
         {
@@ -1357,5 +1547,6 @@ namespace netDxf
         }
 
         #endregion
+
     }
 }

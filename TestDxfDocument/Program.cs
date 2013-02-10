@@ -23,6 +23,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using netDxf;
 using netDxf.Blocks;
 using netDxf.Entities;
@@ -40,7 +41,12 @@ namespace TestDxfDocument
     {
         private static void Main()
         {
-            WriteNoAsciiText();
+            //ObjectVisibility();
+            Test();
+            //EntityTrueColor();
+            //EntityLineWeight();
+            //ReadWriteFromStream();
+            //WriteNoAsciiText();
             //WriteSplineBoundaryHatch();
             //WriteNoInsertBlock();
             //WriteImage();
@@ -81,17 +87,150 @@ namespace TestDxfDocument
             //Dxf2000();
             //SpeedTest();
             //WritePolyline3d();
+            //WriteInsert();
+        }
+        private static void Test()
+        {
+            DxfDocument dxf = new DxfDocument();
+
+            //Point point = new Point(10, 10, 0);
+            //point.Rotation = 45;
+            //dxf.AddEntity(point);
+            //dxf.Save("point.dxf", DxfVersion.AutoCad2000);
+            //dxf.Load("point.dxf");
+
+            //dxf.Load("hatch.dxf");
+
+            //string version = DxfDocument.CheckDxfFileVersion("sample.dxf");
+            bool okLoad = dxf.Load("sample.dxf");
+            bool okSave = dxf.Save("sample copy.dxf", DxfVersion.AutoCad2000);
+        }
+        private static void ObjectVisibility()
+        {
+            Line line = new Line(new Vector3(0, 0, 0), new Vector3(100, 100, 0));
+            line.Color = AciColor.Yellow;
+
+            Line line2 = new Line(new Vector3(0, 100, 0), new Vector3(100, 0, 0));
+            line2.IsVisible = false;
+
+            DxfDocument dxf = new DxfDocument();
+            dxf.AddEntity(line);
+            dxf.AddEntity(line2);
+            dxf.Save("object visibility.dxf", DxfVersion.AutoCad2000);
+            dxf.Load("object visibility.dxf");
+            dxf.Save("object visibility 2.dxf", DxfVersion.AutoCad2000);
+
+        }
+        private static void WriteInsert()
+        {
+            // nested blocks
+            DxfDocument dxf = new DxfDocument();
+
+            Block nestedBlock = new Block("Nested block");
+            nestedBlock.Entities.Add(new Line(new Vector3(-5, -5, 0), new Vector3(5, 5, 0)));
+            nestedBlock.Entities.Add(new Line(new Vector3(5, -5, 0), new Vector3(-5, 5, 0)));
+
+            Insert nestedInsert = new Insert(nestedBlock, new Vector3(0, 0, 0)); // the position will be relative to the position of the insert that nest it
+
+            Circle circle = new Circle(Vector3.Zero, 5);
+            circle.Layer = new Layer("circle");
+            circle.Layer.Color.Index = 2;
+            Block block = new Block("MyBlock");
+            block.Entities.Add(circle);
+            block.Entities.Add(nestedInsert);
+
+            Insert insert = new Insert(block, new Vector3(5, 5, 5));
+            insert.Layer = new Layer("insert");
+
+            dxf.AddEntity(insert);
+
+            dxf.Save("insert.dxf", DxfVersion.AutoCad2000);
+            dxf.Load("insert.dxf");
+
+        }
+        private static void EntityTrueColor()
+        {
+            Line line = new Line(new Vector3(0, 0, 0), new Vector3(100, 100, 0));
+            line.Color = new AciColor(152, 103, 136);
+            // by default a color initialized with rgb components will be exported as true color
+            // you can override this behaviour with
+            // line.Color.UseTrueColor = false;
+
+            Layer layer = new Layer("MyLayer");
+            layer.Color = new AciColor(157, 238, 17);
+            Line line2 = new Line(new Vector3(0, 100, 0), new Vector3(100, 0, 0));
+            line2.Layer = layer;
+            DxfDocument dxf = new DxfDocument();
+            dxf.AddEntity(line);
+            dxf.AddEntity(line2);
+            dxf.Save("line true color.dxf", DxfVersion.AutoCad2000);
+            dxf.Load("line true color.dxf");
+        }
+        private static void EntityLineWeight()
+        {
+            // the lineweight is always defined as 1/100 mm, this property is the equivalent of stroke width, outline width in other programs. Do not confuse with line.Thickness
+            // it follow the AutoCAD naming style, check the documentation in case of doubt
+            Line line = new Line(new Vector3(0, 0, 0), new Vector3(100, 100, 0));
+            line.Lineweight.Value = 100; // 1.0 mm
+            Text text = new Text("Text with lineweight", Vector3.Zero, 10);
+            text.Lineweight.Value = 50; // 0.5 mm
+
+            Layer layer = new Layer("MyLayer");
+            layer.Lineweight.Value = 200; // 2 mm all entities in the layer with Color.ByLayer will inherit this value
+            layer.Color = AciColor.Green;
+            Line line2 = new Line(new Vector3(0, 100, 0), new Vector3(100, 0, 0));
+            line2.Layer = layer;
+
+            DxfDocument dxf = new DxfDocument();
+            dxf.AddEntity(line);
+            dxf.AddEntity(line2);
+            dxf.AddEntity(text);
+            dxf.Save("line weight.dxf", DxfVersion.AutoCad2000);
+            dxf.Load("line weight.dxf");
+        }
+        private static void ReadWriteFromStream()
+        {
+            // Load and Save methods are now able to work directly with a stream.
+            // They will return true or false if the operation has been carried out successfully or not.
+            // The Save(string file, DxfVersion dxfVersion) and Load(string file) methods will still raise an exception if they are unable to create the FileStream.
+            // On Debug mode they will raise any exception that migh occurr during the whole process.
+            Line line = new Line(new Vector3(0, 0, 0), new Vector3(100, 100, 0));
+            DxfDocument dxf = new DxfDocument();
+            dxf.AddEntity(line);
+            dxf.Save("test.dxf", DxfVersion.AutoCad2000);
+            
+            // saving to memory stream always use the default constructor, a fixed size stream will not work.
+            MemoryStream memoryStream = new MemoryStream();
+            dxf.Load(memoryStream);
+
+            dxf.Save(memoryStream, DxfVersion.AutoCad2000);
+
+            // loading from memory stream
+            DxfDocument dxf2 = new DxfDocument();
+            dxf2.Load(memoryStream);
+
+            // saving to file stream
+            FileStream fileStream = new FileStream("test fileStream.dxf", FileMode.Create);
+            dxf2.Save(fileStream, DxfVersion.AutoCad2000);
+            fileStream.Close(); // you will need to close the stream manually to avoid file already open conflicts
+
+            FileStream fileStreamLoad = new FileStream("test fileStream.dxf", FileMode.Open, FileAccess.Read);
+            DxfDocument dxf3 = new DxfDocument();
+            dxf3.Load(fileStreamLoad);
+
         }
         private static void WriteNoAsciiText()
         {
+            TextStyle textStyle = new TextStyle("Arial.ttf");
             DxfDocument dxf = new DxfDocument();
             Text text = new Text("ÁÉÍÓÚ áéíóú Ññ àèìòù âêîôû", Vector2.Zero,10);
+            text.Style = textStyle;
             dxf.AddEntity(text);
-            dxf.Save("text1.dxf", DxfVersion.AutoCad2000);
-            dxf.Load("text1.dxf");
-            dxf.Save("text2.dxf", DxfVersion.AutoCad2004);
-            dxf.Save("text3.dxf", DxfVersion.AutoCad2007);
-            dxf.Save("text4.dxf", DxfVersion.AutoCad2010);
+            dxf.Save("text.dxf", DxfVersion.AutoCad2000);
+            //dxf.Load("text1.dxf");
+            //dxf.Save("text2.dxf", DxfVersion.AutoCad2004);
+            //dxf.Save("text3.dxf", DxfVersion.AutoCad2007);
+            //dxf.Save("text4.dxf", DxfVersion.AutoCad2010);
 
         }
         private static void WriteSplineBoundaryHatch()
@@ -111,7 +250,7 @@ namespace TestDxfDocument
 
             List<HatchBoundaryPath> boundary = new List<HatchBoundaryPath>();
 
-            HatchBoundaryPath path = new HatchBoundaryPath(new List<IEntityObject> {spline});
+            HatchBoundaryPath path = new HatchBoundaryPath(new List<EntityObject> {spline});
             boundary.Add(path);
             Hatch hatch = new Hatch(HatchPattern.Line, boundary);
             hatch.Pattern.Angle = 45;
@@ -129,7 +268,7 @@ namespace TestDxfDocument
             Line line = new Line(ctrlPoints[0].Location, ctrlPoints[ctrlPoints.Count - 1].Location);
 
             List<HatchBoundaryPath> boundary2 = new List<HatchBoundaryPath>();
-            HatchBoundaryPath path2 = new HatchBoundaryPath(new List<IEntityObject> { openSpline, line });
+            HatchBoundaryPath path2 = new HatchBoundaryPath(new List<EntityObject> { openSpline, line });
             boundary2.Add(path2);
             Hatch hatch2 = new Hatch(HatchPattern.Line, boundary2);
             hatch2.Pattern.Angle = 45;
@@ -146,14 +285,20 @@ namespace TestDxfDocument
         }
         private static void WriteNoInsertBlock()
         {
+            Line line = new Line(new Vector3(0, 0, 0), new Vector3(100, 100, 0));
+            Line line2 = new Line(new Vector3(0, 100, 0), new Vector3(100, 0, 0));
             // create the block definition
             Block block = new Block("MyBlock");
             // add the entities that you want in the block
-            block.Entities.Add(new Line(new Vector3(0, 0, 0), new Vector3(100, 100, 0)));
+            block.Entities.Add(line);
+            block.Entities.Add(line2);
+            
+            
             // create the document
             DxfDocument dxf = new DxfDocument();
             // add the block definition to the block table list (this is the function that was private in earlier versions, check the changelog.txt)
             dxf.AddBlock(block);
+
             // and save file, no visible entities will appear if you try to open the drawing but the block will be there
             dxf.Save("Block definiton.dxf", DxfVersion.AutoCad2000);
 
@@ -302,7 +447,7 @@ namespace TestDxfDocument
 
 
             DxfDocument dxf = new DxfDocument();
-            dxf.AddEntity(new IEntityObject[] {line, circle, dim1, text});
+            dxf.AddEntity(new EntityObject[] {line, circle, dim1, text});
             dxf.Save("before remove.dxf", DxfVersion.AutoCad2004);
 
             dxf.RemoveEntity(circle);
@@ -684,7 +829,7 @@ namespace TestDxfDocument
             // a hatch can have many boundaries (closed loops) and every boundary path can be made of several entities (lines, polylines, arcs, circles and ellipses)
             List<HatchBoundaryPath> boundary = new List<HatchBoundaryPath>
                                                         {
-                                                            new HatchBoundaryPath(new List<IEntityObject>{circle})
+                                                            new HatchBoundaryPath(new List<EntityObject>{circle})
                                                         };  
 
             // create the hatch in this case we will use the predefined Solid hatch pattern and our circle as the boundary path
@@ -814,9 +959,9 @@ namespace TestDxfDocument
             poly3.IsClosed = true;
 
             List<HatchBoundaryPath> boundary = new List<HatchBoundaryPath>{
-                                                                            new HatchBoundaryPath(new List<IEntityObject>{poly}),
-                                                                            new HatchBoundaryPath(new List<IEntityObject>{poly2}),
-                                                                            new HatchBoundaryPath(new List<IEntityObject>{poly3}),
+                                                                            new HatchBoundaryPath(new List<EntityObject>{poly}),
+                                                                            new HatchBoundaryPath(new List<EntityObject>{poly2}),
+                                                                            new HatchBoundaryPath(new List<EntityObject>{poly3}),
                                                                           };
 
             HatchPattern pattern = new HatchPattern("MyPattern", "A custom hatch pattern");
@@ -902,7 +1047,7 @@ namespace TestDxfDocument
 
 
             List<HatchBoundaryPath> boundary = new List<HatchBoundaryPath>{
-                                                                            new HatchBoundaryPath(new List<IEntityObject>{line1, line2, line3, line4})
+                                                                            new HatchBoundaryPath(new List<EntityObject>{line1, line2, line3, line4})
                                                                           };
             Hatch hatch = new Hatch(HatchPattern.Line, boundary);
             hatch.Layer = new Layer("hatch")
@@ -961,9 +1106,9 @@ namespace TestDxfDocument
             poly3.IsClosed = true;
 
             List<HatchBoundaryPath> boundary = new List<HatchBoundaryPath>{
-                                                                            new HatchBoundaryPath(new List<IEntityObject>{poly}),
-                                                                            new HatchBoundaryPath(new List<IEntityObject>{poly2}),
-                                                                            new HatchBoundaryPath(new List<IEntityObject>{poly3}),
+                                                                            new HatchBoundaryPath(new List<EntityObject>{poly}),
+                                                                            new HatchBoundaryPath(new List<EntityObject>{poly2}),
+                                                                            new HatchBoundaryPath(new List<EntityObject>{poly3}),
                                                                           };
             Hatch hatch = new Hatch(HatchPattern.Net, boundary);
             hatch.Layer = new Layer("hatch")
@@ -999,8 +1144,8 @@ namespace TestDxfDocument
             Ellipse ellipse = new Ellipse(Vector3.Zero,16,10);
             ellipse.Rotation = 30;
             List<HatchBoundaryPath> boundary = new List<HatchBoundaryPath>{
-                                                                            new HatchBoundaryPath(new List<IEntityObject>{poly}),
-                                                                            new HatchBoundaryPath(new List<IEntityObject>{ellipse})
+                                                                            new HatchBoundaryPath(new List<EntityObject>{poly}),
+                                                                            new HatchBoundaryPath(new List<EntityObject>{ellipse})
                                                                           };
 
             Hatch hatch = new Hatch(HatchPattern.Line, boundary);
@@ -1038,8 +1183,8 @@ namespace TestDxfDocument
             Line line =new Line(new Vector3(8,0,0), new Vector3(-8,0,0));
 
             List<HatchBoundaryPath> boundary = new List<HatchBoundaryPath>{
-                                                                            new HatchBoundaryPath(new List<IEntityObject>{poly}),
-                                                                            new HatchBoundaryPath(new List<IEntityObject>{poly2, ellipse})
+                                                                            new HatchBoundaryPath(new List<EntityObject>{poly}),
+                                                                            new HatchBoundaryPath(new List<EntityObject>{poly2, ellipse})
                                                                           };
 
             Hatch hatch = new Hatch(HatchPattern.Line, boundary);
@@ -1052,6 +1197,7 @@ namespace TestDxfDocument
             dxf.AddEntity(hatch);
 
             dxf.Save("hatchTest3.dxf", DxfVersion.AutoCad2010);
+            dxf.Load("hatchTest3.dxf");
         }
         private static void Dxf2000()
         {
@@ -1163,28 +1309,35 @@ namespace TestDxfDocument
         private static void SpeedTest()
         {
             Stopwatch crono = new Stopwatch();
+            const int numLines = 100000; // create # lines
             float totalTime=0;
+            
+            List<EntityObject> lines = new List<EntityObject>(numLines);
+            DxfDocument dxf = new DxfDocument();
 
             crono.Start();
-            DxfDocument dxf = new DxfDocument();
-            // create 100,000 lines
-            for (int i=0; i<100000;i++)
+            for (int i = 0; i < numLines; i++)
             {
                  //line
                 Line line = new Line(new Vector3(0, i, 0), new Vector3(5, i, 0));
                 line.Layer = new Layer("line");
                 line.Layer.Color.Index = 6;
-                dxf.AddEntity(line);
+                lines.Add(line);
             }
-
             Console.WriteLine("Time creating entities : " + crono.ElapsedMilliseconds / 1000.0f);
+            totalTime += crono.ElapsedMilliseconds;
+            crono.Reset();
+
+            crono.Start();
+            dxf.AddEntity(lines);
+            Console.WriteLine("Time adding entities to document : " + crono.ElapsedMilliseconds / 1000.0f);
             totalTime += crono.ElapsedMilliseconds;
             crono.Reset();
 
             crono.Start();
             dxf.Save("speedtest.dxf", DxfVersion.AutoCad2000);
             Console.WriteLine("Time saving file : " + crono.ElapsedMilliseconds / 1000.0f);
-           totalTime += crono.ElapsedMilliseconds;
+            totalTime += crono.ElapsedMilliseconds;
             crono.Reset();
 
             crono.Start();
@@ -1211,12 +1364,12 @@ namespace TestDxfDocument
             // one thing to note, if there is already a text style with the assigned name, the existing one in the text style table will override the new one.
             //attdef.Style.IsVertical = true;
 
-            //TextStyle txt = dxf.GetTextStyle("Standard");
-            TextStyle txt = new TextStyle("MyStyle");
+            TextStyle txt = new TextStyle("MyStyle", "complex.shx");
             txt.IsVertical = true;
             attdef.Style = txt;
             
             attdef.WidthFactor = 2;
+            // not all alignment options are avaliable for ttf fonts 
             attdef.Alignment = TextAlignment.MiddleCenter;
             attdef.Rotation = 0;
 
@@ -1307,6 +1460,7 @@ namespace TestDxfDocument
             insert.Layer = new Layer("insert");
 
             dxf.AddEntity(insert);
+            //dxf.AddEntity(circle); // this is not allowed the circle is already part of a block
 
             dxf.Save("insert.dxf", DxfVersion.AutoCad2000);
             dxf.Load("insert.dxf");

@@ -47,8 +47,8 @@ namespace netDxf.Entities
     {
         #region private fields
 
-        private ImageClippingBoundaryType type;
-        private List<Vector2> vertexes;
+        private readonly ImageClippingBoundaryType type;
+        private readonly List<Vector2> vertexes;
 
         #endregion
 

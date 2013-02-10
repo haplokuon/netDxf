@@ -27,7 +27,7 @@ using netDxf.Tables;
 namespace netDxf.Entities
 {
     /// <summary>
-    /// Represents a linear or rotated dimension <see cref="IEntityObject">entity</see>.
+    /// Represents a linear or rotated dimension <see cref="EntityObject">entity</see>.
     /// </summary>
     public class LinearDimension :
         Dimension

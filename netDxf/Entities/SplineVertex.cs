@@ -99,8 +99,6 @@ namespace netDxf.Entities
 
         #region overrides
 
-        #region overrides
-
         /// <summary>
         /// Obtains a string that represents the spline vertex.
         /// </summary>
@@ -109,6 +107,7 @@ namespace netDxf.Entities
         {
             return string.Format("{0}: ({1}) w={2}", "SplineVertex", this.Location, this.Weigth);
         }
+
 
         /// <summary>
         /// Obtains a string that represents the spline vertex.
@@ -119,8 +118,6 @@ namespace netDxf.Entities
         {
             return string.Format("{0}: ({1}) w={2}", "SplineVertex", this.Location.ToString(provider), this.Weigth.ToString(provider));
         }
-
-        #endregion
 
         #endregion
 

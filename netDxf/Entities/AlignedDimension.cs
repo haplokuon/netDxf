@@ -26,7 +26,7 @@ using netDxf.Tables;
 namespace netDxf.Entities
 {
     /// <summary>
-    /// Represents a dimension <see cref="IEntityObject">entity</see> that is aligned the reference line.
+    /// Represents a dimension <see cref="EntityObject">entity</see> that is aligned the reference line.
     /// </summary>
     public class AlignedDimension :
         Dimension

@@ -1,7 +1,7 @@
-﻿#region netDxf, Copyright(C) 2012 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf, Copyright(C) 2013 Daniel Carvajal, Licensed under LGPL.
 
 //                        netDxf library
-// Copyright (C) 2012 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2013 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -21,7 +21,6 @@
 #endregion
 
 using System;
-using System.Collections.Generic;
 using System.Globalization;
 using netDxf.Blocks;
 using netDxf.Tables;
@@ -29,18 +28,16 @@ using netDxf.Tables;
 namespace netDxf.Entities
 {
     /// <summary>
-    /// Represents the base class for a dimension <see cref="IEntityObject">entity</see>.
+    /// Represents the base class for a dimension <see cref="EntityObject">entity</see>.
     /// </summary>
     /// <reamarks>
     /// Once a dimension is added to the dxf document, its properties should not be modified or the changes will not be reflected in the saved dxf file.
     /// </reamarks>
     public abstract class Dimension:
-        DxfObject,
-        IEntityObject
+        EntityObject
     {
         #region protected fields
 
-        protected const EntityType TYPE = EntityType.Dimension;
         protected Vector3 definitionPoint;
         protected Vector3 midTextPoint;
         protected Vector3 normal;
@@ -50,10 +47,6 @@ namespace netDxf.Entities
         protected MTextLineSpacingStyle lineSpacingStyle;
         protected Block block;
         protected double lineSpacing;
-        protected AciColor color;
-        protected Layer layer;
-        protected LineType lineType;
-        protected Dictionary<ApplicationRegistry, XData> xData;
 
         #endregion
 
@@ -62,7 +55,8 @@ namespace netDxf.Entities
         /// <summary>
         /// Initializes a new instance of the <c>Dimension</c> class.
         /// </summary>
-        protected Dimension(DimensionType type) : base(DxfObjectCode.Dimension)
+        protected Dimension(DimensionType type)
+            : base(EntityType.Dimension, DxfObjectCode.Dimension)
         {
             this.definitionPoint = Vector3.Zero;
             this.midTextPoint = Vector3.Zero;
@@ -72,11 +66,9 @@ namespace netDxf.Entities
             this.lineSpacingStyle = MTextLineSpacingStyle.AtLeast;
             this.lineSpacing = 1.0;
             this.block = null;
-            this.color = AciColor.ByLayer;
-            this.layer = Layer.Default;
-            this.lineType = LineType.ByLayer;
             this.style = DimensionStyle.Default;
         }
+
         #endregion
 
         #region internal properties
@@ -192,69 +184,6 @@ namespace netDxf.Entities
 
         #endregion
 
-        #region IEntityObject Members
-
-        /// <summary>
-        /// Gets the entity <see cref="netDxf.Entities.EntityType">type</see>.
-        /// </summary>
-        public EntityType Type
-        {
-            get { return TYPE; }
-        }
-
-        /// <summary>
-        /// Gets or sets the entity <see cref="netDxf.AciColor">color</see>.
-        /// </summary>
-        public AciColor Color
-        {
-            get { return this.color; }
-            set
-            {
-                if (value == null)
-                    throw new ArgumentNullException("value");
-                this.color = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the entity <see cref="netDxf.Tables.Layer">layer</see>.
-        /// </summary>
-        public Layer Layer
-        {
-            get { return this.layer; }
-            set
-            {
-                if (value == null)
-                    throw new ArgumentNullException("value");
-                this.layer = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the entity <see cref="netDxf.Tables.LineType">line type</see>.
-        /// </summary>
-        public LineType LineType
-        {
-            get { return this.lineType; }
-            set
-            {
-                if (value == null)
-                    throw new ArgumentNullException("value");
-                this.lineType = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the entity <see cref="netDxf.XData">extende data</see>.
-        /// </summary>
-        public Dictionary<ApplicationRegistry, XData> XData
-        {
-            get { return this.xData; }
-            set { this.xData = value; }
-        }
-
-        #endregion
-
         #region internal methods
 
         /// <summary>
@@ -289,5 +218,6 @@ namespace netDxf.Entities
         }
         
         #endregion
+
     }
 }

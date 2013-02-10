@@ -100,6 +100,8 @@
     <Compile Include="Entities\SplineTypeFlags.cs" />
     <Compile Include="Entities\SplineVertex.cs" />
     <Compile Include="Entities\VertexTypeFlags.cs" />
+    <Compile Include="Header\PointShape.cs" />
+    <Compile Include="Lineweight.cs" />
     <Compile Include="Header\DefaultDrawingUnits.cs" />
     <Compile Include="Header\DxfVersion.cs" />
     <Compile Include="Header\SystemVariable.cs" />
@@ -141,7 +143,7 @@
     <Compile Include="Entities\PolyfaceMeshFace.cs" />
     <Compile Include="Entities\PolyfaceMeshVertex.cs" />
     <Compile Include="Entities\Polyline.cs" />
-    <Compile Include="Entities\IEntityObject.cs" />
+    <Compile Include="Entities\EntityObject.cs" />
     <Compile Include="Entities\Insert.cs" />
     <Compile Include="Entities\Line.cs" />
     <Compile Include="Blocks\Block.cs" />
@@ -149,8 +151,8 @@
     <Compile Include="Entities\Face3d.cs" />
     <Compile Include="Entities\PolyfaceMesh.cs" />
     <Compile Include="Entities\Text.cs" />
-    <Compile Include="Reader.cs" />
-    <Compile Include="Tables\ITableObject.cs" />
+    <Compile Include="DxfReader.cs" />
+    <Compile Include="Tables\TableObject.cs" />
     <Compile Include="Tables\Layer.cs" />
     <Compile Include="MathHelper.cs" />
     <Compile Include="Tables\LineType.cs" />
@@ -158,7 +160,7 @@
     <Compile Include="XData.cs" />
     <Compile Include="StringCode.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Writer.cs">
+    <Compile Include="DxfWriter.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="XDataCode.cs" />

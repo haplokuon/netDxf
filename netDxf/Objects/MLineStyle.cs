@@ -28,14 +28,8 @@ namespace netDxf.Objects
     /// Represents as MLine style.
     /// </summary>
     internal class MLineStyle :
-        DxfObject,
-        ITableObject
+        TableObject
     {
-        #region private fields
-
-        private readonly string name;
-
-        #endregion
 
         #region constants
 
@@ -52,9 +46,8 @@ namespace netDxf.Objects
         /// Initializes a new instance of the <c>MLineStyle</c> class.
         /// </summary>
         public MLineStyle(string name)
-            : base(DxfObjectCode.MLineStyle)
+            : base(name, DxfObjectCode.MLineStyle)
         {
-            this.name = name;
         }
 
         #endregion
@@ -63,29 +56,5 @@ namespace netDxf.Objects
 
         #endregion
 
-        #region ITableObject Members
-
-        /// <summary>
-        /// Gets the table name.
-        /// </summary>
-        public string Name
-        {
-            get { return this.name; }
-        }
-
-        #endregion
-
-        #region overrides
-
-        /// <summary>
-        /// Converts the value of this instance to its equivalent string representation.
-        /// </summary>
-        /// <returns>The string representation.</returns>
-        public override string ToString()
-        {
-            return this.name;
-        }
-
-        #endregion
     }
 }

@@ -91,8 +91,9 @@ namespace netDxf.Objects
         private readonly float horizontalResolution;
         private readonly float verticalResolution;
 
-        // this will store the references to the images that makes use of this image definition (key image handle, value reactor)
-        private readonly Dictionary<string, ImageDefReactor> reactors = new Dictionary<string,ImageDefReactor>();
+        // this will store the references to the images that makes use of this image definition (key: image handle, value: reactor)
+        private readonly Dictionary<string, ImageDefReactor> reactors = new Dictionary<string, ImageDefReactor>();
+
         #endregion
 
         #region contructors
@@ -332,6 +333,10 @@ namespace netDxf.Objects
         {
             get { return verticalResolution; }
         }
+
+        #endregion
+
+        #region internal properties
 
         internal Dictionary<string, ImageDefReactor> Reactors
         {

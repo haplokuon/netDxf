@@ -1,7 +1,7 @@
-﻿#region netDxf, Copyright(C) 2009 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf, Copyright(C) 2013 Daniel Carvajal, Licensed under LGPL.
 
 //                        netDxf library
-// Copyright (C) 2009 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2013 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -23,12 +23,10 @@
 namespace netDxf.Tables
 {
     internal class ViewPort :
-        DxfObject,
-        ITableObject
+        TableObject
     {
         #region private fields
 
-        private readonly string name;
         private Vector2 lowerLeftCorner = Vector2.Zero;
         private Vector2 upperRightCorner = new Vector2(1, 1);
         private Vector2 snapBasePoint = Vector2.Zero;
@@ -54,9 +52,8 @@ namespace netDxf.Tables
         /// Initializes a new instance of the <c>ViewPort</c> class.
         /// </summary>
         public ViewPort(string name)
-            : base(DxfObjectCode.ViewPort)
+            : base(name, DxfObjectCode.ViewPort)
         {
-            this.name = name;
         }
 
         #endregion
@@ -107,29 +104,5 @@ namespace netDxf.Tables
 
         #endregion
 
-        #region ITableObject Members
-
-        /// <summary>
-        /// Gets the table name.
-        /// </summary>
-        public string Name
-        {
-            get { return this.name; }
-        }
-
-        #endregion
-
-        #region overrides
-
-        /// <summary>
-        /// Converts the value of this instance to its equivalent string representation.
-        /// </summary>
-        /// <returns>The string representation.</returns>
-        public override string ToString()
-        {
-            return this.name;
-        }
-
-        #endregion
     }
 }

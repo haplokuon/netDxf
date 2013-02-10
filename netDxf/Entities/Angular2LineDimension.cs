@@ -26,7 +26,7 @@ using netDxf.Tables;
 namespace netDxf.Entities
 {
     /// <summary>
-    /// Represents a 3 point angular dimension <see cref="IEntityObject">entity</see>.
+    /// Represents a 3 point angular dimension <see cref="EntityObject">entity</see>.
     /// </summary>
     public class Angular2LineDimension :
         Dimension
