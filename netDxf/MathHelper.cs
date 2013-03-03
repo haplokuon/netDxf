@@ -54,10 +54,7 @@ namespace netDxf
         /// Represents the smallest number.
         /// </summary>
         public const double Epsilon = 0.000000000001;
-        /// <summary>
-        /// Defines the max number of decimals of an angle. Trigonometric functions are very prone to round off errors.
-        /// </summary>
-        public const int MaxAngleDecimals = 12;
+
         /// <summary>
         /// Constant to transform an angle between degrees and radians.
         /// </summary>
@@ -186,7 +183,7 @@ namespace netDxf
         /// <param name="from">Points coordinate system.</param>
         /// <param name="to">Coordinate system of the transformed points.</param>
         /// <returns>Transormed point list.</returns>
-        public static IList<Vector3> Transform(IList<Vector3> points, Vector3 zAxis, CoordinateSystem from, CoordinateSystem to)
+        public static List<Vector3> Transform(List<Vector3> points, Vector3 zAxis, CoordinateSystem from, CoordinateSystem to)
         {
             if (zAxis.Equals(Vector3.UnitZ)) return points;
 

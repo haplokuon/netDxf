@@ -25,10 +25,10 @@ using System;
 namespace netDxf.Tables
 {
     /// <summary>
-    /// Defines objects that are part of the dxf table section.
+    /// Defines classes that can be accesed by name. They are usually part of the dxf table section but can also be part of the objects section.
     /// </summary>
-    public abstract class TableObject
-        : DxfObject
+    public abstract class TableObject :
+        DxfObject
     {
 
         #region private fields
@@ -39,11 +39,17 @@ namespace netDxf.Tables
 
         #region constructors
 
-        protected TableObject(string name, string codeName) : base(codeName)
+        /// <summary>
+        /// Initializes a new instance of the <c>TableObject</c> class.
+        /// </summary>
+        /// <param name="name">Table name.</param>
+        /// <param name="codeName">Table <see cref="DxfObjectCode">code name</see>.</param>
+        /// <remarks>Do not give names starting with * to table objects, they are reserved for internal use.</remarks>
+        protected TableObject(string name, string codeName)
+            : base(codeName)
         {
             if (string.IsNullOrEmpty(name))
                 throw (new ArgumentNullException("name"));
-
             this.name = name;
         }
 
@@ -51,10 +57,10 @@ namespace netDxf.Tables
 
         #region public properties
 
-
         /// <summary>
         /// Gets the name of the table object.
         /// </summary>
+        /// <remarks>Table object names are case unsensitive.</remarks>
         public string Name
         {
             get { return name; }

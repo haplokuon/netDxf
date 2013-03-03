@@ -82,6 +82,11 @@ namespace netDxf.Entities
         MText,
 
         /// <summary>
+        /// Multiline entity.
+        /// </summary>
+        MLine,
+
+        /// <summary>
         /// 3d face entity.
         /// </summary>
         Face3D,
@@ -142,7 +147,7 @@ namespace netDxf.Entities
         private Lineweight lineweight;
         private double lineTypeScale;
         private bool isVisible;
-        private Dictionary<ApplicationRegistry, XData> xData;
+        private Dictionary<string, XData> xData;
 
         #endregion
 
@@ -158,6 +163,7 @@ namespace netDxf.Entities
             this.lineweight = Lineweight.ByLayer;
             this.lineTypeScale = 1.0;
             this.isVisible = true;
+            this.xData = new Dictionary<string, XData>();
         }
 
         #endregion
@@ -252,12 +258,17 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets or sets the entity <see cref="XData">extende data</see>.
+        /// Gets or sets the entity <see cref="XData">extende data</see> (key: ApplicationRegistry.Name, value: XData).
         /// </summary>
-        public Dictionary<ApplicationRegistry, XData> XData
+        public Dictionary<string, XData> XData
         {
             get { return this.xData; }
-            set { this.xData = value; }
+            set
+            {
+                if (value == null)
+                    throw new ArgumentNullException("value");
+                this.xData = value;
+            }
         }
 
         #endregion

@@ -92,7 +92,7 @@ namespace netDxf.Objects
         private readonly float verticalResolution;
 
         // this will store the references to the images that makes use of this image definition (key: image handle, value: reactor)
-        private readonly Dictionary<string, ImageDefReactor> reactors = new Dictionary<string, ImageDefReactor>();
+        private readonly Dictionary<string, ImageDefReactor> reactors;
 
         #endregion
 
@@ -116,9 +116,9 @@ namespace netDxf.Objects
         /// </para>
         /// <para>
         /// Note (this is from the ACAD docs): AutoCAD 2000, AutoCAD LT 2000, and later releases do not support LZW-compressed TIFF files,
-        /// with the exception of English language versions sold in the US and Canada. 
+        /// with the exception of English language versions sold in the US and Canada.<br />
         /// If you have TIFF files that were created using LZW compression and want to insert them into a drawing 
-        /// you must resave the TIFF files with LZW compression disabled. 
+        /// you must resave the TIFF files with LZW compression disabled.
         /// </para>
         /// </remarks>
         public ImageDef(string fileName, int width, float horizontalResolution, int height, float verticalResolution, ResolutionUnits units)
@@ -145,9 +145,9 @@ namespace netDxf.Objects
         /// </para>
         /// <para>
         /// Note (this is from the ACAD docs): AutoCAD 2000, AutoCAD LT 2000, and later releases do not support LZW-compressed TIFF files,
-        /// with the exception of English language versions sold in the US and Canada. 
+        /// with the exception of English language versions sold in the US and Canada.<br />
         /// If you have TIFF files that were created using LZW compression and want to insert them into a drawing 
-        /// you must resave the TIFF files with LZW compression disabled. 
+        /// you must resave the TIFF files with LZW compression disabled.
         /// </para>
         /// </remarks>
         public ImageDef(string fileName, int width, float horizontalResolution, int height, float verticalResolution, string name, ResolutionUnits units)
@@ -172,6 +172,7 @@ namespace netDxf.Objects
             // pixel size use the units defined in the document, it is controlled by the header variable $INSUNITS and the RasterVariables units
             this.onePixelSize = new Vector2(25.4/horizontalResolution, 25.4/verticalResolution);
 
+            this.reactors = new Dictionary<string, ImageDefReactor>();
         }
 
         ///  <summary>
@@ -184,15 +185,15 @@ namespace netDxf.Objects
         ///  The name of the file without extension will be used as the name of the image definition.
         ///  </para>
         ///  <para>
-        ///  Supported image formats: BMP, JPG, PNG, TIFF.
+        ///  Supported image formats: BMP, JPG, PNG, TIFF.<br />
         ///  Eventhought AutoCAD supports more image formats, this constructor is restricted to the ones the net framework supports in common with AutoCAD.
         ///  Use the generic constructor instead.
         ///  </para>
         ///  <para>
         ///  Note (this is from the ACAD docs): AutoCAD 2000, AutoCAD LT 2000, and later releases do not support LZW-compressed TIFF files,
-        ///  with the exception of English language versions sold in the US and Canada. 
+        ///  with the exception of English language versions sold in the US and Canada.<br />
         ///  If you have TIFF files that were created using LZW compression and want to insert them into a drawing 
-        ///  you must resave the TIFF files with LZW compression disabled. 
+        ///  you must resave the TIFF files with LZW compression disabled.
         ///  </para>
         /// </remarks>
         public ImageDef(string fileName, ResolutionUnits units = ResolutionUnits.Centimeters)
@@ -211,15 +212,15 @@ namespace netDxf.Objects
         ///  The name assigned to the image definition must be unique.
         ///  </para>
         ///  <para>
-        ///  Supported image formats: BMP, JPG, PNG, TIFF.
+        ///  Supported image formats: BMP, JPG, PNG, TIFF.<br />
         ///  Eventhought AutoCAD supports more image formats, this constructor is restricted to the ones the .net library supports in common with AutoCAD.
         ///  Use the generic constructor instead.
         ///  </para>
         ///  <para>
         ///  Note (this is from the ACAD docs): AutoCAD 2000, AutoCAD LT 2000, and later releases do not support LZW-compressed TIFF files,
-        ///  with the exception of English language versions sold in the US and Canada. 
+        ///  with the exception of English language versions sold in the US and Canada.<br />
         ///  If you have TIFF files that were created using LZW compression and want to insert them into a drawing 
-        ///  you must resave the TIFF files with LZW compression disabled. 
+        ///  you must resave the TIFF files with LZW compression disabled.
         ///  </para>
         /// </remarks>
         public ImageDef(string fileName, string name, ResolutionUnits units = ResolutionUnits.Centimeters)
@@ -264,6 +265,7 @@ namespace netDxf.Objects
                 throw new ArgumentException("Image file not supported.", fileName);
             }
 
+            this.reactors = new Dictionary<string, ImageDefReactor>();
         }
 
         #endregion

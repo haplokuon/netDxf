@@ -115,6 +115,8 @@ namespace netDxf.Entities
             this.definitionPoint = centerPoint;
             this.radius = radius;
             this.rotation = rotation;
+            if (style == null)
+                throw new ArgumentNullException("style", "The Dimension style cannot be null.");
             this.style = style;
         }
 

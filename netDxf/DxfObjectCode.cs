@@ -143,9 +143,14 @@ namespace netDxf
         public const string MText = "MTEXT";
 
         /// <summary>
+        /// MLine.
+        /// </summary>
+        public const string MLine = "MLINE";
+
+        /// <summary>
         /// 3d face.
         /// </summary>
-        public const string Face3D = "3DFACE";
+        public const string Face3d = "3DFACE";
 
         /// <summary>
         /// Block insertion.
@@ -206,5 +211,10 @@ namespace netDxf
         /// Raster variables.
         /// </summary>
         public const string RasterVariables = "RASTERVARIABLES";
+
+        /// <summary>
+        /// Groups.
+        /// </summary>
+        public const string Group = "GROUP";
     }
 }

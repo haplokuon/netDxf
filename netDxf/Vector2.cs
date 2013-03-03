@@ -1,7 +1,7 @@
-#region netDxf, Copyright(C) 2012 Daniel Carvajal, Licensed under LGPL.
+#region netDxf, Copyright(C) 2013 Daniel Carvajal, Licensed under LGPL.
 
 //                        netDxf library
-// Copyright (C) 2012 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2013 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -22,6 +22,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Threading;
 
 namespace netDxf
 {
@@ -309,7 +310,7 @@ namespace netDxf
         /// <returns>True if the two components are equal or false in anyother case.</returns>
         public static bool operator ==(Vector2 u, Vector2 v)
         {
-            return ((MathHelper.IsEqual(v.X, u.X)) && (MathHelper.IsEqual(v.Y, u.Y)));
+            return Equals(u, v);
         }
 
         /// <summary>
@@ -320,7 +321,7 @@ namespace netDxf
         /// <returns>True if the two components are different or false in anyother case.</returns>
         public static bool operator !=(Vector2 u, Vector2 v)
         {
-            return ((!MathHelper.IsEqual(v.X, u.X)) || (!MathHelper.IsEqual(v.Y, u.Y)));
+            return !Equals(u, v);
         }
 
         /// <summary>
@@ -483,7 +484,8 @@ namespace netDxf
         /// <returns>A string text.</returns>
         public override string ToString()
         {
-            return string.Format("{0};{1}", this.x, this.y);
+            string separator = Thread.CurrentThread.CurrentCulture.TextInfo.ListSeparator;
+            return string.Format("{0}{2}{1}", this.x, this.y, separator);
         }
 
         /// <summary>
@@ -493,7 +495,8 @@ namespace netDxf
         /// <returns>A string text.</returns>
         public string ToString(IFormatProvider provider)
         {
-            return string.Format("{0};{1}", this.x.ToString(provider), this.y.ToString(provider));
+            string separator = Thread.CurrentThread.CurrentCulture.TextInfo.ListSeparator;
+            return string.Format("{0}{2}{1}", this.x.ToString(provider), this.y.ToString(provider), separator);
         }
 
         #endregion

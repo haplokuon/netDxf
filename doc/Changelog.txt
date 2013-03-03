@@ -1,7 +1,20 @@
+[0.4.0 - 2013/03/03]
++ Added MLine entity.
++ Added Groups.
++ Added hatch gradient pattern (only supported by AutoCad2004 and higher dxf versions).
++ Now all header variables (version, codepage, handleseed,...) are handled by the HeaderVariables class.
++ The AciColor rgb to index conversion might be a little more accurate now.
++ Added AciColor conversions from and to HSL (hue, saturation, lightness).
++ Deleted parameter DxfVersion from the Save() method of the DxfDocument. Now it is handled by the AcadVer property of the DrawingVariables property of the DxfDocument.
++ DxfDocument.Load() methods are now static, they will return null if errors are found during the loading process.
++ Deleted FileInfo property from the DxfDocument.
++ Updated "netDxf Documentation.chm".
++ (fixed) The true color values were not being read.
+
 [0.3.0 - 2013/02/10]
 + Feature request Id #11534 Add DxfDocument.Save() that takes an output System.IO.StreamDxfDocument, added also DxfDocument.Load() from a stream.
 + Feature request Id #11536 Write lineweight values (group code 370) to DXF. Layers and entities now support lineweight property.
-+ Feature request Id #11537 Add support for RGB colours (group code 420). Layers and entities now support true colors.
++ Feature request Id #11537 Add support for RGB colors (group code 420). Layers and entities now support true colors.
 + Now you can access the full list of indexed colors.
 + Added linetype scale property (group code 48) to all entities.
 + Added object visibility property (group code 60) to all entities.

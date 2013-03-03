@@ -121,19 +121,20 @@ namespace netDxf.Tables
         /// <summary>
         /// Gets or sets the width factor.
         /// </summary>
+        /// <remarks>Valid values range from 0.01 to 100. Default: 1.0.</remarks>
         public double WidthFactor
         {
             get { return this.widthFactor; }
             set
             {
-                if (value <= 0)
-                    throw (new ArgumentOutOfRangeException("value", value, "The width factor should be greater than zero."));
+                if (value < 0.01 || value > 100.0)
+                    throw (new ArgumentOutOfRangeException("value", value, "The width factor valid values range from 0.01 to 100."));
                 this.widthFactor = value;
             }
         }
 
         /// <summary>
-        /// Gets or sets the font oblique angle.
+        /// Gets or sets the font oblique angle in degrees.
         /// </summary>
         public double ObliqueAngle
         {

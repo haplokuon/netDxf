@@ -105,6 +105,8 @@ namespace netDxf.Entities
             this.position = position;
             this.alignment = TextAlignment.BaselineLeft;
             this.normal = Vector3.UnitZ;
+            if (style == null)
+                throw new ArgumentNullException("style", "The Text style cannot be null.");
             this.style = style;
             this.height = height;
             this.widthFactor = style.WidthFactor;

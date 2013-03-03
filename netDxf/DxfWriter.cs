@@ -113,6 +113,7 @@ namespace netDxf
             this.WriteCodePair(0, StringCode.EndOfFile);
 
             this.writer.Flush();
+            //this.writer.Close();
         }
 
         /// <summary>
@@ -268,10 +269,9 @@ namespace netDxf
         public void WriteSystemVariable(HeaderVariable variable)
         {
             if (this.activeSection != StringCode.HeaderSection)
-            {
                 throw new InvalidDxfSectionException(this.activeSection);
-            }
-            this.WriteCodePair(HeaderVariable.NAME_CODE_GROUP, variable.Name);
+
+            this.WriteCodePair(9, variable.Name);
             this.WriteCodePair(variable.CodeGroup, variable.Value);
         }
 
@@ -444,23 +444,6 @@ namespace netDxf
         }
 
         /// <summary>
-        /// Writes a new dimension style to the table section.
-        /// </summary>
-        /// <param name="style">MLineStyle.</param>
-        public void WriteMLineStyle(MLineStyle style)
-        {
-            this.WriteCodePair(0, style.CodeName);
-            this.WriteCodePair(5, style.Handle);
-
-            this.WriteCodePair(100, SubclassMarker.MLineStyle);
-
-            this.WriteCodePair(2, style);
-
-            // flags
-            this.WriteCodePair(70, 0);
-        }
-
-        /// <summary>
         /// Writes a new block record to the table section.
         /// </summary>
         /// <param name="blockRecord">Block.</param>
@@ -536,7 +519,7 @@ namespace netDxf
             else
                 this.WriteCodePair(62, -layer.Color.Index);
             if (layer.Color.UseTrueColor)
-                this.WriteCodePair(420, AciColor.ToTrueColor(layer.Color.R, layer.Color.G, layer.Color.B));
+                this.WriteCodePair(420, AciColor.ToTrueColor(layer.Color));
             this.WriteCodePair(6, layer.LineType.Name);
             this.WriteCodePair(290, layer.Plot ? 1 : 0);
             this.WriteCodePair(370, layer.Lineweight.Value);
@@ -653,7 +636,7 @@ namespace netDxf
             this.WriteCodePair(8, entity.Layer);
             this.WriteCodePair(62, entity.Color.Index);
             if (entity.Color.UseTrueColor)
-                this.WriteCodePair(420, AciColor.ToTrueColor(entity.Color.R, entity.Color.G, entity.Color.B));
+                this.WriteCodePair(420, AciColor.ToTrueColor(entity.Color));
             this.WriteCodePair(6, entity.LineType);
             this.WriteCodePair(370, entity.Lineweight.Value);
             this.WriteCodePair(78, entity.LineTypeScale);
@@ -719,6 +702,9 @@ namespace netDxf
                     break;
                 case EntityType.Image:
                     this.WriteImage((Image)entity);
+                    break;
+                case EntityType.MLine:
+                    this.WriteMLine((MLine)entity);
                     break;
                 default:
                     throw new DxfEntityException(entity.Type.ToString(), "Entity unknown." );
@@ -1297,19 +1283,17 @@ namespace netDxf
 
             this.WriteCodePair(70, (int)hatch.Pattern.Fill);
 
-            this.WriteCodePair(71, 0);  // Associativity flag (associative = 1; non-associative = 0); for MPolygon, solid-fill flag (has solid fill = 1; lacks solid fill = 0)
+            this.WriteCodePair(71, 0);
 
             // boundary paths info
             WriteHatchBoundaryPaths(hatch.BoundaryPaths);
-            
+
             // pattern info
             WriteHatchPattern(hatch.Pattern);
-            
-            // I don't know what is the purpose of these codes, it seems that it doesn't change anything but they are needed
-            this.WriteCodePair(47, 1.0);
-            this.WriteCodePair(98, 1);
-            this.WriteCodePair(10, 0.0);
-            this.WriteCodePair(20, 0.0);
+
+            // add or modifies xData information for GradientColor1ACI and GradientColor2ACI
+            if (hatch.Pattern.GetType() == typeof (HatchGradientPattern))
+                ((HatchGradientPattern) hatch.Pattern).GradientColorAciXData(hatch.XData);
 
             this.WriteXData(hatch.XData);   
         }
@@ -1317,7 +1301,7 @@ namespace netDxf
         private void WriteHatchBoundaryPaths(List<HatchBoundaryPath> boundaryPaths)
         {
             this.WriteCodePair(91, boundaryPaths.Count);
-            
+
             // each hatch boundary paths are made of multiple closed loops
             foreach (HatchBoundaryPath path in boundaryPaths)
             {
@@ -1327,7 +1311,7 @@ namespace netDxf
                 {
                     WriteHatchBoundaryPathData(entity);
                 }
-                this.WriteCodePair(97, 0);
+                this.WriteCodePair(97, 0); // associative hatches not supported
             }
         }
 
@@ -1410,7 +1394,7 @@ namespace netDxf
                         }
                         else
                         {
-                            // open polylines will always exported as its internal entities lines and arcs when combined with other entities to make a closed path.
+                            // open polylines will always exported as its internal entities lines and arcs when combined with other entities to make a closed loop.
                             // AutoCAD seems to like them exploded.
                             List<EntityObject> exploded = polyline.Explode();
                             foreach (EntityObject o in exploded)
@@ -1452,14 +1436,43 @@ namespace netDxf
             this.WriteCodePair(75, (int)pattern.Style); 
             this.WriteCodePair(76, (int)pattern.Type);
 
-            if (pattern.Name == PredefinedHatchPatternName.Solid || pattern.LineDefinitions.Count == 0)
-                return;
+            if (pattern.Fill == FillType.PatternFill)
+            {
+                this.WriteCodePair(52, pattern.Angle);
+                this.WriteCodePair(41, pattern.Scale);
+                this.WriteCodePair(77, 0);  // Hatch pattern double flag
+                this.WriteCodePair(78, pattern.LineDefinitions.Count);  // Number of pattern definition lines  
+                WriteHatchPatternDefinitonLines(pattern);
+            }
 
-            this.WriteCodePair(52, pattern.Angle);
-            this.WriteCodePair(41, pattern.Scale);
-            this.WriteCodePair(77, 0);  // Hatch pattern double flag
-            this.WriteCodePair(78, pattern.LineDefinitions.Count);  // Number of pattern definition lines  
-            WriteHatchPatternDefinitonLines(pattern);
+            // I don't know what is the purpose of these codes, it seems that it doesn't change anything but they are needed
+            this.WriteCodePair(47, 1.0);
+            this.WriteCodePair(98, 1);
+            this.WriteCodePair(10, 0.0);
+            this.WriteCodePair(20, 0.0);
+
+            if (pattern.GetType() == typeof (HatchGradientPattern) && this.version > DxfVersion.AutoCad2000)
+                WriteGradientHatchPattern((HatchGradientPattern) pattern);
+        }
+
+        private void WriteGradientHatchPattern(HatchGradientPattern pattern)
+        {
+            // again the order of codes shown in the documentation will not work
+            this.WriteCodePair(450, 1);
+            this.WriteCodePair(451, 0);
+            this.WriteCodePair(460, pattern.Angle * MathHelper.DegToRad);
+            this.WriteCodePair(461, pattern.Centered ? 0.0 : 1.0);
+            this.WriteCodePair(452, pattern.SingleColor ? 1 : 0);
+            this.WriteCodePair(462, pattern.Tint);
+            this.WriteCodePair(453, 2);
+            this.WriteCodePair(463, 0.0);
+            this.WriteCodePair(63, pattern.Color1.Index);
+            this.WriteCodePair(421, AciColor.ToTrueColor(pattern.Color1));
+            this.WriteCodePair(463, 1.0);
+            this.WriteCodePair(63, pattern.Color2.Index);
+            this.WriteCodePair(421, AciColor.ToTrueColor(pattern.Color2));
+            this.WriteCodePair(470, StringEnum.GetStringValue(pattern.GradientType));
+
         }
 
         private void WriteHatchPatternDefinitonLines(HatchPattern pattern)
@@ -1679,16 +1692,16 @@ namespace netDxf
             this.WriteCodePair(30, image.Position.Z);
 
             Vector2 u = MathHelper.Transform(new Vector2(image.Width / image.Definition.Width, 0.0), image.Rotation * MathHelper.DegToRad, MathHelper.CoordinateSystem.Object, MathHelper.CoordinateSystem.World);
-            Vector3 uWCS = MathHelper.Transform(new Vector3(u.X, u.Y, 0.0), image.Normal, MathHelper.CoordinateSystem.Object, MathHelper.CoordinateSystem.World);
-            this.WriteCodePair(11, uWCS.X);
-            this.WriteCodePair(21, uWCS.Y);
-            this.WriteCodePair(31, uWCS.Z);
+            Vector3 uWcs = MathHelper.Transform(new Vector3(u.X, u.Y, 0.0), image.Normal, MathHelper.CoordinateSystem.Object, MathHelper.CoordinateSystem.World);
+            this.WriteCodePair(11, uWcs.X);
+            this.WriteCodePair(21, uWcs.Y);
+            this.WriteCodePair(31, uWcs.Z);
 
             Vector2 v = MathHelper.Transform(new Vector2(0.0, image.Height / image.Definition.Height), image.Rotation * MathHelper.DegToRad, MathHelper.CoordinateSystem.Object, MathHelper.CoordinateSystem.World);
-            Vector3 vWCS = MathHelper.Transform(new Vector3(v.X, v.Y, 0.0), image.Normal, MathHelper.CoordinateSystem.Object, MathHelper.CoordinateSystem.World);
-            this.WriteCodePair(12, vWCS.X);
-            this.WriteCodePair(22, vWCS.Y);
-            this.WriteCodePair(32, vWCS.Z);
+            Vector3 vWcs = MathHelper.Transform(new Vector3(v.X, v.Y, 0.0), image.Normal, MathHelper.CoordinateSystem.Object, MathHelper.CoordinateSystem.World);
+            this.WriteCodePair(12, vWcs.X);
+            this.WriteCodePair(22, vWcs.Y);
+            this.WriteCodePair(32, vWcs.Z);
 
             this.WriteCodePair(13, image.Definition.Width);
             this.WriteCodePair(23, image.Definition.Height);
@@ -1713,6 +1726,79 @@ namespace netDxf
 
         }
 
+        private void WriteMLine(MLine mLine)
+        {
+            this.WriteCodePair(100, SubclassMarker.MLine);
+
+            this.WriteCodePair(2, mLine.Style.Name);
+            this.WriteCodePair(340, mLine.Style.Handle);
+
+            this.WriteCodePair(40, mLine.Scale);
+            this.WriteCodePair(70, (int)mLine.Justification);
+            this.WriteCodePair(71, (int)mLine.Flags);
+            this.WriteCodePair(72, mLine.Vertexes.Count);
+            this.WriteCodePair(73, mLine.Style.Elements.Count);
+
+            // the MLine information is in OCS we need to saved in WCS
+            // this behaviour is similar to the LWPolyline, the info is in OCS because these entities are strictly 2d. Normally they are used in the XY plane whose
+            // normal is (0, 0, 1) so no transformation is needed, OCS are equal to WCS
+            List<Vector3> ocsVertexes = new List<Vector3>();
+            foreach (MLineVertex segment in mLine.Vertexes)
+            {
+                ocsVertexes.Add(new Vector3(segment.Location.X, segment.Location.Y, mLine.Elevation));
+            }
+            List<Vector3> wcsVertexes = MathHelper.Transform(ocsVertexes, mLine.Normal, MathHelper.CoordinateSystem.Object, MathHelper.CoordinateSystem.World);
+
+            // Althought it is not recommended the vertex list might have 0 entries
+            if (wcsVertexes.Count == 0)
+            {
+                this.WriteCodePair(10, 0.0);
+                this.WriteCodePair(20, 0.0);
+                this.WriteCodePair(30, 0.0);
+            }
+            else
+            {
+                this.WriteCodePair(10, wcsVertexes[0].X);
+                this.WriteCodePair(20, wcsVertexes[0].Y);
+                this.WriteCodePair(30, wcsVertexes[0].Z);
+            }
+
+            this.WriteCodePair(210, mLine.Normal.X);
+            this.WriteCodePair(220, mLine.Normal.Y);
+            this.WriteCodePair(230, mLine.Normal.Z);
+
+            for (int i = 0; i < wcsVertexes.Count; i++)
+            {
+                this.WriteCodePair(11, wcsVertexes[i].X);
+                this.WriteCodePair(21, wcsVertexes[i].Y);
+                this.WriteCodePair(31, wcsVertexes[i].Z);
+
+                // the directions are written in world coordinates
+                Vector2 dir = mLine.Vertexes[i].Direction;
+                Vector3 wcsDir = MathHelper.Transform(new Vector3(dir.X, dir.Y, mLine.Elevation), mLine.Normal, MathHelper.CoordinateSystem.Object, MathHelper.CoordinateSystem.World);
+                this.WriteCodePair(12, wcsDir.X);
+                this.WriteCodePair(22, wcsDir.Y);
+                this.WriteCodePair(32, wcsDir.Z);
+                Vector2 mitter = mLine.Vertexes[i].Miter;
+                Vector3 wcsMitter = MathHelper.Transform(new Vector3(mitter.X, mitter.Y, mLine.Elevation), mLine.Normal, MathHelper.CoordinateSystem.Object, MathHelper.CoordinateSystem.World);
+                this.WriteCodePair(13, wcsMitter.X);
+                this.WriteCodePair(23, wcsMitter.Y);
+                this.WriteCodePair(33, wcsMitter.Z);
+
+                foreach (List<double> distances in mLine.Vertexes[i].Distances)
+                {
+                    this.WriteCodePair(74, distances.Count);
+                    foreach (double distance in distances)
+                    {
+                        this.WriteCodePair(41, distance);
+                    }
+                    this.WriteCodePair(75, 0);
+                }
+            }
+
+            this.WriteXData(mLine.XData);
+        }
+
         #endregion
 
         #region methods for Object section
@@ -1726,11 +1812,21 @@ namespace netDxf
             this.WriteCodePair(280, dictionary.IsHardOwner ? 1 : 0);
             this.WriteCodePair(281, (int)dictionary.Clonning);
 
-            foreach (DictionaryObjectEntry entry in dictionary.Entries)
+            foreach (KeyValuePair<string, string> entry in dictionary.Entries)
             {
-                this.WriteCodePair(3, entry.Name);
-                this.WriteCodePair(350, entry.HandleToOwner);
+                this.WriteCodePair(3, entry.Value);
+                this.WriteCodePair(350, entry.Key);
             }
+        }
+
+        public void WriteImageDefReactor(ImageDefReactor reactor)
+        {
+            this.WriteCodePair(0, reactor.CodeName);
+            this.WriteCodePair(5, reactor.Handle);
+
+            this.WriteCodePair(100, SubclassMarker.RasterImageDefReactor);
+            this.WriteCodePair(90, 2);
+            this.WriteCodePair(330, reactor.ImageHandle);
         }
 
         public void WriteImageDef(ImageDef imageDef, string ownerHandle)
@@ -1762,26 +1858,62 @@ namespace netDxf
 
         }
 
-        public void WriteImageDefReactor(ImageDefReactor reactor)
-        {
-            this.WriteCodePair(0, reactor.CodeName);
-            this.WriteCodePair(5, reactor.Handle);
-
-            this.WriteCodePair(100, SubclassMarker.RasterImageDefReactor);
-            this.WriteCodePair(90, 2);
-            this.WriteCodePair(330, reactor.ImageHandle);
-        }
-
-        public void WriteRasterVariables(RasterVariables variables)
+        public void WriteRasterVariables(RasterVariables variables, string ownerHandle)
         {
             this.WriteCodePair(0, variables.CodeName);
             this.WriteCodePair(5, variables.Handle);
+            this.WriteCodePair(330, ownerHandle);
 
             this.WriteCodePair(100, SubclassMarker.RasterVariables);
             this.WriteCodePair(90, 0);
             this.WriteCodePair(70, variables.DisplayFrame ? 1 : 0);
             this.WriteCodePair(71, (int)variables.DisplayQuality);
             this.WriteCodePair(72, (int)variables.Units);
+        }
+
+        public void WriteMLineStyle(MLineStyle style, string ownerHandle)
+        {
+            this.WriteCodePair(0, style.CodeName);
+            this.WriteCodePair(5, style.Handle);
+            this.WriteCodePair(330, ownerHandle);
+
+            this.WriteCodePair(100, SubclassMarker.MLineStyle);
+
+            this.WriteCodePair(2, style.Name);
+            this.WriteCodePair(70, (int)style.Flags);
+            this.WriteCodePair(3, style.Description);
+            this.WriteCodePair(62, style.FillColor.Index);
+            if (style.FillColor.UseTrueColor && this.version > DxfVersion.AutoCad2000)
+                this.WriteCodePair(420, AciColor.ToTrueColor(style.FillColor));
+            this.WriteCodePair(51, style.StartAngle);
+            this.WriteCodePair(52, style.EndAngle);
+            this.WriteCodePair(71, style.Elements.Count);
+            foreach (MLineStyleElement element in style.Elements)
+            {
+                this.WriteCodePair(49, element.Offset);
+                this.WriteCodePair(62, element.Color.Index);
+                if (element.Color.UseTrueColor && this.version > DxfVersion.AutoCad2000)
+                    this.WriteCodePair(420, AciColor.ToTrueColor(element.Color));
+                this.WriteCodePair(6, element.LineType.Name);
+            }
+        }
+
+        public void WriteGroup(Group group, string ownerHandle)
+        {
+            this.WriteCodePair(0, group.CodeName);
+            this.WriteCodePair(5, group.Handle);
+            this.WriteCodePair(330, ownerHandle);
+
+            this.WriteCodePair(100, SubclassMarker.Group);
+
+            this.WriteCodePair(300, group.Description);
+            this.WriteCodePair(70, group.IsUnnamed ? 1 : 0);
+            this.WriteCodePair(71, group.IsSelectable ? 1 : 0);
+
+            foreach (EntityObject entity in group.Entities)
+            {
+                this.WriteCodePair(340, entity.Handle);
+            }
         }
 
         #endregion
@@ -2058,12 +2190,9 @@ namespace netDxf
             }
         }
 
-        private void WriteXData(Dictionary<ApplicationRegistry, XData> xData)
+        private void WriteXData(Dictionary<string, XData> xData)
         {
-            if (xData == null)
-                return;
-
-            foreach (ApplicationRegistry appReg in xData.Keys)
+            foreach (string appReg in xData.Keys)
             {
                 this.WriteCodePair(XDataCode.AppReg, appReg);
                 foreach (XDataRecord x in xData[appReg].XDataRecord)

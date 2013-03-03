@@ -1,7 +1,7 @@
-﻿#region netDxf, Copyright(C) 2012 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf, Copyright(C) 2013 Daniel Carvajal, Licensed under LGPL.
 
 //                        netDxf library
-// Copyright (C) 2012 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2013 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -57,6 +57,7 @@ namespace netDxf
         public const string Face3d = "AcDbFace";
         public const string Insert = "AcDbBlockReference";
         public const string Line = "AcDbLine";
+        public const string MLine = "AcDbMline";
         public const string Point = "AcDbPoint";
         public const string Vertex = "AcDbVertex";
         public const string Polyline = "AcDb2dPolyline";
@@ -78,5 +79,6 @@ namespace netDxf
         public const string RasterImageDef = "AcDbRasterImageDef";
         public const string RasterImageDefReactor = "AcDbRasterImageDefReactor";
         public const string RasterVariables = "AcDbRasterVariables";
+        public const string Group = "AcDbGroup";
     }
 }

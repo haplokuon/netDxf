@@ -20,6 +20,7 @@
 
 #endregion
 
+using System;
 using netDxf.Blocks;
 using netDxf.Tables;
 
@@ -91,6 +92,8 @@ namespace netDxf.Entities
             this.firstPoint = firstPoint;
             this.secondPoint = secondPoint;
             this.offset = offset;
+            if (style == null)
+                throw new ArgumentNullException("style", "The Dimension style cannot be null.");
             this.style = style;
         }
 

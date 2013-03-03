@@ -91,5 +91,17 @@ namespace netDxf
 
         #endregion
 
+        #region overrides
+
+        /// <summary>
+        /// Obtains a string that represents the dxf object.
+        /// </summary>
+        /// <returns>A string text.</returns>
+        public override string ToString()
+        {
+            return codeName;
+        }
+
+        #endregion
     }
 }

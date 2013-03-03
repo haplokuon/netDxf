@@ -30,11 +30,21 @@ namespace netDxf.Header
     /// </summary>
     internal class HeaderVariable
     {
-        public const int NAME_CODE_GROUP = 9;
-        public static readonly Dictionary<string, int> Allowed = InitializeSystemVariables();
+        #region private fields
+
         private readonly string name;
         private readonly int codeGroup;
-        private readonly object value;
+        private object value;
+
+        #endregion
+
+        #region constants
+
+        public static readonly Dictionary<string, int> Allowed = HeaderVariablesCodeGroup();
+
+        #endregion
+
+        #region constructors
 
         public HeaderVariable(string name, object value)
         {
@@ -44,6 +54,10 @@ namespace netDxf.Header
             this.name = name;
             this.value = value;
         }
+
+        #endregion
+
+        #region public properties
 
         public string Name
         {
@@ -58,30 +72,49 @@ namespace netDxf.Header
         public object Value
         {
             get { return this.value; }
+            set { this.value = value; }
         }
+
+        #endregion
+
+        #region overrides
 
         public override string ToString()
         {
-            return String.Format("{0} : {1}", this.name, this.value);
+            return String.Format("{0}:{1}", this.name, this.value);
         }
 
-        private static Dictionary<string, int> InitializeSystemVariables()
+        #endregion
+
+        #region private methods
+
+        private static Dictionary<string, int> HeaderVariablesCodeGroup()
         {
             return new Dictionary<string, int>
                        {
-                           {SystemVariable.DatabaseVersion, 1},
-                           {SystemVariable.HandSeed, 5},
-                           {SystemVariable.Angbase, 50},
-                           {SystemVariable.Angdir, 70},
-                           {SystemVariable.DwgCodePage, 3},
-                           {SystemVariable.Extnames, 290},
-                           {SystemVariable.Insunits, 70},
-                           {SystemVariable.LtScale, 40},
-                           {SystemVariable.LwDisplay, 290},
-                           {SystemVariable.PdMode, 70},
-                           {SystemVariable.PdSize, 40}
+                           {HeaderVariableCode.AcadVer, 1},
+                           {HeaderVariableCode.HandleSeed, 5},
+                           {HeaderVariableCode.Angbase, 50},
+                           {HeaderVariableCode.Angdir, 70},
+                           {HeaderVariableCode.AttMode, 70},
+                           {HeaderVariableCode.AUnits, 70},
+                           {HeaderVariableCode.AUprec, 70},
+                           {HeaderVariableCode.LUnits, 70},
+                           {HeaderVariableCode.LUprec, 70},
+                           {HeaderVariableCode.DwgCodePage, 3},
+                           {HeaderVariableCode.Extnames, 290},
+                           {HeaderVariableCode.Insunits, 70},
+                           {HeaderVariableCode.LastSavedBy, 1},
+                           {HeaderVariableCode.LtScale, 40},
+                           {HeaderVariableCode.LwDisplay, 290},
+                           {HeaderVariableCode.PdMode, 70},
+                           {HeaderVariableCode.PdSize, 40},
+                           {HeaderVariableCode.PLineGen, 70}
 
                        };
         }
+
+        #endregion
+
     }
 }

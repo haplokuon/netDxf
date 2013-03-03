@@ -53,6 +53,7 @@ namespace netDxf.Tables
         private int dimtoh = 0;
         private string dimdsep = ".";
         private int dimaunit = 0;
+
         #endregion
 
         #region constants
@@ -164,9 +165,9 @@ namespace netDxf.Tables
         /// Controls drawing of circle or arc center marks and centerlines.
         /// </summary>
         /// <remarks>
-        /// 0 - No center marks or lines are drawn.
-        /// greater than 0 - Centerlines are drawn.
-        /// lower than 0 - Center marks are drawn.
+        /// 0 - No center marks or lines are drawn.<br />
+        /// greater than 0 - Centerlines are drawn.<br />
+        /// lower than 0 - Center marks are drawn.<br />
         /// The absolute value specifies the size of the center mark or centerline. 
         /// The size of the centerline is the length of the centerline segment that extends outside the circle or arc.
         /// It is also the size of the gap between the center mark and the start of the centerline. 

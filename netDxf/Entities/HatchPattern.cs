@@ -53,7 +53,7 @@ namespace netDxf.Entities
     }
 
     /// <summary>
-    /// Hatch style.
+    /// Hatch pattern style.
     /// </summary>
     public enum HatchStyle
     {
@@ -91,7 +91,7 @@ namespace netDxf.Entities
     }
 
     /// <summary>
-    /// Solid fill (solid fill = 1; pattern fill = 0); for MPolygon, the version of MPolygon.
+    /// Hatch pattern fill type.
     /// </summary>
     public enum FillType
     {  
@@ -106,7 +106,7 @@ namespace netDxf.Entities
     }
 
     /// <summary>
-    /// Represents the hatch pattern style.
+    /// Represents a <see cref="Hatch">hatch</see> pattern style.
     /// </summary>
     public class HatchPattern
     {
@@ -290,15 +290,15 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets or sets the pattern angle between 0 and 180 degrees (not aplicable in Solid fills).
+        /// Gets or sets the pattern angle between 0 and 360 degrees.
         /// </summary>
         public double Angle
         {
             get { return angle; }
             set
             {
-                if (value < 0 || value > 180)
-                    throw new ArgumentOutOfRangeException("value", value.ToString(Thread.CurrentThread.CurrentCulture), "The angle must be between 0 and 180 degrees");
+                if (value < 0 || value > 360)
+                    throw new ArgumentOutOfRangeException("value", value.ToString(Thread.CurrentThread.CurrentCulture), "The angle must be between 0 and 360 degrees");
                 angle = value;
             }
         }

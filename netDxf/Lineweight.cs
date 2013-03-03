@@ -21,6 +21,7 @@
 #endregion
 
 using System;
+using System.Globalization;
 
 namespace netDxf
 {
@@ -124,6 +125,26 @@ namespace netDxf
                        {
                            weight = this.weight
                        };
+        }
+
+        #endregion
+
+        #region overrides
+
+        /// <summary>
+        /// Converts the value of this instance to its equivalent string representation.
+        /// </summary>
+        /// <returns>The string representation.</returns>
+        public override string ToString()
+        {
+            if (this.weight == -3)
+                return "Default";
+            if (this.weight == -2)
+                return "ByBlock";
+            if (this.weight == -1)
+                return "ByLayer";
+
+            return this.weight.ToString(CultureInfo.InvariantCulture);
         }
 
         #endregion

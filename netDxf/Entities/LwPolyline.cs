@@ -59,10 +59,12 @@ namespace netDxf.Entities
         /// Initializes a new instance of the <c>LwPolyline</c> class.
         /// </summary>
         /// <param name="vertexes">LwPolyline <see cref="LwPolylineVertex">vertex</see> list in object coordinates.</param>
-        /// <param name="isClosed">Sets if the polyline is closed</param>
+        /// <param name="isClosed">Sets if the polyline is closed.</param>
         public LwPolyline(List<LwPolylineVertex> vertexes, bool isClosed = false)
             : base(EntityType.LightWeightPolyline, DxfObjectCode.LightWeightPolyline)
         {
+            if (vertexes == null)
+                throw new ArgumentNullException("vertexes");
             this.vertexes = vertexes;
             this.isClosed = isClosed;
             this.normal = Vector3.UnitZ;
@@ -111,7 +113,7 @@ namespace netDxf.Entities
             set
             {
                 if (Vector3.Zero == value)
-                    throw new ArgumentNullException("value", "The normal can not be the zero vector");
+                    throw new ArgumentNullException("value", "The normal can not be the zero vector.");
                 value.Normalize();
                 this.normal = value;
             }

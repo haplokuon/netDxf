@@ -27,7 +27,7 @@ using netDxf.Tables;
 namespace netDxf.Entities
 {
     /// <summary>
-    /// Represents a MText <see cref="EntityObject">entity</see>.
+    /// Represents a multiline text <see cref="EntityObject">entity</see>.
     /// </summary>
     public class MText :
         EntityObject
@@ -182,6 +182,8 @@ namespace netDxf.Entities
             this.position = position;
             this.attachmentPoint = MTextAttachmentPoint.TopLeft;
             this.normal = Vector3.UnitZ;
+            if (style == null)
+                throw new ArgumentNullException("style", "The Text style cannot be null.");
             this.style = style;
             this.rectangleWidth = rectangleWidth;
             this.height = height;
@@ -275,7 +277,7 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets or sets the text attachment point.
+        /// Gets or sets the text <see cref="MTextAttachmentPoint">attachment point</see>.
         /// </summary>
         public MTextAttachmentPoint AttachmentPoint
         {

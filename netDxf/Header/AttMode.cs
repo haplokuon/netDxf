@@ -20,27 +20,24 @@
 
 #endregion
 
-namespace netDxf.Objects
+namespace netDxf.Header
 {
-    internal class DictionaryObjectEntry
+    /// <summary>
+    /// Defines the attribute visibility.
+    /// </summary>
+    public enum AttMode
     {
-        private readonly string name;
-        private readonly string handleToOwner;
-
-        public DictionaryObjectEntry(string name, string handleToOwner)
-        {
-            this.name = name;
-            this.handleToOwner = handleToOwner;
-        }
-
-        public string Name
-        {
-            get { return name; }
-        }
-
-        public string HandleToOwner
-        {
-            get { return handleToOwner; }
-        }
+        /// <summary>
+        /// None.
+        /// </summary>
+        None = 0,
+        /// <summary>
+        /// Normal.
+        /// </summary>
+        Normal = 1,
+        /// <summary>
+        /// All.
+        /// </summary>
+        All = 2
     }
 }

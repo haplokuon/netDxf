@@ -38,11 +38,12 @@ namespace netDxf.Entities
         private List<HatchBoundaryPath> boundaryPaths;
         private HatchPattern pattern;
         private double elevation;
-        private Vector3 normal; 
+        private Vector3 normal;
 
         #endregion
 
         #region constructors
+
         /// <summary>
         /// Initializes a new instance of the <c>Hatch</c> class.
         /// </summary>
@@ -59,6 +60,8 @@ namespace netDxf.Entities
             this.pattern = pattern;
             this.boundaryPaths = boundaryPaths;
             this.normal = Vector3.UnitZ;
+            if (pattern.GetType() == typeof (HatchGradientPattern))
+                ((HatchGradientPattern) pattern).GradientColorAciXData(this.XData);
         }
 
         #endregion
@@ -71,12 +74,20 @@ namespace netDxf.Entities
         public HatchPattern Pattern
         {
             get { return pattern; }
-            set { pattern = value; }
+            set
+            {
+                if (value.GetType() == typeof(HatchGradientPattern))
+                    ((HatchGradientPattern)value).GradientColorAciXData(this.XData);
+                pattern = value;
+            }
         }
 
         /// <summary>
         /// Gets or sets the hatch boundary paths.
         /// </summary>
+        /// <remarks>
+        /// If the hatch is associative the boundary paths will be also added to the document.
+        /// </remarks>
         public List<HatchBoundaryPath> BoundaryPaths
         {
             get { return boundaryPaths; }

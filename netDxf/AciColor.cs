@@ -23,6 +23,7 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Globalization;
 using System.Threading;
 
 namespace netDxf
@@ -159,7 +160,7 @@ namespace netDxf
             this.g = g;
             this.b = b;
             this.useTrueColor = true;
-            this.index = RGBtoACI(this.r, this.g, this.b);
+            this.index = RgbToAci(this.r, this.g, this.b);
         }
 
         /// <summary>
@@ -170,6 +171,18 @@ namespace netDxf
         ///<param name="b">Blue component.</param>
         /// <remarks>By default the UseTrueColor will be set to true.</remarks>
         public AciColor(float r, float g, float b)
+            : this((byte)(r * 255), (byte)(g * 255), (byte)(b * 255))
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <c>AciColor</c> class.
+        /// </summary>
+        ///<param name="r">Red component.</param>
+        ///<param name="g">Green component.</param>
+        ///<param name="b">Blue component.</param>
+        /// <remarks>By default the UseTrueColor will be set to true.</remarks>
+        public AciColor(double r, double g, double b)
             : this((byte)(r * 255), (byte)(g * 255), (byte)(b * 255))
         {
         }
@@ -189,9 +202,9 @@ namespace netDxf
         /// </summary>
         /// <param name="index">Color index.</param>
         /// <remarks>
-        /// By default the UseTrueColor will be set to false.
-        /// Accepted color index values range from 1 to 255.
-        /// Indexes from 1 to 255 represents a color, the index 0 and 256 are reserved they define bylayer and byblock colors.
+        /// By default the UseTrueColor will be set to false.<br />
+        /// Accepted color index values range from 1 to 255.<br />
+        /// Indexes from 1 to 255 represents a color, the index 0 and 256 are reserved for bylayer and byblock colors.
         /// </remarks>
         public AciColor(short index)
         {
@@ -252,7 +265,7 @@ namespace netDxf
         /// </summary>
         /// <remarks>
         /// Accepted color index values range from 1 to 255.
-        /// Indexes from 1 to 255 represents a color, the index 0 and 256 are reserved they define bylayer and byblock colors.
+        /// Indexes from 1 to 255 represents a color, the index 0 and 256 are reserved for bylayer and byblock colors.
         /// </remarks>
         public short Index
         {
@@ -276,9 +289,115 @@ namespace netDxf
         #region public methods
 
         /// <summary>
+        /// Converts HSL (hue, saturation, lightness) value to an <see cref="AciColor">AciColor</see>.
+        /// </summary>
+        /// <param name="hue">Hue (input values range from 0 to 1).</param>
+        /// <param name="saturation">Saturation percentage (input values range from 0 to 1).</param>
+        /// <param name="lightness">Lightness percentage (input values range from 0 to 1).</param>
+        /// <returns>An <see cref="Color">AciColor</see> that represents the acutal hsl value.</returns>
+        public static AciColor FromHsl(double hue, double saturation, double lightness)
+        {
+            double red = lightness;
+            double green = lightness;
+            double blue = lightness;
+            double v = (lightness <= 0.5) ? (lightness * (1.0 + saturation)) : (lightness + saturation - lightness * saturation);
+            if (v > 0)
+            {
+                double m = lightness + lightness - v;
+                double sv = (v - m) / v;
+                hue *= 6.0;
+                int sextant = (int)hue;
+                double fract = hue - sextant;
+                double vsf = v * sv * fract;
+                double mid1 = m + vsf;
+                double mid2 = v - vsf;
+                switch (sextant)
+                {
+                    case 0 | 6:
+                        red = v;
+                        green = mid1;
+                        blue = m;
+                        break;
+                    case 1:
+                        red = mid2;
+                        green = v;
+                        blue = m;
+                        break;
+                    case 2:
+                        red = m;
+                        green = v;
+                        blue = mid1;
+                        break;
+                    case 3:
+                        red = m;
+                        green = mid2;
+                        blue = v;
+                        break;
+                    case 4:
+                        red = mid1;
+                        green = m;
+                        blue = v;
+                        break;
+                    case 5:
+                        red = v;
+                        green = m;
+                        blue = mid2;
+                        break;
+                }
+            }
+            return new AciColor(red, green, blue);
+        }
+
+        /// <summary>
+        /// Converts the RGB (red, green, blue) components of an <see cref="AciColor">AciColor</see> to HSL (hue, saturation, lightness) values.
+        /// </summary>
+        /// <param name="color">A <see cref="AciColor">color</see>.</param>
+        /// <param name="hue">Hue (output values range from 0 to 1).</param>
+        /// <param name="saturation">Saturation percentage (output values range from 0 to 1).</param>
+        /// <param name="lightness">Lightness percentage (output values range from 0 to 1).</param>
+        public static void ToHsl(AciColor color, out double hue, out double saturation, out double lightness)
+        {
+            double red = color.R / 255.0;
+            double green = color.G / 255.0;
+            double blue = color.B / 255.0;
+
+            hue = 0;
+            saturation = 0;
+            double v = Math.Max(red, green);
+            v = Math.Max(v, blue);
+            double m = Math.Min(red, green);
+            m = Math.Min(m, blue);
+
+            lightness = (m + v) / 2.0;
+            if (lightness <= 0.0)
+                return;
+
+            double vm = v - m;
+            saturation = vm;
+            if (saturation > 0.0)
+                saturation /= (lightness <= 0.5) ? (v + m) : (2.0 - v - m);
+            else
+                return;
+
+            double red2 = (v - red) / vm;
+            double green2 = (v - green) / vm;
+            double blue2 = (v - blue) / vm;
+
+            if (MathHelper.IsEqual(red, v))
+                hue = (MathHelper.IsEqual(green, m) ? 5.0 + blue2 : 1.0 - green2);
+            else if (MathHelper.IsEqual(green, v))
+                hue = (MathHelper.IsEqual(blue, m) ? 1.0 + red2 : 3.0 - blue2);
+            else
+                hue = (MathHelper.IsEqual(red, m) ? 3.0 + green2 : 5.0 - red2);
+
+            hue /= 6.0;
+        }
+
+        /// <summary>
         /// Converts the AciColor to a <see cref="Color">color</see>.
         /// </summary>
-        /// <returns>A default color white will be used for byblock and bylayer colors.</returns>
+        /// <returns>A <see cref="Color">System.Drawing.Color</see> that represents the actual AciColor.</returns>
+        /// <remarks> A default color white will be used for byblock and bylayer colors.</remarks>
         public Color ToColor()
         {
             if (this.index < 1 || this.index > 255) //default color definition for byblock and bylayer colors
@@ -287,7 +406,7 @@ namespace netDxf
         }
 
         /// <summary>
-        /// Converts the Color to a <see cref="Color">AciColor</see>.
+        /// Converts the Color to an <see cref="Color">AciColor</see>.
         /// </summary>
         public void FromColor(Color color)
         {
@@ -295,7 +414,7 @@ namespace netDxf
             this.g = color.G;
             this.b = color.B;
             this.useTrueColor = true;
-            this.index = RGBtoACI(this.r, this.g, this.b);
+            this.index = RgbToAci(this.r, this.g, this.b);
         }
 
         /// <summary>
@@ -579,7 +698,12 @@ namespace netDxf
                 return "ByBlock";
             if (this.index == 256)
                 return "ByLayer";
-            return this.index.ToString(Thread.CurrentThread.CurrentCulture);
+            if (this.useTrueColor)
+            {
+                string separator = Thread.CurrentThread.CurrentCulture.TextInfo.ListSeparator;
+                return string.Format("{0}{3}{1}{3}{2}", this.r, this.g, this.b, separator);
+            }
+            return this.index.ToString(CultureInfo.InvariantCulture);
         }
 
         #endregion
@@ -606,11 +730,25 @@ namespace netDxf
 
         #endregion
 
+        #region comparision methods
+
+        /// <summary>
+        /// Check if the components of two colors are equal.
+        /// </summary>
+        /// <param name="obj">Another color to compare to.</param>
+        /// <returns>True if the three components are almost equal or false in anyother case.</returns>
+        public bool Equals(AciColor obj)
+        {
+            return (obj.r == this.r) && (obj.g == this.g) && (obj.b == this.b);
+        }
+
+        #endregion
+
         #region internal methods
 
-        internal static int ToTrueColor(byte r, byte g, byte b)
+        internal static int ToTrueColor(AciColor color)
         {
-            return b + (g * 256) + (r * 65536);
+            return color.B + (color.G * 256) + (color.R * 65536);
         }
 
         internal static AciColor FromTrueColor(int value)
@@ -635,15 +773,15 @@ namespace netDxf
         ///<param name="r">Red component.</param>
         ///<param name="g">Green component.</param>
         ///<param name="b">Blue component.</param>
-        /// <remarks>This conversion will never be accurate. It uses a simple distance method using RGB space.</remarks>
-        private static byte RGBtoACI(byte r, byte g, byte b)
+        /// <remarks>This conversion will never be accurate.</remarks>
+        private static byte RgbToAci(byte r, byte g, byte b)
         {
-            int prevDist = int.MaxValue;
+            double prevDist = double.MaxValue;
             byte index = 0;
             foreach (byte key in aciColors.Keys)
             {
                 byte[] color = aciColors[key];
-                int dist = Math.Abs((r - color[0]) * (r - color[0]) + (g - color[1]) * (g - color[1]) + (b - color[2]) * (b - color[2]));
+                double dist = Math.Abs(0.3 * (r - color[0]) + 0.59 * (g - color[1]) + 0.11 * (b - color[2]));
                 if (dist < prevDist)
                 {
                     prevDist = dist;
@@ -655,5 +793,6 @@ namespace netDxf
         }
 
         #endregion
+
     }
 }

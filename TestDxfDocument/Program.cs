@@ -41,8 +41,12 @@ namespace TestDxfDocument
     {
         private static void Main()
         {
-            //ObjectVisibility();
             Test();
+
+            //WriteGradientPattern();
+            //WriteGroup();
+            //WriteMLine();
+            //ObjectVisibility();
             //EntityTrueColor();
             //EntityLineWeight();
             //ReadWriteFromStream();
@@ -73,7 +77,7 @@ namespace TestDxfDocument
             //ReadDxfFile();
             //ExplodeTest();
             //HatchTestLinesBoundary();
-            //HatchTest1();
+            HatchTest1();
             //HatchTest2();
             //HatchTest3();
             //BlockAttributes();
@@ -91,34 +95,186 @@ namespace TestDxfDocument
         }
         private static void Test()
         {
+            // important changes in netDxf 0.4 version
+
+            DxfVersion version = DxfDocument.CheckDxfFileVersion("sample.dxf");
+            // the Load function is now static
+            // sample.dxf contains all supported entities by netDxf
+            DxfDocument dxf = DxfDocument.Load("sample.dxf");
+
+            // the dxf version is controlled by the DrawingVariables property of the dxf document,
+            // also a HeaderVariables instance or a DxfVersion can be passed to the constructor to initialize a new DxfDocument.
+            dxf.DrawingVariables.AcadVer = DxfVersion.AutoCad2010;
+            dxf.Save("sample copy.dxf");
+        }
+
+        private static void WriteGradientPattern()
+        {
+            List<LwPolylineVertex> vertexes = new List<LwPolylineVertex>
+                                         {
+                                             new LwPolylineVertex(new Vector2(0, 0)),
+                                             new LwPolylineVertex(new Vector2(0, 150)),
+                                             new LwPolylineVertex(new Vector2(150, 150)),
+                                             new LwPolylineVertex(new Vector2(150, 0))
+                                         };
+            LwPolyline pol = new LwPolyline(vertexes, true);
+
+
+            Line line1 = new Line(new Vector2(0, 0), new Vector2(0, 150));
+            Line line2 = new Line(new Vector2(0, 150), new Vector2(150, 150));
+            Line line3 = new Line(new Vector2(150, 150), new Vector2(150, 0));
+            Line line4 = new Line(new Vector2(150, 0), new Vector2(0, 0));
+
+
+            HatchGradientPattern gradient = new HatchGradientPattern(AciColor.Red, AciColor.Blue, HatchGradientPatternType.Linear);
+            //HatchGradientPattern gradient = new HatchGradientPattern(AciColor.Red, 0.75, HatchGradientPatternType.Linear);
+            gradient.Angle = 30;
+
+            List<HatchBoundaryPath> boundary = new List<HatchBoundaryPath>
+                                                   {
+                                                       new HatchBoundaryPath(new List<EntityObject> {pol})
+                                                   };
+            Hatch hatch = new Hatch(gradient, boundary);
+            
+            // gradients are only supported for AutoCad2004 and later
+            DxfDocument dxf = new DxfDocument(DxfVersion.AutoCad2004);
+            dxf.AddEntity(hatch);
+            dxf.Save("gradient test.dxf");
+
+            //DxfDocument dxf2 = DxfDocument.Load("gradient test.dxf");
+
+            //dxf.DrawingVariables.AcadVer = DxfVersion.AutoCad2000;
+
+            //AciColor color = new AciColor(63, 79, 127);
+
+            //dxf.Save("gradient test 2000.dxf");
+
+        }
+        private static void WriteGroup()
+        {
+            Line line1 = new Line(new Vector2(0, 0), new Vector2(100, 100));
+            Line line2 = new Line(new Vector2(100, 0), new Vector2(200, 100));
+            Line line3 = new Line(new Vector2(200, 0), new Vector2(300, 100));
+
+            Group group = new Group("MyGroup")
+                              {
+                                  Entities = new List<EntityObject> {line1, line2}
+                              };
+
+            Group group2 = new Group()
+            {
+                Entities = new List<EntityObject> { line1, line3 }
+            };
+
             DxfDocument dxf = new DxfDocument();
+            // the AddGroup method will also add the entities contained in a group to the document.
+            dxf.AddGroup(group);
+            dxf.AddGroup(group2);
+            dxf.Save("group.dxf");
 
-            //Point point = new Point(10, 10, 0);
-            //point.Rotation = 45;
-            //dxf.AddEntity(point);
-            //dxf.Save("point.dxf", DxfVersion.AutoCad2000);
-            //dxf.Load("point.dxf");
+            DxfDocument dxf2 = DxfDocument.Load("group.dxf");
+            Console.WriteLine("Dxf name: " + dxf2.Name + " loaded.");
+        }
+        private static void WriteMLine()
+        {
+            DxfDocument dxf = new DxfDocument();
+            //MLineStyle style = MLineStyle.Default;
+            //dxf.AddMLineStyle(style);
 
-            //dxf.Load("hatch.dxf");
+            List<Vector2> vertexes = new List<Vector2>
+                                         {
+                                             new Vector2(0, 0),
+                                             new Vector2(0, 150),
+                                             new Vector2(150, 150),
+                                             new Vector2(150, 0)
+                                         };
 
-            //string version = DxfDocument.CheckDxfFileVersion("sample.dxf");
-            bool okLoad = dxf.Load("sample.dxf");
-            bool okSave = dxf.Save("sample copy.dxf", DxfVersion.AutoCad2000);
+            MLine mline = new MLine(vertexes);
+            mline.Scale = 20;
+            mline.Justification = MLineJustification.Zero;
+            //mline.IsClosed = true;
+
+            MLineStyle style = new MLineStyle("MyStyle", "Personalized style.");
+            style.Elements.Add(new MLineStyleElement(0.25));
+            style.Elements.Add(new MLineStyleElement(-0.25));
+            // if we add new elements directly to the list we need to sort the list,
+            style.Elements.Sort();
+            style.Flags = MLineStyleFlags.EndInnerArcsCap | MLineStyleFlags.EndRoundCap | MLineStyleFlags.StartInnerArcsCap | MLineStyleFlags.StartRoundCap;
+            //style.StartAngle = 25.0;
+            //style.EndAngle = 160.0;
+            // AutoCad2000 dxf version does not support true colors for MLineStyle elements
+            style.Elements[0].Color = new AciColor(180, 230, 147);
+            mline.Style = style;
+            // we have modified the mline after setting its vertexes so we need to manually call this method.
+            // also when manually editting the vertex distances
+            mline.CalculateVertexesInfo();
+
+            // we can manually create cuts or gaps in the individual elements that made the multiline.
+            // the cuts are defined as distances from the start point of the element along its direction.
+            mline.Vertexes[0].Distances[0].Add(50);
+            mline.Vertexes[0].Distances[0].Add(100);
+            mline.Vertexes[0].Distances[mline.Style.Elements.Count-1].Add(50);
+            mline.Vertexes[0].Distances[mline.Style.Elements.Count-1].Add(100);
+            dxf.AddEntity(mline);
+
+            dxf.DrawingVariables.AcadVer = DxfVersion.AutoCad2004;
+            dxf.Save("MLine.dxf");
+
+            //dxf = DxfDocument.Load("Drawing1.dxf");
+            //dxf.Save("Drawing1 copy.dxf");
+
+            //dxf = DxfDocument.Load("Drawing3.dxf");
+            //dxf.Save("Drawing3 copy.dxf");
+
+            //dxf = DxfDocument.Load("Drawing2.dxf");
+            //dxf.Save("Drawing2 copy.dxf");
+
+            // empty mline
+            //List<Vector2> vertexes2 = new List<Vector2>
+            //                             {
+            //                                 new Vector2(0, 0),
+            //                                 new Vector2(100, 100),
+            //                                 new Vector2(100, 100),
+            //                                 new Vector2(200, 0)
+            //                             };
+
+            //MLine mline2 = new MLine(vertexes2){Scale = 20};
+            //mline2.CalculateVertexesInfo();
+
+            //DxfDocument dxf2 = new DxfDocument();
+            //dxf2.AddEntity(mline2);
+            ////dxf2.Save("void mline.dxf");
+
+            //MLine mline3 = new MLine();
+            //dxf2.AddEntity(mline3);
+            ////dxf2.Save("void mline.dxf");
+
+            //Polyline pol = new Polyline();
+            //LwPolyline lwPol = new LwPolyline();
+            //dxf2.AddEntity(pol);
+            //dxf2.AddEntity(lwPol);
+            //dxf2.Save("void mline.dxf");
+            //dxf2 = DxfDocument.Load("void mline.dxf");
+            
         }
         private static void ObjectVisibility()
         {
-            Line line = new Line(new Vector3(0, 0, 0), new Vector3(100, 100, 0));
-            line.Color = AciColor.Yellow;
+            Line line = new Line(new Vector3(0, 0, 0), new Vector3(100, 100, 0))
+                            {
+                                Color = AciColor.Yellow
+                            };
 
-            Line line2 = new Line(new Vector3(0, 100, 0), new Vector3(100, 0, 0));
-            line2.IsVisible = false;
+            Line line2 = new Line(new Vector3(0, 100, 0), new Vector3(100, 0, 0))
+                             {
+                                 IsVisible = false
+                             };
 
             DxfDocument dxf = new DxfDocument();
             dxf.AddEntity(line);
             dxf.AddEntity(line2);
-            dxf.Save("object visibility.dxf", DxfVersion.AutoCad2000);
-            dxf.Load("object visibility.dxf");
-            dxf.Save("object visibility 2.dxf", DxfVersion.AutoCad2000);
+            dxf.Save("object visibility.dxf");
+            dxf = DxfDocument.Load("object visibility.dxf");
+            dxf.Save("object visibility 2.dxf");
 
         }
         private static void WriteInsert()
@@ -144,8 +300,8 @@ namespace TestDxfDocument
 
             dxf.AddEntity(insert);
 
-            dxf.Save("insert.dxf", DxfVersion.AutoCad2000);
-            dxf.Load("insert.dxf");
+            dxf.Save("insert.dxf");
+            dxf = DxfDocument.Load("insert.dxf");
 
         }
         private static void EntityTrueColor()
@@ -163,8 +319,8 @@ namespace TestDxfDocument
             DxfDocument dxf = new DxfDocument();
             dxf.AddEntity(line);
             dxf.AddEntity(line2);
-            dxf.Save("line true color.dxf", DxfVersion.AutoCad2000);
-            dxf.Load("line true color.dxf");
+            dxf.Save("line true color.dxf");
+            dxf = DxfDocument.Load("line true color.dxf");
         }
         private static void EntityLineWeight()
         {
@@ -185,8 +341,8 @@ namespace TestDxfDocument
             dxf.AddEntity(line);
             dxf.AddEntity(line2);
             dxf.AddEntity(text);
-            dxf.Save("line weight.dxf", DxfVersion.AutoCad2000);
-            dxf.Load("line weight.dxf");
+            dxf.Save("line weight.dxf");
+            dxf = DxfDocument.Load("line weight.dxf");
         }
         private static void ReadWriteFromStream()
         {
@@ -197,26 +353,22 @@ namespace TestDxfDocument
             Line line = new Line(new Vector3(0, 0, 0), new Vector3(100, 100, 0));
             DxfDocument dxf = new DxfDocument();
             dxf.AddEntity(line);
-            dxf.Save("test.dxf", DxfVersion.AutoCad2000);
+            dxf.Save("test.dxf");
             
             // saving to memory stream always use the default constructor, a fixed size stream will not work.
             MemoryStream memoryStream = new MemoryStream();
-            dxf.Load(memoryStream);
-
-            dxf.Save(memoryStream, DxfVersion.AutoCad2000);
+            dxf.Save(memoryStream);
 
             // loading from memory stream
-            DxfDocument dxf2 = new DxfDocument();
-            dxf2.Load(memoryStream);
+            DxfDocument dxf2 = DxfDocument.Load(memoryStream);
 
             // saving to file stream
             FileStream fileStream = new FileStream("test fileStream.dxf", FileMode.Create);
-            dxf2.Save(fileStream, DxfVersion.AutoCad2000);
+            dxf2.Save(fileStream);
             fileStream.Close(); // you will need to close the stream manually to avoid file already open conflicts
 
             FileStream fileStreamLoad = new FileStream("test fileStream.dxf", FileMode.Open, FileAccess.Read);
-            DxfDocument dxf3 = new DxfDocument();
-            dxf3.Load(fileStreamLoad);
+            DxfDocument dxf3 = DxfDocument.Load(fileStreamLoad);
 
         }
         private static void WriteNoAsciiText()
@@ -226,11 +378,15 @@ namespace TestDxfDocument
             Text text = new Text("ÁÉÍÓÚ áéíóú Ññ àèìòù âêîôû", Vector2.Zero,10);
             text.Style = textStyle;
             dxf.AddEntity(text);
-            dxf.Save("text.dxf", DxfVersion.AutoCad2000);
-            //dxf.Load("text1.dxf");
-            //dxf.Save("text2.dxf", DxfVersion.AutoCad2004);
-            //dxf.Save("text3.dxf", DxfVersion.AutoCad2007);
-            //dxf.Save("text4.dxf", DxfVersion.AutoCad2010);
+            dxf.Save("text.dxf");
+
+            dxf = DxfDocument.Load("text1.dxf");
+            dxf.DrawingVariables.AcadVer = DxfVersion.AutoCad2004;
+            dxf.Save("text2.dxf");
+            dxf.DrawingVariables.AcadVer = DxfVersion.AutoCad2007;
+            dxf.Save("text3.dxf");
+            dxf.DrawingVariables.AcadVer = DxfVersion.AutoCad2010;
+            dxf.Save("text4.dxf");
 
         }
         private static void WriteSplineBoundaryHatch()
@@ -259,9 +415,10 @@ namespace TestDxfDocument
             DxfDocument dxf = new DxfDocument();
             dxf.AddEntity(hatch);
             dxf.AddEntity(spline);
-            dxf.Save("hatch closed spline.dxf", DxfVersion.AutoCad2000);
-            dxf.Load("hatch closed spline.dxf");
-            dxf.Save("hatch closed spline 2010.dxf", DxfVersion.AutoCad2010);
+            dxf.Save("hatch closed spline.dxf");
+            dxf = DxfDocument.Load("hatch closed spline.dxf");
+            dxf.DrawingVariables.AcadVer = DxfVersion.AutoCad2010;
+            dxf.Save("hatch closed spline 2010.dxf");
 
             // hatch boundary path with spline and line
             Spline openSpline = new Spline(ctrlPoints, 3);
@@ -278,9 +435,10 @@ namespace TestDxfDocument
             dxf2.AddEntity(hatch2);
             dxf2.AddEntity(openSpline);
             dxf2.AddEntity(line);
-            dxf2.Save("hatch open spline.dxf", DxfVersion.AutoCad2000);
-            dxf2.Load("hatch open spline.dxf");
-            dxf2.Save("hatch open spline 2010.dxf", DxfVersion.AutoCad2010);
+            dxf2.Save("hatch open spline.dxf");
+            dxf2 = DxfDocument.Load("hatch open spline.dxf");
+            dxf.DrawingVariables.AcadVer = DxfVersion.AutoCad2010;
+            dxf2.Save("hatch open spline 2010.dxf");
 
         }
         private static void WriteNoInsertBlock()
@@ -300,7 +458,7 @@ namespace TestDxfDocument
             dxf.AddBlock(block);
 
             // and save file, no visible entities will appear if you try to open the drawing but the block will be there
-            dxf.Save("Block definiton.dxf", DxfVersion.AutoCad2000);
+            dxf.Save("Block definiton.dxf");
 
         }
         private static void WriteImage()
@@ -316,9 +474,9 @@ namespace TestDxfDocument
             xdata1.XDataRecord.Add(new XDataRecord(XDataCode.WorldSpacePositionY, image.Position.Y));
             xdata1.XDataRecord.Add(new XDataRecord(XDataCode.WorldSpacePositionZ, image.Position.Z));
             xdata1.XDataRecord.Add(XDataRecord.CloseControlString);
-            image.XData = new Dictionary<ApplicationRegistry, XData>
+            image.XData = new Dictionary<string, XData>
                              {
-                                 {xdata1.ApplicationRegistry, xdata1},
+                                 {xdata1.ApplicationRegistry.Name, xdata1},
                              };
 
             //image.Normal = new Vector3(1, 1, 1);
@@ -348,15 +506,16 @@ namespace TestDxfDocument
             //dxf.AddEntity(image3);
             dxf.AddEntity(insert);
 
-            dxf.Save("image.dxf", DxfVersion.AutoCad2000);
-            dxf.Load("image.dxf");
-            dxf.Save("image.dxf", DxfVersion.AutoCad2010);
+            dxf.Save("image.dxf");
+            dxf = DxfDocument.Load("image.dxf");
+            dxf.DrawingVariables.AcadVer = DxfVersion.AutoCad2010;
+            dxf.Save("image.dxf");
 
             //dxf.RemoveEntity(image2);
-            //dxf.Save("image2.dxf", DxfVersion.AutoCad2000);
+            //dxf.Save("image2.dxf");
             //dxf.RemoveEntity(image3);
             //dxf.RemoveEntity(image);
-            //dxf.Save("image3.dxf", DxfVersion.AutoCad2000);
+            //dxf.Save("image3.dxf");
         }
         private static void SplineDrawing()
         {
@@ -413,7 +572,7 @@ namespace TestDxfDocument
             //dxf.AddEntity(closedNonPeriodicSpline);
             dxf.AddEntity(closedPeriodicSpline);
             //dxf.AddEntity(splineCircle);
-            dxf.Save("spline.dxf", DxfVersion.AutoCad2000);
+            dxf.Save("spline.dxf");
 
         }
         private static void AddAndRemove()
@@ -440,50 +599,55 @@ namespace TestDxfDocument
 
             //text
             TextStyle style = new TextStyle("MyTextStyle", "Arial.ttf");
-            Text text = new Text("Hello world!", Vector3.Zero, 10.0f, style);
-            text.Layer = new Layer("text");
-            text.Layer.Color.Index = 8;
+            Text text = new Text("Hello world!", Vector3.Zero, 10.0f, style)
+                            {
+                                Layer = new Layer("text")
+                                            {
+                                                Color = {Index = 8}
+                                            }
+                            };
             text.Alignment = TextAlignment.TopRight;
 
-
+            HeaderVariables variables = new HeaderVariables
+                                            {
+                                                AcadVer = DxfVersion.AutoCad2004
+                                            };
             DxfDocument dxf = new DxfDocument();
             dxf.AddEntity(new EntityObject[] {line, circle, dim1, text});
-            dxf.Save("before remove.dxf", DxfVersion.AutoCad2004);
+            dxf.Save("before remove.dxf");
 
             dxf.RemoveEntity(circle);
-            dxf.Save("after remove.dxf", DxfVersion.AutoCad2004);
+            dxf.Save("after remove.dxf");
 
             dxf.AddEntity(circle);
-            dxf.Save("after remove and add.dxf", DxfVersion.AutoCad2004);
+            dxf.Save("after remove and add.dxf");
 
             dxf.RemoveEntity(dim1);
-            dxf.Save("remove dim.dxf", DxfVersion.AutoCad2004);
+            dxf.Save("remove dim.dxf");
 
             dxf.AddEntity(dim1);
-            dxf.Save("add dim.dxf", DxfVersion.AutoCad2004);
+            dxf.Save("add dim.dxf");
 
-            DxfDocument dxf2 = new DxfDocument();
-            dxf2.Load("dim block names.dxf");
+            DxfDocument dxf2 = DxfDocument.Load("dim block names.dxf");
             dxf2.AddEntity(dim1);
-            dxf2.Save("dim block names2.dxf", DxfVersion.AutoCad2000);
+            dxf2.Save("dim block names2.dxf");
         }
         private static void LoadAndSave()
         {
-            DxfDocument dxf=new DxfDocument();
-            dxf.Load("block sample.dxf");
-            dxf.Save("block sample1.dxf", DxfVersion.AutoCad2004);
+            DxfDocument dxf = DxfDocument.Load("block sample.dxf");
+            dxf.Save("block sample1.dxf");
 
             DxfDocument dxf2 = new DxfDocument();
             dxf2.AddEntity(dxf.Inserts[0]);
-            dxf2.Save("block sample2.dxf", DxfVersion.AutoCad2004);
+            dxf2.Save("block sample2.dxf");
 
-            dxf.Save("clean2.dxf", DxfVersion.AutoCad2000);
-            dxf.Load("clean.dxf");
-            dxf.Save("clean1.dxf", DxfVersion.AutoCad2000);
+            dxf.Save("clean2.dxf");
+            dxf = DxfDocument.Load("clean.dxf");
+            dxf.Save("clean1.dxf");
 
             // open a dxf saved with autocad
-            dxf.Load("sample.dxf");
-            dxf.Save("sample4.dxf", DxfVersion.AutoCad2000);
+            dxf = DxfDocument.Load("sample.dxf");
+            dxf.Save("sample4.dxf");
 
             Line cadLine = dxf.Lines[0];
             Layer layer = new Layer("netLayer");
@@ -494,22 +658,21 @@ namespace TestDxfDocument
             // add a new entity to the document
             dxf.AddEntity(line);
 
-            dxf.Save("sample2.dxf", DxfVersion.AutoCad2010);
+            dxf.Save("sample2.dxf");
 
             DxfDocument dxf3 = new DxfDocument();
             dxf3.AddEntity(cadLine);
             dxf3.AddEntity(line);
-            dxf3.Save("sample3.dxf", DxfVersion.AutoCad2010);
+            dxf3.Save("sample3.dxf");
         }
         private static void Fixes()
         {
-            DxfDocument dxf = new DxfDocument();
-            dxf.Load("solid hatch sample.dxf");
+            DxfDocument dxf = DxfDocument.Load("solid hatch sample.dxf");
         }
         private static void CleanDrawing()
         {
             DxfDocument dxf = new DxfDocument();
-            dxf.Save("clean drawing.dxf", DxfVersion.AutoCad2004);
+            dxf.Save("clean drawing.dxf");
         }
         private static void OrdinateDimensionDrawing()
         {
@@ -548,9 +711,9 @@ namespace TestDxfDocument
             dxf.AddEntity(lineXRotate);
             dxf.AddEntity(lineYRotate);
 
-            dxf.Save("ordinate dimension.dxf", DxfVersion.AutoCad2000);
+            dxf.Save("ordinate dimension.dxf");
 
-            dxf.Load("ordinate dimension.dxf");
+            dxf = DxfDocument.Load("ordinate dimension.dxf");
         }
         private static void Angular2LineDimensionDrawing()
         {
@@ -574,9 +737,10 @@ namespace TestDxfDocument
 
             dxf.AddEntity(insert);
 
-            dxf.Save("angular 2 line dimension.dxf", DxfVersion.AutoCad2000);
-            dxf.Load("angular 2 line dimension.dxf");
-            dxf.Save("angular 2 line dimension.dxf", DxfVersion.AutoCad2010);
+            dxf.Save("angular 2 line dimension.dxf");
+            dxf = DxfDocument.Load("angular 2 line dimension.dxf");
+            dxf.DrawingVariables.AcadVer = DxfVersion.AutoCad2010;
+            dxf.Save("angular 2 line dimension.dxf");
         }
         private static void Angular3PointDimensionDrawing()
         {
@@ -591,9 +755,9 @@ namespace TestDxfDocument
             Angular3PointDimension dim = new Angular3PointDimension(arc, 5, myStyle);
             dxf.AddEntity(arc);
             dxf.AddEntity(dim);
-            dxf.Save("angular 3 point dimension.dxf", DxfVersion.AutoCad2000);
+            dxf.Save("angular 3 point dimension.dxf");
 
-            dxf.Load("angular 3 point dimension.dxf");
+            dxf = DxfDocument.Load("angular 3 point dimension.dxf");
         }
         private static void DiametricDimensionDrawing()
         {
@@ -611,9 +775,17 @@ namespace TestDxfDocument
             DiametricDimension dim = new DiametricDimension(circle, 30, myStyle);
             dxf.AddEntity(circle);
             dxf.AddEntity(dim);
-            dxf.Save("diametric dimension.dxf", DxfVersion.AutoCad2000);
+            dxf.Save("diametric dimension.dxf");
 
-            dxf.Load("diametric dimension.dxf");
+            dxf.RemoveEntity(dim);
+            dxf.Save("diametric dimension removed.dxf");
+
+            dxf = DxfDocument.Load("diametric dimension.dxf");
+            // remove entitiy with a handle
+            Dimension dimLoaded = (Dimension) dxf.GetEntityByHandle(dim.Handle);
+            dxf.RemoveEntity(dimLoaded);
+            dxf.Save("diametric dimension removed 2.dxf");
+
         }
         private static void RadialDimensionDrawing()
         {
@@ -631,9 +803,9 @@ namespace TestDxfDocument
             RadialDimension dim = new RadialDimension(circle, 30, myStyle);
             dxf.AddEntity(circle);
             dxf.AddEntity(dim);
-            dxf.Save("radial dimension.dxf", DxfVersion.AutoCad2000);
+            dxf.Save("radial dimension.dxf");
 
-            dxf.Load("radial dimension.dxf");
+            dxf = DxfDocument.Load("radial dimension.dxf");
         }
         private static void LinearDimensionDrawing()
         {
@@ -661,18 +833,18 @@ namespace TestDxfDocument
             xdata.XDataRecord.Add(new XDataRecord(XDataCode.Real, 15.5));
             xdata.XDataRecord.Add(new XDataRecord(XDataCode.Long, 350));
             xdata.XDataRecord.Add(XDataRecord.CloseControlString);
-            dimX.XData = new Dictionary<ApplicationRegistry, XData>
+            dimX.XData = new Dictionary<string, XData>
                              {
-                                 {xdata.ApplicationRegistry, xdata}
+                                 {xdata.ApplicationRegistry.Name, xdata}
                              };
-            dimY.XData = new Dictionary<ApplicationRegistry, XData>
+            dimY.XData = new Dictionary<string, XData>
                              {
-                                 {xdata.ApplicationRegistry, xdata}
+                                 {xdata.ApplicationRegistry.Name, xdata}
                              };
             dxf.AddEntity(dimX);
             dxf.AddEntity(dimY);
-            dxf.Save("linear dimension.dxf", DxfVersion.AutoCad2000);
-            dxf.Load("linear dimension.dxf");
+            dxf.Save("linear dimension.dxf");
+            dxf = DxfDocument.Load("linear dimension.dxf");
         }
         private static void AlignedDimensionDrawing()
         {
@@ -705,9 +877,9 @@ namespace TestDxfDocument
             xdata.XDataRecord.Add(new XDataRecord(XDataCode.Real, 15.5));
             xdata.XDataRecord.Add(new XDataRecord(XDataCode.Long, 350));
             xdata.XDataRecord.Add(XDataRecord.CloseControlString);
-            dim1.XData = new Dictionary<ApplicationRegistry, XData>
+            dim1.XData = new Dictionary<string, XData>
                              {
-                                 {xdata.ApplicationRegistry, xdata}
+                                 {xdata.ApplicationRegistry.Name, xdata}
                              };
 
             //dxf.AddEntity(line1);
@@ -725,9 +897,9 @@ namespace TestDxfDocument
             Insert insert = new Insert(block);
             dxf.AddEntity(insert);
 
-            dxf.Save("aligned dimension.dxf", DxfVersion.AutoCad2000);
+            dxf.Save("aligned dimension.dxf");
 
-            dxf.Load("aligned dimension.dxf");
+            dxf = DxfDocument.Load("aligned dimension.dxf");
 
         }
         private static void WriteMText()
@@ -808,14 +980,14 @@ namespace TestDxfDocument
             //options.Aligment = MTextFormattingOptions.TextAligment.Bottom;
             //mText.Write("Bottom", options);
 
-            mText.XData = new Dictionary<ApplicationRegistry, XData>
+            mText.XData = new Dictionary<string, XData>
                              {
-                                 {xdata.ApplicationRegistry, xdata}
+                                 {xdata.ApplicationRegistry.Name, xdata}
                              };
             
             dxf.AddEntity(mText);
 
-            dxf.Save("MText sample.dxf", DxfVersion.AutoCad2000);
+            dxf.Save("MText sample.dxf");
 
         }
         private static void HatchCircleBoundary()
@@ -853,7 +1025,7 @@ namespace TestDxfDocument
             // add the hatch to the document
             dxf.AddEntity(hatch);
 
-            dxf.Save("circle solid fill.dxf", DxfVersion.AutoCad2000);
+            dxf.Save("circle solid fill.dxf");
         }
         private static void LineWidth()
         {
@@ -886,7 +1058,7 @@ namespace TestDxfDocument
             dxf.AddEntity(thickLine);
             dxf.AddEntity(widthLine);
 
-            dxf.Save("line width.dxf", DxfVersion.AutoCad2000);
+            dxf.Save("line width.dxf");
 
         }
         private static void ToPolyline()
@@ -925,11 +1097,11 @@ namespace TestDxfDocument
             dxf.AddEntity(ellipseArc);
             dxf.AddEntity(ellipseArc.ToPolyline(10));
 
-            dxf.Save("to polyline.dxf", DxfVersion.AutoCad2000);
+            dxf.Save("to polyline.dxf");
 
-            dxf.Load("to polyline.dxf");
+            dxf = DxfDocument.Load("to polyline.dxf");
 
-            dxf.Save("to polyline2.dxf", DxfVersion.AutoCad2000);
+            dxf.Save("to polyline2.dxf");
         }
         private static void CustomHatchPattern()
         {
@@ -995,7 +1167,7 @@ namespace TestDxfDocument
             dxf.AddEntity(poly3);
             dxf.AddEntity(hatch);
 
-            dxf.Save("hatchTest.dxf", DxfVersion.AutoCad2000);
+            dxf.Save("hatchTest.dxf");
         }
         private static void FilesTest()
         {
@@ -1005,9 +1177,8 @@ namespace TestDxfDocument
         }
         private static void LoadSaveHatchTest()
         {
-            DxfDocument dxf = new DxfDocument();
-            dxf.Load("Hatch2.dxf");
-            dxf.Save("HatchTest.dxf", DxfVersion.AutoCad2000);
+            DxfDocument dxf = DxfDocument.Load("Hatch2.dxf");
+            dxf.Save("HatchTest.dxf");
         }
         private static void ExplodeTest()
         {
@@ -1034,7 +1205,7 @@ namespace TestDxfDocument
             dxf.AddEntity(polyline2d);
             dxf.AddEntity(polyline2d.Explode());
 
-            dxf.Save("explode.dxf", DxfVersion.AutoCad2000);
+            dxf.Save("explode.dxf");
         }
         private static void HatchTestLinesBoundary()
         {
@@ -1065,9 +1236,9 @@ namespace TestDxfDocument
             xdata.XDataRecord.Add(new XDataRecord(XDataCode.Real, hatch.Pattern.Angle));
             xdata.XDataRecord.Add(XDataRecord.CloseControlString);
 
-            hatch.XData = new Dictionary<ApplicationRegistry, XData>
+            hatch.XData = new Dictionary<string, XData>
                              {
-                                 {xdata.ApplicationRegistry, xdata},
+                                 {xdata.ApplicationRegistry.Name, xdata},
                              };
 
             dxf.AddEntity(line1);
@@ -1076,7 +1247,7 @@ namespace TestDxfDocument
             dxf.AddEntity(line4);
             dxf.AddEntity(hatch);
 
-            dxf.Save("hatchTest.dxf", DxfVersion.AutoCad2000);
+            dxf.Save("hatchTest.dxf");
         }
         private static void HatchTest1()
         {
@@ -1124,8 +1295,8 @@ namespace TestDxfDocument
             dxf.AddEntity(poly3);
             dxf.AddEntity(hatch);
 
-            dxf.Save("hatchTest1.dxf", DxfVersion.AutoCad2010);
-            dxf.Load("hatchTest.dxf");
+            dxf.Save("hatchTest1.dxf");
+            dxf = DxfDocument.Load("hatchTest1.dxf");
         }
         private static void HatchTest2()
         {
@@ -1145,17 +1316,22 @@ namespace TestDxfDocument
             ellipse.Rotation = 30;
             List<HatchBoundaryPath> boundary = new List<HatchBoundaryPath>{
                                                                             new HatchBoundaryPath(new List<EntityObject>{poly}),
+                                                                            new HatchBoundaryPath(new List<EntityObject>{circle}),
                                                                             new HatchBoundaryPath(new List<EntityObject>{ellipse})
                                                                           };
 
             Hatch hatch = new Hatch(HatchPattern.Line, boundary);
             hatch.Pattern.Angle = 150;
+            hatch.Pattern.Scale = 5;
+
             dxf.AddEntity(poly);
             dxf.AddEntity(circle);
             dxf.AddEntity(ellipse);
             dxf.AddEntity(hatch);
 
-            dxf.Save("hatchTest2.dxf", DxfVersion.AutoCad2000);
+            dxf.Save("hatchTest2.dxf");
+            dxf = DxfDocument.Load("hatchTest2.dxf");
+            dxf.Save("hatchTest2 copy.dxf");
         }
         private static void HatchTest3()
         {
@@ -1196,8 +1372,8 @@ namespace TestDxfDocument
             dxf.AddEntity(poly2);
             dxf.AddEntity(hatch);
 
-            dxf.Save("hatchTest3.dxf", DxfVersion.AutoCad2010);
-            dxf.Load("hatchTest3.dxf");
+            dxf.Save("hatchTest3.dxf");
+            dxf = DxfDocument.Load("hatchTest3.dxf");
         }
         private static void Dxf2000()
         {
@@ -1209,7 +1385,7 @@ namespace TestDxfDocument
 
             dxf.AddEntity(line);
 
-            dxf.Save("test2000.dxf",DxfVersion.AutoCad2000);
+            dxf.Save("test2000.dxf");
         }
         private static void LwPolyline()
         {
@@ -1225,15 +1401,15 @@ namespace TestDxfDocument
             //poly.IsClosed = true;
             dxf.AddEntity(poly);
 
-            dxf.Save("lwpolyline.dxf", DxfVersion.AutoCad2000);
+            dxf.Save("lwpolyline.dxf");
 
-            dxf.Load("lwpolyline.dxf");
+            dxf = DxfDocument.Load("lwpolyline.dxf");
         }
         private static void Polyline()
         {
 
             DxfDocument dxf = new DxfDocument();
-
+            dxf.DrawingVariables.AcadVer = DxfVersion.AutoCad2010;
             Polyline poly = new Polyline();
             poly.Vertexes.Add(new PolylineVertex(0, 0, 0));
             poly.Vertexes.Add(new PolylineVertex(10, 10, 0));
@@ -1241,7 +1417,7 @@ namespace TestDxfDocument
             poly.Vertexes.Add(new PolylineVertex(30, 10, 0));
             dxf.AddEntity(poly);
 
-            dxf.Save("polyline.dxf", DxfVersion.AutoCad2010);
+            dxf.Save("polyline.dxf");
 
         }
         private static void Solid()
@@ -1256,8 +1432,8 @@ namespace TestDxfDocument
             solid.FourthVertex  = new Vector3(1, 1, 0);
             dxf.AddEntity(solid);
 
-            dxf.Save("solid.dxf", DxfVersion.AutoCad2000);
-            //dxf.Load("solid.dxf");
+            dxf.Save("solid.dxf");
+            //dxf = DxfDocument.Load("solid.dxf");
             //dxf.Save("solid.dxf");
 
         }
@@ -1273,9 +1449,9 @@ namespace TestDxfDocument
             face3d.FourthVertex = new Vector3(0, 1, 0);
             dxf.AddEntity(face3d);
 
-            dxf.Save("face.dxf", DxfVersion.AutoCad2000);
-            dxf.Load("face.dxf");
-            dxf.Save("face return.dxf", DxfVersion.AutoCad2000);
+            dxf.Save("face.dxf");
+            dxf = DxfDocument.Load("face.dxf");
+            dxf.Save("face return.dxf");
 
         }
         private static void Ellipse()
@@ -1301,9 +1477,9 @@ namespace TestDxfDocument
             dxf.AddEntity(ellipse);
 
 
-            dxf.Save("ellipse.dxf", DxfVersion.AutoCad2000);
+            dxf.Save("ellipse.dxf");
             dxf = new DxfDocument();
-            dxf.Load("ellipse.dxf");
+            dxf = DxfDocument.Load("ellipse.dxf");
            
         }
         private static void SpeedTest()
@@ -1335,13 +1511,13 @@ namespace TestDxfDocument
             crono.Reset();
 
             crono.Start();
-            dxf.Save("speedtest.dxf", DxfVersion.AutoCad2000);
+            dxf.Save("speedtest.dxf");
             Console.WriteLine("Time saving file : " + crono.ElapsedMilliseconds / 1000.0f);
             totalTime += crono.ElapsedMilliseconds;
             crono.Reset();
 
             crono.Start();
-            dxf.Load("speedtest.dxf");
+            dxf = DxfDocument.Load("speedtest.dxf");
             Console.WriteLine("Time loading file : " + crono.ElapsedMilliseconds / 1000.0f);
             totalTime += crono.ElapsedMilliseconds;
             crono.Stop();
@@ -1409,9 +1585,9 @@ namespace TestDxfDocument
             xdata2.XDataRecord.Add(new XDataRecord(XDataCode.Long, 350));
             xdata2.XDataRecord.Add(XDataRecord.CloseControlString);
 
-            insert.XData = new Dictionary<ApplicationRegistry, XData>
+            insert.XData = new Dictionary<string, XData>
                              {
-                                 {xdata1.ApplicationRegistry, xdata1},
+                                 {xdata1.ApplicationRegistry.Name, xdata1},
                              };
             dxf.AddEntity(insert);
             dxf.AddEntity(insert2);
@@ -1419,15 +1595,15 @@ namespace TestDxfDocument
             Circle circle = new Circle(Vector3.Zero, 5);
             circle.Layer = new Layer("circle");
             circle.Layer.Color.Index = 2;
-            circle.XData = new Dictionary<ApplicationRegistry, XData>
+            circle.XData = new Dictionary<string, XData>
                              {
-                                 {xdata2.ApplicationRegistry, xdata2},
+                                 {xdata2.ApplicationRegistry.Name, xdata2},
                              };
             dxf.AddEntity(circle);
 
-            dxf.Save("Block with attributes.dxf", DxfVersion.AutoCad2000);
-            dxf.Load("Block with attributes.dxf");
-            dxf.Save("Block with attributes 2.dxf", DxfVersion.AutoCad2000);
+            dxf.Save("Block with attributes.dxf");
+            dxf = DxfDocument.Load("Block with attributes.dxf");
+            dxf.Save("Block with attributes 2.dxf");
         }
         private static void WriteNestedInsert()
         {
@@ -1462,9 +1638,10 @@ namespace TestDxfDocument
             dxf.AddEntity(insert);
             //dxf.AddEntity(circle); // this is not allowed the circle is already part of a block
 
-            dxf.Save("insert.dxf", DxfVersion.AutoCad2000);
-            dxf.Load("insert.dxf");
-            dxf.Save("insert.dxf", DxfVersion.AutoCad2010);
+            dxf.Save("insert.dxf");
+            dxf = DxfDocument.Load("insert.dxf");
+            dxf.DrawingVariables.AcadVer = DxfVersion.AutoCad2010;
+            dxf.Save("insert.dxf");
 
         }
         private static void WritePolyfaceMesh()
@@ -1490,19 +1667,7 @@ namespace TestDxfDocument
             PolyfaceMesh mesh = new PolyfaceMesh(vertexes, faces);
             dxf.AddEntity(mesh);
 
-            dxf.Save("mesh.dxf", DxfVersion.AutoCad2000);
-        }
-        private static void ReadDxfFile()
-        {
-            DxfDocument dxf = new DxfDocument();
-            //dxf.Load("AutoCad2007.dxf");
-            //dxf.Load("AutoCad2004.dxf");
-            //dxf.Load("AutoCad2000.dxf");
-            //dxf.Save("AutoCad2000 result.dxf", DxfVersion.AutoCad2000);
-            dxf.Load("AutoCad12.dxf");
-            //dxf.Load("Tablet.dxf");
-
-            //dxf.Save("Tablet result.dxf", DxfVersion.AutoCad2000);
+            dxf.Save("mesh.dxf");
         }
         private static void WriteDxfFile()
         {
@@ -1544,10 +1709,10 @@ namespace TestDxfDocument
             circle.Layer.Color=AciColor.Yellow;
             circle.LineType = LineType.Dashed;
             circle.Normal = extrusion;
-            circle.XData=new Dictionary<ApplicationRegistry, XData>
+            circle.XData=new Dictionary<string, XData>
                              {
-                                 {xdata.ApplicationRegistry, xdata},
-                                 {xdata2.ApplicationRegistry, xdata2}
+                                 {xdata.ApplicationRegistry.Name, xdata},
+                                 {xdata2.ApplicationRegistry.Name, xdata2}
                              };
 
             dxf.AddEntity(circle);
@@ -1675,14 +1840,17 @@ namespace TestDxfDocument
             text.Layer.Color.Index = 8;
             text.Alignment = TextAlignment.TopRight;
             dxf.AddEntity(text);
-            
-            //dxf.Save("AutoCad2010.dxf", DxfVersion.AutoCad2010);
-            //dxf.Save("AutoCad2007.dxf", DxfVersion.AutoCad2007);
-            dxf.Save("AutoCad2004.dxf", DxfVersion.AutoCad2004);
-            dxf.Save("AutoCad2000.dxf", DxfVersion.AutoCad2000);
 
-            dxf.Load("AutoCad2000.dxf");
-            dxf.Save("AutoCad2000 result.dxf", DxfVersion.AutoCad2000);
+            dxf.DrawingVariables.AcadVer = DxfVersion.AutoCad2010;
+            dxf.Save("AutoCad2010.dxf");
+            dxf.DrawingVariables.AcadVer = DxfVersion.AutoCad2007;
+            dxf.Save("AutoCad2007.dxf");
+            dxf.DrawingVariables.AcadVer = DxfVersion.AutoCad2004;
+            dxf.Save("AutoCad2004.dxf");
+            dxf.DrawingVariables.AcadVer = DxfVersion.AutoCad2000;
+            dxf.Save("AutoCad2000.dxf");
+            dxf = DxfDocument.Load("AutoCad2000.dxf");
+            dxf.Save("AutoCad2000 result.dxf");
         }
         private static void WritePolyline3d()
         {
@@ -1704,13 +1872,13 @@ namespace TestDxfDocument
             xdata.XDataRecord.Add(new XDataRecord(XDataCode.Integer, poly.Vertexes.Count));
             xdata.XDataRecord.Add(XDataRecord.CloseControlString);
 
-            poly.XData = new Dictionary<ApplicationRegistry, XData>
+            poly.XData = new Dictionary<string, XData>
                              {
-                                 {xdata.ApplicationRegistry, xdata},
+                                 {xdata.ApplicationRegistry.Name, xdata},
                              }; 
             dxf.AddEntity(poly);
 
-            dxf.Save("polyline.dxf", DxfVersion.AutoCad2000);
+            dxf.Save("polyline.dxf");
 
             
         }

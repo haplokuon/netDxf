@@ -78,7 +78,7 @@ namespace netDxf.Entities
         /// <param name="thirdVertex">3d face <see cref="Vector3">third vertex</see>.</param>
         /// <param name="fourthVertex">3d face <see cref="Vector3">fourth vertex</see>.</param>
         public Face3d(Vector3 firstVertex, Vector3 secondVertex, Vector3 thirdVertex, Vector3 fourthVertex)
-            : base(EntityType.Face3D, DxfObjectCode.Face3D)
+            : base(EntityType.Face3D, DxfObjectCode.Face3d)
         {
             this.firstVertex = firstVertex;
             this.secondVertex = secondVertex;

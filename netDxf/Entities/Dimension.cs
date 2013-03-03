@@ -165,7 +165,7 @@ namespace netDxf.Entities
             set
             {
                 if (value < 0.25 || value > 4.0)
-                    throw new ArgumentOutOfRangeException("value", value, "Valid values range from 0.25 to 4.00");
+                    throw new ArgumentOutOfRangeException("value", value, "The line spacing factor valid values range from 0.25 to 4.00");
                 lineSpacing = value;
             }
         }

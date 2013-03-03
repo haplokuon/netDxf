@@ -51,6 +51,8 @@ namespace netDxf.Entities
         public Polyline(List<PolylineVertex> vertexes, bool isClosed = false) 
             : base (EntityType.Polyline, DxfObjectCode.Polyline)
         {
+            if (vertexes == null)
+                throw new ArgumentNullException("vertexes");
             this.vertexes = vertexes;
             this.flags = isClosed ? PolylineTypeFlags.ClosedPolylineOrClosedPolygonMeshInM | PolylineTypeFlags.Polyline3D : PolylineTypeFlags.Polyline3D;
             this.smoothType = PolylineSmoothType.NoSmooth;
@@ -78,7 +80,7 @@ namespace netDxf.Entities
             set
             {
                 if (value == null)
-                    throw new ArgumentNullException("value"); 
+                    throw new ArgumentNullException("value");
                 this.vertexes = value;
             }
         }

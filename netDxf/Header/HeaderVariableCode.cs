@@ -25,17 +25,17 @@ namespace netDxf.Header
     /// <summary>
     /// Strings system variables
     /// </summary>
-    public static class SystemVariable
+    internal static class HeaderVariableCode
     {
         /// <summary>
         /// The AutoCAD drawing database version number.
         /// </summary>
-        public const string DatabaseVersion = "$ACADVER";
+        public const string AcadVer = "$ACADVER";
 
         /// <summary>
-        /// Next available handle (this variable must be present in the header section).
+        /// Next available handle.
         /// </summary>
-        public const string HandSeed = "$HANDSEED";
+        public const string HandleSeed = "$HANDSEED";
 
         /// <summary>
         /// Angle 0 direction.
@@ -48,6 +48,31 @@ namespace netDxf.Header
         public const string Angdir = "$ANGDIR";
 
         /// <summary>
+        /// Attribute visibility.
+        /// </summary>
+        public const string AttMode = "$ATTMODE";
+
+        /// <summary>
+        /// Units format for angles.
+        /// </summary>
+        public const string AUnits = "$AUNITS";
+
+        /// <summary>
+        /// Units precision for angles.
+        /// </summary>
+        public const string AUprec = "$AUPREC";
+
+        /// <summary>
+        /// Units format for coordinates and distances.
+        /// </summary>
+        public const string LUnits = "$LUNITS";
+
+        /// <summary>
+        /// Units precision for coordinates and distances.
+        /// </summary>
+        public const string LUprec = "$LUPREC";
+
+        /// <summary>
         /// Drawing code page; set to the system code page when a new drawing is created, but not otherwise maintained by AutoCAD.
         /// </summary>
         public const string DwgCodePage = "$DWGCODEPAGE";
@@ -55,20 +80,40 @@ namespace netDxf.Header
         /// <summary>
         /// Controls symbol table naming.
         /// </summary>
+        /// <remarks>
+        /// Controls symbol table naming:<br />
+        /// 0 = Release 14 compatibility. Limits names to 31 characters in length.<br />
+        /// Names can include the letters A to Z, the numerals 0 to 9,
+        /// and the special characters dollar sign ($), underscore (_), and hyphen (-).<br />
+        /// 1 = AutoCAD 2000.<br />
+        /// Names can be up to 255 characters in length, 
+        /// and can include the letters A to Z, the numerals 0 to 9, spaces, 
+        /// and any special characters not used for other purposes by Microsoft Windows and AutoCAD.
+        /// </remarks>
         public const string Extnames = "$EXTNAMES";
 
         /// <summary>
         /// Default drawing units for AutoCAD DesignCenter blocks.
-        /// Also applies to raster image units, eventhought they have the RasterVariables object and units in ImageDef.
         /// </summary>
+        /// <remarks>
+        /// Also applies to raster image units, eventhought they have the RasterVariables object and units in ImageDef.
+        /// </remarks>
         public const string Insunits = "$INSUNITS";
 
         /// <summary>
-        /// Controls the display of lineweights on the Model or Layout tab:
+        /// User name that saved the file.
+        /// </summary>
+        public const string LastSavedBy = "$LASTSAVEDBY";
+
+        /// <summary>
+        /// Controls the display of lineweights on the Model or Layout tab.
+        /// </summary>
+        /// <remarks>
         /// 0 = Lineweight is not displayed
         /// 1 = Lineweight is displayed
-        /// </summary>
+        /// </remarks>
         public const string LwDisplay = "$LWDISPLAY";
+
 
         /// <summary>
         /// Global linetype scale.
@@ -82,10 +127,21 @@ namespace netDxf.Header
 
         /// <summary>
         /// Controls the size of the point figures, except for PDMODE values 0 (Dot) and 1 (Empty).
-        /// A setting of 0 generates the point at 5 percent of the drawing area height.
-        /// A positive PDSIZE value specifies an absolute size for the point figures.
-        /// A negative value is interpreted as a percentage of the viewport size. 
         /// </summary>
+        /// <remarks>
+        /// A setting of 0 generates the point at 5 percent of the drawing area height.<br />
+        /// A positive PDSIZE value specifies an absolute size for the point figures.<br />
+        /// A negative value is interpreted as a percentage of the viewport size.<br />
+        /// </remarks>
         public const string PdSize = "$PDSIZE";
+
+        /// <summary>
+        /// Governs the generation of linetype patterns around the vertices of a 2D polyline.
+        /// </summary>
+        /// <remarks>
+        /// 1 = Linetype is generated in a continuous pattern around vertices of the polyline.<br />
+        /// 0 = Each segment of the polyline starts and ends with a dash.
+        /// </remarks>
+        public const string PLineGen = "$PLINEGEN";
     }
 }

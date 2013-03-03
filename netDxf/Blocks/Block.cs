@@ -71,12 +71,13 @@ namespace netDxf.Blocks
         /// Initializes a new instance of the <c>Block</c> class.
         /// </summary>
         /// <param name="name">Block name.</param>
+        /// <remarks>Do not give names starting with * to block definitions, they are reserved for internal use.</remarks>
         public Block(string name)
             : base (DxfObjectCode.Block)
         {
             if (string.IsNullOrEmpty(name))
                 throw (new ArgumentNullException("name"));
-            
+
             this.name = name;
             this.position = Vector3.Zero;
             this.layer = Layer.Default;
@@ -140,9 +141,10 @@ namespace netDxf.Blocks
         /// Gets or sets the <see cref="EntityObject">entity</see> list that makes the block.
         /// </summary>
         /// <remarks>
-        /// The UCS in effect when a block definition is created becomes the WCS for all
-        /// entities in the block definition. The new origin for these entities is shifted to
-        /// match the base point defined for the block definition. All entity data is translated to fit this new WCS.
+        /// It is recommended to define the entities of a block in the default layer "0".<br />
+        /// The UCS in effect when a block definition is created becomes the WCS for all entities in the block definition.
+        /// The new origin for these entities is shifted to  match the base point defined for the block definition.
+        /// All entity data is translated to fit this new WCS.
         /// </remarks>
         public List<EntityObject> Entities
         {
@@ -197,13 +199,9 @@ namespace netDxf.Blocks
         {
             entityNumber = this.record.AsignHandle(entityNumber);
             entityNumber = this.end.AsignHandle(entityNumber);
-            foreach(AttributeDefinition attDef in this.attributes.Values )
+            foreach (AttributeDefinition attdef in this.attributes.Values)
             {
-                entityNumber = attDef.AsignHandle(entityNumber);
-            }
-            foreach (EntityObject entity in this.entities )
-            {
-                entityNumber = entity.AsignHandle(entityNumber);
+                entityNumber = attdef.AsignHandle(entityNumber);
             }
             return base.AsignHandle(entityNumber);
         }

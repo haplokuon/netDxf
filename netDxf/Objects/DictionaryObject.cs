@@ -40,7 +40,7 @@ namespace netDxf.Objects
     internal class DictionaryObject :
         DxfObject
     {
-        private readonly List<DictionaryObjectEntry> entries;
+        private readonly Dictionary<string, string> entries;
         private readonly string handleToOwner;
         private bool isHardOwner;
         private ClonningFlag clonning;
@@ -51,15 +51,19 @@ namespace netDxf.Objects
             this.handleToOwner = handleToOwner;
             this.isHardOwner = false;
             this.clonning = ClonningFlag.KeepExisting;
-            this.entries = new List<DictionaryObjectEntry>();
+            this.entries = new Dictionary<string, string>();
         }
 
+        
         public string HandleToOwner
         {
             get { return handleToOwner; }
         }
 
-        public List<DictionaryObjectEntry> Entries
+        /// <summary>
+        /// Gets the entries dictionary (key: owner entry handle, value: name)
+        /// </summary>
+        public Dictionary<string, string> Entries
         {
             get { return entries; }
         }

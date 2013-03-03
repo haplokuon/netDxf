@@ -1,7 +1,7 @@
-#region netDxf, Copyright(C) 2009 Daniel Carvajal, Licensed under LGPL.
+#region netDxf, Copyright(C) 2013 Daniel Carvajal, Licensed under LGPL.
 
 //                        netDxf library
-// Copyright (C) 2009 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2013 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -22,6 +22,7 @@
 
 using System;
 using System.Text;
+using System.Threading;
 
 namespace netDxf
 {
@@ -298,11 +299,11 @@ namespace netDxf
         /// <returns>A string text.</returns>
         public override string ToString()
         {
+            string separator = Thread.CurrentThread.CurrentCulture.TextInfo.ListSeparator;
             StringBuilder s = new StringBuilder();
-            s.Append(string.Format("|{0};{1};{2}|" + Environment.NewLine, this.mM11, this.mM12, this.mM13));
-            s.Append(string.Format("|{0};{1};{2}|" + Environment.NewLine, this.mM21, this.mM22, this.mM23));
-            s.Append(string.Format("|{0};{1};{2}|" + Environment.NewLine, this.mM31, this.mM32, this.mM33));
-
+            s.Append(string.Format("|{0}{3}{1}{3}{2}|" + Environment.NewLine, this.mM11, this.mM12, this.mM13, separator));
+            s.Append(string.Format("|{0}{3}{1}{3}{2}|" + Environment.NewLine, this.mM21, this.mM22, this.mM23, separator));
+            s.Append(string.Format("|{0}{3}{1}{3}{2}|" + Environment.NewLine, this.mM31, this.mM32, this.mM33, separator));
             return s.ToString();
         }
 
@@ -313,11 +314,11 @@ namespace netDxf
         /// <returns>A string text.</returns>
         public string ToString(IFormatProvider provider)
         {
+            string separator = Thread.CurrentThread.CurrentCulture.TextInfo.ListSeparator;
             StringBuilder s = new StringBuilder();
-            s.Append(string.Format("|{0};{1};{2}|" + Environment.NewLine, this.mM11.ToString(provider), this.mM12.ToString(provider), this.mM13.ToString(provider)));
-            s.Append(string.Format("|{0};{1};{2}|" + Environment.NewLine, this.mM21.ToString(provider), this.mM22.ToString(provider), this.mM23.ToString(provider)));
-            s.Append(string.Format("|{0};{1};{2}|" + Environment.NewLine, this.mM31.ToString(provider), this.mM32.ToString(provider), this.mM33.ToString(provider)));
-
+            s.Append(string.Format("|{0}{3}{1}{3}{2}|" + Environment.NewLine, this.mM11.ToString(provider), this.mM12.ToString(provider), this.mM13.ToString(provider), separator));
+            s.Append(string.Format("|{0}{3}{1}{3}{2}|" + Environment.NewLine, this.mM21.ToString(provider), this.mM22.ToString(provider), this.mM23.ToString(provider), separator));
+            s.Append(string.Format("|{0}{3}{1}{3}{2}|" + Environment.NewLine, this.mM31.ToString(provider), this.mM32.ToString(provider), this.mM33.ToString(provider), separator));
             return s.ToString();
         }
 

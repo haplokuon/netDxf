@@ -1,7 +1,7 @@
-#region netDxf, Copyright(C) 2012 Daniel Carvajal, Licensed under LGPL.
+#region netDxf, Copyright(C) 2013 Daniel Carvajal, Licensed under LGPL.
 
 //                        netDxf library
-// Copyright (C) 2012 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2013 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -26,22 +26,51 @@ namespace netDxf.Header
     /// The AutoCAD drawing database version number.
     /// </summary>
     public enum DxfVersion
-    { 
+    {
+        /// <summary>
+        /// Unknown AutoCAD DXF file.
+        /// </summary>
+        [StringValue("Unkown")]
+        Unknown = 0,
+        /// <summary>
+        /// AutoCAD R10 DXF file.
+        /// </summary>
+        [StringValue("AC1006")]
+        AutoCad10 = 1,
+        /// <summary>
+        /// AutoCAD R11 and R12 DXF file.
+        /// </summary>
+        [StringValue("AC1009")]
+        AutoCad12 = 2,
+        /// <summary>
+        /// AutoCAD R13 DXF file.
+        /// </summary>
+        [StringValue("AC1012")]
+        AutoCad13 = 3,
+        /// <summary>
+        /// AutoCAD R14 DXF file.
+        /// </summary>
+        [StringValue("AC1014")]
+        AutoCad14 = 4,
         /// <summary>
         /// AutoCAD 2000 DXF file.
         /// </summary>
-        [StringValue("AC1015")] AutoCad2000 = 0,
+        [StringValue("AC1015")]
+        AutoCad2000 = 5,
         /// <summary>
         /// AutoCAD 2004 DXF file.
         /// </summary>
-        [StringValue("AC1018")] AutoCad2004 = 1,
+        [StringValue("AC1018")]
+        AutoCad2004 = 6,
         /// <summary>
         /// AutoCAD 2007 DXF file.
         /// </summary>
-        [StringValue("AC1021")] AutoCad2007 = 2,
+        [StringValue("AC1021")]
+        AutoCad2007 = 7,
         /// <summary>
         /// AutoCAD 2010 DXF file.
         /// </summary>
-        [StringValue("AC1024")] AutoCad2010 = 3
+        [StringValue("AC1024")]
+        AutoCad2010 = 8
     }
 }

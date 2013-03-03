@@ -61,7 +61,7 @@ namespace netDxf.Tables
         #region constants
 
         /// <summary>
-        /// Gets the default Layer.
+        /// Gets the default Layer 0.
         /// </summary>
         public static Layer Default
         {

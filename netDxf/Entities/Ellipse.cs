@@ -273,8 +273,8 @@ namespace netDxf.Entities
             }
             else
             {
-                this.startAngle = Math.Round(Vector2.Angle(start) * MathHelper.RadToDeg, MathHelper.MaxAngleDecimals);
-                this.endAngle = Math.Round(Vector2.Angle(end) * MathHelper.RadToDeg, MathHelper.MaxAngleDecimals);
+                this.startAngle = Vector2.Angle(start) * MathHelper.RadToDeg;
+                this.endAngle = Vector2.Angle(end) * MathHelper.RadToDeg;
             }            
         }
 

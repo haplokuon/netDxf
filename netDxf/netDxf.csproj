@@ -76,9 +76,12 @@
     <Compile Include="Entities\Angular3PointDimension.cs" />
     <Compile Include="Entities\Angular2LineDimension.cs" />
     <Compile Include="Entities\DiametricDimension.cs" />
+    <Compile Include="Entities\HatchGradientPattern.cs" />
     <Compile Include="Entities\ImageClippingBoundary.cs" />
     <Compile Include="Entities\ImageDisplayFlags.cs" />
     <Compile Include="Entities\Image.cs" />
+    <Compile Include="Entities\MLine.cs" />
+    <Compile Include="Entities\MLineVertex.cs" />
     <Compile Include="Entities\OrdinateDimension.cs" />
     <Compile Include="Entities\OrdinateDimensionAxis.cs" />
     <Compile Include="Entities\RadialDimension.cs" />
@@ -90,7 +93,7 @@
     <Compile Include="Entities\MText.cs" />
     <Compile Include="Entities\Hatch.cs" />
     <Compile Include="Entities\HatchPattern.cs" />
-    <Compile Include="Entities\HatchPatternBoundary.cs" />
+    <Compile Include="Entities\HatchBoundaryPath.cs" />
     <Compile Include="Entities\HatchPatternLineDefinition.cs" />
     <Compile Include="Entities\LwPolyline.cs" />
     <Compile Include="Entities\LwPolylineVertex.cs" />
@@ -100,18 +103,23 @@
     <Compile Include="Entities\SplineTypeFlags.cs" />
     <Compile Include="Entities\SplineVertex.cs" />
     <Compile Include="Entities\VertexTypeFlags.cs" />
+    <Compile Include="Header\AttMode.cs" />
+    <Compile Include="Header\HeaderVariables.cs" />
     <Compile Include="Header\PointShape.cs" />
     <Compile Include="Lineweight.cs" />
     <Compile Include="Header\DefaultDrawingUnits.cs" />
     <Compile Include="Header\DxfVersion.cs" />
-    <Compile Include="Header\SystemVariable.cs" />
+    <Compile Include="Header\HeaderVariableCode.cs" />
     <Compile Include="Entities\MTextLineSpacingStyle.cs" />
-    <Compile Include="Objects\DictionaryObject.cs" />
-    <Compile Include="Objects\DictionaryObjectEntry.cs" />
+    <Compile Include="Objects\DictionaryObject.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Objects\Group.cs" />
     <Compile Include="Objects\ImageDef.cs" />
     <Compile Include="Objects\ImageDefReactor.cs" />
     <Compile Include="Objects\MLineStyle.cs" />
     <Compile Include="Objects\RasterVariables.cs" />
+    <Compile Include="Objects\MLineStyleElement.cs" />
     <Compile Include="Vector2.cs" />
     <Compile Include="Vector3.cs" />
     <Compile Include="Matrix3.cs" />

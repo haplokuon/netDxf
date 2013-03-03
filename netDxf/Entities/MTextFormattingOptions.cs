@@ -1,7 +1,7 @@
-﻿#region netDxf, Copyright(C) 2012 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf, Copyright(C) 2013 Daniel Carvajal, Licensed under LGPL.
 
 //                        netDxf library
-// Copyright (C) 2012 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2013 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -26,7 +26,7 @@ using netDxf.Tables;
 namespace netDxf.Entities
 {
     /// <summary>
-    /// Options for the MText entity text formatting.
+    /// Options for the <see cref="MText">multiline text</see> entity text formatting.
     /// </summary>
     public class MTextFormattingOptions
     {
@@ -74,7 +74,7 @@ namespace netDxf.Entities
         /// <summary>
         /// Initializes a new instance of the <c>MTextFormattingOptions</c> class
         /// </summary>
-        /// <param name="style">Current style of the MText entity.</param>
+        /// <param name="style">Current style of the <see cref="MText">multiline text</see> entity.</param>
         public MTextFormattingOptions(TextStyle style)
         {
             this.bold = false;
@@ -217,6 +217,7 @@ namespace netDxf.Entities
         #endregion
 
         #region public methods
+
         /// <summary>
         /// Obtains the string that represents the formatted text appling the current options.
         /// </summary>
@@ -263,6 +264,7 @@ namespace netDxf.Entities
                 formattedText = string.Format("\\W{0};{1}", widthFactor, formattedText);
             return "{" + formattedText + "}";
         }
+
         #endregion
 
     }

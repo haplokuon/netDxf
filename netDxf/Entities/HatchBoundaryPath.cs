@@ -60,16 +60,17 @@ namespace netDxf.Entities
     }
 
     /// <summary>
-    /// Represent a loop of a hatch boundary path.
-    /// The entities that make a loop can be any combination of lines, polylines, circles, arcs, ellipses, and splines.
+    /// Represent a loop of a <see cref="Hatch">hatch</see> boundaries.
     /// </summary>
     /// <remarks>
+    /// The first loop will be considered as the Outermost path.<br />
+    /// The entities that make a loop can be any combination of lines, polylines, circles, arcs, ellipses, and splines.<br />
     /// The entities that define a loop must define a closed path and they have to be on the same plane as the hatch, 
-    /// if these conditions are not met the result will be unpredictable.
+    /// if these conditions are not met the result will be unpredictable.<br />
     /// The normal and the elevation will be omited (the hatch elevation and normal will be used instead).
     /// Only the x and y coordinates of the line, ellipse, the circle, and spline will be used.
-    /// Circles, full ellipses, closed polylines, closed splines are closed paths so only one must exist in the data list.
-    /// Lines, arcs, ellipse arcs, open polylines, and open splines are open paths so more enties must exist to make a closed loop.
+    /// Circles, full ellipses, closed polylines, closed splines are closed paths so only one should exist in the data list.
+    /// Lines, arcs, ellipse arcs, open polylines, and open splines are open paths so more enties should exist to make a closed loop.
     /// </remarks>
     public class HatchBoundaryPath
     {
@@ -111,6 +112,7 @@ namespace netDxf.Entities
         public BoundaryPathTypeFlag PathTypeFlag
         {
             get { return pathTypeFlag; }
+            internal set { pathTypeFlag = value; }
         }
 
         /// <summary>
@@ -130,6 +132,7 @@ namespace netDxf.Entities
             numberOfEdges = 0;
             pathTypeFlag = BoundaryPathTypeFlag.Derived | BoundaryPathTypeFlag.External;
 
+            // the first loop will be considered as the Outermost path
             foreach (EntityObject entity in data)
             {
                 // it seems that AutoCAD does not have problems on creating loops that theorically does not make sense, like, for example an internal loop that is made of a single arc.

@@ -41,7 +41,7 @@ namespace netDxf.Entities
     }
 
     /// <summary>
-    /// Represent a clipping boundary to display specific portions of an image.
+    /// Represent a clipping boundary to display specific portions of an <see cref="Image">image</see>.
     /// </summary>
     public class ImageClippingBoundary
     {

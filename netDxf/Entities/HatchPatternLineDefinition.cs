@@ -1,7 +1,7 @@
-﻿#region netDxf, Copyright(C) 2012 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf, Copyright(C) 2013 Daniel Carvajal, Licensed under LGPL.
 
 //                        netDxf library
-// Copyright (C) 2012 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2013 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -25,7 +25,7 @@ using System.Collections.Generic;
 namespace netDxf.Entities
 {
     /// <summary>
-    /// Defines a single line thats is part of a hatch pattern.
+    /// Defines a single line thats is part of a <see cref="HatchPattern">hatch pattern</see>.
     /// </summary>
     public class HatchPatternLineDefinition
     {
