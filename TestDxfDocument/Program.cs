@@ -22,6 +22,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using netDxf;
@@ -77,7 +78,7 @@ namespace TestDxfDocument
             //ReadDxfFile();
             //ExplodeTest();
             //HatchTestLinesBoundary();
-            HatchTest1();
+            //HatchTest1();
             //HatchTest2();
             //HatchTest3();
             //BlockAttributes();
@@ -95,6 +96,7 @@ namespace TestDxfDocument
         }
         private static void Test()
         {
+
             // important changes in netDxf 0.4 version
 
             DxfVersion version = DxfDocument.CheckDxfFileVersion("sample.dxf");

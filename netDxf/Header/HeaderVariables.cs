@@ -24,12 +24,17 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Text;
+using netDxf.Entities;
 
 namespace netDxf.Header
 {
     /// <summary>
     /// Represents the header variables of a dxf document.
     /// </summary>
+    /// <remarks>
+    /// The names of header variables are the same as they appear in the official dxf documentation but without the $,
+    /// check it in case of doubt on what they represent.
+    /// </remarks>
     public class HeaderVariables
     {
         #region private fields
@@ -43,6 +48,7 @@ namespace netDxf.Header
         /// <summary>
         /// Initializes a new instance of the <c>SystemVariables</c>.
         /// </summary>
+        /// <remarks>The default values are the same ones that are apply to a new AutoCad drawing.</remarks>
         public HeaderVariables()
         {
             variables = new Dictionary<string, HeaderVariable>
@@ -55,6 +61,17 @@ namespace netDxf.Header
                                {HeaderVariableCode.AttMode, new HeaderVariable(HeaderVariableCode.AttMode, 1)},
                                {HeaderVariableCode.AUnits, new HeaderVariable(HeaderVariableCode.AUnits, 0)},
                                {HeaderVariableCode.AUprec, new HeaderVariable(HeaderVariableCode.AUprec, 0)},
+                               {HeaderVariableCode.CeColor, new HeaderVariable(HeaderVariableCode.CeColor, 256)},
+                               {HeaderVariableCode.CeLtScale, new HeaderVariable(HeaderVariableCode.CeLtScale, 1.0)},
+                               {HeaderVariableCode.CeLtype, new HeaderVariable(HeaderVariableCode.CeLtype, "ByLayer")},
+                               {HeaderVariableCode.CeLweight, new HeaderVariable(HeaderVariableCode.CeLweight, -1)},
+                               {HeaderVariableCode.CLayer, new HeaderVariable(HeaderVariableCode.CLayer, "0")},
+                               {HeaderVariableCode.CMLJust, new HeaderVariable(HeaderVariableCode.CMLJust, 0)},
+                               {HeaderVariableCode.CMLScale, new HeaderVariable(HeaderVariableCode.CMLScale, 20)},
+                               {HeaderVariableCode.CMLStyle, new HeaderVariable(HeaderVariableCode.CMLStyle, "Standard")},
+                               {HeaderVariableCode.DimStyle, new HeaderVariable(HeaderVariableCode.DimStyle, "Standard")},
+                               {HeaderVariableCode.TextSize, new HeaderVariable(HeaderVariableCode.TextSize, 2.5)},
+                               {HeaderVariableCode.TextStyle, new HeaderVariable(HeaderVariableCode.TextStyle, "Standard")},
                                {HeaderVariableCode.LUnits, new HeaderVariable(HeaderVariableCode.LUnits, 2)},
                                {HeaderVariableCode.LUprec, new HeaderVariable(HeaderVariableCode.LUprec, 4)},
                                {HeaderVariableCode.Extnames, new HeaderVariable(HeaderVariableCode.Extnames, 1)},
@@ -149,6 +166,141 @@ namespace netDxf.Header
         {
             get { return (int)variables[HeaderVariableCode.AUprec].Value; }
             set { variables[HeaderVariableCode.AUprec].Value = value; }
+        }
+
+        /// <summary>
+        /// Current entity color.
+        /// </summary>
+        /// <remarks>Default value: 256 (ByLayer). This header variable only supports indexed colors.</remarks>
+        public AciColor CeColor
+        {
+            get { return AciColor.FromCadIndex((short) variables[HeaderVariableCode.CeColor].Value); }
+            set
+            {
+                if (value == null)
+                    throw new ArgumentNullException("value");
+                variables[HeaderVariableCode.CeColor].Value = value.Index;
+            }
+        }
+
+        /// <summary>
+        /// Current entity linetype scale.
+        /// </summary>
+        /// <remarks>Default value: 1.0.</remarks>
+        public double CeLtScale
+        {
+            get { return (double) variables[HeaderVariableCode.CeLtScale].Value; }
+            set
+            {
+                if (value <= 0 )
+                    throw new ArgumentOutOfRangeException("value", value, "The linetype scale must be greater than zero.");
+                variables[HeaderVariableCode.CeLtScale].Value = value;
+            }
+        }
+
+        /// <summary>
+        /// Current entity lineweight.
+        /// </summary>
+        /// <remarks>Default value: -1 (ByLayer).</remarks>
+        public Lineweight CeLweight
+        {
+            get { return Lineweight.FromCadIndex((short) variables[HeaderVariableCode.CeLweight].Value); }
+            set
+            {
+                if (value == null)
+                    throw new ArgumentNullException("value");
+                variables[HeaderVariableCode.CeLweight].Value = value.Value;
+            }
+        }
+
+        /// <summary>
+        /// Current entity linetype name.
+        /// </summary>
+        /// <remarks>Default value: ByLayer.</remarks>
+        public string CeLtype
+        {
+            get { return (string)variables[HeaderVariableCode.CeLtype].Value; }
+            set
+            {
+                if (string.IsNullOrEmpty(value))
+                    throw new ArgumentNullException("value");
+                variables[HeaderVariableCode.CeLtype].Value = value;
+            }
+        }
+
+        /// <summary>
+        /// Current layer name.
+        /// </summary>
+        /// <remarks>Default value: 0.</remarks>
+        public string CLayer
+        {
+            get { return (string)variables[HeaderVariableCode.CLayer].Value; }
+            set
+            {
+                if (string.IsNullOrEmpty(value))
+                    throw new ArgumentNullException("value");
+                variables[HeaderVariableCode.CLayer].Value = value;
+            }
+        }              
+
+        /// <summary>
+        /// Current multiline justification.
+        /// </summary>
+        /// <remarks>Default value: 0 (Top).</remarks>
+        public MLineJustification CMLJust
+        {
+            get { return (MLineJustification)variables[HeaderVariableCode.CMLJust].Value; }
+            set { variables[HeaderVariableCode.CMLJust].Value = (int)value; }
+        }
+
+        /// <summary>
+        /// Current multiline scale.
+        /// </summary>
+        /// <remarks>Default value: 20.</remarks>
+        public double CMLScale
+        {
+            get { return (double) variables[HeaderVariableCode.CMLScale].Value; }
+            set { variables[HeaderVariableCode.CMLScale].Value = value; }
+        }
+
+        /// <summary>
+        /// Current multiline style.
+        /// </summary>
+        /// <remarks>Default value: Standard.</remarks>
+        public string CMLStyle
+        {
+            get { return (string)variables[HeaderVariableCode.CMLStyle].Value; }
+            set { variables[HeaderVariableCode.CMLStyle].Value = value; }
+        }
+
+        /// <summary>
+        /// Current dimension style.
+        /// </summary>
+        /// <remarks>Default value: Standard.</remarks>
+        public string DimStyle
+        {
+            get { return (string)variables[HeaderVariableCode.DimStyle].Value; }
+            set { variables[HeaderVariableCode.DimStyle].Value = value; }
+        }
+
+        /// <summary>
+        /// Default text height.
+        /// </summary>
+        /// <remarks>Default value: 2.5.</remarks>
+        public double TextSize
+        {
+            get { return (double)variables[HeaderVariableCode.TextSize].Value; }
+            set { variables[HeaderVariableCode.TextSize].Value = value; }
+        }
+
+        /// <summary>
+        /// Current text style.
+        /// </summary>
+        /// <remarks>Default value: Standard.</remarks>
+        public string TextStyle
+        {
+            get { return (string)variables[HeaderVariableCode.TextStyle].Value; }
+            set { variables[HeaderVariableCode.TextStyle].Value = value; }
         }
 
         /// <summary>

@@ -197,8 +197,9 @@ namespace netDxf.Entities
             get { return scale; }
             set
             {
-                if (value <= 0)
-                    throw new ArgumentOutOfRangeException("value", value, "The MLine scale must be greater than zero.");
+                // AutoCad accepts negative scales, but it is not recommended
+                //if (value <= 0)
+                //    throw new ArgumentOutOfRangeException("value", value, "The MLine scale must be greater than zero.");
                 scale = value;
             }
         }

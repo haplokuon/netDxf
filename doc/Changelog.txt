@@ -1,3 +1,6 @@
+[0.4.1 - 2013/03/07]
++ Added new header variables that handle the properties applied to new entities.
+
 [0.4.0 - 2013/03/03]
 + Added MLine entity.
 + Added Groups.

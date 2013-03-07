@@ -149,5 +149,29 @@ namespace netDxf
 
         #endregion
 
+        #region internal methods
+
+        internal static Lineweight FromCadIndex(short index)
+        {
+            Lineweight lineweight;
+            switch (index)
+            {
+                case -3:
+                    lineweight = Default;
+                    break;
+                case -2:
+                    lineweight = ByBlock;
+                    break;
+                case -1:
+                    lineweight = ByLayer;
+                    break;
+                default:
+                    lineweight = new Lineweight(index);
+                    break;
+            }
+
+            return lineweight;
+        }
+        #endregion
     }
 }

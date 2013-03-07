@@ -50,6 +50,7 @@ namespace netDxf
         #endregion
 
         #region constants
+
         /// <summary>
         /// Represents the smallest number.
         /// </summary>

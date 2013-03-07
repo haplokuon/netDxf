@@ -63,6 +63,61 @@ namespace netDxf.Header
         public const string AUprec = "$AUPREC";
 
         /// <summary>
+        /// Current entity color.
+        /// </summary>
+        public const string CeColor = "$CECOLOR";
+
+        /// <summary>
+        /// Current entity linetype scale.
+        /// </summary>
+        public const string CeLtScale = "$CELTSCALE";
+
+        /// <summary>
+        /// Current entity lineweight.
+        /// </summary>
+        public const string CeLweight = "$CELWEIGHT";
+
+        /// <summary>
+        /// Current entity linetype name.
+        /// </summary>
+        public const string CeLtype = "$CELTYPE";
+
+        /// <summary>
+        /// Current layer name.
+        /// </summary>
+        public const string CLayer = "$CLAYER";
+
+        /// <summary>
+        /// Current multiline justification.
+        /// </summary>
+        public const string CMLJust = "$CMLJUST";
+
+        /// <summary>
+        /// Current multiline scale.
+        /// </summary>
+        public const string CMLScale = "$CMLSCALE";
+
+        /// <summary>
+        /// Current multiline style name.
+        /// </summary>
+        public const string CMLStyle = "$CMLSTYLE";
+
+        /// <summary>
+        /// Current dimension style name
+        /// </summary>
+        public const string DimStyle = "$DIMSTYLE";
+
+        /// <summary>
+        /// Default text height.
+        /// </summary>
+        public const string TextSize = "$TEXTSIZE";
+
+        /// <summary>
+        /// Current text style name.
+        /// </summary>
+        public const string TextStyle = "$TEXTSTYLE";
+
+        /// <summary>
         /// Units format for coordinates and distances.
         /// </summary>
         public const string LUnits = "$LUNITS";

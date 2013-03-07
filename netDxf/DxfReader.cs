@@ -513,6 +513,70 @@ namespace netDxf
                         case HeaderVariableCode.AUprec:
                             this.headerVariables.AUprec = int.Parse(dxfPairInfo.Value);
                             break;
+                        case HeaderVariableCode.CeColor:
+                            short colorIndex = short.Parse(dxfPairInfo.Value);
+                            AciColor color;
+                            switch (colorIndex)
+                            {
+                                case 0:
+                                    color = AciColor.ByBlock;
+                                    break;
+                                case 256:
+                                    color = AciColor.ByLayer;
+                                    break;
+                                default:
+                                    color = new AciColor(colorIndex);
+                                    break;
+                            }
+                            this.headerVariables.CeColor = color;
+                            break;
+                        case HeaderVariableCode.CeLtScale:
+                            this.headerVariables.CeLtScale = double.Parse(dxfPairInfo.Value);
+                            break;
+                        case HeaderVariableCode.CeLtype:
+                            this.headerVariables.CeLtype = dxfPairInfo.Value;
+                            break;
+                        case HeaderVariableCode.CeLweight:
+                            short weightIndex = short.Parse(dxfPairInfo.Value);
+                            Lineweight lineweight;
+                            switch (weightIndex)
+                            {
+                                case -3:
+                                    lineweight = Lineweight.Default;
+                                    break;
+                                case -2:
+                                    lineweight = Lineweight.ByBlock;
+                                    break;
+                                case -1:
+                                    lineweight = Lineweight.ByLayer;
+                                    break;
+                                default:
+                                    lineweight = new Lineweight(weightIndex);
+                                    break;
+                            }
+                            this.headerVariables.CeLweight = lineweight;
+                            break;
+                        case HeaderVariableCode.CLayer:
+                            this.headerVariables.CLayer = dxfPairInfo.Value;
+                            break;
+                        case HeaderVariableCode.CMLJust:
+                            this.headerVariables.CMLJust = (MLineJustification) int.Parse(dxfPairInfo.Value);
+                            break;
+                        case HeaderVariableCode.CMLScale:
+                            this.headerVariables.CMLScale = double.Parse(dxfPairInfo.Value);
+                            break;
+                        case HeaderVariableCode.CMLStyle:
+                            this.headerVariables.CMLStyle = dxfPairInfo.Value;
+                            break;
+                        case HeaderVariableCode.DimStyle:
+                            this.headerVariables.DimStyle = dxfPairInfo.Value;
+                            break;
+                        case HeaderVariableCode.TextSize:
+                            this.headerVariables.TextSize = double.Parse(dxfPairInfo.Value);
+                            break;
+                        case HeaderVariableCode.TextStyle:
+                            this.headerVariables.TextStyle = dxfPairInfo.Value;
+                            break;
                         case HeaderVariableCode.LastSavedBy:
                             this.headerVariables.LastSavedBy = dxfPairInfo.Value;
                             break;
@@ -917,7 +981,7 @@ namespace netDxf
                         break;
                     case 62: //aci color code
                         if (!color.UseTrueColor)
-                            color = GetColorByIndex(short.Parse(dxfPairInfo.Value));
+                            color = AciColor.FromCadIndex(short.Parse(dxfPairInfo.Value));
                         dxfPairInfo = this.ReadCodePair();
                         break;
                     case 420: // the entity uses true color
@@ -935,7 +999,7 @@ namespace netDxf
                         dxfPairInfo = this.ReadCodePair();
                         break;
                     case 370: //lineweight code
-                        lineweight = GetLineweightByIndex(short.Parse(dxfPairInfo.Value));
+                        lineweight = Lineweight.FromCadIndex(short.Parse(dxfPairInfo.Value));
                         dxfPairInfo = this.ReadCodePair();
                         break;
                     case 48: //linetype scale
@@ -1592,7 +1656,7 @@ namespace netDxf
                         break;
                     case 62: //aci color code
                         if (!color.UseTrueColor)
-                            color = GetColorByIndex(short.Parse(dxfPairInfo.Value));
+                            color = AciColor.FromCadIndex(short.Parse(dxfPairInfo.Value));
                         dxfPairInfo = this.ReadCodePair();
                         break;
                     case 420: //the entity uses true color
@@ -1610,7 +1674,7 @@ namespace netDxf
                         dxfPairInfo = this.ReadCodePair();
                         break;
                     case 370: //lineweight code
-                        lineweight = GetLineweightByIndex(short.Parse(dxfPairInfo.Value));
+                        lineweight = Lineweight.FromCadIndex(short.Parse(dxfPairInfo.Value));
                         dxfPairInfo = this.ReadCodePair();
                         break;
                     case 48: //linetype scale
@@ -4867,7 +4931,7 @@ namespace netDxf
                         break;
                     case 62:
                         if(!fillColor.UseTrueColor)
-                            fillColor = GetColorByIndex(short.Parse(dxfPairInfo.Value));
+                            fillColor = AciColor.FromCadIndex(short.Parse(dxfPairInfo.Value));
                         dxfPairInfo = this.ReadCodePair();
                         break;
                     case 420:
@@ -4920,7 +4984,7 @@ namespace netDxf
                 double offset = double.Parse(dxfPairInfo.Value); // code 49
                 dxfPairInfo = this.ReadCodePair();
 
-                AciColor color = GetColorByIndex(short.Parse(dxfPairInfo.Value));
+                AciColor color = AciColor.FromCadIndex(short.Parse(dxfPairInfo.Value));
                 dxfPairInfo = this.ReadCodePair();
 
                 if (dxfPairInfo.Code == 420)
@@ -5094,47 +5158,6 @@ namespace netDxf
                 alignment = TextAlignment.Fit;
 
             return alignment;
-        }
-
-        private AciColor GetColorByIndex(short index)
-        {
-            AciColor color;
-            switch (index)
-            {
-                case 0:
-                    color = AciColor.ByBlock;
-                    break;
-                case 256:
-                    color = AciColor.ByLayer;
-                    break;
-                default:
-                    color = new AciColor(index);
-                    break;
-            }
-
-            return color;
-        }
-
-        private Lineweight GetLineweightByIndex(short index)
-        {
-            Lineweight lineweight;
-            switch (index)
-            {
-                case -3:
-                    lineweight = Lineweight.Default;
-                    break;
-                case -2:
-                    lineweight = Lineweight.ByBlock;
-                    break;
-                case -1:
-                    lineweight = Lineweight.ByLayer;
-                    break;
-                default:
-                    lineweight = new Lineweight(index);
-                    break;
-            }
-
-            return lineweight;
         }
 
         private Block GetBlock(string name)

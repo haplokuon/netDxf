@@ -736,7 +736,7 @@ namespace netDxf
         /// Check if the components of two colors are equal.
         /// </summary>
         /// <param name="obj">Another color to compare to.</param>
-        /// <returns>True if the three components are almost equal or false in anyother case.</returns>
+        /// <returns>True if the three components are equal or false in anyother case.</returns>
         public bool Equals(AciColor obj)
         {
             return (obj.r == this.r) && (obj.g == this.g) && (obj.b == this.b);
@@ -761,6 +761,25 @@ namespace netDxf
             int b = index;
 
             return new AciColor((byte) r, (byte) g, (byte) b);
+        }
+
+        internal static AciColor FromCadIndex(short index)
+        {
+            AciColor color;
+            switch (index)
+            {
+                case 0:
+                    color = ByBlock;
+                    break;
+                case 256:
+                    color = ByLayer;
+                    break;
+                default:
+                    color = new AciColor(index);
+                    break;
+            }
+
+            return color;
         }
 
         #endregion
