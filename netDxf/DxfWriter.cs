@@ -271,6 +271,9 @@ namespace netDxf
             if (this.activeSection != StringCode.HeaderSection)
                 throw new InvalidDxfSectionException(this.activeSection);
 
+            // the LastSavedBy header variable is not recognized in AutoCad2000 dxf files, so it will not be written
+            if (variable.Name == HeaderVariableCode.LastSavedBy && this.version <= DxfVersion.AutoCad2000)
+                return;
             this.WriteCodePair(9, variable.Name);
             this.WriteCodePair(variable.CodeGroup, variable.Value);
         }
@@ -2060,9 +2063,9 @@ namespace netDxf
             this.WriteCodePair(100, SubclassMarker.Text);
 
             // we apply the insert rotation to the attribute
-            double sine = attrib.Definition.Position.X * Math.Sin(insert.Rotation * MathHelper.DegToRad);
-            double cosine = attrib.Definition.Position.Y * Math.Cos(insert.Rotation * MathHelper.DegToRad);
-            Vector3 point = new Vector3(cosine - sine, cosine + sine, attrib.Definition.Position.Z);
+            double sine = attrib.Position.X * Math.Sin(insert.Rotation * MathHelper.DegToRad);
+            double cosine = attrib.Position.Y * Math.Cos(insert.Rotation * MathHelper.DegToRad);
+            Vector3 point = new Vector3(cosine - sine, cosine + sine, attrib.Position.Z);
 
             Vector3 ocsPosition = point + MathHelper.Transform(insert.Position, insert.Normal, MathHelper.CoordinateSystem.World, MathHelper.CoordinateSystem.Object);
 
@@ -2070,12 +2073,12 @@ namespace netDxf
             this.WriteCodePair(20, ocsPosition.Y);
             this.WriteCodePair(30, ocsPosition.Z);
 
-            this.WriteCodePair(40, attrib.Definition.Height);
-            this.WriteCodePair(41, attrib.Definition.WidthFactor);
-            this.WriteCodePair(7, attrib.Definition.Style);
+            this.WriteCodePair(40, attrib.Height);
+            this.WriteCodePair(41, attrib.WidthFactor);
+            this.WriteCodePair(7, attrib.Style);
             this.WriteCodePair(1, attrib.Value);
 
-            switch (attrib.Definition.Alignment)
+            switch (attrib.Alignment)
             {
                 case TextAlignment.TopLeft:
                     this.WriteCodePair(72, 0);
@@ -2128,7 +2131,7 @@ namespace netDxf
             this.WriteCodePair(21, ocsPosition.Y);
             this.WriteCodePair(31, ocsPosition.Z);
 
-            this.WriteCodePair(50, attrib.Definition.Rotation + insert.Rotation);
+            this.WriteCodePair(50, attrib.Rotation + insert.Rotation);
 
             this.WriteCodePair(210, insert.Normal.X);
             this.WriteCodePair(220, insert.Normal.Y);
@@ -2136,11 +2139,11 @@ namespace netDxf
 
             this.WriteCodePair(100, SubclassMarker.Attribute);
 
-            this.WriteCodePair(2, attrib.Definition.Id);
+            this.WriteCodePair(2, attrib.Id);
 
-            this.WriteCodePair(70, (int) attrib.Definition.Flags);
+            this.WriteCodePair(70, (int) attrib.Flags);
 
-            switch (attrib.Definition.Alignment)
+            switch (attrib.Alignment)
             {
                 case TextAlignment.TopLeft:
                     this.WriteCodePair(74, 3);

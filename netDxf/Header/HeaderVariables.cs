@@ -55,6 +55,7 @@ namespace netDxf.Header
                            {
                                {HeaderVariableCode.AcadVer, new HeaderVariable(HeaderVariableCode.AcadVer, StringEnum.GetStringValue(DxfVersion.AutoCad2000))},
                                {HeaderVariableCode.DwgCodePage, new HeaderVariable(HeaderVariableCode.DwgCodePage, "ANSI_" + Encoding.Default.WindowsCodePage)},
+                               {HeaderVariableCode.LastSavedBy, new HeaderVariable(HeaderVariableCode.LastSavedBy, Environment.UserName)},
                                {HeaderVariableCode.HandleSeed, new HeaderVariable(HeaderVariableCode.HandleSeed, Convert.ToString(1, 16))},
                                {HeaderVariableCode.Angbase, new HeaderVariable(HeaderVariableCode.Angbase, 0)},
                                {HeaderVariableCode.Angdir, new HeaderVariable(HeaderVariableCode.Angdir, 0)},
@@ -76,7 +77,6 @@ namespace netDxf.Header
                                {HeaderVariableCode.LUprec, new HeaderVariable(HeaderVariableCode.LUprec, 4)},
                                {HeaderVariableCode.Extnames, new HeaderVariable(HeaderVariableCode.Extnames, 1)},
                                {HeaderVariableCode.Insunits, new HeaderVariable(HeaderVariableCode.Insunits, (int) DefaultDrawingUnits.Millimeters)},
-                               {HeaderVariableCode.LastSavedBy, new HeaderVariable(HeaderVariableCode.LastSavedBy, Environment.UserName)},
                                {HeaderVariableCode.LtScale, new HeaderVariable(HeaderVariableCode.LtScale, 1.0)},
                                {HeaderVariableCode.LwDisplay, new HeaderVariable(HeaderVariableCode.LwDisplay, 0)},
                                {HeaderVariableCode.PdMode, new HeaderVariable(HeaderVariableCode.PdMode, (int) PointShape.Dot)},
@@ -369,7 +369,8 @@ namespace netDxf.Header
         /// User name that saved the file.
         /// </summary>
         /// <remarks>
-        /// By default it uses the user name of the person who is currently logged on to the Windows operating system.
+        /// By default it uses the user name of the person who is currently logged on to the Windows operating system.<br />
+        /// This header variable is not compatible with AutoCad2000 or lower versions.
         /// </remarks>
         public string LastSavedBy
         {

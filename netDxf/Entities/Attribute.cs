@@ -21,22 +21,36 @@
 #endregion
 
 using System;
+using netDxf.Tables;
 
 namespace netDxf.Entities
 {
     /// <summary>
     /// Represents a attribute <see cref="EntityObject">entity</see>.
     /// </summary>
-    /// <remarks>The attribute position and orientation are expressed in local coordinates of the <see cref="Insert">Insert</see> entity to which it belongs.</remarks>
+    /// <remarks>
+    /// The attribute position and orientation are expressed in local coordinates of the <see cref="Insert">Insert</see> entity to which it belongs.<br />
+    /// During the attribute initialization a copy of all attribute definition properties will be copied,
+    /// so any changes made to the attribute definition will only be applied to new attribute instances and not to existing ones.
+    /// This behaviour is to allow imported <see cref="Insert">Insert</see> entities to have attributes without definition in the block, 
+    /// althought this might sound not totally correct it is allowed by AutoCad.
+    /// </remarks>
     public class Attribute :
         EntityObject
     {
         #region private fields
 
         private AttributeDefinition definition;
+        private string id;
         private object value;
+        private TextStyle style;
+        private Vector3 position;
+        private AttributeFlags flags;
+        private double height;
+        private double widthFactor;
         private double rotation;
         private Vector3 normal;
+        private TextAlignment alignment;
 
         #endregion
 
@@ -70,9 +84,16 @@ namespace netDxf.Entities
             if (definition == null)
                 throw new ArgumentNullException("definition");
             this.definition = definition;
+            this.id = definition.Id;
             this.value = value;
+            this.style = definition.Style;
+            this.position = definition.Position;
+            this.flags = definition.Flags;
+            this.height = definition.Height;
+            this.widthFactor = definition.WidthFactor;
             this.rotation = definition.Rotation;
             this.normal = definition.Normal;
+            this.alignment = definition.Alignment;
         }
 
         #endregion
@@ -82,6 +103,7 @@ namespace netDxf.Entities
         /// <summary>
         /// Gets the attribute definition.
         /// </summary>
+        /// <remarks>If the insert attribute has no definition it will return null.</remarks>
         public AttributeDefinition Definition
         {
             get { return this.definition; }
@@ -89,12 +111,84 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets or sets the attribute text rotation in degrees.
+        /// Gets the attribute identifier.
         /// </summary>
-        internal double Rotation
+        public string Id
         {
-            get { return this.rotation; }
-            set { this.rotation = value; }
+            get { return this.id; }
+            internal set { this.id = value;}
+        }
+
+        /// <summary>
+        /// Gets or sets the attribute text height.
+        /// </summary>
+        public double Height
+        {
+            get { return this.height; }
+            set
+            {
+                if (value <= 0)
+                    throw (new ArgumentOutOfRangeException("value", value, "The height should be greater than zero."));
+                this.height = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the attribute text width factor.
+        /// </summary>
+        public double WidthFactor
+        {
+            get { return this.widthFactor; }
+            set
+            {
+                if (value <= 0)
+                    throw (new ArgumentOutOfRangeException("value", value, "The width factor should be greater than zero."));
+                this.widthFactor = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the attribute value.
+        /// </summary>
+        public object Value
+        {
+            get { return this.value; }
+            set { this.value = value; }
+        }
+
+        /// <summary>
+        /// Gets or sets the attribute text style.
+        /// </summary>
+        /// <remarks>
+        /// The <see cref="TextStyle">text style</see> defines the basic properties of the information text.
+        /// </remarks>
+        public TextStyle Style
+        {
+            get { return this.style; }
+            set
+            {
+                if (value == null)
+                    throw new NullReferenceException("value");
+                this.style = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the attribute <see cref="Vector3">position</see> in world coordinates.
+        /// </summary>
+        public Vector3 Position
+        {
+            get { return this.position; }
+            set { this.position = value; }
+        }
+
+        /// <summary>
+        /// Gets or sets the attribute flags.
+        /// </summary>
+        public AttributeFlags Flags
+        {
+            get { return this.flags; }
+            set { this.flags = value; }
         }
 
         /// <summary>
@@ -113,12 +207,21 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets or sets the attribute value.
+        /// Gets or sets the attribute text rotation in degrees.
         /// </summary>
-        public object Value
+        public double Rotation
         {
-            get { return this.value; }
-            set { this.value = value; }
+            get { return this.rotation; }
+            set { this.rotation = value; }
+        }
+
+        /// <summary>
+        /// Gets or sets the text alignment.
+        /// </summary>
+        public TextAlignment Alignment
+        {
+            get { return alignment; }
+            set { alignment = value; }
         }
 
         #endregion

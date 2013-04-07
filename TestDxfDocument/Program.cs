@@ -42,8 +42,7 @@ namespace TestDxfDocument
     {
         private static void Main()
         {
-            Test();
-
+            //Test();
             //WriteGradientPattern();
             //WriteGroup();
             //WriteMLine();
@@ -94,6 +93,7 @@ namespace TestDxfDocument
             //WritePolyline3d();
             //WriteInsert();
         }
+
         private static void Test()
         {
 
@@ -1640,10 +1640,10 @@ namespace TestDxfDocument
             dxf.AddEntity(insert);
             //dxf.AddEntity(circle); // this is not allowed the circle is already part of a block
 
-            dxf.Save("insert.dxf");
-            dxf = DxfDocument.Load("insert.dxf");
+            dxf.Save("nested insert.dxf");
+            dxf = DxfDocument.Load("nested insert.dxf");
             dxf.DrawingVariables.AcadVer = DxfVersion.AutoCad2010;
-            dxf.Save("insert.dxf");
+            dxf.Save("nested insert copy.dxf");
 
         }
         private static void WritePolyfaceMesh()

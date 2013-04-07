@@ -381,6 +381,15 @@ namespace netDxf
             this.groups = new Dictionary<string, Group>();
 
             dxfPairInfo = this.ReadCodePair();
+
+            // read the comments at the head of the file, any other comments will be ignored
+            // they sometimes hold information about the program that has generated the dxf
+            while (dxfPairInfo.Code == 999)
+            {
+                 this.comments.Add(dxfPairInfo.Value);
+                 dxfPairInfo = this.ReadCodePair();
+            }
+
             while (dxfPairInfo.Value != StringCode.EndOfFile)
             {
                 if (dxfPairInfo.Value == StringCode.BeginSection)
@@ -726,7 +735,8 @@ namespace netDxf
                 }
             }
 
-            // post process the possible nested blocks
+            // post process the possible nested blocks,
+            // in nested blocks (blocks that contains Insert entities) the block definition might be defined AFTER the block that references them
             foreach (KeyValuePair<Insert,  string> pair in this.nestedBlocks)
             {
                 Insert insert = pair.Key;
@@ -734,7 +744,10 @@ namespace netDxf
                 foreach (Attribute att in insert.Attributes)
                 {
                     string attDefId = this.nestedBlocksAttributes[att];
-                    att.Definition = insert.Block.Attributes[attDefId];
+                    // attribute definitions might be null if an INSERT entity attribute has not been defined in the block
+                    AttributeDefinition attDef;
+                    insert.Block.Attributes.TryGetValue(attDefId, out attDef);
+                    att.Definition = attDef;
                 }
             }
             foreach (KeyValuePair<string, Dimension> pair in this.nestedDimBlocks)
@@ -790,7 +803,9 @@ namespace netDxf
                         dxfPairInfo = this.ReadCodePair();
                         break;
                     case 3:
-                        name = dxfPairInfo.Value;
+                        //I don't know the reason of these duplicity since code 2 also contains the block name
+                        //The program EASE exports code 3 with an empty string
+                        //name = dxfPairInfo.Value;
                         dxfPairInfo = this.ReadCodePair();
                         break;
                     case 0: // entity
@@ -867,64 +882,84 @@ namespace netDxf
                 {
                     case 2:
                         id = dxfPairInfo.Value;
+                        dxfPairInfo = this.ReadCodePair();
                         break;
                     case 3:
                         text = dxfPairInfo.Value;
+                        dxfPairInfo = this.ReadCodePair();
                         break;
                     case 1:
                         value = dxfPairInfo.Value;
+                        dxfPairInfo = this.ReadCodePair();
                         break;
                     case 70:
                         flags = (AttributeFlags) int.Parse(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
                         break;
                     case 10:
                         firstAlignmentPoint.X = double.Parse(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
                         break;
                     case 20:
                         firstAlignmentPoint.Y = double.Parse(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
                         break;
                     case 30:
                         firstAlignmentPoint.Z = double.Parse(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
                         break;
                     case 11:
                         secondAlignmentPoint.X = double.Parse(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
                         break;
                     case 21:
                         secondAlignmentPoint.Y = double.Parse(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
                         break;
                     case 31:
                         secondAlignmentPoint.Z = double.Parse(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
                         break;
                     case 7:
                         style = this.GetTextStyle(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
                         break;
                     case 40:
                         height = double.Parse(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
                         break;
                     case 41:
                         widthFactor = double.Parse(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
                         break;
                     case 50:
                         rotation = double.Parse(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
                         break;
                     case 72:
                         horizontalAlignment = int.Parse(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
                         break;
                     case 74:
                         verticalAlignment = int.Parse(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
                         break;
                     case 210:
                         normal.X = double.Parse(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
                         break;
                     case 220:
                         normal.Y = double.Parse(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
                         break;
                     case 230:
                         normal.Z = double.Parse(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                    default:
+                        dxfPairInfo = this.ReadCodePair();
                         break;
                 }
-
-                dxfPairInfo = this.ReadCodePair();
             }
 
             TextAlignment alignment = ObtainAlignment(horizontalAlignment, verticalAlignment);
@@ -954,11 +989,25 @@ namespace netDxf
             Lineweight lineweight = Lineweight.ByLayer;
             double linetypeScale = 1.0;
 
+            AttributeFlags flags = AttributeFlags.Visible;
+            Vector3 firstAlignmentPoint = Vector3.Zero;
+            Vector3 secondAlignmentPoint = Vector3.Zero;
+            TextStyle style = TextStyle.Default;
+            double height = 0.0;
+            double widthFactor = 0.0;
+            int horizontalAlignment = 0;
+            int verticalAlignment = 0;
+            double rotation = 0.0;
+            Vector3 normal = Vector3.UnitZ;
+
+            // DxfObject codes
             dxfPairInfo = this.ReadCodePair();
             while (dxfPairInfo.Code != 100)
             {
                 switch (dxfPairInfo.Code)
                 {
+                    case 0:
+                        throw new DxfEntityException(DxfObjectCode.Attribute, "Premature end of entity definition.");
                     case 5:
                         handle = dxfPairInfo.Value;
                         dxfPairInfo = this.ReadCodePair();
@@ -975,6 +1024,8 @@ namespace netDxf
             {
                 switch (dxfPairInfo.Code)
                 {
+                    case 0:
+                        throw new DxfEntityException(DxfObjectCode.Attribute, "Premature end of entity definition.");
                     case 8: //layer code
                         layer = this.GetLayer(dxfPairInfo.Value);
                         dxfPairInfo = this.ReadCodePair();
@@ -1023,11 +1074,77 @@ namespace netDxf
                 {
                     case 2:
                         attdefId = dxfPairInfo.Value;
-                        if (!isBlockEntity) attdef = block.Attributes[attdefId];
+                        // seems that some programs (sketchup AFAIK) might export insert entities with attributtes which definitions are not defined in the block
+                        if (!isBlockEntity)
+                            block.Attributes.TryGetValue(attdefId, out attdef);
                         dxfPairInfo = this.ReadCodePair();
                         break;
                     case 1:
                         value = dxfPairInfo.Value;
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 70:
+                        flags = (AttributeFlags)int.Parse(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 10:
+                        firstAlignmentPoint.X = double.Parse(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 20:
+                        firstAlignmentPoint.Y = double.Parse(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 30:
+                        firstAlignmentPoint.Z = double.Parse(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 11:
+                        secondAlignmentPoint.X = double.Parse(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 21:
+                        secondAlignmentPoint.Y = double.Parse(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 31:
+                        secondAlignmentPoint.Z = double.Parse(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 7:
+                        style = this.GetTextStyle(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 40:
+                        height = double.Parse(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 41:
+                        widthFactor = double.Parse(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 50:
+                        rotation = double.Parse(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 72:
+                        horizontalAlignment = int.Parse(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 74:
+                        verticalAlignment = int.Parse(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 210:
+                        normal.X = double.Parse(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 220:
+                        normal.Y = double.Parse(dxfPairInfo.Value);
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 230:
+                        normal.Z = double.Parse(dxfPairInfo.Value);
                         dxfPairInfo = this.ReadCodePair();
                         break;
                     default:
@@ -1035,6 +1152,9 @@ namespace netDxf
                         break;
                 }
             }
+
+            TextAlignment alignment = ObtainAlignment(horizontalAlignment, verticalAlignment);
+            Vector3 ocsBasePoint = alignment == TextAlignment.BaselineLeft ? firstAlignmentPoint : secondAlignmentPoint;
 
             Attribute att = new Attribute
                                 {
@@ -1045,12 +1165,20 @@ namespace netDxf
                                     Lineweight = lineweight,
                                     LineTypeScale = linetypeScale,
                                     Definition = attdef,
-                                    Value = value
+                                    Id = attdefId,
+                                    Position = MathHelper.Transform(ocsBasePoint, normal, MathHelper.CoordinateSystem.Object, MathHelper.CoordinateSystem.World),
+                                    Normal = normal,
+                                    Alignment = alignment,
+                                    Value = value,
+                                    Flags = flags,
+                                    Style = style,
+                                    Height = height,
+                                    WidthFactor = MathHelper.IsZero(widthFactor) ? style.WidthFactor : widthFactor,
+                                    Rotation = rotation
                                 };
 
             if (isBlockEntity)
                 if (attdefId != null) this.nestedBlocksAttributes.Add(att, attdefId);
-                
             return att;
         }
 
@@ -1626,6 +1754,7 @@ namespace netDxf
 
             string dxfCode = dxfPairInfo.Value;
             dxfPairInfo = this.ReadCodePair();
+
             while (dxfPairInfo.Code != 100)
             {
                 switch (dxfPairInfo.Code)
@@ -3224,11 +3353,11 @@ namespace netDxf
                         dxfPairInfo = this.ReadCodePair();
                         break;
                     case 42:
-                        scale.X = double.Parse(dxfPairInfo.Value);
+                        scale.Y = double.Parse(dxfPairInfo.Value);
                         dxfPairInfo = this.ReadCodePair();
                         break;
                     case 43:
-                        scale.X = double.Parse(dxfPairInfo.Value);
+                        scale.Z = double.Parse(dxfPairInfo.Value);
                         dxfPairInfo = this.ReadCodePair();
                         break;
                     case 50:
@@ -3272,7 +3401,7 @@ namespace netDxf
 
                     // read the attribute
                     Attribute attribute = this.ReadAttribute(block, isBlockEntity);
-                    attributes.Add(attribute);
+                    if(attribute !=null) attributes.Add(attribute);
                 }
 
                 // read the end end sequence object until a new element is found
@@ -3515,7 +3644,6 @@ namespace netDxf
             for (int i = 0; i < numVertexes; i++)
             {
                 Vector3 vertex = new Vector3();
-
                 vertex.X = double.Parse(dxfPairInfo.Value); // code 11
                 dxfPairInfo = this.ReadCodePair();
                 vertex.Y = double.Parse(dxfPairInfo.Value); // code 21
@@ -3746,9 +3874,6 @@ namespace netDxf
             }
 
             //begin to read the vertex list (althought it is not recommended the vertex list might have 0 entries)
-            //if (dxfPairInfo.Value != DxfObjectCode.Vertex)
-            //    throw new DxfEntityException(DxfObjectCode.Polyline, "Vertex not found.");
-
             while (dxfPairInfo.Value != StringCode.EndSequence)
             {
                 if (dxfPairInfo.Value == DxfObjectCode.Vertex)
@@ -3759,8 +3884,6 @@ namespace netDxf
             }
 
             // read the end sequence object until a new element is found
-            if (dxfPairInfo.Value != StringCode.EndSequence)
-                throw new DxfEntityException(DxfObjectCode.Polyline, "End sequence entity not found.");
             dxfPairInfo = this.ReadCodePair();
             string endSequenceHandle = null;
             Layer endSequenceLayer = Layer.Default;
@@ -4605,8 +4728,13 @@ namespace netDxf
                         layer = this.GetLayer(dxfPairInfo.Value);
                         dxfPairInfo = this.ReadCodePair();
                         break;
-                    case 62:
-                        color = new AciColor(short.Parse(dxfPairInfo.Value));
+                    case 62: //aci color code
+                        if (!color.UseTrueColor)
+                            color = AciColor.FromCadIndex(short.Parse(dxfPairInfo.Value));
+                        dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 420: //the entity uses true color
+                        color = AciColor.FromTrueColor(int.Parse(dxfPairInfo.Value));
                         dxfPairInfo = this.ReadCodePair();
                         break;
                     case 6:
