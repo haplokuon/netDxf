@@ -29,7 +29,7 @@ namespace netDxf.Entities
     /// Represents a attribute <see cref="EntityObject">entity</see>.
     /// </summary>
     /// <remarks>
-    /// The attribute position and orientation are expressed in local coordinates of the <see cref="Insert">Insert</see> entity to which it belongs.<br />
+    /// The attribute position, rotation, height and width factor values also includes the transformation of the <see cref="Insert">Insert</see> entity to which it belongs.<br />
     /// During the attribute initialization a copy of all attribute definition properties will be copied,
     /// so any changes made to the attribute definition will only be applied to new attribute instances and not to existing ones.
     /// This behaviour is to allow imported <see cref="Insert">Insert</see> entities to have attributes without definition in the block, 
@@ -174,7 +174,7 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets or sets the attribute <see cref="Vector3">position</see> in world coordinates.
+        /// Gets or sets the attribute <see cref="Vector3">position</see> in object coordinates.
         /// </summary>
         public Vector3 Position
         {

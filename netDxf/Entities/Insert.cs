@@ -70,7 +70,11 @@ namespace netDxf.Entities
             this.normal = Vector3.UnitZ;
             foreach (AttributeDefinition attdef in block.Attributes.Values)
             {
-                this.attributes.Add(new Attribute(attdef));
+                Attribute att = new Attribute(attdef)
+                                    {
+                                        Position = attdef.Position + this.position - this.block.Position
+                                    };
+                this.attributes.Add(att);
             }
         }
 
@@ -159,6 +163,45 @@ namespace netDxf.Entities
         internal EndSequence EndSequence
         {
             get { return this.endSequence; }
+        }
+
+        #endregion
+
+        #region public methods
+
+        /// <summary>
+        /// Recalculate the attributes position, rotation, height and width factor with the values applied to the insertion.
+        /// </summary>
+        /// <remarks>
+        /// The attributes position, rotation, height and width factor values includes the transformations applied to the insertion,
+        /// if required this method will calculate the proper values according to the ones defined by the attribute definition.<br />
+        /// Initially the attribute properties holds the same values as the attribute definition but once it belongs to an insertion its values can be changed manually
+        /// independently to its definition, usually you will want that the position, rotation, height and/or width factor are transformed with the insert
+        /// as is the behaviour inside AutoCad.<br />
+        /// This method only applies to attributes that have a definition, some dxf files might generate attributes that have no definition in the block.
+        /// </remarks>
+        public void TransformAttributes()
+        {
+            foreach (Attribute att in this.attributes)
+            {
+                AttributeDefinition attdef = att.Definition;
+                if (attdef == null)
+                    continue;
+
+                Vector3 ocsIns = MathHelper.Transform(this.position, this.Normal, MathHelper.CoordinateSystem.World, MathHelper.CoordinateSystem.Object);
+                double sine =  Math.Sin(this.rotation * MathHelper.DegToRad);
+                double cosine = Math.Cos(this.rotation * MathHelper.DegToRad);
+                double x = this.block.Position.X - attdef.Position.X;
+                double y = this.block.Position.Y - attdef.Position.Y;
+
+                Vector3 point = new Vector3(x * cosine - y * sine, x * sine + y * cosine, this.block.Position.Z - attdef.Position.Z);
+                att.Position = ocsIns - point;
+                att.Rotation = attdef.Rotation + this.rotation;
+                att.Height = attdef.Height * this.scale.Y;
+                att.WidthFactor = attdef.WidthFactor * this.scale.X;
+                att.Normal = this.normal;
+
+            }
         }
 
         #endregion

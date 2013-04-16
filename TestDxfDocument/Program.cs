@@ -42,7 +42,7 @@ namespace TestDxfDocument
     {
         private static void Main()
         {
-            //Test();
+            Test();
             //WriteGradientPattern();
             //WriteGroup();
             //WriteMLine();
@@ -96,9 +96,7 @@ namespace TestDxfDocument
 
         private static void Test()
         {
-
             // important changes in netDxf 0.4 version
-
             DxfVersion version = DxfDocument.CheckDxfFileVersion("sample.dxf");
             // the Load function is now static
             // sample.dxf contains all supported entities by netDxf
@@ -106,8 +104,10 @@ namespace TestDxfDocument
 
             // the dxf version is controlled by the DrawingVariables property of the dxf document,
             // also a HeaderVariables instance or a DxfVersion can be passed to the constructor to initialize a new DxfDocument.
+            dxf.DrawingVariables.AcadVer = DxfVersion.AutoCad2013;
+            dxf.Save("sample 2013.dxf");
             dxf.DrawingVariables.AcadVer = DxfVersion.AutoCad2010;
-            dxf.Save("sample copy.dxf");
+            dxf.Save("sample 2010.dxf");
         }
 
         private static void WriteGradientPattern()
@@ -1533,6 +1533,7 @@ namespace TestDxfDocument
             DxfDocument dxf = new DxfDocument( );
             Block block = new Block("BlockWithAttributes");
             block.Layer = new Layer("BlockSample");
+            block.Position = new Vector3(10, 5, 0);
 
             AttributeDefinition attdef = new AttributeDefinition("NewAttribute");
             attdef.Text = "InfoText";
@@ -1553,23 +1554,36 @@ namespace TestDxfDocument
 
             // the attribute normal will use the one applied to the Insert entity to which it belongs
             // this is subject to change if I find a way to get predictable results even when inserting new blocks in AutoCAD
-            //attdef.Normal = new Vector3(1, 1, 1);
+            //attdef.Normal = new Vector3(1, 0, 0);
 
             block.Attributes.Add(attdef.Id, attdef);
             block.Entities.Add(new Line(new Vector3(-5, -5, 0), new Vector3(5, 5, 0)));
             block.Entities.Add(new Line(new Vector3(5, -5, 0), new Vector3(-5, 5, 0)));
 
-            Insert insert = new Insert(block, new Vector3(5, 5, 5));
-            insert.Layer = new Layer("insert");
-            //insert.Normal = new Vector3(1, 1, 1);
+            Insert insert = new Insert(block, new Vector3(5, 5, 5))
+                                {
+                                    Layer = new Layer("insert"),
+                                    Normal = new Vector3(1, 1, 1),
+                                    Rotation = 45
+                                };
+            // since we have changes the insert position, rotation, normal and/or scale we need to transform the insert attributes
+            insert.TransformAttributes();
+
             // the insert rotation will also affect the attributes.
-            insert.Rotation = 45; 
             insert.Layer.Color.Index = 4;
             insert.Attributes[0].Value = 24;
 
-            Insert insert2 = new Insert(block, new Vector3(-5, -5, -5));
+            Insert insert2 = new Insert(block, new Vector3(0, 0, 0)) //new Vector3(-5, -5, -5))
+                                 {
+                                     Rotation = 45,
+                                     //Scale = new Vector3(1, 2, 1)
+                                 };
             //insert2.Normal = new Vector3(1, 1, 1);
+            // since we have changes the insert position, rotation, normal and/or scale we need to transform the insert attributes
+            insert2.TransformAttributes();
+            
             insert2.Attributes[0].Value = 34;
+            
 
             XData xdata1 = new XData(new ApplicationRegistry("netDxf"));
             xdata1.XDataRecord.Add(new XDataRecord(XDataCode.String, "extended data with netDxf"));

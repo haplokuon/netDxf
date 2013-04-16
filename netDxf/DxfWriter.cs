@@ -919,7 +919,7 @@ namespace netDxf
 
                 foreach (Attribute attrib in insert.Attributes)
                 {
-                    this.WriteAttribute(attrib, insert);
+                    this.WriteAttribute(attrib);
                 }
 
                 this.WriteCodePair(0, insert.EndSequence.CodeName);
@@ -1000,6 +1000,9 @@ namespace netDxf
                 this.WriteCodePair(5, v.Handle);
                 this.WriteCodePair(100, SubclassMarker.Entity);
                 this.WriteCodePair(8, polyline.Layer); // the vertex layer should be the same as the polyline layer
+                this.WriteCodePair(62, polyline.Color.Index); // the vertex color should be the same as the polyline color
+                if (polyline.Color.UseTrueColor)
+                    this.WriteCodePair(420, AciColor.ToTrueColor(polyline.Color));
                 this.WriteCodePair(100, SubclassMarker.Vertex);
                 this.WriteCodePair(100, SubclassMarker.Polyline3dVertex);             
                 this.WriteCodePair(10, v.Location.X);
@@ -1034,7 +1037,10 @@ namespace netDxf
                 this.WriteCodePair(0, v.CodeName);
                 this.WriteCodePair(5, v.Handle);
                 this.WriteCodePair(100, SubclassMarker.Entity);
-                this.WriteCodePair(8, mesh.Layer);
+                this.WriteCodePair(8, mesh.Layer); // the polyfacemesh vertex layer should be the same as the polyfacemesh layer
+                this.WriteCodePair(62, mesh.Color.Index); // the polyfacemesh vertex color should be the same as the polyfacemesh color
+                if (mesh.Color.UseTrueColor)
+                    this.WriteCodePair(420, AciColor.ToTrueColor(mesh.Color));
                 this.WriteCodePair(100, SubclassMarker.Vertex);
                 this.WriteCodePair(100, SubclassMarker.PolyfaceMeshVertex);
                 this.WriteCodePair(70, (int) v.Flags);
@@ -1048,7 +1054,10 @@ namespace netDxf
                 this.WriteCodePair(0, face.CodeName);
                 this.WriteCodePair(5, face.Handle);
                 this.WriteCodePair(100, SubclassMarker.Entity);
-                this.WriteCodePair(8, mesh.Layer);
+                this.WriteCodePair(8, mesh.Layer); // the polyfacemesh face layer should be the same as the polyfacemesh layer
+                this.WriteCodePair(62, mesh.Color.Index); // the polyfacemesh face color should be the same as the polyfacemesh color
+                if (mesh.Color.UseTrueColor)
+                    this.WriteCodePair(420, AciColor.ToTrueColor(mesh.Color));
                 this.WriteCodePair(100, SubclassMarker.PolyfaceMeshFace);
                 this.WriteCodePair(70, (int) VertexTypeFlags.PolyfaceMeshVertex);
                 this.WriteCodePair(10, 0);
@@ -1929,12 +1938,9 @@ namespace netDxf
 
             this.WriteCodePair(100, SubclassMarker.Text);
 
-            // at the moment the attribute definition normal is always (0,0,1) and this transformation is not really necessary, it is here in case this changes
-            Vector3 ocsPosition = MathHelper.Transform(def.Position, def.Normal, MathHelper.CoordinateSystem.World, MathHelper.CoordinateSystem.Object);
-
-            this.WriteCodePair(10, ocsPosition.X);
-            this.WriteCodePair(20, ocsPosition.Y);
-            this.WriteCodePair(30, ocsPosition.Z);
+            this.WriteCodePair(10, def.Position.X);
+            this.WriteCodePair(20, def.Position.Y);
+            this.WriteCodePair(30, def.Position.Z);
             this.WriteCodePair(40, def.Height);
 
             this.WriteCodePair(1, def.Value);
@@ -2056,22 +2062,15 @@ namespace netDxf
             }
         }
 
-        private void WriteAttribute(Attribute attrib, Insert insert)
+        private void WriteAttribute(Attribute attrib)
         {
             this.WriteEntityCommonCodes(attrib);
 
             this.WriteCodePair(100, SubclassMarker.Text);
 
-            // we apply the insert rotation to the attribute
-            double sine = attrib.Position.X * Math.Sin(insert.Rotation * MathHelper.DegToRad);
-            double cosine = attrib.Position.Y * Math.Cos(insert.Rotation * MathHelper.DegToRad);
-            Vector3 point = new Vector3(cosine - sine, cosine + sine, attrib.Position.Z);
-
-            Vector3 ocsPosition = point + MathHelper.Transform(insert.Position, insert.Normal, MathHelper.CoordinateSystem.World, MathHelper.CoordinateSystem.Object);
-
-            this.WriteCodePair(10, ocsPosition.X);
-            this.WriteCodePair(20, ocsPosition.Y);
-            this.WriteCodePair(30, ocsPosition.Z);
+            this.WriteCodePair(10, attrib.Position.X);
+            this.WriteCodePair(20, attrib.Position.Y);
+            this.WriteCodePair(30, attrib.Position.Z);
 
             this.WriteCodePair(40, attrib.Height);
             this.WriteCodePair(41, attrib.WidthFactor);
@@ -2127,15 +2126,15 @@ namespace netDxf
                     break;
             }
 
-            this.WriteCodePair(11, ocsPosition.X);
-            this.WriteCodePair(21, ocsPosition.Y);
-            this.WriteCodePair(31, ocsPosition.Z);
+            this.WriteCodePair(11, attrib.Position.X);
+            this.WriteCodePair(21, attrib.Position.Y);
+            this.WriteCodePair(31, attrib.Position.Z);
 
-            this.WriteCodePair(50, attrib.Rotation + insert.Rotation);
+            this.WriteCodePair(50, attrib.Rotation);
 
-            this.WriteCodePair(210, insert.Normal.X);
-            this.WriteCodePair(220, insert.Normal.Y);
-            this.WriteCodePair(230, insert.Normal.Z);
+            this.WriteCodePair(210, attrib.Normal.X);
+            this.WriteCodePair(220, attrib.Normal.Y);
+            this.WriteCodePair(230, attrib.Normal.Z);
 
             this.WriteCodePair(100, SubclassMarker.Attribute);
 

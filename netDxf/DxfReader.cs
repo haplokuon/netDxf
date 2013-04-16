@@ -795,11 +795,11 @@ namespace netDxf
                         dxfPairInfo = this.ReadCodePair();
                         break;
                     case 20:
-                        basePoint.X = double.Parse(dxfPairInfo.Value);
+                        basePoint.Y = double.Parse(dxfPairInfo.Value);
                         dxfPairInfo = this.ReadCodePair();
                         break;
                     case 30:
-                        basePoint.X = double.Parse(dxfPairInfo.Value);
+                        basePoint.Z = double.Parse(dxfPairInfo.Value);
                         dxfPairInfo = this.ReadCodePair();
                         break;
                     case 3:
@@ -963,11 +963,11 @@ namespace netDxf
             }
 
             TextAlignment alignment = ObtainAlignment(horizontalAlignment, verticalAlignment);
-            Vector3 ocsBasePoint = alignment == TextAlignment.BaselineLeft ? firstAlignmentPoint : secondAlignmentPoint;
+            Vector3 point = alignment == TextAlignment.BaselineLeft ? firstAlignmentPoint : secondAlignmentPoint;
 
             return new AttributeDefinition(id)
                        {
-                           Position = MathHelper.Transform(ocsBasePoint, normal, MathHelper.CoordinateSystem.Object, MathHelper.CoordinateSystem.World),
+                           Position = point,
                            Normal = normal,
                            Alignment = alignment,
                            Text = text,
@@ -1166,7 +1166,7 @@ namespace netDxf
                                     LineTypeScale = linetypeScale,
                                     Definition = attdef,
                                     Id = attdefId,
-                                    Position = MathHelper.Transform(ocsBasePoint, normal, MathHelper.CoordinateSystem.Object, MathHelper.CoordinateSystem.World),
+                                    Position = ocsBasePoint,
                                     Normal = normal,
                                     Alignment = alignment,
                                     Value = value,
@@ -1188,6 +1188,9 @@ namespace netDxf
             while (dxfPairInfo.Value != StringCode.EndSection)
             {
                 EntityObject entity = ReadEntity(false);
+                // the ReadEntity() will return null if an unkown entity has been found
+                if (entity == null)
+                    continue;
 
                 switch (entity.Type)
                 {
@@ -1750,11 +1753,12 @@ namespace netDxf
             double linetypeScale = 1.0;
             bool isVisible = true;
 
-            EntityObject entity = null;
+            EntityObject entity;
 
             string dxfCode = dxfPairInfo.Value;
             dxfPairInfo = this.ReadCodePair();
 
+            // DxfObject common codes
             while (dxfPairInfo.Code != 100)
             {
                 switch (dxfPairInfo.Code)
@@ -1878,20 +1882,18 @@ namespace netDxf
                     break;
                 default:
                     ReadUnknowEntity();
-                    break;
+                    return null;
             }
 
-            if (entity != null)
-            {
-                entity.Handle = handle;
-                entity.Layer = layer;
-                entity.Color = color;
-                entity.LineType = lineType;
-                entity.Lineweight = lineweight;
-                entity.LineTypeScale = linetypeScale;
-                entity.IsVisible = isVisible;
-                this.addedEntity.Add(entity.Handle, entity);
-            }
+            entity.Handle = handle;
+            entity.Layer = layer;
+            entity.Color = color;
+            entity.LineType = lineType;
+            entity.Lineweight = lineweight;
+            entity.LineTypeScale = linetypeScale;
+            entity.IsVisible = isVisible;
+            this.addedEntity.Add(entity.Handle, entity);
+
             return entity;
         }
 

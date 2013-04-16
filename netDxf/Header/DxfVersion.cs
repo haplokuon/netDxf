@@ -71,6 +71,11 @@ namespace netDxf.Header
         /// AutoCAD 2010 DXF file.
         /// </summary>
         [StringValue("AC1024")]
-        AutoCad2010 = 8
+        AutoCad2010 = 8,
+        /// <summary>
+        /// AutoCAD 2013 DXF file.
+        /// </summary>
+        [StringValue("AC1027")]
+        AutoCad2013 = 9
     }
 }

@@ -183,7 +183,7 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets or sets the attribute <see cref="Vector3">position</see> in world coordinates.
+        /// Gets or sets the attribute <see cref="Vector3">position</see> in local coordinates.
         /// </summary>
         public Vector3 Position
         {
