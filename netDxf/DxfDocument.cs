@@ -52,7 +52,6 @@ namespace netDxf
         // during the save process new handles are needed for the table sections, this number should be enough
         private const int ReservedHandles = 10;
 
-
         #region header
 
         private List<string> comments;
@@ -150,20 +149,19 @@ namespace netDxf
             this.addedEntity = new Dictionary<string, EntityObject>(); // keeps track of the added object to avoid duplicates
 
             // tables
-            this.viewports = new Dictionary<string, ViewPort>();
-            this.layers = new Dictionary<string, Layer>();
-            this.lineTypes = new Dictionary<string, LineType>();
-            this.textStyles = new Dictionary<string, TextStyle>();
-            this.blocks = new Dictionary<string, Block>();
-            this.appRegisterNames = new Dictionary<string, ApplicationRegistry>();
-            this.dimStyles = new Dictionary<string, DimensionStyle>();
+            this.viewports = new Dictionary<string, ViewPort>(StringComparer.InvariantCultureIgnoreCase);
+            this.layers = new Dictionary<string, Layer>(StringComparer.InvariantCultureIgnoreCase);
+            this.lineTypes = new Dictionary<string, LineType>(StringComparer.InvariantCultureIgnoreCase);
+            this.textStyles = new Dictionary<string, TextStyle>(StringComparer.InvariantCultureIgnoreCase);
+            this.blocks = new Dictionary<string, Block>(StringComparer.InvariantCultureIgnoreCase);
+            this.appRegisterNames = new Dictionary<string, ApplicationRegistry>(StringComparer.InvariantCultureIgnoreCase);
+            this.dimStyles = new Dictionary<string, DimensionStyle>(StringComparer.InvariantCultureIgnoreCase);
 
             // objects
-            this.groups = new Dictionary<string, Group>();
-            this.mLineStyles = new Dictionary<string, MLineStyle>();
-            this.imageDefs = new Dictionary<string, ImageDef>();
+            this.groups = new Dictionary<string, Group>(StringComparer.InvariantCultureIgnoreCase);
+            this.mLineStyles = new Dictionary<string, MLineStyle>(StringComparer.InvariantCultureIgnoreCase);
+            this.imageDefs = new Dictionary<string, ImageDef>(StringComparer.InvariantCultureIgnoreCase);
             
-
             AddDefaultObjects();
 
             // entities lists
@@ -229,7 +227,7 @@ namespace netDxf
         #region table public properties
 
         /// <summary>
-        /// Gets the application registered names.
+        /// Gets the <see cref="ApplicationRegistry">application registries</see> list.
         /// </summary>
         public ReadOnlyCollection<ApplicationRegistry> AppRegisterNames
         {
@@ -484,6 +482,36 @@ namespace netDxf
         #region public table methods
 
         /// <summary>
+        /// Adds an application registry to the dictionary.
+        /// </summary>
+        /// <param name="appReg"><see cref="ApplicationRegistry">Application registry</see> to add to the dictionary.</param>
+        /// <returns>
+        /// If an application registry already exists with the same name as the instance that is being added the method returns the existing application registry,
+        /// if not it will return the new application registry.
+        /// </returns>
+        public ApplicationRegistry AddApplicationRegistry(ApplicationRegistry appReg)
+        {
+            ApplicationRegistry add;
+            if (this.appRegisterNames.TryGetValue(appReg.Name, out add))
+                return add;
+
+            this.appRegisterNames.Add(appReg.Name, appReg);
+            this.handlesGenerated = appReg.AsignHandle(this.handlesGenerated);
+            return appReg;
+        }
+
+        /// <summary>
+        /// Gets an application registry from the the dictionary.
+        /// </summary>
+        /// <param name="appRegName"><see cref="ApplicationRegistry">Application registry</see> name.</param>
+        /// <returns>Application registry with the actual name, null if it does not exists.</returns>
+        public ApplicationRegistry GetApplicationRegistry(string appRegName)
+        {
+            ApplicationRegistry appReg;
+            return this.appRegisterNames.TryGetValue(appRegName, out appReg) ? appReg : null;
+        }
+
+        /// <summary>
         /// Adds a layer to the dictionary.
         /// </summary>
         /// <param name="layer"><see cref="Layer">Layer</see> to add to the dictionary.</param>
@@ -510,8 +538,8 @@ namespace netDxf
         /// <returns>Layer with the actual name, null if it does not exists.</returns>
         public Layer GetLayer(string layerName)
         {
-            Layer add;
-            return this.layers.TryGetValue(name, out add) ? add : null;
+            Layer layer;
+            return this.layers.TryGetValue(layerName, out layer) ? layer : null;
         }
 
         /// <summary>
@@ -541,8 +569,8 @@ namespace netDxf
         /// <returns>Line type with the actual name, null if it does not exists.</returns>
         public LineType GetLineType(string lineTypeName)
         {
-            LineType add;
-            return this.lineTypes.TryGetValue(name, out add) ? add : null;
+            LineType lineType;
+            return this.lineTypes.TryGetValue(lineTypeName, out lineType) ? lineType : null;
         }
 
         /// <summary>
@@ -571,8 +599,8 @@ namespace netDxf
         /// <returns>Text style with the actual name, null if it does not exists.</returns>
         public TextStyle GetTextStyle(string textStyleName)
         {
-            TextStyle add;
-            return this.textStyles.TryGetValue(name, out add) ? add : null;
+            TextStyle textStyle;
+            return this.textStyles.TryGetValue(textStyleName, out textStyle) ? textStyle : null;
         }
 
         /// <summary>
@@ -602,8 +630,8 @@ namespace netDxf
         /// <returns>Dimension style with the actual name, null if it does not exists.</returns>
         public DimensionStyle GetDimensionStyle(string dimensionStyleName)
         {
-            DimensionStyle add;
-            return this.dimStyles.TryGetValue(name, out add) ? add : null;
+            DimensionStyle dimStyle;
+            return this.dimStyles.TryGetValue(dimensionStyleName, out dimStyle) ? dimStyle : null;
         }
 
         /// <summary>
@@ -649,8 +677,8 @@ namespace netDxf
         /// <returns>Block with the actual name, null if it does not exists.</returns>
         public Block GetBlock(string blockName)
         {
-            Block add;
-            return this.blocks.TryGetValue(name, out add) ? add : null;
+            Block block;
+            return this.blocks.TryGetValue(blockName, out block) ? block : null;
         }
 
         #endregion
@@ -858,8 +886,8 @@ namespace netDxf
         /// <returns>Image definition with the actual name, null if it does not exists.</returns>
         public ImageDef GetImageDef(string imageDefName)
         {
-            ImageDef add;
-            return this.imageDefs.TryGetValue(name, out add) ? add : null;
+            ImageDef imageDef;
+            return this.imageDefs.TryGetValue(imageDefName, out imageDef) ? imageDef : null;
         }
 
         /// <summary>
@@ -892,8 +920,8 @@ namespace netDxf
         /// <returns>MLine style with the actual name, null if it does not exists.</returns>
         public MLineStyle GetMLineStyle(string mLineStyleName)
         {
-            MLineStyle add;
-            return this.mLineStyles.TryGetValue(name, out add) ? add : null;
+            MLineStyle mLineStyle;
+            return this.mLineStyles.TryGetValue(mLineStyleName, out mLineStyle) ? mLineStyle : null;
         }
 
         /// <summary>
@@ -932,8 +960,8 @@ namespace netDxf
         /// <returns>Group with the actual name, null if it does not exists.</returns>
         public Group GetGroup(string groupName)
         {
-            Group add;
-            return this.groups.TryGetValue(name, out add) ? add : null;
+            Group group;
+            return this.groups.TryGetValue(groupName, out group) ? group : null;
         }
 
         /// <summary>
@@ -950,7 +978,6 @@ namespace netDxf
             }
             return this.groups.Remove(group.Name);
         }
-
 
         #endregion
 
@@ -1208,7 +1235,7 @@ namespace netDxf
                 {
                     // if the handle is equal the entity might come from another document, check if it is exactly the same object
                     EntityObject existing = this.addedEntity[entity.Handle];
-                    // if the entity is already in the document return false
+                    // if the entity is already in the document return false, do not add it again
                     if (existing.Equals(entity))
                         return false;
                 }
@@ -1219,11 +1246,7 @@ namespace netDxf
 
             foreach (string appReg in entity.XData.Keys)
             {
-                if (this.appRegisterNames.ContainsKey(appReg)) continue; // no need to register the application again
-
-                XData xData = entity.XData[appReg];
-                this.appRegisterNames.Add(xData.ApplicationRegistry.Name, xData.ApplicationRegistry);
-                this.handlesGenerated = xData.ApplicationRegistry.AsignHandle(this.handlesGenerated);
+                entity.XData[appReg].ApplicationRegistry = AddApplicationRegistry(entity.XData[appReg].ApplicationRegistry);
             }
 
             entity.Layer = AddLayer(entity.Layer);

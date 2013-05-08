@@ -337,18 +337,18 @@ namespace netDxf
             this.headerVariables = new HeaderVariables();
 
             // tables
-            this.appIds = new Dictionary<string, ApplicationRegistry>();
-            this.blockRecords = new Dictionary<string, BlockRecord>();
-            this.layers = new Dictionary<string, Layer>();
-            this.lineTypes = new Dictionary<string, LineType>();
-            this.textStyles = new Dictionary<string, TextStyle>();
-            this.dimStyles = new Dictionary<string, DimensionStyle>();
+            this.appIds = new Dictionary<string, ApplicationRegistry>(StringComparer.InvariantCultureIgnoreCase);
+            this.blockRecords = new Dictionary<string, BlockRecord>(StringComparer.InvariantCultureIgnoreCase);
+            this.layers = new Dictionary<string, Layer>(StringComparer.InvariantCultureIgnoreCase);
+            this.lineTypes = new Dictionary<string, LineType>(StringComparer.InvariantCultureIgnoreCase);
+            this.textStyles = new Dictionary<string, TextStyle>(StringComparer.InvariantCultureIgnoreCase);
+            this.dimStyles = new Dictionary<string, DimensionStyle>(StringComparer.InvariantCultureIgnoreCase);
 
             // blocks
             this.nestedBlocks = new Dictionary<Insert, string>();
-            this.nestedDimBlocks = new Dictionary<string, Dimension>();
+            this.nestedDimBlocks = new Dictionary<string, Dimension>(StringComparer.InvariantCultureIgnoreCase);
             this.nestedBlocksAttributes = new Dictionary<Attribute, string>();
-            this.blocks = new Dictionary<string, Block>();
+            this.blocks = new Dictionary<string, Block>(StringComparer.InvariantCultureIgnoreCase);
 
             // entities
             this.arcs = new List<Arc>();
@@ -371,14 +371,14 @@ namespace netDxf
             this.mLines = new List<MLine>();
 
             // objects
-            this.dictionaries = new Dictionary<string, DictionaryObject>();
-            this.imageDefs = new Dictionary<string, ImageDef>();
-            this.imageDefReactors = new Dictionary<string, ImageDefReactor>();
-            this.imgDefHandles = new Dictionary<string, ImageDef>();
+            this.dictionaries = new Dictionary<string, DictionaryObject>(StringComparer.InvariantCultureIgnoreCase);
+            this.imageDefs = new Dictionary<string, ImageDef>(StringComparer.InvariantCultureIgnoreCase);
+            this.imageDefReactors = new Dictionary<string, ImageDefReactor>(StringComparer.InvariantCultureIgnoreCase);
+            this.imgDefHandles = new Dictionary<string, ImageDef>(StringComparer.InvariantCultureIgnoreCase);
             this.imgToImgDefHandles = new Dictionary<Image, string>();
-            this.mLineStyles = new Dictionary<string, MLineStyle>();
+            this.mLineStyles = new Dictionary<string, MLineStyle>(StringComparer.InvariantCultureIgnoreCase);
             this.mLineToStyleNames = new Dictionary<MLine, string>();
-            this.groups = new Dictionary<string, Group>();
+            this.groups = new Dictionary<string, Group>(StringComparer.InvariantCultureIgnoreCase);
 
             dxfPairInfo = this.ReadCodePair();
 
@@ -435,6 +435,8 @@ namespace netDxf
             foreach (MLine mLine in this.mLines)
             {
                 string name = this.mLineToStyleNames[mLine];
+                if (!this.mLineStyles.ContainsKey(name))
+                    throw new DxfTableException(DxfObjectCode.MLineStyle, "The mline style with name " + name + " does not exist.");
                 mLine.Style = this.mLineStyles[name];
             }
         }
@@ -679,6 +681,8 @@ namespace netDxf
                 {
                     Debug.Assert(dxfPairInfo.Code == 0);
                     ApplicationRegistry appId = this.ReadApplicationId();
+                    if (appId == null) continue;
+                    if (this.appIds.ContainsKey(appId.Name)) continue;
                     this.appIds.Add(appId.Name, appId);
                 }
                 else
@@ -699,10 +703,6 @@ namespace netDxf
                 switch (dxfPairInfo.Code)
                 {
                     case 2:
-                        if (string.IsNullOrEmpty(dxfPairInfo.Value))
-                        {
-                            throw new DxfInvalidCodeValueEntityException(dxfPairInfo.Code, dxfPairInfo.Value, "Invalid value " + dxfPairInfo.Value + " in code " + dxfPairInfo.Code + "." );
-                        }
                         appId = dxfPairInfo.Value;
                         break;
                     case 5:
@@ -711,6 +711,8 @@ namespace netDxf
                 }
                 dxfPairInfo = this.ReadCodePair();
             }
+
+            if (string.IsNullOrEmpty(appId)) return null;
 
             return new ApplicationRegistry(appId)
                        {
@@ -1261,6 +1263,7 @@ namespace netDxf
                 {
                     case DxfObjectCode.Dictionary:
                         DictionaryObject dictionary = ReadDictionary();
+                        if (this.dictionaries.ContainsKey(dictionary.Handle)) continue;
                         this.dictionaries.Add(dictionary.Handle, dictionary);
                         break;
                     case DxfObjectCode.RasterVariables:
@@ -1268,18 +1271,22 @@ namespace netDxf
                         break;
                     case DxfObjectCode.ImageDef:
                         ImageDef imageDef = ReadImageDefinition();
+                        if (this.imageDefs.ContainsKey(imageDef.FileName)) continue;
                         this.imageDefs.Add(imageDef.FileName, imageDef);
                         break;
                     case DxfObjectCode.ImageDefReactor:
                         ImageDefReactor reactor = ReadImageDefReactor();
+                        if (this.imageDefReactors.ContainsKey(reactor.ImageHandle)) continue;
                         this.imageDefReactors.Add(reactor.ImageHandle, reactor);
                         break;
                     case DxfObjectCode.MLineStyle:
                         MLineStyle style = ReadMLineStyle();
+                        if (this.mLineStyles.ContainsKey(style.Name)) continue;
                         this.mLineStyles.Add(style.Name, style);
                         break;
                     case DxfObjectCode.Group:
                         Group group = ReadGroup();
+                        if (this.groups.ContainsKey(group.Name)) continue;
                         this.groups.Add(group.Name, group);
                         break;
                     default:
@@ -1302,7 +1309,9 @@ namespace netDxf
                 {
                     Debug.Assert(dxfPairInfo.Code == 0);
                     BlockRecord blockRecord = this.ReadBlockRecord();
-                    if (blockRecord != null) this.blockRecords.Add(blockRecord.Name, blockRecord);
+                    if (blockRecord == null) continue;
+                    if (this.blockRecords.ContainsKey(blockRecord.Name)) continue;
+                    this.blockRecords.Add(blockRecord.Name, blockRecord);
                 }
                 else
                 {
@@ -1356,7 +1365,9 @@ namespace netDxf
                 {
                     Debug.Assert(dxfPairInfo.Code == 0);
                     Layer layer = this.ReadLayer();
-                    if (layer!=null) this.layers.Add(layer.Name, layer);
+                    if (layer == null) continue;
+                    if(this.layers.ContainsKey(layer.Name)) continue;
+                    this.layers.Add(layer.Name, layer);
                 }
                 else
                 {
@@ -1447,7 +1458,9 @@ namespace netDxf
                 {
                     Debug.Assert(dxfPairInfo.Code == 0);
                     LineType tl = this.ReadLineType();
-                    if (tl != null) this.lineTypes.Add(tl.Name, tl);
+                    if (tl == null) continue;
+                    if (this.lineTypes.ContainsKey(tl.Name)) continue;
+                    this.lineTypes.Add(tl.Name, tl);
                 }
                 else
                 {
@@ -1516,9 +1529,11 @@ namespace netDxf
             {
                 if (dxfPairInfo.Value == StringCode.TextStyleTable)
                 {
-                    Debug.Assert(dxfPairInfo.Code == 0); //el código 0 indica el inicio de una nueva capa
+                    Debug.Assert(dxfPairInfo.Code == 0);
                     TextStyle style = this.ReadTextStyle();
-                    if(style != null) this.textStyles.Add(style.Name, style);
+                    if (style == null) continue;
+                    if(this.textStyles.ContainsKey(style.Name)) continue;
+                    this.textStyles.Add(style.Name, style);
                 }
                 else
                 {
@@ -1614,7 +1629,9 @@ namespace netDxf
                 {
                     Debug.Assert(dxfPairInfo.Code == 0); //el código 0 indica el inicio de una nueva capa
                     DimensionStyle ds = this.ReadDimensionStyle();
-                    if (ds != null) this.dimStyles.Add(ds.Name, ds);
+                    if (ds == null) continue;
+                    if (this.dimStyles.ContainsKey(ds.Name)) continue;
+                    this.dimStyles.Add(ds.Name, ds);
                 }
                 else
                 {
@@ -2013,7 +2030,11 @@ namespace netDxf
                         break;
                     case 1001:
                         XData xDataItem = this.ReadXDataRecord(dxfPairInfo.Value);
-                        xData.Add(xDataItem.ApplicationRegistry.Name, xDataItem);
+                        // to be safe if the xDataItem.ApplicationRegistry.Name already exists we will add the new entry to the existing one
+                        if (xData.ContainsKey(xDataItem.ApplicationRegistry.Name))
+                            xData[xDataItem.ApplicationRegistry.Name].XDataRecord.AddRange(xDataItem.XDataRecord);
+                        else
+                            xData.Add(xDataItem.ApplicationRegistry.Name, xDataItem);
                         break;
                     default:
                         if (dxfPairInfo.Code >= 1000 && dxfPairInfo.Code <= 1071)
@@ -2107,7 +2128,11 @@ namespace netDxf
                         break;
                     case 1001:
                         XData xDataItem = this.ReadXDataRecord(dxfPairInfo.Value);
-                        xData.Add(xDataItem.ApplicationRegistry.Name, xDataItem);
+                        // to be safe if the xDataItem.ApplicationRegistry.Name already exists we will add the new entry to the existing one
+                        if (xData.ContainsKey(xDataItem.ApplicationRegistry.Name))
+                            xData[xDataItem.ApplicationRegistry.Name].XDataRecord.AddRange(xDataItem.XDataRecord);
+                        else
+                            xData.Add(xDataItem.ApplicationRegistry.Name, xDataItem);
                         break;
                     default:
                         if (dxfPairInfo.Code >= 1000 && dxfPairInfo.Code <= 1071)
@@ -2174,7 +2199,11 @@ namespace netDxf
                         break;
                     case 1001:
                         XData xDataItem = this.ReadXDataRecord(dxfPairInfo.Value);
-                        xData.Add(xDataItem.ApplicationRegistry.Name, xDataItem);
+                        // to be safe if the xDataItem.ApplicationRegistry.Name already exists we will add the new entry to the existing one
+                        if (xData.ContainsKey(xDataItem.ApplicationRegistry.Name))
+                            xData[xDataItem.ApplicationRegistry.Name].XDataRecord.AddRange(xDataItem.XDataRecord);
+                        else
+                            xData.Add(xDataItem.ApplicationRegistry.Name, xDataItem);
                         break;
                     default:
                         if (dxfPairInfo.Code >= 1000 && dxfPairInfo.Code <= 1071)
@@ -2394,7 +2423,11 @@ namespace netDxf
                         break;
                     case 1001:
                         XData xDataItem = this.ReadXDataRecord(dxfPairInfo.Value);
-                        xData.Add(xDataItem.ApplicationRegistry.Name, xDataItem);
+                        // to be safe if the xDataItem.ApplicationRegistry.Name already exists we will add the new entry to the existing one
+                        if (xData.ContainsKey(xDataItem.ApplicationRegistry.Name))
+                            xData[xDataItem.ApplicationRegistry.Name].XDataRecord.AddRange(xDataItem.XDataRecord);
+                        else
+                            xData.Add(xDataItem.ApplicationRegistry.Name, xDataItem);
                         break;
                     default:
                         if (dxfPairInfo.Code >= 1000 && dxfPairInfo.Code <= 1071)
@@ -2453,7 +2486,11 @@ namespace netDxf
                         break;
                     case 1001:
                         XData xDataItem = this.ReadXDataRecord(dxfPairInfo.Value);
-                        xData.Add(xDataItem.ApplicationRegistry.Name, xDataItem);
+                        // to be safe if the xDataItem.ApplicationRegistry.Name already exists we will add the new entry to the existing one
+                        if (xData.ContainsKey(xDataItem.ApplicationRegistry.Name))
+                            xData[xDataItem.ApplicationRegistry.Name].XDataRecord.AddRange(xDataItem.XDataRecord);
+                        else
+                            xData.Add(xDataItem.ApplicationRegistry.Name, xDataItem);
                         break;
                     default:
                         if (dxfPairInfo.Code >= 1000 && dxfPairInfo.Code <= 1071)
@@ -2499,7 +2536,11 @@ namespace netDxf
                         break;
                     case 1001:
                         XData xDataItem = this.ReadXDataRecord(dxfPairInfo.Value);
-                        xData.Add(xDataItem.ApplicationRegistry.Name, xDataItem);
+                        // to be safe if the xDataItem.ApplicationRegistry.Name already exists we will add the new entry to the existing one
+                        if (xData.ContainsKey(xDataItem.ApplicationRegistry.Name))
+                            xData[xDataItem.ApplicationRegistry.Name].XDataRecord.AddRange(xDataItem.XDataRecord);
+                        else
+                            xData.Add(xDataItem.ApplicationRegistry.Name, xDataItem);
                         break;
                     default:
                         if (dxfPairInfo.Code >= 1000 && dxfPairInfo.Code <= 1071)
@@ -2547,7 +2588,11 @@ namespace netDxf
                         break;
                     case 1001:
                         XData xDataItem = this.ReadXDataRecord(dxfPairInfo.Value);
-                        xData.Add(xDataItem.ApplicationRegistry.Name, xDataItem);
+                        // to be safe if the xDataItem.ApplicationRegistry.Name already exists we will add the new entry to the existing one
+                        if (xData.ContainsKey(xDataItem.ApplicationRegistry.Name))
+                            xData[xDataItem.ApplicationRegistry.Name].XDataRecord.AddRange(xDataItem.XDataRecord);
+                        else
+                            xData.Add(xDataItem.ApplicationRegistry.Name, xDataItem);
                         break;
                     default:
                         if (dxfPairInfo.Code >= 1000 && dxfPairInfo.Code <= 1071)
@@ -2619,7 +2664,11 @@ namespace netDxf
                         break;
                     case 1001:
                         XData xDataItem = this.ReadXDataRecord(dxfPairInfo.Value);
-                        xData.Add(xDataItem.ApplicationRegistry.Name, xDataItem);
+                        // to be safe if the xDataItem.ApplicationRegistry.Name already exists we will add the new entry to the existing one
+                        if (xData.ContainsKey(xDataItem.ApplicationRegistry.Name))
+                            xData[xDataItem.ApplicationRegistry.Name].XDataRecord.AddRange(xDataItem.XDataRecord);
+                        else
+                            xData.Add(xDataItem.ApplicationRegistry.Name, xDataItem);
                         break;
                     default:
                         if (dxfPairInfo.Code >= 1000 && dxfPairInfo.Code <= 1071)
@@ -2697,7 +2746,11 @@ namespace netDxf
                         break;
                     case 1001:
                         XData xDataItem = this.ReadXDataRecord(dxfPairInfo.Value);
-                        xData.Add(xDataItem.ApplicationRegistry.Name, xDataItem);
+                        // to be safe if the xDataItem.ApplicationRegistry.Name already exists we will add the new entry to the existing one
+                        if (xData.ContainsKey(xDataItem.ApplicationRegistry.Name))
+                            xData[xDataItem.ApplicationRegistry.Name].XDataRecord.AddRange(xDataItem.XDataRecord);
+                        else
+                            xData.Add(xDataItem.ApplicationRegistry.Name, xDataItem);
                         break;
                     default:
                         if (dxfPairInfo.Code >= 1000 && dxfPairInfo.Code <= 1071)
@@ -2747,7 +2800,11 @@ namespace netDxf
                         break;
                     case 1001:
                         XData xDataItem = this.ReadXDataRecord(dxfPairInfo.Value);
-                        xData.Add(xDataItem.ApplicationRegistry.Name, xDataItem);
+                        // to be safe if the xDataItem.ApplicationRegistry.Name already exists we will add the new entry to the existing one
+                        if (xData.ContainsKey(xDataItem.ApplicationRegistry.Name))
+                            xData[xDataItem.ApplicationRegistry.Name].XDataRecord.AddRange(xDataItem.XDataRecord);
+                        else
+                            xData.Add(xDataItem.ApplicationRegistry.Name, xDataItem);
                         break;
                     default:
                         if (dxfPairInfo.Code >= 1000 && dxfPairInfo.Code <= 1071)
@@ -2837,7 +2894,11 @@ namespace netDxf
                         break;
                     case 1001:
                         XData xDataItem = this.ReadXDataRecord(dxfPairInfo.Value);
-                        xData.Add(xDataItem.ApplicationRegistry.Name, xDataItem);
+                        // to be safe if the xDataItem.ApplicationRegistry.Name already exists we will add the new entry to the existing one
+                        if (xData.ContainsKey(xDataItem.ApplicationRegistry.Name))
+                            xData[xDataItem.ApplicationRegistry.Name].XDataRecord.AddRange(xDataItem.XDataRecord);
+                        else
+                            xData.Add(xDataItem.ApplicationRegistry.Name, xDataItem);
                         break;
                     default:
                         if (dxfPairInfo.Code >= 1000 && dxfPairInfo.Code <= 1071)
@@ -2910,7 +2971,11 @@ namespace netDxf
                         break;
                     case 1001:
                         XData xDataItem = this.ReadXDataRecord(dxfPairInfo.Value);
-                        xData.Add(xDataItem.ApplicationRegistry.Name, xDataItem);
+                        // to be safe if the xDataItem.ApplicationRegistry.Name already exists we will add the new entry to the existing one
+                        if (xData.ContainsKey(xDataItem.ApplicationRegistry.Name))
+                            xData[xDataItem.ApplicationRegistry.Name].XDataRecord.AddRange(xDataItem.XDataRecord);
+                        else
+                            xData.Add(xDataItem.ApplicationRegistry.Name, xDataItem);
                         break;
                     default:
                         if (dxfPairInfo.Code >= 1000 && dxfPairInfo.Code <= 1071)
@@ -2995,7 +3060,11 @@ namespace netDxf
                         break;
                     case 1001:
                         XData xDataItem = this.ReadXDataRecord(dxfPairInfo.Value);
-                        xData.Add(xDataItem.ApplicationRegistry.Name, xDataItem);
+                        // to be safe if the xDataItem.ApplicationRegistry.Name already exists we will add the new entry to the existing one
+                        if (xData.ContainsKey(xDataItem.ApplicationRegistry.Name))
+                            xData[xDataItem.ApplicationRegistry.Name].XDataRecord.AddRange(xDataItem.XDataRecord);
+                        else
+                            xData.Add(xDataItem.ApplicationRegistry.Name, xDataItem);
                         break;
                     default:
                         if (dxfPairInfo.Code >= 1000 && dxfPairInfo.Code <= 1071)
@@ -3096,7 +3165,11 @@ namespace netDxf
                         break;
                     case 1001:
                         XData xDataItem = this.ReadXDataRecord(dxfPairInfo.Value);
-                        xData.Add(xDataItem.ApplicationRegistry.Name, xDataItem);
+                        // to be safe if the xDataItem.ApplicationRegistry.Name already exists we will add the new entry to the existing one
+                        if (xData.ContainsKey(xDataItem.ApplicationRegistry.Name))
+                            xData[xDataItem.ApplicationRegistry.Name].XDataRecord.AddRange(xDataItem.XDataRecord);
+                        else
+                            xData.Add(xDataItem.ApplicationRegistry.Name, xDataItem);
                         break;
                     default:
                         if (dxfPairInfo.Code >= 1000 && dxfPairInfo.Code <= 1071)
@@ -3288,7 +3361,11 @@ namespace netDxf
                         break;
                     case 1001:
                         XData xDataItem = this.ReadXDataRecord(dxfPairInfo.Value);
-                        xData.Add(xDataItem.ApplicationRegistry.Name, xDataItem);
+                        // to be safe if the xDataItem.ApplicationRegistry.Name already exists we will add the new entry to the existing one
+                        if (xData.ContainsKey(xDataItem.ApplicationRegistry.Name))
+                            xData[xDataItem.ApplicationRegistry.Name].XDataRecord.AddRange(xDataItem.XDataRecord);
+                        else
+                            xData.Add(xDataItem.ApplicationRegistry.Name, xDataItem);
                         break;
                     default:
                         if (dxfPairInfo.Code >= 1000 && dxfPairInfo.Code <= 1071)
@@ -3380,7 +3457,11 @@ namespace netDxf
                         break;
                     case 1001:
                         XData xDataItem = this.ReadXDataRecord(dxfPairInfo.Value);
-                        xData.Add(xDataItem.ApplicationRegistry.Name, xDataItem);
+                        // to be safe if the xDataItem.ApplicationRegistry.Name already exists we will add the new entry to the existing one
+                        if (xData.ContainsKey(xDataItem.ApplicationRegistry.Name))
+                            xData[xDataItem.ApplicationRegistry.Name].XDataRecord.AddRange(xDataItem.XDataRecord);
+                        else
+                            xData.Add(xDataItem.ApplicationRegistry.Name, xDataItem);
                         break;
                     default:
                         if (dxfPairInfo.Code >= 1000 && dxfPairInfo.Code <= 1071)
@@ -3506,7 +3587,11 @@ namespace netDxf
                         break;
                     case 1001:
                         XData xDataItem = this.ReadXDataRecord(dxfPairInfo.Value);
-                        xData.Add(xDataItem.ApplicationRegistry.Name, xDataItem);
+                        // to be safe if the xDataItem.ApplicationRegistry.Name already exists we will add the new entry to the existing one
+                        if (xData.ContainsKey(xDataItem.ApplicationRegistry.Name))
+                            xData[xDataItem.ApplicationRegistry.Name].XDataRecord.AddRange(xDataItem.XDataRecord);
+                        else
+                            xData.Add(xDataItem.ApplicationRegistry.Name, xDataItem);
                         break;
                     default:
                         if (dxfPairInfo.Code >= 1000 && dxfPairInfo.Code <= 1071)
@@ -3601,7 +3686,11 @@ namespace netDxf
                         break;
                     case 1001:
                         XData xDataItem = this.ReadXDataRecord(dxfPairInfo.Value);
-                        xData.Add(xDataItem.ApplicationRegistry.Name, xDataItem);
+                        // to be safe if the xDataItem.ApplicationRegistry.Name already exists we will add the new entry to the existing one
+                        if (xData.ContainsKey(xDataItem.ApplicationRegistry.Name))
+                            xData[xDataItem.ApplicationRegistry.Name].XDataRecord.AddRange(xDataItem.XDataRecord);
+                        else
+                            xData.Add(xDataItem.ApplicationRegistry.Name, xDataItem);
                         break;
                     default:
                         if (dxfPairInfo.Code >= 1000 && dxfPairInfo.Code <= 1071)
@@ -3789,7 +3878,11 @@ namespace netDxf
                         break;
                     case 1001:
                         XData xDataItem = this.ReadXDataRecord(dxfPairInfo.Value);
-                        xData.Add(xDataItem.ApplicationRegistry.Name, xDataItem);
+                        // to be safe if the xDataItem.ApplicationRegistry.Name already exists we will add the new entry to the existing one
+                        if (xData.ContainsKey(xDataItem.ApplicationRegistry.Name))
+                            xData[xDataItem.ApplicationRegistry.Name].XDataRecord.AddRange(xDataItem.XDataRecord);
+                        else
+                            xData.Add(xDataItem.ApplicationRegistry.Name, xDataItem);
                         break;
                     default:
                         if (dxfPairInfo.Code >= 1000 && dxfPairInfo.Code <= 1071)
@@ -3863,7 +3956,11 @@ namespace netDxf
                         break;
                     case 1001:
                         XData xDataItem = this.ReadXDataRecord(dxfPairInfo.Value);
-                        xData.Add(xDataItem.ApplicationRegistry.Name, xDataItem);
+                        // to be safe if the xDataItem.ApplicationRegistry.Name already exists we will add the new entry to the existing one
+                        if (xData.ContainsKey(xDataItem.ApplicationRegistry.Name))
+                            xData[xDataItem.ApplicationRegistry.Name].XDataRecord.AddRange(xDataItem.XDataRecord);
+                        else
+                            xData.Add(xDataItem.ApplicationRegistry.Name, xDataItem);
                         break;
                     default:
                         if (dxfPairInfo.Code >= 1000 && dxfPairInfo.Code <= 1071)
@@ -4073,7 +4170,11 @@ namespace netDxf
                         break;
                     case 1001:
                         XData xDataItem = this.ReadXDataRecord(dxfPairInfo.Value);
-                        xData.Add(xDataItem.ApplicationRegistry.Name, xDataItem);
+                        // to be safe if the xDataItem.ApplicationRegistry.Name already exists we will add the new entry to the existing one
+                        if (xData.ContainsKey(xDataItem.ApplicationRegistry.Name))
+                            xData[xDataItem.ApplicationRegistry.Name].XDataRecord.AddRange(xDataItem.XDataRecord);
+                        else
+                            xData.Add(xDataItem.ApplicationRegistry.Name, xDataItem);
                         break;
                     default:
                         if (dxfPairInfo.Code >= 1000 && dxfPairInfo.Code <= 1071)
@@ -4190,7 +4291,11 @@ namespace netDxf
                         break;
                     case 1001:
                         XData xDataItem = this.ReadXDataRecord(dxfPairInfo.Value);
-                        xData.Add(xDataItem.ApplicationRegistry.Name, xDataItem);
+                        // to be safe if the xDataItem.ApplicationRegistry.Name already exists we will add the new entry to the existing one
+                        if (xData.ContainsKey(xDataItem.ApplicationRegistry.Name))
+                            xData[xDataItem.ApplicationRegistry.Name].XDataRecord.AddRange(xDataItem.XDataRecord);
+                        else
+                            xData.Add(xDataItem.ApplicationRegistry.Name, xDataItem);
                         break;
                     default:
                         if (dxfPairInfo.Code >= 1000 && dxfPairInfo.Code <= 1071)
@@ -4274,7 +4379,11 @@ namespace netDxf
                         break;
                     case 1001:
                         XData xDataItem = this.ReadXDataRecord(dxfPairInfo.Value);
-                        xData.Add(xDataItem.ApplicationRegistry.Name, xDataItem);
+                        // to be safe if the xDataItem.ApplicationRegistry.Name already exists we will add the new entry to the existing one
+                        if (xData.ContainsKey(xDataItem.ApplicationRegistry.Name))
+                            xData[xDataItem.ApplicationRegistry.Name].XDataRecord.AddRange(xDataItem.XDataRecord);
+                        else
+                            xData.Add(xDataItem.ApplicationRegistry.Name, xDataItem);
                         break;
                     default:
                         if (dxfPairInfo.Code >= 1000 && dxfPairInfo.Code <= 1071)
@@ -5220,6 +5329,7 @@ namespace netDxf
         {
             // the autocad block names has the form *D#
             // we need to find which is the last available number, in case more dimensions are added
+            if (!name.StartsWith("*D", StringComparison.InvariantCultureIgnoreCase)) return;
             int num;
             string token = name.Remove(0, 2);
             if (!int.TryParse(token, out num)) return;
@@ -5230,7 +5340,8 @@ namespace netDxf
         private void CheckGroupName(string name)
         {
             // the autocad group names has the form *A#
-            // we need to find which is the last available number, in case more dimensions are added
+            // we need to find which is the last available number, in case more groups are added
+            if (!name.StartsWith("*A", StringComparison.InvariantCultureIgnoreCase)) return;
             int num;
             string token = name.Remove(0, 2);
             if (!int.TryParse(token, out num)) return;
@@ -5288,6 +5399,13 @@ namespace netDxf
                 alignment = TextAlignment.Fit;
 
             return alignment;
+        }
+
+        private ApplicationRegistry GetApplicationRegistry(string name)
+        {
+            if (this.appIds.ContainsKey(name))
+                return this.appIds[name];
+            throw new DxfTableException(StringCode.ApplicationIDTable, "The application registry with name " + name + " does not exist.");
         }
 
         private Block GetBlock(string name)
@@ -5352,7 +5470,9 @@ namespace netDxf
 
         private XData ReadXDataRecord(string appId)
         {
-            XData xData = new XData(this.appIds[appId]);
+            ApplicationRegistry appReg = GetApplicationRegistry(appId);
+
+            XData xData = new XData(appReg);
             dxfPairInfo = this.ReadCodePair();
 
             while (dxfPairInfo.Code >= 1000 && dxfPairInfo.Code <= 1071)

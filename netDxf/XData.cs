@@ -33,7 +33,7 @@ namespace netDxf
     {
         #region private fields
 
-        private readonly ApplicationRegistry appReg;
+        private ApplicationRegistry appReg;
         private List<XDataRecord> xData;
 
         #endregion
@@ -60,6 +60,7 @@ namespace netDxf
         public ApplicationRegistry ApplicationRegistry
         {
             get { return this.appReg; }
+            internal set { this.appReg = value; }
         }
 
         /// <summary>

@@ -1,3 +1,10 @@
+[0.4.4 - 2013/05/08]
++ Added Add and Get application registries methods.
++ (fixed) Bug in Get table object by name methods.
++ (fixed) Table dictionaries keys will ignore case as it should have been from day one. The names of layers, line types, text styles,... are case insensitive.
++ (fixed) Workarounds for bugs on programs that generate dxfs with duplicate table object names. Duplicate table objects will be skipped.
++ (fixed) Issue Id #11725 CheckDimBlockName. Added check that dimension blocks and group names starts with "*D" and "*A" respectively while reading dxfs.
+
 [0.4.3 - 2013/04/16]
 + Added AutoCad drawing database version number AC1027 = AutoCAD 2013.
 + Attribute definition position is in object coordinates.

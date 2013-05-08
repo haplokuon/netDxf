@@ -42,7 +42,11 @@ namespace TestDxfDocument
     {
         private static void Main()
         {
+
             Test();
+
+            //ApplicationRegistries();
+            //TestOCStoWCS();
             //WriteGradientPattern();
             //WriteGroup();
             //WriteMLine();
@@ -110,6 +114,54 @@ namespace TestDxfDocument
             dxf.Save("sample 2010.dxf");
         }
 
+        private static void ApplicationRegistries()
+        {
+            DxfDocument dxf = new DxfDocument();
+            // add a new application registry to the document (optional), if not present it will be added when the entity is passed to the document
+            ApplicationRegistry newAppReg = dxf.AddApplicationRegistry(new ApplicationRegistry("NewAppReg"));
+
+            Line line = new Line(Vector2.Zero, 100 * Vector2.UnitX);
+            XData xdata = new XData(newAppReg);
+            xdata.XDataRecord.Add(new XDataRecord(XDataCode.String, "string of the new application registry"));
+            line.XData = new Dictionary<string, XData>
+                             {
+                                 {xdata.ApplicationRegistry.Name, xdata},
+                             };
+
+            dxf.AddEntity(line);
+            dxf.Save("ApplicationRegistryTest.dxf");
+
+            // gets the complete application registries present in the document
+            ReadOnlyCollection<ApplicationRegistry> appRegs = dxf.AppRegisterNames;
+
+            // get an application registry by name
+            ApplicationRegistry netDxfAppReg = dxf.GetApplicationRegistry(appRegs[appRegs.Count - 1].Name);
+        }
+        private static void TestOCStoWCS()
+        {
+            // vertexes of the light weight polyline, they are defined in OCS (Object Coordinate System)
+            LwPolylineVertex v1 = new LwPolylineVertex(1, -5);
+            LwPolylineVertex v2 = new LwPolylineVertex(-3, 2);
+            LwPolylineVertex v3 = new LwPolylineVertex(8, 15);
+
+            LwPolyline lwp = new LwPolyline(new List<LwPolylineVertex> {v1, v2, v3});
+            // the normal will define the plane where the lwpolyline is defined
+            lwp.Normal = new Vector3(1, 1, 0);
+            // the entity elevation defines the z vector of the vertexes along the entity normal
+            lwp.Elevation = 2.5;
+
+            DxfDocument dxf = new DxfDocument();
+            dxf.AddEntity(lwp);
+            dxf.Save("OCStoWCS.dxf");
+
+            // if you want to convert the vertexes of the polyline to WCS (World Coordinate System), you can
+            Vector3 v1OCS = new Vector3(v1.Location.X, v1.Location.Y, lwp.Elevation);
+            Vector3 v2OCS = new Vector3(v2.Location.X, v2.Location.Y, lwp.Elevation);
+            Vector3 v3OCS = new Vector3(v3.Location.X, v3.Location.Y, lwp.Elevation);
+            List<Vector3> vertexesWCS = MathHelper.Transform(new List<Vector3> { v1OCS, v2OCS, v3OCS }, lwp.Normal, MathHelper.CoordinateSystem.Object, MathHelper.CoordinateSystem.World);
+
+
+        }
         private static void WriteGradientPattern()
         {
             List<LwPolylineVertex> vertexes = new List<LwPolylineVertex>
@@ -666,10 +718,6 @@ namespace TestDxfDocument
             dxf3.AddEntity(cadLine);
             dxf3.AddEntity(line);
             dxf3.Save("sample3.dxf");
-        }
-        private static void Fixes()
-        {
-            DxfDocument dxf = DxfDocument.Load("solid hatch sample.dxf");
         }
         private static void CleanDrawing()
         {
