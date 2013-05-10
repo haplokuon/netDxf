@@ -42,7 +42,6 @@ namespace TestDxfDocument
     {
         private static void Main()
         {
-
             Test();
 
             //ApplicationRegistries();

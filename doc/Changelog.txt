@@ -1,3 +1,6 @@
+[0.4.5 - 2013/05/10]
++ Workaround buggy dxf files with entities that references table objets not defined in the tables section. This only applies to application registries, layers, line types, text styles, dimension styles and mline styles, if necessary a new one with default values will be created.
+
 [0.4.4 - 2013/05/08]
 + Added Add and Get application registries methods.
 + (fixed) Bug in Get table object by name methods.

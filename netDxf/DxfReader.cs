@@ -435,9 +435,7 @@ namespace netDxf
             foreach (MLine mLine in this.mLines)
             {
                 string name = this.mLineToStyleNames[mLine];
-                if (!this.mLineStyles.ContainsKey(name))
-                    throw new DxfTableException(DxfObjectCode.MLineStyle, "The mline style with name " + name + " does not exist.");
-                mLine.Style = this.mLineStyles[name];
+                mLine.Style = GetMLineStyle(name);
             }
         }
 
@@ -3682,7 +3680,6 @@ namespace netDxf
                     case 11:
                         // the info that follows contains the information on the vertexes of the MLine
                         segments = ReadMLineSegments(numVertexes, numStyleElements, normal, out elevation);
-
                         break;
                     case 1001:
                         XData xDataItem = this.ReadXDataRecord(dxfPairInfo.Value);
@@ -3696,7 +3693,6 @@ namespace netDxf
                         if (dxfPairInfo.Code >= 1000 && dxfPairInfo.Code <= 1071)
                             throw new DxfInvalidCodeValueEntityException(dxfPairInfo.Code, dxfPairInfo.Value,
                                                                          "The extended data of an entity must start with the application registry code.");
-
                         dxfPairInfo = this.ReadCodePair();
                         break;
                 }
@@ -5405,7 +5401,13 @@ namespace netDxf
         {
             if (this.appIds.ContainsKey(name))
                 return this.appIds[name];
-            throw new DxfTableException(StringCode.ApplicationIDTable, "The application registry with name " + name + " does not exist.");
+
+            // if an entity references a table object not defined in the tables section a new one will be created
+            ApplicationRegistry appReg = new ApplicationRegistry(name);
+            int numHandle = appReg.AsignHandle(Convert.ToInt32(this.HeaderVariables.HandleSeed, 16));
+            this.headerVariables.HandleSeed = Convert.ToString(numHandle, 16);
+            this.appIds.Add(name, appReg);
+            return appReg;
         }
 
         private Block GetBlock(string name)
@@ -5419,21 +5421,40 @@ namespace netDxf
         {
             if (this.layers.ContainsKey(name))
                 return this.layers[name];
-            throw new DxfTableException(StringCode.LayerTable, "The layer with name " + name + " does not exist.");
+
+            // if an entity references a table object not defined in the tables section a new one will be created
+            Layer layer = new Layer(name);
+            layer.LineType = GetLineType(layer.LineType.Name);
+            int numHandle = layer.AsignHandle(Convert.ToInt32(this.HeaderVariables.HandleSeed, 16));
+            this.headerVariables.HandleSeed = Convert.ToString(numHandle, 16);
+            this.layers.Add(name, layer);
+            return layer;
         }
 
         private LineType GetLineType(string name)
         {
             if (this.lineTypes.ContainsKey(name))
                 return this.lineTypes[name];
-            throw new DxfTableException(StringCode.LineTypeTable, "The line type with name " + name + " does not exist.");
+
+            // if an entity references a table object not defined in the tables section a new one will be created
+            LineType lineType = new LineType(name);
+            int numHandle = lineType.AsignHandle(Convert.ToInt32(this.HeaderVariables.HandleSeed, 16));
+            this.headerVariables.HandleSeed = Convert.ToString(numHandle, 16);
+            this.lineTypes.Add(name, lineType);
+            return lineType;
         }
 
         private TextStyle GetTextStyle(string name)
         {
             if (this.textStyles.ContainsKey(name))
                 return this.textStyles[name];
-            throw new DxfTableException(StringCode.TextStyleTable, "The text style with name " + name + " does not exist.");
+
+            // if an entity references a table object not defined in the tables section a new one will be created
+            TextStyle textStyle = new TextStyle(name);
+            int numHandle = textStyle.AsignHandle(Convert.ToInt32(this.HeaderVariables.HandleSeed, 16));
+            this.headerVariables.HandleSeed = Convert.ToString(numHandle, 16);
+            this.textStyles.Add(name, textStyle);
+            return textStyle;
         }
 
         private TextStyle GetTextStyleByHandle(string handle)
@@ -5450,8 +5471,30 @@ namespace netDxf
         {
             if (this.dimStyles.ContainsKey(name))
                 return this.dimStyles[name];
-            throw new DxfTableException(StringCode.DimensionStyleTable, "The dimension style with name " + name + " does not exist.");
+
+            // if an entity references a table object not defined in the tables section a new one will be created
+            DimensionStyle dimStyle = new DimensionStyle(name);
+            dimStyle.TextStyle = GetTextStyle(dimStyle.TextStyle.Name);
+            int numHandle = dimStyle.AsignHandle(Convert.ToInt32(this.HeaderVariables.HandleSeed, 16));
+            this.headerVariables.HandleSeed = Convert.ToString(numHandle, 16);
+            this.dimStyles.Add(name, dimStyle);
+            return dimStyle;
         }
+
+        private MLineStyle GetMLineStyle(string name)
+        {
+            if (this.mLineStyles.ContainsKey(name))
+                return this.mLineStyles[name];
+
+            // if an entity references a table object not defined in the tables section a new one will be created
+            MLineStyle mlineStyle = new MLineStyle(name);
+            mlineStyle.Elements[0].LineType = GetLineType(mlineStyle.Elements[0].LineType.Name);
+            int numHandle = mlineStyle.AsignHandle(Convert.ToInt32(this.HeaderVariables.HandleSeed, 16));
+            this.headerVariables.HandleSeed = Convert.ToString(numHandle, 16);
+            this.mLineStyles.Add(name, mlineStyle);
+            return mlineStyle;
+        }
+
 
         private static CodeValuePair ReadCodePair(TextReader reader)
         {
