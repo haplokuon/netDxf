@@ -85,7 +85,6 @@ namespace netDxf.Entities
         private bool noStartCaps;
         private bool noEndCaps;
         private double elevation;
-        private Vector3 normal;
         private MLineFlags flags;
         private List<MLineVertex> vertexes;
 
@@ -146,7 +145,6 @@ namespace netDxf.Entities
             this.noStartCaps = false;
             this.noEndCaps = false;
             this.elevation = 0.0;
-            this.normal = Vector3.UnitZ;
             if (vertexes == null)
                 throw new ArgumentNullException("vertexes");
             this.SetVertexes(vertexes);
@@ -172,21 +170,6 @@ namespace netDxf.Entities
         {
             get { return this.elevation; }
             set { this.elevation = value; }
-        }
-
-        /// <summary>
-        /// Gets or sets the multiline <see cref="Vector3">normal</see>.
-        /// </summary>
-        public Vector3 Normal
-        {
-            get { return this.normal; }
-            set
-            {
-                if (Vector3.Zero == value)
-                    throw new ArgumentNullException("value", "The normal can not be the zero vector.");
-                value.Normalize();
-                this.normal = value;
-            }
         }
 
         /// <summary>

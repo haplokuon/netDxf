@@ -1,3 +1,15 @@
+[0.4.6 - 2013/05/16]
++ Added Block insertion units.
++ Added length units convertion methods to MathHelper.
++ Added Scale and Rotation methods to Matrix3.
++ Added polyline Explode method.
++ Added polyface mesh Explode method.
++ Rename DefaultDrawingUnits to DrawingUnits and moved to netDxf namespace.
++ Rename DxfDocument.PolyfaceMesh property to DxfDocument.PolyfaceMeshes.
++ The entity Normal property is now part of the EntityObject base class.
++ (fixed) Polyline IsClosed property.
++ (fixed) Write polyface meshes with a number of vertexes less than three.
+
 [0.4.5 - 2013/05/10]
 + Workaround buggy dxf files with entities that references table objets not defined in the tables section. This only applies to application registries, layers, line types, text styles, dimension styles and mline styles, if necessary a new one with default values will be created.
 

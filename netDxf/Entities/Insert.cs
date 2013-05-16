@@ -40,7 +40,6 @@ namespace netDxf.Entities
         private Vector3 position;
         private Vector3 scale;
         private double rotation;
-        private Vector3 normal;
         private readonly List<Attribute> attributes = new List<Attribute>();
 
         #endregion
@@ -67,7 +66,6 @@ namespace netDxf.Entities
             this.position = position;
             this.scale = new Vector3(1.0, 1.0, 1.0);
             this.rotation = 0.0f;
-            this.normal = Vector3.UnitZ;
             foreach (AttributeDefinition attdef in block.Attributes.Values)
             {
                 Attribute att = new Attribute(attdef)
@@ -145,21 +143,6 @@ namespace netDxf.Entities
             set { this.rotation = value; }
         }
 
-        /// <summary>
-        /// Gets or sets the insert <see cref="Vector3">normal</see>.
-        /// </summary>
-        public Vector3 Normal
-        {
-            get { return this.normal; }
-            set
-            {
-                if (Vector3.Zero == value)
-                    throw new ArgumentNullException("value", "The normal can not be the zero vector");
-                value.Normalize();
-                this.normal = value;
-            }
-        }
-
         internal EndSequence EndSequence
         {
             get { return this.endSequence; }
@@ -199,8 +182,7 @@ namespace netDxf.Entities
                 att.Rotation = attdef.Rotation + this.rotation;
                 att.Height = attdef.Height * this.scale.Y;
                 att.WidthFactor = attdef.WidthFactor * this.scale.X;
-                att.Normal = this.normal;
-
+                att.Normal = this.Normal;
             }
         }
 

@@ -213,7 +213,9 @@ namespace netDxf
         /// <returns>Matrix3.</returns>
         public static Matrix3 operator *(Matrix3 a, Matrix3 b)
         {
-            return new Matrix3(a.M11*b.M11 + a.M12*b.M21 + a.M13*b.M31, a.M11*b.M12 + a.M12*b.M22 + a.M13*b.M32, a.M11*b.M13 + a.M12*b.M23 + a.M13*b.M33, a.M21*b.M11 + a.M22*b.M21 + a.M23*b.M31, a.M21*b.M12 + a.M22*b.M22 + a.M23*b.M32, a.M21*b.M13 + a.M22*b.M23 + a.M23*b.M33, a.M31*b.M11 + a.M32*b.M21 + a.M33*b.M31, a.M31*b.M12 + a.M32*b.M22 + a.M33*b.M32, a.M31*b.M13 + a.M32*b.M23 + a.M33*b.M33);
+            return new Matrix3(a.M11*b.M11 + a.M12*b.M21 + a.M13*b.M31, a.M11*b.M12 + a.M12*b.M22 + a.M13*b.M32, a.M11*b.M13 + a.M12*b.M23 + a.M13*b.M33, a.M21*b.M11 + a.M22*b.M21 + a.M23*b.M31,
+                               a.M21*b.M12 + a.M22*b.M22 + a.M23*b.M32, a.M21*b.M13 + a.M22*b.M23 + a.M23*b.M33, a.M31*b.M11 + a.M32*b.M21 + a.M33*b.M31, a.M31*b.M12 + a.M32*b.M22 + a.M33*b.M32,
+                               a.M31*b.M13 + a.M32*b.M23 + a.M33*b.M33);
         }
 
         /// <summary>
@@ -222,6 +224,7 @@ namespace netDxf
         /// <param name="a">Matrix3.</param>
         /// <param name="u">Vector3d.</param>
         /// <returns>Matrix3.</returns>
+        /// <remarks>Matrix3 adopts the convention of using column vectors to represent three dimensional points.</remarks>
         public static Vector3 operator *(Matrix3 a, Vector3 u)
         {
             return new Vector3(a.M11*u.X + a.M12*u.Y + a.M13*u.Z, a.M21*u.X + a.M22*u.Y + a.M23*u.Z, a.M31*u.X + a.M32*u.Y + a.M33*u.Z);
@@ -261,7 +264,7 @@ namespace netDxf
             Matrix3 resultado = new Matrix3();
             if (MathHelper.IsZero(det))
             {
-                throw (new ArithmeticException("The matrix is not invertible"));
+                throw (new ArithmeticException("The matrix is not invertible."));
             }
             det = 1/det;
 
@@ -289,7 +292,82 @@ namespace netDxf
             return new Matrix3(this.mM11, this.mM21, this.mM31, this.mM12, this.mM22, this.mM32, this.mM13, this.mM23, this.mM33);
         }
 
-#endregion
+        #endregion
+
+        #region static mehtods
+
+        /// <summary>
+        /// Builds a rotation matrix for a rotation around the x-axis.
+        /// </summary>
+        /// <param name="angle">The counter-clockwise angle in radians.</param>
+        /// <returns>The resulting Matrix3 instance.</returns>
+        /// <remarks>Matrix3 adopts the convention of using column vectors to represent three dimensional points.</remarks>
+        public static Matrix3 RotationX(double angle)
+        {
+            double cos = Math.Cos(angle);
+            double sin = Math.Sin(angle);
+            return new Matrix3(1, 0, 0, 0, cos, -sin, 0, sin, cos);
+        }
+
+        /// <summary>
+        /// Builds a rotation matrix for a rotation around the y-axis.
+        /// </summary>
+        /// <param name="angle">The counter-clockwise angle in radians.</param>
+        /// <returns>The resulting Matrix3 instance.</returns>
+        /// <remarks>Matrix3 adopts the convention of using column vectors to represent three dimensional points.</remarks>
+        public static Matrix3 RotationY(double angle)
+        {
+            double cos = Math.Cos(angle);
+            double sin = Math.Sin(angle);
+            return new Matrix3(cos, 0, sin, 0, 1, 0, -sin, 0, cos);
+        }
+
+        /// <summary>
+        /// Builds a rotation matrix for a rotation around the z-axis.
+        /// </summary>
+        /// <param name="angle">The counter-clockwise angle in radians.</param>
+        /// <returns>The resulting Matrix3 instance.</returns>
+        /// <remarks>Matrix3 adopts the convention of using column vectors to represent three dimensional points.</remarks>
+        public static Matrix3 RotationZ(double angle)
+        {
+            double cos = Math.Cos(angle);
+            double sin = Math.Sin(angle);
+            return new Matrix3(cos, -sin, 0, sin, cos, 0, 0, 0, 1);
+        }
+
+        /// <summary>
+        /// Build a scaling matrix.
+        /// </summary>
+        /// <param name="scale">Single scale factor for x, y, and z axes.</param>
+        /// <returns>A scaling matrix.</returns>
+        public static Matrix3 Scale(double scale)
+        {
+            return Scale(scale, scale, scale);
+        }
+
+        /// <summary>
+        /// Build a scaling matrix.
+        /// </summary>
+        /// <param name="scale">Scale factors for x, y, and z axes.</param>
+        /// <returns>A scaling matrix.</returns>
+        public static Matrix3 Scale(Vector3 scale)
+        {
+            return Scale(scale.X, scale.Y, scale.Z);
+        }
+
+        /// <summary>
+        /// Build a scaling matrix.
+        /// </summary>
+        /// <param name="x">Scale factor for x-axis.</param>
+        /// <param name="y">Scale factor for y-axis.</param>
+        /// <param name="z">Scale factor for z-axis.</param>
+        /// <returns>A scaling matrix.</returns>
+        public static Matrix3 Scale(double x, double y, double z)
+        {
+            return new Matrix3(x, 0, 0, 0, y, 0, 0, 0, z);
+        }
+
+        #endregion
 
         #region overrides
 
@@ -323,6 +401,5 @@ namespace netDxf
         }
 
         #endregion
-
     }
 }

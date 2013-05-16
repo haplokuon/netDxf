@@ -141,13 +141,14 @@ namespace netDxf.Entities
         #region private fields
 
         private readonly EntityType type;
-        private AciColor color;
-        private Layer layer;
-        private LineType lineType;
-        private Lineweight lineweight;
-        private double lineTypeScale;
-        private bool isVisible;
-        private Dictionary<string, XData> xData;
+        protected AciColor color;
+        protected Layer layer;
+        protected LineType lineType;
+        protected Lineweight lineweight;
+        protected double lineTypeScale;
+        protected bool isVisible;
+        protected Vector3 normal;
+        protected Dictionary<string, XData> xData;
 
         #endregion
 
@@ -163,6 +164,7 @@ namespace netDxf.Entities
             this.lineweight = Lineweight.ByLayer;
             this.lineTypeScale = 1.0;
             this.isVisible = true;
+            this.normal = Vector3.UnitZ;
             this.xData = new Dictionary<string, XData>();
         }
 
@@ -255,6 +257,21 @@ namespace netDxf.Entities
         {
             get { return isVisible; }
             set { isVisible = value; }
+        }
+
+        /// <summary>
+        /// Gets or sets the entity <see cref="Vector3">normal</see>.
+        /// </summary>
+        public Vector3 Normal
+        {
+            get { return this.normal; }
+            set
+            {
+                if (Vector3.Zero == value)
+                    throw new ArgumentNullException("value", "The normal can not be the zero vector.");
+                value.Normalize();
+                this.normal = value;
+            }
         }
 
         /// <summary>

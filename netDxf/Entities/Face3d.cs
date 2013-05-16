@@ -31,7 +31,7 @@ namespace netDxf.Entities
     public enum EdgeFlags
     {
         /// <summary>
-        /// All edges as visibles (default).
+        /// All edges are visible (default).
         /// </summary>
         Visibles = 0,
         /// <summary>
@@ -151,7 +151,7 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets or set the 3d face edge visibility.
+        /// Gets or sets the 3d face edge visibility.
         /// </summary>
         public EdgeFlags EdgeFlags
         {

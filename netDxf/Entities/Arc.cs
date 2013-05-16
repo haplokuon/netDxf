@@ -40,7 +40,6 @@ namespace netDxf.Entities
         private double startAngle;
         private double endAngle;
         private double thickness;
-        private Vector3 normal;
 
         #endregion
 
@@ -81,7 +80,6 @@ namespace netDxf.Entities
             this.startAngle = startAngle;
             this.endAngle = endAngle;
             this.thickness = 0.0;
-            this.normal = Vector3.UnitZ;
         }
 
         #endregion
@@ -138,21 +136,6 @@ namespace netDxf.Entities
             set { this.thickness = value; }
         }
 
-        /// <summary>
-        /// Gets or sets the arc <see cref="Vector3">normal</see>.
-        /// </summary>
-        public Vector3 Normal
-        {
-            get { return this.normal; }
-            set
-            {
-                if (Vector3.Zero == value)
-                    throw new ArgumentNullException("value", "The normal can not be the zero vector");
-                value.Normalize();
-                this.normal = value;
-            }
-        }
-
         #endregion
 
         #region methods
@@ -190,20 +173,22 @@ namespace netDxf.Entities
         public LwPolyline ToPolyline(int precision)
         {
             IEnumerable<Vector2> vertexes = this.PolygonalVertexes(precision);
-            Vector3 ocsCenter = MathHelper.Transform(this.center, this.normal, MathHelper.CoordinateSystem.World, MathHelper.CoordinateSystem.Object);
+            Vector3 ocsCenter = MathHelper.Transform(this.center, this.Normal, MathHelper.CoordinateSystem.World, MathHelper.CoordinateSystem.Object);
 
             LwPolyline poly = new LwPolyline
-            {
-                Color = (AciColor) this.Color.Clone(),
-                Layer = this.Layer,
-                LineType = this.LineType,
-                Lineweight = (Lineweight) this.Lineweight.Clone(),
-                XData = this.XData,
-                Normal = this.normal,
-                Elevation = ocsCenter.Z,
-                Thickness = this.thickness,
-                IsClosed = false
-            };
+                                  {
+                                      Color = this.Color,
+                                      IsVisible = this.IsVisible,
+                                      Layer = this.Layer,
+                                      LineType = this.LineType,
+                                      LineTypeScale = this.LineTypeScale,
+                                      Lineweight = this.Lineweight,
+                                      XData = this.XData,
+                                      Normal = this.Normal,
+                                      Elevation = ocsCenter.Z,
+                                      Thickness = this.Thickness,
+                                      IsClosed = false
+                                  };
             foreach (Vector2 v in vertexes)
             {
                 poly.Vertexes.Add(new LwPolylineVertex(v.X + ocsCenter.X, v.Y + ocsCenter.Y));

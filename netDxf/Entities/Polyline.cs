@@ -36,7 +36,6 @@ namespace netDxf.Entities
         private readonly EndSequence endSequence;
         private List<PolylineVertex> vertexes;
         private PolylineTypeFlags flags;
-        private bool isClosed;
         private readonly PolylineSmoothType smoothType;
 
         #endregion
@@ -90,12 +89,8 @@ namespace netDxf.Entities
         /// </summary>
         public bool IsClosed
         {
-            get { return this.isClosed; }
-            set
-            {
-                this.flags = value ? PolylineTypeFlags.ClosedPolylineOrClosedPolygonMeshInM | PolylineTypeFlags.Polyline3D : PolylineTypeFlags.Polyline3D;
-                this.isClosed = value;
-            }
+            get { return (this.flags & PolylineTypeFlags.ClosedPolylineOrClosedPolygonMeshInM) == PolylineTypeFlags.ClosedPolylineOrClosedPolygonMeshInM; }
+            set { this.flags = value ? PolylineTypeFlags.ClosedPolylineOrClosedPolygonMeshInM | PolylineTypeFlags.Polyline3D : PolylineTypeFlags.Polyline3D; }
         }
 
         /// <summary>
@@ -148,6 +143,54 @@ namespace netDxf.Entities
             entityNumber = this.endSequence.AsignHandle(entityNumber);
 
             return base.AsignHandle(entityNumber);
+        }
+
+        #endregion
+
+        #region public methods
+
+        /// <summary>
+        /// Decompose the actual polyline in a list of <see cref="Line">lines</see>.
+        /// </summary>
+        /// <returns>A list of <see cref="Line">lines</see> that made up the polyline.</returns>
+        public List<EntityObject> Explode()
+        {
+            List<EntityObject> entities = new List<EntityObject>();
+            int index = 0;
+            foreach (PolylineVertex vertex in this.Vertexes)
+            {
+                Vector3 start;
+                Vector3 end;
+
+                if (index == this.Vertexes.Count - 1)
+                {
+                    if (!this.IsClosed) break;
+                    start = vertex.Location;
+                    end = this.vertexes[0].Location;
+                }
+                else
+                {
+                    start = vertex.Location;
+                    end = this.vertexes[index + 1].Location;
+                }
+
+                entities.Add(new Line
+                                 {
+                                     StartPoint = start,
+                                     EndPoint = end,
+                                     Color = this.Color,
+                                     IsVisible = this.IsVisible,
+                                     Layer = this.Layer,
+                                     LineType = this.LineType,
+                                     LineTypeScale = this.LineTypeScale,
+                                     Lineweight = this.Lineweight,
+                                     XData = this.XData
+                                 });
+
+                index++;
+            }
+
+            return entities;
         }
 
         #endregion

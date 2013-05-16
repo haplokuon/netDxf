@@ -40,7 +40,7 @@ namespace netDxf.Entities
 
         #endregion
 
-        #region constructurs
+        #region constructors
 
         /// <summary>
         /// Initializes a new instance of the <c>PolyfaceMesh</c> class.
@@ -141,6 +141,98 @@ namespace netDxf.Entities
                 entityNumber = f.AsignHandle(entityNumber);
             }
             return base.AsignHandle(entityNumber);
+        }
+
+        #endregion
+
+        #region public methods
+
+        /// <summary>
+        /// Decompose the actual polyface mesh faces in <see cref="Point">points</see> (one vertex polyface mesh face),
+        /// <see cref="Line">lines</see> (two vertexes polyface mesh face) and <see cref="Face3d">3d faces</see> (three or four vertexes polyface mesh face).
+        /// </summary>
+        /// <returns>A list of <see cref="Face3d">3d faces</see> that made up the polyface mesh.</returns>
+        public List<EntityObject> Explode()
+        {
+            List<EntityObject> entities = new List<EntityObject>();
+
+            foreach (PolyfaceMeshFace face in this.Faces)
+            {
+                if (face.VertexIndexes.Length == 1)
+                {
+                    Point point = new Point
+                                      {
+                                          Location = this.Vertexes[Math.Abs(face.VertexIndexes[0]) - 1].Location,
+                                          Color = this.Color,
+                                          IsVisible = this.IsVisible,
+                                          Layer = this.Layer,
+                                          LineType = this.LineType,
+                                          LineTypeScale = this.LineTypeScale,
+                                          Lineweight = this.Lineweight,
+                                          XData = this.XData
+                                      };
+                    entities.Add(point);
+                    continue;
+                }
+                if (face.VertexIndexes.Length == 2)
+                {
+                    Line line = new Line
+                    {
+                        StartPoint = this.Vertexes[Math.Abs(face.VertexIndexes[0]) - 1].Location,
+                        EndPoint = this.Vertexes[Math.Abs(face.VertexIndexes[1]) - 1].Location,
+                        Color = this.Color,
+                        IsVisible = this.IsVisible,
+                        Layer = this.Layer,
+                        LineType = this.LineType,
+                        LineTypeScale = this.LineTypeScale,
+                        Lineweight = this.Lineweight,
+                        XData = this.XData
+                    };
+                    entities.Add(line);
+                    continue;
+                }
+
+                EdgeFlags edgeVisibility = EdgeFlags.Visibles;
+
+                int indexV1 = face.VertexIndexes[0];
+                int indexV2 = face.VertexIndexes[1];
+                int indexV3 = face.VertexIndexes[2];
+                // Polyface mesh faces are made of 3 or 4 vertexes, we will repeat the third vertex if the face vertexes is three
+                int indexV4 = face.VertexIndexes.Length == 3 ? face.VertexIndexes[2] : face.VertexIndexes[3];
+
+                if (indexV1 < 0)
+                    edgeVisibility = edgeVisibility | EdgeFlags.First;
+                if (indexV2 < 0)
+                    edgeVisibility = edgeVisibility | EdgeFlags.Second;
+                if (indexV3 < 0)
+                    edgeVisibility = edgeVisibility | EdgeFlags.Third;
+                if (indexV4 < 0)
+                    edgeVisibility = edgeVisibility | EdgeFlags.Fourth;
+
+                Vector3 v1 = this.Vertexes[Math.Abs(indexV1) - 1].Location;
+                Vector3 v2 = this.Vertexes[Math.Abs(indexV2) - 1].Location;
+                Vector3 v3 = this.Vertexes[Math.Abs(indexV3) - 1].Location;
+                Vector3 v4 = this.Vertexes[Math.Abs(indexV4) - 1].Location;
+
+                Face3d face3d = new Face3d
+                {
+                    FirstVertex = v1,
+                    SecondVertex = v2,
+                    ThirdVertex = v3,
+                    FourthVertex = v4,
+                    EdgeFlags = edgeVisibility,
+                    Color = this.Color,
+                    IsVisible = this.IsVisible,
+                    Layer = this.Layer,
+                    LineType = this.LineType,
+                    LineTypeScale = this.LineTypeScale,
+                    Lineweight = this.Lineweight,
+                    XData = this.XData
+                };
+
+                entities.Add(face3d);
+            }
+            return entities;
         }
 
         #endregion

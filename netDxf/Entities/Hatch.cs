@@ -38,7 +38,6 @@ namespace netDxf.Entities
         private List<HatchBoundaryPath> boundaryPaths;
         private HatchPattern pattern;
         private double elevation;
-        private Vector3 normal;
 
         #endregion
 
@@ -59,7 +58,6 @@ namespace netDxf.Entities
         {
             this.pattern = pattern;
             this.boundaryPaths = boundaryPaths;
-            this.normal = Vector3.UnitZ;
             if (pattern.GetType() == typeof (HatchGradientPattern))
                 ((HatchGradientPattern) pattern).GradientColorAciXData(this.XData);
         }
@@ -106,21 +104,6 @@ namespace netDxf.Entities
         {
             get { return elevation; }
             set { elevation = value; }
-        }
-
-        /// <summary>
-        /// Gets or sets the hatch <see cref="Vector3">normal</see>.
-        /// </summary>
-        public Vector3 Normal
-        {
-            get { return this.normal; }
-            set
-            {
-                if (Vector3.Zero == value)
-                    throw new ArgumentNullException("value", "The normal can not be the zero vector");
-                value.Normalize();
-                this.normal = value;
-            }
         }
 
         #endregion

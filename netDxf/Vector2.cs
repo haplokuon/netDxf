@@ -413,7 +413,7 @@ namespace netDxf
         {
             double mod = this.Modulus();
             if (MathHelper.IsZero(mod))
-                throw new ArithmeticException("Cannot normalize a zero vector");
+                throw new ArithmeticException("Cannot normalize a zero vector.");
             double modInv = 1/mod;
             this.x *= modInv;
             this.y *= modInv;

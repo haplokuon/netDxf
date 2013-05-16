@@ -51,10 +51,10 @@ namespace netDxf.Entities
         /// Initializes a new instance of the <c>PolyfaceMeshFace</c> class.
         /// </summary>
         /// <remarks>
-        /// By default the face is made up of three vertexes.
+        /// By default the face is made up of four vertexes.
         /// </remarks>
         public PolyfaceMeshFace()
-            : this(new int[3])
+            : this(new int[4])
         {
         }
 

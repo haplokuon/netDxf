@@ -1,7 +1,7 @@
-﻿#region netDxf, Copyright(C) 2009 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf, Copyright(C) 2013 Daniel Carvajal, Licensed under LGPL.
 
 //                        netDxf library
-// Copyright (C) 2009 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2013 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -29,6 +29,12 @@ namespace netDxf.Tables
         TableObject
     {
 
+        #region private fields
+
+        private DrawingUnits units;
+
+        #endregion
+
         #region constructors
 
         /// <summary>
@@ -38,6 +44,20 @@ namespace netDxf.Tables
         public BlockRecord(string name)
             : base(name, DxfObjectCode.BlockRecord)
         {
+            this.units = DrawingUnits.Unitless;
+        }
+
+        #endregion
+
+        #region public properties
+
+        /// <summary>
+        /// Block insertion units.
+        /// </summary>
+        public DrawingUnits Units
+        {
+            get { return units; }
+            set { units = value; }
         }
 
         #endregion

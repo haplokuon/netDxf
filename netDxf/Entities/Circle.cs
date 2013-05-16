@@ -36,7 +36,6 @@ namespace netDxf.Entities
         private Vector3 center;
         private double radius;
         private double thickness;
-        private Vector3 normal;
         
         #endregion
 
@@ -53,7 +52,6 @@ namespace netDxf.Entities
             this.center = center;
             this.radius = radius;
             this.thickness = 0.0;
-            this.normal = Vector3.UnitZ;
         }
 
         /// <summary>
@@ -105,22 +103,6 @@ namespace netDxf.Entities
             set { this.thickness = value; }
         }
 
-        /// <summary>
-        /// Gets or sets the circle <see cref="netDxf.Vector3">normal</see>.
-        /// </summary>
-        /// <remarks>
-        /// The normal will always be normalized.
-        /// </remarks>
-        public Vector3 Normal
-        {
-            get { return this.normal; }
-            set
-            {
-                value.Normalize();
-                this.normal = value;
-            }
-        }
-
         #endregion
 
         #region public methods
@@ -157,15 +139,17 @@ namespace netDxf.Entities
         public LwPolyline ToPolyline(int precision)
         {
             IEnumerable<Vector2> vertexes = this.PolygonalVertexes(precision);
-            Vector3 ocsCenter = MathHelper.Transform(this.center, this.normal, MathHelper.CoordinateSystem.World, MathHelper.CoordinateSystem.Object);
+            Vector3 ocsCenter = MathHelper.Transform(this.Center, this.normal, MathHelper.CoordinateSystem.World, MathHelper.CoordinateSystem.Object);
 
             LwPolyline poly = new LwPolyline
                                 {
-                                    Color = (AciColor) this.Color.Clone(),
-                                    Layer = this.Layer,
-                                    LineType = this.LineType,
-                                    Lineweight = (Lineweight) this.Lineweight.Clone(),
-                                    XData = this.XData,
+                                    Color = this.color,
+                                    IsVisible = this.isVisible,
+                                    Layer = this.layer,
+                                    LineType = this.lineType,
+                                    LineTypeScale = this.lineTypeScale,
+                                    Lineweight = this.lineweight,
+                                    XData = this.xData,
                                     Normal = this.normal,
                                     Elevation = ocsCenter.Z,
                                     Thickness = this.thickness,

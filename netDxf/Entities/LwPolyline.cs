@@ -37,9 +37,7 @@ namespace netDxf.Entities
         #region private fields
 
         private List<LwPolylineVertex> vertexes;
-        private bool isClosed;
         private PolylineTypeFlags flags;
-        private Vector3 normal;
         private double elevation;
         private double thickness;
 
@@ -66,8 +64,6 @@ namespace netDxf.Entities
             if (vertexes == null)
                 throw new ArgumentNullException("vertexes");
             this.vertexes = vertexes;
-            this.isClosed = isClosed;
-            this.normal = Vector3.UnitZ;
             this.elevation = 0.0;
             this.thickness = 0.0;
             this.flags = isClosed ? PolylineTypeFlags.ClosedPolylineOrClosedPolygonMeshInM : PolylineTypeFlags.OpenPolyline;
@@ -96,27 +92,8 @@ namespace netDxf.Entities
         /// </summary>
         public bool IsClosed
         {
-            get { return this.isClosed; }
-            set
-            {
-                this.flags = value ? PolylineTypeFlags.ClosedPolylineOrClosedPolygonMeshInM : PolylineTypeFlags.OpenPolyline;
-                this.isClosed = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the light weight polyline <see cref="Vector3">normal</see>.
-        /// </summary>
-        public Vector3 Normal
-        {
-            get { return this.normal; }
-            set
-            {
-                if (Vector3.Zero == value)
-                    throw new ArgumentNullException("value", "The normal can not be the zero vector.");
-                value.Normalize();
-                this.normal = value;
-            }
+            get { return (this.flags & PolylineTypeFlags.ClosedPolylineOrClosedPolygonMeshInM) == PolylineTypeFlags.ClosedPolylineOrClosedPolygonMeshInM; }
+            set { this.flags = value ? PolylineTypeFlags.ClosedPolylineOrClosedPolygonMeshInM : PolylineTypeFlags.OpenPolyline; }
         }
 
         /// <summary>
@@ -169,10 +146,7 @@ namespace netDxf.Entities
         /// <summary>
         /// Decompose the actual polyline in its internal entities, <see cref="Line">lines</see> and <see cref="Arc">arcs</see>.
         /// </summary>
-        /// <remarks>
-        /// Makes the opposite function as the Join() method.
-        /// </remarks>
-        /// <returns>A list of <see cref="Line">lines</see>see> and <see cref="Arc">arcs</see> that made up the polyline.</returns>
+        /// <returns>A list of <see cref="Line">lines</see> and <see cref="Arc">arcs</see> that made up the polyline.</returns>
         public List<EntityObject> Explode()
         {
             List<EntityObject> entities = new List<EntityObject>();
@@ -185,7 +159,7 @@ namespace netDxf.Entities
 
                 if (index == this.Vertexes.Count - 1)
                 {
-                    if (!this.isClosed) break;
+                    if (!this.IsClosed) break;
                     p1 = new Vector2(vertex.Location.X, vertex.Location.Y);
                     p2 = new Vector2(this.vertexes[0].Location.X, this.vertexes[0].Location.Y);
                 }
@@ -204,15 +178,19 @@ namespace netDxf.Entities
                                                         MathHelper.CoordinateSystem.Object,
                                                         MathHelper.CoordinateSystem.World);
 
-                    entities.Add(new Line(start, end)
+                    entities.Add(new Line
                     {
+                        StartPoint = start,
+                        EndPoint = end,
                         Color = this.Color,
+                        IsVisible = this.IsVisible,
                         Layer = this.Layer,
                         LineType = this.LineType,
+                        LineTypeScale = this.LineTypeScale,
                         Lineweight = this.Lineweight,
-                        XData = this.XData,
                         Normal = this.Normal,
                         Thickness = this.Thickness,
+                        XData = this.XData
                     });
                 }
                 else
@@ -239,23 +217,28 @@ namespace netDxf.Entities
                     Vector3 point = MathHelper.Transform(new Vector3(center.X, center.Y, this.elevation), this.normal,
                                                             MathHelper.CoordinateSystem.Object,
                                                             MathHelper.CoordinateSystem.World);
-                    entities.Add(new Arc(point, r, startAngle, endAngle)
-                    {
-                        Color = this.Color,
-                        Layer = this.Layer,
-                        LineType = this.LineType,
-                        Lineweight = this.Lineweight,
-                        XData = this.XData,
-                        Normal = this.Normal,
-                        Thickness = this.Thickness,
-                    });
+                    entities.Add(new Arc
+                                     {
+                                         Center = point,
+                                         Radius = r,
+                                         StartAngle = startAngle,
+                                         EndAngle = endAngle,
+                                         Color = this.Color,
+                                         IsVisible = this.IsVisible,
+                                         Layer = this.Layer,
+                                         LineType = this.LineType,
+                                         LineTypeScale = this.LineTypeScale,
+                                         Lineweight = this.Lineweight,
+                                         Normal = this.Normal,
+                                         Thickness = this.Thickness,
+                                         XData = this.XData
+                                     });
                 }
                 index++;
             }
 
             return entities;
         }
-
 
         /// <summary>
         /// Obtains a list of vertexes that represent the polyline approximating the curve segments as necessary.

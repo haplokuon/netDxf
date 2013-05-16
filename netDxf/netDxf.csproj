@@ -47,7 +47,7 @@
     <OutputPath>bin\Debug\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
+    <WarningLevel>3</WarningLevel>
     <DocumentationFile>bin\Debug\netDxf.xml</DocumentationFile>
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -107,7 +107,7 @@
     <Compile Include="Header\HeaderVariables.cs" />
     <Compile Include="Header\PointShape.cs" />
     <Compile Include="Lineweight.cs" />
-    <Compile Include="Header\DefaultDrawingUnits.cs" />
+    <Compile Include="DrawingUnits.cs" />
     <Compile Include="Header\DxfVersion.cs" />
     <Compile Include="Header\HeaderVariableCode.cs" />
     <Compile Include="Entities\MTextLineSpacingStyle.cs" />

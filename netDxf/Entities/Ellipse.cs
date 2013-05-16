@@ -40,7 +40,6 @@ namespace netDxf.Entities
         private double startAngle;
         private double endAngle;
         private double thickness;
-        private Vector3 normal;
         private int curvePoints;
 
         #endregion
@@ -65,7 +64,6 @@ namespace netDxf.Entities
             this.rotation = 0.0;
             this.curvePoints = 30;
             this.thickness = 0.0;
-            this.normal = Vector3.UnitZ;
         }
 
         /// <summary>
@@ -161,19 +159,6 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets or sets the ellipse <see cref="Vector3">normal</see>.
-        /// </summary>
-        public Vector3 Normal
-        {
-            get { return this.normal; }
-            set
-            {
-                value.Normalize();
-                this.normal = value;
-            }
-        }
-
-        /// <summary>
         /// Gets or sets the number of points generated along the ellipse during the conversion to a polyline.
         /// </summary>
         public int CurvePoints
@@ -211,19 +196,21 @@ namespace netDxf.Entities
         public LwPolyline ToPolyline(int precision)
         {
             IEnumerable<Vector2> vertexes = this.PolygonalVertexes(precision);
-            Vector3 ocsCenter = MathHelper.Transform(this.center, this.normal, MathHelper.CoordinateSystem.World, MathHelper.CoordinateSystem.Object);
+            Vector3 ocsCenter = MathHelper.Transform(this.center, this.Normal, MathHelper.CoordinateSystem.World, MathHelper.CoordinateSystem.Object);
             LwPolyline poly = new LwPolyline
-                                {
-                                    Color = (AciColor) this.Color.Clone(),
-                                    Layer = this.Layer,
-                                    LineType = this.LineType,
-                                    XData = this.XData,
-                                    Lineweight = (Lineweight) Lineweight.Clone(),
-                                    Normal = this.normal,
-                                    Elevation = ocsCenter.Z,
-                                    Thickness = this.thickness,
-                                    IsClosed = this.IsFullEllipse
-                                };
+                                  {
+                                      Color = this.Color,
+                                      IsVisible = this.IsVisible,
+                                      Layer = this.Layer,
+                                      LineType = this.LineType,
+                                      LineTypeScale = this.LineTypeScale,
+                                      Lineweight = this.Lineweight,
+                                      XData = this.XData,
+                                      Normal = this.Normal,
+                                      Elevation = ocsCenter.Z,
+                                      Thickness = this.Thickness,
+                                      IsClosed = this.IsFullEllipse
+                                  };
 
             foreach (Vector2 v in vertexes)
             {

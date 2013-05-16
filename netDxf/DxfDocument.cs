@@ -369,9 +369,9 @@ namespace netDxf
         }
 
         /// <summary>
-        /// Gets the <see cref="PolyfaceMesh">polyface meshes</see> list.
+        /// Gets the <see cref="PolyfaceMeshes">polyface meshes</see> list.
         /// </summary>
-        public ReadOnlyCollection<PolyfaceMesh> PolyfaceMesh
+        public ReadOnlyCollection<PolyfaceMesh> PolyfaceMeshes
         {
             get { return this.polyfaceMeshes.AsReadOnly(); }
         }

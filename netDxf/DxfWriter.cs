@@ -462,10 +462,12 @@ namespace netDxf
 
             this.WriteCodePair(100, SubclassMarker.BlockRecord);
 
-            this.WriteCodePair(2, blockRecord);
+            this.WriteCodePair(2, blockRecord.Name);
 
             // Hard-pointer ID/handle to associated LAYOUT object
             this.WriteCodePair(340, 0);
+
+            this.WriteCodePair(70, (int)blockRecord.Units);
         }
 
         /// <summary>
@@ -990,8 +992,12 @@ namespace netDxf
             this.WriteCodePair(30, 0.0);
 
             this.WriteCodePair(70, (int)polyline.Flags);
-            this.WriteCodePair(75, (int)polyline.SmoothType); 
-  
+            this.WriteCodePair(75, (int)polyline.SmoothType);
+
+            this.WriteCodePair(210, polyline.Normal.X);
+            this.WriteCodePair(220, polyline.Normal.Y);
+            this.WriteCodePair(230, polyline.Normal.Z);
+
             this.WriteXData(polyline.XData);
 
             foreach (PolylineVertex v in polyline.Vertexes)
@@ -1029,6 +1035,10 @@ namespace netDxf
             this.WriteCodePair(20, 0.0);
             this.WriteCodePair(30, 0.0);
 
+            this.WriteCodePair(210, mesh.Normal.X);
+            this.WriteCodePair(220, mesh.Normal.Y);
+            this.WriteCodePair(230, mesh.Normal.Z);
+
             if (mesh.XData != null)
                 this.WriteXData(mesh.XData);
 
@@ -1065,9 +1075,9 @@ namespace netDxf
                 this.WriteCodePair(30, 0);
 
                 this.WriteCodePair(71, face.VertexIndexes[0]);
-                this.WriteCodePair(72, face.VertexIndexes[1]);
-                this.WriteCodePair(73, face.VertexIndexes[2]);
-                if (face.VertexIndexes.Length == 4) this.WriteCodePair(74, face.VertexIndexes[3]);
+                if (face.VertexIndexes.Length > 1) this.WriteCodePair(72, face.VertexIndexes[1]);
+                if (face.VertexIndexes.Length > 2) this.WriteCodePair(73, face.VertexIndexes[2]);
+                if (face.VertexIndexes.Length > 3) this.WriteCodePair(74, face.VertexIndexes[3]);
             }
 
             this.WriteCodePair(0, mesh.EndSequence.CodeName);

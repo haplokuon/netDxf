@@ -32,7 +32,6 @@ namespace netDxf.Entities
 
         private Vector3 location;
         private double thickness;
-        private Vector3 normal;
         private double rotation;
 
         #endregion
@@ -48,7 +47,6 @@ namespace netDxf.Entities
         {
             this.location = location;
             this.thickness = 0.0f;
-            this.normal = Vector3.UnitZ;
             this.rotation = 0.0;
         }
 
@@ -101,19 +99,6 @@ namespace netDxf.Entities
         {
             get { return this.thickness; }
             set { this.thickness = value; }
-        }
-
-        /// <summary>
-        /// Gets or sets the point <see cref="netDxf.Vector3">normal</see>.
-        /// </summary>
-        public Vector3 Normal
-        {
-            get { return this.normal; }
-            set
-            {
-                value.Normalize();
-                this.normal = value;
-            }
         }
 
         /// <summary>

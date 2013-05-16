@@ -602,7 +602,7 @@ namespace netDxf
                             this.headerVariables.Extnames = (int.Parse(dxfPairInfo.Value) != 0);
                             break;
                         case HeaderVariableCode.Insunits:
-                            this.headerVariables.Insunits = (DefaultDrawingUnits)int.Parse(dxfPairInfo.Value);
+                            this.headerVariables.Insunits = (DrawingUnits)int.Parse(dxfPairInfo.Value);
                             break;
                         case HeaderVariableCode.LtScale:
                             this.headerVariables.LtScale = double.Parse(dxfPairInfo.Value);
@@ -1322,6 +1322,7 @@ namespace netDxf
         {
             string handle = null;
             string name = null;
+            DrawingUnits units = DrawingUnits.Unitless;
 
             dxfPairInfo = this.ReadCodePair();
 
@@ -1338,6 +1339,9 @@ namespace netDxf
                                                                          "Invalid value " + dxfPairInfo.Value + " in code " + dxfPairInfo.Code + ".");
                         name = dxfPairInfo.Value;
                         break;
+                    case 70:
+                        units = (DrawingUnits) int.Parse(dxfPairInfo.Value);
+                        break;
                 }
                 dxfPairInfo = this.ReadCodePair();
             }
@@ -1347,7 +1351,11 @@ namespace netDxf
             // we need to check for generated blocks by dimensions, even if the dimension was deleted the block might persist in the drawing.
             CheckDimBlockName(name);
 
-            return new BlockRecord(name){Handle = handle};
+            return new BlockRecord(name)
+                       {
+                           Handle = handle,
+                           Units = units
+                       };
         }
 
         #endregion
@@ -4018,7 +4026,10 @@ namespace netDxf
                     polyline3dVertexes.Add(vertex);
                 }
 
-                pol = new Polyline(polyline3dVertexes, isClosed);
+                pol = new Polyline(polyline3dVertexes, isClosed)
+                          {
+                              Normal = normal
+                          };
                 ((Polyline) pol).EndSequence.Handle = endSequenceHandle;
                 ((Polyline) pol).EndSequence.Layer = endSequenceLayer;
             }
@@ -4048,7 +4059,10 @@ namespace netDxf
                         polyfaceFaces.Add(vertex);
                     }
                 }
-                pol = new PolyfaceMesh(polyfaceVertexes, polyfaceFaces);
+                pol = new PolyfaceMesh(polyfaceVertexes, polyfaceFaces)
+                          {
+                              Normal = normal
+                          };
                 ((PolyfaceMesh) pol).EndSequence.Handle = endSequenceHandle;
                 ((PolyfaceMesh) pol).EndSequence.Layer = endSequenceLayer;
             }
@@ -5494,7 +5508,6 @@ namespace netDxf
             this.mLineStyles.Add(name, mlineStyle);
             return mlineStyle;
         }
-
 
         private static CodeValuePair ReadCodePair(TextReader reader)
         {

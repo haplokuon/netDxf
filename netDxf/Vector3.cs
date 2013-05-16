@@ -278,17 +278,12 @@ namespace netDxf
             double b = u.Z*v.X - u.X*v.Z;
             double c = u.X*v.Y - u.Y*v.X;
             if (! MathHelper.IsZero(a, threshold))
-            {
                 return false;
-            }
             if (!MathHelper.IsZero(b, threshold))
-            {
                 return false;
-            }
             if (!MathHelper.IsZero(c, threshold))
-            {
                 return false;
-            }
+
             return true;
         }
 
@@ -301,8 +296,8 @@ namespace netDxf
         public static Vector3 Round(Vector3 u, int numDigits)
         {
             return new Vector3((Math.Round(u.X, numDigits)),
-                                (Math.Round(u.Y, numDigits)),
-                                (Math.Round(u.Z, numDigits)));
+                               (Math.Round(u.Y, numDigits)),
+                               (Math.Round(u.Z, numDigits)));
         }
 
         #endregion

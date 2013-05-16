@@ -37,7 +37,6 @@ namespace netDxf.Entities
         private Vector3 position;
         private double width;
         private double height;
-        private Vector3 normal;
         private double rotation;
         private ImageDef imageDef;
         private bool clipping;
@@ -68,7 +67,6 @@ namespace netDxf.Entities
             this.position = position;
             this.width = imageDefinition.Width * imageDefinition.OnePixelSize.X;
             this.height = imageDefinition.Height * imageDefinition.OnePixelSize.Y;
-            this.normal = Vector3.UnitZ;
             this.rotation = 0;
             this.clipping = false;
             this.brightness = 50.0f;
@@ -107,19 +105,6 @@ namespace netDxf.Entities
         {
             get { return width; }
             internal set { width = value; }
-        }
-
-        /// <summary>
-        /// Gets or sets the image <see cref="Vector3">normal</see>.
-        /// </summary>
-        public Vector3 Normal
-        {
-            get { return this.normal; }
-            set
-            {
-                value.Normalize();
-                this.normal = value;
-            }
         }
 
         /// <summary>

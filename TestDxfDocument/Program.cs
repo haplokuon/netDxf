@@ -43,7 +43,7 @@ namespace TestDxfDocument
         private static void Main()
         {
             Test();
-
+            //ExplodePolyfaceMesh();
             //ApplicationRegistries();
             //TestOCStoWCS();
             //WriteGradientPattern();
@@ -113,6 +113,18 @@ namespace TestDxfDocument
             dxf.Save("sample 2010.dxf");
         }
 
+        private static void ExplodePolyfaceMesh()
+        {
+            DxfDocument dxf = DxfDocument.Load("polyface mesh.dxf");
+            DxfDocument dxfOut = new DxfDocument(dxf.DrawingVariables);
+            foreach (PolyfaceMesh polyfaceMesh in dxf.PolyfaceMeshes)
+            {
+                List<EntityObject> entities = polyfaceMesh.Explode();
+                dxfOut.AddEntity(entities);
+            }
+
+            dxfOut.Save("polyface mesh exploded.dxf");
+        }
         private static void ApplicationRegistries()
         {
             DxfDocument dxf = new DxfDocument();

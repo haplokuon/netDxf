@@ -60,7 +60,6 @@ namespace netDxf.Entities
         #region private fields
 
         private Vector3 position;        
-        private Vector3 normal;
         private double rectangleWidth;
         private double height;
         private double rotation;
@@ -181,7 +180,6 @@ namespace netDxf.Entities
             this.value = text;
             this.position = position;
             this.attachmentPoint = MTextAttachmentPoint.TopLeft;
-            this.normal = Vector3.UnitZ;
             if (style == null)
                 throw new ArgumentNullException("style", "The Text style cannot be null.");
             this.style = style;
@@ -301,19 +299,6 @@ namespace netDxf.Entities
         {
             get { return this.position; }
             set { this.position = value; }
-        }
-
-        /// <summary>
-        /// Gets or sets the text <see cref="Vector3">normal</see>.
-        /// </summary>
-        public Vector3 Normal
-        {
-            get { return this.normal; }
-            set
-            {
-                value.Normalize();
-                this.normal = value;
-            }
         }
 
         /// <summary>

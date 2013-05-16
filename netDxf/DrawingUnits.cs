@@ -20,12 +20,12 @@
 
 #endregion
 
-namespace netDxf.Header
+namespace netDxf
 {
     /// <summary>
     /// Default drawing units for AutoCAD DesignCenter blocks.
     /// </summary>
-    public enum DefaultDrawingUnits
+    public enum DrawingUnits
     {
         /// <summary>
         /// Unitless.
@@ -64,7 +64,7 @@ namespace netDxf.Header
         /// </summary>
         Microinches = 8,
         /// <summary>
-        /// Mils.
+        /// Mils (a thousandth of an inch).
         /// </summary>
         Mils = 9,
         /// <summary>

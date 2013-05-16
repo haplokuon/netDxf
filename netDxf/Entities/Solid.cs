@@ -37,7 +37,6 @@ namespace netDxf.Entities
         private Vector3 thirdVertex;
         private Vector3 fourthVertex;
         private double thickness;
-        private Vector3 normal;
 
         #endregion
 
@@ -58,7 +57,6 @@ namespace netDxf.Entities
             this.thirdVertex = thirdVertex;
             this.fourthVertex = fourthVertex;
             this.thickness = 0.0;
-            this.normal = Vector3.UnitZ;
         }
 
         /// <summary>
@@ -131,21 +129,6 @@ namespace netDxf.Entities
         {
             get { return this.thickness; }
             set { this.thickness = value; }
-        }
-
-        /// <summary>
-        /// Gets or sets the solid <see cref="Vector3">normal</see>.
-        /// </summary>
-        public Vector3 Normal
-        {
-            get { return this.normal; }
-            set
-            {
-                if (Vector3.Zero == value)
-                    throw new ArgumentNullException("value", "The normal can not be the zero vector");
-                value.Normalize();
-                this.normal = value;
-            }
         }
 
         #endregion

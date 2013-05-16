@@ -36,7 +36,6 @@ namespace netDxf.Entities
 
         private TextAlignment alignment;
         private Vector3 position;
-        private Vector3 normal;
         private double obliqueAngle;
         private TextStyle style;
         private string value;
@@ -189,19 +188,6 @@ namespace netDxf.Entities
         {
             get { return this.alignment; }
             set { this.alignment = value; }
-        }
-
-        /// <summary>
-        /// Gets or sets the text <see cref="Vector3">normal</see>.
-        /// </summary>
-        public Vector3 Normal
-        {
-            get { return this.normal; }
-            set
-            {
-                value.Normalize();
-                this.normal = value;
-            }
         }
 
         /// <summary>

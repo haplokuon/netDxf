@@ -40,7 +40,6 @@ namespace netDxf.Entities
 
         protected Vector3 definitionPoint;
         protected Vector3 midTextPoint;
-        protected Vector3 normal;
         protected DimensionStyle style;
         protected DimensionType dimensionType;
         protected MTextAttachmentPoint attachmentPoint;
@@ -60,7 +59,6 @@ namespace netDxf.Entities
         {
             this.definitionPoint = Vector3.Zero;
             this.midTextPoint = Vector3.Zero;
-            this.normal = Vector3.UnitZ;
             this.dimensionType = type;
             this.attachmentPoint = MTextAttachmentPoint.MiddleCenter;
             this.lineSpacingStyle = MTextLineSpacingStyle.AtLeast;
@@ -94,21 +92,6 @@ namespace netDxf.Entities
         #endregion
 
         #region public properties
-
-        /// <summary>
-        /// Gets or sets the dimension <see cref="Vector3">normal</see>.
-        /// </summary>
-        public virtual Vector3 Normal
-        {
-            get { return normal; }
-            set
-            {
-                if (Vector3.Zero == value)
-                    throw new ArgumentNullException("value", "The normal can not be the zero vector");
-                value.Normalize();
-                this.normal = value;
-            }
-        }
 
         /// <summary>
         /// Gets or sets the style associated with the dimension.

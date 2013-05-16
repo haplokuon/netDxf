@@ -49,7 +49,6 @@ namespace netDxf.Entities
         private double height;
         private double widthFactor;
         private double rotation;
-        private Vector3 normal;
         private TextAlignment alignment;
 
         #endregion
@@ -92,7 +91,6 @@ namespace netDxf.Entities
             this.height = definition.Height;
             this.widthFactor = definition.WidthFactor;
             this.rotation = definition.Rotation;
-            this.normal = definition.Normal;
             this.alignment = definition.Alignment;
         }
 
@@ -189,21 +187,6 @@ namespace netDxf.Entities
         {
             get { return this.flags; }
             set { this.flags = value; }
-        }
-
-        /// <summary>
-        /// Gets or sets the attribute <see cref="Vector3">normal</see>.
-        /// </summary>
-        internal Vector3 Normal
-        {
-            get { return this.normal; }
-            set
-            {
-                if (Vector3.Zero == value)
-                    throw new ArgumentNullException("value", "The normal can not be the zero vector");
-                value.Normalize();
-                this.normal = value;
-            }
         }
 
         /// <summary>

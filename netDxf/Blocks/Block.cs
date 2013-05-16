@@ -109,6 +109,15 @@ namespace netDxf.Blocks
         }
 
         /// <summary>
+        /// Block insertion units.
+        /// </summary>
+        public DrawingUnits InsertionUnits
+        {
+            get { return this.record.Units; }
+            set { this.record.Units = value; }
+        }
+
+        /// <summary>
         /// Gets or sets the block <see cref="Layer">layer</see>.
         /// </summary>
         public Layer Layer
@@ -157,7 +166,6 @@ namespace netDxf.Blocks
             }
         }
 
-        
         #endregion
 
         #region internal properties

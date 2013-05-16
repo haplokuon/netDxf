@@ -57,18 +57,18 @@ namespace netDxf.Header
                                {HeaderVariableCode.DwgCodePage, new HeaderVariable(HeaderVariableCode.DwgCodePage, "ANSI_" + Encoding.Default.WindowsCodePage)},
                                {HeaderVariableCode.LastSavedBy, new HeaderVariable(HeaderVariableCode.LastSavedBy, Environment.UserName)},
                                {HeaderVariableCode.HandleSeed, new HeaderVariable(HeaderVariableCode.HandleSeed, Convert.ToString(1, 16))},
-                               {HeaderVariableCode.Angbase, new HeaderVariable(HeaderVariableCode.Angbase, 0)},
+                               {HeaderVariableCode.Angbase, new HeaderVariable(HeaderVariableCode.Angbase, 0.0)},
                                {HeaderVariableCode.Angdir, new HeaderVariable(HeaderVariableCode.Angdir, 0)},
                                {HeaderVariableCode.AttMode, new HeaderVariable(HeaderVariableCode.AttMode, 1)},
                                {HeaderVariableCode.AUnits, new HeaderVariable(HeaderVariableCode.AUnits, 0)},
                                {HeaderVariableCode.AUprec, new HeaderVariable(HeaderVariableCode.AUprec, 0)},
-                               {HeaderVariableCode.CeColor, new HeaderVariable(HeaderVariableCode.CeColor, 256)},
+                               {HeaderVariableCode.CeColor, new HeaderVariable(HeaderVariableCode.CeColor, (short)256)},
                                {HeaderVariableCode.CeLtScale, new HeaderVariable(HeaderVariableCode.CeLtScale, 1.0)},
                                {HeaderVariableCode.CeLtype, new HeaderVariable(HeaderVariableCode.CeLtype, "ByLayer")},
-                               {HeaderVariableCode.CeLweight, new HeaderVariable(HeaderVariableCode.CeLweight, -1)},
+                               {HeaderVariableCode.CeLweight, new HeaderVariable(HeaderVariableCode.CeLweight, (short)-1)},
                                {HeaderVariableCode.CLayer, new HeaderVariable(HeaderVariableCode.CLayer, "0")},
                                {HeaderVariableCode.CMLJust, new HeaderVariable(HeaderVariableCode.CMLJust, 0)},
-                               {HeaderVariableCode.CMLScale, new HeaderVariable(HeaderVariableCode.CMLScale, 20)},
+                               {HeaderVariableCode.CMLScale, new HeaderVariable(HeaderVariableCode.CMLScale, 20.0)},
                                {HeaderVariableCode.CMLStyle, new HeaderVariable(HeaderVariableCode.CMLStyle, "Standard")},
                                {HeaderVariableCode.DimStyle, new HeaderVariable(HeaderVariableCode.DimStyle, "Standard")},
                                {HeaderVariableCode.TextSize, new HeaderVariable(HeaderVariableCode.TextSize, 2.5)},
@@ -76,11 +76,11 @@ namespace netDxf.Header
                                {HeaderVariableCode.LUnits, new HeaderVariable(HeaderVariableCode.LUnits, 2)},
                                {HeaderVariableCode.LUprec, new HeaderVariable(HeaderVariableCode.LUprec, 4)},
                                {HeaderVariableCode.Extnames, new HeaderVariable(HeaderVariableCode.Extnames, 1)},
-                               {HeaderVariableCode.Insunits, new HeaderVariable(HeaderVariableCode.Insunits, (int) DefaultDrawingUnits.Millimeters)},
+                               {HeaderVariableCode.Insunits, new HeaderVariable(HeaderVariableCode.Insunits, (int) DrawingUnits.Millimeters)},
                                {HeaderVariableCode.LtScale, new HeaderVariable(HeaderVariableCode.LtScale, 1.0)},
                                {HeaderVariableCode.LwDisplay, new HeaderVariable(HeaderVariableCode.LwDisplay, 0)},
                                {HeaderVariableCode.PdMode, new HeaderVariable(HeaderVariableCode.PdMode, (int) PointShape.Dot)},
-                               {HeaderVariableCode.PdSize, new HeaderVariable(HeaderVariableCode.PdSize, 0)},
+                               {HeaderVariableCode.PdSize, new HeaderVariable(HeaderVariableCode.PdSize, 0.0)},
                                {HeaderVariableCode.PLineGen, new HeaderVariable(HeaderVariableCode.PLineGen, 0)}
                            };
         }
@@ -359,9 +359,9 @@ namespace netDxf.Header
         /// Default value: 0.<br />
         /// Also applies to raster image units, eventhought they have the RasterVariables object and units in ImageDef.
         /// </remarks>
-        public DefaultDrawingUnits Insunits
+        public DrawingUnits Insunits
         {
-            get { return (DefaultDrawingUnits)variables[HeaderVariableCode.Insunits].Value; }
+            get { return (DrawingUnits)variables[HeaderVariableCode.Insunits].Value; }
             internal set { variables[HeaderVariableCode.Insunits].Value = (int)value; }
         }
 
