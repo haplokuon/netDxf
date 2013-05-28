@@ -1374,12 +1374,8 @@ namespace netDxf
                         this.WriteCodePair(20, ellipse.Center.Y);
                         double sine = 0.5 * ellipse.MajorAxis * Math.Sin(ellipse.Rotation * MathHelper.DegToRad);
                         double cosine = 0.5 * ellipse.MajorAxis * Math.Cos(ellipse.Rotation * MathHelper.DegToRad);
-                        Vector3 axisPoint = MathHelper.Transform(new Vector3(cosine, sine, 0),
-                                                                  ellipse.Normal,
-                                                                  MathHelper.CoordinateSystem.Object,
-                                                                  MathHelper.CoordinateSystem.World);
-                        this.WriteCodePair(11, axisPoint.X);
-                        this.WriteCodePair(21, axisPoint.Y);
+                        this.WriteCodePair(11, cosine);
+                        this.WriteCodePair(21, sine);
 
                         this.WriteCodePair(40, ellipse.MinorAxis / ellipse.MajorAxis);
                         this.WriteCodePair(50, ellipse.StartAngle);

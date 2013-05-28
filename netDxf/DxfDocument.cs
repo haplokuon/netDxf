@@ -424,6 +424,21 @@ namespace netDxf
             get { return this.mLines.AsReadOnly(); }
         }
 
+        /// <summary>
+        /// Gets the <see cref="Dimension">dimensions</see> list.
+        /// </summary>
+        public ReadOnlyCollection<Dimension> Dimensions
+        {
+            get { return this.dimensions.AsReadOnly(); }
+        }
+
+        /// <summary>
+        /// Gets the <see cref="Splines">splines</see> list.
+        /// </summary>
+        public ReadOnlyCollection<Spline> Splines
+        {
+            get { return this.splines.AsReadOnly(); }
+        }
         #endregion
 
         #region public object properties

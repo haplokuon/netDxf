@@ -104,9 +104,8 @@ namespace TestDxfDocument
             // the Load function is now static
             // sample.dxf contains all supported entities by netDxf
             DxfDocument dxf = DxfDocument.Load("sample.dxf");
-
-            // the dxf version is controlled by the DrawingVariables property of the dxf document,
-            // also a HeaderVariables instance or a DxfVersion can be passed to the constructor to initialize a new DxfDocument.
+            //// the dxf version is controlled by the DrawingVariables property of the dxf document,
+            //// also a HeaderVariables instance or a DxfVersion can be passed to the constructor to initialize a new DxfDocument.
             dxf.DrawingVariables.AcadVer = DxfVersion.AutoCad2013;
             dxf.Save("sample 2013.dxf");
             dxf.DrawingVariables.AcadVer = DxfVersion.AutoCad2010;
