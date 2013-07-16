@@ -1,7 +1,7 @@
-﻿#region netDxf, Copyright(C) 2012 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf, Copyright(C) 2013 Daniel Carvajal, Licensed under LGPL.
 
 //                        netDxf library
-// Copyright (C) 2012 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2013 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -34,14 +34,22 @@ namespace netDxf.Entities
     {
         #region private fields
 
-        private Vector3 firstPoint;
-        private Vector3 secondPoint;
+        private Vector3 start;
+        private Vector3 end;
         private double offset;
         private double rotation;
 
         #endregion
 
         #region constructors
+
+        /// <summary>
+        /// Initializes a new instance of the <c>LinearDimension</c> class.
+        /// </summary>
+        public LinearDimension()
+            : this(Vector3.Zero, Vector3.UnitX, 0.1, 0.0)
+        {
+        }
 
         /// <summary>
         /// Initializes a new instance of the <c>LinearDimension</c> class.
@@ -72,6 +80,19 @@ namespace netDxf.Entities
         /// <summary>
         /// Initializes a new instance of the <c>LinearDimension</c> class.
         /// </summary>
+        /// <param name="firstPoint">First reference <see cref="Vector2">point</see> of the dimension.</param>
+        /// <param name="secondPoint">Second reference <see cref="Vector2">point</see> of the dimension.</param>
+        /// <param name="offset">Distance between the mid point reference line and the dimension line.</param>
+        /// <param name="rotation">Rotation in degrees of the dimension line.</param>
+        /// <remarks>The reference points define the distance to be measure.</remarks>
+        public LinearDimension(Vector2 firstPoint, Vector2 secondPoint, double offset, double rotation)
+            : this(new Vector3(firstPoint.X, firstPoint.Y, 0.0), new Vector3(secondPoint.X, secondPoint.Y, 0.0), offset, rotation, DimensionStyle.Default)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <c>LinearDimension</c> class.
+        /// </summary>
         /// <param name="firstPoint">First reference <see cref="Vector3">point</see> of the dimension.</param>
         /// <param name="secondPoint">Second reference <see cref="Vector3">point</see> of the dimension.</param>
         /// <param name="offset">Distance between the mid point reference line and the dimension line.</param>
@@ -79,6 +100,20 @@ namespace netDxf.Entities
         /// <remarks>The reference points define the distance to be measure.</remarks>
         public LinearDimension(Vector3 firstPoint, Vector3 secondPoint, double offset, double rotation)
             : this(firstPoint, secondPoint, offset, rotation, DimensionStyle.Default)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <c>LinearDimension</c> class.
+        /// </summary>
+        /// <param name="firstPoint">First reference <see cref="Vector2">point</see> of the dimension.</param>
+        /// <param name="secondPoint">Second reference <see cref="Vector2">point</see> of the dimension.</param>
+        /// <param name="offset">Distance between the mid point reference line and the dimension line.</param>
+        /// <param name="rotation">Rotation in degrees of the dimension line.</param>
+        /// <param name="style">The <see cref="DimensionStyle">style</see> to use with the dimension.</param>
+        /// <remarks>The reference points define the distance to be measure.</remarks>
+        public LinearDimension(Vector2 firstPoint, Vector2 secondPoint, double offset, double rotation, DimensionStyle style)
+            : this(new Vector3(firstPoint.X, firstPoint.Y, 0.0), new Vector3(secondPoint.X, secondPoint.Y, 0.0), offset, rotation, style)
         {
         }
 
@@ -94,8 +129,8 @@ namespace netDxf.Entities
         public LinearDimension(Vector3 firstPoint, Vector3 secondPoint, double offset, double rotation, DimensionStyle style)
             : base(DimensionType.Linear)
         {
-            this.firstPoint = firstPoint;
-            this.secondPoint = secondPoint;
+            this.start = firstPoint;
+            this.end = secondPoint;
             this.offset = offset;
             this.style = style;
             this.rotation = rotation;
@@ -110,8 +145,8 @@ namespace netDxf.Entities
         /// </summary>
         public Vector3 FirstReferencePoint
         {
-            get { return firstPoint; }
-            set { this.firstPoint = value; }
+            get { return start; }
+            set { this.start = value; }
         }
 
         /// <summary>
@@ -119,17 +154,8 @@ namespace netDxf.Entities
         /// </summary>
         public Vector3 SecondReferencePoint
         {
-            get { return secondPoint; }
-            set { this.secondPoint = value; }
-        }
-
-        /// <summary>
-        /// Gets or sets the distance between the mid point of the reference line and the dimension line.
-        /// </summary>
-        public double Offset
-        {
-            get { return offset; }
-            set { offset = value; }
+            get { return end; }
+            set { this.end = value; }
         }
 
         /// <summary>
@@ -142,18 +168,27 @@ namespace netDxf.Entities
         }
 
         /// <summary>
+        /// Gets or sets the distance between the mid point of the reference line and the dimension line.
+        /// </summary>
+        public double Offset
+        {
+            get { return offset; }
+            set { offset = value; }
+        }
+
+        /// <summary>
         /// Gets the actual measurement.
         /// </summary>
         public override double Value
         {
             get
             {
-                Vector3 refPoint = MathHelper.Transform(this.firstPoint, this.normal,
+                Vector3 refPoint = MathHelper.Transform(this.start, this.normal,
                                                         MathHelper.CoordinateSystem.World,
                                                         MathHelper.CoordinateSystem.Object);
 
                 Vector2 firstRef = new Vector2(refPoint.X, refPoint.Y);
-                refPoint = MathHelper.Transform(this.secondPoint, this.normal,
+                refPoint = MathHelper.Transform(this.end, this.normal,
                                                 MathHelper.CoordinateSystem.World,
                                                 MathHelper.CoordinateSystem.Object);
 
@@ -177,12 +212,12 @@ namespace netDxf.Entities
         internal override Block BuildBlock(string name)
         {
             // we will build the dimension block in object coordinates with normal the dimension normal
-            Vector3 refPoint = MathHelper.Transform(this.firstPoint, this.normal,
+            Vector3 refPoint = MathHelper.Transform(this.start, this.normal,
                                                     MathHelper.CoordinateSystem.World,
                                                     MathHelper.CoordinateSystem.Object);
 
             Vector2 firstRef = new Vector2(refPoint.X, refPoint.Y);
-            refPoint = MathHelper.Transform(this.secondPoint, this.normal,
+            refPoint = MathHelper.Transform(this.end, this.normal,
                                             MathHelper.CoordinateSystem.World,
                                             MathHelper.CoordinateSystem.Object);
 
@@ -258,6 +293,35 @@ namespace netDxf.Entities
             return dim;
         }
 
+        /// <summary>
+        /// Creates a new LinearDimension that is a copy of the current instance.
+        /// </summary>
+        /// <returns>A new LinearDimension that is a copy of this instance.</returns>
+        public override object Clone()
+        {
+            return new LinearDimension
+            {
+                //EntityObject properties
+                Color = this.color,
+                Layer = this.layer,
+                LineType = this.lineType,
+                Lineweight = this.lineweight,
+                LineTypeScale = this.lineTypeScale,
+                Normal = this.normal,
+                XData = this.xData,
+                //Dimension properties
+                Style = this.style,
+                AttachmentPoint = this.attachmentPoint,
+                LineSpacingStyle = this.lineSpacingStyle,
+                LineSpacingFactor = this.lineSpacing,
+                //LinearDimension properties
+                FirstReferencePoint = this.start,
+                SecondReferencePoint = this.end,
+                Rotation = this.rotation,
+                Offset = this.offset
+            };
+        }
         #endregion
+
     }
 }

@@ -1,7 +1,7 @@
-﻿#region netDxf, Copyright(C) 2012 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf, Copyright(C) 2013 Daniel Carvajal, Licensed under LGPL.
 
 //                        netDxf library
-// Copyright (C) 2012 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2013 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -34,13 +34,21 @@ namespace netDxf.Entities
     {
         #region private fields
 
-        private Vector3 firstPoint;
-        private Vector3 secondPoint;
+        private Vector3 firstRef;
+        private Vector3 secondRef;
         private double offset;
 
         #endregion
 
         #region constructors
+
+        /// <summary>
+        /// Initializes a new instance of the <c>AlignedDimension</c> class.
+        /// </summary>
+        public AlignedDimension()
+            : this(Vector3.Zero, Vector3.UnitX, 0.1)
+        {
+        }
 
         /// <summary>
         /// Initializes a new instance of the <c>AlignedDimension</c> class.
@@ -69,12 +77,37 @@ namespace netDxf.Entities
         /// <summary>
         /// Initializes a new instance of the <c>AlignedDimension</c> class.
         /// </summary>
+        /// <param name="firstPoint">First reference <see cref="Vector2">point</see> of the dimension.</param>
+        /// <param name="secondPoint">Second reference <see cref="Vector2">point</see> of the dimension.</param>
+        /// <param name="offset">Distance between the reference line and the dimension line.</param>
+        /// <remarks>The reference points define the distance to be measure.</remarks>
+        public AlignedDimension(Vector2 firstPoint, Vector2 secondPoint, double offset)
+            : this(new Vector3(firstPoint.X, firstPoint.Y, 0.0), new Vector3(secondPoint.X, secondPoint.Y, 0.0), offset, DimensionStyle.Default)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <c>AlignedDimension</c> class.
+        /// </summary>
         /// <param name="firstPoint">First reference <see cref="Vector3">point</see> of the dimension.</param>
         /// <param name="secondPoint">Second reference <see cref="Vector3">point</see> of the dimension.</param>
         /// <param name="offset">Distance between the reference line and the dimension line.</param>
         /// <remarks>The reference points define the distance to be measure.</remarks>
         public AlignedDimension(Vector3 firstPoint, Vector3 secondPoint, double offset)
             : this(firstPoint, secondPoint, offset, DimensionStyle.Default)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <c>AlignedDimension</c> class.
+        /// </summary>
+        /// <param name="firstPoint">First reference <see cref="Vector2">point</see> of the dimension.</param>
+        /// <param name="secondPoint">Second reference <see cref="Vector2">point</see> of the dimension.</param>
+        /// <param name="offset">Distance between the reference line and the dimension line.</param>
+        /// <param name="style">The <see cref="DimensionStyle">style</see> to use with the dimension.</param>
+        /// <remarks>The reference points define the distance to be measure.</remarks>
+        public AlignedDimension(Vector2 firstPoint, Vector2 secondPoint, double offset, DimensionStyle style)
+            : this(new Vector3(firstPoint.X, firstPoint.Y, 0.0), new Vector3(secondPoint.X, secondPoint.Y, 0.0), offset, style)
         {
         }
 
@@ -89,8 +122,8 @@ namespace netDxf.Entities
         public AlignedDimension(Vector3 firstPoint, Vector3 secondPoint, double offset, DimensionStyle style)
             : base(DimensionType.Aligned)
         {
-            this.firstPoint = firstPoint;
-            this.secondPoint = secondPoint;
+            this.firstRef = firstPoint;
+            this.secondRef = secondPoint;
             this.offset = offset;
             if (style == null)
                 throw new ArgumentNullException("style", "The Dimension style cannot be null.");
@@ -106,8 +139,8 @@ namespace netDxf.Entities
         /// </summary>
         public Vector3 FirstReferencePoint
         {
-            get { return firstPoint; }
-            set { firstPoint = value; }
+            get { return this.firstRef; }
+            set { this.firstRef = value; }
         }
 
         /// <summary>
@@ -115,8 +148,8 @@ namespace netDxf.Entities
         /// </summary>
         public Vector3 SecondReferencePoint
         {
-            get { return secondPoint; }
-            set { secondPoint = value; }
+            get { return this.secondRef; }
+            set { this.secondRef = value; }
         }
 
         /// <summary>
@@ -124,8 +157,8 @@ namespace netDxf.Entities
         /// </summary>
         public double Offset
         {
-            get { return offset; }
-            set { offset = value; }
+            get { return this.offset; }
+            set { this.offset = value; }
         }
 
         /// <summary>
@@ -133,7 +166,7 @@ namespace netDxf.Entities
         /// </summary>
         public override double Value
         {
-            get { return Vector3.Distance(this.firstPoint, this.secondPoint); }
+            get { return Vector3.Distance(this.firstRef, this.secondRef); }
         }
 
         #endregion
@@ -148,12 +181,12 @@ namespace netDxf.Entities
         internal override Block BuildBlock(string name)
         {
             // we will build the dimension block in object coordinates with normal the dimension normal
-            Vector3 refPoint = MathHelper.Transform(this.firstPoint, this.normal,
+            Vector3 refPoint = MathHelper.Transform(this.firstRef, this.normal,
                                                     MathHelper.CoordinateSystem.World,
                                                     MathHelper.CoordinateSystem.Object);
 
             Vector2 firstRef = new Vector2(refPoint.X, refPoint.Y);   
-            refPoint = MathHelper.Transform(this.secondPoint, this.normal,
+            refPoint = MathHelper.Transform(this.secondRef, this.normal,
                                             MathHelper.CoordinateSystem.World,
                                             MathHelper.CoordinateSystem.Object);
 
@@ -175,7 +208,7 @@ namespace netDxf.Entities
 
             // dimension lines
             double offsetRot = 0.0;
-            if (offset < 0)
+            if (this.offset < 0)
                 offsetRot = MathHelper.PI;  
             Line startBorder = new Line(Vector2.Polar(firstRef, this.style.DIMEXO, offsetRot + refRotation + MathHelper.HalfPI),
                                         Vector2.Polar(startDimLine, this.style.DIMEXE, offsetRot + refRotation + MathHelper.HalfPI));
@@ -230,6 +263,35 @@ namespace netDxf.Entities
             return dim;
         }
 
+        /// <summary>
+        /// Creates a new AlignedDimension that is a copy of the current instance.
+        /// </summary>
+        /// <returns>A new AlignedDimension that is a copy of this instance.</returns>
+        public override object Clone()
+        {
+            return new AlignedDimension
+                {
+                    //EntityObject properties
+                    Color = this.color,
+                    Layer = this.layer,
+                    LineType = this.lineType,
+                    Lineweight = this.lineweight,
+                    LineTypeScale = this.lineTypeScale,
+                    Normal = this.normal,
+                    XData = this.xData,
+                    //Dimension properties
+                    Style = this.style,
+                    AttachmentPoint = this.attachmentPoint,
+                    LineSpacingStyle = this.lineSpacingStyle,
+                    LineSpacingFactor = this.lineSpacing,
+                    //AlignedDimension properties
+                    FirstReferencePoint = this.firstRef,
+                    SecondReferencePoint = this.secondRef,
+                    Offset = this.offset
+                };
+        }
+
         #endregion
+
     }
 }

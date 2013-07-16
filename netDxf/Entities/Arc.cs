@@ -198,5 +198,33 @@ namespace netDxf.Entities
 
         #endregion
 
+        #region overrides
+
+        /// <summary>
+        /// Creates a new Arc that is a copy of the current instance.
+        /// </summary>
+        /// <returns>A new Arc that is a copy of this instance.</returns>
+        public override object Clone()
+        {
+            return new Arc
+            {
+                //EntityObject properties
+                Color = this.color,
+                Layer = this.layer,
+                LineType = this.lineType,
+                Lineweight = this.lineweight,
+                LineTypeScale = this.lineTypeScale,
+                Normal = this.normal,
+                XData = this.xData,
+                //Arc properties
+                Center = this.center,
+                Radius = this.radius,
+                StartAngle = this.startAngle,
+                EndAngle = this.endAngle,
+                Thickness = this.thickness
+            };
+        }
+
+        #endregion
     }
 }

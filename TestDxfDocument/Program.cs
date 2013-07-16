@@ -25,6 +25,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
+using System.Text;
 using netDxf;
 using netDxf.Blocks;
 using netDxf.Entities;
@@ -43,6 +44,13 @@ namespace TestDxfDocument
         private static void Main()
         {
             Test();
+
+            //ExplodeInsert();
+            //ImageUsesAndRemove();
+            //LayerAndLineTypesUsesAndRemove();
+            //TextAndDimensionStyleUsesAndRemove();
+            //MLineStyleUsesAndRemove();
+            //AppRegUsesAndRemove();
             //ExplodePolyfaceMesh();
             //ApplicationRegistries();
             //TestOCStoWCS();
@@ -83,6 +91,7 @@ namespace TestDxfDocument
             //HatchTest1();
             //HatchTest2();
             //HatchTest3();
+            //HatchTest4();
             //BlockAttributes();
             //WriteNestedInsert();
             //WritePolyfaceMesh();
@@ -99,19 +108,470 @@ namespace TestDxfDocument
 
         private static void Test()
         {
-            // important changes in netDxf 0.4 version
             DxfVersion version = DxfDocument.CheckDxfFileVersion("sample.dxf");
-            // the Load function is now static
+
             // sample.dxf contains all supported entities by netDxf
             DxfDocument dxf = DxfDocument.Load("sample.dxf");
-            //// the dxf version is controlled by the DrawingVariables property of the dxf document,
-            //// also a HeaderVariables instance or a DxfVersion can be passed to the constructor to initialize a new DxfDocument.
+
+            Console.WriteLine("FILE COMMENTS: {0}", dxf.Comments.Count);
+            foreach (var o in dxf.Comments)
+            {
+                Console.WriteLine("     {0}", o);
+            }
+            Console.WriteLine();
+
+            Console.WriteLine("APPLICATION REGISTRIES: {0}", dxf.ApplicationRegistries.Count);
+            foreach (var o in dxf.ApplicationRegistries)
+            {
+                Console.WriteLine("     {0}; References count: {1}", o.Name, dxf.ApplicationRegistries.GetReferences(o.Name).Count);
+            }
+            Console.WriteLine();
+
+            Console.WriteLine("LAYERS: {0}", dxf.Layers.Count);
+            foreach (var o in dxf.Layers)
+            {
+                Console.WriteLine("     {0}; References count: {1}", o.Name, dxf.Layers.GetReferences(o).Count);
+            }
+            Console.WriteLine();
+
+            Console.WriteLine("LINE TYPES: {0}", dxf.LineTypes.Count);
+            foreach (var o in dxf.LineTypes)
+            {
+                Console.WriteLine("     {0}; References count: {1}", o.Name, dxf.LineTypes.GetReferences(o.Name).Count);
+            }
+            Console.WriteLine();
+
+            Console.WriteLine("TEXT STYLES: {0}", dxf.TextStyles.Count);
+            foreach (var o in dxf.TextStyles)
+            {
+                Console.WriteLine("     {0}; References count: {1}", o.Name, dxf.TextStyles.GetReferences(o.Name).Count);
+            }
+            Console.WriteLine();
+
+            Console.WriteLine("DIMENSION STYLES: {0}", dxf.DimensionStyles.Count);
+            foreach (var o in dxf.DimensionStyles)
+            {
+                Console.WriteLine("     {0}; References count: {1}", o.Name, dxf.DimensionStyles.GetReferences(o.Name).Count);
+            }
+            Console.WriteLine();
+
+            Console.WriteLine("MLINE STYLES: {0}", dxf.MlineStyles.Count);
+            foreach (var o in dxf.MlineStyles)
+            {
+                Console.WriteLine("     {0}; References count: {1}", o.Name, dxf.MlineStyles.GetReferences(o.Name).Count);
+            }
+            Console.WriteLine();
+
+            Console.WriteLine("BLOCKS: {0}", dxf.Blocks.Count);
+            foreach (var o in dxf.Blocks)
+            {
+                Console.WriteLine("     {0}; References count: {1}", o.Name, dxf.Blocks.GetReferences(o.Name).Count);
+            }
+            Console.WriteLine();
+
+            Console.WriteLine("IMAGE DEFINITIONS: {0}", dxf.ImageDefinitions.Count);
+            foreach (var o in dxf.ImageDefinitions)
+            {
+                Console.WriteLine("     {0}; File name: {1}; References count: {2}", o.Name, o.FileName, dxf.ImageDefinitions.GetReferences(o.Name).Count);
+            }
+            Console.WriteLine();
+
+            Console.WriteLine("GROUPS: {0}", dxf.Groups.Count);
+            foreach (var o in dxf.Groups)
+            {
+                Console.WriteLine("     {0}; Entities count: {1}", o.Name, o.Entities.Count);
+            }
+            Console.WriteLine();
+
+            Console.WriteLine("ENTITIES:");
+            Console.WriteLine("     {0}; count: {1}", EntityType.Arc.ToString() , dxf.Arcs.Count);
+            Console.WriteLine("     {0}; count: {1}", EntityType.Circle.ToString(), dxf.Circles.Count);
+            Console.WriteLine("     {0}; count: {1}", EntityType.Dimension.ToString(), dxf.Dimensions.Count);
+            Console.WriteLine("     {0}; count: {1}", EntityType.Ellipse.ToString(), dxf.Ellipses.Count);
+            Console.WriteLine("     {0}; count: {1}", EntityType.Face3D.ToString(), dxf.Faces3d.Count);
+            Console.WriteLine("     {0}; count: {1}", EntityType.Hatch.ToString(), dxf.Hatches.Count);
+            Console.WriteLine("     {0}; count: {1}", EntityType.Image.ToString(), dxf.Images.Count);
+            Console.WriteLine("     {0}; count: {1}", EntityType.Insert.ToString(), dxf.Inserts.Count);
+            Console.WriteLine("     {0}; count: {1}", EntityType.LightWeightPolyline.ToString(), dxf.LwPolylines.Count);
+            Console.WriteLine("     {0}; count: {1}", EntityType.Line.ToString(), dxf.Lines.Count);
+            Console.WriteLine("     {0}; count: {1}", EntityType.MLine.ToString(), dxf.MLines.Count);
+            Console.WriteLine("     {0}; count: {1}", EntityType.MText.ToString(), dxf.MTexts.Count);
+            Console.WriteLine("     {0}; count: {1}", EntityType.Point.ToString(), dxf.Points.Count);
+            Console.WriteLine("     {0}; count: {1}", EntityType.PolyfaceMesh.ToString(), dxf.PolyfaceMeshes.Count);
+            Console.WriteLine("     {0}; count: {1}", EntityType.Polyline.ToString(), dxf.Polylines.Count);
+            Console.WriteLine("     {0}; count: {1}", EntityType.Solid.ToString(), dxf.Solids.Count);
+            Console.WriteLine("     {0}; count: {1}", EntityType.Spline.ToString(), dxf.Splines.Count);
+            Console.WriteLine("     {0}; count: {1}", EntityType.Text.ToString(), dxf.Texts.Count);
+            Console.WriteLine();
+
+            // the dxf version is controlled by the DrawingVariables property of the dxf document,
+            // also a HeaderVariables instance or a DxfVersion can be passed to the constructor to initialize a new DxfDocument.
             dxf.DrawingVariables.AcadVer = DxfVersion.AutoCad2013;
             dxf.Save("sample 2013.dxf");
             dxf.DrawingVariables.AcadVer = DxfVersion.AutoCad2010;
             dxf.Save("sample 2010.dxf");
+
+            Console.WriteLine("Press a key to continue...");
+            Console.ReadLine();
         }
 
+        //private static void ExplodeInsert()
+        //{
+        //    DxfDocument dxf = DxfDocument.Load("explode\\ExplodeInsertUniformScale.dxf");
+
+        //    List<DxfObject> refs = dxf.Blocks.References["ExplodeBlock"];
+        //    Insert insert = (Insert)refs[0];
+        //    dxf.RemoveEntity(insert);
+        //    insert.Layer = new Layer("Original block");
+        //    insert.Layer.Color = AciColor.DarkGrey;
+        //    dxf.AddEntity(insert);
+        //    List<EntityObject> explodedEntities = insert.Explode();
+        //    dxf.AddEntity(explodedEntities);
+
+        //    dxf.Save("ExplodeInsert.dxf");
+        //}
+
+        private static void ImageUsesAndRemove()
+        {
+            ImageDef imageDef1 = new ImageDef("img\\image01.jpg");
+            Image image1 = new Image(imageDef1, Vector3.Zero);
+
+            ImageDef imageDef2 = new ImageDef("img\\image02.jpg");
+            Image image2 = new Image(imageDef2, new Vector3(0, 220, 0));
+            Image image3 = new Image(imageDef2, image2.Position + new Vector3(280,0,0));
+
+            Block block =new Block("MyImageBlock");
+            block.Entities.Add(image1);
+
+            Insert insert = new Insert(block);
+
+            DxfDocument dxf = new DxfDocument();
+            dxf.AddEntity(insert);
+            dxf.AddEntity(image2);
+            dxf.AddEntity(image3);
+            dxf.Save("test netDxf.dxf");
+
+           
+            dxf.RemoveEntity(insert);
+            dxf.Blocks.Remove(insert.Block.Name);
+            // imageDef1 has no references in the document
+            List<DxfObject> uses = dxf.ImageDefinitions.GetReferences(imageDef1.Name);
+            dxf.Save("test netDxf with unreferenced imageDef.dxf");
+            dxf = DxfDocument.Load("test netDxf with unreferenced imageDef.dxf");
+
+            // once we have removed the insert and then the block that contained image1 we don't have more references to imageDef1
+            dxf.ImageDefinitions.Remove(imageDef1.Name);
+            dxf.Save("test netDxf with deleted imageDef.dxf");
+
+        }
+        private static void LayerAndLineTypesUsesAndRemove()
+        {
+            DxfDocument dxf = new DxfDocument();
+
+            Layer layer1 = new Layer("Layer1");
+            layer1.Color = AciColor.Blue;
+            layer1.LineType = LineType.Center;
+
+            Layer layer2 = new Layer("Layer2");
+            layer2.Color = AciColor.Red;
+
+            LwPolyline poly = new LwPolyline();
+            poly.Vertexes.Add(new LwPolylineVertex(0, 0));
+            poly.Vertexes.Add(new LwPolylineVertex(10, 10));
+            poly.Vertexes.Add(new LwPolylineVertex(20, 0));
+            poly.Vertexes.Add(new LwPolylineVertex(30, 10));
+            poly.Layer = layer1;
+            dxf.AddEntity(poly);
+
+            Ellipse ellipse = new Ellipse(new Vector3(2, 2, 0), 5, 3);
+            ellipse.Rotation = 30;
+            ellipse.Layer = layer1;
+            dxf.AddEntity(ellipse);
+
+            Line line = new Line(new Vector2(10, 5), new Vector2(-10, -5));
+            line.Layer = layer2;
+            line.LineType = LineType.DashDot;
+            dxf.AddEntity(line);
+
+
+            bool ok;
+
+            // this will return false since layer1 is not empty
+            ok = dxf.Layers.Remove(layer1.Name);
+
+            List<DxfObject> entities = dxf.Layers.GetReferences(layer1.Name);
+            foreach (DxfObject o in entities)
+            {
+                dxf.RemoveEntity(o as EntityObject);
+            }
+
+            // now this should return true since layer1 is empty
+            ok = dxf.Layers.Remove(layer1.Name);
+
+            // blocks needs an special attention
+            Layer layer3 = new Layer("Layer3");
+            layer3.Color = AciColor.Yellow;
+
+            Circle circle = new Circle(Vector3.Zero, 15);
+            // it is always recommended that all block entities will be located in layer 0, but this is up to the user.
+            circle.Layer = new Layer("circle");
+            circle.Layer.Color = AciColor.Green;
+
+            Block block = new Block("MyBlock");
+            block.Entities.Add(circle);
+            block.Layer = new Layer("blockLayer");
+            AttributeDefinition attdef = new AttributeDefinition("NewAttribute");
+            attdef.Layer = new Layer("attDefLayer");
+            attdef.LineType = LineType.Center;
+            block.Attributes.Add(attdef.Id, attdef);
+
+            Insert insert = new Insert(block, new Vector2(5, 5));
+            insert.Layer = layer3;
+            insert.Attributes[0].Layer = new Layer("attLayer");
+            insert.Attributes[0].LineType = LineType.Dashed;
+            dxf.AddEntity(insert);
+
+            dxf.Save("test.dxf");
+
+            DxfDocument dxf2 = DxfDocument.Load("test.dxf");
+
+            // this list will contain the circle entity
+            List<DxfObject> dxfObjects;
+            dxfObjects = dxf.Layers.GetReferences("circle");
+
+            // but we cannot removed since it is part of a block
+            ok = dxf.RemoveEntity(circle);
+            // we need to remove first the block, but to do this we need to make sure there are no references of that block in the document
+            dxfObjects = dxf.Blocks.GetReferences(block.Name);
+            foreach (DxfObject o in dxfObjects)
+            {
+                dxf.RemoveEntity(o as EntityObject);
+            }
+
+
+            // now it is safe to remove the block since we do not have more references in the document
+            ok = dxf.Blocks.Remove(block.Name);
+            // now it is safe to remove the layer "circle", the circle entity was removed with the block since it was part of it
+            ok = dxf.Layers.Remove("circle");
+
+            // purge all document layers, only empty layers will be removed
+            dxf.Layers.Clear();
+
+            // purge all document line types, only line types without references will be removed
+            dxf.LineTypes.Clear();
+
+            dxf.Save("test2.dxf");
+        }
+        private static void TextAndDimensionStyleUsesAndRemove()
+        {
+            DxfDocument dxf = new DxfDocument();
+
+            Layer layer1 = new Layer("Layer1");
+            layer1.Color = AciColor.Blue;
+            layer1.LineType = LineType.Center;
+
+            Layer layer2 = new Layer("Layer2");
+            layer2.Color = AciColor.Red;
+
+            // blocks needs an special attention
+            Layer layer3 = new Layer("Layer3");
+            layer3.Color = AciColor.Yellow;
+
+            Circle circle = new Circle(Vector3.Zero, 15);
+            // it is always recommended that all block entities will be located in layer 0, but this is up to the user.
+            circle.Layer = new Layer("circle");
+            circle.Layer.Color = AciColor.Green;
+
+            Block block = new Block("MyBlock");
+            block.Entities.Add(circle);
+            AttributeDefinition attdef = new AttributeDefinition("NewAttribute");
+            
+            block.Attributes.Add(attdef.Id, attdef);
+
+            Insert insert = new Insert(block, new Vector2(5, 5));
+            insert.Attributes[0].Style = new TextStyle("Arial.ttf");
+
+            dxf.AddEntity(insert);
+
+            dxf.Save("style.dxf");
+            DxfDocument dxf2;
+            dxf2 = DxfDocument.Load("style.dxf");
+
+            dxf.RemoveEntity(circle);
+
+            Vector3 p1 = new Vector3(0, 0, 0);
+            Vector3 p2 = new Vector3(5, 5, 0);
+            Line line = new Line(p1, p2);
+
+            dxf.AddEntity(line);
+
+            DimensionStyle myStyle = new DimensionStyle("MyStyle");
+            myStyle.TextStyle = new TextStyle("Tahoma.ttf");
+            myStyle.DIMPOST = "<>mm";
+            myStyle.DIMDEC = 2;
+            double offset = 7;
+            LinearDimension dimX = new LinearDimension(line, offset, 0.0, myStyle);
+            dimX.Rotation += 30.0;
+            LinearDimension dimY = new LinearDimension(line, offset, 90.0, myStyle);
+            dimY.Rotation += 30.0;
+
+            dxf.AddEntity(dimX);
+            dxf.AddEntity(dimY);
+
+            dxf.Save("style2.dxf");
+            dxf2 = DxfDocument.Load("style2.dxf");
+
+
+            dxf.RemoveEntity(dimX);
+            dxf.RemoveEntity(dimY);
+
+            bool ok;
+
+            // we can remove myStyle it was only referenced by dimX and dimY
+            ok = dxf.DimensionStyles.Remove(myStyle.Name);
+
+            // we cannot remove myStyle.TextStyle since it is in use by the internal blocks created by the dimension entities
+            ok = dxf.Blocks.Remove(dimX.Block.Name);
+            ok = dxf.Blocks.Remove(dimY.Block.Name);
+
+            // no we can remove the unreferenced textStyle
+            ok = dxf.TextStyles.Remove(myStyle.TextStyle.Name);
+
+            dxf.Save("style3.dxf");
+            dxf2 = DxfDocument.Load("style3.dxf");
+        }
+        private static void MLineStyleUsesAndRemove()
+        {
+            DxfDocument dxf = new DxfDocument();
+            //MLineStyle style = MLineStyle.Default;
+            //dxf.AddMLineStyle(style);
+
+            List<Vector2> vertexes = new List<Vector2>
+                                         {
+                                             new Vector2(0, 0),
+                                             new Vector2(0, 150),
+                                             new Vector2(150, 150),
+                                             new Vector2(150, 0)
+                                         };
+
+            MLine mline = new MLine(vertexes);
+            mline.Scale = 20;
+            mline.Justification = MLineJustification.Zero;
+            //mline.IsClosed = true;
+
+            MLineStyle style = new MLineStyle("MyStyle", "Personalized style.");
+            style.Elements.Add(new MLineStyleElement(0.25));
+            style.Elements.Add(new MLineStyleElement(-0.25));
+            // if we add new elements directly to the list we need to sort the list,
+            style.Elements.Sort();
+            style.Flags = MLineStyleFlags.EndInnerArcsCap | MLineStyleFlags.EndRoundCap | MLineStyleFlags.StartInnerArcsCap | MLineStyleFlags.StartRoundCap;
+            //style.StartAngle = 25.0;
+            //style.EndAngle = 160.0;
+            // AutoCad2000 dxf version does not support true colors for MLineStyle elements
+            style.Elements[0].Color = new AciColor(180, 230, 147);
+            mline.Style = style;
+            // we have modified the mline after setting its vertexes so we need to manually call this method.
+            // also when manually editting the vertex distances
+            mline.CalculateVertexesInfo();
+
+            // we can manually create cuts or gaps in the individual elements that made the multiline.
+            // the cuts are defined as distances from the start point of the element along its direction.
+            mline.Vertexes[0].Distances[0].Add(50);
+            mline.Vertexes[0].Distances[0].Add(100);
+            mline.Vertexes[0].Distances[mline.Style.Elements.Count - 1].Add(50);
+            mline.Vertexes[0].Distances[mline.Style.Elements.Count - 1].Add(100);
+            dxf.AddEntity(mline);
+
+            dxf.DrawingVariables.AcadVer = DxfVersion.AutoCad2004;
+            dxf.Save("MLine.dxf");
+
+            DxfDocument dxf2 = DxfDocument.Load("MLine.dxf");
+
+            // "MyStyle" is used only once
+            List<DxfObject> uses;
+            uses = dxf.MlineStyles.GetReferences(mline.Style.Name);
+
+            // if we try to get the LineTypeUses, we will find out that "MyStyle" appears several times,
+            // this is due to that each MLineStyleElement of a MLineStyle has an associated LineType
+            uses = dxf.LineTypes.GetReferences(LineType.ByLayer.Name);
+
+            bool ok;
+            ok = dxf.RemoveEntity(mline);
+
+            // "MyStyle" is not used its reference has been deleted
+            uses = dxf.MlineStyles.GetReferences(mline.Style.Name);
+            // we can safely remove it
+            dxf.MlineStyles.Remove(mline.Style.Name);
+
+            dxf.Save("MLine2.dxf");
+
+            dxf.Layers.Clear();
+
+            dxf.Save("MLine2.dxf");
+        }
+        private static void AppRegUsesAndRemove()
+        {
+            DxfDocument dxf = new DxfDocument();
+
+            List<PolylineVertex> vertexes = new List<PolylineVertex>{
+                                                                        new PolylineVertex(0, 0, 0), 
+                                                                        new PolylineVertex(10, 0, 10), 
+                                                                        new PolylineVertex(10, 10, 20), 
+                                                                        new PolylineVertex(0, 10, 30)
+                                                                        };
+
+            Polyline poly = new Polyline(vertexes, true);
+
+            XData xdata1 = new XData(new ApplicationRegistry("netDxf"));
+            xdata1.XDataRecord.Add(new XDataRecord(XDataCode.String, "extended data with netDxf"));
+
+            poly.XData = new Dictionary<string, XData>
+                             {
+                                 {xdata1.ApplicationRegistry.Name, xdata1},
+                             };
+            dxf.AddEntity(poly);
+
+            Line line = new Line(new Vector2(10, 5), new Vector2(-10, -5));
+
+            ApplicationRegistry myAppReg = new ApplicationRegistry("MyAppReg");
+            XData xdata2 = new XData(myAppReg);
+            xdata2.XDataRecord.Add(new XDataRecord(XDataCode.Distance, Vector3.Distance(line.StartPoint, line.EndPoint)));
+            line.XData = new Dictionary<string, XData>
+                             {
+                                 {myAppReg.Name, xdata2},
+                             };
+            dxf.AddEntity(line);
+
+            Circle circle = new Circle(Vector3.Zero, 15);
+            XData xdata3 = new XData(myAppReg);
+            xdata3.XDataRecord.Add(new XDataRecord(XDataCode.Real, circle.Radius));
+            circle.XData = new Dictionary<string, XData>
+                             {
+                                 {myAppReg.Name, xdata3},
+                             };
+            dxf.AddEntity(circle);
+
+            dxf.Save("appreg.dxf");
+
+            DxfDocument dxf2 = DxfDocument.Load("appreg.dxf");
+
+            // will return false the "MyAppReg" is in use
+            bool ok;
+            ok = dxf.ApplicationRegistries.Remove(myAppReg.Name);
+            dxf.RemoveEntity(line);
+            dxf.RemoveEntity(circle);
+            // "MyAppReg" is not used anymore
+            IList<DxfObject> uses = dxf.ApplicationRegistries.GetReferences(myAppReg.Name);
+            // it is safe to delete it
+            ok = dxf.ApplicationRegistries.Remove(myAppReg.Name);
+            
+            // we can even make a full cleanup
+            dxf.ApplicationRegistries.Clear();
+
+            dxf.Save("appreg2.dxf");
+
+
+        }
         private static void ExplodePolyfaceMesh()
         {
             DxfDocument dxf = DxfDocument.Load("polyface mesh.dxf");
@@ -128,7 +588,7 @@ namespace TestDxfDocument
         {
             DxfDocument dxf = new DxfDocument();
             // add a new application registry to the document (optional), if not present it will be added when the entity is passed to the document
-            ApplicationRegistry newAppReg = dxf.AddApplicationRegistry(new ApplicationRegistry("NewAppReg"));
+            ApplicationRegistry newAppReg = dxf.ApplicationRegistries.Add(new ApplicationRegistry("NewAppReg"));
 
             Line line = new Line(Vector2.Zero, 100 * Vector2.UnitX);
             XData xdata = new XData(newAppReg);
@@ -142,10 +602,10 @@ namespace TestDxfDocument
             dxf.Save("ApplicationRegistryTest.dxf");
 
             // gets the complete application registries present in the document
-            ReadOnlyCollection<ApplicationRegistry> appRegs = dxf.AppRegisterNames;
+            ICollection<ApplicationRegistry> appRegs = dxf.ApplicationRegistries.Values;
 
             // get an application registry by name
-            ApplicationRegistry netDxfAppReg = dxf.GetApplicationRegistry(appRegs[appRegs.Count - 1].Name);
+            //ApplicationRegistry netDxfAppReg = dxf.ApplicationRegistries[appRegs[dxf.ApplicationRegistries.Count - 1].Name];
         }
         private static void TestOCStoWCS()
         {
@@ -519,7 +979,7 @@ namespace TestDxfDocument
             // create the document
             DxfDocument dxf = new DxfDocument();
             // add the block definition to the block table list (this is the function that was private in earlier versions, check the changelog.txt)
-            dxf.AddBlock(block);
+            dxf.Blocks.Add(block);
 
             // and save file, no visible entities will appear if you try to open the drawing but the block will be there
             dxf.Save("Block definiton.dxf");
@@ -527,7 +987,7 @@ namespace TestDxfDocument
         }
         private static void WriteImage()
         {
-            ImageDef imageDef = new ImageDef("image01.png");
+            ImageDef imageDef = new ImageDef("img\\image01.jpg");
             Image image = new Image(imageDef, Vector3.Zero);
             image.SetScale(2);
 
@@ -580,6 +1040,7 @@ namespace TestDxfDocument
             //dxf.RemoveEntity(image3);
             //dxf.RemoveEntity(image);
             //dxf.Save("image3.dxf");
+
         }
         private static void SplineDrawing()
         {
@@ -1286,7 +1747,10 @@ namespace TestDxfDocument
                 Color = AciColor.Red,
                 LineType = LineType.Dashed
             };
+            hatch.Elevation = 52;
             hatch.Pattern.Angle = 45;
+            hatch.Pattern.Scale = 10;
+            hatch.Normal = new Vector3(1, 1, 1);
 
             XData xdata = new XData(new ApplicationRegistry("netDxf"));
             xdata.XDataRecord.Add(new XDataRecord(XDataCode.String, "extended data with netDxf"));
@@ -1301,11 +1765,12 @@ namespace TestDxfDocument
                                  {xdata.ApplicationRegistry.Name, xdata},
                              };
 
-            dxf.AddEntity(line1);
-            dxf.AddEntity(line2);
-            dxf.AddEntity(line3);
-            dxf.AddEntity(line4);
+            //dxf.AddEntity(line1);
+            //dxf.AddEntity(line2);
+            //dxf.AddEntity(line3);
+            //dxf.AddEntity(line4);
             dxf.AddEntity(hatch);
+            dxf.AddEntity(hatch.CreateWCSBoundary());
 
             dxf.Save("hatchTest.dxf");
         }
@@ -1348,12 +1813,14 @@ namespace TestDxfDocument
                                   LineType = LineType.Continuous
                               };
             hatch.Pattern.Angle = 30;
-
+            hatch.Elevation = 52;
+            hatch.Normal = new Vector3(1,1,0);
             hatch.Pattern.Scale = 1 / hatch.Pattern.LineDefinitions[0].Delta.Y;
-            dxf.AddEntity(poly);
-            dxf.AddEntity(poly2);
-            dxf.AddEntity(poly3);
+            //dxf.AddEntity(poly);
+            //dxf.AddEntity(poly2);
+            //dxf.AddEntity(poly3);
             dxf.AddEntity(hatch);
+            dxf.AddEntity(hatch.CreateWCSBoundary());
 
             dxf.Save("hatchTest1.dxf");
             dxf = DxfDocument.Load("hatchTest1.dxf");
@@ -1383,12 +1850,13 @@ namespace TestDxfDocument
             Hatch hatch = new Hatch(HatchPattern.Line, boundary);
             hatch.Pattern.Angle = 150;
             hatch.Pattern.Scale = 5;
-
-            dxf.AddEntity(poly);
-            dxf.AddEntity(circle);
-            dxf.AddEntity(ellipse);
+            hatch.Normal = new Vector3(1,1,1);
+            hatch.Elevation = 23;
+            //dxf.AddEntity(poly);
+            //dxf.AddEntity(circle);
+            //dxf.AddEntity(ellipse);
             dxf.AddEntity(hatch);
-
+            dxf.AddEntity(hatch.CreateWCSBoundary());
             dxf.Save("hatchTest2.dxf");
             dxf = DxfDocument.Load("hatchTest2.dxf");
             dxf.Save("hatchTest2 copy.dxf");
@@ -1433,7 +1901,13 @@ namespace TestDxfDocument
             dxf.AddEntity(hatch);
 
             dxf.Save("hatchTest3.dxf");
-            dxf = DxfDocument.Load("hatchTest3.dxf");
+            dxf = DxfDocument.Load("hatchTest3 copy.dxf");
+        }
+        private static void HatchTest4()
+        {
+            DxfDocument dxf = DxfDocument.Load("tests//HatchBoundary.dxf");
+            dxf.AddEntity(dxf.Hatches[0].CreateWCSBoundary());
+            dxf.Save("HatchTest4.dxf");
         }
         private static void Dxf2000()
         {
@@ -1467,7 +1941,6 @@ namespace TestDxfDocument
         }
         private static void Polyline()
         {
-
             DxfDocument dxf = new DxfDocument();
             dxf.DrawingVariables.AcadVer = DxfVersion.AutoCad2010;
             Polyline poly = new Polyline();

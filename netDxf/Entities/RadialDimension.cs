@@ -1,7 +1,7 @@
-﻿#region netDxf, Copyright(C) 2012 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf, Copyright(C) 2013 Daniel Carvajal, Licensed under LGPL.
 
 //                        netDxf library
-// Copyright (C) 2012 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2013 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -41,6 +41,15 @@ namespace netDxf.Entities
         #endregion
 
         #region constructors
+
+        /// <summary>
+        /// Initializes a new instance of the <c>RadialDimension</c> class.
+        /// </summary>
+        public RadialDimension()
+            :this(Vector3.Zero,1.0,0.0)
+        {
+        }
+
         /// <summary>
         /// Initializes a new instance of the <c>RadialDimension</c> class.
         /// </summary>
@@ -129,8 +138,8 @@ namespace netDxf.Entities
         /// </summary>
         internal Vector3 CircunferencePoint
         {
-            get { return circunferencePoint; }
-            set { circunferencePoint = value; }
+            get { return this.circunferencePoint; }
+            set { this.circunferencePoint = value; }
         }
 
         #endregion
@@ -142,8 +151,8 @@ namespace netDxf.Entities
         /// </summary>
         public Vector3 CenterPoint
         {
-            get { return definitionPoint; }
-            set { definitionPoint = value; }
+            get { return this.definitionPoint; }
+            set { this.definitionPoint = value; }
         }
 
 
@@ -152,8 +161,8 @@ namespace netDxf.Entities
         /// </summary>
         public double Radius
         {
-            get { return radius; }
-            set { radius = value; }
+            get { return this.radius; }
+            set { this.radius = value; }
         }
 
         /// <summary>
@@ -161,8 +170,8 @@ namespace netDxf.Entities
         /// </summary>
         public double Rotation
         {
-            get { return rotation; }
-            set { rotation = value; }
+            get { return this.rotation; }
+            set { this.rotation = value; }
         }
 
         /// <summary>
@@ -176,6 +185,7 @@ namespace netDxf.Entities
         #endregion
 
         #region overrides
+
         /// <summary>
         /// Format the value for the dimension text.
         /// </summary>
@@ -251,6 +261,34 @@ namespace netDxf.Entities
             dim.Entities.Add(text);
             this.block = dim;
             return dim;
+        }
+
+        /// <summary>
+        /// Creates a new RadialDimension that is a copy of the current instance.
+        /// </summary>
+        /// <returns>A new RadialDimension that is a copy of this instance.</returns>
+        public override object Clone()
+        {
+            return new RadialDimension
+            {
+                //EntityObject properties
+                Color = this.color,
+                Layer = this.layer,
+                LineType = this.lineType,
+                Lineweight = this.lineweight,
+                LineTypeScale = this.lineTypeScale,
+                Normal = this.normal,
+                XData = this.xData,
+                //Dimension properties
+                Style = this.style,
+                AttachmentPoint = this.attachmentPoint,
+                LineSpacingStyle = this.lineSpacingStyle,
+                LineSpacingFactor = this.lineSpacing,
+                //RadialDimension properties
+                CenterPoint = this.definitionPoint,
+                Radius = this.radius,
+                Rotation = this.rotation
+            };
         }
 
         #endregion

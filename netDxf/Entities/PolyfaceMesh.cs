@@ -236,5 +236,42 @@ namespace netDxf.Entities
         }
 
         #endregion
+
+        #region overrides
+
+        /// <summary>
+        /// Creates a new PolyfaceMesh that is a copy of the current instance.
+        /// </summary>
+        /// <returns>A new PolyfaceMesh that is a copy of this instance.</returns>
+        public override object Clone()
+        {
+            List<PolyfaceMeshVertex> copyVertexes = new List<PolyfaceMeshVertex>();
+            foreach (PolyfaceMeshVertex vertex in this.vertexes)
+            {
+                copyVertexes.Add((PolyfaceMeshVertex) vertex.Clone());
+            }
+            List<PolyfaceMeshFace> copyFaces = new List<PolyfaceMeshFace>();
+            foreach (PolyfaceMeshFace face in this.faces)
+            {
+                copyFaces.Add((PolyfaceMeshFace) face.Clone());
+            }
+            return new PolyfaceMesh
+            {
+                //EntityObject properties
+                Color = this.color,
+                Layer = this.layer,
+                LineType = this.lineType,
+                Lineweight = this.lineweight,
+                LineTypeScale = this.lineTypeScale,
+                Normal = this.normal,
+                XData = this.xData,
+                //PolyfaceMesh properties
+                Vertexes = copyVertexes,
+                Faces = copyFaces
+            };
+        }
+
+        #endregion
+
     }
 }

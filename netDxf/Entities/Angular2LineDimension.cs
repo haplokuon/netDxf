@@ -1,7 +1,7 @@
-﻿#region netDxf, Copyright(C) 2012 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf, Copyright(C) 2013 Daniel Carvajal, Licensed under LGPL.
 
 //                        netDxf library
-// Copyright (C) 2012 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2013 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -44,6 +44,15 @@ namespace netDxf.Entities
         #endregion
 
         #region constructors
+
+        /// <summary>
+        /// Initializes a new instance of the <c>Angular2LineDimension</c> class.
+        /// </summary>
+        public Angular2LineDimension()
+            : this(Vector3.Zero, Vector3.UnitX, Vector3.Zero, Vector3.UnitY, 0.1)
+        {
+        }
+
         /// <summary>
         /// Initializes a new instance of the <c>Angular2LineDimension</c> class.
         /// </summary>
@@ -65,6 +74,20 @@ namespace netDxf.Entities
             : this(firstLine.StartPoint, firstLine.EndPoint, secondLine.StartPoint, secondLine.EndPoint, offset, style)
         {
         }
+
+        /// <summary>
+        /// Initializes a new instance of the <c>Angular2LineDimension</c> class.
+        /// </summary>
+        /// <param name="startFirstLine">Start <see cref="Vector2">point</see> of the first line that defines de angle to measure.</param>
+        /// <param name="endFirstLine">End <see cref="Vector2">point</see> of the first line that defines de angle to measure.</param>
+        /// <param name="startSecondLine">Start <see cref="Vector2">point</see> of the second line that defines de angle to measure.</param>
+        /// <param name="endSecondLine">End <see cref="Vector2">point</see> of the second line that defines de angle to measure.</param>
+        /// <param name="offset">Distance between the center point and the dimension line.</param>
+        public Angular2LineDimension(Vector2 startFirstLine, Vector2 endFirstLine, Vector2 startSecondLine, Vector2 endSecondLine, double offset)
+            : this(new Vector3(startFirstLine.X, startFirstLine.Y, 0.0), new Vector3(endFirstLine.X, endFirstLine.Y, 0.0), new Vector3(startSecondLine.X, startSecondLine.Y, 0.0), new Vector3(endSecondLine.X, endSecondLine.Y, 0.0), offset, DimensionStyle.Default)
+        {
+        }
+
         /// <summary>
         /// Initializes a new instance of the <c>Angular2LineDimension</c> class.
         /// </summary>
@@ -77,6 +100,21 @@ namespace netDxf.Entities
             : this(startFirstLine, endFirstLine, startSecondLine, endSecondLine, offset, DimensionStyle.Default)
         {
         }
+
+        /// <summary>
+        /// Initializes a new instance of the <c>Angular2LineDimension</c> class.
+        /// </summary>
+        /// <param name="startFirstLine">Start <see cref="Vector2">point</see> of the first line that defines de angle to measure.</param>
+        /// <param name="endFirstLine">End <see cref="Vector2">point</see> of the first line that defines de angle to measure.</param>
+        /// <param name="startSecondLine">Start <see cref="Vector2">point</see> of the second line that defines de angle to measure.</param>
+        /// <param name="endSecondLine">End <see cref="Vector2">point</see> of the second line that defines de angle to measure.</param>
+        /// <param name="offset">Distance between the center point and the dimension line.</param>
+        /// <param name="style">The <see cref="DimensionStyle">style</see> to use with the dimension.</param>
+        public Angular2LineDimension(Vector2 startFirstLine, Vector2 endFirstLine, Vector2 startSecondLine, Vector2 endSecondLine, double offset, DimensionStyle style)
+            : this(new Vector3(startFirstLine.X, startFirstLine.Y, 0.0), new Vector3(endFirstLine.X, endFirstLine.Y, 0.0), new Vector3(startSecondLine.X, startSecondLine.Y, 0.0), new Vector3(endSecondLine.X, endSecondLine.Y, 0.0), offset, style)
+        {
+        }
+
         /// <summary>
         /// Initializes a new instance of the <c>Angular2LineDimension</c> class.
         /// </summary>
@@ -300,6 +338,36 @@ namespace netDxf.Entities
             dim.Entities.Add(text);
             this.block = dim;
             return dim;
+        }
+
+        /// <summary>
+        /// Creates a new Angular2LineDimension that is a copy of the current instance.
+        /// </summary>
+        /// <returns>A new Angular2LineDimension that is a copy of this instance.</returns>
+        public override object Clone()
+        {
+            return new Angular2LineDimension
+            {
+                //EntityObject properties
+                Color = this.color,
+                Layer = this.layer,
+                LineType = this.lineType,
+                Lineweight = this.lineweight,
+                LineTypeScale = this.lineTypeScale,
+                Normal = this.normal,
+                XData = this.xData,
+                //Dimension properties
+                Style = this.style,
+                AttachmentPoint = this.attachmentPoint,
+                LineSpacingStyle = this.lineSpacingStyle,
+                LineSpacingFactor = this.lineSpacing,
+                //Angular2LineDimension properties
+                StartFirstLine = this.startFirstLine,
+                EndFirstLine = this.endFirstLine,
+                StartSecondLine = this.startSecondLine,
+                EndSecondLine = this.endSecondLine,
+                Offset = this.offset
+            };
         }
 
         #endregion

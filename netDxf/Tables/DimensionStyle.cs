@@ -20,6 +20,8 @@
 
 #endregion
 
+using System;
+
 namespace netDxf.Tables
 {
     /// <summary>
@@ -58,7 +60,7 @@ namespace netDxf.Tables
 
         #region constants
 
-        internal static DimensionStyle Default
+        public static DimensionStyle Default
         {
             get { return new DimensionStyle("Standard"); }
         }
@@ -73,6 +75,7 @@ namespace netDxf.Tables
         public DimensionStyle(string name)
             : base(name, DxfObjectCode.DimStyle)
         {
+            this.reserved = name.Equals("Standard", StringComparison.InvariantCultureIgnoreCase);
             this.textStyle = TextStyle.Default;
         }
 

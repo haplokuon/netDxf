@@ -1,7 +1,7 @@
-﻿#region netDxf, Copyright(C) 2012 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf, Copyright(C) 2013 Daniel Carvajal, Licensed under LGPL.
 
 //                        netDxf library
-// Copyright (C) 2012 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2013 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -36,13 +36,21 @@ namespace netDxf.Entities
 
         private double diameter;
         private double rotation;
-        private Vector3 centerPoint;
-        private Vector3 circunferencePoint;
+        private Vector3 center;
+        private Vector3 circunferenceRef;
 
         #endregion
 
         #region constructors
-        
+
+        /// <summary>
+        /// Initializes a new instance of the <c>RadialDimension</c> class.
+        /// </summary>
+        public DiametricDimension()
+            : this(Vector3.Zero, 1.0, 0.0)
+        {
+        }
+
         /// <summary>
         /// Initializes a new instance of the <c>RadialDimension</c> class.
         /// </summary>
@@ -74,8 +82,33 @@ namespace netDxf.Entities
         /// <param name="diameter">Diameter value.</param>
         /// <param name="rotation">Rotation in degrees of the dimension line.</param>
         /// <remarks>The center point and the definition point define the distance to be measure.</remarks>
+        public DiametricDimension(Vector2 centerPoint, double diameter, double rotation)
+            : this(new Vector3(centerPoint.X, centerPoint.Y, 0.0), diameter, rotation, DimensionStyle.Default)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <c>RadialDimension</c> class.
+        /// </summary>
+        /// <param name="centerPoint">Center <see cref="Vector3">point</see> of the circunference.</param>
+        /// <param name="diameter">Diameter value.</param>
+        /// <param name="rotation">Rotation in degrees of the dimension line.</param>
+        /// <remarks>The center point and the definition point define the distance to be measure.</remarks>
         public DiametricDimension(Vector3 centerPoint, double diameter, double rotation)
             : this(centerPoint, diameter, rotation, DimensionStyle.Default)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <c>RadialDimension</c> class.
+        /// </summary>
+        /// <param name="centerPoint">Center <see cref="Vector3">point</see> of the circunference.</param>
+        /// <param name="diameter">Diameter value.</param>
+        /// <param name="rotation">Rotation in degrees of the dimension line.</param>
+        /// <param name="style">The <see cref="DimensionStyle">style</see> to use with the dimension.</param>
+        /// <remarks>The center point and the definition point define the distance to be measure.</remarks>
+        public DiametricDimension(Vector2 centerPoint, double diameter, double rotation, DimensionStyle style)
+            : this(new Vector3(centerPoint.X, centerPoint.Y, 0.0), diameter, rotation, style)
         {
         }
 
@@ -90,7 +123,7 @@ namespace netDxf.Entities
         public DiametricDimension(Vector3 centerPoint, double diameter, double rotation, DimensionStyle style)
             : base(DimensionType.Diameter)
         {
-            this.centerPoint = centerPoint;
+            this.center = centerPoint;
             this.diameter = diameter;
             this.rotation = rotation;
             if (style == null)
@@ -107,8 +140,8 @@ namespace netDxf.Entities
         /// </summary>
         internal Vector3 CircunferencePoint
         {
-            get { return circunferencePoint; }
-            set { circunferencePoint = value; }
+            get { return circunferenceRef; }
+            set { circunferenceRef = value; }
         }
 
         #endregion
@@ -120,10 +153,9 @@ namespace netDxf.Entities
         /// </summary>
         public Vector3 CenterPoint
         {
-            get { return centerPoint; }
-            set { centerPoint = value; }
+            get { return center; }
+            set { center = value; }
         }
-
 
         /// <summary>
         /// Gets or sets the diameter of the circunference.
@@ -173,7 +205,7 @@ namespace netDxf.Entities
         internal override Block BuildBlock(string name)
         {
             // we will build the dimension block in object coordinates with normal the dimension normal
-            Vector3 refPoint = MathHelper.Transform(this.centerPoint, this.normal,
+            Vector3 refPoint = MathHelper.Transform(this.center, this.normal,
                                                     MathHelper.CoordinateSystem.World,
                                                     MathHelper.CoordinateSystem.Object);
 
@@ -188,7 +220,7 @@ namespace netDxf.Entities
                                                            MathHelper.CoordinateSystem.World);
 
             Vector2 secondRef = Vector2.Polar(centerRef, -this.diameter * 0.5, refRotation);
-            this.circunferencePoint = MathHelper.Transform(new Vector3(secondRef.X, secondRef.Y, elev), this.normal,
+            this.circunferenceRef = MathHelper.Transform(new Vector3(secondRef.X, secondRef.Y, elev), this.normal,
                                                            MathHelper.CoordinateSystem.Object,
                                                            MathHelper.CoordinateSystem.World);
             // reference points
@@ -241,6 +273,34 @@ namespace netDxf.Entities
             dim.Entities.Add(text);
             this.block = dim;
             return dim;
+        }
+
+        /// <summary>
+        /// Creates a new DiametricDimension that is a copy of the current instance.
+        /// </summary>
+        /// <returns>A new DiametricDimension that is a copy of this instance.</returns>
+        public override object Clone()
+        {
+            return new DiametricDimension
+            {
+                //EntityObject properties
+                Color = this.color,
+                Layer = this.layer,
+                LineType = this.lineType,
+                Lineweight = this.lineweight,
+                LineTypeScale = this.lineTypeScale,
+                Normal = this.normal,
+                XData = this.xData,
+                //Dimension properties
+                Style = this.style,
+                AttachmentPoint = this.attachmentPoint,
+                LineSpacingStyle = this.lineSpacingStyle,
+                LineSpacingFactor = this.lineSpacing,
+                //DiametricDimension properties
+                CenterPoint = this.center,
+                Diameter = this.diameter,
+                Rotation = this.rotation
+            };
         }
 
         #endregion

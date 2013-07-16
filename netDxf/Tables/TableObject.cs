@@ -28,11 +28,12 @@ namespace netDxf.Tables
     /// Defines classes that can be accesed by name. They are usually part of the dxf table section but can also be part of the objects section.
     /// </summary>
     public abstract class TableObject :
-        DxfObject
+        DxfObject, IComparable, IComparable<TableObject>
     {
 
         #region private fields
 
+        protected bool reserved;
         private readonly string name;
 
         #endregion
@@ -51,6 +52,7 @@ namespace netDxf.Tables
             if (string.IsNullOrEmpty(name))
                 throw (new ArgumentNullException("name"));
             this.name = name;
+            this.reserved = false;
         }
 
         #endregion
@@ -66,6 +68,48 @@ namespace netDxf.Tables
             get { return name; }
         }
 
+        /// <summary>
+        /// Gets if the table object is reserved and cannot be deleted.
+        /// </summary>
+        public bool IsReserved
+        {
+            get { return this.reserved; }
+        }
+
+        #endregion
+
+        #region implements IComparable
+
+        /// <summary>
+        /// Compares the current TableObject with another TableObject of the same type.
+        /// </summary>
+        /// <param name="other">A TableObject to compare with this TableObject.</param>
+        /// <returns>
+        /// An integer that indicates the relative order of the table objects being compared.
+        /// The return value has the following meanings: Value Meaning Less than zero This object is less than the other parameter.
+        /// Zero This object is equal to other. Greater than zero This object is greater than other.
+        /// </returns>
+        /// <remarks>If both table objects are no of the same type it will return zero. The comparision is made by their names.</remarks>
+        public int CompareTo(object other)
+        {
+            return this.GetType() == other.GetType() ? String.Compare(this.Name, ((TableObject)other).Name, StringComparison.InvariantCultureIgnoreCase) : 0;
+        }
+
+        /// <summary>
+        /// Compares the current TableObject with another TableObject of the same type.
+        /// </summary>
+        /// <param name="other">A TableObject to compare with this TableObject.</param>
+        /// <returns>
+        /// An integer that indicates the relative order of the table objects being compared.
+        /// The return value has the following meanings: Value Meaning Less than zero This object is less than the other parameter.
+        /// Zero This object is equal to other. Greater than zero This object is greater than other.
+        /// </returns>
+        /// <remarks>If both table objects are no of the same type it will return zero. The comparision is made by their names.</remarks>
+        public int CompareTo(TableObject other)
+        {
+            return this.GetType() == other.GetType() ? String.Compare(this.Name, (other).Name, StringComparison.InvariantCultureIgnoreCase) : 0;
+        }
+
         #endregion
 
         #region overrides
@@ -78,6 +122,7 @@ namespace netDxf.Tables
         {
             return this.Name;
         }
+
 
         #endregion
 

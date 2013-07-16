@@ -76,8 +76,8 @@ namespace netDxf.Entities
         /// </summary>
         internal Vector3 DefinitionPoint
         {
-            get { return definitionPoint; }
-            set { definitionPoint = value; }
+            get { return this.definitionPoint; }
+            set { this.definitionPoint = value; }
         }
 
         /// <summary>
@@ -85,8 +85,8 @@ namespace netDxf.Entities
         /// </summary>
         internal Vector3 MidTextPoint
         {
-            get { return midTextPoint; }
-            set { midTextPoint = value; }
+            get { return this.midTextPoint; }
+            set { this.midTextPoint = value; }
         }
 
         #endregion
@@ -98,8 +98,8 @@ namespace netDxf.Entities
         /// </summary>
         public DimensionStyle Style
         {
-            get { return style; }
-            set { style = value; }
+            get { return this.style; }
+            set { this.style = value; }
         }
 
         /// <summary>
@@ -107,7 +107,7 @@ namespace netDxf.Entities
         /// </summary>
         public DimensionType DimensionType
         {
-            get { return dimensionType; }
+            get { return this.dimensionType; }
         }
 
         /// <summary>
@@ -132,8 +132,8 @@ namespace netDxf.Entities
         /// </summary>
         public MTextLineSpacingStyle LineSpacingStyle
         {
-            get { return lineSpacingStyle; }
-            set { lineSpacingStyle = value; }
+            get { return this.lineSpacingStyle; }
+            set { this.lineSpacingStyle = value; }
         }
 
         /// <summary>
@@ -144,12 +144,12 @@ namespace netDxf.Entities
         /// </remarks>
         public double LineSpacingFactor
         {
-            get { return lineSpacing; }
+            get { return this.lineSpacing; }
             set
             {
                 if (value < 0.25 || value > 4.0)
                     throw new ArgumentOutOfRangeException("value", value, "The line spacing factor valid values range from 0.25 to 4.00");
-                lineSpacing = value;
+                this.lineSpacing = value;
             }
         }
 
@@ -161,8 +161,8 @@ namespace netDxf.Entities
         /// </remarks>
         public Block Block
         {
-            get { return block; }
-            internal set { block = value; }
+            get { return this.block; }
+            internal set { this.block = value; }
         }
 
         #endregion

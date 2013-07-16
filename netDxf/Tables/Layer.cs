@@ -40,6 +40,18 @@ namespace netDxf.Tables
 
         #endregion
 
+        #region constants
+
+        /// <summary>
+        /// Gets the default Layer 0.
+        /// </summary>
+        public static Layer Default
+        {
+            get { return new Layer("0"); }
+        }
+
+        #endregion
+
         #region constructors
 
         /// <summary>
@@ -49,23 +61,13 @@ namespace netDxf.Tables
         public Layer(string name)
             : base(name, DxfObjectCode.Layer)
         {
+            this.reserved = name.Equals("0", StringComparison.InvariantCultureIgnoreCase);
+
             this.color = AciColor.Default;
             this.lineType = LineType.Continuous;
             this.isVisible = true;
             this.plot = true;
             this.lineweight = Lineweight.Default;
-        }
-
-        #endregion
-
-        #region constants
-
-        /// <summary>
-        /// Gets the default Layer 0.
-        /// </summary>
-        public static Layer Default
-        {
-            get { return new Layer("0"); }
         }
 
         #endregion

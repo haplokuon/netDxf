@@ -22,6 +22,7 @@
 
 using System;
 using netDxf.Objects;
+using netDxf.Tables;
 
 namespace netDxf.Entities
 {
@@ -227,6 +228,41 @@ namespace netDxf.Entities
             this.width = this.imageDef.Width * this.imageDef.OnePixelSize.X * scaleX;
             this.height = this.imageDef.Height * this.imageDef.OnePixelSize.Y * scaleY;
         }
+        #endregion
+
+        #region overrides
+
+        /// <summary>
+        /// Creates a new Image that is a copy of the current instance.
+        /// </summary>
+        /// <returns>A new Image that is a copy of this instance.</returns>
+        public override object Clone()
+        {
+            return new Image
+            {
+                //EntityObject properties
+                Color = this.color,
+                Layer = this.layer,
+                LineType = this.lineType,
+                Lineweight = this.lineweight,
+                LineTypeScale = this.lineTypeScale,
+                Normal = this.normal,
+                XData = this.xData,
+                //Image properties
+                Position = this.position,
+                Height = this.height,
+                Width = this.width,
+                Rotation = this.rotation,
+                Definition = this.imageDef,
+                Clipping = this.clipping,
+                Brightness = this.brightness,
+                Contrast = this.contrast,
+                Fade = this.fade,
+                DisplayOptions = this.displayOptions,
+                ClippingBoundary = (ImageClippingBoundary) this.clippingBoundary.Clone()
+            };
+        }
+
         #endregion
 
     }

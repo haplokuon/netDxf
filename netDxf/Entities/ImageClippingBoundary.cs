@@ -43,16 +43,21 @@ namespace netDxf.Entities
     /// <summary>
     /// Represent a clipping boundary to display specific portions of an <see cref="Image">image</see>.
     /// </summary>
-    public class ImageClippingBoundary
+    public class ImageClippingBoundary :
+        ICloneable
     {
         #region private fields
 
-        private readonly ImageClippingBoundaryType type;
-        private readonly List<Vector2> vertexes;
+        private ImageClippingBoundaryType type;
+        private List<Vector2> vertexes;
 
         #endregion
 
         #region constructors
+
+        internal ImageClippingBoundary()
+        {
+        }
 
         /// <summary>
         /// Initializes a new instance of the <c>ImageClippingBoundary</c> class as a rectangular clipping boundary.
@@ -101,6 +106,7 @@ namespace netDxf.Entities
         public ImageClippingBoundaryType Type
         {
             get { return type; }
+            internal set { type = value; }
         }
 
         /// <summary>
@@ -109,8 +115,30 @@ namespace netDxf.Entities
         public List<Vector2> Vertexes
         {
             get { return vertexes; }
+            internal set { vertexes = value; }
         }
 
         #endregion
+
+        #region overrides
+
+        /// <summary>
+        /// Creates a new ImageClippingBoundary that is a copy of the current instance.
+        /// </summary>
+        /// <returns>A new ImageClippingBoundary that is a copy of this instance.</returns>
+        public object Clone()
+        {
+            List<Vector2> copyVertexes = new List<Vector2>();
+            copyVertexes.AddRange(this.vertexes);
+            return new ImageClippingBoundary
+            {
+                //ImageClippingBoundary properties
+                Type = this.type,
+                Vertexes = copyVertexes
+            };
+        }
+
+        #endregion
+
     }
 }

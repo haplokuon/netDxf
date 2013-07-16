@@ -31,13 +31,12 @@ namespace netDxf.Blocks
     /// Represents a block definition.
     /// </summary>
     public class Block :
-        DxfObject 
+        TableObject 
     {
         #region private fields
 
         private BlockRecord record;
         private readonly BlockEnd end;
-        private readonly string name;
         private BlockTypeFlags typeFlags;
         private Layer layer;
         private Vector3 position;
@@ -48,19 +47,20 @@ namespace netDxf.Blocks
 
         #region constants
 
-        internal static Block  ModelSpace
+        /// <summary>
+        /// Gets the default *Model_Space block.
+        /// </summary>
+        public static Block  ModelSpace
         {
-            get{ return new Block("*Model_Space");}
+            get { return new Block("*Model_Space"); }
         }
 
-        internal static Block PaperSpace
+        /// <summary>
+        /// Gets the default *Paper_Space block.
+        /// </summary>
+        public static Block PaperSpace
         {
             get { return new Block("*Paper_Space"); }
-        }
-
-        internal static Block PaperSpace0
-        {
-            get { return new Block("*Paper_Space0"); }
         }
 
         #endregion
@@ -73,15 +73,13 @@ namespace netDxf.Blocks
         /// <param name="name">Block name.</param>
         /// <remarks>Do not give names starting with * to block definitions, they are reserved for internal use.</remarks>
         public Block(string name)
-            : base (DxfObjectCode.Block)
+            : base (name, DxfObjectCode.Block)
         {
-            if (string.IsNullOrEmpty(name))
-                throw (new ArgumentNullException("name"));
-
-            this.name = name;
+            this.reserved = name.Equals("*Model_Space", StringComparison.InvariantCultureIgnoreCase) ||
+                            name.Equals("*Paper_Space", StringComparison.InvariantCultureIgnoreCase);
             this.position = Vector3.Zero;
             this.layer = Layer.Default;
-            this.attributes = new Dictionary<string, AttributeDefinition>();
+            this.attributes = new Dictionary<string, AttributeDefinition>(StringComparer.InvariantCulture);
             this.entities = new List<EntityObject>();
             this.record = new BlockRecord(name);
             this.end = new BlockEnd(this.layer);          
@@ -90,14 +88,6 @@ namespace netDxf.Blocks
         #endregion
 
         #region public properties
-
-        /// <summary>
-        /// Gets the block name.
-        /// </summary>
-        public string Name
-        {
-            get { return this.name; }
-        }
 
         /// <summary>
         /// Gets or sets the block position in world coordinates.
@@ -135,6 +125,9 @@ namespace netDxf.Blocks
         /// <summary>
         /// Gets or sets the block <see cref="AttributeDefinition">attribute definition</see> list.
         /// </summary>
+        /// <remarks>
+        /// The dictionary key holds the attribute id that must be unique for each dictionary entry.
+        /// </remarks>
         public Dictionary<string, AttributeDefinition> Attributes
         {
             get { return this.attributes; }
@@ -212,15 +205,6 @@ namespace netDxf.Blocks
                 entityNumber = attdef.AsignHandle(entityNumber);
             }
             return base.AsignHandle(entityNumber);
-        }
-
-        /// <summary>
-        /// Converts the value of this instance to its equivalent string representation.
-        /// </summary>
-        /// <returns>The string representation.</returns>
-        public override string ToString()
-        {
-            return this.name;
         }
 
         #endregion

@@ -1,7 +1,7 @@
-﻿#region netDxf, Copyright(C) 2012 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf, Copyright(C) 2013 Daniel Carvajal, Licensed under LGPL.
 
 //                        netDxf library
-// Copyright (C) 2012 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2013 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -35,12 +35,20 @@ namespace netDxf.Entities
         #region private fields
 
         private double offset;
-        private Vector3 centerPoint;
-        private Vector3 firstPoint;
-        private Vector3 secondPoint;
+        private Vector3 center;
+        private Vector3 start;
+        private Vector3 end;
         #endregion
 
         #region constructors
+
+        /// <summary>
+        /// Initializes a new instance of the <c>Angular3PointDimension</c> class.
+        /// </summary>
+        public Angular3PointDimension()
+            : this(Vector3.Zero, Vector3.UnitX, Vector3.UnitY, 0.1)
+        {
+        }
 
         /// <summary>
         /// Initializes a new instance of the <c>Angular3PointDimension</c> class.
@@ -61,7 +69,7 @@ namespace netDxf.Entities
         public Angular3PointDimension(Arc arc, double offset, DimensionStyle style)
             : base(DimensionType.Angular3Point)
         {
-            this.centerPoint = arc.Center;
+            this.center = arc.Center;
 
             Vector3 refPoint = MathHelper.Transform(arc.Center, arc.Normal,
                                                     MathHelper.CoordinateSystem.World,
@@ -71,12 +79,12 @@ namespace netDxf.Entities
             double elev = refPoint.Z;
 
             Vector2 firstRef = Vector2.Polar(centerRef, arc.Radius, arc.StartAngle * MathHelper.DegToRad);
-            this.firstPoint = MathHelper.Transform(new Vector3(firstRef.X, firstRef.Y, elev), arc.Normal,
+            this.start = MathHelper.Transform(new Vector3(firstRef.X, firstRef.Y, elev), arc.Normal,
                                                     MathHelper.CoordinateSystem.Object,
                                                     MathHelper.CoordinateSystem.World);
 
             Vector2 secondRef = Vector2.Polar(centerRef, arc.Radius, arc.EndAngle * MathHelper.DegToRad);
-            this.secondPoint = MathHelper.Transform(new Vector3(secondRef.X, secondRef.Y, elev), arc.Normal,
+            this.end = MathHelper.Transform(new Vector3(secondRef.X, secondRef.Y, elev), arc.Normal,
                                                     MathHelper.CoordinateSystem.Object,
                                                     MathHelper.CoordinateSystem.World);
 
@@ -85,6 +93,18 @@ namespace netDxf.Entities
             if (style == null)
                 throw new ArgumentNullException("style", "The Dimension style cannot be null.");
             this.style = style;      
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <c>Angular3PointDimension</c> class.
+        /// </summary>
+        /// <param name="centerPoint">Center of the angle arc to mesaure.</param>
+        /// <param name="startPoint">Angle start point.</param>
+        /// <param name="endPoint">Angle end point.</param>
+        /// <param name="offset">Distance between the center point and the dimension line.</param>
+        public Angular3PointDimension(Vector2 centerPoint, Vector2 startPoint, Vector2 endPoint, double offset)
+            : this(new Vector3(centerPoint.X, centerPoint.Y, 0.0), new Vector3(startPoint.X, startPoint.Y, 0.0), new Vector3(endPoint.X, endPoint.Y, 0.0), offset, DimensionStyle.Default)
+        {
         }
 
         /// <summary>
@@ -103,20 +123,33 @@ namespace netDxf.Entities
         /// Initializes a new instance of the <c>Angular3PointDimension</c> class.
         /// </summary>
         /// <param name="centerPoint">Center of the angle arc to mesaure.</param>
-        /// <param name="firstPoint">Angle start point.</param>
-        /// <param name="secondPoint">Angle end point.</param>
+        /// <param name="startPoint">Angle start point.</param>
+        /// <param name="endPoint">Angle end point.</param>
         /// <param name="offset">Distance between the center point and the dimension line.</param>
         /// <param name="style">The <see cref="DimensionStyle">style</see> to use with the dimension.</param>
-        public Angular3PointDimension(Vector3 centerPoint, Vector3 firstPoint, Vector3 secondPoint, double offset, DimensionStyle style)
+        public Angular3PointDimension(Vector2 centerPoint, Vector2 startPoint, Vector2 endPoint, double offset, DimensionStyle style)
+            : this(new Vector3(centerPoint.X, centerPoint.Y, 0.0), new Vector3(startPoint.X, startPoint.Y, 0.0), new Vector3(endPoint.X, endPoint.Y, 0.0), offset, style)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <c>Angular3PointDimension</c> class.
+        /// </summary>
+        /// <param name="centerPoint">Center of the angle arc to mesaure.</param>
+        /// <param name="startPoint">Angle start point.</param>
+        /// <param name="endPoint">Angle end point.</param>
+        /// <param name="offset">Distance between the center point and the dimension line.</param>
+        /// <param name="style">The <see cref="DimensionStyle">style</see> to use with the dimension.</param>
+        public Angular3PointDimension(Vector3 centerPoint, Vector3 startPoint, Vector3 endPoint, double offset, DimensionStyle style)
             : base(DimensionType.Angular3Point)
         {
-            this.centerPoint = centerPoint;
+            this.center = centerPoint;
 
-            Vector3 dir1 = firstPoint - centerPoint;
-            Vector3 dir2 = secondPoint - centerPoint;
+            Vector3 dir1 = startPoint - centerPoint;
+            Vector3 dir2 = endPoint - centerPoint;
             this.normal = Vector3.CrossProduct(dir1, dir2);
-            this.firstPoint = firstPoint;
-            this.secondPoint = secondPoint;
+            this.start = startPoint;
+            this.end = endPoint;
             this.offset = offset;
             this.style = style;
         }
@@ -129,8 +162,8 @@ namespace netDxf.Entities
         /// </summary>
         internal Vector3 FirstPoint
         {
-            get { return firstPoint; }
-            set { firstPoint = value; }
+            get { return this.start; }
+            set { this.start = value; }
         }
 
         /// <summary>
@@ -138,8 +171,8 @@ namespace netDxf.Entities
         /// </summary>
         internal Vector3 SecondPoint
         {
-            get { return secondPoint; }
-            set { secondPoint = value; }
+            get { return this.end; }
+            set { this.end = value; }
         }
 
         #endregion
@@ -151,8 +184,26 @@ namespace netDxf.Entities
         /// </summary>
         public Vector3 CenterPoint
         {
-            get { return centerPoint; }
-            set { centerPoint = value; }
+            get { return this.center; }
+            set { this.center = value; }
+        }
+
+        /// <summary>
+        /// Gets or sets the angle start point of the dimension.
+        /// </summary>
+        public Vector3 StartPoint
+        {
+            get { return this.start; }
+            set { this.start = value; }
+        }
+
+        /// <summary>
+        /// Gets or sets the angle end point of the dimension.
+        /// </summary>
+        public Vector3 EndPoint
+        {
+            get { return this.end; }
+            set { this.end = value; }
         }
 
         /// <summary>
@@ -160,8 +211,8 @@ namespace netDxf.Entities
         /// </summary>
         public double Offset
         {
-            get { return offset; }
-            set { offset = value; }
+            get { return this.offset; }
+            set { this.offset = value; }
         }
 
         /// <summary>
@@ -171,13 +222,13 @@ namespace netDxf.Entities
         {
             get
             {
-                Vector3 localPoint = MathHelper.Transform(centerPoint, this.normal, MathHelper.CoordinateSystem.World, MathHelper.CoordinateSystem.Object);
+                Vector3 localPoint = MathHelper.Transform(this.center, this.normal, MathHelper.CoordinateSystem.World, MathHelper.CoordinateSystem.Object);
                 Vector2 refCenter = new Vector2(localPoint.X, localPoint.Y);
 
-                localPoint = MathHelper.Transform(firstPoint, this.normal, MathHelper.CoordinateSystem.World, MathHelper.CoordinateSystem.Object);
+                localPoint = MathHelper.Transform(this.start, this.normal, MathHelper.CoordinateSystem.World, MathHelper.CoordinateSystem.Object);
                 Vector2 refStart = new Vector2(localPoint.X, localPoint.Y);
 
-                localPoint = MathHelper.Transform(secondPoint, this.normal, MathHelper.CoordinateSystem.World, MathHelper.CoordinateSystem.Object);
+                localPoint = MathHelper.Transform(this.end, this.normal, MathHelper.CoordinateSystem.World, MathHelper.CoordinateSystem.Object);
                 Vector2 refEnd = new Vector2(localPoint.X, localPoint.Y);
 
                 double rotation = Vector2.Angle(refCenter, refStart);
@@ -198,13 +249,13 @@ namespace netDxf.Entities
         internal override Block BuildBlock(string name)
         {
             // we will build the dimension block in object coordinates with normal the dimension normal
-            Vector3 localPoint = MathHelper.Transform(centerPoint, this.normal, MathHelper.CoordinateSystem.World, MathHelper.CoordinateSystem.Object);
+            Vector3 localPoint = MathHelper.Transform(this.center, this.normal, MathHelper.CoordinateSystem.World, MathHelper.CoordinateSystem.Object);
             Vector2 refCenter = new Vector2(localPoint.X, localPoint.Y);
 
-            localPoint = MathHelper.Transform(firstPoint, this.normal, MathHelper.CoordinateSystem.World, MathHelper.CoordinateSystem.Object);
+            localPoint = MathHelper.Transform(this.start, this.normal, MathHelper.CoordinateSystem.World, MathHelper.CoordinateSystem.Object);
             Vector2 refStart = new Vector2(localPoint.X, localPoint.Y);
 
-            localPoint = MathHelper.Transform(secondPoint, this.normal, MathHelper.CoordinateSystem.World, MathHelper.CoordinateSystem.Object);
+            localPoint = MathHelper.Transform(this.end, this.normal, MathHelper.CoordinateSystem.World, MathHelper.CoordinateSystem.Object);
             Vector2 refEnd = new Vector2(localPoint.X, localPoint.Y);
 
             double elev = localPoint.Z;
@@ -213,7 +264,7 @@ namespace netDxf.Entities
             Layer defPoints = new Layer("Defpoints") { Plot = false };
             Point startRef = new Point(refStart) { Layer = defPoints };
             Point endRef = new Point(refEnd) { Layer = defPoints };
-            Point center = new Point(refCenter) { Layer = defPoints };
+            Point centerPoint = new Point(refCenter) { Layer = defPoints };
 
             // dimension lines
             double startAngle = Vector2.Angle(refCenter, refStart);
@@ -254,7 +305,7 @@ namespace netDxf.Entities
             this.midTextPoint = new Vector3(midText.X, midText.Y, elev); // this value is in OCS
             
             MText text = new MText(this.FormatDimensionText(aperture),
-                                   midTextPoint,
+                                   this.midTextPoint,
                                    this.style.DIMTXT, 0.0, this.style.TextStyle)
             {
                 AttachmentPoint = MTextAttachmentPoint.BottomCenter,
@@ -265,7 +316,7 @@ namespace netDxf.Entities
             Block dim = new Block(name);
             dim.Entities.Add(startRef);
             dim.Entities.Add(endRef);
-            dim.Entities.Add(center);
+            dim.Entities.Add(centerPoint);
             dim.Entities.Add(startBorder);
             dim.Entities.Add(endBorder);
             dim.Entities.Add(dimArc);
@@ -274,6 +325,35 @@ namespace netDxf.Entities
             dim.Entities.Add(text);
             this.block = dim;
             return dim;
+        }
+
+        /// <summary>
+        /// Creates a new Angular3PointDimension that is a copy of the current instance.
+        /// </summary>
+        /// <returns>A new Angular3PointDimension that is a copy of this instance.</returns>
+        public override object Clone()
+        {
+            return new Angular3PointDimension
+            {
+                //EntityObject properties
+                Color = this.color,
+                Layer = this.layer,
+                LineType = this.lineType,
+                Lineweight = this.lineweight,
+                LineTypeScale = this.lineTypeScale,
+                Normal = this.normal,
+                XData = this.xData,
+                //Dimension properties
+                Style = this.style,
+                AttachmentPoint = this.attachmentPoint,
+                LineSpacingStyle = this.lineSpacingStyle,
+                LineSpacingFactor = this.lineSpacing,
+                //Angular3PointDimension properties
+                CenterPoint = this.center,
+                StartPoint = this.start,
+                EndPoint = this.end,
+                Offset = this.offset
+            };
         }
 
         #endregion

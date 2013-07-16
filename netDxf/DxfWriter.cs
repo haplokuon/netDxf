@@ -1,4 +1,4 @@
-#region netDxf, Copyright(C) 2013 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf, Copyright(C) 2013 Daniel Carvajal, Licensed under LGPL.
 
 //                        netDxf library
 // Copyright (C) 2013 Daniel Carvajal (haplokuon@gmail.com)
@@ -365,7 +365,7 @@ namespace netDxf
         /// Writes a new view port to the table section.
         /// </summary>
         /// <param name="vp">Viewport.</param>
-        public void WriteViewPort(ViewPort vp)
+        public void WriteViewPort(Viewport vp)
         {
             if (this.activeTable != StringCode.ViewPortTable)
             {
@@ -1464,7 +1464,7 @@ namespace netDxf
             }
 
             // I don't know what is the purpose of these codes, it seems that it doesn't change anything but they are needed
-            this.WriteCodePair(47, 1.0);
+            this.WriteCodePair(47, 0.0);
             this.WriteCodePair(98, 1);
             this.WriteCodePair(10, 0.0);
             this.WriteCodePair(20, 0.0);
@@ -1731,7 +1731,7 @@ namespace netDxf
             this.WriteCodePair(281, image.Brightness);
             this.WriteCodePair(282, image.Contrast);
             this.WriteCodePair(283, image.Fade);
-
+            this.WriteCodePair(360, image.Definition.Reactors[image.Handle].Handle);
             this.WriteCodePair(71, (int)image.ClippingBoundary.Type);
             this.WriteCodePair(91, image.ClippingBoundary.Vertexes.Count);
             foreach (Vector2 vertex in image.ClippingBoundary.Vertexes)

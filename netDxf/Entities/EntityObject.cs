@@ -136,7 +136,7 @@ namespace netDxf.Entities
     /// Represents a generic entity.
     /// </summary>
     public abstract class EntityObject
-        : DxfObject
+        : DxfObject, ICloneable
     {
         #region private fields
 
@@ -303,5 +303,14 @@ namespace netDxf.Entities
 
         #endregion
 
+        #region ICloneable
+
+        /// <summary>
+        /// Creates a new entity that is a copy of the current instance.
+        /// </summary>
+        /// <returns>A new entity that is a copy of this instance.</returns>
+        public abstract object Clone();
+
+        #endregion
     }
 }

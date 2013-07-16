@@ -1,7 +1,7 @@
-﻿#region netDxf, Copyright(C) 2012 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf, Copyright(C) 2013 Daniel Carvajal, Licensed under LGPL.
 
 //                        netDxf library
-// Copyright (C) 2012 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2013 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -45,6 +45,14 @@ namespace netDxf.Entities
         #endregion
 
         #region constructors
+
+        /// <summary>
+        /// Initializes a new instance of the <c>OrdinateDimension</c> class.
+        /// </summary>
+        public OrdinateDimension()
+            :this(Vector3.Zero, Vector2.UnitX, 0.1, 0.0, OrdinateDimensionAxis.Y)
+        {
+        }
 
         /// <summary>
         /// Initializes a new instance of the <c>OrdinateDimension</c> class.
@@ -203,6 +211,36 @@ namespace netDxf.Entities
             dim.Entities.Add(text);
             this.block = dim;
             return dim;
+        }
+
+        /// <summary>
+        /// Creates a new OrdinateDimension that is a copy of the current instance.
+        /// </summary>
+        /// <returns>A new OrdinateDimension that is a copy of this instance.</returns>
+        public override object Clone()
+        {
+            return new OrdinateDimension
+            {
+                //EntityObject properties
+                Color = this.color,
+                Layer = this.layer,
+                LineType = this.lineType,
+                Lineweight = this.lineweight,
+                LineTypeScale = this.lineTypeScale,
+                Normal = this.normal,
+                XData = this.xData,
+                //Dimension properties
+                Style = this.style,
+                AttachmentPoint = this.attachmentPoint,
+                LineSpacingStyle = this.lineSpacingStyle,
+                LineSpacingFactor = this.lineSpacing,
+                //OrdinateDimension properties
+                Origin = this.origin,
+                ReferencePoint = this.referencePoint,
+                Rotation = this.rotation,
+                Length = this.length,
+                Axis = this.axis
+            };
         }
 
         #endregion

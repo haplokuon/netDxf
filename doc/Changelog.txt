@@ -1,3 +1,16 @@
+[0.5.0 - 2013/07/16]
++ Lots of changes on how the document handles the tables, check the samples or ask in the forum in case of doubt.
++ Added TableObjects class and derivatives for application registries, blocks, dimension styles, layers, line types, multiline styles, text styles, and image definitions collections to uniform its behaviour.
++ Added Remove and Purge methods for table objects. Now it is possible to clean the document from empty layers, blocks without references,...
++ Added GetReferences method for table objects. Now it is possible to get the list of dxf objects that make use of a particular layer, block,...
++ Added CreateWCSBoundary method for hatches, it will generate a list of entities that makes the hatch boundaries expressed in world coordinates.
++ Entities implement IClonable interface.
++ Block now derives from TableObject.
++ ImageDef now derives from TableObject.
++ Updated "netDxf Documentation.chm".
++ (fixed) Image entity not writing code 360 (Hard reference to imagedef_reactor object).
++ (fixed) Read MLine when it was part of a block.
+
 [0.4.7 - 2013/05/28]
 + Added missing Splines property to access the splines list of the DxfDocument.
 + Added missing Dimensions property to access the dimensions list of the DxfDocument.

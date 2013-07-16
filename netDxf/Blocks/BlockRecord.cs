@@ -1,4 +1,4 @@
-﻿#region netDxf, Copyright(C) 2013 Daniel Carvajal, Licensed under LGPL.
+#region netDxf, Copyright(C) 2013 Daniel Carvajal, Licensed under LGPL.
 
 //                        netDxf library
 // Copyright (C) 2013 Daniel Carvajal (haplokuon@gmail.com)
@@ -20,17 +20,20 @@
 
 #endregion
 
-namespace netDxf.Tables
+using System;
+
+namespace netDxf.Blocks
 {
     /// <summary>
     /// Represent the record of a block in the tables section.
     /// </summary>
     internal class BlockRecord :
-        TableObject
+        DxfObject
     {
 
         #region private fields
 
+        private readonly string name;
         private DrawingUnits units;
 
         #endregion
@@ -42,8 +45,11 @@ namespace netDxf.Tables
         /// </summary>
         /// <param name="name">Block definition name.</param>
         public BlockRecord(string name)
-            : base(name, DxfObjectCode.BlockRecord)
+            : base(DxfObjectCode.BlockRecord)
         {
+            if (string.IsNullOrEmpty(name))
+                throw (new ArgumentNullException("name"));
+            this.name = name;
             this.units = DrawingUnits.Unitless;
         }
 
@@ -52,12 +58,34 @@ namespace netDxf.Tables
         #region public properties
 
         /// <summary>
+        /// Gets the name of the block record.
+        /// </summary>
+        /// <remarks>Block record names are case unsensitive.</remarks>
+        public string Name
+        {
+            get { return name; }
+        }
+
+        /// <summary>
         /// Block insertion units.
         /// </summary>
         public DrawingUnits Units
         {
             get { return units; }
             set { units = value; }
+        }
+
+        #endregion
+
+        #region overrides
+
+        /// <summary>
+        /// Converts the value of this instance to its equivalent string representation.
+        /// </summary>
+        /// <returns>The string representation.</returns>
+        public override string ToString()
+        {
+            return this.Name;
         }
 
         #endregion

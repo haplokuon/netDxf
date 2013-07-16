@@ -164,5 +164,32 @@ namespace netDxf.Entities
 
         #endregion
 
+        #region overrides
+
+        /// <summary>
+        /// Creates a new Circle that is a copy of the current instance.
+        /// </summary>
+        /// <returns>A new Circle that is a copy of this instance.</returns>
+        public override object Clone()
+        {
+            return new Circle
+            {
+                //EntityObject properties
+                Color = this.color,
+                Layer = this.layer,
+                LineType = this.lineType,
+                Lineweight = this.lineweight,
+                LineTypeScale = this.lineTypeScale,
+                Normal = this.normal,
+                XData = this.xData,
+                //Circle properties
+                Center = this.center,
+                Radius = this.radius,
+                Thickness = this.thickness
+            };
+        }
+
+        #endregion
+
     }
 }

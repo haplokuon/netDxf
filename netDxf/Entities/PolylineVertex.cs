@@ -29,7 +29,7 @@ namespace netDxf.Entities
     /// Represents a <see cref="Polyline">polyline</see> vertex.
     /// </summary>
     public class PolylineVertex :
-        DxfObject
+        DxfObject, ICloneable
     { 
         #region private fields
 
@@ -102,6 +102,15 @@ namespace netDxf.Entities
         public override string ToString()
         {
             return String.Format("{0}: ({1})", "PolylineVertex", this.location);
+        }
+
+        /// <summary>
+        /// Creates a new PolylineVertex that is a copy of the current instance.
+        /// </summary>
+        /// <returns>A new PolylineVertex that is a copy of this instance.</returns>
+        public object Clone()
+        {
+            return new PolylineVertex(this.location);
         }
 
         #endregion

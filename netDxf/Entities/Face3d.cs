@@ -71,7 +71,7 @@ namespace netDxf.Entities
         #region constructors
 
         /// <summary>
-        /// Initializes a new instance of the <c>Face3D</c> class.
+        /// Initializes a new instance of the <c>Face3d</c> class.
         /// </summary>
         /// <param name="firstVertex">3d face <see cref="Vector3">first vertex</see>.</param>
         /// <param name="secondVertex">3d face <see cref="Vector3">second vertex</see>.</param>
@@ -88,7 +88,7 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Initializes a new instance of the <c>Face3D</c> class.
+        /// Initializes a new instance of the <c>Face3d</c> class.
         /// </summary>
         /// <param name="firstVertex">3d face <see cref="Vector2">first vertex</see>.</param>
         /// <param name="secondVertex">3d face <see cref="Vector2">second vertex</see>.</param>
@@ -103,7 +103,7 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Initializes a new instance of the <c>Face3D</c> class.
+        /// Initializes a new instance of the <c>Face3d</c> class.
         /// </summary>
         public Face3d()
             : this(Vector3.Zero, Vector3.Zero, Vector3.Zero, Vector3.Zero)
@@ -157,6 +157,35 @@ namespace netDxf.Entities
         {
             get { return this.edgeFlags; }
             set { this.edgeFlags = value; }
+        }
+
+        #endregion
+
+        #region overrides
+
+        /// <summary>
+        /// Creates a new Face3d that is a copy of the current instance.
+        /// </summary>
+        /// <returns>A new Face3d that is a copy of this instance.</returns>
+        public override object Clone()
+        {
+            return new Face3d
+            {
+                //EntityObject properties
+                Color = this.color,
+                Layer = this.layer,
+                LineType = this.lineType,
+                Lineweight = this.lineweight,
+                LineTypeScale = this.lineTypeScale,
+                Normal = this.normal,
+                XData = this.xData,
+                //Face3d properties
+                FirstVertex = this.firstVertex,
+                SecondVertex = this.secondVertex,
+                ThirdVertex = this.thirdVertex,
+                FourthVertex = this.fourthVertex,
+                EdgeFlags = this.edgeFlags
+            };
         }
 
         #endregion

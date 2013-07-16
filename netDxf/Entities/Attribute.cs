@@ -209,5 +209,39 @@ namespace netDxf.Entities
 
         #endregion
 
+        #region overrides
+
+        /// <summary>
+        /// Creates a new Attribute that is a copy of the current instance.
+        /// </summary>
+        /// <returns>A new Attribute that is a copy of this instance.</returns>
+        public override object Clone()
+        {
+            return new Attribute
+            {
+                //EntityObject properties
+                Color = this.color,
+                Layer = this.layer,
+                LineType = this.lineType,
+                Lineweight = this.lineweight,
+                LineTypeScale = this.lineTypeScale,
+                Normal = this.normal,
+                XData = this.xData,
+                //Attribute properties
+                Definition = this.definition,
+                Id = this.id,
+                Height = this.height,
+                WidthFactor = this.widthFactor,
+                Value = this.value,
+                Style = this.style,
+                Position = this.position,
+                Flags = this.flags,
+                Rotation = this.rotation,
+                Alignment = this.alignment
+            };
+        }
+
+        #endregion
+
     }
 }

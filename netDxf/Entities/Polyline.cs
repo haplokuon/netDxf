@@ -85,7 +85,7 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets or sets if the light weight polyline is closed.
+        /// Gets or sets if the polyline is closed.
         /// </summary>
         public bool IsClosed
         {
@@ -111,6 +111,7 @@ namespace netDxf.Entities
         internal PolylineTypeFlags Flags
         {
             get { return this.flags; }
+            set { this.flags = value; }
         }
 
         /// <summary>
@@ -119,30 +120,6 @@ namespace netDxf.Entities
         internal EndSequence EndSequence
         {
             get { return this.endSequence; }
-        }
-
-        #endregion
-
-        #region overrides
-
-        /// <summary>
-        /// Asigns a handle to the object based in a integer counter.
-        /// </summary>
-        /// <param name="entityNumber">Number to asign.</param>
-        /// <returns>Next avaliable entity number.</returns>
-        /// <remarks>
-        /// Some objects might consume more than one, is, for example, the case of polylines that will asign
-        /// automatically a handle to its vertexes. The entity number will be converted to an hexadecimal number.
-        /// </remarks>
-        internal override int AsignHandle(int entityNumber)
-        {
-            foreach( PolylineVertex v in this.vertexes )
-            {
-                entityNumber = v.AsignHandle(entityNumber);
-            }
-            entityNumber = this.endSequence.AsignHandle(entityNumber);
-
-            return base.AsignHandle(entityNumber);
         }
 
         #endregion
@@ -175,22 +152,73 @@ namespace netDxf.Entities
                 }
 
                 entities.Add(new Line
-                                 {
-                                     StartPoint = start,
-                                     EndPoint = end,
-                                     Color = this.Color,
-                                     IsVisible = this.IsVisible,
-                                     Layer = this.Layer,
-                                     LineType = this.LineType,
-                                     LineTypeScale = this.LineTypeScale,
-                                     Lineweight = this.Lineweight,
-                                     XData = this.XData
-                                 });
+                {
+                    StartPoint = start,
+                    EndPoint = end,
+                    Color = this.Color,
+                    IsVisible = this.IsVisible,
+                    Layer = this.Layer,
+                    LineType = this.LineType,
+                    LineTypeScale = this.LineTypeScale,
+                    Lineweight = this.Lineweight,
+                    XData = this.XData
+                });
 
                 index++;
             }
 
             return entities;
+        }
+
+        #endregion
+
+        #region overrides
+
+        /// <summary>
+        /// Asigns a handle to the object based in a integer counter.
+        /// </summary>
+        /// <param name="entityNumber">Number to asign.</param>
+        /// <returns>Next avaliable entity number.</returns>
+        /// <remarks>
+        /// Some objects might consume more than one, is, for example, the case of polylines that will asign
+        /// automatically a handle to its vertexes. The entity number will be converted to an hexadecimal number.
+        /// </remarks>
+        internal override int AsignHandle(int entityNumber)
+        {
+            foreach( PolylineVertex v in this.vertexes )
+            {
+                entityNumber = v.AsignHandle(entityNumber);
+            }
+            entityNumber = this.endSequence.AsignHandle(entityNumber);
+
+            return base.AsignHandle(entityNumber);
+        }
+
+        /// <summary>
+        /// Creates a new Polyline that is a copy of the current instance.
+        /// </summary>
+        /// <returns>A new Polyline that is a copy of this instance.</returns>
+        public override object Clone()
+        {
+            List<PolylineVertex> copyVertexes = new List<PolylineVertex>();
+            foreach (PolylineVertex vertex in this.vertexes)
+            {
+                copyVertexes.Add((PolylineVertex) vertex.Clone());
+            }
+            return new Polyline
+            {
+                //EntityObject properties
+                Color = this.color,
+                Layer = this.layer,
+                LineType = this.lineType,
+                Lineweight = this.lineweight,
+                LineTypeScale = this.lineTypeScale,
+                Normal = this.normal,
+                XData = this.xData,
+                //Polyline properties
+                Vertexes = copyVertexes,
+                Flags = this.flags
+            };
         }
 
         #endregion

@@ -1,4 +1,4 @@
-#region netDxf, Copyright(C) 2013 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf, Copyright(C) 2013 Daniel Carvajal, Licensed under LGPL.
 
 //                        netDxf library
 // Copyright (C) 2013 Daniel Carvajal (haplokuon@gmail.com)
@@ -76,15 +76,21 @@ namespace netDxf
         private List<Image> images;
 
         //tables
-        private Dictionary<string, ApplicationRegistry> appIds;
-        private Dictionary<string, BlockRecord> blockRecords;
+        private Dictionary<string, ApplicationRegistry> appRegistries;
+        private Dictionary<string, List<DxfObject>> appRegistryRefs;
         private Dictionary<string, Layer> layers;
+        private Dictionary<string, List<DxfObject>> layerRefs;
         private Dictionary<string, LineType> lineTypes;
+        private Dictionary<string, List<DxfObject>> lineTypeRefs;
         private Dictionary<string, TextStyle> textStyles;
+        private Dictionary<string, List<DxfObject>> textStyleRefs;
         private Dictionary<string, DimensionStyle> dimStyles;
+        private Dictionary<string, List<DxfObject>> dimStyleRefs;
 
         //blocks
+        private Dictionary<string, BlockRecord> blockRecords;
         private Dictionary<string, Block> blocks;
+        private Dictionary<string, List<DxfObject>> blockRefs;
 
         // in nested blocks (blocks that contains Insert entities) the block definition might be defined AFTER the block that references them
         // temporarily this variables will store information to post process the nested block list
@@ -95,9 +101,11 @@ namespace netDxf
         //objects
         private RasterVariables rasterVariables;
         private Dictionary<string, ImageDef> imageDefs;
+        private Dictionary<string, List<DxfObject>> imageDefRefs;
         private Dictionary<string, DictionaryObject> dictionaries;
         private Dictionary<string, ImageDefReactor> imageDefReactors;
-        private Dictionary<string, MLineStyle> mLineStyles;
+        private Dictionary<string, MLineStyle> mlineStyles;
+        private Dictionary<string, List<DxfObject>> mlineStyleRefs;
         private Dictionary<string, Group> groups;
 
         // variables for post-processing
@@ -246,9 +254,14 @@ namespace netDxf
 
         #region public table properties
 
-        public Dictionary<string, ApplicationRegistry> ApplicationRegistrationIds
+        public Dictionary<string, ApplicationRegistry> ApplicationRegistries
         {
-            get { return this.appIds; }
+            get { return this.appRegistries; }
+        }
+
+        public Dictionary<string, List<DxfObject>> ApplicationRegistryReferences
+        {
+            get { return this.appRegistryRefs; }
         }
 
         public Dictionary<string, Layer> Layers
@@ -256,9 +269,19 @@ namespace netDxf
             get { return this.layers; }
         }
 
+        public Dictionary<string, List<DxfObject>> LayerReferences
+        {
+            get { return this.layerRefs; }
+        }
+
         public Dictionary<string, LineType> LineTypes
         {
             get { return this.lineTypes; }
+        }
+
+        public Dictionary<string, List<DxfObject>> LineTypeReferences
+        {
+            get { return this.lineTypeRefs; }
         }
 
         public Dictionary<string, TextStyle> TextStyles
@@ -266,9 +289,19 @@ namespace netDxf
             get { return this.textStyles; }
         }
 
+        public Dictionary<string, List<DxfObject>> TextStyleReferences
+        {
+            get { return this.textStyleRefs; }
+        }
+
         public Dictionary<string, DimensionStyle> DimensionStyles
         {
             get { return this.dimStyles; }
+        }
+
+        public Dictionary<string, List<DxfObject>> DimensionStyleReferences
+        {
+            get { return this.dimStyleRefs; }
         }
 
         public Dictionary<string, Block> Blocks
@@ -276,19 +309,33 @@ namespace netDxf
             get { return this.blocks; }
         }
 
+        public Dictionary<string, List<DxfObject>> BlockReferences
+        {
+            get { return this.blockRefs; }
+        }
+
+        public Dictionary<string, MLineStyle> MLineStyles
+        {
+            get { return mlineStyles; }
+        }
+
+        public Dictionary<string, List<DxfObject>> MLineStyleReferences
+        {
+            get { return this.mlineStyleRefs; }
+        }
 
         #endregion
 
         #region public object properties
 
-        public Dictionary<string, MLineStyle> MLineStyles
-        {
-            get { return mLineStyles; }
-        }
-
         public Dictionary<string, ImageDef> ImageDefs
         {
             get { return imageDefs; }
+        }
+
+        public Dictionary<string, List<DxfObject>> ImageDefReferences
+        {
+            get { return this.imageDefRefs; }
         }
 
         public RasterVariables RasterVariables
@@ -337,18 +384,24 @@ namespace netDxf
             this.headerVariables = new HeaderVariables();
 
             // tables
-            this.appIds = new Dictionary<string, ApplicationRegistry>(StringComparer.InvariantCultureIgnoreCase);
-            this.blockRecords = new Dictionary<string, BlockRecord>(StringComparer.InvariantCultureIgnoreCase);
+            this.appRegistries = new Dictionary<string, ApplicationRegistry>(StringComparer.InvariantCultureIgnoreCase);
+            this.appRegistryRefs = new Dictionary<string, List<DxfObject>>(StringComparer.InvariantCultureIgnoreCase);
             this.layers = new Dictionary<string, Layer>(StringComparer.InvariantCultureIgnoreCase);
+            this.layerRefs = new Dictionary<string, List<DxfObject>>(StringComparer.InvariantCultureIgnoreCase);
             this.lineTypes = new Dictionary<string, LineType>(StringComparer.InvariantCultureIgnoreCase);
+            this.lineTypeRefs = new Dictionary<string, List<DxfObject>>(StringComparer.InvariantCultureIgnoreCase);
             this.textStyles = new Dictionary<string, TextStyle>(StringComparer.InvariantCultureIgnoreCase);
+            this.textStyleRefs = new Dictionary<string, List<DxfObject>>(StringComparer.InvariantCultureIgnoreCase);
             this.dimStyles = new Dictionary<string, DimensionStyle>(StringComparer.InvariantCultureIgnoreCase);
+            this.dimStyleRefs = new Dictionary<string, List<DxfObject>>(StringComparer.InvariantCultureIgnoreCase);
 
             // blocks
             this.nestedBlocks = new Dictionary<Insert, string>();
             this.nestedDimBlocks = new Dictionary<string, Dimension>(StringComparer.InvariantCultureIgnoreCase);
             this.nestedBlocksAttributes = new Dictionary<Attribute, string>();
+            this.blockRecords = new Dictionary<string, BlockRecord>(StringComparer.InvariantCultureIgnoreCase);
             this.blocks = new Dictionary<string, Block>(StringComparer.InvariantCultureIgnoreCase);
+            this.blockRefs = new Dictionary<string, List<DxfObject>>(StringComparer.InvariantCultureIgnoreCase);
 
             // entities
             this.arcs = new List<Arc>();
@@ -373,10 +426,12 @@ namespace netDxf
             // objects
             this.dictionaries = new Dictionary<string, DictionaryObject>(StringComparer.InvariantCultureIgnoreCase);
             this.imageDefs = new Dictionary<string, ImageDef>(StringComparer.InvariantCultureIgnoreCase);
+            this.imageDefRefs = new Dictionary<string, List<DxfObject>>(StringComparer.InvariantCultureIgnoreCase);
             this.imageDefReactors = new Dictionary<string, ImageDefReactor>(StringComparer.InvariantCultureIgnoreCase);
             this.imgDefHandles = new Dictionary<string, ImageDef>(StringComparer.InvariantCultureIgnoreCase);
             this.imgToImgDefHandles = new Dictionary<Image, string>();
-            this.mLineStyles = new Dictionary<string, MLineStyle>(StringComparer.InvariantCultureIgnoreCase);
+            this.mlineStyles = new Dictionary<string, MLineStyle>(StringComparer.InvariantCultureIgnoreCase);
+            this.mlineStyleRefs = new Dictionary<string, List<DxfObject>>(StringComparer.InvariantCultureIgnoreCase);
             this.mLineToStyleNames = new Dictionary<MLine, string>();
             this.groups = new Dictionary<string, Group>(StringComparer.InvariantCultureIgnoreCase);
 
@@ -428,14 +483,16 @@ namespace netDxf
             {
                 Image image = pair.Key;
                 image.Definition = this.imgDefHandles[pair.Value];
+                this.imageDefRefs[image.Definition.Name].Add(image);
                 image.Definition.Reactors.Add(image.Handle, this.imageDefReactors[image.Handle]);
             }
 
-            // postprocess the MLines list to assign their MLineStyle
-            foreach (MLine mLine in this.mLines)
+            // postprocess the MLines to assign their MLineStyle
+            foreach (KeyValuePair<MLine, string> pair in this.mLineToStyleNames)
             {
-                string name = this.mLineToStyleNames[mLine];
-                mLine.Style = GetMLineStyle(name);
+                MLine mline = pair.Key;
+                mline.Style = this.mlineStyles[pair.Value];
+                this.mlineStyleRefs[pair.Value].Add(mline);
             }
         }
 
@@ -680,8 +737,8 @@ namespace netDxf
                     Debug.Assert(dxfPairInfo.Code == 0);
                     ApplicationRegistry appId = this.ReadApplicationId();
                     if (appId == null) continue;
-                    if (this.appIds.ContainsKey(appId.Name)) continue;
-                    this.appIds.Add(appId.Name, appId);
+                    if (this.appRegistries.ContainsKey(appId.Name)) continue;
+                    this.appRegistries.Add(appId.Name, appId);
                 }
                 else
                 {
@@ -712,6 +769,8 @@ namespace netDxf
 
             if (string.IsNullOrEmpty(appId)) return null;
 
+            this.appRegistryRefs.Add(appId, new List<DxfObject>());
+
             return new ApplicationRegistry(appId)
                        {
                            Handle = handle
@@ -741,6 +800,7 @@ namespace netDxf
             {
                 Insert insert = pair.Key;
                 insert.Block = this.blocks[pair.Value];
+                this.blockRefs[insert.Block.Name].Add(insert);
                 foreach (Attribute att in insert.Attributes)
                 {
                     string attDefId = this.nestedBlocksAttributes[att];
@@ -843,6 +903,8 @@ namespace netDxf
                         break;
                 }
             }
+
+            this.blockRefs.Add(name, new List<DxfObject>());
             Block block = new Block(name)
                               {
                                   Record = blockRecord,
@@ -855,7 +917,7 @@ namespace netDxf
                               };
             block.End.Handle = endBlockHandle;
             block.End.Layer = endBlockLayer;
-
+            this.layerRefs[block.Layer.Name].Add(block);
             return block;
         }
 
@@ -965,19 +1027,23 @@ namespace netDxf
             TextAlignment alignment = ObtainAlignment(horizontalAlignment, verticalAlignment);
             Vector3 point = alignment == TextAlignment.BaselineLeft ? firstAlignmentPoint : secondAlignmentPoint;
 
-            return new AttributeDefinition(id)
-                       {
-                           Position = point,
-                           Normal = normal,
-                           Alignment = alignment,
-                           Text = text,
-                           Value = value,
-                           Flags = flags,
-                           Style = style,
-                           Height = height,
-                           WidthFactor = MathHelper.IsZero(widthFactor) ? style.WidthFactor : widthFactor,
-                           Rotation = rotation,
-                       };
+            AttributeDefinition attDef = new AttributeDefinition(id)
+                {
+                    Position = point,
+                    Normal = normal,
+                    Alignment = alignment,
+                    Text = text,
+                    Value = value,
+                    Flags = flags,
+                    Style = style,
+                    Height = height,
+                    WidthFactor = MathHelper.IsZero(widthFactor) ? style.WidthFactor : widthFactor,
+                    Rotation = rotation
+                };
+
+            this.textStyleRefs[style.Name].Add(attDef);
+
+            return attDef;
         }
 
         private Attribute ReadAttribute(Block block, bool isBlockEntity = false)
@@ -1179,6 +1245,11 @@ namespace netDxf
 
             if (isBlockEntity)
                 if (attdefId != null) this.nestedBlocksAttributes.Add(att, attdefId);
+
+            this.layerRefs[att.Layer.Name].Add(att);
+            this.lineTypeRefs[att.LineType.Name].Add(att);
+            this.textStyleRefs[att.Style.Name].Add(att);
+
             return att;
         }
 
@@ -1269,8 +1340,8 @@ namespace netDxf
                         break;
                     case DxfObjectCode.ImageDef:
                         ImageDef imageDef = ReadImageDefinition();
-                        if (this.imageDefs.ContainsKey(imageDef.FileName)) continue;
-                        this.imageDefs.Add(imageDef.FileName, imageDef);
+                        if (this.imageDefs.ContainsKey(imageDef.Name)) continue;
+                        this.imageDefs.Add(imageDef.Name, imageDef);
                         break;
                     case DxfObjectCode.ImageDefReactor:
                         ImageDefReactor reactor = ReadImageDefReactor();
@@ -1279,8 +1350,9 @@ namespace netDxf
                         break;
                     case DxfObjectCode.MLineStyle:
                         MLineStyle style = ReadMLineStyle();
-                        if (this.mLineStyles.ContainsKey(style.Name)) continue;
-                        this.mLineStyles.Add(style.Name, style);
+                        if (style == null) continue;
+                        if (this.mlineStyles.ContainsKey(style.Name)) continue;
+                        this.mlineStyles.Add(style.Name, style);
                         break;
                     case DxfObjectCode.Group:
                         Group group = ReadGroup();
@@ -1374,6 +1446,7 @@ namespace netDxf
                     if (layer == null) continue;
                     if(this.layers.ContainsKey(layer.Name)) continue;
                     this.layers.Add(layer.Name, layer);
+                    this.layerRefs.Add(layer.Name, new List<DxfObject>());
                 }
                 else
                 {
@@ -1440,15 +1513,18 @@ namespace netDxf
 
             if (string.IsNullOrEmpty(name)) return null;
 
-            return new Layer(name)
-                       {
-                           Color = color,
-                           LineType = lineType,
-                           IsVisible = isVisible,
-                           Plot = plot,
-                           Lineweight = lineweight,
-                           Handle = handle
-                       };
+            Layer layer = new Layer(name)
+                {
+                    Color = color,
+                    LineType = lineType,
+                    IsVisible = isVisible,
+                    Plot = plot,
+                    Lineweight = lineweight,
+                    Handle = handle
+                };
+
+            this.lineTypeRefs[layer.LineType.Name].Add(layer);
+            return layer;
         }
 
         #endregion
@@ -1515,6 +1591,8 @@ namespace netDxf
             }
 
             if (string.IsNullOrEmpty(name)) return null;
+
+            this.lineTypeRefs.Add(name, new List<DxfObject>());
 
             return new LineType(name)
                        {
@@ -1609,6 +1687,8 @@ namespace netDxf
             }
 
             if (string.IsNullOrEmpty(name)) return null;
+
+            this.textStyleRefs.Add(name, new List<DxfObject>());
 
             return new TextStyle(name, font)
                        {
@@ -1738,9 +1818,10 @@ namespace netDxf
                 dxfPairInfo = this.ReadCodePair();
             }
 
-            if (string.IsNullOrEmpty(name) && string.IsNullOrEmpty(txtStyleHandle)) return null;
+            if (string.IsNullOrEmpty(name) || string.IsNullOrEmpty(txtStyleHandle)) return null;
+            this.dimStyleRefs.Add(name, new List<DxfObject>());
 
-            return new DimensionStyle(name)
+            DimensionStyle dimStyle = new DimensionStyle(name)
                        {
                            Handle = handle,
                            DIMEXO = dimexo,
@@ -1760,6 +1841,9 @@ namespace netDxf
                            DIMDSEP = dimdsep,
                            TextStyle = GetTextStyleByHandle(txtStyleHandle)
                        };
+
+            this.textStyleRefs[dimStyle.TextStyle.Name].Add(dimStyle);
+            return dimStyle;
         }
 
         #endregion
@@ -1915,8 +1999,17 @@ namespace netDxf
             entity.Lineweight = lineweight;
             entity.LineTypeScale = linetypeScale;
             entity.IsVisible = isVisible;
+            
             this.addedEntity.Add(entity.Handle, entity);
-
+            this.layerRefs[layer.Name].Add(entity);
+            this.lineTypeRefs[entity.LineType.Name].Add(entity);
+            if (entity.XData != null)
+            {
+                foreach (string registry in entity.XData.Keys)
+                {
+                    this.appRegistryRefs[registry].Add(entity);
+                }
+            }
             return entity;
         }
 
@@ -2375,20 +2468,23 @@ namespace netDxf
                     throw new ArgumentException("The dimension type: " + type + " is not implemented or unknown.");
             }
 
-            if (dim != null)
-            {
-                dim.Style = style;
-                dim.Block = drawingBlock;
-                dim.DefinitionPoint = defPoint;
-                dim.MidTextPoint = midtxtPoint;
-                dim.AttachmentPoint = attachmentPoint;
-                dim.LineSpacingStyle = lineSpacingStyle;
-                dim.LineSpacingFactor = lineSpacingFactor;
-                dim.Normal = normal;
-            }
+            if (dim == null) return null;
+            if (drawingBlockName == null) return null;
+
+            dim.Style = style;
+            dim.Block = drawingBlock;
+            dim.DefinitionPoint = defPoint;
+            dim.MidTextPoint = midtxtPoint;
+            dim.AttachmentPoint = attachmentPoint;
+            dim.LineSpacingStyle = lineSpacingStyle;
+            dim.LineSpacingFactor = lineSpacingFactor;
+            dim.Normal = normal;
 
             if (isBlockEntity)
-                if (drawingBlockName != null) this.nestedDimBlocks.Add(drawingBlockName, dim);
+                this.nestedDimBlocks.Add(drawingBlockName, dim);
+
+            this.blockRefs[drawingBlockName].Add(dim);
+            this.dimStyleRefs[style.Name].Add(dim);
 
             return dim;
         }
@@ -3490,7 +3586,8 @@ namespace netDxf
 
                     // read the attribute
                     Attribute attribute = this.ReadAttribute(block, isBlockEntity);
-                    if(attribute !=null) attributes.Add(attribute);
+                    if(attribute !=null)
+                        attributes.Add(attribute);
                 }
 
                 // read the end end sequence object until a new element is found
@@ -3514,7 +3611,7 @@ namespace netDxf
                 }
             }
 
-            // It is a lot more intuitive to give the center in world coordinates and then define the orientation with the normal.
+            // It is a lot more intuitive to give the position in world coordinates and then define the orientation with the normal.
             Vector3 wcsBasePoint = MathHelper.Transform(basePoint, normal, MathHelper.CoordinateSystem.Object, MathHelper.CoordinateSystem.World);
 
             Insert insert = new Insert
@@ -3532,9 +3629,13 @@ namespace netDxf
             insert.Attributes.AddRange(attributes);
             insert.XData = xData;
 
+            if (blockName == null)
+                throw new NullReferenceException("The insert block name cannot be null.");
             if (isBlockEntity)
-                if (blockName != null) this.nestedBlocks.Add(insert, blockName);
-                
+                this.nestedBlocks.Add(insert, blockName);
+            else
+                this.blockRefs[blockName].Add(insert);
+
             return insert;
         }
 
@@ -4206,6 +4307,8 @@ namespace netDxf
             text.Alignment = alignment;
             text.XData = xData;
 
+            this.textStyleRefs[text.Style.Name].Add(text);
+
             return text;
         }
 
@@ -4317,7 +4420,7 @@ namespace netDxf
                 }
             }
 
-            return new MText(text, insertionPoint, height, rectangleWidth, style)
+            MText mText = new MText(text, insertionPoint, height, rectangleWidth, style)
                               {
                                   LineSpacingFactor = lineSpacing,
                                   AttachmentPoint = attachmentPoint,
@@ -4328,7 +4431,8 @@ namespace netDxf
                                   XData = xData
                               };
 
-
+            this.textStyleRefs[style.Name].Add(mText);
+            return mText;
         }
 
         private Hatch ReadHatch()
@@ -5116,6 +5220,7 @@ namespace netDxf
                                         Handle = handle
                                     };
 
+            this.imageDefRefs.Add(imageDef.Name, new List<DxfObject>());
             this.imgDefHandles.Add(imageDef.Handle, imageDef);
             return imageDef;
         }
@@ -5208,7 +5313,9 @@ namespace netDxf
                         break;
                 }
             }
+            if (string.IsNullOrEmpty(name)) return null;
 
+            this.mlineStyleRefs.Add(name, new List<DxfObject>());
             MLineStyle style = new MLineStyle(name, description)
                                    {
                                        Handle = handle,
@@ -5218,6 +5325,11 @@ namespace netDxf
                                        EndAngle = endAngle,
                                        Elements = elements
                                    };
+
+            foreach (MLineStyleElement e in elements)
+            {
+                this.lineTypeRefs[e.LineType.Name].Add(style);
+            }   
 
             return style;
         }
@@ -5413,14 +5525,14 @@ namespace netDxf
 
         private ApplicationRegistry GetApplicationRegistry(string name)
         {
-            if (this.appIds.ContainsKey(name))
-                return this.appIds[name];
+            if (this.appRegistries.ContainsKey(name))
+                return this.appRegistries[name];
 
             // if an entity references a table object not defined in the tables section a new one will be created
             ApplicationRegistry appReg = new ApplicationRegistry(name);
             int numHandle = appReg.AsignHandle(Convert.ToInt32(this.HeaderVariables.HandleSeed, 16));
             this.headerVariables.HandleSeed = Convert.ToString(numHandle, 16);
-            this.appIds.Add(name, appReg);
+            this.appRegistries.Add(name, appReg);
             return appReg;
         }
 
@@ -5442,6 +5554,7 @@ namespace netDxf
             int numHandle = layer.AsignHandle(Convert.ToInt32(this.HeaderVariables.HandleSeed, 16));
             this.headerVariables.HandleSeed = Convert.ToString(numHandle, 16);
             this.layers.Add(name, layer);
+            this.layerRefs.Add(name, new List<DxfObject>());
             return layer;
         }
 
@@ -5455,6 +5568,7 @@ namespace netDxf
             int numHandle = lineType.AsignHandle(Convert.ToInt32(this.HeaderVariables.HandleSeed, 16));
             this.headerVariables.HandleSeed = Convert.ToString(numHandle, 16);
             this.lineTypes.Add(name, lineType);
+            this.lineTypeRefs.Add(name, new List<DxfObject>());
             return lineType;
         }
 
@@ -5468,6 +5582,7 @@ namespace netDxf
             int numHandle = textStyle.AsignHandle(Convert.ToInt32(this.HeaderVariables.HandleSeed, 16));
             this.headerVariables.HandleSeed = Convert.ToString(numHandle, 16);
             this.textStyles.Add(name, textStyle);
+            this.textStyleRefs.Add(name, new List<DxfObject>());
             return textStyle;
         }
 
@@ -5492,20 +5607,22 @@ namespace netDxf
             int numHandle = dimStyle.AsignHandle(Convert.ToInt32(this.HeaderVariables.HandleSeed, 16));
             this.headerVariables.HandleSeed = Convert.ToString(numHandle, 16);
             this.dimStyles.Add(name, dimStyle);
+            this.dimStyleRefs.Add(name, new List<DxfObject>());
             return dimStyle;
         }
 
         private MLineStyle GetMLineStyle(string name)
         {
-            if (this.mLineStyles.ContainsKey(name))
-                return this.mLineStyles[name];
+            if (this.mlineStyles.ContainsKey(name))
+                return this.mlineStyles[name];
 
             // if an entity references a table object not defined in the tables section a new one will be created
             MLineStyle mlineStyle = new MLineStyle(name);
             mlineStyle.Elements[0].LineType = GetLineType(mlineStyle.Elements[0].LineType.Name);
             int numHandle = mlineStyle.AsignHandle(Convert.ToInt32(this.HeaderVariables.HandleSeed, 16));
             this.headerVariables.HandleSeed = Convert.ToString(numHandle, 16);
-            this.mLineStyles.Add(name, mlineStyle);
+            this.mlineStyles.Add(name, mlineStyle);
+            this.mlineStyleRefs.Add(name, new List<DxfObject>());
             return mlineStyle;
         }
 

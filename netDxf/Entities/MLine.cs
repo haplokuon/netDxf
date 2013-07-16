@@ -177,13 +177,13 @@ namespace netDxf.Entities
         /// </summary>
         public double Scale
         {
-            get { return scale; }
+            get { return this.scale; }
             set
             {
                 // AutoCad accepts negative scales, but it is not recommended
                 //if (value <= 0)
                 //    throw new ArgumentOutOfRangeException("value", value, "The MLine scale must be greater than zero.");
-                scale = value;
+                this.scale = value;
             }
         }
 
@@ -192,14 +192,14 @@ namespace netDxf.Entities
         /// </summary>
         public bool IsClosed
         {
-            get { return isClosed; }
+            get { return this.isClosed; }
             set
             {
                 if((this.flags & MLineFlags.Closed) == MLineFlags.Closed)
                     this.flags -= MLineFlags.Closed;
                 if (value) 
                     this.flags |= MLineFlags.Closed;
-                isClosed = value;
+                this.isClosed = value;
             }
         }
 
@@ -208,14 +208,14 @@ namespace netDxf.Entities
         /// </summary>
         public bool NoStartCaps
         {
-            get { return noStartCaps; }
+            get { return this.noStartCaps; }
             set
             {
                 if ((this.flags & MLineFlags.NoStartCaps) == MLineFlags.NoStartCaps)
                     this.flags -= MLineFlags.NoStartCaps;
                 if (value)
                     this.flags |= MLineFlags.NoStartCaps;
-                noStartCaps = value;
+                this.noStartCaps = value;
             }
         }
 
@@ -224,14 +224,14 @@ namespace netDxf.Entities
         /// </summary>
         public bool NoEndCaps
         {
-            get { return noEndCaps; }
+            get { return this.noEndCaps; }
             set
             {
                 if ((this.flags & MLineFlags.NoEndCaps) == MLineFlags.NoEndCaps)
                     this.flags -= MLineFlags.NoEndCaps;
                 if (value)
                     this.flags |= MLineFlags.NoEndCaps;
-                noEndCaps = value;
+                this.noEndCaps = value;
             }
         }
 
@@ -240,8 +240,8 @@ namespace netDxf.Entities
         /// </summary>
         public MLineJustification Justification
         {
-            get { return justification; }
-            set { justification = value; }
+            get { return this.justification; }
+            set { this.justification = value; }
         }
 
         /// <summary>
@@ -249,12 +249,12 @@ namespace netDxf.Entities
         /// </summary>
         public MLineStyle Style
         {
-            get { return style; }
+            get { return this.style; }
             set
             {
                 if (value == null)
                     throw new ArgumentNullException("value", "The MLine style cannot be null.");
-                style = value;
+                this.style = value;
             }
         }
 
@@ -267,7 +267,7 @@ namespace netDxf.Entities
         /// </summary>
         internal MLineFlags Flags
         {
-            get { return flags; }
+            get { return this.flags; }
         }
 
         #endregion
@@ -338,7 +338,7 @@ namespace netDxf.Entities
                         mitter = MathHelper.Transform(dir, this.style.StartAngle * MathHelper.DegToRad, MathHelper.CoordinateSystem.Object, MathHelper.CoordinateSystem.World);
 
                 }
-                else if (i + 1 == vertexes.Count)
+                else if (i + 1 == this.vertexes.Count)
                 {
                     if (this.isClosed)
                     {
@@ -403,9 +403,47 @@ namespace netDxf.Entities
             {
                 this.vertexes.Add(new MLineVertex(point, Vector2.Zero, Vector2.Zero, null));
             }
-            CalculateVertexesInfo();
+            this.CalculateVertexesInfo();
         }
         
         #endregion
+
+        #region overrides
+
+        /// <summary>
+        /// Creates a new MLine that is a copy of the current instance.
+        /// </summary>
+        /// <returns>A new MLine that is a copy of this instance.</returns>
+        public override object Clone()
+        {
+            List<MLineVertex> copyVertexes = new List<MLineVertex>();
+            foreach (MLineVertex vertex in this.vertexes)
+            {
+                copyVertexes.Add((MLineVertex)vertex.Clone());
+            }
+            return new MLine
+            {
+                //EntityObject properties
+                Color = this.color,
+                Layer = this.layer,
+                LineType = this.lineType,
+                Lineweight = this.lineweight,
+                LineTypeScale = this.lineTypeScale,
+                Normal = this.normal,
+                XData = this.xData,
+                //MLine properties
+                Vertexes = copyVertexes,
+                Elevation = this.elevation,
+                Scale = this.scale,
+                IsClosed = this.isClosed,
+                NoStartCaps = this.noStartCaps,
+                NoEndCaps = this.noEndCaps,
+                Justification = this.justification,
+                Style = this.style
+            };
+        }
+
+        #endregion
+
     }
 }

@@ -198,6 +198,7 @@ namespace netDxf.Entities
             get
             {
                 HatchPattern pattern = new HatchPattern(PredefinedHatchPatternName.Net, "Horizontal / vertical grid");
+
                 HatchPatternLineDefinition lineDefinition = new HatchPatternLineDefinition
                                                                 {
                                                                     Angle = 0,
@@ -290,15 +291,15 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets or sets the pattern angle between 0 and 360 degrees.
+        /// Gets or sets the pattern angle.
         /// </summary>
         public double Angle
         {
             get { return angle; }
             set
             {
-                if (value < 0 || value > 360)
-                    throw new ArgumentOutOfRangeException("value", value.ToString(Thread.CurrentThread.CurrentCulture), "The angle must be between 0 and 360 degrees");
+                //if (value < 0 || value > 360)
+                //    throw new ArgumentOutOfRangeException("value", value.ToString(Thread.CurrentThread.CurrentCulture), "The angle must be between 0 and 360 degrees");
                 angle = value;
             }
         }

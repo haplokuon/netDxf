@@ -22,13 +22,16 @@
 
 namespace netDxf.Tables
 {
-    internal class View :
+    internal class Viewport :
         TableObject
     {
         #region private fields
 
         private Vector2 lowerLeftCorner = Vector2.Zero;
-        private Vector2 upperRightCorner = new Vector2(1.0, 1.0);
+        private Vector2 upperRightCorner = new Vector2(1, 1);
+        private Vector2 snapBasePoint = Vector2.Zero;
+        private Vector2 snapSpacing = new Vector2(0.5f, 0.5f);
+        private Vector2 gridSpacing = new Vector2(10, 10);
         private Vector3 target = Vector3.Zero;
         private Vector3 camera = Vector3.UnitZ;
 
@@ -36,9 +39,9 @@ namespace netDxf.Tables
 
         #region constants
 
-        internal static View Default
+        public static Viewport Active
         {
-            get { return new View("Default"); }
+            get { return new Viewport("*Active"); }
         }
 
         #endregion
@@ -46,10 +49,10 @@ namespace netDxf.Tables
         #region constructors
 
         /// <summary>
-        /// Initializes a new instance of the <c>View</c> class.
+        /// Initializes a new instance of the <c>ViewPort</c> class.
         /// </summary>
-        public View(string name)
-            : base(name, DxfObjectCode.View)
+        public Viewport(string name)
+            : base(name, DxfObjectCode.ViewPort)
         {
         }
 
@@ -67,6 +70,24 @@ namespace netDxf.Tables
         {
             get { return this.upperRightCorner; }
             set { this.upperRightCorner = value; }
+        }
+
+        public Vector2 SnapBasePoint
+        {
+            get { return this.snapBasePoint; }
+            set { this.snapBasePoint = value; }
+        }
+
+        public Vector2 SnapSpacing
+        {
+            get { return this.snapSpacing; }
+            set { this.snapSpacing = value; }
+        }
+
+        public Vector2 GridSpacing
+        {
+            get { return this.gridSpacing; }
+            set { this.gridSpacing = value; }
         }
 
         public Vector3 Target

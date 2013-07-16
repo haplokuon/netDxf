@@ -118,6 +118,15 @@ namespace netDxf.Entities
         #region public properties
 
         /// <summary>
+        /// Gets or sets Text <see cref="Vector2">position</see> in world coordinates.
+        /// </summary>
+        public Vector3 Position
+        {
+            get { return this.position; }
+            set { this.position = value; }
+        }
+
+        /// <summary>
         /// Gets or sets the text rotation.
         /// </summary>
         public double Rotation
@@ -164,24 +173,6 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets or sets the <see cref="TextStyle">text style</see>.
-        /// </summary>
-        public TextStyle Style
-        {
-            get { return this.style; }
-            set { this.style = value; }
-        }
-
-        /// <summary>
-        /// Gets or sets Text <see cref="Vector2">position</see> in world coordinates.
-        /// </summary>
-        public Vector3 Position
-        {
-            get { return this.position; }
-            set { this.position = value; }
-        }
-
-        /// <summary>
         /// Gets or sets the text alignment.
         /// </summary>
         public TextAlignment Alignment
@@ -191,12 +182,53 @@ namespace netDxf.Entities
         }
 
         /// <summary>
+        /// Gets or sets the <see cref="TextStyle">text style</see>.
+        /// </summary>
+        public TextStyle Style
+        {
+            get { return this.style; }
+            set { this.style = value; }
+        }
+
+        /// <summary>
         /// Gets or sets the text string.
         /// </summary>
         public string Value
         {
             get { return this.value; }
             set { this.value = value; }
+        }
+
+        #endregion
+
+        #region overrides
+
+        /// <summary>
+        /// Creates a new Text that is a copy of the current instance.
+        /// </summary>
+        /// <returns>A new Text that is a copy of this instance.</returns>
+        public override object Clone()
+        {
+            return new Text
+            {
+                //EntityObject properties
+                Color = this.color,
+                Layer = this.layer,
+                LineType = this.lineType,
+                Lineweight = this.lineweight,
+                LineTypeScale = this.lineTypeScale,
+                Normal = this.normal,
+                XData = this.xData,
+                //Text properties
+                Position = this.position,
+                Rotation = this.rotation,
+                Height = this.height,
+                WidthFactor = this.widthFactor,
+                ObliqueAngle = this.obliqueAngle,
+                Alignment = this.alignment,
+                Style = this.style,
+                Value = this.value
+            };
         }
 
         #endregion

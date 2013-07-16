@@ -145,6 +145,10 @@ namespace netDxf.Tables
         public LineType(string name, string description = null)
             : base(name, DxfObjectCode.LineType)
         {
+            this.reserved = name.Equals("ByLayer", StringComparison.InvariantCultureIgnoreCase) ||
+                            name.Equals("ByBlock", StringComparison.InvariantCultureIgnoreCase) ||
+                            name.Equals("Continuous", StringComparison.InvariantCultureIgnoreCase);
+
             this.description = description;
             this.segments = new List<double>();
         }

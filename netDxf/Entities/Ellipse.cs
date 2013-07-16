@@ -40,7 +40,6 @@ namespace netDxf.Entities
         private double startAngle;
         private double endAngle;
         private double thickness;
-        private int curvePoints;
 
         #endregion
 
@@ -62,7 +61,6 @@ namespace netDxf.Entities
             this.startAngle = 0.0;
             this.endAngle = 360.0;
             this.rotation = 0.0;
-            this.curvePoints = 30;
             this.thickness = 0.0;
         }
 
@@ -79,7 +77,7 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Initializes a new instance of the <c>ellipse</c> class.
+        /// Initializes a new instance of the <c>Ellipse</c> class.
         /// </summary>
         public Ellipse()
             : this(Vector3.Zero, 1.0, 0.5)
@@ -156,15 +154,6 @@ namespace netDxf.Entities
         {
             get { return this.endAngle; }
             set { this.endAngle = value; }
-        }
-
-        /// <summary>
-        /// Gets or sets the number of points generated along the ellipse during the conversion to a polyline.
-        /// </summary>
-        public int CurvePoints
-        {
-            get { return this.curvePoints; }
-            set { this.curvePoints = value; }
         }
 
         /// <summary>
@@ -324,6 +313,37 @@ namespace netDxf.Entities
                 }
             }
             return points;
+        }
+
+        #endregion
+
+        #region overrides
+
+        /// <summary>
+        /// Creates a new Ellipse that is a copy of the current instance.
+        /// </summary>
+        /// <returns>A new Ellipse that is a copy of this instance.</returns>
+        public override object Clone()
+        {
+            return new Ellipse
+            {
+                //EntityObject properties
+                Color = this.color,
+                Layer = this.layer,
+                LineType = this.lineType,
+                Lineweight = this.lineweight,
+                LineTypeScale = this.lineTypeScale,
+                Normal = this.normal,
+                XData = this.xData,
+                //Ellipse properties
+                Center = this.center,
+                MajorAxis = this.majorAxis,
+                MinorAxis = this.minorAxis,
+                Rotation = this.rotation,
+                StartAngle = this.startAngle,
+                EndAngle = this.endAngle,
+                Thickness = this.thickness
+            };
         }
 
         #endregion

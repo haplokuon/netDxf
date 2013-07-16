@@ -1,7 +1,7 @@
-﻿#region netDxf, Copyright(C) 2009 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf, Copyright(C) 2013 Daniel Carvajal, Licensed under LGPL.
 
 //                        netDxf library
-// Copyright (C) 2009 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2013 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -20,6 +20,8 @@
 
 #endregion
 
+using System;
+
 namespace netDxf.Tables
 {
 
@@ -30,6 +32,18 @@ namespace netDxf.Tables
         TableObject
     {
 
+        #region constants
+
+        /// <summary>
+        /// Gets the default application registry.
+        /// </summary>
+        internal static ApplicationRegistry Default
+        {
+            get { return new ApplicationRegistry("ACAD"); }
+        }
+
+        #endregion
+
         #region constructors
 
         /// <summary>
@@ -39,18 +53,7 @@ namespace netDxf.Tables
         public ApplicationRegistry(string name)
             : base(name, DxfObjectCode.AppId)
         {
-        }
-
-        #endregion
-
-        #region constants
-
-        /// <summary>
-        /// Gets the default application registry.
-        /// </summary>
-        internal static ApplicationRegistry Default
-        {
-            get { return new ApplicationRegistry("ACAD"); }
+            this.reserved = name.Equals("ACAD", StringComparison.InvariantCultureIgnoreCase);
         }
 
         #endregion

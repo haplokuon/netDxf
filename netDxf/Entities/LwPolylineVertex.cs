@@ -27,7 +27,8 @@ namespace netDxf.Entities
     /// <summary>
     /// Represents a <see cref="LwPolyline">LwPolyline</see> vertex.
     /// </summary>
-    public class LwPolylineVertex
+    public class LwPolylineVertex :
+        ICloneable
     {
         #region private fields
 
@@ -129,6 +130,21 @@ namespace netDxf.Entities
         public override string ToString()
         {
             return String.Format("{0}: ({1})", "LwPolylineVertex", this.location);
+        }
+
+        /// <summary>
+        /// Creates a new LwPolylineVertex that is a copy of the current instance.
+        /// </summary>
+        /// <returns>A new LwPolylineVertex that is a copy of this instance.</returns>
+        public object Clone()
+        {
+            return new LwPolylineVertex
+                {
+                    Location = this.location,
+                    Bulge = this.bulge,
+                    BeginWidth = this.beginWidth,
+                    EndWidth = this.endWidth
+                };
         }
 
         #endregion

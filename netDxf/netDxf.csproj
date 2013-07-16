@@ -69,8 +69,23 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AciColor.cs" />
+    <Compile Include="Blocks\Block.cs" />
     <Compile Include="Blocks\BlockEnd.cs" />
+    <Compile Include="Blocks\BlockRecord.cs" />
     <Compile Include="Blocks\BlockTypeFlags.cs" />
+    <Compile Include="Collections\ApplicationRegistries.cs" />
+    <Compile Include="Collections\BlockRecords.cs" />
+    <Compile Include="Collections\DimensionStyles.cs" />
+    <Compile Include="Collections\ImageDefinitions.cs" />
+    <Compile Include="Collections\Layers.cs" />
+    <Compile Include="Collections\LineTypes.cs" />
+    <Compile Include="Collections\MLineStyles.cs" />
+    <Compile Include="Collections\TableObjects.cs" />
+    <Compile Include="Collections\TextStyles.cs" />
+    <Compile Include="Objects\ImageDef.cs" />
+    <Compile Include="Objects\ImageDefReactor.cs" />
+    <Compile Include="Objects\MLineStyle.cs" />
+    <Compile Include="Objects\MLineStyleElement.cs" />
     <Compile Include="CodeValuePair.cs" />
     <Compile Include="Entities\AlignedDimension.cs" />
     <Compile Include="Entities\Angular3PointDimension.cs" />
@@ -115,11 +130,7 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Objects\Group.cs" />
-    <Compile Include="Objects\ImageDef.cs" />
-    <Compile Include="Objects\ImageDefReactor.cs" />
-    <Compile Include="Objects\MLineStyle.cs" />
     <Compile Include="Objects\RasterVariables.cs" />
-    <Compile Include="Objects\MLineStyleElement.cs" />
     <Compile Include="Vector2.cs" />
     <Compile Include="Vector3.cs" />
     <Compile Include="Matrix3.cs" />
@@ -133,10 +144,9 @@
     <Compile Include="SubclassMarker.cs" />
     <Compile Include="Symbols.cs" />
     <Compile Include="Tables\ApplicationRegistry.cs" />
-    <Compile Include="Tables\BlockRecord.cs" />
     <Compile Include="Tables\View.cs" />
     <Compile Include="Tables\DimensionStyle.cs" />
-    <Compile Include="Tables\ViewPort.cs" />
+    <Compile Include="Tables\Viewport.cs" />
     <Compile Include="Entities\TextAligment.cs" />
     <Compile Include="DxfDocument.cs" />
     <Compile Include="DxfException.cs" />
@@ -154,7 +164,6 @@
     <Compile Include="Entities\EntityObject.cs" />
     <Compile Include="Entities\Insert.cs" />
     <Compile Include="Entities\Line.cs" />
-    <Compile Include="Blocks\Block.cs" />
     <Compile Include="Entities\Circle.cs" />
     <Compile Include="Entities\Face3d.cs" />
     <Compile Include="Entities\PolyfaceMesh.cs" />

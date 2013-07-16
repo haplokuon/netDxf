@@ -42,9 +42,9 @@ namespace netDxf.Entities
 
         #region constructors
 
-        internal MLineVertex(Vector2 position, Vector2 direction, Vector2 miter, List<double>[] distances)
+        internal MLineVertex(Vector2 location, Vector2 direction, Vector2 miter, List<double>[] distances)
         {
-            this.location = position;
+            this.location = location;
             this.direction = direction;
             this.miter = miter;
             this.distances = distances;
@@ -114,6 +114,21 @@ namespace netDxf.Entities
         public override string ToString()
         {
             return String.Format("{0}: ({1})", "MLineVertex", this.location);
+        }
+
+        /// <summary>
+        /// Creates a new MLineVertex that is a copy of the current instance.
+        /// </summary>
+        /// <returns>A new MLineVertex that is a copy of this instance.</returns>
+        public object Clone()
+        {
+            List<double>[] copyDistances = new List<double>[this.distances.Length];
+            for (int j = 0; j < this.distances.Length; j++)
+            {
+                copyDistances[j] = new List<double>();
+                copyDistances[j].AddRange(this.distances[j]);
+            }
+            return new MLineVertex(this.location, this.direction, this.miter, copyDistances);
         }
 
         #endregion

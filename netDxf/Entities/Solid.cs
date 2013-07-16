@@ -20,8 +20,6 @@
 
 #endregion
 
-using System;
-
 namespace netDxf.Entities
 {
     /// <summary>
@@ -129,6 +127,35 @@ namespace netDxf.Entities
         {
             get { return this.thickness; }
             set { this.thickness = value; }
+        }
+
+        #endregion
+
+        #region overrides
+
+        /// <summary>
+        /// Creates a new Solid that is a copy of the current instance.
+        /// </summary>
+        /// <returns>A new Solid that is a copy of this instance.</returns>
+        public override object Clone()
+        {
+            return new Solid
+            {
+                //EntityObject properties
+                Color = this.color,
+                Layer = this.layer,
+                LineType = this.lineType,
+                Lineweight = this.lineweight,
+                LineTypeScale = this.lineTypeScale,
+                Normal = this.normal,
+                XData = this.xData,
+                //Solid properties
+                FirstVertex = this.firstVertex,
+                SecondVertex = this.secondVertex,
+                ThirdVertex = this.thirdVertex,
+                FourthVertex = this.fourthVertex,
+                Thickness = this.thickness
+            };
         }
 
         #endregion

@@ -76,6 +76,7 @@ namespace netDxf.Tables
         {
             if (string.IsNullOrEmpty(font))
                 throw (new ArgumentNullException("font"));
+            this.reserved = name.Equals("Standard", StringComparison.InvariantCultureIgnoreCase);
             this.font = font;
             this.widthFactor = 1.0;
             this.obliqueAngle = 0.0;

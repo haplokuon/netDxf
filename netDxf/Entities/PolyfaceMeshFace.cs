@@ -36,7 +36,7 @@ namespace netDxf.Entities
     /// The maximum number of vertex indexes in a face is 4.
     /// </remarks>
     public class PolyfaceMeshFace :
-        DxfObject
+        DxfObject, ICloneable
     {
         #region private fields
 
@@ -114,6 +114,17 @@ namespace netDxf.Entities
         public override string ToString()
         {
             return "PolyfaceMeshFace";
+        }
+
+        /// <summary>
+        /// Creates a new PolyfaceMeshFace that is a copy of the current instance.
+        /// </summary>
+        /// <returns>A new PolyfaceMeshFace that is a copy of this instance.</returns>
+        public object Clone()
+        {
+            int[] copyVertexIndexes = new int[this.vertexIndexes.Length];
+            this.vertexIndexes.CopyTo(copyVertexIndexes, 0);
+            return new PolyfaceMeshFace(copyVertexIndexes);
         }
 
         #endregion

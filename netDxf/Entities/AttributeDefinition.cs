@@ -212,11 +212,23 @@ namespace netDxf.Entities
         /// </summary>
         public TextAlignment Alignment
         {
-            get { return alignment; }
-            set { alignment = value; }
+            get { return this.alignment; }
+            set { this.alignment = value; }
         }
 
         #endregion
 
+        #region overrides
+
+        /// <summary>
+        /// Creates a new AttributeDefinition that is a copy of the current instance.
+        /// </summary>
+        /// <returns>A new AttributeDefinition that is a copy of this instance.</returns>
+        public override object Clone()
+        {
+            return new InvalidOperationException("Attribute definition cannot be clonned.");
+        }
+
+        #endregion
     }
 }

@@ -124,6 +124,7 @@ namespace netDxf.Entities
         internal PolylineTypeFlags Flags
         {
             get { return this.flags; }
+            set { this.flags = value; }
         }   
 
         #endregion
@@ -316,6 +317,40 @@ namespace netDxf.Entities
         }
 
         #endregion
+
+        #region overrides
+
+        /// <summary>
+        /// Creates a new LwPolyline that is a copy of the current instance.
+        /// </summary>
+        /// <returns>A new LwPolyline that is a copy of this instance.</returns>
+        public override object Clone()
+        {
+            List<LwPolylineVertex> copyVertexes = new List<LwPolylineVertex>();
+            foreach (LwPolylineVertex vertex in this.vertexes)
+            {
+                copyVertexes.Add((LwPolylineVertex) vertex.Clone());
+            }
+            return new LwPolyline
+                {
+                    //EntityObject properties
+                    Color = this.color,
+                    Layer = this.layer,
+                    LineType = this.lineType,
+                    Lineweight = this.lineweight,
+                    LineTypeScale = this.lineTypeScale,
+                    Normal = this.normal,
+                    XData = this.xData,
+                    //LwPolyline properties
+                    Vertexes = copyVertexes,
+                    Elevation = this.elevation,
+                    Thickness = this.thickness,
+                    Flags = this.flags
+                };
+        }
+
+        #endregion
+
 
     }
 }

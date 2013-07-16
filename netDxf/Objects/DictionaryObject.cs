@@ -54,7 +54,6 @@ namespace netDxf.Objects
             this.entries = new Dictionary<string, string>();
         }
 
-        
         public string HandleToOwner
         {
             get { return handleToOwner; }

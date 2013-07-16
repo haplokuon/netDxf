@@ -1,4 +1,4 @@
-﻿#region netDxf, Copyright(C) 2013 Daniel Carvajal, Licensed under LGPL.
+#region netDxf, Copyright(C) 2013 Daniel Carvajal, Licensed under LGPL.
 
 //                        netDxf library
 // Copyright (C) 2013 Daniel Carvajal (haplokuon@gmail.com)
@@ -24,6 +24,7 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
+using netDxf.Tables;
 
 namespace netDxf.Objects
 {
@@ -78,11 +79,10 @@ namespace netDxf.Objects
     /// Represents a image definition.
     /// </summary>
     public class ImageDef :
-        DxfObject
+        TableObject
     {
         #region private fields
 
-        private readonly string name;
         private readonly string fileName;
         private readonly int width;
         private readonly int height;
@@ -122,7 +122,7 @@ namespace netDxf.Objects
         /// </para>
         /// </remarks>
         public ImageDef(string fileName, int width, float horizontalResolution, int height, float verticalResolution, ResolutionUnits units)
-            : this(fileName, width, horizontalResolution, height, verticalResolution, null, units)
+            : this(fileName, width, horizontalResolution, height, verticalResolution, Path.GetFileNameWithoutExtension(fileName), units)
         {
         }
 
@@ -151,7 +151,7 @@ namespace netDxf.Objects
         /// </para>
         /// </remarks>
         public ImageDef(string fileName, int width, float horizontalResolution, int height, float verticalResolution, string name, ResolutionUnits units)
-            : base(DxfObjectCode.ImageDef)
+            : base(name, DxfObjectCode.ImageDef)
         {
             if (string.IsNullOrEmpty(fileName))
                 throw new ArgumentNullException("fileName", "The image file name cannot be empty or null.");
@@ -159,8 +159,6 @@ namespace netDxf.Objects
             FileInfo info = new FileInfo(fileName);
             if (!info.Exists)
                 throw new FileNotFoundException("Image file not found", fileName);
-
-            this.name = string.IsNullOrEmpty(name) ? Path.GetFileNameWithoutExtension(fileName) : name;
 
             this.fileName = fileName;
             this.width = width;
@@ -197,7 +195,7 @@ namespace netDxf.Objects
         ///  </para>
         /// </remarks>
         public ImageDef(string fileName, ResolutionUnits units = ResolutionUnits.Centimeters)
-            : this(fileName, null, units)
+            : this(fileName, Path.GetFileNameWithoutExtension(fileName), units)
         {
         }
 
@@ -224,7 +222,7 @@ namespace netDxf.Objects
         ///  </para>
         /// </remarks>
         public ImageDef(string fileName, string name, ResolutionUnits units = ResolutionUnits.Centimeters)
-            : base(DxfObjectCode.ImageDef)
+            : base(name, DxfObjectCode.ImageDef)
         {
             if (string.IsNullOrEmpty(fileName))
                 throw new ArgumentNullException("fileName", "The image file name cannot be empty or null.");
@@ -232,8 +230,6 @@ namespace netDxf.Objects
             FileInfo info = new FileInfo(fileName);
             if (!info.Exists)
                 throw new FileNotFoundException("Image file not found", fileName);
-
-            this.name = string.IsNullOrEmpty(name) ? Path.GetFileNameWithoutExtension(fileName) : name;
 
             this.fileName = fileName;
 
@@ -278,14 +274,6 @@ namespace netDxf.Objects
         public string FileName
         {
             get { return fileName; }
-        }
-
-        /// <summary>
-        /// Gets the image definition name.
-        /// </summary>
-        public string Name
-        {
-            get { return name; }
         }
 
         /// <summary>

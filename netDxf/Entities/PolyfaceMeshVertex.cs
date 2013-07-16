@@ -28,7 +28,7 @@ namespace netDxf.Entities
     /// Represents a polyface mesh vertex. 
     /// </summary>
     public class PolyfaceMeshVertex :
-        DxfObject
+        DxfObject, ICloneable
     {
         #region private fields
 
@@ -101,6 +101,15 @@ namespace netDxf.Entities
         public override string ToString()
         {
             return String.Format("{0}: {1}", "PolyfaceMeshVertex", this.location);
+        }
+
+        /// <summary>
+        /// Creates a new PolyfaceMeshVertex that is a copy of the current instance.
+        /// </summary>
+        /// <returns>A new PolyfaceMeshVertex that is a copy of this instance.</returns>
+        public object Clone()
+        {
+            return new PolyfaceMeshVertex(this.location);
         }
 
         #endregion

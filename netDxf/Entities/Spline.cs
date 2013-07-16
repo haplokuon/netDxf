@@ -66,7 +66,7 @@ namespace netDxf.Entities
             this.controlPoints = controlPoints;
             this.knots = knots;
             this.degree = degree;
-            this.isPeriodic = PeriodicTest(controlPoints, degree);
+            this.isPeriodic = this.PeriodicTest(controlPoints, degree);
             if (this.isPeriodic)
             {
                 this.isClosed = true;
@@ -120,7 +120,7 @@ namespace netDxf.Entities
                 this.flags = this.isClosed ? SplineTypeFlags.Closed | SplineTypeFlags.Rational : SplineTypeFlags.Rational;
             }
 
-            Create(controlPoints); 
+            this.Create(controlPoints); 
         }
 
         #endregion
@@ -132,7 +132,7 @@ namespace netDxf.Entities
         /// </summary>
         public ReadOnlyCollection<SplineVertex> ControlPoints
         {
-            get { return controlPoints.AsReadOnly(); }
+            get { return this.controlPoints.AsReadOnly(); }
         }
 
         /// <summary>
@@ -140,7 +140,7 @@ namespace netDxf.Entities
         /// </summary>
         public short Degree
         {
-            get { return degree; }
+            get { return this.degree; }
         }
 
         /// <summary>
@@ -148,7 +148,7 @@ namespace netDxf.Entities
         /// </summary>
         public bool IsClosed
         {
-            get { return isClosed; }
+            get { return this.isClosed; }
         }
 
         /// <summary>
@@ -156,7 +156,7 @@ namespace netDxf.Entities
         /// </summary>
         public bool IsPeriodic
         {
-            get { return isPeriodic; }
+            get { return this.isPeriodic; }
         }
 
         /// <summary>
@@ -165,7 +165,7 @@ namespace netDxf.Entities
         /// <remarks>By default a uniform knot vector is created.</remarks>
         public double[] Knots
         {
-            get { return knots; }
+            get { return this.knots; }
         }
 
         #endregion
@@ -236,19 +236,51 @@ namespace netDxf.Entities
             {
                 int i;
                 for (i = 0; i <= this.degree; i++)
-                    knots[i] = 0.0;
+                    this.knots[i] = 0.0;
 
                 for (; i < numControlPoints; i++)
-                    knots[i] = (i - this.degree) * factor;
+                    this.knots[i] = (i - this.degree) * factor;
 
                 for (; i < numKnots; i++)
-                    knots[i] = 1;
+                    this.knots[i] = 1;
             }
             else
             {
                 for (int i = 0; i < numKnots; i++)
-                    knots[i] = (i - this.degree) * factor;
+                    this.knots[i] = (i - this.degree) * factor;
             }
+        }
+
+        #endregion
+
+        #region overrides
+
+        /// <summary>
+        /// Creates a new Spline that is a copy of the current instance.
+        /// </summary>
+        /// <returns>A new Spline that is a copy of this instance.</returns>
+        public override object Clone()
+        {
+            List<SplineVertex> copyControlPoints = new List<SplineVertex>();
+            foreach (SplineVertex vertex in this.controlPoints)
+            {
+                copyControlPoints.Add((SplineVertex) vertex.Clone());
+            }
+            double[] copyKnots = new double[this.knots.Length];
+            this.knots.CopyTo(copyKnots, 0);
+
+            return new Spline(copyControlPoints, copyKnots, this.degree)
+            {
+                //EntityObject properties
+                Color = this.color,
+                Layer = this.layer,
+                LineType = this.lineType,
+                Lineweight = this.lineweight,
+                LineTypeScale = this.lineTypeScale,
+                Normal = this.normal,
+                XData = this.xData,
+                //Spline properties
+            };
         }
 
         #endregion

@@ -226,12 +226,12 @@ namespace netDxf.Entities
         /// </remarks>
         public double LineSpacingFactor
         {
-            get { return lineSpacing; }
+            get { return this.lineSpacing; }
             set
             {
                 if(value<0.25 || value>4.0)
                     throw new ArgumentOutOfRangeException("value", value, "Valid values range from 0.25 to 4.00");
-                lineSpacing = value;
+                this.lineSpacing = value;
             }
         }
 
@@ -243,12 +243,12 @@ namespace netDxf.Entities
         /// </remarks>
         public double ParagraphHeightFactor
         {
-            get { return paragraphHeightFactor; }
+            get { return this.paragraphHeightFactor; }
             set
             {
                 if (value < 0.25 || value > 4.0)
                     throw new ArgumentOutOfRangeException("value", value, "Valid values range from 0.25 to 4.00");
-                paragraphHeightFactor = value;
+                this.paragraphHeightFactor = value;
             }
         }
 
@@ -257,8 +257,8 @@ namespace netDxf.Entities
         /// </summary>
         public MTextLineSpacingStyle LineSpacingStyle
         {
-            get { return lineSpacingStyle; }
-            set { lineSpacingStyle = value; }
+            get { return this.lineSpacingStyle; }
+            set { this.lineSpacingStyle = value; }
         }
 
         /// <summary>
@@ -270,8 +270,8 @@ namespace netDxf.Entities
         ///  </remarks>
         public double RectangleWidth
         {
-            get { return rectangleWidth; }
-            set { rectangleWidth = value; }
+            get { return this.rectangleWidth; }
+            set { this.rectangleWidth = value; }
         }
 
         /// <summary>
@@ -307,6 +307,7 @@ namespace netDxf.Entities
         public string Value
         {
             get { return this.value; }
+            internal set { this.value = value; }
         }
 
         #endregion
@@ -330,11 +331,46 @@ namespace netDxf.Entities
         /// </summary>
         public void EndParagraph()
         {
-            if(!MathHelper.IsOne(paragraphHeightFactor))
-                this.value += "{\\H" + paragraphHeightFactor + "x;}\\P";
+            if(!MathHelper.IsOne(this.paragraphHeightFactor))
+                this.value += "{\\H" + this.paragraphHeightFactor + "x;}\\P";
             else
                 this.value += "\\P";
         }
+
+        #endregion
+
+        #region overrides
+
+        /// <summary>
+        /// Creates a new MText that is a copy of the current instance.
+        /// </summary>
+        /// <returns>A new MText that is a copy of this instance.</returns>
+        public override object Clone()
+        {
+            return new MText
+                {
+                    //EntityObject properties
+                    Color = this.color,
+                    Layer = this.layer,
+                    LineType = this.lineType,
+                    Lineweight = this.lineweight,
+                    LineTypeScale = this.lineTypeScale,
+                    Normal = this.normal,
+                    XData = this.xData,
+                    //MText properties
+                    Position = this.position,
+                    Rotation = this.rotation,
+                    Height = this.height,
+                    LineSpacingFactor = this.lineSpacing,
+                    ParagraphHeightFactor = this.paragraphHeightFactor,
+                    LineSpacingStyle = this.lineSpacingStyle,
+                    RectangleWidth = this.rectangleWidth,
+                    AttachmentPoint = this.attachmentPoint,
+                    Style = this.style,
+                    Value = this.value
+                };
+        }
+
         #endregion
 
     }

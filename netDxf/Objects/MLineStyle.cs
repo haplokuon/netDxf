@@ -1,4 +1,4 @@
-﻿#region netDxf, Copyright(C) 2013 Daniel Carvajal, Licensed under LGPL.
+#region netDxf, Copyright(C) 2013 Daniel Carvajal, Licensed under LGPL.
 
 //                        netDxf library
 // Copyright (C) 2013 Daniel Carvajal (haplokuon@gmail.com)
@@ -78,6 +78,17 @@ namespace netDxf.Objects
         TableObject
     {
 
+        #region private fields
+
+        private MLineStyleFlags flags;
+        private string description;
+        private AciColor fillColor;
+        private double startAngle;
+        private double endAngle;
+        private List<MLineStyleElement> elements;
+
+        #endregion
+
         #region constants
 
         /// <summary>
@@ -87,17 +98,6 @@ namespace netDxf.Objects
         {
             get { return new MLineStyle("Standard"); }
         }
-
-        #endregion
-
-        #region private fields
-
-        private MLineStyleFlags flags;
-        private string description;
-        private AciColor fillColor;
-        private double startAngle;
-        private double endAngle;
-        private List<MLineStyleElement> elements;
 
         #endregion
 
@@ -112,6 +112,7 @@ namespace netDxf.Objects
         public MLineStyle(string name, string description = null)
             : base(name, DxfObjectCode.MLineStyle)
         {
+            this.reserved = name.Equals("Standard", StringComparison.InvariantCultureIgnoreCase);
             this.flags = MLineStyleFlags.None;
             this.description = description;
             this.fillColor = AciColor.ByLayer;

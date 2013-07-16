@@ -27,7 +27,9 @@ namespace netDxf.Entities
     /// <summary>
     /// Represents a control point of a <see cref="Spline">spline</see>.
     /// </summary>
-    public class SplineVertex
+    public class SplineVertex :
+        ICloneable
+
     {
         #region private fields
 
@@ -82,8 +84,8 @@ namespace netDxf.Entities
         /// </summary>
         public Vector3 Location
         {
-            get { return location; }
-            set { location = value; }
+            get { return this.location; }
+            set { this.location = value; }
         }
 
         /// <summary>
@@ -91,8 +93,8 @@ namespace netDxf.Entities
         /// </summary>
         public double Weigth
         {
-            get { return weigth; }
-            set { weigth = value; }
+            get { return this.weigth; }
+            set { this.weigth = value; }
         }
 
         #endregion
@@ -108,6 +110,14 @@ namespace netDxf.Entities
             return string.Format("{0}: ({1}) w={2}", "SplineVertex", this.Location, this.Weigth);
         }
 
+        /// <summary>
+        /// Creates a new Spline that is a copy of the current instance.
+        /// </summary>
+        /// <returns>A new Spline that is a copy of this instance.</returns>
+        public object Clone()
+        {
+            return new SplineVertex(this.location, this.weigth);
+        }
 
         /// <summary>
         /// Obtains a string that represents the spline vertex.

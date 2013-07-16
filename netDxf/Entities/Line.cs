@@ -30,8 +30,8 @@ namespace netDxf.Entities
     {
         #region private fields
 
-        private Vector3 startPoint;
-        private Vector3 endPoint;
+        private Vector3 start;
+        private Vector3 end;
         private double thickness;
 
         #endregion
@@ -64,8 +64,8 @@ namespace netDxf.Entities
         public Line(Vector3 startPoint, Vector3 endPoint) 
             : base(EntityType.Line, DxfObjectCode.Line)
         {
-            this.startPoint = startPoint;
-            this.endPoint = endPoint;
+            this.start = startPoint;
+            this.end = endPoint;
             this.thickness = 0.0;
         }
 
@@ -78,8 +78,8 @@ namespace netDxf.Entities
         /// </summary>
         public Vector3 StartPoint
         {
-            get { return this.startPoint; }
-            set { this.startPoint = value; }
+            get { return this.start; }
+            set { this.start = value; }
         }
 
         /// <summary>
@@ -87,8 +87,8 @@ namespace netDxf.Entities
         /// </summary>
         public Vector3 EndPoint
         {
-            get { return this.endPoint; }
-            set { this.endPoint = value; }
+            get { return this.end; }
+            set { this.end = value; }
         }
 
         /// <summary>
@@ -98,6 +98,33 @@ namespace netDxf.Entities
         {
             get { return this.thickness ; }
             set { this.thickness = value; }
+        }
+
+        #endregion
+
+        #region overrides
+
+        /// <summary>
+        /// Creates a new Line that is a copy of the current instance.
+        /// </summary>
+        /// <returns>A new Line that is a copy of this instance.</returns>
+        public override object Clone()
+        {
+            return new Line
+            {
+                //EntityObject properties
+                Color = this.color,
+                Layer = this.layer,
+                LineType = this.lineType,
+                Lineweight = this.lineweight,
+                LineTypeScale = this.lineTypeScale,
+                Normal = this.normal,
+                XData = this.xData,
+                //Line properties
+                StartPoint = this.start,
+                EndPoint = this.end,
+                Thickness = this.thickness,
+            };
         }
 
         #endregion
