@@ -20,26 +20,58 @@
 
 #endregion
 
+using System;
+
 namespace netDxf.Tables
 {
-    internal class View :
+    public enum Viewmode
+    {
+        /// <summary>
+        /// Turned off.
+        /// </summary>
+        Off = 0,
+        /// <summary>
+        /// Perspective view active.
+        /// </summary>
+        Perspective = 1,
+        /// <summary>
+        /// Front clipping on.
+        /// </summary>
+        FrontClippingPlane = 2,
+        /// <summary>
+        /// Back clipping on.
+        /// </summary>
+        BackClippingPlane = 4,
+        /// <summary>
+        /// UCS Follow mode on.
+        /// </summary>
+        UCSFollow = 8,
+        /// <summary>
+        /// Front clip not at eye. If on, the front clip distance (FRONTZ) determines the front clipping plane.
+        /// If off, FRONTZ is ignored, and the front clipping plane is set to pass through the camera point (vectors behind the camera are not displayed).
+        /// This flag is ignored if the front-clipping bit (2) is off.
+        /// </summary>
+        FrontClipNotAtEye = 16
+    }
+
+    public class View :
         TableObject
     {
         #region private fields
 
-        private Vector2 lowerLeftCorner = Vector2.Zero;
-        private Vector2 upperRightCorner = new Vector2(1.0, 1.0);
         private Vector3 target = Vector3.Zero;
         private Vector3 camera = Vector3.UnitZ;
+        private double height = 1.0;
+        private double width = 1.0;
+        private double rotation = 0.0;
+        private Viewmode viewmode = Viewmode.Off;
+        private double fov = 40.0;
+        private double frontClippingPlane = 0.0;
+        private double backClippingPlane = 0.0;
 
         #endregion
 
         #region constants
-
-        internal static View Default
-        {
-            get { return new View("Default"); }
-        }
 
         #endregion
 
@@ -49,25 +81,14 @@ namespace netDxf.Tables
         /// Initializes a new instance of the <c>View</c> class.
         /// </summary>
         public View(string name)
-            : base(name, DxfObjectCode.View)
+            : base(name, DxfObjectCode.View, true)
         {
+            this.reserved = false;
         }
 
         #endregion
 
         #region public properties
-
-        public Vector2 LowerLeftCorner
-        {
-            get { return this.lowerLeftCorner; }
-            set { this.lowerLeftCorner = value; }
-        }
-
-        public Vector2 UpperRightCorner
-        {
-            get { return this.upperRightCorner; }
-            set { this.upperRightCorner = value; }
-        }
 
         public Vector3 Target
         {
@@ -79,6 +100,48 @@ namespace netDxf.Tables
         {
             get { return this.camera; }
             set { this.camera = value; }
+        }
+
+        public double Height
+        {
+            get { return this.height; }
+            set { this.height = value; }
+        }
+
+        public double Width
+        {
+            get { return this.width; }
+            set { this.width = value; }
+        }
+
+        public double Rotation
+        {
+            get { return this.rotation; }
+            set { this.rotation = value; }
+        }
+
+        public Viewmode Viewmode
+        {
+            get { return this.viewmode; }
+            set { this.viewmode = value; }
+        }
+
+        public double Fov
+        {
+            get { return this.fov; }
+            set { this.fov = value; }
+        }
+
+        public double FrontClippingPlane
+        {
+            get { return this.frontClippingPlane; }
+            set { this.frontClippingPlane = value; }
+        }
+
+        public double BackClippingPlane
+        {
+            get { return this.backClippingPlane; }
+            set { this.backClippingPlane = value; }
         }
 
         #endregion

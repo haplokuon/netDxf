@@ -20,7 +20,6 @@
 
 #endregion
 
-using System;
 using System.Collections.Generic;
 using netDxf.Tables;
 
@@ -95,6 +94,17 @@ namespace netDxf.Collections
             this.references.Remove(style.Name);
             return this.list.Remove(style.Name);
 
+        }
+
+        /// <summary>
+        /// Removes a dimension style.
+        /// </summary>
+        /// <param name="style"><see cref="DimensionStyle">DimensionStyle</see> to remove from the document.</param>
+        /// <returns>True is the dimension style has been successfully removed, or false otherwise.</returns>
+        /// <remarks>Reserved dimension styles or any other referenced by objects cannot be removed.</remarks>
+        public override bool Remove(DimensionStyle style)
+        {
+            return Remove(style.Name);
         }
 
         #endregion

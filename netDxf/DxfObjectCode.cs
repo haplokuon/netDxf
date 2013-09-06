@@ -93,6 +93,16 @@ namespace netDxf
         public const string Line = "LINE";
 
         /// <summary>
+        /// Ray.
+        /// </summary>
+        public const string Ray = "RAY";
+
+        /// <summary>
+        /// XLine.
+        /// </summary>
+        public const string XLine = "XLINE";
+
+        /// <summary>
         /// Ellipse.
         /// </summary>
         public const string Ellipse = "ELLIPSE";

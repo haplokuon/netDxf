@@ -52,7 +52,7 @@ namespace netDxf.Blocks
         /// </summary>
         public static Block  ModelSpace
         {
-            get { return new Block("*Model_Space"); }
+            get { return new Block("*Model_Space", false); }
         }
 
         /// <summary>
@@ -60,20 +60,15 @@ namespace netDxf.Blocks
         /// </summary>
         public static Block PaperSpace
         {
-            get { return new Block("*Paper_Space"); }
+            get { return new Block("*Paper_Space", false); }
         }
 
         #endregion
 
         #region constructors
 
-        /// <summary>
-        /// Initializes a new instance of the <c>Block</c> class.
-        /// </summary>
-        /// <param name="name">Block name.</param>
-        /// <remarks>Do not give names starting with * to block definitions, they are reserved for internal use.</remarks>
-        public Block(string name)
-            : base (name, DxfObjectCode.Block)
+        internal Block(string name, bool checkName)
+            : base (name, DxfObjectCode.Block, checkName)
         {
             this.reserved = name.Equals("*Model_Space", StringComparison.InvariantCultureIgnoreCase) ||
                             name.Equals("*Paper_Space", StringComparison.InvariantCultureIgnoreCase);
@@ -83,6 +78,15 @@ namespace netDxf.Blocks
             this.entities = new List<EntityObject>();
             this.record = new BlockRecord(name);
             this.end = new BlockEnd(this.layer);          
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <c>Block</c> class.
+        /// </summary>
+        /// <param name="name">Block name.</param>
+        public Block(string name)
+            : this (name, true)
+        {
         }
 
         #endregion

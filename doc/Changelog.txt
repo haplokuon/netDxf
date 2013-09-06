@@ -1,7 +1,22 @@
+[0.6.0 - 2013/09/06]
++ Added Ray entity.
++ Added XLine entity (aka construction line).
++ Added UCS (user coordinate system) table object.
++ Added method Remove(T tableObject) to TableObjects.
++ Added check for not supported characters in table object names. The following characters are not allowed \<>/?":;*|,=`
++ Group now derives from TableObject.
++ Added Groups class derived from TableObjects to control the dxf document groups.
++ Added two methods to the Groups class, Remove deletes the group and the grouped entities and Ungroup deletes the group while keeping the entities in the document.
++ Added IsByLayer and IsByBlock bool properties to AciColor.
++ (fixed) Read Dimension when it was part of a block.
++ (fixed) Read line weight applied to layers.
++ (fixed) Issue Id #12000 Empty font name throw exception. Added workaround dxf files that have empty or null font names on TextStyle definitions.
++ (fixed) Issue Id #12126 Scaled and rotated hatch patterns. Pattern line definition origin needed to be transformed.
+
 [0.5.0 - 2013/07/16]
 + Lots of changes on how the document handles the tables, check the samples or ask in the forum in case of doubt.
 + Added TableObjects class and derivatives for application registries, blocks, dimension styles, layers, line types, multiline styles, text styles, and image definitions collections to uniform its behaviour.
-+ Added Remove and Purge methods for table objects. Now it is possible to clean the document from empty layers, blocks without references,...
++ Added Remove and Clear methods for table objects. Now it is possible to clean the document from empty layers, blocks without references,...
 + Added GetReferences method for table objects. Now it is possible to get the list of dxf objects that make use of a particular layer, block,...
 + Added CreateWCSBoundary method for hatches, it will generate a list of entities that makes the hatch boundaries expressed in world coordinates.
 + Entities implement IClonable interface.

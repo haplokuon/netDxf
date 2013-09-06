@@ -20,6 +20,8 @@
 
 #endregion
 
+using System;
+
 namespace netDxf.Tables
 {
     internal class Viewport :
@@ -41,19 +43,25 @@ namespace netDxf.Tables
 
         public static Viewport Active
         {
-            get { return new Viewport("*Active"); }
+            get { return new Viewport("*Active", false); }
         }
 
         #endregion
 
         #region constructors
 
+        internal Viewport(string name, bool checkName)
+            : base(name, DxfObjectCode.ViewPort, checkName)
+        {
+            this.reserved = name.Equals("*Active", StringComparison.InvariantCultureIgnoreCase);
+        }
+
         /// <summary>
-        /// Initializes a new instance of the <c>ViewPort</c> class.
+        /// Initializes a new instance of the <c>Viewport</c> class.
         /// </summary>
         public Viewport(string name)
-            : base(name, DxfObjectCode.ViewPort)
-        {
+            : this(name, true)
+        {          
         }
 
         #endregion

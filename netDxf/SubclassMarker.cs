@@ -38,6 +38,7 @@ namespace netDxf
         public const string MLineStyle = "AcDbMlineStyle";
         public const string DimensionStyleTable = "AcDbDimStyleTable";
         public const string DimensionStyle = "AcDbDimStyleTableRecord";
+        public const string Ucs = "AcDbUCSTableRecord";
         public const string Dimension = "AcDbDimension";
         public const string AlignedDimension = "AcDbAlignedDimension";
         public const string LinearDimension = "AcDbRotatedDimension";
@@ -57,6 +58,8 @@ namespace netDxf
         public const string Face3d = "AcDbFace";
         public const string Insert = "AcDbBlockReference";
         public const string Line = "AcDbLine";
+        public const string Ray = "AcDbRay";
+        public const string XLine = "AcDbXline";
         public const string MLine = "AcDbMline";
         public const string Point = "AcDbPoint";
         public const string Vertex = "AcDbVertex";

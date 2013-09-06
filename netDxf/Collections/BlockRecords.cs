@@ -132,6 +132,17 @@ namespace netDxf.Collections
 
         }
 
+        /// <summary>
+        /// Removes a block.
+        /// </summary>
+        /// <param name="block"><see cref="Block">Block</see> to remove from the document.</param>
+        /// <returns>True is the block has been successfully removed, or false otherwise.</returns>
+        /// <remarks>Reserved blocks or any other referenced by objects cannot be removed.</remarks>
+        public override bool Remove(Block block)
+        {
+            return Remove(block.Name);
+        }
+
         #endregion
 
     }

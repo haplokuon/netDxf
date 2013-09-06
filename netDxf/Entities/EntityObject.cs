@@ -129,7 +129,19 @@ namespace netDxf.Entities
         /// <summary>
         /// A raster image entity.
         /// </summary>
-        Image
+        Image,
+
+        /// <summary>
+        /// Ray entity.
+        /// </summary>
+        Ray,
+
+
+        /// <summary>
+        /// XLine entity.
+        /// </summary>
+        XLine
+
     }
     
     /// <summary>
@@ -267,10 +279,10 @@ namespace netDxf.Entities
             get { return this.normal; }
             set
             {
-                if (Vector3.Zero == value)
+                if (value == Vector3.Zero)
                     throw new ArgumentNullException("value", "The normal can not be the zero vector.");
-                value.Normalize();
                 this.normal = value;
+                this.normal.Normalize();
             }
         }
 

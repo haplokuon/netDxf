@@ -103,6 +103,17 @@ namespace netDxf.Collections
 
         }
 
+        /// <summary>
+        /// Removes a multiline style.
+        /// </summary>
+        /// <param name="style"><see cref="MLineStyle">MLineStyle</see> to remove from the document.</param>
+        /// <returns>True is the multiline style has been successfully removed, or false otherwise.</returns>
+        /// <remarks>Reserved multiline styles or any other referenced by objects cannot be removed.</remarks>
+        public override bool Remove(MLineStyle style)
+        {
+            return Remove(style.Name);
+        }
+
         #endregion
 
     }

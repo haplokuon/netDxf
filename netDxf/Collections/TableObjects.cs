@@ -23,7 +23,6 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using netDxf.Tables;
 
 namespace netDxf.Collections
@@ -189,17 +188,6 @@ namespace netDxf.Collections
         /// if not it will return the new table object.
         /// </returns>
         public abstract T Add(T tableObject);
-        //{
-        //    T add;
-        //    if (this.list.TryGetValue(tableObject.Name, out add))
-        //        return add;
-
-        //    this.document.NumHandles = tableObject.AsignHandle(this.document.NumHandles);
-        //    this.list.Add(tableObject.Name, tableObject);
-        //    this.references.Add(tableObject.Name, new List<DxfObject>());
-
-        //    return tableObject;
-        //}
 
         /// <summary>
         /// Removes a table object.
@@ -208,23 +196,14 @@ namespace netDxf.Collections
         /// <returns>True is the table object has been successfully removed, or false otherwise.</returns>
         /// <remarks>Reserved table objects or any other referenced by objects cannot be removed.</remarks>
         public abstract bool Remove(string name);
-        //{
-        //    T tableObject = this[name];
 
-        //    if (tableObject == null)
-        //        return false;
-
-        //    if (tableObject.IsReserved)
-        //        return false;
-
-        //    if (this.references[tableObject.Name].Count != 0)
-        //        return false;
-
-        //    this.references.Remove(tableObject.Name);
-        //    return this.list.Remove(tableObject.Name);
-
-        //}
-
+        /// <summary>
+        /// Removes a table object.
+        /// </summary>
+        /// <param name="tableObject"><see cref="TableObject">Table object</see> to remove from the document.</param>
+        /// <returns>True is the table object has been successfully removed, or false otherwise.</returns>
+        /// <remarks>Reserved table objects or any other referenced by objects cannot be removed.</remarks>
+        public abstract bool Remove(T tableObject);
 
         /// <summary>
         /// Removes all table objects that are not reserved and have no references.

@@ -73,7 +73,7 @@ namespace netDxf.Tables
         /// Initializes a new instance of the <c>DimensionStyle</c> class.
         /// </summary>
         public DimensionStyle(string name)
-            : base(name, DxfObjectCode.DimStyle)
+            : base(name, DxfObjectCode.DimStyle, true)
         {
             this.reserved = name.Equals("Standard", StringComparison.InvariantCultureIgnoreCase);
             this.textStyle = TextStyle.Default;

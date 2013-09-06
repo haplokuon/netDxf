@@ -224,11 +224,27 @@ namespace netDxf
         #region public properties
 
         /// <summary>
+        /// Defines if the color is defined by layer.
+        /// </summary>
+        public bool IsByLayer
+        {
+            get { return this.index == 256; }
+        }
+
+        /// <summary>
+        /// Defines if the color is defined by block.
+        /// </summary>
+        public bool IsByBlock
+        {
+            get { return this.index == 0; }
+        }
+
+        /// <summary>
         /// Gets the red component of the AciColor.
         /// </summary>
         public byte R
         {
-            get { return r; }
+            get { return this.r; }
         }
 
         /// <summary>
@@ -236,7 +252,7 @@ namespace netDxf
         /// </summary>
         public byte G
         {
-            get { return g; }
+            get { return this.g; }
         }
 
         /// <summary>
@@ -244,7 +260,7 @@ namespace netDxf
         /// </summary>
         public byte B
         {
-            get { return b; }
+            get { return this.b; }
         }
 
         /// <summary>
@@ -256,8 +272,8 @@ namespace netDxf
         /// </remarks>
         public bool UseTrueColor
         {
-            get { return useTrueColor; }
-            set { useTrueColor = value; }
+            get { return this.useTrueColor; }
+            set { this.useTrueColor = value; }
         }
 
         /// <summary>
@@ -402,7 +418,7 @@ namespace netDxf
         {
             if (this.index < 1 || this.index > 255) //default color definition for byblock and bylayer colors
                 return Color.White;
-            return Color.FromArgb(r, g, b);
+            return Color.FromArgb(this.r, this.g, this.b);
         }
 
         /// <summary>

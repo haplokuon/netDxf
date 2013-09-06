@@ -20,7 +20,6 @@
 
 #endregion
 
-using System;
 using System.Collections.Generic;
 using netDxf.Tables;
 
@@ -91,6 +90,17 @@ namespace netDxf.Collections
             this.references.Remove(appReg.Name);
             return this.list.Remove(appReg.Name);
 
+        }
+
+        /// <summary>
+        /// Removes an application registry.
+        /// </summary>
+        /// <param name="appReg"><see cref="ApplicationRegistry">ApplicationRegistry</see> to remove from the document.</param>
+        /// <returns>True is the application registry has been successfully removed, or false otherwise.</returns>
+        /// <remarks>Reserved application registries or any other referenced by objects cannot be removed.</remarks>
+        public override bool Remove(ApplicationRegistry appReg)
+        {
+            return Remove(appReg.Name);
         }
 
         #endregion

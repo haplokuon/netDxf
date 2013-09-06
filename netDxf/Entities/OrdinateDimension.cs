@@ -204,7 +204,7 @@ namespace netDxf.Entities
             };
 
             // drawing block
-            Block dim = new Block(name);
+            Block dim = new Block(name, false);
             dim.Entities.Add(startRef);
             dim.Entities.Add(endRef);
             dim.Entities.Add(dimLine);

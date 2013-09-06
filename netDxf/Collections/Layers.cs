@@ -96,6 +96,17 @@ namespace netDxf.Collections
 
         }
 
+        /// <summary>
+        /// Removes a layer.
+        /// </summary>
+        /// <param name="layer"><see cref="Layer">Layer</see> to remove from the document.</param>
+        /// <returns>True is the layer has been successfully removed, or false otherwise.</returns>
+        /// <remarks>Reserved layers or any other referenced by objects cannot be removed.</remarks>
+        public override bool Remove(Layer layer)
+        {
+            return Remove(layer.Name);
+        }
+
         #endregion
 
     }

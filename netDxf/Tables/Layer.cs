@@ -59,10 +59,9 @@ namespace netDxf.Tables
         /// </summary>
         /// <param name="name">Layer name.</param>
         public Layer(string name)
-            : base(name, DxfObjectCode.Layer)
+            : base(name, DxfObjectCode.Layer, true)
         {
             this.reserved = name.Equals("0", StringComparison.InvariantCultureIgnoreCase);
-
             this.color = AciColor.Default;
             this.lineType = LineType.Continuous;
             this.isVisible = true;
@@ -98,6 +97,8 @@ namespace netDxf.Tables
             {
                 if (value == null)
                     throw new NullReferenceException("value"); 
+                if (value.IsByLayer || value.IsByBlock)
+                    throw new ArgumentException("The layer color cannot be ByLayer or ByBlock");
                 this.color = value;
             }
         }

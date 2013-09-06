@@ -577,6 +577,44 @@ namespace netDxf
             this.WriteCodePair(50, style.ObliqueAngle);
         }
 
+        /// <summary>
+        /// Writes a new user coordinate system to the table section.
+        /// </summary>
+        /// <param name="ucs">UCS.</param>
+        public void WriteUCS(UCS ucs)
+        {
+            if (this.activeTable != StringCode.UcsTable)
+            {
+                throw new InvalidDxfTableException(this.activeTable);
+            }
+
+            this.WriteCodePair(0, ucs.CodeName);
+            this.WriteCodePair(5, ucs.Handle);
+            this.WriteCodePair(100, SubclassMarker.TableRecord);
+
+            this.WriteCodePair(100, SubclassMarker.Ucs);
+
+            this.WriteCodePair(2, ucs.Name);
+
+            this.WriteCodePair(70, 0);
+
+            this.WriteCodePair(10, ucs.Origin.X);
+            this.WriteCodePair(20, ucs.Origin.Y);
+            this.WriteCodePair(30, ucs.Origin.Z);
+
+            this.WriteCodePair(11, ucs.XAxis.X);
+            this.WriteCodePair(21, ucs.XAxis.Y);
+            this.WriteCodePair(31, ucs.XAxis.Z);
+
+            this.WriteCodePair(12, ucs.YAxis.X);
+            this.WriteCodePair(22, ucs.YAxis.Y);
+            this.WriteCodePair(32, ucs.YAxis.Z);
+
+            this.WriteCodePair(79, 0);
+
+            this.WriteCodePair(146, ucs.Elevation);
+        }
+
         #endregion
 
         #region methods for Block section
@@ -657,6 +695,12 @@ namespace netDxf
 
             switch (entity.Type)
             {
+                case EntityType.Ray:
+                    this.WriteRay((Ray)entity);
+                    break;
+                case EntityType.XLine:
+                    this.WriteXLine((XLine)entity);
+                    break;
                 case EntityType.Arc:
                     this.WriteArc((Arc) entity);
                     break;
@@ -954,6 +998,36 @@ namespace netDxf
             this.WriteCodePair(230, line.Normal.Z);
 
             this.WriteXData(line.XData);
+        }
+
+        private void WriteRay(Ray ray)
+        {
+            this.WriteCodePair(100, SubclassMarker.Ray);
+
+            this.WriteCodePair(10, ray.Origin.X);
+            this.WriteCodePair(20, ray.Origin.Y);
+            this.WriteCodePair(30, ray.Origin.Z);
+
+            this.WriteCodePair(11, ray.Direction.X);
+            this.WriteCodePair(21, ray.Direction.Y);
+            this.WriteCodePair(31, ray.Direction.Z);
+
+            this.WriteXData(ray.XData);
+        }
+
+        private void WriteXLine(XLine xline)
+        {
+            this.WriteCodePair(100, SubclassMarker.XLine);
+
+            this.WriteCodePair(10, xline.Origin.X);
+            this.WriteCodePair(20, xline.Origin.Y);
+            this.WriteCodePair(30, xline.Origin.Z);
+
+            this.WriteCodePair(11, xline.Direction.X);
+            this.WriteCodePair(21, xline.Direction.Y);
+            this.WriteCodePair(31, xline.Direction.Z);
+
+            this.WriteXData(xline.XData);
         }
 
         private void WriteLightWeightPolyline(LwPolyline polyline)
@@ -1498,19 +1572,25 @@ namespace netDxf
             foreach (HatchPatternLineDefinition line in pattern.LineDefinitions)
             {
                 double scale = pattern.Scale;
-                double angle = (line.Angle + pattern.Angle) * MathHelper.DegToRad;
-                double sin = Math.Sin(angle);
-                double cos = Math.Cos(angle);       
+                double angle = line.Angle + pattern.Angle;
                 // Pattern fill data.
                 // In theory this should hold the same information as the pat file but for unkown reason the dxf requires global data instead of local,
                 // it's a guess the documentation is kind of obscure.
                 // This means we have to apply the pattern rotation and scale to the line definitions
-                Vector2 offset = new Vector2(cos * line.Delta.X * scale - sin * line.Delta.Y * scale, sin * line.Delta.X * scale + cos * line.Delta.Y * scale);
-                this.WriteCodePair(53, line.Angle + pattern.Angle);
-                this.WriteCodePair(43, line.Origin.X);
-                this.WriteCodePair(44, line.Origin.Y);
-                this.WriteCodePair(45, offset.X);
-                this.WriteCodePair(46, offset.Y);
+                this.WriteCodePair(53, angle);
+
+                double sinOrigin = Math.Sin(pattern.Angle * MathHelper.DegToRad);
+                double cosOrigin = Math.Cos(pattern.Angle * MathHelper.DegToRad);       
+                Vector2 origin = new Vector2(cosOrigin * line.Origin.X * scale - sinOrigin * line.Origin.Y * scale, sinOrigin * line.Origin.X * scale + cosOrigin * line.Origin.Y * scale);
+                this.WriteCodePair(43, origin.X);
+                this.WriteCodePair(44, origin.Y);
+
+                double sinDelta = Math.Sin(angle * MathHelper.DegToRad);
+                double cosDelta = Math.Cos(angle * MathHelper.DegToRad);       
+                Vector2 delta = new Vector2(cosDelta * line.Delta.X * scale - sinDelta * line.Delta.Y * scale, sinDelta * line.Delta.X * scale + cosDelta * line.Delta.Y * scale);
+                this.WriteCodePair(45, delta.X);
+                this.WriteCodePair(46, delta.Y);
+
                 this.WriteCodePair(79, line.DashPattern.Count);
                 foreach (double dash in line.DashPattern)
                 {

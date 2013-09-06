@@ -48,9 +48,9 @@ namespace netDxf
         // keeps track of the number of handles generated
         internal int NumHandles;
         // keeps track of the dimension blocks generated
-        private int dimensionBlocksGenerated;
+        internal int DimensionBlocksGenerated;
         // keeps track of the group names generated (this groups have the isUnnamed bool set to true)
-        private int groupNamesGenerated;
+        internal int GroupNamesGenerated;
         // during the save process new handles are needed for the table sections, this number should be enough
         private const int ReservedHandles = 10;
 
@@ -71,8 +71,10 @@ namespace netDxf
         private TextStyles textStyles;
         private DimensionStyles dimStyles;
         private MLineStyles mlineStyles;
+        private UCSs ucss;
         private BlockRecords blocks;
         private ImageDefinitions imageDefs;
+        private Groups groups;
 
         #endregion
 
@@ -98,12 +100,13 @@ namespace netDxf
         private List<Spline> splines;
         private List<Image> images;
         private List<MLine> mLines;
+        private List<Ray> rays;
+        private List<XLine> xlines;
 
         #endregion
 
         #region objects
 
-        private Dictionary<string, Group> groups;
         private RasterVariables rasterVariables;
 
         #endregion
@@ -141,8 +144,8 @@ namespace netDxf
             this.drawingVariables = drawingVariables;
 
             this.NumHandles = 1;
-            this.dimensionBlocksGenerated = 0;
-            this.groupNamesGenerated = 0;
+            this.DimensionBlocksGenerated = 0;
+            this.GroupNamesGenerated = 0;
             this.addedEntity = new Dictionary<string, EntityObject>(); // keeps track of the added object to avoid duplicates
 
             // tables
@@ -153,11 +156,10 @@ namespace netDxf
             this.textStyles = new TextStyles(this);
             this.dimStyles = new DimensionStyles(this);
             this.mlineStyles = new MLineStyles(this);
+            this.ucss = new UCSs(this);
             this.blocks = new BlockRecords(this);
             this.imageDefs = new ImageDefinitions(this);
-
-            // objects
-            this.groups = new Dictionary<string, Group>(StringComparer.InvariantCultureIgnoreCase);
+            this.groups = new Groups(this);
             
             this.AddDefaultObjects();
 
@@ -180,6 +182,8 @@ namespace netDxf
             this.splines = new List<Spline>();
             this.images = new List<Image>();
             this.mLines = new List<MLine>();
+            this.rays = new List<Ray>();
+            this.xlines = new List<XLine>();
         }
 
         #endregion
@@ -272,6 +276,14 @@ namespace netDxf
         }
 
         /// <summary>
+        /// Gets the <see cref="UCSs">User coordinate system</see> collection.
+        /// </summary>
+        public UCSs UCSs
+        {
+            get { return this.ucss; }
+        }
+
+        /// <summary>
         /// Gets the <see cref="Blocks">block</see> collection.
         /// </summary>
         public BlockRecords Blocks
@@ -280,11 +292,19 @@ namespace netDxf
         }
 
         /// <summary>
-        /// Gets the <see cref="ImageDef">image definitions</see> collection.
+        /// Gets the <see cref="ImageDefinitions">image definitions</see> collection.
         /// </summary>
         public ImageDefinitions ImageDefinitions
         {
             get { return this.imageDefs; }
+        }
+
+        /// <summary>
+        /// Gets the <see cref="Groups">groups</see> collection.
+        /// </summary>
+        public Groups Groups
+        {
+            get { return this.groups; }
         }
 
         #endregion
@@ -434,6 +454,24 @@ namespace netDxf
         {
             get { return this.splines.AsReadOnly(); }
         }
+
+        /// <summary>
+        /// Gets the <see cref="Ray">rays</see> list.
+        /// </summary>
+        public ReadOnlyCollection<Ray> Rays
+        {
+            get { return this.rays.AsReadOnly(); }
+        }
+
+
+        /// <summary>
+        /// Gets the <see cref="XLine">xlines</see> list.
+        /// </summary>
+        public ReadOnlyCollection<XLine> XLines
+        {
+            get { return this.xlines.AsReadOnly(); }
+        }
+
         #endregion
 
         #region public object properties
@@ -444,14 +482,6 @@ namespace netDxf
         public RasterVariables RasterVariables
         {
             get { return this.rasterVariables; }
-        }
-
-        /// <summary>
-        /// Gets the <see cref="Group">group</see> list.
-        /// </summary>
-        public ICollection<Group> Groups
-        {
-            get { return this.groups.Values; }
         }
 
         #endregion
@@ -542,65 +572,6 @@ namespace netDxf
         public bool RemoveEntity(EntityObject entity)
         {
             return this.RemoveEntity(entity, false);
-        }
-
-        #endregion
-
-        #region public object methods
-
-        /// <summary>
-        /// Adds a group to the list.
-        /// </summary>
-        /// <param name="group"><see cref="Group">Group</see> to add to the list.</param>
-        /// <returns>
-        /// If a group already exists with the same name as the instance that is being added the method returns the existing group,
-        /// if not it will return the new group.
-        /// </returns>
-        /// <remarks>All entities of the group will be automatically added to the document.</remarks>
-        public Group AddGroup(Group group)
-        {
-            // if no name has been given to the group a generic name will be created
-            if (group.IsUnnamed)
-                group.Name = "*A" + ++this.groupNamesGenerated;
-
-            Group add;
-            if (this.groups.TryGetValue(group.Name, out add))
-                return add;
-
-            this.NumHandles = group.AsignHandle(this.NumHandles);
-            this.groups.Add(group.Name, group);
-            foreach (EntityObject entity in group.Entities)
-            {
-                this.AddEntity(entity);
-            }
-
-            return group;
-        }
-
-        /// <summary>
-        /// Gets a group from the the dictionary.
-        /// </summary>
-        /// <param name="groupName"><see cref="Group">Group</see> name.</param>
-        /// <returns>Group with the actual name, null if it does not exists.</returns>
-        public Group GetGroup(string groupName)
-        {
-            Group group;
-            return this.groups.TryGetValue(groupName, out group) ? group : null;
-        }
-
-        /// <summary>
-        /// Removes a group from the list.
-        /// </summary>
-        /// <param name="group"><see cref="Group">Group</see> to remove from the list.</param>
-        /// <param name="removeEntities">Defines if the entities contained in the group will be deleted.</param>
-        /// <returns>True if group is successfully removed; otherwise, false.</returns>
-        public bool RemoveGroup(Group group, bool removeEntities)
-        {
-            foreach ( EntityObject entity in group.Entities)
-            {
-                this.RemoveEntity(entity);
-            }
-            return this.groups.Remove(group.Name);
         }
 
         #endregion
@@ -895,7 +866,7 @@ namespace netDxf
                     this.dimStyles.References[((Dimension)entity).Style.Name].Add(entity);
 
                     // create the block that represent the dimension drawing
-                    Block dimBlock = ((Dimension)entity).BuildBlock("*D" + ++this.dimensionBlocksGenerated);
+                    Block dimBlock = ((Dimension)entity).BuildBlock("*D" + ++this.DimensionBlocksGenerated);
                     if (this.blocks.Contains(dimBlock.Name))
                         throw new ArgumentException("The list already contains the block: " + dimBlock.Name + ". The block names that start with *D are reserverd for dimensions");
                     dimBlock.TypeFlags = BlockTypeFlags.AnonymousBlock;
@@ -975,6 +946,13 @@ namespace netDxf
                     this.mlineStyles.References[((MLine)entity).Style.Name].Add(entity);
                     if (!isBlockEntity) this.mLines.Add((MLine)entity);
                     break;
+                case EntityType.Ray:
+                    if (!isBlockEntity) this.rays.Add((Ray)entity);
+                    break;
+                case EntityType.XLine:
+                    if (!isBlockEntity) this.xlines.Add((XLine)entity);
+                    break;
+
                 case EntityType.AttributeDefinition:
                     throw new ArgumentException("The entity " + entity.Type + " is only allowed as part of block definition.", "entity");
 
@@ -1081,6 +1059,12 @@ namespace netDxf
                     if (removed || isBlockEntity)
                         this.mlineStyles.References[((MLine)entity).Style.Name].Remove(entity);
                     break;
+                case EntityType.Ray:
+                    removed = this.rays.Remove((Ray)entity);
+                    break;
+                case EntityType.XLine:
+                    removed = this.xlines.Remove((XLine)entity);
+                    break;
                 case EntityType.AttributeDefinition:
                     throw new ArgumentException("The entity " + entity.Type + " is only allowed as part of another entity", "entity");
 
@@ -1126,10 +1110,12 @@ namespace netDxf
             document.lineTypes = new LineTypes(document, dxfReader.LineTypes, dxfReader.LineTypeReferences);
             document.textStyles = new TextStyles(document, dxfReader.TextStyles, dxfReader.TextStyleReferences);
             document.dimStyles = new DimensionStyles(document, dxfReader.DimensionStyles, dxfReader.DimensionStyleReferences);
-            document.dimensionBlocksGenerated = dxfReader.DimensionBlocksGenerated;
+            document.DimensionBlocksGenerated = dxfReader.DimensionBlocksGenerated;
             document.mlineStyles = new MLineStyles(document, dxfReader.MLineStyles, dxfReader.MLineStyleReferences);
+            document.ucss = new UCSs(document, dxfReader.UCSs, dxfReader.UCSReferences);
             document.blocks = new BlockRecords(document, dxfReader.Blocks, dxfReader.BlockReferences);
             document.imageDefs = new ImageDefinitions(document, dxfReader.ImageDefs, dxfReader.ImageDefReferences);
+            document.groups = new Groups(document, dxfReader.Groups, dxfReader.GroupReferences);
 
             //entities information
             document.arcs = dxfReader.Arcs;
@@ -1150,10 +1136,11 @@ namespace netDxf
             document.splines = dxfReader.Splines;
             document.images = dxfReader.Images;
             document.mLines = dxfReader.MLines;
+            document.rays = dxfReader.Rays;
+            document.xlines = dxfReader.XLines;
 
             // objects
-            document.groups = dxfReader.Groups;
-            document.groupNamesGenerated = dxfReader.GroupNamesGenerated;
+            document.GroupNamesGenerated = dxfReader.GroupNamesGenerated;
             // we will define a new RasterVariables object in case there is none in the dxf
             if (dxfReader.RasterVariables == null)
             {
@@ -1299,6 +1286,10 @@ namespace netDxf
 
             //ucs
             dxfWriter.BeginTable(StringCode.UcsTable, Convert.ToString(this.NumHandles++, 16));
+            foreach (UCS ucs in this.ucss.Values)
+            {
+                dxfWriter.WriteUCS(ucs);
+            }
             dxfWriter.EndTable();
 
             //registered application tables
@@ -1328,7 +1319,14 @@ namespace netDxf
 
             //ENTITIES SECTION
             dxfWriter.BeginSection(StringCode.EntitiesSection);
-
+            foreach (Ray ray in this.rays)
+            {
+                dxfWriter.WriteEntity(ray);
+            }
+            foreach (XLine xline in this.xlines)
+            {
+                dxfWriter.WriteEntity(xline);
+            }
             foreach (Arc arc in this.arcs)
             {
                 dxfWriter.WriteEntity(arc);
@@ -1478,4 +1476,5 @@ namespace netDxf
         #endregion
 
     }
+
 }

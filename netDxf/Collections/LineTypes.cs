@@ -93,6 +93,17 @@ namespace netDxf.Collections
             return this.list.Remove(lineType.Name);
         }
 
+        /// <summary>
+        /// Removes a line type.
+        /// </summary>
+        /// <param name="lineType"><see cref="LineType">LineType</see> to remove from the document.</param>
+        /// <returns>True is the line type has been successfully removed, or false otherwise.</returns>
+        /// <remarks>Reserved line types or any other referenced by objects cannot be removed.</remarks>
+        public override bool Remove(LineType lineType)
+        {
+            return Remove(lineType.Name);
+        }
+
         #endregion
 
     }

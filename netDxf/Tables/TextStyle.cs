@@ -72,7 +72,7 @@ namespace netDxf.Tables
         /// <param name="name">Text style name.</param>
         /// <param name="font">Text style font file name.</param>
         public TextStyle(string name, string font)
-            : base(name, DxfObjectCode.TextStyle)
+            : base(name, DxfObjectCode.TextStyle, true)
         {
             if (string.IsNullOrEmpty(font))
                 throw (new ArgumentNullException("font"));

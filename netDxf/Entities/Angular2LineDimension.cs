@@ -325,7 +325,7 @@ namespace netDxf.Entities
             };
 
             // drawing block
-            Block dim = new Block(name);
+            Block dim = new Block(name, false);
             dim.Entities.Add(startFirstPoint);
             dim.Entities.Add(endFirstPoint);
             dim.Entities.Add(startSecondPoint);

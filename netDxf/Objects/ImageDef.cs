@@ -151,7 +151,7 @@ namespace netDxf.Objects
         /// </para>
         /// </remarks>
         public ImageDef(string fileName, int width, float horizontalResolution, int height, float verticalResolution, string name, ResolutionUnits units)
-            : base(name, DxfObjectCode.ImageDef)
+            : base(name, DxfObjectCode.ImageDef, true)
         {
             if (string.IsNullOrEmpty(fileName))
                 throw new ArgumentNullException("fileName", "The image file name cannot be empty or null.");
@@ -222,7 +222,7 @@ namespace netDxf.Objects
         ///  </para>
         /// </remarks>
         public ImageDef(string fileName, string name, ResolutionUnits units = ResolutionUnits.Centimeters)
-            : base(name, DxfObjectCode.ImageDef)
+            : base(name, DxfObjectCode.ImageDef, true)
         {
             if (string.IsNullOrEmpty(fileName))
                 throw new ArgumentNullException("fileName", "The image file name cannot be empty or null.");

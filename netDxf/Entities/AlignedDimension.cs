@@ -34,8 +34,8 @@ namespace netDxf.Entities
     {
         #region private fields
 
-        private Vector3 firstRef;
-        private Vector3 secondRef;
+        private Vector3 firstRefPoint;
+        private Vector3 secondRefPoint;
         private double offset;
 
         #endregion
@@ -122,8 +122,8 @@ namespace netDxf.Entities
         public AlignedDimension(Vector3 firstPoint, Vector3 secondPoint, double offset, DimensionStyle style)
             : base(DimensionType.Aligned)
         {
-            this.firstRef = firstPoint;
-            this.secondRef = secondPoint;
+            this.firstRefPoint = firstPoint;
+            this.secondRefPoint = secondPoint;
             this.offset = offset;
             if (style == null)
                 throw new ArgumentNullException("style", "The Dimension style cannot be null.");
@@ -139,8 +139,8 @@ namespace netDxf.Entities
         /// </summary>
         public Vector3 FirstReferencePoint
         {
-            get { return this.firstRef; }
-            set { this.firstRef = value; }
+            get { return this.firstRefPoint; }
+            set { this.firstRefPoint = value; }
         }
 
         /// <summary>
@@ -148,8 +148,8 @@ namespace netDxf.Entities
         /// </summary>
         public Vector3 SecondReferencePoint
         {
-            get { return this.secondRef; }
-            set { this.secondRef = value; }
+            get { return this.secondRefPoint; }
+            set { this.secondRefPoint = value; }
         }
 
         /// <summary>
@@ -166,7 +166,7 @@ namespace netDxf.Entities
         /// </summary>
         public override double Value
         {
-            get { return Vector3.Distance(this.firstRef, this.secondRef); }
+            get { return Vector3.Distance(this.firstRefPoint, this.secondRefPoint); }
         }
 
         #endregion
@@ -181,12 +181,12 @@ namespace netDxf.Entities
         internal override Block BuildBlock(string name)
         {
             // we will build the dimension block in object coordinates with normal the dimension normal
-            Vector3 refPoint = MathHelper.Transform(this.firstRef, this.normal,
+            Vector3 refPoint = MathHelper.Transform(this.firstRefPoint, this.normal,
                                                     MathHelper.CoordinateSystem.World,
                                                     MathHelper.CoordinateSystem.Object);
 
             Vector2 firstRef = new Vector2(refPoint.X, refPoint.Y);   
-            refPoint = MathHelper.Transform(this.secondRef, this.normal,
+            refPoint = MathHelper.Transform(this.secondRefPoint, this.normal,
                                             MathHelper.CoordinateSystem.World,
                                             MathHelper.CoordinateSystem.Object);
 
@@ -249,7 +249,7 @@ namespace netDxf.Entities
                              };
 
             // drawing block
-            Block dim = new Block(name);
+            Block dim = new Block(name, false);
             dim.Entities.Add(startRef);
             dim.Entities.Add(endRef);
             dim.Entities.Add(defPoint);
@@ -285,8 +285,8 @@ namespace netDxf.Entities
                     LineSpacingStyle = this.lineSpacingStyle,
                     LineSpacingFactor = this.lineSpacing,
                     //AlignedDimension properties
-                    FirstReferencePoint = this.firstRef,
-                    SecondReferencePoint = this.secondRef,
+                    FirstReferencePoint = this.firstRefPoint,
+                    SecondReferencePoint = this.secondRefPoint,
                     Offset = this.offset
                 };
         }

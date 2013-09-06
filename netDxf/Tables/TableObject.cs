@@ -33,8 +33,9 @@ namespace netDxf.Tables
 
         #region private fields
 
+        private static readonly string[] notAllowed = {"\\", "<", ">", "/", "?", "\"", ":", ";", "*", "|", ",", "=", "`"};
         protected bool reserved;
-        private readonly string name;
+        private string name;
 
         #endregion
 
@@ -43,14 +44,22 @@ namespace netDxf.Tables
         /// <summary>
         /// Initializes a new instance of the <c>TableObject</c> class.
         /// </summary>
-        /// <param name="name">Table name.</param>
+        /// <param name="name">Table name. The following characters \&lt;&gt;/?":;*|,=` are not supported for table object names.</param>
         /// <param name="codeName">Table <see cref="DxfObjectCode">code name</see>.</param>
-        /// <remarks>Do not give names starting with * to table objects, they are reserved for internal use.</remarks>
-        protected TableObject(string name, string codeName)
+        protected TableObject(string name, string codeName, bool checkName)
             : base(codeName)
         {
-            if (string.IsNullOrEmpty(name))
-                throw (new ArgumentNullException("name"));
+            if (checkName)
+            {
+                if (string.IsNullOrEmpty(name))
+                    throw (new ArgumentNullException("name")); 
+
+                foreach (string s in notAllowed)
+                {
+                    if(name.Contains(s))
+                        throw new ArgumentException("The following characters \\<>/?\":;*|,=` are not supported for table object names.");
+                }
+            }
             this.name = name;
             this.reserved = false;
         }
@@ -66,6 +75,7 @@ namespace netDxf.Tables
         public string Name
         {
             get { return name; }
+            internal set { name = value; }
         }
 
         /// <summary>

@@ -251,7 +251,7 @@ namespace netDxf.Entities
                                  Rotation = refRotation*MathHelper.RadToDeg
                              };
 
-            Block dim = new Block(name);
+            Block dim = new Block(name, false);
             dim.Entities.Add(startRef);
             dim.Entities.Add(endRef);
             dim.Entities.Add(dimLine);

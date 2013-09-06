@@ -23,6 +23,7 @@
 using System;
 using System.Collections.Generic;
 using netDxf.Entities;
+using netDxf.Tables;
 
 namespace netDxf.Objects
 {
@@ -30,12 +31,11 @@ namespace netDxf.Objects
     /// Represents a group of entities.
     /// </summary>
     public class Group :
-        DxfObject
+        TableObject
     {
 
         #region private fields
 
-        private string name;
         private string description;
         private bool isUnnamed;
         private bool isSelectable;
@@ -53,38 +53,17 @@ namespace netDxf.Objects
         /// If the name is set to null or empty, a unique name will be generated when it is added to the document.
         /// </remarks>
         public Group(string name = null)
-            : base(DxfObjectCode.Group)
+            : base(name, DxfObjectCode.Group, !string.IsNullOrEmpty(name))
         {
-            if (string.IsNullOrEmpty(name))
-            {
-                this.isUnnamed = true;
-                this.name = null;
-            }
-            else
-            {
-                if (name.StartsWith("*"))
-                    throw new ArgumentException("Names starting with * are reserved.", name);
-                this.isUnnamed = false;
-                this.name = name;
-            }
+            this.isUnnamed = string.IsNullOrEmpty(name);
             this.description = null;
-            this.isSelectable = true;
-            
+            this.isSelectable = true;          
             this.entities = new List<EntityObject>();
         }
 
         #endregion
 
         #region public properties
-
-        /// <summary>
-        /// Gets the name of the group.
-        /// </summary>
-        public string Name
-        {
-            get { return name; }
-            internal set { name = value; }
-        }
 
         /// <summary>
         /// Gets or sets the description of the group.

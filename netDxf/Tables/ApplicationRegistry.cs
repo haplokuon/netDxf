@@ -51,7 +51,7 @@ namespace netDxf.Tables
         /// </summary>
         /// <param name="name">Layer name.</param>
         public ApplicationRegistry(string name)
-            : base(name, DxfObjectCode.AppId)
+            : base(name, DxfObjectCode.AppId, true)
         {
             this.reserved = name.Equals("ACAD", StringComparison.InvariantCultureIgnoreCase);
         }

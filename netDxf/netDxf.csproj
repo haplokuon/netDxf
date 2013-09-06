@@ -75,6 +75,8 @@
     <Compile Include="Blocks\BlockTypeFlags.cs" />
     <Compile Include="Collections\ApplicationRegistries.cs" />
     <Compile Include="Collections\BlockRecords.cs" />
+    <Compile Include="Collections\Groups.cs" />
+    <Compile Include="Collections\UCSs.cs" />
     <Compile Include="Collections\DimensionStyles.cs" />
     <Compile Include="Collections\ImageDefinitions.cs" />
     <Compile Include="Collections\Layers.cs" />
@@ -82,6 +84,8 @@
     <Compile Include="Collections\MLineStyles.cs" />
     <Compile Include="Collections\TableObjects.cs" />
     <Compile Include="Collections\TextStyles.cs" />
+    <Compile Include="Entities\XLine.cs" />
+    <Compile Include="Entities\Ray.cs" />
     <Compile Include="Objects\ImageDef.cs" />
     <Compile Include="Objects\ImageDefReactor.cs" />
     <Compile Include="Objects\MLineStyle.cs" />
@@ -131,6 +135,10 @@
     </Compile>
     <Compile Include="Objects\Group.cs" />
     <Compile Include="Objects\RasterVariables.cs" />
+    <Compile Include="Tables\UCS.cs" />
+    <Compile Include="Tables\View.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="Vector2.cs" />
     <Compile Include="Vector3.cs" />
     <Compile Include="Matrix3.cs" />
@@ -144,7 +152,6 @@
     <Compile Include="SubclassMarker.cs" />
     <Compile Include="Symbols.cs" />
     <Compile Include="Tables\ApplicationRegistry.cs" />
-    <Compile Include="Tables\View.cs" />
     <Compile Include="Tables\DimensionStyle.cs" />
     <Compile Include="Tables\Viewport.cs" />
     <Compile Include="Entities\TextAligment.cs" />

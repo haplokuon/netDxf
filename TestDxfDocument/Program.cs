@@ -44,7 +44,9 @@ namespace TestDxfDocument
         private static void Main()
         {
             Test();
-
+            //ComplexHatch();
+            //RayAndXLine();
+            //UserCoordinateSystems();
             //ExplodeInsert();
             //ImageUsesAndRemove();
             //LayerAndLineTypesUsesAndRemove();
@@ -108,11 +110,17 @@ namespace TestDxfDocument
 
         private static void Test()
         {
+            DxfDocument test = new DxfDocument();
+            TextStyle style = new TextStyle("MyTextStyle", "tahoma.ttf");
+            test.TextStyles.Add(style);
+            test.Save("TextStyle.dxf");
+
             DxfVersion version = DxfDocument.CheckDxfFileVersion("sample.dxf");
 
             // sample.dxf contains all supported entities by netDxf
             DxfDocument dxf = DxfDocument.Load("sample.dxf");
-
+            Console.WriteLine("FILE VERSION: {0}", dxf.DrawingVariables.AcadVer);
+            Console.WriteLine();
             Console.WriteLine("FILE COMMENTS: {0}", dxf.Comments.Count);
             foreach (var o in dxf.Comments)
             {
@@ -162,6 +170,13 @@ namespace TestDxfDocument
             }
             Console.WriteLine();
 
+            Console.WriteLine("UCSs: {0}", dxf.UCSs.Count);
+            foreach (var o in dxf.UCSs)
+            {
+                Console.WriteLine("     {0}", o.Name);
+            }
+            Console.WriteLine();
+
             Console.WriteLine("BLOCKS: {0}", dxf.Blocks.Count);
             foreach (var o in dxf.Blocks)
             {
@@ -202,6 +217,8 @@ namespace TestDxfDocument
             Console.WriteLine("     {0}; count: {1}", EntityType.Solid.ToString(), dxf.Solids.Count);
             Console.WriteLine("     {0}; count: {1}", EntityType.Spline.ToString(), dxf.Splines.Count);
             Console.WriteLine("     {0}; count: {1}", EntityType.Text.ToString(), dxf.Texts.Count);
+            Console.WriteLine("     {0}; count: {1}", EntityType.Ray.ToString(), dxf.Rays.Count);
+            Console.WriteLine("     {0}; count: {1}", EntityType.XLine.ToString(), dxf.XLines.Count);
             Console.WriteLine();
 
             // the dxf version is controlled by the DrawingVariables property of the dxf document,
@@ -231,6 +248,63 @@ namespace TestDxfDocument
         //    dxf.Save("ExplodeInsert.dxf");
         //}
 
+        private static void ComplexHatch()
+        {
+            HatchPattern pattern = HatchPattern.FromFile("hatch\\acad.pat", "ESCHER");
+            pattern.Scale = 1.5;
+            pattern.Angle = 30;
+
+            LwPolyline poly = new LwPolyline();
+            poly.Vertexes.Add(new LwPolylineVertex(-10, -10));
+            poly.Vertexes.Add(new LwPolylineVertex(10, -10));
+            poly.Vertexes.Add(new LwPolylineVertex(10, 10));
+            poly.Vertexes.Add(new LwPolylineVertex(-10, 10));
+            poly.IsClosed = true;
+
+            List<HatchBoundaryPath> boundary = new List<HatchBoundaryPath>
+                {
+                    new HatchBoundaryPath(new List<EntityObject> {poly})
+                };
+            Hatch hatch = new Hatch(pattern, boundary);
+            
+            DxfDocument dxf = new DxfDocument();
+            dxf.AddEntity(poly);
+            dxf.AddEntity(hatch);
+            dxf.Save("complexhatch.dxf");
+
+            DxfDocument dxf2 = DxfDocument.Load("complexhatch.dxf");
+            dxf2.Save("complexhatch2.dxf");
+
+        }
+        private static void RayAndXLine()
+        {
+            Ray ray = new Ray(new Vector3(1, 1, 1), new Vector3(1, 1, 1));
+            XLine xline = new XLine(Vector2.Zero, new Vector2(1,1));
+
+            DxfDocument dxf = new DxfDocument();
+            dxf.AddEntity(ray);
+            dxf.AddEntity(xline);
+            dxf.Save("RayAndXLine.dxf");
+
+
+            dxf = DxfDocument.Load("RayAndXLine.dxf");
+
+        }
+        private static void UserCoordinateSystems()
+        {
+            DxfDocument dxf = new DxfDocument();
+            UCS ucs1 = new UCS("user1", Vector3.Zero, Vector3.UnitX, Vector3.UnitZ);
+            UCS ucs2 = UCS.FromXAxisAndPointOnXYplane("user2", Vector3.Zero, new Vector3(1,1,0), new Vector3(1,1,1));
+            UCS ucs3 = UCS.FromNormal("user3", Vector3.Zero, new Vector3(1, 1, 1), 0);
+            dxf.UCSs.Add(ucs1);
+            dxf.UCSs.Add(ucs2);
+            dxf.UCSs.Add(ucs3);
+
+            dxf.Save("ucs.dxf");
+
+            dxf = DxfDocument.Load("ucs.dxf");
+
+        }
         private static void ImageUsesAndRemove()
         {
             ImageDef imageDef1 = new ImageDef("img\\image01.jpg");
@@ -680,24 +754,32 @@ namespace TestDxfDocument
             Line line2 = new Line(new Vector2(100, 0), new Vector2(200, 100));
             Line line3 = new Line(new Vector2(200, 0), new Vector2(300, 100));
 
+            // named group
             Group group = new Group("MyGroup")
-                              {
-                                  Entities = new List<EntityObject> {line1, line2}
-                              };
+                {
+                    Entities = new List<EntityObject> {line1, line2}
+                };
 
-            Group group2 = new Group()
-            {
-                Entities = new List<EntityObject> { line1, line3 }
-            };
+            //unnamed group
+            Group group2 = new Group
+                {
+                    Entities = new List<EntityObject> {line1, line3}
+                };
 
             DxfDocument dxf = new DxfDocument();
             // the AddGroup method will also add the entities contained in a group to the document.
-            dxf.AddGroup(group);
-            dxf.AddGroup(group2);
+            dxf.Groups.Add(group);
+            dxf.Groups.Add(group2);
+
+            List<DxfObject> list = dxf.Groups.GetReferences(group);
             dxf.Save("group.dxf");
 
-            DxfDocument dxf2 = DxfDocument.Load("group.dxf");
-            Console.WriteLine("Dxf name: " + dxf2.Name + " loaded.");
+            dxf = DxfDocument.Load("group.dxf");
+            dxf.Groups.Remove(group);
+            dxf.Groups.Ungroup(group2);
+            dxf.Save("group copy.dxf");
+
+
         }
         private static void WriteMLine()
         {
@@ -1901,7 +1983,6 @@ namespace TestDxfDocument
             dxf.AddEntity(hatch);
 
             dxf.Save("hatchTest3.dxf");
-            dxf = DxfDocument.Load("hatchTest3 copy.dxf");
         }
         private static void HatchTest4()
         {

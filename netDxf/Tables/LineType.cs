@@ -143,7 +143,7 @@ namespace netDxf.Tables
         /// <param name="name">Line type name.</param>
         /// <param name="description">Line type description (optional).</param>
         public LineType(string name, string description = null)
-            : base(name, DxfObjectCode.LineType)
+            : base(name, DxfObjectCode.LineType, true)
         {
             this.reserved = name.Equals("ByLayer", StringComparison.InvariantCultureIgnoreCase) ||
                             name.Equals("ByBlock", StringComparison.InvariantCultureIgnoreCase) ||

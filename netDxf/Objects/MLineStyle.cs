@@ -110,7 +110,7 @@ namespace netDxf.Objects
         /// <param name="description">MLine style description (optional).</param>
         /// <remarks>By default the multiline style has to elements with offsets 0.5 y -0.5.</remarks>
         public MLineStyle(string name, string description = null)
-            : base(name, DxfObjectCode.MLineStyle)
+            : base(name, DxfObjectCode.MLineStyle, true)
         {
             this.reserved = name.Equals("Standard", StringComparison.InvariantCultureIgnoreCase);
             this.flags = MLineStyleFlags.None;
@@ -132,7 +132,7 @@ namespace netDxf.Objects
         /// <param name="elements">Elements of the multiline.</param>
         /// <param name="description">MLine style description (optional).</param>
         public MLineStyle(string name, List<MLineStyleElement> elements, string description = null)
-            : base(name, DxfObjectCode.MLineStyle)
+            : base(name, DxfObjectCode.MLineStyle, true)
         {
             if (elements == null)
                 throw new ArgumentNullException("elements");
