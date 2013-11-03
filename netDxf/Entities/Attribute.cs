@@ -41,7 +41,7 @@ namespace netDxf.Entities
         #region private fields
 
         private AttributeDefinition definition;
-        private string id;
+        private string tag;
         private object value;
         private TextStyle style;
         private Vector3 position;
@@ -83,7 +83,7 @@ namespace netDxf.Entities
             if (definition == null)
                 throw new ArgumentNullException("definition");
             this.definition = definition;
-            this.id = definition.Id;
+            this.tag = definition.Tag;
             this.value = value;
             this.style = definition.Style;
             this.position = definition.Position;
@@ -111,10 +111,10 @@ namespace netDxf.Entities
         /// <summary>
         /// Gets the attribute identifier.
         /// </summary>
-        public string Id
+        public string Tag
         {
-            get { return this.id; }
-            internal set { this.id = value;}
+            get { return this.tag; }
+            internal set { this.tag = value;}
         }
 
         /// <summary>
@@ -229,7 +229,7 @@ namespace netDxf.Entities
                 XData = this.xData,
                 //Attribute properties
                 Definition = this.definition,
-                Id = this.id,
+                Tag = this.tag,
                 Height = this.height,
                 WidthFactor = this.widthFactor,
                 Value = this.value,

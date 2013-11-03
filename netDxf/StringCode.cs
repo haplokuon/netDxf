@@ -68,6 +68,11 @@ namespace netDxf
         public const string ObjectsSection = "OBJECTS";
 
         /// <summary>
+        /// objects.
+        /// </summary>
+        public const string ThumbnailImageSection = "THUMBNAILIMAGE";
+
+        /// <summary>
         /// dxf name string.
         /// </summary>
         public const string BeginSection = "SECTION";

@@ -23,7 +23,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text;
 using netDxf.Blocks;
 using netDxf.Entities;
 using netDxf.Header;
@@ -88,8 +87,7 @@ namespace netDxf
         {
             try
             {
-                // Encoding with the actual system default, the most common one is 1252 Latin 1; Western European (Windows)
-                this.writer = new StreamWriter(stream, Encoding.Default);
+                this.writer = new StreamWriter(stream);
             }
             catch (Exception ex)
             {
@@ -1474,7 +1472,7 @@ namespace netDxf
                         if (polyline.IsClosed)
                         {
                             this.WriteCodePair(72, 1);  // Has bulge flag
-                            this.WriteCodePair(73, polyline.IsClosed ? 1 : 0);
+                            this.WriteCodePair(73, 1);
                             this.WriteCodePair(93, polyline.Vertexes.Count);
 
                             foreach (LwPolylineVertex vertex in polyline.Vertexes)
@@ -1486,8 +1484,7 @@ namespace netDxf
                         }
                         else
                         {
-                            // open polylines will always exported as its internal entities lines and arcs when combined with other entities to make a closed loop.
-                            // AutoCAD seems to like them exploded.
+                            // open polylines will always be exploded before being exported, AutoCAD seems to like it this way
                             List<EntityObject> exploded = polyline.Explode();
                             foreach (EntityObject o in exploded)
                             {
@@ -2095,7 +2092,7 @@ namespace netDxf
             this.WriteCodePair(100, SubclassMarker.AttributeDefinition);
 
             this.WriteCodePair(3, def.Text);
-            this.WriteCodePair(2, def.Id);
+            this.WriteCodePair(2, def.Tag);
             this.WriteCodePair(70, (int)def.Flags);
 
             switch (def.Alignment)
@@ -2224,7 +2221,7 @@ namespace netDxf
 
             this.WriteCodePair(100, SubclassMarker.Attribute);
 
-            this.WriteCodePair(2, attrib.Id);
+            this.WriteCodePair(2, attrib.Tag);
 
             this.WriteCodePair(70, (int) attrib.Flags);
 

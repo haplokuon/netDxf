@@ -83,7 +83,7 @@ namespace netDxf
         /// Some objects might consume more than one, is, for example, the case of polylines that will asign
         /// automatically a handle to its vertexes. The entity number will be converted to an hexadecimal number.
         /// </remarks>
-        internal virtual int AsignHandle(int entityNumber)
+        internal virtual long AsignHandle(long entityNumber)
         {
             this.handle = Convert.ToString(entityNumber, 16);
             return entityNumber + 1;

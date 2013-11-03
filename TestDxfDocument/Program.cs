@@ -22,10 +22,8 @@
 
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
-using System.Text;
 using netDxf;
 using netDxf.Blocks;
 using netDxf.Entities;
@@ -110,13 +108,6 @@ namespace TestDxfDocument
 
         private static void Test()
         {
-            DxfDocument test = new DxfDocument();
-            TextStyle style = new TextStyle("MyTextStyle", "tahoma.ttf");
-            test.TextStyles.Add(style);
-            test.Save("TextStyle.dxf");
-
-            DxfVersion version = DxfDocument.CheckDxfFileVersion("sample.dxf");
-
             // sample.dxf contains all supported entities by netDxf
             DxfDocument dxf = DxfDocument.Load("sample.dxf");
             Console.WriteLine("FILE VERSION: {0}", dxf.DrawingVariables.AcadVer);
@@ -397,7 +388,7 @@ namespace TestDxfDocument
             AttributeDefinition attdef = new AttributeDefinition("NewAttribute");
             attdef.Layer = new Layer("attDefLayer");
             attdef.LineType = LineType.Center;
-            block.Attributes.Add(attdef.Id, attdef);
+            block.Attributes.Add(attdef.Tag, attdef);
 
             Insert insert = new Insert(block, new Vector2(5, 5));
             insert.Layer = layer3;
@@ -460,7 +451,7 @@ namespace TestDxfDocument
             block.Entities.Add(circle);
             AttributeDefinition attdef = new AttributeDefinition("NewAttribute");
             
-            block.Attributes.Add(attdef.Id, attdef);
+            block.Attributes.Add(attdef.Tag, attdef);
 
             Insert insert = new Insert(block, new Vector2(5, 5));
             insert.Attributes[0].Style = new TextStyle("Arial.ttf");
@@ -1898,9 +1889,9 @@ namespace TestDxfDocument
             hatch.Elevation = 52;
             hatch.Normal = new Vector3(1,1,0);
             hatch.Pattern.Scale = 1 / hatch.Pattern.LineDefinitions[0].Delta.Y;
-            //dxf.AddEntity(poly);
-            //dxf.AddEntity(poly2);
-            //dxf.AddEntity(poly3);
+            dxf.AddEntity(poly);
+            dxf.AddEntity(poly2);
+            dxf.AddEntity(poly3);
             dxf.AddEntity(hatch);
             dxf.AddEntity(hatch.CreateWCSBoundary());
 
@@ -2168,7 +2159,7 @@ namespace TestDxfDocument
             // this is subject to change if I find a way to get predictable results even when inserting new blocks in AutoCAD
             //attdef.Normal = new Vector3(1, 0, 0);
 
-            block.Attributes.Add(attdef.Id, attdef);
+            block.Attributes.Add(attdef.Tag, attdef);
             block.Entities.Add(new Line(new Vector3(-5, -5, 0), new Vector3(5, 5, 0)));
             block.Entities.Add(new Line(new Vector3(5, -5, 0), new Vector3(-5, 5, 0)));
 
@@ -2247,7 +2238,7 @@ namespace TestDxfDocument
             AttributeDefinition attdef = new AttributeDefinition("NewAttribute");
             attdef.Text = "InfoText";
             attdef.Alignment = TextAlignment.MiddleCenter;
-            nestedBlock.Attributes.Add(attdef.Id, attdef);
+            nestedBlock.Attributes.Add(attdef.Tag, attdef);
             Insert nestedInsert = new Insert(nestedBlock, new Vector3(0, 0, 0)); // the position will be relative to the position of the insert that nest it
             nestedInsert.Attributes[0].Value = 24;
 

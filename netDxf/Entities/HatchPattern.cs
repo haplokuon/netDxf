@@ -343,7 +343,7 @@ namespace netDxf.Entities
             StreamReader reader;
             try
             {
-                reader = new StreamReader(File.OpenRead(file), Encoding.ASCII);
+                reader = new StreamReader(File.OpenRead(file), true);
             }
             catch (Exception ex)
             {

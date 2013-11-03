@@ -46,7 +46,7 @@ namespace netDxf
 
         private string name;
         // keeps track of the number of handles generated
-        internal int NumHandles;
+        internal long NumHandles;
         // keeps track of the dimension blocks generated
         internal int DimensionBlocksGenerated;
         // keeps track of the group names generated (this groups have the isUnnamed bool set to true)
@@ -1102,7 +1102,7 @@ namespace netDxf
             //header information
             document.comments = dxfReader.Comments;
             document.drawingVariables = dxfReader.HeaderVariables;
-            document.NumHandles = Convert.ToInt32(dxfReader.HeaderVariables.HandleSeed, 16);
+            document.NumHandles = Convert.ToInt64(dxfReader.HeaderVariables.HandleSeed, 16);
 
             //tables information
             document.appRegistries = new ApplicationRegistries(document, dxfReader.ApplicationRegistries, dxfReader.ApplicationRegistryReferences);

@@ -24,7 +24,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Text;
 using netDxf.Blocks;
 using netDxf.Entities;
 using netDxf.Header;
@@ -158,7 +157,7 @@ namespace netDxf
 
         public HeaderVariables HeaderVariables
         {
-            get { return headerVariables; }
+            get { return this.headerVariables; }
         }
 
         #endregion
@@ -252,7 +251,7 @@ namespace netDxf
 
         public List<Image> Images
         {
-            get { return images; }
+            get { return this.images; }
         }
 
         public List<Ray> Rays
@@ -331,7 +330,7 @@ namespace netDxf
 
         public Dictionary<string, MLineStyle> MLineStyles
         {
-            get { return mlineStyles; }
+            get { return this.mlineStyles; }
         }
 
         public Dictionary<string, List<DxfObject>> MLineStyleReferences
@@ -355,7 +354,7 @@ namespace netDxf
 
         public Dictionary<string, ImageDef> ImageDefs
         {
-            get { return imageDefs; }
+            get { return this.imageDefs; }
         }
 
         public Dictionary<string, List<DxfObject>> ImageDefReferences
@@ -365,12 +364,12 @@ namespace netDxf
 
         public RasterVariables RasterVariables
         {
-            get { return rasterVariables; }
+            get { return this.rasterVariables; }
         }
 
         public Dictionary<string, Group> Groups
         {
-            get { return groups; }
+            get { return this.groups; }
         }
 
         public Dictionary<string, List<DxfObject>> GroupReferences
@@ -391,15 +390,9 @@ namespace netDxf
             if (stream == null)
                 throw new ArgumentNullException("stream", "The stream cannot be null");
 
-            // in case of error trying to get the code page we will default to the most common one 1252 Latin 1; Western European (Windows)
-            int codepage;
-            string encoding = CheckHeaderVariable(stream, HeaderVariableCode.DwgCodePage) ?? "ANSI_1252";
-            if (!int.TryParse(encoding.Split('_')[1], out codepage))
-                codepage = 1252;
-
             try
             {
-                this.reader = new StreamReader(stream, Encoding.GetEncoding(codepage));
+                this.reader = new StreamReader(stream, true);
             }
             catch (Exception ex)
             {
@@ -470,22 +463,22 @@ namespace netDxf
             this.groups = new Dictionary<string, Group>(StringComparer.InvariantCultureIgnoreCase);
             this.groupRefs = new Dictionary<string, List<DxfObject>>();
 
-            dxfPairInfo = this.ReadCodePair();
+            this.dxfPairInfo = this.ReadCodePair();
 
             // read the comments at the head of the file, any other comments will be ignored
             // they sometimes hold information about the program that has generated the dxf
-            while (dxfPairInfo.Code == 999)
+            while (this.dxfPairInfo.Code == 999)
             {
-                 this.comments.Add(dxfPairInfo.Value);
-                 dxfPairInfo = this.ReadCodePair();
+                 this.comments.Add(this.dxfPairInfo.Value);
+                 this.dxfPairInfo = this.ReadCodePair();
             }
 
-            while (dxfPairInfo.Value != StringCode.EndOfFile)
+            while (this.dxfPairInfo.Value != StringCode.EndOfFile)
             {
-                if (dxfPairInfo.Value == StringCode.BeginSection)
+                if (this.dxfPairInfo.Value == StringCode.BeginSection)
                 {
-                    dxfPairInfo = this.ReadCodePair();
-                    switch (dxfPairInfo.Value)
+                    this.dxfPairInfo = this.ReadCodePair();
+                    switch (this.dxfPairInfo.Value)
                     {
                         case StringCode.HeaderSection:
                             this.ReadHeader();
@@ -505,11 +498,14 @@ namespace netDxf
                         case StringCode.ObjectsSection:
                             this.ReadObjects();
                             break;
+                        case StringCode.ThumbnailImageSection:
+                            this.ReadThumbnailImage();
+                            break;
                         default:
-                            throw new InvalidDxfSectionException(dxfPairInfo.Value, "Unknown section " + dxfPairInfo.Value + ".");
+                            throw new InvalidDxfSectionException(this.dxfPairInfo.Value, "Unknown section " + this.dxfPairInfo.Value + ".");
                     }
                 }
-                dxfPairInfo = this.ReadCodePair();
+                this.dxfPairInfo = this.ReadCodePair();
             }
             stream.Position = 0;
 
@@ -533,7 +529,7 @@ namespace netDxf
 
         public static string CheckHeaderVariable(Stream stream, string headerVariable)
         {
-            StreamReader reader = new StreamReader(stream, Encoding.ASCII); // use the basic encoding to read only the header info
+            StreamReader reader = new StreamReader(stream, true);
             CodeValuePair dxfPairInfo = ReadCodePair(reader);
             while (dxfPairInfo.Value != StringCode.EndOfFile)
             {
@@ -576,46 +572,46 @@ namespace netDxf
 
         private void ReadHeader()
         {
-            dxfPairInfo = this.ReadCodePair();
-            while (dxfPairInfo.Value != StringCode.EndSection)
+            this.dxfPairInfo = this.ReadCodePair();
+            while (this.dxfPairInfo.Value != StringCode.EndSection)
             {
-                if (HeaderVariable.Allowed.ContainsKey(dxfPairInfo.Value))
+                if (HeaderVariable.Allowed.ContainsKey(this.dxfPairInfo.Value))
                 {
-                    int codeGroup = HeaderVariable.Allowed[dxfPairInfo.Value];
-                    string variableName = dxfPairInfo.Value;
-                    dxfPairInfo = this.ReadCodePair();
-                    if (dxfPairInfo.Code != codeGroup)
+                    int codeGroup = HeaderVariable.Allowed[this.dxfPairInfo.Value];
+                    string variableName = this.dxfPairInfo.Value;
+                    this.dxfPairInfo = this.ReadCodePair();
+                    if (this.dxfPairInfo.Code != codeGroup)
                         throw new DxfHeaderVariableException(variableName, "Invalid variable name and code group convination.");
                     switch (variableName)
                     {
                         case HeaderVariableCode.AcadVer:
                             DxfVersion acadVer = DxfVersion.Unknown;
-                            if(StringEnum.IsStringDefined(typeof(DxfVersion), dxfPairInfo.Value))
-                                acadVer = (DxfVersion) StringEnum.Parse(typeof(DxfVersion), dxfPairInfo.Value);
+                            if(StringEnum.IsStringDefined(typeof(DxfVersion), this.dxfPairInfo.Value))
+                                acadVer = (DxfVersion) StringEnum.Parse(typeof(DxfVersion), this.dxfPairInfo.Value);
                             if (acadVer < DxfVersion.AutoCad2000)
                                 throw new NotSupportedException("Only AutoCad2000 and higher dxf versions are supported.");
                             this.headerVariables.AcadVer = acadVer;
                             break;
                         case HeaderVariableCode.HandleSeed:
-                            this.headerVariables.HandleSeed = dxfPairInfo.Value;
+                            this.headerVariables.HandleSeed = this.dxfPairInfo.Value;
                             break;
                         case HeaderVariableCode.Angbase:
-                            this.headerVariables.Angbase = double.Parse(dxfPairInfo.Value);
+                            this.headerVariables.Angbase = double.Parse(this.dxfPairInfo.Value);
                             break;
                         case HeaderVariableCode.Angdir:
-                            this.headerVariables.Angdir = int.Parse(dxfPairInfo.Value);
+                            this.headerVariables.Angdir = int.Parse(this.dxfPairInfo.Value);
                             break;
                         case HeaderVariableCode.AttMode:
-                            this.headerVariables.AttMode = (AttMode)int.Parse(dxfPairInfo.Value);
+                            this.headerVariables.AttMode = (AttMode)int.Parse(this.dxfPairInfo.Value);
                             break;
                         case HeaderVariableCode.AUnits:
-                            this.headerVariables.AUnits = int.Parse(dxfPairInfo.Value);
+                            this.headerVariables.AUnits = int.Parse(this.dxfPairInfo.Value);
                             break;
                         case HeaderVariableCode.AUprec:
-                            this.headerVariables.AUprec = int.Parse(dxfPairInfo.Value);
+                            this.headerVariables.AUprec = int.Parse(this.dxfPairInfo.Value);
                             break;
                         case HeaderVariableCode.CeColor:
-                            short colorIndex = short.Parse(dxfPairInfo.Value);
+                            short colorIndex = short.Parse(this.dxfPairInfo.Value);
                             AciColor color;
                             switch (colorIndex)
                             {
@@ -632,13 +628,13 @@ namespace netDxf
                             this.headerVariables.CeColor = color;
                             break;
                         case HeaderVariableCode.CeLtScale:
-                            this.headerVariables.CeLtScale = double.Parse(dxfPairInfo.Value);
+                            this.headerVariables.CeLtScale = double.Parse(this.dxfPairInfo.Value);
                             break;
                         case HeaderVariableCode.CeLtype:
-                            this.headerVariables.CeLtype = dxfPairInfo.Value;
+                            this.headerVariables.CeLtype = this.dxfPairInfo.Value;
                             break;
                         case HeaderVariableCode.CeLweight:
-                            short weightIndex = short.Parse(dxfPairInfo.Value);
+                            short weightIndex = short.Parse(this.dxfPairInfo.Value);
                             Lineweight lineweight;
                             switch (weightIndex)
                             {
@@ -658,108 +654,108 @@ namespace netDxf
                             this.headerVariables.CeLweight = lineweight;
                             break;
                         case HeaderVariableCode.CLayer:
-                            this.headerVariables.CLayer = dxfPairInfo.Value;
+                            this.headerVariables.CLayer = this.dxfPairInfo.Value;
                             break;
                         case HeaderVariableCode.CMLJust:
-                            this.headerVariables.CMLJust = (MLineJustification) int.Parse(dxfPairInfo.Value);
+                            this.headerVariables.CMLJust = (MLineJustification) int.Parse(this.dxfPairInfo.Value);
                             break;
                         case HeaderVariableCode.CMLScale:
-                            this.headerVariables.CMLScale = double.Parse(dxfPairInfo.Value);
+                            this.headerVariables.CMLScale = double.Parse(this.dxfPairInfo.Value);
                             break;
                         case HeaderVariableCode.CMLStyle:
-                            this.headerVariables.CMLStyle = dxfPairInfo.Value;
+                            this.headerVariables.CMLStyle = this.dxfPairInfo.Value;
                             break;
                         case HeaderVariableCode.DimStyle:
-                            this.headerVariables.DimStyle = dxfPairInfo.Value;
+                            this.headerVariables.DimStyle = this.dxfPairInfo.Value;
                             break;
                         case HeaderVariableCode.TextSize:
-                            this.headerVariables.TextSize = double.Parse(dxfPairInfo.Value);
+                            this.headerVariables.TextSize = double.Parse(this.dxfPairInfo.Value);
                             break;
                         case HeaderVariableCode.TextStyle:
-                            this.headerVariables.TextStyle = dxfPairInfo.Value;
+                            this.headerVariables.TextStyle = this.dxfPairInfo.Value;
                             break;
                         case HeaderVariableCode.LastSavedBy:
-                            this.headerVariables.LastSavedBy = dxfPairInfo.Value;
+                            this.headerVariables.LastSavedBy = this.dxfPairInfo.Value;
                             break;
                         case HeaderVariableCode.LUnits:
-                            this.headerVariables.LUnits = int.Parse(dxfPairInfo.Value);
+                            this.headerVariables.LUnits = int.Parse(this.dxfPairInfo.Value);
                             break;
                         case HeaderVariableCode.LUprec:
-                            this.headerVariables.LUprec = int.Parse(dxfPairInfo.Value);
+                            this.headerVariables.LUprec = int.Parse(this.dxfPairInfo.Value);
                             break;
                         case HeaderVariableCode.DwgCodePage:
-                            this.headerVariables.DwgCodePage = dxfPairInfo.Value;
+                            this.headerVariables.DwgCodePage = this.dxfPairInfo.Value;
                             break;
                         case HeaderVariableCode.Extnames:
-                            this.headerVariables.Extnames = (int.Parse(dxfPairInfo.Value) != 0);
+                            this.headerVariables.Extnames = (int.Parse(this.dxfPairInfo.Value) != 0);
                             break;
                         case HeaderVariableCode.Insunits:
-                            this.headerVariables.Insunits = (DrawingUnits)int.Parse(dxfPairInfo.Value);
+                            this.headerVariables.Insunits = (DrawingUnits)int.Parse(this.dxfPairInfo.Value);
                             break;
                         case HeaderVariableCode.LtScale:
-                            this.headerVariables.LtScale = double.Parse(dxfPairInfo.Value);
+                            this.headerVariables.LtScale = double.Parse(this.dxfPairInfo.Value);
                             break;
                         case HeaderVariableCode.LwDisplay:
-                            this.headerVariables.LwDisplay = (int.Parse(dxfPairInfo.Value) != 0);
+                            this.headerVariables.LwDisplay = (int.Parse(this.dxfPairInfo.Value) != 0);
                             break;
                         case HeaderVariableCode.PdMode:
-                            this.headerVariables.PdMode = (PointShape)int.Parse(dxfPairInfo.Value);
+                            this.headerVariables.PdMode = (PointShape)int.Parse(this.dxfPairInfo.Value);
                             break;
                         case HeaderVariableCode.PdSize:
-                            this.headerVariables.PdSize = double.Parse(dxfPairInfo.Value);
+                            this.headerVariables.PdSize = double.Parse(this.dxfPairInfo.Value);
                             break;
                         case HeaderVariableCode.PLineGen:
-                            this.headerVariables.PLineGen = int.Parse(dxfPairInfo.Value);
+                            this.headerVariables.PLineGen = int.Parse(this.dxfPairInfo.Value);
                             break;
                     }
                 }
-                dxfPairInfo = this.ReadCodePair();
+                this.dxfPairInfo = this.ReadCodePair();
             }
         }
 
         private void ReadClasses()
         {
-            dxfPairInfo = this.ReadCodePair();
-            while (dxfPairInfo.Value != StringCode.EndSection)
+            this.dxfPairInfo = this.ReadCodePair();
+            while (this.dxfPairInfo.Value != StringCode.EndSection)
             {
-                dxfPairInfo = this.ReadCodePair();
+                this.dxfPairInfo = this.ReadCodePair();
             }
         }
 
         private void ReadTables()
         {
-            dxfPairInfo = this.ReadCodePair();
-            while (dxfPairInfo.Value != StringCode.EndSection)
+            this.dxfPairInfo = this.ReadCodePair();
+            while (this.dxfPairInfo.Value != StringCode.EndSection)
             {
-                dxfPairInfo = this.ReadCodePair();
-                switch (dxfPairInfo.Value)
+                this.dxfPairInfo = this.ReadCodePair();
+                switch (this.dxfPairInfo.Value)
                 {
                     case StringCode.ApplicationIDTable:
-                        Debug.Assert(dxfPairInfo.Code == 2);
+                        Debug.Assert(this.dxfPairInfo.Code == 2);
                         this.ReadApplicationsId();
                         break;
                     case StringCode.BlockRecordTable:
-                        Debug.Assert(dxfPairInfo.Code == 2);
+                        Debug.Assert(this.dxfPairInfo.Code == 2);
                         this.ReadBlockRecords();
                         break;
                     case StringCode.LayerTable:
-                        Debug.Assert(dxfPairInfo.Code == 2);
+                        Debug.Assert(this.dxfPairInfo.Code == 2);
                         this.ReadLayers();
                         break;
                     case StringCode.LineTypeTable:
-                        Debug.Assert(dxfPairInfo.Code == 2);
+                        Debug.Assert(this.dxfPairInfo.Code == 2);
                         this.ReadLineTypes();
                         break;
                     case StringCode.TextStyleTable:
-                        Debug.Assert(dxfPairInfo.Code == 2);
+                        Debug.Assert(this.dxfPairInfo.Code == 2);
                         this.ReadTextStyles();
                         break;
                     case StringCode.DimensionStyleTable:
-                        Debug.Assert(dxfPairInfo.Code == 2);
+                        Debug.Assert(this.dxfPairInfo.Code == 2);
                         this.ReadDimStyles();
                         break;
                     case StringCode.UcsTable:
-                        Debug.Assert(dxfPairInfo.Code == 2);
+                        Debug.Assert(this.dxfPairInfo.Code == 2);
                         this.ReadUCSs();
                         break;
                 }
@@ -768,10 +764,10 @@ namespace netDxf
 
         private void ReadEntities()
         {
-            dxfPairInfo = this.ReadCodePair();
-            while (dxfPairInfo.Value != StringCode.EndSection)
+            this.dxfPairInfo = this.ReadCodePair();
+            while (this.dxfPairInfo.Value != StringCode.EndSection)
             {
-                EntityObject entity = ReadEntity(false);
+                EntityObject entity = this.ReadEntity(false);
                 // the ReadEntity() will return null if an unkown entity has been found
                 if (entity == null)
                     continue;
@@ -844,44 +840,53 @@ namespace netDxf
 
         private void ReadObjects()
         {
-            dxfPairInfo = this.ReadCodePair();
-            while (dxfPairInfo.Value != StringCode.EndSection)
+            this.dxfPairInfo = this.ReadCodePair();
+            while (this.dxfPairInfo.Value != StringCode.EndSection)
             {
-                switch (dxfPairInfo.Value)
+                switch (this.dxfPairInfo.Value)
                 {
                     case DxfObjectCode.Dictionary:
-                        DictionaryObject dictionary = ReadDictionary();
+                        DictionaryObject dictionary = this.ReadDictionary();
                         if (this.dictionaries.ContainsKey(dictionary.Handle)) continue;
                         this.dictionaries.Add(dictionary.Handle, dictionary);
                         break;
                     case DxfObjectCode.RasterVariables:
-                        this.rasterVariables = ReadRasterVariables();
+                        this.rasterVariables = this.ReadRasterVariables();
                         break;
                     case DxfObjectCode.ImageDef:
-                        ImageDef imageDef = ReadImageDefinition();
+                        ImageDef imageDef = this.ReadImageDefinition();
                         if (this.imageDefs.ContainsKey(imageDef.Name)) continue;
                         this.imageDefs.Add(imageDef.Name, imageDef);
                         break;
                     case DxfObjectCode.ImageDefReactor:
-                        ImageDefReactor reactor = ReadImageDefReactor();
+                        ImageDefReactor reactor = this.ReadImageDefReactor();
                         if (this.imageDefReactors.ContainsKey(reactor.ImageHandle)) continue;
                         this.imageDefReactors.Add(reactor.ImageHandle, reactor);
                         break;
                     case DxfObjectCode.MLineStyle:
-                        MLineStyle style = ReadMLineStyle();
+                        MLineStyle style = this.ReadMLineStyle();
                         if (style == null) continue;
                         if (this.mlineStyles.ContainsKey(style.Name)) continue;
                         this.mlineStyles.Add(style.Name, style);
                         break;
                     case DxfObjectCode.Group:
-                        Group group = ReadGroup();
+                        Group group = this.ReadGroup();
                         if (this.groups.ContainsKey(group.Name)) continue;
                         this.groups.Add(group.Name, group);
                         break;
                     default:
-                        dxfPairInfo = this.ReadCodePair();
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                 }
+            }
+        }
+
+        private void ReadThumbnailImage()
+        {
+            this.dxfPairInfo = this.ReadCodePair();
+            while (this.dxfPairInfo.Value != StringCode.EndSection)
+            {
+                this.dxfPairInfo = this.ReadCodePair();
             }
         }
 
@@ -891,12 +896,12 @@ namespace netDxf
 
         private void ReadApplicationsId()
         {
-            dxfPairInfo = this.ReadCodePair();
-            while (dxfPairInfo.Value != StringCode.EndTable)
+            this.dxfPairInfo = this.ReadCodePair();
+            while (this.dxfPairInfo.Value != StringCode.EndTable)
             {
-                if (dxfPairInfo.Value == StringCode.ApplicationIDTable)
+                if (this.dxfPairInfo.Value == StringCode.ApplicationIDTable)
                 {
-                    Debug.Assert(dxfPairInfo.Code == 0);
+                    Debug.Assert(this.dxfPairInfo.Code == 0);
                     ApplicationRegistry appId = this.ReadApplicationId();
                     if (appId == null) continue;
                     if (this.appRegistries.ContainsKey(appId.Name)) continue;
@@ -904,7 +909,7 @@ namespace netDxf
                 }
                 else
                 {
-                    dxfPairInfo = this.ReadCodePair();
+                    this.dxfPairInfo = this.ReadCodePair();
                 }
             }
         }
@@ -913,20 +918,20 @@ namespace netDxf
         {
             string appId = string.Empty;
             string handle = string.Empty;
-            dxfPairInfo = this.ReadCodePair();
+            this.dxfPairInfo = this.ReadCodePair();
 
-            while (dxfPairInfo.Code != 0)
+            while (this.dxfPairInfo.Code != 0)
             {
-                switch (dxfPairInfo.Code)
+                switch (this.dxfPairInfo.Code)
                 {
                     case 2:
-                        appId = dxfPairInfo.Value;
+                        appId = this.dxfPairInfo.Value;
                         break;
                     case 5:
-                        handle = dxfPairInfo.Value;
+                        handle = this.dxfPairInfo.Value;
                         break;
                 }
-                dxfPairInfo = this.ReadCodePair();
+                this.dxfPairInfo = this.ReadCodePair();
             }
 
             if (string.IsNullOrEmpty(appId)) return null;
@@ -945,12 +950,12 @@ namespace netDxf
 
         private void ReadBlockRecords()
         {
-            dxfPairInfo = this.ReadCodePair();
-            while (dxfPairInfo.Value != StringCode.EndTable)
+            this.dxfPairInfo = this.ReadCodePair();
+            while (this.dxfPairInfo.Value != StringCode.EndTable)
             {
-                if (dxfPairInfo.Value == StringCode.BlockRecordTable)
+                if (this.dxfPairInfo.Value == StringCode.BlockRecordTable)
                 {
-                    Debug.Assert(dxfPairInfo.Code == 0);
+                    Debug.Assert(this.dxfPairInfo.Code == 0);
                     BlockRecord blockRecord = this.ReadBlockRecord();
                     if (blockRecord == null) continue;
                     if (this.blockRecords.ContainsKey(blockRecord.Name)) continue;
@@ -958,7 +963,7 @@ namespace netDxf
                 }
                 else
                 {
-                    dxfPairInfo = this.ReadCodePair();
+                    this.dxfPairInfo = this.ReadCodePair();
                 }
             }
         }
@@ -969,32 +974,32 @@ namespace netDxf
             string name = null;
             DrawingUnits units = DrawingUnits.Unitless;
 
-            dxfPairInfo = this.ReadCodePair();
+            this.dxfPairInfo = this.ReadCodePair();
 
-            while (dxfPairInfo.Code != 0)
+            while (this.dxfPairInfo.Code != 0)
             {
-                switch (dxfPairInfo.Code)
+                switch (this.dxfPairInfo.Code)
                 {
                     case 5:
-                        handle = dxfPairInfo.Value;
+                        handle = this.dxfPairInfo.Value;
                         break;
                     case 2:
-                        if (string.IsNullOrEmpty(dxfPairInfo.Value))
-                            throw new DxfInvalidCodeValueEntityException(dxfPairInfo.Code, dxfPairInfo.Value,
-                                                                         "Invalid value " + dxfPairInfo.Value + " in code " + dxfPairInfo.Code + ".");
-                        name = dxfPairInfo.Value;
+                        if (string.IsNullOrEmpty(this.dxfPairInfo.Value))
+                            throw new DxfInvalidCodeValueEntityException(this.dxfPairInfo.Code, this.dxfPairInfo.Value,
+                                                                         "Invalid value " + this.dxfPairInfo.Value + " in code " + this.dxfPairInfo.Code + ".");
+                        name = this.dxfPairInfo.Value;
                         break;
                     case 70:
-                        units = (DrawingUnits) int.Parse(dxfPairInfo.Value);
+                        units = (DrawingUnits) int.Parse(this.dxfPairInfo.Value);
                         break;
                 }
-                dxfPairInfo = this.ReadCodePair();
+                this.dxfPairInfo = this.ReadCodePair();
             }
 
             if (string.IsNullOrEmpty(name)) return null;
 
             // we need to check for generated blocks by dimensions, even if the dimension was deleted the block might persist in the drawing.
-            CheckDimBlockName(name);
+            this.CheckDimBlockName(name);
 
             return new BlockRecord(name)
                        {
@@ -1009,12 +1014,12 @@ namespace netDxf
 
         private void ReadLayers()
         {
-            dxfPairInfo = this.ReadCodePair();
-            while (dxfPairInfo.Value != StringCode.EndTable)
+            this.dxfPairInfo = this.ReadCodePair();
+            while (this.dxfPairInfo.Value != StringCode.EndTable)
             {
-                if (dxfPairInfo.Value == StringCode.LayerTable)
+                if (this.dxfPairInfo.Value == StringCode.LayerTable)
                 {
-                    Debug.Assert(dxfPairInfo.Code == 0);
+                    Debug.Assert(this.dxfPairInfo.Code == 0);
                     Layer layer = this.ReadLayer();
                     if (layer == null) continue;
                     if(this.layers.ContainsKey(layer.Name)) continue;
@@ -1023,7 +1028,7 @@ namespace netDxf
                 }
                 else
                 {
-                    dxfPairInfo = this.ReadCodePair();
+                    this.dxfPairInfo = this.ReadCodePair();
                 }
             }
         }
@@ -1038,20 +1043,20 @@ namespace netDxf
             LineType lineType = null;
             Lineweight lineweight = Lineweight.Default;
 
-            dxfPairInfo = this.ReadCodePair();
+            this.dxfPairInfo = this.ReadCodePair();
 
-            while (dxfPairInfo.Code != 0)
+            while (this.dxfPairInfo.Code != 0)
             {
-                switch (dxfPairInfo.Code)
+                switch (this.dxfPairInfo.Code)
                 {
                     case 5:
-                        handle = dxfPairInfo.Value;
+                        handle = this.dxfPairInfo.Value;
                         break;
                     case 2:
-                        name = dxfPairInfo.Value;
+                        name = this.dxfPairInfo.Value;
                         break;
                     case 62:
-                        short index = short.Parse(dxfPairInfo.Value);
+                        short index = short.Parse(this.dxfPairInfo.Value);
                         if (index < 0)
                         {
                             isVisible = false;
@@ -1061,11 +1066,11 @@ namespace netDxf
                             color = new AciColor(index);
                         break;
                     case 420: // the layer uses true color
-                        color = AciColor.FromTrueColor(int.Parse(dxfPairInfo.Value));
+                        color = AciColor.FromTrueColor(int.Parse(this.dxfPairInfo.Value));
                         break;
                     case 6:
                         // the linetype names ByLayer or ByBlock are case unsensitive
-                        string lineTypeName = dxfPairInfo.Value;
+                        string lineTypeName = this.dxfPairInfo.Value;
                         if (String.Compare(lineTypeName, "ByLayer", StringComparison.OrdinalIgnoreCase) == 0)
                             lineTypeName = "ByLayer";
                         if (String.Compare(lineTypeName, "ByBlock", StringComparison.OrdinalIgnoreCase) == 0)
@@ -1073,16 +1078,16 @@ namespace netDxf
                         lineType = this.GetLineType(lineTypeName);
                         break;
                     case 290:
-                        if(int.Parse(dxfPairInfo.Value)==0)
+                        if(int.Parse(this.dxfPairInfo.Value)==0)
                             plot = false;
                         break;
                     case 370:
-                        lineweight = Lineweight.FromCadIndex(short.Parse(dxfPairInfo.Value));
-                        dxfPairInfo = this.ReadCodePair();
+                        lineweight = Lineweight.FromCadIndex(short.Parse(this.dxfPairInfo.Value));
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                 }
 
-                dxfPairInfo = this.ReadCodePair();
+                this.dxfPairInfo = this.ReadCodePair();
             }
 
             if (string.IsNullOrEmpty(name)) return null;
@@ -1107,12 +1112,12 @@ namespace netDxf
 
         private void ReadLineTypes()
         {
-            dxfPairInfo = this.ReadCodePair();
-            while (dxfPairInfo.Value != StringCode.EndTable)
+            this.dxfPairInfo = this.ReadCodePair();
+            while (this.dxfPairInfo.Value != StringCode.EndTable)
             {
-                if (dxfPairInfo.Value == StringCode.LineTypeTable)
+                if (this.dxfPairInfo.Value == StringCode.LineTypeTable)
                 {
-                    Debug.Assert(dxfPairInfo.Code == 0);
+                    Debug.Assert(this.dxfPairInfo.Code == 0);
                     LineType tl = this.ReadLineType();
                     if (tl == null) continue;
                     if (this.lineTypes.ContainsKey(tl.Name)) continue;
@@ -1120,7 +1125,7 @@ namespace netDxf
                 }
                 else
                 {
-                    dxfPairInfo = this.ReadCodePair();
+                    this.dxfPairInfo = this.ReadCodePair();
                 }
             }
         }
@@ -1132,24 +1137,24 @@ namespace netDxf
             string description = null;
             List<double> segments = new List<double>();
 
-            dxfPairInfo = this.ReadCodePair();
+            this.dxfPairInfo = this.ReadCodePair();
 
-            while (dxfPairInfo.Code != 0)
+            while (this.dxfPairInfo.Code != 0)
             {
-                switch (dxfPairInfo.Code)
+                switch (this.dxfPairInfo.Code)
                 {
                     case 5:
-                        handle = dxfPairInfo.Value;
+                        handle = this.dxfPairInfo.Value;
                         break;
                     case 2: // line type name is case insensitive
-                        name = dxfPairInfo.Value;
+                        name = this.dxfPairInfo.Value;
                         if (String.Compare(name, "ByLayer", StringComparison.OrdinalIgnoreCase) == 0)
                             name = "ByLayer";
                         if (String.Compare(name, "ByBlock", StringComparison.OrdinalIgnoreCase) == 0)
                             name = "ByBlock";
                         break;
                     case 3: // linetype description
-                        description = dxfPairInfo.Value;
+                        description = this.dxfPairInfo.Value;
                         break;
                     case 73:
                         //number of segments (not needed)
@@ -1158,10 +1163,10 @@ namespace netDxf
                         //length of the line type segments (not needed)
                         break;
                     case 49:
-                        segments.Add(double.Parse(dxfPairInfo.Value));
+                        segments.Add(double.Parse(this.dxfPairInfo.Value));
                         break;
                 }
-                dxfPairInfo = this.ReadCodePair();
+                this.dxfPairInfo = this.ReadCodePair();
             }
 
             if (string.IsNullOrEmpty(name)) return null;
@@ -1182,12 +1187,12 @@ namespace netDxf
 
         private void ReadTextStyles()
         {
-            dxfPairInfo = this.ReadCodePair();
-            while (dxfPairInfo.Value != StringCode.EndTable)
+            this.dxfPairInfo = this.ReadCodePair();
+            while (this.dxfPairInfo.Value != StringCode.EndTable)
             {
-                if (dxfPairInfo.Value == StringCode.TextStyleTable)
+                if (this.dxfPairInfo.Value == StringCode.TextStyleTable)
                 {
-                    Debug.Assert(dxfPairInfo.Code == 0);
+                    Debug.Assert(this.dxfPairInfo.Code == 0);
                     TextStyle style = this.ReadTextStyle();
                     if (style == null) continue;
                     if(this.textStyles.ContainsKey(style.Name)) continue;
@@ -1195,7 +1200,7 @@ namespace netDxf
                 }
                 else
                 {
-                    dxfPairInfo = this.ReadCodePair();
+                    this.dxfPairInfo = this.ReadCodePair();
                 }
             }
         }
@@ -1212,52 +1217,52 @@ namespace netDxf
             double widthFactor = 0.0f;
             double obliqueAngle = 0.0f;
 
-            dxfPairInfo = this.ReadCodePair();
+            this.dxfPairInfo = this.ReadCodePair();
 
             //leer los datos mientras no encontramos el código 0 que indicaría el final de la capa
-            while (dxfPairInfo.Code != 0)
+            while (this.dxfPairInfo.Code != 0)
             {
-                switch (dxfPairInfo.Code)
+                switch (this.dxfPairInfo.Code)
                 {
                     case 5:
-                        handle = dxfPairInfo.Value;
+                        handle = this.dxfPairInfo.Value;
                         break;
                     case 2:
-                        name = dxfPairInfo.Value;
+                        name = this.dxfPairInfo.Value;
                         break;
                     case 3:
-                        font = dxfPairInfo.Value;
+                        font = this.dxfPairInfo.Value;
                         break;
 
                     case 70:
-                        if (int.Parse(dxfPairInfo.Value) == 4)
+                        if (int.Parse(this.dxfPairInfo.Value) == 4)
                             isVertical = true;
                         break;
                     case 71:
-                        if (int.Parse(dxfPairInfo.Value) == 6)
+                        if (int.Parse(this.dxfPairInfo.Value) == 6)
                         {
                             isBackward = true;
                             isUpsideDown = true;
                         }
-                        else if (int.Parse(dxfPairInfo.Value) == 2)
+                        else if (int.Parse(this.dxfPairInfo.Value) == 2)
                             isBackward = true;
-                        else if (int.Parse(dxfPairInfo.Value) == 4)
+                        else if (int.Parse(this.dxfPairInfo.Value) == 4)
                             isUpsideDown = true;
                         break;
                     case 40:
-                        height = double.Parse(dxfPairInfo.Value);
+                        height = double.Parse(this.dxfPairInfo.Value);
                         break;
                     case 41:
-                        widthFactor = double.Parse(dxfPairInfo.Value);
+                        widthFactor = double.Parse(this.dxfPairInfo.Value);
                         break;
                     case 42:
                         //last text height used (not aplicable)
                         break;
                     case 50:
-                        obliqueAngle = double.Parse(dxfPairInfo.Value);
+                        obliqueAngle = double.Parse(this.dxfPairInfo.Value);
                         break;
                 }
-                dxfPairInfo = this.ReadCodePair();
+                this.dxfPairInfo = this.ReadCodePair();
             }
 
             if (string.IsNullOrEmpty(name)) return null;
@@ -1283,12 +1288,12 @@ namespace netDxf
 
         private void ReadDimStyles()
         {
-            dxfPairInfo = this.ReadCodePair();
-            while (dxfPairInfo.Value != StringCode.EndTable)
+            this.dxfPairInfo = this.ReadCodePair();
+            while (this.dxfPairInfo.Value != StringCode.EndTable)
             {
-                if (dxfPairInfo.Value == StringCode.DimensionStyleTable)
+                if (this.dxfPairInfo.Value == StringCode.DimensionStyleTable)
                 {
-                    Debug.Assert(dxfPairInfo.Code == 0); //el código 0 indica el inicio de una nueva capa
+                    Debug.Assert(this.dxfPairInfo.Code == 0); //el código 0 indica el inicio de una nueva capa
                     DimensionStyle ds = this.ReadDimensionStyle();
                     if (ds == null) continue;
                     if (this.dimStyles.ContainsKey(ds.Name)) continue;
@@ -1296,7 +1301,7 @@ namespace netDxf
                 }
                 else
                 {
-                    dxfPairInfo = this.ReadCodePair();
+                    this.dxfPairInfo = this.ReadCodePair();
                 }
             }
         }
@@ -1329,68 +1334,68 @@ namespace netDxf
             int dimaunit = defaultDim.DIMAUNIT;
             string dimdsep = defaultDim.DIMDSEP;
 
-            dxfPairInfo = this.ReadCodePair();
+            this.dxfPairInfo = this.ReadCodePair();
 
-            while (dxfPairInfo.Code != 0)
+            while (this.dxfPairInfo.Code != 0)
             {
-                switch (dxfPairInfo.Code)
+                switch (this.dxfPairInfo.Code)
                 {
                     case 105:
-                        handle = dxfPairInfo.Value;
+                        handle = this.dxfPairInfo.Value;
                         break;
                     case 2:
-                        name = dxfPairInfo.Value;
+                        name = this.dxfPairInfo.Value;
                         break;
                     case 3:
-                        dimpost = dxfPairInfo.Value;
+                        dimpost = this.dxfPairInfo.Value;
                         break;
                     case 41:
-                        dimasz = double.Parse(dxfPairInfo.Value);
+                        dimasz = double.Parse(this.dxfPairInfo.Value);
                         break;
                     case 42:
-                        dimexo = double.Parse(dxfPairInfo.Value);
+                        dimexo = double.Parse(this.dxfPairInfo.Value);
                         break;
                     case 44:
-                        dimexe = double.Parse(dxfPairInfo.Value);
+                        dimexe = double.Parse(this.dxfPairInfo.Value);
                         break;
                     case 73:
-                        dimtih = int.Parse(dxfPairInfo.Value);
+                        dimtih = int.Parse(this.dxfPairInfo.Value);
                         break;
                     case 74:
-                        dimtoh = int.Parse(dxfPairInfo.Value);
+                        dimtoh = int.Parse(this.dxfPairInfo.Value);
                         break;
                     case 77:
-                        dimtad = int.Parse(dxfPairInfo.Value);
+                        dimtad = int.Parse(this.dxfPairInfo.Value);
                         break;
                     case 140:
-                        dimtxt = double.Parse(dxfPairInfo.Value);
+                        dimtxt = double.Parse(this.dxfPairInfo.Value);
                         break;
                     case 141:
-                        dimcen = double.Parse(dxfPairInfo.Value);
+                        dimcen = double.Parse(this.dxfPairInfo.Value);
                         break;
                     case 147:
-                        dimgap = double.Parse(dxfPairInfo.Value);
+                        dimgap = double.Parse(this.dxfPairInfo.Value);
                         break;
                     case 149:
-                        dimadec = int.Parse(dxfPairInfo.Value);
+                        dimadec = int.Parse(this.dxfPairInfo.Value);
                         break;
                     case 271:
-                        dimdec = int.Parse(dxfPairInfo.Value);
+                        dimdec = int.Parse(this.dxfPairInfo.Value);
                         break;
                     case 275:
-                        dimaunit = int.Parse(dxfPairInfo.Value);
+                        dimaunit = int.Parse(this.dxfPairInfo.Value);
                         break;
                     case 278:
-                        dimdsep = dxfPairInfo.Value;
+                        dimdsep = this.dxfPairInfo.Value;
                         break;
                     case 280:
-                        dimjust = int.Parse(dxfPairInfo.Value);
+                        dimjust = int.Parse(this.dxfPairInfo.Value);
                         break;
                     case 340:
-                        txtStyleHandle = dxfPairInfo.Value;
+                        txtStyleHandle = this.dxfPairInfo.Value;
                         break;
                 }
-                dxfPairInfo = this.ReadCodePair();
+                this.dxfPairInfo = this.ReadCodePair();
             }
 
             if (string.IsNullOrEmpty(name) || string.IsNullOrEmpty(txtStyleHandle)) return null;
@@ -1414,7 +1419,7 @@ namespace netDxf
                            DIMTOH = dimtoh,
                            DIMAUNIT = dimaunit,
                            DIMDSEP = dimdsep,
-                           TextStyle = GetTextStyleByHandle(txtStyleHandle)
+                           TextStyle = this.GetTextStyleByHandle(txtStyleHandle)
                        };
 
             this.textStyleRefs[dimStyle.TextStyle.Name].Add(dimStyle);
@@ -1427,12 +1432,12 @@ namespace netDxf
 
         private void ReadUCSs()
         {
-            dxfPairInfo = this.ReadCodePair();
-            while (dxfPairInfo.Value != StringCode.EndTable)
+            this.dxfPairInfo = this.ReadCodePair();
+            while (this.dxfPairInfo.Value != StringCode.EndTable)
             {
-                if (dxfPairInfo.Value == StringCode.UcsTable)
+                if (this.dxfPairInfo.Value == StringCode.UcsTable)
                 {
-                    Debug.Assert(dxfPairInfo.Code == 0);
+                    Debug.Assert(this.dxfPairInfo.Code == 0);
                     UCS ucs = this.ReadUCS();
                     if (ucs == null) continue;
                     if (this.layers.ContainsKey(ucs.Name)) continue;
@@ -1441,7 +1446,7 @@ namespace netDxf
                 }
                 else
                 {
-                    dxfPairInfo = this.ReadCodePair();
+                    this.dxfPairInfo = this.ReadCodePair();
                 }
             }
         }
@@ -1455,51 +1460,51 @@ namespace netDxf
             Vector3 yDir = Vector3.UnitY;
             double elevation = 0.0;
 
-            dxfPairInfo = this.ReadCodePair();
+            this.dxfPairInfo = this.ReadCodePair();
 
-            while (dxfPairInfo.Code != 0)
+            while (this.dxfPairInfo.Code != 0)
             {
-                switch (dxfPairInfo.Code)
+                switch (this.dxfPairInfo.Code)
                 {
                     case 5:
-                        handle = dxfPairInfo.Value;
+                        handle = this.dxfPairInfo.Value;
                         break;
                     case 2:
-                        name = dxfPairInfo.Value;
+                        name = this.dxfPairInfo.Value;
                         break;
                     case 10:
-                        origin.X = double.Parse(dxfPairInfo.Value);
+                        origin.X = double.Parse(this.dxfPairInfo.Value);
                         break;
                     case 20:
-                        origin.Y = double.Parse(dxfPairInfo.Value);
+                        origin.Y = double.Parse(this.dxfPairInfo.Value);
                         break;
                     case 30:
-                        origin.Z = double.Parse(dxfPairInfo.Value);
+                        origin.Z = double.Parse(this.dxfPairInfo.Value);
                         break;
                     case 11:
-                        xDir.X = double.Parse(dxfPairInfo.Value);
+                        xDir.X = double.Parse(this.dxfPairInfo.Value);
                         break;
                     case 21:
-                        xDir.Y = double.Parse(dxfPairInfo.Value);
+                        xDir.Y = double.Parse(this.dxfPairInfo.Value);
                         break;
                     case 31:
-                        xDir.Z = double.Parse(dxfPairInfo.Value);
+                        xDir.Z = double.Parse(this.dxfPairInfo.Value);
                         break;
                     case 12:
-                        yDir.X = double.Parse(dxfPairInfo.Value);
+                        yDir.X = double.Parse(this.dxfPairInfo.Value);
                         break;
                     case 22:
-                        yDir.Y = double.Parse(dxfPairInfo.Value);
+                        yDir.Y = double.Parse(this.dxfPairInfo.Value);
                         break;
                     case 32:
-                        yDir.Z = double.Parse(dxfPairInfo.Value);
+                        yDir.Z = double.Parse(this.dxfPairInfo.Value);
                         break;
                     case 146:
-                        elevation = double.Parse(dxfPairInfo.Value);
+                        elevation = double.Parse(this.dxfPairInfo.Value);
                         break;
                 }
 
-                dxfPairInfo = this.ReadCodePair();
+                this.dxfPairInfo = this.ReadCodePair();
             }
 
             if (string.IsNullOrEmpty(name)) return null;
@@ -1519,17 +1524,17 @@ namespace netDxf
 
         private void ReadBlocks()
         {
-            dxfPairInfo = this.ReadCodePair();
-            while (dxfPairInfo.Value != StringCode.EndSection)
+            this.dxfPairInfo = this.ReadCodePair();
+            while (this.dxfPairInfo.Value != StringCode.EndSection)
             {
-                switch (dxfPairInfo.Value)
+                switch (this.dxfPairInfo.Value)
                 {
                     case StringCode.BeginBlock:
                         Block block = this.ReadBlock();
                         this.blocks.Add(block.Name, block);
                         break;
                     default:
-                        dxfPairInfo = this.ReadCodePair();
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                 }
             }
@@ -1568,79 +1573,86 @@ namespace netDxf
             List<EntityObject> entities = new List<EntityObject>();
             Dictionary<string, AttributeDefinition> attdefs = new Dictionary<string, AttributeDefinition>();
 
-            dxfPairInfo = this.ReadCodePair();
-            while (dxfPairInfo.Value != StringCode.EndBlock)
+            this.dxfPairInfo = this.ReadCodePair();
+            while (this.dxfPairInfo.Value != StringCode.EndBlock)
             {
-                switch (dxfPairInfo.Code)
+                switch (this.dxfPairInfo.Code)
                 {
                     case 5:
-                        handle = dxfPairInfo.Value;
-                        dxfPairInfo = this.ReadCodePair();
+                        handle = this.dxfPairInfo.Value;
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 8:
-                        layer = this.GetLayer(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        layer = this.GetLayer(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 2:
-                        name = dxfPairInfo.Value;
+                        name = this.dxfPairInfo.Value;
                         if (!this.blockRecords.TryGetValue(name, out blockRecord))
                             throw new ClosedDxfTableException(StringCode.BlockRecordTable, "The block record " + name + " is not defined");
-                        dxfPairInfo = this.ReadCodePair();
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 70:
-                        type = (BlockTypeFlags)int.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        type = (BlockTypeFlags)int.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 10:
-                        basePoint.X = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        basePoint.X = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 20:
-                        basePoint.Y = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        basePoint.Y = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 30:
-                        basePoint.Z = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        basePoint.Z = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 3:
                         //I don't know the reason of these duplicity since code 2 also contains the block name
                         //The program EASE exports code 3 with an empty string
                         //name = dxfPairInfo.Value;
-                        dxfPairInfo = this.ReadCodePair();
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 0: // entity
                         EntityObject entity = this.ReadEntity(true);
                         if (entity != null)
                             if (entity.Type == EntityType.AttributeDefinition)
-                                attdefs.Add(((AttributeDefinition)entity).Id, (AttributeDefinition)entity);
+                            {
+                                // autocad allows duplicate tags in attribute definitions, but this library does not
+                                // having duplicate tags is not recommended in any way, since there will be now way to know which is the definition
+                                // associated to the insert attribute
+                                AttributeDefinition attDef = (AttributeDefinition)entity;
+                                if (!attdefs.ContainsKey(attDef.Tag))
+                                    attdefs.Add(((AttributeDefinition)entity).Tag, attDef);
+                            }
                             else
                                 entities.Add(entity);
                         break;
                     default:
-                        dxfPairInfo = this.ReadCodePair();
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                 }
             }
 
             // read the end bloc object until a new element is found
-            dxfPairInfo = this.ReadCodePair();
+            this.dxfPairInfo = this.ReadCodePair();
             string endBlockHandle = string.Empty;
             Layer endBlockLayer = layer;
-            while (dxfPairInfo.Code != 0)
+            while (this.dxfPairInfo.Code != 0)
             {
-                switch (dxfPairInfo.Code)
+                switch (this.dxfPairInfo.Code)
                 {
                     case 5:
-                        endBlockHandle = dxfPairInfo.Value;
-                        dxfPairInfo = this.ReadCodePair();
+                        endBlockHandle = this.dxfPairInfo.Value;
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 8:
-                        endBlockLayer = this.GetLayer(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        endBlockLayer = this.GetLayer(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     default:
-                        dxfPairInfo = this.ReadCodePair();
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                 }
             }
@@ -1678,89 +1690,89 @@ namespace netDxf
             double rotation = 0.0;
             Vector3 normal = Vector3.UnitZ;
 
-            dxfPairInfo = this.ReadCodePair();
-            while (dxfPairInfo.Code != 0)
+            this.dxfPairInfo = this.ReadCodePair();
+            while (this.dxfPairInfo.Code != 0)
             {
-                switch (dxfPairInfo.Code)
+                switch (this.dxfPairInfo.Code)
                 {
                     case 2:
-                        id = dxfPairInfo.Value;
-                        dxfPairInfo = this.ReadCodePair();
+                        id = this.dxfPairInfo.Value;
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 3:
-                        text = dxfPairInfo.Value;
-                        dxfPairInfo = this.ReadCodePair();
+                        text = this.dxfPairInfo.Value;
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 1:
-                        value = dxfPairInfo.Value;
-                        dxfPairInfo = this.ReadCodePair();
+                        value = this.dxfPairInfo.Value;
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 70:
-                        flags = (AttributeFlags)int.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        flags = (AttributeFlags)int.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 10:
-                        firstAlignmentPoint.X = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        firstAlignmentPoint.X = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 20:
-                        firstAlignmentPoint.Y = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        firstAlignmentPoint.Y = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 30:
-                        firstAlignmentPoint.Z = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        firstAlignmentPoint.Z = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 11:
-                        secondAlignmentPoint.X = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        secondAlignmentPoint.X = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 21:
-                        secondAlignmentPoint.Y = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        secondAlignmentPoint.Y = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 31:
-                        secondAlignmentPoint.Z = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        secondAlignmentPoint.Z = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 7:
-                        style = this.GetTextStyle(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        style = this.GetTextStyle(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 40:
-                        height = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        height = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 41:
-                        widthFactor = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        widthFactor = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 50:
-                        rotation = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        rotation = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 72:
-                        horizontalAlignment = int.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        horizontalAlignment = int.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 74:
-                        verticalAlignment = int.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        verticalAlignment = int.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 210:
-                        normal.X = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        normal.X = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 220:
-                        normal.Y = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        normal.Y = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 230:
-                        normal.Z = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        normal.Z = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     default:
-                        dxfPairInfo = this.ReadCodePair();
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                 }
             }
@@ -1808,64 +1820,64 @@ namespace netDxf
             Vector3 normal = Vector3.UnitZ;
 
             // DxfObject codes
-            dxfPairInfo = this.ReadCodePair();
-            while (dxfPairInfo.Code != 100)
+            this.dxfPairInfo = this.ReadCodePair();
+            while (this.dxfPairInfo.Code != 100)
             {
-                switch (dxfPairInfo.Code)
+                switch (this.dxfPairInfo.Code)
                 {
                     case 0:
                         throw new DxfEntityException(DxfObjectCode.Attribute, "Premature end of entity definition.");
                     case 5:
-                        handle = dxfPairInfo.Value;
-                        dxfPairInfo = this.ReadCodePair();
+                        handle = this.dxfPairInfo.Value;
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     default:
-                        dxfPairInfo = this.ReadCodePair();
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                 }
             }
 
             // AcDbEntity common codes
-            dxfPairInfo = this.ReadCodePair();
-            while (dxfPairInfo.Code != 100)
+            this.dxfPairInfo = this.ReadCodePair();
+            while (this.dxfPairInfo.Code != 100)
             {
-                switch (dxfPairInfo.Code)
+                switch (this.dxfPairInfo.Code)
                 {
                     case 0:
                         throw new DxfEntityException(DxfObjectCode.Attribute, "Premature end of entity definition.");
                     case 8: //layer code
-                        layer = this.GetLayer(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        layer = this.GetLayer(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 62: //aci color code
                         if (!color.UseTrueColor)
-                            color = AciColor.FromCadIndex(short.Parse(dxfPairInfo.Value));
-                        dxfPairInfo = this.ReadCodePair();
+                            color = AciColor.FromCadIndex(short.Parse(this.dxfPairInfo.Value));
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 420: // the entity uses true color
-                        color = AciColor.FromTrueColor(int.Parse(dxfPairInfo.Value));
-                        dxfPairInfo = this.ReadCodePair();
+                        color = AciColor.FromTrueColor(int.Parse(this.dxfPairInfo.Value));
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 6: //type line code
                         // the linetype names ByLayer or ByBlock are case unsensitive
-                        string lineTypeName = dxfPairInfo.Value;
+                        string lineTypeName = this.dxfPairInfo.Value;
                         if (String.Compare(lineTypeName, "ByLayer", StringComparison.OrdinalIgnoreCase) == 0)
                             lineTypeName = "ByLayer";
                         if (String.Compare(lineTypeName, "ByBlock", StringComparison.OrdinalIgnoreCase) == 0)
                             lineTypeName = "ByBlock";
                         lineType = this.GetLineType(lineTypeName);
-                        dxfPairInfo = this.ReadCodePair();
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 370: //lineweight code
-                        lineweight = Lineweight.FromCadIndex(short.Parse(dxfPairInfo.Value));
-                        dxfPairInfo = this.ReadCodePair();
+                        lineweight = Lineweight.FromCadIndex(short.Parse(this.dxfPairInfo.Value));
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 48: //linetype scale
-                        linetypeScale = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        linetypeScale = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     default:
-                        dxfPairInfo = this.ReadCodePair();
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                 }
             }
@@ -1874,88 +1886,88 @@ namespace netDxf
             AttributeDefinition attdef = null;
             Object value = null;
 
-            dxfPairInfo = this.ReadCodePair();
-            while (dxfPairInfo.Code != 0)
+            this.dxfPairInfo = this.ReadCodePair();
+            while (this.dxfPairInfo.Code != 0)
             {
-                switch (dxfPairInfo.Code)
+                switch (this.dxfPairInfo.Code)
                 {
                     case 2:
-                        attdefId = dxfPairInfo.Value;
+                        attdefId = this.dxfPairInfo.Value;
                         // seems that some programs (sketchup AFAIK) might export insert entities with attributtes which definitions are not defined in the block
                         if (!isBlockEntity)
                             block.Attributes.TryGetValue(attdefId, out attdef);
-                        dxfPairInfo = this.ReadCodePair();
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 1:
-                        value = dxfPairInfo.Value;
-                        dxfPairInfo = this.ReadCodePair();
+                        value = this.dxfPairInfo.Value;
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 70:
-                        flags = (AttributeFlags)int.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        flags = (AttributeFlags)int.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 10:
-                        firstAlignmentPoint.X = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        firstAlignmentPoint.X = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 20:
-                        firstAlignmentPoint.Y = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        firstAlignmentPoint.Y = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 30:
-                        firstAlignmentPoint.Z = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        firstAlignmentPoint.Z = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 11:
-                        secondAlignmentPoint.X = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        secondAlignmentPoint.X = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 21:
-                        secondAlignmentPoint.Y = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        secondAlignmentPoint.Y = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 31:
-                        secondAlignmentPoint.Z = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        secondAlignmentPoint.Z = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 7:
-                        style = this.GetTextStyle(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        style = this.GetTextStyle(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 40:
-                        height = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        height = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 41:
-                        widthFactor = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        widthFactor = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 50:
-                        rotation = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        rotation = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 72:
-                        horizontalAlignment = int.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        horizontalAlignment = int.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 74:
-                        verticalAlignment = int.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        verticalAlignment = int.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 210:
-                        normal.X = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        normal.X = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 220:
-                        normal.Y = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        normal.Y = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 230:
-                        normal.Z = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        normal.Z = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     default:
-                        dxfPairInfo = this.ReadCodePair();
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                 }
             }
@@ -1972,7 +1984,7 @@ namespace netDxf
                 Lineweight = lineweight,
                 LineTypeScale = linetypeScale,
                 Definition = attdef,
-                Id = attdefId,
+                Tag = attdefId,
                 Position = ocsBasePoint,
                 Normal = normal,
                 Alignment = alignment,
@@ -2010,71 +2022,71 @@ namespace netDxf
 
             EntityObject entity;
 
-            string dxfCode = dxfPairInfo.Value;
-            dxfPairInfo = this.ReadCodePair();
+            string dxfCode = this.dxfPairInfo.Value;
+            this.dxfPairInfo = this.ReadCodePair();
 
             // DxfObject common codes
-            while (dxfPairInfo.Code != 100)
+            while (this.dxfPairInfo.Code != 100)
             {
-                switch (dxfPairInfo.Code)
+                switch (this.dxfPairInfo.Code)
                 {
                     case 0:
                         throw new DxfEntityException(dxfCode, "Premature end of entity definition.");
                     case 5:
-                        handle = dxfPairInfo.Value;
-                        dxfPairInfo = this.ReadCodePair();
+                        handle = this.dxfPairInfo.Value;
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     default:
-                        dxfPairInfo = this.ReadCodePair();
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                 }
             }
 
             // AcDbEntity common codes
-            dxfPairInfo = this.ReadCodePair();
-            while (dxfPairInfo.Code != 100)
+            this.dxfPairInfo = this.ReadCodePair();
+            while (this.dxfPairInfo.Code != 100)
             {
-                switch (dxfPairInfo.Code)
+                switch (this.dxfPairInfo.Code)
                 {
                     case 0:
                         throw new DxfEntityException(dxfCode, "Premature end of entity definition.");
                     case 8: //layer code
-                        layer = this.GetLayer(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        layer = this.GetLayer(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 62: //aci color code
                         if (!color.UseTrueColor)
-                            color = AciColor.FromCadIndex(short.Parse(dxfPairInfo.Value));
-                        dxfPairInfo = this.ReadCodePair();
+                            color = AciColor.FromCadIndex(short.Parse(this.dxfPairInfo.Value));
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 420: //the entity uses true color
-                        color = AciColor.FromTrueColor(int.Parse(dxfPairInfo.Value));
-                        dxfPairInfo = this.ReadCodePair();
+                        color = AciColor.FromTrueColor(int.Parse(this.dxfPairInfo.Value));
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 6: //type line code
                         // the linetype names ByLayer or ByBlock are case unsensitive
-                        string lineTypeName = dxfPairInfo.Value;
+                        string lineTypeName = this.dxfPairInfo.Value;
                         if (String.Compare(lineTypeName, "ByLayer", StringComparison.OrdinalIgnoreCase) == 0)
                             lineTypeName = "ByLayer";
                         if (String.Compare(lineTypeName, "ByBlock", StringComparison.OrdinalIgnoreCase) == 0)
                             lineTypeName = "ByBlock";
                         lineType = this.GetLineType(lineTypeName);
-                        dxfPairInfo = this.ReadCodePair();
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 370: //lineweight code
-                        lineweight = Lineweight.FromCadIndex(short.Parse(dxfPairInfo.Value));
-                        dxfPairInfo = this.ReadCodePair();
+                        lineweight = Lineweight.FromCadIndex(short.Parse(this.dxfPairInfo.Value));
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 48: //linetype scale
-                        linetypeScale = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        linetypeScale = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 60: //object visibility
-                        if (int.Parse(dxfPairInfo.Value) == 1) isVisible = false;
-                        dxfPairInfo = this.ReadCodePair();
+                        if (int.Parse(this.dxfPairInfo.Value) == 1) isVisible = false;
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     default:
-                        dxfPairInfo = this.ReadCodePair();
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                 }
             }
@@ -2142,7 +2154,7 @@ namespace netDxf
                     entity = this.ReadAttributeDefinition();
                     break;
                 default:
-                    ReadUnknowEntity();
+                    this.ReadUnknowEntity();
                     return null;
             }
 
@@ -2183,95 +2195,95 @@ namespace netDxf
             ImageClippingBoundary clippingBoundary = null;
 
             Dictionary<string, XData> xData = new Dictionary<string, XData>();
-            dxfPairInfo = this.ReadCodePair();
-            while (dxfPairInfo.Code != 0)
+            this.dxfPairInfo = this.ReadCodePair();
+            while (this.dxfPairInfo.Code != 0)
             {
-                switch (dxfPairInfo.Code)
+                switch (this.dxfPairInfo.Code)
                 {
                     case 10:
-                        posX = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        posX = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 20:
-                        posY = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        posY = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 30:
-                        posZ = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        posZ = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 11:
-                        uX = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        uX = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 21:
-                        uY = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        uY = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 31:
-                        uZ = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        uZ = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 12:
-                        vX = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        vX = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 22:
-                        vY = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        vY = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 32:
-                        vZ = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        vZ = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 13:
-                        width = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        width = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 23:
-                        height = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        height = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 340:
-                        imageDefHandle = dxfPairInfo.Value;
-                        dxfPairInfo = this.ReadCodePair();
+                        imageDefHandle = this.dxfPairInfo.Value;
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 70:
-                        displayOptions = (ImageDisplayFlags) int.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        displayOptions = (ImageDisplayFlags) int.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 280:
-                        clipping = int.Parse(dxfPairInfo.Value) != 0;
-                        dxfPairInfo = this.ReadCodePair();
+                        clipping = int.Parse(this.dxfPairInfo.Value) != 0;
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 281:
-                        brightness = float.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        brightness = float.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 282:
-                        contrast = float.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        contrast = float.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 283:
-                        fade = float.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        fade = float.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 71:
-                        boundaryType = (ImageClippingBoundaryType) int.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        boundaryType = (ImageClippingBoundaryType) int.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 91:
-                        int numVertexes = int.Parse(dxfPairInfo.Value);
+                        int numVertexes = int.Parse(this.dxfPairInfo.Value);
                         List<Vector2> vertexes = new List<Vector2>();
-                        dxfPairInfo = this.ReadCodePair();
+                        this.dxfPairInfo = this.ReadCodePair();
                         for (int i = 0; i < numVertexes; i++)
                         {
                             double x = 0.0;
                             double y = 0.0;
-                            if (dxfPairInfo.Code == 14) x = double.Parse(dxfPairInfo.Value);
-                            dxfPairInfo = this.ReadCodePair();
-                            if (dxfPairInfo.Code == 24) y = double.Parse(dxfPairInfo.Value);
-                            dxfPairInfo = this.ReadCodePair();
+                            if (this.dxfPairInfo.Code == 14) x = double.Parse(this.dxfPairInfo.Value);
+                            this.dxfPairInfo = this.ReadCodePair();
+                            if (this.dxfPairInfo.Code == 24) y = double.Parse(this.dxfPairInfo.Value);
+                            this.dxfPairInfo = this.ReadCodePair();
                             vertexes.Add(new Vector2(x, y));
                         }
                         if(boundaryType == ImageClippingBoundaryType.Rectangular)
@@ -2282,7 +2294,7 @@ namespace netDxf
                             clippingBoundary = null;
                         break;
                     case 1001:
-                        XData xDataItem = this.ReadXDataRecord(dxfPairInfo.Value);
+                        XData xDataItem = this.ReadXDataRecord(this.dxfPairInfo.Value);
                         // to be safe if the xDataItem.ApplicationRegistry.Name already exists we will add the new entry to the existing one
                         if (xData.ContainsKey(xDataItem.ApplicationRegistry.Name))
                             xData[xDataItem.ApplicationRegistry.Name].XDataRecord.AddRange(xDataItem.XDataRecord);
@@ -2290,10 +2302,10 @@ namespace netDxf
                             xData.Add(xDataItem.ApplicationRegistry.Name, xDataItem);
                         break;
                     default:
-                        if (dxfPairInfo.Code >= 1000 && dxfPairInfo.Code <= 1071)
-                            throw new DxfInvalidCodeValueEntityException(dxfPairInfo.Code, dxfPairInfo.Value,
+                        if (this.dxfPairInfo.Code >= 1000 && this.dxfPairInfo.Code <= 1071)
+                            throw new DxfInvalidCodeValueEntityException(this.dxfPairInfo.Code, this.dxfPairInfo.Value,
                                                                          "The extended data of an entity must start with the application registry code.");
-                        dxfPairInfo = this.ReadCodePair();
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                 }
             }
@@ -2337,53 +2349,53 @@ namespace netDxf
             Vector3 normal = Vector3.UnitZ;
             Dictionary<string, XData> xData = new Dictionary<string, XData>();
 
-            dxfPairInfo = this.ReadCodePair();
-            while (dxfPairInfo.Code != 0)
+            this.dxfPairInfo = this.ReadCodePair();
+            while (this.dxfPairInfo.Code != 0)
             {
-                switch (dxfPairInfo.Code)
+                switch (this.dxfPairInfo.Code)
                 {
                     case 10:
-                        center.X = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        center.X = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 20:
-                        center.Y = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        center.Y = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 30:
-                        center.Z = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        center.Z = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 40:
-                        radius = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        radius = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 50:
-                        startAngle = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        startAngle = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 51:
-                        endAngle = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        endAngle = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 39:
-                        thickness = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        thickness = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 210:
-                        normal.X = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        normal.X = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 220:
-                        normal.Y = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        normal.Y = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 230:
-                        normal.Z = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        normal.Z = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 1001:
-                        XData xDataItem = this.ReadXDataRecord(dxfPairInfo.Value);
+                        XData xDataItem = this.ReadXDataRecord(this.dxfPairInfo.Value);
                         // to be safe if the xDataItem.ApplicationRegistry.Name already exists we will add the new entry to the existing one
                         if (xData.ContainsKey(xDataItem.ApplicationRegistry.Name))
                             xData[xDataItem.ApplicationRegistry.Name].XDataRecord.AddRange(xDataItem.XDataRecord);
@@ -2391,10 +2403,10 @@ namespace netDxf
                             xData.Add(xDataItem.ApplicationRegistry.Name, xDataItem);
                         break;
                     default:
-                        if (dxfPairInfo.Code >= 1000 && dxfPairInfo.Code <= 1071)
-                            throw new DxfInvalidCodeValueEntityException(dxfPairInfo.Code, dxfPairInfo.Value,
+                        if (this.dxfPairInfo.Code >= 1000 && this.dxfPairInfo.Code <= 1071)
+                            throw new DxfInvalidCodeValueEntityException(this.dxfPairInfo.Code, this.dxfPairInfo.Value,
                                                                          "The extended data of an entity must start with the application registry code.");
-                        dxfPairInfo = this.ReadCodePair();
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                 }
             }
@@ -2423,45 +2435,45 @@ namespace netDxf
             Vector3 normal = Vector3.UnitZ;
             Dictionary<string, XData> xData = new Dictionary<string, XData>();
 
-            dxfPairInfo = this.ReadCodePair();
-            while (dxfPairInfo.Code != 0)
+            this.dxfPairInfo = this.ReadCodePair();
+            while (this.dxfPairInfo.Code != 0)
             {
-                switch (dxfPairInfo.Code)
+                switch (this.dxfPairInfo.Code)
                 {
                     case 10:
-                        center.X = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        center.X = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 20:
-                        center.Y = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        center.Y = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 30:
-                        center.Z = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        center.Z = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 40:
-                        radius = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        radius = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 39:
-                        thickness = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        thickness = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 210:
-                        normal.X = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        normal.X = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 220:
-                        normal.Y = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        normal.Y = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 230:
-                        normal.Z = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        normal.Z = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 1001:
-                        XData xDataItem = this.ReadXDataRecord(dxfPairInfo.Value);
+                        XData xDataItem = this.ReadXDataRecord(this.dxfPairInfo.Value);
                         // to be safe if the xDataItem.ApplicationRegistry.Name already exists we will add the new entry to the existing one
                         if (xData.ContainsKey(xDataItem.ApplicationRegistry.Name))
                             xData[xDataItem.ApplicationRegistry.Name].XDataRecord.AddRange(xDataItem.XDataRecord);
@@ -2469,10 +2481,10 @@ namespace netDxf
                             xData.Add(xDataItem.ApplicationRegistry.Name, xDataItem);
                         break;
                     default:
-                        if (dxfPairInfo.Code >= 1000 && dxfPairInfo.Code <= 1071)
-                            throw new DxfInvalidCodeValueEntityException(dxfPairInfo.Code, dxfPairInfo.Value,
+                        if (this.dxfPairInfo.Code >= 1000 && this.dxfPairInfo.Code <= 1071)
+                            throw new DxfInvalidCodeValueEntityException(this.dxfPairInfo.Code, this.dxfPairInfo.Value,
                                                                          "The extended data of an entity must start with the application registry code.");
-                        dxfPairInfo = this.ReadCodePair();
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                 }
             }
@@ -2507,89 +2519,89 @@ namespace netDxf
             double lineSpacingFactor = 1.0;
             bool dimInfo = false;
 
-            dxfPairInfo = this.ReadCodePair();
+            this.dxfPairInfo = this.ReadCodePair();
             while (!dimInfo)
             {
-                switch (dxfPairInfo.Code)
+                switch (this.dxfPairInfo.Code)
                 {
                     case 2:
-                        drawingBlockName = dxfPairInfo.Value;
+                        drawingBlockName = this.dxfPairInfo.Value;
                         if(!isBlockEntity) drawingBlock = this.GetBlock(drawingBlockName);
-                        dxfPairInfo = this.ReadCodePair();
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 3:
-                        style = this.GetDimensionStyle(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        style = this.GetDimensionStyle(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 10:
-                        defPoint.X = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        defPoint.X = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 20:
-                        defPoint.Y = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        defPoint.Y = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 30:
-                        defPoint.Z = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        defPoint.Z = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 11:
-                        midtxtPoint.X = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        midtxtPoint.X = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 21:
-                        midtxtPoint.Y = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        midtxtPoint.Y = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 31:
-                        midtxtPoint.Z = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        midtxtPoint.Z = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 70:
-                        dimType = (DimensionTypeFlag)int.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        dimType = (DimensionTypeFlag)int.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 71:
-                        attachmentPoint = (MTextAttachmentPoint) int.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        attachmentPoint = (MTextAttachmentPoint) int.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 72:
-                        lineSpacingStyle = (MTextLineSpacingStyle) int.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        lineSpacingStyle = (MTextLineSpacingStyle) int.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 41:
-                        lineSpacingFactor = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        lineSpacingFactor = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 51:
                         // even if the documentation says that code 51 is optional, rotated ordinate dimensions will not work correctly is this value is not provided
-                        dimRot = 360 - double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        dimRot = 360 - double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 210:
-                        normal.X = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        normal.X = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 220:
-                        normal.Y = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        normal.Y = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 230:
-                        normal.Z = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        normal.Z = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 100:
-                        if (dxfPairInfo.Value == SubclassMarker.AlignedDimension ||
-                            dxfPairInfo.Value == SubclassMarker.RadialDimension ||
-                            dxfPairInfo.Value == SubclassMarker.DiametricDimension ||
-                            dxfPairInfo.Value == SubclassMarker.Angular3PointDimension ||
-                            dxfPairInfo.Value == SubclassMarker.Angular2LineDimension ||
-                            dxfPairInfo.Value == SubclassMarker.OrdinateDimension)
+                        if (this.dxfPairInfo.Value == SubclassMarker.AlignedDimension ||
+                            this.dxfPairInfo.Value == SubclassMarker.RadialDimension ||
+                            this.dxfPairInfo.Value == SubclassMarker.DiametricDimension ||
+                            this.dxfPairInfo.Value == SubclassMarker.Angular3PointDimension ||
+                            this.dxfPairInfo.Value == SubclassMarker.Angular2LineDimension ||
+                            this.dxfPairInfo.Value == SubclassMarker.OrdinateDimension)
                             dimInfo = true; // we have finished reading the basic dimension info
-                        dxfPairInfo = this.ReadCodePair();
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     default:
-                        dxfPairInfo = this.ReadCodePair();
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                 }
             }
@@ -2611,25 +2623,25 @@ namespace netDxf
             switch (type)
             {
                 case (DimensionTypeFlag.Aligned):
-                    dim = ReadAlignedDimension(defPoint);
+                    dim = this.ReadAlignedDimension(defPoint);
                     break;
                 case (DimensionTypeFlag.Linear):
-                    dim = ReadLinearDimension(defPoint);
+                    dim = this.ReadLinearDimension(defPoint);
                     break;
                 case (DimensionTypeFlag.Radius):
-                    dim = ReadRadialDimension(defPoint, normal);
+                    dim = this.ReadRadialDimension(defPoint, normal);
                     break;
                 case (DimensionTypeFlag.Diameter):
-                    dim = ReadDiametricDimension(defPoint, normal);
+                    dim = this.ReadDiametricDimension(defPoint, normal);
                     break;
                 case (DimensionTypeFlag.Angular3Point):
-                    dim = ReadAngular3PointDimension(defPoint);
+                    dim = this.ReadAngular3PointDimension(defPoint);
                     break;
                 case (DimensionTypeFlag.Angular):
-                    dim = ReadAngular2LineDimension(defPoint);
+                    dim = this.ReadAngular2LineDimension(defPoint);
                     break;
                 case (DimensionTypeFlag.Ordinate):
-                    dim = ReadOrdinateDimension(defPoint, axis, normal, dimRot);
+                    dim = this.ReadOrdinateDimension(defPoint, axis, normal, dimRot);
                     break;
                 default:
                     throw new ArgumentException("The dimension type: " + type + " is not implemented or unknown.");
@@ -2663,36 +2675,36 @@ namespace netDxf
             Vector3 secondRef = Vector3.Zero;
             Dictionary<string, XData> xData = new Dictionary<string, XData>();
 
-            while (dxfPairInfo.Code != 0)
+            while (this.dxfPairInfo.Code != 0)
             {
-                switch (dxfPairInfo.Code)
+                switch (this.dxfPairInfo.Code)
                 {
                     case 13:
-                        firstRef.X = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        firstRef.X = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 23:
-                        firstRef.Y = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        firstRef.Y = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 33:
-                        firstRef.Z = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        firstRef.Z = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 14:
-                        secondRef.X = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        secondRef.X = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 24:
-                        secondRef.Y = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        secondRef.Y = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 34:
-                        secondRef.Z = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        secondRef.Z = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 1001:
-                        XData xDataItem = this.ReadXDataRecord(dxfPairInfo.Value);
+                        XData xDataItem = this.ReadXDataRecord(this.dxfPairInfo.Value);
                         // to be safe if the xDataItem.ApplicationRegistry.Name already exists we will add the new entry to the existing one
                         if (xData.ContainsKey(xDataItem.ApplicationRegistry.Name))
                             xData[xDataItem.ApplicationRegistry.Name].XDataRecord.AddRange(xDataItem.XDataRecord);
@@ -2700,10 +2712,10 @@ namespace netDxf
                             xData.Add(xDataItem.ApplicationRegistry.Name, xDataItem);
                         break;
                     default:
-                        if (dxfPairInfo.Code >= 1000 && dxfPairInfo.Code <= 1071)
-                            throw new DxfInvalidCodeValueEntityException(dxfPairInfo.Code, dxfPairInfo.Value,
+                        if (this.dxfPairInfo.Code >= 1000 && this.dxfPairInfo.Code <= 1071)
+                            throw new DxfInvalidCodeValueEntityException(this.dxfPairInfo.Code, this.dxfPairInfo.Value,
                                                                          "The extended data of an entity must start with the application registry code.");
-                        dxfPairInfo = this.ReadCodePair();
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                 }
             }
@@ -2718,44 +2730,44 @@ namespace netDxf
             double rot = 0.0;
             Dictionary<string, XData> xData = new Dictionary<string, XData>();
 
-            while (dxfPairInfo.Code != 0)
+            while (this.dxfPairInfo.Code != 0)
             {
-                switch (dxfPairInfo.Code)
+                switch (this.dxfPairInfo.Code)
                 {
                     case 13:
-                        firtRef.X = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        firtRef.X = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 23:
-                        firtRef.Y = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        firtRef.Y = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 33:
-                        firtRef.Z = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        firtRef.Z = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 14:
-                        secondRef.X = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        secondRef.X = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 24:
-                        secondRef.Y = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        secondRef.Y = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 34:
-                        secondRef.Z = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        secondRef.Z = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 50:
-                        rot = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        rot = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 52:
                         // AutoCAD is unable to recognized code 52 for oblique dimension line even though it appears as valid in the dxf documentation
-                        dxfPairInfo = this.ReadCodePair();
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 1001:
-                        XData xDataItem = this.ReadXDataRecord(dxfPairInfo.Value);
+                        XData xDataItem = this.ReadXDataRecord(this.dxfPairInfo.Value);
                         // to be safe if the xDataItem.ApplicationRegistry.Name already exists we will add the new entry to the existing one
                         if (xData.ContainsKey(xDataItem.ApplicationRegistry.Name))
                             xData[xDataItem.ApplicationRegistry.Name].XDataRecord.AddRange(xDataItem.XDataRecord);
@@ -2763,10 +2775,10 @@ namespace netDxf
                             xData.Add(xDataItem.ApplicationRegistry.Name, xDataItem);
                         break;
                     default:
-                        if (dxfPairInfo.Code >= 1000 && dxfPairInfo.Code <= 1071)
-                            throw new DxfInvalidCodeValueEntityException(dxfPairInfo.Code, dxfPairInfo.Value,
+                        if (this.dxfPairInfo.Code >= 1000 && this.dxfPairInfo.Code <= 1071)
+                            throw new DxfInvalidCodeValueEntityException(this.dxfPairInfo.Code, this.dxfPairInfo.Value,
                                                                          "The extended data of an entity must start with the application registry code.");
-                        dxfPairInfo = this.ReadCodePair();
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                 }
             }
@@ -2785,27 +2797,27 @@ namespace netDxf
             Vector3 circunferenceRef = Vector3.Zero;
             Dictionary<string, XData> xData = new Dictionary<string, XData>();
 
-            while (dxfPairInfo.Code != 0)
+            while (this.dxfPairInfo.Code != 0)
             {
-                switch (dxfPairInfo.Code)
+                switch (this.dxfPairInfo.Code)
                 {
                     case 15:
-                        circunferenceRef.X = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        circunferenceRef.X = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 25:
-                        circunferenceRef.Y = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        circunferenceRef.Y = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 35:
-                        circunferenceRef.Z = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        circunferenceRef.Z = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 40:
-                        dxfPairInfo = this.ReadCodePair();
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 1001:
-                        XData xDataItem = this.ReadXDataRecord(dxfPairInfo.Value);
+                        XData xDataItem = this.ReadXDataRecord(this.dxfPairInfo.Value);
                         // to be safe if the xDataItem.ApplicationRegistry.Name already exists we will add the new entry to the existing one
                         if (xData.ContainsKey(xDataItem.ApplicationRegistry.Name))
                             xData[xDataItem.ApplicationRegistry.Name].XDataRecord.AddRange(xDataItem.XDataRecord);
@@ -2813,10 +2825,10 @@ namespace netDxf
                             xData.Add(xDataItem.ApplicationRegistry.Name, xDataItem);
                         break;
                     default:
-                        if (dxfPairInfo.Code >= 1000 && dxfPairInfo.Code <= 1071)
-                            throw new DxfInvalidCodeValueEntityException(dxfPairInfo.Code, dxfPairInfo.Value,
+                        if (this.dxfPairInfo.Code >= 1000 && this.dxfPairInfo.Code <= 1071)
+                            throw new DxfInvalidCodeValueEntityException(this.dxfPairInfo.Code, this.dxfPairInfo.Value,
                                                                          "The extended data of an entity must start with the application registry code.");
-                        dxfPairInfo = this.ReadCodePair();
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                 }
             }
@@ -2837,27 +2849,27 @@ namespace netDxf
             Vector3 circunferenceRef = Vector3.Zero;
             Dictionary<string, XData> xData = new Dictionary<string, XData>();
 
-            while (dxfPairInfo.Code != 0)
+            while (this.dxfPairInfo.Code != 0)
             {
-                switch (dxfPairInfo.Code)
+                switch (this.dxfPairInfo.Code)
                 {
                     case 15:
-                        circunferenceRef.X = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        circunferenceRef.X = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 25:
-                        circunferenceRef.Y = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        circunferenceRef.Y = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 35:
-                        circunferenceRef.Z = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        circunferenceRef.Z = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 40:
-                        dxfPairInfo = this.ReadCodePair();
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 1001:
-                        XData xDataItem = this.ReadXDataRecord(dxfPairInfo.Value);
+                        XData xDataItem = this.ReadXDataRecord(this.dxfPairInfo.Value);
                         // to be safe if the xDataItem.ApplicationRegistry.Name already exists we will add the new entry to the existing one
                         if (xData.ContainsKey(xDataItem.ApplicationRegistry.Name))
                             xData[xDataItem.ApplicationRegistry.Name].XDataRecord.AddRange(xDataItem.XDataRecord);
@@ -2865,10 +2877,10 @@ namespace netDxf
                             xData.Add(xDataItem.ApplicationRegistry.Name, xDataItem);
                         break;
                     default:
-                        if (dxfPairInfo.Code >= 1000 && dxfPairInfo.Code <= 1071)
-                            throw new DxfInvalidCodeValueEntityException(dxfPairInfo.Code, dxfPairInfo.Value,
+                        if (this.dxfPairInfo.Code >= 1000 && this.dxfPairInfo.Code <= 1071)
+                            throw new DxfInvalidCodeValueEntityException(this.dxfPairInfo.Code, this.dxfPairInfo.Value,
                                                                          "The extended data of an entity must start with the application registry code.");
-                        dxfPairInfo = this.ReadCodePair();
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                 }
             }
@@ -2892,48 +2904,48 @@ namespace netDxf
 
             Dictionary<string, XData> xData = new Dictionary<string, XData>();
 
-            while (dxfPairInfo.Code != 0)
+            while (this.dxfPairInfo.Code != 0)
             {
-                switch (dxfPairInfo.Code)
+                switch (this.dxfPairInfo.Code)
                 {
                     case 13:
-                        firstRef.X = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        firstRef.X = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 23:
-                        firstRef.Y = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        firstRef.Y = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 33:
-                        firstRef.Z = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        firstRef.Z = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 14:
-                        secondRef.X = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        secondRef.X = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 24:
-                        secondRef.Y = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        secondRef.Y = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 34:
-                        secondRef.Z = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        secondRef.Z = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 15:
-                        center.X = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        center.X = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 25:
-                        center.Y = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        center.Y = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 35:
-                        center.Z = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        center.Z = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 1001:
-                        XData xDataItem = this.ReadXDataRecord(dxfPairInfo.Value);
+                        XData xDataItem = this.ReadXDataRecord(this.dxfPairInfo.Value);
                         // to be safe if the xDataItem.ApplicationRegistry.Name already exists we will add the new entry to the existing one
                         if (xData.ContainsKey(xDataItem.ApplicationRegistry.Name))
                             xData[xDataItem.ApplicationRegistry.Name].XDataRecord.AddRange(xDataItem.XDataRecord);
@@ -2941,10 +2953,10 @@ namespace netDxf
                             xData.Add(xDataItem.ApplicationRegistry.Name, xDataItem);
                         break;
                     default:
-                        if (dxfPairInfo.Code >= 1000 && dxfPairInfo.Code <= 1071)
-                            throw new DxfInvalidCodeValueEntityException(dxfPairInfo.Code, dxfPairInfo.Value,
+                        if (this.dxfPairInfo.Code >= 1000 && this.dxfPairInfo.Code <= 1071)
+                            throw new DxfInvalidCodeValueEntityException(this.dxfPairInfo.Code, this.dxfPairInfo.Value,
                                                                          "The extended data of an entity must start with the application registry code.");
-                        dxfPairInfo = this.ReadCodePair();
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                 }
             }
@@ -2962,60 +2974,60 @@ namespace netDxf
 
             Dictionary<string, XData> xData = new Dictionary<string, XData>();
 
-            while (dxfPairInfo.Code != 0)
+            while (this.dxfPairInfo.Code != 0)
             {
-                switch (dxfPairInfo.Code)
+                switch (this.dxfPairInfo.Code)
                 {
                     case 13:
-                        startFirstLine.X = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        startFirstLine.X = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 23:
-                        startFirstLine.Y = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        startFirstLine.Y = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 33:
-                        startFirstLine.Z = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        startFirstLine.Z = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 14:
-                        endFirstLine.X = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        endFirstLine.X = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 24:
-                        endFirstLine.Y = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        endFirstLine.Y = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 34:
-                        endFirstLine.Z = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        endFirstLine.Z = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 15:
-                        startSecondLine.X = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        startSecondLine.X = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 25:
-                        startSecondLine.Y = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        startSecondLine.Y = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 35:
-                        startSecondLine.Z = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        startSecondLine.Z = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 16:
-                        arcDefinitionPoint.X = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        arcDefinitionPoint.X = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 26:
-                        arcDefinitionPoint.Y = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        arcDefinitionPoint.Y = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 36:
-                        arcDefinitionPoint.Z = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        arcDefinitionPoint.Z = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 1001:
-                        XData xDataItem = this.ReadXDataRecord(dxfPairInfo.Value);
+                        XData xDataItem = this.ReadXDataRecord(this.dxfPairInfo.Value);
                         // to be safe if the xDataItem.ApplicationRegistry.Name already exists we will add the new entry to the existing one
                         if (xData.ContainsKey(xDataItem.ApplicationRegistry.Name))
                             xData[xDataItem.ApplicationRegistry.Name].XDataRecord.AddRange(xDataItem.XDataRecord);
@@ -3023,10 +3035,10 @@ namespace netDxf
                             xData.Add(xDataItem.ApplicationRegistry.Name, xDataItem);
                         break;
                     default:
-                        if (dxfPairInfo.Code >= 1000 && dxfPairInfo.Code <= 1071)
-                            throw new DxfInvalidCodeValueEntityException(dxfPairInfo.Code, dxfPairInfo.Value,
+                        if (this.dxfPairInfo.Code >= 1000 && this.dxfPairInfo.Code <= 1071)
+                            throw new DxfInvalidCodeValueEntityException(this.dxfPairInfo.Code, this.dxfPairInfo.Value,
                                                                          "The extended data of an entity must start with the application registry code.");
-                        dxfPairInfo = this.ReadCodePair();
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                 }
             }
@@ -3040,36 +3052,36 @@ namespace netDxf
 
             Dictionary<string, XData> xData = new Dictionary<string, XData>();
 
-            while (dxfPairInfo.Code != 0)
+            while (this.dxfPairInfo.Code != 0)
             {
-                switch (dxfPairInfo.Code)
+                switch (this.dxfPairInfo.Code)
                 {
                     case 13:
-                        firstPoint.X = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        firstPoint.X = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 23:
-                        firstPoint.Y = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        firstPoint.Y = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 33:
-                        firstPoint.Z = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        firstPoint.Z = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 14:
-                        secondPoint.X = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        secondPoint.X = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 24:
-                        secondPoint.Y = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        secondPoint.Y = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 34:
-                        secondPoint.Z = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        secondPoint.Z = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 1001:
-                        XData xDataItem = this.ReadXDataRecord(dxfPairInfo.Value);
+                        XData xDataItem = this.ReadXDataRecord(this.dxfPairInfo.Value);
                         // to be safe if the xDataItem.ApplicationRegistry.Name already exists we will add the new entry to the existing one
                         if (xData.ContainsKey(xDataItem.ApplicationRegistry.Name))
                             xData[xDataItem.ApplicationRegistry.Name].XDataRecord.AddRange(xDataItem.XDataRecord);
@@ -3077,10 +3089,10 @@ namespace netDxf
                             xData.Add(xDataItem.ApplicationRegistry.Name, xDataItem);
                         break;
                     default:
-                        if (dxfPairInfo.Code >= 1000 && dxfPairInfo.Code <= 1071)
-                            throw new DxfInvalidCodeValueEntityException(dxfPairInfo.Code, dxfPairInfo.Value,
+                        if (this.dxfPairInfo.Code >= 1000 && this.dxfPairInfo.Code <= 1071)
+                            throw new DxfInvalidCodeValueEntityException(this.dxfPairInfo.Code, this.dxfPairInfo.Value,
                                                                          "The extended data of an entity must start with the application registry code.");
-                        dxfPairInfo = this.ReadCodePair();
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                 }
             }
@@ -3108,61 +3120,61 @@ namespace netDxf
 
             Dictionary<string, XData> xData = new Dictionary<string, XData>();
 
-            dxfPairInfo = this.ReadCodePair();
-            while (dxfPairInfo.Code != 0)
+            this.dxfPairInfo = this.ReadCodePair();
+            while (this.dxfPairInfo.Code != 0)
             {
-                switch (dxfPairInfo.Code)
+                switch (this.dxfPairInfo.Code)
                 {
                     case 10:
-                        center.X = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        center.X = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 20:
-                        center.Y = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        center.Y = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 30:
-                        center.Z = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        center.Z = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 11:
-                        axisPoint.X = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        axisPoint.X = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 21:
-                        axisPoint.Y = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        axisPoint.Y = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 31:
-                        axisPoint.Z = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        axisPoint.Z = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 40:
-                        ratio = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        ratio = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 41:
-                        param[0] = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        param[0] = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 42:
-                        param[1] = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        param[1] = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 210:
-                        normal.X = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        normal.X = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 220:
-                        normal.Y = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        normal.Y = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 230:
-                        normal.Z = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        normal.Z = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 1001:
-                        XData xDataItem = this.ReadXDataRecord(dxfPairInfo.Value);
+                        XData xDataItem = this.ReadXDataRecord(this.dxfPairInfo.Value);
                         // to be safe if the xDataItem.ApplicationRegistry.Name already exists we will add the new entry to the existing one
                         if (xData.ContainsKey(xDataItem.ApplicationRegistry.Name))
                             xData[xDataItem.ApplicationRegistry.Name].XDataRecord.AddRange(xDataItem.XDataRecord);
@@ -3170,10 +3182,10 @@ namespace netDxf
                             xData.Add(xDataItem.ApplicationRegistry.Name, xDataItem);
                         break;
                     default:
-                        if (dxfPairInfo.Code >= 1000 && dxfPairInfo.Code <= 1071)
-                            throw new DxfInvalidCodeValueEntityException(dxfPairInfo.Code, dxfPairInfo.Value,
+                        if (this.dxfPairInfo.Code >= 1000 && this.dxfPairInfo.Code <= 1071)
+                            throw new DxfInvalidCodeValueEntityException(this.dxfPairInfo.Code, this.dxfPairInfo.Value,
                                                                          "The extended data of an entity must start with the application registry code.");
-                        dxfPairInfo = this.ReadCodePair();
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                 }
             }
@@ -3208,45 +3220,45 @@ namespace netDxf
             double rotation = 0.0;
             Dictionary<string, XData> xData = new Dictionary<string, XData>();
 
-            dxfPairInfo = this.ReadCodePair();
-            while (dxfPairInfo.Code != 0)
+            this.dxfPairInfo = this.ReadCodePair();
+            while (this.dxfPairInfo.Code != 0)
             {
-                switch (dxfPairInfo.Code)
+                switch (this.dxfPairInfo.Code)
                 {
                     case 10:
-                        location.X = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        location.X = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 20:
-                        location.Y = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        location.Y = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 30:
-                        location.Z = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        location.Z = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 39:
-                        thickness = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        thickness = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 210:
-                        normal.X = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        normal.X = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 220:
-                        normal.Y = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        normal.Y = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 230:
-                        normal.Z = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        normal.Z = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 50:
-                        rotation = 360.0 - double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        rotation = 360.0 - double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 1001:
-                        XData xDataItem = this.ReadXDataRecord(dxfPairInfo.Value);
+                        XData xDataItem = this.ReadXDataRecord(this.dxfPairInfo.Value);
                         // to be safe if the xDataItem.ApplicationRegistry.Name already exists we will add the new entry to the existing one
                         if (xData.ContainsKey(xDataItem.ApplicationRegistry.Name))
                             xData[xDataItem.ApplicationRegistry.Name].XDataRecord.AddRange(xDataItem.XDataRecord);
@@ -3254,10 +3266,10 @@ namespace netDxf
                             xData.Add(xDataItem.ApplicationRegistry.Name, xDataItem);
                         break;
                     default:
-                        if (dxfPairInfo.Code >= 1000 && dxfPairInfo.Code <= 1071)
-                            throw new DxfInvalidCodeValueEntityException(dxfPairInfo.Code, dxfPairInfo.Value,
+                        if (this.dxfPairInfo.Code >= 1000 && this.dxfPairInfo.Code <= 1071)
+                            throw new DxfInvalidCodeValueEntityException(this.dxfPairInfo.Code, this.dxfPairInfo.Value,
                                                                          "The extended data of an entity must start with the application registry code.");
-                        dxfPairInfo = this.ReadCodePair();
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                 }
             }
@@ -3281,65 +3293,65 @@ namespace netDxf
             EdgeFlags flags = EdgeFlags.Visibles;
             Dictionary<string, XData> xData = new Dictionary<string, XData>();
 
-            dxfPairInfo = this.ReadCodePair();
-            while (dxfPairInfo.Code != 0)
+            this.dxfPairInfo = this.ReadCodePair();
+            while (this.dxfPairInfo.Code != 0)
             {
-                switch (dxfPairInfo.Code)
+                switch (this.dxfPairInfo.Code)
                 {
                     case 10:
-                        v0.X = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        v0.X = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 20:
-                        v0.Y = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        v0.Y = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 30:
-                        v0.Z = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        v0.Z = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 11:
-                        v1.X = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        v1.X = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 21:
-                        v1.Y = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        v1.Y = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 31:
-                        v1.Z = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        v1.Z = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 12:
-                        v2.X = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        v2.X = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 22:
-                        v2.Y = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        v2.Y = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 32:
-                        v2.Z = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        v2.Z = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 13:
-                        v3.X = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        v3.X = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 23:
-                        v3.Y = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        v3.Y = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 33:
-                        v3.Z = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        v3.Z = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 70:
-                        flags = (EdgeFlags) (int.Parse(dxfPairInfo.Value));
-                        dxfPairInfo = this.ReadCodePair();
+                        flags = (EdgeFlags) (int.Parse(this.dxfPairInfo.Value));
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 1001:
-                        XData xDataItem = this.ReadXDataRecord(dxfPairInfo.Value);
+                        XData xDataItem = this.ReadXDataRecord(this.dxfPairInfo.Value);
                         // to be safe if the xDataItem.ApplicationRegistry.Name already exists we will add the new entry to the existing one
                         if (xData.ContainsKey(xDataItem.ApplicationRegistry.Name))
                             xData[xDataItem.ApplicationRegistry.Name].XDataRecord.AddRange(xDataItem.XDataRecord);
@@ -3347,11 +3359,11 @@ namespace netDxf
                             xData.Add(xDataItem.ApplicationRegistry.Name, xDataItem);
                         break;
                     default:
-                        if (dxfPairInfo.Code >= 1000 && dxfPairInfo.Code <= 1071)
-                            throw new DxfInvalidCodeValueEntityException(dxfPairInfo.Code, dxfPairInfo.Value,
+                        if (this.dxfPairInfo.Code >= 1000 && this.dxfPairInfo.Code <= 1071)
+                            throw new DxfInvalidCodeValueEntityException(this.dxfPairInfo.Code, this.dxfPairInfo.Value,
                                                                          "The extended data of an entity must start with the application registry code.");
 
-                        dxfPairInfo = this.ReadCodePair();
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                 }
             }
@@ -3376,77 +3388,77 @@ namespace netDxf
             Vector3 normal = Vector3.UnitZ;
             Dictionary<string, XData> xData = new Dictionary<string, XData>();
 
-            dxfPairInfo = this.ReadCodePair();
-            while (dxfPairInfo.Code != 0)
+            this.dxfPairInfo = this.ReadCodePair();
+            while (this.dxfPairInfo.Code != 0)
             {
-                switch (dxfPairInfo.Code)
+                switch (this.dxfPairInfo.Code)
                 {
                     case 10:
-                        v0.X = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        v0.X = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 20:
-                        v0.Y = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        v0.Y = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 30:
-                        v0.Z = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        v0.Z = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 11:
-                        v1.X = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        v1.X = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 21:
-                        v1.Y = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        v1.Y = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 31:
-                        v1.Z = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        v1.Z = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 12:
-                        v2.X = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        v2.X = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 22:
-                        v2.Y = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        v2.Y = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 32:
-                        v2.Z = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        v2.Z = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 13:
-                        v3.X = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        v3.X = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 23:
-                        v3.Y = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        v3.Y = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 33:
-                        v3.Z = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        v3.Z = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 70:
-                        thickness = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        thickness = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 210:
-                        normal.X = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        normal.X = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 220:
-                        normal.Y = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        normal.Y = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 230:
-                        normal.Z = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        normal.Z = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 1001:
-                        XData xDataItem = this.ReadXDataRecord(dxfPairInfo.Value);
+                        XData xDataItem = this.ReadXDataRecord(this.dxfPairInfo.Value);
                         // to be safe if the xDataItem.ApplicationRegistry.Name already exists we will add the new entry to the existing one
                         if (xData.ContainsKey(xDataItem.ApplicationRegistry.Name))
                             xData[xDataItem.ApplicationRegistry.Name].XDataRecord.AddRange(xDataItem.XDataRecord);
@@ -3454,11 +3466,11 @@ namespace netDxf
                             xData.Add(xDataItem.ApplicationRegistry.Name, xDataItem);
                         break;
                     default:
-                        if (dxfPairInfo.Code >= 1000 && dxfPairInfo.Code <= 1071)
-                            throw new DxfInvalidCodeValueEntityException(dxfPairInfo.Code, dxfPairInfo.Value,
+                        if (this.dxfPairInfo.Code >= 1000 && this.dxfPairInfo.Code <= 1071)
+                            throw new DxfInvalidCodeValueEntityException(this.dxfPairInfo.Code, this.dxfPairInfo.Value,
                                                                          "The extended data of an entity must start with the application registry code.");
 
-                        dxfPairInfo = this.ReadCodePair();
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                 }
             }
@@ -3515,95 +3527,95 @@ namespace netDxf
 
             Dictionary<string, XData> xData = new Dictionary<string, XData>();
 
-            dxfPairInfo = this.ReadCodePair();
-            while (dxfPairInfo.Code != 0)
+            this.dxfPairInfo = this.ReadCodePair();
+            while (this.dxfPairInfo.Code != 0)
             {
-                switch (dxfPairInfo.Code)
+                switch (this.dxfPairInfo.Code)
                 {
                     case 210:
-                        normal.X = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        normal.X = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 220:
-                        normal.Y = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        normal.Y = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 230:
-                        normal.Z = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        normal.Z = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 70:
-                        flags = (SplineTypeFlags)(int.Parse(dxfPairInfo.Value));
-                        dxfPairInfo = this.ReadCodePair();
+                        flags = (SplineTypeFlags)(int.Parse(this.dxfPairInfo.Value));
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 71:
-                        degree = short.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        degree = short.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 72:
-                        numKnots = int.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        numKnots = int.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 73:
-                        numCtrlPoints = int.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        numCtrlPoints = int.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 74:
-                        numFitPoints = int.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        numFitPoints = int.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 42:
-                        knotTolerance = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        knotTolerance = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 43:
-                        ctrlPointTolerance = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        ctrlPointTolerance = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 44:
-                        fitTolerance = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        fitTolerance = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 12:
-                        stX = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        stX = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 22:
-                        stY = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        stY = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 32:
-                        stZ = double.Parse(dxfPairInfo.Value);
+                        stZ = double.Parse(this.dxfPairInfo.Value);
                         startTangent = new Vector3(stX, stY, stZ);
-                        dxfPairInfo = this.ReadCodePair();
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 13:
-                        etX = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        etX = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 23:
-                        etY = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        etY = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 33:
-                        etZ = double.Parse(dxfPairInfo.Value);
+                        etZ = double.Parse(this.dxfPairInfo.Value);
                         endTangent = new Vector3(stX, stY, stZ);
-                        dxfPairInfo = this.ReadCodePair();
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 40:
                         // multiple code 40 entries, one per knot value
-                        knots = ReadSplineKnots(numKnots);
+                        knots = this.ReadSplineKnots(numKnots);
                         break;
                     case 10:
-                        ctrlX = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        ctrlX = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 20:
-                        ctrlY = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        ctrlY = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 30:
-                        ctrlZ = double.Parse(dxfPairInfo.Value);
+                        ctrlZ = double.Parse(this.dxfPairInfo.Value);
                         
                         if (ctrlWeigth.Equals(-1))
                         {
@@ -3615,37 +3627,37 @@ namespace netDxf
                             ctrlPoints.Add(new SplineVertex(ctrlX, ctrlY, ctrlZ, ctrlWeigth));
                             ctrlPointIndex = -1;
                         }
-                        dxfPairInfo = this.ReadCodePair();
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 41:
                         // code 41 might appear before or after the control point coordiantes.
                         // I am open to better ways to handling this.
                         if (ctrlPointIndex == -1)
                         {
-                            ctrlWeigth = double.Parse(dxfPairInfo.Value);
+                            ctrlWeigth = double.Parse(this.dxfPairInfo.Value);
                         }
                         else
                         {
-                            ctrlPoints[ctrlPointIndex].Weigth = double.Parse(dxfPairInfo.Value);
+                            ctrlPoints[ctrlPointIndex].Weigth = double.Parse(this.dxfPairInfo.Value);
                             ctrlWeigth = -1;
                         }
-                        dxfPairInfo = this.ReadCodePair();
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 11:
-                        fitX = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        fitX = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 21:
-                        fitY = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        fitY = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 31:
-                        fitZ = double.Parse(dxfPairInfo.Value);
+                        fitZ = double.Parse(this.dxfPairInfo.Value);
                         fitPoints.Add(new Vector3(fitX, fitY, fitZ));
-                        dxfPairInfo = this.ReadCodePair();
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 1001:
-                        XData xDataItem = this.ReadXDataRecord(dxfPairInfo.Value);
+                        XData xDataItem = this.ReadXDataRecord(this.dxfPairInfo.Value);
                         // to be safe if the xDataItem.ApplicationRegistry.Name already exists we will add the new entry to the existing one
                         if (xData.ContainsKey(xDataItem.ApplicationRegistry.Name))
                             xData[xDataItem.ApplicationRegistry.Name].XDataRecord.AddRange(xDataItem.XDataRecord);
@@ -3653,11 +3665,11 @@ namespace netDxf
                             xData.Add(xDataItem.ApplicationRegistry.Name, xDataItem);
                         break;
                     default:
-                        if (dxfPairInfo.Code >= 1000 && dxfPairInfo.Code <= 1071)
-                            throw new DxfInvalidCodeValueEntityException(dxfPairInfo.Code, dxfPairInfo.Value,
+                        if (this.dxfPairInfo.Code >= 1000 && this.dxfPairInfo.Code <= 1071)
+                            throw new DxfInvalidCodeValueEntityException(this.dxfPairInfo.Code, this.dxfPairInfo.Value,
                                                                          "The extended data of an entity must start with the application registry code.");
 
-                        dxfPairInfo = this.ReadCodePair();
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                 }
             }
@@ -3671,10 +3683,10 @@ namespace netDxf
             double[] knots = new double[numKnots];
             for (int i = 0; i < numKnots; i++)
             {
-                if (dxfPairInfo.Code != 40)
+                if (this.dxfPairInfo.Code != 40)
                     throw new DxfException("The knot vector must have " + numKnots + " code 40 entries.");
-                knots[i] = double.Parse(dxfPairInfo.Value);
-                dxfPairInfo = this.ReadCodePair();
+                knots[i] = double.Parse(this.dxfPairInfo.Value);
+                this.dxfPairInfo = this.ReadCodePair();
             }
             return knots;
         }
@@ -3690,58 +3702,58 @@ namespace netDxf
             List<Attribute> attributes = new List<Attribute>();
             Dictionary<string, XData> xData = new Dictionary<string, XData>();
 
-            dxfPairInfo = this.ReadCodePair();
-            while (dxfPairInfo.Code != 0)
+            this.dxfPairInfo = this.ReadCodePair();
+            while (this.dxfPairInfo.Code != 0)
             {
-                switch (dxfPairInfo.Code)
+                switch (this.dxfPairInfo.Code)
                 {
                     case 2:
-                        blockName = dxfPairInfo.Value;
+                        blockName = this.dxfPairInfo.Value;
                         if(!isBlockEntity) block = this.GetBlock(blockName);
-                        dxfPairInfo = this.ReadCodePair();
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 10:
-                        basePoint.X = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        basePoint.X = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 20:
-                        basePoint.Y = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        basePoint.Y = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 30:
-                        basePoint.Z = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        basePoint.Z = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 41:
-                        scale.X = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        scale.X = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 42:
-                        scale.Y = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        scale.Y = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 43:
-                        scale.Z = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        scale.Z = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 50:
-                        rotation = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        rotation = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 210:
-                        normal.X = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        normal.X = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 220:
-                        normal.Y = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        normal.Y = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 230:
-                        normal.Z = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        normal.Z = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 1001:
-                        XData xDataItem = this.ReadXDataRecord(dxfPairInfo.Value);
+                        XData xDataItem = this.ReadXDataRecord(this.dxfPairInfo.Value);
                         // to be safe if the xDataItem.ApplicationRegistry.Name already exists we will add the new entry to the existing one
                         if (xData.ContainsKey(xDataItem.ApplicationRegistry.Name))
                             xData[xDataItem.ApplicationRegistry.Name].XDataRecord.AddRange(xDataItem.XDataRecord);
@@ -3749,11 +3761,11 @@ namespace netDxf
                             xData.Add(xDataItem.ApplicationRegistry.Name, xDataItem);
                         break;
                     default:
-                        if (dxfPairInfo.Code >= 1000 && dxfPairInfo.Code <= 1071)
-                            throw new DxfInvalidCodeValueEntityException(dxfPairInfo.Code, dxfPairInfo.Value,
+                        if (this.dxfPairInfo.Code >= 1000 && this.dxfPairInfo.Code <= 1071)
+                            throw new DxfInvalidCodeValueEntityException(this.dxfPairInfo.Code, this.dxfPairInfo.Value,
                                                                          "The extended data of an entity must start with the application registry code.");
 
-                        dxfPairInfo = this.ReadCodePair();
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                 }
             }
@@ -3761,11 +3773,11 @@ namespace netDxf
             // if there are attributes
             string endSequenceHandle = string.Empty;
             Layer endSequenceLayer = Layer.Default;
-            if (dxfPairInfo.Value == DxfObjectCode.Attribute)
+            if (this.dxfPairInfo.Value == DxfObjectCode.Attribute)
             {
-                while (dxfPairInfo.Value != StringCode.EndSequence)
+                while (this.dxfPairInfo.Value != StringCode.EndSequence)
                 {
-                    if (dxfPairInfo.Value != DxfObjectCode.Attribute) continue;
+                    if (this.dxfPairInfo.Value != DxfObjectCode.Attribute) continue;
 
                     // read the attribute
                     Attribute attribute = this.ReadAttribute(block, isBlockEntity);
@@ -3774,21 +3786,21 @@ namespace netDxf
                 }
 
                 // read the end end sequence object until a new element is found
-                dxfPairInfo = this.ReadCodePair();
-                while (dxfPairInfo.Code != 0)
+                this.dxfPairInfo = this.ReadCodePair();
+                while (this.dxfPairInfo.Code != 0)
                 {
-                    switch (dxfPairInfo.Code)
+                    switch (this.dxfPairInfo.Code)
                     {
                         case 5:
-                            endSequenceHandle = dxfPairInfo.Value;
-                            dxfPairInfo = this.ReadCodePair();
+                            endSequenceHandle = this.dxfPairInfo.Value;
+                            this.dxfPairInfo = this.ReadCodePair();
                             break;
                         case 8:
-                            endSequenceLayer = this.GetLayer(dxfPairInfo.Value);
-                            dxfPairInfo = this.ReadCodePair();
+                            endSequenceLayer = this.GetLayer(this.dxfPairInfo.Value);
+                            this.dxfPairInfo = this.ReadCodePair();
                             break;
                         default:
-                            dxfPairInfo = this.ReadCodePair();
+                            this.dxfPairInfo = this.ReadCodePair();
                             break;
                     }
                 }
@@ -3830,53 +3842,53 @@ namespace netDxf
             double thickness = 0.0;
             Dictionary<string, XData> xData = new Dictionary<string, XData>();
 
-            dxfPairInfo = this.ReadCodePair();
-            while (dxfPairInfo.Code != 0)
+            this.dxfPairInfo = this.ReadCodePair();
+            while (this.dxfPairInfo.Code != 0)
             {
-                switch (dxfPairInfo.Code)
+                switch (this.dxfPairInfo.Code)
                 {
                     case 10:
-                        start.X = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        start.X = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 20:
-                        start.Y = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        start.Y = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 30:
-                        start.Z = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        start.Z = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 11:
-                        end.X = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        end.X = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 21:
-                        end.Y = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        end.Y = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 31:
-                        end.Z = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        end.Z = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 39:
-                        thickness = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        thickness = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 210:
-                        normal.X = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        normal.X = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 220:
-                        normal.Y = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        normal.Y = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 230:
-                        normal.Z = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        normal.Z = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 1001:
-                        XData xDataItem = this.ReadXDataRecord(dxfPairInfo.Value);
+                        XData xDataItem = this.ReadXDataRecord(this.dxfPairInfo.Value);
                         // to be safe if the xDataItem.ApplicationRegistry.Name already exists we will add the new entry to the existing one
                         if (xData.ContainsKey(xDataItem.ApplicationRegistry.Name))
                             xData[xDataItem.ApplicationRegistry.Name].XDataRecord.AddRange(xDataItem.XDataRecord);
@@ -3884,11 +3896,11 @@ namespace netDxf
                             xData.Add(xDataItem.ApplicationRegistry.Name, xDataItem);
                         break;
                     default:
-                        if (dxfPairInfo.Code >= 1000 && dxfPairInfo.Code <= 1071)
-                            throw new DxfInvalidCodeValueEntityException(dxfPairInfo.Code, dxfPairInfo.Value,
+                        if (this.dxfPairInfo.Code >= 1000 && this.dxfPairInfo.Code <= 1071)
+                            throw new DxfInvalidCodeValueEntityException(this.dxfPairInfo.Code, this.dxfPairInfo.Value,
                                                                          "The extended data of an entity must start with the application registry code.");
 
-                        dxfPairInfo = this.ReadCodePair();
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                 }
             }
@@ -3909,37 +3921,37 @@ namespace netDxf
             Vector3 direction = Vector3.UnitX;
             Dictionary<string, XData> xData = new Dictionary<string, XData>();
 
-            dxfPairInfo = this.ReadCodePair();
-            while (dxfPairInfo.Code != 0)
+            this.dxfPairInfo = this.ReadCodePair();
+            while (this.dxfPairInfo.Code != 0)
             {
-                switch (dxfPairInfo.Code)
+                switch (this.dxfPairInfo.Code)
                 {
                     case 10:
-                        origin.X = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        origin.X = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 20:
-                        origin.Y = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        origin.Y = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 30:
-                        origin.Z = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        origin.Z = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 11:
-                        direction.X = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        direction.X = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 21:
-                        direction.Y = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        direction.Y = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 31:
-                        direction.Z = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        direction.Z = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 1001:
-                        XData xDataItem = this.ReadXDataRecord(dxfPairInfo.Value);
+                        XData xDataItem = this.ReadXDataRecord(this.dxfPairInfo.Value);
                         // to be safe if the xDataItem.ApplicationRegistry.Name already exists we will add the new entry to the existing one
                         if (xData.ContainsKey(xDataItem.ApplicationRegistry.Name))
                             xData[xDataItem.ApplicationRegistry.Name].XDataRecord.AddRange(xDataItem.XDataRecord);
@@ -3947,11 +3959,11 @@ namespace netDxf
                             xData.Add(xDataItem.ApplicationRegistry.Name, xDataItem);
                         break;
                     default:
-                        if (dxfPairInfo.Code >= 1000 && dxfPairInfo.Code <= 1071)
-                            throw new DxfInvalidCodeValueEntityException(dxfPairInfo.Code, dxfPairInfo.Value,
+                        if (this.dxfPairInfo.Code >= 1000 && this.dxfPairInfo.Code <= 1071)
+                            throw new DxfInvalidCodeValueEntityException(this.dxfPairInfo.Code, this.dxfPairInfo.Value,
                                                                          "The extended data of an entity must start with the application registry code.");
 
-                        dxfPairInfo = this.ReadCodePair();
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                 }
             }
@@ -3970,37 +3982,37 @@ namespace netDxf
             Vector3 direction = Vector3.UnitX;
             Dictionary<string, XData> xData = new Dictionary<string, XData>();
 
-            dxfPairInfo = this.ReadCodePair();
-            while (dxfPairInfo.Code != 0)
+            this.dxfPairInfo = this.ReadCodePair();
+            while (this.dxfPairInfo.Code != 0)
             {
-                switch (dxfPairInfo.Code)
+                switch (this.dxfPairInfo.Code)
                 {
                     case 10:
-                        origin.X = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        origin.X = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 20:
-                        origin.Y = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        origin.Y = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 30:
-                        origin.Z = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        origin.Z = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 11:
-                        direction.X = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        direction.X = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 21:
-                        direction.Y = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        direction.Y = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 31:
-                        direction.Z = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        direction.Z = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 1001:
-                        XData xDataItem = this.ReadXDataRecord(dxfPairInfo.Value);
+                        XData xDataItem = this.ReadXDataRecord(this.dxfPairInfo.Value);
                         // to be safe if the xDataItem.ApplicationRegistry.Name already exists we will add the new entry to the existing one
                         if (xData.ContainsKey(xDataItem.ApplicationRegistry.Name))
                             xData[xDataItem.ApplicationRegistry.Name].XDataRecord.AddRange(xDataItem.XDataRecord);
@@ -4008,11 +4020,11 @@ namespace netDxf
                             xData.Add(xDataItem.ApplicationRegistry.Name, xDataItem);
                         break;
                     default:
-                        if (dxfPairInfo.Code >= 1000 && dxfPairInfo.Code <= 1071)
-                            throw new DxfInvalidCodeValueEntityException(dxfPairInfo.Code, dxfPairInfo.Value,
+                        if (this.dxfPairInfo.Code >= 1000 && this.dxfPairInfo.Code <= 1071)
+                            throw new DxfInvalidCodeValueEntityException(this.dxfPairInfo.Code, this.dxfPairInfo.Value,
                                                                          "The extended data of an entity must start with the application registry code.");
 
-                        dxfPairInfo = this.ReadCodePair();
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                 }
             }
@@ -4038,67 +4050,67 @@ namespace netDxf
             List<MLineVertex> segments = new List<MLineVertex>();
             Dictionary<string, XData> xData = new Dictionary<string, XData>();
 
-            dxfPairInfo = this.ReadCodePair();
-            while (dxfPairInfo.Code != 0)
+            this.dxfPairInfo = this.ReadCodePair();
+            while (this.dxfPairInfo.Code != 0)
             {
-                switch (dxfPairInfo.Code)
+                switch (this.dxfPairInfo.Code)
                 {
                     case 2:
                         // the MLineStyle is defined in the objects sections after the definition of the entity, something similar happens with the image entity
                         // the MLineStyle will be applied to the MLine after parsing the whole file
-                        styleName = dxfPairInfo.Value;
-                        dxfPairInfo = this.ReadCodePair();
+                        styleName = this.dxfPairInfo.Value;
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 40:
-                        scale = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        scale = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 70:
-                        justification = (MLineJustification) int.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        justification = (MLineJustification) int.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 71:
-                        flags = (MLineFlags)int.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        flags = (MLineFlags)int.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 72:
-                        numVertexes = int.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        numVertexes = int.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 73:
-                        numStyleElements = int.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        numStyleElements = int.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 10:
                         // this info is not needed it is repeated in the vertexes list
-                        dxfPairInfo = this.ReadCodePair();
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 20:
                         // this info is not needed it is repeated in the vertexes list
-                        dxfPairInfo = this.ReadCodePair();
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 30:
                         // this info is not needed it is repeated in the vertexes list
-                        dxfPairInfo = this.ReadCodePair();
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 210:
-                        normal.X = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        normal.X = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 220:
-                        normal.Y = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        normal.Y = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 230:
-                        normal.Z = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        normal.Z = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 11:
                         // the info that follows contains the information on the vertexes of the MLine
-                        segments = ReadMLineSegments(numVertexes, numStyleElements, normal, out elevation);
+                        segments = this.ReadMLineSegments(numVertexes, numStyleElements, normal, out elevation);
                         break;
                     case 1001:
-                        XData xDataItem = this.ReadXDataRecord(dxfPairInfo.Value);
+                        XData xDataItem = this.ReadXDataRecord(this.dxfPairInfo.Value);
                         // to be safe if the xDataItem.ApplicationRegistry.Name already exists we will add the new entry to the existing one
                         if (xData.ContainsKey(xDataItem.ApplicationRegistry.Name))
                             xData[xDataItem.ApplicationRegistry.Name].XDataRecord.AddRange(xDataItem.XDataRecord);
@@ -4106,10 +4118,10 @@ namespace netDxf
                             xData.Add(xDataItem.ApplicationRegistry.Name, xDataItem);
                         break;
                     default:
-                        if (dxfPairInfo.Code >= 1000 && dxfPairInfo.Code <= 1071)
-                            throw new DxfInvalidCodeValueEntityException(dxfPairInfo.Code, dxfPairInfo.Value,
+                        if (this.dxfPairInfo.Code >= 1000 && this.dxfPairInfo.Code <= 1071)
+                            throw new DxfInvalidCodeValueEntityException(this.dxfPairInfo.Code, this.dxfPairInfo.Value,
                                                                          "The extended data of an entity must start with the application registry code.");
-                        dxfPairInfo = this.ReadCodePair();
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                 }
             }
@@ -4147,48 +4159,48 @@ namespace netDxf
             for (int i = 0; i < numVertexes; i++)
             {
                 Vector3 vertex = new Vector3();
-                vertex.X = double.Parse(dxfPairInfo.Value); // code 11
-                dxfPairInfo = this.ReadCodePair();
-                vertex.Y = double.Parse(dxfPairInfo.Value); // code 21
-                dxfPairInfo = this.ReadCodePair();
-                vertex.Z = double.Parse(dxfPairInfo.Value); // code 31
-                dxfPairInfo = this.ReadCodePair();
+                vertex.X = double.Parse(this.dxfPairInfo.Value); // code 11
+                this.dxfPairInfo = this.ReadCodePair();
+                vertex.Y = double.Parse(this.dxfPairInfo.Value); // code 21
+                this.dxfPairInfo = this.ReadCodePair();
+                vertex.Z = double.Parse(this.dxfPairInfo.Value); // code 31
+                this.dxfPairInfo = this.ReadCodePair();
 
                 Vector3 dir = new Vector3();
-                dir.X = double.Parse(dxfPairInfo.Value); // code 12
-                dxfPairInfo = this.ReadCodePair();
-                dir.Y = double.Parse(dxfPairInfo.Value); // code 22
-                dxfPairInfo = this.ReadCodePair();
-                dir.Z = double.Parse(dxfPairInfo.Value); // code 32
-                dxfPairInfo = this.ReadCodePair();
+                dir.X = double.Parse(this.dxfPairInfo.Value); // code 12
+                this.dxfPairInfo = this.ReadCodePair();
+                dir.Y = double.Parse(this.dxfPairInfo.Value); // code 22
+                this.dxfPairInfo = this.ReadCodePair();
+                dir.Z = double.Parse(this.dxfPairInfo.Value); // code 32
+                this.dxfPairInfo = this.ReadCodePair();
                 
                 Vector3 mitter = new Vector3();
-                mitter.X = double.Parse(dxfPairInfo.Value); // code 13
-                dxfPairInfo = this.ReadCodePair();
-                mitter.Y = double.Parse(dxfPairInfo.Value); // code 23
-                dxfPairInfo = this.ReadCodePair();
-                mitter.Z = double.Parse(dxfPairInfo.Value); // code 33
-                dxfPairInfo = this.ReadCodePair();
+                mitter.X = double.Parse(this.dxfPairInfo.Value); // code 13
+                this.dxfPairInfo = this.ReadCodePair();
+                mitter.Y = double.Parse(this.dxfPairInfo.Value); // code 23
+                this.dxfPairInfo = this.ReadCodePair();
+                mitter.Z = double.Parse(this.dxfPairInfo.Value); // code 33
+                this.dxfPairInfo = this.ReadCodePair();
 
                 List<double>[] distances = new List<double>[numStyleElements];
                 for (int j = 0; j < numStyleElements; j++)
                 {
                     distances[j] = new List<double>();
-                    int numDistances = int.Parse(dxfPairInfo.Value); // code 74
-                    dxfPairInfo = this.ReadCodePair();
+                    int numDistances = int.Parse(this.dxfPairInfo.Value); // code 74
+                    this.dxfPairInfo = this.ReadCodePair();
                     for (int k = 0; k < numDistances; k++)
                     {
-                        distances[j].Add(double.Parse(dxfPairInfo.Value)); // code 41
-                        dxfPairInfo = this.ReadCodePair();
+                        distances[j].Add(double.Parse(this.dxfPairInfo.Value)); // code 41
+                        this.dxfPairInfo = this.ReadCodePair();
                     }
 
                     // no more info is needed, fill params are not supported
-                    int numFillParams = int.Parse(dxfPairInfo.Value); // code 75
-                    dxfPairInfo = this.ReadCodePair();
+                    int numFillParams = int.Parse(this.dxfPairInfo.Value); // code 75
+                    this.dxfPairInfo = this.ReadCodePair();
                     for (int k = 0; k < numFillParams; k++)
                     {
-                        double param = double.Parse(dxfPairInfo.Value); // code 42
-                        dxfPairInfo = this.ReadCodePair();
+                        double param = double.Parse(this.dxfPairInfo.Value); // code 42
+                        this.dxfPairInfo = this.ReadCodePair();
                     }
                 }
 
@@ -4221,33 +4233,33 @@ namespace netDxf
 
             Dictionary<string, XData> xData = new Dictionary<string, XData>();
 
-            dxfPairInfo = this.ReadCodePair();
+            this.dxfPairInfo = this.ReadCodePair();
 
-            while (dxfPairInfo.Code != 0)
+            while (this.dxfPairInfo.Code != 0)
             {
-                switch (dxfPairInfo.Code)
+                switch (this.dxfPairInfo.Code)
                 {
                     case 38:
-                        pol.Elevation = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        pol.Elevation = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 39:
-                        pol.Thickness = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        pol.Thickness = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 43:
                         // constant width (optional; default = 0). Not used if variable width (codes 40 and/or 41) is set
-                        constantWidth = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        constantWidth = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 70:
-                        PolylineTypeFlags flags = (PolylineTypeFlags) int.Parse(dxfPairInfo.Value);
+                        PolylineTypeFlags flags = (PolylineTypeFlags) int.Parse(this.dxfPairInfo.Value);
                         pol.IsClosed = (flags & PolylineTypeFlags.ClosedPolylineOrClosedPolygonMeshInM) == PolylineTypeFlags.ClosedPolylineOrClosedPolygonMeshInM;
-                        dxfPairInfo = this.ReadCodePair();
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 90:
                         //numVertexes = int.Parse(code.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 10:
                         v = new LwPolylineVertex
@@ -4255,41 +4267,41 @@ namespace netDxf
                                     BeginWidth = constantWidth,
                                     EndWidth = constantWidth
                                 };
-                        vX = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        vX = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 20:
-                        double vY = double.Parse(dxfPairInfo.Value);
+                        double vY = double.Parse(this.dxfPairInfo.Value);
                         v.Location = new Vector2(vX, vY);
                         pol.Vertexes.Add(v);
-                        dxfPairInfo = this.ReadCodePair();
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 40:
-                        v.BeginWidth = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        v.BeginWidth = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 41:
-                        v.EndWidth = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        v.EndWidth = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 42:
-                        v.Bulge = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        v.Bulge = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 210:
-                        normal.X = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        normal.X = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 220:
-                        normal.Y = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        normal.Y = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 230:
-                        normal.Z = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        normal.Z = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 1001:
-                        XData xDataItem = this.ReadXDataRecord(dxfPairInfo.Value);
+                        XData xDataItem = this.ReadXDataRecord(this.dxfPairInfo.Value);
                         // to be safe if the xDataItem.ApplicationRegistry.Name already exists we will add the new entry to the existing one
                         if (xData.ContainsKey(xDataItem.ApplicationRegistry.Name))
                             xData[xDataItem.ApplicationRegistry.Name].XDataRecord.AddRange(xDataItem.XDataRecord);
@@ -4297,11 +4309,11 @@ namespace netDxf
                             xData.Add(xDataItem.ApplicationRegistry.Name, xDataItem);
                         break;
                     default:
-                        if (dxfPairInfo.Code >= 1000 && dxfPairInfo.Code <= 1071)
-                            throw new DxfInvalidCodeValueEntityException(dxfPairInfo.Code, dxfPairInfo.Value,
+                        if (this.dxfPairInfo.Code >= 1000 && this.dxfPairInfo.Code <= 1071)
+                            throw new DxfInvalidCodeValueEntityException(this.dxfPairInfo.Code, this.dxfPairInfo.Value,
                                                                          "The extended data of an entity must start with the application registry code.");
 
-                        dxfPairInfo = this.ReadCodePair();
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                 }
             }
@@ -4326,48 +4338,48 @@ namespace netDxf
             List<Vertex> vertexes = new List<Vertex>();
             Dictionary<string, XData> xData = new Dictionary<string, XData>();
 
-            dxfPairInfo = this.ReadCodePair();
+            this.dxfPairInfo = this.ReadCodePair();
 
-            while (dxfPairInfo.Code != 0)
+            while (this.dxfPairInfo.Code != 0)
             {
-                switch (dxfPairInfo.Code)
+                switch (this.dxfPairInfo.Code)
                 {
                     case 30:
-                        elevation = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        elevation = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 39:
-                        thickness = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        thickness = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 70:
-                        flags = (PolylineTypeFlags) (int.Parse(dxfPairInfo.Value));
-                        dxfPairInfo = this.ReadCodePair();
+                        flags = (PolylineTypeFlags) (int.Parse(this.dxfPairInfo.Value));
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 71:
                         //this field might not exist for polyface meshes, we cannot depend on it
                         //numVertexes = int.Parse(code.Value); code = this.ReadCodePair();
-                        dxfPairInfo = this.ReadCodePair();
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 72:
                         //this field might not exist for polyface meshes, we cannot depend on it
                         //numFaces  = int.Parse(code.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 210:
-                        normal.X = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        normal.X = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 220:
-                        normal.Y = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        normal.Y = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 230:
-                        normal.Z = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        normal.Z = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 1001:
-                        XData xDataItem = this.ReadXDataRecord(dxfPairInfo.Value);
+                        XData xDataItem = this.ReadXDataRecord(this.dxfPairInfo.Value);
                         // to be safe if the xDataItem.ApplicationRegistry.Name already exists we will add the new entry to the existing one
                         if (xData.ContainsKey(xDataItem.ApplicationRegistry.Name))
                             xData[xDataItem.ApplicationRegistry.Name].XDataRecord.AddRange(xDataItem.XDataRecord);
@@ -4375,19 +4387,19 @@ namespace netDxf
                             xData.Add(xDataItem.ApplicationRegistry.Name, xDataItem);
                         break;
                     default:
-                        if (dxfPairInfo.Code >= 1000 && dxfPairInfo.Code <= 1071)
-                            throw new DxfInvalidCodeValueEntityException(dxfPairInfo.Code, dxfPairInfo.Value,
+                        if (this.dxfPairInfo.Code >= 1000 && this.dxfPairInfo.Code <= 1071)
+                            throw new DxfInvalidCodeValueEntityException(this.dxfPairInfo.Code, this.dxfPairInfo.Value,
                                                                          "The extended data of an entity must start with the application registry code.");
 
-                        dxfPairInfo = this.ReadCodePair();
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                 }
             }
 
             //begin to read the vertex list (althought it is not recommended the vertex list might have 0 entries)
-            while (dxfPairInfo.Value != StringCode.EndSequence)
+            while (this.dxfPairInfo.Value != StringCode.EndSequence)
             {
-                if (dxfPairInfo.Value == DxfObjectCode.Vertex)
+                if (this.dxfPairInfo.Value == DxfObjectCode.Vertex)
                 {
                     Vertex vertex = this.ReadVertex();
                     vertexes.Add(vertex);
@@ -4395,23 +4407,23 @@ namespace netDxf
             }
 
             // read the end sequence object until a new element is found
-            dxfPairInfo = this.ReadCodePair();
+            this.dxfPairInfo = this.ReadCodePair();
             string endSequenceHandle = null;
             Layer endSequenceLayer = Layer.Default;
-            while (dxfPairInfo.Code != 0)
+            while (this.dxfPairInfo.Code != 0)
             {
-                switch (dxfPairInfo.Code)
+                switch (this.dxfPairInfo.Code)
                 {
                     case 5:
-                        endSequenceHandle = dxfPairInfo.Value;
-                        dxfPairInfo = this.ReadCodePair();
+                        endSequenceHandle = this.dxfPairInfo.Value;
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 8:
-                        endSequenceLayer = this.GetLayer(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        endSequenceLayer = this.GetLayer(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     default:
-                        dxfPairInfo = this.ReadCodePair();
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                 }
             }
@@ -4513,81 +4525,81 @@ namespace netDxf
             int verticalAlignment = 0;
             Dictionary<string, XData> xData = new Dictionary<string, XData>();
 
-            dxfPairInfo = this.ReadCodePair();
-            while (dxfPairInfo.Code != 0)
+            this.dxfPairInfo = this.ReadCodePair();
+            while (this.dxfPairInfo.Code != 0)
             {
-                switch (dxfPairInfo.Code)
+                switch (this.dxfPairInfo.Code)
                 {
                     case 1:
-                        text.Value = dxfPairInfo.Value;
-                        dxfPairInfo = this.ReadCodePair();
+                        text.Value = this.dxfPairInfo.Value;
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 10:
-                        firstAlignmentPoint.X = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        firstAlignmentPoint.X = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 20:
-                        firstAlignmentPoint.Y = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        firstAlignmentPoint.Y = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 30:
-                        firstAlignmentPoint.Z = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        firstAlignmentPoint.Z = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 11:
-                        secondAlignmentPoint.X = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        secondAlignmentPoint.X = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 21:
-                        secondAlignmentPoint.Y = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        secondAlignmentPoint.Y = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 31:
-                        secondAlignmentPoint.Z = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        secondAlignmentPoint.Z = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 40:
-                        text.Height = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        text.Height = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 41:
-                        text.WidthFactor = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        text.WidthFactor = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 50:
-                        text.Rotation = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        text.Rotation = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 51:
-                        text.ObliqueAngle = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        text.ObliqueAngle = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 7:
-                        text.Style = this.GetTextStyle(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        text.Style = this.GetTextStyle(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 72:
-                        horizontalAlignment = int.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        horizontalAlignment = int.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 73:
-                        verticalAlignment = int.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        verticalAlignment = int.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 210:
-                        normal.X = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        normal.X = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 220:
-                        normal.Y = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        normal.Y = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 230:
-                        normal.Z = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        normal.Z = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 1001:
-                        XData xDataItem = this.ReadXDataRecord(dxfPairInfo.Value);
+                        XData xDataItem = this.ReadXDataRecord(this.dxfPairInfo.Value);
                         // to be safe if the xDataItem.ApplicationRegistry.Name already exists we will add the new entry to the existing one
                         if (xData.ContainsKey(xDataItem.ApplicationRegistry.Name))
                             xData[xDataItem.ApplicationRegistry.Name].XDataRecord.AddRange(xDataItem.XDataRecord);
@@ -4595,11 +4607,11 @@ namespace netDxf
                             xData.Add(xDataItem.ApplicationRegistry.Name, xDataItem);
                         break;
                     default:
-                        if (dxfPairInfo.Code >= 1000 && dxfPairInfo.Code <= 1071)
-                            throw new DxfInvalidCodeValueEntityException(dxfPairInfo.Code, dxfPairInfo.Value,
+                        if (this.dxfPairInfo.Code >= 1000 && this.dxfPairInfo.Code <= 1071)
+                            throw new DxfInvalidCodeValueEntityException(this.dxfPairInfo.Code, this.dxfPairInfo.Value,
                                                                          "The extended data of an entity must start with the application registry code.");
 
-                        dxfPairInfo = this.ReadCodePair();
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                 }
             }
@@ -4634,83 +4646,83 @@ namespace netDxf
             string text = string.Empty;
             Dictionary<string, XData> xData = new Dictionary<string, XData>();
 
-            dxfPairInfo = this.ReadCodePair();
-            while (dxfPairInfo.Code != 0)
+            this.dxfPairInfo = this.ReadCodePair();
+            while (this.dxfPairInfo.Code != 0)
             {
-                switch (dxfPairInfo.Code)
+                switch (this.dxfPairInfo.Code)
                 {
                     case 1:
-                        text += dxfPairInfo.Value;
-                        dxfPairInfo = this.ReadCodePair();
+                        text += this.dxfPairInfo.Value;
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 3:
-                        text += dxfPairInfo.Value;
-                        dxfPairInfo = this.ReadCodePair();
+                        text += this.dxfPairInfo.Value;
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 10:
-                        insertionPoint.X = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        insertionPoint.X = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 20:
-                        insertionPoint.Y = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        insertionPoint.Y = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 30:
-                        insertionPoint.Z = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        insertionPoint.Z = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 11:
-                        direction.X = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        direction.X = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 21:
-                        direction.Y = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        direction.Y = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 31:
                         // Z direction value (direction.Z = double.Parse(dxfPairInfo.Value);)
                         // we will alway defined the angle of the text on the plane where it is defined so Z value will be zero.
-                        dxfPairInfo = this.ReadCodePair();
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 40:
-                        height = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        height = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 41:
-                        rectangleWidth = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        rectangleWidth = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 44:
-                        lineSpacing = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        lineSpacing = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 50:
                         isRotationDefined = true;
-                        rotation = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        rotation = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 7:
-                        style = this.GetTextStyle(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        style = this.GetTextStyle(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 71:
-                        attachmentPoint = (MTextAttachmentPoint) int.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        attachmentPoint = (MTextAttachmentPoint) int.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 210:
-                        normal.X = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        normal.X = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 220:
-                        normal.Y = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        normal.Y = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 230:
-                        normal.Z = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        normal.Z = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 1001:
-                        XData xDataItem = this.ReadXDataRecord(dxfPairInfo.Value);
+                        XData xDataItem = this.ReadXDataRecord(this.dxfPairInfo.Value);
                         // to be safe if the xDataItem.ApplicationRegistry.Name already exists we will add the new entry to the existing one
                         if (xData.ContainsKey(xDataItem.ApplicationRegistry.Name))
                             xData[xDataItem.ApplicationRegistry.Name].XDataRecord.AddRange(xDataItem.XDataRecord);
@@ -4718,11 +4730,11 @@ namespace netDxf
                             xData.Add(xDataItem.ApplicationRegistry.Name, xDataItem);
                         break;
                     default:
-                        if (dxfPairInfo.Code >= 1000 && dxfPairInfo.Code <= 1071)
-                            throw new DxfInvalidCodeValueEntityException(dxfPairInfo.Code, dxfPairInfo.Value,
+                        if (this.dxfPairInfo.Code >= 1000 && this.dxfPairInfo.Code <= 1071)
+                            throw new DxfInvalidCodeValueEntityException(this.dxfPairInfo.Code, this.dxfPairInfo.Value,
                                                                          "The extended data of an entity must start with the application registry code.");
 
-                        dxfPairInfo = this.ReadCodePair();
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                 }
             }
@@ -4752,54 +4764,54 @@ namespace netDxf
             List<HatchBoundaryPath> paths = new List<HatchBoundaryPath>();
             Dictionary<string, XData> xData = new Dictionary<string, XData>();
 
-            dxfPairInfo = this.ReadCodePair();
+            this.dxfPairInfo = this.ReadCodePair();
 
-            while (dxfPairInfo.Code != 0)
+            while (this.dxfPairInfo.Code != 0)
             {
-                switch (dxfPairInfo.Code)
+                switch (this.dxfPairInfo.Code)
                 {
                     case 2:
-                        name = dxfPairInfo.Value;
-                        dxfPairInfo = this.ReadCodePair();
+                        name = this.dxfPairInfo.Value;
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 30:
-                        elevation = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        elevation = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 210:
-                        normal.X = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        normal.X = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 220:
-                        normal.Y = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        normal.Y = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 230:
-                        normal.Z = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        normal.Z = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 91:
                         // the next lines hold the information about the hatch boundary paths
-                        int numPaths = int.Parse(dxfPairInfo.Value);
-                        paths = ReadHatchBoundaryPaths(numPaths);
+                        int numPaths = int.Parse(this.dxfPairInfo.Value);
+                        paths = this.ReadHatchBoundaryPaths(numPaths);
                         break;
                     case 70:
                         // Solid fill flag
-                        fill = (FillType) int.Parse(dxfPairInfo.Value);
+                        fill = (FillType) int.Parse(this.dxfPairInfo.Value);
                         if (fill == FillType.SolidFill) name = PredefinedHatchPatternName.Solid;
-                        dxfPairInfo = this.ReadCodePair();
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 71:
                         // Associativity flag (associative = 1; non-associative = 0); for MPolygon, solid-fill flag (has solid fill = 1; lacks solid fill = 0)
-                        dxfPairInfo = this.ReadCodePair();
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 75:
                         // the next lines hold the information about the hatch pattern
-                        pattern = ReadHatchPattern(name);
+                        pattern = this.ReadHatchPattern(name);
                         pattern.Fill = fill;
                         break;
                     case 1001:
-                        XData xDataItem = this.ReadXDataRecord(dxfPairInfo.Value);
+                        XData xDataItem = this.ReadXDataRecord(this.dxfPairInfo.Value);
                         // to be safe if the xDataItem.ApplicationRegistry.Name already exists we will add the new entry to the existing one
                         if (xData.ContainsKey(xDataItem.ApplicationRegistry.Name))
                             xData[xDataItem.ApplicationRegistry.Name].XDataRecord.AddRange(xDataItem.XDataRecord);
@@ -4807,11 +4819,11 @@ namespace netDxf
                             xData.Add(xDataItem.ApplicationRegistry.Name, xDataItem);
                         break;
                     default:
-                        if (dxfPairInfo.Code >= 1000 && dxfPairInfo.Code <= 1071)
-                            throw new DxfInvalidCodeValueEntityException(dxfPairInfo.Code, dxfPairInfo.Value,
+                        if (this.dxfPairInfo.Code >= 1000 && this.dxfPairInfo.Code <= 1071)
+                            throw new DxfInvalidCodeValueEntityException(this.dxfPairInfo.Code, this.dxfPairInfo.Value,
                                                                          "The extended data of an entity must start with the application registry code.");
 
-                        dxfPairInfo = this.ReadCodePair();
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                 }
             }
@@ -4830,25 +4842,25 @@ namespace netDxf
         {
             List<HatchBoundaryPath> paths = new List<HatchBoundaryPath>();
 
-            dxfPairInfo = this.ReadCodePair();
+            this.dxfPairInfo = this.ReadCodePair();
 
             while (paths.Count < numPaths)
             {
-                switch (dxfPairInfo.Code)
+                switch (this.dxfPairInfo.Code)
                 {
                     case 92:
-                        BoundaryPathTypeFlag pathTypeFlag = (BoundaryPathTypeFlag) int.Parse(dxfPairInfo.Value);
+                        BoundaryPathTypeFlag pathTypeFlag = (BoundaryPathTypeFlag) int.Parse(this.dxfPairInfo.Value);
                         if ((pathTypeFlag & BoundaryPathTypeFlag.Polyline) == BoundaryPathTypeFlag.Polyline)
-                            paths.Add(ReadPolylineBoundaryPath());
-                        dxfPairInfo = this.ReadCodePair();
+                            paths.Add(this.ReadPolylineBoundaryPath());
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 93:
-                        int numEdges = int.Parse(dxfPairInfo.Value);
-                        paths.Add(ReadEdgeBoundaryPath(numEdges));
-                        dxfPairInfo = this.ReadCodePair();
+                        int numEdges = int.Parse(this.dxfPairInfo.Value);
+                        paths.Add(this.ReadEdgeBoundaryPath(numEdges));
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     default:
-                        dxfPairInfo = this.ReadCodePair();
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                 }
             }
@@ -4858,29 +4870,29 @@ namespace netDxf
         private HatchBoundaryPath ReadPolylineBoundaryPath()
         {
             List<LwPolylineVertex> vertexes = new List<LwPolylineVertex>();
-            dxfPairInfo = this.ReadCodePair();
+            this.dxfPairInfo = this.ReadCodePair();
 
-            bool hasBulge = int.Parse(dxfPairInfo.Value) != 0;
-            dxfPairInfo = this.ReadCodePair();
+            bool hasBulge = int.Parse(this.dxfPairInfo.Value) != 0;
+            this.dxfPairInfo = this.ReadCodePair();
 
             // is polyline closed
-            bool isClosed = int.Parse(dxfPairInfo.Value) == 1;
-            dxfPairInfo = this.ReadCodePair();
+            bool isClosed = int.Parse(this.dxfPairInfo.Value) == 1;
+            this.dxfPairInfo = this.ReadCodePair();
 
-            int numVertexes = int.Parse(dxfPairInfo.Value); // code 93
-            dxfPairInfo = this.ReadCodePair();
+            int numVertexes = int.Parse(this.dxfPairInfo.Value); // code 93
+            this.dxfPairInfo = this.ReadCodePair();
 
             for (int i = 0; i < numVertexes; i++)
             {
                 double bulge = 0.0;
-                double x = double.Parse(dxfPairInfo.Value); // code 10
-                dxfPairInfo = this.ReadCodePair();
-                double y = double.Parse(dxfPairInfo.Value); // code 20
-                dxfPairInfo = this.ReadCodePair();
+                double x = double.Parse(this.dxfPairInfo.Value); // code 10
+                this.dxfPairInfo = this.ReadCodePair();
+                double y = double.Parse(this.dxfPairInfo.Value); // code 20
+                this.dxfPairInfo = this.ReadCodePair();
                 if (hasBulge)
                 {
-                    bulge = double.Parse(dxfPairInfo.Value);  // code 42
-                    dxfPairInfo = this.ReadCodePair();
+                    bulge = double.Parse(this.dxfPairInfo.Value);  // code 42
+                    this.dxfPairInfo = this.ReadCodePair();
                 }
                 vertexes.Add(new LwPolylineVertex(x, y, bulge));
             }
@@ -4894,65 +4906,65 @@ namespace netDxf
         {
             // the information of the boundary path data always appear exactly as it is readed
             List<EntityObject> entities = new List<EntityObject>();
-            dxfPairInfo = this.ReadCodePair();
+            this.dxfPairInfo = this.ReadCodePair();
 
             while (entities.Count < numEdges)
             {
                 // Edge type (only if boundary is not a polyline): 1 = Line; 2 = Circular arc; 3 = Elliptic arc; 4 = Spline
-                switch (int.Parse(dxfPairInfo.Value))
+                switch (int.Parse(this.dxfPairInfo.Value))
                 {
                     case 1:
-                        dxfPairInfo = this.ReadCodePair();
+                        this.dxfPairInfo = this.ReadCodePair();
                         // line
-                        double lX1 = double.Parse(dxfPairInfo.Value); // code 10
-                        dxfPairInfo = this.ReadCodePair();
-                        double lY1 = double.Parse(dxfPairInfo.Value); // code 20
-                        dxfPairInfo = this.ReadCodePair();
-                        double lX2 = double.Parse(dxfPairInfo.Value); // code 11
-                        dxfPairInfo = this.ReadCodePair();
-                        double lY2 = double.Parse(dxfPairInfo.Value); // code 21
-                        dxfPairInfo = this.ReadCodePair();
+                        double lX1 = double.Parse(this.dxfPairInfo.Value); // code 10
+                        this.dxfPairInfo = this.ReadCodePair();
+                        double lY1 = double.Parse(this.dxfPairInfo.Value); // code 20
+                        this.dxfPairInfo = this.ReadCodePair();
+                        double lX2 = double.Parse(this.dxfPairInfo.Value); // code 11
+                        this.dxfPairInfo = this.ReadCodePair();
+                        double lY2 = double.Parse(this.dxfPairInfo.Value); // code 21
+                        this.dxfPairInfo = this.ReadCodePair();
                         entities.Add(new Line(new Vector3(lX1, lY1, 0.0), new Vector3(lX2, lY2, 0.0)));
                         break;
                     case 2:
-                        dxfPairInfo = this.ReadCodePair();
+                        this.dxfPairInfo = this.ReadCodePair();
                         // circular arc
-                        double aX = double.Parse(dxfPairInfo.Value); // code 10
-                        dxfPairInfo = this.ReadCodePair();
-                        double aY = double.Parse(dxfPairInfo.Value); // code 40
-                        dxfPairInfo = this.ReadCodePair();
-                        double aR = double.Parse(dxfPairInfo.Value); // code 40
-                        dxfPairInfo = this.ReadCodePair();
-                        double aStart = double.Parse(dxfPairInfo.Value); // code 50
-                        dxfPairInfo = this.ReadCodePair();
-                        double aEnd = double.Parse(dxfPairInfo.Value); // code 51
-                        dxfPairInfo = this.ReadCodePair();
-                        bool aCCW = int.Parse(dxfPairInfo.Value) != 0; // code 73
-                        dxfPairInfo = this.ReadCodePair();
+                        double aX = double.Parse(this.dxfPairInfo.Value); // code 10
+                        this.dxfPairInfo = this.ReadCodePair();
+                        double aY = double.Parse(this.dxfPairInfo.Value); // code 40
+                        this.dxfPairInfo = this.ReadCodePair();
+                        double aR = double.Parse(this.dxfPairInfo.Value); // code 40
+                        this.dxfPairInfo = this.ReadCodePair();
+                        double aStart = double.Parse(this.dxfPairInfo.Value); // code 50
+                        this.dxfPairInfo = this.ReadCodePair();
+                        double aEnd = double.Parse(this.dxfPairInfo.Value); // code 51
+                        this.dxfPairInfo = this.ReadCodePair();
+                        bool aCCW = int.Parse(this.dxfPairInfo.Value) != 0; // code 73
+                        this.dxfPairInfo = this.ReadCodePair();
                         // a full circle will never happen, AutoCAD exports circle boundary paths as two vertex polylines with bulges of 1 and -1
                         entities.Add(aCCW
                                          ? new Arc(new Vector3(aX, aY, 0.0), aR, aStart, aEnd)
                                          : new Arc(new Vector3(aX, aY, 0.0), aR, 360 - aEnd, 360 - aStart));
                         break;
                     case 3:
-                        dxfPairInfo = this.ReadCodePair();
+                        this.dxfPairInfo = this.ReadCodePair();
                         // elliptic arc
-                        double eX = double.Parse(dxfPairInfo.Value); // code 10
-                        dxfPairInfo = this.ReadCodePair();
-                        double eY = double.Parse(dxfPairInfo.Value); // code 20
-                        dxfPairInfo = this.ReadCodePair();
-                        double eAxisX = double.Parse(dxfPairInfo.Value); // code 11
-                        dxfPairInfo = this.ReadCodePair();
-                        double eAxisY = double.Parse(dxfPairInfo.Value); // code 21
-                        dxfPairInfo = this.ReadCodePair();
-                        double eAxisRatio = double.Parse(dxfPairInfo.Value); // code 40
-                        dxfPairInfo = this.ReadCodePair();
-                        double eStart = double.Parse(dxfPairInfo.Value); // code 50
-                        dxfPairInfo = this.ReadCodePair();
-                        double eEnd = double.Parse(dxfPairInfo.Value); // code 51
-                        dxfPairInfo = this.ReadCodePair();
-                        bool eCCW = int.Parse(dxfPairInfo.Value) != 0; // code 73
-                        dxfPairInfo = this.ReadCodePair();
+                        double eX = double.Parse(this.dxfPairInfo.Value); // code 10
+                        this.dxfPairInfo = this.ReadCodePair();
+                        double eY = double.Parse(this.dxfPairInfo.Value); // code 20
+                        this.dxfPairInfo = this.ReadCodePair();
+                        double eAxisX = double.Parse(this.dxfPairInfo.Value); // code 11
+                        this.dxfPairInfo = this.ReadCodePair();
+                        double eAxisY = double.Parse(this.dxfPairInfo.Value); // code 21
+                        this.dxfPairInfo = this.ReadCodePair();
+                        double eAxisRatio = double.Parse(this.dxfPairInfo.Value); // code 40
+                        this.dxfPairInfo = this.ReadCodePair();
+                        double eStart = double.Parse(this.dxfPairInfo.Value); // code 50
+                        this.dxfPairInfo = this.ReadCodePair();
+                        double eEnd = double.Parse(this.dxfPairInfo.Value); // code 51
+                        this.dxfPairInfo = this.ReadCodePair();
+                        bool eCCW = int.Parse(this.dxfPairInfo.Value) != 0; // code 73
+                        this.dxfPairInfo = this.ReadCodePair();
 
                         Vector3 center = new Vector3(eX, eY, 0.0);
                         Vector3 axisPoint = new Vector3(eAxisX, eAxisY, 0.0);
@@ -4976,38 +4988,38 @@ namespace netDxf
                         entities.Add(ellipse);
                         break;
                     case 4:
-                         dxfPairInfo = this.ReadCodePair();
+                         this.dxfPairInfo = this.ReadCodePair();
                         // spline
                         List<SplineVertex> controlPoints = new List<SplineVertex>();
-                        short degree = short.Parse(dxfPairInfo.Value); // code 94
-                        dxfPairInfo = this.ReadCodePair();
-                        int isRational = int.Parse(dxfPairInfo.Value); // code 73
-                        dxfPairInfo = this.ReadCodePair();
-                        int isPeriodic = int.Parse(dxfPairInfo.Value); // code 74
-                        dxfPairInfo = this.ReadCodePair();
-                        int numKnots = int.Parse(dxfPairInfo.Value); // code 95
-                        dxfPairInfo = this.ReadCodePair();
-                        int numControlPoints = int.Parse(dxfPairInfo.Value); // code 96
-                        dxfPairInfo = this.ReadCodePair();
+                        short degree = short.Parse(this.dxfPairInfo.Value); // code 94
+                        this.dxfPairInfo = this.ReadCodePair();
+                        int isRational = int.Parse(this.dxfPairInfo.Value); // code 73
+                        this.dxfPairInfo = this.ReadCodePair();
+                        int isPeriodic = int.Parse(this.dxfPairInfo.Value); // code 74
+                        this.dxfPairInfo = this.ReadCodePair();
+                        int numKnots = int.Parse(this.dxfPairInfo.Value); // code 95
+                        this.dxfPairInfo = this.ReadCodePair();
+                        int numControlPoints = int.Parse(this.dxfPairInfo.Value); // code 96
+                        this.dxfPairInfo = this.ReadCodePair();
                         double[] knots = new double[numKnots];
                         for (int i = 0; i < numKnots; i++)
                         {
-                            knots[i] = double.Parse(dxfPairInfo.Value);  // code 40
-                            dxfPairInfo = this.ReadCodePair();
+                            knots[i] = double.Parse(this.dxfPairInfo.Value);  // code 40
+                            this.dxfPairInfo = this.ReadCodePair();
                         }
 
                         for (int i = 0; i < numControlPoints; i++)
                         {
                             double w = 1.0;
-                            double x = double.Parse(dxfPairInfo.Value); // code 10
-                            dxfPairInfo = this.ReadCodePair();
-                            double y = double.Parse(dxfPairInfo.Value); // code 20
-                            dxfPairInfo = this.ReadCodePair();
+                            double x = double.Parse(this.dxfPairInfo.Value); // code 10
+                            this.dxfPairInfo = this.ReadCodePair();
+                            double y = double.Parse(this.dxfPairInfo.Value); // code 20
+                            this.dxfPairInfo = this.ReadCodePair();
                             // control point weight might not be present
-                            if (dxfPairInfo.Code == 42)
+                            if (this.dxfPairInfo.Code == 42)
                             {
-                                w = double.Parse(dxfPairInfo.Value); // code 42
-                                dxfPairInfo = this.ReadCodePair();
+                                w = double.Parse(this.dxfPairInfo.Value); // code 42
+                                this.dxfPairInfo = this.ReadCodePair();
                             }
                             
                             controlPoints.Add(new SplineVertex(x, y, 0.0, w));
@@ -5017,31 +5029,31 @@ namespace netDxf
                         // stores information about spline fit point (the spline entity does not make use of this information)
                         if (this.headerVariables.AcadVer >= DxfVersion.AutoCad2010)
                         {
-                            int numFitData = int.Parse(dxfPairInfo.Value); // code 97
-                            dxfPairInfo = this.ReadCodePair();
+                            int numFitData = int.Parse(this.dxfPairInfo.Value); // code 97
+                            this.dxfPairInfo = this.ReadCodePair();
                             for (int i = 0; i < numFitData; i++)
                             {
-                                double fitX = double.Parse(dxfPairInfo.Value); // code 11
-                                dxfPairInfo = this.ReadCodePair();
-                                double fitY = double.Parse(dxfPairInfo.Value); // code 21
-                                dxfPairInfo = this.ReadCodePair();
+                                double fitX = double.Parse(this.dxfPairInfo.Value); // code 11
+                                this.dxfPairInfo = this.ReadCodePair();
+                                double fitY = double.Parse(this.dxfPairInfo.Value); // code 21
+                                this.dxfPairInfo = this.ReadCodePair();
                             }
 
                             // the info on start tangent might not appear
-                            if (dxfPairInfo.Code == 12)
+                            if (this.dxfPairInfo.Code == 12)
                             {
-                                double startTanX = double.Parse(dxfPairInfo.Value); // code 12
-                                dxfPairInfo = this.ReadCodePair();
-                                double startTanY = double.Parse(dxfPairInfo.Value); // code 22
-                                dxfPairInfo = this.ReadCodePair();
+                                double startTanX = double.Parse(this.dxfPairInfo.Value); // code 12
+                                this.dxfPairInfo = this.ReadCodePair();
+                                double startTanY = double.Parse(this.dxfPairInfo.Value); // code 22
+                                this.dxfPairInfo = this.ReadCodePair();
                             }
                             // the info on end tangent might not appear
-                            if (dxfPairInfo.Code == 13)
+                            if (this.dxfPairInfo.Code == 13)
                             {
-                                double endTanX = double.Parse(dxfPairInfo.Value); // code 13
-                                dxfPairInfo = this.ReadCodePair();
-                                double endTanY = double.Parse(dxfPairInfo.Value); // code 23
-                                dxfPairInfo = this.ReadCodePair();
+                                double endTanX = double.Parse(this.dxfPairInfo.Value); // code 13
+                                this.dxfPairInfo = this.ReadCodePair();
+                                double endTanY = double.Parse(this.dxfPairInfo.Value); // code 23
+                                this.dxfPairInfo = this.ReadCodePair();
                             }
                         }
 
@@ -5064,58 +5076,58 @@ namespace netDxf
             HatchType type = HatchType.UserDefined;
             HatchStyle style = HatchStyle.Normal;
 
-            while (dxfPairInfo.Code != 0 && dxfPairInfo.Code != 1001)
+            while (this.dxfPairInfo.Code != 0 && this.dxfPairInfo.Code != 1001)
             {
-                switch (dxfPairInfo.Code)
+                switch (this.dxfPairInfo.Code)
                 {
                     case 52:
-                        angle = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        angle = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 41:
-                        scale = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        scale = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 47:
-                        dxfPairInfo = this.ReadCodePair();
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 98:
-                        dxfPairInfo = this.ReadCodePair();
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 10:
-                        dxfPairInfo = this.ReadCodePair();
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 20:
-                        dxfPairInfo = this.ReadCodePair();
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 75:
-                        style = (HatchStyle) int.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        style = (HatchStyle) int.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 76:
-                        type = (HatchType) int.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        type = (HatchType) int.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 77:
                         // hatch pattern double flag (not used)
-                        dxfPairInfo = this.ReadCodePair();
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 78:
                         // number of pattern definition lines
-                        int numLines = int.Parse(dxfPairInfo.Value);
-                        lineDefinitions = ReadHatchPatternDefinitionLine(scale, angle, numLines);
+                        int numLines = int.Parse(this.dxfPairInfo.Value);
+                        lineDefinitions = this.ReadHatchPatternDefinitionLine(scale, angle, numLines);
                         break;
                     case 450:
-                        if (int.Parse(dxfPairInfo.Value) == 1)
+                        if (int.Parse(this.dxfPairInfo.Value) == 1)
                         {
                             isGradient = true; // gradient pattern
-                            hatch = ReadHatchGradientPattern();
+                            hatch = this.ReadHatchGradientPattern();
                         }
                         else
-                            dxfPairInfo = this.ReadCodePair(); // solid hatch, we do not need to read anything else
+                            this.dxfPairInfo = this.ReadCodePair(); // solid hatch, we do not need to read anything else
                         break;
                     default:
-                        dxfPairInfo = this.ReadCodePair();
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                 }
             }
@@ -5134,31 +5146,31 @@ namespace netDxf
         {
             // the information for gradient pattern must follow an strict order
             //dxfPairInfo = this.ReadCodePair();  // code 450 not needed
-            dxfPairInfo = this.ReadCodePair();  // code 451 not needed
-            dxfPairInfo = this.ReadCodePair();
-            double angle = double.Parse(dxfPairInfo.Value); // code 460
-            dxfPairInfo = this.ReadCodePair();
-            bool centered = ((int)double.Parse(dxfPairInfo.Value) == 0); // code 461
-            dxfPairInfo = this.ReadCodePair();
-            bool singleColor = (int.Parse(dxfPairInfo.Value) != 0); // code 452
-            dxfPairInfo = this.ReadCodePair();
-            double tint = double.Parse(dxfPairInfo.Value); // code 462
-            dxfPairInfo = this.ReadCodePair();  // code 453 not needed
+            this.dxfPairInfo = this.ReadCodePair();  // code 451 not needed
+            this.dxfPairInfo = this.ReadCodePair();
+            double angle = double.Parse(this.dxfPairInfo.Value); // code 460
+            this.dxfPairInfo = this.ReadCodePair();
+            bool centered = ((int)double.Parse(this.dxfPairInfo.Value) == 0); // code 461
+            this.dxfPairInfo = this.ReadCodePair();
+            bool singleColor = (int.Parse(this.dxfPairInfo.Value) != 0); // code 452
+            this.dxfPairInfo = this.ReadCodePair();
+            double tint = double.Parse(this.dxfPairInfo.Value); // code 462
+            this.dxfPairInfo = this.ReadCodePair();  // code 453 not needed
 
-            dxfPairInfo = this.ReadCodePair();  // code 463 not needed (0.0)
-            dxfPairInfo = this.ReadCodePair();  // code 63
+            this.dxfPairInfo = this.ReadCodePair();  // code 463 not needed (0.0)
+            this.dxfPairInfo = this.ReadCodePair();  // code 63
             //AciColor color1 = new AciColor(short.Parse(dxfPairInfo.Value));
-            dxfPairInfo = this.ReadCodePair(); // code 421
-            AciColor color1 = AciColor.FromTrueColor(int.Parse(dxfPairInfo.Value));
+            this.dxfPairInfo = this.ReadCodePair(); // code 421
+            AciColor color1 = AciColor.FromTrueColor(int.Parse(this.dxfPairInfo.Value));
 
-            dxfPairInfo = this.ReadCodePair();  // code 463 not needed (1.0)
-            dxfPairInfo = this.ReadCodePair();  // code 63
+            this.dxfPairInfo = this.ReadCodePair();  // code 463 not needed (1.0)
+            this.dxfPairInfo = this.ReadCodePair();  // code 63
             //AciColor color2 = new AciColor(short.Parse(dxfPairInfo.Value));
-            dxfPairInfo = this.ReadCodePair();  // code 421
-            AciColor color2 = AciColor.FromTrueColor(int.Parse(dxfPairInfo.Value));
+            this.dxfPairInfo = this.ReadCodePair();  // code 421
+            AciColor color2 = AciColor.FromTrueColor(int.Parse(this.dxfPairInfo.Value));
 
-            dxfPairInfo = this.ReadCodePair();  // code 470
-            string typeName = dxfPairInfo.Value;
+            this.dxfPairInfo = this.ReadCodePair();  // code 470
+            string typeName = this.dxfPairInfo.Value;
             if (!StringEnum.IsStringDefined(typeof (HatchGradientPatternType), typeName))
                 throw new DxfEntityException("HatchPatternGradient", "Unkown hatch gradient type: " + typeName);
             HatchGradientPatternType type = (HatchGradientPatternType) StringEnum.Parse(typeof(HatchGradientPatternType), typeName);
@@ -5181,36 +5193,36 @@ namespace netDxf
         {
             List<HatchPatternLineDefinition> lineDefinitions = new List<HatchPatternLineDefinition>();
 
-            dxfPairInfo = this.ReadCodePair();
+            this.dxfPairInfo = this.ReadCodePair();
             for (int i = 0; i < numLines; i++)
             {
                 Vector2 origin = Vector2.Zero;
                 Vector2 delta = Vector2.Zero;
 
-                double angle = double.Parse(dxfPairInfo.Value); // code 53
-                dxfPairInfo = this.ReadCodePair();
+                double angle = double.Parse(this.dxfPairInfo.Value); // code 53
+                this.dxfPairInfo = this.ReadCodePair();
 
-                origin.X = double.Parse(dxfPairInfo.Value); // code 43
-                dxfPairInfo = this.ReadCodePair();
+                origin.X = double.Parse(this.dxfPairInfo.Value); // code 43
+                this.dxfPairInfo = this.ReadCodePair();
 
-                origin.Y = double.Parse(dxfPairInfo.Value); // code 44
-                dxfPairInfo = this.ReadCodePair();
+                origin.Y = double.Parse(this.dxfPairInfo.Value); // code 44
+                this.dxfPairInfo = this.ReadCodePair();
 
-                delta.X = double.Parse(dxfPairInfo.Value); // code 45
-                dxfPairInfo = this.ReadCodePair();
+                delta.X = double.Parse(this.dxfPairInfo.Value); // code 45
+                this.dxfPairInfo = this.ReadCodePair();
 
-                delta.Y = double.Parse(dxfPairInfo.Value); // code 46
-                dxfPairInfo = this.ReadCodePair();
+                delta.Y = double.Parse(this.dxfPairInfo.Value); // code 46
+                this.dxfPairInfo = this.ReadCodePair();
 
-                int numSegments = int.Parse(dxfPairInfo.Value); // code 79
-                dxfPairInfo = this.ReadCodePair();
+                int numSegments = int.Parse(this.dxfPairInfo.Value); // code 79
+                this.dxfPairInfo = this.ReadCodePair();
 
                 List<double> dashPattern = new List<double>();
                 for (int j = 0; j < numSegments; j++)
                 {
                     // positive values means solid segments and negative values means spaces (one entry per element)
-                    dashPattern.Add(double.Parse(dxfPairInfo.Value) / patternScale); // code 49
-                    dxfPairInfo = this.ReadCodePair();
+                    dashPattern.Add(double.Parse(this.dxfPairInfo.Value) / patternScale); // code 49
+                    this.dxfPairInfo = this.ReadCodePair();
                 }
 
                 // Pattern fill data. In theory this should hold the same information as the pat file but for unkown reason the dxf requires global data instead of local.
@@ -5248,85 +5260,85 @@ namespace netDxf
             List<int> vertexIndexes = new List<int>();
             VertexTypeFlags flags = VertexTypeFlags.PolylineVertex;
 
-            dxfPairInfo = this.ReadCodePair();
+            this.dxfPairInfo = this.ReadCodePair();
 
-            while (dxfPairInfo.Code != 0)
+            while (this.dxfPairInfo.Code != 0)
             {
-                switch (dxfPairInfo.Code)
+                switch (this.dxfPairInfo.Code)
                 {
                     case 5:
-                        handle = dxfPairInfo.Value;
-                        dxfPairInfo = this.ReadCodePair();
+                        handle = this.dxfPairInfo.Value;
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 8:
-                        layer = this.GetLayer(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        layer = this.GetLayer(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 62: //aci color code
                         if (!color.UseTrueColor)
-                            color = AciColor.FromCadIndex(short.Parse(dxfPairInfo.Value));
-                        dxfPairInfo = this.ReadCodePair();
+                            color = AciColor.FromCadIndex(short.Parse(this.dxfPairInfo.Value));
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 420: //the entity uses true color
-                        color = AciColor.FromTrueColor(int.Parse(dxfPairInfo.Value));
-                        dxfPairInfo = this.ReadCodePair();
+                        color = AciColor.FromTrueColor(int.Parse(this.dxfPairInfo.Value));
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 6:
                         // the linetype names ByLayer or ByBlock are case unsensitive
-                        string lineTypeName = dxfPairInfo.Value;
+                        string lineTypeName = this.dxfPairInfo.Value;
                         if (String.Compare(lineTypeName, "ByLayer", StringComparison.OrdinalIgnoreCase) == 0)
                             lineTypeName = "ByLayer";
                         if (String.Compare(lineTypeName, "ByBlock", StringComparison.OrdinalIgnoreCase) == 0)
                             lineTypeName = "ByBlock";
                         lineType = this.GetLineType(lineTypeName);
-                        dxfPairInfo = this.ReadCodePair();
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 10:
-                        location.X = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        location.X = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 20:
-                        location.Y = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        location.Y = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 30:
-                        location.Z = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        location.Z = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 40:
-                        beginThickness = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        beginThickness = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 41:
-                        endThickness = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        endThickness = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 42:
-                        bulge = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        bulge = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 70:
-                        flags = (VertexTypeFlags) int.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        flags = (VertexTypeFlags) int.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 71:
-                        vertexIndexes.Add(int.Parse(dxfPairInfo.Value));
-                        dxfPairInfo = this.ReadCodePair();
+                        vertexIndexes.Add(int.Parse(this.dxfPairInfo.Value));
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 72:
-                        vertexIndexes.Add(int.Parse(dxfPairInfo.Value));
-                        dxfPairInfo = this.ReadCodePair();
+                        vertexIndexes.Add(int.Parse(this.dxfPairInfo.Value));
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 73:
-                        vertexIndexes.Add(int.Parse(dxfPairInfo.Value));
-                        dxfPairInfo = this.ReadCodePair();
+                        vertexIndexes.Add(int.Parse(this.dxfPairInfo.Value));
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 74:
-                        vertexIndexes.Add(int.Parse(dxfPairInfo.Value));
-                        dxfPairInfo = this.ReadCodePair();
+                        vertexIndexes.Add(int.Parse(this.dxfPairInfo.Value));
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     default:
-                        dxfPairInfo = this.ReadCodePair();
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                 }
             }
@@ -5349,10 +5361,10 @@ namespace netDxf
         private void ReadUnknowEntity()
         {
             // if the entity is unknown keep reading until an end of section or a new entity is found
-            dxfPairInfo = this.ReadCodePair();
-            while (dxfPairInfo.Code != 0)
+            this.dxfPairInfo = this.ReadCodePair();
+            while (this.dxfPairInfo.Code != 0)
             {
-                dxfPairInfo = this.ReadCodePair();
+                this.dxfPairInfo = this.ReadCodePair();
             }
         }
 
@@ -5370,43 +5382,43 @@ namespace netDxf
             List<string> names = new List<string>();
             List<string> handlesToOwner = new List<string>();
 
-            dxfPairInfo = this.ReadCodePair();
-            while (dxfPairInfo.Code != 0)
+            this.dxfPairInfo = this.ReadCodePair();
+            while (this.dxfPairInfo.Code != 0)
             {
-                switch (dxfPairInfo.Code)
+                switch (this.dxfPairInfo.Code)
                 {
                     case 5:
-                        handle = dxfPairInfo.Value;
-                        dxfPairInfo = this.ReadCodePair();
+                        handle = this.dxfPairInfo.Value;
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 330:
-                        handleOwner = dxfPairInfo.Value;
-                        dxfPairInfo = this.ReadCodePair();
+                        handleOwner = this.dxfPairInfo.Value;
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 280:
-                        isHardOwner = int.Parse(dxfPairInfo.Value) != 0;
-                        dxfPairInfo = this.ReadCodePair();
+                        isHardOwner = int.Parse(this.dxfPairInfo.Value) != 0;
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 281:
-                        clonning = (ClonningFlag) int.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        clonning = (ClonningFlag) int.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 3:
                         numEntries += 1;
-                        names.Add(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        names.Add(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 350: // Soft-owner ID/handle to entry object 
-                        handlesToOwner.Add(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        handlesToOwner.Add(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 360:
                         // Hard-owner ID/handle to entry object
-                        handlesToOwner.Add(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        handlesToOwner.Add(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     default:
-                        dxfPairInfo = this.ReadCodePair();
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                 }
             }
@@ -5431,29 +5443,29 @@ namespace netDxf
         private RasterVariables ReadRasterVariables()
         {
             RasterVariables variables = new RasterVariables();
-            dxfPairInfo = this.ReadCodePair();
-            while (dxfPairInfo.Code != 0)
+            this.dxfPairInfo = this.ReadCodePair();
+            while (this.dxfPairInfo.Code != 0)
             {
-                switch (dxfPairInfo.Code)
+                switch (this.dxfPairInfo.Code)
                 {
                     case 5:
-                        variables.Handle = dxfPairInfo.Value;
-                        dxfPairInfo = this.ReadCodePair();
+                        variables.Handle = this.dxfPairInfo.Value;
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 70:
-                        variables.DisplayFrame = int.Parse(dxfPairInfo.Value) != 0;
-                        dxfPairInfo = this.ReadCodePair();
+                        variables.DisplayFrame = int.Parse(this.dxfPairInfo.Value) != 0;
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 71:
-                        variables.DisplayQuality = (ImageDisplayQuality) int.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        variables.DisplayQuality = (ImageDisplayQuality) int.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 72:
-                        variables.Units = (ImageUnits) int.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        variables.Units = (ImageUnits) int.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     default:
-                        dxfPairInfo = this.ReadCodePair();
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                 }
             }
@@ -5472,45 +5484,45 @@ namespace netDxf
             float hPixel = 0.0f;
             ResolutionUnits units = ResolutionUnits.NoUnits;
 
-            dxfPairInfo = this.ReadCodePair();
-            while (dxfPairInfo.Code != 0)
+            this.dxfPairInfo = this.ReadCodePair();
+            while (this.dxfPairInfo.Code != 0)
             {
-                switch (dxfPairInfo.Code)
+                switch (this.dxfPairInfo.Code)
                 {
                     case 5:
-                        handle = dxfPairInfo.Value;
-                        dxfPairInfo = this.ReadCodePair();
+                        handle = this.dxfPairInfo.Value;
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 1:
-                        fileName = dxfPairInfo.Value;
-                        dxfPairInfo = this.ReadCodePair();
+                        fileName = this.dxfPairInfo.Value;
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 10:
-                        width = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        width = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 20:
-                        height = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        height = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 11:
-                        wPixel = float.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        wPixel = float.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 21:
-                        hPixel = float.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        hPixel = float.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 281:
-                        units = (ResolutionUnits) int.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        units = (ResolutionUnits) int.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 330:
-                        ownerHandle = dxfPairInfo.Value;
-                        dxfPairInfo = this.ReadCodePair();
+                        ownerHandle = this.dxfPairInfo.Value;
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     default:
-                        dxfPairInfo = this.ReadCodePair();
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                 }
             }
@@ -5538,21 +5550,21 @@ namespace netDxf
             string handle = null;
             string imgOwner = null;
 
-            dxfPairInfo = this.ReadCodePair();
-            while (dxfPairInfo.Code != 0)
+            this.dxfPairInfo = this.ReadCodePair();
+            while (this.dxfPairInfo.Code != 0)
             {
-                switch (dxfPairInfo.Code)
+                switch (this.dxfPairInfo.Code)
                 {
                     case 5:
-                        handle = dxfPairInfo.Value;
-                        dxfPairInfo = this.ReadCodePair();
+                        handle = this.dxfPairInfo.Value;
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 330:
-                        imgOwner = dxfPairInfo.Value;
-                        dxfPairInfo = this.ReadCodePair();
+                        imgOwner = this.dxfPairInfo.Value;
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                    default:
-                        dxfPairInfo = this.ReadCodePair();
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                 }
             }
@@ -5574,50 +5586,50 @@ namespace netDxf
             MLineStyleFlags flags = MLineStyleFlags.None;
             List<MLineStyleElement> elements = new List<MLineStyleElement>();
 
-            dxfPairInfo = this.ReadCodePair();
-            while (dxfPairInfo.Code != 0)
+            this.dxfPairInfo = this.ReadCodePair();
+            while (this.dxfPairInfo.Code != 0)
             {
-                switch (dxfPairInfo.Code)
+                switch (this.dxfPairInfo.Code)
                 {
                     case 5:
-                        handle = dxfPairInfo.Value;
-                        dxfPairInfo = this.ReadCodePair();
+                        handle = this.dxfPairInfo.Value;
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 2:
-                        name = dxfPairInfo.Value;
-                        dxfPairInfo = this.ReadCodePair();
+                        name = this.dxfPairInfo.Value;
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 3:
-                        description = dxfPairInfo.Value;
-                        dxfPairInfo = this.ReadCodePair();
+                        description = this.dxfPairInfo.Value;
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 62:
                         if(!fillColor.UseTrueColor)
-                            fillColor = AciColor.FromCadIndex(short.Parse(dxfPairInfo.Value));
-                        dxfPairInfo = this.ReadCodePair();
+                            fillColor = AciColor.FromCadIndex(short.Parse(this.dxfPairInfo.Value));
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 420:
-                        fillColor = AciColor.FromTrueColor(int.Parse(dxfPairInfo.Value));
-                        dxfPairInfo = this.ReadCodePair();
+                        fillColor = AciColor.FromTrueColor(int.Parse(this.dxfPairInfo.Value));
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 70:
-                        flags = (MLineStyleFlags) int.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        flags = (MLineStyleFlags) int.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 51:
-                        startAngle = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        startAngle = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 52:
-                        endAngle = double.Parse(dxfPairInfo.Value);
-                        dxfPairInfo = this.ReadCodePair();
+                        endAngle = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 71:
-                        int numElements = int.Parse(dxfPairInfo.Value);
-                        elements = ReadMLineStyleElements(numElements);
+                        int numElements = int.Parse(this.dxfPairInfo.Value);
+                        elements = this.ReadMLineStyleElements(numElements);
                         break;
                     default:
-                        dxfPairInfo = this.ReadCodePair();
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                 }
             }
@@ -5646,30 +5658,30 @@ namespace netDxf
         {
             List<MLineStyleElement> elements = new List<MLineStyleElement>();
 
-            dxfPairInfo = this.ReadCodePair();
+            this.dxfPairInfo = this.ReadCodePair();
 
             for (int i = 0; i < numElements; i++)
             {
-                double offset = double.Parse(dxfPairInfo.Value); // code 49
-                dxfPairInfo = this.ReadCodePair();
+                double offset = double.Parse(this.dxfPairInfo.Value); // code 49
+                this.dxfPairInfo = this.ReadCodePair();
 
-                AciColor color = AciColor.FromCadIndex(short.Parse(dxfPairInfo.Value));
-                dxfPairInfo = this.ReadCodePair();
+                AciColor color = AciColor.FromCadIndex(short.Parse(this.dxfPairInfo.Value));
+                this.dxfPairInfo = this.ReadCodePair();
 
-                if (dxfPairInfo.Code == 420)
+                if (this.dxfPairInfo.Code == 420)
                 {
-                    color = AciColor.FromTrueColor(int.Parse(dxfPairInfo.Value));   // code 420
-                    dxfPairInfo = this.ReadCodePair();
+                    color = AciColor.FromTrueColor(int.Parse(this.dxfPairInfo.Value));   // code 420
+                    this.dxfPairInfo = this.ReadCodePair();
                 }
 
                 // the linetype names ByLayer or ByBlock are case unsensitive
-                string lineTypeName = dxfPairInfo.Value;   // code 6
+                string lineTypeName = this.dxfPairInfo.Value;   // code 6
                 if (String.Compare(lineTypeName, "ByLayer", StringComparison.OrdinalIgnoreCase) == 0)
                     lineTypeName = "ByLayer";
                 if (String.Compare(lineTypeName, "ByBlock", StringComparison.OrdinalIgnoreCase) == 0)
                     lineTypeName = "ByBlock";
-                LineType lineType = GetLineType(lineTypeName);
-                dxfPairInfo = this.ReadCodePair();
+                LineType lineType = this.GetLineType(lineTypeName);
+                this.dxfPairInfo = this.ReadCodePair();
 
                 MLineStyleElement element = new MLineStyleElement(offset)
                                                 {
@@ -5692,52 +5704,52 @@ namespace netDxf
             bool isSelectable = true;
             List<EntityObject> entities = new List<EntityObject>();
 
-            dxfPairInfo = this.ReadCodePair();
-            while (dxfPairInfo.Code != 0)
+            this.dxfPairInfo = this.ReadCodePair();
+            while (this.dxfPairInfo.Code != 0)
             {
-                switch (dxfPairInfo.Code)
+                switch (this.dxfPairInfo.Code)
                 {
                     case 5:
-                        handle = dxfPairInfo.Value;
-                        dxfPairInfo = this.ReadCodePair();
+                        handle = this.dxfPairInfo.Value;
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 330:
-                        string handleOwner = dxfPairInfo.Value;
+                        string handleOwner = this.dxfPairInfo.Value;
                         DictionaryObject dict = this.dictionaries[handleOwner];
                         if (handle == null)
                             throw new NullReferenceException("Null handle in Group dictionary.");
                         name = dict.Entries[handle];
-                        dxfPairInfo = this.ReadCodePair();
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 300:
-                        description = dxfPairInfo.Value;
-                        dxfPairInfo = this.ReadCodePair();
+                        description = this.dxfPairInfo.Value;
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 70:
-                        isUnnamed = int.Parse(dxfPairInfo.Value) != 0;
-                        dxfPairInfo = this.ReadCodePair();
+                        isUnnamed = int.Parse(this.dxfPairInfo.Value) != 0;
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 71:
-                        isSelectable = int.Parse(dxfPairInfo.Value) != 0;
-                        dxfPairInfo = this.ReadCodePair();
+                        isSelectable = int.Parse(this.dxfPairInfo.Value) != 0;
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 340:
                         // the groups are defined in the objects section after the entities section, any entity included in a group has been previously defined
                         EntityObject entity;
-                        this.addedEntity.TryGetValue(dxfPairInfo.Value, out entity);
+                        this.addedEntity.TryGetValue(this.dxfPairInfo.Value, out entity);
                         if(entity != null)
                             entities.Add(entity);
-                        dxfPairInfo = this.ReadCodePair();
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     default:
-                        dxfPairInfo = this.ReadCodePair();
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                 }
             }
 
             // we need to keep track of the group names generated
             if(isUnnamed)
-                CheckGroupName(name);
+                this.CheckGroupName(name);
 
             Group group = new Group
                 {
@@ -5840,7 +5852,7 @@ namespace netDxf
 
             // if an entity references a table object not defined in the tables section a new one will be created
             ApplicationRegistry appReg = new ApplicationRegistry(name);
-            int numHandle = appReg.AsignHandle(Convert.ToInt32(this.HeaderVariables.HandleSeed, 16));
+            long numHandle = appReg.AsignHandle(Convert.ToInt64(this.HeaderVariables.HandleSeed, 16));
             this.headerVariables.HandleSeed = Convert.ToString(numHandle, 16);
             this.appRegistries.Add(name, appReg);
             return appReg;
@@ -5862,8 +5874,8 @@ namespace netDxf
 
             // if an entity references a table object not defined in the tables section a new one will be created
             layer = new Layer(name);
-            layer.LineType = GetLineType(layer.LineType.Name);
-            int numHandle = layer.AsignHandle(Convert.ToInt32(this.HeaderVariables.HandleSeed, 16));
+            layer.LineType = this.GetLineType(layer.LineType.Name);
+            long numHandle = layer.AsignHandle(Convert.ToInt64(this.HeaderVariables.HandleSeed, 16));
             this.headerVariables.HandleSeed = Convert.ToString(numHandle, 16);
             this.layers.Add(name, layer);
             this.layerRefs.Add(name, new List<DxfObject>());
@@ -5878,7 +5890,7 @@ namespace netDxf
 
             // if an entity references a table object not defined in the tables section a new one will be created
             lineType = new LineType(name);
-            int numHandle = lineType.AsignHandle(Convert.ToInt32(this.HeaderVariables.HandleSeed, 16));
+            long numHandle = lineType.AsignHandle(Convert.ToInt64(this.HeaderVariables.HandleSeed, 16));
             this.headerVariables.HandleSeed = Convert.ToString(numHandle, 16);
             this.lineTypes.Add(name, lineType);
             this.lineTypeRefs.Add(name, new List<DxfObject>());
@@ -5893,7 +5905,7 @@ namespace netDxf
 
             // if an entity references a table object not defined in the tables section a new one will be created
             style = new TextStyle(name);
-            int numHandle = style.AsignHandle(Convert.ToInt32(this.HeaderVariables.HandleSeed, 16));
+            long numHandle = style.AsignHandle(Convert.ToInt64(this.HeaderVariables.HandleSeed, 16));
             this.headerVariables.HandleSeed = Convert.ToString(numHandle, 16);
             this.textStyles.Add(name, style);
             this.textStyleRefs.Add(name, new List<DxfObject>());
@@ -5918,8 +5930,8 @@ namespace netDxf
 
             // if an entity references a table object not defined in the tables section a new one will be created
             style = new DimensionStyle(name);
-            style.TextStyle = GetTextStyle(style.TextStyle.Name);
-            int numHandle = style.AsignHandle(Convert.ToInt32(this.HeaderVariables.HandleSeed, 16));
+            style.TextStyle = this.GetTextStyle(style.TextStyle.Name);
+            long numHandle = style.AsignHandle(Convert.ToInt64(this.HeaderVariables.HandleSeed, 16));
             this.headerVariables.HandleSeed = Convert.ToString(numHandle, 16);
             this.dimStyles.Add(name, style);
             this.dimStyleRefs.Add(name, new List<DxfObject>());
@@ -5964,19 +5976,19 @@ namespace netDxf
 
         private XData ReadXDataRecord(string appId)
         {
-            ApplicationRegistry appReg = GetApplicationRegistry(appId);
+            ApplicationRegistry appReg = this.GetApplicationRegistry(appId);
 
             XData xData = new XData(appReg);
-            dxfPairInfo = this.ReadCodePair();
+            this.dxfPairInfo = this.ReadCodePair();
 
-            while (dxfPairInfo.Code >= 1000 && dxfPairInfo.Code <= 1071)
+            while (this.dxfPairInfo.Code >= 1000 && this.dxfPairInfo.Code <= 1071)
             {
-                if (dxfPairInfo.Code == XDataCode.AppReg)
+                if (this.dxfPairInfo.Code == XDataCode.AppReg)
                     break;
 
-                XDataRecord xDataRecord = new XDataRecord(dxfPairInfo.Code, dxfPairInfo.Value);
+                XDataRecord xDataRecord = new XDataRecord(this.dxfPairInfo.Code, this.dxfPairInfo.Value);
                 xData.XDataRecord.Add(xDataRecord);
-                dxfPairInfo = this.ReadCodePair();
+                this.dxfPairInfo = this.ReadCodePair();
             }
 
             return xData;

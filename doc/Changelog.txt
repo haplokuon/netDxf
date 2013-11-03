@@ -1,3 +1,10 @@
+[0.6.1 - 2013/09/06]
++ Rename Attribute definition and Attribute Id to Tag as it is the name given by the dxf documentation.
++ (fixed) Duplicate attribute definition tags. Although AutoCad allows this behaviour this library does not. Having duplicate tags is not recommended in any way, since there will be now way to know which is the definition associated to the insert attribute.
++ (fixed) Load dxf files containing a ThumbnailImage section.
++ (fixed) Load dxf file encoding.
++ (fixed) Big HandleSeed hex numbers. The NumHandles has been changed to long, hopefully this will solve the problem, but I don't know which is the largest handle hex number AutoCad can generate. The BigInteger class of the Net Framework 4.0 will solve this problem but at the moment this library maintains its compatibility with Net 2.0 
+
 [0.6.0 - 2013/09/06]
 + Added Ray entity.
 + Added XLine entity (aka construction line).

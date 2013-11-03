@@ -183,7 +183,7 @@ namespace netDxf.Entities
         /// Some objects might consume more than one, is, for example, the case of polylines that will asign
         /// automatically a handle to its vertexes. The entity number will be converted to an hexadecimal number.
         /// </remarks>
-        internal override int AsignHandle(int entityNumber)
+        internal override long AsignHandle(long entityNumber)
         {
             foreach( PolylineVertex v in this.vertexes )
             {
