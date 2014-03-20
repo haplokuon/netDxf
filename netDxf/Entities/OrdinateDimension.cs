@@ -1,4 +1,4 @@
-﻿#region netDxf, Copyright(C) 2013 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf, Copyright(C) 2014 Daniel Carvajal, Licensed under LGPL.
 
 //                        netDxf library
 // Copyright (C) 2013 Daniel Carvajal (haplokuon@gmail.com)
@@ -82,7 +82,7 @@ namespace netDxf.Entities
             : base(DimensionType.Ordinate)
         {
             this.origin = origin;
-            this.rotation = rotation;
+            this.rotation = MathHelper.NormalizeAngle(rotation);
             this.length = length;
             this.referencePoint = referencePoint;
             this.axis = axis;
@@ -133,7 +133,7 @@ namespace netDxf.Entities
         public double Rotation
         {
             get { return rotation; }
-            set { rotation = value; }
+            set { MathHelper.NormalizeAngle(rotation = value); }
         }
 
         /// <summary>

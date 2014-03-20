@@ -1,4 +1,4 @@
-﻿#region netDxf, Copyright(C) 2013 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf, Copyright(C) 2014 Daniel Carvajal, Licensed under LGPL.
 
 //                        netDxf library
 // Copyright (C) 2013 Daniel Carvajal (haplokuon@gmail.com)
@@ -39,6 +39,7 @@ namespace netDxf.Entities
         #endregion
 
         #region constructor
+
         /// <summary>
         /// Initializes a new instance of the <c>HatchPatternLineDefinition</c> class.
         /// </summary>
@@ -60,7 +61,7 @@ namespace netDxf.Entities
         public double Angle
         {
             get { return angle; }
-            set { angle = value; }
+            set { angle = MathHelper.NormalizeAngle(value); }
         }
 
         /// <summary>

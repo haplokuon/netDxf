@@ -1,4 +1,4 @@
-﻿#region netDxf, Copyright(C) 2013 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf, Copyright(C) 2014 Daniel Carvajal, Licensed under LGPL.
 
 //                        netDxf library
 // Copyright (C) 2013 Daniel Carvajal (haplokuon@gmail.com)
@@ -24,6 +24,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Text;
 using netDxf.Blocks;
 using netDxf.Entities;
 using netDxf.Header;
@@ -384,7 +385,7 @@ namespace netDxf
         /// <summary>
         /// Reads the whole stream.
         /// </summary>
-        /// <param name="stream">Stream</param>
+        /// <param name="stream">Stream.</param>
         public void Read(Stream stream)
         {
             if (stream == null)
@@ -392,7 +393,24 @@ namespace netDxf
 
             try
             {
-                this.reader = new StreamReader(stream, true);
+                Encoding encodingType = EncodingType.GetType(stream);
+                bool isUnicode = (encodingType.EncodingName == Encoding.UTF8.EncodingName) ||
+                                 (encodingType.EncodingName == Encoding.BigEndianUnicode.EncodingName) ||
+                                 (encodingType.EncodingName == Encoding.Unicode.EncodingName);
+
+                if (isUnicode)
+                    this.reader = new StreamReader(stream, true);
+                else
+                {
+                    // if the file is no utf-8 use the codepage provided by the dxf file
+                    string dwgcodepage = CheckHeaderVariable(stream, HeaderVariableCode.DwgCodePage);
+                    if (string.IsNullOrEmpty(dwgcodepage))
+                        throw (new DxfException("Unknown codepage for non unicode file.")); 
+                    int codepage;
+                    if (!int.TryParse(dwgcodepage.Split('_')[1], out codepage))
+                        throw (new DxfException("Unknown codepage for non unicode file."));
+                    this.reader = new StreamReader(stream, Encoding.GetEncoding(codepage));
+                }
             }
             catch (Exception ex)
             {
@@ -1219,7 +1237,6 @@ namespace netDxf
 
             this.dxfPairInfo = this.ReadCodePair();
 
-            //leer los datos mientras no encontramos el código 0 que indicaría el final de la capa
             while (this.dxfPairInfo.Code != 0)
             {
                 switch (this.dxfPairInfo.Code)
@@ -1635,7 +1652,7 @@ namespace netDxf
                 }
             }
 
-            // read the end bloc object until a new element is found
+            // read the end block object until a new element is found
             this.dxfPairInfo = this.ReadCodePair();
             string endBlockHandle = string.Empty;
             Layer endBlockLayer = layer;
@@ -3208,7 +3225,7 @@ namespace netDxf
                     XData = xData
                 };
 
-            ellipse.SetParameters(param);
+            SetEllipseParameters(ellipse, param);
             return ellipse;
         }
 
@@ -5768,6 +5785,27 @@ namespace netDxf
         #endregion
 
         #region private methods
+
+        private void SetEllipseParameters(Ellipse ellipse, double[] param)
+        {
+            double a = ellipse.MajorAxis * 0.5;
+            double b = ellipse.MinorAxis * 0.5;
+
+            Vector2 startPoint = new Vector2(a * Math.Cos(param[0]), b * Math.Sin(param[0]));
+            Vector2 endPoint = new Vector2(a * Math.Cos(param[1]), b * Math.Sin(param[1]));
+
+            // trigonometry functions are very prone to round off errors
+            if (startPoint.Equals(endPoint))
+            {
+                ellipse.StartAngle = 0.0;
+                ellipse.EndAngle = 0.0;
+            }
+            else
+            {
+                ellipse.StartAngle = Vector2.Angle(startPoint) * MathHelper.RadToDeg;
+                ellipse.EndAngle = Vector2.Angle(endPoint) * MathHelper.RadToDeg;
+            }
+        }
 
         private void CheckDimBlockName(string name)
         {

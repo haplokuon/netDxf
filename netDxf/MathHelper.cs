@@ -1,4 +1,4 @@
-﻿#region netDxf, Copyright(C) 2013 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf, Copyright(C) 2014 Daniel Carvajal, Licensed under LGPL.
 
 //                        netDxf library
 // Copyright (C) 2013 Daniel Carvajal (haplokuon@gmail.com)
@@ -22,7 +22,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
 
 namespace netDxf
 {
@@ -368,6 +367,7 @@ namespace netDxf
         /// <param name="point1">Second line origin point.</param>
         /// <param name="dir1">Second line direction.</param>
         /// <param name="intersection">Intersection point of the two lines.</param>
+        /// <param name="threshold">Tolerance.</param>
         /// <returns>0 if there is an intersection point, 1 if the lines are parallel or 2 if the lines are the same.</returns>
         public static int FindIntersection(Vector2 point0, Vector2 dir0, Vector2 point1, Vector2 dir1, out Vector2 intersection, double threshold = Epsilon)
         {
@@ -397,6 +397,20 @@ namespace netDxf
             // lines are the same
             intersection = Vector2.Zero;
             return 2;
+        }
+
+        /// <summary>
+        /// Normalizes the value of an angle in degrees between [0, 360[.
+        /// </summary>
+        /// <param name="angle">Angle in degrees.</param>
+        /// <returns>The equivalent angle in the range [0, 360[.</returns>
+        /// <remarks>Negative angles will be converted to its positive equivalent.</remarks>
+        public static double NormalizeAngle(double angle)
+        {
+            double c = angle%360;
+            if (c < 0)
+                return 360.0 + c;
+            return c;
         }
 
         #endregion

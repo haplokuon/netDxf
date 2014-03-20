@@ -10,7 +10,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
 [assembly: AssemblyProduct("TestDxfDocument")]
-[assembly: AssemblyCopyright("Daniel Carvajal ©  2013")]
+[assembly: AssemblyCopyright("Daniel Carvajal ©  2014")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 

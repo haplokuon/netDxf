@@ -1,4 +1,4 @@
-﻿#region netDxf, Copyright(C) 2013 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf, Copyright(C) 2014 Daniel Carvajal, Licensed under LGPL.
 
 //                        netDxf library
 // Copyright (C) 2013 Daniel Carvajal (haplokuon@gmail.com)
@@ -79,8 +79,7 @@ namespace netDxf.Entities
         /// </summary>
         public MText() 
             : this(string.Empty, Vector3.Zero, 1.0, 1.0, TextStyle.Default)
-        {
-            
+        {          
         }
 
         /// <summary>
@@ -201,7 +200,7 @@ namespace netDxf.Entities
         public double Rotation
         {
             get { return this.rotation; }
-            set { this.rotation = value; }
+            set { this.rotation = MathHelper.NormalizeAngle(value); }
         }
 
         /// <summary>

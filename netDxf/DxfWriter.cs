@@ -1,4 +1,4 @@
-﻿#region netDxf, Copyright(C) 2013 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf, Copyright(C) 2014 Daniel Carvajal, Licensed under LGPL.
 
 //                        netDxf library
 // Copyright (C) 2013 Daniel Carvajal (haplokuon@gmail.com)
@@ -96,7 +96,7 @@ namespace netDxf
         }
 
         /// <summary>
-        /// Closes the dxf file.
+        /// Closes the dxf writer.
         /// </summary>
         public void Close()
         {
@@ -111,7 +111,6 @@ namespace netDxf
             this.WriteCodePair(0, StringCode.EndOfFile);
 
             this.writer.Flush();
-            //this.writer.Close();
         }
 
         /// <summary>
@@ -680,7 +679,7 @@ namespace netDxf
                 this.WriteCodePair(420, AciColor.ToTrueColor(entity.Color));
             this.WriteCodePair(6, entity.LineType);
             this.WriteCodePair(370, entity.Lineweight.Value);
-            this.WriteCodePair(78, entity.LineTypeScale);
+            this.WriteCodePair(48, entity.LineTypeScale);
             this.WriteCodePair(60, entity.IsVisible ? 0 : 1);
         }
 
@@ -837,7 +836,7 @@ namespace netDxf
 
             this.WriteCodePair(40, ellipse.MinorAxis/ellipse.MajorAxis);
 
-            double[] paramaters = ellipse.GetParameters();
+            double[] paramaters = GetEllipseParameters(ellipse);
             this.WriteCodePair(41, paramaters[0]);
             this.WriteCodePair(42, paramaters[1]);
 
@@ -2014,6 +2013,32 @@ namespace netDxf
         #endregion
 
         #region private methods
+
+        private double[] GetEllipseParameters(Ellipse ellipse)
+        {
+            double atan1;
+            double atan2;
+            if (ellipse.IsFullEllipse)
+            {
+                atan1 = 0.0;
+                atan2 = MathHelper.TwoPI;
+            }
+            else
+            {
+                Vector2 startPoint = new Vector2(ellipse.Center.X, ellipse.Center.Y) + ellipse.PolarCoordinateRelativeToCenter(ellipse.StartAngle);
+                Vector2 endPoint = new Vector2(ellipse.Center.X, ellipse.Center.Y) + ellipse.PolarCoordinateRelativeToCenter(ellipse.EndAngle);
+                double a = ellipse.MajorAxis * 0.5;
+                double b = ellipse.MinorAxis * 0.5;
+                double px1 = ((startPoint.X - ellipse.Center.X) / a);
+                double py1 = ((startPoint.Y - ellipse.Center.Y) / b);
+                double px2 = ((endPoint.X - ellipse.Center.X) / a);
+                double py2 = ((endPoint.Y - ellipse.Center.Y) / b);
+
+                atan1 = Math.Atan2(py1, px1);
+                atan2 = Math.Atan2(py2, px2);
+            }
+            return new[] { atan1, atan2 };
+        }
 
         private void WriteAttributeDefinition(AttributeDefinition def)
         {

@@ -375,7 +375,7 @@ namespace netDxf.Header
         public string LastSavedBy
         {
             get { return (string)variables[HeaderVariableCode.LastSavedBy].Value; }
-            set { variables[HeaderVariableCode.LwDisplay].Value = value; }
+            set { variables[HeaderVariableCode.LastSavedBy].Value = value; }
         }
 
         /// <summary>

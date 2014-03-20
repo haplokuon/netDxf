@@ -52,11 +52,11 @@ namespace netDxf.Tables
             if (checkName)
             {
                 if (string.IsNullOrEmpty(name))
-                    throw (new ArgumentNullException("name")); 
+                    throw (new ArgumentNullException("name"));
 
                 foreach (string s in notAllowed)
                 {
-                    if(name.Contains(s))
+                    if (name.Contains(s))
                         throw new ArgumentException("The following characters \\<>/?\":;*|,=` are not supported for table object names.");
                 }
             }

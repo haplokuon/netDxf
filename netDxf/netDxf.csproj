@@ -73,6 +73,7 @@
     <Compile Include="Blocks\BlockEnd.cs" />
     <Compile Include="Blocks\BlockRecord.cs" />
     <Compile Include="Blocks\BlockTypeFlags.cs" />
+    <Compile Include="EncodingType.cs" />
     <Compile Include="Collections\ApplicationRegistries.cs" />
     <Compile Include="Collections\BlockRecords.cs" />
     <Compile Include="Collections\Groups.cs" />

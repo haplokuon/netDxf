@@ -61,6 +61,7 @@ namespace TestDxfDocument
             //EntityTrueColor();
             //EntityLineWeight();
             //ReadWriteFromStream();
+            //Text();
             //WriteNoAsciiText();
             //WriteSplineBoundaryHatch();
             //WriteNoInsertBlock();
@@ -68,7 +69,6 @@ namespace TestDxfDocument
             //SplineDrawing();
             //AddAndRemove();
             //LoadAndSave();
-            //Fixes();
             //CleanDrawing();
             //OrdinateDimensionDrawing();
             //Angular2LineDimensionDrawing();
@@ -955,9 +955,10 @@ namespace TestDxfDocument
             // saving to memory stream always use the default constructor, a fixed size stream will not work.
             MemoryStream memoryStream = new MemoryStream();
             dxf.Save(memoryStream);
-
+            
             // loading from memory stream
             DxfDocument dxf2 = DxfDocument.Load(memoryStream);
+            memoryStream.Close(); // once the stream is not need anymore we need to close the stream
 
             // saving to file stream
             FileStream fileStream = new FileStream("test fileStream.dxf", FileMode.Create);
@@ -966,16 +967,69 @@ namespace TestDxfDocument
 
             FileStream fileStreamLoad = new FileStream("test fileStream.dxf", FileMode.Open, FileAccess.Read);
             DxfDocument dxf3 = DxfDocument.Load(fileStreamLoad);
+            fileStreamLoad.Close();
 
+            DxfDocument dxf4 = DxfDocument.Load("test fileStream.dxf");
+
+        }
+        private static void Text()
+        {
+            // use a font that has support for chinesse characters
+            TextStyle textStyle = new TextStyle("Chinese text", "simsun.ttf");
+
+            // for dxf database version 2007 and later you can use directly the characters,
+            DxfDocument dxf1 = new DxfDocument(DxfVersion.AutoCad2010);
+            Text text1 = new Text("这是中国文字", Vector2.Zero, 10, textStyle);
+            MText mtext1 = new MText("这是中国文字", new Vector2(0, 30), 10, 0, textStyle);
+            dxf1.AddEntity(text1);
+            dxf1.AddEntity(mtext1);
+            dxf1.Save("textCad2010.dxf");
+
+            foreach (Text text in dxf1.Texts)
+            {
+                Console.WriteLine(text.Value);
+            }
+            foreach (MText text in dxf1.MTexts)
+            {
+                Console.WriteLine(text.Value);
+            }
+
+            Console.WriteLine("Press a key to continue...");
+            Console.ReadLine();
+
+            DxfDocument loadDxf = DxfDocument.Load("textCad2010.dxf");
+
+            // for previous version (this method will also work for later ones) you will need to supply the unicode value (U+value),
+            // you can get this value with the Windows Character Map application
+            DxfDocument dxf2 = new DxfDocument(DxfVersion.AutoCad2010);
+            Text text2 = new Text("\\U+8FD9\\U+662F\\U+4E2D\\U+56FD\\U+6587\\U+5B57", Vector2.Zero, 10, textStyle);
+            MText mtext2 = new MText("\\U+8FD9\\U+662F\\U+4E2D\\U+56FD\\U+6587\\U+5B57", new Vector2(0, 30), 10, 0, textStyle);
+            dxf2.AddEntity(text2);
+            dxf2.AddEntity(mtext2);
+            dxf2.Save("textCad2000.dxf");
         }
         private static void WriteNoAsciiText()
         {
             TextStyle textStyle = new TextStyle("Arial.ttf");
             DxfDocument dxf = new DxfDocument();
-            Text text = new Text("ÁÉÍÓÚ áéíóú Ññ àèìòù âêîôû", Vector2.Zero,10);
-            text.Style = textStyle;
+            dxf.DrawingVariables.LastSavedBy = "ЉЊЋЌЍжзицрлЯ";
+            //Text text = new Text("ÁÉÍÓÚ áéíóú Ññ àèìòù âêîôû", Vector2.Zero,10);
+            Text text = new Text("ЉЊЋЌЍжзицрлЯ", Vector2.Zero, 10, textStyle);
+            MText mtext = new MText("ЉЊЋЌЍжзицрлЯ", new Vector2(0, 50), 10, 0, textStyle);
+
             dxf.AddEntity(text);
-            dxf.Save("text.dxf");
+            dxf.AddEntity(mtext);
+            foreach (Text t in dxf.Texts)
+            {
+                Console.WriteLine(t.Value);
+            }
+            foreach (MText t in dxf.MTexts)
+            {
+                Console.WriteLine(t.Value);
+            }
+            Console.WriteLine("Press a key to continue...");
+            Console.ReadLine();
+            dxf.Save("text1.dxf");
 
             dxf = DxfDocument.Load("text1.dxf");
             dxf.DrawingVariables.AcadVer = DxfVersion.AutoCad2004;
@@ -1665,17 +1719,16 @@ namespace TestDxfDocument
             Circle circle = new Circle(center, 7.5);
             circle.Normal = normal;
 
-            Arc arc = new Arc(center, 5, 30, 215);
+            Arc arc = new Arc(center, 5, -45, 45);
             arc.Normal = normal;
-
 
             Ellipse ellipse = new Ellipse(center, 15, 7.5);
             ellipse.Rotation = 35;
             ellipse.Normal = normal;
 
             Ellipse ellipseArc = new Ellipse(center, 10, 5);
-            ellipseArc.StartAngle = 30;
-            ellipseArc.EndAngle = 325;
+            ellipseArc.StartAngle = 315;
+            ellipseArc.EndAngle = 45;
             ellipseArc.Rotation = 35;
             ellipseArc.Normal = normal;
 
@@ -2064,28 +2117,34 @@ namespace TestDxfDocument
            
             DxfDocument dxf = new DxfDocument();
 
-            Line line = new Line(new Vector3(0, 0, 0), new Vector3(2 * Math.Cos(Math.PI / 4),2 * Math.Cos(Math.PI / 4), 0));
+            //Line line = new Line(new Vector3(0, 0, 0), new Vector3(2 * Math.Cos(Math.PI / 4),2 * Math.Cos(Math.PI / 4), 0));
 
-            dxf.AddEntity(line);
+            //dxf.AddEntity(line);
 
-            Line line2 = new Line(new Vector3(0, 0, 0), new Vector3(0, -2, 0));
-            dxf.AddEntity(line2);
+            //Line line2 = new Line(new Vector3(0, 0, 0), new Vector3(0, -2, 0));
+            //dxf.AddEntity(line2);
 
-            Arc arc=new Arc(Vector3.Zero,2,45,270);
-            dxf.AddEntity(arc);
+            //Arc arc=new Arc(Vector3.Zero,2,45,270);
+            //dxf.AddEntity(arc);
 
-            // ellipses are saved as polylines
             Ellipse ellipse = new Ellipse(new Vector3(2,2,0), 5,3);
             ellipse.Rotation = 30;
             ellipse.Normal=new Vector3(1,1,1);
             ellipse.Thickness = 2;
             dxf.AddEntity(ellipse);
 
+            Ellipse ellipseArc = new Ellipse(new Vector3(2, 10, 0), 5, 3);
+            ellipseArc.StartAngle = -45;
+            ellipseArc.EndAngle = 45;
+            dxf.AddEntity(ellipseArc);
 
             dxf.Save("ellipse.dxf");
             dxf = new DxfDocument();
             dxf = DxfDocument.Load("ellipse.dxf");
-           
+
+            DxfDocument load = DxfDocument.Load("test ellipse.dxf");
+            load.Save("saved test ellipse.dxf");
+
         }
         private static void SpeedTest()
         {

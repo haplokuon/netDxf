@@ -1,4 +1,4 @@
-﻿#region netDxf, Copyright(C) 2013 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf, Copyright(C) 2014 Daniel Carvajal, Licensed under LGPL.
 
 //                        netDxf library
 // Copyright (C) 2013 Daniel Carvajal (haplokuon@gmail.com)
@@ -86,7 +86,7 @@ namespace netDxf.Entities
             this.block = block;
             this.position = position;
             this.scale = new Vector3(1.0, 1.0, 1.0);
-            this.rotation = 0.0f;
+            this.rotation = 0.0;
             this.endSequence = new EndSequence();
             this.attributes = new List<Attribute>();
             foreach (AttributeDefinition attdef in block.Attributes.Values)
@@ -145,7 +145,7 @@ namespace netDxf.Entities
         public double Rotation
         {
             get { return this.rotation; }
-            set { this.rotation = value; }
+            set { this.rotation = MathHelper.NormalizeAngle(value); }
         }
 
         #endregion

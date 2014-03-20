@@ -1,4 +1,4 @@
-﻿#region netDxf, Copyright(C) 2013 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf, Copyright(C) 2014 Daniel Carvajal, Licensed under LGPL.
 
 //                        netDxf library
 // Copyright (C) 2013 Daniel Carvajal (haplokuon@gmail.com)
@@ -23,7 +23,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text;
 
 namespace netDxf.Entities
 {
@@ -109,7 +108,6 @@ namespace netDxf.Entities
     /// </summary>
     public class HatchPattern
     {
-
         #region private fields
 
         private readonly string name;
@@ -290,17 +288,13 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets or sets the pattern angle.
+        /// Gets or sets the pattern angle in degrees.
         /// </summary>
         public double Angle
         {
             get { return angle; }
             set
-            {
-                //if (value < 0 || value > 360)
-                //    throw new ArgumentOutOfRangeException("value", value.ToString(Thread.CurrentThread.CurrentCulture), "The angle must be between 0 and 360 degrees");
-                angle = value;
-            }
+            { angle = MathHelper.NormalizeAngle(value); }
         }
 
         /// <summary>

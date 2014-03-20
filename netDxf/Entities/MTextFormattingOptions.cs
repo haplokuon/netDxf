@@ -1,4 +1,4 @@
-﻿#region netDxf, Copyright(C) 2013 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf, Copyright(C) 2014 Daniel Carvajal, Licensed under LGPL.
 
 //                        netDxf library
 // Copyright (C) 2013 Daniel Carvajal (haplokuon@gmail.com)
@@ -177,13 +177,13 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets or sets the obliquing angle.
+        /// Gets or sets the obliquing angle in degrees.
         /// </summary>
         /// <remarks>Set as 0.0 to apply the default obliquing angle.</remarks>
         public double ObliqueAngle
         {
             get { return obliqueAngle; }
-            set { obliqueAngle = value; }
+            set { obliqueAngle = MathHelper.NormalizeAngle(value); }
         }
 
         /// <summary>

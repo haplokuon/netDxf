@@ -1,4 +1,4 @@
-﻿#region netDxf, Copyright(C) 2013 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf, Copyright(C) 2014 Daniel Carvajal, Licensed under LGPL.
 
 //                        netDxf library
 // Copyright (C) 2013 Daniel Carvajal (haplokuon@gmail.com)
@@ -123,7 +123,7 @@ namespace netDxf.Entities
         {
             this.definitionPoint = centerPoint;
             this.radius = radius;
-            this.rotation = rotation;
+            this.rotation = MathHelper.NormalizeAngle(rotation);
             if (style == null)
                 throw new ArgumentNullException("style", "The Dimension style cannot be null.");
             this.style = style;
@@ -171,7 +171,7 @@ namespace netDxf.Entities
         public double Rotation
         {
             get { return this.rotation; }
-            set { this.rotation = value; }
+            set { this.rotation = MathHelper.NormalizeAngle(value); }
         }
 
         /// <summary>

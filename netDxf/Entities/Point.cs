@@ -1,4 +1,4 @@
-﻿#region netDxf, Copyright(C) 2013 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf, Copyright(C) 2014 Daniel Carvajal, Licensed under LGPL.
 
 //                        netDxf library
 // Copyright (C) 2013 Daniel Carvajal (haplokuon@gmail.com)
@@ -102,13 +102,12 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets or sets the point local rotation along its normal.
+        /// Gets or sets the point local rotation in degrees along its normal.
         /// </summary>
-        /// <remarks>The angle is measured in degrees.</remarks>
         public double Rotation
         {
             get { return this.rotation; }
-            set { this.rotation = value; }
+            set { this.rotation = MathHelper.NormalizeAngle(value); }
         }
 
         #endregion
