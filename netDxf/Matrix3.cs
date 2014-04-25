@@ -1,7 +1,7 @@
-#region netDxf, Copyright(C) 2013 Daniel Carvajal, Licensed under LGPL.
+#region netDxf, Copyright(C) 2014 Daniel Carvajal, Licensed under LGPL.
 
 //                        netDxf library
-// Copyright (C) 2013 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2014 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -377,11 +377,10 @@ namespace netDxf
         /// <returns>A string text.</returns>
         public override string ToString()
         {
-            string separator = Thread.CurrentThread.CurrentCulture.TextInfo.ListSeparator;
             StringBuilder s = new StringBuilder();
-            s.Append(string.Format("|{0}{3}{1}{3}{2}|" + Environment.NewLine, this.mM11, this.mM12, this.mM13, separator));
-            s.Append(string.Format("|{0}{3}{1}{3}{2}|" + Environment.NewLine, this.mM21, this.mM22, this.mM23, separator));
-            s.Append(string.Format("|{0}{3}{1}{3}{2}|" + Environment.NewLine, this.mM31, this.mM32, this.mM33, separator));
+            s.Append(string.Format("|{0}{3}{1}{3}{2}|" + Environment.NewLine, this.mM11, this.mM12, this.mM13, Thread.CurrentThread.CurrentCulture.TextInfo.ListSeparator));
+            s.Append(string.Format("|{0}{3}{1}{3}{2}|" + Environment.NewLine, this.mM21, this.mM22, this.mM23, Thread.CurrentThread.CurrentCulture.TextInfo.ListSeparator));
+            s.Append(string.Format("|{0}{3}{1}{3}{2}|" + Environment.NewLine, this.mM31, this.mM32, this.mM33, Thread.CurrentThread.CurrentCulture.TextInfo.ListSeparator));
             return s.ToString();
         }
 

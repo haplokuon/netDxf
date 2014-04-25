@@ -1,7 +1,7 @@
-﻿#region netDxf, Copyright(C) 2013 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf, Copyright(C) 2014 Daniel Carvajal, Licensed under LGPL.
 
 //                        netDxf library
-// Copyright (C) 2013 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2014 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -61,13 +61,18 @@ namespace netDxf
         }
 
         /// <summary>
-        /// Gets or sets the handle asigned to the dxf object.
+        /// Gets the handle asigned to the dxf object.
         /// </summary>
-        /// <remarks>It is a unique hexadecimal number asigned automatically to every dxf object. Only the getter is public.</remarks>
+        /// <remarks>The handle is a unique hexadecimal number asigned automatically to every dxf object.</remarks>
         public string Handle
         {
             get { return this.handle; }
-            internal set { this.handle = value;}
+            internal set
+            {
+                if (value == null)
+                    throw new ArgumentNullException("value");
+                this.handle = value;
+            }
         }
 
         #endregion
@@ -85,7 +90,7 @@ namespace netDxf
         /// </remarks>
         internal virtual long AsignHandle(long entityNumber)
         {
-            this.handle = Convert.ToString(entityNumber, 16);
+            this.handle = entityNumber.ToString("X");
             return entityNumber + 1;
         }
 

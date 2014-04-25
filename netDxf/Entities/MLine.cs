@@ -175,16 +175,11 @@ namespace netDxf.Entities
         /// <summary>
         /// Gets or sets the multiline scale.
         /// </summary>
+        /// <remarks>AutoCad accepts negative scales, but it is not recommended. </remarks>
         public double Scale
         {
             get { return this.scale; }
-            set
-            {
-                // AutoCad accepts negative scales, but it is not recommended
-                //if (value <= 0)
-                //    throw new ArgumentOutOfRangeException("value", value, "The MLine scale must be greater than zero.");
-                this.scale = value;
-            }
+            set { this.scale = value; }
         }
 
         /// <summary>

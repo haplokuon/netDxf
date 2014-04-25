@@ -153,8 +153,8 @@ namespace netDxf.Entities
         /// </summary>
         public Vector3 CenterPoint
         {
-            get { return center; }
-            set { center = value; }
+            get { return this.center; }
+            set { this.center = value; }
         }
 
         /// <summary>
@@ -162,8 +162,8 @@ namespace netDxf.Entities
         /// </summary>
         public double Diameter
         {
-            get { return diameter; }
-            set { diameter = value; }
+            get { return this.diameter; }
+            set { this.diameter = value; }
         }
 
         /// <summary>
@@ -171,8 +171,8 @@ namespace netDxf.Entities
         /// </summary>
         public double Rotation
         {
-            get { return rotation; }
-            set { rotation = MathHelper.NormalizeAngle(value); }
+            get { return this.rotation; }
+            set { this.rotation = MathHelper.NormalizeAngle(value); }
         }
 
         /// <summary>

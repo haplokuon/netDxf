@@ -1,7 +1,7 @@
-﻿#region netDxf, Copyright(C) 2013 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf, Copyright(C) 2014 Daniel Carvajal, Licensed under LGPL.
 
 //                        netDxf library
-// Copyright (C) 2013 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2014 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -30,6 +30,7 @@ using netDxf.Entities;
 using netDxf.Header;
 using netDxf.Objects;
 using netDxf.Tables;
+using Group = netDxf.Objects.Group;
 using Point = netDxf.Entities.Point;
 
 namespace TestDxfDocument
@@ -42,6 +43,9 @@ namespace TestDxfDocument
         private static void Main()
         {
             Test();
+
+            //EncodingTest();
+            //CheckReferences();
             //ComplexHatch();
             //RayAndXLine();
             //UserCoordinateSystems();
@@ -51,7 +55,7 @@ namespace TestDxfDocument
             //TextAndDimensionStyleUsesAndRemove();
             //MLineStyleUsesAndRemove();
             //AppRegUsesAndRemove();
-            //ExplodePolyfaceMesh();
+            //ExplodePolyfaceMesh(); 
             //ApplicationRegistries();
             //TestOCStoWCS();
             //WriteGradientPattern();
@@ -105,6 +109,7 @@ namespace TestDxfDocument
             //WritePolyline3d();
             //WriteInsert();
         }
+
 
         private static void Test()
         {
@@ -239,6 +244,167 @@ namespace TestDxfDocument
         //    dxf.Save("ExplodeInsert.dxf");
         //}
 
+        public static void EncodingTest()
+        {
+            DxfDocument dxf;
+            dxf = DxfDocument.Load("tests//EncodeDecodeProcess (cad 2010).dxf");
+            dxf.DrawingVariables.AcadVer = DxfVersion.AutoCad2000;
+            dxf.Save("EncodeDecodeProcess (netDxf 2000).dxf");
+
+            dxf = DxfDocument.Load("tests//EncodeDecodeProcess (cad 2000).dxf");
+            dxf.DrawingVariables.AcadVer = DxfVersion.AutoCad2010;
+            dxf.Save("EncodeDecodeProcess (netDxf 2010).dxf");
+        }
+        public static void CheckReferences()
+        {
+            DxfDocument dxf = new DxfDocument();
+
+            Layer layer1 = new Layer("Layer1");
+            layer1.Color = AciColor.Blue;
+            layer1.LineType = LineType.Center;
+
+            Layer layer2 = new Layer("Layer2");
+            layer2.Color = AciColor.Red;
+
+            LwPolyline poly = new LwPolyline();
+            poly.Vertexes.Add(new LwPolylineVertex(0, 0));
+            poly.Vertexes.Add(new LwPolylineVertex(10, 10));
+            poly.Vertexes.Add(new LwPolylineVertex(20, 0));
+            poly.Vertexes.Add(new LwPolylineVertex(30, 10));
+            poly.Layer = layer1;
+            dxf.AddEntity(poly);
+
+            Ellipse ellipse = new Ellipse(new Vector3(2, 2, 0), 5, 3);
+            ellipse.Rotation = 30;
+            ellipse.Layer = layer1;
+            dxf.AddEntity(ellipse);
+
+            Line line = new Line(new Vector2(10, 5), new Vector2(-10, -5));
+            line.Layer = layer2;
+            line.LineType = LineType.DashDot;
+            dxf.AddEntity(line);
+
+            dxf.Save("test.dxf");
+
+            foreach (ApplicationRegistry registry in dxf.ApplicationRegistries)
+            {
+                foreach (DxfObject o in dxf.ApplicationRegistries.GetReferences(registry))
+                {
+                    if (o is EntityObject)
+                    {
+                        foreach (KeyValuePair<string, XData> data in ((EntityObject)o).XData)
+                        {
+                            if (data.Key == registry.Name)
+                                if (!ReferenceEquals(registry, data.Value.ApplicationRegistry))
+                                    Console.WriteLine("Application registry {0} not equal entity to {1}", registry.Name, o.CodeName);
+                        }
+                    }
+                }
+            }
+
+            foreach (Block block in dxf.Blocks)
+            {
+                foreach (DxfObject o in dxf.Blocks.GetReferences(block))
+                {
+                    if (o is Insert)
+                        if (!ReferenceEquals(block, ((Insert)o).Block))
+                            Console.WriteLine("Block {0} not equal entity to {1}", block.Name, o.CodeName);
+                }
+            }
+
+            foreach (ImageDef def in dxf.ImageDefinitions)
+            {
+                foreach (DxfObject o in dxf.ImageDefinitions.GetReferences(def))
+                {
+                    if (o is Image)
+                        if (!ReferenceEquals(def, ((Image)o).Definition))
+                            Console.WriteLine("Image definition {0} not equal entity to {1}", def.Name, o.CodeName);
+                }
+            }
+
+            foreach (DimensionStyle dimStyle in dxf.DimensionStyles)
+            {
+                foreach (DxfObject o in dxf.DimensionStyles.GetReferences(dimStyle))
+                {
+                    if (o is Dimension)
+                        if (!ReferenceEquals(dimStyle, ((Dimension)o).Style))
+                            Console.WriteLine("Dimension style {0} not equal entity to {1}", dimStyle.Name, o.CodeName);
+                }
+
+            }
+
+            foreach (Group g in dxf.Groups)
+            {
+                foreach (DxfObject o in dxf.Groups.GetReferences(g))
+                {
+                    // no references
+                }
+            }
+
+            foreach (UCS u in dxf.UCSs)
+            {
+                foreach (DxfObject o in dxf.UCSs.GetReferences(u))
+                {
+                    // no references
+                }
+            }
+
+            foreach (TextStyle style in dxf.TextStyles)
+            {
+                foreach (DxfObject o in dxf.TextStyles.GetReferences(style))
+                {
+                    if (o is Text)
+                        if (!ReferenceEquals(style, ((Text)o).Style))
+                            Console.WriteLine("Text style {0} not equal entity to {1}", style.Name, o.CodeName);
+
+                    if (o is MText)
+                        if (!ReferenceEquals(style, ((MText)o).Style))
+                            Console.WriteLine("Text style {0} not equal entity to {1}", style.Name, o.CodeName);
+
+                    if (o is DimensionStyle)
+                        if (!ReferenceEquals(style, ((DimensionStyle)o).TextStyle))
+                            Console.WriteLine("Text style {0} not equal entity to {1}", style.Name, o.CodeName);
+                }
+            }
+
+            foreach (Layer layer in dxf.Layers)
+            {
+                foreach (DxfObject o in dxf.Layers.GetReferences(layer))
+                {
+                    if (o is Block)
+                        if (!ReferenceEquals(layer, ((Block)o).Layer))
+                            Console.WriteLine("Layer {0} not equal entity to {1}", layer.Name, o.CodeName);
+                    if (o is EntityObject)
+                        if (!ReferenceEquals(layer, ((EntityObject)o).Layer))
+                            Console.WriteLine("Layer {0} not equal entity to {1}", layer.Name, o.CodeName);
+                }
+            }
+
+            foreach (LineType lType in dxf.LineTypes)
+            {
+                foreach (DxfObject o in dxf.LineTypes.GetReferences(lType))
+                {
+                    if (o is Layer)
+                        if (!ReferenceEquals(lType, ((Layer)o).LineType))
+                            Console.WriteLine("Line type {0} not equal to {1}", lType.Name, o.CodeName);
+                    if (o is MLineStyle)
+                    {
+                        foreach (MLineStyleElement e in ((MLineStyle)o).Elements)
+                        {
+                            if (!ReferenceEquals(lType, e.LineType))
+                                Console.WriteLine("Line type {0} not equal to {1}", lType.Name, o.CodeName);
+                        }
+                    }
+                    if (o is EntityObject)
+                        if (!ReferenceEquals(lType, ((EntityObject)o).LineType))
+                            Console.WriteLine("Line type {0} not equal entity to {1}", lType.Name, o.CodeName);
+
+                }
+            }
+
+            Console.WriteLine("Press a key to continue...");
+            Console.ReadKey();
+        }
         private static void ComplexHatch()
         {
             HatchPattern pattern = HatchPattern.FromFile("hatch\\acad.pat", "ESCHER");
@@ -2149,7 +2315,8 @@ namespace TestDxfDocument
         private static void SpeedTest()
         {
             Stopwatch crono = new Stopwatch();
-            const int numLines = 100000; // create # lines
+            const int numLines = (int)1e6; // create # lines
+            string layerName = "MyLayer";
             float totalTime=0;
             
             List<EntityObject> lines = new List<EntityObject>(numLines);
@@ -2160,7 +2327,7 @@ namespace TestDxfDocument
             {
                  //line
                 Line line = new Line(new Vector3(0, i, 0), new Vector3(5, i, 0));
-                line.Layer = new Layer("line");
+                line.Layer = new Layer(layerName);
                 line.Layer.Color.Index = 6;
                 lines.Add(line);
             }
@@ -2175,16 +2342,34 @@ namespace TestDxfDocument
             crono.Reset();
 
             crono.Start();
-            dxf.Save("speedtest.dxf");
-            Console.WriteLine("Time saving file : " + crono.ElapsedMilliseconds / 1000.0f);
+            dxf.DrawingVariables.AcadVer = DxfVersion.AutoCad2000;
+            dxf.Save("speedtest (netDxf 2000).dxf");
+            Console.WriteLine("Time saving file 2000 : " + crono.ElapsedMilliseconds / 1000.0f);
             totalTime += crono.ElapsedMilliseconds;
             crono.Reset();
 
             crono.Start();
-            dxf = DxfDocument.Load("speedtest.dxf");
-            Console.WriteLine("Time loading file : " + crono.ElapsedMilliseconds / 1000.0f);
+            dxf.DrawingVariables.AcadVer = DxfVersion.AutoCad2010;
+            dxf.Save("speedtest (netDxf 2010).dxf");
+            Console.WriteLine("Time saving file 2010 : " + crono.ElapsedMilliseconds / 1000.0f);
+            totalTime += crono.ElapsedMilliseconds;
+            crono.Reset();
+
+
+            crono.Start();
+            dxf = DxfDocument.Load("speedtest (netDxf 2000).dxf");
+            Console.WriteLine("Time loading file 2000: " + crono.ElapsedMilliseconds / 1000.0f);
             totalTime += crono.ElapsedMilliseconds;
             crono.Stop();
+            crono.Reset();
+
+
+            crono.Start();
+            dxf = DxfDocument.Load("speedtest (netDxf 2010).dxf");
+            Console.WriteLine("Time loading file 2010: " + crono.ElapsedMilliseconds / 1000.0f);
+            totalTime += crono.ElapsedMilliseconds;
+            crono.Stop();
+            crono.Reset();
 
             Console.WriteLine("Total time : " + totalTime / 1000.0f);
             Console.ReadLine();

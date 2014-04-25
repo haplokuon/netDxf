@@ -1,7 +1,7 @@
-﻿#region netDxf, Copyright(C) 2013 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf, Copyright(C) 2014 Daniel Carvajal, Licensed under LGPL.
 
 //                        netDxf library
-// Copyright (C) 2013 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2014 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -48,15 +48,17 @@ namespace netDxf.Entities
     {
         #region private fields
 
-        private ImageClippingBoundaryType type;
-        private List<Vector2> vertexes;
+        private readonly ImageClippingBoundaryType type;
+        private readonly List<Vector2> vertexes;
 
         #endregion
 
         #region constructors
 
-        internal ImageClippingBoundary()
+        private ImageClippingBoundary(ImageClippingBoundaryType type, List<Vector2> vertexes)
         {
+            this.type = type;
+            this.vertexes = vertexes;
         }
 
         /// <summary>
@@ -105,8 +107,7 @@ namespace netDxf.Entities
         /// </summary>
         public ImageClippingBoundaryType Type
         {
-            get { return type; }
-            internal set { type = value; }
+            get { return this.type; }
         }
 
         /// <summary>
@@ -114,8 +115,7 @@ namespace netDxf.Entities
         /// </summary>
         public List<Vector2> Vertexes
         {
-            get { return vertexes; }
-            internal set { vertexes = value; }
+            get { return this.vertexes; }
         }
 
         #endregion
@@ -130,12 +130,7 @@ namespace netDxf.Entities
         {
             List<Vector2> copyVertexes = new List<Vector2>();
             copyVertexes.AddRange(this.vertexes);
-            return new ImageClippingBoundary
-            {
-                //ImageClippingBoundary properties
-                Type = this.type,
-                Vertexes = copyVertexes
-            };
+            return new ImageClippingBoundary(this.type, copyVertexes);
         }
 
         #endregion

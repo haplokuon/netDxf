@@ -1,4 +1,4 @@
-#region netDxf, Copyright(C) 2013 Daniel Carvajal, Licensed under LGPL.
+#region netDxf, Copyright(C) 2014 Daniel Carvajal, Licensed under LGPL.
 
 //                        netDxf library
 // Copyright (C) 2013 Daniel Carvajal (haplokuon@gmail.com)
@@ -71,6 +71,11 @@ namespace netDxf
         /// objects.
         /// </summary>
         public const string ThumbnailImageSection = "THUMBNAILIMAGE";
+
+        /// <summary>
+        /// Undocumented section. Currently it is used for storing the data for solids, regions, surfaces, and the preview image.
+        /// </summary>
+        public const string AcdsDataSection = "ACDSDATA";
 
         /// <summary>
         /// dxf name string.

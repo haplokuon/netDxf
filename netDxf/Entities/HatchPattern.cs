@@ -26,7 +26,6 @@ using System.IO;
 
 namespace netDxf.Entities
 {
-
     /// <summary>
     /// Predefined hatch pattern name.
     /// </summary>
@@ -36,14 +35,17 @@ namespace netDxf.Entities
         /// Solid.
         /// </summary>
         public const string Solid = "SOLID";
+
         /// <summary>
         /// Line.
         /// </summary>
         public const string Line = "LINE";
+
         /// <summary>
         /// Net.
         /// </summary>
         public const string Net = "NET";
+
         /// <summary>
         /// Dots.
         /// </summary>
@@ -59,10 +61,12 @@ namespace netDxf.Entities
         /// Hatch “odd parity” area.
         /// </summary>
         Normal = 0,
+
         /// <summary>
         /// Hatch outermost area only.
         /// </summary>
         Outer = 1,
+
         /// <summary>
         /// Hatch through entire area.
         /// </summary>
@@ -78,10 +82,12 @@ namespace netDxf.Entities
         /// User defined.
         /// </summary>
         UserDefined = 0,
+
         /// <summary>
         /// Predefined.
         /// </summary>
         Predefined = 1,
+
         /// <summary>
         /// Custom.
         /// </summary>
@@ -92,15 +98,16 @@ namespace netDxf.Entities
     /// Hatch pattern fill type.
     /// </summary>
     public enum FillType
-    {  
+    {
         /// <summary>
         /// Pattern fill.
         /// </summary>
         PatternFill = 0,
+
         /// <summary>
         /// Solid fill.
         /// </summary>
-        SolidFill = 1    
+        SolidFill = 1
     }
 
     /// <summary>
@@ -152,7 +159,7 @@ namespace netDxf.Entities
         {
             get
             {
-                HatchPattern pattern = new HatchPattern(PredefinedHatchPatternName.Solid, "Solid fill") { type = HatchType.Predefined };
+                HatchPattern pattern = new HatchPattern(PredefinedHatchPatternName.Solid, "Solid fill") {type = HatchType.Predefined};
                 // this is the pattern line definition for solid fills as defined in the acad.pat, but it is not needed
                 //HatchPatternLineDefinition lineDefinition = new HatchPatternLineDefinition
                 //                                                {
@@ -175,11 +182,11 @@ namespace netDxf.Entities
             {
                 HatchPattern pattern = new HatchPattern(PredefinedHatchPatternName.Line, "Parallel horizontal lines");
                 HatchPatternLineDefinition lineDefinition = new HatchPatternLineDefinition
-                                                                {
-                                                                    Angle = 0,
-                                                                    Origin = Vector2.Zero,
-                                                                    Delta = new Vector2(0.0, 0.125)
-                                                                };
+                    {
+                        Angle = 0,
+                        Origin = Vector2.Zero,
+                        Delta = new Vector2(0.0, 0.125)
+                    };
                 pattern.LineDefinitions.Add(lineDefinition);
                 pattern.type = HatchType.Predefined;
                 return pattern;
@@ -197,19 +204,19 @@ namespace netDxf.Entities
                 HatchPattern pattern = new HatchPattern(PredefinedHatchPatternName.Net, "Horizontal / vertical grid");
 
                 HatchPatternLineDefinition lineDefinition = new HatchPatternLineDefinition
-                                                                {
-                                                                    Angle = 0,
-                                                                    Origin = Vector2.Zero,
-                                                                    Delta = new Vector2(0.0, 0.125)
-                                                                };
+                    {
+                        Angle = 0,
+                        Origin = Vector2.Zero,
+                        Delta = new Vector2(0.0, 0.125)
+                    };
                 pattern.LineDefinitions.Add(lineDefinition);
 
                 lineDefinition = new HatchPatternLineDefinition
-                                     {
-                                         Angle = 90,
-                                         Origin = Vector2.Zero,
-                                         Delta = new Vector2(0.0, 0.125)
-                                     };
+                    {
+                        Angle = 90,
+                        Origin = Vector2.Zero,
+                        Delta = new Vector2(0.0, 0.125)
+                    };
                 pattern.LineDefinitions.Add(lineDefinition);
                 pattern.type = HatchType.Predefined;
                 return pattern;
@@ -226,12 +233,12 @@ namespace netDxf.Entities
             {
                 HatchPattern pattern = new HatchPattern(PredefinedHatchPatternName.Dots, "A series of dots");
                 HatchPatternLineDefinition lineDefinition = new HatchPatternLineDefinition
-                                                                {
-                                                                    Angle = 0,
-                                                                    Origin = Vector2.Zero,
-                                                                    Delta = new Vector2(0.03125, 0.0625),
-                                                                    DashPattern = new List<double>{0, -0.0625}
-                                                                };
+                    {
+                        Angle = 0,
+                        Origin = Vector2.Zero,
+                        Delta = new Vector2(0.03125, 0.0625),
+                        DashPattern = new List<double> {0, -0.0625}
+                    };
                 pattern.LineDefinitions.Add(lineDefinition);
                 pattern.type = HatchType.Predefined;
                 return pattern;
@@ -247,7 +254,7 @@ namespace netDxf.Entities
         /// </summary>
         public string Name
         {
-            get { return name; }
+            get { return this.name; }
         }
 
         /// <summary>
@@ -255,8 +262,8 @@ namespace netDxf.Entities
         /// </summary>
         public string Description
         {
-            get { return description; }
-            set { description = value; }
+            get { return this.description; }
+            set { this.description = value; }
         }
 
         /// <summary>
@@ -265,8 +272,8 @@ namespace netDxf.Entities
         /// <remarks>Only normal style is implemented.</remarks>
         public HatchStyle Style
         {
-            get { return style; }
-            internal set { style = value; }
+            get { return this.style; }
+            internal set { this.style = value; }
         }
 
         /// <summary>
@@ -274,8 +281,8 @@ namespace netDxf.Entities
         /// </summary>
         public HatchType Type
         {
-            get { return type; }
-            set { type = value; }
+            get { return this.type; }
+            set { this.type = value; }
         }
 
         /// <summary>
@@ -283,8 +290,8 @@ namespace netDxf.Entities
         /// </summary>
         public FillType Fill
         {
-            get { return fill; }
-            internal set {fill = value;}
+            get { return this.fill; }
+            internal set { this.fill = value; }
         }
 
         /// <summary>
@@ -292,9 +299,8 @@ namespace netDxf.Entities
         /// </summary>
         public double Angle
         {
-            get { return angle; }
-            set
-            { angle = MathHelper.NormalizeAngle(value); }
+            get { return this.angle; }
+            set { this.angle = MathHelper.NormalizeAngle(value); }
         }
 
         /// <summary>
@@ -302,8 +308,13 @@ namespace netDxf.Entities
         /// </summary>
         public double Scale
         {
-            get { return scale; }
-            set { scale = value; }
+            get { return this.scale; }
+            set
+            {
+                if (value <= 0)
+                    throw (new ArgumentOutOfRangeException("value", value, "The scale can not be zero or less."));
+                this.scale = value;
+            }
         }
 
         /// <summary>
@@ -311,15 +322,14 @@ namespace netDxf.Entities
         /// </summary>
         public List<HatchPatternLineDefinition> LineDefinitions
         {
-            get { return lineDefinitions; }
+            get { return this.lineDefinitions; }
             set
             {
                 if (value == null)
                     throw new ArgumentNullException("value");
-                lineDefinitions = value;
+                this.lineDefinitions = value;
             }
         }
-
 
         #endregion
 
@@ -333,74 +343,66 @@ namespace netDxf.Entities
         /// <returns>A Hatch pattern defined by the pat file.</returns>
         public static HatchPattern FromFile(string file, string patternName)
         {
-            HatchPattern pattern = null;    
-            StreamReader reader;
-            try
+            HatchPattern pattern = null;
+
+            using (StreamReader reader = new StreamReader(File.Open(file, FileMode.Open, FileAccess.Read, FileShare.ReadWrite), true))
             {
-                reader = new StreamReader(File.OpenRead(file), true);
-            }
-            catch (Exception ex)
-            {
-                throw (new FileLoadException("Unknown error reading pat file.", file, ex));
-            }
-
-            while (!reader.EndOfStream)
-            {
-                string line = reader.ReadLine();
-                if(line==null) throw new FileLoadException("Unknown error reading pat file.", file);
-                // lines starting with semicolons are comments
-                if(line.StartsWith(";")) continue;
-                // every pattern definition starts with '*'
-                if (!line.StartsWith("*")) continue;
-
-                // reading pattern name and description
-                int endName = line.IndexOf(','); // the first semicolon divides the name from the description that might contain more semicolons
-                string name = line.Substring(1, endName - 1);
-                string description = line.Substring(endName + 1, line.Length - endName - 1);
-                
-                // remove start and end spaces
-                description = description.Trim();
-                if (!name.Equals(patternName, StringComparison.InvariantCultureIgnoreCase)) continue;
-
-                // we have found the pattern name, the next lines of the file contains the pattern definition
-                line = reader.ReadLine();
-                if (line == null) throw new FileLoadException("Unknown error reading pat file.", file);
-                pattern = new HatchPattern(name, description);
-
-                while (!reader.EndOfStream && !line.StartsWith("*") && !string.IsNullOrEmpty(line))
+                while (!reader.EndOfStream)
                 {
-                    List<double> dashPattern = new List<double>();
-                    string[] tokens = line.Split(',');
-                    double angle = double.Parse(tokens[0]);
-                    Vector2 origin = new Vector2(double.Parse(tokens[1]),double.Parse(tokens[2]));
-                    Vector2 delta = new Vector2(double.Parse(tokens[3]), double.Parse(tokens[4]));
-                    // the rest of the info is optional if it exists define the dash pattern definition
-                    for (int i = 5; i < tokens.Length; i++)
-                        dashPattern.Add(double.Parse(tokens[i]));
+                    string line = reader.ReadLine();
+                    if (line == null) throw new FileLoadException("Unknown error reading pat file.", file);
+                    // lines starting with semicolons are comments
+                    if (line.StartsWith(";")) continue;
+                    // every pattern definition starts with '*'
+                    if (!line.StartsWith("*")) continue;
 
-                    HatchPatternLineDefinition lineDefinition = new HatchPatternLineDefinition
-                                                                    {
-                                                                        Angle = angle, 
-                                                                        Origin = origin, 
-                                                                        Delta = delta, 
-                                                                        DashPattern = dashPattern
-                                                                    };
+                    // reading pattern name and description
+                    int endName = line.IndexOf(','); // the first semicolon divides the name from the description that might contain more semicolons
+                    string name = line.Substring(1, endName - 1);
+                    string description = line.Substring(endName + 1, line.Length - endName - 1);
 
-                    pattern.lineDefinitions.Add(lineDefinition);
-                    pattern.type = HatchType.UserDefined;
+                    // remove start and end spaces
+                    description = description.Trim();
+                    if (!name.Equals(patternName, StringComparison.InvariantCultureIgnoreCase)) continue;
+
+                    // we have found the pattern name, the next lines of the file contains the pattern definition
                     line = reader.ReadLine();
                     if (line == null) throw new FileLoadException("Unknown error reading pat file.", file);
-                    line = line.Trim();
+                    pattern = new HatchPattern(name, description);
+
+                    while (!reader.EndOfStream && !line.StartsWith("*") && !string.IsNullOrEmpty(line))
+                    {
+                        List<double> dashPattern = new List<double>();
+                        string[] tokens = line.Split(',');
+                        double angle = double.Parse(tokens[0]);
+                        Vector2 origin = new Vector2(double.Parse(tokens[1]), double.Parse(tokens[2]));
+                        Vector2 delta = new Vector2(double.Parse(tokens[3]), double.Parse(tokens[4]));
+                        // the rest of the info is optional if it exists define the dash pattern definition
+                        for (int i = 5; i < tokens.Length; i++)
+                            dashPattern.Add(double.Parse(tokens[i]));
+
+                        HatchPatternLineDefinition lineDefinition = new HatchPatternLineDefinition
+                            {
+                                Angle = angle,
+                                Origin = origin,
+                                Delta = delta,
+                                DashPattern = dashPattern
+                            };
+
+                        pattern.lineDefinitions.Add(lineDefinition);
+                        pattern.type = HatchType.UserDefined;
+                        line = reader.ReadLine();
+                        if (line == null) throw new FileLoadException("Unknown error reading pat file.", file);
+                        line = line.Trim();
+                    }
+                    // there is no need to continue parsing the file, the info has been read
+                    break;
                 }
-                // there is no need to continue parsing the file, the info has been read
-                break;
             }
 
-            reader.Close(); 
-            return pattern; 
+            return pattern;
         }
 
         #endregion
-
     }
 }

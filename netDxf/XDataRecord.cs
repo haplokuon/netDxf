@@ -78,6 +78,7 @@ namespace netDxf
         /// <summary>
         /// Gets or set the XData code.
         /// </summary>
+        /// <remarks>The only valid values are the ones defined in the <see cref="XDataCode">XDataCode</see> class.</remarks>
         public int Code
         {
             get { return this.code; }

@@ -156,9 +156,9 @@ namespace netDxf.Objects
             if (string.IsNullOrEmpty(fileName))
                 throw new ArgumentNullException("fileName", "The image file name cannot be empty or null.");
 
-            FileInfo info = new FileInfo(fileName);
-            if (!info.Exists)
-                throw new FileNotFoundException("Image file not found", fileName);
+            //FileInfo info = new FileInfo(fileName);
+            //if (!info.Exists)
+            //    throw new FileNotFoundException("Image file not found", fileName);
 
             this.fileName = fileName;
             this.width = width;

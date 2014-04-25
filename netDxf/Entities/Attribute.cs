@@ -166,7 +166,7 @@ namespace netDxf.Entities
             set
             {
                 if (value == null)
-                    throw new NullReferenceException("value");
+                    throw new ArgumentNullException("value");
                 this.style = value;
             }
         }

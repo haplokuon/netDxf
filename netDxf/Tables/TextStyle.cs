@@ -1,7 +1,7 @@
-﻿#region netDxf, Copyright(C) 2013 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf, Copyright(C) 2014 Daniel Carvajal, Licensed under LGPL.
 
 //                        netDxf library
-// Copyright (C) 2013 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2014 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -95,8 +95,9 @@ namespace netDxf.Tables
         /// </summary>
         public string FontName
         {
-            get{return this.font;}
+            get { return this.font; }
         }
+
         /// <summary>
         /// Gets the style font file name without the extension.
         /// </summary>
@@ -104,6 +105,7 @@ namespace netDxf.Tables
         {
             get { return Path.GetFileNameWithoutExtension(this.font); }
         }
+
         /// <summary>
         /// Gets or sets the text height.
         /// </summary>
@@ -114,7 +116,7 @@ namespace netDxf.Tables
             set
             {
                 if (value < 0)
-                    throw (new ArgumentOutOfRangeException("value", value,"The height can not be less than zero."));
+                    throw (new ArgumentOutOfRangeException("value", value, "The height can not be less than zero."));
                 this.height = value;
             }
         }
@@ -129,7 +131,7 @@ namespace netDxf.Tables
             set
             {
                 if (value < 0.01 || value > 100.0)
-                    throw (new ArgumentOutOfRangeException("value", value, "The width factor valid values range from 0.01 to 100."));
+                    throw (new ArgumentOutOfRangeException("value", value, "The TextStyle WidthFactor valid values range from 0.01 to 100."));
                 this.widthFactor = value;
             }
         }
@@ -137,10 +139,16 @@ namespace netDxf.Tables
         /// <summary>
         /// Gets or sets the font oblique angle in degrees.
         /// </summary>
+        /// <remarks>Valid values range from -85 to 85. Default: 0.0.</remarks>
         public double ObliqueAngle
         {
             get { return this.obliqueAngle; }
-            set { this.obliqueAngle = value; }
+            set
+            {
+                if (value < -85.0 || value > 85.0)
+                    throw (new ArgumentOutOfRangeException("value", value, "The TextStyle ObliqueAngle valid values range from -85 to 85."));
+                this.obliqueAngle = value;
+            }
         }
 
         /// <summary>
@@ -171,6 +179,5 @@ namespace netDxf.Tables
         }
 
         #endregion
-
     }
 }

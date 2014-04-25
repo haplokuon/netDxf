@@ -1,7 +1,7 @@
-﻿#region netDxf, Copyright(C) 2013 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf, Copyright(C) 2014 Daniel Carvajal, Licensed under LGPL.
 
 //                        netDxf library
-// Copyright (C) 2013 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2014 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -56,7 +56,7 @@ namespace netDxf.Header
                                {HeaderVariableCode.AcadVer, new HeaderVariable(HeaderVariableCode.AcadVer, StringEnum.GetStringValue(DxfVersion.AutoCad2000))},
                                {HeaderVariableCode.DwgCodePage, new HeaderVariable(HeaderVariableCode.DwgCodePage, "ANSI_" + Encoding.Default.WindowsCodePage)},
                                {HeaderVariableCode.LastSavedBy, new HeaderVariable(HeaderVariableCode.LastSavedBy, Environment.UserName)},
-                               {HeaderVariableCode.HandleSeed, new HeaderVariable(HeaderVariableCode.HandleSeed, Convert.ToString(1, 16))},
+                               {HeaderVariableCode.HandleSeed, new HeaderVariable(HeaderVariableCode.HandleSeed, "1")},
                                {HeaderVariableCode.Angbase, new HeaderVariable(HeaderVariableCode.Angbase, 0.0)},
                                {HeaderVariableCode.Angdir, new HeaderVariable(HeaderVariableCode.Angdir, 0)},
                                {HeaderVariableCode.AttMode, new HeaderVariable(HeaderVariableCode.AttMode, 1)},
@@ -178,7 +178,7 @@ namespace netDxf.Header
             set
             {
                 if (value == null)
-                    throw new ArgumentNullException("value");
+                    throw new ArgumentNullException("value", "The current entity color cannot be null.");
                 variables[HeaderVariableCode.CeColor].Value = value.Index;
             }
         }
@@ -193,7 +193,7 @@ namespace netDxf.Header
             set
             {
                 if (value <= 0 )
-                    throw new ArgumentOutOfRangeException("value", value, "The linetype scale must be greater than zero.");
+                    throw new ArgumentOutOfRangeException("value", value, "The current entity linetype scale must be greater than zero.");
                 variables[HeaderVariableCode.CeLtScale].Value = value;
             }
         }
@@ -208,7 +208,7 @@ namespace netDxf.Header
             set
             {
                 if (value == null)
-                    throw new ArgumentNullException("value");
+                    throw new ArgumentNullException("value", "The current entity lineweight cannot be null.");
                 variables[HeaderVariableCode.CeLweight].Value = value.Value;
             }
         }
@@ -223,7 +223,7 @@ namespace netDxf.Header
             set
             {
                 if (string.IsNullOrEmpty(value))
-                    throw new ArgumentNullException("value");
+                    throw new ArgumentNullException("value", "The current entity linetype name cannot be null or empty.");
                 variables[HeaderVariableCode.CeLtype].Value = value;
             }
         }
@@ -238,7 +238,7 @@ namespace netDxf.Header
             set
             {
                 if (string.IsNullOrEmpty(value))
-                    throw new ArgumentNullException("value");
+                    throw new ArgumentNullException("value", "The current layer name cannot be null or empty.");
                 variables[HeaderVariableCode.CLayer].Value = value;
             }
         }              
@@ -270,7 +270,12 @@ namespace netDxf.Header
         public string CMLStyle
         {
             get { return (string)variables[HeaderVariableCode.CMLStyle].Value; }
-            set { variables[HeaderVariableCode.CMLStyle].Value = value; }
+            set
+            {
+                if (string.IsNullOrEmpty(value))
+                    throw new ArgumentNullException("value", "The current multiline style name cannot be null or empty.");
+                variables[HeaderVariableCode.CMLStyle].Value = value;
+            }
         }
 
         /// <summary>
@@ -280,7 +285,12 @@ namespace netDxf.Header
         public string DimStyle
         {
             get { return (string)variables[HeaderVariableCode.DimStyle].Value; }
-            set { variables[HeaderVariableCode.DimStyle].Value = value; }
+            set
+            {
+                if (string.IsNullOrEmpty(value))
+                    throw new ArgumentNullException("value", "The current dimesion style name cannot be null or empty.");
+                variables[HeaderVariableCode.DimStyle].Value = value;
+            }
         }
 
         /// <summary>
@@ -290,7 +300,12 @@ namespace netDxf.Header
         public double TextSize
         {
             get { return (double)variables[HeaderVariableCode.TextSize].Value; }
-            set { variables[HeaderVariableCode.TextSize].Value = value; }
+            set
+            {
+                if (value <= 0)
+                    throw new ArgumentOutOfRangeException("value", value, "The default text height must be greater than zero.");
+                variables[HeaderVariableCode.TextSize].Value = value;
+            }
         }
 
         /// <summary>
@@ -300,7 +315,12 @@ namespace netDxf.Header
         public string TextStyle
         {
             get { return (string)variables[HeaderVariableCode.TextStyle].Value; }
-            set { variables[HeaderVariableCode.TextStyle].Value = value; }
+            set
+            {
+                if (string.IsNullOrEmpty(value))
+                    throw new ArgumentNullException("value", "The current text style name cannot be null or empty.");
+                variables[HeaderVariableCode.TextStyle].Value = value;
+            }
         }
 
         /// <summary>
@@ -388,7 +408,7 @@ namespace netDxf.Header
             set
             {
                 if (value <= 0)
-                    throw new ArgumentOutOfRangeException("value", value, "The linetype scale must be greater than zero.");
+                    throw new ArgumentOutOfRangeException("value", value, "The global linetype scale must be greater than zero.");
                 variables[HeaderVariableCode.LtScale].Value = value;
             }
         }

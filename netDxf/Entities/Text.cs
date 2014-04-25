@@ -107,6 +107,8 @@ namespace netDxf.Entities
             if (style == null)
                 throw new ArgumentNullException("style", "The Text style cannot be null.");
             this.style = style;
+            if (height <= 0)
+                throw (new ArgumentOutOfRangeException("height", value, "The Text Height can not be zero or less."));
             this.height = height;
             this.widthFactor = style.WidthFactor;
             this.obliqueAngle = style.ObliqueAngle;
@@ -143,8 +145,8 @@ namespace netDxf.Entities
             get { return this.height; }
             set
             {
-                if (value < 0)
-                    throw new ArgumentOutOfRangeException("value", value.ToString(Thread.CurrentThread.CurrentCulture));
+                if (value <= 0)
+                    throw (new ArgumentOutOfRangeException("value", value, "The Text Height can not be zero or less."));
                 this.height = value;
             }
         }
@@ -152,13 +154,14 @@ namespace netDxf.Entities
         /// <summary>
         /// Gets or sets the width factor.
         /// </summary>
+        /// <remarks>Valid values range from 0.01 to 100. Default: 1.0.</remarks>
         public double WidthFactor
         {
             get { return this.widthFactor; }
             set
             {
-                if (value <= 0)
-                    throw new ArgumentOutOfRangeException("value", value.ToString(Thread.CurrentThread.CurrentCulture));
+                if (value < 0.01 || value > 100.0)
+                    throw (new ArgumentOutOfRangeException("value", value, "The Text WidthFactor valid values range from 0.01 to 100."));
                 this.widthFactor = value;
             }
         }
@@ -166,10 +169,16 @@ namespace netDxf.Entities
         /// <summary>
         /// Gets or sets the font oblique angle.
         /// </summary>
+        /// <remarks>Valid values range from -85 to 85. Default: 0.0.</remarks>
         public double ObliqueAngle
         {
             get { return this.obliqueAngle; }
-            set { this.obliqueAngle = value; }
+            set
+            {
+                if (value < -85.0 || value > 85.0)
+                    throw (new ArgumentOutOfRangeException("value", value, "The Text ObliqueAngle valid values range from -85 to 85."));
+                this.obliqueAngle = value;
+            }
         }
 
         /// <summary>
@@ -187,7 +196,12 @@ namespace netDxf.Entities
         public TextStyle Style
         {
             get { return this.style; }
-            set { this.style = value; }
+            set
+            {
+                if (value == null)
+                    throw new ArgumentNullException("value", "The Text Style cannot be null.");
+                this.style = value;
+            }
         }
 
         /// <summary>

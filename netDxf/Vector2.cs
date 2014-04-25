@@ -1,7 +1,7 @@
-#region netDxf, Copyright(C) 2013 Daniel Carvajal, Licensed under LGPL.
+#region netDxf, Copyright(C) 2014 Daniel Carvajal, Licensed under LGPL.
 
 //                        netDxf library
-// Copyright (C) 2013 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2014 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -484,8 +484,7 @@ namespace netDxf
         /// <returns>A string text.</returns>
         public override string ToString()
         {
-            string separator = Thread.CurrentThread.CurrentCulture.TextInfo.ListSeparator;
-            return string.Format("{0}{2}{1}", this.x, this.y, separator);
+            return string.Format("{0}{2}{1}", this.x, this.y, Thread.CurrentThread.CurrentCulture.TextInfo.ListSeparator);
         }
 
         /// <summary>
@@ -495,8 +494,7 @@ namespace netDxf
         /// <returns>A string text.</returns>
         public string ToString(IFormatProvider provider)
         {
-            string separator = Thread.CurrentThread.CurrentCulture.TextInfo.ListSeparator;
-            return string.Format("{0}{2}{1}", this.x.ToString(provider), this.y.ToString(provider), separator);
+            return string.Format("{0}{2}{1}", this.x.ToString(provider), this.y.ToString(provider), Thread.CurrentThread.CurrentCulture.TextInfo.ListSeparator);
         }
 
         #endregion

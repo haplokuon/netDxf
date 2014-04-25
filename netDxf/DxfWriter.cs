@@ -23,12 +23,14 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text;
 using netDxf.Blocks;
 using netDxf.Entities;
 using netDxf.Header;
 using netDxf.Objects;
 using netDxf.Tables;
 using Attribute=netDxf.Entities.Attribute;
+using Group = netDxf.Objects.Group;
 
 namespace netDxf
 {
@@ -41,14 +43,10 @@ namespace netDxf
 
         private string activeSection = StringCode.Unknown;
         private string activeTable = StringCode.Unknown;
-        private bool isHeader;
-        private bool isClassesSection;
-        private bool isTableSection;
-        private bool isBlockDefinition;
-        private bool isEntitiesSection;
-        private bool isObjectsSection;
         private TextWriter writer;
         private readonly DxfVersion version;
+        // here we will store strings already encoded
+        private readonly Dictionary<string, string> buffer = new Dictionary<string, string>();
 
         #endregion
 
@@ -83,11 +81,14 @@ namespace netDxf
 
         #region public methods
 
-        public void Open(Stream stream)
+        /// <summary>
+        /// Open the dxf writer.
+        /// </summary>
+        public void Open(Stream stream, Encoding encoding)
         {
             try
             {
-                this.writer = new StreamWriter(stream);
+                this.writer = encoding == null ? new StreamWriter(stream) : new StreamWriter(stream, encoding);
             }
             catch (Exception ex)
             {
@@ -121,66 +122,11 @@ namespace netDxf
         public void BeginSection(string section)
         {
             if (this.activeSection != StringCode.Unknown)
-            {
                 throw new OpenDxfSectionException(this.activeSection);
-            }
 
             this.WriteCodePair(0, StringCode.BeginSection);
-
-            if (section == StringCode.HeaderSection)
-            {
-                if (this.isHeader)
-                {
-                    throw (new ClosedDxfSectionException(StringCode.HeaderSection));
-                }
-                this.WriteCodePair(2, StringCode.HeaderSection);
-                this.isHeader = true;
-            }
-            if (section == StringCode.ClassesSection)
-            {
-                if (this.isClassesSection)
-                {
-                    throw (new ClosedDxfSectionException(StringCode.ClassesSection));
-                }
-                this.WriteCodePair(2, StringCode.ClassesSection);
-                this.isClassesSection = true;
-            }
-            if (section == StringCode.TablesSection)
-            {
-                if (this.isTableSection)
-                {
-                    throw (new ClosedDxfSectionException(StringCode.TablesSection));
-                }
-                this.WriteCodePair(2, StringCode.TablesSection);
-                this.isTableSection = true;
-            }
-            if (section == StringCode.BlocksSection)
-            {
-                if (this.isBlockDefinition)
-                {
-                    throw (new ClosedDxfSectionException(StringCode.BlocksSection));
-                }
-                this.WriteCodePair(2, StringCode.BlocksSection);
-                this.isBlockDefinition = true;
-            }
-            if (section == StringCode.EntitiesSection)
-            {
-                if (this.isEntitiesSection)
-                {
-                    throw (new ClosedDxfSectionException(StringCode.EntitiesSection));
-                }
-                this.WriteCodePair(2, StringCode.EntitiesSection);
-                this.isEntitiesSection = true;
-            }
-            if (section == StringCode.ObjectsSection)
-            {
-                if (this.isObjectsSection)
-                {
-                    throw (new ClosedDxfSectionException(StringCode.ObjectsSection));
-                }
-                this.WriteCodePair(2, StringCode.ObjectsSection);
-                this.isObjectsSection = true;
-            }
+            this.WriteCodePair(2, section);
+            
             this.activeSection = section;
         }
 
@@ -190,31 +136,10 @@ namespace netDxf
         public void EndSection()
         {
             if (this.activeSection == StringCode.Unknown)
-            {
                 throw new ClosedDxfSectionException(StringCode.Unknown);
-            }
+
             this.WriteCodePair(0, StringCode.EndSection);
-            switch (this.activeSection)
-            {
-                case StringCode.HeaderSection:
-                    this.isEntitiesSection = false;
-                    break;
-                case StringCode.ClassesSection:
-                    this.isEntitiesSection = false;
-                    break;
-                case StringCode.TablesSection:
-                    this.isTableSection = false;
-                    break;
-                case StringCode.BlocksSection:
-                    this.isBlockDefinition = true;
-                    break;
-                case StringCode.EntitiesSection:
-                    this.isEntitiesSection = false;
-                    break;
-                case StringCode.ObjectsSection:
-                    this.isEntitiesSection = false;
-                    break;
-            }
+
             this.activeSection = StringCode.Unknown;
         }
 
@@ -225,10 +150,12 @@ namespace netDxf
         /// <param name="handle">Handle assigned to this table</param>
         public void BeginTable(string table, string handle)
         {
-            if (this.activeTable != StringCode.Unknown)
-            {
+            if (this.activeSection != StringCode.TablesSection)
                 throw new OpenDxfTableException(table);
-            }
+
+            if (this.activeTable != StringCode.Unknown)
+                throw new OpenDxfTableException(table);
+
             this.WriteCodePair(0, StringCode.Table);
             this.WriteCodePair(2, table);
             this.WriteCodePair(5, handle);
@@ -268,11 +195,49 @@ namespace netDxf
             if (this.activeSection != StringCode.HeaderSection)
                 throw new InvalidDxfSectionException(this.activeSection);
 
-            // the LastSavedBy header variable is not recognized in AutoCad2000 dxf files, so it will not be written
-            if (variable.Name == HeaderVariableCode.LastSavedBy && this.version <= DxfVersion.AutoCad2000)
-                return;
-            this.WriteCodePair(9, variable.Name);
-            this.WriteCodePair(variable.CodeGroup, variable.Value);
+            string name = variable.Name;
+            string value = variable.Value.ToString();
+            switch (name)
+            {
+                case HeaderVariableCode.LastSavedBy:
+                    // the LastSavedBy header variable is not recognized in AutoCad2000 dxf files, so it will not be written
+                    if (this.version > DxfVersion.AutoCad2000)
+                    {
+                        value = EncodeNonAsciiCharacters(value);
+                        this.WriteCodePair(9, name);
+                        this.WriteCodePair(variable.CodeGroup, value);
+                    }
+                    break;
+                case HeaderVariableCode.CLayer:
+                    value = EncodeNonAsciiCharacters(value);
+                    this.WriteCodePair(9, name);
+                    this.WriteCodePair(variable.CodeGroup, value);
+                    break;
+                case HeaderVariableCode.CeLtype:
+                    value = EncodeNonAsciiCharacters(value);
+                    this.WriteCodePair(9, name);
+                    this.WriteCodePair(variable.CodeGroup, value);
+                    break;
+                case HeaderVariableCode.CMLStyle:
+                    value = EncodeNonAsciiCharacters(value);
+                    this.WriteCodePair(9, name);
+                    this.WriteCodePair(variable.CodeGroup, value);
+                    break;
+                case HeaderVariableCode.DimStyle:
+                    value = EncodeNonAsciiCharacters(value);
+                    this.WriteCodePair(9, name);
+                    this.WriteCodePair(variable.CodeGroup, value);
+                    break;
+                case HeaderVariableCode.TextStyle:
+                    value = EncodeNonAsciiCharacters(value);
+                    this.WriteCodePair(9, name);
+                    this.WriteCodePair(variable.CodeGroup, value);
+                    break;
+                default:
+                    this.WriteCodePair(9, name);
+                    this.WriteCodePair(variable.CodeGroup, value);
+                    break;
+            }         
         }
 
         #endregion
@@ -354,7 +319,9 @@ namespace netDxf
             this.WriteCodePair(5, appReg.Handle);
             this.WriteCodePair(100, SubclassMarker.TableRecord);
             this.WriteCodePair(100, SubclassMarker.ApplicationId);
-            this.WriteCodePair(2, appReg);
+
+            this.WriteCodePair(2, EncodeNonAsciiCharacters(appReg.Name));
+
             this.WriteCodePair(70, 0);
         }
 
@@ -373,7 +340,9 @@ namespace netDxf
             this.WriteCodePair(100, SubclassMarker.TableRecord);
 
             this.WriteCodePair(100, SubclassMarker.ViewPort);
-            this.WriteCodePair(2, vp);
+
+            this.WriteCodePair(2, EncodeNonAsciiCharacters(vp.Name));
+
             this.WriteCodePair(70, 0);
 
             this.WriteCodePair(10, vp.LowerLeftCorner.X);
@@ -421,7 +390,7 @@ namespace netDxf
 
             this.WriteCodePair(100, SubclassMarker.DimensionStyle);
 
-            this.WriteCodePair(2, style);
+            this.WriteCodePair(2, EncodeNonAsciiCharacters(style.Name));
 
             // flags
             this.WriteCodePair(70, 0);
@@ -459,7 +428,7 @@ namespace netDxf
 
             this.WriteCodePair(100, SubclassMarker.BlockRecord);
 
-            this.WriteCodePair(2, blockRecord.Name);
+            this.WriteCodePair(2, EncodeNonAsciiCharacters(blockRecord.Name));
 
             // Hard-pointer ID/handle to associated LAYOUT object
             this.WriteCodePair(340, 0);
@@ -485,8 +454,11 @@ namespace netDxf
             this.WriteCodePair(100, SubclassMarker.LineType);
 
             this.WriteCodePair(70, 0);
-            this.WriteCodePair(2, tl);
-            this.WriteCodePair(3, tl.Description);
+
+            this.WriteCodePair(2, EncodeNonAsciiCharacters(tl.Name));
+
+            this.WriteCodePair(3, EncodeNonAsciiCharacters(tl.Description));
+
             this.WriteCodePair(72, 65);
             this.WriteCodePair(73, tl.Segments.Count);
             this.WriteCodePair(40, tl.Length());
@@ -513,8 +485,16 @@ namespace netDxf
             this.WriteCodePair(100, SubclassMarker.TableRecord);
 
             this.WriteCodePair(100, SubclassMarker.Layer);
-            this.WriteCodePair(2, layer.Name);
-            this.WriteCodePair(70, 0);
+
+            this.WriteCodePair(2, EncodeNonAsciiCharacters(layer.Name));
+
+            LayerFlags flags = LayerFlags.None;
+            if (layer.IsFrozen)
+                flags = flags | LayerFlags.Frozen;
+            if (layer.IsLocked)
+                flags = flags | LayerFlags.Locked;
+            this.WriteCodePair(70, (int)flags);
+
             //a negative color represents a hidden layer.
             if (layer.IsVisible)
                 this.WriteCodePair(62, layer.Color.Index);
@@ -522,7 +502,9 @@ namespace netDxf
                 this.WriteCodePair(62, -layer.Color.Index);
             if (layer.Color.UseTrueColor)
                 this.WriteCodePair(420, AciColor.ToTrueColor(layer.Color));
-            this.WriteCodePair(6, layer.LineType.Name);
+
+            this.WriteCodePair(6, EncodeNonAsciiCharacters(layer.LineType.Name));
+
             this.WriteCodePair(290, layer.Plot ? 1 : 0);
             this.WriteCodePair(370, layer.Lineweight.Value);
             // Hard pointer ID/handle of PlotStyleName object
@@ -546,8 +528,9 @@ namespace netDxf
 
             this.WriteCodePair(100, SubclassMarker.TextStyle);
 
-            this.WriteCodePair(2, style);
-            this.WriteCodePair(3, style.FontName);
+            this.WriteCodePair(2, EncodeNonAsciiCharacters(style.Name));
+
+            this.WriteCodePair(3, EncodeNonAsciiCharacters(style.FontName));
 
             this.WriteCodePair(70, style.IsVertical ? 4 : 0);
 
@@ -591,7 +574,7 @@ namespace netDxf
 
             this.WriteCodePair(100, SubclassMarker.Ucs);
 
-            this.WriteCodePair(2, ucs.Name);
+            this.WriteCodePair(2, EncodeNonAsciiCharacters(ucs.Name));
 
             this.WriteCodePair(70, 0);
 
@@ -623,14 +606,17 @@ namespace netDxf
                 throw new InvalidDxfSectionException(this.activeSection);
             }
 
+            string name = EncodeNonAsciiCharacters(block.Name);
+
             this.WriteCodePair(0, block.CodeName);
             this.WriteCodePair(5, block.Handle);
             this.WriteCodePair(100, SubclassMarker.Entity);
-            this.WriteCodePair(8, block.Layer);
+
+            this.WriteCodePair(8, EncodeNonAsciiCharacters(block.Layer.Name));
 
             this.WriteCodePair(100, SubclassMarker.BlockBegin);
 
-            this.WriteCodePair(2, block);
+            this.WriteCodePair(2, name);
 
             //flags
             this.WriteCodePair(70, block.Attributes.Count == 0 ? (int)block.TypeFlags : (int)(block.TypeFlags | BlockTypeFlags.NonConstantAttributeDefinitions));
@@ -639,7 +625,7 @@ namespace netDxf
             this.WriteCodePair(20, block.Position.Y);
             this.WriteCodePair(30, block.Position.Z);
 
-            this.WriteCodePair(3, block);
+            this.WriteCodePair(3, name);
 
             foreach (AttributeDefinition attdef in block.Attributes.Values)
             {
@@ -659,7 +645,8 @@ namespace netDxf
             this.WriteCodePair(0, blockEnd.CodeName);
             this.WriteCodePair(5, blockEnd.Handle);
             this.WriteCodePair(100, SubclassMarker.Entity);
-            this.WriteCodePair(8, blockEnd.Layer);
+
+            this.WriteCodePair(8, EncodeNonAsciiCharacters(blockEnd.Layer.Name));
 
             this.WriteCodePair(100, SubclassMarker.BlockEnd);
         }
@@ -667,21 +654,6 @@ namespace netDxf
         #endregion
 
         #region methods for Entity section
-
-        public void WriteEntityCommonCodes(EntityObject entity)
-        {
-            this.WriteCodePair(0, entity.CodeName);
-            this.WriteCodePair(5, entity.Handle);
-            this.WriteCodePair(100, SubclassMarker.Entity);
-            this.WriteCodePair(8, entity.Layer);
-            this.WriteCodePair(62, entity.Color.Index);
-            if (entity.Color.UseTrueColor)
-                this.WriteCodePair(420, AciColor.ToTrueColor(entity.Color));
-            this.WriteCodePair(6, entity.LineType);
-            this.WriteCodePair(370, entity.Lineweight.Value);
-            this.WriteCodePair(48, entity.LineTypeScale);
-            this.WriteCodePair(60, entity.IsVisible ? 0 : 1);
-        }
 
         public void WriteEntity(EntityObject entity, bool isBlockEntity = false)
         {
@@ -756,6 +728,25 @@ namespace netDxf
                     throw new DxfEntityException(entity.Type.ToString(), "Entity unknown." );
                     
             }
+        }
+
+        public void WriteEntityCommonCodes(EntityObject entity)
+        {
+            this.WriteCodePair(0, entity.CodeName);
+            this.WriteCodePair(5, entity.Handle);
+            this.WriteCodePair(100, SubclassMarker.Entity);
+
+            this.WriteCodePair(8, EncodeNonAsciiCharacters(entity.Layer.Name));
+
+            this.WriteCodePair(62, entity.Color.Index);
+            if (entity.Color.UseTrueColor)
+                this.WriteCodePair(420, AciColor.ToTrueColor(entity.Color));
+
+            this.WriteCodePair(6, EncodeNonAsciiCharacters(entity.LineType.Name));
+
+            this.WriteCodePair(370, entity.Lineweight.Value);
+            this.WriteCodePair(48, entity.LineTypeScale);
+            this.WriteCodePair(60, entity.IsVisible ? 0 : 1);
         }
 
         private void WriteArc(Arc arc)
@@ -933,7 +924,7 @@ namespace netDxf
         {
             this.WriteCodePair(100, SubclassMarker.Insert);
 
-            this.WriteCodePair(2, insert.Block);
+            this.WriteCodePair(2, EncodeNonAsciiCharacters(insert.Block.Name));
 
             // It is a lot more intuitive to give the center in world coordinates and then define the orientation with the normal.
             Vector3 ocsInsertion = MathHelper.Transform(insert.Position, insert.Normal, MathHelper.CoordinateSystem.World, MathHelper.CoordinateSystem.Object);
@@ -968,7 +959,8 @@ namespace netDxf
                 this.WriteCodePair(0, insert.EndSequence.CodeName);
                 this.WriteCodePair(5, insert.EndSequence.Handle);
                 this.WriteCodePair(100, SubclassMarker.Entity);
-                this.WriteCodePair(8, insert.EndSequence.Layer);
+
+                this.WriteCodePair(8, EncodeNonAsciiCharacters(insert.EndSequence.Layer.Name));
             }
             else
             {
@@ -1071,12 +1063,16 @@ namespace netDxf
 
             this.WriteXData(polyline.XData);
 
+            string layerName = EncodeNonAsciiCharacters(polyline.Layer.Name);
+
             foreach (PolylineVertex v in polyline.Vertexes)
             {
                 this.WriteCodePair(0, v.CodeName);
                 this.WriteCodePair(5, v.Handle);
                 this.WriteCodePair(100, SubclassMarker.Entity);
-                this.WriteCodePair(8, polyline.Layer); // the vertex layer should be the same as the polyline layer
+
+                this.WriteCodePair(8, layerName); // the vertex layer should be the same as the polyline layer
+
                 this.WriteCodePair(62, polyline.Color.Index); // the vertex color should be the same as the polyline color
                 if (polyline.Color.UseTrueColor)
                     this.WriteCodePair(420, AciColor.ToTrueColor(polyline.Color));
@@ -1091,7 +1087,9 @@ namespace netDxf
             this.WriteCodePair(0, polyline.EndSequence.CodeName);
             this.WriteCodePair(5, polyline.EndSequence.Handle);
             this.WriteCodePair(100, SubclassMarker.Entity);
-            this.WriteCodePair(8, polyline.EndSequence.Layer);
+
+            this.WriteCodePair(8, EncodeNonAsciiCharacters(polyline.EndSequence.Layer.Name));
+
         }
 
         private void WritePolyfaceMesh(PolyfaceMesh mesh)
@@ -1113,12 +1111,16 @@ namespace netDxf
             if (mesh.XData != null)
                 this.WriteXData(mesh.XData);
 
+            string layerName = EncodeNonAsciiCharacters(mesh.Layer.Name);
+
             foreach (PolyfaceMeshVertex v in mesh.Vertexes)
             {
                 this.WriteCodePair(0, v.CodeName);
                 this.WriteCodePair(5, v.Handle);
                 this.WriteCodePair(100, SubclassMarker.Entity);
-                this.WriteCodePair(8, mesh.Layer); // the polyfacemesh vertex layer should be the same as the polyfacemesh layer
+
+                this.WriteCodePair(8, layerName); // the polyfacemesh vertex layer should be the same as the polyfacemesh layer
+
                 this.WriteCodePair(62, mesh.Color.Index); // the polyfacemesh vertex color should be the same as the polyfacemesh color
                 if (mesh.Color.UseTrueColor)
                     this.WriteCodePair(420, AciColor.ToTrueColor(mesh.Color));
@@ -1135,7 +1137,8 @@ namespace netDxf
                 this.WriteCodePair(0, face.CodeName);
                 this.WriteCodePair(5, face.Handle);
                 this.WriteCodePair(100, SubclassMarker.Entity);
-                this.WriteCodePair(8, mesh.Layer); // the polyfacemesh face layer should be the same as the polyfacemesh layer
+
+                this.WriteCodePair(8, layerName); // the polyfacemesh face layer should be the same as the polyfacemesh layer
                 this.WriteCodePair(62, mesh.Color.Index); // the polyfacemesh face color should be the same as the polyfacemesh color
                 if (mesh.Color.UseTrueColor)
                     this.WriteCodePair(420, AciColor.ToTrueColor(mesh.Color));
@@ -1154,7 +1157,8 @@ namespace netDxf
             this.WriteCodePair(0, mesh.EndSequence.CodeName);
             this.WriteCodePair(5, mesh.EndSequence.Handle);
             this.WriteCodePair(100, SubclassMarker.Entity);
-            this.WriteCodePair(8, mesh.EndSequence.Layer);
+
+            this.WriteCodePair(8, EncodeNonAsciiCharacters(mesh.EndSequence.Layer.Name));
         }
 
         private void WritePoint(Point point)
@@ -1181,7 +1185,7 @@ namespace netDxf
         {
             this.WriteCodePair(100, SubclassMarker.Text);
 
-            this.WriteCodePair(1, text.Value);
+            this.WriteCodePair(1, EncodeNonAsciiCharacters(text.Value));
 
             // another example of this ocs vs wcs non sense.
             // while the MText position is written in WCS the position of the Text is written in OCS (different rules for the same concept).
@@ -1199,7 +1203,7 @@ namespace netDxf
 
             this.WriteCodePair(51, text.ObliqueAngle);
 
-            this.WriteCodePair(7, text.Style);
+            this.WriteCodePair(7, EncodeNonAsciiCharacters(text.Style.Name));
 
             this.WriteCodePair(11, ocsBasePoint.X);
             this.WriteCodePair(21, ocsBasePoint.Y);
@@ -1325,7 +1329,7 @@ namespace netDxf
             this.WriteCodePair(220, mText.Normal.Y);
             this.WriteCodePair(230, mText.Normal.Z);
 
-            WriteMTextChunks(mText.Value);
+            WriteMTextChunks(EncodeNonAsciiCharacters(mText.Value));
 
             this.WriteCodePair(40, mText.Height);
             this.WriteCodePair(41, mText.RectangleWidth);
@@ -1339,7 +1343,7 @@ namespace netDxf
             // By style (the flow direction is inherited from the associated text style)
             this.WriteCodePair(72, 5);
 
-            this.WriteCodePair(7, mText.Style);
+            this.WriteCodePair(7, EncodeNonAsciiCharacters(mText.Style.Name));
 
             this.WriteXData(mText.XData);
         }
@@ -1599,7 +1603,8 @@ namespace netDxf
         {
             this.WriteCodePair(100, SubclassMarker.Dimension);
 
-            this.WriteCodePair(2, dim.Block.Name);
+            this.WriteCodePair(2, EncodeNonAsciiCharacters(dim.Block.Record.Name));
+
             this.WriteCodePair(10, dim.DefinitionPoint.X);
             this.WriteCodePair(20, dim.DefinitionPoint.Y);
             this.WriteCodePair(30, dim.DefinitionPoint.Z);
@@ -1624,7 +1629,7 @@ namespace netDxf
             this.WriteCodePair(220, dim.Normal.Y);
             this.WriteCodePair(230, dim.Normal.Z);
 
-            this.WriteCodePair(3, dim.Style.Name);
+            this.WriteCodePair(3, EncodeNonAsciiCharacters(dim.Style.Name));
 
             switch (dim.DimensionType)
             {
@@ -1824,7 +1829,8 @@ namespace netDxf
         {
             this.WriteCodePair(100, SubclassMarker.MLine);
 
-            this.WriteCodePair(2, mLine.Style.Name);
+            this.WriteCodePair(2, EncodeNonAsciiCharacters(mLine.Style.Name));
+
             this.WriteCodePair(340, mLine.Style.Handle);
 
             this.WriteCodePair(40, mLine.Scale);
@@ -1893,153 +1899,6 @@ namespace netDxf
             this.WriteXData(mLine.XData);
         }
 
-        #endregion
-
-        #region methods for Object section
-
-        public void WriteDictionary(DictionaryObject dictionary)
-        {
-            this.WriteCodePair(0, StringCode.Dictionary);
-            this.WriteCodePair(5, dictionary.Handle);
-            this.WriteCodePair(330, 0);
-            this.WriteCodePair(100, SubclassMarker.Dictionary);
-            this.WriteCodePair(280, dictionary.IsHardOwner ? 1 : 0);
-            this.WriteCodePair(281, (int)dictionary.Clonning);
-
-            foreach (KeyValuePair<string, string> entry in dictionary.Entries)
-            {
-                this.WriteCodePair(3, entry.Value);
-                this.WriteCodePair(350, entry.Key);
-            }
-        }
-
-        public void WriteImageDefReactor(ImageDefReactor reactor)
-        {
-            this.WriteCodePair(0, reactor.CodeName);
-            this.WriteCodePair(5, reactor.Handle);
-
-            this.WriteCodePair(100, SubclassMarker.RasterImageDefReactor);
-            this.WriteCodePair(90, 2);
-            this.WriteCodePair(330, reactor.ImageHandle);
-        }
-
-        public void WriteImageDef(ImageDef imageDef, string ownerHandle)
-        {
-            this.WriteCodePair(0, imageDef.CodeName);
-            this.WriteCodePair(5, imageDef.Handle);
-
-            this.WriteCodePair(102, "{ACAD_REACTORS");
-            this.WriteCodePair(330, ownerHandle);
-            foreach (ImageDefReactor reactor in imageDef.Reactors.Values)
-            {
-                this.WriteCodePair(330, reactor.Handle);
-            }
-            this.WriteCodePair(102, "}");
-
-            this.WriteCodePair(330, ownerHandle);
-
-            this.WriteCodePair(100, SubclassMarker.RasterImageDef);
-            this.WriteCodePair(1, imageDef.FileName);
-
-            this.WriteCodePair(10, imageDef.Width);
-            this.WriteCodePair(20, imageDef.Height);
-
-            this.WriteCodePair(11, imageDef.OnePixelSize.X);
-            this.WriteCodePair(21, imageDef.OnePixelSize.Y);
-
-            this.WriteCodePair(280, 1);
-            this.WriteCodePair(281, (int)imageDef.ResolutionUnits);
-
-        }
-
-        public void WriteRasterVariables(RasterVariables variables, string ownerHandle)
-        {
-            this.WriteCodePair(0, variables.CodeName);
-            this.WriteCodePair(5, variables.Handle);
-            this.WriteCodePair(330, ownerHandle);
-
-            this.WriteCodePair(100, SubclassMarker.RasterVariables);
-            this.WriteCodePair(90, 0);
-            this.WriteCodePair(70, variables.DisplayFrame ? 1 : 0);
-            this.WriteCodePair(71, (int)variables.DisplayQuality);
-            this.WriteCodePair(72, (int)variables.Units);
-        }
-
-        public void WriteMLineStyle(MLineStyle style, string ownerHandle)
-        {
-            this.WriteCodePair(0, style.CodeName);
-            this.WriteCodePair(5, style.Handle);
-            this.WriteCodePair(330, ownerHandle);
-
-            this.WriteCodePair(100, SubclassMarker.MLineStyle);
-
-            this.WriteCodePair(2, style.Name);
-            this.WriteCodePair(70, (int)style.Flags);
-            this.WriteCodePair(3, style.Description);
-            this.WriteCodePair(62, style.FillColor.Index);
-            if (style.FillColor.UseTrueColor && this.version > DxfVersion.AutoCad2000)
-                this.WriteCodePair(420, AciColor.ToTrueColor(style.FillColor));
-            this.WriteCodePair(51, style.StartAngle);
-            this.WriteCodePair(52, style.EndAngle);
-            this.WriteCodePair(71, style.Elements.Count);
-            foreach (MLineStyleElement element in style.Elements)
-            {
-                this.WriteCodePair(49, element.Offset);
-                this.WriteCodePair(62, element.Color.Index);
-                if (element.Color.UseTrueColor && this.version > DxfVersion.AutoCad2000)
-                    this.WriteCodePair(420, AciColor.ToTrueColor(element.Color));
-                this.WriteCodePair(6, element.LineType.Name);
-            }
-        }
-
-        public void WriteGroup(Group group, string ownerHandle)
-        {
-            this.WriteCodePair(0, group.CodeName);
-            this.WriteCodePair(5, group.Handle);
-            this.WriteCodePair(330, ownerHandle);
-
-            this.WriteCodePair(100, SubclassMarker.Group);
-
-            this.WriteCodePair(300, group.Description);
-            this.WriteCodePair(70, group.IsUnnamed ? 1 : 0);
-            this.WriteCodePair(71, group.IsSelectable ? 1 : 0);
-
-            foreach (EntityObject entity in group.Entities)
-            {
-                this.WriteCodePair(340, entity.Handle);
-            }
-        }
-
-        #endregion
-
-        #region private methods
-
-        private double[] GetEllipseParameters(Ellipse ellipse)
-        {
-            double atan1;
-            double atan2;
-            if (ellipse.IsFullEllipse)
-            {
-                atan1 = 0.0;
-                atan2 = MathHelper.TwoPI;
-            }
-            else
-            {
-                Vector2 startPoint = new Vector2(ellipse.Center.X, ellipse.Center.Y) + ellipse.PolarCoordinateRelativeToCenter(ellipse.StartAngle);
-                Vector2 endPoint = new Vector2(ellipse.Center.X, ellipse.Center.Y) + ellipse.PolarCoordinateRelativeToCenter(ellipse.EndAngle);
-                double a = ellipse.MajorAxis * 0.5;
-                double b = ellipse.MinorAxis * 0.5;
-                double px1 = ((startPoint.X - ellipse.Center.X) / a);
-                double py1 = ((startPoint.Y - ellipse.Center.Y) / b);
-                double px2 = ((endPoint.X - ellipse.Center.X) / a);
-                double py2 = ((endPoint.Y - ellipse.Center.Y) / b);
-
-                atan1 = Math.Atan2(py1, px1);
-                atan2 = Math.Atan2(py2, px2);
-            }
-            return new[] { atan1, atan2 };
-        }
-
         private void WriteAttributeDefinition(AttributeDefinition def)
         {
             this.WriteEntityCommonCodes(def);
@@ -2051,7 +1910,7 @@ namespace netDxf
             this.WriteCodePair(30, def.Position.Z);
             this.WriteCodePair(40, def.Height);
 
-            this.WriteCodePair(1, def.Value);
+            this.WriteCodePair(1, EncodeNonAsciiCharacters(def.Value.ToString()));
 
             switch (def.Alignment)
             {
@@ -2104,7 +1963,8 @@ namespace netDxf
 
             this.WriteCodePair(50, def.Rotation);
             this.WriteCodePair(41, def.WidthFactor);
-            this.WriteCodePair(7, def.Style);
+
+            this.WriteCodePair(7, EncodeNonAsciiCharacters(def.Style.Name));
 
             this.WriteCodePair(11, def.Position.X);
             this.WriteCodePair(21, def.Position.Y);
@@ -2116,8 +1976,10 @@ namespace netDxf
 
             this.WriteCodePair(100, SubclassMarker.AttributeDefinition);
 
-            this.WriteCodePair(3, def.Text);
-            this.WriteCodePair(2, def.Tag);
+            this.WriteCodePair(3, EncodeNonAsciiCharacters(def.Text));
+
+            this.WriteCodePair(2, EncodeNonAsciiCharacters(def.Tag));
+
             this.WriteCodePair(70, (int)def.Flags);
 
             switch (def.Alignment)
@@ -2182,8 +2044,10 @@ namespace netDxf
 
             this.WriteCodePair(40, attrib.Height);
             this.WriteCodePair(41, attrib.WidthFactor);
-            this.WriteCodePair(7, attrib.Style);
-            this.WriteCodePair(1, attrib.Value);
+
+            this.WriteCodePair(7, EncodeNonAsciiCharacters(attrib.Style.Name));
+
+            this.WriteCodePair(1, EncodeNonAsciiCharacters(attrib.Value.ToString()));
 
             switch (attrib.Alignment)
             {
@@ -2246,9 +2110,9 @@ namespace netDxf
 
             this.WriteCodePair(100, SubclassMarker.Attribute);
 
-            this.WriteCodePair(2, attrib.Tag);
+            this.WriteCodePair(2, EncodeNonAsciiCharacters(attrib.Tag));
 
-            this.WriteCodePair(70, (int) attrib.Flags);
+            this.WriteCodePair(70, (int)attrib.Flags);
 
             switch (attrib.Alignment)
             {
@@ -2300,23 +2164,216 @@ namespace netDxf
             }
         }
 
+        #endregion
+
+        #region methods for Object section
+
+        public void WriteDictionary(DictionaryObject dictionary)
+        {
+            this.WriteCodePair(0, StringCode.Dictionary);
+            this.WriteCodePair(5, dictionary.Handle);
+            this.WriteCodePair(330, 0);
+            this.WriteCodePair(100, SubclassMarker.Dictionary);
+            this.WriteCodePair(280, dictionary.IsHardOwner ? 1 : 0);
+            this.WriteCodePair(281, (int)dictionary.Clonning);
+
+            foreach (KeyValuePair<string, string> entry in dictionary.Entries)
+            {
+                this.WriteCodePair(3, EncodeNonAsciiCharacters(entry.Value));
+
+                this.WriteCodePair(350, entry.Key);
+            }
+        }
+
+        public void WriteImageDefReactor(ImageDefReactor reactor)
+        {
+            this.WriteCodePair(0, reactor.CodeName);
+            this.WriteCodePair(5, reactor.Handle);
+
+            this.WriteCodePair(100, SubclassMarker.RasterImageDefReactor);
+            this.WriteCodePair(90, 2);
+            this.WriteCodePair(330, reactor.ImageHandle);
+        }
+
+        public void WriteImageDef(ImageDef imageDef, string ownerHandle)
+        {
+            this.WriteCodePair(0, imageDef.CodeName);
+            this.WriteCodePair(5, imageDef.Handle);
+
+            this.WriteCodePair(102, "{ACAD_REACTORS");
+            this.WriteCodePair(330, ownerHandle);
+            foreach (ImageDefReactor reactor in imageDef.Reactors.Values)
+            {
+                this.WriteCodePair(330, reactor.Handle);
+            }
+            this.WriteCodePair(102, "}");
+
+            this.WriteCodePair(330, ownerHandle);
+
+            this.WriteCodePair(100, SubclassMarker.RasterImageDef);
+            this.WriteCodePair(1, imageDef.FileName);
+
+            this.WriteCodePair(10, imageDef.Width);
+            this.WriteCodePair(20, imageDef.Height);
+
+            this.WriteCodePair(11, imageDef.OnePixelSize.X);
+            this.WriteCodePair(21, imageDef.OnePixelSize.Y);
+
+            this.WriteCodePair(280, 1);
+            this.WriteCodePair(281, (int)imageDef.ResolutionUnits);
+
+        }
+
+        public void WriteRasterVariables(RasterVariables variables, string ownerHandle)
+        {
+            this.WriteCodePair(0, variables.CodeName);
+            this.WriteCodePair(5, variables.Handle);
+            this.WriteCodePair(330, ownerHandle);
+
+            this.WriteCodePair(100, SubclassMarker.RasterVariables);
+            this.WriteCodePair(90, 0);
+            this.WriteCodePair(70, variables.DisplayFrame ? 1 : 0);
+            this.WriteCodePair(71, (int)variables.DisplayQuality);
+            this.WriteCodePair(72, (int)variables.Units);
+        }
+
+        public void WriteMLineStyle(MLineStyle style, string ownerHandle)
+        {
+            this.WriteCodePair(0, style.CodeName);
+            this.WriteCodePair(5, style.Handle);
+            this.WriteCodePair(330, ownerHandle);
+
+            this.WriteCodePair(100, SubclassMarker.MLineStyle);
+
+            this.WriteCodePair(2, EncodeNonAsciiCharacters(style.Name));
+
+            this.WriteCodePair(70, (int)style.Flags);
+
+            this.WriteCodePair(3, EncodeNonAsciiCharacters(style.Description));
+
+            this.WriteCodePair(62, style.FillColor.Index);
+            if (style.FillColor.UseTrueColor && this.version > DxfVersion.AutoCad2000)
+                this.WriteCodePair(420, AciColor.ToTrueColor(style.FillColor));
+            this.WriteCodePair(51, style.StartAngle);
+            this.WriteCodePair(52, style.EndAngle);
+            this.WriteCodePair(71, style.Elements.Count);
+            foreach (MLineStyleElement element in style.Elements)
+            {
+                this.WriteCodePair(49, element.Offset);
+                this.WriteCodePair(62, element.Color.Index);
+                if (element.Color.UseTrueColor && this.version > DxfVersion.AutoCad2000)
+                    this.WriteCodePair(420, AciColor.ToTrueColor(element.Color));
+
+                this.WriteCodePair(6, EncodeNonAsciiCharacters(element.LineType.Name));
+            }
+        }
+
+        public void WriteGroup(Group group, string ownerHandle)
+        {
+            this.WriteCodePair(0, group.CodeName);
+            this.WriteCodePair(5, group.Handle);
+            this.WriteCodePair(330, ownerHandle);
+
+            this.WriteCodePair(100, SubclassMarker.Group);
+
+            this.WriteCodePair(300, group.Description);
+            this.WriteCodePair(70, group.IsUnnamed ? 1 : 0);
+            this.WriteCodePair(71, group.IsSelectable ? 1 : 0);
+
+            foreach (EntityObject entity in group.Entities)
+            {
+                this.WriteCodePair(340, entity.Handle);
+            }
+        }
+
+        #endregion
+
+        #region private methods
+
+        private string EncodeNonAsciiCharacters(string text)
+        {
+            // for dxf database version prior to AutoCad 2007 non ASCII characters, including the extended chart, must be encoded to the template \U+####,
+            // where #### is the for digits hexadecimal number that represent that character.
+            if (this.version >= DxfVersion.AutoCad2007) return text;
+
+            if (string.IsNullOrEmpty(text)) return text;
+
+            string encoded;
+            if(this.buffer.TryGetValue(text, out encoded)) return encoded;
+
+            StringBuilder sb = new StringBuilder();
+            foreach (char c in text)
+            {
+                if (c > 255)
+                {
+                    string encodedValue = "\\U+" + String.Format("{0:X4}", Convert.ToInt32(c));
+                    sb.Append(encodedValue);
+                }
+                else
+                {
+                    sb.Append(c);
+                }
+            }
+
+            encoded = sb.ToString();
+            this.buffer.Add(text, encoded);
+            return encoded;
+
+            // encoding of non ASCII characters, including the extended chart, using regular expresions, this code is slower
+            //return Regex.Replace(
+            //    text,
+            //    @"(?<char>[^\u0000-\u00ff]{1})",
+            //    m => "\\U+" + String.Format("{0:X4}", Convert.ToInt32(m.Groups["char"].Value[0])));
+
+        }
+
+        private double[] GetEllipseParameters(Ellipse ellipse)
+        {
+            double atan1;
+            double atan2;
+            if (ellipse.IsFullEllipse)
+            {
+                atan1 = 0.0;
+                atan2 = MathHelper.TwoPI;
+            }
+            else
+            {
+                Vector2 startPoint = new Vector2(ellipse.Center.X, ellipse.Center.Y) + ellipse.PolarCoordinateRelativeToCenter(ellipse.StartAngle);
+                Vector2 endPoint = new Vector2(ellipse.Center.X, ellipse.Center.Y) + ellipse.PolarCoordinateRelativeToCenter(ellipse.EndAngle);
+                double a = ellipse.MajorAxis * 0.5;
+                double b = ellipse.MinorAxis * 0.5;
+                double px1 = ((startPoint.X - ellipse.Center.X) / a);
+                double py1 = ((startPoint.Y - ellipse.Center.Y) / b);
+                double px2 = ((endPoint.X - ellipse.Center.X) / a);
+                double py2 = ((endPoint.Y - ellipse.Center.Y) / b);
+
+                atan1 = Math.Atan2(py1, px1);
+                atan2 = Math.Atan2(py2, px2);
+            }
+            return new[] { atan1, atan2 };
+        }
+
         private void WriteXData(Dictionary<string, XData> xData)
         {
             foreach (string appReg in xData.Keys)
             {
-                this.WriteCodePair(XDataCode.AppReg, appReg);
+                this.WriteCodePair(XDataCode.AppReg, EncodeNonAsciiCharacters(appReg));
+
                 foreach (XDataRecord x in xData[appReg].XDataRecord)
                 {
-                    this.WriteCodePair(x.Code, x.Value);
+                    int code = x.Code;
+                    string value = x.Value.ToString();
+                    if (code == 1000 || code == 1003)
+                        value = EncodeNonAsciiCharacters(value);
+                    this.WriteCodePair(code, value);
                 }
             }
         }
 
         private void WriteCodePair(int codigo, object valor)
         {
-            string nameConversion = valor == null ? string.Empty : valor.ToString();
             this.writer.WriteLine(codigo);
-            this.writer.WriteLine(nameConversion);
+            this.writer.WriteLine(valor.ToString());
         }
 
         #endregion

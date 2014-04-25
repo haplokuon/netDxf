@@ -45,12 +45,12 @@ namespace netDxf.Entities
         /// </summary>
         public HatchPatternLineDefinition()
         {
-            angle = 0.0;
-            origin = Vector2.Zero;
-            delta = Vector2.Zero;
-            dashPattern = new List<double>();
-
+            this.angle = 0.0;
+            this.origin = Vector2.Zero;
+            this.delta = Vector2.Zero;
+            this.dashPattern = new List<double>();
         }
+
         #endregion
 
         #region public properties
@@ -60,8 +60,8 @@ namespace netDxf.Entities
         /// </summary>
         public double Angle
         {
-            get { return angle; }
-            set { angle = MathHelper.NormalizeAngle(value); }
+            get { return this.angle; }
+            set { this.angle = MathHelper.NormalizeAngle(value); }
         }
 
         /// <summary>
@@ -69,8 +69,8 @@ namespace netDxf.Entities
         /// </summary>
         public Vector2 Origin
         {
-            get { return origin; }
-            set { origin = value; }
+            get { return this.origin; }
+            set { this.origin = value; }
         }
 
         /// <summary>
@@ -82,8 +82,8 @@ namespace netDxf.Entities
         /// </remarks>
         public Vector2 Delta
         {
-            get { return delta; }
-            set { delta = value; }
+            get { return this.delta; }
+            set { this.delta = value; }
         }
 
         /// <summary>
@@ -94,8 +94,8 @@ namespace netDxf.Entities
         /// </remarks>
         public List<double> DashPattern
         {
-            get { return dashPattern; }
-            set { dashPattern = value; }
+            get { return this.dashPattern; }
+            set { this.dashPattern = value; }
         }
 
         #endregion

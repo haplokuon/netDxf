@@ -85,8 +85,8 @@ namespace netDxf.Entities
         /// </summary>
         public Vector3 Position
         {
-            get { return position; }
-            set { position = value; }
+            get { return this.position; }
+            set { this.position = value; }
         }
 
         /// <summary>
@@ -94,8 +94,8 @@ namespace netDxf.Entities
         /// </summary>
         public double Height
         {
-            get { return height; }
-            internal set { height = value; }
+            get { return this.height; }
+            internal set { this.height = value; }
         }
 
         /// <summary>
@@ -103,8 +103,8 @@ namespace netDxf.Entities
         /// </summary>
         public double Width
         {
-            get { return width; }
-            internal set { width = value; }
+            get { return this.width; }
+            internal set { this.width = value; }
         }
 
         /// <summary>
@@ -121,8 +121,8 @@ namespace netDxf.Entities
         /// </summary>
         public ImageDef Definition
         {
-            get { return imageDef; }
-            internal set { imageDef = value; }
+            get { return this.imageDef; }
+            internal set { this.imageDef = value; }
         }
 
         /// <summary>
@@ -130,8 +130,8 @@ namespace netDxf.Entities
         /// </summary>
         public bool Clipping
         {
-            get { return clipping; }
-            set { clipping = value; }
+            get { return this.clipping; }
+            set { this.clipping = value; }
         }
 
         /// <summary>
@@ -139,12 +139,12 @@ namespace netDxf.Entities
         /// </summary>
         public float Brightness
         {
-            get { return brightness; }
+            get { return this.brightness; }
             set
             {
                 if (value < 0 && value > 100)
                     throw new ArgumentOutOfRangeException("value", value, "Accepted brightness values range from 0 to 100.");
-                brightness = value;
+                this.brightness = value;
             }
         }
 
@@ -153,12 +153,12 @@ namespace netDxf.Entities
         /// </summary>
         public float Contrast
         {
-            get { return contrast; }
+            get { return this.contrast; }
             set
             {
                 if (value < 0 && value > 100)
                     throw new ArgumentOutOfRangeException("value", value, "Accepted contrast values range from 0 to 100.");
-                contrast = value;
+                this.contrast = value;
             }
         }
 
@@ -167,12 +167,12 @@ namespace netDxf.Entities
         /// </summary>
         public float Fade
         {
-            get { return fade; }
+            get { return this.fade; }
             set
             {
                 if (value < 0 && value > 100)
                     throw new ArgumentOutOfRangeException("value", value, "Accepted fade values range from 0 to 100.");
-                fade = value;
+                this.fade = value;
             }
         }
 
@@ -181,8 +181,8 @@ namespace netDxf.Entities
         /// </summary>
         public ImageDisplayFlags DisplayOptions
         {
-            get { return displayOptions; }
-            set { displayOptions = value; }
+            get { return this.displayOptions; }
+            set { this.displayOptions = value; }
         }
 
         /// <summary>
@@ -193,8 +193,8 @@ namespace netDxf.Entities
         /// </remarks>
         public ImageClippingBoundary ClippingBoundary
         {
-            get { return clippingBoundary; }
-            set { clippingBoundary = value ?? new ImageClippingBoundary(-0.5, -0.5, this.imageDef.Width, this.imageDef.Height); }
+            get { return this.clippingBoundary; }
+            set { this.clippingBoundary = value ?? new ImageClippingBoundary(-0.5, -0.5, this.imageDef.Width, this.imageDef.Height); }
         }
 
         #endregion
@@ -207,7 +207,7 @@ namespace netDxf.Entities
         /// <param name="scale">X and Y scale of the image.</param>
         public void SetScale(Vector2 scale)
         {
-            SetScale(scale.X, scale.Y);
+            this.SetScale(scale.X, scale.Y);
         }
         /// <summary>
         /// Sets the scale of the image.
@@ -215,7 +215,7 @@ namespace netDxf.Entities
         /// <param name="scale">Uniform scale of the image.</param>
         public void SetScale(double scale)
         {
-            SetScale(scale, scale);
+            this.SetScale(scale, scale);
         }
         /// <summary>
         /// Sets the scale of the image.

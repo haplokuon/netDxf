@@ -108,7 +108,7 @@ namespace netDxf.Entities
             : base(EntityType.AttributeDefinition, DxfObjectCode.AttributeDefinition)
         {
             if (tag.Contains(" "))
-                throw new ArgumentException("The id string cannot contain spaces", "tag");
+                throw new ArgumentException("The tag string cannot contain spaces", "tag");
             this.tag = tag;
             this.flags = AttributeFlags.Visible;
             this.text = string.Empty;
@@ -191,7 +191,7 @@ namespace netDxf.Entities
             set
             {
                 if (value == null)
-                    throw new NullReferenceException("value");
+                    throw new ArgumentNullException("value");
                this.style = value;
             }
         }

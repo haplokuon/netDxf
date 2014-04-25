@@ -57,25 +57,25 @@ namespace netDxf
         public const int BinaryData = 1004;
 
         /// <summary>
-        /// Handles of entities in the drawing database
+        /// Handles of entities in the drawing database.
         /// </summary>
         public const int DatabaseHandle = 1005;
 
         /// <summary>
         /// Three real values, in the order X, Y, Z.
-        /// They can be used as a point or vector record. AutoCAD never alters their value
+        /// They can be used as a point or vector record. AutoCAD never alters their value.
         /// </summary>
         public const int RealX = 1010;
 
         /// <summary>
         /// Three real values, in the order X, Y, Z.
-        /// They can be used as a point or vector record. AutoCAD never alters their value
+        /// They can be used as a point or vector record. AutoCAD never alters their value.
         /// </summary>
         public const int RealY = 1020;
 
         /// <summary>
         /// Three real values, in the order X, Y, Z.
-        /// They can be used as a point or vector record. AutoCAD never alters their value
+        /// They can be used as a point or vector record. AutoCAD never alters their value.
         /// </summary>
         public const int RealZ = 1030;
 

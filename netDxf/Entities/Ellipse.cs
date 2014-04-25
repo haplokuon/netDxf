@@ -127,9 +127,8 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets or sets the ellipse local rotation along its normal.
+        /// Gets or sets the ellipse local rotation in degrees along its normal.
         /// </summary>
-        /// <remarks>The angle is measured in degrees.</remarks>
         public double Rotation
         {
             get { return this.rotation; }

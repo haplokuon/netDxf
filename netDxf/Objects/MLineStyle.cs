@@ -1,7 +1,7 @@
-#region netDxf, Copyright(C) 2013 Daniel Carvajal, Licensed under LGPL.
+#region netDxf, Copyright(C) 2014 Daniel Carvajal, Licensed under LGPL.
 
 //                        netDxf library
-// Copyright (C) 2013 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2014 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -114,10 +114,11 @@ namespace netDxf.Objects
         {
             this.reserved = name.Equals("Standard", StringComparison.InvariantCultureIgnoreCase);
             this.flags = MLineStyleFlags.None;
-            this.description = description;
+
+            this.description = string.IsNullOrEmpty(description) ? string.Empty : description;
             this.fillColor = AciColor.ByLayer;
-            this.startAngle = 90;
-            this.endAngle = 90;
+            this.startAngle = 90.0;
+            this.endAngle = 90.0;
             this.elements = new List<MLineStyleElement>
                                 {
                                     new MLineStyleElement(0.5),
@@ -134,6 +135,7 @@ namespace netDxf.Objects
         public MLineStyle(string name, List<MLineStyleElement> elements, string description = null)
             : base(name, DxfObjectCode.MLineStyle, true)
         {
+            
             if (elements == null)
                 throw new ArgumentNullException("elements");
             if (elements.Count < 1)
@@ -143,10 +145,10 @@ namespace netDxf.Objects
 
             this.elements = elements;
             this.flags = MLineStyleFlags.None;
-            this.description = description;
+            this.description = string.IsNullOrEmpty(description) ? string.Empty : description;
             this.fillColor = AciColor.ByLayer;
-            this.startAngle = 90;
-            this.endAngle = 90;
+            this.startAngle = 90.0;
+            this.endAngle = 90.0;
         }
 
         #endregion
@@ -158,8 +160,8 @@ namespace netDxf.Objects
         /// </summary>
         public MLineStyleFlags Flags
         {
-            get { return flags; }
-            set { flags = value; }
+            get { return this.flags; }
+            set { this.flags = value; }
         }
 
         /// <summary>
@@ -167,8 +169,8 @@ namespace netDxf.Objects
         /// </summary>
         public string Description
         {
-            get { return description; }
-            set { description = value; }
+            get { return this.description; }
+            set { this.description = string.IsNullOrEmpty(value) ? string.Empty : value; }
         }
 
         /// <summary>
@@ -179,8 +181,13 @@ namespace netDxf.Objects
         /// </remarks>
         public AciColor FillColor
         {
-            get { return fillColor; }
-            set { fillColor = value; }
+            get { return this.fillColor; }
+            set
+            {
+                if (value == null)
+                    throw new ArgumentNullException("value");
+                this.fillColor = value;
+            }
         }
 
         /// <summary>
@@ -188,12 +195,12 @@ namespace netDxf.Objects
         /// </summary>
         public double StartAngle
         {
-            get { return startAngle; }
+            get { return this.startAngle; }
             set
             {
                 if (value < 10.0 || value > 170.0)
                     throw new ArgumentOutOfRangeException("value", value, "The MLine style start angle valid values range from 10 to 170 degrees.");
-                startAngle = value;
+                this.startAngle = value;
             }
         }
 
@@ -202,12 +209,12 @@ namespace netDxf.Objects
         /// </summary>
         public double EndAngle
         {
-            get { return endAngle; }
+            get { return this.endAngle; }
             set
             {
                 if (value < 10.0 || value > 170.0)
                     throw new ArgumentOutOfRangeException("value", value, "The MLine style start angle valid values range from 10 to 170 degrees.");
-                endAngle = value;
+                this.endAngle = value;
             }
         }
 
@@ -216,10 +223,11 @@ namespace netDxf.Objects
         /// </summary>
         /// <remarks>
         /// The elements list must be ordered, this will be done automatically,
-        /// but if new elements are added individually to the list it will have to be sorted manually calling the Sort() method.</remarks>
+        /// but if new elements are added individually to the list it will have to be sorted manually calling the Sort() method.
+        /// </remarks>
         public List<MLineStyleElement> Elements
         {
-            get { return elements; }
+            get { return this.elements; }
             set
             {
                 if (value == null)
@@ -227,7 +235,7 @@ namespace netDxf.Objects
                 if (value.Count < 1)
                     throw new ArgumentOutOfRangeException("value", value.Count, "The vertex list must have at least one element.");
                 value.Sort();
-                elements = value;
+                this.elements = value;
             }
         }
 

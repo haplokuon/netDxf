@@ -1,4 +1,4 @@
-﻿#region netDxf, Copyright(C) 2013 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf, Copyright(C) 2014 Daniel Carvajal, Licensed under LGPL.
 
 //                        netDxf library
 // Copyright (C) 2013 Daniel Carvajal (haplokuon@gmail.com)
@@ -24,6 +24,45 @@ using System;
 
 namespace netDxf.Tables
 {
+
+    /// <summary>
+    /// Standard layer flags (bit-coded values).
+    /// </summary>
+    [Flags]
+    internal enum LayerFlags
+    {
+        /// <summary>
+        /// Default.
+        /// </summary>
+        None = 0,
+        /// <summary>
+        /// Layer is frozen; otherwise layer is thawed.
+        /// </summary>
+        Frozen = 1,
+        /// <summary>
+        /// Layer is frozen by default in new viewports.
+        /// </summary>
+        FrozenNewViewports = 2,
+        /// <summary>
+        /// Layer is locked.
+        /// </summary>
+        Locked = 4,
+        /// <summary>
+        /// If set, table entry is externally dependent on an xref.
+        /// </summary>
+        XrefDependent = 16,
+        /// <summary>
+        /// If both this bit and bit 16 are set, the externally dependent xref has been successfully resolved.
+        /// </summary>
+        XrefResolved = 32,
+        /// <summary>
+        /// If set, the table entry was referenced by at least one entity in the drawing the last time the 
+        /// drawing was edited. (This flag is for the benefit of AutoCAD commands. It can be ignored by 
+        /// most programs that read DXF files and need not be set by programs that write DXF files)
+        /// </summary>
+        Referenced = 64
+    }
+
     /// <summary>
     /// Represents a layer.
     /// </summary>
@@ -34,6 +73,8 @@ namespace netDxf.Tables
 
         private AciColor color;
         private bool isVisible;
+        private bool isFrozen;
+        private bool isLocked;
         private bool plot;
         private LineType lineType;
         private Lineweight lineweight;
@@ -82,7 +123,7 @@ namespace netDxf.Tables
             set
             {
                 if (value == null)
-                    throw new NullReferenceException("value"); 
+                    throw new ArgumentNullException("value"); 
                 this.lineType = value;
             }
         }
@@ -96,9 +137,9 @@ namespace netDxf.Tables
             set
             {
                 if (value == null)
-                    throw new NullReferenceException("value"); 
+                    throw new ArgumentNullException("value"); 
                 if (value.IsByLayer || value.IsByBlock)
-                    throw new ArgumentException("The layer color cannot be ByLayer or ByBlock");
+                    throw new ArgumentException("The layer color cannot be ByLayer or ByBlock", "value");
                 this.color = value;
             }
         }
@@ -112,6 +153,23 @@ namespace netDxf.Tables
             set { this.isVisible = value; }
         }
 
+        /// <summary>
+        /// Gets or sets if the layer is frozen; otherwise layer is thawed.
+        /// </summary>
+        public bool IsFrozen
+        {
+            get { return this.isFrozen; }
+            set { this.isFrozen = value; }
+        }
+
+        /// <summary>
+        /// Gets or sets if the layer is locked.
+        /// </summary>
+        public bool IsLocked
+        {
+            get { return this.isLocked; }
+            set { this.isLocked = value; }
+        }
         /// <summary>
         /// Gets or sets if the plotting flag.
         /// </summary>

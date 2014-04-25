@@ -1,7 +1,7 @@
-﻿#region netDxf, Copyright(C) 2013 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf, Copyright(C) 2014 Daniel Carvajal, Licensed under LGPL.
 
 //                        netDxf library
-// Copyright (C) 2013 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2014 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -23,7 +23,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text;
 
 namespace netDxf.Tables
 {
@@ -148,8 +147,7 @@ namespace netDxf.Tables
             this.reserved = name.Equals("ByLayer", StringComparison.InvariantCultureIgnoreCase) ||
                             name.Equals("ByBlock", StringComparison.InvariantCultureIgnoreCase) ||
                             name.Equals("Continuous", StringComparison.InvariantCultureIgnoreCase);
-
-            this.description = description;
+            this.description = string.IsNullOrEmpty(description) ? string.Empty : description;
             this.segments = new List<double>();
         }
 
@@ -163,7 +161,7 @@ namespace netDxf.Tables
         public string Description
         {
             get { return this.description; }
-            set { this.description = value; }
+            set { this.description = string.IsNullOrEmpty(value) ? string.Empty : value; }
         }
 
         /// <summary>
@@ -180,7 +178,7 @@ namespace netDxf.Tables
             set
             {
                 if (value == null)
-                    throw new NullReferenceException("value");
+                    throw new ArgumentNullException("value");
                 this.segments = value;
             }
         }
@@ -212,59 +210,51 @@ namespace netDxf.Tables
         public static LineType FromFile(string file, string lineTypeName)
         {
             LineType lineType = null;
-            StreamReader reader;
-            try
+
+            using(StreamReader reader =  new StreamReader(File.Open(file, FileMode.Open, FileAccess.Read, FileShare.ReadWrite), true))
             {
-                reader = new StreamReader(File.OpenRead(file), true);
-            }
-            catch (Exception ex)
-            {
-                throw (new FileLoadException("Unknown error reading lin file.", file, ex));
-            }
-
-            while (!reader.EndOfStream)
-            {
-                string line = reader.ReadLine();
-                if (line == null) throw new FileLoadException("Unknown error reading lin file.", file);
-                // lines starting with semicolons are comments
-                if (line.StartsWith(";")) continue;
-                // every line type definition starts with '*'
-                if (!line.StartsWith("*")) continue;
-
-                // reading line type name and description
-                int endName = line.IndexOf(','); // the first semicolon divides the name from the description that might contain more semicolons
-                string name = line.Substring(1, endName - 1);
-                string description = line.Substring(endName + 1, line.Length - endName - 1);
-
-                // remove start and end spaces
-                description = description.Trim();
-                
-                if (!name.Equals(lineTypeName, StringComparison.InvariantCultureIgnoreCase)) continue;
-
-                // we have found the line type name, the next line of the file contains the line type definition
-                line = reader.ReadLine();
-                if (line == null) throw new FileLoadException("Unknown error reading lin file.", file); 
-                lineType = new LineType(name, description);
-
-                string[] tokens = line.Split(',');
-
-                // the index 0 is always A (alignment field)
-                for (int i = 1; i < tokens.Length; i++)
+                while (!reader.EndOfStream)
                 {
-                    double segment;
-                    if (double.TryParse(tokens[i], out segment))
-                        lineType.Segments.Add(segment);
-                    else
-                    {
-                        // only simple linetypes are supported.
-                        lineType = null;
-                        break;
-                    }
-                }
-                break;
-            }
+                    string line = reader.ReadLine();
+                    if (line == null) throw new FileLoadException("Unknown error reading lin file.", file);
+                    // lines starting with semicolons are comments
+                    if (line.StartsWith(";")) continue;
+                    // every line type definition starts with '*'
+                    if (!line.StartsWith("*")) continue;
 
-            reader.Close();
+                    // reading line type name and description
+                    int endName = line.IndexOf(','); // the first semicolon divides the name from the description that might contain more semicolons
+                    string name = line.Substring(1, endName - 1);
+                    string description = line.Substring(endName + 1, line.Length - endName - 1);
+
+                    // remove start and end spaces
+                    description = description.Trim();
+
+                    if (!name.Equals(lineTypeName, StringComparison.InvariantCultureIgnoreCase)) continue;
+
+                    // we have found the line type name, the next line of the file contains the line type definition
+                    line = reader.ReadLine();
+                    if (line == null) throw new FileLoadException("Unknown error reading lin file.", file);
+                    lineType = new LineType(name, description);
+
+                    string[] tokens = line.Split(',');
+
+                    // the index 0 is always A (alignment field)
+                    for (int i = 1; i < tokens.Length; i++)
+                    {
+                        double segment;
+                        if (double.TryParse(tokens[i], out segment))
+                            lineType.Segments.Add(segment);
+                        else
+                        {
+                            // only simple linetypes are supported.
+                            lineType = null;
+                            break;
+                        }
+                    }
+                    break;
+                }
+            }
             return lineType;
         }
 

@@ -1,7 +1,7 @@
-﻿#region netDxf, Copyright(C) 2013 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf, Copyright(C) 2014 Daniel Carvajal, Licensed under LGPL.
 
 //                        netDxf library
-// Copyright (C) 2013 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2014 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -63,8 +63,7 @@ namespace netDxf
 
         #region tables
 
-        private new readonly List<Viewport> viewports;
-
+        private readonly List<Viewport> viewports;
         private ApplicationRegistries appRegistries;
         private Layers layers;
         private LineTypes lineTypes;
@@ -214,12 +213,11 @@ namespace netDxf
         }
 
         /// <summary>
-        /// Gets or sets the name of the document, once a file is saved or loaded this field is equals the file name without extension.
+        /// Gets the name of the document, once a file is saved or loaded this field is equals the file name without extension.
         /// </summary>
         public string Name
         {
             get { return this.name; }
-            set { this.name = value; }
         }
 
         #endregion
@@ -598,7 +596,7 @@ namespace netDxf
             Stream stream;
             try
             {
-                stream = File.OpenRead(file);
+                stream = File.Open(file, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
             }
             catch (Exception ex)
             {
@@ -788,7 +786,7 @@ namespace netDxf
             Stream stream;
             try
             {
-                stream = File.OpenRead(file);
+                stream = File.Open(file, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
             }
             catch (Exception ex)
             {
@@ -1100,7 +1098,7 @@ namespace netDxf
             //header information
             document.comments = dxfReader.Comments;
             document.drawingVariables = dxfReader.HeaderVariables;
-            document.NumHandles = Convert.ToInt64(dxfReader.HeaderVariables.HandleSeed, 16);
+            document.NumHandles = long.Parse(dxfReader.HeaderVariables.HandleSeed, NumberStyles.HexNumber);
 
             //tables information
             document.appRegistries = new ApplicationRegistries(document, dxfReader.ApplicationRegistries, dxfReader.ApplicationRegistryReferences);
@@ -1156,6 +1154,8 @@ namespace netDxf
             if (this.drawingVariables.AcadVer < DxfVersion.AutoCad2000)
                 throw new NotSupportedException("Only AutoCad2000 and newer dxf versions are supported.");
 
+            DxfWriter dxfWriter = new DxfWriter(this.drawingVariables.AcadVer);
+
             // dictionaries
             List<DictionaryObject> dictionaries = new List<DictionaryObject>();
 
@@ -1169,9 +1169,9 @@ namespace netDxf
 
             // create the Group dictionary
             DictionaryObject groupDictionary = new DictionaryObject(baseDictionary.Handle);
+            this.NumHandles = groupDictionary.AsignHandle(this.NumHandles);
             if (this.groups.Count > 0)
             {
-                this.NumHandles = groupDictionary.AsignHandle(this.NumHandles);
                 foreach (Group group in this.groups.Values)
                 {
                     groupDictionary.Entries.Add(group.Handle, group.Name);
@@ -1182,9 +1182,9 @@ namespace netDxf
 
             // create the MLine style dictionary
             DictionaryObject mLineStyleDictionary = new DictionaryObject(baseDictionary.Handle);
+            this.NumHandles = mLineStyleDictionary.AsignHandle(this.NumHandles);
             if (this.mlineStyles.Count > 0)
             {
-                this.NumHandles = mLineStyleDictionary.AsignHandle(this.NumHandles);
                 foreach (MLineStyle mLineStyle in this.mlineStyles.Values)
                 {
                     mLineStyleDictionary.Entries.Add(mLineStyle.Handle, mLineStyle.Name);
@@ -1195,22 +1195,24 @@ namespace netDxf
 
             // create the image dictionary
             DictionaryObject imageDefDictionary = new DictionaryObject(baseDictionary.Handle);
+            this.NumHandles = imageDefDictionary.AsignHandle(this.NumHandles);
             if (this.imageDefs.Count > 0)
             {
-                this.NumHandles = imageDefDictionary.AsignHandle(this.NumHandles);
                 foreach (ImageDef imageDef in this.imageDefs.Values)
+                {
                     imageDefDictionary.Entries.Add(imageDef.Handle, imageDef.Name);
-
+                }
+                    
                 dictionaries.Add(imageDefDictionary);
 
                 namedObjectDictionary.Entries.Add(imageDefDictionary.Handle, "ACAD_IMAGE_DICT");
                 namedObjectDictionary.Entries.Add(this.rasterVariables.Handle, "ACAD_IMAGE_VARS");
             }
 
-            this.drawingVariables.HandleSeed = Convert.ToString(this.NumHandles + ReservedHandles, 16);
+            this.drawingVariables.HandleSeed = (this.NumHandles + ReservedHandles).ToString("X");
 
-            DxfWriter dxfWriter = new DxfWriter(this.drawingVariables.AcadVer);
-            dxfWriter.Open(stream);
+            dxfWriter.Open(stream, this.drawingVariables.AcadVer < DxfVersion.AutoCad2007 ? Encoding.Default : null);
+
             foreach (string comment in this.comments)
             {
                 dxfWriter.WriteComment(comment);
@@ -1239,7 +1241,7 @@ namespace netDxf
             dxfWriter.BeginSection(StringCode.TablesSection);
 
             //viewport tables
-            dxfWriter.BeginTable(StringCode.ViewPortTable, Convert.ToString(this.NumHandles++, 16));
+            dxfWriter.BeginTable(StringCode.ViewPortTable, this.NumHandles++.ToString("X"));
             foreach (Viewport vport in this.viewports)
             {
                 dxfWriter.WriteViewPort(vport);
@@ -1247,7 +1249,7 @@ namespace netDxf
             dxfWriter.EndTable();
 
             //line type tables
-            dxfWriter.BeginTable(StringCode.LineTypeTable, Convert.ToString(this.NumHandles++, 16));
+            dxfWriter.BeginTable(StringCode.LineTypeTable, this.NumHandles++.ToString("X"));
             foreach (LineType lineType in this.lineTypes.Values)
             {
                 dxfWriter.WriteLineType(lineType);
@@ -1255,7 +1257,7 @@ namespace netDxf
             dxfWriter.EndTable();
 
             //layer tables
-            dxfWriter.BeginTable(StringCode.LayerTable, Convert.ToString(this.NumHandles++, 16));
+            dxfWriter.BeginTable(StringCode.LayerTable, this.NumHandles++.ToString("X"));
             foreach (Layer layer in this.layers.Values)
             {
                 dxfWriter.WriteLayer(layer);
@@ -1263,7 +1265,7 @@ namespace netDxf
             dxfWriter.EndTable();
 
             //text style tables
-            dxfWriter.BeginTable(StringCode.TextStyleTable, Convert.ToString(this.NumHandles++, 16));
+            dxfWriter.BeginTable(StringCode.TextStyleTable, this.NumHandles++.ToString("X"));
             foreach (TextStyle style in this.textStyles.Values)
             {
                 dxfWriter.WriteTextStyle(style);
@@ -1271,7 +1273,7 @@ namespace netDxf
             dxfWriter.EndTable();
 
             //dimension style tables
-            dxfWriter.BeginTable(StringCode.DimensionStyleTable, Convert.ToString(this.NumHandles++, 16));
+            dxfWriter.BeginTable(StringCode.DimensionStyleTable, this.NumHandles++.ToString("X"));
             foreach (DimensionStyle style in this.dimStyles.Values)
             {
                 dxfWriter.WriteDimensionStyle(style);
@@ -1279,11 +1281,11 @@ namespace netDxf
             dxfWriter.EndTable();
 
             //view
-            dxfWriter.BeginTable(StringCode.ViewTable, Convert.ToString(this.NumHandles++, 16));
+            dxfWriter.BeginTable(StringCode.ViewTable, this.NumHandles++.ToString("X"));
             dxfWriter.EndTable();
 
             //ucs
-            dxfWriter.BeginTable(StringCode.UcsTable, Convert.ToString(this.NumHandles++, 16));
+            dxfWriter.BeginTable(StringCode.UcsTable, this.NumHandles++.ToString("X"));
             foreach (UCS ucs in this.ucss.Values)
             {
                 dxfWriter.WriteUCS(ucs);
@@ -1291,7 +1293,7 @@ namespace netDxf
             dxfWriter.EndTable();
 
             //registered application tables
-            dxfWriter.BeginTable(StringCode.ApplicationIDTable, Convert.ToString(this.NumHandles++, 16));
+            dxfWriter.BeginTable(StringCode.ApplicationIDTable, this.NumHandles++.ToString("X"));
             foreach (ApplicationRegistry id in this.appRegistries.Values)
             {
                 dxfWriter.RegisterApplication(id);
@@ -1299,7 +1301,7 @@ namespace netDxf
             dxfWriter.EndTable();
 
             //block reacord table
-            dxfWriter.BeginTable(StringCode.BlockRecordTable, Convert.ToString(this.NumHandles++, 16));
+            dxfWriter.BeginTable(StringCode.BlockRecordTable, this.NumHandles++.ToString("X"));
             foreach (Block block in this.blocks.Values)
             {
                 dxfWriter.WriteBlockRecord(block.Record);

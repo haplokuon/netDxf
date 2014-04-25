@@ -20,6 +20,7 @@
 
 #endregion
 
+using System;
 using netDxf.Tables;
 
 namespace netDxf.Entities
@@ -47,7 +48,12 @@ namespace netDxf.Entities
         public Layer Layer
         {
             get { return this.layer; }
-            set { if (value != null) this.layer = value; }
+            set
+            {
+                if (value == null)
+                    throw new ArgumentNullException("value"); 
+                this.layer = value;
+            }
         }
     }
 }

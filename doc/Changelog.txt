@@ -1,3 +1,14 @@
+[0.7.0 - 2014/04/25]
++ Encoding and decoding of non extended ASCII characters will be done automatically by the DxfWriter and the DxfReader. Dxf versions prior to 2007 need to encode the characters outside the extended ASCII chart (char>255) as \U+#### where #### is a four digits hexadecimal number that represents the character. 
++ Added IsFrozen and IsLocked properties to layers.
++ Workarounds for possible out of range values while importing dxf files.
++ Erased FileNotFound exception in ImageDef constructor, AutoCAD will only show a file not found in case the image is not present.
++ Allow to load files while they are being opened by another process. AutoCAD likes to keep their drawing files opened while working on them.
++ (fixed) Read ACDSDATA section. Undocumented dxf section that seems to affect only the dxf database version 2013 and later.
++ (fixed) The Text and MText height can not be zero or less.
++ (fixed) Read SEQEND object in Insert entities. Drawings with proxy graphics might be affected by this.
++ (fixed) Some TableObject properties of DxfObjects not pointing to the same reference in its corresponding global list.
+
 [0.6.2 - 2014/03/20]
 + All angle values now will be normalized to the range [0,360[. In the case of the ellipse if the start and end angles are equal it will be considered a full ellipse.
 + (fixed) Load dxf files not encoded as utf8, all other files will use the supplied dxf codepage to get the proper encoding.

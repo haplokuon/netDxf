@@ -1,7 +1,7 @@
-﻿#region netDxf, Copyright(C) 2013 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf, Copyright(C) 2014 Daniel Carvajal, Licensed under LGPL.
 
 //                        netDxf library
-// Copyright (C) 2013 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2014 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -48,7 +48,7 @@ namespace netDxf.Objects
         public DictionaryObject(string handleToOwner)
             : base(DxfObjectCode.Dictionary)
         {
-            this.handleToOwner = handleToOwner;
+            this.handleToOwner = string.IsNullOrEmpty(handleToOwner) ? string.Empty : handleToOwner;
             this.isHardOwner = false;
             this.clonning = ClonningFlag.KeepExisting;
             this.entries = new Dictionary<string, string>();

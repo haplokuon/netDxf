@@ -1,7 +1,7 @@
-﻿#region netDxf, Copyright(C) 2013 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf, Copyright(C) 2014 Daniel Carvajal, Licensed under LGPL.
 
 //                        netDxf library
-// Copyright (C) 2013 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2014 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -52,11 +52,11 @@ namespace netDxf.Objects
         /// <remarks>
         /// If the name is set to null or empty, a unique name will be generated when it is added to the document.
         /// </remarks>
-        public Group(string name = null)
+        public Group(string name = "")
             : base(name, DxfObjectCode.Group, !string.IsNullOrEmpty(name))
         {
             this.isUnnamed = string.IsNullOrEmpty(name);
-            this.description = null;
+            this.description = string.Empty;
             this.isSelectable = true;          
             this.entities = new List<EntityObject>();
         }
@@ -71,7 +71,12 @@ namespace netDxf.Objects
         public string Description
         {
             get { return description; }
-            set { description = value; }
+            set
+            {
+                if (value == null)
+                    throw new ArgumentNullException("value"); 
+                description = value;
+            }
         }
 
         /// <summary>

@@ -1,7 +1,7 @@
-﻿#region netDxf, Copyright(C) 2013 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf, Copyright(C) 2014 Daniel Carvajal, Licensed under LGPL.
 
 //                        netDxf library
-// Copyright (C) 2013 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2014 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -33,7 +33,7 @@ namespace netDxf.Tables
 
         #region private fields
 
-        private static readonly string[] notAllowed = {"\\", "<", ">", "/", "?", "\"", ":", ";", "*", "|", ",", "=", "`"};
+        private static readonly string[] notAllowed = { "\\", "<", ">", "/", "?", "\"", ":", ";", "*", "|", ",", "=", "`" };
         protected bool reserved;
         private string name;
 
@@ -46,6 +46,7 @@ namespace netDxf.Tables
         /// </summary>
         /// <param name="name">Table name. The following characters \&lt;&gt;/?":;*|,=` are not supported for table object names.</param>
         /// <param name="codeName">Table <see cref="DxfObjectCode">code name</see>.</param>
+        /// <param name="checkName">Defines if the table object name needs to be checked for invalid characters.</param>
         protected TableObject(string name, string codeName, bool checkName)
             : base(codeName)
         {
@@ -57,8 +58,12 @@ namespace netDxf.Tables
                 foreach (string s in notAllowed)
                 {
                     if (name.Contains(s))
-                        throw new ArgumentException("The following characters \\<>/?\":;*|,=` are not supported for table object names.");
+                        throw new ArgumentException("The following characters \\<>/?\":;*|,=` are not supported for table object names.", "name");
                 }
+
+                // using regular expressions is slower
+                //if (Regex.IsMatch(name, "[\\<>/?\":;*|,=`]"))
+                //    throw new ArgumentException("The following characters \\<>/?\":;*|,=` are not supported for table object names.", "name");
             }
             this.name = name;
             this.reserved = false;
@@ -75,7 +80,12 @@ namespace netDxf.Tables
         public string Name
         {
             get { return name; }
-            internal set { name = value; }
+            internal set
+            {
+                if (string.IsNullOrEmpty(value))
+                    throw (new ArgumentNullException("value"));
+                name = value;
+            }
         }
 
         /// <summary>

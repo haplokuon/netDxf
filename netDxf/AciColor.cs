@@ -1,7 +1,7 @@
-﻿#region netDxf, Copyright(C) 2013 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf, Copyright(C) 2014 Daniel Carvajal, Licensed under LGPL.
 
 //                        netDxf library
-// Copyright (C) 2013 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2014 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -715,10 +715,8 @@ namespace netDxf
             if (this.index == 256)
                 return "ByLayer";
             if (this.useTrueColor)
-            {
-                string separator = Thread.CurrentThread.CurrentCulture.TextInfo.ListSeparator;
-                return string.Format("{0}{3}{1}{3}{2}", this.r, this.g, this.b, separator);
-            }
+                return string.Format("{0}{3}{1}{3}{2}", this.r, this.g, this.b, Thread.CurrentThread.CurrentCulture.TextInfo.ListSeparator);
+
             return this.index.ToString(CultureInfo.InvariantCulture);
         }
 
