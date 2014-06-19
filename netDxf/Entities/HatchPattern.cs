@@ -26,89 +26,6 @@ using System.IO;
 
 namespace netDxf.Entities
 {
-    /// <summary>
-    /// Predefined hatch pattern name.
-    /// </summary>
-    internal sealed class PredefinedHatchPatternName
-    {
-        /// <summary>
-        /// Solid.
-        /// </summary>
-        public const string Solid = "SOLID";
-
-        /// <summary>
-        /// Line.
-        /// </summary>
-        public const string Line = "LINE";
-
-        /// <summary>
-        /// Net.
-        /// </summary>
-        public const string Net = "NET";
-
-        /// <summary>
-        /// Dots.
-        /// </summary>
-        public const string Dots = "DOTS";
-    }
-
-    /// <summary>
-    /// Hatch pattern style.
-    /// </summary>
-    public enum HatchStyle
-    {
-        /// <summary>
-        /// Hatch “odd parity” area.
-        /// </summary>
-        Normal = 0,
-
-        /// <summary>
-        /// Hatch outermost area only.
-        /// </summary>
-        Outer = 1,
-
-        /// <summary>
-        /// Hatch through entire area.
-        /// </summary>
-        Ignore = 2
-    }
-
-    /// <summary>
-    /// Hatch pattern type.
-    /// </summary>
-    public enum HatchType
-    {
-        /// <summary>
-        /// User defined.
-        /// </summary>
-        UserDefined = 0,
-
-        /// <summary>
-        /// Predefined.
-        /// </summary>
-        Predefined = 1,
-
-        /// <summary>
-        /// Custom.
-        /// </summary>
-        Custom = 2
-    }
-
-    /// <summary>
-    /// Hatch pattern fill type.
-    /// </summary>
-    public enum FillType
-    {
-        /// <summary>
-        /// Pattern fill.
-        /// </summary>
-        PatternFill = 0,
-
-        /// <summary>
-        /// Solid fill.
-        /// </summary>
-        SolidFill = 1
-    }
 
     /// <summary>
     /// Represents a <see cref="Hatch">hatch</see> pattern style.
@@ -119,8 +36,9 @@ namespace netDxf.Entities
 
         private readonly string name;
         private HatchStyle style;
-        private FillType fill;
+        private HatchFillType fill;
         private HatchType type;
+        private Vector2 origin;
         private double angle;
         private double scale;
         private string description;
@@ -140,8 +58,9 @@ namespace netDxf.Entities
             this.name = name.ToUpper();
             this.description = string.IsNullOrEmpty(description) ? name : description;
             this.style = HatchStyle.Normal;
-            this.fill = this.name == PredefinedHatchPatternName.Solid ? FillType.SolidFill : FillType.PatternFill;
+            this.fill = this.name == "SOLID" ? HatchFillType.SolidFill : HatchFillType.PatternFill;
             this.type = HatchType.UserDefined;
+            this.origin = Vector2.Zero;
             this.angle = 0.0;
             this.scale = 1.0;
             this.lineDefinitions = new List<HatchPatternLineDefinition>();
@@ -159,7 +78,7 @@ namespace netDxf.Entities
         {
             get
             {
-                HatchPattern pattern = new HatchPattern(PredefinedHatchPatternName.Solid, "Solid fill") {type = HatchType.Predefined};
+                HatchPattern pattern = new HatchPattern("SOLID", "Solid fill") { type = HatchType.Predefined };
                 // this is the pattern line definition for solid fills as defined in the acad.pat, but it is not needed
                 //HatchPatternLineDefinition lineDefinition = new HatchPatternLineDefinition
                 //                                                {
@@ -180,7 +99,7 @@ namespace netDxf.Entities
         {
             get
             {
-                HatchPattern pattern = new HatchPattern(PredefinedHatchPatternName.Line, "Parallel horizontal lines");
+                HatchPattern pattern = new HatchPattern("LINE", "Parallel horizontal lines");
                 HatchPatternLineDefinition lineDefinition = new HatchPatternLineDefinition
                     {
                         Angle = 0,
@@ -201,7 +120,7 @@ namespace netDxf.Entities
         {
             get
             {
-                HatchPattern pattern = new HatchPattern(PredefinedHatchPatternName.Net, "Horizontal / vertical grid");
+                HatchPattern pattern = new HatchPattern("NET", "Horizontal / vertical grid");
 
                 HatchPatternLineDefinition lineDefinition = new HatchPatternLineDefinition
                     {
@@ -231,7 +150,7 @@ namespace netDxf.Entities
         {
             get
             {
-                HatchPattern pattern = new HatchPattern(PredefinedHatchPatternName.Dots, "A series of dots");
+                HatchPattern pattern = new HatchPattern("DOTS", "A series of dots");
                 HatchPatternLineDefinition lineDefinition = new HatchPatternLineDefinition
                     {
                         Angle = 0,
@@ -267,7 +186,7 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets the hatch style (always Normal).
+        /// Gets the hatch style.
         /// </summary>
         /// <remarks>Only normal style is implemented.</remarks>
         public HatchStyle Style
@@ -288,10 +207,19 @@ namespace netDxf.Entities
         /// <summary>
         /// Gets the solid fill flag.
         /// </summary>
-        public FillType Fill
+        public HatchFillType Fill
         {
             get { return this.fill; }
             internal set { this.fill = value; }
+        }
+
+        /// <summary>
+        /// Gets or sets the pattern origin.
+        /// </summary>
+        public Vector2 Origin
+        {
+            get { return this.origin; }
+            set { this.origin = value; }
         }
 
         /// <summary>
@@ -363,7 +291,7 @@ namespace netDxf.Entities
 
                     // remove start and end spaces
                     description = description.Trim();
-                    if (!name.Equals(patternName, StringComparison.InvariantCultureIgnoreCase)) continue;
+                    if (!name.Equals(patternName, StringComparison.OrdinalIgnoreCase)) continue;
 
                     // we have found the pattern name, the next lines of the file contains the pattern definition
                     line = reader.ReadLine();

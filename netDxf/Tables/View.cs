@@ -20,6 +20,8 @@
 
 #endregion
 
+using netDxf.Collections;
+
 namespace netDxf.Tables
 {
 
@@ -141,6 +143,15 @@ namespace netDxf.Tables
         {
             get { return this.backClippingPlane; }
             set { this.backClippingPlane = value; }
+        }
+
+        /// <summary>
+        /// Gets the owner of the actual dxf object.
+        /// </summary>
+        public new Views Owner
+        {
+            get { return (Views)this.owner; }
+            internal set { this.owner = value; }
         }
 
         #endregion

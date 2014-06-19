@@ -112,7 +112,7 @@ namespace netDxf.Entities
         /// </summary>
         /// <param name="precision">Number of vertexes generated.</param>
         /// <returns>A list vertexes that represents the circle expresed in object coordinate system.</returns>
-        private IEnumerable<Vector2> PolygonalVertexes(int precision)
+        public IList<Vector2> PolygonalVertexes(int precision)
         {
             if (precision < 3)
                 throw new ArgumentOutOfRangeException("precision", precision, "The circle precision must be greater or equal to three");

@@ -1,7 +1,7 @@
-#region netDxf, Copyright(C) 2013 Daniel Carvajal, Licensed under LGPL.
+#region netDxf, Copyright(C) 2014 Daniel Carvajal, Licensed under LGPL.
 
 //                        netDxf library
-// Copyright (C) 2013 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2014 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -35,13 +35,12 @@ namespace netDxf.Collections
 
         #region constructor
 
-        internal LineTypes(DxfDocument document)
-            : base(document)
-        {
-        }
-
-        internal LineTypes(DxfDocument document, Dictionary<string, LineType> list, Dictionary<string, List<DxfObject>> references)
-            : base( document, list, references)
+        internal LineTypes(DxfDocument document, string handle = null)
+            : base(document,
+            new Dictionary<string, LineType>(StringComparer.OrdinalIgnoreCase),
+            new Dictionary<string, List<DxfObject>>(StringComparer.OrdinalIgnoreCase),
+            StringCode.LineTypeTable,
+            handle)
         {
         }
 
@@ -57,16 +56,20 @@ namespace netDxf.Collections
         /// If a line type already exists with the same name as the instance that is being added the method returns the existing line type,
         /// if not it will return the new line type.
         /// </returns>
-        public override LineType Add(LineType lineType)
-        {
+        internal override LineType Add(LineType lineType, bool assignHandle)
+        {      
             LineType add;
+
             if (this.list.TryGetValue(lineType.Name, out add))
                 return add;
+            
+            if (assignHandle)
+                this.document.NumHandles = lineType.AsignHandle(this.document.NumHandles);
 
-            this.document.NumHandles = lineType.AsignHandle(this.document.NumHandles);
             this.list.Add(lineType.Name, lineType);
+            this.document.AddedObjects.Add(lineType.Handle, lineType);
             this.references.Add(lineType.Name, new List<DxfObject>());
-
+            lineType.Owner = this;
             return lineType;
         }
 
@@ -78,19 +81,7 @@ namespace netDxf.Collections
         /// <remarks>Reserved line types or any other referenced by objects cannot be removed.</remarks>
         public override bool Remove(string name)
         {
-            LineType lineType = this[name];
-
-            if (lineType == null)
-                return false;
-
-            if (lineType.IsReserved)
-                return false;
-
-            if (this.references[lineType.Name].Count != 0)
-                return false;
-
-            this.references.Remove(lineType.Name);
-            return this.list.Remove(lineType.Name);
+            return Remove(this[name]);
         }
 
         /// <summary>
@@ -101,7 +92,24 @@ namespace netDxf.Collections
         /// <remarks>Reserved line types or any other referenced by objects cannot be removed.</remarks>
         public override bool Remove(LineType lineType)
         {
-            return Remove(lineType.Name);
+            if (lineType == null)
+                return false;
+
+            if (!this.Contains(lineType))
+                return false;
+
+            if (lineType.IsReserved)
+                return false;
+
+            if (this.references[lineType.Name].Count != 0)
+                return false;
+
+            lineType.Owner = null;
+            this.document.AddedObjects.Remove(lineType.Handle);
+            this.references.Remove(lineType.Name);
+            this.list.Remove(lineType.Name);
+
+            return true;
         }
 
         #endregion

@@ -1,7 +1,7 @@
-#region netDxf, Copyright(C) 2013 Daniel Carvajal, Licensed under LGPL.
+#region netDxf, Copyright(C) 2014 Daniel Carvajal, Licensed under LGPL.
 
 //                        netDxf library
-// Copyright (C) 2013 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2014 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -153,7 +153,7 @@ namespace netDxf.Header
         /// <remarks>
         /// Also applies to raster image units, eventhought they have the RasterVariables object and units in ImageDef.
         /// </remarks>
-        public const string Insunits = "$INSUNITS";
+        public const string InsUnits = "$INSUNITS";
 
         /// <summary>
         /// User name that saved the file.
@@ -198,5 +198,30 @@ namespace netDxf.Header
         /// 0 = Each segment of the polyline starts and ends with a dash.
         /// </remarks>
         public const string PLineGen = "$PLINEGEN";
+
+        /// <summary>
+        /// Local date/time of drawing creation.
+        /// </summary>
+        public const string TdCreate = "$TDCREATE";
+
+        /// <summary>
+        /// Universal date/time the drawing was created.
+        /// </summary>
+        public const string TduCreate = "$TDUCREATE";
+
+        /// <summary>
+        /// Local date/time of last drawing update.
+        /// </summary>
+        public const string TdUpdate = "$TDUPDATE";
+
+        /// <summary>
+        /// Universal date/time of the last update/save.
+        /// </summary>
+        public const string TduUpdate = "$TDUUPDATE";
+
+        /// <summary>
+        /// Cumulative editing time for this drawing.
+        /// </summary>
+        public const string TdinDwg = "$TDINDWG";
     }
 }

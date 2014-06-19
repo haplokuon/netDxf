@@ -1,7 +1,7 @@
-﻿#region netDxf, Copyright(C) 2013 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf, Copyright(C) 2014 Daniel Carvajal, Licensed under LGPL.
 
 //                        netDxf library
-// Copyright (C) 2013 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2014 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -25,14 +25,12 @@ using System.Collections.Generic;
 
 namespace netDxf.Entities
 {
-    
     /// <summary>
     /// Represents a hatch <see cref="EntityObject">entity</see>.
     /// </summary>
     public class Hatch :
         EntityObject
     {
-
         #region private fields
 
         private List<HatchBoundaryPath> boundaryPaths;
@@ -52,15 +50,18 @@ namespace netDxf.Entities
         /// Only the x and y coordinates for the center of the line, ellipse, circle and arc will be used.
         /// </remarks>
         /// <param name="pattern"><see cref="HatchPattern">Hatch pattern</see>.</param>
-        /// <param name="boundaryPaths">A list of <see cref="HatchBoundaryPath">boundary paths</see>.</param>
-        public Hatch(HatchPattern pattern, IEnumerable<HatchBoundaryPath> boundaryPaths)
+        /// <param name="paths">A list of <see cref="HatchBoundaryPath">boundary paths</see>.</param>
+        public Hatch(HatchPattern pattern, List<HatchBoundaryPath> paths)
             : base(EntityType.Hatch, DxfObjectCode.Hatch)
         {
-            this.boundaryPaths = new List<HatchBoundaryPath>();
-            this.boundaryPaths.AddRange(boundaryPaths);
+            if (pattern == null)
+                throw new ArgumentNullException("pattern");
+            if (paths == null)
+                throw new ArgumentNullException("paths");
+            if(paths.Count == 0)
+                throw new ArgumentException("The hatch boundary must contain at least one valid path.", "paths");
+            this.boundaryPaths = paths;
             this.pattern = pattern;
-            if (pattern.GetType() == typeof (HatchGradientPattern))
-                ((HatchGradientPattern) pattern).GradientColorAciXData(this.XData);
         }
 
         #endregion
@@ -68,15 +69,15 @@ namespace netDxf.Entities
         #region public properties
 
         /// <summary>
-        /// Gets or sets the hatch pattern name.
+        /// Gets the hatch pattern.
         /// </summary>
         public HatchPattern Pattern
         {
             get { return this.pattern; }
             set
             {
-                if (value.GetType() == typeof(HatchGradientPattern))
-                    ((HatchGradientPattern)value).GradientColorAciXData(this.XData);
+                if (value == null)
+                    throw new ArgumentNullException("value");
                 this.pattern = value;
             }
         }
@@ -85,7 +86,7 @@ namespace netDxf.Entities
         /// Gets or sets the hatch boundary paths.
         /// </summary>
         /// <remarks>
-        /// If the hatch is associative the boundary paths will be also added to the document.
+        /// The hatch must contain at least on valid boundary path to be able to add it to the DxfDocument, otherwise it will be rejected.
         /// </remarks>
         public List<HatchBoundaryPath> BoundaryPaths
         {
@@ -94,6 +95,8 @@ namespace netDxf.Entities
             {
                 if (value == null)
                     throw new ArgumentNullException("value");
+                if (value.Count == 0)
+                    throw new ArgumentException("The hatch boundary must contain at least one valid path.", "value");
                 this.boundaryPaths = value;
             }
         }
@@ -110,7 +113,7 @@ namespace netDxf.Entities
         #endregion
 
         #region public methods
-        
+
         /// <summary>
         /// Creates a list of entities that represents the boundary of the hatch in world coordinates.
         /// </summary>
@@ -123,39 +126,39 @@ namespace netDxf.Entities
         /// </remarks>
         public List<EntityObject> CreateWCSBoundary()
         {
-            List<EntityObject> data = new List<EntityObject>();
+            List<EntityObject> wcsBoundary = new List<EntityObject>();
             Matrix3 trans = MathHelper.ArbitraryAxis(this.normal);
-            Vector3 pos = trans * new Vector3(0.0, 0.0, this.elevation);
+            Vector3 pos = trans*new Vector3(0.0, 0.0, this.elevation);
             foreach (HatchBoundaryPath path in this.boundaryPaths)
             {
-                foreach (EntityObject entity in path.Data)
+                foreach (HatchBoundaryPath.Edge edge in path.Edges)
                 {
+                    EntityObject entity = edge.ConvertTo();
                     switch (entity.Type)
                     {
                         case (EntityType.Arc):
-                            data.Add(ProcessArc((Arc)entity, trans, pos));
+                            wcsBoundary.Add(ProcessArc((Arc) entity, trans, pos));
                             break;
                         case (EntityType.Circle):
-                            data.Add(ProcessCircle((Circle)entity, trans, pos));
+                            wcsBoundary.Add(ProcessCircle((Circle) entity, trans, pos));
                             break;
                         case (EntityType.Ellipse):
-                            data.Add(ProcessEllipse((Ellipse)entity, trans, pos));
+                            wcsBoundary.Add(ProcessEllipse((Ellipse) entity, trans, pos));
                             break;
                         case (EntityType.Line):
-                            data.Add(ProcessLine((Line)entity, trans, pos));
+                            wcsBoundary.Add(ProcessLine((Line) entity, trans, pos));
                             break;
                         case (EntityType.LightWeightPolyline):
                             // LwPolylines need an special threatement since their vertexes are expressed in object coordinates.
-                            data.Add(ProcessLwPolyline((LwPolyline)entity, this.normal, this.elevation));
+                            wcsBoundary.Add(ProcessLwPolyline((LwPolyline) entity, this.normal, this.elevation));
                             break;
                         case (EntityType.Spline):
-                            data.Add(ProcessSpline((Spline)entity, trans, pos));
+                            wcsBoundary.Add(ProcessSpline((Spline) entity, trans, pos));
                             break;
                     }
                 }
-
             }
-            return data;
+            return wcsBoundary;
         }
 
         #endregion
@@ -164,54 +167,47 @@ namespace netDxf.Entities
 
         private static EntityObject ProcessArc(Arc arc, Matrix3 trans, Vector3 pos)
         {
-            Arc copy = (Arc) arc.Clone();
-            copy.Center = trans * arc.Center + pos;
-            copy.Normal = trans * arc.Normal;
-            return copy;
+            arc.Center = trans*arc.Center + pos;
+            arc.Normal = trans*arc.Normal;
+            return arc;
         }
 
         private static EntityObject ProcessCircle(Circle circle, Matrix3 trans, Vector3 pos)
         {
-            Circle copy = (Circle)circle.Clone();
-            copy.Center = trans * circle.Center + pos;
-            copy.Normal = trans * circle.Normal;
-            return copy;
+            circle.Center = trans*circle.Center + pos;
+            circle.Normal = trans*circle.Normal;
+            return circle;
         }
 
         private static Ellipse ProcessEllipse(Ellipse ellipse, Matrix3 trans, Vector3 pos)
         {
-            Ellipse copy = (Ellipse)ellipse.Clone();
-            copy.Center = trans * ellipse.Center + pos;
-            copy.Normal = trans * ellipse.Normal;
-            return copy;
+            ellipse.Center = trans*ellipse.Center + pos;
+            ellipse.Normal = trans*ellipse.Normal;
+            return ellipse;
         }
 
         private static Line ProcessLine(Line line, Matrix3 trans, Vector3 pos)
         {
-            Line copy = (Line)line.Clone();
-            copy.StartPoint = trans * line.StartPoint + pos;
-            copy.EndPoint = trans * line.EndPoint + pos;
-            copy.Normal = trans * copy.Normal;
-            return copy;
+            line.StartPoint = trans*line.StartPoint + pos;
+            line.EndPoint = trans*line.EndPoint + pos;
+            line.Normal = trans*line.Normal;
+            return line;
         }
 
         private static LwPolyline ProcessLwPolyline(LwPolyline polyline, Vector3 normal, double elevation)
         {
-            LwPolyline copy = (LwPolyline) polyline.Clone();
-            copy.Elevation = elevation;
-            copy.Normal = normal;
-            return copy;
+            polyline.Elevation = elevation;
+            polyline.Normal = normal;
+            return polyline;
         }
 
         private static Spline ProcessSpline(Spline spline, Matrix3 trans, Vector3 pos)
         {
-            Spline copy = (Spline) spline.Clone();
-            foreach (SplineVertex vertex in copy.ControlPoints)
-            {
+            foreach (SplineVertex vertex in spline.ControlPoints)
                 vertex.Location = trans*vertex.Location + pos;
-            }
-            copy.Normal = trans*spline.Normal;
-            return copy;
+
+            spline.Normal = trans*spline.Normal;
+            return spline;
         }
 
         #endregion
@@ -225,18 +221,18 @@ namespace netDxf.Entities
         public override object Clone()
         {
             return new Hatch(this.pattern, this.boundaryPaths)
-            {
-                //EntityObject properties
-                Color = this.color,
-                Layer = this.layer,
-                LineType = this.lineType,
-                Lineweight = this.lineweight,
-                LineTypeScale = this.lineTypeScale,
-                Normal = this.normal,
-                XData = this.xData,
-                //Hatch properties
-                Elevation = this.elevation
-            };
+                {
+                    //EntityObject properties
+                    Color = this.color,
+                    Layer = this.layer,
+                    LineType = this.lineType,
+                    Lineweight = this.lineweight,
+                    LineTypeScale = this.lineTypeScale,
+                    Normal = this.normal,
+                    XData = this.xData,
+                    //Hatch properties
+                    Elevation = this.elevation
+                };
         }
 
         #endregion

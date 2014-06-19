@@ -1,7 +1,7 @@
 ﻿#region netDxf, Copyright(C) 2014 Daniel Carvajal, Licensed under LGPL.
 
 //                        netDxf library
-// Copyright (C) 2013 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2014 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -26,14 +26,13 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Text;
-using System.Text.RegularExpressions;
 using netDxf.Blocks;
+using netDxf.Collections;
 using netDxf.Entities;
 using netDxf.Header;
 using netDxf.Objects;
 using netDxf.Tables;
 using Attribute = netDxf.Entities.Attribute;
-using Group = netDxf.Objects.Group;
 
 namespace netDxf
 {
@@ -46,78 +45,36 @@ namespace netDxf
 
         private CodeValuePair dxfPairInfo;
         private TextReader reader;
-        // keeps track of the dimension blocks generated
-        private int dimensionBlocksGenerated;
-        // keeps track of the group names generated (this groups have the isUnnamed bool set to true)
-        private int groupNamesGenerated;
-        // here we will store strings already decoded
-        private Dictionary<string, string> buffer;
+        private DxfDocument doc;
 
-        //header
-        private List<string> comments;
-        private HeaderVariables headerVariables;
+        // here we will store strings already decoded <string: original, string: decoded>
+        private Dictionary<string, string> decodedStrings;
 
-        //entities
-        //entity objects added to the document (key: handle, value: entity). This dictionary also includes entities that are part of a block.
-        private Dictionary<string, EntityObject> addedEntity;
-        private List<Arc> arcs;
-        private List<Circle> circles;
-        private List<Point> points;
-        private List<Ellipse> ellipses;
-        private List<Face3d> faces3d;
-        private List<Solid> solids;
-        private List<Insert> inserts;
-        private List<Line> lines;
-        private List<MLine> mLines;
-        private List<PolyfaceMesh> polyfaceMeshes;
-        private List<LwPolyline> lightWeightPolylines;
-        private List<Polyline> polylines;
-        private List<Text> texts;
-        private List<MText> mTexts;
-        private List<Hatch> hatches;
-        private List<Dimension> dimensions;
-        private List<Spline> splines;
-        private List<Image> images;
-        private List<Ray> rays;
-        private List<XLine> xlines;
-
-        //tables
-        private Dictionary<string, ApplicationRegistry> appRegistries;
-        private Dictionary<string, List<DxfObject>> appRegistryRefs;
-        private Dictionary<string, Layer> layers;
-        private Dictionary<string, List<DxfObject>> layerRefs;
-        private Dictionary<string, LineType> lineTypes;
-        private Dictionary<string, List<DxfObject>> lineTypeRefs;
-        private Dictionary<string, TextStyle> textStyles;
-        private Dictionary<string, List<DxfObject>> textStyleRefs;
-        private Dictionary<string, DimensionStyle> dimStyles;
-        private Dictionary<string, List<DxfObject>> dimStyleRefs;
-        private Dictionary<string, UCS> ucss;
-        private Dictionary<string, List<DxfObject>> ucsRefs;
-
-        //blocks
+        // blocks records
         private Dictionary<string, BlockRecord> blockRecords;
-        private Dictionary<string, Block> blocks;
-        private Dictionary<string, List<DxfObject>> blockRefs;
+
+        // entities, they will be processed at the end <EntityObject: entity, string: owner handle>.
+        private Dictionary<EntityObject, string> entityList;
+
+        // viewports, they will be processed at the end <EntityObject: viewport, string: clipping boundary handle>.
+        private Dictionary<Viewport, string> viewports;
 
         // in nested blocks (blocks that contains Insert entities) the block definition might be defined AFTER the block that references them
         // temporarily this variables will store information to post process the nested block list
-        private Dictionary<Insert, string> nestedBlocks;
-        private Dictionary<Dimension, string> nestedDimBlocks;
-        private Dictionary<Attribute, string> nestedBlocksAttributes;
+        private Dictionary<Insert, string> nestedInserts;
+        private Dictionary<Dimension, string> nestedDimensions;
+        //private Dictionary<Attribute, string> nestedBlocksAttributes;
 
-        //objects
-        private RasterVariables rasterVariables;
-        private Dictionary<string, ImageDef> imageDefs;
-        private Dictionary<string, List<DxfObject>> imageDefRefs;
+        // the named dictionary is the only one we are interested, it is always the first that appears in the section
+        // It consists solely of associated pairs of entry names and hard ownership pointer references to the associated object.
+        private DictionaryObject namedDictionary;
+        // <string: dictionary handle, DictionaryObject: dictionary>
         private Dictionary<string, DictionaryObject> dictionaries;
+
         private Dictionary<string, ImageDefReactor> imageDefReactors;
-        private Dictionary<string, MLineStyle> mlineStyles;
-        private Dictionary<string, List<DxfObject>> mlineStyleRefs;
-        private Dictionary<string, Group> groups;
-        private Dictionary<string, List<DxfObject>> groupRefs;
 
         // variables for post-processing
+        private Dictionary<Group, List<string>> groupEntities;
 
         // the MLineStyles are defined, in the objects section, AFTER the MLine that references them,
         // temporarily this variables will store information to post process the MLine list
@@ -134,263 +91,13 @@ namespace netDxf
 
         #endregion
 
-        #region public properties
-
-        public List<string> Comments
-        {
-            get { return this.comments; }
-        }
-
-        public int DimensionBlocksGenerated
-        {
-            get { return this.dimensionBlocksGenerated; }
-        }
-
-        public int GroupNamesGenerated
-        {
-            get { return this.groupNamesGenerated; }
-        }
-
-        public Dictionary<string, EntityObject> AddedEntity
-        {
-            get { return this.addedEntity; }
-        }
-
-        #endregion
-
-        #region public header properties
-
-        public HeaderVariables HeaderVariables
-        {
-            get { return this.headerVariables; }
-        }
-
-        #endregion
-
-        #region public entity properties
-
-        public List<Arc> Arcs
-        {
-            get { return this.arcs; }
-        }
-
-        public List<Circle> Circles
-        {
-            get { return this.circles; }
-        }
-
-        public List<Dimension> Dimensions
-        {
-            get { return this.dimensions; }
-        }
-
-        public List<Ellipse> Ellipses
-        {
-            get { return this.ellipses; }
-        }
-
-        public List<Point> Points
-        {
-            get { return this.points; }
-        }
-
-        public List<Face3d> Faces3d
-        {
-            get { return this.faces3d; }
-        }
-
-        public List<Solid> Solids
-        {
-            get { return this.solids; }
-        }
-
-        public List<Spline> Splines
-        {
-            get { return this.splines; }
-        }
-
-        public List<Line> Lines
-        {
-            get { return this.lines; }
-        }
-
-        public List<MLine> MLines
-        {
-            get { return this.mLines; }
-        }
-
-        public List<LwPolyline> LightWeightPolyline
-        {
-            get { return this.lightWeightPolylines; }
-        }
-
-        public List<Polyline> Polylines
-        {
-            get { return this.polylines; }
-        }
-
-        public List<PolyfaceMesh> PolyfaceMeshes
-        {
-            get { return this.polyfaceMeshes; }
-        }
-
-        public List<Insert> Inserts
-        {
-            get { return this.inserts; }
-        }
-
-        public List<Text> Texts
-        {
-            get { return this.texts; }
-        }
-
-        public List<MText> MTexts
-        {
-            get { return this.mTexts; }
-        }
-
-        public List<Hatch> Hatches
-        {
-            get { return this.hatches; }
-        }
-
-        public List<Image> Images
-        {
-            get { return this.images; }
-        }
-
-        public List<Ray> Rays
-        {
-            get { return this.rays; }
-        }
-
-        public List<XLine> XLines
-        {
-            get { return this.xlines; }
-        }
-
-        #endregion
-
-        #region public table properties
-
-        public Dictionary<string, ApplicationRegistry> ApplicationRegistries
-        {
-            get { return this.appRegistries; }
-        }
-
-        public Dictionary<string, List<DxfObject>> ApplicationRegistryReferences
-        {
-            get { return this.appRegistryRefs; }
-        }
-
-        public Dictionary<string, Layer> Layers
-        {
-            get { return this.layers; }
-        }
-
-        public Dictionary<string, List<DxfObject>> LayerReferences
-        {
-            get { return this.layerRefs; }
-        }
-
-        public Dictionary<string, LineType> LineTypes
-        {
-            get { return this.lineTypes; }
-        }
-
-        public Dictionary<string, List<DxfObject>> LineTypeReferences
-        {
-            get { return this.lineTypeRefs; }
-        }
-
-        public Dictionary<string, TextStyle> TextStyles
-        {
-            get { return this.textStyles; }
-        }
-
-        public Dictionary<string, List<DxfObject>> TextStyleReferences
-        {
-            get { return this.textStyleRefs; }
-        }
-
-        public Dictionary<string, DimensionStyle> DimensionStyles
-        {
-            get { return this.dimStyles; }
-        }
-
-        public Dictionary<string, List<DxfObject>> DimensionStyleReferences
-        {
-            get { return this.dimStyleRefs; }
-        }
-
-        public Dictionary<string, Block> Blocks
-        {
-            get { return this.blocks; }
-        }
-
-        public Dictionary<string, List<DxfObject>> BlockReferences
-        {
-            get { return this.blockRefs; }
-        }
-
-        public Dictionary<string, MLineStyle> MLineStyles
-        {
-            get { return this.mlineStyles; }
-        }
-
-        public Dictionary<string, List<DxfObject>> MLineStyleReferences
-        {
-            get { return this.mlineStyleRefs; }
-        }
-
-        public Dictionary<string, UCS> UCSs
-        {
-            get { return this.ucss; }
-        }
-
-        public Dictionary<string, List<DxfObject>> UCSReferences
-        {
-            get { return this.ucsRefs; }
-        }
-
-        #endregion
-
-        #region public object properties
-
-        public Dictionary<string, ImageDef> ImageDefs
-        {
-            get { return this.imageDefs; }
-        }
-
-        public Dictionary<string, List<DxfObject>> ImageDefReferences
-        {
-            get { return this.imageDefRefs; }
-        }
-
-        public RasterVariables RasterVariables
-        {
-            get { return this.rasterVariables; }
-        }
-
-        public Dictionary<string, Group> Groups
-        {
-            get { return this.groups; }
-        }
-
-        public Dictionary<string, List<DxfObject>> GroupReferences
-        {
-            get { return this.groupRefs; }
-        }
-
-        #endregion
-
         #region public methods
 
         /// <summary>
         /// Reads the whole stream.
         /// </summary>
         /// <param name="stream">Stream.</param>
-        public void Read(Stream stream)
+        public DxfDocument Read(Stream stream)
         {
             if (stream == null)
                 throw new ArgumentNullException("stream", "The stream cannot be null");
@@ -421,71 +128,26 @@ namespace netDxf
                 throw (new DxfException("Unknow error opening the reader.", ex));
             }
 
-            this.addedEntity = new Dictionary<string, EntityObject>();
+            this.doc = new DxfDocument(new HeaderVariables(), false);
 
-            this.buffer = new Dictionary<string, string>();
+            this.entityList = new Dictionary<EntityObject, string>();
+            this.viewports = new Dictionary<Viewport, string>();
 
-            this.comments = new List<string>();
-
-            // header
-            this.headerVariables = new HeaderVariables();
-
-            // tables
-            this.appRegistries = new Dictionary<string, ApplicationRegistry>(StringComparer.InvariantCultureIgnoreCase);
-            this.appRegistryRefs = new Dictionary<string, List<DxfObject>>(StringComparer.InvariantCultureIgnoreCase);
-            this.layers = new Dictionary<string, Layer>(StringComparer.InvariantCultureIgnoreCase);
-            this.layerRefs = new Dictionary<string, List<DxfObject>>(StringComparer.InvariantCultureIgnoreCase);
-            this.lineTypes = new Dictionary<string, LineType>(StringComparer.InvariantCultureIgnoreCase);
-            this.lineTypeRefs = new Dictionary<string, List<DxfObject>>(StringComparer.InvariantCultureIgnoreCase);
-            this.textStyles = new Dictionary<string, TextStyle>(StringComparer.InvariantCultureIgnoreCase);
-            this.textStyleRefs = new Dictionary<string, List<DxfObject>>(StringComparer.InvariantCultureIgnoreCase);
-            this.dimStyles = new Dictionary<string, DimensionStyle>(StringComparer.InvariantCultureIgnoreCase);
-            this.dimStyleRefs = new Dictionary<string, List<DxfObject>>(StringComparer.InvariantCultureIgnoreCase);
-            this.ucss = new Dictionary<string, UCS>(StringComparer.InvariantCultureIgnoreCase);
-            this.ucsRefs = new Dictionary<string, List<DxfObject>>(StringComparer.InvariantCultureIgnoreCase);
+            this.decodedStrings = new Dictionary<string, string>();
 
             // blocks
-            this.nestedBlocks = new Dictionary<Insert, string>();
-            this.nestedDimBlocks = new Dictionary<Dimension, string>();
-            this.nestedBlocksAttributes = new Dictionary<Attribute, string>();
-            this.blockRecords = new Dictionary<string, BlockRecord>(StringComparer.InvariantCultureIgnoreCase);
-            this.blocks = new Dictionary<string, Block>(StringComparer.InvariantCultureIgnoreCase);
-            this.blockRefs = new Dictionary<string, List<DxfObject>>(StringComparer.InvariantCultureIgnoreCase);
-
-            // entities
-            this.arcs = new List<Arc>();
-            this.circles = new List<Circle>();
-            this.faces3d = new List<Face3d>();
-            this.ellipses = new List<Ellipse>();
-            this.solids = new List<Solid>();
-            this.inserts = new List<Insert>();
-            this.lines = new List<Line>();
-            this.polyfaceMeshes = new List<PolyfaceMesh>();
-            this.lightWeightPolylines = new List<LwPolyline>();
-            this.polylines = new List<Polyline>();
-            this.points = new List<Point>();
-            this.texts = new List<Text>();
-            this.mTexts = new List<MText>();
-            this.hatches = new List<Hatch>();
-            this.dimensions = new List<Dimension>();
-            this.splines = new List<Spline>();
-            this.images = new List<Image>();
-            this.mLines = new List<MLine>();
-            this.rays = new List<Ray>();
-            this.xlines = new List<XLine>();
+            this.nestedInserts = new Dictionary<Insert, string>();
+            this.nestedDimensions = new Dictionary<Dimension, string>();
+            //this.nestedBlocksAttributes = new Dictionary<Attribute, string>();
+            this.blockRecords = new Dictionary<string, BlockRecord>(StringComparer.OrdinalIgnoreCase);
 
             // objects
-            this.dictionaries = new Dictionary<string, DictionaryObject>(StringComparer.InvariantCultureIgnoreCase);
-            this.imageDefs = new Dictionary<string, ImageDef>(StringComparer.InvariantCultureIgnoreCase);
-            this.imageDefRefs = new Dictionary<string, List<DxfObject>>(StringComparer.InvariantCultureIgnoreCase);
-            this.imageDefReactors = new Dictionary<string, ImageDefReactor>(StringComparer.InvariantCultureIgnoreCase);
-            this.imgDefHandles = new Dictionary<string, ImageDef>(StringComparer.InvariantCultureIgnoreCase);
+            this.dictionaries = new Dictionary<string, DictionaryObject>(StringComparer.OrdinalIgnoreCase);
+            this.groupEntities = new Dictionary<Group, List<string>>();
+            this.imageDefReactors = new Dictionary<string, ImageDefReactor>(StringComparer.OrdinalIgnoreCase);
+            this.imgDefHandles = new Dictionary<string, ImageDef>(StringComparer.OrdinalIgnoreCase);
             this.imgToImgDefHandles = new Dictionary<Image, string>();
-            this.mlineStyles = new Dictionary<string, MLineStyle>(StringComparer.InvariantCultureIgnoreCase);
-            this.mlineStyleRefs = new Dictionary<string, List<DxfObject>>(StringComparer.InvariantCultureIgnoreCase);
             this.mLineToStyleNames = new Dictionary<MLine, string>();
-            this.groups = new Dictionary<string, Group>(StringComparer.InvariantCultureIgnoreCase);
-            this.groupRefs = new Dictionary<string, List<DxfObject>>();
 
             this.dxfPairInfo = this.ReadCodePair();
 
@@ -493,7 +155,7 @@ namespace netDxf
             // they sometimes hold information about the program that has generated the dxf
             while (this.dxfPairInfo.Code == 999)
             {
-                this.comments.Add(this.dxfPairInfo.Value);
+                this.doc.Comments.Add(this.dxfPairInfo.Value);
                 this.dxfPairInfo = this.ReadCodePair();
             }
 
@@ -541,8 +203,12 @@ namespace netDxf
             {
                 Image image = pair.Key;
                 image.Definition = this.imgDefHandles[pair.Value];
-                this.imageDefRefs[image.Definition.Name].Add(image);
                 image.Definition.Reactors.Add(image.Handle, this.imageDefReactors[image.Handle]);
+
+                // we still need to set the definitive image size, now that we know all units involved
+                double factor = MathHelper.ConversionFactor(this.doc.DrawingVariables.InsUnits, this.doc.RasterVariables.Units);
+                image.Width *= factor;
+                image.Height *= factor;
             }
 
             // postprocess the MLines to assign their MLineStyle
@@ -550,8 +216,86 @@ namespace netDxf
             {
                 MLine mline = pair.Key;
                 mline.Style = this.GetMLineStyle(pair.Value);
-                this.mlineStyleRefs[pair.Value].Add(mline);
             }
+
+            foreach (KeyValuePair<EntityObject, string> pair in this.entityList)
+            {
+                // this is the default layout in case the entity has not defined layout
+                Layout layout;
+                Block block;
+                if (pair.Value == null)
+                {
+                    layout = Layout.ModelSpace;
+                    block = layout.AssociatedBlock;
+                }
+                else
+                {
+                    block = this.GetBlock(((BlockRecord) this.doc.GetObjectByHandle(pair.Value)).Name);
+                    layout = block.Record.Layout;
+                }
+
+                // the viewport with id 1 is stored directly in the layout since it has no graphical representation
+                if (pair.Key is Viewport)
+                {
+                    Viewport viewport = (Viewport) pair.Key;
+                    if (viewport.Id == 1)
+                    {
+                        // the base layout viewport has always id = 1 and we will not add it to the entities list of the document.
+                        // this viewport has no graphical representation, it is the view of the paper space layout itself and it does not show the model.
+                        layout.Viewport = viewport;
+                        layout.Viewport.Owner = block;
+                    }
+                    else
+                    {
+                        this.doc.ActiveLayout = layout.Name;
+                        this.doc.AddEntity(pair.Key, false, false);
+                    }
+                }
+                else
+                {
+                    this.doc.ActiveLayout = layout.Name;
+                    this.doc.AddEntity(pair.Key, false, false);
+
+                    // apply the units scale to the insertion scale (this is for not nested blocks)
+                    if (pair.Key is Insert)
+                    {
+                        Insert insert = (Insert) pair.Key;
+                        double scale = MathHelper.ConversionFactor(this.doc.DrawingVariables.InsUnits, insert.Block.Record.Units);
+                        insert.Scale *= scale;
+                    }
+                }
+            }
+
+            // assign a handle to the default layout viewports
+            foreach (Layout layout in this.doc.Layouts)
+            {
+                if (layout.Viewport != null)
+                    if (string.IsNullOrEmpty(layout.Viewport.Handle))
+                        this.doc.NumHandles = layout.Viewport.AsignHandle(this.doc.NumHandles);
+            }
+
+            // post process viewports clipping boundaries
+            foreach (KeyValuePair<Viewport, string> pair in this.viewports)
+            {
+                DxfObject entity = this.doc.GetObjectByHandle(pair.Value);
+                if (entity is EntityObject)
+                    pair.Key.ClippingBoundary = (EntityObject) entity;
+            }
+
+            // post process group entities
+            foreach (KeyValuePair<Group, List<string>> pair in this.groupEntities)
+            {
+                foreach (string handle in pair.Value)
+                {
+                    DxfObject entity = this.doc.GetObjectByHandle(handle);
+                    if (entity is EntityObject)
+                        pair.Key.Entities.Add((EntityObject) entity);
+                }
+            }
+
+            this.doc.ActiveLayout = Layout.ModelSpace.Name;
+
+            return this.doc;
         }
 
         public static string CheckHeaderVariable(Stream stream, string headerVariable)
@@ -598,6 +342,8 @@ namespace netDxf
 
         private void ReadHeader()
         {
+            Debug.Assert(this.dxfPairInfo.Value == StringCode.HeaderSection);
+
             this.dxfPairInfo = this.ReadCodePair();
             while (this.dxfPairInfo.Value != StringCode.EndSection)
             {
@@ -613,103 +359,119 @@ namespace netDxf
                     {
                         case HeaderVariableCode.AcadVer:
                             DxfVersion acadVer = DxfVersion.Unknown;
-                            if (StringEnum.IsStringDefined(typeof(DxfVersion), value))
+                            if (StringEnum.IsStringDefined(typeof (DxfVersion), value))
                                 acadVer = (DxfVersion) StringEnum.Parse(typeof (DxfVersion), this.dxfPairInfo.Value);
                             if (acadVer < DxfVersion.AutoCad2000)
                                 throw new NotSupportedException("Only AutoCad2000 and higher dxf versions are supported.");
-                            this.headerVariables.AcadVer = acadVer;
+                            this.doc.DrawingVariables.AcadVer = acadVer;
                             break;
                         case HeaderVariableCode.HandleSeed:
-                            this.headerVariables.HandleSeed = value;
+                            this.doc.DrawingVariables.HandleSeed = value;
+                            this.doc.NumHandles = long.Parse(value, NumberStyles.HexNumber, CultureInfo.InvariantCulture);
                             break;
                         case HeaderVariableCode.Angbase:
-                            this.headerVariables.Angbase = double.Parse(value);
+                            this.doc.DrawingVariables.Angbase = double.Parse(value);
                             break;
                         case HeaderVariableCode.Angdir:
-                            this.headerVariables.Angdir = int.Parse(value);
+                            this.doc.DrawingVariables.Angdir = int.Parse(value);
                             break;
                         case HeaderVariableCode.AttMode:
-                            this.headerVariables.AttMode = (AttMode)int.Parse(value);
+                            this.doc.DrawingVariables.AttMode = (AttMode) int.Parse(value);
                             break;
                         case HeaderVariableCode.AUnits:
-                            this.headerVariables.AUnits = int.Parse(value);
+                            this.doc.DrawingVariables.AUnits = (AngleUnitType) int.Parse(value);
                             break;
                         case HeaderVariableCode.AUprec:
-                            this.headerVariables.AUprec = int.Parse(value);
+                            this.doc.DrawingVariables.AUprec = int.Parse(value);
                             break;
                         case HeaderVariableCode.CeColor:
-                            this.headerVariables.CeColor = AciColor.FromCadIndex(short.Parse(value));
+                            this.doc.DrawingVariables.CeColor = AciColor.FromCadIndex(short.Parse(value));
                             break;
                         case HeaderVariableCode.CeLtScale:
-                            this.headerVariables.CeLtScale = double.Parse(value);
+                            this.doc.DrawingVariables.CeLtScale = double.Parse(value);
                             break;
                         case HeaderVariableCode.CeLtype:
-                            this.headerVariables.CeLtype = this.DecodeEncodedNonAsciiCharacters(value);
+                            this.doc.DrawingVariables.CeLtype = this.DecodeEncodedNonAsciiCharacters(value);
                             break;
                         case HeaderVariableCode.CeLweight:
-                            this.headerVariables.CeLweight = Lineweight.FromCadIndex(short.Parse(value));
+                            this.doc.DrawingVariables.CeLweight = Lineweight.FromCadIndex(short.Parse(value));
                             break;
                         case HeaderVariableCode.CLayer:
-                            this.headerVariables.CLayer = this.DecodeEncodedNonAsciiCharacters(value);
+                            this.doc.DrawingVariables.CLayer = this.DecodeEncodedNonAsciiCharacters(value);
                             break;
                         case HeaderVariableCode.CMLJust:
-                            this.headerVariables.CMLJust = (MLineJustification)int.Parse(value);
+                            this.doc.DrawingVariables.CMLJust = (MLineJustification) int.Parse(value);
                             break;
                         case HeaderVariableCode.CMLScale:
-                            this.headerVariables.CMLScale = double.Parse(value);
+                            this.doc.DrawingVariables.CMLScale = double.Parse(value);
                             break;
                         case HeaderVariableCode.CMLStyle:
                             string mLineStyleName = this.DecodeEncodedNonAsciiCharacters(value);
                             if (!string.IsNullOrEmpty(mLineStyleName))
-                                this.headerVariables.CMLStyle = mLineStyleName;
+                                this.doc.DrawingVariables.CMLStyle = mLineStyleName;
                             break;
                         case HeaderVariableCode.DimStyle:
                             string dimStyleName = this.DecodeEncodedNonAsciiCharacters(value);
                             if (!string.IsNullOrEmpty(dimStyleName))
-                                this.headerVariables.DimStyle = dimStyleName;
+                                this.doc.DrawingVariables.DimStyle = dimStyleName;
                             break;
                         case HeaderVariableCode.TextSize:
                             double size = double.Parse(value);
                             if (size > 0.0)
-                                this.headerVariables.TextSize = size;
+                                this.doc.DrawingVariables.TextSize = size;
                             break;
                         case HeaderVariableCode.TextStyle:
                             string textStyleName = this.DecodeEncodedNonAsciiCharacters(value);
                             if (!string.IsNullOrEmpty(textStyleName))
-                                this.headerVariables.TextStyle = textStyleName;
+                                this.doc.DrawingVariables.TextStyle = textStyleName;
                             break;
                         case HeaderVariableCode.LastSavedBy:
-                            this.headerVariables.LastSavedBy = this.DecodeEncodedNonAsciiCharacters(value);
+                            this.doc.DrawingVariables.LastSavedBy = this.DecodeEncodedNonAsciiCharacters(value);
                             break;
                         case HeaderVariableCode.LUnits:
-                            this.headerVariables.LUnits = int.Parse(value);
+                            this.doc.DrawingVariables.LUnits = (LinearUnitType) int.Parse(value);
                             break;
                         case HeaderVariableCode.LUprec:
-                            this.headerVariables.LUprec = int.Parse(value);
+                            this.doc.DrawingVariables.LUprec = int.Parse(value);
                             break;
                         case HeaderVariableCode.DwgCodePage:
-                            this.headerVariables.DwgCodePage = value;
+                            this.doc.DrawingVariables.DwgCodePage = value;
                             break;
                         case HeaderVariableCode.Extnames:
-                            this.headerVariables.Extnames = (int.Parse(value) != 0);
+                            this.doc.DrawingVariables.Extnames = (int.Parse(value) != 0);
                             break;
-                        case HeaderVariableCode.Insunits:
-                            this.headerVariables.Insunits = (DrawingUnits)int.Parse(value);
+                        case HeaderVariableCode.InsUnits:
+                            this.doc.DrawingVariables.InsUnits = (DrawingUnits) int.Parse(value);
                             break;
                         case HeaderVariableCode.LtScale:
-                            this.headerVariables.LtScale = double.Parse(value);
+                            this.doc.DrawingVariables.LtScale = double.Parse(value);
                             break;
                         case HeaderVariableCode.LwDisplay:
-                            this.headerVariables.LwDisplay = (int.Parse(value) != 0);
+                            this.doc.DrawingVariables.LwDisplay = (int.Parse(value) != 0);
                             break;
                         case HeaderVariableCode.PdMode:
-                            this.headerVariables.PdMode = (PointShape)int.Parse(value);
+                            this.doc.DrawingVariables.PdMode = (PointShape) int.Parse(value);
                             break;
                         case HeaderVariableCode.PdSize:
-                            this.headerVariables.PdSize = double.Parse(value);
+                            this.doc.DrawingVariables.PdSize = double.Parse(value);
                             break;
                         case HeaderVariableCode.PLineGen:
-                            this.headerVariables.PLineGen = int.Parse(value);
+                            this.doc.DrawingVariables.PLineGen = int.Parse(value);
+                            break;
+                        case HeaderVariableCode.TdCreate:
+                            this.doc.DrawingVariables.TdCreate = DrawingTime.FromJulianCalendar(double.Parse(value));
+                            break;
+                        case HeaderVariableCode.TduCreate:
+                            this.doc.DrawingVariables.TduCreate = DrawingTime.FromJulianCalendar(double.Parse(value));
+                            break;
+                        case HeaderVariableCode.TdUpdate:
+                            this.doc.DrawingVariables.TdUpdate = DrawingTime.FromJulianCalendar(double.Parse(value));
+                            break;
+                        case HeaderVariableCode.TduUpdate:
+                            this.doc.DrawingVariables.TduUpdate = DrawingTime.FromJulianCalendar(double.Parse(value));
+                            break;
+                        case HeaderVariableCode.TdinDwg:
+                            this.doc.DrawingVariables.TdinDwg = DrawingTime.EditingTime(double.Parse(value));
                             break;
                     }
                 }
@@ -719,6 +481,8 @@ namespace netDxf
 
         private void ReadClasses()
         {
+            Debug.Assert(this.dxfPairInfo.Value == StringCode.ClassesSection);
+
             this.dxfPairInfo = this.ReadCodePair();
             while (this.dxfPairInfo.Value != StringCode.EndSection)
             {
@@ -728,122 +492,110 @@ namespace netDxf
 
         private void ReadTables()
         {
+            Debug.Assert(this.dxfPairInfo.Value == StringCode.TablesSection);
+
             this.dxfPairInfo = this.ReadCodePair();
             while (this.dxfPairInfo.Value != StringCode.EndSection)
             {
-                this.dxfPairInfo = this.ReadCodePair();
+                this.ReadTable();
+            }
+
+            // check if all table collections has been created
+            if (this.doc.ApplicationRegistries == null)
+                this.doc.ApplicationRegistries = new ApplicationRegistries(this.doc);
+            if (this.doc.Blocks == null)
+                this.doc.Blocks = new BlockRecords(this.doc);
+            if (this.doc.DimensionStyles == null)
+                this.doc.DimensionStyles = new DimensionStyles(this.doc);
+            if (this.doc.Layers == null)
+                this.doc.Layers = new Layers(this.doc);
+            if (this.doc.LineTypes == null)
+                this.doc.LineTypes = new LineTypes(this.doc);
+            if (this.doc.TextStyles == null)
+                this.doc.TextStyles = new TextStyles(this.doc);
+            if (this.doc.UCSs == null)
+                this.doc.UCSs = new UCSs(this.doc);
+            if (this.doc.Views == null)
+                this.doc.Views = new Views(this.doc);
+            if (this.doc.VPorts == null)
+                this.doc.VPorts = new VPorts(this.doc);
+        }
+
+        private void ReadBlocks()
+        {
+            Debug.Assert(this.dxfPairInfo.Value == StringCode.BlocksSection);
+            
+            // the blocks list will be added to the document after reading the blocks section to handle possible nested insert cases.
+            Dictionary<string, Block> blocks = new Dictionary<string, Block>(StringComparer.OrdinalIgnoreCase);
+
+            this.dxfPairInfo = this.ReadCodePair();
+            while (this.dxfPairInfo.Value != StringCode.EndSection)
+            {
                 switch (this.dxfPairInfo.Value)
                 {
-                    case StringCode.ApplicationIDTable:
-                        Debug.Assert(this.dxfPairInfo.Code == 2);
-                        this.ReadApplicationsId();
+                    case StringCode.BeginBlock:
+                        Block block = this.ReadBlock();
+                        blocks.Add(block.Name, block);
                         break;
-                    case StringCode.BlockRecordTable:
-                        Debug.Assert(this.dxfPairInfo.Code == 2);
-                        this.ReadBlockRecords();
-                        break;
-                    case StringCode.LayerTable:
-                        Debug.Assert(this.dxfPairInfo.Code == 2);
-                        this.ReadLayers();
-                        break;
-                    case StringCode.LineTypeTable:
-                        Debug.Assert(this.dxfPairInfo.Code == 2);
-                        this.ReadLineTypes();
-                        break;
-                    case StringCode.TextStyleTable:
-                        Debug.Assert(this.dxfPairInfo.Code == 2);
-                        this.ReadTextStyles();
-                        break;
-                    case StringCode.DimensionStyleTable:
-                        Debug.Assert(this.dxfPairInfo.Code == 2);
-                        this.ReadDimStyles();
-                        break;
-                    case StringCode.UcsTable:
-                        Debug.Assert(this.dxfPairInfo.Code == 2);
-                        this.ReadUCSs();
+                    default:
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                 }
+            }
+
+            // post process the possible nested blocks,
+            // in nested blocks (blocks that contains Insert entities) the block definition might be defined AFTER the insert that references them
+            foreach (KeyValuePair<Insert, string> pair in this.nestedInserts)
+            {
+                Insert insert = pair.Key;
+                insert.Block = blocks[pair.Value];
+                foreach (Attribute att in insert.Attributes.Values)
+                {
+                    //string tag = this.nestedBlocksAttributes[att];
+                    // attribute definitions might be null if an INSERT entity attribute has not been defined in the block
+                    AttributeDefinition attDef;
+                    if(insert.Block.AttributeDefinitions.TryGetValue(att.Tag, out attDef))
+                        att.Definition = attDef;
+                    att.Owner = insert.Block;
+                }
+                // in the case the insert belongs to a *PaperSpace# the insert owner has not been asigned yet,
+                // in this case the owner units are the document units and will be assigned at the end with the rest of the entities 
+                if (insert.Owner != null)
+                {
+                    // apply the units scale to the insertion scale (this is for nested blocks)
+                    double scale = MathHelper.ConversionFactor(insert.Owner.Record.Units, insert.Block.Record.Units);
+                    insert.Scale *= scale;
+                }
+
+            }
+            foreach (KeyValuePair<Dimension, string> pair in this.nestedDimensions)
+            {
+                Dimension dim = pair.Key;
+                dim.Block = blocks[pair.Value];
+            }
+
+            // add the the blocks to the document
+            foreach (Block block in blocks.Values)
+            {
+                this.doc.Blocks.Add(block, false);
             }
         }
 
         private void ReadEntities()
         {
+            Debug.Assert(this.dxfPairInfo.Value == StringCode.EntitiesSection);
+
             this.dxfPairInfo = this.ReadCodePair();
             while (this.dxfPairInfo.Value != StringCode.EndSection)
             {
-                EntityObject entity = this.ReadEntity(false);
-                // the ReadEntity() will return null if an unkown entity has been found
-                if (entity == null)
-                    continue;
-
-                switch (entity.Type)
-                {
-                    case EntityType.Arc:
-                        this.arcs.Add((Arc) entity);
-                        break;
-                    case EntityType.Circle:
-                        this.circles.Add((Circle) entity);
-                        break;
-                    case EntityType.Dimension:
-                        this.dimensions.Add((Dimension) entity);
-                        break;
-                    case EntityType.Point:
-                        this.points.Add((Point) entity);
-                        break;
-                    case EntityType.Ellipse:
-                        this.ellipses.Add((Ellipse) entity);
-                        break;
-                    case EntityType.Face3D:
-                        this.faces3d.Add((Face3d) entity);
-                        break;
-                    case EntityType.Solid:
-                        this.solids.Add((Solid) entity);
-                        break;
-                    case EntityType.Spline:
-                        this.splines.Add((Spline) entity);
-                        break;
-                    case EntityType.Insert:
-                        this.inserts.Add((Insert) entity);
-                        break;
-                    case EntityType.Line:
-                        this.lines.Add((Line) entity);
-                        break;
-                    case EntityType.LightWeightPolyline:
-                        this.lightWeightPolylines.Add((LwPolyline) entity);
-                        break;
-                    case EntityType.Polyline:
-                        this.polylines.Add((Polyline) entity);
-                        break;
-                    case EntityType.PolyfaceMesh:
-                        this.polyfaceMeshes.Add((PolyfaceMesh) entity);
-                        break;
-                    case EntityType.Text:
-                        this.texts.Add((Text) entity);
-                        break;
-                    case EntityType.MText:
-                        this.mTexts.Add((MText) entity);
-                        break;
-                    case EntityType.Hatch:
-                        this.hatches.Add((Hatch) entity);
-                        break;
-                    case EntityType.Image:
-                        this.images.Add((Image) entity);
-                        break;
-                    case EntityType.MLine:
-                        this.mLines.Add((MLine) entity);
-                        break;
-                    case EntityType.Ray:
-                        this.rays.Add((Ray) entity);
-                        break;
-                    case EntityType.XLine:
-                        this.xlines.Add((XLine) entity);
-                        break;
-                }
+                this.ReadEntity(false);
             }
         }
 
         private void ReadObjects()
         {
+            Debug.Assert(this.dxfPairInfo.Value == StringCode.ObjectsSection);
+
             this.dxfPairInfo = this.ReadCodePair();
             while (this.dxfPairInfo.Value != StringCode.EndSection)
             {
@@ -851,16 +603,21 @@ namespace netDxf
                 {
                     case DxfObjectCode.Dictionary:
                         DictionaryObject dictionary = this.ReadDictionary();
-                        if (this.dictionaries.ContainsKey(dictionary.Handle)) continue;
                         this.dictionaries.Add(dictionary.Handle, dictionary);
+
+                        // the named dictionary always appears the first in the objects section
+                        if (this.namedDictionary == null)
+                        {
+                            this.CreateObjectCollection(dictionary);
+                            this.namedDictionary = dictionary;
+                        }
                         break;
                     case DxfObjectCode.RasterVariables:
-                        this.rasterVariables = this.ReadRasterVariables();
+                        this.doc.RasterVariables = this.ReadRasterVariables();
                         break;
                     case DxfObjectCode.ImageDef:
                         ImageDef imageDef = this.ReadImageDefinition();
-                        if (this.imageDefs.ContainsKey(imageDef.Name)) continue;
-                        this.imageDefs.Add(imageDef.Name, imageDef);
+                        this.doc.ImageDefinitions.Add(imageDef, false);
                         break;
                     case DxfObjectCode.ImageDefReactor:
                         ImageDefReactor reactor = this.ReadImageDefReactor();
@@ -869,24 +626,36 @@ namespace netDxf
                         break;
                     case DxfObjectCode.MLineStyle:
                         MLineStyle style = this.ReadMLineStyle();
-                        if (style == null) continue;
-                        if (this.mlineStyles.ContainsKey(style.Name)) continue;
-                        this.mlineStyles.Add(style.Name, style);
+                        this.doc.MlineStyles.Add(style, false);
                         break;
                     case DxfObjectCode.Group:
                         Group group = this.ReadGroup();
-                        if (this.groups.ContainsKey(group.Name)) continue;
-                        this.groups.Add(group.Name, group);
+                        this.doc.Groups.Add(group, false);
+                        break;
+                    case DxfObjectCode.Layout:
+                        Layout layout = this.ReadLayout();
+                        this.doc.Layouts.Add(layout, false);
                         break;
                     default:
                         this.dxfPairInfo = this.ReadCodePair();
                         break;
                 }
             }
+
+            // add the default objects in case they have not been found in the file
+            // add ModelSpace layout
+            if(!this.doc.Layouts.Contains(Layout.ModelSpace.Name))
+                this.doc.Layouts.Add(Layout.ModelSpace);
+
+            // raster variables
+            if (this.doc.RasterVariables == null)
+                this.doc.RasterVariables = new RasterVariables();
         }
 
         private void ReadThumbnailImage()
         {
+            Debug.Assert(this.dxfPairInfo.Value == StringCode.ThumbnailImageSection);
+
             this.dxfPairInfo = this.ReadCodePair();
             while (this.dxfPairInfo.Value != StringCode.EndSection)
             {
@@ -896,6 +665,8 @@ namespace netDxf
 
         private void ReadAcdsData()
         {
+            Debug.Assert(this.dxfPairInfo.Value == StringCode.AcdsDataSection);
+
             this.dxfPairInfo = this.ReadCodePair();
             while (this.dxfPairInfo.Value != StringCode.EndSection)
             {
@@ -905,33 +676,199 @@ namespace netDxf
 
         #endregion
 
-        #region applicationId methods
+        #region table methods
 
-        private void ReadApplicationsId()
+        private void CreateTableCollection(string name, string handle)
         {
+            switch (name)
+            {
+                case StringCode.ApplicationIDTable:
+                    this.doc.ApplicationRegistries = new ApplicationRegistries(this.doc, handle);
+                    break;
+                case StringCode.BlockRecordTable:
+                    this.doc.Blocks = new BlockRecords(this.doc, handle);
+                    return;
+                case StringCode.DimensionStyleTable:
+                    this.doc.DimensionStyles = new DimensionStyles(this.doc, handle);
+                    break;
+                case StringCode.LayerTable:
+                    this.doc.Layers = new Layers(this.doc, handle);
+                    break;
+                case StringCode.LineTypeTable:
+                    this.doc.LineTypes = new LineTypes(this.doc, handle);
+                    break;
+                case StringCode.TextStyleTable:
+                    this.doc.TextStyles = new TextStyles(this.doc, handle);
+                    break;
+                case StringCode.UcsTable:
+                    this.doc.UCSs = new UCSs(this.doc, handle);
+                    break;
+                case StringCode.ViewTable:
+                    this.doc.Views = new Views(this.doc, handle);
+                    break;
+                case StringCode.VportTable:
+                    this.doc.VPorts = new VPorts(this.doc, handle);
+                    break;
+            }
+        }
+
+        private void ReadTable()
+        {
+            Debug.Assert(this.dxfPairInfo.Value == StringCode.Table);
+
+            string handle = null;
             this.dxfPairInfo = this.ReadCodePair();
+            string tableName = this.dxfPairInfo.Value;
+            this.dxfPairInfo = this.ReadCodePair();
+
             while (this.dxfPairInfo.Value != StringCode.EndTable)
             {
-                if (this.dxfPairInfo.Value == StringCode.ApplicationIDTable)
+                switch (this.dxfPairInfo.Code)
                 {
-                    Debug.Assert(this.dxfPairInfo.Code == 0);
-                    ApplicationRegistry appId = this.ReadApplicationId();
-                    if (appId == null) continue;
-                    if (this.appRegistries.ContainsKey(appId.Name)) continue;
-                    this.appRegistries.Add(appId.Name, appId);
-                    this.appRegistryRefs.Add(appId.Name, new List<DxfObject>());
+                    case 5:
+                        handle = this.dxfPairInfo.Value;
+                        this.dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 330:
+                        string owner = this.dxfPairInfo.Value;
+                        // owner should be always, 0 handle of the document.
+                        Debug.Assert(owner == "0");
+                        this.dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 102:
+                        this.ReadExtensionDictionaryGroup();
+                        this.dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 0:
+                        this.CreateTableCollection(tableName, handle);
+                        this.ReadTableEntry(handle);
+                        break;
+                    default:
+                        this.dxfPairInfo = this.ReadCodePair();
+                        break;
                 }
-                else
+            }
+
+            this.dxfPairInfo = this.ReadCodePair();
+        }
+
+        private void ReadTableEntry(string ownerHandle)
+        {
+            string dxfCode = this.dxfPairInfo.Value;
+            string handle = null;
+
+            while (this.dxfPairInfo.Value != StringCode.EndTable)
+            {
+                // table entry common codes
+                while (this.dxfPairInfo.Code != 100)
                 {
-                    this.dxfPairInfo = this.ReadCodePair();
+                    switch (this.dxfPairInfo.Code)
+                    {
+                        case 5:
+                            handle = this.dxfPairInfo.Value;
+                            this.dxfPairInfo = this.ReadCodePair();
+                            break;
+                        case 105:
+                            // this handle code is specific of dimension styles
+                            handle = this.dxfPairInfo.Value;
+                            this.dxfPairInfo = this.ReadCodePair();
+                            break;
+                        case 330:
+                            string owner = this.dxfPairInfo.Value;
+                            // owner should be always, the handle of the list to which the entry belongs.
+                            Debug.Assert(owner == ownerHandle);
+                            this.dxfPairInfo = this.ReadCodePair();
+                            break;
+                        case 102:
+                            this.ReadExtensionDictionaryGroup();
+                            this.dxfPairInfo = this.ReadCodePair();
+                            break;
+                        default:
+                            this.dxfPairInfo = this.ReadCodePair();
+                            break;
+                    }
+                }
+
+                this.dxfPairInfo = this.ReadCodePair();
+
+                switch (dxfCode)
+                {
+                    case StringCode.ApplicationIDTable:
+                        ApplicationRegistry appReg = this.ReadApplicationId();
+                        if (appReg != null)
+                        {
+                            appReg.Handle = handle;
+                            this.doc.ApplicationRegistries.Add(appReg, false);
+                        }
+                        break;
+                    case StringCode.BlockRecordTable:
+                        BlockRecord record = this.ReadBlockRecord();
+                        if (record != null)
+                        {
+                            record.Handle = handle;
+                            this.blockRecords.Add(record.Name, record);
+                        }
+                        break;
+                    case StringCode.DimensionStyleTable:
+                        DimensionStyle dimStyle = this.ReadDimensionStyle();
+                        if (dimStyle != null)
+                        {
+                            dimStyle.Handle = handle;
+                            this.doc.DimensionStyles.Add(dimStyle, false);
+                        }
+                        break;
+                    case StringCode.LayerTable:
+                        Layer layer = this.ReadLayer();
+                        if (layer != null)
+                        {
+                            layer.Handle = handle;
+                            this.doc.Layers.Add(layer, false);
+                        }
+                        break;
+                    case StringCode.LineTypeTable:
+                        LineType lineType = this.ReadLineType();
+                        if (lineType != null)
+                        {
+                            lineType.Handle = handle;
+                            this.doc.LineTypes.Add(lineType, false);
+                        }
+                        break;
+                    case StringCode.TextStyleTable:
+                        TextStyle style = this.ReadTextStyle();
+                        if (style != null)
+                        {
+                            style.Handle = handle;
+                            this.doc.TextStyles.Add(style, false);
+                        }
+                        break;
+                    case StringCode.UcsTable:
+                        UCS ucs = this.ReadUCS();
+                        if (ucs != null)
+                        {
+                            ucs.Handle = handle;
+                            this.doc.UCSs.Add(ucs, false);
+                        }
+                        break;
+                    case StringCode.ViewTable:
+                        this.ReadView();
+                        //this.doc.Views.Add((View) entry);
+                        break;
+                    case StringCode.VportTable:
+                        this.ReadVPort();
+                        //this.doc.Vports.Add((VPort) entry);
+                        break;
+                    default:
+                        this.ReadUnkownTableEntry();
+                        return;
                 }
             }
         }
 
         private ApplicationRegistry ReadApplicationId()
         {
+            Debug.Assert(this.dxfPairInfo.Value == SubclassMarker.ApplicationId);
+
             string appId = string.Empty;
-            string handle = string.Empty;
             this.dxfPairInfo = this.ReadCodePair();
 
             while (this.dxfPairInfo.Code != 0)
@@ -939,10 +876,7 @@ namespace netDxf
                 switch (this.dxfPairInfo.Code)
                 {
                     case 2:
-                        appId = DecodeEncodedNonAsciiCharacters(this.dxfPairInfo.Value);
-                        break;
-                    case 5:
-                        handle = this.dxfPairInfo.Value;
+                        appId = this.DecodeEncodedNonAsciiCharacters(this.dxfPairInfo.Value);
                         break;
                 }
                 this.dxfPairInfo = this.ReadCodePair();
@@ -950,41 +884,19 @@ namespace netDxf
 
             if (string.IsNullOrEmpty(appId)) return null;
 
-            return new ApplicationRegistry(appId)
-                {
-                    Handle = handle
-                };
-        }
-
-        #endregion
-
-        #region blockrecord methods
-
-        private void ReadBlockRecords()
-        {
-            this.dxfPairInfo = this.ReadCodePair();
-            while (this.dxfPairInfo.Value != StringCode.EndTable)
-            {
-                if (this.dxfPairInfo.Value == StringCode.BlockRecordTable)
-                {
-                    Debug.Assert(this.dxfPairInfo.Code == 0);
-                    BlockRecord blockRecord = this.ReadBlockRecord();
-                    if (blockRecord == null) continue;
-                    if (this.blockRecords.ContainsKey(blockRecord.Name)) continue;
-                    this.blockRecords.Add(blockRecord.Name, blockRecord);
-                }
-                else
-                {
-                    this.dxfPairInfo = this.ReadCodePair();
-                }
-            }
+            return new ApplicationRegistry(appId);
         }
 
         private BlockRecord ReadBlockRecord()
         {
-            string handle = null;
+            Debug.Assert(this.dxfPairInfo.Value == SubclassMarker.BlockRecord);
+
             string name = null;
             DrawingUnits units = DrawingUnits.Unitless;
+            bool allowExploding = true;
+            bool scaleUniformly = false;
+
+            Dictionary<string, XData> xData = new Dictionary<string, XData>();
 
             this.dxfPairInfo = this.ReadCodePair();
 
@@ -992,21 +904,50 @@ namespace netDxf
             {
                 switch (this.dxfPairInfo.Code)
                 {
-                    case 5:
-                        handle = this.dxfPairInfo.Value;
-                        break;
                     case 2:
-                        name = DecodeEncodedNonAsciiCharacters(this.dxfPairInfo.Value);
-
-                        if (string.IsNullOrEmpty(name))
-                            throw new DxfInvalidCodeValueEntityException(this.dxfPairInfo.Code, name,
-                                                                         "Invalid value " + name + " in code " + this.dxfPairInfo.Code + ".");
+                        name = this.DecodeEncodedNonAsciiCharacters(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 70:
                         units = (DrawingUnits) int.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 280:
+                        allowExploding = int.Parse(this.dxfPairInfo.Value) != 0;
+                        this.dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 281:
+                        scaleUniformly = int.Parse(this.dxfPairInfo.Value) != 0;
+                        this.dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 1001:
+                        XData xDataItem = this.ReadXDataRecord(this.dxfPairInfo.Value);
+                        // to be safe if the xDataItem.ApplicationRegistry.Name already exists we will add the new entry to the existing one
+                        if (xData.ContainsKey(xDataItem.ApplicationRegistry.Name))
+                            xData[xDataItem.ApplicationRegistry.Name].XDataRecord.AddRange(xDataItem.XDataRecord);
+                        else
+                            xData.Add(xDataItem.ApplicationRegistry.Name, xDataItem);
+                        break;
+                    default:
+                        if (this.dxfPairInfo.Code >= 1000 && this.dxfPairInfo.Code <= 1071)
+                            throw new DxfInvalidCodeValueEntityException(this.dxfPairInfo.Code, this.dxfPairInfo.Value,
+                                                                         "The extended data of an entity must start with the application registry code.");
+                        this.dxfPairInfo = this.ReadCodePair();
                         break;
                 }
-                this.dxfPairInfo = this.ReadCodePair();
+            }
+
+            // here is where dxf versions prior to AutoCad2007 stores the block units
+            XData designCenterData;
+            if (xData.TryGetValue(ApplicationRegistry.Default.Name, out designCenterData))
+            {     
+                foreach (XDataRecord record in designCenterData.XDataRecord)
+                {
+                    // the second 1070 code is the one that stores the block units,
+                    // it will override the first 1070 that stores the Autodesk Design Center version number
+                    if (record.Code == XDataCode.Integer)
+                        units = (DrawingUnits) record.Value;
+                }    
             }
 
             if (string.IsNullOrEmpty(name)) return null;
@@ -1016,323 +957,17 @@ namespace netDxf
 
             return new BlockRecord(name)
                 {
-                    Handle = handle,
-                    Units = units
+                    Units = units,
+                    AllowExploding = allowExploding,
+                    ScaleUniformly = scaleUniformly
                 };
-        }
-
-        #endregion
-
-        #region layer methods
-
-        private void ReadLayers()
-        {
-            this.dxfPairInfo = this.ReadCodePair();
-            while (this.dxfPairInfo.Value != StringCode.EndTable)
-            {
-                if (this.dxfPairInfo.Value == StringCode.LayerTable)
-                {
-                    Debug.Assert(this.dxfPairInfo.Code == 0);
-                    Layer layer = this.ReadLayer();
-                    if (layer == null) continue;
-                    if (this.layers.ContainsKey(layer.Name)) continue;
-                    this.layers.Add(layer.Name, layer);
-                    this.layerRefs.Add(layer.Name, new List<DxfObject>());
-                    this.lineTypeRefs[layer.LineType.Name].Add(layer);
-                }
-                else
-                {
-                    this.dxfPairInfo = this.ReadCodePair();
-                }
-            }
-        }
-
-        private Layer ReadLayer()
-        {
-            string handle = null;
-            string name = null;
-            bool isVisible = true;
-            bool plot = true;
-            AciColor color = AciColor.Default;
-            LineType lineType = null;
-            Lineweight lineweight = Lineweight.Default;
-            LayerFlags flags = LayerFlags.None;
-
-            this.dxfPairInfo = this.ReadCodePair();
-
-            while (this.dxfPairInfo.Code != 0)
-            {
-                switch (this.dxfPairInfo.Code)
-                {
-                    case 5:
-                        handle = this.dxfPairInfo.Value;
-                        break;
-                    case 2:
-                        name = DecodeEncodedNonAsciiCharacters(this.dxfPairInfo.Value);
-                        break;
-                    case 70:
-                        flags = (LayerFlags)(int.Parse(this.dxfPairInfo.Value));
-                        break;
-                    case 62:
-                        short index = short.Parse(this.dxfPairInfo.Value);
-                        if (index < 0)
-                        {
-                            isVisible = false;
-                            index = Math.Abs(index);
-                        }
-                        if (!color.UseTrueColor)
-                            color = new AciColor(index);
-                        break;
-                    case 420: // the layer uses true color
-                        color = AciColor.FromTrueColor(int.Parse(this.dxfPairInfo.Value));
-                        break;
-                    case 6:
-                        // the linetype names ByLayer or ByBlock are case unsensitive
-                        string lineTypeName = this.dxfPairInfo.Value;
-                        if (String.Compare(lineTypeName, "ByLayer", StringComparison.OrdinalIgnoreCase) == 0)
-                            lineTypeName = "ByLayer";
-                        else if (String.Compare(lineTypeName, "ByBlock", StringComparison.OrdinalIgnoreCase) == 0)
-                            lineTypeName = "ByBlock";
-                        lineType = this.GetLineType(lineTypeName);
-                        break;
-                    case 290:
-                        if (int.Parse(this.dxfPairInfo.Value) == 0)
-                            plot = false;
-                        break;
-                    case 370:
-                        lineweight = Lineweight.FromCadIndex(short.Parse(this.dxfPairInfo.Value));
-                        this.dxfPairInfo = this.ReadCodePair();
-                        break;
-                }
-
-                this.dxfPairInfo = this.ReadCodePair();
-            }
-
-            if (string.IsNullOrEmpty(name)) return null;
-
-            return new Layer(name)
-                {
-                    Color = color,
-                    LineType = lineType,
-                    IsVisible = isVisible,
-                    IsFrozen = (flags & LayerFlags.Frozen) == LayerFlags.Frozen,
-                    IsLocked = (flags & LayerFlags.Locked) == LayerFlags.Locked,
-                    Plot = plot,
-                    Lineweight = lineweight,
-                    Handle = handle
-                };
-        }
-
-        #endregion
-
-        #region line type methods
-
-        private void ReadLineTypes()
-        {
-            this.dxfPairInfo = this.ReadCodePair();
-            while (this.dxfPairInfo.Value != StringCode.EndTable)
-            {
-                if (this.dxfPairInfo.Value == StringCode.LineTypeTable)
-                {
-                    Debug.Assert(this.dxfPairInfo.Code == 0);
-                    LineType tl = this.ReadLineType();
-                    if (tl == null) continue;
-                    if (this.lineTypes.ContainsKey(tl.Name)) continue;
-                    this.lineTypes.Add(tl.Name, tl);
-                    this.lineTypeRefs.Add(tl.Name, new List<DxfObject>());
-                }
-                else
-                {
-                    this.dxfPairInfo = this.ReadCodePair();
-                }
-            }
-        }
-
-        private LineType ReadLineType()
-        {
-            string handle = null;
-            string name = null;
-            string description = null;
-            List<double> segments = new List<double>();
-
-            this.dxfPairInfo = this.ReadCodePair();
-
-            while (this.dxfPairInfo.Code != 0)
-            {
-                switch (this.dxfPairInfo.Code)
-                {
-                    case 5:
-                        handle = this.dxfPairInfo.Value;
-                        break;
-                    case 2: // line type name is case insensitive
-                        name = this.dxfPairInfo.Value;
-                        if (String.Compare(name, "ByLayer", StringComparison.OrdinalIgnoreCase) == 0)
-                            name = "ByLayer";
-                        else if (String.Compare(name, "ByBlock", StringComparison.OrdinalIgnoreCase) == 0)
-                            name = "ByBlock";
-                        name = DecodeEncodedNonAsciiCharacters(name);
-                        break;
-                    case 3: // linetype description
-                        description = DecodeEncodedNonAsciiCharacters(this.dxfPairInfo.Value);
-                        break;
-                    case 73:
-                        //number of segments (not needed)
-                        break;
-                    case 40:
-                        //length of the line type segments (not needed)
-                        break;
-                    case 49:
-                        segments.Add(double.Parse(this.dxfPairInfo.Value));
-                        break;
-                }
-                this.dxfPairInfo = this.ReadCodePair();
-            }
-
-            if (string.IsNullOrEmpty(name)) return null;
-
-            return new LineType(name)
-                {
-                    Description = description,
-                    Segments = segments,
-                    Handle = handle
-                };
-        }
-
-        #endregion
-
-        #region text style methods
-
-        private void ReadTextStyles()
-        {
-            this.dxfPairInfo = this.ReadCodePair();
-            while (this.dxfPairInfo.Value != StringCode.EndTable)
-            {
-                if (this.dxfPairInfo.Value == StringCode.TextStyleTable)
-                {
-                    Debug.Assert(this.dxfPairInfo.Code == 0);
-                    TextStyle style = this.ReadTextStyle();
-                    if (style == null) continue;
-                    if (this.textStyles.ContainsKey(style.Name)) continue;
-                    this.textStyles.Add(style.Name, style);
-                    this.textStyleRefs.Add(style.Name, new List<DxfObject>());
-                }
-                else
-                {
-                    this.dxfPairInfo = this.ReadCodePair();
-                }
-            }
-        }
-
-        private TextStyle ReadTextStyle()
-        {
-            string handle = null;
-            string name = null;
-            string font = null;
-            bool isVertical = false;
-            bool isBackward = false;
-            bool isUpsideDown = false;
-            double height = 0.0f;
-            double widthFactor = 0.0f;
-            double obliqueAngle = 0.0f;
-
-            this.dxfPairInfo = this.ReadCodePair();
-
-            while (this.dxfPairInfo.Code != 0)
-            {
-                switch (this.dxfPairInfo.Code)
-                {
-                    case 5:
-                        handle = this.dxfPairInfo.Value;
-                        break;
-                    case 2:
-                        name = DecodeEncodedNonAsciiCharacters(this.dxfPairInfo.Value);
-                        break;
-                    case 3:
-                        font = DecodeEncodedNonAsciiCharacters(this.dxfPairInfo.Value);
-                        break;
-
-                    case 70:
-                        if (int.Parse(this.dxfPairInfo.Value) == 4)
-                            isVertical = true;
-                        break;
-                    case 71:
-                        if (int.Parse(this.dxfPairInfo.Value) == 6)
-                        {
-                            isBackward = true;
-                            isUpsideDown = true;
-                        }
-                        else if (int.Parse(this.dxfPairInfo.Value) == 2)
-                            isBackward = true;
-                        else if (int.Parse(this.dxfPairInfo.Value) == 4)
-                            isUpsideDown = true;
-                        break;
-                    case 40:
-                        height = double.Parse(this.dxfPairInfo.Value);
-                        if (height < 0.0)
-                            height = 0.0;
-                        break;
-                    case 41:
-                        widthFactor = double.Parse(this.dxfPairInfo.Value);
-                        if (widthFactor < 0.01 || widthFactor > 100.0)
-                            widthFactor = 1.0;
-                        break;
-                    case 42:
-                        //last text height used (not aplicable)
-                        break;
-                    case 50:
-                        obliqueAngle = double.Parse(this.dxfPairInfo.Value);
-                        if (obliqueAngle < -85.0 || obliqueAngle > 85.0)
-                            obliqueAngle = 0.0;
-                        break;
-                }
-                this.dxfPairInfo = this.ReadCodePair();
-            }
-
-            if (string.IsNullOrEmpty(name)) return null;
-            if (string.IsNullOrEmpty(font)) font = TextStyle.Default.FontName;
-
-            return new TextStyle(name, font)
-                {
-                    Height = height,
-                    IsBackward = isBackward,
-                    IsUpsideDown = isUpsideDown,
-                    IsVertical = isVertical,
-                    ObliqueAngle = obliqueAngle,
-                    WidthFactor = widthFactor,
-                    Handle = handle
-                };
-        }
-
-        #endregion
-
-        #region dimension style methods
-
-        private void ReadDimStyles()
-        {
-            this.dxfPairInfo = this.ReadCodePair();
-            while (this.dxfPairInfo.Value != StringCode.EndTable)
-            {
-                if (this.dxfPairInfo.Value == StringCode.DimensionStyleTable)
-                {
-                    Debug.Assert(this.dxfPairInfo.Code == 0); //el código 0 indica el inicio de una nueva capa
-                    DimensionStyle ds = this.ReadDimensionStyle();
-                    if (ds == null) continue;
-                    if (this.dimStyles.ContainsKey(ds.Name)) continue;
-                    this.dimStyles.Add(ds.Name, ds);
-                    this.dimStyleRefs.Add(ds.Name, new List<DxfObject>());
-                    this.textStyleRefs[ds.TextStyle.Name].Add(ds);
-                }
-                else
-                {
-                    this.dxfPairInfo = this.ReadCodePair();
-                }
-            }
         }
 
         private DimensionStyle ReadDimensionStyle()
         {
+            Debug.Assert(this.dxfPairInfo.Value == SubclassMarker.DimensionStyle);
+
             DimensionStyle defaultDim = DimensionStyle.Default;
-            string handle = null;
             string name = null;
             string txtStyleHandle = null;
 
@@ -1363,11 +998,8 @@ namespace netDxf
             {
                 switch (this.dxfPairInfo.Code)
                 {
-                    case 105:
-                        handle = this.dxfPairInfo.Value;
-                        break;
                     case 2:
-                        name = DecodeEncodedNonAsciiCharacters(this.dxfPairInfo.Value);
+                        name = this.DecodeEncodedNonAsciiCharacters(this.dxfPairInfo.Value);
                         break;
                     case 3:
                         dimpost = this.dxfPairInfo.Value;
@@ -1425,7 +1057,6 @@ namespace netDxf
 
             return new DimensionStyle(name)
                 {
-                    Handle = handle,
                     DIMEXO = dimexo,
                     DIMEXE = dimexe,
                     DIMASZ = dimasz,
@@ -1443,37 +1074,231 @@ namespace netDxf
                     DIMDSEP = dimdsep,
                     TextStyle = this.GetTextStyleByHandle(txtStyleHandle)
                 };
-
         }
 
-        #endregion
-
-        #region ucs methods
-
-        private void ReadUCSs()
+        private Layer ReadLayer()
         {
+            Debug.Assert(this.dxfPairInfo.Value == SubclassMarker.Layer);
+
+            string name = null;
+            bool isVisible = true;
+            bool plot = true;
+            AciColor color = AciColor.Default;
+            LineType lineType = null;
+            Lineweight lineweight = Lineweight.Default;
+            LayerFlags flags = LayerFlags.None;
+            Transparency transparency = new Transparency(0);
+
             this.dxfPairInfo = this.ReadCodePair();
-            while (this.dxfPairInfo.Value != StringCode.EndTable)
+
+            while (this.dxfPairInfo.Code != 0)
             {
-                if (this.dxfPairInfo.Value == StringCode.UcsTable)
+                switch (this.dxfPairInfo.Code)
                 {
-                    Debug.Assert(this.dxfPairInfo.Code == 0);
-                    UCS ucs = this.ReadUCS();
-                    if (ucs == null) continue;
-                    if (this.layers.ContainsKey(ucs.Name)) continue;
-                    this.ucss.Add(ucs.Name, ucs);
-                    this.ucsRefs.Add(ucs.Name, new List<DxfObject>());
-                }
-                else
-                {
-                    this.dxfPairInfo = this.ReadCodePair();
+                    case 2:
+                        name = this.DecodeEncodedNonAsciiCharacters(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 70:
+                        flags = (LayerFlags) (int.Parse(this.dxfPairInfo.Value));
+                        this.dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 62:
+                        short index = short.Parse(this.dxfPairInfo.Value);
+                        if (index < 0)
+                        {
+                            isVisible = false;
+                            index = Math.Abs(index);
+                        }
+                        if (!color.UseTrueColor)
+                            color = AciColor.FromCadIndex(index);
+
+                        this.dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 420: // the layer uses true color
+                        color = AciColor.FromTrueColor(int.Parse(this.dxfPairInfo.Value));
+                        this.dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 6:
+                        // the linetype names ByLayer or ByBlock are case unsensitive
+                        string lineTypeName = this.dxfPairInfo.Value;
+                        if (String.Compare(lineTypeName, "ByLayer", StringComparison.OrdinalIgnoreCase) == 0)
+                            lineTypeName = "ByLayer";
+                        else if (String.Compare(lineTypeName, "ByBlock", StringComparison.OrdinalIgnoreCase) == 0)
+                            lineTypeName = "ByBlock";
+                        lineType = this.GetLineType(lineTypeName);
+
+                        this.dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 290:
+                        if (int.Parse(this.dxfPairInfo.Value) == 0)
+                            plot = false;
+                        this.dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 370:
+                        lineweight = Lineweight.FromCadIndex(short.Parse(this.dxfPairInfo.Value));
+                        this.dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 1001:
+                         // layer transparency is stored in xdata
+                        // the ApplicationRegistries might be defined after the objects that requieres them,
+                        // same old story this time we don't need to store the information in the object xdata since it is only supported by entities.
+                        if (this.dxfPairInfo.Value == "AcCmTransparency")
+                        {
+                            this.dxfPairInfo = this.ReadCodePair();
+                            transparency = Transparency.FromAlphaValue(int.Parse(this.dxfPairInfo.Value));
+                        }
+                        this.dxfPairInfo = this.ReadCodePair();
+                        break;
+                    default:
+                        this.dxfPairInfo = this.ReadCodePair();
+                        break;
                 }
             }
+
+            if (string.IsNullOrEmpty(name)) return null;
+
+            return new Layer(name)
+                {
+                    Color = color,
+                    LineType = lineType,
+                    IsVisible = isVisible,
+                    IsFrozen = (flags & LayerFlags.Frozen) == LayerFlags.Frozen,
+                    IsLocked = (flags & LayerFlags.Locked) == LayerFlags.Locked,
+                    Plot = plot,
+                    Lineweight = lineweight,
+                    Transparency = transparency
+                };
+        }
+
+        private LineType ReadLineType()
+        {
+            Debug.Assert(this.dxfPairInfo.Value == SubclassMarker.LineType);
+
+            string name = null;
+            string description = null;
+            List<double> segments = new List<double>();
+
+            this.dxfPairInfo = this.ReadCodePair();
+
+            while (this.dxfPairInfo.Code != 0)
+            {
+                switch (this.dxfPairInfo.Code)
+                {
+                    case 2: // line type name is case insensitive
+                        name = this.dxfPairInfo.Value;
+                        if (String.Compare(name, LineType.ByLayer.Name, StringComparison.OrdinalIgnoreCase) == 0)
+                            name = LineType.ByLayer.Name;
+                        else if (String.Compare(name, LineType.ByBlock.Name, StringComparison.OrdinalIgnoreCase) == 0)
+                            name = LineType.ByBlock.Name;
+                        name = this.DecodeEncodedNonAsciiCharacters(name);
+                        break;
+                    case 3: // linetype description
+                        description = this.DecodeEncodedNonAsciiCharacters(this.dxfPairInfo.Value);
+                        break;
+                    case 73:
+                        //number of segments (not needed)
+                        break;
+                    case 40:
+                        //length of the line type segments (not needed)
+                        break;
+                    case 49:
+                        segments.Add(double.Parse(this.dxfPairInfo.Value));
+                        break;
+                }
+                this.dxfPairInfo = this.ReadCodePair();
+            }
+
+            if (string.IsNullOrEmpty(name)) return null;
+
+            return new LineType(name)
+                {
+                    Description = description,
+                    Segments = segments,
+                };
+        }
+
+        private TextStyle ReadTextStyle()
+        {
+            Debug.Assert(this.dxfPairInfo.Value == SubclassMarker.TextStyle);
+
+            string name = null;
+            string font = null;
+            bool isVertical = false;
+            bool isBackward = false;
+            bool isUpsideDown = false;
+            double height = 0.0f;
+            double widthFactor = 0.0f;
+            double obliqueAngle = 0.0f;
+
+            this.dxfPairInfo = this.ReadCodePair();
+
+            while (this.dxfPairInfo.Code != 0)
+            {
+                switch (this.dxfPairInfo.Code)
+                {
+                    case 2:
+                        name = this.DecodeEncodedNonAsciiCharacters(this.dxfPairInfo.Value);
+                        break;
+                    case 3:
+                        font = this.DecodeEncodedNonAsciiCharacters(this.dxfPairInfo.Value);
+                        break;
+
+                    case 70:
+                        if (int.Parse(this.dxfPairInfo.Value) == 4)
+                            isVertical = true;
+                        break;
+                    case 71:
+                        if (int.Parse(this.dxfPairInfo.Value) == 6)
+                        {
+                            isBackward = true;
+                            isUpsideDown = true;
+                        }
+                        else if (int.Parse(this.dxfPairInfo.Value) == 2)
+                            isBackward = true;
+                        else if (int.Parse(this.dxfPairInfo.Value) == 4)
+                            isUpsideDown = true;
+                        break;
+                    case 40:
+                        height = double.Parse(this.dxfPairInfo.Value);
+                        if (height < 0.0)
+                            height = 0.0;
+                        break;
+                    case 41:
+                        widthFactor = double.Parse(this.dxfPairInfo.Value);
+                        if (widthFactor < 0.01 || widthFactor > 100.0)
+                            widthFactor = 1.0;
+                        break;
+                    case 42:
+                        //last text height used (not aplicable)
+                        break;
+                    case 50:
+                        obliqueAngle = double.Parse(this.dxfPairInfo.Value);
+                        if (obliqueAngle < -85.0 || obliqueAngle > 85.0)
+                            obliqueAngle = 0.0;
+                        break;
+                }
+                this.dxfPairInfo = this.ReadCodePair();
+            }
+
+            if (string.IsNullOrEmpty(name)) return null;
+            if (string.IsNullOrEmpty(font)) font = TextStyle.Default.FontName;
+
+            return new TextStyle(name, font)
+                {
+                    Height = height,
+                    IsBackward = isBackward,
+                    IsUpsideDown = isUpsideDown,
+                    IsVertical = isVertical,
+                    ObliqueAngle = obliqueAngle,
+                    WidthFactor = widthFactor,
+                };
         }
 
         private UCS ReadUCS()
         {
-            string handle = null;
+            Debug.Assert(this.dxfPairInfo.Value == SubclassMarker.Ucs);
+
             string name = null;
             Vector3 origin = Vector3.Zero;
             Vector3 xDir = Vector3.UnitX;
@@ -1486,11 +1311,8 @@ namespace netDxf
             {
                 switch (this.dxfPairInfo.Code)
                 {
-                    case 5:
-                        handle = this.dxfPairInfo.Value;
-                        break;
                     case 2:
-                        name = DecodeEncodedNonAsciiCharacters(this.dxfPairInfo.Value);
+                        name = this.DecodeEncodedNonAsciiCharacters(this.dxfPairInfo.Value);
                         break;
                     case 10:
                         origin.X = double.Parse(this.dxfPairInfo.Value);
@@ -1531,66 +1353,63 @@ namespace netDxf
 
             return new UCS(name, origin, xDir, yDir)
                 {
-                    Handle = handle,
                     Elevation = elevation
                 };
+        }
+
+        private View ReadView()
+        {
+            Debug.Assert(this.dxfPairInfo.Value == SubclassMarker.View);
+
+            this.dxfPairInfo = this.ReadCodePair();
+
+            while (this.dxfPairInfo.Code != 0)
+            {
+                this.dxfPairInfo = this.ReadCodePair();
+            }
+
+            return null;
+        }
+
+        private VPort ReadVPort()
+        {
+            Debug.Assert(this.dxfPairInfo.Value == SubclassMarker.VPort);
+
+            this.dxfPairInfo = this.ReadCodePair();
+
+            while (this.dxfPairInfo.Code != 0)
+            {
+                this.dxfPairInfo = this.ReadCodePair();
+            }
+
+            return null;
+        }
+
+        private void ReadUnkownTableEntry()
+        {
+            this.dxfPairInfo = this.ReadCodePair();
+
+            while (this.dxfPairInfo.Code != 0)
+            {
+                this.dxfPairInfo = this.ReadCodePair();
+            }
         }
 
         #endregion
 
         #region block methods
 
-        private void ReadBlocks()
-        {
-            this.dxfPairInfo = this.ReadCodePair();
-            while (this.dxfPairInfo.Value != StringCode.EndSection)
-            {
-                switch (this.dxfPairInfo.Value)
-                {
-                    case StringCode.BeginBlock:
-                        Block block = this.ReadBlock();
-                        this.blocks.Add(block.Name, block);
-                        this.layerRefs[block.Layer.Name].Add(block);
-                        break;
-                    default:
-                        this.dxfPairInfo = this.ReadCodePair();
-                        break;
-                }
-            }
-
-            // post process the possible nested blocks,
-            // in nested blocks (blocks that contains Insert entities) the block definition might be defined AFTER the block that references them
-            foreach (KeyValuePair<Insert, string> pair in this.nestedBlocks)
-            {
-                Insert insert = pair.Key;
-                insert.Block = this.blocks[pair.Value];
-                this.blockRefs[insert.Block.Name].Add(insert);
-                foreach (Attribute att in insert.Attributes)
-                {
-                    string attDefId = this.nestedBlocksAttributes[att];
-                    // attribute definitions might be null if an INSERT entity attribute has not been defined in the block
-                    AttributeDefinition attDef;
-                    insert.Block.Attributes.TryGetValue(attDefId, out attDef);
-                    att.Definition = attDef;
-                }
-            }
-            foreach (KeyValuePair<Dimension, string> pair in this.nestedDimBlocks)
-            {
-                Dimension dim = pair.Key;
-                dim.Block = this.blocks[pair.Value];
-            }
-        }
-
         private Block ReadBlock()
         {
-            BlockRecord blockRecord = null;
+            Debug.Assert(this.dxfPairInfo.Value == StringCode.BeginBlock);
+
+            BlockRecord blockRecord;
             Layer layer = null;
             string name = string.Empty;
             string handle = string.Empty;
             BlockTypeFlags type = BlockTypeFlags.None;
             Vector3 basePoint = Vector3.Zero;
-            List<EntityObject> entities = new List<EntityObject>();
-            Dictionary<string, AttributeDefinition> attdefs = new Dictionary<string, AttributeDefinition>();
+            List<EntityObject> blockEntities = new List<EntityObject>();
 
             this.dxfPairInfo = this.ReadCodePair();
             while (this.dxfPairInfo.Value != StringCode.EndBlock)
@@ -1606,9 +1425,7 @@ namespace netDxf
                         this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 2:
-                        name = DecodeEncodedNonAsciiCharacters(this.dxfPairInfo.Value);
-                        if (!this.blockRecords.TryGetValue(name, out blockRecord))
-                            throw new DxfTableException(StringCode.BlockRecordTable, "The block record " + name + " is not defined");
+                        name = this.DecodeEncodedNonAsciiCharacters(this.dxfPairInfo.Value);
                         this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 70:
@@ -1629,24 +1446,13 @@ namespace netDxf
                         break;
                     case 3:
                         //I don't know the reason of these duplicity since code 2 also contains the block name
-                        //The program EASE exports code 3 with an empty string
+                        //The program EASE exports code 3 with an empty string (use it or don't use it but do NOT mix information)
                         //name = dxfPairInfo.Value;
                         this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 0: // entity
                         EntityObject entity = this.ReadEntity(true);
-                        if (entity != null)
-                            if (entity.Type == EntityType.AttributeDefinition)
-                            {
-                                // autocad allows duplicate tags in attribute definitions, but this library does not
-                                // having duplicate tags is not recommended in any way, since there will be now way to know which is the definition
-                                // associated to the insert attribute
-                                AttributeDefinition attDef = (AttributeDefinition) entity;
-                                if (!attdefs.ContainsKey(attDef.Tag))
-                                    attdefs.Add(((AttributeDefinition) entity).Tag, attDef);
-                            }
-                            else
-                                entities.Add(entity);
+                        if (entity != null) blockEntities.Add(entity);
                         break;
                     default:
                         this.dxfPairInfo = this.ReadCodePair();
@@ -1676,20 +1482,54 @@ namespace netDxf
                 }
             }
 
-            this.blockRefs.Add(name, new List<DxfObject>());
+            if (!this.blockRecords.TryGetValue(name, out blockRecord))
+                throw new DxfTableException(StringCode.BlockRecordTable, "The block record " + name + " is not defined");
+
+            BlockEnd end = new BlockEnd
+                {
+                    Handle = endBlockHandle,
+                    Owner = blockRecord,
+                    Layer = endBlockLayer
+                };
+
             Block block = new Block(name, false)
                 {
-                    Record = blockRecord,
+                    Handle = handle,
+                    Owner = blockRecord,
                     Position = basePoint,
                     Layer = layer,
-                    Entities = entities,
-                    Attributes = attdefs,
-                    Handle = handle,
-                    TypeFlags = type
+                    Flags = type,
+                    End = end
                 };
-            block.End.Handle = endBlockHandle;
-            block.End.Layer = endBlockLayer;
-            
+
+
+            if (name.StartsWith(Block.PaperSpace.Name, StringComparison.OrdinalIgnoreCase))
+            {
+                // the dxf is not consistent with the way they handle entities that belong to different paper spaces.
+                // While the entities of *Paper_Space block are stored in the ENTITIES section as the *Model_Space,
+                // the list of entities in *Paper_Space# are stored in the block definition itself.
+                // As all this entities do not need an insert entity to have a visual representation,
+                // they will be stored in the global entities lists together with the rest of the entities of *Model_Space and *Paper_Space
+                foreach (EntityObject entity in blockEntities)
+                    this.entityList.Add(entity, blockRecord.Handle);
+
+                // this kind of blocks do not store attribute definitions
+            }
+            else
+            {
+                // add attribute definitions and entities
+                foreach (EntityObject entity in blockEntities)
+                {
+                    if (entity.Type == EntityType.AttributeDefinition)
+                        // autocad allows duplicate tags in attribute definitions, but this library does not
+                        // having duplicate tags is not recommended in any way, since there will be now way to know which is the definition
+                        // associated to the insert attribute
+                        block.AttributeDefinitions.Add((AttributeDefinition) entity);
+                    else
+                        block.Entities.Add(entity);
+                }
+            }
+
             return block;
         }
 
@@ -1715,15 +1555,15 @@ namespace netDxf
                 switch (this.dxfPairInfo.Code)
                 {
                     case 2:
-                        id = DecodeEncodedNonAsciiCharacters(this.dxfPairInfo.Value);
+                        id = this.DecodeEncodedNonAsciiCharacters(this.dxfPairInfo.Value);
                         this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 3:
-                        text = DecodeEncodedNonAsciiCharacters(this.dxfPairInfo.Value);
+                        text = this.DecodeEncodedNonAsciiCharacters(this.dxfPairInfo.Value);
                         this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 1:
-                        value = DecodeEncodedNonAsciiCharacters(this.dxfPairInfo.Value);
+                        value = this.DecodeEncodedNonAsciiCharacters(this.dxfPairInfo.Value);
                         this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 70:
@@ -1813,8 +1653,6 @@ namespace netDxf
                     Rotation = rotation
                 };
 
-            this.textStyleRefs[style.Name].Add(attDef);
-
             return attDef;
         }
 
@@ -1901,7 +1739,7 @@ namespace netDxf
                 }
             }
 
-            string attdefId = null;
+            string atttag = null;
             AttributeDefinition attdef = null;
             Object value = null;
 
@@ -1911,14 +1749,15 @@ namespace netDxf
                 switch (this.dxfPairInfo.Code)
                 {
                     case 2:
-                        attdefId = DecodeEncodedNonAsciiCharacters(this.dxfPairInfo.Value);
+                        atttag = this.DecodeEncodedNonAsciiCharacters(this.dxfPairInfo.Value);
                         // seems that some programs (sketchup AFAIK) might export insert entities with attributtes which definitions are not defined in the block
+                        // if it is not present the insert attribute will have a null definition
                         if (!isBlockEntity)
-                            block.Attributes.TryGetValue(attdefId, out attdef);
+                            block.AttributeDefinitions.TryGetValue(atttag, out attdef);
                         this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 1:
-                        value = DecodeEncodedNonAsciiCharacters(this.dxfPairInfo.Value);
+                        value = this.DecodeEncodedNonAsciiCharacters(this.dxfPairInfo.Value);
                         this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 70:
@@ -1994,8 +1833,9 @@ namespace netDxf
             TextAlignment alignment = ObtainAlignment(horizontalAlignment, verticalAlignment);
             Vector3 ocsBasePoint = alignment == TextAlignment.BaselineLeft ? firstAlignmentPoint : secondAlignmentPoint;
 
-            Attribute att = new Attribute
+            return new Attribute
                 {
+                    Owner = block,
                     Handle = handle,
                     Color = color,
                     Layer = layer,
@@ -2003,7 +1843,7 @@ namespace netDxf
                     Lineweight = lineweight,
                     LineTypeScale = linetypeScale,
                     Definition = attdef,
-                    Tag = attdefId,
+                    Tag = atttag,
                     Position = ocsBasePoint,
                     Normal = normal,
                     Alignment = alignment,
@@ -2014,15 +1854,6 @@ namespace netDxf
                     WidthFactor = MathHelper.IsZero(widthFactor) ? style.WidthFactor : widthFactor,
                     Rotation = rotation
                 };
-
-            if (isBlockEntity)
-                if (attdefId != null) this.nestedBlocksAttributes.Add(att, attdefId);
-
-            this.layerRefs[att.Layer.Name].Add(att);
-            this.lineTypeRefs[att.LineType.Name].Add(att);
-            this.textStyleRefs[att.Style.Name].Add(att);
-
-            return att;
         }
 
         #endregion
@@ -2032,12 +1863,14 @@ namespace netDxf
         private EntityObject ReadEntity(bool isBlockEntity)
         {
             string handle = null;
+            string owner = null;
             Layer layer = this.GetLayer(Layer.Default.Name);
             AciColor color = AciColor.ByLayer;
             LineType lineType = this.GetLineType(LineType.ByLayer.Name);
             Lineweight lineweight = Lineweight.ByLayer;
             double linetypeScale = 1.0;
             bool isVisible = true;
+            Transparency transparency = Transparency.ByLayer;
 
             EntityObject entity;
 
@@ -2053,6 +1886,14 @@ namespace netDxf
                         throw new DxfEntityException(dxfCode, "Premature end of entity definition.");
                     case 5:
                         handle = this.dxfPairInfo.Value;
+                        this.dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 102:
+                        this.ReadExtensionDictionaryGroup();
+                        this.dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 330:
+                        owner = this.dxfPairInfo.Value;
                         this.dxfPairInfo = this.ReadCodePair();
                         break;
                     default:
@@ -2082,13 +1923,17 @@ namespace netDxf
                         color = AciColor.FromTrueColor(int.Parse(this.dxfPairInfo.Value));
                         this.dxfPairInfo = this.ReadCodePair();
                         break;
+                    case 440: //transparency
+                        transparency = Transparency.FromAlphaValue(int.Parse(this.dxfPairInfo.Value));
+                        this.dxfPairInfo = this.ReadCodePair();
+                        break;
                     case 6: //type line code
                         // the linetype names ByLayer or ByBlock are case unsensitive
                         string lineTypeName = this.dxfPairInfo.Value;
-                        if (String.Compare(lineTypeName, "ByLayer", StringComparison.OrdinalIgnoreCase) == 0)
-                            lineTypeName = "ByLayer";
-                        else if (String.Compare(lineTypeName, "ByBlock", StringComparison.OrdinalIgnoreCase) == 0)
-                            lineTypeName = "ByBlock";
+                        if (String.Compare(lineTypeName, LineType.ByLayer.Name, StringComparison.OrdinalIgnoreCase) == 0)
+                            lineTypeName = LineType.ByLayer.Name;
+                        else if (String.Compare(lineTypeName, LineType.ByBlock.Name, StringComparison.OrdinalIgnoreCase) == 0)
+                            lineTypeName = LineType.ByBlock.Name;
                         lineType = this.GetLineType(lineTypeName);
                         this.dxfPairInfo = this.ReadCodePair();
                         break;
@@ -2172,10 +2017,16 @@ namespace netDxf
                 case DxfObjectCode.AttributeDefinition:
                     entity = this.ReadAttributeDefinition();
                     break;
+                case DxfObjectCode.Viewport:
+                    entity = this.ReadViewport();
+                    break;
                 default:
                     this.ReadUnknowEntity();
                     return null;
             }
+
+            if (entity == null) return null;
+
             entity.Handle = handle;
             entity.Layer = layer;
             entity.Color = color;
@@ -2183,21 +2034,229 @@ namespace netDxf
             entity.Lineweight = lineweight;
             entity.LineTypeScale = linetypeScale;
             entity.IsVisible = isVisible;
+            entity.Transparency = transparency;
 
-            this.addedEntity.Add(entity.Handle, entity);
-            this.layerRefs[layer.Name].Add(entity);
-            this.lineTypeRefs[entity.LineType.Name].Add(entity);
-            if (entity.XData != null)
+            // the entities list will be processed at the end
+            if (!isBlockEntity) this.entityList.Add(entity, owner);
+
+            return entity;
+        }
+
+        private Viewport ReadViewport()
+        {
+            Debug.Assert(this.dxfPairInfo.Value == SubclassMarker.Viewport);
+
+            Viewport viewport = new Viewport();
+            Vector3 center = viewport.Center;
+            Vector2 viewCenter = viewport.ViewCenter;
+            Vector2 snapBase = viewport.SnapBase;
+            Vector2 snapSpacing = viewport.SnapSpacing;
+            Vector2 gridSpacing = viewport.GridSpacing;
+            Vector3 viewDirection = viewport.ViewDirection;
+            Vector3 viewTarget = viewport.ViewTarget;
+            Vector3 ucsOrigin = Vector3.Zero;
+            Vector3 ucsXAxis = Vector3.UnitX;
+            Vector3 ucsYAxis = Vector3.UnitY;
+
+            Dictionary<string, XData> xData = new Dictionary<string, XData>();
+
+            this.dxfPairInfo = this.ReadCodePair();
+            while (this.dxfPairInfo.Code != 0)
             {
-                foreach (string registry in entity.XData.Keys)
+                switch (this.dxfPairInfo.Code)
                 {
-                    this.appRegistryRefs[registry].Add(entity);
+                    case 10:
+                        center.X = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 20:
+                        center.Y = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 30:
+                        center.Z = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 40:
+                        viewport.Width = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 41:
+                        viewport.Height = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 68:
+                        viewport.Stacking = short.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 69:
+                        viewport.Id = short.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 12:
+                        viewCenter.X = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 22:
+                        viewCenter.Y = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 13:
+                        snapBase.X = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 23:
+                        snapBase.Y = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 14:
+                        snapSpacing.X = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 24:
+                        snapSpacing.Y = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 15:
+                        gridSpacing.X = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 25:
+                        gridSpacing.Y = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 16:
+                        viewDirection.X = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 26:
+                        viewDirection.Y = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 36:
+                        viewDirection.Z = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 17:
+                        viewTarget.X = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 27:
+                        viewTarget.Y = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 37:
+                        viewTarget.Z = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 42:
+                        viewport.LensLength = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 43:
+                        viewport.FrontClipPlane = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 44:
+                        viewport.BackClipPlane = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 45:
+                        viewport.ViewHeight = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 50:
+                        viewport.SnapAngle = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 51:
+                        viewport.TwistAngle = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 72:
+                        viewport.CircleZoomPercent = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 331:
+                        Layer layer = (Layer) this.doc.GetObjectByHandle(this.dxfPairInfo.Value);
+                        viewport.FrozenLayers.Add(layer);
+                        this.dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 90:
+                        viewport.Status = (ViewportStatusFlags) int.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 340:
+                        // we will postprocess the clipping boundary in case it has been defined before the viewport
+                        this.viewports.Add(viewport, this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 110:
+                        ucsOrigin.X = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 120:
+                        ucsOrigin.Y = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 130:
+                        ucsOrigin.Z = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 111:
+                        ucsXAxis.X = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 121:
+                        ucsXAxis.Y = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 131:
+                        ucsXAxis.Z = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 112:
+                        ucsYAxis.X = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 122:
+                        ucsYAxis.Y = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 132:
+                        ucsYAxis.Z = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 1001:
+                        XData xDataItem = this.ReadXDataRecord(this.dxfPairInfo.Value);
+                        // to be safe if the xDataItem.ApplicationRegistry.Name already exists we will add the new entry to the existing one
+                        if (xData.ContainsKey(xDataItem.ApplicationRegistry.Name))
+                            xData[xDataItem.ApplicationRegistry.Name].XDataRecord.AddRange(xDataItem.XDataRecord);
+                        else
+                            xData.Add(xDataItem.ApplicationRegistry.Name, xDataItem);
+                        break;
+                    default:
+                        if (this.dxfPairInfo.Code >= 1000 && this.dxfPairInfo.Code <= 1071)
+                            throw new DxfInvalidCodeValueEntityException(this.dxfPairInfo.Code, this.dxfPairInfo.Value,
+                                                                         "The extended data of an entity must start with the application registry code.");
+                        this.dxfPairInfo = this.ReadCodePair();
+                        break;
                 }
             }
 
-            
+            viewport.Center = center;
+            viewport.ViewCenter = viewCenter;
+            viewport.SnapBase = snapBase;
+            viewport.SnapSpacing = snapSpacing;
+            viewport.GridSpacing = gridSpacing;
+            viewport.ViewDirection = viewDirection;
+            viewport.ViewTarget = viewTarget;
+            viewport.UcsOrigin = ucsOrigin;
+            viewport.UcsXAxis = ucsXAxis;
+            viewport.UcsYAxis = ucsYAxis;
+            viewport.XData = xData;
 
-            return entity;
+            return viewport;
         }
 
         private Image ReadImage()
@@ -2371,6 +2430,7 @@ namespace netDxf
             Dictionary<string, XData> xData = new Dictionary<string, XData>();
 
             this.dxfPairInfo = this.ReadCodePair();
+
             while (this.dxfPairInfo.Code != 0)
             {
                 switch (this.dxfPairInfo.Code)
@@ -2553,7 +2613,7 @@ namespace netDxf
                     case 3:
                         string styleName = this.dxfPairInfo.Value;
                         if (string.IsNullOrEmpty(styleName))
-                            styleName = this.headerVariables.DimStyle;
+                            styleName = this.doc.DrawingVariables.DimStyle;
                         style = this.GetDimensionStyle(styleName);
                         this.dxfPairInfo = this.ReadCodePair();
                         break;
@@ -2686,11 +2746,7 @@ namespace netDxf
             dim.Normal = normal;
 
             if (isBlockEntity)
-                this.nestedDimBlocks.Add(dim, drawingBlockName);
-            else
-                this.blockRefs[drawingBlockName].Add(dim);
-
-            this.dimStyleRefs[style.Name].Add(dim);
+                this.nestedDimensions.Add(dim, drawingBlockName);
 
             return dim;
         }
@@ -3282,7 +3338,7 @@ namespace netDxf
                     XData = xData
                 };
 
-            SetEllipseParameters(ellipse, param);
+            this.SetEllipseParameters(ellipse, param);
             return ellipse;
         }
 
@@ -3842,7 +3898,7 @@ namespace netDxf
                 }
             }
 
-            
+
             if (this.dxfPairInfo.Value == DxfObjectCode.Attribute)
             {
                 while (this.dxfPairInfo.Value != StringCode.EndSequence)
@@ -3851,7 +3907,6 @@ namespace netDxf
                     if (attribute != null)
                         attributes.Add(attribute);
                 }
-                
             }
 
             string endSequenceHandle = string.Empty;
@@ -3882,6 +3937,12 @@ namespace netDxf
             // It is a lot more intuitive to give the position in world coordinates and then define the orientation with the normal.
             Vector3 wcsBasePoint = MathHelper.Transform(basePoint, normal, MathHelper.CoordinateSystem.Object, MathHelper.CoordinateSystem.World);
 
+            EndSequence end = new EndSequence
+                {
+                    Handle = endSequenceHandle,
+                    Layer = endSequenceLayer
+                };
+
             Insert insert = new Insert
                 {
                     Block = block,
@@ -3889,20 +3950,15 @@ namespace netDxf
                     Rotation = rotation,
                     Scale = scale,
                     Normal = normal,
+                    Attributes = new AttributeDictionary(attributes),
+                    EndSequence = end,
+                    XData = xData
+
                 };
 
-            insert.EndSequence.Handle = endSequenceHandle;
-            insert.EndSequence.Layer = endSequenceLayer;
-            insert.Attributes.Clear();
-            insert.Attributes.AddRange(attributes);
-            insert.XData = xData;
-
-            if (blockName == null)
-                throw new NullReferenceException("The insert block name cannot be null.");
+            // post process nested inserts
             if (isBlockEntity)
-                this.nestedBlocks.Add(insert, blockName);
-            else
-                this.blockRefs[blockName].Add(insert);
+                this.nestedInserts.Add(insert, blockName);
 
             return insert;
         }
@@ -4132,7 +4188,7 @@ namespace netDxf
                         // the MLineStyle will be applied to the MLine after parsing the whole file
                         styleName = this.dxfPairInfo.Value;
                         if (string.IsNullOrEmpty(styleName))
-                            styleName = this.headerVariables.CMLStyle;
+                            styleName = this.doc.DrawingVariables.CMLStyle;
                         this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 40:
@@ -4222,6 +4278,7 @@ namespace netDxf
 
             // save the referenced style name for postprocessing
             this.mLineToStyleNames.Add(mline, styleName);
+
             return mline;
         }
 
@@ -4648,13 +4705,13 @@ namespace netDxf
                     case 40:
                         height = double.Parse(this.dxfPairInfo.Value);
                         if (height <= 0.0)
-                            height = this.headerVariables.TextSize;
+                            height = this.doc.DrawingVariables.TextSize;
                         this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 41:
                         widthFactor = double.Parse(this.dxfPairInfo.Value);
                         if (widthFactor < 0.01 || widthFactor > 100.0)
-                            widthFactor = this.headerVariables.TextSize;
+                            widthFactor = this.doc.DrawingVariables.TextSize;
                         this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 50:
@@ -4670,7 +4727,7 @@ namespace netDxf
                     case 7:
                         string styleName = this.dxfPairInfo.Value;
                         if (string.IsNullOrEmpty(styleName))
-                            styleName = this.headerVariables.TextStyle;
+                            styleName = this.doc.DrawingVariables.TextStyle;
                         style = this.GetTextStyle(styleName);
                         this.dxfPairInfo = this.ReadCodePair();
                         break;
@@ -4717,7 +4774,7 @@ namespace netDxf
 
             // another example of this ocs vs wcs non sense.
             // while the MText position is written in WCS the position of the Text is written in OCS (different rules for the same concept).
-            textString = DecodeEncodedNonAsciiCharacters(textString);
+            textString = this.DecodeEncodedNonAsciiCharacters(textString);
             Text text = new Text
                 {
                     Value = textString,
@@ -4731,8 +4788,6 @@ namespace netDxf
                     Alignment = alignment,
                     XData = xData
                 };
-
-            this.textStyleRefs[text.Style.Name].Add(text);
 
             return text;
         }
@@ -4793,7 +4848,7 @@ namespace netDxf
                     case 40:
                         height = double.Parse(this.dxfPairInfo.Value);
                         if (height <= 0.0)
-                            height = this.headerVariables.TextSize;
+                            height = this.doc.DrawingVariables.TextSize;
                         this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 41:
@@ -4814,7 +4869,7 @@ namespace netDxf
                     case 7:
                         string styleName = this.dxfPairInfo.Value;
                         if (string.IsNullOrEmpty(styleName))
-                            styleName = this.headerVariables.TextStyle;
+                            styleName = this.doc.DrawingVariables.TextStyle;
                         style = this.GetTextStyle(styleName);
                         this.dxfPairInfo = this.ReadCodePair();
                         break;
@@ -4852,7 +4907,7 @@ namespace netDxf
                 }
             }
 
-            textString = DecodeEncodedNonAsciiCharacters(textString);
+            textString = this.DecodeEncodedNonAsciiCharacters(textString);
 
             MText mText = new MText
                 {
@@ -4870,14 +4925,13 @@ namespace netDxf
                     XData = xData
                 };
 
-            this.textStyleRefs[style.Name].Add(mText);
             return mText;
         }
 
         private Hatch ReadHatch()
         {
             string name = string.Empty;
-            FillType fill = FillType.SolidFill;
+            HatchFillType fill = HatchFillType.SolidFill;
             double elevation = 0.0;
             Vector3 normal = Vector3.UnitZ;
             HatchPattern pattern = HatchPattern.Line;
@@ -4917,8 +4971,8 @@ namespace netDxf
                         break;
                     case 70:
                         // Solid fill flag
-                        fill = (FillType) int.Parse(this.dxfPairInfo.Value);
-                        if (fill == FillType.SolidFill) name = PredefinedHatchPatternName.Solid;
+                        fill = (HatchFillType) int.Parse(this.dxfPairInfo.Value);
+                        //if (fill == HatchFillType.SolidFill) name = PredefinedHatchPatternName.Solid;
                         this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 71:
@@ -4948,6 +5002,24 @@ namespace netDxf
                 }
             }
 
+            // here is where dxf stores the pattern origin
+            XData patternOrigin;
+            Vector2 origin = Vector2.Zero;
+            if (xData.TryGetValue(ApplicationRegistry.Default.Name, out patternOrigin))
+            {
+                foreach (XDataRecord record in patternOrigin.XDataRecord)
+                {
+                    if (record.Code == XDataCode.RealX)
+                        origin.X = (double) record.Value;
+                    else if (record.Code == XDataCode.RealY)
+                        origin.Y = (double)record.Value;
+                    // record.Code == XDataCode.RealZ is always 0
+                }
+            }
+            pattern.Origin = origin;
+
+            if (paths.Count == 0) return null;
+
             return new Hatch(pattern, paths)
                 {
                     Elevation = elevation,
@@ -4959,22 +5031,40 @@ namespace netDxf
         private List<HatchBoundaryPath> ReadHatchBoundaryPaths(int numPaths)
         {
             List<HatchBoundaryPath> paths = new List<HatchBoundaryPath>();
-
             this.dxfPairInfo = this.ReadCodePair();
-
+            HatchBoundaryPathTypeFlag pathTypeFlag = HatchBoundaryPathTypeFlag.Derived | HatchBoundaryPathTypeFlag.External;
             while (paths.Count < numPaths)
             {
+                HatchBoundaryPath path;
+
                 switch (this.dxfPairInfo.Code)
                 {
                     case 92:
-                        BoundaryPathTypeFlag pathTypeFlag = (BoundaryPathTypeFlag) int.Parse(this.dxfPairInfo.Value);
-                        if ((pathTypeFlag & BoundaryPathTypeFlag.Polyline) == BoundaryPathTypeFlag.Polyline)
-                            paths.Add(this.ReadPolylineBoundaryPath());
+                        pathTypeFlag = (HatchBoundaryPathTypeFlag)int.Parse(this.dxfPairInfo.Value);
+                        // adding External and Derived to all path type flags solves an strange problem with code 98 not found,
+                        // it seems related to the code 47 that appears before, only some combinations of flags are affected
+                        // this is what the documentation says about code 47:
+                        // Pixel size used to determine the density to perform various intersection and ray casting operations
+                        // in hatch pattern computation for associative hatches and hatches created with the Flood method of hatching
+                        pathTypeFlag = pathTypeFlag | HatchBoundaryPathTypeFlag.External | HatchBoundaryPathTypeFlag.Derived;
+
+                        if ((pathTypeFlag & HatchBoundaryPathTypeFlag.Polyline) == HatchBoundaryPathTypeFlag.Polyline)
+                        {
+                            path = this.ReadEdgePolylineBoundaryPath();
+                            path.PathTypeFlag = pathTypeFlag;
+                            paths.Add(path);
+                        }
                         this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 93:
                         int numEdges = int.Parse(this.dxfPairInfo.Value);
-                        paths.Add(this.ReadEdgeBoundaryPath(numEdges));
+                        path = this.ReadEdgeBoundaryPath(numEdges);
+                        path.PathTypeFlag = pathTypeFlag;
+                        paths.Add(path);
+                        this.dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 330:
+                        // references to boundary objects, not supported
                         this.dxfPairInfo = this.ReadCodePair();
                         break;
                     default:
@@ -4985,19 +5075,21 @@ namespace netDxf
             return paths;
         }
 
-        private HatchBoundaryPath ReadPolylineBoundaryPath()
+        private HatchBoundaryPath ReadEdgePolylineBoundaryPath()
         {
-            List<LwPolylineVertex> vertexes = new List<LwPolylineVertex>();
+            HatchBoundaryPath.Polyline poly = new HatchBoundaryPath.Polyline();
+
             this.dxfPairInfo = this.ReadCodePair();
 
             bool hasBulge = int.Parse(this.dxfPairInfo.Value) != 0;
             this.dxfPairInfo = this.ReadCodePair();
 
             // is polyline closed
-            bool isClosed = int.Parse(this.dxfPairInfo.Value) == 1;
+            poly.IsClosed = int.Parse(this.dxfPairInfo.Value) == 1;
             this.dxfPairInfo = this.ReadCodePair();
 
             int numVertexes = int.Parse(this.dxfPairInfo.Value); // code 93
+            poly.Vertexes = new Vector3[numVertexes];
             this.dxfPairInfo = this.ReadCodePair();
 
             for (int i = 0; i < numVertexes; i++)
@@ -5012,26 +5104,25 @@ namespace netDxf
                     bulge = double.Parse(this.dxfPairInfo.Value); // code 42
                     this.dxfPairInfo = this.ReadCodePair();
                 }
-                vertexes.Add(new LwPolylineVertex(x, y, bulge));
+                poly.Vertexes[i] = new Vector3(x, y, bulge);
             }
-
-            LwPolyline polyline = new LwPolyline(vertexes, isClosed);
-            List<EntityObject> entities = isClosed ? new List<EntityObject> {polyline} : polyline.Explode();
-            return new HatchBoundaryPath(entities);
+            return new HatchBoundaryPath(new List<HatchBoundaryPath.Edge> {poly});
         }
 
         private HatchBoundaryPath ReadEdgeBoundaryPath(int numEdges)
         {
             // the information of the boundary path data always appear exactly as it is readed
-            List<EntityObject> entities = new List<EntityObject>();
+            List<HatchBoundaryPath.Edge> entities = new List<HatchBoundaryPath.Edge>();
             this.dxfPairInfo = this.ReadCodePair();
 
             while (entities.Count < numEdges)
             {
                 // Edge type (only if boundary is not a polyline): 1 = Line; 2 = Circular arc; 3 = Elliptic arc; 4 = Spline
-                switch (int.Parse(this.dxfPairInfo.Value))
+                if (this.dxfPairInfo.Code != 72) throw new ArgumentException();
+                HatchBoundaryPath.EdgeType type = (HatchBoundaryPath.EdgeType) int.Parse(this.dxfPairInfo.Value);
+                switch (type)
                 {
-                    case 1:
+                    case HatchBoundaryPath.EdgeType.Line:
                         this.dxfPairInfo = this.ReadCodePair();
                         // line
                         double lX1 = double.Parse(this.dxfPairInfo.Value); // code 10
@@ -5042,9 +5133,13 @@ namespace netDxf
                         this.dxfPairInfo = this.ReadCodePair();
                         double lY2 = double.Parse(this.dxfPairInfo.Value); // code 21
                         this.dxfPairInfo = this.ReadCodePair();
-                        entities.Add(new Line(new Vector3(lX1, lY1, 0.0), new Vector3(lX2, lY2, 0.0)));
+
+                        HatchBoundaryPath.Line line = new HatchBoundaryPath.Line();
+                        line.Start = new Vector2(lX1, lY1);
+                        line.End = new Vector2(lX2, lY2);
+                        entities.Add(line);
                         break;
-                    case 2:
+                    case HatchBoundaryPath.EdgeType.Arc:
                         this.dxfPairInfo = this.ReadCodePair();
                         // circular arc
                         double aX = double.Parse(this.dxfPairInfo.Value); // code 10
@@ -5059,12 +5154,16 @@ namespace netDxf
                         this.dxfPairInfo = this.ReadCodePair();
                         bool aCCW = int.Parse(this.dxfPairInfo.Value) != 0; // code 73
                         this.dxfPairInfo = this.ReadCodePair();
-                        // a full circle will never happen, AutoCAD exports circle boundary paths as two vertex polylines with bulges of 1 and -1
-                        entities.Add(aCCW
-                                         ? new Arc(new Vector3(aX, aY, 0.0), aR, aStart, aEnd)
-                                         : new Arc(new Vector3(aX, aY, 0.0), aR, 360 - aEnd, 360 - aStart));
+
+                        HatchBoundaryPath.Arc arc = new HatchBoundaryPath.Arc();
+                        arc.Center = new Vector2(aX, aY);
+                        arc.Radius = aR;
+                        arc.StartAngle = aStart;
+                        arc.EndAngle = aEnd;
+                        arc.IsCounterclockwise = aCCW;
+                        entities.Add(arc);
                         break;
-                    case 3:
+                    case HatchBoundaryPath.EdgeType.Ellipse:
                         this.dxfPairInfo = this.ReadCodePair();
                         // elliptic arc
                         double eX = double.Parse(this.dxfPairInfo.Value); // code 10
@@ -5084,42 +5183,37 @@ namespace netDxf
                         bool eCCW = int.Parse(this.dxfPairInfo.Value) != 0; // code 73
                         this.dxfPairInfo = this.ReadCodePair();
 
-                        Vector3 center = new Vector3(eX, eY, 0.0);
-                        Vector3 axisPoint = new Vector3(eAxisX, eAxisY, 0.0);
-                        Vector3 ocsAxisPoint = MathHelper.Transform(axisPoint,
-                                                                    Vector3.UnitZ,
-                                                                    MathHelper.CoordinateSystem.World,
-                                                                    MathHelper.CoordinateSystem.Object);
-                        double rotation = Vector2.Angle(new Vector2(ocsAxisPoint.X, ocsAxisPoint.Y))*MathHelper.RadToDeg;
-                        double majorAxis = 2*axisPoint.Modulus();
-                        Ellipse ellipse = new Ellipse
-                            {
-                                MajorAxis = majorAxis,
-                                MinorAxis = majorAxis*eAxisRatio,
-                                Rotation = rotation,
-                                Center = center,
-                                StartAngle = eCCW ? eStart : 360 - eEnd,
-                                EndAngle = eCCW ? eEnd : 360 - eStart,
-                                Normal = Vector3.UnitZ
-                            };
-
+                        HatchBoundaryPath.Ellipse ellipse = new HatchBoundaryPath.Ellipse();
+                        ellipse.Center = new Vector2(eX, eY);
+                        ellipse.EndMajorAxis = new Vector2(eAxisX, eAxisY);
+                        ellipse.MinorRatio = eAxisRatio;
+                        ellipse.StartAngle = eStart;
+                        ellipse.EndAngle = eEnd;
+                        ellipse.IsCounterclockwise = eCCW;
+                        
                         entities.Add(ellipse);
                         break;
-                    case 4:
+                    case HatchBoundaryPath.EdgeType.Spline:
                         this.dxfPairInfo = this.ReadCodePair();
                         // spline
-                        List<SplineVertex> controlPoints = new List<SplineVertex>();
+
                         short degree = short.Parse(this.dxfPairInfo.Value); // code 94
                         this.dxfPairInfo = this.ReadCodePair();
-                        int isRational = int.Parse(this.dxfPairInfo.Value); // code 73
+
+                        bool isRational = int.Parse(this.dxfPairInfo.Value) != 0; // code 73
                         this.dxfPairInfo = this.ReadCodePair();
-                        int isPeriodic = int.Parse(this.dxfPairInfo.Value); // code 74
+
+                        bool isPeriodic = int.Parse(this.dxfPairInfo.Value) != 0; // code 74
                         this.dxfPairInfo = this.ReadCodePair();
+
                         int numKnots = int.Parse(this.dxfPairInfo.Value); // code 95
-                        this.dxfPairInfo = this.ReadCodePair();
-                        int numControlPoints = int.Parse(this.dxfPairInfo.Value); // code 96
-                        this.dxfPairInfo = this.ReadCodePair();
                         double[] knots = new double[numKnots];
+                        this.dxfPairInfo = this.ReadCodePair();
+
+                        int numControlPoints = int.Parse(this.dxfPairInfo.Value); // code 96
+                        Vector3[] controlPoints = new Vector3[numControlPoints];
+                        this.dxfPairInfo = this.ReadCodePair();
+                     
                         for (int i = 0; i < numKnots; i++)
                         {
                             knots[i] = double.Parse(this.dxfPairInfo.Value); // code 40
@@ -5128,24 +5222,26 @@ namespace netDxf
 
                         for (int i = 0; i < numControlPoints; i++)
                         {
-                            double w = 1.0;
                             double x = double.Parse(this.dxfPairInfo.Value); // code 10
                             this.dxfPairInfo = this.ReadCodePair();
+
                             double y = double.Parse(this.dxfPairInfo.Value); // code 20
                             this.dxfPairInfo = this.ReadCodePair();
+
                             // control point weight might not be present
+                            double w = 1.0;
                             if (this.dxfPairInfo.Code == 42)
                             {
                                 w = double.Parse(this.dxfPairInfo.Value); // code 42
                                 this.dxfPairInfo = this.ReadCodePair();
                             }
 
-                            controlPoints.Add(new SplineVertex(x, y, 0.0, w));
+                            controlPoints[i] = new Vector3(x, y, w);
                         }
 
                         // this information is only required for AutoCAD version 2010
                         // stores information about spline fit point (the spline entity does not make use of this information)
-                        if (this.headerVariables.AcadVer >= DxfVersion.AutoCad2010)
+                        if (this.doc.DrawingVariables.AcadVer >= DxfVersion.AutoCad2010)
                         {
                             int numFitData = int.Parse(this.dxfPairInfo.Value); // code 97
                             this.dxfPairInfo = this.ReadCodePair();
@@ -5175,7 +5271,14 @@ namespace netDxf
                             }
                         }
 
-                        Spline spline = new Spline(controlPoints, knots, degree);
+                        //Spline spline = new Spline(controlPoints, knots, degree);
+                        HatchBoundaryPath.Spline spline = new HatchBoundaryPath.Spline();
+                        spline.Degree = degree;
+                        spline.IsPeriodic = isPeriodic;
+                        spline.IsRational = isRational;
+                        spline.ControlPoints = controlPoints;
+                        spline.Knots = knots;
+
                         entities.Add(spline);
                         break;
                 }
@@ -5279,13 +5382,11 @@ namespace netDxf
 
             this.dxfPairInfo = this.ReadCodePair(); // code 463 not needed (0.0)
             this.dxfPairInfo = this.ReadCodePair(); // code 63
-            //AciColor color1 = new AciColor(short.Parse(dxfPairInfo.Value));
             this.dxfPairInfo = this.ReadCodePair(); // code 421
             AciColor color1 = AciColor.FromTrueColor(int.Parse(this.dxfPairInfo.Value));
 
             this.dxfPairInfo = this.ReadCodePair(); // code 463 not needed (1.0)
             this.dxfPairInfo = this.ReadCodePair(); // code 63
-            //AciColor color2 = new AciColor(short.Parse(dxfPairInfo.Value));
             this.dxfPairInfo = this.ReadCodePair(); // code 421
             AciColor color2 = AciColor.FromTrueColor(int.Parse(this.dxfPairInfo.Value));
 
@@ -5492,11 +5593,44 @@ namespace netDxf
 
         #region object methods
 
+        private void CreateObjectCollection(DictionaryObject namedDict)
+        {
+            string groupsHandle = null;
+            string layoutsHandle = null;
+            string mlineStylesHandle = null;
+            string imageDefsHandle = null;
+
+            foreach (KeyValuePair<string, string> entry in namedDict.Entries)
+            {
+                switch (entry.Value)
+                {
+                    case StringCode.GroupDictionary:
+                        groupsHandle = entry.Key;
+                        break;
+                    case StringCode.LayoutDictionary:
+                        layoutsHandle = entry.Key;
+                        break;
+                    case StringCode.MLineStyleDictionary:
+                        mlineStylesHandle = entry.Key;
+                        break;
+                    case StringCode.ImageDefDictionary:
+                        imageDefsHandle = entry.Key;
+                        break;
+                }
+            }
+
+            // create the collections with the provided handles
+            this.doc.Groups = new Groups(this.doc, groupsHandle);
+            this.doc.Layouts = new Layouts(this.doc, layoutsHandle);
+            this.doc.MlineStyles = new MLineStyles(this.doc, mlineStylesHandle);
+            this.doc.ImageDefinitions = new ImageDefinitions(this.doc, imageDefsHandle);
+        }
+
         private DictionaryObject ReadDictionary()
         {
             string handle = null;
             string handleOwner = null;
-            ClonningFlag clonning = ClonningFlag.KeepExisting;
+            DictionaryClonningFlag clonning = DictionaryClonningFlag.KeepExisting;
             bool isHardOwner = false;
             int numEntries = 0;
             List<string> names = new List<string>();
@@ -5520,12 +5654,12 @@ namespace netDxf
                         this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 281:
-                        clonning = (ClonningFlag) int.Parse(this.dxfPairInfo.Value);
+                        clonning = (DictionaryClonningFlag) int.Parse(this.dxfPairInfo.Value);
                         this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 3:
                         numEntries += 1;
-                        names.Add(DecodeEncodedNonAsciiCharacters(this.dxfPairInfo.Value));
+                        names.Add(this.DecodeEncodedNonAsciiCharacters(this.dxfPairInfo.Value));
                         this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 350: // Soft-owner ID/handle to entry object 
@@ -5543,12 +5677,17 @@ namespace netDxf
                 }
             }
 
-            DictionaryObject dictionary = new DictionaryObject(handleOwner)
+            DxfObject owner = null;
+            //if (handleOwner != null)
+            //    owner = this.doc.AddedObjects[handleOwner];
+
+            DictionaryObject dictionary = new DictionaryObject(owner)
                 {
                     Handle = handle,
                     IsHardOwner = isHardOwner,
                     Clonning = clonning
                 };
+
             for (int i = 0; i < numEntries; i++)
             {
                 string id = handlesToOwner[i];
@@ -5602,7 +5741,7 @@ namespace netDxf
             double width = 0, height = 0;
             float wPixel = 0.0f;
             float hPixel = 0.0f;
-            ResolutionUnits units = ResolutionUnits.NoUnits;
+            ImageResolutionUnits units = ImageResolutionUnits.NoUnits;
 
             this.dxfPairInfo = this.ReadCodePair();
             while (this.dxfPairInfo.Code != 0)
@@ -5634,7 +5773,7 @@ namespace netDxf
                         this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 281:
-                        units = (ResolutionUnits) int.Parse(this.dxfPairInfo.Value);
+                        units = (ImageResolutionUnits) int.Parse(this.dxfPairInfo.Value);
                         this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 330:
@@ -5655,12 +5794,15 @@ namespace netDxf
                 name = imageDefDict.Entries[handle];
             }
 
-            ImageDef imageDef = new ImageDef(fileName, (int) width, 25.4f/wPixel, (int) height, 25.4f/hPixel, name, units)
+            // The documentation says that this is the size of one pixel in AutoCAD units, but it seems that this is always the size of one pixel in milimeters
+            // this value is used to calculate the image resolution in ppi or ppc, and the default image size.
+            // The documentation in this regard and its relation with the final image size in drawing units is a complete nonsense
+            double factor = MathHelper.ConversionFactor((ImageUnits)units, DrawingUnits.Millimeters);
+            ImageDef imageDef = new ImageDef(fileName, name, (int)width, (float)factor / wPixel, (int)height, (float)factor / hPixel, units)
                 {
                     Handle = handle
                 };
 
-            this.imageDefRefs.Add(imageDef.Name, new List<DxfObject>());
             this.imgDefHandles.Add(imageDef.Handle, imageDef);
             return imageDef;
         }
@@ -5716,11 +5858,11 @@ namespace netDxf
                         this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 2:
-                        name = DecodeEncodedNonAsciiCharacters(this.dxfPairInfo.Value);
+                        name = this.DecodeEncodedNonAsciiCharacters(this.dxfPairInfo.Value);
                         this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 3:
-                        description = DecodeEncodedNonAsciiCharacters(this.dxfPairInfo.Value);
+                        description = this.DecodeEncodedNonAsciiCharacters(this.dxfPairInfo.Value);
                         this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 62:
@@ -5759,7 +5901,6 @@ namespace netDxf
             }
             if (string.IsNullOrEmpty(name)) return null;
 
-            this.mlineStyleRefs.Add(name, new List<DxfObject>());
             MLineStyle style = new MLineStyle(name, description)
                 {
                     Handle = handle,
@@ -5769,11 +5910,6 @@ namespace netDxf
                     EndAngle = endAngle,
                     Elements = elements
                 };
-
-            foreach (MLineStyleElement e in elements)
-            {
-                this.lineTypeRefs[e.LineType.Name].Add(style);
-            }
 
             return style;
         }
@@ -5826,8 +5962,7 @@ namespace netDxf
             string name = null;
             bool isUnnamed = true;
             bool isSelectable = true;
-            List<EntityObject> entities = new List<EntityObject>();
-
+            List<string> entities = new List<string>();
             this.dxfPairInfo = this.ReadCodePair();
             while (this.dxfPairInfo.Code != 0)
             {
@@ -5858,11 +5993,8 @@ namespace netDxf
                         this.dxfPairInfo = this.ReadCodePair();
                         break;
                     case 340:
-                        // the groups are defined in the objects section after the entities section, any entity included in a group has been previously defined
-                        EntityObject entity;
-                        this.addedEntity.TryGetValue(this.dxfPairInfo.Value, out entity);
-                        if (entity != null)
-                            entities.Add(entity);
+                        string entity = this.dxfPairInfo.Value;
+                        entities.Add(entity);
                         this.dxfPairInfo = this.ReadCodePair();
                         break;
                     default:
@@ -5881,23 +6013,341 @@ namespace netDxf
                     Name = name,
                     Description = description,
                     IsUnnamed = isUnnamed,
-                    IsSelectable = isSelectable,
-                    Entities = entities
+                    IsSelectable = isSelectable
                 };
-            this.groupRefs.Add(group.Name, new List<DxfObject>());
+
+            // the group entities will be processed later
+            this.groupEntities.Add(group, entities);
+
             return group;
+        }
+
+        private Layout ReadLayout()
+        {
+            PlotSettings plot = new PlotSettings();
+            string handle = null;
+            string owner = null;
+            string name = null;
+            int tabOrder = 1;
+            Vector2 minLimit = new Vector2(-20.0, -7.5);
+            Vector2 maxLimit = new Vector2(277.0, 202.5);
+            Vector3 basePoint = Vector3.Zero;
+            Vector3 minExtents = new Vector3(25.7, 19.5, 0.0);
+            Vector3 maxExtents = new Vector3(231.3, 175.5, 0.0);
+            double elevation = 0;
+            Vector3 ucsOrigin = Vector3.Zero;
+            Vector3 ucsXAxis = Vector3.UnitX;
+            Vector3 ucsYAxis = Vector3.UnitY;
+            BlockRecord ownerRecord = null;
+            //Block ownerBlock = null;
+
+            string dxfCode = this.dxfPairInfo.Value;
+            this.dxfPairInfo = this.ReadCodePair();
+
+            // DxfObject common codes
+            while (this.dxfPairInfo.Code != 100)
+            {
+                switch (this.dxfPairInfo.Code)
+                {
+                    case 0:
+                        throw new DxfEntityException(dxfCode, "Premature end of object definition.");
+                    case 5:
+                        handle = this.dxfPairInfo.Value;
+                        this.dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 102:
+                        this.ReadExtensionDictionaryGroup();
+                        this.dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 330:
+                        owner = this.dxfPairInfo.Value;
+                        this.dxfPairInfo = this.ReadCodePair();
+                        break;
+                    default:
+                        this.dxfPairInfo = this.ReadCodePair();
+                        break;
+                }
+            }
+
+            while (this.dxfPairInfo.Code != 0)
+            {
+                switch (this.dxfPairInfo.Code)
+                {
+                    case 100:
+                        if (this.dxfPairInfo.Value == SubclassMarker.PlotSettings)
+                            plot = this.ReadPlotSettings();
+                        this.dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 1:
+                        name = this.DecodeEncodedNonAsciiCharacters(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 10:
+                        minLimit.X = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 20:
+                        minLimit.X = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 11:
+                        maxLimit.X = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 21:
+                        maxLimit.Y = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 12:
+                        basePoint.X = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 22:
+                        basePoint.Y = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 32:
+                        basePoint.Z = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 14:
+                        minExtents.X = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 24:
+                        minExtents.Y = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 34:
+                        minExtents.Z = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 15:
+                        maxExtents.X = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 25:
+                        maxExtents.Y = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 35:
+                        maxExtents.Z = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 146:
+                        elevation = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 13:
+                        ucsOrigin.X = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 23:
+                        ucsOrigin.Y = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 33:
+                        ucsOrigin.Z = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 16:
+                        ucsXAxis.X = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 26:
+                        ucsXAxis.Y = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 36:
+                        ucsXAxis.Z = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 17:
+                        ucsYAxis.X = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 27:
+                        ucsYAxis.Y = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 37:
+                        ucsYAxis.Z = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 330:
+                        string blockHandle = this.dxfPairInfo.Value;
+                        ownerRecord = (BlockRecord) this.doc.GetObjectByHandle(blockHandle);
+                        this.dxfPairInfo = this.ReadCodePair();
+                        break;
+                    default:
+                        this.dxfPairInfo = this.ReadCodePair();
+                        break;
+                }
+            }
+
+            // if the layout has an invalid block record discard it
+            if (ownerRecord == null)
+                return null;
+
+            Layout layout = new Layout(name)
+                {
+                    PlotSettings = plot,
+                    Handle = handle,
+                    TabOrder = tabOrder,
+                    MinLimit = minLimit,
+                    MaxLimit = maxLimit,
+                    BasePoint = basePoint,
+                    MinExtents = minExtents,
+                    MaxExtents = maxExtents,
+                    Elevation = elevation,
+                    UcsOrigin = ucsOrigin,
+                    UcsXAxis = ucsXAxis,
+                    UcsYAxis = ucsYAxis,
+                    AssociatedBlock = this.doc.Blocks[ownerRecord.Name]
+                };
+
+            return layout;
+        }
+
+        private PlotSettings ReadPlotSettings()
+        {
+            PlotSettings plot = new PlotSettings();
+            Vector2 paperSize = plot.PaperSize;
+            Vector2 windowBottomLeft = plot.WindowBottomLeft;
+            Vector2 windowUpRight = plot.WindowUpRight;
+            Vector2 paperImageOrigin = plot.PaperImageOrigin;
+
+            this.dxfPairInfo = this.ReadCodePair();
+            while (this.dxfPairInfo.Code != 100)
+            {
+                switch (this.dxfPairInfo.Code)
+                {
+                    case 1:
+                        plot.PageSetupName = this.dxfPairInfo.Value;
+                        this.dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 2:
+                        plot.PlotterName = this.dxfPairInfo.Value;
+                        this.dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 4:
+                        plot.PaperSizeName = this.dxfPairInfo.Value;
+                        this.dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 6:
+                        plot.ViewName = this.dxfPairInfo.Value;
+                        this.dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 40:
+                        plot.LeftMargin = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 41:
+                        plot.BottomMargin = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 42:
+                        plot.RightMargin = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 43:
+                        plot.TopMargin = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 44:
+                        paperSize.X = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 45:
+                        paperSize.Y = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 48:
+                        windowBottomLeft.X = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 49:
+                        windowUpRight.X = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 140:
+                        windowBottomLeft.Y = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 141:
+                        windowUpRight.Y = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 142:
+                        plot.PrintScaleNumerator = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 143:
+                        plot.PrintScaleDenominator = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 70:
+                        plot.Flags = (PlotFlags) int.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 72:
+                        plot.PaperUnits = (PlotPaperUnits) int.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 73:
+                        plot.PaperRotation = (PlotRotation) int.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 148:
+                        paperImageOrigin.X = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
+                        break;
+                    case 149:
+                        paperImageOrigin.Y = double.Parse(this.dxfPairInfo.Value);
+                        this.dxfPairInfo = this.ReadCodePair();
+                        break;
+                    default:
+                        this.dxfPairInfo = this.ReadCodePair();
+                        break;
+                }
+            }
+
+            plot.PaperSize = paperSize;
+            plot.WindowBottomLeft = windowBottomLeft;
+            plot.WindowUpRight = windowUpRight;
+            plot.PaperImageOrigin = paperImageOrigin;
+
+            return plot;
         }
 
         #endregion
 
         #region private methods
 
+        private void ReadExtensionDictionaryGroup()
+        {
+            string dictionaryGroup = this.dxfPairInfo.Value.Remove(0, 1);
+            this.dxfPairInfo = this.ReadCodePair();
+
+            while (this.dxfPairInfo.Code != 102)
+            {
+                switch (this.dxfPairInfo.Code)
+                {
+                    case 330:
+                        break;
+                    case 360:
+                        break;
+                }
+                this.dxfPairInfo = this.ReadCodePair();
+            }
+        }
+
         private string DecodeEncodedNonAsciiCharacters(string text)
         {
             if (string.IsNullOrEmpty(text)) return text;
 
             string decoded;
-            if (buffer.TryGetValue(text, out decoded)) return decoded;
+            if (this.decodedStrings.TryGetValue(text, out decoded)) return decoded;
 
             int length = text.Length;
             StringBuilder sb = new StringBuilder();
@@ -5915,7 +6365,7 @@ namespace netDxf
                             string hex = text.Substring(i + 3, 4);
                             if (int.TryParse(hex, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out value))
                             {
-                                c = (char)value;
+                                c = (char) value;
                                 i += 6;
                             }
                         }
@@ -5932,7 +6382,7 @@ namespace netDxf
             //    @"\\U\+(?<hex>[a-zA-Z0-9]{4})",
             //    m => ((char)int.Parse(m.Groups["hex"].Value, NumberStyles.HexNumber)).ToString(CultureInfo.InvariantCulture), RegexOptions.IgnoreCase);
 
-            this.buffer.Add(text, decoded);
+            this.decodedStrings.Add(text, decoded);
             return decoded;
         }
 
@@ -5961,24 +6411,24 @@ namespace netDxf
         {
             // the autocad block names has the form *D#
             // we need to find which is the last available number, in case more dimensions are added
-            if (!name.StartsWith("*D", StringComparison.InvariantCultureIgnoreCase)) return;
+            if (!name.StartsWith("*D", StringComparison.OrdinalIgnoreCase)) return;
             int num;
             string token = name.Remove(0, 2);
             if (!int.TryParse(token, out num)) return;
-            if (num > this.dimensionBlocksGenerated)
-                this.dimensionBlocksGenerated = num;
+            if (num > this.doc.DimensionBlocksGenerated)
+                this.doc.DimensionBlocksGenerated = num;
         }
 
         private void CheckGroupName(string name)
         {
             // the autocad group names has the form *A#
             // we need to find which is the last available number, in case more groups are added
-            if (!name.StartsWith("*A", StringComparison.InvariantCultureIgnoreCase)) return;
+            if (!name.StartsWith("*A", StringComparison.OrdinalIgnoreCase)) return;
             int num;
             string token = name.Remove(0, 2);
             if (!int.TryParse(token, out num)) return;
-            if (num > this.groupNamesGenerated)
-                this.groupNamesGenerated = num;
+            if (num > this.doc.GroupNamesGenerated)
+                this.doc.GroupNamesGenerated = num;
         }
 
         private static TextAlignment ObtainAlignment(int horizontal, int vertical)
@@ -6035,114 +6485,98 @@ namespace netDxf
 
         private ApplicationRegistry GetApplicationRegistry(string name)
         {
-            name = DecodeEncodedNonAsciiCharacters(name);
+            name = this.DecodeEncodedNonAsciiCharacters(name);
 
             ApplicationRegistry appReg;
-            if (this.appRegistries.TryGetValue(name, out appReg))
+            if (this.doc.ApplicationRegistries.TryGetValue(name, out appReg))
                 return appReg;
 
             // if an entity references a table object not defined in the tables section a new one will be created
             appReg = new ApplicationRegistry(name);
-            long numHandle = appReg.AsignHandle(long.Parse(this.HeaderVariables.HandleSeed, NumberStyles.HexNumber));
-            this.headerVariables.HandleSeed = numHandle.ToString("X");
-            this.appRegistries.Add(name, appReg);
+            this.doc.ApplicationRegistries.Add(appReg);
             return appReg;
         }
 
         private Block GetBlock(string name)
         {
             Block block;
-            if (this.blocks.TryGetValue(name, out block))
+            if (this.doc.Blocks.TryGetValue(name, out block))
                 return block;
             throw new ArgumentException("The block with name " + name + " does not exist.");
         }
 
         private Layer GetLayer(string name)
         {
-            name = DecodeEncodedNonAsciiCharacters(name);
+            name = this.DecodeEncodedNonAsciiCharacters(name);
 
             Layer layer;
-            if (this.layers.TryGetValue(name, out layer))
+            if (this.doc.Layers.TryGetValue(name, out layer))
                 return layer;
 
             // if an entity references a table object not defined in the tables section a new one will be created
             layer = new Layer(name);
             layer.LineType = this.GetLineType(layer.LineType.Name);
-            long numHandle = layer.AsignHandle(long.Parse(this.HeaderVariables.HandleSeed, NumberStyles.HexNumber));
-            this.headerVariables.HandleSeed = numHandle.ToString("X");
-            this.layers.Add(name, layer);
-            this.layerRefs.Add(name, new List<DxfObject>());
+            this.doc.Layers.Add(layer);
             return layer;
         }
 
         private LineType GetLineType(string name)
         {
-            name = DecodeEncodedNonAsciiCharacters(name);
+            name = this.DecodeEncodedNonAsciiCharacters(name);
 
             LineType lineType;
-            if (this.lineTypes.TryGetValue(name, out lineType))
+            if (this.doc.LineTypes.TryGetValue(name, out lineType))
                 return lineType;
 
             // if an entity references a table object not defined in the tables section a new one will be created
             lineType = new LineType(name);
-            long numHandle = lineType.AsignHandle(long.Parse(this.HeaderVariables.HandleSeed, NumberStyles.HexNumber));
-            this.headerVariables.HandleSeed = numHandle.ToString("X");
-            this.lineTypes.Add(name, lineType);
-            this.lineTypeRefs.Add(name, new List<DxfObject>());
+            this.doc.LineTypes.Add(lineType);
             return lineType;
         }
 
         private TextStyle GetTextStyle(string name)
         {
-            name = DecodeEncodedNonAsciiCharacters(name);
+            name = this.DecodeEncodedNonAsciiCharacters(name);
 
             TextStyle style;
-            if (this.textStyles.TryGetValue(name, out style))
+            if (this.doc.TextStyles.TryGetValue(name, out style))
                 return style;
 
             // if an entity references a table object not defined in the tables section a new one will be created
             style = new TextStyle(name);
-            long numHandle = style.AsignHandle(long.Parse(this.HeaderVariables.HandleSeed, NumberStyles.HexNumber));
-            this.headerVariables.HandleSeed = numHandle.ToString("X");
-            this.textStyles.Add(name, style);
-            this.textStyleRefs.Add(name, new List<DxfObject>());
+            this.doc.TextStyles.Add(style);
             return style;
         }
 
         private TextStyle GetTextStyleByHandle(string handle)
         {
-            foreach (TextStyle style in this.textStyles.Values)
-            {
-                if (style.Handle == handle)
-                    return style;
-            }
-            throw new ArgumentException("The text style with handle " + handle + " does not exist.");
+            TextStyle style = (TextStyle) this.doc.GetObjectByHandle(handle);
+            if (style == null)
+                throw new ArgumentException("The text style with handle " + handle + " does not exist.");
+            return style;
         }
 
         private DimensionStyle GetDimensionStyle(string name)
         {
-            name = DecodeEncodedNonAsciiCharacters(name);
+            name = this.DecodeEncodedNonAsciiCharacters(name);
 
             DimensionStyle style;
-            if (this.dimStyles.TryGetValue(name, out style))
+            if (this.doc.DimensionStyles.TryGetValue(name, out style))
                 return style;
 
             // if an entity references a table object not defined in the tables section a new one will be created
             style = new DimensionStyle(name);
             style.TextStyle = this.GetTextStyle(style.TextStyle.Name);
-            long numHandle = style.AsignHandle(long.Parse(this.HeaderVariables.HandleSeed, NumberStyles.HexNumber));
-            this.headerVariables.HandleSeed = numHandle.ToString("X");
-            this.dimStyles.Add(name, style);
-            this.dimStyleRefs.Add(name, new List<DxfObject>());
+            this.doc.DimensionStyles.Add(style);
             return style;
         }
 
         private MLineStyle GetMLineStyle(string name)
         {
-            name = DecodeEncodedNonAsciiCharacters(name);
+            name = this.DecodeEncodedNonAsciiCharacters(name);
 
             MLineStyle style;
-            if (this.mlineStyles.TryGetValue(name, out style))
+            if (this.doc.MlineStyles.TryGetValue(name, out style))
                 return style;
             throw new ArgumentException("The mline style with name " + name + " does not exist.");
 
@@ -6157,21 +6591,6 @@ namespace netDxf
             //this.mlineStyles.Add(name, mlineStyle);
             //this.mlineStyleRefs.Add(name, new List<DxfObject>());
             //return mlineStyle;
-        }
-
-        private static CodeValuePair ReadCodePair(TextReader reader)
-        {
-            int intCode;
-            string readCode = reader.ReadLine();
-            if (!int.TryParse(readCode, out intCode))
-                throw (new DxfException("Invalid group code " + readCode));
-            string value = reader.ReadLine();
-            return new CodeValuePair(intCode, value);
-        }
-
-        private CodeValuePair ReadCodePair()
-        {
-            return ReadCodePair(this.reader);
         }
 
         private XData ReadXDataRecord(string appId)
@@ -6191,28 +6610,23 @@ namespace netDxf
                 switch (code)
                 {
                     case XDataCode.String:
-                        value = DecodeEncodedNonAsciiCharacters(this.dxfPairInfo.Value);
+                        value = this.DecodeEncodedNonAsciiCharacters(this.dxfPairInfo.Value);
                         break;
                     case XDataCode.AppReg:
-                        // Application name cannot apper inside the extended data, AutoCAD assumes it is the beginning of a new application extended data group
+                        // Application name cannot appear inside the extended data, AutoCAD assumes it is the beginning of a new application extended data group
                         break;
-
                     case XDataCode.ControlString:
                         value = this.dxfPairInfo.Value;
                         break;
-
                     case XDataCode.LayerName:
-                        value = DecodeEncodedNonAsciiCharacters(this.dxfPairInfo.Value);
+                        value = this.DecodeEncodedNonAsciiCharacters(this.dxfPairInfo.Value);
                         break;
-
                     case XDataCode.BinaryData:
                         value = this.dxfPairInfo.Value;
                         break;
-
                     case XDataCode.DatabaseHandle:
                         value = this.dxfPairInfo.Value;
                         break;
-
                     case XDataCode.RealX:
                     case XDataCode.RealY:
                     case XDataCode.RealZ:
@@ -6238,7 +6652,6 @@ namespace netDxf
                     case XDataCode.Long:
                         value = long.Parse(this.dxfPairInfo.Value);
                         break;
-
                 }
 
                 XDataRecord xDataRecord = new XDataRecord(code, value);
@@ -6249,6 +6662,22 @@ namespace netDxf
             return xData;
         }
 
+        private static CodeValuePair ReadCodePair(TextReader reader)
+        {
+            int intCode;
+            string readCode = reader.ReadLine();
+            if (!int.TryParse(readCode, out intCode))
+                throw (new DxfException("Invalid group code " + readCode));
+            string value = reader.ReadLine();
+            return new CodeValuePair(intCode, value);
+        }
+
+        private CodeValuePair ReadCodePair()
+        {
+            return ReadCodePair(this.reader);
+        }
+
         #endregion
+
     }
 }

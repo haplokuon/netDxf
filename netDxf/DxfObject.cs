@@ -24,6 +24,7 @@ using System;
 
 namespace netDxf
 {
+
     /// <summary>
     /// Represents the base class for all dxf objects.
     /// </summary>
@@ -32,8 +33,9 @@ namespace netDxf
 
         #region protected fields
 
-        private readonly string codeName;
-        private string handle;
+        protected readonly string codeName;
+        protected string handle;
+        protected DxfObject owner;
 
         #endregion
 
@@ -46,6 +48,8 @@ namespace netDxf
         protected DxfObject(string codeName)
         {
             this.codeName = codeName;
+            this.handle = null;
+            this.owner = null;
         }
 
         #endregion
@@ -73,6 +77,15 @@ namespace netDxf
                     throw new ArgumentNullException("value");
                 this.handle = value;
             }
+        }
+
+        /// <summary>
+        /// Gets the owner of the actual dxf object.
+        /// </summary>
+        internal virtual DxfObject Owner
+        {
+            get { return this.owner; }
+            set { this.owner = value; }
         }
 
         #endregion

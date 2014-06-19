@@ -8,7 +8,6 @@ using System.Reflection;
 
 namespace netDxf
 {
-
     #region Class StringEnum
 
     /// <summary>

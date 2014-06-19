@@ -1,7 +1,7 @@
-﻿#region netDxf, Copyright(C) 2013 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf, Copyright(C) 2014 Daniel Carvajal, Licensed under LGPL.
 
 //                        netDxf library
-// Copyright (C) 2013 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2014 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -22,128 +22,11 @@
 
 using System;
 using System.Collections.Generic;
+using netDxf.Blocks;
 using netDxf.Tables;
 
 namespace netDxf.Entities
 {
-    /// <summary>
-    /// Defines the entity type.
-    /// </summary>
-    public enum EntityType
-    {
-        /// <summary>
-        /// Line entity.
-        /// </summary>
-        Line,
-
-        /// <summary>
-        /// 3d polyline entity.
-        /// </summary>
-        Polyline,
-
-        /// <summary>
-        /// Lightweight polyline entity.
-        /// </summary>
-        LightWeightPolyline,
-
-        /// <summary>
-        /// Polyface mesh entity.
-        /// </summary>
-        PolyfaceMesh,
-
-        /// <summary>
-        /// Circle entity.
-        /// </summary>
-        Circle,
-
-        /// <summary>
-        /// Ellipse entity.
-        /// </summary>
-        Ellipse,
-
-        /// <summary>
-        /// Point entity.
-        /// </summary>
-        Point,
-
-        /// <summary>
-        /// Arc entity.
-        /// </summary>
-        Arc,
-
-        /// <summary>
-        /// Text string entity.
-        /// </summary>
-        Text,
-
-        /// <summary>
-        /// Multiline text string entity.
-        /// </summary>
-        MText,
-
-        /// <summary>
-        /// Multiline entity.
-        /// </summary>
-        MLine,
-
-        /// <summary>
-        /// 3d face entity.
-        /// </summary>
-        Face3D,
-
-        /// <summary>
-        /// Solid.
-        /// </summary>
-        Solid,
-
-        /// <summary>
-        /// Spline (nonuniform rational B-splines NURBS).
-        /// </summary>
-        Spline,
-
-        /// <summary>
-        /// Block insertion entity.
-        /// </summary>
-        Insert,
-
-        /// <summary>
-        /// Hatch entity.
-        /// </summary>
-        Hatch,
-
-        /// <summary>
-        /// Attribute entity.
-        /// </summary>
-        Attribute,
-
-        /// <summary>
-        /// Attribute definition entity.
-        /// </summary>
-        AttributeDefinition,
-
-        /// <summary>
-        /// Dimension entity.
-        /// </summary>
-        Dimension,
-
-        /// <summary>
-        /// A raster image entity.
-        /// </summary>
-        Image,
-
-        /// <summary>
-        /// Ray entity.
-        /// </summary>
-        Ray,
-
-
-        /// <summary>
-        /// XLine entity.
-        /// </summary>
-        XLine
-
-    }
-    
     /// <summary>
     /// Represents a generic entity.
     /// </summary>
@@ -157,10 +40,13 @@ namespace netDxf.Entities
         protected Layer layer;
         protected LineType lineType;
         protected Lineweight lineweight;
+        protected Transparency transparency;
         protected double lineTypeScale;
         protected bool isVisible;
         protected Vector3 normal;
         protected Dictionary<string, XData> xData;
+        protected DxfObject reactor;
+
 
         #endregion
 
@@ -174,6 +60,7 @@ namespace netDxf.Entities
             this.layer = Layer.Default;
             this.lineType = LineType.ByLayer;
             this.lineweight = Lineweight.ByLayer;
+            this.transparency = Transparency.ByLayer;
             this.lineTypeScale = 1.0;
             this.isVisible = true;
             this.normal = Vector3.UnitZ;
@@ -183,6 +70,19 @@ namespace netDxf.Entities
         #endregion
 
         #region public properties
+
+        /// <summary>
+        /// Gets the object that has been attached to this entity.
+        /// </summary>
+        /// <remarks>
+        /// This information is subject to change in the future to become a list, an entity can be attached to multiple objects;
+        /// but at the moment only the viewport clipping boundary make use of this. Use this information with care.
+        /// </remarks>
+        public DxfObject Reactor
+        {
+            get { return this.reactor; }
+            internal set { this.reactor = value; }
+        }
 
         /// <summary>
         /// Gets the entity <see cref="EntityType">type</see>.
@@ -249,16 +149,30 @@ namespace netDxf.Entities
         }
 
         /// <summary>
+        /// Gets or sets layer transparency (default: ByLayer).
+        /// </summary>
+        public Transparency Transparency
+        {
+            get { return this.transparency; }
+            set
+            {
+                if (value == null)
+                    throw new ArgumentNullException("value");
+                this.transparency = value;
+            }
+        }
+
+        /// <summary>
         /// Gets or sets the entity linetype scale.
         /// </summary>
         public double LineTypeScale
         {
-            get { return lineTypeScale; }
+            get { return this.lineTypeScale; }
             set
             {
-                if (value <= 0 )
+                if (value <= 0)
                     throw new ArgumentOutOfRangeException("value", value, "The linetype scale must be greater than zero.");
-                lineTypeScale = value;
+                this.lineTypeScale = value;
             }
         }
 
@@ -267,8 +181,8 @@ namespace netDxf.Entities
         /// </summary>
         public bool IsVisible
         {
-            get { return isVisible; }
-            set { isVisible = value; }
+            get { return this.isVisible; }
+            set { this.isVisible = value; }
         }
 
         /// <summary>
@@ -284,6 +198,15 @@ namespace netDxf.Entities
                 this.normal = value;
                 this.normal.Normalize();
             }
+        }
+
+        /// <summary>
+        /// Gets the owner of the actual dxf object.
+        /// </summary>
+        public new Block Owner
+        {
+            get { return (Block) this.owner; }
+            internal set { this.owner = value; }
         }
 
         /// <summary>

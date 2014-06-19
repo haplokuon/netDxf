@@ -22,6 +22,7 @@
 
 using System;
 using System.IO;
+using netDxf.Collections;
 
 namespace netDxf.Tables
 {
@@ -41,6 +42,7 @@ namespace netDxf.Tables
         private double obliqueAngle;
         private double widthFactor;
 
+        private static readonly TextStyle standard;
         #endregion
 
         #region constants
@@ -50,12 +52,17 @@ namespace netDxf.Tables
         /// </summary>
         public static TextStyle Default
         {
-            get { return new TextStyle("Standard", "simplex.shx"); }
+            get { return standard; }
         }
 
         #endregion
 
         #region constructors
+
+        static TextStyle()
+        {
+            standard = new TextStyle("Standard", "simplex.shx");
+        }
 
         /// <summary>
         /// Initializes a new instance of the <c>TextStyle</c> class. The font file name, without the extension, will be used as the TextStyle name.
@@ -76,7 +83,7 @@ namespace netDxf.Tables
         {
             if (string.IsNullOrEmpty(font))
                 throw (new ArgumentNullException("font"));
-            this.reserved = name.Equals("Standard", StringComparison.InvariantCultureIgnoreCase);
+            this.reserved = name.Equals("Standard", StringComparison.OrdinalIgnoreCase);
             this.font = font;
             this.widthFactor = 1.0;
             this.obliqueAngle = 0.0;
@@ -176,6 +183,15 @@ namespace netDxf.Tables
         {
             get { return this.isUpsideDown; }
             set { this.isUpsideDown = value; }
+        }
+
+        /// <summary>
+        /// Gets the owner of the actual dxf object.
+        /// </summary>
+        public new TextStyles Owner
+        {
+            get { return (TextStyles)this.owner; }
+            internal set { this.owner = value; }
         }
 
         #endregion

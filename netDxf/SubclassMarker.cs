@@ -31,7 +31,7 @@ namespace netDxf
         public const string Table = "AcDbSymbolTable";
         public const string TableRecord = "AcDbSymbolTableRecord";
         public const string Layer = "AcDbLayerTableRecord";
-        public const string ViewPort = "AcDbViewportTableRecord";
+        public const string VPort = "AcDbViewportTableRecord";
         public const string View = "AcDbViewTableRecord";
         public const string LineType = "AcDbLinetypeTableRecord";
         public const string TextStyle = "AcDbTextStyleTableRecord";
@@ -75,6 +75,7 @@ namespace netDxf
         public const string Text = "AcDbText";
         public const string MText = "AcDbMText";
         public const string Hatch = "AcDbHatch";
+        public const string Viewport = "AcDbViewport";
         public const string Attribute = "AcDbAttribute";
         public const string AttributeDefinition = "AcDbAttributeDefinition";
         public const string Dictionary = "AcDbDictionary";
@@ -83,5 +84,7 @@ namespace netDxf
         public const string RasterImageDefReactor = "AcDbRasterImageDefReactor";
         public const string RasterVariables = "AcDbRasterVariables";
         public const string Group = "AcDbGroup";
+        public const string Layout = "AcDbLayout";
+        public const string PlotSettings = "AcDbPlotSettings";
     }
 }

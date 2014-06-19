@@ -24,39 +24,20 @@ using System.Collections.Generic;
 
 namespace netDxf.Objects
 {
-    /// <summary>
-    /// Duplicate record cloning flag (determines how to merge duplicate entries).
-    /// </summary>
-    internal enum ClonningFlag
-    {
-        NotApplicable = 0,
-        KeepExisting = 1,
-        UseClone = 2,
-        XrefName = 3,
-        Name = 4,
-        UnmangleName = 5
-    }
-
-    internal class DictionaryObject :
+    public class DictionaryObject :
         DxfObject
     {
         private readonly Dictionary<string, string> entries;
-        private readonly string handleToOwner;
         private bool isHardOwner;
-        private ClonningFlag clonning;
+        private DictionaryClonningFlag clonning;
 
-        public DictionaryObject(string handleToOwner)
+        internal DictionaryObject(DxfObject owner)
             : base(DxfObjectCode.Dictionary)
         {
-            this.handleToOwner = string.IsNullOrEmpty(handleToOwner) ? string.Empty : handleToOwner;
             this.isHardOwner = false;
-            this.clonning = ClonningFlag.KeepExisting;
+            this.clonning = DictionaryClonningFlag.KeepExisting;
             this.entries = new Dictionary<string, string>();
-        }
-
-        public string HandleToOwner
-        {
-            get { return handleToOwner; }
+            this.owner = owner;
         }
 
         /// <summary>
@@ -73,7 +54,7 @@ namespace netDxf.Objects
             set { isHardOwner = value; }
         }
 
-        public ClonningFlag Clonning
+        public DictionaryClonningFlag Clonning
         {
             get { return clonning; }
             set { clonning = value; }

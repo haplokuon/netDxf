@@ -37,9 +37,9 @@ namespace netDxf.Blocks
         /// <summary>
         /// Initializes a new instance of the <c>BlockEnd</c> class.
         /// </summary>
-        public BlockEnd(Layer layer) : base(DxfObjectCode.BlockEnd)
+        public BlockEnd() : base(DxfObjectCode.BlockEnd)
         {
-            this.layer = layer;
+            this.layer = Layer.Default;
         }
 
         /// <summary>

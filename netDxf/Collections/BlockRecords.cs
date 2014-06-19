@@ -1,7 +1,7 @@
-#region netDxf, Copyright(C) 2013 Daniel Carvajal, Licensed under LGPL.
+#region netDxf, Copyright(C) 2014 Daniel Carvajal, Licensed under LGPL.
 
 //                        netDxf library
-// Copyright (C) 2013 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2014 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -36,13 +36,12 @@ namespace netDxf.Collections
 
         #region constructor
 
-        internal BlockRecords(DxfDocument document)
-            : base(document)
-        {
-        }
-
-        internal BlockRecords(DxfDocument document, Dictionary<string, Block> list, Dictionary<string, List<DxfObject>> references)
-            : base(document, list, references)
+        internal BlockRecords(DxfDocument document, string handle = null)
+            : base(document,
+            new Dictionary<string, Block>(StringComparer.OrdinalIgnoreCase),
+            new Dictionary<string, List<DxfObject>>(StringComparer.OrdinalIgnoreCase),
+            StringCode.BlockRecordTable,
+            handle)
         {
         }
 
@@ -58,27 +57,33 @@ namespace netDxf.Collections
         /// If a block already exists with the same name as the instance that is being added the method returns the existing block,
         /// if not it will return the new block.
         /// </returns>
-        public override Block Add(Block block)
+        internal override Block Add(Block block, bool assignHandle)
         {
             Block add;
             if (this.list.TryGetValue(block.Name, out add))
                 return add;
 
-            this.document.NumHandles = block.AsignHandle(this.document.NumHandles);
+            if(assignHandle)
+                this.document.NumHandles = block.AsignHandle(this.document.NumHandles);
+
+            this.document.AddedObjects.Add(block.Handle, block);
+            this.document.AddedObjects.Add(block.Owner.Handle, block.Owner);
+
             this.list.Add(block.Name, block);
             this.references.Add(block.Name, new List<DxfObject>());
 
+            block.Owner.Owner = this;
             block.Layer = this.document.Layers.Add(block.Layer);
             this.document.Layers.References[block.Layer.Name].Add(block);
 
             //for new block definitions configure its entities
             foreach (EntityObject blockEntity in block.Entities)
             {
-                this.document.AddEntity(blockEntity, true);
+                this.document.AddEntity(blockEntity, true, assignHandle);
             }
 
             //for new block definitions configure its attributes
-            foreach (AttributeDefinition attDef in block.Attributes.Values)
+            foreach (AttributeDefinition attDef in block.AttributeDefinitions.Values)
             {
                 attDef.Layer = this.document.Layers.Add(attDef.Layer);
                 this.document.Layers.References[attDef.Layer.Name].Add(attDef);
@@ -101,35 +106,7 @@ namespace netDxf.Collections
         /// <remarks>Reserved blocks or any other referenced by objects cannot be removed.</remarks>
         public override bool Remove(string name)
         {
-            Block block = this[name];
-
-            if (block == null)
-                return false;
-
-            if (block.IsReserved)
-                return false;
-
-            if (this.references[block.Name].Count != 0)
-                return false;
-
-            this.document.Layers.References[block.Layer.Name].Remove(block);
-
-            // we will remove all entities from the block definition
-            foreach (EntityObject o in block.Entities)
-            {
-                this.document.RemoveEntity(o, true);
-            }
-            // we will remove all attribute definitions from the associated layers
-            foreach (AttributeDefinition attDef in block.Attributes.Values)
-            {
-                this.document.Layers.References[attDef.Layer.Name].Remove(attDef);
-                this.document.LineTypes.References[attDef.LineType.Name].Remove(attDef);
-                this.document.TextStyles.References[attDef.Style.Name].Remove(attDef);
-            }
-
-            this.references.Remove(block.Name);
-            return this.list.Remove(block.Name);
-
+            return Remove(this[name]);
         }
 
         /// <summary>
@@ -140,7 +117,42 @@ namespace netDxf.Collections
         /// <remarks>Reserved blocks or any other referenced by objects cannot be removed.</remarks>
         public override bool Remove(Block block)
         {
-            return Remove(block.Name);
+            if (block == null)
+                return false;
+
+            if (!this.Contains(block))
+                return false;
+
+            if (block.IsReserved)
+                return false;
+
+            if (this.references[block.Name].Count != 0)
+                return false;
+
+            // remove the block from the associated layer
+            this.document.Layers.References[block.Layer.Name].Remove(block);
+
+            // we will remove all entities from the block definition
+            foreach (EntityObject o in block.Entities)
+            {
+                this.document.RemoveEntity(o, true);
+            }
+
+            // remove all attribute definitions from the associated layers
+            foreach (AttributeDefinition attDef in block.AttributeDefinitions.Values)
+            {
+                this.document.Layers.References[attDef.Layer.Name].Remove(attDef);
+                this.document.LineTypes.References[attDef.LineType.Name].Remove(attDef);
+                this.document.TextStyles.References[attDef.Style.Name].Remove(attDef);
+            }
+
+            block.Record.Owner = null;
+            this.document.AddedObjects.Remove(block.Handle);
+            this.references.Remove(block.Name);
+            this.list.Remove(block.Name);
+
+            return true;
+
         }
 
         #endregion

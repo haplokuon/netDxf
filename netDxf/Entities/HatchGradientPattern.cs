@@ -1,7 +1,7 @@
-﻿#region netDxf, Copyright(C) 2013 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf, Copyright(C) 2014 Daniel Carvajal, Licensed under LGPL.
 
 //                        netDxf library
-// Copyright (C) 2013 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2014 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -21,63 +21,9 @@
 #endregion
 
 using System;
-using System.Collections.Generic;
-using netDxf.Tables;
 
 namespace netDxf.Entities
 {
-    /// <summary>
-    /// Gradient pattern types.
-    /// </summary>
-    public enum HatchGradientPatternType
-    {
-        /// <summary>
-        /// Linear.
-        /// </summary>
-        [StringValue("LINEAR")]
-        Linear,
-        /// <summary>
-        /// Cylinder.
-        /// </summary>
-        [StringValue("CYLINDER")]
-        Cylinder,
-        /// <summary>
-        /// Inverser cylinder.
-        /// </summary>
-        [StringValue("INVCYLINDER")]
-        InvCylinder,
-        /// <summary>
-        /// Spherical.
-        /// </summary>
-        [StringValue("SPHERICAL")]
-        Spherical,
-        /// <summary>
-        /// Inverse spherical.
-        /// </summary>
-        [StringValue("INVSPHERICAL")]
-        InvSpherical,
-        /// <summary>
-        /// Hemispherical.
-        /// </summary>
-        [StringValue("HEMISPHERICAL")]
-        Hemispherical,
-        /// <summary>
-        /// Inverse hemispherical.
-        /// </summary>
-        [StringValue("INVHEMISPHERICAL")]
-        InvHemispherical,
-        /// <summary>
-        /// Curved.
-        /// </summary>
-        [StringValue("CURVED")]
-        Curved,
-        /// <summary>
-        /// Inverse curved.
-        /// </summary>
-        [StringValue("INVCURVED")]
-        InvCurved
-    }
-
     /// <summary>
     /// Represents the hatch gradient pattern style.
     /// </summary>
@@ -87,7 +33,6 @@ namespace netDxf.Entities
     public class HatchGradientPattern :
         HatchPattern
     {
-
         #region private fields
 
         private HatchGradientPatternType gradientType;
@@ -129,7 +74,7 @@ namespace netDxf.Entities
             if (color == null)
                 throw new ArgumentNullException("color");
             this.color1 = color;
-            this.color2 = Color2FromTint(tint);
+            this.color2 = this.Color2FromTint(tint);
             this.singleColor = true;
             this.gradientType = type;
             this.tint = tint;
@@ -167,8 +112,8 @@ namespace netDxf.Entities
         /// </summary>
         public HatchGradientPatternType GradientType
         {
-            get { return gradientType; }
-            set { gradientType = value; }
+            get { return this.gradientType; }
+            set { this.gradientType = value; }
         }
 
         /// <summary>
@@ -176,12 +121,12 @@ namespace netDxf.Entities
         /// </summary>
         public AciColor Color1
         {
-            get { return color1; }
+            get { return this.color1; }
             set
             {
                 if (value == null)
                     throw new ArgumentNullException("value");
-                color1 = value;
+                this.color1 = value;
             }
         }
 
@@ -193,13 +138,13 @@ namespace netDxf.Entities
         /// </remarks>
         public AciColor Color2
         {
-            get { return color2; }
+            get { return this.color2; }
             set
             {
                 if (value == null)
                     throw new ArgumentNullException("value");
                 this.singleColor = false;
-                color2 = value;
+                this.color2 = value;
             }
         }
 
@@ -208,12 +153,12 @@ namespace netDxf.Entities
         /// </summary>
         public bool SingleColor
         {
-            get { return singleColor; }
+            get { return this.singleColor; }
             set
             {
                 if (value)
-                    this.Color2 = Color2FromTint(this.tint);
-                singleColor = value;
+                    this.Color2 = this.Color2FromTint(this.tint);
+                this.singleColor = value;
             }
         }
 
@@ -223,12 +168,12 @@ namespace netDxf.Entities
         /// <remarks>It only applies to single color gradient patterns.</remarks>
         public double Tint
         {
-            get { return tint; }
+            get { return this.tint; }
             set
             {
-                if(singleColor)
-                    this.Color2 = Color2FromTint(value);
-                tint = value;
+                if (this.singleColor)
+                    this.Color2 = this.Color2FromTint(value);
+                this.tint = value;
             }
         }
 
@@ -241,47 +186,8 @@ namespace netDxf.Entities
         /// </remarks>
         public bool Centered
         {
-            get { return centered; }
-            set { centered = value; }
-        }
-
-        #endregion
-
-        #region public methods
-
-        /// <summary>
-        /// Modifies or creates the xData hatch information entries that hold the values for the gradient color indexes.
-        /// </summary>
-        /// <param name="xdata">Hatch <see cref="XData">XData</see></param>
-        public void GradientColorAciXData(Dictionary<string, XData> xdata)
-        {
-            if (xdata.ContainsKey("GradientColor1ACI"))
-            {
-                XData xdataEntry = xdata["GradientColor1ACI"];
-                XDataRecord record = new XDataRecord(XDataCode.Integer, this.color1.Index);
-                xdataEntry.XDataRecord.Clear();
-                xdataEntry.XDataRecord.Add(record);
-            }
-            else
-            {
-                XData xdataEntry = new XData(new ApplicationRegistry("GradientColor1ACI"));
-                xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Integer, this.Color1.Index));
-                xdata.Add(xdataEntry.ApplicationRegistry.Name, xdataEntry);
-            }
-
-            if (xdata.ContainsKey("GradientColor2ACI"))
-            {
-                XData xdataEntry = xdata["GradientColor2ACI"];
-                XDataRecord record = new XDataRecord(XDataCode.Integer, this.color2.Index);
-                xdataEntry.XDataRecord.Clear();
-                xdataEntry.XDataRecord.Add(record);
-            }
-            else
-            {
-                XData xdataEntry = new XData(new ApplicationRegistry("GradientColor2ACI"));
-                xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Integer, this.color2.Index));
-                xdata.Add(xdataEntry.ApplicationRegistry.Name, xdataEntry);
-            }
+            get { return this.centered; }
+            set { this.centered = value; }
         }
 
         #endregion
@@ -291,7 +197,7 @@ namespace netDxf.Entities
         private AciColor Color2FromTint(double value)
         {
             double h, s, l;
-            AciColor.ToHsl(color1, out h, out s, out l);
+            AciColor.ToHsl(this.color1, out h, out s, out l);
             return AciColor.FromHsl(h, s, value);
         }
 

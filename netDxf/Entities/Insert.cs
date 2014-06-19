@@ -23,6 +23,7 @@
 using System;
 using System.Collections.Generic;
 using netDxf.Blocks;
+using netDxf.Collections;
 
 namespace netDxf.Entities
 {
@@ -35,12 +36,12 @@ namespace netDxf.Entities
     {
         #region private fields
 
-        private readonly EndSequence endSequence;
+        private EndSequence endSequence;
         private Block block;
         private Vector3 position;
         private Vector3 scale;
         private double rotation;
-        private List<Attribute> attributes;
+        private AttributeDictionary attributes;
 
         #endregion
 
@@ -50,7 +51,7 @@ namespace netDxf.Entities
             : base (EntityType.Insert, DxfObjectCode.Insert)
         {
             this.endSequence = new EndSequence();
-            this.attributes = new List<Attribute>();
+            this.attributes = new AttributeDictionary();
         }
 
         /// <summary>
@@ -85,19 +86,24 @@ namespace netDxf.Entities
             
             this.block = block;
             this.position = position;
-            this.scale = new Vector3(1.0, 1.0, 1.0);
+            this.scale = new Vector3(1.0);
             this.rotation = 0.0;
             this.endSequence = new EndSequence();
-            this.attributes = new List<Attribute>();
-            foreach (AttributeDefinition attdef in block.Attributes.Values)
+
+            List<Attribute> atts = new List<Attribute>(block.AttributeDefinitions.Count);
+            foreach (AttributeDefinition attdef in block.AttributeDefinitions.Values)
             {
                 Attribute att = new Attribute(attdef)
                 {
-                    Position = attdef.Position + this.position - this.block.Position
+                    Position = attdef.Position + this.position - this.block.Position,
+                    Owner = block
                 };
-                this.attributes.Add(att);
+                atts.Add(att);
             }
+
+            this.attributes = new AttributeDictionary(atts);
         }
+
 
         #endregion
 
@@ -106,7 +112,7 @@ namespace netDxf.Entities
         /// <summary>
         /// Gets the insert list of <see cref="Attribute">attributes</see>.
         /// </summary>
-        public List<Attribute> Attributes
+        public AttributeDictionary Attributes
         {
             get { return this.attributes; }
             internal set { this.attributes = value; }
@@ -155,6 +161,7 @@ namespace netDxf.Entities
         internal EndSequence EndSequence
         {
             get { return this.endSequence; }
+            set { this.endSequence = value; }
         }
 
         #endregion
@@ -174,7 +181,7 @@ namespace netDxf.Entities
         /// </remarks>
         public void TransformAttributes()
         {
-            foreach (Attribute att in this.attributes)
+            foreach (Attribute att in this.attributes.Values)
             {
                 AttributeDefinition attdef = att.Definition;
                 if (attdef == null)
@@ -195,7 +202,6 @@ namespace netDxf.Entities
             }
         }
 
-
         #endregion
 
         #region overrides
@@ -212,7 +218,7 @@ namespace netDxf.Entities
         internal override long AsignHandle(long entityNumber)
         {
             entityNumber = this.endSequence.AsignHandle(entityNumber);
-            foreach (Attribute attrib in this.attributes)
+            foreach (Attribute attrib in this.attributes.Values)
             {
                 entityNumber = attrib.AsignHandle(entityNumber);
             }
@@ -228,12 +234,10 @@ namespace netDxf.Entities
         public override object Clone()
         {
             List<Attribute> copyAttributes = new List<Attribute>();
-            foreach (Attribute att in this.attributes)
-            {
+            foreach (Attribute att in this.attributes.Values)
                 copyAttributes.Add((Attribute)att.Clone());
-            }
 
-            return new Insert(this.block, this.position)
+            return new Insert
                 {
                     //EntityObject properties
                     Color = this.color,
@@ -244,9 +248,11 @@ namespace netDxf.Entities
                     Normal = this.normal,
                     XData = this.xData,
                     //Insert properties
+                    Position = this.position,
+                    Block = this.block,
                     Scale = this.scale,
                     Rotation = this.rotation,
-                    Attributes = copyAttributes
+                    Attributes = new AttributeDictionary(copyAttributes)
                 };
 
         }

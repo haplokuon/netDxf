@@ -59,14 +59,52 @@ namespace netDxf.Entities
         /// Initializes a new instance of the <c>Image</c> class.
         /// </summary>
         /// <param name="imageDefinition">Image definition.</param>
+        /// <param name="position">Image <see cref="Vector2">position</see> in world coordinates.</param>
+        /// <param name="size">Image <see cref="Vector2">size</see> in world coordinates.</param>
+        public Image(ImageDef imageDefinition, Vector2 position, Vector2 size)
+            : this(imageDefinition, new Vector3(position.X, position.Y, 0.0), size.X, size.Y)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <c>Image</c> class.
+        /// </summary>
+        /// <param name="imageDefinition">Image definition.</param>
         /// <param name="position">Image <see cref="Vector3">position</see> in world coordinates.</param>
-        public Image(ImageDef imageDefinition, Vector3 position)
+        /// <param name="size">Image <see cref="Vector2">size</see> in world coordinates.</param>
+        public Image(ImageDef imageDefinition, Vector3 position, Vector2 size)
+            :this(imageDefinition, position, size.X, size.Y)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <c>Image</c> class.
+        /// </summary>
+        /// <param name="imageDefinition">Image definition.</param>
+        /// <param name="position">Image <see cref="Vector2">position</see> in world coordinates.</param>
+        /// <param name="width">Image width in world coordinates.</param>
+        /// <param name="height">Image height in world coordinates.</param>
+        public Image(ImageDef imageDefinition, Vector2 position, double width, double height)
+            : this(imageDefinition, new Vector3(position.X, position.Y, 0.0), width, height)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <c>Image</c> class.
+        /// </summary>
+        /// <param name="imageDefinition">Image definition.</param>
+        /// <param name="position">Image <see cref="Vector3">position</see> in world coordinates.</param>
+        /// <param name="width">Image width in world coordinates.</param>
+        /// <param name="height">Image height in world coordinates.</param>
+        public Image(ImageDef imageDefinition, Vector3 position, double width, double height)
             : base(EntityType.Image, DxfObjectCode.Image)
         {
             this.imageDef = imageDefinition;
             this.position = position;
-            this.width = imageDefinition.Width * imageDefinition.OnePixelSize.X;
-            this.height = imageDefinition.Height * imageDefinition.OnePixelSize.Y;
+            //this.width = imageDefinition.Width * imageDefinition.OnePixelSize.X;
+            //this.height = imageDefinition.Height * imageDefinition.OnePixelSize.Y;
+            this.width = width;
+            this.height = height;
             this.rotation = 0;
             this.clipping = false;
             this.brightness = 50.0f;
@@ -95,7 +133,7 @@ namespace netDxf.Entities
         public double Height
         {
             get { return this.height; }
-            internal set { this.height = value; }
+            set { this.height = value; }
         }
 
         /// <summary>
@@ -104,7 +142,7 @@ namespace netDxf.Entities
         public double Width
         {
             get { return this.width; }
-            internal set { this.width = value; }
+            set { this.width = value; }
         }
 
         /// <summary>
@@ -199,35 +237,35 @@ namespace netDxf.Entities
 
         #endregion
 
-        #region public methods
+        //#region public methods
 
-        /// <summary>
-        /// Sets the scale of the image.
-        /// </summary>
-        /// <param name="scale">X and Y scale of the image.</param>
-        public void SetScale(Vector2 scale)
-        {
-            this.SetScale(scale.X, scale.Y);
-        }
-        /// <summary>
-        /// Sets the scale of the image.
-        /// </summary>
-        /// <param name="scale">Uniform scale of the image.</param>
-        public void SetScale(double scale)
-        {
-            this.SetScale(scale, scale);
-        }
-        /// <summary>
-        /// Sets the scale of the image.
-        /// </summary>
-        /// <param name="scaleX">X scale of the image.</param>
-        /// <param name="scaleY">Y scale of the image.</param>
-        public void SetScale(double scaleX, double scaleY)
-        {
-            this.width = this.imageDef.Width * this.imageDef.OnePixelSize.X * scaleX;
-            this.height = this.imageDef.Height * this.imageDef.OnePixelSize.Y * scaleY;
-        }
-        #endregion
+        ///// <summary>
+        ///// Sets the scale of the image.
+        ///// </summary>
+        ///// <param name="scale">X and Y scale of the image.</param>
+        //public void SetScale(Vector2 scale)
+        //{
+        //    this.SetScale(scale.X, scale.Y);
+        //}
+        ///// <summary>
+        ///// Sets the scale of the image.
+        ///// </summary>
+        ///// <param name="scale">Uniform scale of the image.</param>
+        //public void SetScale(double scale)
+        //{
+        //    this.SetScale(scale, scale);
+        //}
+        ///// <summary>
+        ///// Sets the scale of the image.
+        ///// </summary>
+        ///// <param name="scaleX">X scale of the image.</param>
+        ///// <param name="scaleY">Y scale of the image.</param>
+        //public void SetScale(double scaleX, double scaleY)
+        //{
+        //    //this.width = this.imageDef.Width * this.imageDef.OnePixelSize.X * scaleX;
+        //    //this.height = this.imageDef.Height * this.imageDef.OnePixelSize.Y * scaleY;
+        //}
+        //#endregion
 
         #region overrides
 
@@ -249,8 +287,8 @@ namespace netDxf.Entities
                 XData = this.xData,
                 //Image properties
                 Position = this.position,
-                Height = this.height,
-                Width = this.width,
+                //Height = this.height,
+                //Width = this.width,
                 Rotation = this.rotation,
                 Definition = this.imageDef,
                 Clipping = this.clipping,

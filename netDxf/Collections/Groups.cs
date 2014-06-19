@@ -1,7 +1,7 @@
-#region netDxf, Copyright(C) 2013 Daniel Carvajal, Licensed under LGPL.
+#region netDxf, Copyright(C) 2014 Daniel Carvajal, Licensed under LGPL.
 
 //                        netDxf library
-// Copyright (C) 2013 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2014 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -20,6 +20,7 @@
 
 #endregion
 
+using System;
 using System.Collections.Generic;
 using netDxf.Entities;
 using netDxf.Objects;
@@ -36,13 +37,12 @@ namespace netDxf.Collections
 
         #region constructor
 
-        internal Groups(DxfDocument document)
-            : base(document)
-        {
-        }
-
-        internal Groups(DxfDocument document, Dictionary<string, Group> list, Dictionary<string, List<DxfObject>> references)
-            : base( document, list, references)
+        internal Groups(DxfDocument document, string handle = null)
+            : base(document,
+            new Dictionary<string, Group>(StringComparer.OrdinalIgnoreCase),
+            new Dictionary<string, List<DxfObject>>(StringComparer.OrdinalIgnoreCase),
+            StringCode.GroupDictionary,
+            handle)
         {
         }
 
@@ -59,24 +59,28 @@ namespace netDxf.Collections
         /// if not it will return the new user coordinate system.<br />
         /// The methods will automatically add the grouped entities to the document, if they have not been added previously.
         /// </returns>
-        public override Group Add(Group group)
+        internal override Group Add(Group group, bool assignHandle)
         {
             // if no name has been given to the group a generic name will be created
-            if (group.IsUnnamed)
+            if (group.IsUnnamed && string.IsNullOrEmpty(group.Name))
                 group.Name = "*A" + ++this.document.GroupNamesGenerated;
 
             Group add;
             if (this.list.TryGetValue(group.Name, out add))
                 return add;
 
-            this.document.NumHandles = group.AsignHandle(this.document.NumHandles);
+            if (assignHandle)
+                this.document.NumHandles = group.AsignHandle(this.document.NumHandles);
+
+            this.document.AddedObjects.Add(group.Handle, group);
             this.list.Add(group.Name, group);
             this.references.Add(group.Name, new List<DxfObject>());
             foreach (EntityObject entity in group.Entities)
             {
                 this.document.AddEntity(entity);
+                this.references[group.Name].Add(entity);
             }
-
+            group.Owner = this;
             return group;
         }
 
@@ -89,9 +93,21 @@ namespace netDxf.Collections
         /// Reserved group or any other referenced by objects cannot be removed.</remarks>
         public bool Ungroup(string name)
         {
-            Group group = this[name];
+            return Ungroup(this[name]);
+        }
 
+        /// <summary>
+        /// Deletes a group but keeps the grouped entities in the document.
+        /// </summary>
+        /// <param name="group"><see cref="Group">Group</see> to remove from the document.</param>
+        /// <returns>True is the group has been successfully removed, or false otherwise.</returns>
+        /// <remarks>Reserved groups or any other referenced by objects cannot be removed.</remarks>
+        public bool Ungroup(Group group)
+        {
             if (group == null)
+                return false;
+
+            if (!this.Contains(group))
                 return false;
 
             if (group.IsReserved)
@@ -100,19 +116,13 @@ namespace netDxf.Collections
             if (this.references[group.Name].Count != 0)
                 return false;
 
+            group.Owner = null;
+            this.document.AddedObjects.Remove(group.Handle);
             this.references.Remove(group.Name);
-            return this.list.Remove(group.Name);
-        }
+            this.list.Remove(group.Name);
 
-        /// <summary>
-        /// Deletes a group but keeps the grouped entities in the document.
-        /// </summary>
-        /// <param name="group"><see cref="Group">Group</see> to remove from the document.</param>
-        /// <returns>True is the group has been successfully removed, or false otherwise.</returns>
-        /// <remarks> Reserved groups or any other referenced by objects cannot be removed.</remarks>
-        public bool Ungroup(Group group)
-        {
-            return Ungroup(group.Name);
+            return true;
+
         }
 
         /// <summary>
@@ -123,24 +133,7 @@ namespace netDxf.Collections
         /// <remarks>Reserved groups or any other referenced by objects cannot be removed.</remarks>
         public override bool Remove(string name)
         {
-            Group group = this[name];
-
-            if (group == null)
-                return false;
-
-            if (group.IsReserved)
-                return false;
-
-            if (this.references[group.Name].Count != 0)
-                return false;
-
-            foreach (EntityObject entity in group.Entities)
-            {
-                this.document.RemoveEntity(entity);
-            }
-
-            this.references.Remove(group.Name);
-            return this.list.Remove(group.Name);
+            return Remove(this[name]);
         }
 
         /// <summary>
@@ -151,7 +144,15 @@ namespace netDxf.Collections
         /// <remarks>Reserved groups or any other referenced by objects cannot be removed.</remarks>
         public override bool Remove(Group group)
         {
-            return Remove(group.Name);
+            if (Ungroup(group))
+            {
+                foreach (EntityObject entity in group.Entities)
+                {
+                    this.document.RemoveEntity(entity);
+                }
+                return true;
+            }
+            return false;
         }
 
         #endregion

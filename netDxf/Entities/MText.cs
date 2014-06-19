@@ -21,7 +21,7 @@
 #endregion
 
 using System;
-using System.Threading;
+using System.Text;
 using netDxf.Tables;
 
 namespace netDxf.Entities
@@ -29,37 +29,94 @@ namespace netDxf.Entities
     /// <summary>
     /// Represents a multiline text <see cref="EntityObject">entity</see>.
     /// </summary>
+    /// <remarks>
+    /// Formatting codes for MText, you can use them directly while setting the text value or use the Write() method.<br />
+    /// \L Start underline<br />
+    /// \l Stop underline<br />
+    /// \O Start overstrike<br />
+    /// \o Stop overstrike<br />
+    /// \K Start strike-through<br />
+    /// \k Stop strike-through<br />
+    /// \P New paragraph (new line)<br />
+    /// \pxi Control codes for bullets, numbered paragraphs and columns<br />
+    /// \X Paragraph wrap on the dimension line (only in dimensions)<br />
+    /// \Q Slanting (obliquing) text by angle - e.g. \Q30;<br />
+    /// \H Text height - e.g. \H3x;<br />
+    /// \W Text width - e.g. \W0.8x;<br />
+    /// \F Font selection<br />
+    /// <br />
+    /// e.g. \Fgdt;o - GDT-tolerance<br />
+    /// e.g. \Fkroeger|b0|i0|c238|p10; - font Kroeger, non-bold, non-italic, codepage 238, pitch 10<br />
+    /// <br />
+    /// \S Stacking, fractions<br />
+    /// <br />
+    /// e.g. \SA^B;<br />
+    /// A<br />
+    /// B<br />
+    /// e.g. \SX/Y<br />
+    /// X<br />
+    /// -<br />
+    /// Y<br />
+    /// e.g. \S1#4;<br />
+    /// 1/4<br />
+    /// <br />
+    /// \A Alignment<br />
+    /// \A0; = bottom<br />
+    /// \A1; = center<br />
+    /// \A2; = top<br />
+    /// <br />
+    /// \C Color change<br />
+    /// \C1; = red<br />
+    /// \C2; = yellow<br />
+    /// \C3; = green<br />
+    /// \C4; = cyan<br />
+    /// \C5; = blue<br />
+    /// \C6; = magenta<br />
+    /// \C7; = white<br />
+    /// <br />
+    /// \T Tracking, char.spacing - e.g. \T2;<br />
+    /// \~ Non-wrapping space, hard space<br />
+    /// {} Braces - define the text area influenced by the code<br />
+    /// \ Escape character - e.g. \\ = "\", \{ = "{"<br />
+    /// <br />
+    /// Codes and braces can be nested up to 8 levels deep.<br />
+    /// </remarks>
     public class MText :
         EntityObject
     {
         #region Special string codes
-        /// <summary>
-        /// Text strings to define special characters..
-        /// </summary>
-        public struct SpecialCharacters
-        {
-            /// <summary>
-            /// Inserts a nonbreaking space
-            /// </summary>
-            public const string NonbreakingSpace = "\\~";
-            /// <summary>
-            /// Inserts a backslash
-            /// </summary>
-            public const string Backslash = "\\\\";
-            /// <summary>
-            /// Opening brace
-            /// </summary>
-            public const string OpeningBrace = "\\{";
-            /// <summary>
-            /// Closing brace
-            /// </summary>
-            public const string ClosingBrace = "\\}";
-        }
+
+        ///// <summary>
+        ///// Text strings to define special characters.
+        ///// </summary>
+        //public struct SpecialCharacters
+        //{
+        //    /// <summary>
+        //    /// Inserts a nonbreaking space
+        //    /// </summary>
+        //    public const string NonbreakingSpace = "\\~";
+
+        //    /// <summary>
+        //    /// Inserts a backslash
+        //    /// </summary>
+        //    public const string Backslash = "\\\\";
+
+        //    /// <summary>
+        //    /// Opening brace
+        //    /// </summary>
+        //    public const string OpeningBrace = "\\{";
+
+        //    /// <summary>
+        //    /// Closing brace
+        //    /// </summary>
+        //    public const string ClosingBrace = "\\}";
+        //}
+
         #endregion
 
         #region private fields
 
-        private Vector3 position;        
+        private Vector3 position;
         private double rectangleWidth;
         private double height;
         private double rotation;
@@ -77,9 +134,9 @@ namespace netDxf.Entities
         /// <summary>
         /// Initializes a new instance of the <c>MText</c> class.
         /// </summary>
-        public MText() 
+        public MText()
             : this(string.Empty, Vector3.Zero, 1.0, 1.0, TextStyle.Default)
-        {          
+        {
         }
 
         /// <summary>
@@ -184,7 +241,7 @@ namespace netDxf.Entities
             this.style = style;
             this.rectangleWidth = rectangleWidth;
             if (height <= 0)
-                throw (new ArgumentOutOfRangeException("height", value, "The MText Height can not be zero or less."));
+                throw (new ArgumentOutOfRangeException("height", this.value, "The MText height can not be zero or less."));
             this.height = height;
             this.lineSpacing = 1.0;
             this.paragraphHeightFactor = 1.0;
@@ -230,7 +287,7 @@ namespace netDxf.Entities
             get { return this.lineSpacing; }
             set
             {
-                if(value<0.25 || value>4.0)
+                if (value < 0.25 || value > 4.0)
                     throw new ArgumentOutOfRangeException("value", value, "The MText LineSpacingFactor valid values range from 0.25 to 4.00");
                 this.lineSpacing = value;
             }
@@ -308,12 +365,12 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets the text string.
+        /// Gets or sets the raw text string.
         /// </summary>
         public string Value
         {
             get { return this.value; }
-            internal set { this.value = value; }
+            set { this.value = value; }
         }
 
         #endregion
@@ -332,15 +389,100 @@ namespace netDxf.Entities
             else
                 this.value += options.FormatText(text);
         }
+
         /// <summary>
         /// Ends the actual paragraph (adds the end paragraph code and the paragraph height factor). 
         /// </summary>
         public void EndParagraph()
         {
-            if(!MathHelper.IsOne(this.paragraphHeightFactor))
+            if (!MathHelper.IsOne(this.paragraphHeightFactor))
                 this.value += "{\\H" + this.paragraphHeightFactor + "x;}\\P";
             else
                 this.value += "\\P";
+        }
+
+        /// <summary>
+        /// Obtains the MText text value without the formatting codes, control characters like tab '\t' will be preserved in the result,
+        /// the new paragraph command "\P" will be converted to new line feed '\r\n'.
+        /// </summary>
+        /// <returns>MText text value without the formatting codes.</returns>
+        public string PlainText()
+        {
+            if (string.IsNullOrEmpty(this.value))
+                return string.Empty;
+
+            StringBuilder rawText = new StringBuilder();
+            CharEnumerator chars = this.value.GetEnumerator();
+
+            while (chars.MoveNext())
+            {
+                char token = chars.Current;
+                if (token == '\\') // is a formatting command
+                {
+                    if (chars.MoveNext())
+                        token = chars.Current;
+                    else
+                        return rawText.ToString(); // premature end of text
+
+                    if (token == '\\' | token == '{' | token == '}') // escape chars
+                        rawText.Append(token);
+                    else if (token == 'L' | token == 'l' | token == 'O' | token == 'o' | token == 'K' | token == 'k' | token == 'P' | token == 'X') // one char commands
+                        if (token == 'P') rawText.Append(Environment.NewLine);
+                        else { } // discard other commands
+                    else // formatting commands of more than one character always terminate in ';'
+                    {
+                        bool stacking = token == 'S'; // we want to preserve the text under the stacking command
+                        while (token != ';')
+                        {
+                            if (chars.MoveNext())
+                                token = chars.Current;
+                            else
+                                return rawText.ToString(); // premature end of text
+
+                            if (stacking && token != ';')
+                                rawText.Append(token); // append user data of stacking command
+                        }
+                    }
+                }
+                else if (token == '{' | token == '}')
+                {
+                    // discard group markers
+                }
+                else if (token == '%')
+                {
+                    if (chars.MoveNext())
+                        token = chars.Current;
+                    else
+                        return rawText.ToString(); // premature end of text
+
+                    if (token == '%')
+                    {
+                        if (chars.MoveNext())
+                            token = chars.Current;
+                        else
+                            return rawText.ToString(); // premature end of text
+
+                        switch (token)
+                        {
+                            case 'c':
+                                rawText.Append('Ø');
+                                break;
+                            case 'd':
+                                rawText.Append('°');
+                                break;
+                            case 'p':
+                                rawText.Append('±');
+                                break;
+                        }
+                    }
+                    else // char is just a single '%'
+                        rawText.Append(token);
+                }
+                else // char is what it is, a character
+                    rawText.Append(token);
+
+            }
+            return rawText.ToString();
         }
 
         #endregion
@@ -378,6 +520,5 @@ namespace netDxf.Entities
         }
 
         #endregion
-
     }
 }

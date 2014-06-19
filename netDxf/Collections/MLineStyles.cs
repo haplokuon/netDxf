@@ -1,7 +1,7 @@
-#region netDxf, Copyright(C) 2013 Daniel Carvajal, Licensed under LGPL.
+#region netDxf, Copyright(C) 2014 Daniel Carvajal, Licensed under LGPL.
 
 //                        netDxf library
-// Copyright (C) 2013 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2014 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -35,13 +35,12 @@ namespace netDxf.Collections
 
         #region constructor
 
-        internal MLineStyles(DxfDocument document)
-            : base(document)
-        {
-        }
-
-        internal MLineStyles(DxfDocument document, Dictionary<string, MLineStyle> list, Dictionary<string, List<DxfObject>> references)
-            : base(document, list, references)
+        internal MLineStyles(DxfDocument document, string handle = null)
+            : base(document,
+            new Dictionary<string, MLineStyle>(StringComparer.OrdinalIgnoreCase),
+            new Dictionary<string, List<DxfObject>>(StringComparer.OrdinalIgnoreCase),
+            StringCode.MLineStyleDictionary,
+            handle)
         {
         }
 
@@ -57,13 +56,18 @@ namespace netDxf.Collections
         /// If a multiline style already exists with the same name as the instance that is being added the method returns the existing multiline style,
         /// if not it will return the new multiline style.
         /// </returns>
-        public override MLineStyle Add(MLineStyle style)
+        internal override MLineStyle Add(MLineStyle style, bool assignHandle)
         {
+
             MLineStyle add;
             if (this.list.TryGetValue(style.Name, out add))
                 return add;
 
-            this.document.NumHandles = style.AsignHandle(this.document.NumHandles);
+            if (assignHandle)
+                this.document.NumHandles = style.AsignHandle(this.document.NumHandles);
+
+            this.document.AddedObjects.Add(style.Handle, style);
+
             this.list.Add(style.Name, style);
             this.references.Add(style.Name, new List<DxfObject>());
             foreach (MLineStyleElement element in style.Elements)
@@ -71,6 +75,7 @@ namespace netDxf.Collections
                 element.LineType = this.document.LineTypes.Add(element.LineType);
                 this.document.LineTypes.References[element.LineType.Name].Add(style);
             }
+            style.Owner = this;
             return style;
         }
 
@@ -82,9 +87,21 @@ namespace netDxf.Collections
         /// <remarks>Reserved multiline styles or any other referenced by objects cannot be removed.</remarks>
         public override bool Remove(string name)
         {
-            MLineStyle style = this[name];
+            return Remove(this[name]);
+        }
 
+        /// <summary>
+        /// Removes a multiline style.
+        /// </summary>
+        /// <param name="style"><see cref="MLineStyle">MLineStyle</see> to remove from the document.</param>
+        /// <returns>True is the multiline style has been successfully removed, or false otherwise.</returns>
+        /// <remarks>Reserved multiline styles or any other referenced by objects cannot be removed.</remarks>
+        public override bool Remove(MLineStyle style)
+        {
             if (style == null)
+                return false;
+
+            if (!this.Contains(style))
                 return false;
 
             if (style.IsReserved)
@@ -98,20 +115,12 @@ namespace netDxf.Collections
                 this.document.LineTypes.References[element.LineType.Name].Remove(style);
             }
 
+            style.Owner = null;
+            this.document.AddedObjects.Remove(style.Handle);
             this.references.Remove(style.Name);
-            return this.list.Remove(style.Name);
+            this.list.Remove(style.Name);
 
-        }
-
-        /// <summary>
-        /// Removes a multiline style.
-        /// </summary>
-        /// <param name="style"><see cref="MLineStyle">MLineStyle</see> to remove from the document.</param>
-        /// <returns>True is the multiline style has been successfully removed, or false otherwise.</returns>
-        /// <remarks>Reserved multiline styles or any other referenced by objects cannot be removed.</remarks>
-        public override bool Remove(MLineStyle style)
-        {
-            return Remove(style.Name);
+            return true;
         }
 
         #endregion

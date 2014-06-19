@@ -1,3 +1,20 @@
+[0.8.0 - 2014/06/23]
++ Lots of changes, some of them might brake your current code, ask in the project discussion board in case of doubt.
++ Added ModelSpace and PaperSpace, now it is possible to work in model space and paper space through layouts. See the PaperSpace() sample in the TestDxfDocument project.
++ Added Layouts.
++ Added PlotSettings.
++ Added Viewports.
++ Added Transparency to Layers and Entities.
++ Added method PlainText() to MText class that will return the text without the formatting codes.
++ Added the drawing variables $TDCREATE, $TDUCREATE, $TDUPDATE, and $TDUUPDATE; that control the drawing creation and last update in local and universal time(UTC).
++ Added the drawing variable $TDINDWG that control the drawing editing time.
++ Now you can set the document and block drawing units, and image units. See the DocumentUnits() sample in the TestDxfDocument project.
++ Reworked the hatch boundary path information, this will also fix a problem with arc boundary paths that were defined CW instead of the common CCW. It still possible to retrieve entities that make the hatch boundary path with the method Hatch.CreateWCSBoundary().
++ Reworked how the entities and attribute definitions are stored in a block. See the BlockWidthAttributes() sample in the TestDxfDocument project.
++ Rename FillType to HatchFillType, BoundaryPathTypeFlag to HatchBoundaryPathTypeFlag, and TableObjects.Values to TableObjects.Items.
++ Some modifications in the Image entity, now the width and height of the image represent the size in world coordinate units.
++ (fixed) MText color formatting option when it was using true color.
+
 [0.7.0 - 2014/04/25]
 + Encoding and decoding of non extended ASCII characters will be done automatically by the DxfWriter and the DxfReader. Dxf versions prior to 2007 need to encode the characters outside the extended ASCII chart (char>255) as \U+#### where #### is a four digits hexadecimal number that represents the character. 
 + Added IsFrozen and IsLocked properties to layers.

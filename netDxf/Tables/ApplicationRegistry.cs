@@ -21,6 +21,7 @@
 #endregion
 
 using System;
+using netDxf.Collections;
 
 namespace netDxf.Tables
 {
@@ -31,6 +32,11 @@ namespace netDxf.Tables
     public class ApplicationRegistry :
         TableObject
     {
+        #region private fields
+
+        private static readonly ApplicationRegistry defaultApp;
+
+        #endregion
 
         #region constants
 
@@ -39,12 +45,17 @@ namespace netDxf.Tables
         /// </summary>
         internal static ApplicationRegistry Default
         {
-            get { return new ApplicationRegistry("ACAD"); }
+            get { return defaultApp; }
         }
 
         #endregion
 
         #region constructors
+
+        static ApplicationRegistry()
+        {
+            defaultApp = new ApplicationRegistry("ACAD");
+        }
 
         /// <summary>
         /// Initializes a new instance of the <c>ApplicationRegistry</c> class.
@@ -53,7 +64,20 @@ namespace netDxf.Tables
         public ApplicationRegistry(string name)
             : base(name, DxfObjectCode.AppId, true)
         {
-            this.reserved = name.Equals("ACAD", StringComparison.InvariantCultureIgnoreCase);
+            this.reserved = name.Equals("ACAD", StringComparison.OrdinalIgnoreCase);
+        }
+
+        #endregion
+
+        #region public properties
+
+        /// <summary>
+        /// Gets the owner of the actual dxf object.
+        /// </summary>
+        public new ApplicationRegistries Owner
+        {
+            get { return (ApplicationRegistries)this.owner; }
+            internal set { this.owner = value; }
         }
 
         #endregion

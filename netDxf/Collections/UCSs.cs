@@ -1,7 +1,7 @@
-#region netDxf, Copyright(C) 2013 Daniel Carvajal, Licensed under LGPL.
+#region netDxf, Copyright(C) 2014 Daniel Carvajal, Licensed under LGPL.
 
 //                        netDxf library
-// Copyright (C) 2013 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2014 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -20,6 +20,7 @@
 
 #endregion
 
+using System;
 using System.Collections.Generic;
 using netDxf.Tables;
 
@@ -35,13 +36,12 @@ namespace netDxf.Collections
 
         #region constructor
 
-        internal UCSs(DxfDocument document)
-            : base(document)
-        {
-        }
-
-        internal UCSs(DxfDocument document, Dictionary<string, UCS> list, Dictionary<string, List<DxfObject>> references)
-            : base( document, list, references)
+        internal UCSs(DxfDocument document, string handle = null)
+            : base(document,
+            new Dictionary<string, UCS>(StringComparer.OrdinalIgnoreCase),
+            new Dictionary<string, List<DxfObject>>(StringComparer.OrdinalIgnoreCase),
+            StringCode.UcsTable,
+            handle)
         {
         }
 
@@ -57,16 +57,19 @@ namespace netDxf.Collections
         /// If a user coordinate system already exists with the same name as the instance that is being added the method returns the existing user coordinate system,
         /// if not it will return the new user coordinate system.
         /// </returns>
-        public override UCS Add(UCS ucs)
+        internal override UCS Add(UCS ucs, bool assignHandle)
         {
             UCS add;
             if (this.list.TryGetValue(ucs.Name, out add))
                 return add;
 
-            this.document.NumHandles = ucs.AsignHandle(this.document.NumHandles);
+            if (assignHandle)
+                this.document.NumHandles = ucs.AsignHandle(this.document.NumHandles);
+
+            this.document.AddedObjects.Add(ucs.Handle, ucs);
             this.list.Add(ucs.Name, ucs);
             this.references.Add(ucs.Name, new List<DxfObject>());
-
+            ucs.Owner = this;
             return ucs;
         }
 
@@ -78,19 +81,7 @@ namespace netDxf.Collections
         /// <remarks>Reserved user coordinate system or any other referenced by objects cannot be removed.</remarks>
         public override bool Remove(string name)
         {
-            UCS ucs = this[name];
-
-            if (ucs == null)
-                return false;
-
-            if (ucs.IsReserved)
-                return false;
-
-            if (this.references[ucs.Name].Count != 0)
-                return false;
-
-            this.references.Remove(ucs.Name);
-            return this.list.Remove(ucs.Name);
+            return Remove(this[name]);
         }
 
         /// <summary>
@@ -101,7 +92,24 @@ namespace netDxf.Collections
         /// <remarks>Reserved user coordinate system or any other referenced by objects cannot be removed.</remarks>
         public override bool Remove(UCS ucs)
         {
-            return Remove(ucs.Name);
+            if (ucs == null)
+                return false;
+
+            if (!this.Contains(ucs))
+                return false;
+
+            if (ucs.IsReserved)
+                return false;
+
+            if (this.references[ucs.Name].Count != 0)
+                return false;
+
+            ucs.Owner = null;
+            this.document.AddedObjects.Remove(ucs.Handle);
+            this.references.Remove(ucs.Name);
+            this.list.Remove(ucs.Name);
+
+            return true;
         }
 
         #endregion

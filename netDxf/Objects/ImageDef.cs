@@ -1,7 +1,7 @@
-#region netDxf, Copyright(C) 2013 Daniel Carvajal, Licensed under LGPL.
+#region netDxf, Copyright(C) 2014 Daniel Carvajal, Licensed under LGPL.
 
 //                        netDxf library
-// Copyright (C) 2013 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2014 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -24,59 +24,13 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
+using netDxf.Collections;
 using netDxf.Tables;
 
 namespace netDxf.Objects
 {
     /// <summary>
-    /// Defines the image resolution units.
-    /// </summary>
-    public enum ResolutionUnits
-    {
-        /// <summary>
-        /// No units.
-        /// </summary>
-        NoUnits = 0,
-
-        /// <summary>
-        /// Centimeters.
-        /// </summary>
-        Centimeters = 2,
-
-        /// <summary>
-        /// Inches.
-        /// </summary>
-        Inches = 5
-    }
-
-    /// <summary>
-    /// Supported image formats.
-    /// </summary>
-    /// <remarks>
-    /// These are the image formats in common between the net framework and AutoCAD
-    /// </remarks>
-    public enum SupportedImageFormats
-    {
-        /// <summary>
-        /// Bmp image format.
-        /// </summary>
-        Bmp,
-        /// <summary>
-        /// Jpg image format.
-        /// </summary>
-        Jpeg,
-        /// <summary>
-        /// Png image format.
-        /// </summary>
-        Png,
-        /// <summary>
-        /// Tiff image format.
-        /// </summary>
-        Tiff
-    }
-
-    /// <summary>
-    /// Represents a image definition.
+    /// Represents an image definition.
     /// </summary>
     public class ImageDef :
         TableObject
@@ -86,10 +40,10 @@ namespace netDxf.Objects
         private readonly string fileName;
         private readonly int width;
         private readonly int height;
-        private readonly ResolutionUnits resolutionUnits;
-        private readonly Vector2 onePixelSize;
-        private readonly float horizontalResolution;
-        private readonly float verticalResolution;
+        private ImageResolutionUnits resolutionUnits;
+        // internally we will store the resolution in ppi
+        private float horizontalResolution;
+        private float verticalResolution;
 
         // this will store the references to the images that makes use of this image definition (key: image handle, value: reactor)
         private readonly Dictionary<string, ImageDefReactor> reactors;
@@ -121,8 +75,8 @@ namespace netDxf.Objects
         /// you must resave the TIFF files with LZW compression disabled.
         /// </para>
         /// </remarks>
-        public ImageDef(string fileName, int width, float horizontalResolution, int height, float verticalResolution, ResolutionUnits units)
-            : this(fileName, width, horizontalResolution, height, verticalResolution, Path.GetFileNameWithoutExtension(fileName), units)
+        public ImageDef(string fileName, int width, float horizontalResolution, int height, float verticalResolution, ImageResolutionUnits units)
+            : this(fileName, Path.GetFileNameWithoutExtension(fileName), width, horizontalResolution, height, verticalResolution, units)
         {
         }
 
@@ -130,11 +84,11 @@ namespace netDxf.Objects
         /// Initializes a new instance of the <c>ImageDef</c> class.
         /// </summary>
         /// <param name="fileName">Image file name with full or relative path.</param>
+        /// <param name="name">Image definition name, if null or empty the file name without the extension will be used.</param>
         /// <param name="width">Image width in pixels.</param>
         /// <param name="horizontalResolution">Image horizontal resolution in pixels.</param>
         /// <param name="height">Image height in pixels.</param>
         /// <param name="verticalResolution">Image vertical resolution in pixels.</param>
-        /// <param name="name">Image definition name, if null or empty the file name without the extension will be used.</param>
         /// <param name="units">Image resolution units.</param>
         /// <remarks>
         /// <para>
@@ -150,15 +104,11 @@ namespace netDxf.Objects
         /// you must resave the TIFF files with LZW compression disabled.
         /// </para>
         /// </remarks>
-        public ImageDef(string fileName, int width, float horizontalResolution, int height, float verticalResolution, string name, ResolutionUnits units)
+        public ImageDef(string fileName, string name, int width, float horizontalResolution, int height, float verticalResolution, ImageResolutionUnits units)
             : base(name, DxfObjectCode.ImageDef, true)
         {
             if (string.IsNullOrEmpty(fileName))
                 throw new ArgumentNullException("fileName", "The image file name cannot be empty or null.");
-
-            //FileInfo info = new FileInfo(fileName);
-            //if (!info.Exists)
-            //    throw new FileNotFoundException("Image file not found", fileName);
 
             this.fileName = fileName;
             this.width = width;
@@ -167,9 +117,6 @@ namespace netDxf.Objects
             this.verticalResolution = verticalResolution;
             this.resolutionUnits = units;
 
-            // pixel size use the units defined in the document, it is controlled by the header variable $INSUNITS and the RasterVariables units
-            this.onePixelSize = new Vector2(25.4/horizontalResolution, 25.4/verticalResolution);
-
             this.reactors = new Dictionary<string, ImageDefReactor>();
         }
 
@@ -177,7 +124,6 @@ namespace netDxf.Objects
         ///  Initializes a new instance of the <c>ImageDef</c> class.
         ///  </summary>
         ///  <param name="fileName">Image file name with full or relative path.</param>
-        /// <param name="units">Image resolution units, by defult centimeters will be used.</param>
         /// <remarks>
         ///  <para>
         ///  The name of the file without extension will be used as the name of the image definition.
@@ -194,8 +140,8 @@ namespace netDxf.Objects
         ///  you must resave the TIFF files with LZW compression disabled.
         ///  </para>
         /// </remarks>
-        public ImageDef(string fileName, ResolutionUnits units = ResolutionUnits.Centimeters)
-            : this(fileName, Path.GetFileNameWithoutExtension(fileName), units)
+        public ImageDef(string fileName)
+            : this(fileName, Path.GetFileNameWithoutExtension(fileName))
         {
         }
 
@@ -204,7 +150,6 @@ namespace netDxf.Objects
         ///  </summary>
         ///  <param name="fileName">Image file name with full or relative path.</param>
         ///  <param name="name">Image definition name, if null or empty the file name without the extension will be used.</param>
-        /// <param name="units">Image resolution units, by defult centimeters will be used.</param>
         /// <remarks>
         ///  <para>
         ///  The name assigned to the image definition must be unique.
@@ -221,7 +166,7 @@ namespace netDxf.Objects
         ///  you must resave the TIFF files with LZW compression disabled.
         ///  </para>
         /// </remarks>
-        public ImageDef(string fileName, string name, ResolutionUnits units = ResolutionUnits.Centimeters)
+        public ImageDef(string fileName, string name)
             : base(name, DxfObjectCode.ImageDef, true)
         {
             if (string.IsNullOrEmpty(fileName))
@@ -239,21 +184,10 @@ namespace netDxf.Objects
                 {
                     this.width = bitmap.Width;
                     this.height = bitmap.Height;
-                    if (units == ResolutionUnits.Centimeters)
-                    {
-                        // the System.Drawing.Image stores the image resolution in inches
-                        this.horizontalResolution = bitmap.HorizontalResolution/2.54f;
-                        this.verticalResolution = bitmap.VerticalResolution/2.54f;
-                    }
-                    else
-                    {
-                        this.horizontalResolution = bitmap.HorizontalResolution;
-                        this.verticalResolution = bitmap.VerticalResolution;
-                    }
-                    this.resolutionUnits = units;
-
-                    // pixel size use the units defined in the document, it is controlled by the header variable $INSUNITS
-                    this.onePixelSize = new Vector2(25.4/bitmap.HorizontalResolution, 25.4/bitmap.VerticalResolution);
+                    this.horizontalResolution = bitmap.HorizontalResolution;
+                    this.verticalResolution = bitmap.VerticalResolution;
+                    // the System.Drawing.Image stores the image resolution in inches
+                    this.resolutionUnits = ImageResolutionUnits.Inches;
                 }
             }
             catch (Exception)
@@ -273,7 +207,7 @@ namespace netDxf.Objects
         /// </summary>
         public string FileName
         {
-            get { return fileName; }
+            get { return this.fileName; }
         }
 
         /// <summary>
@@ -281,7 +215,7 @@ namespace netDxf.Objects
         /// </summary>
         public int Width
         {
-            get { return width; }
+            get { return this.width; }
         }
 
         /// <summary>
@@ -289,23 +223,35 @@ namespace netDxf.Objects
         /// </summary>
         public int Height
         {
-            get { return height; }
+            get { return this.height; }
         }
 
         /// <summary>
-        /// Gets the image resolution units used to calculate the one pixel size value.
+        /// Gets or sets the image resolution units.
         /// </summary>
-        public ResolutionUnits ResolutionUnits
+        public ImageResolutionUnits ResolutionUnits
         {
-            get { return resolutionUnits; }
-        }
-
-        /// <summary>
-        /// Gets the default size of one pixel in AutoCAD units.
-        /// </summary>
-        public Vector2 OnePixelSize
-        {
-            get { return onePixelSize; }
+            get { return this.resolutionUnits; }
+            set
+            {
+                if (this.resolutionUnits != value)
+                {
+                    switch (value)
+                    {
+                        case ImageResolutionUnits.Centimeters:
+                            this.horizontalResolution /= 2.54f;
+                            this.verticalResolution /= 2.54f;
+                            break;
+                        case ImageResolutionUnits.Inches:
+                            this.horizontalResolution *= 2.54f;
+                            this.verticalResolution *= 2.54f;
+                            break;
+                        case ImageResolutionUnits.NoUnits:
+                            break;
+                    }
+                }
+                this.resolutionUnits = value;
+            }
         }
 
         /// <summary>
@@ -313,7 +259,7 @@ namespace netDxf.Objects
         /// </summary>
         public float HorizontalResolution
         {
-            get { return horizontalResolution; }
+            get { return this.horizontalResolution; }
         }
 
         /// <summary>
@@ -321,7 +267,16 @@ namespace netDxf.Objects
         /// </summary>
         public float VerticalResolution
         {
-            get { return verticalResolution; }
+            get { return this.verticalResolution; }
+        }
+
+        /// <summary>
+        /// Gets the owner of the actual dxf object.
+        /// </summary>
+        public new ImageDefinitions Owner
+        {
+            get { return (ImageDefinitions) this.owner; }
+            internal set { this.owner = value; }
         }
 
         #endregion
@@ -330,7 +285,7 @@ namespace netDxf.Objects
 
         internal Dictionary<string, ImageDefReactor> Reactors
         {
-            get { return reactors; }
+            get { return this.reactors; }
         }
 
         #endregion

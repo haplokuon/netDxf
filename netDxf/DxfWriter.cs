@@ -22,6 +22,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Text;
 using netDxf.Blocks;
@@ -44,47 +45,302 @@ namespace netDxf
         private string activeSection = StringCode.Unknown;
         private string activeTable = StringCode.Unknown;
         private TextWriter writer;
-        private readonly DxfVersion version;
-        // here we will store strings already encoded
-        private readonly Dictionary<string, string> buffer = new Dictionary<string, string>();
+        private DxfDocument doc;
+        // here we will store strings already encoded <string: original, string: encoded>
+        private Dictionary<string, string> encodedStrings;
 
         #endregion
 
         #region constructors
 
-        public DxfWriter(DxfVersion version)
-        {
-            this.version = version;
-        }
-
-        #endregion
-
-        #region public properties
-
-        /// <summary>
-        /// Gets the active section.
-        /// </summary>
-        public String ActiveSection
-        {
-            get { return this.activeSection; }
-        }
-
-        /// <summary>
-        /// Gets the dxf file version.
-        /// </summary>
-        public DxfVersion Version
-        {
-            get { return this.version; }
-        }
-
         #endregion
 
         #region public methods
 
+        public void Write(Stream stream, DxfDocument document)
+        {
+            this.doc = document;
+
+            if (this.doc.DrawingVariables.AcadVer < DxfVersion.AutoCad2000)
+                throw new NotSupportedException("Only AutoCad2000 and newer dxf versions are supported.");
+
+            this.encodedStrings = new Dictionary<string, string>();
+
+            // create the default PaperSpace layout in case it does not exist. The ModelSpace layout always exists
+            if (this.doc.Layouts.Count == 1)
+                this.doc.Layouts.Add(new Layout("Layout1"));
+
+            // create the application registry AcCmTransparency in case it doesn't exists, it is requiered by the layer and entity transparency
+            this.doc.ApplicationRegistries.Add(new ApplicationRegistry("AcCmTransparency"));
+
+            // dictionaries
+            List<DictionaryObject> dictionaries = new List<DictionaryObject>();
+
+            // Named dictionary it is always the first to appear in the object section
+            DictionaryObject namedObjectDictionary = new DictionaryObject(this.doc);
+            this.doc.NumHandles = namedObjectDictionary.AsignHandle(this.doc.NumHandles);
+            dictionaries.Add(namedObjectDictionary);
+
+            // create the Group dictionary, this dictionary always appear even if there are no groups in the drawing
+            DictionaryObject groupDictionary = new DictionaryObject(namedObjectDictionary);
+            this.doc.NumHandles = groupDictionary.AsignHandle(this.doc.NumHandles);
+            foreach (Group group in this.doc.Groups.Items)
+            {
+                groupDictionary.Entries.Add(group.Handle, group.Name);
+            }
+            dictionaries.Add(groupDictionary);
+            namedObjectDictionary.Entries.Add(groupDictionary.Handle, StringCode.GroupDictionary);
+
+            // Layout dictionary
+            DictionaryObject layoutDictionary = new DictionaryObject(namedObjectDictionary);
+            this.doc.NumHandles = layoutDictionary.AsignHandle(this.doc.NumHandles);
+            if (this.doc.Layouts.Count > 0)
+            {
+                foreach (Layout layout in this.doc.Layouts.Items)
+                {
+                    layoutDictionary.Entries.Add(layout.Handle, layout.Name);
+                }
+                dictionaries.Add(layoutDictionary);
+                namedObjectDictionary.Entries.Add(layoutDictionary.Handle, StringCode.LayoutDictionary);
+            }
+
+            // create the MLine style dictionary
+            DictionaryObject mLineStyleDictionary = new DictionaryObject(namedObjectDictionary);
+            this.doc.NumHandles = mLineStyleDictionary.AsignHandle(this.doc.NumHandles);
+            if (this.doc.MlineStyles.Count > 0)
+            {
+                foreach (MLineStyle mLineStyle in this.doc.MlineStyles.Items)
+                {
+                    mLineStyleDictionary.Entries.Add(mLineStyle.Handle, mLineStyle.Name);
+                }
+                dictionaries.Add(mLineStyleDictionary);
+                namedObjectDictionary.Entries.Add(mLineStyleDictionary.Handle, StringCode.MLineStyleDictionary);
+            }
+
+            // create the image dictionary
+            DictionaryObject imageDefDictionary = new DictionaryObject(namedObjectDictionary);
+            this.doc.NumHandles = imageDefDictionary.AsignHandle(this.doc.NumHandles);
+            if (this.doc.ImageDefinitions.Count > 0)
+            {
+                foreach (ImageDef imageDef in this.doc.ImageDefinitions.Items)
+                {
+                    imageDefDictionary.Entries.Add(imageDef.Handle, imageDef.Name);
+                }
+
+                dictionaries.Add(imageDefDictionary);
+
+                namedObjectDictionary.Entries.Add(imageDefDictionary.Handle, StringCode.ImageDefDictionary);
+                namedObjectDictionary.Entries.Add(this.doc.RasterVariables.Handle, StringCode.ImageVarsDictionary);
+            }
+
+            this.doc.DrawingVariables.HandleSeed = this.doc.NumHandles.ToString("X");
+
+            this.Open(stream, this.doc.DrawingVariables.AcadVer < DxfVersion.AutoCad2007 ? Encoding.Default : null);
+
+            foreach (string comment in this.doc.Comments)
+            {
+                this.WriteComment(comment);
+            }
+
+            //HEADER SECTION
+            this.BeginSection(StringCode.HeaderSection);
+            foreach (HeaderVariable variable in this.doc.DrawingVariables.Values)
+            {
+                this.WriteSystemVariable(variable);
+            }
+            this.EndSection();
+
+            //CLASSES SECTION
+            this.BeginSection(StringCode.ClassesSection);
+            this.WriteRasterVariablesClass(1);
+            if (this.doc.ImageDefinitions.Items.Count > 0)
+            {
+                this.WriteImageDefClass(this.doc.ImageDefinitions.Count);
+                this.WriteImageDefRectorClass(this.doc.Images.Count);
+                this.WriteImageClass(this.doc.Images.Count);
+            }
+            this.EndSection();
+
+            //TABLES SECTION
+            this.BeginSection(StringCode.TablesSection);
+
+            //registered application tables
+            this.BeginTable(this.doc.ApplicationRegistries.CodeName, this.doc.ApplicationRegistries.Handle);
+            foreach (ApplicationRegistry id in this.doc.ApplicationRegistries.Items)
+            {
+                this.RegisterApplication(id);
+            }
+            this.EndTable();
+
+            //viewport tables
+            this.BeginTable(this.doc.VPorts.CodeName, this.doc.VPorts.Handle);
+            foreach (VPort vport in this.doc.VPorts)
+            {
+                this.WriteVPort(vport);
+            }
+            this.EndTable();
+
+            //line type tables
+            this.BeginTable(this.doc.LineTypes.CodeName, this.doc.LineTypes.Handle);
+            foreach (LineType lineType in this.doc.LineTypes.Items)
+            {
+                this.WriteLineType(lineType);
+            }
+            this.EndTable();
+
+            //layer tables
+            this.BeginTable(this.doc.Layers.CodeName, this.doc.Layers.Handle);
+            foreach (Layer layer in this.doc.Layers.Items)
+            {
+                this.WriteLayer(layer);
+            }
+            this.EndTable();
+
+            //text style tables
+            this.BeginTable(this.doc.TextStyles.CodeName, this.doc.TextStyles.Handle);
+            foreach (TextStyle style in this.doc.TextStyles.Items)
+            {
+                this.WriteTextStyle(style);
+            }
+            this.EndTable();
+
+            //dimension style tables
+            this.BeginTable(this.doc.DimensionStyles.CodeName, this.doc.DimensionStyles.Handle);
+            foreach (DimensionStyle style in this.doc.DimensionStyles.Items)
+            {
+                this.WriteDimensionStyle(style);
+            }
+            this.EndTable();
+
+            //view
+            this.BeginTable(this.doc.Views.CodeName, this.doc.Views.Handle);
+            foreach (View view in this.doc.Views)
+            {
+                throw new NotImplementedException("this.WriteView");
+            }
+            this.EndTable();
+
+            //ucs
+            this.BeginTable(this.doc.UCSs.CodeName, this.doc.UCSs.Handle);
+            foreach (UCS ucs in this.doc.UCSs.Items)
+            {
+                this.WriteUCS(ucs);
+            }
+            this.EndTable();
+
+            //block reacord table
+            this.BeginTable(this.doc.Blocks.CodeName, this.doc.Blocks.Handle);
+            foreach (Block block in this.doc.Blocks.Items)
+            {
+                this.WriteBlockRecord(block.Record);
+            }
+            this.EndTable();
+
+            this.EndSection(); //End section tables
+
+            //BLOCKS SECTION
+            this.BeginSection(StringCode.BlocksSection);
+            foreach (Block block in this.doc.Blocks.Items)
+            {
+                Layout layout = null;
+
+                if (block.Name.StartsWith("*Paper_Space"))
+                {
+                    string index = block.Name.Remove(0, 12);
+                    if (!string.IsNullOrEmpty(index))
+                    {
+                        layout = block.Record.Layout;
+                    }
+                }
+
+                this.WriteBlock(block, layout);
+
+            }
+            this.EndSection(); //End section blocks
+
+            //ENTITIES SECTION
+            this.BeginSection(StringCode.EntitiesSection);
+            foreach (Layout layout in this.doc.Layouts)
+            {
+                if (layout.AssociatedBlock.Name.StartsWith("*Paper_Space"))
+                {
+                    string index = layout.AssociatedBlock.Name.Remove(0, 12);
+                    if (string.IsNullOrEmpty(index))
+                    {
+                        this.WriteEntity(layout.Viewport, layout);
+
+                        List<DxfObject> entities = this.doc.Layouts.GetReferences(layout);
+                        foreach (DxfObject o in entities)
+                        {
+                            this.WriteEntity(o as EntityObject, layout);
+                        }
+                    }
+                }
+                else
+                {
+                    if (layout.Viewport != null)
+                        this.WriteEntity(layout.Viewport, layout);
+
+                    List<DxfObject> entities = this.doc.Layouts.GetReferences(layout);
+                    foreach (DxfObject o in entities)
+                    {
+                        this.WriteEntity(o as EntityObject, layout);
+                    }
+                }
+            }
+            this.EndSection(); //End section entities
+
+            //OBJECTS SECTION
+            this.BeginSection(StringCode.ObjectsSection);
+
+            foreach (DictionaryObject dictionary in dictionaries)
+            {
+                this.WriteDictionary(dictionary);
+            }
+
+            foreach (Group group in this.doc.Groups.Items)
+            {
+                this.WriteGroup(group, groupDictionary.Handle);
+            }
+
+            foreach (Layout layout in this.doc.Layouts)
+            {
+                this.WriteLayout(layout, layoutDictionary.Handle);
+            }
+
+            foreach (MLineStyle style in this.doc.MlineStyles.Items)
+            {
+                this.WriteMLineStyle(style, mLineStyleDictionary.Handle);
+            }
+
+            // the raster variables dictionary is only needed when the drawing has image entities
+            if (this.doc.ImageDefinitions.Count > 0)
+                this.WriteRasterVariables(this.doc.RasterVariables, imageDefDictionary.Handle);
+
+            foreach (ImageDef imageDef in this.doc.ImageDefinitions.Items)
+            {
+                foreach (ImageDefReactor reactor in imageDef.Reactors.Values)
+                {
+                    this.WriteImageDefReactor(reactor);
+                }
+                this.WriteImageDef(imageDef, imageDefDictionary.Handle);
+            }
+
+            this.EndSection(); //End section objects
+
+            this.Close();
+
+            stream.Position = 0;
+        }
+
+        #endregion
+
+        #region private methods
+
         /// <summary>
         /// Open the dxf writer.
         /// </summary>
-        public void Open(Stream stream, Encoding encoding)
+        private void Open(Stream stream, Encoding encoding)
         {
             try
             {
@@ -92,25 +348,16 @@ namespace netDxf
             }
             catch (Exception ex)
             {
-                throw (new DxfException("Error when trying to create the dxf reader.", ex));
+                throw (new IOException("Error when trying to create the dxf reader.", ex));
             }
         }
 
         /// <summary>
         /// Closes the dxf writer.
         /// </summary>
-        public void Close()
+        private void Close()
         {
-            if (this.activeSection != StringCode.Unknown)
-            {
-                throw new OpenDxfSectionException(this.activeSection);
-            }
-            if (this.activeTable != StringCode.Unknown)
-            {
-                throw new OpenDxfTableException(this.activeTable);
-            }
             this.WriteCodePair(0, StringCode.EndOfFile);
-
             this.writer.Flush();
         }
 
@@ -119,27 +366,23 @@ namespace netDxf
         /// </summary>
         /// <param name="section">Section type to open.</param>
         /// <remarks>There can be only one type section.</remarks>
-        public void BeginSection(string section)
+        private void BeginSection(string section)
         {
-            if (this.activeSection != StringCode.Unknown)
-                throw new OpenDxfSectionException(this.activeSection);
+            Debug.Assert(this.activeSection == StringCode.Unknown);
 
             this.WriteCodePair(0, StringCode.BeginSection);
-            this.WriteCodePair(2, section);
-            
+            this.WriteCodePair(2, section);          
             this.activeSection = section;
         }
 
         /// <summary>
         /// Closes the active section.
         /// </summary>
-        public void EndSection()
+        private void EndSection()
         {
-            if (this.activeSection == StringCode.Unknown)
-                throw new ClosedDxfSectionException(StringCode.Unknown);
+            Debug.Assert(this.activeSection != StringCode.Unknown);
 
             this.WriteCodePair(0, StringCode.EndSection);
-
             this.activeSection = StringCode.Unknown;
         }
 
@@ -148,17 +391,15 @@ namespace netDxf
         /// </summary>
         /// <param name="table">Table type to open.</param>
         /// <param name="handle">Handle assigned to this table</param>
-        public void BeginTable(string table, string handle)
+        private void BeginTable(string table, string handle)
         {
-            if (this.activeSection != StringCode.TablesSection)
-                throw new OpenDxfTableException(table);
-
-            if (this.activeTable != StringCode.Unknown)
-                throw new OpenDxfTableException(table);
+            Debug.Assert(this.activeSection == StringCode.TablesSection);
 
             this.WriteCodePair(0, StringCode.Table);
             this.WriteCodePair(2, table);
             this.WriteCodePair(5, handle);
+            this.WriteCodePair(330, "0");
+
             this.WriteCodePair(100, SubclassMarker.Table);
 
             if (table == StringCode.DimensionStyleTable)
@@ -169,12 +410,9 @@ namespace netDxf
         /// <summary>
         /// Closes the active table.
         /// </summary>
-        public void EndTable()
+        private void EndTable()
         {
-            if (this.activeTable == StringCode.Unknown)
-            {
-                throw new ClosedDxfTableException(StringCode.Unknown);
-            }
+            Debug.Assert(this.activeSection != StringCode.Unknown);
 
             this.WriteCodePair(0, StringCode.EndTable);
             this.activeTable = StringCode.Unknown;
@@ -184,16 +422,15 @@ namespace netDxf
 
         #region methods for Header section
 
-        public void WriteComment(string comment)
+        private void WriteComment(string comment)
         {
             if (!string.IsNullOrEmpty(comment))
                 this.WriteCodePair(999, comment);
         }
 
-        public void WriteSystemVariable(HeaderVariable variable)
+        private void WriteSystemVariable(HeaderVariable variable)
         {
-            if (this.activeSection != StringCode.HeaderSection)
-                throw new InvalidDxfSectionException(this.activeSection);
+            Debug.Assert(this.activeSection == StringCode.HeaderSection);
 
             string name = variable.Name;
             string value = variable.Value.ToString();
@@ -201,7 +438,7 @@ namespace netDxf
             {
                 case HeaderVariableCode.LastSavedBy:
                     // the LastSavedBy header variable is not recognized in AutoCad2000 dxf files, so it will not be written
-                    if (this.version > DxfVersion.AutoCad2000)
+                    if (this.doc.DrawingVariables.AcadVer > DxfVersion.AutoCad2000)
                     {
                         value = EncodeNonAsciiCharacters(value);
                         this.WriteCodePair(9, name);
@@ -209,25 +446,9 @@ namespace netDxf
                     }
                     break;
                 case HeaderVariableCode.CLayer:
-                    value = EncodeNonAsciiCharacters(value);
-                    this.WriteCodePair(9, name);
-                    this.WriteCodePair(variable.CodeGroup, value);
-                    break;
                 case HeaderVariableCode.CeLtype:
-                    value = EncodeNonAsciiCharacters(value);
-                    this.WriteCodePair(9, name);
-                    this.WriteCodePair(variable.CodeGroup, value);
-                    break;
                 case HeaderVariableCode.CMLStyle:
-                    value = EncodeNonAsciiCharacters(value);
-                    this.WriteCodePair(9, name);
-                    this.WriteCodePair(variable.CodeGroup, value);
-                    break;
                 case HeaderVariableCode.DimStyle:
-                    value = EncodeNonAsciiCharacters(value);
-                    this.WriteCodePair(9, name);
-                    this.WriteCodePair(variable.CodeGroup, value);
-                    break;
                 case HeaderVariableCode.TextStyle:
                     value = EncodeNonAsciiCharacters(value);
                     this.WriteCodePair(9, name);
@@ -244,7 +465,7 @@ namespace netDxf
 
         #region methods for Classes section
 
-        public void WriteImageClass(int count)
+        private void WriteImageClass(int count)
         {
             this.WriteCodePair(0, StringCode.Class);
             this.WriteCodePair(1, DxfObjectCode.Image);
@@ -253,12 +474,12 @@ namespace netDxf
 
             // default codes as shown in the dxf documentation
             this.WriteCodePair(90, 127);
-            if (this.version > DxfVersion.AutoCad2000) this.WriteCodePair(91, count);
+            if (this.doc.DrawingVariables.AcadVer > DxfVersion.AutoCad2000) this.WriteCodePair(91, count);
             this.WriteCodePair(280, 0);
             this.WriteCodePair(281, 1);
         }
 
-        public void WriteImageDefClass(int count)
+        private void WriteImageDefClass(int count)
         {
             this.WriteCodePair(0, StringCode.Class);
             this.WriteCodePair(1, DxfObjectCode.ImageDef);
@@ -267,12 +488,12 @@ namespace netDxf
 
             // default codes as shown in the dxf documentation
             this.WriteCodePair(90, 0);
-            if (this.version > DxfVersion.AutoCad2000) this.WriteCodePair(91, count);
+            if (this.doc.DrawingVariables.AcadVer > DxfVersion.AutoCad2000) this.WriteCodePair(91, count);
             this.WriteCodePair(280, 0);
             this.WriteCodePair(281, 0);
         }
 
-        public void WriteImageDefRectorClass(int count)
+        private void WriteImageDefRectorClass(int count)
         {
             this.WriteCodePair(0, StringCode.Class);
             this.WriteCodePair(1, DxfObjectCode.ImageDefReactor);
@@ -281,12 +502,12 @@ namespace netDxf
 
             // default codes as shown in the dxf documentation
             this.WriteCodePair(90, 1);
-            if (this.version > DxfVersion.AutoCad2000) this.WriteCodePair(91, count);
+            if (this.doc.DrawingVariables.AcadVer > DxfVersion.AutoCad2000) this.WriteCodePair(91, count);
             this.WriteCodePair(280, 0);
             this.WriteCodePair(281, 0);
         }
 
-        public void WriteRasterVariablesClass(int count)
+        private void WriteRasterVariablesClass(int count)
         {
             this.WriteCodePair(0, StringCode.Class);
             this.WriteCodePair(1, DxfObjectCode.RasterVariables);
@@ -295,7 +516,7 @@ namespace netDxf
 
             // default codes as shown in the dxf documentation
             this.WriteCodePair(90, 0);
-            if (this.version > DxfVersion.AutoCad2000) this.WriteCodePair(91, count);
+            if (this.doc.DrawingVariables.AcadVer > DxfVersion.AutoCad2000) this.WriteCodePair(91, count);
             this.WriteCodePair(280, 0);
             this.WriteCodePair(281, 0);
         }
@@ -308,15 +529,14 @@ namespace netDxf
         /// Writes a new extended data application registry to the table section.
         /// </summary>
         /// <param name="appReg">Name of the application registry.</param>
-        public void RegisterApplication(ApplicationRegistry appReg)
+        private void RegisterApplication(ApplicationRegistry appReg)
         {
-            if (this.activeTable != StringCode.ApplicationIDTable)
-            {
-                throw new InvalidDxfTableException(StringCode.ApplicationIDTable);
-            }
+            Debug.Assert(this.activeTable == StringCode.ApplicationIDTable);
 
             this.WriteCodePair(0, StringCode.ApplicationIDTable);
             this.WriteCodePair(5, appReg.Handle);
+            this.WriteCodePair(330, appReg.Owner.Handle);
+
             this.WriteCodePair(100, SubclassMarker.TableRecord);
             this.WriteCodePair(100, SubclassMarker.ApplicationId);
 
@@ -329,17 +549,17 @@ namespace netDxf
         /// Writes a new view port to the table section.
         /// </summary>
         /// <param name="vp">Viewport.</param>
-        public void WriteViewPort(Viewport vp)
+        private void WriteVPort(VPort vp)
         {
-            if (this.activeTable != StringCode.ViewPortTable)
-            {
-                throw new InvalidDxfTableException(this.activeTable);
-            }
+            Debug.Assert(this.activeTable == StringCode.VportTable);
+
             this.WriteCodePair(0, vp.CodeName);
             this.WriteCodePair(5, vp.Handle);
+            this.WriteCodePair(330, vp.Owner.Handle);
+
             this.WriteCodePair(100, SubclassMarker.TableRecord);
 
-            this.WriteCodePair(100, SubclassMarker.ViewPort);
+            this.WriteCodePair(100, SubclassMarker.VPort);
 
             this.WriteCodePair(2, EncodeNonAsciiCharacters(vp.Name));
 
@@ -377,14 +597,13 @@ namespace netDxf
         /// Writes a new dimension style to the table section.
         /// </summary>
         /// <param name="style">DimensionStyle.</param>
-        public void WriteDimensionStyle(DimensionStyle style)
+        private void WriteDimensionStyle(DimensionStyle style)
         {
-            if (this.activeTable != StringCode.DimensionStyleTable)
-            {
-                throw new InvalidDxfTableException(this.activeTable);
-            }
+            Debug.Assert(this.activeTable == StringCode.DimensionStyleTable);
+
             this.WriteCodePair(0, style.CodeName);
             this.WriteCodePair(105, style.Handle);
+            this.WriteCodePair(330, style.Owner.Handle);
 
             this.WriteCodePair(100, SubclassMarker.TableRecord);
 
@@ -416,14 +635,14 @@ namespace netDxf
         /// Writes a new block record to the table section.
         /// </summary>
         /// <param name="blockRecord">Block.</param>
-        public void WriteBlockRecord(BlockRecord blockRecord)
+        private void WriteBlockRecord(BlockRecord blockRecord)
         {
-            if (this.activeTable != StringCode.BlockRecordTable)
-            {
-                throw new InvalidDxfTableException(this.activeTable);
-            }
+            Debug.Assert(this.activeTable == StringCode.BlockRecordTable);
+
             this.WriteCodePair(0, blockRecord.CodeName);
             this.WriteCodePair(5, blockRecord.Handle);
+            this.WriteCodePair(330, blockRecord.Owner.Handle);
+
             this.WriteCodePair(100, SubclassMarker.TableRecord);
 
             this.WriteCodePair(100, SubclassMarker.BlockRecord);
@@ -431,24 +650,40 @@ namespace netDxf
             this.WriteCodePair(2, EncodeNonAsciiCharacters(blockRecord.Name));
 
             // Hard-pointer ID/handle to associated LAYOUT object
-            this.WriteCodePair(340, 0);
+            this.WriteCodePair(340, blockRecord.Layout == null ? "0" : blockRecord.Layout.Handle);
 
+            // internal blocks do not need more information
+            if (blockRecord.IsForInternalUseOnly) return;
+
+            // The next three values will only work for dxf version AutoCad2007 and upwards
             this.WriteCodePair(70, (int)blockRecord.Units);
+            this.WriteCodePair(280, blockRecord.AllowExploding ? 1 : 0);
+            this.WriteCodePair(281, blockRecord.ScaleUniformly ? 1 : 0);
+
+            if (this.doc.DrawingVariables.AcadVer >= DxfVersion.AutoCad2007)
+                return;
+
+            // for dxf versions prior to AutoCad2007 the block record units is stored in an extended data block
+            this.WriteCodePair(1001, ApplicationRegistry.Default.Name); // the default application registry is always present in the document
+            this.WriteCodePair(1000, "DesignCenter Data");
+            this.WriteCodePair(1002, "{");
+            this.WriteCodePair(1070, 1); // Autodesk Design Center version number.
+            this.WriteCodePair(1070, (int)blockRecord.Units);
+            this.WriteCodePair(1002, "}");
         }
 
         /// <summary>
         /// Writes a new line type to the table section.
         /// </summary>
         /// <param name="tl">Line type.</param>
-        public void WriteLineType(LineType tl)
+        private void WriteLineType(LineType tl)
         {
-            if (this.activeTable != StringCode.LineTypeTable)
-            {
-                throw new InvalidDxfTableException(this.activeTable);
-            }
+            Debug.Assert(this.activeTable == StringCode.LineTypeTable);
 
             this.WriteCodePair(0, tl.CodeName);
             this.WriteCodePair(5, tl.Handle);
+            this.WriteCodePair(330, tl.Owner.Handle);
+
             this.WriteCodePair(100, SubclassMarker.TableRecord);
 
             this.WriteCodePair(100, SubclassMarker.LineType);
@@ -473,15 +708,14 @@ namespace netDxf
         /// Writes a new layer to the table section.
         /// </summary>
         /// <param name="layer">Layer.</param>
-        public void WriteLayer(Layer layer)
+        private void WriteLayer(Layer layer)
         {
-            if (this.activeTable != StringCode.LayerTable)
-            {
-                throw new InvalidDxfTableException(this.activeTable);
-            }
+            Debug.Assert(this.activeTable == StringCode.LayerTable);
 
             this.WriteCodePair(0, layer.CodeName);
             this.WriteCodePair(5, layer.Handle);
+            this.WriteCodePair(330, layer.Owner.Handle);
+
             this.WriteCodePair(100, SubclassMarker.TableRecord);
 
             this.WriteCodePair(100, SubclassMarker.Layer);
@@ -503,27 +737,36 @@ namespace netDxf
             if (layer.Color.UseTrueColor)
                 this.WriteCodePair(420, AciColor.ToTrueColor(layer.Color));
 
+
             this.WriteCodePair(6, EncodeNonAsciiCharacters(layer.LineType.Name));
 
             this.WriteCodePair(290, layer.Plot ? 1 : 0);
             this.WriteCodePair(370, layer.Lineweight.Value);
             // Hard pointer ID/handle of PlotStyleName object
             this.WriteCodePair(390, 0);
+
+            // transparency is stored in xdata
+            if (layer.Transparency.Value > 0)
+            {
+                int alpha = Transparency.ToAlphaValue(layer.Transparency);
+                this.WriteCodePair(1001, "AcCmTransparency");
+                this.WriteCodePair(1071, alpha);
+            }
+
         }
 
         /// <summary>
         /// Writes a new text style to the table section.
         /// </summary>
         /// <param name="style">TextStyle.</param>
-        public void WriteTextStyle(TextStyle style)
+        private void WriteTextStyle(TextStyle style)
         {
-            if (this.activeTable != StringCode.TextStyleTable)
-            {
-                throw new InvalidDxfTableException(this.activeTable);
-            }
+            Debug.Assert(this.activeTable == StringCode.TextStyleTable);
 
             this.WriteCodePair(0, style.CodeName);
             this.WriteCodePair(5, style.Handle);
+            this.WriteCodePair(330, style.Owner.Handle);
+
             this.WriteCodePair(100, SubclassMarker.TableRecord);
 
             this.WriteCodePair(100, SubclassMarker.TextStyle);
@@ -561,15 +804,14 @@ namespace netDxf
         /// Writes a new user coordinate system to the table section.
         /// </summary>
         /// <param name="ucs">UCS.</param>
-        public void WriteUCS(UCS ucs)
+        private void WriteUCS(UCS ucs)
         {
-            if (this.activeTable != StringCode.UcsTable)
-            {
-                throw new InvalidDxfTableException(this.activeTable);
-            }
+            Debug.Assert(this.activeTable == StringCode.UcsTable);
 
             this.WriteCodePair(0, ucs.CodeName);
             this.WriteCodePair(5, ucs.Handle);
+            this.WriteCodePair(330, ucs.Owner.Handle);
+
             this.WriteCodePair(100, SubclassMarker.TableRecord);
 
             this.WriteCodePair(100, SubclassMarker.Ucs);
@@ -599,18 +841,20 @@ namespace netDxf
 
         #region methods for Block section
 
-        public void WriteBlock(Block block)
+        private void WriteBlock(Block block, Layout layout)
         {
-            if (this.activeSection != StringCode.BlocksSection)
-            {
-                throw new InvalidDxfSectionException(this.activeSection);
-            }
+            Debug.Assert(this.activeSection == StringCode.BlocksSection);
 
             string name = EncodeNonAsciiCharacters(block.Name);
 
             this.WriteCodePair(0, block.CodeName);
             this.WriteCodePair(5, block.Handle);
+            this.WriteCodePair(330, block.Owner.Handle);
+
             this.WriteCodePair(100, SubclassMarker.Entity);
+
+            if (layout != null)
+                this.WriteCodePair(67, layout.IsPaperSpace ? 1 : 0);
 
             this.WriteCodePair(8, EncodeNonAsciiCharacters(block.Layer.Name));
 
@@ -619,7 +863,7 @@ namespace netDxf
             this.WriteCodePair(2, name);
 
             //flags
-            this.WriteCodePair(70, block.Attributes.Count == 0 ? (int)block.TypeFlags : (int)(block.TypeFlags | BlockTypeFlags.NonConstantAttributeDefinitions));
+            this.WriteCodePair(70, block.AttributeDefinitions.Count == 0 ? (int)block.Flags : (int)(block.Flags | BlockTypeFlags.NonConstantAttributeDefinitions));
 
             this.WriteCodePair(10, block.Position.X);
             this.WriteCodePair(20, block.Position.Y);
@@ -627,26 +871,36 @@ namespace netDxf
 
             this.WriteCodePair(3, name);
 
-            foreach (AttributeDefinition attdef in block.Attributes.Values)
+            foreach (AttributeDefinition attdef in block.AttributeDefinitions.Values)
             {
                 this.WriteAttributeDefinition(attdef);
             }
 
-            foreach (EntityObject entity in block.Entities)
+            if (layout == null)
             {
-                this.WriteEntity(entity, true);
+                foreach (EntityObject entity in block.Entities)
+                {
+                    this.WriteEntity(entity, null);
+                }
+            }
+            else
+            {
+                this.WriteEntity(layout.Viewport, layout);
+
+                List<DxfObject> entities = this.doc.Layouts.GetReferences(layout);
+                foreach (DxfObject entity in entities)
+                {
+                    this.WriteEntity(entity as EntityObject, layout);
+                }
             }
 
-            this.WriteBlockEnd(block.End);
-        }
-
-        public void WriteBlockEnd(BlockEnd blockEnd)
-        {
-            this.WriteCodePair(0, blockEnd.CodeName);
-            this.WriteCodePair(5, blockEnd.Handle);
+            // EndBlock entity
+            this.WriteCodePair(0, block.End.CodeName);
+            this.WriteCodePair(5, block.End.Handle);
+            this.WriteCodePair(330, block.Owner.Handle);
             this.WriteCodePair(100, SubclassMarker.Entity);
 
-            this.WriteCodePair(8, EncodeNonAsciiCharacters(blockEnd.Layer.Name));
+            this.WriteCodePair(8, EncodeNonAsciiCharacters(block.End.Layer.Name));
 
             this.WriteCodePair(100, SubclassMarker.BlockEnd);
         }
@@ -655,12 +909,11 @@ namespace netDxf
 
         #region methods for Entity section
 
-        public void WriteEntity(EntityObject entity, bool isBlockEntity = false)
+        private void WriteEntity(EntityObject entity, Layout layout)
         {
-            if (this.activeSection != StringCode.EntitiesSection && !isBlockEntity)
-                throw new InvalidDxfSectionException(this.activeSection);
+            Debug.Assert(this.activeSection == StringCode.EntitiesSection || this.activeSection == StringCode.BlocksSection);
 
-            WriteEntityCommonCodes(entity);
+            WriteEntityCommonCodes(entity, layout);
 
             switch (entity.Type)
             {
@@ -724,17 +977,33 @@ namespace netDxf
                 case EntityType.MLine:
                     this.WriteMLine((MLine)entity);
                     break;
+                case EntityType.Viewport:
+                    this.WriteViewport((Viewport)entity);
+                    break;
                 default:
-                    throw new DxfEntityException(entity.Type.ToString(), "Entity unknown." );
+                    throw new ArgumentException("Entity unknown.", "entity");
                     
             }
         }
 
-        public void WriteEntityCommonCodes(EntityObject entity)
+        private void WriteEntityCommonCodes(EntityObject entity, Layout layout)
         {
             this.WriteCodePair(0, entity.CodeName);
             this.WriteCodePair(5, entity.Handle);
+
+            if (entity.Reactor != null)
+            {
+                this.WriteCodePair(102, "{ACAD_REACTORS");
+                this.WriteCodePair(330, entity.Reactor.Handle);
+                this.WriteCodePair(102, "}");
+            }
+
+            this.WriteCodePair(330, entity.Owner.Owner.Handle);
+
             this.WriteCodePair(100, SubclassMarker.Entity);
+
+            if (layout != null)
+                this.WriteCodePair(67, layout.IsPaperSpace ? 1 : 0);
 
             this.WriteCodePair(8, EncodeNonAsciiCharacters(entity.Layer.Name));
 
@@ -742,11 +1011,15 @@ namespace netDxf
             if (entity.Color.UseTrueColor)
                 this.WriteCodePair(420, AciColor.ToTrueColor(entity.Color));
 
+            if (entity.Transparency.Value>=0)
+                this.WriteCodePair(440, Transparency.ToAlphaValue(entity.Transparency));
+
             this.WriteCodePair(6, EncodeNonAsciiCharacters(entity.LineType.Name));
 
             this.WriteCodePair(370, entity.Lineweight.Value);
             this.WriteCodePair(48, entity.LineTypeScale);
             this.WriteCodePair(60, entity.IsVisible ? 0 : 1);
+
         }
 
         private void WriteArc(Arc arc)
@@ -933,9 +1206,12 @@ namespace netDxf
             this.WriteCodePair(20, ocsInsertion.Y);
             this.WriteCodePair(30, ocsInsertion.Z);
 
-            this.WriteCodePair(41, insert.Scale.X);
-            this.WriteCodePair(42, insert.Scale.Y);
-            this.WriteCodePair(43, insert.Scale.Z);
+            // we need to apply the scaling factor between the block and the document or the block that owns it in case of nested blocks
+            double scale = MathHelper.ConversionFactor(insert.Block.Record.Units, insert.Owner.Record.IsForInternalUseOnly ? this.doc.DrawingVariables.InsUnits : insert.Owner.Record.Units);
+
+            this.WriteCodePair(41, insert.Scale.X * scale);
+            this.WriteCodePair(42, insert.Scale.Y * scale);
+            this.WriteCodePair(43, insert.Scale.Z * scale);
 
             this.WriteCodePair(50, insert.Rotation);
 
@@ -946,15 +1222,13 @@ namespace netDxf
             if (insert.Attributes.Count > 0)
             {
                 //Obsolete; formerly an “entities follow flag” (optional; ignore if present)
-                //but its needed to load the dxf file in AutoCAD
+                //AutoCAD will fail loading the file if it is not there, more dxf voodoo
                 this.WriteCodePair(66, "1");
 
                 this.WriteXData(insert.XData);
 
-                foreach (Attribute attrib in insert.Attributes)
-                {
+                foreach (Attribute attrib in insert.Attributes.Values)
                     this.WriteAttribute(attrib);
-                }
 
                 this.WriteCodePair(0, insert.EndSequence.CodeName);
                 this.WriteCodePair(5, insert.EndSequence.Handle);
@@ -1388,10 +1662,6 @@ namespace netDxf
             // pattern info
             WriteHatchPattern(hatch.Pattern);
 
-            // add or modifies xData information for GradientColor1ACI and GradientColor2ACI
-            if (hatch.Pattern.GetType() == typeof (HatchGradientPattern))
-                ((HatchGradientPattern) hatch.Pattern).GradientColorAciXData(hatch.XData);
-
             this.WriteXData(hatch.XData);   
         }
 
@@ -1402,125 +1672,98 @@ namespace netDxf
             // each hatch boundary paths are made of multiple closed loops
             foreach (HatchBoundaryPath path in boundaryPaths)
             {
-                this.WriteCodePair(92, (int)path.PathTypeFlag);
-                if ((path.PathTypeFlag & BoundaryPathTypeFlag.Polyline) != BoundaryPathTypeFlag.Polyline) this.WriteCodePair(93, path.NumberOfEdges);
-                foreach (EntityObject entity in path.Data)
-                {
+                this.WriteCodePair(92, (int) path.PathTypeFlag);
+
+                if ((path.PathTypeFlag & HatchBoundaryPathTypeFlag.Polyline) != HatchBoundaryPathTypeFlag.Polyline)
+                    this.WriteCodePair(93, path.Edges.Count);
+
+                foreach (HatchBoundaryPath.Edge entity in path.Edges)
                     WriteHatchBoundaryPathData(entity);
-                }
+
                 this.WriteCodePair(97, 0); // associative hatches not supported
             }
         }
 
-        private void WriteHatchBoundaryPathData(EntityObject entity)
-        {    
-                switch (entity.Type)
+        private void WriteHatchBoundaryPathData(HatchBoundaryPath.Edge entity)
+        {
+            if (entity is HatchBoundaryPath.Arc)
+            {
+                this.WriteCodePair(72, 2);  // Edge type (only if boundary is not a polyline): 1 = Line; 2 = Circular arc; 3 = Elliptic arc; 4 = Spline
+
+                HatchBoundaryPath.Arc arc = (HatchBoundaryPath.Arc)entity;
+
+                this.WriteCodePair(10, arc.Center.X);
+                this.WriteCodePair(20, arc.Center.Y);
+                this.WriteCodePair(40, arc.Radius);
+                this.WriteCodePair(50, arc.StartAngle);
+                this.WriteCodePair(51, arc.EndAngle);
+                this.WriteCodePair(73, arc.IsCounterclockwise ? 1 : 0); 
+            }
+            else if (entity is HatchBoundaryPath.Ellipse)
+            {
+                this.WriteCodePair(72, 3);  // Edge type (only if boundary is not a polyline): 1 = Line; 2 = Circular arc; 3 = Elliptic arc; 4 = Spline
+
+                HatchBoundaryPath.Ellipse ellipse = (HatchBoundaryPath.Ellipse)entity;
+
+                this.WriteCodePair(10, ellipse.Center.X);
+                this.WriteCodePair(20, ellipse.Center.Y);
+                this.WriteCodePair(11, ellipse.EndMajorAxis.X);
+                this.WriteCodePair(21, ellipse.EndMajorAxis.Y);
+                this.WriteCodePair(40, ellipse.MinorRatio);
+                this.WriteCodePair(50, ellipse.StartAngle);
+                this.WriteCodePair(51, ellipse.EndAngle);
+                this.WriteCodePair(73, ellipse.IsCounterclockwise ? 1 : 0);
+            }
+            else if(entity is HatchBoundaryPath.Line)
+            {
+                this.WriteCodePair(72, 1);  // Edge type (only if boundary is not a polyline): 1 = Line; 2 = Circular arc; 3 = Elliptic arc; 4 = Spline
+
+                HatchBoundaryPath.Line line = (HatchBoundaryPath.Line)entity;
+
+                this.WriteCodePair(10, line.Start.X);
+                this.WriteCodePair(20, line.Start.Y);
+                this.WriteCodePair(11, line.End.X);
+                this.WriteCodePair(21, line.End.Y);
+            }
+            else if (entity is HatchBoundaryPath.Polyline)
+            {
+                HatchBoundaryPath.Polyline poly = (HatchBoundaryPath.Polyline) entity;
+                this.WriteCodePair(72, 1);  // Has bulge flag
+                this.WriteCodePair(73, poly.IsClosed ? 1 : 0);
+                this.WriteCodePair(93, poly.Vertexes.Length);
+
+                foreach (Vector3 vertex in poly.Vertexes)
                 {
-                    case EntityType.Arc:
-                        this.WriteCodePair(72, 2);  // Edge type (only if boundary is not a polyline): 1 = Line; 2 = Circular arc; 3 = Elliptic arc; 4 = Spline
-
-                        Arc arc = (Arc)entity;
-                        this.WriteCodePair(10, arc.Center.X);
-                        this.WriteCodePair(20, arc.Center.Y);
-                        this.WriteCodePair(40, arc.Radius);
-                        this.WriteCodePair(50, arc.StartAngle);
-                        this.WriteCodePair(51, arc.EndAngle);
-                        this.WriteCodePair(73, Math.Sign(arc.EndAngle - arc.StartAngle) >= 0 ? 1 : 0); // Is counterclockwise flag
-                        break;
-                    case EntityType.Circle:
-                        this.WriteCodePair(72, 2);  // Edge type (only if boundary is not a polyline): 1 = Line; 2 = Circular arc; 3 = Elliptic arc; 4 = Spline
-
-                        Circle circle = (Circle)entity;
-                        this.WriteCodePair(10, circle.Center.X);
-                        this.WriteCodePair(20, circle.Center.Y);
-                        this.WriteCodePair(40, circle.Radius);
-                        this.WriteCodePair(50, 0);
-                        this.WriteCodePair(51, 360);
-                        this.WriteCodePair(73, 1);   // Is counterclockwise flag   
-                        break;
-
-                    case EntityType.Ellipse:
-
-                        this.WriteCodePair(72, 3);  // Edge type (only if boundary is not a polyline): 1 = Line; 2 = Circular arc; 3 = Elliptic arc; 4 = Spline
-
-                        Ellipse ellipse = (Ellipse)entity;
-
-                        this.WriteCodePair(10, ellipse.Center.X);
-                        this.WriteCodePair(20, ellipse.Center.Y);
-                        double sine = 0.5 * ellipse.MajorAxis * Math.Sin(ellipse.Rotation * MathHelper.DegToRad);
-                        double cosine = 0.5 * ellipse.MajorAxis * Math.Cos(ellipse.Rotation * MathHelper.DegToRad);
-                        this.WriteCodePair(11, cosine);
-                        this.WriteCodePair(21, sine);
-
-                        this.WriteCodePair(40, ellipse.MinorAxis / ellipse.MajorAxis);
-                        this.WriteCodePair(50, ellipse.StartAngle);
-                        this.WriteCodePair(51, ellipse.EndAngle);
-
-                        this.WriteCodePair(73, Math.Sign(ellipse.EndAngle - ellipse.StartAngle) >= 0 ? 1 : 0); // Is counterclockwise flag
-                        break;
-
-                    case EntityType.Line:
-                        this.WriteCodePair(72, 1);  // Edge type (only if boundary is not a polyline): 1 = Line; 2 = Circular arc; 3 = Elliptic arc; 4 = Spline
-
-                        Line line = (Line)entity;
-                        this.WriteCodePair(10, line.StartPoint.X);
-                        this.WriteCodePair(20, line.StartPoint.Y);
-                        this.WriteCodePair(11, line.EndPoint.X);
-                        this.WriteCodePair(21, line.EndPoint.Y);
-
-                        break;
-
-                    case EntityType.LightWeightPolyline:
-                        LwPolyline polyline = (LwPolyline)entity;
-                        if (polyline.IsClosed)
-                        {
-                            this.WriteCodePair(72, 1);  // Has bulge flag
-                            this.WriteCodePair(73, 1);
-                            this.WriteCodePair(93, polyline.Vertexes.Count);
-
-                            foreach (LwPolylineVertex vertex in polyline.Vertexes)
-                            {
-                                this.WriteCodePair(10, vertex.Location.X);
-                                this.WriteCodePair(20, vertex.Location.Y);
-                                this.WriteCodePair(42, vertex.Bulge);
-                            }
-                        }
-                        else
-                        {
-                            // open polylines will always be exploded before being exported, AutoCAD seems to like it this way
-                            List<EntityObject> exploded = polyline.Explode();
-                            foreach (EntityObject o in exploded)
-                            {
-                                WriteHatchBoundaryPathData(o);
-                            }
-                        }
-                        break;
-                    case EntityType.Spline:
-                        Spline spline = (Spline)entity;
-                        this.WriteCodePair(72, 4);  // Edge type (only if boundary is not a polyline): 1 = Line; 2 = Circular arc; 3 = Elliptic arc; 4 = Spline
-                        this.WriteCodePair(94, spline.Degree);
-                        this.WriteCodePair(73, (spline.Flags & SplineTypeFlags.Rational) == SplineTypeFlags.Rational ? 1 : 0);
-                        this.WriteCodePair(74, spline.IsPeriodic ? 1 : 0);
-                        this.WriteCodePair(95, spline.Knots.Length);
-                        this.WriteCodePair(96, spline.ControlPoints.Count);
-                        foreach (double knot in spline.Knots)
-                            this.WriteCodePair(40, knot);
-
-                        foreach (SplineVertex point in spline.ControlPoints)
-                        {
-                            this.WriteCodePair(10, point.Location.X);
-                            this.WriteCodePair(20, point.Location.Y);
-                            this.WriteCodePair(42, point.Weigth);
-                        }
-
-                        // this information is only required for AutoCAD version 2010
-                        // stores information about spline fit points (the spline entity has no fit points and no tangent info)
-                        if (this.version >= DxfVersion.AutoCad2010) this.WriteCodePair(97, 0);
-                        
-                        break;
-                    default:
-                        throw new NotSupportedException("Hatch boundary path not supported: " + entity.Type);
+                    this.WriteCodePair(10, vertex.X);
+                    this.WriteCodePair(20, vertex.Y);
+                    this.WriteCodePair(42, vertex.Z);
                 }
+            }
+            else if (entity is HatchBoundaryPath.Spline)
+            {
+                this.WriteCodePair(72, 4);  // Edge type (only if boundary is not a polyline): 1 = Line; 2 = Circular arc; 3 = Elliptic arc; 4 = Spline
+
+                HatchBoundaryPath.Spline spline = (HatchBoundaryPath.Spline)entity;
+
+                this.WriteCodePair(94, spline.Degree);
+                this.WriteCodePair(73, spline.IsRational ? 1 : 0);
+                this.WriteCodePair(74, spline.IsPeriodic ? 1 : 0);
+                this.WriteCodePair(95, spline.Knots.Length);
+                this.WriteCodePair(96, spline.ControlPoints.Length);
+                foreach (double knot in spline.Knots)
+                    this.WriteCodePair(40, knot);
+                foreach (Vector3 point in spline.ControlPoints)
+                {
+                    this.WriteCodePair(10, point.X);
+                    this.WriteCodePair(20, point.Y);
+                    if(spline.IsRational) this.WriteCodePair(42, point.Z);
+                }
+
+                // this information is only required for AutoCAD version 2010
+                // stores information about spline fit points (the spline entity has no fit points and no tangent info)
+                if (this.doc.DrawingVariables.AcadVer >= DxfVersion.AutoCad2010) this.WriteCodePair(97, 0);
+            }
+            
         }
 
         private void WriteHatchPattern(HatchPattern pattern)
@@ -1528,7 +1771,7 @@ namespace netDxf
             this.WriteCodePair(75, (int)pattern.Style); 
             this.WriteCodePair(76, (int)pattern.Type);
 
-            if (pattern.Fill == FillType.PatternFill)
+            if (pattern.Fill == HatchFillType.PatternFill)
             {
                 this.WriteCodePair(52, pattern.Angle);
                 this.WriteCodePair(41, pattern.Scale);
@@ -1538,12 +1781,13 @@ namespace netDxf
             }
 
             // I don't know what is the purpose of these codes, it seems that it doesn't change anything but they are needed
-            this.WriteCodePair(47, 0.0);
+            this.WriteCodePair(47, 0);
             this.WriteCodePair(98, 1);
             this.WriteCodePair(10, 0.0);
             this.WriteCodePair(20, 0.0);
 
-            if (pattern.GetType() == typeof (HatchGradientPattern) && this.version > DxfVersion.AutoCad2000)
+            // dxf AutoCad2000 does not support hatch gradient patterns
+            if (pattern is HatchGradientPattern && this.doc.DrawingVariables.AcadVer > DxfVersion.AutoCad2000)
                 WriteGradientHatchPattern((HatchGradientPattern) pattern);
         }
 
@@ -1603,7 +1847,7 @@ namespace netDxf
         {
             this.WriteCodePair(100, SubclassMarker.Dimension);
 
-            this.WriteCodePair(2, EncodeNonAsciiCharacters(dim.Block.Record.Name));
+            this.WriteCodePair(2, EncodeNonAsciiCharacters(dim.Block.Name));
 
             this.WriteCodePair(10, dim.DefinitionPoint.X);
             this.WriteCodePair(20, dim.DefinitionPoint.Y);
@@ -1709,7 +1953,6 @@ namespace netDxf
 
         private void WriteDiametricDimension(DiametricDimension dim)
         {
-
             this.WriteCodePair(100, SubclassMarker.DiametricDimension);
 
             this.WriteCodePair(15, dim.CircunferencePoint.X);
@@ -1790,14 +2033,17 @@ namespace netDxf
             this.WriteCodePair(20, image.Position.Y);
             this.WriteCodePair(30, image.Position.Z);
 
+            double factor = MathHelper.ConversionFactor(this.doc.RasterVariables.Units, this.doc.DrawingVariables.InsUnits);
             Vector2 u = MathHelper.Transform(new Vector2(image.Width / image.Definition.Width, 0.0), image.Rotation * MathHelper.DegToRad, MathHelper.CoordinateSystem.Object, MathHelper.CoordinateSystem.World);
             Vector3 uWcs = MathHelper.Transform(new Vector3(u.X, u.Y, 0.0), image.Normal, MathHelper.CoordinateSystem.Object, MathHelper.CoordinateSystem.World);
+            uWcs *= factor;
             this.WriteCodePair(11, uWcs.X);
             this.WriteCodePair(21, uWcs.Y);
             this.WriteCodePair(31, uWcs.Z);
 
             Vector2 v = MathHelper.Transform(new Vector2(0.0, image.Height / image.Definition.Height), image.Rotation * MathHelper.DegToRad, MathHelper.CoordinateSystem.Object, MathHelper.CoordinateSystem.World);
             Vector3 vWcs = MathHelper.Transform(new Vector3(v.X, v.Y, 0.0), image.Normal, MathHelper.CoordinateSystem.Object, MathHelper.CoordinateSystem.World);
+            vWcs *= factor;
             this.WriteCodePair(12, vWcs.X);
             this.WriteCodePair(22, vWcs.Y);
             this.WriteCodePair(32, vWcs.Z);
@@ -1901,7 +2147,7 @@ namespace netDxf
 
         private void WriteAttributeDefinition(AttributeDefinition def)
         {
-            this.WriteEntityCommonCodes(def);
+            this.WriteEntityCommonCodes(def, null);
 
             this.WriteCodePair(100, SubclassMarker.Text);
 
@@ -1910,7 +2156,13 @@ namespace netDxf
             this.WriteCodePair(30, def.Position.Z);
             this.WriteCodePair(40, def.Height);
 
-            this.WriteCodePair(1, EncodeNonAsciiCharacters(def.Value.ToString()));
+            object value = def.Value;
+            if (value == null)
+                this.WriteCodePair(1, string.Empty);
+            else if (value is string)
+                this.WriteCodePair(1, this.EncodeNonAsciiCharacters((string)value));
+            else
+                this.WriteCodePair(1, value.ToString());
 
             switch (def.Alignment)
             {
@@ -2034,7 +2286,7 @@ namespace netDxf
 
         private void WriteAttribute(Attribute attrib)
         {
-            this.WriteEntityCommonCodes(attrib);
+            this.WriteEntityCommonCodes(attrib, null);
 
             this.WriteCodePair(100, SubclassMarker.Text);
 
@@ -2047,7 +2299,13 @@ namespace netDxf
 
             this.WriteCodePair(7, EncodeNonAsciiCharacters(attrib.Style.Name));
 
-            this.WriteCodePair(1, EncodeNonAsciiCharacters(attrib.Value.ToString()));
+            object value = attrib.Value;
+            if (value == null)
+                this.WriteCodePair(1, string.Empty);
+            else if (value is string)
+                this.WriteCodePair(1, this.EncodeNonAsciiCharacters((string)value));
+            else
+                this.WriteCodePair(1, value.ToString());
 
             switch (attrib.Alignment)
             {
@@ -2164,18 +2422,86 @@ namespace netDxf
             }
         }
 
+        private void WriteViewport(Viewport viewport)
+        {
+            this.WriteCodePair(100, SubclassMarker.Viewport);
+
+            this.WriteCodePair(10, viewport.Center.X);
+            this.WriteCodePair(20, viewport.Center.Y);
+            this.WriteCodePair(30, viewport.Center.Z);
+
+            this.WriteCodePair(40, viewport.Width);
+            this.WriteCodePair(41, viewport.Height);
+            this.WriteCodePair(68, viewport.Stacking);
+            this.WriteCodePair(69, viewport.Id);
+
+            this.WriteCodePair(12, viewport.ViewCenter.X);
+            this.WriteCodePair(22, viewport.ViewCenter.Y);
+
+            this.WriteCodePair(13, viewport.SnapBase.X);
+            this.WriteCodePair(23, viewport.SnapBase.Y);
+
+            this.WriteCodePair(14, viewport.SnapSpacing.X);
+            this.WriteCodePair(24, viewport.SnapSpacing.Y);
+
+            this.WriteCodePair(15, viewport.GridSpacing.X);
+            this.WriteCodePair(25, viewport.GridSpacing.Y);
+
+            this.WriteCodePair(16, viewport.ViewDirection.X);
+            this.WriteCodePair(26, viewport.ViewDirection.Y);
+            this.WriteCodePair(36, viewport.ViewDirection.Z);
+
+            this.WriteCodePair(17, viewport.ViewTarget.X);
+            this.WriteCodePair(27, viewport.ViewTarget.Y);
+            this.WriteCodePair(37, viewport.ViewTarget.Z);
+
+            this.WriteCodePair(42, viewport.LensLength);
+
+            this.WriteCodePair(43, viewport.FrontClipPlane);
+            this.WriteCodePair(44, viewport.BackClipPlane);
+            this.WriteCodePair(45, viewport.ViewHeight);
+
+            this.WriteCodePair(50, viewport.SnapAngle);
+            this.WriteCodePair(51, viewport.TwistAngle);
+            this.WriteCodePair(72, viewport.CircleZoomPercent);
+
+            foreach (Layer layer in viewport.FrozenLayers)
+                this.WriteCodePair(331, layer.Handle);        
+
+            this.WriteCodePair(90, (int)viewport.Status);
+
+            if(viewport.ClippingBoundary != null) this.WriteCodePair(340, viewport.ClippingBoundary.Handle);
+
+            this.WriteCodePair(110, viewport.UcsOrigin.X);
+            this.WriteCodePair(120, viewport.UcsOrigin.Y);
+            this.WriteCodePair(130, viewport.UcsOrigin.Z);
+
+            this.WriteCodePair(111, viewport.UcsXAxis.X);
+            this.WriteCodePair(121, viewport.UcsXAxis.Y);
+            this.WriteCodePair(131, viewport.UcsXAxis.Z);
+
+            this.WriteCodePair(112, viewport.UcsYAxis.X);
+            this.WriteCodePair(122, viewport.UcsYAxis.Y);
+            this.WriteCodePair(132, viewport.UcsYAxis.Z);
+
+            this.WriteXData(viewport.XData);
+        }
+
         #endregion
 
         #region methods for Object section
 
-        public void WriteDictionary(DictionaryObject dictionary)
+        private void WriteDictionary(DictionaryObject dictionary)
         {
             this.WriteCodePair(0, StringCode.Dictionary);
             this.WriteCodePair(5, dictionary.Handle);
-            this.WriteCodePair(330, 0);
+            this.WriteCodePair(330, dictionary.Owner.Handle);
+
             this.WriteCodePair(100, SubclassMarker.Dictionary);
             this.WriteCodePair(280, dictionary.IsHardOwner ? 1 : 0);
             this.WriteCodePair(281, (int)dictionary.Clonning);
+
+            if (dictionary.Entries == null) return;
 
             foreach (KeyValuePair<string, string> entry in dictionary.Entries)
             {
@@ -2185,17 +2511,18 @@ namespace netDxf
             }
         }
 
-        public void WriteImageDefReactor(ImageDefReactor reactor)
+        private void WriteImageDefReactor(ImageDefReactor reactor)
         {
             this.WriteCodePair(0, reactor.CodeName);
             this.WriteCodePair(5, reactor.Handle);
+            this.WriteCodePair(330, reactor.ImageHandle);
 
             this.WriteCodePair(100, SubclassMarker.RasterImageDefReactor);
             this.WriteCodePair(90, 2);
             this.WriteCodePair(330, reactor.ImageHandle);
         }
 
-        public void WriteImageDef(ImageDef imageDef, string ownerHandle)
+        private void WriteImageDef(ImageDef imageDef, string ownerHandle)
         {
             this.WriteCodePair(0, imageDef.CodeName);
             this.WriteCodePair(5, imageDef.Handle);
@@ -2216,15 +2543,18 @@ namespace netDxf
             this.WriteCodePair(10, imageDef.Width);
             this.WriteCodePair(20, imageDef.Height);
 
-            this.WriteCodePair(11, imageDef.OnePixelSize.X);
-            this.WriteCodePair(21, imageDef.OnePixelSize.Y);
+            // The documentation says that this is the size of one pixel in AutoCAD units, but it seems that this is always the size of one pixel in milimeters
+            // this value is used to calculate the image resolution in ppi or ppc, and the default image size.
+            double factor = MathHelper.ConversionFactor((ImageUnits)imageDef.ResolutionUnits, DrawingUnits.Millimeters);
+            this.WriteCodePair(11, factor / imageDef.HorizontalResolution);
+            this.WriteCodePair(21, factor / imageDef.VerticalResolution);
 
             this.WriteCodePair(280, 1);
             this.WriteCodePair(281, (int)imageDef.ResolutionUnits);
 
         }
 
-        public void WriteRasterVariables(RasterVariables variables, string ownerHandle)
+        private void WriteRasterVariables(RasterVariables variables, string ownerHandle)
         {
             this.WriteCodePair(0, variables.CodeName);
             this.WriteCodePair(5, variables.Handle);
@@ -2237,7 +2567,7 @@ namespace netDxf
             this.WriteCodePair(72, (int)variables.Units);
         }
 
-        public void WriteMLineStyle(MLineStyle style, string ownerHandle)
+        private void WriteMLineStyle(MLineStyle style, string ownerHandle)
         {
             this.WriteCodePair(0, style.CodeName);
             this.WriteCodePair(5, style.Handle);
@@ -2252,7 +2582,7 @@ namespace netDxf
             this.WriteCodePair(3, EncodeNonAsciiCharacters(style.Description));
 
             this.WriteCodePair(62, style.FillColor.Index);
-            if (style.FillColor.UseTrueColor && this.version > DxfVersion.AutoCad2000)
+            if (style.FillColor.UseTrueColor && this.doc.DrawingVariables.AcadVer > DxfVersion.AutoCad2000)
                 this.WriteCodePair(420, AciColor.ToTrueColor(style.FillColor));
             this.WriteCodePair(51, style.StartAngle);
             this.WriteCodePair(52, style.EndAngle);
@@ -2261,14 +2591,14 @@ namespace netDxf
             {
                 this.WriteCodePair(49, element.Offset);
                 this.WriteCodePair(62, element.Color.Index);
-                if (element.Color.UseTrueColor && this.version > DxfVersion.AutoCad2000)
+                if (element.Color.UseTrueColor && this.doc.DrawingVariables.AcadVer > DxfVersion.AutoCad2000)
                     this.WriteCodePair(420, AciColor.ToTrueColor(element.Color));
 
                 this.WriteCodePair(6, EncodeNonAsciiCharacters(element.LineType.Name));
             }
         }
 
-        public void WriteGroup(Group group, string ownerHandle)
+        private void WriteGroup(Group group, string ownerHandle)
         {
             this.WriteCodePair(0, group.CodeName);
             this.WriteCodePair(5, group.Handle);
@@ -2276,7 +2606,7 @@ namespace netDxf
 
             this.WriteCodePair(100, SubclassMarker.Group);
 
-            this.WriteCodePair(300, group.Description);
+            this.WriteCodePair(300, EncodeNonAsciiCharacters(group.Description));
             this.WriteCodePair(70, group.IsUnnamed ? 1 : 0);
             this.WriteCodePair(71, group.IsSelectable ? 1 : 0);
 
@@ -2284,6 +2614,88 @@ namespace netDxf
             {
                 this.WriteCodePair(340, entity.Handle);
             }
+        }
+
+        private void WriteLayout(Layout layout, string ownerHandle)
+        {
+            this.WriteCodePair(0, layout.CodeName);
+            this.WriteCodePair(5, layout.Handle);
+            this.WriteCodePair(330, ownerHandle);
+
+            PlotSettings plot = layout.PlotSettings;
+            this.WriteCodePair(100, SubclassMarker.PlotSettings);
+            this.WriteCodePair(1, plot.PageSetupName);
+            this.WriteCodePair(2, plot.PlotterName);
+            this.WriteCodePair(4, plot.PaperSizeName);
+            this.WriteCodePair(6, plot.ViewName);
+
+            this.WriteCodePair(40, plot.LeftMargin);
+            this.WriteCodePair(41, plot.BottomMargin);
+            this.WriteCodePair(42, plot.RightMargin);
+            this.WriteCodePair(43, plot.TopMargin);
+            this.WriteCodePair(44, plot.PaperSize.X);
+            this.WriteCodePair(45, plot.PaperSize.Y);
+            this.WriteCodePair(46, plot.Origin.X);
+            this.WriteCodePair(47, plot.Origin.Y);
+            this.WriteCodePair(48, plot.WindowBottomLeft.X);
+            this.WriteCodePair(49, plot.WindowUpRight.X);
+            this.WriteCodePair(140, plot.WindowBottomLeft.Y);
+            this.WriteCodePair(141, plot.WindowUpRight.Y);
+
+            this.WriteCodePair(142, plot.PrintScaleNumerator);
+            this.WriteCodePair(143, plot.PrintScaleDenominator);
+            this.WriteCodePair(70, (int)plot.Flags);
+            this.WriteCodePair(72, (int)plot.PaperUnits);
+            this.WriteCodePair(73, (int)plot.PaperRotation);
+            this.WriteCodePair(74, 5.0);
+            this.WriteCodePair(7, "");
+            this.WriteCodePair(75, 16);
+
+            this.WriteCodePair(147, plot.PrintScale);
+            this.WriteCodePair(148, plot.PaperImageOrigin.X);
+            this.WriteCodePair(149, plot.PaperImageOrigin.Y);
+
+            this.WriteCodePair(100, SubclassMarker.Layout);
+            this.WriteCodePair(1, this.EncodeNonAsciiCharacters(layout.Name));
+            this.WriteCodePair(70, 1);
+            this.WriteCodePair(71, layout.TabOrder);
+
+
+            this.WriteCodePair(10, layout.MinLimit.X);
+            this.WriteCodePair(20, layout.MinLimit.Y);
+            this.WriteCodePair(11, layout.MaxLimit.X);
+            this.WriteCodePair(21, layout.MaxLimit.Y);
+
+            this.WriteCodePair(12, layout.BasePoint.X);
+            this.WriteCodePair(22, layout.BasePoint.Y);
+            this.WriteCodePair(32, layout.BasePoint.Z);
+
+            this.WriteCodePair(14, layout.MinExtents.X);
+            this.WriteCodePair(24, layout.MinExtents.Y);
+            this.WriteCodePair(34, layout.MinExtents.Z);
+
+            this.WriteCodePair(15, layout.MaxExtents.X);
+            this.WriteCodePair(25, layout.MaxExtents.Y);
+            this.WriteCodePair(35, layout.MaxExtents.Z);
+
+            this.WriteCodePair(146, layout.Elevation);
+
+            this.WriteCodePair(13, layout.UcsOrigin.X);
+            this.WriteCodePair(23, layout.UcsOrigin.Y);
+            this.WriteCodePair(33, layout.UcsOrigin.Z);
+
+
+            this.WriteCodePair(16, layout.UcsXAxis.X);
+            this.WriteCodePair(26, layout.UcsXAxis.Y);
+            this.WriteCodePair(36, layout.UcsXAxis.Z);
+
+            this.WriteCodePair(17, layout.UcsYAxis.X);
+            this.WriteCodePair(27, layout.UcsYAxis.Y);
+            this.WriteCodePair(37, layout.UcsYAxis.Z);
+
+            this.WriteCodePair(76, 0);
+
+            this.WriteCodePair(330, layout.AssociatedBlock.Owner.Handle);
         }
 
         #endregion
@@ -2294,19 +2706,19 @@ namespace netDxf
         {
             // for dxf database version prior to AutoCad 2007 non ASCII characters, including the extended chart, must be encoded to the template \U+####,
             // where #### is the for digits hexadecimal number that represent that character.
-            if (this.version >= DxfVersion.AutoCad2007) return text;
+            if (this.doc.DrawingVariables.AcadVer >= DxfVersion.AutoCad2007) return text;
 
-            if (string.IsNullOrEmpty(text)) return text;
+            if (string.IsNullOrEmpty(text)) return string.Empty;
 
             string encoded;
-            if(this.buffer.TryGetValue(text, out encoded)) return encoded;
+            if(this.encodedStrings.TryGetValue(text, out encoded)) return encoded;
 
             StringBuilder sb = new StringBuilder();
             foreach (char c in text)
             {
                 if (c > 255)
                 {
-                    string encodedValue = "\\U+" + String.Format("{0:X4}", Convert.ToInt32(c));
+                    string encodedValue = string.Concat("\\U+", Convert.ToInt32(c).ToString("X4")); //This in my tests should be much faster.
                     sb.Append(encodedValue);
                 }
                 else
@@ -2316,7 +2728,7 @@ namespace netDxf
             }
 
             encoded = sb.ToString();
-            this.buffer.Add(text, encoded);
+            this.encodedStrings.Add(text, encoded);
             return encoded;
 
             // encoding of non ASCII characters, including the extended chart, using regular expresions, this code is slower

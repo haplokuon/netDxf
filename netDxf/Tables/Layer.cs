@@ -21,48 +21,10 @@
 #endregion
 
 using System;
+using netDxf.Collections;
 
 namespace netDxf.Tables
 {
-
-    /// <summary>
-    /// Standard layer flags (bit-coded values).
-    /// </summary>
-    [Flags]
-    internal enum LayerFlags
-    {
-        /// <summary>
-        /// Default.
-        /// </summary>
-        None = 0,
-        /// <summary>
-        /// Layer is frozen; otherwise layer is thawed.
-        /// </summary>
-        Frozen = 1,
-        /// <summary>
-        /// Layer is frozen by default in new viewports.
-        /// </summary>
-        FrozenNewViewports = 2,
-        /// <summary>
-        /// Layer is locked.
-        /// </summary>
-        Locked = 4,
-        /// <summary>
-        /// If set, table entry is externally dependent on an xref.
-        /// </summary>
-        XrefDependent = 16,
-        /// <summary>
-        /// If both this bit and bit 16 are set, the externally dependent xref has been successfully resolved.
-        /// </summary>
-        XrefResolved = 32,
-        /// <summary>
-        /// If set, the table entry was referenced by at least one entity in the drawing the last time the 
-        /// drawing was edited. (This flag is for the benefit of AutoCAD commands. It can be ignored by 
-        /// most programs that read DXF files and need not be set by programs that write DXF files)
-        /// </summary>
-        Referenced = 64
-    }
-
     /// <summary>
     /// Represents a layer.
     /// </summary>
@@ -78,6 +40,9 @@ namespace netDxf.Tables
         private bool plot;
         private LineType lineType;
         private Lineweight lineweight;
+        private Transparency transparency;
+
+        private static readonly Layer defaultLayer;
 
         #endregion
 
@@ -88,12 +53,17 @@ namespace netDxf.Tables
         /// </summary>
         public static Layer Default
         {
-            get { return new Layer("0"); }
+            get { return defaultLayer; }
         }
 
         #endregion
 
         #region constructors
+
+        static Layer()
+        {
+            defaultLayer = new Layer("0");
+        }
 
         /// <summary>
         /// Initializes a new instance of the <c>Layer</c> class.
@@ -102,12 +72,13 @@ namespace netDxf.Tables
         public Layer(string name)
             : base(name, DxfObjectCode.Layer, true)
         {
-            this.reserved = name.Equals("0", StringComparison.InvariantCultureIgnoreCase);
+            this.reserved = name.Equals("0", StringComparison.OrdinalIgnoreCase);
             this.color = AciColor.Default;
             this.lineType = LineType.Continuous;
             this.isVisible = true;
             this.plot = true;
             this.lineweight = Lineweight.Default;
+            this.transparency = new Transparency();
         }
 
         #endregion
@@ -181,7 +152,7 @@ namespace netDxf.Tables
         }
 
         /// <summary>
-        /// Gets or sets the entity line weight, one unit is always 1/100 mm (default = Default).
+        /// Gets or sets the layer line weight, one unit is always 1/100 mm (default = Default).
         /// </summary>
         public Lineweight Lineweight
         {
@@ -192,6 +163,29 @@ namespace netDxf.Tables
                     throw new ArgumentNullException("value");
                 this.lineweight = value;
             }
+        }
+
+        /// <summary>
+        /// Gets or sets layer transparency (default: 0, opaque).
+        /// </summary>
+        public Transparency Transparency
+        {
+            get { return this.transparency; }
+            set
+            {
+                if (value == null)
+                    throw new ArgumentNullException("value");
+                this.transparency = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets the owner of the actual dxf object.
+        /// </summary>
+        public new Layers Owner
+        {
+            get { return (Layers)this.owner; }
+            internal set { this.owner = value; }
         }
 
         #endregion

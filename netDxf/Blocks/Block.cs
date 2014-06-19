@@ -21,9 +21,10 @@
 #endregion
 
 using System;
-using System.Collections.Generic;
 using netDxf.Entities;
 using netDxf.Tables;
+using netDxf.Collections;
+using Attribute = netDxf.Entities.Attribute;
 
 namespace netDxf.Blocks
 {
@@ -31,17 +32,19 @@ namespace netDxf.Blocks
     /// Represents a block definition.
     /// </summary>
     public class Block :
-        TableObject 
+        TableObject
     {
         #region private fields
 
-        private BlockRecord record;
-        private readonly BlockEnd end;
-        private BlockTypeFlags typeFlags;
+        private readonly EntityCollection entities;
+        private readonly AttributeDefinitionDictionary attributes;
+        private string description;
+        private BlockEnd end;
+        private BlockTypeFlags flags;
         private Layer layer;
         private Vector3 position;
-        private Dictionary<string, AttributeDefinition> attributes;
-        private List<EntityObject> entities;
+        private static readonly Block modelSpace;
+        private static readonly Block paperSpace;
 
         #endregion
 
@@ -50,9 +53,9 @@ namespace netDxf.Blocks
         /// <summary>
         /// Gets the default *Model_Space block.
         /// </summary>
-        public static Block  ModelSpace
+        public static Block ModelSpace
         {
-            get { return new Block("*Model_Space", false); }
+            get { return modelSpace; }
         }
 
         /// <summary>
@@ -60,24 +63,17 @@ namespace netDxf.Blocks
         /// </summary>
         public static Block PaperSpace
         {
-            get { return new Block("*Paper_Space", false); }
+            get { return paperSpace; }
         }
 
         #endregion
 
         #region constructors
 
-        internal Block(string name, bool checkName)
-            : base (name, DxfObjectCode.Block, checkName)
+        static Block()
         {
-            this.reserved = name.Equals("*Model_Space", StringComparison.InvariantCultureIgnoreCase) ||
-                            name.Equals("*Paper_Space", StringComparison.InvariantCultureIgnoreCase);
-            this.position = Vector3.Zero;
-            this.layer = Layer.Default;
-            this.attributes = new Dictionary<string, AttributeDefinition>(StringComparer.InvariantCulture);
-            this.entities = new List<EntityObject>();
-            this.record = new BlockRecord(name);
-            this.end = new BlockEnd(this.layer);          
+            modelSpace = new Block("*Model_Space", false);
+            paperSpace = new Block("*Paper_Space", false);
         }
 
         /// <summary>
@@ -85,13 +81,51 @@ namespace netDxf.Blocks
         /// </summary>
         /// <param name="name">Block name.</param>
         public Block(string name)
-            : this (name, true)
+            : this(name, true)
         {
+        }
+
+        internal Block(string name, bool checkName)
+            : base(name, DxfObjectCode.Block, checkName)
+        {
+            this.reserved = name.Equals("*Model_Space", StringComparison.OrdinalIgnoreCase);
+            this.description = string.Empty;
+            this.position = Vector3.Zero;
+            this.layer = Layer.Default;
+
+            this.entities = new EntityCollection();
+            this.entities.BeforeAddItem += Entities_BeforeAddItem;
+            this.entities.AddItem += Entities_AddItem;
+            this.entities.BeforeRemoveItem += Entities_BeforeRemoveItem;
+            this.entities.RemoveItem += Entities_RemoveItem;
+
+            this.attributes = new AttributeDefinitionDictionary();
+            this.attributes.BeforeAddItem += AttributeDefinitions_BeforeAddItem;
+            this.attributes.AddItem += AttributeDefinitions_ItemAdd;
+            this.attributes.BeforeRemoveItem += AttributeDefinitions_BeforeRemoveItem;
+            this.attributes.RemoveItem += AttributeDefinitions_RemoveItem;
+
+            this.owner = new BlockRecord(name);
+            this.flags = BlockTypeFlags.None;
+            this.end = new BlockEnd
+                {
+                    Layer = this.layer,
+                    Owner = this.owner
+                };
         }
 
         #endregion
 
         #region public properties
+
+        /// <summary>
+        /// Gets or sets the block description.
+        /// </summary>
+        public string Description
+        {
+            get { return this.description; }
+            set { this.description = string.IsNullOrEmpty(value) ? string.Empty : value; }
+        }
 
         /// <summary>
         /// Gets or sets the block position in world coordinates.
@@ -103,15 +137,6 @@ namespace netDxf.Blocks
         }
 
         /// <summary>
-        /// Block insertion units.
-        /// </summary>
-        public DrawingUnits InsertionUnits
-        {
-            get { return this.record.Units; }
-            set { this.record.Units = value; }
-        }
-
-        /// <summary>
         /// Gets or sets the block <see cref="Layer">layer</see>.
         /// </summary>
         public Layer Layer
@@ -120,71 +145,59 @@ namespace netDxf.Blocks
             set
             {
                 if (value == null)
-                    throw new ArgumentNullException("value"); 
+                    throw new ArgumentNullException("value");
                 this.layer = value;
                 this.end.Layer = value;
             }
         }
 
         /// <summary>
-        /// Gets or sets the block <see cref="AttributeDefinition">attribute definition</see> list.
+        /// Gets the <see cref="EntityObject">entity</see> list of the block.
         /// </summary>
-        /// <remarks>
-        /// The dictionary key holds the attribute id that must be unique for each dictionary entry.
-        /// </remarks>
-        public Dictionary<string, AttributeDefinition> Attributes
+        /// <remarks>Null items, entities already owned by another Block, attribute definitions and attributes are not allowed in the entities list.</remarks>
+        public EntityCollection Entities
         {
-            get { return this.attributes; }
-            set
-            {
-                if (value == null)
-                    throw new ArgumentNullException("value");
-                this.attributes = value;
-            }
+            get { return this.entities; }
         }
 
         /// <summary>
-        /// Gets or sets the <see cref="EntityObject">entity</see> list that makes the block.
+        /// Gets the <see cref="AttributeDefinition">entity</see> list of the block.
         /// </summary>
-        /// <remarks>
-        /// It is recommended to define the entities of a block in the default layer "0".<br />
-        /// The UCS in effect when a block definition is created becomes the WCS for all entities in the block definition.
-        /// The new origin for these entities is shifted to  match the base point defined for the block definition.
-        /// All entity data is translated to fit this new WCS.
-        /// </remarks>
-        public List<EntityObject> Entities
+        /// <remarks>Null, and attribute definitions already owned by another Block are not allowed in the attribute definition list.</remarks>
+        public AttributeDefinitionDictionary AttributeDefinitions
         {
-            get { return this.entities; }
-            set
-            {
-                if (value == null)
-                    throw new ArgumentNullException("value");
-                this.entities = value;
-            }
+            get { return this.attributes; }
+        }
+
+        /// <summary>
+        /// Gets the block record associated with this block.
+        /// </summary>
+        /// <remarks>It returns the same object as the owner property.</remarks>
+        public new BlockRecord Record
+        {
+            get { return (BlockRecord) this.owner; }
         }
 
         #endregion
 
         #region internal properties
 
-        internal BlockRecord Record
-        {
-            get { return this.record; }
-            set { this.record = value; }
-        }
-
+        /// <summary>
+        /// Gets or sets the block end object.
+        /// </summary>
         internal BlockEnd End
         {
             get { return this.end; }
+            set { this.end = value; }
         }
 
         /// <summary>
         /// Gets or sets the block-type flags (bit-coded values, may be combined).
         /// </summary>
-        internal BlockTypeFlags TypeFlags
+        internal BlockTypeFlags Flags
         {
-            get { return typeFlags; }
-            set { typeFlags = value; }
+            get { return this.flags; }
+            set { this.flags = value; }
         }
 
         #endregion
@@ -202,13 +215,81 @@ namespace netDxf.Blocks
         /// </remarks>
         internal override long AsignHandle(long entityNumber)
         {
-            entityNumber = this.record.AsignHandle(entityNumber);
+            entityNumber = this.owner.AsignHandle(entityNumber);
             entityNumber = this.end.AsignHandle(entityNumber);
             foreach (AttributeDefinition attdef in this.attributes.Values)
             {
                 entityNumber = attdef.AsignHandle(entityNumber);
             }
             return base.AsignHandle(entityNumber);
+        }
+
+        #endregion
+
+        #region Entities collection events
+
+        private void Entities_BeforeAddItem(EntityCollection sender, EntityCollectionEventArgs e)
+        {
+            // null items, entities already owned by another Block, attribute definitions and attributes are not allowed in the entities list.
+            if (e.Item == null)
+                e.Cancel = true;
+            else if (e.Item is AttributeDefinition)
+                e.Cancel = true;
+            else if (e.Item is Attribute)
+                e.Cancel = true;
+            else if (e.Item.Owner != null)
+                e.Cancel = true;
+            else
+                e.Cancel = false;
+        }
+
+        private void Entities_AddItem(EntityCollection sender, EntityCollectionEventArgs e)
+        {
+            e.Item.Owner = this;
+        }
+
+        private void Entities_BeforeRemoveItem(EntityCollection sender, EntityCollectionEventArgs e)
+        {
+            // only items owned by tha actual block can be removed
+            e.Cancel = !ReferenceEquals(e.Item.Owner, this);
+        }
+
+        private void Entities_RemoveItem(EntityCollection sender, EntityCollectionEventArgs e)
+        {
+            e.Item.Owner = null;
+        }
+
+        #endregion
+
+        #region Attributes dictionary events
+
+        private void AttributeDefinitions_BeforeAddItem(AttributeDefinitionDictionary sender, AttributeDefinitionDictionaryEventArgs e)
+        {
+            // null, attributes with the same tag, and attribute definitions already owned by another Block are not allowed in the attributes list.
+            if (e.Item == null)
+                e.Cancel = true;
+            else if (this.attributes.ContainsKey(e.Item.Tag))
+                e.Cancel = true;
+            else if (e.Item.Owner != null)
+                e.Cancel = true;
+            else
+                e.Cancel = false;
+        }
+
+        private void AttributeDefinitions_ItemAdd(AttributeDefinitionDictionary sender, AttributeDefinitionDictionaryEventArgs e)
+        {
+            e.Item.Owner = this;
+        }
+
+        private void AttributeDefinitions_BeforeRemoveItem(AttributeDefinitionDictionary sender, AttributeDefinitionDictionaryEventArgs e)
+        {
+            // only attribute definitions owned by tha actual block can be removed
+            e.Cancel = !ReferenceEquals(e.Item.Owner, this);
+        }
+
+        private void AttributeDefinitions_RemoveItem(AttributeDefinitionDictionary sender, AttributeDefinitionDictionaryEventArgs e)
+        {
+            e.Item.Owner = null;
         }
 
         #endregion

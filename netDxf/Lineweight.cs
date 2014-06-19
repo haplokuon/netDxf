@@ -1,7 +1,7 @@
-﻿#region netDxf, Copyright(C) 2013 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf, Copyright(C) 2014 Daniel Carvajal, Licensed under LGPL.
 
 //                        netDxf library
-// Copyright (C) 2013 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2014 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -29,12 +29,13 @@ namespace netDxf
     /// <summary>
     /// Represents the lineweight of a layer or an entity.
     /// </summary>
-    public class Lineweight
-        : ICloneable
+    public class Lineweight :
+        ICloneable,
+        IEquatable<Lineweight>
     {
         #region private fields
 
-        private short weight;
+        private short value;
 
         #endregion
 
@@ -45,7 +46,7 @@ namespace netDxf
         /// </summary>
         public static Lineweight ByLayer
         {
-            get { return new Lineweight { weight = -1 }; }
+            get { return new Lineweight { value = -1 }; }
         }
 
         /// <summary>
@@ -53,7 +54,7 @@ namespace netDxf
         /// </summary>
         public static Lineweight ByBlock
         {
-            get { return new Lineweight { weight = -2 }; }
+            get { return new Lineweight { value = -2 }; }
         }
 
         /// <summary>
@@ -61,7 +62,7 @@ namespace netDxf
         /// </summary>
         public static Lineweight Default
         {
-            get { return new Lineweight { weight = -3 }; }
+            get { return new Lineweight { value = -3 }; }
         }
 
         #endregion
@@ -73,7 +74,7 @@ namespace netDxf
         /// </summary>
         public Lineweight()
         {
-            this.weight = -1;
+            this.value = -1;
         }
 
         /// <summary>
@@ -87,7 +88,7 @@ namespace netDxf
         {
             if (weight < 0 || weight > 200)
                 throw new ArgumentOutOfRangeException("weight", weight, "Accepted lineweight values range from 0 to 200.");
-            this.weight = weight;
+            this.value = weight;
         }
 
         #endregion
@@ -102,56 +103,20 @@ namespace netDxf
         /// </remarks>
         public short Value
         {
-            get { return weight; }
+            get { return value; }
             set
             {
                 if (value < 0 || value > 200)
                     throw new ArgumentOutOfRangeException("value", value, "Accepted lineweight values range from 0 to 200.");
-                this.weight = value;
+                this.value = value;
             }
         }
 
         #endregion
 
-        #region implements ICloneable
+        #region public methods
 
-        /// <summary>
-        /// Creates a new object that is a copy of the current instance.
-        /// </summary>
-        /// <returns>A new object that is a copy of this instance.</returns>
-        public Object Clone()
-        {
-            return new Lineweight
-                       {
-                           weight = this.weight
-                       };
-        }
-
-        #endregion
-
-        #region overrides
-
-        /// <summary>
-        /// Converts the value of this instance to its equivalent string representation.
-        /// </summary>
-        /// <returns>The string representation.</returns>
-        public override string ToString()
-        {
-            if (this.weight == -3)
-                return "Default";
-            if (this.weight == -2)
-                return "ByBlock";
-            if (this.weight == -1)
-                return "ByLayer";
-
-            return this.weight.ToString(CultureInfo.InvariantCulture);
-        }
-
-        #endregion
-
-        #region internal methods
-
-        internal static Lineweight FromCadIndex(short index)
+        public static Lineweight FromCadIndex(short index)
         {
             Lineweight lineweight;
             switch (index)
@@ -172,6 +137,58 @@ namespace netDxf
 
             return lineweight;
         }
+
         #endregion
+
+        #region implements ICloneable
+
+        /// <summary>
+        /// Creates a new object that is a copy of the current instance.
+        /// </summary>
+        /// <returns>A new object that is a copy of this instance.</returns>
+        public Object Clone()
+        {
+            return new Lineweight
+                       {
+                           value = this.value
+                       };
+        }
+
+        #endregion
+
+        #region implements IEquatable
+
+        /// <summary>
+        /// Check if the components of two line weights are equal.
+        /// </summary>
+        /// <param name="obj">Another Lineweight to compare to.</param>
+        /// <returns>True if their weights are equal or false in anyother case.</returns>
+        public bool Equals(Lineweight obj)
+        {
+            return obj.value == this.value;
+        }
+
+        #endregion
+
+        #region overrides
+
+        /// <summary>
+        /// Converts the value of this instance to its equivalent string representation.
+        /// </summary>
+        /// <returns>The string representation.</returns>
+        public override string ToString()
+        {
+            if (this.value == -3)
+                return "Default";
+            if (this.value == -2)
+                return "ByBlock";
+            if (this.value == -1)
+                return "ByLayer";
+
+            return this.value.ToString(CultureInfo.CurrentCulture);
+        }
+
+        #endregion
+
     }
 }

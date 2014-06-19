@@ -21,6 +21,7 @@
 #endregion
 
 using System;
+using netDxf.Collections;
 
 namespace netDxf.Tables
 {
@@ -56,26 +57,35 @@ namespace netDxf.Tables
         private string dimdsep = ".";
         private int dimaunit = 0;
 
+        private static readonly DimensionStyle standard;
+
         #endregion
 
         #region constants
 
+        /// <summary>
+        /// Gets the default dimension style.
+        /// </summary>
         public static DimensionStyle Default
         {
-            get { return new DimensionStyle("Standard"); }
+            get { return standard; }
         }
 
         #endregion
 
         #region constructors
 
+        static DimensionStyle()
+        {
+            standard = new DimensionStyle("Standard");
+        }
         /// <summary>
         /// Initializes a new instance of the <c>DimensionStyle</c> class.
         /// </summary>
         public DimensionStyle(string name)
             : base(name, DxfObjectCode.DimStyle, true)
         {
-            this.reserved = name.Equals("Standard", StringComparison.InvariantCultureIgnoreCase);
+            this.reserved = name.Equals("Standard", StringComparison.OrdinalIgnoreCase);
             this.textStyle = TextStyle.Default;
         }
 
@@ -251,6 +261,15 @@ namespace netDxf.Tables
         {
             get { return dimaunit; }
             set { dimaunit = value; }
+        }
+
+        /// <summary>
+        /// Gets the owner of the actual dxf object.
+        /// </summary>
+        public new DimensionStyles Owner
+        {
+            get { return (DimensionStyles)this.owner; }
+            internal set { this.owner = value; }
         }
 
         #endregion

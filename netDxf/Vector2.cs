@@ -41,6 +41,16 @@ namespace netDxf
         #region constructors
 
         /// <summary>
+        /// Initializes a new instance of Vector3.
+        /// </summary>
+        /// <param name="value">X, Y component.</param>
+        public Vector2(double value)
+        {
+            this.x = value;
+            this.y = value;
+        }
+
+        /// <summary>
         /// Initializes a new instance of Vector2.
         /// </summary>
         /// <param name="x">X component.</param>
@@ -434,7 +444,7 @@ namespace netDxf
         /// <returns>Array.</returns>
         public double[] ToArray()
         {
-            double[] u = new[] {this.x, this.y};
+            double[] u = {this.x, this.y};
             return u;
         }
 

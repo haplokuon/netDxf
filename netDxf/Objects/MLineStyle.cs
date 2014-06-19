@@ -22,55 +22,11 @@
 
 using System;
 using System.Collections.Generic;
+using netDxf.Collections;
 using netDxf.Tables;
 
 namespace netDxf.Objects
 {
-
-    /// <summary>
-    /// Flags (bit-coded).
-    /// </summary>
-    [Flags]
-    public enum MLineStyleFlags
-    {
-        /// <summary>
-        /// None.
-        /// </summary>
-        None = 0,
-        /// <summary>
-        /// Fill on.
-        /// </summary>
-        FillOn = 1,
-        /// <summary>
-        /// Display miters.
-        /// </summary>
-        DisplayMiters = 2,
-        /// <summary>
-        /// Start square end (line) cap.
-        /// </summary>
-        StartSquareEndCap = 16,
-        /// <summary>
-        /// Start inner arcs cap.
-        /// </summary>
-        StartInnerArcsCap = 32,
-        /// <summary>
-        /// Start round (outer arcs) cap.
-        /// </summary>
-        StartRoundCap = 64,
-        /// <summary>
-        /// End square (line) cap.
-        /// </summary>
-        EndSquareCap = 256,
-        /// <summary>
-        /// End inner arcs cap.
-        /// </summary>
-        EndInnerArcsCap = 512,
-        /// <summary>
-        /// End round (outer arcs) cap.
-        /// </summary>
-        EndRoundCap = 1024
-    }
-
     /// <summary>
     /// Represents as MLine style.
     /// </summary>
@@ -87,6 +43,7 @@ namespace netDxf.Objects
         private double endAngle;
         private List<MLineStyleElement> elements;
 
+        private static readonly MLineStyle standard;
         #endregion
 
         #region constants
@@ -96,12 +53,17 @@ namespace netDxf.Objects
         /// </summary>
         public static MLineStyle Default
         {
-            get { return new MLineStyle("Standard"); }
+            get { return standard; }
         }
 
         #endregion
 
         #region constructors
+
+        static MLineStyle()
+        {
+            standard = new MLineStyle("Standard");
+        }
 
         /// <summary>
         /// Initializes a new instance of the <c>MLineStyle</c> class.
@@ -112,7 +74,7 @@ namespace netDxf.Objects
         public MLineStyle(string name, string description = null)
             : base(name, DxfObjectCode.MLineStyle, true)
         {
-            this.reserved = name.Equals("Standard", StringComparison.InvariantCultureIgnoreCase);
+            this.reserved = name.Equals("Standard", StringComparison.OrdinalIgnoreCase);
             this.flags = MLineStyleFlags.None;
 
             this.description = string.IsNullOrEmpty(description) ? string.Empty : description;
@@ -237,6 +199,15 @@ namespace netDxf.Objects
                 value.Sort();
                 this.elements = value;
             }
+        }
+
+        /// <summary>
+        /// Gets the owner of the actual dxf object.
+        /// </summary>
+        public new MLineStyles Owner
+        {
+            get { return (MLineStyles)this.owner; }
+            internal set { this.owner = value; }
         }
 
         #endregion

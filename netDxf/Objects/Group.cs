@@ -21,8 +21,7 @@
 #endregion
 
 using System;
-using System.Collections.Generic;
-using netDxf.Entities;
+using netDxf.Collections;
 using netDxf.Tables;
 
 namespace netDxf.Objects
@@ -39,7 +38,7 @@ namespace netDxf.Objects
         private string description;
         private bool isUnnamed;
         private bool isSelectable;
-        private List<EntityObject> entities;
+        private EntityCollection entities;
 
         #endregion
 
@@ -57,8 +56,8 @@ namespace netDxf.Objects
         {
             this.isUnnamed = string.IsNullOrEmpty(name);
             this.description = string.Empty;
-            this.isSelectable = true;          
-            this.entities = new List<EntityObject>();
+            this.isSelectable = true;
+            this.entities = new EntityCollection();
         }
 
         #endregion
@@ -105,7 +104,7 @@ namespace netDxf.Objects
         /// An entity may be contained in different groups.<br/>
         /// If the entities list is modified after it has been added to the document the entities will have to be added manually.
         /// </remarks>
-        public List<EntityObject> Entities
+        public EntityCollection Entities
         {
             get { return entities; }
             set
@@ -114,6 +113,15 @@ namespace netDxf.Objects
                     throw new ArgumentNullException("value");
                 entities = value;
             }
+        }
+
+        /// <summary>
+        /// Gets the owner of the actual dxf object.
+        /// </summary>
+        public new Groups Owner
+        {
+            get { return (Groups)this.owner; }
+            internal set { this.owner = value; }
         }
 
         #endregion

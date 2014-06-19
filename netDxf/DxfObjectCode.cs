@@ -53,9 +53,9 @@ namespace netDxf
         public const string Layer = "LAYER";
 
         /// <summary>
-        /// Viewport.
+        /// Viewport table object.
         /// </summary>
-        public const string ViewPort = "VPORT";
+        public const string VPort = "VPORT";
 
         /// <summary>
         /// Text style.
@@ -208,6 +208,11 @@ namespace netDxf
         public const string Image = "IMAGE";
 
         /// <summary>
+        /// Viewport entity.
+        /// </summary>
+        public const string Viewport = "VIEWPORT";
+
+        /// <summary>
         /// Image definition.
         /// </summary>
         public const string ImageDef = "IMAGEDEF";
@@ -226,5 +231,10 @@ namespace netDxf
         /// Groups.
         /// </summary>
         public const string Group = "GROUP";
+
+        /// <summary>
+        /// Layouts.
+        /// </summary>
+        public const string Layout = "LAYOUT";
     }
 }

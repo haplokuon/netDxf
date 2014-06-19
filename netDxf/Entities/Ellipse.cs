@@ -201,7 +201,7 @@ namespace netDxf.Entities
         /// </summary>
         /// <param name="precision">Number of divisions.</param>
         /// <returns>A list vertexes that represents the ellipse expresed in object coordinate system.</returns>
-        private IEnumerable<Vector2> PolygonalVertexes(int precision)
+        public IList<Vector2> PolygonalVertexes(int precision)
         {
             List<Vector2> points = new List<Vector2>();
             double beta = this.rotation*MathHelper.DegToRad;

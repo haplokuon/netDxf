@@ -248,7 +248,7 @@ namespace netDxf.Entities
         /// <param name="weldThreshold">Tolerance to consider if two new generated vertexes are equal.</param>
         /// <param name="bulgeThreshold">Minimun distance from which approximate curved segments of the polyline.</param>
         /// <returns>A list of vertexes expresed in object coordinate system.</returns>
-        public List<Vector2> PoligonalVertexes(int bulgePrecision, double weldThreshold, double bulgeThreshold)
+        public IList<Vector2> PoligonalVertexes(int bulgePrecision, double weldThreshold, double bulgeThreshold)
         {
             List<Vector2> ocsVertexes = new List<Vector2>();
 

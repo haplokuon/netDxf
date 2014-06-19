@@ -25,38 +25,12 @@ using netDxf.Tables;
 
 namespace netDxf.Entities
 {
-    ///<summary>Attribute flags.</summary>
-    [Flags]
-    public enum AttributeFlags
-    {
-        /// <summary>
-        /// Attribute is visible.
-        /// </summary>
-        Visible = 0,
-        /// <summary>
-        /// Attribute is invisible (does not appear).
-        /// </summary>
-        Hidden = 1,
-        /// <summary>
-        /// This is a constant attribute.
-        /// </summary>
-        Constant = 2,
-        /// <summary>
-        /// Verification is required on input of this attribute.
-        /// </summary>
-        Verify = 4,
-        /// <summary>
-        /// Attribute is preset (no prompt during insertion).
-        /// </summary>
-        Predefined = 8
-    }
-
     /// <summary>
     /// Represents a attribute definition <see cref="EntityObject">entity</see>.
     /// </summary>
     /// <remarks>
-    /// AutoCad allows duplicate tags in attribute definitions, but this library does not having duplicate tags is not recommended in any way,
-    /// since there will be now way to know which is the definition associated to the insert attribute.
+    /// AutoCad allows to have duplicate tags in the attribute definitions list, but this library does not.
+    /// To have duplicate tags is not recommended in any way, since there will be now way to know which is the definition associated to the insert attribute.
     /// </remarks>
     public class AttributeDefinition :
         EntityObject
@@ -82,12 +56,6 @@ namespace netDxf.Entities
         /// Intitializes a new instance of the <c>AttributeDefiniton</c> class.
         /// </summary>
         /// <param name="tag">Attribute identifier, the parameter <c>id</c> string cannot contain spaces.</param>
-        /// <remarks>
-        /// Duplicate attribute definition tags are not allowed.
-        /// Although AutoCad allows this behaviour this library does not.
-        /// Having duplicate tags is not recommended in any way,
-        /// since there will be now way to know which is the definition associated to the insert attribute.
-        /// </remarks>
         public AttributeDefinition(string tag)
             : this(tag, TextStyle.Default)
         {
@@ -98,17 +66,11 @@ namespace netDxf.Entities
         /// </summary>
         /// <param name="tag">Attribute identifier, the parameter <c>id</c> string cannot contain spaces.</param>
         /// <param name="style">Attribute <see cref="TextStyle">text style</see>.</param>
-        /// <remarks>
-        /// Duplicate attribute definition tags are not allowed.
-        /// Although AutoCad allows this behaviour this library does not.
-        /// Having duplicate tags is not recommended in any way,
-        /// since there will be now way to know which is the definition associated to the insert attribute.
-        /// </remarks>
         public AttributeDefinition(string tag, TextStyle style)
             : base(EntityType.AttributeDefinition, DxfObjectCode.AttributeDefinition)
         {
             if (tag.Contains(" "))
-                throw new ArgumentException("The tag string cannot contain spaces", "tag");
+                throw new ArgumentException("The tag string cannot contain spaces.", "tag");
             this.tag = tag;
             this.flags = AttributeFlags.Visible;
             this.text = string.Empty;
@@ -136,6 +98,7 @@ namespace netDxf.Entities
         /// <summary>
         /// Gets or sets the attribute information text.
         /// </summary>
+        /// <remarks>This is the text prompt shown to introduce the attribute value when new Insert entities are inserted into the drawing.</remarks>
         public string Text
         {
             get { return this.text; }

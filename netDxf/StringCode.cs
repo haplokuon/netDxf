@@ -95,7 +95,7 @@ namespace netDxf
         /// <summary>
         /// view ports.
         /// </summary>
-        public const string ViewPortTable = "VPORT";
+        public const string VportTable = "VPORT";
 
         /// <summary>
         /// views.
@@ -158,9 +158,34 @@ namespace netDxf
         public const string EndSequence = "SEQEND";
 
         /// <summary>
-        /// dictionary
+        /// Generic dictionary
         /// </summary>
         public const string Dictionary = "DICTIONARY";
+
+        /// <summary>
+        /// Group dictionary
+        /// </summary>
+        public const string GroupDictionary = "ACAD_GROUP";
+
+        /// <summary>
+        /// Layouts dictionary
+        /// </summary>
+        public const string LayoutDictionary = "ACAD_LAYOUT";
+
+        /// <summary>
+        /// MLine styles dictionary
+        /// </summary>
+        public const string MLineStyleDictionary = "ACAD_MLINESTYLE";
+
+        /// <summary>
+        /// MLine styles dictionary
+        /// </summary>
+        public const string ImageDefDictionary = "ACAD_IMAGE_DICT";
+
+        /// <summary>
+        /// MLine styles dictionary
+        /// </summary>
+        public const string ImageVarsDictionary = "ACAD_IMAGE_VARS";
 
         /// <summary>
         /// end of file

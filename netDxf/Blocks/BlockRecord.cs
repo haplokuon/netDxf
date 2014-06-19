@@ -1,7 +1,7 @@
-#region netDxf, Copyright(C) 2013 Daniel Carvajal, Licensed under LGPL.
+#region netDxf, Copyright(C) 2014 Daniel Carvajal, Licensed under LGPL.
 
 //                        netDxf library
-// Copyright (C) 2013 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2014 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -21,20 +21,25 @@
 #endregion
 
 using System;
+using netDxf.Collections;
+using netDxf.Objects;
 
 namespace netDxf.Blocks
 {
     /// <summary>
     /// Represent the record of a block in the tables section.
     /// </summary>
-    internal class BlockRecord :
+    public class BlockRecord :
         DxfObject
     {
-
         #region private fields
 
         private readonly string name;
+        private Layout layout;
+        private static DrawingUnits defaultUnits = DrawingUnits.Unitless;
         private DrawingUnits units;
+        private bool allowExploding;
+        private bool scaleUniformly;
 
         #endregion
 
@@ -50,7 +55,10 @@ namespace netDxf.Blocks
             if (string.IsNullOrEmpty(name))
                 throw (new ArgumentNullException("name"));
             this.name = name;
-            this.units = DrawingUnits.Unitless;
+            this.layout = null;
+            this.units = BlockRecord.DefaultUnits;
+            this.allowExploding = true;
+            this.scaleUniformly = false;
         }
 
         #endregion
@@ -60,19 +68,83 @@ namespace netDxf.Blocks
         /// <summary>
         /// Gets the name of the block record.
         /// </summary>
-        /// <remarks>Block record names are case unsensitive.</remarks>
+        /// <remarks>
+        /// Block record names are case unsensitive.<br />
+        /// The block which name starts with "*" are for internal purpose only.
+        /// </remarks>
         public string Name
         {
-            get { return name; }
+            get { return this.name; }
         }
 
         /// <summary>
-        /// Block insertion units.
+        /// Gets the associated Layout.
+        /// </summary>
+        public Layout Layout
+        {
+            get { return this.layout; }
+            internal set { this.layout = value; }
+        }
+
+        /// <summary>
+        /// Gets or sets the block insertion units.
         /// </summary>
         public DrawingUnits Units
         {
-            get { return units; }
-            set { units = value; }
+            get { return this.units; }
+            set { this.units = value; }
+        }
+
+        /// <summary>
+        /// Gets or sets the default block units.
+        /// </summary>
+        /// <remarks>These are the units that all new blocks will use as default.</remarks>
+        public static DrawingUnits DefaultUnits
+        {
+            get { return defaultUnits; }
+            set { defaultUnits = value; }
+        }
+
+        /// <summary>
+        /// Gets or sets if the block can be exploded.
+        /// </summary>
+        /// <remarks>
+        /// This property is only compatible with dxf version AutoCad2007 and upwards.
+        /// </remarks>
+        public bool AllowExploding
+        {
+            get { return this.allowExploding; }
+            set { this.allowExploding = value; }
+        }
+
+        /// <summary>
+        /// Gets or sets if the block must be scaled uniformly.
+        /// </summary>
+        /// <remarks>
+        /// This property is only compatible with dxf version AutoCad2007 and upwards.
+        /// </remarks>
+        public bool ScaleUniformly
+        {
+            get { return this.scaleUniformly; }
+            set { this.scaleUniformly = value; }
+        }
+
+        /// <summary>
+        /// Gets the owner of the actual dxf object.
+        /// </summary>
+        public new BlockRecords Owner
+        {
+            get { return (BlockRecords) this.owner; }
+            internal set { this.owner = value; }
+        }
+
+        /// <summary>
+        /// Gets if the block record is for internal use only.
+        /// </summary>
+        /// <remarks>All blocks which name starts with "*" are for internal use and should not be modified.</remarks>
+        public bool IsForInternalUseOnly
+        {
+            get { return this.name.StartsWith("*"); }
         }
 
         #endregion
@@ -89,6 +161,5 @@ namespace netDxf.Blocks
         }
 
         #endregion
-
     }
 }

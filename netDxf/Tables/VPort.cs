@@ -21,10 +21,11 @@
 #endregion
 
 using System;
+using netDxf.Collections;
 
 namespace netDxf.Tables
 {
-    internal class Viewport :
+    public class VPort :
         TableObject
     {
         #region private fields
@@ -32,7 +33,7 @@ namespace netDxf.Tables
         private Vector2 lowerLeftCorner = Vector2.Zero;
         private Vector2 upperRightCorner = new Vector2(1, 1);
         private Vector2 snapBasePoint = Vector2.Zero;
-        private Vector2 snapSpacing = new Vector2(0.5f, 0.5f);
+        private Vector2 snapSpacing = new Vector2(0.5, 0.5);
         private Vector2 gridSpacing = new Vector2(10, 10);
         private Vector3 target = Vector3.Zero;
         private Vector3 camera = Vector3.UnitZ;
@@ -41,25 +42,25 @@ namespace netDxf.Tables
 
         #region constants
 
-        public static Viewport Active
+        public static VPort Active
         {
-            get { return new Viewport("*Active", false); }
+            get { return new VPort("*Active", false); }
         }
 
         #endregion
 
         #region constructors
 
-        internal Viewport(string name, bool checkName)
-            : base(name, DxfObjectCode.ViewPort, checkName)
+        internal VPort(string name, bool checkName)
+            : base(name, DxfObjectCode.VPort, checkName)
         {
-            this.reserved = name.Equals("*Active", StringComparison.InvariantCultureIgnoreCase);
+            this.reserved = name.Equals("*Active", StringComparison.OrdinalIgnoreCase);
         }
 
         /// <summary>
         /// Initializes a new instance of the <c>Viewport</c> class.
         /// </summary>
-        public Viewport(string name)
+        public VPort(string name)
             : this(name, true)
         {          
         }
@@ -108,6 +109,15 @@ namespace netDxf.Tables
         {
             get { return this.camera; }
             set { this.camera = value; }
+        }
+
+        /// <summary>
+        /// Gets the owner of the actual dxf object.
+        /// </summary>
+        public new VPorts Owner
+        {
+            get { return (VPorts)this.owner; }
+            internal set { this.owner = value; }
         }
 
         #endregion

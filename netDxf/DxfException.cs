@@ -44,7 +44,7 @@ namespace netDxf
     #region section exceptions
 
     public class DxfHeaderVariableException : DxfException
-        {
+    {
 
         public DxfHeaderVariableException(string name)
             : base()
@@ -121,7 +121,7 @@ namespace netDxf
 
     #endregion
 
-    #region table exceptions
+    //#region table exceptions
 
     public class DxfTableException : DxfException
     {
@@ -145,46 +145,46 @@ namespace netDxf
         }
     }
 
-    public class InvalidDxfTableException : DxfTableException
-    {
-        public InvalidDxfTableException(string table)
-            : base(table)
-        {
-        }
+    //public class InvalidDxfTableException : DxfTableException
+    //{
+    //    public InvalidDxfTableException(string table)
+    //        : base(table)
+    //    {
+    //    }
 
-        public InvalidDxfTableException(string table, string message)
-            : base(table, message)
-        {
-        }
-    }
+    //    public InvalidDxfTableException(string table, string message)
+    //        : base(table, message)
+    //    {
+    //    }
+    //}
 
-    public class OpenDxfTableException : DxfTableException
-    {
-        public OpenDxfTableException(string table)
-            : base(table)
-        {
-        }
+    //public class OpenDxfTableException : DxfTableException
+    //{
+    //    public OpenDxfTableException(string table)
+    //        : base(table)
+    //    {
+    //    }
 
-        public OpenDxfTableException(string table, string message)
-            : base(table, message)
-        {
-        }
-    }
+    //    public OpenDxfTableException(string table, string message)
+    //        : base(table, message)
+    //    {
+    //    }
+    //}
 
-    public class ClosedDxfTableException : DxfTableException
-    {
-        public ClosedDxfTableException(string table)
-            : base(table)
-        {
-        }
+    //public class ClosedDxfTableException : DxfTableException
+    //{
+    //    public ClosedDxfTableException(string table)
+    //        : base(table)
+    //    {
+    //    }
 
-        public ClosedDxfTableException(string table, string message)
-            : base(table, message)
-        {
-        }
-    }
+    //    public ClosedDxfTableException(string table, string message)
+    //        : base(table, message)
+    //    {
+    //    }
+    //}
 
-    #endregion
+    //#endregion
 
     #region entity exceptions
 

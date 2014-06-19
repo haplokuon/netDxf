@@ -23,6 +23,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using netDxf.Collections;
 
 namespace netDxf.Tables
 {
@@ -40,6 +41,10 @@ namespace netDxf.Tables
         private string description;
         private List<double> segments;
 
+        private static readonly LineType byLayer;
+        private static readonly LineType byBlock;
+        private static readonly LineType continuous;
+
         #endregion
 
         #region constants
@@ -49,7 +54,7 @@ namespace netDxf.Tables
         /// </summary>
         public static LineType ByLayer
         {
-            get { return new LineType("ByLayer"); }
+            get { return byLayer; }
         }
 
         /// <summary>
@@ -57,15 +62,15 @@ namespace netDxf.Tables
         /// </summary>
         public static LineType ByBlock
         {
-            get { return new LineType("ByBlock"); }
+            get { return byBlock; }
         }
 
         /// <summary>
-        /// Gets a predefined continuous line.
+        /// Gets the predefined continuous line.
         /// </summary>
         public static LineType Continuous
         {
-            get { return new LineType("Continuous", "Solid line"); }
+            get { return continuous; }
         }
 
         /// <summary>
@@ -136,6 +141,13 @@ namespace netDxf.Tables
 
         #region constructors
 
+        static LineType()
+        {
+            byLayer = new LineType("ByLayer");
+            byBlock = new LineType("ByBlock");
+            continuous = new LineType("Continuous", "Solid line");
+        }
+
         /// <summary>
         /// Initializes a new instance of the <c>LineType</c> class.
         /// </summary>
@@ -144,9 +156,9 @@ namespace netDxf.Tables
         public LineType(string name, string description = null)
             : base(name, DxfObjectCode.LineType, true)
         {
-            this.reserved = name.Equals("ByLayer", StringComparison.InvariantCultureIgnoreCase) ||
-                            name.Equals("ByBlock", StringComparison.InvariantCultureIgnoreCase) ||
-                            name.Equals("Continuous", StringComparison.InvariantCultureIgnoreCase);
+            this.reserved = name.Equals("ByLayer", StringComparison.OrdinalIgnoreCase) ||
+                            name.Equals("ByBlock", StringComparison.OrdinalIgnoreCase) ||
+                            name.Equals("Continuous", StringComparison.OrdinalIgnoreCase);
             this.description = string.IsNullOrEmpty(description) ? string.Empty : description;
             this.segments = new List<double>();
         }
@@ -181,6 +193,15 @@ namespace netDxf.Tables
                     throw new ArgumentNullException("value");
                 this.segments = value;
             }
+        }
+
+        /// <summary>
+        /// Gets the owner of the actual dxf object.
+        /// </summary>
+        public new LineTypes Owner
+        {
+            get { return (LineTypes)this.owner; }
+            internal set { this.owner = value; }
         }
 
         #endregion
@@ -230,7 +251,7 @@ namespace netDxf.Tables
                     // remove start and end spaces
                     description = description.Trim();
 
-                    if (!name.Equals(lineTypeName, StringComparison.InvariantCultureIgnoreCase)) continue;
+                    if (!name.Equals(lineTypeName, StringComparison.OrdinalIgnoreCase)) continue;
 
                     // we have found the line type name, the next line of the file contains the line type definition
                     line = reader.ReadLine();

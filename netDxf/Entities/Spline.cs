@@ -203,9 +203,7 @@ namespace netDxf.Entities
         {
             bool periodic = false;
             for (int i = 0; i < d; i++)
-            {
                 periodic = points[i].Location.Equals(points[points.Count + i - d].Location);
-            }
             return periodic;
         }
 

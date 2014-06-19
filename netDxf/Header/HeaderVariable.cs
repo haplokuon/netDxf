@@ -1,7 +1,7 @@
-﻿#region netDxf, Copyright(C) 2013 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf, Copyright(C) 2014 Daniel Carvajal, Licensed under LGPL.
 
 //                        netDxf library
-// Copyright (C) 2013 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2014 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -28,7 +28,7 @@ namespace netDxf.Header
     /// <summary>
     /// Defines a header variable.
     /// </summary>
-    internal class HeaderVariable
+    public class HeaderVariable
     {
         #region private fields
 
@@ -49,7 +49,7 @@ namespace netDxf.Header
         public HeaderVariable(string name, object value)
         {
             if (!Allowed.ContainsKey(name))
-                throw new ArgumentOutOfRangeException("name", name,"Variable name " + name + " not defined.");
+                throw new ArgumentOutOfRangeException("name", name, string.Format("Variable name {0} not defined.", name));
             this.codeGroup = Allowed[name];
             this.name = name;
             this.value = value;
@@ -59,16 +59,25 @@ namespace netDxf.Header
 
         #region public properties
 
+        /// <summary>
+        /// Gets the header variable name.
+        /// </summary>
         public string Name
         {
             get { return this.name; }
         }
 
+        /// <summary>
+        /// Gets the header variable code group.
+        /// </summary>
         public int CodeGroup
         {
             get { return this.codeGroup; }
         }
 
+        /// <summary>
+        /// Gets the header variable stored value.
+        /// </summary>
         public object Value
         {
             get { return this.value; }
@@ -114,13 +123,18 @@ namespace netDxf.Header
                            {HeaderVariableCode.TextStyle, 7},
                            {HeaderVariableCode.DwgCodePage, 3},
                            {HeaderVariableCode.Extnames, 290},
-                           {HeaderVariableCode.Insunits, 70},
+                           {HeaderVariableCode.InsUnits, 70},
                            {HeaderVariableCode.LastSavedBy, 1},
                            {HeaderVariableCode.LtScale, 40},
                            {HeaderVariableCode.LwDisplay, 290},
                            {HeaderVariableCode.PdMode, 70},
                            {HeaderVariableCode.PdSize, 40},
-                           {HeaderVariableCode.PLineGen, 70}
+                           {HeaderVariableCode.PLineGen, 70},
+                           {HeaderVariableCode.TdCreate, 40},
+                           {HeaderVariableCode.TduCreate, 40},
+                           {HeaderVariableCode.TdUpdate, 40},
+                           {HeaderVariableCode.TduUpdate, 40},
+                           {HeaderVariableCode.TdinDwg, 40},
 
                        };
         }

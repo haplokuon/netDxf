@@ -20,7 +20,6 @@
 
 #endregion
 
-using System;
 using System.Collections;
 using System.Collections.Generic;
 using netDxf.Tables;
@@ -33,9 +32,10 @@ namespace netDxf.Collections
     /// </summary>
     /// <typeparam name="T"><see cref="TableObject">TableObject</see>.</typeparam>
     public abstract class TableObjects<T> :
+        DxfObject,
         IEnumerable<T> where T : TableObject
+        
     {
-
         #region private fields
 
         protected readonly DxfDocument document;
@@ -46,18 +46,20 @@ namespace netDxf.Collections
 
         #region constructor
 
-        internal TableObjects(DxfDocument document)
+        internal TableObjects(DxfDocument document, Dictionary<string, T> list, Dictionary<string, List<DxfObject>> references, string codeName, string handle)
+            : base(codeName)
         {
-            this.document = document;
-            this.list = new Dictionary<string, T>(StringComparer.InvariantCultureIgnoreCase);
-            this.references = new Dictionary<string, List<DxfObject>>(StringComparer.InvariantCultureIgnoreCase);
-        }
-
-        internal TableObjects(DxfDocument document, Dictionary<string, T> list, Dictionary<string, List<DxfObject>> references)
-        {
-            this.document = document;
             this.list = list;
             this.references = references;
+            this.owner = document;
+            this.document = document;
+
+            if (string.IsNullOrEmpty(handle))
+                this.document.NumHandles = base.AsignHandle(this.document.NumHandles);
+            else
+                this.handle = handle;
+
+            this.document.AddedObjects.Add(this.handle, this);
         }
 
         #endregion
@@ -74,15 +76,15 @@ namespace netDxf.Collections
         {
             get
             {
-                T tableObject;
-                return this.list.TryGetValue(name, out tableObject) ? tableObject : null;
+                T item;
+                return this.list.TryGetValue(name, out item) ? item : null;
             }
         }
 
         /// <summary>
         /// Gets the table object list.
         /// </summary>
-        public ICollection<T> Values
+        public ICollection<T> Items
         {
             get { return this.list.Values; }
         }
@@ -101,6 +103,15 @@ namespace netDxf.Collections
         public int Count
         {
             get { return this.list.Count; }
+        }
+
+        /// <summary>
+        /// Gets the owner of the actual dxf object.
+        /// </summary>
+        public new DxfDocument Owner
+        {
+            get { return (DxfDocument)this.owner; }
+            internal set { this.owner = value; }
         }
 
         #endregion
@@ -138,12 +149,12 @@ namespace netDxf.Collections
         /// </summary>
         /// <returns>The list of DxfObjects that reference the specified table object.</returns>
         /// <remarks>If there is no specified table object in the list the method will return null.</remarks>
-        public List<DxfObject> GetReferences(T tableObject)
+        public List<DxfObject> GetReferences(T item)
         {
-            if (!this.Contains(tableObject.Name))
+            if (!this.Contains(item.Name))
                 return null;
             List<DxfObject> objects = new List<DxfObject>();
-            objects.AddRange(this.references[tableObject.Name]);
+            objects.AddRange(this.references[item.Name]);
             return objects;
         }
 
@@ -160,34 +171,39 @@ namespace netDxf.Collections
         /// <summary>
         /// Checks if a table object already exists in the list. 
         /// </summary>
-        /// <param name="tableObject">Table object.</param>
+        /// <param name="item">Table object.</param>
         /// <returns>True is a table object exists, false otherwise.</returns>
-        public bool Contains(T tableObject)
+        public bool Contains(T item)
         {
-            return this.list.ContainsValue(tableObject);
+            return this.list.ContainsValue(item);
         }
 
         /// <summary>
         /// Gets the table object associated with the specified name.
         /// </summary>
         /// <param name="name"> The name of the table object to get.</param>
-        /// <param name="tableObject">When this method returns, contains the table object associated with the specified name, if the key is found;
+        /// <param name="item">When this method returns, contains the table object associated with the specified name, if the key is found;
         /// otherwise, the default value for the type of the value parameter. This parameter is passed uninitialized.</param>
         /// <returns>True if the table contains an element with the specified name; otherwise, false.</returns>
-        public bool TryGetValue(string name, out T tableObject)
+        public bool TryGetValue(string name, out T item)
         {
-            return this.list.TryGetValue(name, out tableObject);
+            return this.list.TryGetValue(name, out item);
         }
 
         /// <summary>
         /// Adds a table object to the list.
         /// </summary>
-        /// <param name="tableObject"><see cref="TableObject">Table object</see> to add to the list.</param>
+        /// <param name="item"><see cref="TableObject">Table object</see> to add to the list.</param>
         /// <returns>
         /// If a table object already exists with the same name as the instance that is being added the method returns the existing table object,
         /// if not it will return the new table object.
         /// </returns>
-        public abstract T Add(T tableObject);
+        public T Add(T item)
+        {
+            return this.Add(item, true);
+        }
+
+        internal abstract T Add(T tableObject, bool assignHandle);
 
         /// <summary>
         /// Removes a table object.
@@ -200,10 +216,10 @@ namespace netDxf.Collections
         /// <summary>
         /// Removes a table object.
         /// </summary>
-        /// <param name="tableObject"><see cref="TableObject">Table object</see> to remove from the document.</param>
+        /// <param name="item"><see cref="TableObject">Table object</see> to remove from the document.</param>
         /// <returns>True is the table object has been successfully removed, or false otherwise.</returns>
         /// <remarks>Reserved table objects or any other referenced by objects cannot be removed.</remarks>
-        public abstract bool Remove(T tableObject);
+        public abstract bool Remove(T item);
 
         /// <summary>
         /// Removes all table objects that are not reserved and have no references.
@@ -213,9 +229,7 @@ namespace netDxf.Collections
             string[] names = new string[this.Count];
             this.list.Keys.CopyTo(names, 0);
             foreach (string o in names)
-            {
                 this.Remove(o);
-            }
         }
 
 	    #endregion

@@ -68,23 +68,13 @@ namespace netDxf.Entities
         /// Althought the attribute entity could override values defined in its definiton for simplicity the implementation has restricted this posibility.
         /// </remarks>
         public Attribute(AttributeDefinition definition)
-            : this(definition, null)
-        {
-        }
-
-        /// <summary>
-        /// Intitializes a new instance of the <c>Attribute</c> class.
-        /// </summary>
-        /// <param name="definition"><see cref="AttributeDefinition">Attribute definition</see>.</param>
-        /// <param name="value">Attribute value.</param>
-        public Attribute(AttributeDefinition definition, object value)
             : base(EntityType.Attribute, DxfObjectCode.Attribute)
         {
             if (definition == null)
                 throw new ArgumentNullException("definition");
             this.definition = definition;
             this.tag = definition.Tag;
-            this.value = value;
+            this.value = definition.Value;
             this.style = definition.Style;
             this.position = definition.Position;
             this.flags = definition.Flags;
@@ -109,7 +99,7 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets the attribute identifier.
+        /// Gets the attribute tag.
         /// </summary>
         public string Tag
         {

@@ -21,7 +21,6 @@
 #endregion
 
 using System;
-using System.Threading;
 using netDxf.Tables;
 
 namespace netDxf.Entities

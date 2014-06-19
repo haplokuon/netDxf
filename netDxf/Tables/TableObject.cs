@@ -28,14 +28,19 @@ namespace netDxf.Tables
     /// Defines classes that can be accesed by name. They are usually part of the dxf table section but can also be part of the objects section.
     /// </summary>
     public abstract class TableObject :
-        DxfObject, IComparable, IComparable<TableObject>
+        DxfObject,
+        IComparable,
+        IComparable<TableObject>
     {
 
         #region private fields
 
-        private static readonly string[] notAllowed = { "\\", "<", ">", "/", "?", "\"", ":", ";", "*", "|", ",", "=", "`" };
+        /// <summary>
+        /// Gets the array of characters not supported as table object names.
+        /// </summary>
+        public static readonly string[] InvalidCharacters = { "\\", "<", ">", "/", "?", "\"", ":", ";", "*", "|", ",", "=", "`" };
         protected bool reserved;
-        private string name;
+        protected string name;
 
         #endregion
 
@@ -52,19 +57,10 @@ namespace netDxf.Tables
         {
             if (checkName)
             {
-                if (string.IsNullOrEmpty(name))
-                    throw (new ArgumentNullException("name"));
-
-                foreach (string s in notAllowed)
-                {
-                    if (name.Contains(s))
-                        throw new ArgumentException("The following characters \\<>/?\":;*|,=` are not supported for table object names.", "name");
-                }
-
-                // using regular expressions is slower
-                //if (Regex.IsMatch(name, "[\\<>/?\":;*|,=`]"))
-                //    throw new ArgumentException("The following characters \\<>/?\":;*|,=` are not supported for table object names.", "name");
+                if (!IsValidName(name))
+                    throw new ArgumentException("The following characters \\<>/?\":;*|,=` are not supported for table object names.", "name");
             }
+
             this.name = name;
             this.reserved = false;
         }
@@ -112,7 +108,7 @@ namespace netDxf.Tables
         /// <remarks>If both table objects are no of the same type it will return zero. The comparision is made by their names.</remarks>
         public int CompareTo(object other)
         {
-            return this.GetType() == other.GetType() ? String.Compare(this.Name, ((TableObject)other).Name, StringComparison.InvariantCultureIgnoreCase) : 0;
+            return CompareTo((TableObject)other);
         }
 
         /// <summary>
@@ -127,7 +123,34 @@ namespace netDxf.Tables
         /// <remarks>If both table objects are no of the same type it will return zero. The comparision is made by their names.</remarks>
         public int CompareTo(TableObject other)
         {
-            return this.GetType() == other.GetType() ? String.Compare(this.Name, (other).Name, StringComparison.InvariantCultureIgnoreCase) : 0;
+            return this.GetType() == other.GetType() ? String.Compare(this.Name, other.Name, StringComparison.OrdinalIgnoreCase) : 0;
+        }
+
+        #endregion
+
+        #region public methods
+
+        /// <summary>
+        /// Checks if a string is valid as a table object name.
+        /// </summary>
+        /// <param name="name">String to check.</param>
+        /// <returns>True if the string is valid as a table object name, or false otherwise.</returns>
+        public static bool IsValidName(string name)
+        {
+            if (string.IsNullOrEmpty(name))
+                return false;
+
+            foreach (string s in InvalidCharacters)
+            {
+                if (name.Contains(s))
+                    return false;
+            }
+
+            // using regular expressions is slower
+            //if (Regex.IsMatch(name, "[\\<>/?\":;*|,=`]"))
+            //    throw new ArgumentException("The following characters \\<>/?\":;*|,=` are not supported for table object names.", "name");
+
+            return true;
         }
 
         #endregion

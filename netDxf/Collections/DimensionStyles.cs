@@ -1,7 +1,7 @@
-#region netDxf, Copyright(C) 2013 Daniel Carvajal, Licensed under LGPL.
+#region netDxf, Copyright(C) 2014 Daniel Carvajal, Licensed under LGPL.
 
 //                        netDxf library
-// Copyright (C) 2013 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2014 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -20,6 +20,7 @@
 
 #endregion
 
+using System;
 using System.Collections.Generic;
 using netDxf.Tables;
 
@@ -34,13 +35,12 @@ namespace netDxf.Collections
 
         #region constructor
 
-        internal DimensionStyles(DxfDocument document)
-            : base(document)
-        {
-        }
-
-        internal DimensionStyles(DxfDocument document, Dictionary<string, DimensionStyle> list, Dictionary<string, List<DxfObject>> references)
-            : base(document, list, references)
+        internal DimensionStyles(DxfDocument document, string handle = null)
+            : base(document,
+            new Dictionary<string, DimensionStyle>(StringComparer.OrdinalIgnoreCase),
+            new Dictionary<string, List<DxfObject>>(StringComparer.OrdinalIgnoreCase),
+            StringCode.DimensionStyleTable,
+            handle)
         {
         }
 
@@ -56,18 +56,21 @@ namespace netDxf.Collections
         /// If a dimension style already exists with the same name as the instance that is being added the method returns the existing dimension style,
         /// if not it will return the new dimension style.
         /// </returns>
-        public override DimensionStyle Add(DimensionStyle style)
+        internal override DimensionStyle Add(DimensionStyle style, bool assignHandle)
         {
             DimensionStyle add;
             if (this.list.TryGetValue(style.Name, out add))
                 return add;
 
-            this.document.NumHandles = style.AsignHandle(this.document.NumHandles);
+            if(assignHandle)
+                this.document.NumHandles = style.AsignHandle(this.document.NumHandles);
+
+            this.document.AddedObjects.Add(style.Handle, style);
             this.list.Add(style.Name, style);
             this.references.Add(style.Name, new List<DxfObject>());
             style.TextStyle = this.document.TextStyles.Add(style.TextStyle);
             this.document.TextStyles.References[style.TextStyle.Name].Add(style);
-
+            style.Owner = this;
             return style;
         }
 
@@ -79,21 +82,7 @@ namespace netDxf.Collections
         /// <remarks>Reserved dimension styles or any other referenced by objects cannot be removed.</remarks>
         public override bool Remove(string name)
         {
-            DimensionStyle style = this[name];
-            
-            if (style == null)
-                return false;
-
-            if (style.IsReserved)
-                return false;
-
-            if (this.references[style.Name].Count != 0)
-                return false;
-
-            this.document.TextStyles.References[style.TextStyle.Name].Remove(style);
-            this.references.Remove(style.Name);
-            return this.list.Remove(style.Name);
-
+            return Remove(this[name]);
         }
 
         /// <summary>
@@ -104,7 +93,26 @@ namespace netDxf.Collections
         /// <remarks>Reserved dimension styles or any other referenced by objects cannot be removed.</remarks>
         public override bool Remove(DimensionStyle style)
         {
-            return Remove(style.Name);
+            if (style == null)
+                return false;
+
+            if (!this.Contains(style))
+                return false;
+
+            if (style.IsReserved)
+                return false;
+
+            if (this.references[style.Name].Count != 0)
+                return false;
+
+            style.Owner = null;
+            this.document.TextStyles.References[style.TextStyle.Name].Remove(style);
+            this.document.AddedObjects.Remove(style.Handle);
+            this.references.Remove(style.Name);
+            this.list.Remove(style.Name);
+
+            return true;
+
         }
 
         #endregion

@@ -34,6 +34,7 @@ namespace netDxf.Entities
     {
         #region private fields
 
+        public bool ccw;
         private Vector3 center;
         private double radius;
         private double startAngle;
@@ -174,22 +175,22 @@ namespace netDxf.Entities
         {
             IEnumerable<Vector2> vertexes = this.PolygonalVertexes(precision);
             Vector3 ocsCenter = MathHelper.Transform(this.center, this.Normal, MathHelper.CoordinateSystem.World,
-                MathHelper.CoordinateSystem.Object);
+                                                     MathHelper.CoordinateSystem.Object);
 
             LwPolyline poly = new LwPolyline
-            {
-                Color = this.Color,
-                IsVisible = this.IsVisible,
-                Layer = this.Layer,
-                LineType = this.LineType,
-                LineTypeScale = this.LineTypeScale,
-                Lineweight = this.Lineweight,
-                XData = this.XData,
-                Normal = this.Normal,
-                Elevation = ocsCenter.Z,
-                Thickness = this.Thickness,
-                IsClosed = false
-            };
+                {
+                    Color = this.Color,
+                    IsVisible = this.IsVisible,
+                    Layer = this.Layer,
+                    LineType = this.LineType,
+                    LineTypeScale = this.LineTypeScale,
+                    Lineweight = this.Lineweight,
+                    XData = this.XData,
+                    Normal = this.Normal,
+                    Elevation = ocsCenter.Z,
+                    Thickness = this.Thickness,
+                    IsClosed = false
+                };
             foreach (Vector2 v in vertexes)
             {
                 poly.Vertexes.Add(new LwPolylineVertex(v.X + ocsCenter.X, v.Y + ocsCenter.Y));
@@ -208,22 +209,22 @@ namespace netDxf.Entities
         public override object Clone()
         {
             return new Arc
-            {
-                //EntityObject properties
-                Color = this.color,
-                Layer = this.layer,
-                LineType = this.lineType,
-                Lineweight = this.lineweight,
-                LineTypeScale = this.lineTypeScale,
-                Normal = this.normal,
-                XData = this.xData,
-                //Arc properties
-                Center = this.center,
-                Radius = this.radius,
-                StartAngle = this.startAngle,
-                EndAngle = this.endAngle,
-                Thickness = this.thickness
-            };
+                {
+                    //EntityObject properties
+                    Color = this.color,
+                    Layer = this.layer,
+                    LineType = this.lineType,
+                    Lineweight = this.lineweight,
+                    LineTypeScale = this.lineTypeScale,
+                    Normal = this.normal,
+                    XData = this.xData,
+                    //Arc properties
+                    Center = this.center,
+                    Radius = this.radius,
+                    StartAngle = this.startAngle,
+                    EndAngle = this.endAngle,
+                    Thickness = this.thickness
+                };
         }
 
         #endregion

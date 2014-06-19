@@ -68,11 +68,25 @@
     <Reference Include="System.Drawing" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BoundingRectangle.cs" />
     <Compile Include="AciColor.cs" />
     <Compile Include="Blocks\Block.cs" />
     <Compile Include="Blocks\BlockEnd.cs" />
     <Compile Include="Blocks\BlockRecord.cs" />
     <Compile Include="Blocks\BlockTypeFlags.cs" />
+    <Compile Include="Collections\AttributeDefinitionDictionary.cs" />
+    <Compile Include="Collections\AttributeDictionary.cs" />
+    <Compile Include="Collections\EntityCollection.cs" />
+    <Compile Include="Collections\EntityCollectionEventArgs.cs" />
+    <Compile Include="Collections\Layouts.cs" />
+    <Compile Include="Collections\ObservableCollectionBase.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Collections\ObservableDictionaryBase.cs" />
+    <Compile Include="Collections\Views.cs" />
+    <Compile Include="Collections\Vports.cs" />
+    <Compile Include="Entities\AttributeFlags.cs" />
+    <Compile Include="Transparency.cs" />
     <Compile Include="EncodingType.cs" />
     <Compile Include="Collections\ApplicationRegistries.cs" />
     <Compile Include="Collections\BlockRecords.cs" />
@@ -85,10 +99,22 @@
     <Compile Include="Collections\MLineStyles.cs" />
     <Compile Include="Collections\TableObjects.cs" />
     <Compile Include="Collections\TextStyles.cs" />
+    <Compile Include="Entities\EntityType.cs" />
+    <Compile Include="Entities\HatchBoundaryPathTypeFlag.cs" />
+    <Compile Include="Entities\HatchFillType.cs" />
+    <Compile Include="Entities\HatchGradientPatternType.cs" />
+    <Compile Include="Entities\HatchStyle.cs" />
+    <Compile Include="Entities\HatchType.cs" />
+    <Compile Include="Entities\Viewport.cs" />
+    <Compile Include="Entities\ViewportStatusFlags.cs" />
     <Compile Include="Entities\XLine.cs" />
     <Compile Include="Entities\Ray.cs" />
+    <Compile Include="DrawingTime.cs" />
+    <Compile Include="Objects\DictionaryClonningFlag.cs" />
     <Compile Include="Objects\ImageDef.cs" />
     <Compile Include="Objects\ImageDefReactor.cs" />
+    <Compile Include="Objects\ImageDisplayQuality.cs" />
+    <Compile Include="Objects\Layout.cs" />
     <Compile Include="Objects\MLineStyle.cs" />
     <Compile Include="Objects\MLineStyleElement.cs" />
     <Compile Include="CodeValuePair.cs" />
@@ -135,7 +161,14 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Objects\Group.cs" />
+    <Compile Include="Objects\MLineStyleFlags.cs" />
+    <Compile Include="Objects\PlotFlags.cs" />
+    <Compile Include="Objects\PlotPaperUnits.cs" />
+    <Compile Include="Objects\PlotRotation.cs" />
+    <Compile Include="Objects\PlotSettings.cs" />
     <Compile Include="Objects\RasterVariables.cs" />
+    <Compile Include="Objects\SupportedImageFormats.cs" />
+    <Compile Include="Tables\LayerFlags.cs" />
     <Compile Include="Tables\UCS.cs" />
     <Compile Include="Tables\View.cs">
       <SubType>Code</SubType>
@@ -154,7 +187,7 @@
     <Compile Include="Symbols.cs" />
     <Compile Include="Tables\ApplicationRegistry.cs" />
     <Compile Include="Tables\DimensionStyle.cs" />
-    <Compile Include="Tables\Viewport.cs" />
+    <Compile Include="Tables\VPort.cs" />
     <Compile Include="Entities\TextAligment.cs" />
     <Compile Include="DxfDocument.cs" />
     <Compile Include="DxfException.cs" />

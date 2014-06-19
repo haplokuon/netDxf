@@ -39,14 +39,17 @@ namespace netDxf.Entities
             /// Bottom.
             /// </summary>
             Bottom = 0,
+
             /// <summary>
             /// Center.
             /// </summary>
             Center = 1,
+
             /// <summary>
             /// Top.
             /// </summary>
             Top = 2,
+
             /// <summary>
             /// Current value (no changes).
             /// </summary>
@@ -55,22 +58,24 @@ namespace netDxf.Entities
 
         #region private fields
 
-        private bool bold = false;
-        private bool italic = false;
-        private bool overline = false;
-        private bool underline = false;
-        private AciColor color = null;
-        private string fontName = null;
-        private TextAligment aligment = TextAligment.Default;
-        private double heightFactor = 1.0;
-        private double obliqueAngle = 0.0;
-        private double characterSpaceFactor = 1.0;
-        private double widthFactor = 1.0;
+        private bool bold;
+        private bool italic;
+        private bool overline;
+        private bool underline;
+        private bool strikeThrough;
+        private AciColor color;
+        private string fontName;
+        private TextAligment aligment;
+        private double heightFactor;
+        private double obliqueAngle;
+        private double characterSpaceFactor;
+        private double widthFactor;
         private readonly TextStyle style;
 
         #endregion
 
         #region constructors
+
         /// <summary>
         /// Initializes a new instance of the <c>MTextFormattingOptions</c> class
         /// </summary>
@@ -90,6 +95,7 @@ namespace netDxf.Entities
             this.widthFactor = 1.0;
             this.style = style;
         }
+
         #endregion
 
         #region public properties
@@ -100,8 +106,8 @@ namespace netDxf.Entities
         /// <remarks>The style font must support bold characters.</remarks>
         public bool Bold
         {
-            get { return bold; }
-            set { bold = value; }
+            get { return this.bold; }
+            set { this.bold = value; }
         }
 
         /// <summary>
@@ -110,8 +116,8 @@ namespace netDxf.Entities
         /// <remarks>The style font must support italic characters.</remarks>
         public bool Italic
         {
-            get { return italic; }
-            set { italic = value; }
+            get { return this.italic; }
+            set { this.italic = value; }
         }
 
         /// <summary>
@@ -119,8 +125,8 @@ namespace netDxf.Entities
         /// </summary>
         public bool Overline
         {
-            get { return overline; }
-            set { overline = value; }
+            get { return this.overline; }
+            set { this.overline = value; }
         }
 
         /// <summary>
@@ -128,18 +134,30 @@ namespace netDxf.Entities
         /// </summary>
         public bool Underline
         {
-            get { return underline; }
-            set { underline = value; }
+            get { return this.underline; }
+            set { this.underline = value; }
+        }
+
+        /// <summary>
+        /// Gets or sets strike-through.
+        /// </summary>
+        public bool StrikeThrough
+        {
+            get { return this.strikeThrough; }
+            set { this.strikeThrough = value; }
         }
 
         /// <summary>
         /// Gets or sets the text color.
         /// </summary>
-        /// <remarks>Set as null to apply the default color.</remarks>
+        /// <remarks>
+        /// Set as null to apply the default color.<br />
+        /// True color is only compatible with dxf database version greater than AutoCad2000.
+        /// </remarks>
         public AciColor Color
         {
-            get { return color; }
-            set { color = value; }
+            get { return this.color; }
+            set { this.color = value; }
         }
 
         /// <summary>
@@ -148,8 +166,8 @@ namespace netDxf.Entities
         /// <remarks>Set as null to apply the default font.</remarks>
         public string FontName
         {
-            get { return fontName; }
-            set { fontName = value; }
+            get { return this.fontName; }
+            set { this.fontName = value; }
         }
 
         /// <summary>
@@ -157,8 +175,8 @@ namespace netDxf.Entities
         /// </summary>
         public TextAligment Aligment
         {
-            get { return aligment; }
-            set { aligment = value; }
+            get { return this.aligment; }
+            set { this.aligment = value; }
         }
 
         /// <summary>
@@ -167,12 +185,12 @@ namespace netDxf.Entities
         /// <remarks>Set as 1.0 to apply the default height factor.</remarks>
         public double HeightFactor
         {
-            get { return heightFactor; }
+            get { return this.heightFactor; }
             set
             {
-                if(value<=0)
-                    throw new ArgumentOutOfRangeException("value",value, "The character percentage height must be greater than 0.");
-                heightFactor = value;
+                if (value <= 0)
+                    throw new ArgumentOutOfRangeException("value", value, "The character percentage height must be greater than 0.");
+                this.heightFactor = value;
             }
         }
 
@@ -182,8 +200,8 @@ namespace netDxf.Entities
         /// <remarks>Set as 0.0 to apply the default obliquing angle.</remarks>
         public double ObliqueAngle
         {
-            get { return obliqueAngle; }
-            set { obliqueAngle = MathHelper.NormalizeAngle(value); }
+            get { return this.obliqueAngle; }
+            set { this.obliqueAngle = MathHelper.NormalizeAngle(value); }
         }
 
         /// <summary>
@@ -195,12 +213,12 @@ namespace netDxf.Entities
         /// </remarks>
         public double CharacterSpaceFactor
         {
-            get { return characterSpaceFactor; }
+            get { return this.characterSpaceFactor; }
             set
             {
-                if(value < 0.75 || value > 4)
+                if (value < 0.75 || value > 4)
                     throw new ArgumentOutOfRangeException("value", value, "The character space valid values range from a minimum of .75 to 4");
-                characterSpaceFactor = value;
+                this.characterSpaceFactor = value;
             }
         }
 
@@ -210,8 +228,8 @@ namespace netDxf.Entities
         /// <remarks>Set as 1.0 to apply the default width factor.</remarks>
         public double WidthFactor
         {
-            get { return widthFactor; }
-            set { widthFactor = value; }
+            get { return this.widthFactor; }
+            set { this.widthFactor = value; }
         }
 
         #endregion
@@ -226,46 +244,51 @@ namespace netDxf.Entities
         public string FormatText(string text)
         {
             string formattedText = text;
-            if(overline)
-                formattedText = string.Format("\\O{0}\\o", formattedText);  
-            if(underline)
-                formattedText = string.Format("\\L{0}\\l", formattedText);  
-            if(color != null)
-                formattedText = string.Format("\\C{0};{1}", color.Index, formattedText);
-            if(fontName != null)
+            if (this.overline)
+                formattedText = string.Format("\\O{0}\\o", formattedText);
+            if (this.underline)
+                formattedText = string.Format("\\L{0}\\l", formattedText);
+            if (this.strikeThrough)
+                formattedText = string.Format("\\K{0}\\k", formattedText);
+            if (this.color != null)
             {
-                if (bold && italic)
-                    formattedText = string.Format("\\f{0}|b1|i1;{1}", fontName, formattedText);
-                else if (bold && !italic)
-                    formattedText = string.Format("\\f{0}|b1|i0;{1}", fontName, formattedText);
-                else if (!bold && italic)
-                    formattedText = string.Format("\\f{0}|i1|b0;{1}", fontName, formattedText);
+                formattedText = this.color.UseTrueColor ?
+                    string.Format("\\C{0};\\c{1};{2}", this.color.Index, AciColor.ToTrueColor(this.color), formattedText) :
+                    string.Format("\\C{0};{1}", this.color.Index, formattedText);
+            }
+            if (this.fontName != null)
+            {
+                if (this.bold && this.italic)
+                    formattedText = string.Format("\\f{0}|b1|i1;{1}", this.fontName, formattedText);
+                else if (this.bold && !this.italic)
+                    formattedText = string.Format("\\f{0}|b1|i0;{1}", this.fontName, formattedText);
+                else if (!this.bold && this.italic)
+                    formattedText = string.Format("\\f{0}|i1|b0;{1}", this.fontName, formattedText);
                 else
-                    formattedText = string.Format("\\F{0};{1}", fontName, formattedText);
+                    formattedText = string.Format("\\F{0};{1}", this.fontName, formattedText);
             }
             else
             {
-                if (bold && italic)
-                    formattedText = string.Format("\\f{0}|b1|i1;{1}", style.FontNameWithoutExtension, formattedText);
-                if (bold && !italic)
-                    formattedText = string.Format("\\f{0}|b1|i0;{1}", style.FontNameWithoutExtension, formattedText);
-                if (!bold && italic)
-                    formattedText = string.Format("\\f{0}|i1|b0;{1}", style.FontNameWithoutExtension, formattedText);
-            }    
-            if(aligment != TextAligment.Default)
-                formattedText = string.Format("\\A{0};{1}", (int)aligment, formattedText);
-            if(!MathHelper.IsOne(heightFactor))
-                formattedText = string.Format("\\H{0}x;{1}", heightFactor, formattedText);
-            if (!MathHelper.IsZero(obliqueAngle))
-                formattedText = string.Format("\\Q{0};{1}", obliqueAngle, formattedText);
-            if (!MathHelper.IsOne(characterSpaceFactor))
-                formattedText = string.Format("\\T{0};{1}", characterSpaceFactor, formattedText);
-            if (!MathHelper.IsOne(widthFactor))
-                formattedText = string.Format("\\W{0};{1}", widthFactor, formattedText);
+                if (this.bold && this.italic)
+                    formattedText = string.Format("\\f{0}|b1|i1;{1}", this.style.FontNameWithoutExtension, formattedText);
+                if (this.bold && !this.italic)
+                    formattedText = string.Format("\\f{0}|b1|i0;{1}", this.style.FontNameWithoutExtension, formattedText);
+                if (!this.bold && this.italic)
+                    formattedText = string.Format("\\f{0}|i1|b0;{1}", this.style.FontNameWithoutExtension, formattedText);
+            }
+            if (this.aligment != TextAligment.Default)
+                formattedText = string.Format("\\A{0};{1}", (int) this.aligment, formattedText);
+            if (!MathHelper.IsOne(this.heightFactor))
+                formattedText = string.Format("\\H{0}x;{1}", this.heightFactor, formattedText);
+            if (!MathHelper.IsZero(this.obliqueAngle))
+                formattedText = string.Format("\\Q{0};{1}", this.obliqueAngle, formattedText);
+            if (!MathHelper.IsOne(this.characterSpaceFactor))
+                formattedText = string.Format("\\T{0};{1}", this.characterSpaceFactor, formattedText);
+            if (!MathHelper.IsOne(this.widthFactor))
+                formattedText = string.Format("\\W{0};{1}", this.widthFactor, formattedText);
             return "{" + formattedText + "}";
         }
 
         #endregion
-
     }
 }

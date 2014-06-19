@@ -44,6 +44,17 @@ namespace netDxf
         /// <summary>
         /// Initializes a new instance of Vector3.
         /// </summary>
+        /// <param name="value">X, Y, Z component.</param>
+        public Vector3(double value)
+        {
+            this.x = value;
+            this.y = value;
+            this.z = value;
+        }
+
+        /// <summary>
+        /// Initializes a new instance of Vector3.
+        /// </summary>
         /// <param name="x">X component.</param>
         /// <param name="y">Y component.</param>
         /// <param name="z">Z component.</param>
@@ -437,7 +448,7 @@ namespace netDxf
         /// <returns>Array.</returns>
         public double[] ToArray()
         {
-            double[] u = new[] {this.x, this.y, this.z};
+            double[] u = {this.x, this.y, this.z};
             return u;
         }
 

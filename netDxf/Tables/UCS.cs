@@ -21,6 +21,7 @@
 #endregion
 
 using System;
+using netDxf.Collections;
 
 namespace netDxf.Tables
 {
@@ -122,6 +123,15 @@ namespace netDxf.Tables
         {
             get { return this.elevation; }
             set { this.elevation = value; }
+        }
+
+        /// <summary>
+        /// Gets the owner of the actual dxf object.
+        /// </summary>
+        public new UCSs Owner
+        {
+            get { return (UCSs)this.owner; }
+            internal set { this.owner = value; }
         }
 
         #endregion
