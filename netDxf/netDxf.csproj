@@ -68,6 +68,8 @@
     <Reference Include="System.Drawing" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BinaryCodeValueReader.cs" />
+    <Compile Include="BinaryCodeValueWriter.cs" />
     <Compile Include="BoundingRectangle.cs" />
     <Compile Include="AciColor.cs" />
     <Compile Include="Blocks\Block.cs" />
@@ -85,7 +87,16 @@
     <Compile Include="Collections\ObservableDictionaryBase.cs" />
     <Compile Include="Collections\Views.cs" />
     <Compile Include="Collections\Vports.cs" />
+    <Compile Include="Entities\Mesh.cs" />
+    <Compile Include="Entities\MeshEdge.cs" />
+    <Compile Include="Entities\MLineFlags.cs" />
+    <Compile Include="Entities\MLineJustification.cs" />
+    <Compile Include="TextCodeValueWriter.cs" />
+    <Compile Include="ICodeValueWriter.cs" />
     <Compile Include="Entities\AttributeFlags.cs" />
+    <Compile Include="Entities\Face3dEdgeFlags.cs" />
+    <Compile Include="ICodeValueReader.cs" />
+    <Compile Include="TextCodeValueReader.cs" />
     <Compile Include="Transparency.cs" />
     <Compile Include="EncodingType.cs" />
     <Compile Include="Collections\ApplicationRegistries.cs" />
@@ -117,7 +128,6 @@
     <Compile Include="Objects\Layout.cs" />
     <Compile Include="Objects\MLineStyle.cs" />
     <Compile Include="Objects\MLineStyleElement.cs" />
-    <Compile Include="CodeValuePair.cs" />
     <Compile Include="Entities\AlignedDimension.cs" />
     <Compile Include="Entities\Angular3PointDimension.cs" />
     <Compile Include="Entities\Angular2LineDimension.cs" />

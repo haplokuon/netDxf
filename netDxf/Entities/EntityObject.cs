@@ -64,7 +64,7 @@ namespace netDxf.Entities
             this.lineTypeScale = 1.0;
             this.isVisible = true;
             this.normal = Vector3.UnitZ;
-            this.xData = new Dictionary<string, XData>();
+            this.xData = new Dictionary<string, XData>(StringComparer.OrdinalIgnoreCase);
         }
 
         #endregion

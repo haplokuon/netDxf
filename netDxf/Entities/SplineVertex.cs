@@ -70,7 +70,7 @@ namespace netDxf.Entities
         public SplineVertex(Vector3 location, double weigth = 1.0)
         {
             if (weigth <= 0)
-                throw new ArgumentException("The spline vertex weight must be greater than zero.");
+                throw (new ArgumentOutOfRangeException("weigth", weigth, "The spline vertex weight must be greater than zero."));
             this.location = location;
             this.weigth = weigth;
         }
@@ -94,7 +94,12 @@ namespace netDxf.Entities
         public double Weigth
         {
             get { return this.weigth; }
-            set { this.weigth = value; }
+            set
+            {
+                if (value <= 0)
+                    throw (new ArgumentOutOfRangeException("value", value, "The spline vertex weight must be greater than zero."));
+                this.weigth = value;
+            }
         }
 
         #endregion

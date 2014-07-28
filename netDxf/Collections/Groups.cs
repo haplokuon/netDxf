@@ -38,12 +38,18 @@ namespace netDxf.Collections
         #region constructor
 
         internal Groups(DxfDocument document, string handle = null)
+            : this(document,0,handle)
+        {
+        }
+
+        internal Groups(DxfDocument document, int capacity, string handle = null)
             : base(document,
-            new Dictionary<string, Group>(StringComparer.OrdinalIgnoreCase),
-            new Dictionary<string, List<DxfObject>>(StringComparer.OrdinalIgnoreCase),
+            new Dictionary<string, Group>(capacity, StringComparer.OrdinalIgnoreCase),
+            new Dictionary<string, List<DxfObject>>(capacity, StringComparer.OrdinalIgnoreCase),
             StringCode.GroupDictionary,
             handle)
         {
+            this.maxCapacity = int.MaxValue;
         }
 
         #endregion
@@ -61,6 +67,9 @@ namespace netDxf.Collections
         /// </returns>
         internal override Group Add(Group group, bool assignHandle)
         {
+            if (this.list.Count >= this.maxCapacity)
+                throw new OverflowException(String.Format("Table overflow. The maximum number of elements the table {0} can have is {1}", this.codeName, this.maxCapacity));
+
             // if no name has been given to the group a generic name will be created
             if (group.IsUnnamed && string.IsNullOrEmpty(group.Name))
                 group.Name = "*A" + ++this.document.GroupNamesGenerated;

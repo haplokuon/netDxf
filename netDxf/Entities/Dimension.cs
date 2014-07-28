@@ -185,7 +185,7 @@ namespace netDxf.Entities
         {
             string format;
             string text;
-            NumberFormatInfo numberFormat = new NumberFormatInfo { NumberDecimalSeparator = this.style.DIMDSEP };
+            NumberFormatInfo numberFormat = new NumberFormatInfo { NumberDecimalSeparator = this.style.DIMDSEP.ToString(CultureInfo.InvariantCulture) };
             if (this is Angular3PointDimension || this is Angular2LineDimension)
             {
                 format = "F" + this.style.DIMADEC;

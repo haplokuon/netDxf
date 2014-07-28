@@ -73,6 +73,11 @@ namespace netDxf.Entities
         Text,
 
         /// <summary>
+        /// Mesh entity.
+        /// </summary>
+        Mesh,
+
+        /// <summary>
         /// Multiline text string entity.
         /// </summary>
         MText,
@@ -88,7 +93,7 @@ namespace netDxf.Entities
         Face3D,
 
         /// <summary>
-        /// Solid.
+        /// Solid entity.
         /// </summary>
         Solid,
 
@@ -96,6 +101,11 @@ namespace netDxf.Entities
         /// Spline (nonuniform rational B-splines NURBS).
         /// </summary>
         Spline,
+
+        /// <summary>
+        /// Helix entity.
+        /// </summary>
+        Helix,
 
         /// <summary>
         /// Block insertion entity.

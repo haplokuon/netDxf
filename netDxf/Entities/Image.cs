@@ -40,9 +40,9 @@ namespace netDxf.Entities
         private double rotation;
         private ImageDef imageDef;
         private bool clipping;
-        private float brightness;
-        private float contrast;
-        private float fade;
+        private short brightness;
+        private short contrast;
+        private short fade;
         private ImageDisplayFlags displayOptions;
         private ImageClippingBoundary clippingBoundary;
 
@@ -101,15 +101,13 @@ namespace netDxf.Entities
         {
             this.imageDef = imageDefinition;
             this.position = position;
-            //this.width = imageDefinition.Width * imageDefinition.OnePixelSize.X;
-            //this.height = imageDefinition.Height * imageDefinition.OnePixelSize.Y;
             this.width = width;
             this.height = height;
             this.rotation = 0;
             this.clipping = false;
-            this.brightness = 50.0f;
-            this.contrast = 50.0f;
-            this.fade = 0.0f;
+            this.brightness = 50;
+            this.contrast = 50;
+            this.fade = 0;
             this.displayOptions = ImageDisplayFlags.ShowImage | ImageDisplayFlags.ShowImageWhenNotAlignedWithScreen | ImageDisplayFlags.UseClippingBoundary;
             this.clippingBoundary = new ImageClippingBoundary(-0.5, -0.5, imageDefinition.Width, imageDefinition.Height);
         }
@@ -175,7 +173,7 @@ namespace netDxf.Entities
         /// <summary>
         /// Gets or sets the brightness value (0-100; default = 50)
         /// </summary>
-        public float Brightness
+        public short Brightness
         {
             get { return this.brightness; }
             set
@@ -189,7 +187,7 @@ namespace netDxf.Entities
         /// <summary>
         /// Gets or sets the contrast value (0-100; default = 50)
         /// </summary>
-        public float Contrast
+        public short Contrast
         {
             get { return this.contrast; }
             set
@@ -203,7 +201,7 @@ namespace netDxf.Entities
         /// <summary>
         /// Gets or sets the fade value (0-100; default = 0)
         /// </summary>
-        public float Fade
+        public short Fade
         {
             get { return this.fade; }
             set
@@ -237,36 +235,6 @@ namespace netDxf.Entities
 
         #endregion
 
-        //#region public methods
-
-        ///// <summary>
-        ///// Sets the scale of the image.
-        ///// </summary>
-        ///// <param name="scale">X and Y scale of the image.</param>
-        //public void SetScale(Vector2 scale)
-        //{
-        //    this.SetScale(scale.X, scale.Y);
-        //}
-        ///// <summary>
-        ///// Sets the scale of the image.
-        ///// </summary>
-        ///// <param name="scale">Uniform scale of the image.</param>
-        //public void SetScale(double scale)
-        //{
-        //    this.SetScale(scale, scale);
-        //}
-        ///// <summary>
-        ///// Sets the scale of the image.
-        ///// </summary>
-        ///// <param name="scaleX">X scale of the image.</param>
-        ///// <param name="scaleY">Y scale of the image.</param>
-        //public void SetScale(double scaleX, double scaleY)
-        //{
-        //    //this.width = this.imageDef.Width * this.imageDef.OnePixelSize.X * scaleX;
-        //    //this.height = this.imageDef.Height * this.imageDef.OnePixelSize.Y * scaleY;
-        //}
-        //#endregion
-
         #region overrides
 
         /// <summary>
@@ -287,8 +255,8 @@ namespace netDxf.Entities
                 XData = this.xData,
                 //Image properties
                 Position = this.position,
-                //Height = this.height,
-                //Width = this.width,
+                Height = this.height,
+                Width = this.width,
                 Rotation = this.rotation,
                 Definition = this.imageDef,
                 Clipping = this.clipping,

@@ -1,7 +1,7 @@
-#region netDxf, Copyright(C) 2013 Daniel Carvajal, Licensed under LGPL.
+#region netDxf, Copyright(C) 2014 Daniel Carvajal, Licensed under LGPL.
 
 //                        netDxf library
-// Copyright (C) 2013 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2014 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -30,7 +30,7 @@ namespace netDxf
         #region private fields
 
         private object value;
-        private int code;
+        private short code;
 
         #endregion
 
@@ -65,7 +65,7 @@ namespace netDxf
         /// </summary>
         /// <param name="code">XData code.</param>
         /// <param name="value">XData value.</param>
-        public XDataRecord(int code, object value)
+        public XDataRecord(short code, object value)
         {
             this.code = code;
             this.value = value;
@@ -79,7 +79,7 @@ namespace netDxf
         /// Gets or set the XData code.
         /// </summary>
         /// <remarks>The only valid values are the ones defined in the <see cref="XDataCode">XDataCode</see> class.</remarks>
-        public int Code
+        public short Code
         {
             get { return this.code; }
             set { this.code = value; }

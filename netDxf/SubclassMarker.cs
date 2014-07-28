@@ -56,6 +56,7 @@ namespace netDxf
         public const string Ellipse = "AcDbEllipse";
         public const string Spline = "AcDbSpline";
         public const string Face3d = "AcDbFace";
+        public const string Helix = "AcDbHelix";
         public const string Insert = "AcDbBlockReference";
         public const string Line = "AcDbLine";
         public const string Ray = "AcDbRay";
@@ -73,6 +74,7 @@ namespace netDxf
         public const string PolyfaceMeshFace = "AcDbFaceRecord";
         public const string Solid = "AcDbTrace";
         public const string Text = "AcDbText";
+        public const string Mesh = "AcDbSubDMesh";
         public const string MText = "AcDbMText";
         public const string Hatch = "AcDbHatch";
         public const string Viewport = "AcDbViewport";

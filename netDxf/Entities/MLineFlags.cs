@@ -1,7 +1,7 @@
-﻿#region netDxf, Copyright(C) 2009 Daniel Carvajal, Licensed under LGPL.
+#region netDxf, Copyright(C) 2014 Daniel Carvajal, Licensed under LGPL.
 
 //                        netDxf library
-// Copyright (C) 2009 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2014 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -20,46 +20,31 @@
 
 #endregion
 
-namespace netDxf
+using System;
+
+namespace netDxf.Entities
 {
     /// <summary>
-    /// Represents the minimun information element in a dxf file.
+    /// Flags (bit-coded values).
     /// </summary>
-    internal struct CodeValuePair
+    [Flags]
+    internal enum MLineFlags
     {
-        private readonly int code;
-        private readonly string value;
-
         /// <summary>
-        /// Initalizes a new instance of the <c>CodeValuePair</c> class.
+        /// Has at least one vertex (code 72 is greater than 0).
         /// </summary>
-        /// <param name="code">Dxf code.</param>
-        /// <param name="value">Value for the specified code.</param>
-        public CodeValuePair(int code, string value)
-        {
-            this.code = code;
-            this.value = value;
-        }
-
+        Has = 1,
         /// <summary>
-        /// Gets the dxf code.
+        /// Closed.
         /// </summary>
-        public int Code
-        {
-            get { return this.code; }
-        }
-
+        Closed = 2,
         /// <summary>
-        /// Gets the value.
+        /// Suppress start caps.
         /// </summary>
-        public string Value
-        {
-            get { return this.value; }
-        }
-
-        public override string ToString()
-        {
-            return string.Format("{0}:{1}", this.code, this.value);
-        }
+        NoStartCaps = 4,
+        /// <summary>
+        /// Suppress end caps.
+        /// </summary>
+        NoEndCaps = 8
     }
 }

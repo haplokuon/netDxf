@@ -33,7 +33,7 @@ namespace netDxf.Header
         #region private fields
 
         private readonly string name;
-        private readonly int codeGroup;
+        private readonly short codeGroup;
         private object value;
 
         #endregion
@@ -50,7 +50,7 @@ namespace netDxf.Header
         {
             if (!Allowed.ContainsKey(name))
                 throw new ArgumentOutOfRangeException("name", name, string.Format("Variable name {0} not defined.", name));
-            this.codeGroup = Allowed[name];
+            this.codeGroup = (short)Allowed[name];
             this.name = name;
             this.value = value;
         }
@@ -70,7 +70,7 @@ namespace netDxf.Header
         /// <summary>
         /// Gets the header variable code group.
         /// </summary>
-        public int CodeGroup
+        public short CodeGroup
         {
             get { return this.codeGroup; }
         }

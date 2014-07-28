@@ -37,12 +37,18 @@ namespace netDxf.Collections
         #region constructor
 
         internal UCSs(DxfDocument document, string handle = null)
+            : this(document,0,handle)
+        {
+        }
+
+        internal UCSs(DxfDocument document, int capacity, string handle = null)
             : base(document,
-            new Dictionary<string, UCS>(StringComparer.OrdinalIgnoreCase),
-            new Dictionary<string, List<DxfObject>>(StringComparer.OrdinalIgnoreCase),
+            new Dictionary<string, UCS>(capacity, StringComparer.OrdinalIgnoreCase),
+            new Dictionary<string, List<DxfObject>>(capacity, StringComparer.OrdinalIgnoreCase),
             StringCode.UcsTable,
             handle)
         {
+            this.maxCapacity = short.MaxValue;
         }
 
         #endregion
@@ -59,6 +65,9 @@ namespace netDxf.Collections
         /// </returns>
         internal override UCS Add(UCS ucs, bool assignHandle)
         {
+            if (this.list.Count >= this.maxCapacity)
+                throw new OverflowException(String.Format("Table overflow. The maximum number of elements the table {0} can have is {1}", this.codeName, this.maxCapacity));
+
             UCS add;
             if (this.list.TryGetValue(ucs.Name, out add))
                 return add;

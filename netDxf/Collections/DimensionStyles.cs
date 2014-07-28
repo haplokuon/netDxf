@@ -36,12 +36,18 @@ namespace netDxf.Collections
         #region constructor
 
         internal DimensionStyles(DxfDocument document, string handle = null)
+            : this(document,0,handle)
+        {
+        }
+
+        internal DimensionStyles(DxfDocument document, int capacity, string handle = null)
             : base(document,
-            new Dictionary<string, DimensionStyle>(StringComparer.OrdinalIgnoreCase),
-            new Dictionary<string, List<DxfObject>>(StringComparer.OrdinalIgnoreCase),
+            new Dictionary<string, DimensionStyle>(capacity, StringComparer.OrdinalIgnoreCase),
+            new Dictionary<string, List<DxfObject>>(capacity, StringComparer.OrdinalIgnoreCase),
             StringCode.DimensionStyleTable,
             handle)
         {
+            this.maxCapacity = short.MaxValue;
         }
 
         #endregion
@@ -58,6 +64,9 @@ namespace netDxf.Collections
         /// </returns>
         internal override DimensionStyle Add(DimensionStyle style, bool assignHandle)
         {
+            if (this.list.Count >= this.maxCapacity)
+                throw new OverflowException(String.Format("Table overflow. The maximum number of elements the table {0} can have is {1}", this.codeName, this.maxCapacity));
+
             DimensionStyle add;
             if (this.list.TryGetValue(style.Name, out add))
                 return add;

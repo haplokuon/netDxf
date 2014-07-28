@@ -1,7 +1,7 @@
-﻿#region netDxf, Copyright(C) 2013 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf, Copyright(C) 2014 Daniel Carvajal, Licensed under LGPL.
 
 //                        netDxf library
-// Copyright (C) 2013 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2014 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -22,33 +22,29 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 
 namespace netDxf.Entities
 {
     /// <summary>
     /// Represents a polyface mesh <see cref="EntityObject">entity</see>.
     /// </summary>
+    /// <remarks>
+    /// The maximum number of vertexes and faces that a PolyfaceMesh can have is short.MaxValue = 32767.
+    /// </remarks>
     public class PolyfaceMesh :
         EntityObject
     {
         #region private fields
 
-        private readonly EndSequence endSequence;
-        private List<PolyfaceMeshFace> faces;
-        private List<PolyfaceMeshVertex> vertexes;
+        private readonly List<PolyfaceMeshFace> faces;
+        private readonly List<PolyfaceMeshVertex> vertexes;
         private readonly PolylineTypeFlags flags;
+        private readonly EndSequence endSequence;
 
         #endregion
 
         #region constructors
-
-        /// <summary>
-        /// Initializes a new instance of the <c>PolyfaceMesh</c> class.
-        /// </summary>
-        public PolyfaceMesh()
-            : this(new List<PolyfaceMeshVertex>(), new List<PolyfaceMeshFace>())
-        {
-        }
 
         /// <summary>
         /// Initializes a new instance of the <c>PolyfaceMesh</c> class.
@@ -71,29 +67,17 @@ namespace netDxf.Entities
         /// <summary>
         /// Gets or sets the polyface mesh <see cref="PolyfaceMeshVertex">vertexes</see>.
         /// </summary>
-        public List<PolyfaceMeshVertex> Vertexes
+        public ReadOnlyCollection<PolyfaceMeshVertex> Vertexes
         {
-            get { return this.vertexes; }
-            set
-            {
-                if (value == null)
-                    throw new ArgumentNullException("value");
-                this.vertexes = value;
-            }
+            get { return this.vertexes.AsReadOnly(); }
         }
 
         /// <summary>
         /// Gets or sets the polyface mesh <see cref="PolyfaceMeshFace">faces</see>.
         /// </summary>
-        public List<PolyfaceMeshFace> Faces
+        public ReadOnlyCollection<PolyfaceMeshFace> Faces
         {
-            get { return this.faces; }
-            set
-            {
-                if (value == null)
-                    throw new ArgumentNullException("value");
-                this.faces = value;
-            }
+            get { return this.faces.AsReadOnly(); }
         }
 
         #endregion
@@ -192,22 +176,22 @@ namespace netDxf.Entities
                     continue;
                 }
 
-                EdgeFlags edgeVisibility = EdgeFlags.Visibles;
+                Face3dEdgeFlags edgeVisibility = Face3dEdgeFlags.Visibles;
 
-                int indexV1 = face.VertexIndexes[0];
-                int indexV2 = face.VertexIndexes[1];
-                int indexV3 = face.VertexIndexes[2];
+                short indexV1 = face.VertexIndexes[0];
+                short indexV2 = face.VertexIndexes[1];
+                short indexV3 = face.VertexIndexes[2];
                 // Polyface mesh faces are made of 3 or 4 vertexes, we will repeat the third vertex if the face vertexes is three
                 int indexV4 = face.VertexIndexes.Length == 3 ? face.VertexIndexes[2] : face.VertexIndexes[3];
 
                 if (indexV1 < 0)
-                    edgeVisibility = edgeVisibility | EdgeFlags.First;
+                    edgeVisibility = edgeVisibility | Face3dEdgeFlags.First;
                 if (indexV2 < 0)
-                    edgeVisibility = edgeVisibility | EdgeFlags.Second;
+                    edgeVisibility = edgeVisibility | Face3dEdgeFlags.Second;
                 if (indexV3 < 0)
-                    edgeVisibility = edgeVisibility | EdgeFlags.Third;
+                    edgeVisibility = edgeVisibility | Face3dEdgeFlags.Third;
                 if (indexV4 < 0)
-                    edgeVisibility = edgeVisibility | EdgeFlags.Fourth;
+                    edgeVisibility = edgeVisibility | Face3dEdgeFlags.Fourth;
 
                 Vector3 v1 = this.Vertexes[Math.Abs(indexV1) - 1].Location;
                 Vector3 v2 = this.Vertexes[Math.Abs(indexV2) - 1].Location;
@@ -255,7 +239,7 @@ namespace netDxf.Entities
             {
                 copyFaces.Add((PolyfaceMeshFace) face.Clone());
             }
-            return new PolyfaceMesh
+            return new PolyfaceMesh(copyVertexes, copyFaces)
             {
                 //EntityObject properties
                 Color = this.color,
@@ -266,8 +250,6 @@ namespace netDxf.Entities
                 Normal = this.normal,
                 XData = this.xData,
                 //PolyfaceMesh properties
-                Vertexes = copyVertexes,
-                Faces = copyFaces
             };
         }
 

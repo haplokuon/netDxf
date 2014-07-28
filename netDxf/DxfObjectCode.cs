@@ -1,7 +1,7 @@
-﻿#region netDxf, Copyright(C) 2012 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf, Copyright(C) 2014 Daniel Carvajal, Licensed under LGPL.
 
 //                        netDxf library
-// Copyright (C) 2012 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2014 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -148,6 +148,11 @@ namespace netDxf
         public const string Text = "TEXT";
 
         /// <summary>
+        /// Mesh.
+        /// </summary>
+        public const string Mesh = "MESH";
+
+        /// <summary>
         /// Multiline text string.
         /// </summary>
         public const string MText = "MTEXT";
@@ -161,6 +166,11 @@ namespace netDxf
         /// 3d face.
         /// </summary>
         public const string Face3d = "3DFACE";
+
+        /// <summary>
+        /// Helix.
+        /// </summary>
+        public const string Helix = "HELIX";
 
         /// <summary>
         /// Block insertion.

@@ -47,7 +47,7 @@ namespace netDxf.Objects
         private Vector3 origin;
         private Vector3 xAxis;
         private Vector3 yAxis;
-        private int tabOrder;
+        private short tabOrder;
         private Viewport viewport;
         private readonly bool isPaperSpace;
         private static readonly Layout modelSpace;
@@ -127,7 +127,7 @@ namespace netDxf.Objects
         /// attached to the AutoCAD drawing frame window. Note that the "Model" tab always appears
         /// as the first tab regardless of its tab order (always zero).
         /// </remarks>
-        public int TabOrder
+        public short TabOrder
         {
             get { return this.tabOrder; }
             set

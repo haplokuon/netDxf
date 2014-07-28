@@ -1,7 +1,7 @@
-﻿#region netDxf, Copyright(C) 2013 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf, Copyright(C) 2014 Daniel Carvajal, Licensed under LGPL.
 
 //                        netDxf library
-// Copyright (C) 2013 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2014 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -26,49 +26,6 @@ using netDxf.Objects;
 
 namespace netDxf.Entities
 {
-    /// <summary>
-    /// Justification.
-    /// </summary>
-    public enum MLineJustification
-    {
-        /// <summary>
-        /// Top.
-        /// </summary>
-        Top = 0,
-        /// <summary>
-        /// Zero.
-        /// </summary>
-        Zero = 1,
-        /// <summary>
-        /// Bottom.
-        /// </summary>
-        Bottom = 2
-    }
-
-    /// <summary>
-    /// Flags (bit-coded values).
-    /// </summary>
-    [Flags]
-    internal enum MLineFlags
-    {
-        /// <summary>
-        /// Has at least one vertex (code 72 is greater than 0).
-        /// </summary>
-        Has = 1,
-        /// <summary>
-        /// Closed.
-        /// </summary>
-        Closed = 2,
-        /// <summary>
-        /// Suppress start caps.
-        /// </summary>
-        NoStartCaps = 4,
-        /// <summary>
-        /// Suppress end caps.
-        /// </summary>
-        NoEndCaps = 8
-    }
-
     /// <summary>
     /// Represents a multiline <see cref="EntityObject">entity</see>.
     /// </summary>

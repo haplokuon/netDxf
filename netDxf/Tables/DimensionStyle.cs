@@ -31,7 +31,6 @@ namespace netDxf.Tables
     public class DimensionStyle :
         TableObject
     {
-
         #region private fields
 
         private TextStyle textStyle;
@@ -46,16 +45,16 @@ namespace netDxf.Tables
 
         // text
         private double dimtxt = 0.18;
-        private int dimjust = 0;
-        private int dimtad = 1;
+        private short dimjust = 0;
+        private short dimtad = 1;
         private double dimgap = 0.09;
-        private int dimadec = 0;
-        private int dimdec = 2;
+        private short dimadec = 0;
+        private short dimdec = 2;
         private string dimpost = "<>";
-        private int dimtih = 0;
-        private int dimtoh = 0;
-        private string dimdsep = ".";
-        private int dimaunit = 0;
+        private short dimtih = 0;
+        private short dimtoh = 0;
+        private char dimdsep = '.';
+        private short dimaunit = 0;
 
         private static readonly DimensionStyle standard;
 
@@ -79,6 +78,7 @@ namespace netDxf.Tables
         {
             standard = new DimensionStyle("Standard");
         }
+
         /// <summary>
         /// Initializes a new instance of the <c>DimensionStyle</c> class.
         /// </summary>
@@ -98,12 +98,12 @@ namespace netDxf.Tables
         /// </summary>
         public TextStyle TextStyle
         {
-            get { return textStyle; }
+            get { return this.textStyle; }
             set
             {
                 if (value == null)
-                    throw new ArgumentNullException("value"); 
-                textStyle = value;
+                    throw new ArgumentNullException("value");
+                this.textStyle = value;
             }
         }
 
@@ -112,8 +112,8 @@ namespace netDxf.Tables
         /// </summary>
         public double DIMGAP
         {
-            get { return dimgap; }
-            set { dimgap = value; }
+            get { return this.dimgap; }
+            set { this.dimgap = value; }
         }
 
         /// <summary>
@@ -121,8 +121,8 @@ namespace netDxf.Tables
         /// </summary>
         public double DIMEXO
         {
-            get { return dimexo; }
-            set { dimexo = value; }
+            get { return this.dimexo; }
+            set { this.dimexo = value; }
         }
 
         /// <summary>
@@ -130,8 +130,8 @@ namespace netDxf.Tables
         /// </summary>
         public double DIMEXE
         {
-            get { return dimexe; }
-            set { dimexe = value; }
+            get { return this.dimexe; }
+            set { this.dimexe = value; }
         }
 
         /// <summary>
@@ -139,8 +139,8 @@ namespace netDxf.Tables
         /// </summary>
         public double DIMASZ
         {
-            get { return dimasz; }
-            set { dimasz = value; }
+            get { return this.dimasz; }
+            set { this.dimasz = value; }
         }
 
         /// <summary>
@@ -148,35 +148,35 @@ namespace netDxf.Tables
         /// </summary>
         public double DIMTXT
         {
-            get { return dimtxt; }
-            set { dimtxt = value; }
+            get { return this.dimtxt; }
+            set { this.dimtxt = value; }
         }
 
         /// <summary>
         /// Controls the horizontal positioning of dimension text.
         /// </summary>
-        public int DIMJUST
+        public short DIMJUST
         {
-            get { return dimjust; }
-            set { dimjust = value; }
+            get { return this.dimjust; }
+            set { this.dimjust = value; }
         }
 
         /// <summary>
         /// Controls the vertical position of text in relation to the dimension line.
         /// </summary>
-        public int DIMTAD
+        public short DIMTAD
         {
-            get { return dimtad; }
-            set { dimtad = value; }
+            get { return this.dimtad; }
+            set { this.dimtad = value; }
         }
 
         /// <summary>
         /// Sets the number of decimal places displayed for the primary units of a dimension.
         /// </summary>
-        public int DIMDEC
+        public short DIMDEC
         {
-            get { return dimdec; }
-            set { dimdec = value; }
+            get { return this.dimdec; }
+            set { this.dimdec = value; }
         }
 
         /// <summary>
@@ -193,17 +193,17 @@ namespace netDxf.Tables
         /// </remarks>
         public double DIMCEN
         {
-            get { return dimcen; }
-            set { dimcen = value; }
+            get { return this.dimcen; }
+            set { this.dimcen = value; }
         }
 
         /// <summary>
         /// Controls the number of precision places displayed in angular dimensions.
         /// </summary>
-        public int DIMADEC
+        public short DIMADEC
         {
-            get { return dimadec; }
-            set { dimadec = value; }
+            get { return this.dimadec; }
+            set { this.dimadec = value; }
         }
 
         /// <summary>
@@ -217,35 +217,35 @@ namespace netDxf.Tables
         /// </remarks>
         public string DIMPOST
         {
-            get { return dimpost; }
-            set { dimpost = value; }
+            get { return this.dimpost; }
+            set { this.dimpost = value; }
         }
 
         /// <summary>
         /// Controls the position of dimension text inside the extension lines for all dimension types except Ordinate.
         /// </summary>
-        public int DIMTIH
+        public short DIMTIH
         {
-            get { return dimtih; }
-            set { dimtih = value; }
+            get { return this.dimtih; }
+            set { this.dimtih = value; }
         }
 
         /// <summary>
         /// Controls the position of dimension text outside the extension lines.
         /// </summary>
-        public int DIMTOH
+        public short DIMTOH
         {
-            get { return dimtoh; }
-            set { dimtoh = value; }
+            get { return this.dimtoh; }
+            set { this.dimtoh = value; }
         }
 
         /// <summary>
         /// Specifies a single-character decimal separator to use when creating dimensions whose unit format is decimal.
         /// </summary>
-        public string DIMDSEP
+        public char DIMDSEP
         {
-            get { return dimdsep; }
-            set { dimdsep = value; }
+            get { return this.dimdsep; }
+            set { this.dimdsep = value; }
         }
 
         /// <summary>
@@ -257,10 +257,10 @@ namespace netDxf.Tables
         /// 2 Gradians
         /// 3 Radians
         /// </remarks>
-        public int DIMAUNIT
+        public short DIMAUNIT
         {
-            get { return dimaunit; }
-            set { dimaunit = value; }
+            get { return this.dimaunit; }
+            set { this.dimaunit = value; }
         }
 
         /// <summary>
@@ -268,11 +268,10 @@ namespace netDxf.Tables
         /// </summary>
         public new DimensionStyles Owner
         {
-            get { return (DimensionStyles)this.owner; }
+            get { return (DimensionStyles) this.owner; }
             internal set { this.owner = value; }
         }
 
         #endregion
-
     }
 }

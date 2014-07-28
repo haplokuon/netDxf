@@ -98,6 +98,7 @@ namespace netDxf
         private readonly List<Ray> rays;
         private readonly List<XLine> xlines;
         private readonly List<Viewport> viewports;
+        private readonly List<Mesh> meshes;
 
         #endregion
 
@@ -184,6 +185,7 @@ namespace netDxf
             this.rays = new List<Ray>();
             this.xlines = new List<XLine>();
             this.viewports = new List<Viewport>();
+            this.meshes = new List<Mesh>();
 
             if(createDefaultObjects) this.AddDefaultObjects();
 
@@ -218,11 +220,15 @@ namespace netDxf
         }
 
         /// <summary>
-        /// Gets the name of the document, once a file is saved or loaded this field is equals the file name without extension.
+        /// Gets or sets the name of the document.
         /// </summary>
+        /// <remarks>
+        /// When a file is loaded this field is equals the file name without extension.<br />
+        /// </remarks>
         public string Name
         {
             get { return this.name; }
+            set { this.name = value; }
         }
 
         #endregion
@@ -471,7 +477,15 @@ namespace netDxf
         }
 
         /// <summary>
-        /// Gets the <see cref="MLines">multilines</see> list.
+        /// Gets the <see cref="Mesh">mesh</see> list.
+        /// </summary>
+        public ReadOnlyCollection<Mesh> Meshes
+        {
+            get { return this.meshes.AsReadOnly(); }
+        }
+
+        /// <summary>
+        /// Gets the <see cref="MLine">multilines</see> list.
         /// </summary>
         public ReadOnlyCollection<MLine> MLines
         {
@@ -487,7 +501,7 @@ namespace netDxf
         }
 
         /// <summary>
-        /// Gets the <see cref="Splines">splines</see> list.
+        /// Gets the <see cref="Spline">splines</see> list.
         /// </summary>
         public ReadOnlyCollection<Spline> Splines
         {
@@ -678,16 +692,11 @@ namespace netDxf
                 throw new IOException("Error trying to open the file " + fileInfo.FullName + " for reading.", ex);
             }
 
-            // In dxf files the decimal point is always a dot. We have to make sure that this doesn't interfere with the system configuration.
-            CultureInfo cultureInfo = CultureInfo.CurrentCulture;
-            Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
-
             DxfReader dxfReader = new DxfReader();
 
 #if DEBUG
             DxfDocument document = dxfReader.Read(stream);
             stream.Close();
-            Thread.CurrentThread.CurrentCulture = cultureInfo;
 #else
             DxfDocument document;
             try
@@ -701,7 +710,6 @@ namespace netDxf
             finally
             {
                 stream.Close();
-                Thread.CurrentThread.CurrentCulture = cultureInfo;
             }
 
 #endif
@@ -721,15 +729,10 @@ namespace netDxf
         /// </remarks>
         public static DxfDocument Load(Stream stream)
         {
-            // In dxf files the decimal point is always a dot. We have to make sure that this doesn't interfere with the system configuration.
-            CultureInfo cultureInfo = CultureInfo.CurrentCulture;
-            Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
-
             DxfReader dxfReader = new DxfReader();
 
 #if DEBUG
             DxfDocument document = dxfReader.Read(stream);
-            Thread.CurrentThread.CurrentCulture = cultureInfo;
 #else
             DxfDocument document;
             try
@@ -740,10 +743,6 @@ namespace netDxf
             {
                 return null;
             }
-            finally
-            {
-                Thread.CurrentThread.CurrentCulture = cultureInfo;
-            }
 
 #endif
             return document;
@@ -753,34 +752,29 @@ namespace netDxf
         /// Saves the database of the actual DxfDocument to a dxf file.
         /// </summary>
         /// <param name="file">File name.</param>
+        /// <param name="isBinary">Defines if the file will be saved as binary, by default it will be saved as text.</param>
         /// <returns>Return true if the file has been succesfully save, false otherwise.</returns>
-        /// <exception cref="IOException"></exception>
         /// <remarks>
         /// If the file already exists it will be overwritten.<br />
         /// The Save method will still raise an exception if they are unable to create the FileStream.<br />
         /// On Debug mode they will raise any exception that migh occur during the whole process.
         /// </remarks>
-        public bool Save(string file)
+        public bool Save(string file, bool isBinary = false)
         {
             FileInfo fileInfo = new FileInfo(file);
             this.name = Path.GetFileNameWithoutExtension(fileInfo.FullName);
-
-            // In dxf files the decimal point is always a dot. We have to make sure that this doesn't interfere with the system configuration.
-            CultureInfo cultureInfo = CultureInfo.CurrentCulture;
-            Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
 
             DxfWriter dxfWriter = new DxfWriter();
 
             Stream stream = File.Create(file);
 
 #if DEBUG
-            dxfWriter.Write(stream, this);
+            dxfWriter.Write(stream, this, isBinary);
             stream.Close();
-            Thread.CurrentThread.CurrentCulture = cultureInfo;
 #else
             try
             {
-                dxfWriter.Save(stream, this);
+                dxfWriter.Write(stream, this, isBinary);
             }
             catch
             {
@@ -789,7 +783,6 @@ namespace netDxf
             finally
             {
                 stream.Close();
-                Thread.CurrentThread.CurrentCulture = cultureInfo;
             }
                 
 #endif
@@ -800,34 +793,26 @@ namespace netDxf
         /// Saves the database of the actual DxfDocument to a stream.
         /// </summary>
         /// <param name="stream">Stream.</param>
+        /// <param name="isBinary">Defines if the file will be saved as binary, by default it will be saved as text.</param>
         /// <returns>Return true if the stream has been succesfully saved, false otherwise.</returns>
         /// <remarks>
         /// On Debug mode it will raise any exception that might occur during the whole process.<br />
         /// The caller will be responsible of closing the stream.
         /// </remarks>
-        public bool Save(Stream stream)
+        public bool Save(Stream stream, bool isBinary = false)
         {
-            // In dxf files the decimal point is always a dot. We have to make sure that this doesn't interfere with the system configuration.
-            CultureInfo cultureInfo = CultureInfo.CurrentCulture;
-            Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
-
             DxfWriter dxfWriter = new DxfWriter();
 
 #if DEBUG
-            dxfWriter.Write(stream, this);
-            Thread.CurrentThread.CurrentCulture = cultureInfo;
+            dxfWriter.Write(stream, this, isBinary);
 #else
             try
             {
-                dxfWriter.Save(stream, this);
+                dxfWriter.Write(stream, this, isBinary);
             }
             catch
             {
                 return false;
-            }
-            finally
-            {
-                Thread.CurrentThread.CurrentCulture = cultureInfo;
             }
                 
 #endif
@@ -838,11 +823,12 @@ namespace netDxf
         /// Checks the AutoCAD dxf file database version.
         /// </summary>
         /// <param name="stream">Stream</param>
+        /// <param name="isBinary">Returns true if the dxf is a binary file.</param>
         /// <returns>String that represents the dxf file version.</returns>
         /// <remarks>The caller will be responsible of closing the stream.</remarks>
-        public static DxfVersion CheckDxfFileVersion(Stream stream)
+        public static DxfVersion CheckDxfFileVersion(Stream stream, out bool isBinary)
         {
-            string value = DxfReader.CheckHeaderVariable(stream, HeaderVariableCode.AcadVer);
+            string value = DxfReader.CheckHeaderVariable(stream, HeaderVariableCode.AcadVer, out isBinary);
             return (DxfVersion) StringEnum.Parse(typeof (DxfVersion), value);
         }
 
@@ -850,18 +836,20 @@ namespace netDxf
         /// Checks the AutoCAD dxf file database version.
         /// </summary>
         /// <param name="file">File name.</param>
+        /// <param name="isBinary">Returns true if the dxf is a binary file.</param>
         /// <returns>String that represents the dxf file version.</returns>
-        public static DxfVersion CheckDxfFileVersion(string file)
+        public static DxfVersion CheckDxfFileVersion(string file, out bool isBinary)
         {
             Stream stream = File.Open(file, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
-
+            
             string value;
             try
             {
-                value = DxfReader.CheckHeaderVariable(stream, HeaderVariableCode.AcadVer);
+                value = DxfReader.CheckHeaderVariable(stream, HeaderVariableCode.AcadVer, out isBinary);
             }
             catch
             {
+                isBinary = false;
                 return DxfVersion.Unknown;
             }
             finally
@@ -882,7 +870,7 @@ namespace netDxf
             if (entity == null)
                 return false;
 
-            if (!string.IsNullOrEmpty(entity.Handle) && !assignHandle)
+            if (!string.IsNullOrEmpty(entity.Handle))
             {
                 // check if the entity handle has been assigned
                 if (this.AddedObjects.ContainsKey(entity.Handle))
@@ -894,10 +882,9 @@ namespace netDxf
                         return false;
                 }
             }
-            else
-            {
+
+            if (assignHandle)
                 this.NumHandles = entity.AsignHandle(this.NumHandles);
-            }
 
             // the entities that are part of a block do not belong to any of the entities lists but to the block definition.
             switch (entity.Type)
@@ -936,7 +923,7 @@ namespace netDxf
                     break;
                 case EntityType.Hatch:
                     Hatch hatch = (Hatch) entity;
-                    HatchPatternXData(hatch);
+                    hatch.AddPatternXData();
                     if (!isBlockEntity) this.hatches.Add(hatch);
                     break;
                 case EntityType.Insert:
@@ -972,6 +959,9 @@ namespace netDxf
                     break;
                 case EntityType.Solid:
                     if (!isBlockEntity) this.solids.Add((Solid) entity);
+                    break;
+                case EntityType.Mesh:
+                    if (!isBlockEntity) this.meshes.Add((Mesh)entity);
                     break;
                 case EntityType.Text:
                     ((Text) entity).Style = this.textStyles.Add(((Text) entity).Style);
@@ -1117,6 +1107,9 @@ namespace netDxf
                 case EntityType.Solid:
                     removed = this.solids.Remove((Solid) entity);
                     break;
+                case EntityType.Mesh:
+                    removed = this.meshes.Remove((Mesh)entity);
+                    break;
                 case EntityType.Text:
                     this.textStyles.References[((Text) entity).Style.Name].Remove(entity);
                     removed = this.texts.Remove((Text) entity);
@@ -1228,57 +1221,6 @@ namespace netDxf
             // raster variables
             this.RasterVariables = new RasterVariables();
 
-        }
-
-        private void HatchPatternXData(Hatch hatch)
-        {
-            if (hatch.XData.ContainsKey(ApplicationRegistry.Default.Name))
-            {
-                XData xdataEntry = hatch.XData[ApplicationRegistry.Default.Name];
-                xdataEntry.XDataRecord.Clear();
-                xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.RealX, hatch.Pattern.Origin.X));
-                xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.RealY, hatch.Pattern.Origin.Y));
-                xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.RealZ, 0.0));
-            }
-            else
-            {
-                XData xdataEntry = new XData(new ApplicationRegistry(ApplicationRegistry.Default.Name));
-                xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.RealX, hatch.Pattern.Origin.X));
-                xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.RealY, hatch.Pattern.Origin.Y));
-                xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.RealZ, 0.0));
-                hatch.XData.Add(xdataEntry.ApplicationRegistry.Name, xdataEntry);
-            }
-
-            if (!(hatch.Pattern is HatchGradientPattern)) return;
-
-            HatchGradientPattern grad = (HatchGradientPattern)hatch.Pattern;
-            if (hatch.XData.ContainsKey("GradientColor1ACI"))
-            {
-                XData xdataEntry = hatch.XData["GradientColor1ACI"];
-                XDataRecord record = new XDataRecord(XDataCode.Integer, grad.Color1.Index);
-                xdataEntry.XDataRecord.Clear();
-                xdataEntry.XDataRecord.Add(record);
-            }
-            else
-            {
-                XData xdataEntry = new XData(new ApplicationRegistry("GradientColor1ACI"));
-                xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Integer, grad.Color1.Index));
-                hatch.XData.Add(xdataEntry.ApplicationRegistry.Name, xdataEntry);
-            }
-
-            if (hatch.XData.ContainsKey("GradientColor2ACI"))
-            {
-                XData xdataEntry = hatch.XData["GradientColor2ACI"];
-                XDataRecord record = new XDataRecord(XDataCode.Integer, grad.Color2.Index);
-                xdataEntry.XDataRecord.Clear();
-                xdataEntry.XDataRecord.Add(record);
-            }
-            else
-            {
-                XData xdataEntry = new XData(new ApplicationRegistry("GradientColor2ACI"));
-                xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Integer, grad.Color2.Index));
-                hatch.XData.Add(xdataEntry.ApplicationRegistry.Name, xdataEntry);
-            }
         }
 
         #endregion

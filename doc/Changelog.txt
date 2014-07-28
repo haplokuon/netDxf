@@ -1,5 +1,34 @@
-[0.8.0 - 2014/06/23]
-+ Lots of changes, some of them might brake your current code, ask in the project discussion board in case of doubt.
+[0.9.0 - 2014/07/28]
++ netDxf now supports both text based and binary dxf files (see BinaryDxfFiles() sample for more info).
++ Added Mesh entity (see MeshEntity() sample for more info).
++ Added argument "out bool isBinary" to the CheckDxfFileVersion method of the DxfDocument class, that will return true is the dxf is a binary file.
++ Added argument "bool isBinary = false" to the Save method of the DxfDocument class. It defines if the file should be saved as binary, by the default it is saved as text.
++ Added limits to the maximum number of elements a TableObject collection can have, reaching and even getting close to this value causes problems in AutoCad. These limits, defined by the MaxCapacity property, are still too high for any practical purpose. The number of table object entries, for example, is defined by a code 70 (16 bit integer).
++ Issue Id #13116 Added constructors to Face3d entity that takes three vertexes.
++ Rename EdgeFlags to Face3dEdgeFlags.
++ Rename XDataCode.Integer and XDataCode.Long to XDataCode.Int16 and XDataCode.Int32, respectively, to better reflect the kind of variable stored. In net a 16 bit integer is a short and a 32 bit integer is an int.
++ Workaround for possible erroneous number of knots and/or number of control points values in Spline entities while importing dxf files.
++ Changed several variable types to accommodate to the type defined by the dxf codes, this is now a lot more important in binary dxf (see changelog.txt for more details).
+	HeaderVariable property CodeGroup is now short (it was int).
+	XDataRecord property Code is now short (it was int).
+	Image brightness, contrast, and fade are now shorts (they were floats).
+	ImageDev horizontal resolution, and vertical resolution are now doubles (they were floats).
+	DimensionStyle DIMDSEP is now a char variable (it was string).
+	DimensionStyle DIMTIH, DIMTOH, DIMTAD, DIMADEC, DIMDEC, DIMAUNIT, and DIMJUST are now shorts (they were ints).
+	Viewport property CircleZoomPercent is now short (it was double).
+	XDataCode class members are now shorts (they were ints).
+	PolyfaceMeshFace property VertexIndexes is now an array of shorts (it was an array of ints).
+	XData binary data (code 1004) is stored as a byte array (see BinaryChunkXData() sample for more info)
+	Layout property TabOrder is now short (it was int).
++ (fixed) Read DimensionStyle DIMADEC variable. 
++ (fixed) In the previous version the DxfWriter was working very slowly.
++ (fixed) FromJulianCalendar conversion when, rounding up the seconds fraction the result was exactly 60. Now the related methods also use the milliseconds in the conversions.
++ (fixed) MText rectangle width cannot be negative and is, now, 0.0 by default, the word wrap is turned off and the width of the multiline text object is as wide as the longest line of text.
++ (fixed) Issue Id #13143 Rename dxfWriter.Save to dxfWriter.Write.
++ (fixed) Adding duplicate entities to the document, this is related to the issue Id #13149. When you add a group to the DxfDocument the entities in the group will be automatically added to it, so it is not necessary to add them manually with AddEntity.
+
+[0.8.0 - 2014/06/19]
++ Lots of changes, some of them might break your current code, ask in the project discussion board in case of doubt.
 + Added ModelSpace and PaperSpace, now it is possible to work in model space and paper space through layouts. See the PaperSpace() sample in the TestDxfDocument project.
 + Added Layouts.
 + Added PlotSettings.

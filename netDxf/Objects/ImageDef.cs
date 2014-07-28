@@ -42,8 +42,8 @@ namespace netDxf.Objects
         private readonly int height;
         private ImageResolutionUnits resolutionUnits;
         // internally we will store the resolution in ppi
-        private float horizontalResolution;
-        private float verticalResolution;
+        private double horizontalResolution;
+        private double verticalResolution;
 
         // this will store the references to the images that makes use of this image definition (key: image handle, value: reactor)
         private readonly Dictionary<string, ImageDefReactor> reactors;
@@ -75,7 +75,7 @@ namespace netDxf.Objects
         /// you must resave the TIFF files with LZW compression disabled.
         /// </para>
         /// </remarks>
-        public ImageDef(string fileName, int width, float horizontalResolution, int height, float verticalResolution, ImageResolutionUnits units)
+        public ImageDef(string fileName, int width, double horizontalResolution, int height, double verticalResolution, ImageResolutionUnits units)
             : this(fileName, Path.GetFileNameWithoutExtension(fileName), width, horizontalResolution, height, verticalResolution, units)
         {
         }
@@ -104,7 +104,7 @@ namespace netDxf.Objects
         /// you must resave the TIFF files with LZW compression disabled.
         /// </para>
         /// </remarks>
-        public ImageDef(string fileName, string name, int width, float horizontalResolution, int height, float verticalResolution, ImageResolutionUnits units)
+        public ImageDef(string fileName, string name, int width, double horizontalResolution, int height, double verticalResolution, ImageResolutionUnits units)
             : base(name, DxfObjectCode.ImageDef, true)
         {
             if (string.IsNullOrEmpty(fileName))
@@ -239,12 +239,12 @@ namespace netDxf.Objects
                     switch (value)
                     {
                         case ImageResolutionUnits.Centimeters:
-                            this.horizontalResolution /= 2.54f;
-                            this.verticalResolution /= 2.54f;
+                            this.horizontalResolution /= 2.54;
+                            this.verticalResolution /= 2.54;
                             break;
                         case ImageResolutionUnits.Inches:
-                            this.horizontalResolution *= 2.54f;
-                            this.verticalResolution *= 2.54f;
+                            this.horizontalResolution *= 2.54;
+                            this.verticalResolution *= 2.54;
                             break;
                         case ImageResolutionUnits.NoUnits:
                             break;
@@ -257,7 +257,7 @@ namespace netDxf.Objects
         /// <summary>
         /// Gets the image horizontal resolution in pixels per unit.
         /// </summary>
-        public float HorizontalResolution
+        public double HorizontalResolution
         {
             get { return this.horizontalResolution; }
         }
@@ -265,7 +265,7 @@ namespace netDxf.Objects
         /// <summary>
         /// Gets the image vertical resolution in pixels per unit.
         /// </summary>
-        public float VerticalResolution
+        public double VerticalResolution
         {
             get { return this.verticalResolution; }
         }

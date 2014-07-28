@@ -22,7 +22,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Threading;
 
 namespace netDxf.Entities
 {
@@ -34,7 +33,6 @@ namespace netDxf.Entities
     {
         #region private fields
 
-        public bool ccw;
         private Vector3 center;
         private double radius;
         private double startAngle;
@@ -104,7 +102,7 @@ namespace netDxf.Entities
             set
             {
                 if (value <= 0)
-                    throw new ArgumentOutOfRangeException("value", value.ToString(Thread.CurrentThread.CurrentCulture));
+                    throw new ArgumentOutOfRangeException("value", value, "The arc radius must be greater than zero.");
                 this.radius = value;
             }
         }

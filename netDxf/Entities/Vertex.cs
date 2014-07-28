@@ -39,7 +39,7 @@ namespace netDxf.Entities
 
         private VertexTypeFlags flags;
         private Vector3 location;
-        private int[] vertexIndexes;
+        private short[] vertexIndexes;
         private double beginThickness;
         private double endThickness;
         private double bulge;
@@ -120,7 +120,7 @@ namespace netDxf.Entities
             set { this.location = value; }
         }
 
-        public int[] VertexIndexes
+        public short[] VertexIndexes
         {
             get { return this.vertexIndexes; }
             set { this.vertexIndexes = value; }

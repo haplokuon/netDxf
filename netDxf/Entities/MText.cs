@@ -84,35 +84,6 @@ namespace netDxf.Entities
     public class MText :
         EntityObject
     {
-        #region Special string codes
-
-        ///// <summary>
-        ///// Text strings to define special characters.
-        ///// </summary>
-        //public struct SpecialCharacters
-        //{
-        //    /// <summary>
-        //    /// Inserts a nonbreaking space
-        //    /// </summary>
-        //    public const string NonbreakingSpace = "\\~";
-
-        //    /// <summary>
-        //    /// Inserts a backslash
-        //    /// </summary>
-        //    public const string Backslash = "\\\\";
-
-        //    /// <summary>
-        //    /// Opening brace
-        //    /// </summary>
-        //    public const string OpeningBrace = "\\{";
-
-        //    /// <summary>
-        //    /// Closing brace
-        //    /// </summary>
-        //    public const string ClosingBrace = "\\}";
-        //}
-
-        #endregion
 
         #region private fields
 
@@ -135,7 +106,7 @@ namespace netDxf.Entities
         /// Initializes a new instance of the <c>MText</c> class.
         /// </summary>
         public MText()
-            : this(string.Empty, Vector3.Zero, 1.0, 1.0, TextStyle.Default)
+            : this(string.Empty, Vector3.Zero, 1.0, 0.0, TextStyle.Default)
         {
         }
 
@@ -240,7 +211,7 @@ namespace netDxf.Entities
                 throw new ArgumentNullException("style", "The Text style cannot be null.");
             this.style = style;
             this.rectangleWidth = rectangleWidth;
-            if (height <= 0)
+            if (height <= 0.0)
                 throw (new ArgumentOutOfRangeException("height", this.value, "The MText height can not be zero or less."));
             this.height = height;
             this.lineSpacing = 1.0;
@@ -271,7 +242,7 @@ namespace netDxf.Entities
             set
             {
                 if (value <= 0)
-                    throw (new ArgumentOutOfRangeException("value", value, "The MText Height can not be zero or less."));
+                    throw (new ArgumentOutOfRangeException("value", value, "The MText height must be greater than zero."));
                 this.height = value;
             }
         }
@@ -323,13 +294,19 @@ namespace netDxf.Entities
         /// Gets or sets the text reference rectangle width.
         /// </summary>
         /// <remarks>
-        /// This value defines the width of the box where the text will fit.
-        /// If a paragraph width is longer than the rectangle width it will be broken in several lines, using the word spaces as breaking points.
+        /// This value defines the width of the box where the text will fit.<br/>
+        /// If a paragraph width is longer than the rectangle width it will be broken in several lines, using the word spaces as breaking points.<br/>
+        /// If you specify a width of 0, word wrap is turned off and the width of the multiline text object is as wide as the longest line of text.
         ///  </remarks>
         public double RectangleWidth
         {
             get { return this.rectangleWidth; }
-            set { this.rectangleWidth = value; }
+            set
+            {
+                if (value < 0.0)
+                    throw (new ArgumentOutOfRangeException("value", value, "The MText rectangle width must be positive."));
+                this.rectangleWidth = value;
+            }
         }
 
         /// <summary>

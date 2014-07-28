@@ -31,19 +31,29 @@ namespace netDxf.Collections
     /// <summary>
     /// Represents a collection of layouts.
     /// </summary>
+    /// <remarks>
+    /// AutoCad limits the number of layouts to 256, but at the same time it allows to import dxf files with more than that,
+    /// for this reason the max capacity has been set to short.MaxValue.
+    /// The maximum number of layouts is also limited by the number of blocks, due to that for each layout a block record must exist in the blocks collection.
+    /// </remarks>
     public sealed class Layouts :
         TableObjects<Layout>
     {
-
         #region constructor
 
         internal Layouts(DxfDocument document, string handle = null)
-            : base(document,
-            new Dictionary<string, Layout>(StringComparer.OrdinalIgnoreCase),
-            new Dictionary<string, List<DxfObject>>(StringComparer.OrdinalIgnoreCase),
-            StringCode.LayoutDictionary,
-            handle)
+            : this(document, 0, handle)
         {
+        }
+
+        internal Layouts(DxfDocument document, int capacity, string handle = null)
+            : base(document,
+                new Dictionary<string, Layout>(capacity, StringComparer.OrdinalIgnoreCase),
+                new Dictionary<string, List<DxfObject>>(capacity, StringComparer.OrdinalIgnoreCase),
+                StringCode.LayoutDictionary,
+                handle)
+        {
+            this.maxCapacity = short.MaxValue;
         }
 
         #endregion
@@ -59,6 +69,9 @@ namespace netDxf.Collections
         /// </returns>
         internal override Layout Add(Layout layout, bool assignHandle)
         {
+            if (this.list.Count >= this.maxCapacity)
+                throw new OverflowException(String.Format("Table overflow. The maximum number of elements the table {0} can have is {1}", this.codeName, this.maxCapacity));
+
             Layout add;
             if (this.list.TryGetValue(layout.Name, out add))
                 return add;
@@ -103,7 +116,7 @@ namespace netDxf.Collections
         /// </remarks>
         public override bool Remove(string name)
         {
-            return Remove(this[name]);
+            return this.Remove(this[name]);
         }
 
         /// <summary>
@@ -167,10 +180,8 @@ namespace netDxf.Collections
             }
 
             return true;
-
         }
 
         #endregion
-
     }
 }

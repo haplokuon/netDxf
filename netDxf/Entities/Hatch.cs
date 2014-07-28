@@ -22,6 +22,7 @@
 
 using System;
 using System.Collections.Generic;
+using netDxf.Tables;
 
 namespace netDxf.Entities
 {
@@ -210,6 +211,56 @@ namespace netDxf.Entities
             return spline;
         }
 
+        internal void AddPatternXData()
+        {
+            if (this.XData.ContainsKey(ApplicationRegistry.Default.Name))
+            {
+                XData xdataEntry = this.XData[ApplicationRegistry.Default.Name];
+                xdataEntry.XDataRecord.Clear();
+                xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.RealX, this.Pattern.Origin.X));
+                xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.RealY, this.Pattern.Origin.Y));
+                xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.RealZ, 0.0));
+            }
+            else
+            {
+                XData xdataEntry = new XData(new ApplicationRegistry(ApplicationRegistry.Default.Name));
+                xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.RealX, this.Pattern.Origin.X));
+                xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.RealY, this.Pattern.Origin.Y));
+                xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.RealZ, 0.0));
+                this.XData.Add(xdataEntry.ApplicationRegistry.Name, xdataEntry);
+            }
+
+            if (!(this.Pattern is HatchGradientPattern)) return;
+
+            HatchGradientPattern grad = (HatchGradientPattern)this.Pattern;
+            if (this.XData.ContainsKey("GradientColor1ACI"))
+            {
+                XData xdataEntry = this.XData["GradientColor1ACI"];
+                XDataRecord record = new XDataRecord(XDataCode.Int16, grad.Color1.Index);
+                xdataEntry.XDataRecord.Clear();
+                xdataEntry.XDataRecord.Add(record);
+            }
+            else
+            {
+                XData xdataEntry = new XData(new ApplicationRegistry("GradientColor1ACI"));
+                xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, grad.Color1.Index));
+                this.XData.Add(xdataEntry.ApplicationRegistry.Name, xdataEntry);
+            }
+
+            if (this.XData.ContainsKey("GradientColor2ACI"))
+            {
+                XData xdataEntry = this.XData["GradientColor2ACI"];
+                XDataRecord record = new XDataRecord(XDataCode.Int16, grad.Color2.Index);
+                xdataEntry.XDataRecord.Clear();
+                xdataEntry.XDataRecord.Add(record);
+            }
+            else
+            {
+                XData xdataEntry = new XData(new ApplicationRegistry("GradientColor2ACI"));
+                xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, grad.Color2.Index));
+                this.XData.Add(xdataEntry.ApplicationRegistry.Name, xdataEntry);
+            }
+        }
         #endregion
 
         #region overrides

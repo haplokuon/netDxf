@@ -36,12 +36,18 @@ namespace netDxf.Collections
         #region constructor
 
         internal LineTypes(DxfDocument document, string handle = null)
+            : this(document,0,handle)
+        {
+        }
+
+        internal LineTypes(DxfDocument document, int capacity, string handle = null)
             : base(document,
-            new Dictionary<string, LineType>(StringComparer.OrdinalIgnoreCase),
-            new Dictionary<string, List<DxfObject>>(StringComparer.OrdinalIgnoreCase),
+            new Dictionary<string, LineType>(capacity, StringComparer.OrdinalIgnoreCase),
+            new Dictionary<string, List<DxfObject>>(capacity, StringComparer.OrdinalIgnoreCase),
             StringCode.LineTypeTable,
             handle)
         {
+            this.maxCapacity = short.MaxValue;
         }
 
         #endregion
@@ -57,7 +63,10 @@ namespace netDxf.Collections
         /// if not it will return the new line type.
         /// </returns>
         internal override LineType Add(LineType lineType, bool assignHandle)
-        {      
+        {
+            if (this.list.Count >= this.maxCapacity)
+                throw new OverflowException(String.Format("Table overflow. The maximum number of elements the table {0} can have is {1}", this.codeName, this.maxCapacity));
+
             LineType add;
 
             if (this.list.TryGetValue(lineType.Name, out add))

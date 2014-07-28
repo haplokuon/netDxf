@@ -28,6 +28,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Globalization;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using netDxf;
@@ -53,14 +54,23 @@ namespace TestDxfDocument
 
         private static void Main()
         {
+            #region Samples for fixes, new and modified features 0.9.0
 
-            #region Samples for new and modified features
+            //MakingGroups();
+            //CombiningTwoDrawings();
+            //BinaryChunkXData();
+            //BinaryDxfFiles();
+            //MeshEntity();
 
-            MTextEntity();
-            TransparencySample();
-            DocumentUnits();
-            PaperSpace();
-            BlockWithAttributes();
+            #endregion
+
+            #region Samples for new and modified features 0.8.0
+
+            //MTextEntity();
+            //TransparencySample();
+            //DocumentUnits();
+            //PaperSpace();
+            //BlockWithAttributes();
 
             #endregion
 
@@ -131,6 +141,253 @@ namespace TestDxfDocument
             //WritePolyline3d();
             //WriteInsert();
         }
+
+        #region Samples for new and modified features 0.9.0
+
+        private static void MakingGroups()
+        {
+            Line line1 = new Line(Vector2.Zero, Vector2.UnitX);
+            Line line2 = new Line(Vector2.Zero, Vector2.UnitY);
+            Group group = new Group();
+            group.Entities.Add(line1);
+            group.Entities.Add(line2);
+
+            DxfDocument dxf = new DxfDocument();
+            // when we add a group to the document all the entities contained in the group will be automatically added to the document
+            dxf.Groups.Add(group);
+
+            // adding the group entities to the document is not necessary, but doing so should not cause any harm
+            // the AddEntity method will return false in those cases, since those entities are already in the document
+            Console.WriteLine(dxf.AddEntity(line1));
+            Console.WriteLine(dxf.AddEntity(line2));
+
+            dxf.Save("group.dxf");
+
+            DxfDocument load = DxfDocument.Load("group.dxf");
+
+            Console.WriteLine("Press a key to finish...");
+            Console.ReadKey();
+        }
+        private static void CombiningTwoDrawings()
+        {
+            // create first drawing
+            Line line1 = new Line(Vector2.Zero, Vector2.UnitX);
+            line1.Layer = new Layer("Layer01");
+            line1.Layer.Color = AciColor.Blue;
+            DxfDocument dxf1 = new DxfDocument();
+            dxf1.AddEntity(line1);
+            dxf1.Save("drawing01.dxf");
+
+            // create second drawing
+            Line line2 = new Line(Vector2.Zero, Vector2.UnitY);
+            line2.Layer = new Layer("Layer02");
+            line2.Layer.Color = AciColor.Red;
+            DxfDocument dxf2 = new DxfDocument();
+            dxf2.AddEntity(line2);
+            dxf2.Save("drawing02.dxf");
+
+            // load the drawings that will be combined
+            DxfDocument source01 = DxfDocument.Load("drawing01.dxf");
+            DxfDocument source02 = DxfDocument.Load("drawing02.dxf");
+
+            // our destination drawing
+            DxfDocument combined = new DxfDocument();
+            foreach (Line l in source01.Lines)
+            {
+                // It is recommended to make a copy of the source line before we can added to the destination drawing
+                // if we do not make a copy weird things might happen if we save the original drawing again
+                Line copy = (Line)l.Clone();
+                combined.AddEntity(copy);
+            }
+
+            // Another safe way is removing the entity from the original drawing before adding it to the destination drawing
+            Line line = source02.Lines[0];
+            source02.RemoveEntity(line);
+            combined.AddEntity(line);
+
+            combined.Save("CombinedDrawing.dxf");
+        }
+        private static void BinaryChunkXData()
+        {
+            Line line = new Line(Vector2.Zero, Vector2.UnitX);
+
+            ApplicationRegistry appId = new ApplicationRegistry("TestBinaryChunk");
+
+            // the extended data binary data (code 1004) is stored in a different way depending if the dxf file is text or binary.
+            // in text based files as a string of hexadecimal digits, two per binary byte,
+            // while in binary files the data is stored in chunks of 127 bytes, preceding a byte that defines the number of bytes in the chunk
+            byte[] data = new byte[325];
+
+            // fill up the array with some random data
+            Random rnd = new Random();
+            rnd.NextBytes(data);
+
+            XData xdata = new XData(appId);
+
+            // the XDataRecord will store the binary data as a byte array and not as a string as it use to be
+            xdata.XDataRecord.Add(new XDataRecord(XDataCode.BinaryData, data));
+            line.XData = new Dictionary<string, XData>(StringComparer.OrdinalIgnoreCase)
+                             {
+                                 {xdata.ApplicationRegistry.Name, xdata},
+                             };
+
+            DxfDocument dxf = new DxfDocument();
+            dxf.AddEntity(line);
+
+            dxf.Save("BinaryChunkXData.dxf");
+            dxf.Save("BinaryChunkXData binary.dxf", true);
+
+            // some testing
+            DxfDocument test = DxfDocument.Load("BinaryChunkXData binary.dxf");
+            Line lineTest = test.Lines[0];
+            XDataRecord recordTest = lineTest.XData[appId.Name].XDataRecord[0];
+            Debug.Assert(recordTest.Code == XDataCode.BinaryData);
+            byte[] dataText = (byte[]) recordTest.Value;
+
+            byte[] compare = new byte[127];
+            Array.Copy(data, compare, 127);
+
+            for (int i = 0; i < 127; i++)
+            {
+                Console.WriteLine(dataText[i] == compare[i]);
+            }
+
+            // this is the string as it is saved in text based dxf files
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < dataText.Length; i++)
+            {
+                sb.Append(String.Format("{0:X2}", data[i]));
+            }
+            Console.WriteLine(sb.ToString());
+
+            Console.WriteLine();
+            Console.WriteLine("Press a key to continue...");
+            Console.ReadKey();
+        }
+        private static void BinaryDxfFiles()
+        {
+            // Binary dxf files preserve the accuracy of the drawing while text dxf files are saved with 17 decimals.
+            // Binary dxf files are 4-5 times faster to write, while reading is just a little faster.
+            // Binary dxf files take about 20% less file space.
+            DxfDocument dxf = new DxfDocument();
+            // optionally you can give a name to de document
+            dxf.Name = "Binary dxf";
+            Line line = new Line(Vector3.Zero, new Vector3(10));
+            dxf.AddEntity(line);
+
+
+            // To save a document as a binary dxf just set the isBinary parameter to true, by default it will always be saved as a text based dxf 
+            // you can use the document name as tha file name, or just give another one.
+            string file = dxf.Name + ".dxf";
+
+            // Handling with error checking of the saving process
+            bool ok = dxf.Save(file, true);
+            if(ok)
+                Console.WriteLine("The file \"{0}\" has been correctly saved.", file);
+            else
+                Console.WriteLine("Fatal error while saving \"{0}\".", file);
+
+            Console.WriteLine();
+
+            // Handling with error checking of the loading process
+
+            // check if the file exists
+            if (!File.Exists(file))
+            {
+                Console.WriteLine("The file \"{0}\" does not exists.", file);
+            }
+            else
+            {
+                bool isBinary;
+                DxfVersion version = DxfDocument.CheckDxfFileVersion(file, out isBinary);
+
+                // netDxf only supports AutoCad2000 and above.
+                if (version >= DxfVersion.AutoCad2000)
+                {
+                    // To load a binary dxf nothing needs to be done, the reader will detect the correct type.
+                    DxfDocument load = DxfDocument.Load(file);
+                    if (load == null)
+                        Console.WriteLine("Fatal error while loading \"{0}\".", file);
+                    else
+                        //when a document is loaded the file name without extension is used as the document name
+                        Console.WriteLine("The file \"{0}\" version {1} has been correctly loaded.\n\tBinary? {2}", file, version, isBinary);
+                }
+                else
+                {
+                    if(version == DxfVersion.Unknown)
+                        Console.WriteLine("The file \"{0}\" is not a dxf.", file);
+                    else
+                        Console.WriteLine("Dxf file \"{0}\" version {1} is not supported, only AutoCad2000 and above.", file, version);
+                }
+            }
+
+            Console.WriteLine();
+            Console.WriteLine("Press a key to continue...");
+            Console.ReadKey();
+
+        }
+        private static void MeshEntity()
+        {
+            DxfDocument dxf = new DxfDocument();
+
+            // construct a simple cube (see the AutoCad documentation for more information about creating meshes)
+
+            // the mesh data is always defined at level 0 (no subdivision)
+            // 8 vertices
+            List<Vector3> vertexes = new List<Vector3>
+                                            {
+                                                new Vector3(-5, -5, -5),
+                                                new Vector3(5, -5, -5),
+                                                new Vector3(5, 5, -5),
+                                                new Vector3(-5, 5, -5),
+                                                new Vector3(-5, -5, 5),
+                                                new Vector3(5, -5, 5),
+                                                new Vector3(5, 5, 5),
+                                                new Vector3(-5, 5, 5)
+                                            };
+
+            //6 faces
+            List<int[]> faces = new List<int[]>
+                                               {
+                                                   new[] {0, 3, 2, 1},
+                                                   new[] {0, 1, 5, 4},
+                                                   new[] {1, 2, 6, 5},
+                                                   new[] {2, 3, 7, 6},
+                                                   new[] {0, 4, 7, 3},
+                                                   new[] {4, 5, 6, 7}
+                                               };
+
+            
+
+            // the list of edges is optional and only really needed when applying creases values to them
+            // crease negative values will sharpen the edge independently of the subdivision level. Any negative crease value will be reseted as -1.
+            // by default edge creases are set to 0.0 (no edge sharpening)
+            List<MeshEdge> edges = new List<MeshEdge>
+            {
+                new MeshEdge(0, 1),
+                new MeshEdge(1, 2),
+                new MeshEdge(2, 3),
+                new MeshEdge(3, 0),
+                new MeshEdge(4, 5, -1.0),
+                new MeshEdge(5, 6, -1.0),
+                new MeshEdge(6, 7, -1.0),
+                new MeshEdge(7, 4, -1.0),
+                new MeshEdge(0, 4),
+                new MeshEdge(1, 5),
+                new MeshEdge(2, 6),
+                new MeshEdge(3, 7)
+
+            };
+            Mesh mesh = new Mesh(vertexes, faces, edges);
+            mesh.SubdivisionLevel = 3;
+            dxf.AddEntity(mesh);
+
+            dxf.Save("mesh.dxf");
+        }
+
+        #endregion
+
+        #region Samples for new and modified features 0.8.0
 
         private static void MTextEntity()
         {
@@ -473,7 +730,7 @@ namespace TestDxfDocument
             xdata1.XDataRecord.Add(new XDataRecord(XDataCode.WorldSpacePositionZ, 0));
             xdata1.XDataRecord.Add(XDataRecord.CloseControlString);
 
-            insert2.XData = new Dictionary<string, XData>
+            insert2.XData = new Dictionary<string, XData>(StringComparer.OrdinalIgnoreCase)
                              {
                                  {xdata1.ApplicationRegistry.Name, xdata1},
                              };
@@ -485,7 +742,7 @@ namespace TestDxfDocument
             xdata2.XDataRecord.Add(XDataRecord.OpenControlString);
             xdata2.XDataRecord.Add(new XDataRecord(XDataCode.String, "string record"));
             xdata2.XDataRecord.Add(new XDataRecord(XDataCode.Real, 15.5));
-            xdata2.XDataRecord.Add(new XDataRecord(XDataCode.Long, 350));
+            xdata2.XDataRecord.Add(new XDataRecord(XDataCode.Int32, 350));
             xdata2.XDataRecord.Add(XDataRecord.CloseControlString);
 
             // multiple extended data entries might be added
@@ -494,14 +751,14 @@ namespace TestDxfDocument
             xdata3.XDataRecord.Add(XDataRecord.OpenControlString);
             xdata3.XDataRecord.Add(new XDataRecord(XDataCode.String, "string record"));
             xdata3.XDataRecord.Add(new XDataRecord(XDataCode.Real, 15.5));
-            xdata3.XDataRecord.Add(new XDataRecord(XDataCode.Long, 350));
+            xdata3.XDataRecord.Add(new XDataRecord(XDataCode.Int32, 350));
             xdata3.XDataRecord.Add(XDataRecord.CloseControlString);
 
             Circle circle = new Circle(Vector3.Zero, 5);
             circle.Layer = new Layer("MyCircleLayer");
             // AutoCad 2000 does not support true colors, in that case an approximated color index will be used instead
             circle.Layer.Color = new AciColor(Color.MediumSlateBlue);
-            circle.XData = new Dictionary<string, XData>
+            circle.XData = new Dictionary<string, XData>(StringComparer.OrdinalIgnoreCase)
                              {
                                  {xdata2.ApplicationRegistry.Name, xdata2},
                                  {xdata3.ApplicationRegistry.Name, xdata3},
@@ -512,11 +769,33 @@ namespace TestDxfDocument
             DxfDocument dxfLoad = DxfDocument.Load("BlockWithAttributes.dxf");
         }
 
+        #endregion
+
         private static void Test()
         {
+
             // sample.dxf contains all supported entities by netDxf
-            DxfDocument dxf = DxfDocument.Load("sample.dxf");
-            
+            string file = "sample binary.dxf";
+            bool isBinary;
+            DxfVersion dxfVersion = DxfDocument.CheckDxfFileVersion(file, out isBinary);
+            if (dxfVersion < DxfVersion.AutoCad2000)
+            {
+                Console.WriteLine("THE FILE {0} IS NOT A VALID DXF", file);
+                Console.WriteLine();
+
+                Console.WriteLine("FILE VERSION: {0}", dxfVersion);
+                Console.WriteLine();
+
+                Console.WriteLine("Press a key to continue...");
+                Console.ReadLine();
+
+                return;
+            }
+
+            DxfDocument dxf = DxfDocument.Load(file);
+            Console.WriteLine("FILE NAME: {0}", file);
+            Console.WriteLine("\tbinary dxf: {0}", isBinary);
+            Console.WriteLine();            
             Console.WriteLine("FILE VERSION: {0}", dxf.DrawingVariables.AcadVer);
             Console.WriteLine();
             Console.WriteLine("FILE COMMENTS: {0}", dxf.Comments.Count);
@@ -526,8 +805,8 @@ namespace TestDxfDocument
             }
             Console.WriteLine();
             Console.WriteLine("FILE TIME:");
-            Console.WriteLine("\tdrawing created (UTC): {0}", dxf.DrawingVariables.TduCreate);
-            Console.WriteLine("\tdrawing last update (UTC): {0}", dxf.DrawingVariables.TduUpdate);
+            Console.WriteLine("\tdrawing created (UTC): {0}.{1}", dxf.DrawingVariables.TduCreate, dxf.DrawingVariables.TduCreate.Millisecond.ToString("000"));
+            Console.WriteLine("\tdrawing last update (UTC): {0}.{1}", dxf.DrawingVariables.TduUpdate, dxf.DrawingVariables.TduUpdate.Millisecond.ToString("000"));
             Console.WriteLine("\tdrawing edition time: {0}", dxf.DrawingVariables.TdinDwg);
             Console.WriteLine();    
             Console.WriteLine("APPLICATION REGISTRIES: {0}", dxf.ApplicationRegistries.Count);
@@ -621,6 +900,7 @@ namespace TestDxfDocument
             Console.WriteLine("\t{0}; count: {1}", EntityType.Insert, dxf.Inserts.Count);
             Console.WriteLine("\t{0}; count: {1}", EntityType.LightWeightPolyline, dxf.LwPolylines.Count);
             Console.WriteLine("\t{0}; count: {1}", EntityType.Line, dxf.Lines.Count);
+            Console.WriteLine("\t{0}; count: {1}", EntityType.Mesh, dxf.Meshes.Count);
             Console.WriteLine("\t{0}; count: {1}", EntityType.MLine, dxf.MLines.Count);
             Console.WriteLine("\t{0}; count: {1}", EntityType.MText, dxf.MTexts.Count);
             Console.WriteLine("\t{0}; count: {1}", EntityType.Point, dxf.Points.Count);
@@ -646,6 +926,11 @@ namespace TestDxfDocument
             dxf.Save("sample 2004.dxf");
             dxf.DrawingVariables.AcadVer = DxfVersion.AutoCad2000;
             dxf.Save("sample 2000.dxf");
+
+            // saving to binary dxf
+            dxf.DrawingVariables.AcadVer = DxfVersion.AutoCad2013;
+            dxf.Save("binary test.dxf", true);
+            DxfDocument test = DxfDocument.Load("binary test.dxf");
 
             Console.WriteLine("Press a key to continue...");
             Console.ReadLine();
@@ -1226,7 +1511,7 @@ namespace TestDxfDocument
             XData xdata1 = new XData(new ApplicationRegistry("netDxf"));
             xdata1.XDataRecord.Add(new XDataRecord(XDataCode.String, "extended data with netDxf"));
 
-            poly.XData = new Dictionary<string, XData>
+            poly.XData = new Dictionary<string, XData>(StringComparer.OrdinalIgnoreCase)
                              {
                                  {xdata1.ApplicationRegistry.Name, xdata1},
                              };
@@ -1237,7 +1522,7 @@ namespace TestDxfDocument
             ApplicationRegistry myAppReg = new ApplicationRegistry("MyAppReg");
             XData xdata2 = new XData(myAppReg);
             xdata2.XDataRecord.Add(new XDataRecord(XDataCode.Distance, Vector3.Distance(line.StartPoint, line.EndPoint)));
-            line.XData = new Dictionary<string, XData>
+            line.XData = new Dictionary<string, XData>(StringComparer.OrdinalIgnoreCase)
                              {
                                  {myAppReg.Name, xdata2},
                              };
@@ -1246,7 +1531,7 @@ namespace TestDxfDocument
             Circle circle = new Circle(Vector3.Zero, 15);
             XData xdata3 = new XData(myAppReg);
             xdata3.XDataRecord.Add(new XDataRecord(XDataCode.Real, circle.Radius));
-            circle.XData = new Dictionary<string, XData>
+            circle.XData = new Dictionary<string, XData>(StringComparer.OrdinalIgnoreCase)
                              {
                                  {myAppReg.Name, xdata3},
                              };
@@ -1294,7 +1579,7 @@ namespace TestDxfDocument
             Line line = new Line(Vector2.Zero, 100 * Vector2.UnitX);
             XData xdata = new XData(newAppReg);
             xdata.XDataRecord.Add(new XDataRecord(XDataCode.String, "string of the new application registry"));
-            line.XData = new Dictionary<string, XData>
+            line.XData = new Dictionary<string, XData>(StringComparer.OrdinalIgnoreCase)
                              {
                                  {xdata.ApplicationRegistry.Name, xdata},
                              };
@@ -1587,13 +1872,15 @@ namespace TestDxfDocument
             // The Save(string file, DxfVersion dxfVersion) and Load(string file) methods will still raise an exception if they are unable to create the FileStream.
             // On Debug mode they will raise any exception that migh occurr during the whole process.
             Line line = new Line(new Vector3(0, 0, 0), new Vector3(100, 100, 0));
+            bool ok;
             DxfDocument dxf = new DxfDocument();
             dxf.AddEntity(line);
             dxf.Save("test.dxf");
             
             // saving to memory stream always use the default constructor, a fixed size stream will not work.
             MemoryStream memoryStream = new MemoryStream();
-            dxf.Save(memoryStream);
+            if(!dxf.Save(memoryStream))
+                throw new Exception("Error saving to memory stream.");
             
             // loading from memory stream
             DxfDocument dxf2 = DxfDocument.Load(memoryStream);
@@ -1601,7 +1888,9 @@ namespace TestDxfDocument
 
             // saving to file stream
             FileStream fileStream = new FileStream("test fileStream.dxf", FileMode.Create);
-            dxf2.Save(fileStream);
+            if (!dxf2.Save(fileStream, true))
+                throw new Exception("Error saving to file stream.");
+
             fileStream.Close(); // you will need to close the stream manually to avoid file already open conflicts
 
             FileStream fileStreamLoad = new FileStream("test fileStream.dxf", FileMode.Open, FileAccess.Read);
@@ -1763,7 +2052,7 @@ namespace TestDxfDocument
             xdata1.XDataRecord.Add(new XDataRecord(XDataCode.WorldSpacePositionY, image.Position.Y));
             xdata1.XDataRecord.Add(new XDataRecord(XDataCode.WorldSpacePositionZ, image.Position.Z));
             xdata1.XDataRecord.Add(XDataRecord.CloseControlString);
-            image.XData = new Dictionary<string, XData>
+            image.XData = new Dictionary<string, XData>(StringComparer.OrdinalIgnoreCase)
                              {
                                  {xdata1.ApplicationRegistry.Name, xdata1},
                              };
@@ -2056,7 +2345,7 @@ namespace TestDxfDocument
             DimensionStyle myStyle = new DimensionStyle("MyStyle");
             myStyle.DIMPOST = "<>mm";
             myStyle.DIMDEC = 2;
-            myStyle.DIMDSEP = ",";
+            myStyle.DIMDSEP = ',';
 
             DiametricDimension dim = new DiametricDimension(circle, 30, myStyle);
             dxf.AddEntity(circle);
@@ -2084,7 +2373,7 @@ namespace TestDxfDocument
             DimensionStyle myStyle = new DimensionStyle("MyStyle");
             myStyle.DIMPOST = "<>mm";
             myStyle.DIMDEC = 2;
-            myStyle.DIMDSEP = ",";
+            myStyle.DIMDSEP = ',';
             
             RadialDimension dim = new RadialDimension(circle, 30, myStyle);
             dxf.AddEntity(circle);
@@ -2117,13 +2406,13 @@ namespace TestDxfDocument
             xdata.XDataRecord.Add(XDataRecord.OpenControlString);
             xdata.XDataRecord.Add(new XDataRecord(XDataCode.String, "Linear Dimension"));
             xdata.XDataRecord.Add(new XDataRecord(XDataCode.Real, 15.5));
-            xdata.XDataRecord.Add(new XDataRecord(XDataCode.Long, 350));
+            xdata.XDataRecord.Add(new XDataRecord(XDataCode.Int32, 350));
             xdata.XDataRecord.Add(XDataRecord.CloseControlString);
-            dimX.XData = new Dictionary<string, XData>
+            dimX.XData = new Dictionary<string, XData>(StringComparer.OrdinalIgnoreCase)
                              {
                                  {xdata.ApplicationRegistry.Name, xdata}
                              };
-            dimY.XData = new Dictionary<string, XData>
+            dimY.XData = new Dictionary<string, XData>(StringComparer.OrdinalIgnoreCase)
                              {
                                  {xdata.ApplicationRegistry.Name, xdata}
                              };
@@ -2161,9 +2450,9 @@ namespace TestDxfDocument
             xdata.XDataRecord.Add(XDataRecord.OpenControlString);
             xdata.XDataRecord.Add(new XDataRecord(XDataCode.String, "Aligned Dimension"));
             xdata.XDataRecord.Add(new XDataRecord(XDataCode.Real, 15.5));
-            xdata.XDataRecord.Add(new XDataRecord(XDataCode.Long, 350));
+            xdata.XDataRecord.Add(new XDataRecord(XDataCode.Int32, 350));
             xdata.XDataRecord.Add(XDataRecord.CloseControlString);
-            dim1.XData = new Dictionary<string, XData>
+            dim1.XData = new Dictionary<string, XData>(StringComparer.OrdinalIgnoreCase)
                              {
                                  {xdata.ApplicationRegistry.Name, xdata}
                              };
@@ -2266,7 +2555,7 @@ namespace TestDxfDocument
             //options.Aligment = MTextFormattingOptions.TextAligment.Bottom;
             //mText.Write("Bottom", options);
 
-            mText.XData = new Dictionary<string, XData>
+            mText.XData = new Dictionary<string, XData>(StringComparer.OrdinalIgnoreCase)
                              {
                                  {xdata.ApplicationRegistry.Name, xdata}
                              };
@@ -2524,7 +2813,7 @@ namespace TestDxfDocument
             xdata.XDataRecord.Add(new XDataRecord(XDataCode.Real, hatch.Pattern.Angle));
             xdata.XDataRecord.Add(XDataRecord.CloseControlString);
 
-            hatch.XData = new Dictionary<string, XData>
+            hatch.XData = new Dictionary<string, XData>(StringComparer.OrdinalIgnoreCase)
                              {
                                  {xdata.ApplicationRegistry.Name, xdata},
                              };
@@ -2832,35 +3121,48 @@ namespace TestDxfDocument
             totalTime += crono.ElapsedMilliseconds;
             crono.Reset();
 
+            //crono.Start();
+            //dxf.DrawingVariables.AcadVer = DxfVersion.AutoCad2000;
+            //dxf.Save("speedtest (netDxf 2000).dxf");
+            //Console.WriteLine("Time saving file 2000 : " + crono.ElapsedMilliseconds / 1000.0f);
+            //totalTime += crono.ElapsedMilliseconds;
+            //crono.Reset();
+
             crono.Start();
             dxf.DrawingVariables.AcadVer = DxfVersion.AutoCad2000;
-            dxf.Save("speedtest (netDxf 2000).dxf");
-            Console.WriteLine("Time saving file 2000 : " + crono.ElapsedMilliseconds / 1000.0f);
+            dxf.Save("speedtest (binary netDxf 2000).dxf", true);
+            Console.WriteLine("Time saving binary file 2000 : " + crono.ElapsedMilliseconds / 1000.0f);
             totalTime += crono.ElapsedMilliseconds;
             crono.Reset();
 
-            crono.Start();
-            dxf.DrawingVariables.AcadVer = DxfVersion.AutoCad2010;
-            dxf.Save("speedtest (netDxf 2010).dxf");
-            Console.WriteLine("Time saving file 2010 : " + crono.ElapsedMilliseconds / 1000.0f);
-            totalTime += crono.ElapsedMilliseconds;
-            crono.Reset();
+            //crono.Start();
+            //dxf.DrawingVariables.AcadVer = DxfVersion.AutoCad2010;
+            //dxf.Save("speedtest (netDxf 2010).dxf");
+            //Console.WriteLine("Time saving file 2010 : " + crono.ElapsedMilliseconds / 1000.0f);
+            //totalTime += crono.ElapsedMilliseconds;
+            //crono.Reset();
 
 
+            //crono.Start();
+            //dxf = DxfDocument.Load("speedtest (netDxf 2000).dxf");
+            //Console.WriteLine("Time loading file 2000: " + crono.ElapsedMilliseconds / 1000.0f);
+            //totalTime += crono.ElapsedMilliseconds;
+            //crono.Stop();
+            //crono.Reset();
+
             crono.Start();
-            dxf = DxfDocument.Load("speedtest (netDxf 2000).dxf");
-            Console.WriteLine("Time loading file 2000: " + crono.ElapsedMilliseconds / 1000.0f);
+            dxf = DxfDocument.Load("speedtest (binary netDxf 2000).dxf");
+            Console.WriteLine("Time loading binary file 2000: " + crono.ElapsedMilliseconds / 1000.0f);
             totalTime += crono.ElapsedMilliseconds;
             crono.Stop();
             crono.Reset();
 
-
-            crono.Start();
-            dxf = DxfDocument.Load("speedtest (netDxf 2010).dxf");
-            Console.WriteLine("Time loading file 2010: " + crono.ElapsedMilliseconds / 1000.0f);
-            totalTime += crono.ElapsedMilliseconds;
-            crono.Stop();
-            crono.Reset();
+            //crono.Start();
+            //dxf = DxfDocument.Load("speedtest (netDxf 2010).dxf");
+            //Console.WriteLine("Time loading file 2010: " + crono.ElapsedMilliseconds / 1000.0f);
+            //totalTime += crono.ElapsedMilliseconds;
+            //crono.Stop();
+            //crono.Reset();
 
             Console.WriteLine("Total time : " + totalTime / 1000.0f);
             Console.ReadLine();
@@ -2921,9 +3223,9 @@ namespace TestDxfDocument
                                                     };
             List<PolyfaceMeshFace> faces = new List<PolyfaceMeshFace>
                                                {
-                                                   new PolyfaceMeshFace(new[] {1, 2, -3}),
-                                                   new PolyfaceMeshFace(new[] {-1, 3, -4}),
-                                                   new PolyfaceMeshFace(new[] {-1, 4, 5})
+                                                   new PolyfaceMeshFace(new short[] {1, 2, -3}),
+                                                   new PolyfaceMeshFace(new short[] {-1, 3, -4}),
+                                                   new PolyfaceMeshFace(new short[] {-1, 4, 5})
                                                };
 
             PolyfaceMesh mesh = new PolyfaceMesh(vertexes, faces);
@@ -2955,7 +3257,7 @@ namespace TestDxfDocument
             xdata2.XDataRecord.Add(XDataRecord.OpenControlString);
             xdata2.XDataRecord.Add(new XDataRecord(XDataCode.String, "string record"));
             xdata2.XDataRecord.Add(new XDataRecord(XDataCode.Real, 15.5));
-            xdata2.XDataRecord.Add(new XDataRecord(XDataCode.Long, 350));
+            xdata2.XDataRecord.Add(new XDataRecord(XDataCode.Int32, 350));
             xdata2.XDataRecord.Add(XDataRecord.CloseControlString);
 
             //circle
@@ -2971,7 +3273,7 @@ namespace TestDxfDocument
             circle.Layer.Color=AciColor.Yellow;
             circle.LineType = LineType.Dashed;
             circle.Normal = extrusion;
-            circle.XData=new Dictionary<string, XData>
+            circle.XData = new Dictionary<string, XData>(StringComparer.OrdinalIgnoreCase)
                              {
                                  {xdata.ApplicationRegistry.Name, xdata},
                                  {xdata2.ApplicationRegistry.Name, xdata2}
@@ -3052,9 +3354,9 @@ namespace TestDxfDocument
                                                     };
             List<PolyfaceMeshFace> faces = new List<PolyfaceMeshFace>
                                                {
-                                                   new PolyfaceMeshFace(new[] {1, 2, -3}),
-                                                   new PolyfaceMeshFace(new[] {-1, 3, -4}),
-                                                   new PolyfaceMeshFace(new[] {-1, 4, 5})
+                                                   new PolyfaceMeshFace(new short[] {1, 2, -3}),
+                                                   new PolyfaceMeshFace(new short[] {-1, 3, -4}),
+                                                   new PolyfaceMeshFace(new short[] {-1, 4, 5})
                                                };
 
             PolyfaceMesh mesh = new PolyfaceMesh(meshVertexes, faces);
@@ -3131,10 +3433,10 @@ namespace TestDxfDocument
             xdata.XDataRecord.Add(new XDataRecord(XDataCode.String, "extended data with netDxf"));
             xdata.XDataRecord.Add(XDataRecord.OpenControlString);
             xdata.XDataRecord.Add(new XDataRecord(XDataCode.String, "netDxf polyline3d"));
-            xdata.XDataRecord.Add(new XDataRecord(XDataCode.Integer, poly.Vertexes.Count));
+            xdata.XDataRecord.Add(new XDataRecord(XDataCode.Int16, poly.Vertexes.Count));
             xdata.XDataRecord.Add(XDataRecord.CloseControlString);
 
-            poly.XData = new Dictionary<string, XData>
+            poly.XData = new Dictionary<string, XData>(StringComparer.OrdinalIgnoreCase)
                              {
                                  {xdata.ApplicationRegistry.Name, xdata},
                              }; 

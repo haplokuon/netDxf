@@ -1,7 +1,7 @@
-#region netDxf, Copyright(C) 2013 Daniel Carvajal, Licensed under LGPL.
+#region netDxf, Copyright(C) 2014 Daniel Carvajal, Licensed under LGPL.
 
 //                        netDxf library
-// Copyright (C) 2013 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2014 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -20,38 +20,8 @@
 
 #endregion
 
-using System;
-
 namespace netDxf.Entities
 {
-    /// <summary>
-    /// Defines which edges are hidden.
-    /// </summary>
-    [Flags]
-    public enum EdgeFlags
-    {
-        /// <summary>
-        /// All edges are visible (default).
-        /// </summary>
-        Visibles = 0,
-        /// <summary>
-        /// First edge is invisible.
-        /// </summary>
-        First = 1,
-        /// <summary>
-        /// Second edge is invisible.
-        /// </summary>
-        Second = 2,
-        /// <summary>
-        /// Third edge is invisible.
-        /// </summary>
-        Third = 4,
-        /// <summary>
-        /// Fourth edge is invisible.
-        /// </summary>
-        Fourth = 8
-    }
-
     /// <summary>
     /// Represents a 3dFace <see cref="EntityObject">entity</see>.
     /// </summary>
@@ -64,7 +34,7 @@ namespace netDxf.Entities
         private Vector3 secondVertex;
         private Vector3 thirdVertex;
         private Vector3 fourthVertex;
-        private EdgeFlags edgeFlags;
+        private Face3dEdgeFlags edgeFlags;
 
         #endregion
 
@@ -73,18 +43,23 @@ namespace netDxf.Entities
         /// <summary>
         /// Initializes a new instance of the <c>Face3d</c> class.
         /// </summary>
-        /// <param name="firstVertex">3d face <see cref="Vector3">first vertex</see>.</param>
-        /// <param name="secondVertex">3d face <see cref="Vector3">second vertex</see>.</param>
-        /// <param name="thirdVertex">3d face <see cref="Vector3">third vertex</see>.</param>
-        /// <param name="fourthVertex">3d face <see cref="Vector3">fourth vertex</see>.</param>
-        public Face3d(Vector3 firstVertex, Vector3 secondVertex, Vector3 thirdVertex, Vector3 fourthVertex)
-            : base(EntityType.Face3D, DxfObjectCode.Face3d)
+        public Face3d()
+            : this(Vector3.Zero, Vector3.Zero, Vector3.Zero, Vector3.Zero)
         {
-            this.firstVertex = firstVertex;
-            this.secondVertex = secondVertex;
-            this.thirdVertex = thirdVertex;
-            this.fourthVertex = fourthVertex;
-            this.edgeFlags = EdgeFlags.Visibles;
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <c>Face3d</c> class.
+        /// </summary>
+        /// <param name="firstVertex">3d face <see cref="Vector2">first vertex</see>.</param>
+        /// <param name="secondVertex">3d face <see cref="Vector2">second vertex</see>.</param>
+        /// <param name="thirdVertex">3d face <see cref="Vector2">third vertex</see>.</param>
+        public Face3d(Vector2 firstVertex, Vector2 secondVertex, Vector2 thirdVertex)
+            : this(new Vector3(firstVertex.X, firstVertex.Y, 0.0),
+                   new Vector3(secondVertex.X, secondVertex.Y, 0.0),
+                   new Vector3(thirdVertex.X, thirdVertex.Y, 0.0),
+                   new Vector3(thirdVertex.X, thirdVertex.Y, 0.0))
+        {
         }
 
         /// <summary>
@@ -105,9 +80,29 @@ namespace netDxf.Entities
         /// <summary>
         /// Initializes a new instance of the <c>Face3d</c> class.
         /// </summary>
-        public Face3d()
-            : this(Vector3.Zero, Vector3.Zero, Vector3.Zero, Vector3.Zero)
+        /// <param name="firstVertex">3d face <see cref="Vector3">first vertex</see>.</param>
+        /// <param name="secondVertex">3d face <see cref="Vector3">second vertex</see>.</param>
+        /// <param name="thirdVertex">3d face <see cref="Vector3">third vertex</see>.</param>
+        public Face3d(Vector3 firstVertex, Vector3 secondVertex, Vector3 thirdVertex)
+            : this(firstVertex, secondVertex, thirdVertex, thirdVertex)
         {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <c>Face3d</c> class.
+        /// </summary>
+        /// <param name="firstVertex">3d face <see cref="Vector3">first vertex</see>.</param>
+        /// <param name="secondVertex">3d face <see cref="Vector3">second vertex</see>.</param>
+        /// <param name="thirdVertex">3d face <see cref="Vector3">third vertex</see>.</param>
+        /// <param name="fourthVertex">3d face <see cref="Vector3">fourth vertex</see>.</param>
+        public Face3d(Vector3 firstVertex, Vector3 secondVertex, Vector3 thirdVertex, Vector3 fourthVertex)
+            : base(EntityType.Face3D, DxfObjectCode.Face3d)
+        {
+            this.firstVertex = firstVertex;
+            this.secondVertex = secondVertex;
+            this.thirdVertex = thirdVertex;
+            this.fourthVertex = fourthVertex;
+            this.edgeFlags = Face3dEdgeFlags.Visibles;
         }
 
         #endregion
@@ -153,7 +148,7 @@ namespace netDxf.Entities
         /// <summary>
         /// Gets or sets the 3d face edge visibility.
         /// </summary>
-        public EdgeFlags EdgeFlags
+        public Face3dEdgeFlags EdgeFlags
         {
             get { return this.edgeFlags; }
             set { this.edgeFlags = value; }

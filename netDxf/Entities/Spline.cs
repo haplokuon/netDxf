@@ -1,7 +1,7 @@
-﻿#region netDxf, Copyright(C) 2013 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf, Copyright(C) 2014 Daniel Carvajal, Licensed under LGPL.
 
 //                        netDxf library
-// Copyright (C) 2013 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2014 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -50,16 +50,20 @@ namespace netDxf.Entities
         /// </summary>
         /// <param name="controlPoints">Spline control points.</param>
         /// <param name="knots">Spline knot vector.</param>
-        /// <param name="degree">Degree of the spline curve.</param>
+        /// <param name="degree">Degree of the spline curve.  Valid values are 1 (linear), degree 2 (quadratic), degree 3 (cubic), and so on up to degree 10.</param>
         public Spline(List<SplineVertex> controlPoints, double[] knots, short degree)
             : base(EntityType.Spline, DxfObjectCode.Spline)
         {
-            if (degree < 1)
-                throw new ArgumentException("The degree of the spline must be equal or greater than one.");
+            if (degree < 1 || degree > 10)
+                throw (new ArgumentOutOfRangeException("degree", degree, "The spline degree valid values range from 1 to 10."));
+            if (controlPoints == null)
+                throw new ArgumentNullException("controlPoints", "The Spline control points list cannot be null.");
             if (controlPoints.Count < 2)
                 throw new ArgumentException("The number of control points must be equal or greater than 2.");
             if(controlPoints.Count < degree + 1 )
                 throw new ArgumentException("The number of control points must be equal or greater than the spline degree + 1.");
+            if (knots == null)
+                throw new ArgumentNullException("knots", "The Spline knots list cannot be null.");
             if(knots.Length != controlPoints.Count + degree + 1)
                 throw new ArgumentException("The number of knots must be equals to the number of control points + spline degree + 1.");
 
@@ -95,13 +99,15 @@ namespace netDxf.Entities
         /// Initializes a new instance of the <c>Spline</c> class.
         /// </summary>
         /// <param name="controlPoints">Spline control points.</param>
-        /// <param name="degree">Degree of the spline curve.</param>
+        /// <param name="degree">Degree of the spline curve.  Valid values are 1 (linear), degree 2 (quadratic), degree 3 (cubic), and so on up to degree 10.</param>
         /// <param name="periodic">Sets if the spline as periodic closed (default false).</param>
         public Spline(List<SplineVertex> controlPoints, short degree, bool periodic = false)
             : base(EntityType.Spline, DxfObjectCode.Spline)
         {
-            if (degree < 1)
-                throw new ArgumentException("The degree of the spline must be equal or greater than one.");
+            if (degree < 1 || degree > 10)
+                throw (new ArgumentOutOfRangeException("degree", degree, "The spline degree valid values range from 1 to 10."));
+            if (controlPoints == null)
+                throw new ArgumentNullException("controlPoints", "The Spline control points list cannot be null.");
             if (controlPoints.Count < 2)
                 throw new ArgumentException("The number of control points must be equal or greater than 2.");
             if (controlPoints.Count < degree + 1)
@@ -136,8 +142,11 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets the spline degree.
+        /// Gets or sets the polynomial degree of the resulting spline.
         /// </summary>
+        /// <remarks>
+        /// Valid values are 1 (linear), degree 2 (quadratic), degree 3 (cubic), and so on up to degree 10.
+        /// </remarks>
         public short Degree
         {
             get { return this.degree; }
@@ -259,7 +268,7 @@ namespace netDxf.Entities
         /// <returns>A new Spline that is a copy of this instance.</returns>
         public override object Clone()
         {
-            List<SplineVertex> copyControlPoints = new List<SplineVertex>();
+            List<SplineVertex> copyControlPoints = new List<SplineVertex>(this.controlPoints.Count);
             foreach (SplineVertex vertex in this.controlPoints)
             {
                 copyControlPoints.Add((SplineVertex) vertex.Clone());

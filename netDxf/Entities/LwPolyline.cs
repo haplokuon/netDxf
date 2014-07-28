@@ -62,7 +62,7 @@ namespace netDxf.Entities
             : base(EntityType.LightWeightPolyline, DxfObjectCode.LightWeightPolyline)
         {
             if (vertexes == null)
-                throw new ArgumentNullException("vertexes");
+                throw new ArgumentNullException("vertexes", "The LwPolyline vertexes list cannot be null.");
             this.vertexes = vertexes;
             this.elevation = 0.0;
             this.thickness = 0.0;
@@ -82,7 +82,7 @@ namespace netDxf.Entities
             set
             {
                 if (value == null)
-                    throw new ArgumentNullException("value");
+                    throw new ArgumentNullException("value", "The LwPolyline vertexes list cannot be null.");
                 this.vertexes = value;
             }
         }

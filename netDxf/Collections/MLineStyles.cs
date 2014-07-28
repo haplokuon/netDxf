@@ -36,12 +36,18 @@ namespace netDxf.Collections
         #region constructor
 
         internal MLineStyles(DxfDocument document, string handle = null)
+            : this(document,0,handle)
+        {
+        }
+
+        internal MLineStyles(DxfDocument document, int capacity, string handle = null)
             : base(document,
-            new Dictionary<string, MLineStyle>(StringComparer.OrdinalIgnoreCase),
-            new Dictionary<string, List<DxfObject>>(StringComparer.OrdinalIgnoreCase),
+            new Dictionary<string, MLineStyle>(capacity, StringComparer.OrdinalIgnoreCase),
+            new Dictionary<string, List<DxfObject>>(capacity, StringComparer.OrdinalIgnoreCase),
             StringCode.MLineStyleDictionary,
             handle)
         {
+            this.maxCapacity = short.MaxValue;
         }
 
         #endregion
@@ -58,6 +64,8 @@ namespace netDxf.Collections
         /// </returns>
         internal override MLineStyle Add(MLineStyle style, bool assignHandle)
         {
+            if (this.list.Count >= this.maxCapacity)
+                throw new OverflowException(String.Format("Table overflow. The maximum number of elements the table {0} can have is {1}", this.codeName, this.maxCapacity));
 
             MLineStyle add;
             if (this.list.TryGetValue(style.Name, out add))

@@ -20,6 +20,7 @@
 
 #endregion
 
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using netDxf.Tables;
@@ -38,6 +39,7 @@ namespace netDxf.Collections
     {
         #region private fields
 
+        protected int maxCapacity = int.MaxValue;
         protected readonly DxfDocument document;
         protected readonly Dictionary<string, T> list;
         protected readonly Dictionary<string, List<DxfObject>> references;
@@ -46,7 +48,7 @@ namespace netDxf.Collections
 
         #region constructor
 
-        internal TableObjects(DxfDocument document, Dictionary<string, T> list, Dictionary<string, List<DxfObject>> references, string codeName, string handle)
+        protected TableObjects(DxfDocument document, Dictionary<string, T> list, Dictionary<string, List<DxfObject>> references, string codeName, string handle)
             : base(codeName)
         {
             this.list = list;
@@ -103,6 +105,14 @@ namespace netDxf.Collections
         public int Count
         {
             get { return this.list.Count; }
+        }
+
+        /// <summary>
+        /// Gets the maximum number of objects the collection can hold.
+        /// </summary>
+        public int MaxCapacity
+        {
+            get { return this.maxCapacity; }
         }
 
         /// <summary>

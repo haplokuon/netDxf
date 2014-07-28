@@ -54,7 +54,7 @@ namespace netDxf.Entities
         private double viewHeight;
         private double snapAngle;
         private double twistAngle;
-        private double circleZoomPercent;
+        private short circleZoomPercent;
         private ViewportStatusFlags status;
         private readonly List<Layer> frozenLayers;
         private Vector3 ucsOrigin;
@@ -96,7 +96,7 @@ namespace netDxf.Entities
             this.viewHeight = 250;
             this.snapAngle = 0.0;
             this.twistAngle = 0.0;
-            this.circleZoomPercent = 1000.0;
+            this.circleZoomPercent = 1000;
             this.status = ViewportStatusFlags.AdaptiveGridDisplay | ViewportStatusFlags.DisplayGridBeyondDrawingLimits | ViewportStatusFlags.CurrentlyAlwaysEnabled | ViewportStatusFlags.UcsIconVisibility;
             this.frozenLayers = new List<Layer>();
             this.ucsOrigin = Vector3.Zero;
@@ -275,7 +275,7 @@ namespace netDxf.Entities
         /// <summary>
         /// Gets or sets the circle zoom percent.
         /// </summary>
-        public double CircleZoomPercent
+        public short CircleZoomPercent
         {
             get { return this.circleZoomPercent; }
             set { this.circleZoomPercent = value; }
@@ -438,7 +438,45 @@ namespace netDxf.Entities
         /// <returns>A new Viewport that is a copy of this instance.</returns>
         public override object Clone()
         {
-            throw new NotImplementedException();
+            Viewport viewport = new Viewport
+            {
+                //EntityObject properties
+                Color = this.color,
+                Layer = this.layer,
+                LineType = this.lineType,
+                Lineweight = this.lineweight,
+                LineTypeScale = this.lineTypeScale,
+                Normal = this.normal,
+                XData = this.xData,
+                //Viewport properties
+                Center=this.center,
+                Width=this.width,
+                Height=this.height,
+                Stacking = this.stacking,
+                Id = this.id,
+                ViewCenter = this.viewCenter,
+                SnapBase=this.snapBase,
+                SnapSpacing=this.snapSpacing,
+                GridSpacing = this.gridSpacing,
+                ViewDirection = this.viewDirection,
+                ViewTarget = this.viewTarget,
+                LensLength = this.lensLength,
+                FrontClipPlane = this.frontClipPlane,
+                BackClipPlane=this.backClipPlane,
+                ViewHeight = this.viewHeight,
+                SnapAngle = this.snapAngle,
+                TwistAngle = this.twistAngle,
+                CircleZoomPercent = this.circleZoomPercent,
+                Status = this.status,
+                UcsOrigin = this.ucsOrigin,
+                UcsXAxis = this.ucsXAxis,
+                UcsYAxis = this.ucsYAxis,
+                Elevation = this.elevation,
+                ClippingBoundary = this.boundary
+            };
+
+            viewport.FrozenLayers.AddRange(this.frozenLayers.ToArray());
+            return viewport;
         }
 
         #endregion

@@ -145,7 +145,7 @@ namespace netDxf.Entities
             set
             {
                 if (value <= 0)
-                    throw (new ArgumentOutOfRangeException("value", value, "The Text Height can not be zero or less."));
+                    throw (new ArgumentOutOfRangeException("value", value, "The Text Height must be greater than zero."));
                 this.height = value;
             }
         }

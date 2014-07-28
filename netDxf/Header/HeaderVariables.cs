@@ -52,40 +52,40 @@ namespace netDxf.Header
         {
             this.variables = new Dictionary<string, HeaderVariable>
             {
-                {HeaderVariableCode.AcadVer, new HeaderVariable(HeaderVariableCode.AcadVer, StringEnum.GetStringValue(DxfVersion.AutoCad2000))},
+                {HeaderVariableCode.AcadVer, new HeaderVariable(HeaderVariableCode.AcadVer, DxfVersion.AutoCad2000)},
                 {HeaderVariableCode.DwgCodePage, new HeaderVariable(HeaderVariableCode.DwgCodePage, "ANSI_" + Encoding.Default.WindowsCodePage)},
                 {HeaderVariableCode.LastSavedBy, new HeaderVariable(HeaderVariableCode.LastSavedBy, Environment.UserName)},
                 {HeaderVariableCode.HandleSeed, new HeaderVariable(HeaderVariableCode.HandleSeed, "1")},
                 {HeaderVariableCode.Angbase, new HeaderVariable(HeaderVariableCode.Angbase, 0.0)},
-                {HeaderVariableCode.Angdir, new HeaderVariable(HeaderVariableCode.Angdir, 0)},
-                {HeaderVariableCode.AttMode, new HeaderVariable(HeaderVariableCode.AttMode, 1)},
-                {HeaderVariableCode.AUnits, new HeaderVariable(HeaderVariableCode.AUnits, (int) AngleUnitType.DecimalDegrees)},
-                {HeaderVariableCode.AUprec, new HeaderVariable(HeaderVariableCode.AUprec, 0)},
-                {HeaderVariableCode.CeColor, new HeaderVariable(HeaderVariableCode.CeColor, (short) 256)},
+                {HeaderVariableCode.Angdir, new HeaderVariable(HeaderVariableCode.Angdir, (short) 0)},
+                {HeaderVariableCode.AttMode, new HeaderVariable(HeaderVariableCode.AttMode, AttMode.Normal)},
+                {HeaderVariableCode.AUnits, new HeaderVariable(HeaderVariableCode.AUnits, AngleUnitType.DecimalDegrees)},
+                {HeaderVariableCode.AUprec, new HeaderVariable(HeaderVariableCode.AUprec, (short) 0)},
+                {HeaderVariableCode.CeColor, new HeaderVariable(HeaderVariableCode.CeColor, AciColor.ByLayer)},
                 {HeaderVariableCode.CeLtScale, new HeaderVariable(HeaderVariableCode.CeLtScale, 1.0)},
                 {HeaderVariableCode.CeLtype, new HeaderVariable(HeaderVariableCode.CeLtype, "ByLayer")},
-                {HeaderVariableCode.CeLweight, new HeaderVariable(HeaderVariableCode.CeLweight, (short) -1)},
+                {HeaderVariableCode.CeLweight, new HeaderVariable(HeaderVariableCode.CeLweight, Lineweight.ByLayer)},
                 {HeaderVariableCode.CLayer, new HeaderVariable(HeaderVariableCode.CLayer, "0")},
-                {HeaderVariableCode.CMLJust, new HeaderVariable(HeaderVariableCode.CMLJust, 0)},
+                {HeaderVariableCode.CMLJust, new HeaderVariable(HeaderVariableCode.CMLJust, MLineJustification.Top)},
                 {HeaderVariableCode.CMLScale, new HeaderVariable(HeaderVariableCode.CMLScale, 20.0)},
                 {HeaderVariableCode.CMLStyle, new HeaderVariable(HeaderVariableCode.CMLStyle, "Standard")},
                 {HeaderVariableCode.DimStyle, new HeaderVariable(HeaderVariableCode.DimStyle, "Standard")},
                 {HeaderVariableCode.TextSize, new HeaderVariable(HeaderVariableCode.TextSize, 2.5)},
                 {HeaderVariableCode.TextStyle, new HeaderVariable(HeaderVariableCode.TextStyle, "Standard")},
-                {HeaderVariableCode.LUnits, new HeaderVariable(HeaderVariableCode.LUnits, (int) LinearUnitType.Decimal)},
-                {HeaderVariableCode.LUprec, new HeaderVariable(HeaderVariableCode.LUprec, 4)},
-                {HeaderVariableCode.Extnames, new HeaderVariable(HeaderVariableCode.Extnames, 1)},
-                {HeaderVariableCode.InsUnits, new HeaderVariable(HeaderVariableCode.InsUnits, (int) DrawingUnits.Millimeters)},
+                {HeaderVariableCode.LUnits, new HeaderVariable(HeaderVariableCode.LUnits, LinearUnitType.Decimal)},
+                {HeaderVariableCode.LUprec, new HeaderVariable(HeaderVariableCode.LUprec, (short) 4)},
+                {HeaderVariableCode.Extnames, new HeaderVariable(HeaderVariableCode.Extnames, true)},
+                {HeaderVariableCode.InsUnits, new HeaderVariable(HeaderVariableCode.InsUnits, DrawingUnits.Unitless)},
                 {HeaderVariableCode.LtScale, new HeaderVariable(HeaderVariableCode.LtScale, 1.0)},
-                {HeaderVariableCode.LwDisplay, new HeaderVariable(HeaderVariableCode.LwDisplay, 0)},
-                {HeaderVariableCode.PdMode, new HeaderVariable(HeaderVariableCode.PdMode, (int) PointShape.Dot)},
+                {HeaderVariableCode.LwDisplay, new HeaderVariable(HeaderVariableCode.LwDisplay, false)},
+                {HeaderVariableCode.PdMode, new HeaderVariable(HeaderVariableCode.PdMode, PointShape.Dot)},
                 {HeaderVariableCode.PdSize, new HeaderVariable(HeaderVariableCode.PdSize, 0.0)},
-                {HeaderVariableCode.PLineGen, new HeaderVariable(HeaderVariableCode.PLineGen, 0)},
-                {HeaderVariableCode.TdCreate, new HeaderVariable(HeaderVariableCode.TdCreate, DrawingTime.ToJulianCalendar(DateTime.Now))},
-                {HeaderVariableCode.TduCreate, new HeaderVariable(HeaderVariableCode.TduCreate, DrawingTime.ToJulianCalendar(DateTime.UtcNow))},
-                {HeaderVariableCode.TdUpdate, new HeaderVariable(HeaderVariableCode.TdUpdate, DrawingTime.ToJulianCalendar(DateTime.Now))},
-                {HeaderVariableCode.TduUpdate, new HeaderVariable(HeaderVariableCode.TduUpdate, DrawingTime.ToJulianCalendar(DateTime.UtcNow))},
-                {HeaderVariableCode.TdinDwg, new HeaderVariable(HeaderVariableCode.TdinDwg, 0.0)},
+                {HeaderVariableCode.PLineGen, new HeaderVariable(HeaderVariableCode.PLineGen, (short) 0)},
+                {HeaderVariableCode.TdCreate, new HeaderVariable(HeaderVariableCode.TdCreate, DateTime.Now)},
+                {HeaderVariableCode.TduCreate, new HeaderVariable(HeaderVariableCode.TduCreate, DateTime.UtcNow)},
+                {HeaderVariableCode.TdUpdate, new HeaderVariable(HeaderVariableCode.TdUpdate, DateTime.Now)},
+                {HeaderVariableCode.TduUpdate, new HeaderVariable(HeaderVariableCode.TduUpdate, DateTime.UtcNow)},
+                {HeaderVariableCode.TdinDwg, new HeaderVariable(HeaderVariableCode.TdinDwg, new TimeSpan())},
             };
         }
 
@@ -102,14 +102,13 @@ namespace netDxf.Header
         {
             get
             {
-                string code = (string) this.variables[HeaderVariableCode.AcadVer].Value;
-                return (DxfVersion) StringEnum.Parse(typeof (DxfVersion), code);
+                return (DxfVersion)this.variables[HeaderVariableCode.AcadVer].Value;
             }
             set
             {
                 if (value < DxfVersion.AutoCad2000)
                     throw new NotSupportedException("Only AutoCad2000 and newer dxf versions are supported.");
-                this.variables[HeaderVariableCode.AcadVer].Value = StringEnum.GetStringValue(value);
+                this.variables[HeaderVariableCode.AcadVer].Value = value;
             }
         }
 
@@ -136,9 +135,9 @@ namespace netDxf.Header
         /// 1 = Clockwise angles, 0 = Counterclockwise.
         /// </summary>
         /// <remarks>Default value: 0.</remarks>
-        public int Angdir
+        public short Angdir
         {
-            get { return (int) this.variables[HeaderVariableCode.Angdir].Value; }
+            get { return (short)this.variables[HeaderVariableCode.Angdir].Value; }
             internal set { this.variables[HeaderVariableCode.Angdir].Value = value; }
         }
 
@@ -148,8 +147,8 @@ namespace netDxf.Header
         /// <remarks>Default value: AttMode.Normal.</remarks>
         public AttMode AttMode
         {
-            get { return (AttMode) this.variables[HeaderVariableCode.AttMode].Value; }
-            set { this.variables[HeaderVariableCode.AttMode].Value = (int) value; }
+            get { return (AttMode)this.variables[HeaderVariableCode.AttMode].Value; }
+            set { this.variables[HeaderVariableCode.AttMode].Value = value; }
         }
 
         /// <summary>
@@ -158,17 +157,17 @@ namespace netDxf.Header
         /// <remarks>Default value: Decimal degrees.</remarks>
         public AngleUnitType AUnits
         {
-            get { return (AngleUnitType) this.variables[HeaderVariableCode.AUnits].Value; }
-            set { this.variables[HeaderVariableCode.AUnits].Value = (int) value; }
+            get { return (AngleUnitType)this.variables[HeaderVariableCode.AUnits].Value; }
+            set { this.variables[HeaderVariableCode.AUnits].Value = value; }
         }
 
         /// <summary>
         /// Units precision for angles.
         /// </summary>
         /// <remarks>Valid values are integers from 0 to 8. Default value: 0.</remarks>
-        public int AUprec
+        public short AUprec
         {
-            get { return (int) this.variables[HeaderVariableCode.AUprec].Value; }
+            get { return (short) this.variables[HeaderVariableCode.AUprec].Value; }
             set
             {
                 if (value < 0 || value > 8)
@@ -183,12 +182,12 @@ namespace netDxf.Header
         /// <remarks>Default value: 256 (ByLayer). This header variable only supports indexed colors.</remarks>
         public AciColor CeColor
         {
-            get { return AciColor.FromCadIndex((short)this.variables[HeaderVariableCode.CeColor].Value); }
+            get { return (AciColor) this.variables[HeaderVariableCode.CeColor].Value; }
             set
             {
                 if (value == null)
                     throw new ArgumentNullException("value", "The current entity color cannot be null.");
-                this.variables[HeaderVariableCode.CeColor].Value = value.Index;
+                this.variables[HeaderVariableCode.CeColor].Value = value;
             }
         }
 
@@ -213,12 +212,12 @@ namespace netDxf.Header
         /// <remarks>Default value: -1 (ByLayer).</remarks>
         public Lineweight CeLweight
         {
-            get { return Lineweight.FromCadIndex((short) this.variables[HeaderVariableCode.CeLweight].Value); }
+            get { return (Lineweight) this.variables[HeaderVariableCode.CeLweight].Value; }
             set
             {
                 if (value == null)
                     throw new ArgumentNullException("value", "The current entity lineweight cannot be null.");
-                this.variables[HeaderVariableCode.CeLweight].Value = value.Value;
+                this.variables[HeaderVariableCode.CeLweight].Value = value;
             }
         }
 
@@ -258,8 +257,8 @@ namespace netDxf.Header
         /// <remarks>Default value: 0 (Top).</remarks>
         public MLineJustification CMLJust
         {
-            get { return (MLineJustification) this.variables[HeaderVariableCode.CMLJust].Value; }
-            set { this.variables[HeaderVariableCode.CMLJust].Value = (int) value; }
+            get { return (MLineJustification)this.variables[HeaderVariableCode.CMLJust].Value; }
+            set { this.variables[HeaderVariableCode.CMLJust].Value = value; }
         }
 
         /// <summary>
@@ -341,12 +340,12 @@ namespace netDxf.Header
         /// </remarks>
         public LinearUnitType LUnits
         {
-            get { return (LinearUnitType) this.variables[HeaderVariableCode.LUnits].Value; }
+            get { return (LinearUnitType)this.variables[HeaderVariableCode.LUnits].Value; }
             set
             {
                 if (value == LinearUnitType.Architectural || value == LinearUnitType.Engineering)
                     this.InsUnits = DrawingUnits.Inches;
-                this.variables[HeaderVariableCode.LUnits].Value = (int) value;
+                this.variables[HeaderVariableCode.LUnits].Value = value;
             }
         }
 
@@ -354,9 +353,9 @@ namespace netDxf.Header
         /// Units precision for coordinates and distances.
         /// </summary>
         /// <remarks>Valid values are integers from 0 to 8. Default value: 4.</remarks>
-        public int LUprec
+        public short LUprec
         {
-            get { return (int) this.variables[HeaderVariableCode.LUprec].Value; }
+            get { return (short)this.variables[HeaderVariableCode.LUprec].Value; }
             set
             {
                 if (value < 0 || value > 8)
@@ -390,8 +389,8 @@ namespace netDxf.Header
         /// </remarks>
         public bool Extnames
         {
-            get { return (int) this.variables[HeaderVariableCode.Extnames].Value != 0; }
-            internal set { this.variables[HeaderVariableCode.Extnames].Value = value ? 1 : 0; }
+            get { return (bool) this.variables[HeaderVariableCode.Extnames].Value; }
+            internal set { this.variables[HeaderVariableCode.Extnames].Value = value; }
         }
 
         /// <summary>
@@ -403,8 +402,8 @@ namespace netDxf.Header
         /// </remarks>
         public DrawingUnits InsUnits
         {
-            get { return (DrawingUnits) this.variables[HeaderVariableCode.InsUnits].Value; }
-            set { this.variables[HeaderVariableCode.InsUnits].Value = (int) value; }
+            get { return (DrawingUnits)this.variables[HeaderVariableCode.InsUnits].Value; }
+            set { this.variables[HeaderVariableCode.InsUnits].Value = value; }
         }
 
         /// <summary>
@@ -445,8 +444,8 @@ namespace netDxf.Header
         /// </remarks>
         public bool LwDisplay
         {
-            get { return (int) this.variables[HeaderVariableCode.LwDisplay].Value != 0; }
-            set { this.variables[HeaderVariableCode.LwDisplay].Value = value ? 1 : 0; }
+            get { return (bool) this.variables[HeaderVariableCode.LwDisplay].Value; }
+            set { this.variables[HeaderVariableCode.LwDisplay].Value = value; }
         }
 
         /// <summary>
@@ -455,8 +454,8 @@ namespace netDxf.Header
         /// <remarks>Default value: PointShape.Dot.</remarks>
         public PointShape PdMode
         {
-            get { return (PointShape) this.variables[HeaderVariableCode.PdMode].Value; }
-            set { this.variables[HeaderVariableCode.PdMode].Value = (int) value; }
+            get { return (PointShape)this.variables[HeaderVariableCode.PdMode].Value; }
+            set { this.variables[HeaderVariableCode.PdMode].Value = value; }
         }
 
         /// <summary>
@@ -482,15 +481,14 @@ namespace netDxf.Header
         /// 1 = Linetype is generated in a continuous pattern around vertices of the polyline.<br />
         /// 0 = Each segment of the polyline starts and ends with a dash.
         /// </remarks>
-        public int PLineGen
+        public short PLineGen
         {
-            get { return (int) this.variables[HeaderVariableCode.PLineGen].Value; }
+            get { return (short)this.variables[HeaderVariableCode.PLineGen].Value; }
             set
             {
-                if (value == 0 || value == 1)
-                    this.variables[HeaderVariableCode.PLineGen].Value = value;
-                else
+                if (value != 0 && value != 1)
                     throw new ArgumentOutOfRangeException("value", value, "Accepted values are 0 or 1.");
+                this.variables[HeaderVariableCode.PLineGen].Value = value;
             }
         }
 
@@ -500,8 +498,8 @@ namespace netDxf.Header
         /// <remarks>This date/time is local to the time zone where the file was created.</remarks>
         public DateTime TdCreate
         {
-            get { return DrawingTime.FromJulianCalendar((double) this.variables[HeaderVariableCode.TdCreate].Value); }
-            set { this.variables[HeaderVariableCode.TdCreate].Value = DrawingTime.ToJulianCalendar(value); }
+            get { return (DateTime)this.variables[HeaderVariableCode.TdCreate].Value; }
+            set { this.variables[HeaderVariableCode.TdCreate].Value = value; }
         }
 
         /// <summary>
@@ -509,8 +507,8 @@ namespace netDxf.Header
         /// </summary>
         public DateTime TduCreate
         {
-            get { return DrawingTime.FromJulianCalendar((double) this.variables[HeaderVariableCode.TduCreate].Value); }
-            set { this.variables[HeaderVariableCode.TduCreate].Value = DrawingTime.ToJulianCalendar(value); }
+            get { return (DateTime)this.variables[HeaderVariableCode.TduCreate].Value; }
+            set { this.variables[HeaderVariableCode.TduCreate].Value = value; }
         }
 
         /// <summary>
@@ -519,8 +517,8 @@ namespace netDxf.Header
         /// <remarks>This date/time is local to the time zone where the file was created.</remarks>
         public DateTime TdUpdate
         {
-            get { return DrawingTime.FromJulianCalendar((double) this.variables[HeaderVariableCode.TdUpdate].Value); }
-            set { this.variables[HeaderVariableCode.TdUpdate].Value = DrawingTime.ToJulianCalendar(value); }
+            get { return (DateTime)this.variables[HeaderVariableCode.TdUpdate].Value; }
+            set { this.variables[HeaderVariableCode.TdUpdate].Value =value; }
         }
 
         /// <summary>
@@ -528,8 +526,8 @@ namespace netDxf.Header
         /// </summary>
         public DateTime TduUpdate
         {
-            get { return DrawingTime.FromJulianCalendar((double) this.variables[HeaderVariableCode.TduUpdate].Value); }
-            set { this.variables[HeaderVariableCode.TduUpdate].Value = DrawingTime.ToJulianCalendar(value); }
+            get { return (DateTime)this.variables[HeaderVariableCode.TduUpdate].Value; }
+            set { this.variables[HeaderVariableCode.TduUpdate].Value = value; }
         }
 
         /// <summary>
@@ -537,8 +535,8 @@ namespace netDxf.Header
         /// </summary>
         public TimeSpan TdinDwg
         {
-            get { return DrawingTime.EditingTime((double) this.variables[HeaderVariableCode.TdinDwg].Value); }
-            set { this.variables[HeaderVariableCode.TdinDwg].Value = value.TotalDays; }
+            get { return (TimeSpan)this.variables[HeaderVariableCode.TdinDwg].Value; }
+            set { this.variables[HeaderVariableCode.TdinDwg].Value = value; }
         }
 
         #endregion

@@ -39,7 +39,8 @@ namespace netDxf
             double hour = date.Hour;
             double minute = date.Minute;
             double second = date.Second;
-            double fraction = day + hour/24.0 + minute/1440.0 + second/86400.0;
+            double millisecond = date.Millisecond;
+            double fraction = day + hour/24.0 + minute/1440.0 + (second + millisecond / 1000)/86400.0;
 
             if (month < 3)
             {
@@ -88,9 +89,24 @@ namespace netDxf
             fraction -= hours/24.0;
             int minutes = (int) (fraction*1440);
             fraction -= minutes/1440.0;
-            int seconds = (int) Math.Round(fraction*86400);
-
-            return new DateTime(years, months, days, hours, minutes, seconds);
+            
+            double decimalSeconds = fraction*86400;
+            int seconds = (int)decimalSeconds;
+            int milliseconds = (int)((decimalSeconds - seconds) * 1000);
+            //int milliseconds = (int)Math.Round((decimalSeconds-seconds)*1000);
+            //if (milliseconds >= 1000)
+            //    seconds += 1;
+            //if (seconds >= 60)
+            //    minutes += 1;
+            //if (minutes >= 60)
+            //    hours += 1;
+            //if (hours >= 24)
+            //    days += 1;
+            //if (days >= 365)
+            //    months += 1;
+            //if (months >= 12)
+            //    years += 1;
+            return new DateTime(years, months, days, hours, minutes, seconds, milliseconds);
         }
 
         /// <summary>
@@ -109,9 +125,11 @@ namespace netDxf
             int minutes = (int) (fraction*1440);
             fraction -= minutes/1440.0;
 
-            int seconds = (int) Math.Round(fraction*86400);
+            double decimalSeconds = fraction*86400;
+            int seconds = (int)decimalSeconds;
+            int milliseconds = (int)((decimalSeconds-seconds)*1000);
 
-            return new TimeSpan(days, hours, minutes, seconds);
+            return new TimeSpan(days, hours, minutes, seconds, milliseconds);
         }
     }
 }
