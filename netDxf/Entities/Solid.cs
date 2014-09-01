@@ -20,6 +20,9 @@
 
 #endregion
 
+using System.Collections.Generic;
+using netDxf.Tables;
+
 namespace netDxf.Entities
 {
     /// <summary>
@@ -39,22 +42,26 @@ namespace netDxf.Entities
         #endregion
 
         #region constructors
+        /// <summary>
+        /// Initializes a new instance of the <c>Solid</c> class.
+        /// </summary>
+        public Solid()
+            : this(Vector3.Zero, Vector3.Zero, Vector3.Zero, Vector3.Zero)
+        {
+        }
 
         /// <summary>
         /// Initializes a new instance of the <c>Solid</c> class.
         /// </summary>
-        /// <param name="firstVertex">Solid <see cref="Vector3">first vertex</see>.</param>
-        /// <param name="secondVertex">Solid <see cref="Vector3">second vertex</see>.</param>
-        /// <param name="thirdVertex">Solid <see cref="Vector3">third vertex</see>.</param>
-        /// <param name="fourthVertex">Solid <see cref="Vector3">fourth vertex</see>.</param>
-        public Solid(Vector3 firstVertex, Vector3 secondVertex, Vector3 thirdVertex, Vector3 fourthVertex)
-            : base(EntityType.Solid, DxfObjectCode.Solid)
+        /// <param name="firstVertex">Solid <see cref="Vector2">first vertex</see>.</param>
+        /// <param name="secondVertex">Solid <see cref="Vector2">second vertex</see>.</param>
+        /// <param name="thirdVertex">Solid <see cref="Vector2">third vertex</see>.</param>
+        public Solid(Vector2 firstVertex, Vector2 secondVertex, Vector2 thirdVertex)
+            : this(new Vector3(firstVertex.X, firstVertex.Y, 0.0),
+                   new Vector3(secondVertex.X, secondVertex.Y, 0.0),
+                   new Vector3(thirdVertex.X, thirdVertex.Y, 0.0),
+                   new Vector3(thirdVertex.X, thirdVertex.Y, 0.0))
         {
-            this.firstVertex = firstVertex;
-            this.secondVertex = secondVertex;
-            this.thirdVertex = thirdVertex;
-            this.fourthVertex = fourthVertex;
-            this.thickness = 0.0;
         }
 
         /// <summary>
@@ -75,9 +82,29 @@ namespace netDxf.Entities
         /// <summary>
         /// Initializes a new instance of the <c>Solid</c> class.
         /// </summary>
-        public Solid()
-            : this(Vector3.Zero, Vector3.Zero, Vector3.Zero, Vector3.Zero)
+        /// <param name="firstVertex">Solid <see cref="Vector3">first vertex</see>.</param>
+        /// <param name="secondVertex">Solid <see cref="Vector3">second vertex</see>.</param>
+        /// <param name="thirdVertex">Solid <see cref="Vector3">third vertex</see>.</param>
+        public Solid(Vector3 firstVertex, Vector3 secondVertex, Vector3 thirdVertex)
+            : this(firstVertex, secondVertex, thirdVertex, thirdVertex)
+        {           
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <c>Solid</c> class.
+        /// </summary>
+        /// <param name="firstVertex">Solid <see cref="Vector3">first vertex</see>.</param>
+        /// <param name="secondVertex">Solid <see cref="Vector3">second vertex</see>.</param>
+        /// <param name="thirdVertex">Solid <see cref="Vector3">third vertex</see>.</param>
+        /// <param name="fourthVertex">Solid <see cref="Vector3">fourth vertex</see>.</param>
+        public Solid(Vector3 firstVertex, Vector3 secondVertex, Vector3 thirdVertex, Vector3 fourthVertex)
+            : base(EntityType.Solid, DxfObjectCode.Solid)
         {
+            this.firstVertex = firstVertex;
+            this.secondVertex = secondVertex;
+            this.thirdVertex = thirdVertex;
+            this.fourthVertex = fourthVertex;
+            this.thickness = 0.0;
         }
 
         #endregion
@@ -139,16 +166,27 @@ namespace netDxf.Entities
         /// <returns>A new Solid that is a copy of this instance.</returns>
         public override object Clone()
         {
+            Dictionary<string, XData> copyXData = null;
+            if (this.xData != null)
+            {
+                copyXData = new Dictionary<string, XData>();
+                foreach (KeyValuePair<string, XData> data in this.xData)
+                {
+                    copyXData.Add(data.Key, (XData)data.Value.Clone());
+                }
+            }
+
             return new Solid
             {
                 //EntityObject properties
-                Color = this.color,
-                Layer = this.layer,
-                LineType = this.lineType,
-                Lineweight = this.lineweight,
+                Layer = (Layer)this.layer.Clone(),
+                LineType = (LineType)this.lineType.Clone(),
+                Color = (AciColor)this.color.Clone(),
+                Lineweight = (Lineweight)this.lineweight.Clone(),
+                Transparency = (Transparency)this.transparency.Clone(),
                 LineTypeScale = this.lineTypeScale,
                 Normal = this.normal,
-                XData = this.xData,
+                XData = copyXData,
                 //Solid properties
                 FirstVertex = this.firstVertex,
                 SecondVertex = this.secondVertex,

@@ -21,6 +21,7 @@
 #endregion
 
 using System;
+using System.Collections.Generic;
 using netDxf.Tables;
 
 namespace netDxf.Entities
@@ -72,6 +73,14 @@ namespace netDxf.Entities
         {
             if (definition == null)
                 throw new ArgumentNullException("definition");
+            //EntityObject properties
+            this.color = definition.Color;
+            this.Layer = definition.Layer;
+            this.LineType = definition.LineType;
+            this.Lineweight = definition.Lineweight;
+            this.LineTypeScale = definition.LineTypeScale;
+            this.Normal = definition.Normal;
+            //Attribute definition properties
             this.definition = definition;
             this.tag = definition.Tag;
             this.value = definition.Value;
@@ -207,16 +216,27 @@ namespace netDxf.Entities
         /// <returns>A new Attribute that is a copy of this instance.</returns>
         public override object Clone()
         {
+            Dictionary<string, XData> copyXData = null;
+            if (this.xData != null)
+            {
+                copyXData = new Dictionary<string, XData>();
+                foreach (KeyValuePair<string, XData> data in this.xData)
+                {
+                    copyXData.Add(data.Key, (XData)data.Value.Clone());
+                }
+            }
+
             return new Attribute
             {
                 //EntityObject properties
-                Color = this.color,
-                Layer = this.layer,
-                LineType = this.lineType,
-                Lineweight = this.lineweight,
+                Layer = (Layer)this.layer.Clone(),
+                LineType = (LineType)this.lineType.Clone(),
+                Color = (AciColor)this.color.Clone(),
+                Lineweight = (Lineweight)this.lineweight.Clone(),
+                Transparency = (Transparency)this.transparency.Clone(),
                 LineTypeScale = this.lineTypeScale,
                 Normal = this.normal,
-                XData = this.xData,
+                XData = copyXData,
                 //Attribute properties
                 Definition = this.definition,
                 Tag = this.tag,

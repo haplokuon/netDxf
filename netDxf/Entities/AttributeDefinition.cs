@@ -21,6 +21,7 @@
 #endregion
 
 using System;
+using System.Collections.Generic;
 using netDxf.Tables;
 
 namespace netDxf.Entities
@@ -38,7 +39,7 @@ namespace netDxf.Entities
         #region private fields
 
         private readonly string tag;
-        private string text;
+        private string prompt;
         private object value;
         private TextStyle style;
         private Vector3 position;
@@ -73,7 +74,7 @@ namespace netDxf.Entities
                 throw new ArgumentException("The tag string cannot contain spaces.", "tag");
             this.tag = tag;
             this.flags = AttributeFlags.Visible;
-            this.text = string.Empty;
+            this.prompt = string.Empty;
             this.value = null;
             this.position = Vector3.Zero;
             this.style = style;
@@ -99,10 +100,10 @@ namespace netDxf.Entities
         /// Gets or sets the attribute information text.
         /// </summary>
         /// <remarks>This is the text prompt shown to introduce the attribute value when new Insert entities are inserted into the drawing.</remarks>
-        public string Text
+        public string Prompt
         {
-            get { return this.text; }
-            set { this.text = value; }
+            get { return this.prompt; }
+            set { this.prompt = value; }
         }
 
         /// <summary>
@@ -205,7 +206,38 @@ namespace netDxf.Entities
         /// <returns>A new AttributeDefinition that is a copy of this instance.</returns>
         public override object Clone()
         {
-            return new InvalidOperationException("Attribute definition cannot be clonned.");
+            Dictionary<string, XData> copyXData = null;
+            if (this.xData != null)
+            {
+                copyXData = new Dictionary<string, XData>();
+                foreach (KeyValuePair<string, XData> data in this.xData)
+                {
+                    copyXData.Add(data.Key, (XData)data.Value.Clone());
+                }
+            }
+
+            return new AttributeDefinition(this.tag)
+            {
+                //EntityObject properties
+                Layer = (Layer)this.layer.Clone(),
+                LineType = (LineType)this.lineType.Clone(),
+                Color = (AciColor)this.color.Clone(),
+                Lineweight = (Lineweight)this.lineweight.Clone(),
+                Transparency = (Transparency)this.transparency.Clone(),
+                LineTypeScale = this.lineTypeScale,
+                Normal = this.normal,
+                XData = copyXData,
+                //Attribute definition properties
+                Prompt = this.prompt,
+                Value = this.value,
+                Height = this.height,
+                WidthFactor = this.widthFactor,
+                Style = this.style,
+                Position = this.position,
+                Flags = this.flags,
+                Rotation = this.rotation,
+                Alignment = this.alignment
+            };
         }
 
         #endregion

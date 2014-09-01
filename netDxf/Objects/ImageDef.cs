@@ -289,5 +289,29 @@ namespace netDxf.Objects
         }
 
         #endregion
+
+        #region overrides
+
+        /// <summary>
+        /// Creates a new ImageDef that is a copy of the current instance.
+        /// </summary>
+        /// <param name="newName">ImageDef name of the copy.</param>
+        /// <returns>A new ImageDef that is a copy of this instance.</returns>
+        public override TableObject Clone(string newName)
+        {
+            return new ImageDef(this.fileName, newName, this.width, this.horizontalResolution, this.height, this.verticalResolution, this.resolutionUnits);
+        }
+
+        /// <summary>
+        /// Creates a new ImageDef that is a copy of the current instance.
+        /// </summary>
+        /// <returns>A new ImageDef that is a copy of this instance.</returns>
+        public override object Clone()
+        {
+            return Clone(this.name);
+        }
+
+        #endregion
+
     }
 }

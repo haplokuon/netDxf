@@ -23,9 +23,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Globalization;
 using System.IO;
-using System.Threading;
 using netDxf.Blocks;
 using netDxf.Collections;
 using netDxf.Entities;
@@ -99,6 +97,7 @@ namespace netDxf
         private readonly List<XLine> xlines;
         private readonly List<Viewport> viewports;
         private readonly List<Mesh> meshes;
+        private readonly List<AttributeDefinition> attributeDefinitions;
 
         #endregion
 
@@ -186,6 +185,7 @@ namespace netDxf
             this.xlines = new List<XLine>();
             this.viewports = new List<Viewport>();
             this.meshes = new List<Mesh>();
+            this.attributeDefinitions = new List<AttributeDefinition>();
 
             if(createDefaultObjects) this.AddDefaultObjects();
 
@@ -362,6 +362,14 @@ namespace netDxf
         public ReadOnlyCollection<Arc> Arcs
         {
             get { return this.arcs.AsReadOnly(); }
+        }
+
+        /// <summary>
+        /// Gets the <see cref="AttributeDefinition">attribute definitions</see> list.
+        /// </summary>
+        public ReadOnlyCollection<AttributeDefinition> AttributeDefinitions
+        {
+            get { return this.attributeDefinitions.AsReadOnly(); }
         }
 
         /// <summary>
@@ -613,8 +621,8 @@ namespace netDxf
         /// Adds an <see cref="EntityObject">entity</see> to the document.
         /// </summary>
         /// <param name="entity">An <see cref="EntityObject">entity</see> to add to the document.</param>
-        /// <remarks>
         /// <returns>True if the entity has been added to the document, false otherwise.</returns>
+        /// <remarks>
         /// <para>
         /// Once an entity has been added to the dxf document a unique handle identifier (hexadecimal number) is assigned to them.
         /// </para>
@@ -964,14 +972,16 @@ namespace netDxf
                     if (!isBlockEntity) this.meshes.Add((Mesh)entity);
                     break;
                 case EntityType.Text:
-                    ((Text) entity).Style = this.textStyles.Add(((Text) entity).Style);
-                    this.textStyles.References[((Text) entity).Style.Name].Add(entity);
-                    if (!isBlockEntity) this.texts.Add((Text) entity);
+                    Text text = (Text) entity;
+                    text.Style = this.textStyles.Add(text.Style);
+                    this.textStyles.References[text.Style.Name].Add(entity);
+                    if (!isBlockEntity) this.texts.Add(text);
                     break;
                 case EntityType.MText:
-                    ((MText) entity).Style = this.textStyles.Add(((MText) entity).Style);
-                    this.textStyles.References[((MText) entity).Style.Name].Add(entity);
-                    if (!isBlockEntity) this.mTexts.Add((MText) entity);
+                    MText mText = (MText)entity;
+                    mText.Style = this.textStyles.Add(mText.Style);
+                    this.textStyles.References[mText.Style.Name].Add(entity);
+                    if (!isBlockEntity) this.mTexts.Add(mText);
                     break;
                 case EntityType.Image:
                     Image image = (Image) entity;
@@ -1002,10 +1012,13 @@ namespace netDxf
                     this.AddEntity(viewport.ClippingBoundary, isBlockEntity, assignHandle);
                     break;
                 case EntityType.AttributeDefinition:
-                    throw new ArgumentException("The entity " + entity.Type + " is only allowed as part of block definition.", "entity");
-
+                    AttributeDefinition attDef = (AttributeDefinition)entity;
+                    attDef.Style = this.textStyles.Add(attDef.Style);
+                    this.textStyles.References[attDef.Style.Name].Add(entity);
+                    if (!isBlockEntity) this.attributeDefinitions.Add(attDef);
+                    break;
                 case EntityType.Attribute:
-                    throw new ArgumentException("The entity " + entity.Type + " is only allowed as part of block definition.", "entity");
+                    throw new ArgumentException("The entity " + entity.Type + " is only allowed as part of an insert entity.", "entity");
 
                 default:
                     throw new ArgumentException("The entity " + entity.Type + " is not implemented or unknown.");
@@ -1111,12 +1124,14 @@ namespace netDxf
                     removed = this.meshes.Remove((Mesh)entity);
                     break;
                 case EntityType.Text:
-                    this.textStyles.References[((Text) entity).Style.Name].Remove(entity);
-                    removed = this.texts.Remove((Text) entity);
+                    Text text = (Text)entity;
+                    this.textStyles.References[text.Style.Name].Remove(entity);
+                    removed = this.texts.Remove(text);
                     break;
                 case EntityType.MText:
-                    this.textStyles.References[((MText) entity).Style.Name].Remove(entity);
-                    removed = this.mTexts.Remove((MText) entity);
+                    MText mText = (MText)entity;
+                    this.textStyles.References[mText.Style.Name].Remove(entity);
+                    removed = this.mTexts.Remove(mText);
                     break;
                 case EntityType.Image:
                     Image image = (Image) entity;
@@ -1149,11 +1164,12 @@ namespace netDxf
                     }
                     break;
                 case EntityType.AttributeDefinition:
-                    throw new ArgumentException("The entity " + entity.Type + " is only allowed as part of another entity", "entity");
-
+                    AttributeDefinition attDef = (AttributeDefinition) entity;
+                    this.textStyles.References[attDef.Style.Name].Remove(entity);
+                    removed = this.attributeDefinitions.Remove(attDef);
+                    break;
                 case EntityType.Attribute:
                     throw new ArgumentException("The entity " + entity.Type + " is only allowed as part of another entity", "entity");
-
                 default:
                     throw new ArgumentException("The entity " + entity.Type + " is not implemented or unknown");
             }

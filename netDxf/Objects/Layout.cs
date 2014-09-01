@@ -50,8 +50,8 @@ namespace netDxf.Objects
         private short tabOrder;
         private Viewport viewport;
         private readonly bool isPaperSpace;
-        private static readonly Layout modelSpace;
         private Block associatedBlock;
+
         #endregion
 
         #region constants
@@ -64,17 +64,12 @@ namespace netDxf.Objects
         /// </remarks>
         public static Layout ModelSpace
         {
-            get { return modelSpace; }
+            get { return new Layout("Model", Block.ModelSpace, new PlotSettings()); }
         }
 
         #endregion
 
         #region constructor
-
-        static Layout()
-        {
-            modelSpace = new Layout("Model", Block.ModelSpace, new PlotSettings());
-        }
 
         /// <summary>
         /// Initializes a new layout.
@@ -103,6 +98,7 @@ namespace netDxf.Objects
                 this.tabOrder = 1;
                 this.viewport = new Viewport(1) { ViewCenter = new Vector2(50.0, 100.0) };
             }
+
             this.associatedBlock = associatedBlock;
             this.plot = plotSettings;
             this.minLimit = new Vector2(-20.0, -7.5);
@@ -267,6 +263,43 @@ namespace netDxf.Objects
         #endregion
 
         #region overrides
+
+        /// <summary>
+        /// Creates a new Layout that is a copy of the current instance.
+        /// </summary>
+        /// <param name="newName">Layout name of the copy.</param>
+        /// <returns>A new Layout that is a copy of this instance.</returns>
+        /// <remarks>The Model Layout cannot be clonned.</remarks>
+        public override TableObject Clone(string newName)
+        {
+            if (this.name == "Model" || newName == "Model")
+                throw new NotSupportedException("The Model layout cannot be clonned.");
+
+            return new Layout(newName, null, (PlotSettings)this.plot.Clone())
+            {
+                TabOrder = this.tabOrder,
+                MinLimit = this.minLimit,
+                MaxLimit = this.maxLimit,
+                BasePoint = this.basePoint,
+                MinExtents = this.minExtents,
+                MaxExtents = this.maxExtents,
+                Elevation = this.elevation,
+                UcsOrigin = this.origin,
+                UcsXAxis = this.xAxis,
+                UcsYAxis = this.yAxis,
+                Viewport = (Viewport)this.viewport.Clone()
+            };
+        }
+
+        /// <summary>
+        /// Creates a new Layout that is a copy of the current instance.
+        /// </summary>
+        /// <returns>A new Layout that is a copy of this instance.</returns>
+        /// <remarks>The Model Layout cannot be clonned.</remarks>
+        public override object Clone()
+        {
+            return Clone(this.name);
+        }
 
         /// <summary>
         /// Asigns a handle to the object based in a integer counter.

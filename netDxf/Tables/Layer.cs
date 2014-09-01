@@ -42,8 +42,6 @@ namespace netDxf.Tables
         private Lineweight lineweight;
         private Transparency transparency;
 
-        private static readonly Layer defaultLayer;
-
         #endregion
 
         #region constants
@@ -53,17 +51,12 @@ namespace netDxf.Tables
         /// </summary>
         public static Layer Default
         {
-            get { return defaultLayer; }
+            get { return new Layer("0"); }
         }
 
         #endregion
 
         #region constructors
-
-        static Layer()
-        {
-            defaultLayer = new Layer("0");
-        }
 
         /// <summary>
         /// Initializes a new instance of the <c>Layer</c> class.
@@ -78,7 +71,7 @@ namespace netDxf.Tables
             this.isVisible = true;
             this.plot = true;
             this.lineweight = Lineweight.Default;
-            this.transparency = new Transparency();
+            this.transparency = new Transparency(0);
         }
 
         #endregion
@@ -94,7 +87,7 @@ namespace netDxf.Tables
             set
             {
                 if (value == null)
-                    throw new ArgumentNullException("value"); 
+                    throw new ArgumentNullException("value");
                 this.lineType = value;
             }
         }
@@ -108,7 +101,7 @@ namespace netDxf.Tables
             set
             {
                 if (value == null)
-                    throw new ArgumentNullException("value"); 
+                    throw new ArgumentNullException("value");
                 if (value.IsByLayer || value.IsByBlock)
                     throw new ArgumentException("The layer color cannot be ByLayer or ByBlock", "value");
                 this.color = value;
@@ -141,14 +134,15 @@ namespace netDxf.Tables
             get { return this.isLocked; }
             set { this.isLocked = value; }
         }
+
         /// <summary>
         /// Gets or sets if the plotting flag.
         /// </summary>
         /// <remarks>If set to false, do not plot this layer.</remarks>
         public bool Plot
         {
-            get { return plot; }
-            set { plot = value; }
+            get { return this.plot; }
+            set { this.plot = value; }
         }
 
         /// <summary>
@@ -184,8 +178,42 @@ namespace netDxf.Tables
         /// </summary>
         public new Layers Owner
         {
-            get { return (Layers)this.owner; }
+            get { return (Layers) this.owner; }
             internal set { this.owner = value; }
+        }
+
+        #endregion
+
+        #region overrides
+
+        /// <summary>
+        /// Creates a new Layer that is a copy of the current instance.
+        /// </summary>
+        /// <param name="newName">Layer name of the copy.</param>
+        /// <returns>A new Layer that is a copy of this instance.</returns>
+        public override TableObject Clone(string newName)
+        {
+            return new Layer(newName)
+            {
+                Color = this.color,
+                IsVisible = this.isVisible,
+                IsFrozen = this.isFrozen,
+                IsLocked = this.isLocked,
+                Plot = this.plot,
+                LineType = (LineType)this.lineType.Clone(),
+                Lineweight = (Lineweight) this.lineweight.Clone(),
+                Transparency = (Transparency) this.transparency.Clone()
+            };
+
+        }
+
+        /// <summary>
+        /// Creates a new Layer that is a copy of the current instance.
+        /// </summary>
+        /// <returns>A new Layer that is a copy of this instance.</returns>
+        public override object Clone()
+        {
+            return Clone(this.name);
         }
 
         #endregion

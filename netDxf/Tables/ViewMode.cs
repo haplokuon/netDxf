@@ -20,61 +20,35 @@
 
 #endregion
 
-using System;
-
-namespace netDxf.Header
+namespace netDxf.Tables
 {
-    /// <summary>
-    /// Defines a header variable.
-    /// </summary>
-    internal class HeaderVariable
+    public enum ViewMode
     {
-        #region private fields
-
-        private readonly string name;
-        private object value;
-
-        #endregion
-
-        #region constructors
-
-        public HeaderVariable(string name, object value)
-        {
-            this.name = name;
-            this.value = value;
-        }
-
-        #endregion
-
-        #region public properties
-
         /// <summary>
-        /// Gets the header variable name.
+        /// Turned off.
         /// </summary>
-        public string Name
-        {
-            get { return this.name; }
-        }
-
+        Off = 0,
         /// <summary>
-        /// Gets the header variable stored value.
+        /// Perspective view active.
         /// </summary>
-        public object Value
-        {
-            get { return this.value; }
-            set { this.value = value; }
-        }
-
-        #endregion
-
-        #region overrides
-
-        public override string ToString()
-        {
-            return String.Format("{0}:{1}", this.name, this.value);
-        }
-
-        #endregion
-
+        Perspective = 1,
+        /// <summary>
+        /// Front clipping on.
+        /// </summary>
+        FrontClippingPlane = 2,
+        /// <summary>
+        /// Back clipping on.
+        /// </summary>
+        BackClippingPlane = 4,
+        /// <summary>
+        /// UCS Follow mode on.
+        /// </summary>
+        UCSFollow = 8,
+        /// <summary>
+        /// Front clip not at eye. If on, the front clip distance (FRONTZ) determines the front clipping plane.
+        /// If off, FRONTZ is ignored, and the front clipping plane is set to pass through the camera point (vectors behind the camera are not displayed).
+        /// This flag is ignored if the front-clipping bit (2) is off.
+        /// </summary>
+        FrontClipNotAtEye = 16
     }
 }

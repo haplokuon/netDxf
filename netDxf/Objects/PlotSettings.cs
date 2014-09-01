@@ -20,14 +20,16 @@
 
 #endregion
 
+using System;
+
 namespace netDxf.Objects
 {
     /// <summary>
     /// Represents the plot settings of a layout.
     /// </summary>
-    public class PlotSettings
+    public class PlotSettings :
+        ICloneable
     {
-
         #region private fields
 
         private string pageSetupName;
@@ -260,5 +262,36 @@ namespace netDxf.Objects
 
         #endregion
 
+        #region implements ICloneable
+
+        /// <summary>
+        /// Creates a new plot settings that is a copy of the current instance.
+        /// </summary>
+        /// <returns>A new plot settings that is a copy of this instance.</returns>
+        public Object Clone()
+        {
+            return new PlotSettings
+            {
+                PageSetupName = this.pageSetupName,
+                PlotterName = this.plotterName,
+                paperSizeName = this.paperSizeName,
+                ViewName = this.viewName,
+                LeftMargin = this.left,
+                BottomMargin = this.bottom,
+                RightMargin = this.right,
+                TopMargin = this.top,
+                PaperSize = this.paperSize,
+                Origin = this.origin,
+                WindowUpRight = this.windowUpRight,
+                WindowBottomLeft = this.windowBottomLeft,
+                PrintScaleNumerator = this.numeratorScale,
+                PrintScaleDenominator = this.denominatorScale,
+                Flags = this.flags,
+                PaperUnits = this.paperUnits,
+                PaperRotation = this.rotation
+            };
+        }
+
+        #endregion
     }
 }

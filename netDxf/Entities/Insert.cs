@@ -24,6 +24,7 @@ using System;
 using System.Collections.Generic;
 using netDxf.Blocks;
 using netDxf.Collections;
+using netDxf.Tables;
 
 namespace netDxf.Entities
 {
@@ -237,19 +238,30 @@ namespace netDxf.Entities
             foreach (Attribute att in this.attributes.Values)
                 copyAttributes.Add((Attribute)att.Clone());
 
+            Dictionary<string, XData> copyXData = null;
+            if (this.xData != null)
+            {
+                copyXData = new Dictionary<string, XData>();
+                foreach (KeyValuePair<string, XData> data in this.xData)
+                {
+                    copyXData.Add(data.Key, (XData)data.Value.Clone());
+                }
+            }
+
             return new Insert
                 {
                     //EntityObject properties
-                    Color = this.color,
-                    Layer = this.layer,
-                    LineType = this.lineType,
-                    Lineweight = this.lineweight,
+                    Layer = (Layer)this.layer.Clone(),
+                    LineType = (LineType)this.lineType.Clone(),
+                    Color = (AciColor)this.color.Clone(),
+                    Lineweight = (Lineweight)this.lineweight.Clone(),
+                    Transparency = (Transparency)this.transparency.Clone(),
                     LineTypeScale = this.lineTypeScale,
                     Normal = this.normal,
-                    XData = this.xData,
+                    XData = copyXData,
                     //Insert properties
                     Position = this.position,
-                    Block = this.block,
+                    Block = (Block) this.block.Clone(),
                     Scale = this.scale,
                     Rotation = this.rotation,
                     Attributes = new AttributeDictionary(copyAttributes)

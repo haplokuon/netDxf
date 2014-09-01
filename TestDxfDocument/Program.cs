@@ -54,6 +54,15 @@ namespace TestDxfDocument
 
         private static void Main()
         {
+
+            Test();
+
+            #region Samples for fixes, new and modified features 0.9.1
+
+            //LoadAndSaveBlocks();
+
+            #endregion
+
             #region Samples for fixes, new and modified features 0.9.0
 
             //MakingGroups();
@@ -73,8 +82,6 @@ namespace TestDxfDocument
             //BlockWithAttributes();
 
             #endregion
-
-            Test();
 
             //DimensionNestedBlock();
             //EncodingTest();
@@ -141,6 +148,95 @@ namespace TestDxfDocument
             //WritePolyline3d();
             //WriteInsert();
         }
+
+        #region Samples for new and modified features 0.9.1
+
+        public static void LoadAndSaveBlocks()
+        {
+            // Create a block to be used as sample
+            Block baseBlk = new Block("BaseBlock");
+            baseBlk.Record.Units = DrawingUnits.Millimeters;
+            baseBlk.Entities.Add(new Line(new Vector3(-5, -5, 0), new Vector3(5, 5, 0)));
+            baseBlk.Entities.Add(new Line(new Vector3(5, -5, 0), new Vector3(-5, 5, 0)));
+            AttributeDefinition attdef = new AttributeDefinition("MyAttribute")
+            {
+                Prompt = "Enter a value:",
+                Value = 0,
+                Position = Vector3.Zero,
+                Layer = new Layer("MyLayer")
+                {
+                    Color = AciColor.Red
+                }
+            };
+            baseBlk.AttributeDefinitions.Add(attdef);
+
+            // Blocks are saved in a similar way as other dxf, just pass the dxf file name, the DxfVersion, and optionally if the dxf needs to be saved in binary format
+            // Only AutoCad2000 and newer versions are supported.
+            // The block entities and attribute definitions will be added to the Model layout.
+            // The drawing header units will be the ones defined in the block record.
+            baseBlk.Save(baseBlk.Name + ".dxf", DxfVersion.AutoCad2000);
+
+            DxfDocument dxf = new DxfDocument();
+
+            // Blocks are loaded as any other dxf, just pass the dxf file name,
+            // optionally you can also give it a name, by default the file name without extension will be used.
+            // Only AutoCad2000 and newer versions are supported,
+            // Only the entities contained in the Model layout will be used.
+            // The block units will be the ones defined in the dxf header.
+            Block block = Block.Load(baseBlk.Name + ".dxf", "MyBlock");
+
+            // in case the loading process has failed check for null
+            // In DEBUG mode the loading process will raise exceptions while in RELEASE it will just return null, the same as loading a DxfDocument
+            if (block == null)
+            {
+                Console.WriteLine("Error loading the block dxf file.");
+                Console.WriteLine("Press a key to continue...");
+                Console.ReadKey();
+                return;
+            }
+
+            // once the block is loaded we can use it in insert entities
+            Insert insert = new Insert(block, new Vector2(10));
+
+            // the block might also contain attribute definitions
+            int attdefCount = block.AttributeDefinitions.Count;
+
+            // this is the list of attribute definition tags
+            // remember netDxf does not allow the use of duplicate tag names, although AutoCad allows it, it is not recommended
+            ICollection<string> tags = block.AttributeDefinitions.Tags;
+
+            // we can assign values to the insert attributes
+            foreach (Attribute att in insert.Attributes.Values)
+            {
+                att.Value = string.Format("{0} value", att.Tag);
+            }
+
+            // optionally we can manually add the block definition to the document
+            dxf.Blocks.Add(block);
+
+            // we add the insert entity to the document, if the block associated with the block has not been added this method will do it automatically
+            dxf.AddEntity(insert);
+
+            // also it is possible to manually add attribute definitions to a document
+            AttributeDefinition def = new AttributeDefinition("AttDefOutsideBlock")
+            {
+                Prompt = "Enter value:",
+                Value = 0,
+                Color = AciColor.Blue,
+                Position = new Vector3(0, 30, 0)
+            };
+
+            // we will add the attribute definition to the document just like anyother entity
+            dxf.AddEntity(def);
+            
+            // now we can save our new document
+            dxf.Save("CreateBlockFromDxf.dxf");
+
+            DxfDocument load = DxfDocument.Load("CreateBlockFromDxf.dxf");
+
+        }
+
+        #endregion
 
         #region Samples for new and modified features 0.9.0
 
@@ -642,7 +738,7 @@ namespace TestDxfDocument
             // even thought AutoCad allows multiple attribute definition in block definitions, it is not recommended
             AttributeDefinition attdef = new AttributeDefinition("NewAttribute");
             // this is the text prompt shown to introduce the attribute value when a new Insert entity is inserted into the drawing
-            attdef.Text = "InfoText";
+            attdef.Prompt = "InfoText";
             // optionally we can set a default value for new Insert entities
             attdef.Value = 0;
             // the attribute definition position is in local coordinates to the Insert entity to which it belongs
@@ -773,14 +869,41 @@ namespace TestDxfDocument
 
         private static void Test()
         {
-
             // sample.dxf contains all supported entities by netDxf
-            string file = "sample binary.dxf";
+            string file = "sample.dxf";
+
+            // check if the dxf actually exists
+            FileInfo fileInfo = new FileInfo(file);
+            if (!fileInfo.Exists)
+            {
+                Console.WriteLine("THE FILE {0} DOES NOT EXIST", file);
+                Console.WriteLine();
+
+                Console.WriteLine("Press a key to continue...");
+                Console.ReadLine();
+
+                return;
+            }
+
             bool isBinary;
             DxfVersion dxfVersion = DxfDocument.CheckDxfFileVersion(file, out isBinary);
-            if (dxfVersion < DxfVersion.AutoCad2000)
+
+            // check if the file is a dxf
+            if (dxfVersion == DxfVersion.Unknown)
             {
                 Console.WriteLine("THE FILE {0} IS NOT A VALID DXF", file);
+                Console.WriteLine();
+
+                Console.WriteLine("Press a key to continue...");
+                Console.ReadLine();
+
+                return;
+            }
+
+            // check if the dxf file version is supported
+            if (dxfVersion < DxfVersion.AutoCad2000)
+            {
+                Console.WriteLine("THE FILE {0} IS NOT A SUPPORTED DXF", file);
                 Console.WriteLine();
 
                 Console.WriteLine("FILE VERSION: {0}", dxfVersion);
@@ -793,6 +916,20 @@ namespace TestDxfDocument
             }
 
             DxfDocument dxf = DxfDocument.Load(file);
+
+            // check if there has been any problems loading the file,
+            // this might be the case of a corrupt file or a problem in the library
+            if (dxf == null)
+            {
+                Console.WriteLine("ERROR LOADING {0}", file);
+                Console.WriteLine();
+
+                Console.WriteLine("Press a key to continue...");
+                Console.ReadLine();
+
+                return;
+            }
+
             Console.WriteLine("FILE NAME: {0}", file);
             Console.WriteLine("\tbinary dxf: {0}", isBinary);
             Console.WriteLine();            
@@ -891,6 +1028,7 @@ namespace TestDxfDocument
             // or check the Entity.Owner.Record.Layout property
             Console.WriteLine("ENTITIES:");
             Console.WriteLine("\t{0}; count: {1}", EntityType.Arc, dxf.Arcs.Count);
+            Console.WriteLine("\t{0}; count: {1}", EntityType.AttributeDefinition, dxf.AttributeDefinitions.Count);
             Console.WriteLine("\t{0}; count: {1}", EntityType.Circle, dxf.Circles.Count);
             Console.WriteLine("\t{0}; count: {1}", EntityType.Dimension, dxf.Dimensions.Count);
             Console.WriteLine("\t{0}; count: {1}", EntityType.Ellipse, dxf.Ellipses.Count);
@@ -928,7 +1066,7 @@ namespace TestDxfDocument
             dxf.Save("sample 2000.dxf");
 
             // saving to binary dxf
-            dxf.DrawingVariables.AcadVer = DxfVersion.AutoCad2013;
+            dxf.DrawingVariables.AcadVer = DxfVersion.AutoCad2000;
             dxf.Save("binary test.dxf", true);
             DxfDocument test = DxfDocument.Load("binary test.dxf");
 
@@ -993,6 +1131,8 @@ namespace TestDxfDocument
             dxf.AddEntity(line);
 
             dxf.Save("test.dxf");
+
+            dxf = DxfDocument.Load("sample.dxf");
 
             foreach (ApplicationRegistry registry in dxf.ApplicationRegistries)
             {
@@ -3180,7 +3320,7 @@ namespace TestDxfDocument
             nestedBlock.Entities.Add(circle);
             
             AttributeDefinition attdef = new AttributeDefinition("NewAttribute");
-            attdef.Text = "InfoText";
+            attdef.Prompt = "InfoText";
             attdef.Alignment = TextAlignment.MiddleCenter;
             nestedBlock.AttributeDefinitions.Add(attdef);
 

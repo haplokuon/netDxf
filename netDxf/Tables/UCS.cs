@@ -47,6 +47,7 @@ namespace netDxf.Tables
         /// <summary>
         /// Initializes a new instance of the <c>UCS</c> class.
         /// </summary>
+        /// <param name="name">User coordinate system name.</param>
         public UCS(string name)
             : base(name, DxfObjectCode.Ucs, true)
         {
@@ -54,6 +55,7 @@ namespace netDxf.Tables
             this.xAxis = Vector3.UnitX;
             this.yAxis = Vector3.UnitY;
             this.zAxis = Vector3.UnitZ;
+            this.elevation = 0;
         }
 
         /// <summary>
@@ -77,6 +79,7 @@ namespace netDxf.Tables
             this.yAxis = yDirection;
             this.yAxis.Normalize();
             this.zAxis = Vector3.CrossProduct(xAxis, yAxis);
+            this.elevation = 0;
         }
 
         #endregion
@@ -194,6 +197,37 @@ namespace netDxf.Tables
             ucs.yAxis = new Vector3(mat.M12, mat.M22, mat.M32);
             ucs.zAxis = new Vector3(mat.M13, mat.M23, mat.M33);
             return ucs;
+        }
+
+        #endregion
+
+        #region overrides
+
+        /// <summary>
+        /// Creates a new UCS that is a copy of the current instance.
+        /// </summary>
+        /// <param name="newName">UCS name of the copy.</param>
+        /// <returns>A new UCS that is a copy of this instance.</returns>
+        public override TableObject Clone(string newName)
+        {
+            return new UCS(newName)
+            {
+                Origin = this.origin,
+                xAxis = this.xAxis,
+                yAxis = this.yAxis,
+                zAxis = this.zAxis,
+                Elevation = this.elevation
+            };
+
+        }
+
+        /// <summary>
+        /// Creates a new UCS that is a copy of the current instance.
+        /// </summary>
+        /// <returns>A new UCS that is a copy of this instance.</returns>
+        public override object Clone()
+        {
+            return Clone(this.name);
         }
 
         #endregion

@@ -27,6 +27,9 @@ using Attribute = netDxf.Entities.Attribute;
 
 namespace netDxf.Collections
 {
+    /// <summary>
+    /// Represents a collection of <see cref="Attribute">Attributes</see>.
+    /// </summary>
     public class AttributeDictionary :
         IDictionary<string, Attribute>
     {
@@ -78,12 +81,6 @@ namespace netDxf.Collections
             get { return this.innerDictionary[tag]; }
         }
 
-        Attribute IDictionary<string, Attribute>.this[string tag]
-        {
-            get { return this.innerDictionary[tag]; }
-            set { throw new FieldAccessException("The attribute dictionary is for read only purposes."); }
-        }
-
         /// <summary>
         /// Gets a collection containing the attributes in the dictionary.
         /// </summary>
@@ -93,9 +90,9 @@ namespace netDxf.Collections
         }
 
         /// <summary>
-        /// Gets a collection containing the tags in the dictionary.
+        /// Gets an ICollection containing the tags of the current dictionary.
         /// </summary>
-        public ICollection<string> Keys
+        public ICollection<string> Tags
         {
             get { return this.innerDictionary.Keys; }
         }
@@ -118,7 +115,72 @@ namespace netDxf.Collections
 
         #endregion
 
+        #region private properties
+
+        Attribute IDictionary<string, Attribute>.this[string tag]
+        {
+            get { return this.innerDictionary[tag]; }
+            set { throw new FieldAccessException("The attribute dictionary is for read only purposes."); }
+        }
+
+        ICollection<string> IDictionary<string, Attribute>.Keys
+        {
+            get { return this.innerDictionary.Keys; }
+        }
+
+        #endregion
+
         #region public methods
+
+        /// <summary>
+        /// Determines whether the dictionary contains an attribute with the specified tag.
+        /// </summary>
+        /// <param name="tag">The tag to locate in the dictionary.</param>
+        /// <returns>true if the dictionary contains an attribute with the tag; otherwise, false.</returns>
+        public bool ContainsTag(string tag)
+        {
+            return this.innerDictionary.ContainsKey(tag);
+        }
+
+        /// <summary>
+        /// Determines whether the dictionary contains a specific attribute.
+        /// </summary>
+        /// <param name="attribute">The attribute to locate in the dictionary.</param>
+        /// <returns>true if the dictionary contains an attribute with the specified value; otherwise, false.</returns>
+        public bool ContainsValue(Attribute attribute)
+        {
+            return this.innerDictionary.ContainsValue(attribute);
+        }
+
+        /// <summary>
+        /// Gets the attribute associated with the specified tag.
+        /// </summary>
+        /// <param name="tag">The key of the value to tag.</param>
+        /// <param name="attribute">When this method returns, contains the attribute associated with the specified tag, if the tag is found; otherwise, null. This parameter is passed uninitialized.</param>
+        /// <returns>true if the dictionary contains an attribute with the specified tagy; otherwise, false.</returns>
+        public bool TryGetValue(string tag, out Attribute attribute)
+        {
+            return this.innerDictionary.TryGetValue(tag, out attribute);
+        }
+
+        /// <summary>
+        /// Returns an enumerator that iterates through the dictionary.
+        /// </summary>
+        /// <returns>An enumerator that can be used to iterate through the dictionary.</returns>
+        public IEnumerator<KeyValuePair<string, Attribute>> GetEnumerator()
+        {
+            return this.innerDictionary.GetEnumerator();
+        }
+
+
+        #endregion
+
+        #region private methods
+
+        bool IDictionary<string, Attribute>.ContainsKey(string tag)
+        {
+            return this.innerDictionary.ContainsKey(tag);
+        }
 
         void IDictionary<string, Attribute>.Add(string key, Attribute value)
         {
@@ -150,45 +212,9 @@ namespace netDxf.Collections
             return ((IDictionary<string, Attribute>)this.innerDictionary).Contains(item);
         }
 
-        /// <summary>
-        /// Determines whether the dictionary contains an attribute with the specified tag.
-        /// </summary>
-        /// <param name="tag">The tag to locate in the dictionary.</param>
-        /// <returns>true if the dictionary contains an attribute with the tag; otherwise, false.</returns>
-        public bool ContainsKey(string tag)
-        {
-            return this.innerDictionary.ContainsKey(tag);
-        }
-
-        /// <summary>
-        /// Determines whether the dictionary contains a specific attribute.
-        /// </summary>
-        /// <param name="attribute">The attribute to locate in the dictionary.</param>
-        /// <returns>true if the dictionary contains an attribute with the specified value; otherwise, false.</returns>
-        public bool ContainsValue(Attribute attribute)
-        {
-            return this.innerDictionary.ContainsValue(attribute);
-        }
-
-        /// <summary>
-        /// Gets the attribute associated with the specified tag.
-        /// </summary>
-        /// <param name="tag">The key of the value to tag.</param>
-        /// <param name="attribute">When this method returns, contains the attribute associated with the specified tag, if the tag is found; otherwise, null. This parameter is passed uninitialized.</param>
-        /// <returns>true if the dictionary contains an attribute with the specified tagy; otherwise, false.</returns>
-        public bool TryGetValue(string tag, out Attribute attribute)
-        {
-            return this.innerDictionary.TryGetValue(tag, out attribute);
-        }
-
         void ICollection<KeyValuePair<string, Attribute>>.CopyTo(KeyValuePair<string, Attribute>[] array, int arrayIndex)
         {
             ((IDictionary<string, Attribute>)this.innerDictionary).CopyTo(array, arrayIndex);
-        }
-
-        public IEnumerator<KeyValuePair<string, Attribute>> GetEnumerator()
-        {
-            return this.innerDictionary.GetEnumerator();
         }
 
         IEnumerator IEnumerable.GetEnumerator()
@@ -197,6 +223,5 @@ namespace netDxf.Collections
         }
 
         #endregion
-
     }
 }

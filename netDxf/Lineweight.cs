@@ -46,7 +46,7 @@ namespace netDxf
         /// </summary>
         public static Lineweight ByLayer
         {
-            get { return new Lineweight { value = -1 }; }
+            get { return new Lineweight {value = -1};}
         }
 
         /// <summary>
@@ -96,7 +96,31 @@ namespace netDxf
         #region public properties
 
         /// <summary>
-        /// Gets or sets the line weight value range from 0 to 200, one unit is always 1/100 mm.
+        /// Defines if the lineweight is defined by layer.
+        /// </summary>
+        public bool IsByLayer
+        {
+            get { return this.value == -1; }
+        }
+
+        /// <summary>
+        /// Defines if the lineweight is defined by block.
+        /// </summary>
+        public bool IsByBlock
+        {
+            get { return this.value == -2; }
+        }
+
+        /// <summary>
+        /// Defines if the lineweight is default.
+        /// </summary>
+        public bool IsDefault
+        {
+            get { return this.value == -3; }
+        }
+
+        /// <summary>
+        /// Gets or sets the lineweight value range from 0 to 200, one unit is always 1/100 mm.
         /// </summary>
         /// <remarks>
         /// Accepted lineweight values range from 0 to 200, the reserved values - 1, -2, and -3 represents ByLayer, ByBlock, and Default lineweights.
@@ -116,6 +140,11 @@ namespace netDxf
 
         #region public methods
 
+        /// <summary>
+        /// Gets a <see cref="Lineweight">Lineweight</see> from an index.
+        /// </summary>
+        /// <param name="index">A AciColor index.</param>
+        /// <returns>A <see cref="Lineweight">Lineweight</see>.</returns>
         public static Lineweight FromCadIndex(short index)
         {
             Lineweight lineweight;
@@ -143,15 +172,12 @@ namespace netDxf
         #region implements ICloneable
 
         /// <summary>
-        /// Creates a new object that is a copy of the current instance.
+        /// Creates a new lineweight that is a copy of the current instance.
         /// </summary>
-        /// <returns>A new object that is a copy of this instance.</returns>
+        /// <returns>A new lineweight that is a copy of this instance.</returns>
         public Object Clone()
         {
-            return new Lineweight
-                       {
-                           value = this.value
-                       };
+            return new Lineweight { value = this.value };
         }
 
         #endregion

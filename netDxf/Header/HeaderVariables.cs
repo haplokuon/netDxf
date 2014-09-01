@@ -31,8 +31,7 @@ namespace netDxf.Header
     /// Represents the header variables of a dxf document.
     /// </summary>
     /// <remarks>
-    /// The names of header variables are the same as they appear in the official dxf documentation but without the $,
-    /// check it in case of doubt on what they represent.
+    /// The names of header variables are the same as they appear in the official dxf documentation but without the $.
     /// </remarks>
     public class HeaderVariables
     {
@@ -75,6 +74,7 @@ namespace netDxf.Header
                 {HeaderVariableCode.LUnits, new HeaderVariable(HeaderVariableCode.LUnits, LinearUnitType.Decimal)},
                 {HeaderVariableCode.LUprec, new HeaderVariable(HeaderVariableCode.LUprec, (short) 4)},
                 {HeaderVariableCode.Extnames, new HeaderVariable(HeaderVariableCode.Extnames, true)},
+                {HeaderVariableCode.InsBase, new HeaderVariable(HeaderVariableCode.InsBase, Vector3.Zero)},
                 {HeaderVariableCode.InsUnits, new HeaderVariable(HeaderVariableCode.InsUnits, DrawingUnits.Unitless)},
                 {HeaderVariableCode.LtScale, new HeaderVariable(HeaderVariableCode.LtScale, 1.0)},
                 {HeaderVariableCode.LwDisplay, new HeaderVariable(HeaderVariableCode.LwDisplay, false)},
@@ -391,6 +391,18 @@ namespace netDxf.Header
         {
             get { return (bool) this.variables[HeaderVariableCode.Extnames].Value; }
             internal set { this.variables[HeaderVariableCode.Extnames].Value = value; }
+        }
+
+        /// <summary>
+        /// insertion base point for the current drawing.
+        /// </summary>
+        /// <remarks>
+        /// When you insert or externally reference the current drawing into other drawings, this base point is used as the insertion base point.
+        /// </remarks>
+        public Vector3 InsBase
+        {
+            get { return (Vector3) this.variables[HeaderVariableCode.InsBase].Value; }
+            set { this.variables[HeaderVariableCode.InsBase].Value = value; }
         }
 
         /// <summary>

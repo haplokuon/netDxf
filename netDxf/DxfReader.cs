@@ -146,7 +146,6 @@ namespace netDxf
             // blocks
             this.nestedInserts = new Dictionary<Insert, string>();
             this.nestedDimensions = new Dictionary<Dimension, string>();
-            //this.nestedBlocksAttributes = new Dictionary<Attribute, string>();
             this.blockRecords = new Dictionary<string, BlockRecord>(StringComparer.OrdinalIgnoreCase);
 
             // objects
@@ -169,35 +168,35 @@ namespace netDxf
                 this.chunk.Next();
             }
 
-            while (this.chunk.ReadString() != StringCode.EndOfFile)
+            while (this.chunk.ReadString() != DxfObjectCode.EndOfFile)
             {
-                if (this.chunk.ReadString() == StringCode.BeginSection)
+                if (this.chunk.ReadString() == DxfObjectCode.BeginSection)
                 {
                     this.chunk.Next();
                     switch (this.chunk.ReadString())
                     {
-                        case StringCode.HeaderSection:
+                        case DxfObjectCode.HeaderSection:
                             this.ReadHeader();
                             break;
-                        case StringCode.ClassesSection:
+                        case DxfObjectCode.ClassesSection:
                             this.ReadClasses();
                             break;
-                        case StringCode.TablesSection:
+                        case DxfObjectCode.TablesSection:
                             this.ReadTables();
                             break;
-                        case StringCode.BlocksSection:
+                        case DxfObjectCode.BlocksSection:
                             this.ReadBlocks();
                             break;
-                        case StringCode.EntitiesSection:
+                        case DxfObjectCode.EntitiesSection:
                             this.ReadEntities();
                             break;
-                        case StringCode.ObjectsSection:
+                        case DxfObjectCode.ObjectsSection:
                             this.ReadObjects();
                             break;
-                        case StringCode.ThumbnailImageSection:
+                        case DxfObjectCode.ThumbnailImageSection:
                             this.ReadThumbnailImage();
                             break;
-                        case StringCode.AcdsDataSection:
+                        case DxfObjectCode.AcdsDataSection:
                             this.ReadAcdsData();
                             break;
                         default:
@@ -338,30 +337,24 @@ namespace netDxf
             }
 
             chunk.Next();
-            while (chunk.ReadString() != StringCode.EndOfFile)
+            while (chunk.ReadString() != DxfObjectCode.EndOfFile)
             {
                 chunk.Next();
-                if (chunk.ReadString() == StringCode.HeaderSection)
+                if (chunk.ReadString() == DxfObjectCode.HeaderSection)
                 {
                     chunk.Next();
-                    while (chunk.ReadString() != StringCode.EndSection)
+                    while (chunk.ReadString() != DxfObjectCode.EndSection)
                     {
                         string varName = chunk.ReadString();
                         chunk.Next();
 
-                        if (HeaderVariable.Allowed.ContainsKey(varName))
+                        if (varName == headerVariable)
                         {
-                            int codeGroup = HeaderVariable.Allowed[varName];
-                            if (chunk.Code != codeGroup)
-                                throw new DxfHeaderVariableException(varName, "Invalid variable name and code group convination");
-
-                            if (varName == headerVariable)
-                            {
-                                // we found the variable we are looking for
-                                stream.Position = 0;
-                                return chunk.ReadString();
-                            }
+                            // we found the variable we are looking for
+                            stream.Position = 0;
+                            return chunk.ReadString();
                         }
+
                         // some header variables have more than one entry
                         while (chunk.Code != 0 && chunk.Code != 9)
                             chunk.Next();
@@ -383,155 +376,194 @@ namespace netDxf
 
         private void ReadHeader()
         {
-            Debug.Assert(this.chunk.ReadString() == StringCode.HeaderSection);
+            Debug.Assert(this.chunk.ReadString() == DxfObjectCode.HeaderSection);
 
             this.chunk.Next();
-            while (this.chunk.ReadString() != StringCode.EndSection)
+            while (this.chunk.ReadString() != DxfObjectCode.EndSection)
             {
                 string varName = this.chunk.ReadString();
                 this.chunk.Next();
 
-                if (HeaderVariable.Allowed.ContainsKey(varName))
+                switch (varName)
                 {
-                    int codeGroup = HeaderVariable.Allowed[varName];
+                    case HeaderVariableCode.AcadVer:
+                        DxfVersion acadVer = DxfVersion.Unknown;
+                        string version = this.chunk.ReadString();
+                        if (StringEnum.IsStringDefined(typeof (DxfVersion), version))
+                            acadVer = (DxfVersion) StringEnum.Parse(typeof (DxfVersion), version);
+                        if (acadVer < DxfVersion.AutoCad2000)
+                            throw new NotSupportedException("Only AutoCad2000 and higher dxf versions are supported.");
+                        this.doc.DrawingVariables.AcadVer = acadVer;
+                        this.chunk.Next();
+                        break;
+                    case HeaderVariableCode.HandleSeed:
+                        string handleSeed = this.chunk.ReadString();
+                        this.doc.DrawingVariables.HandleSeed = handleSeed;
+                        this.doc.NumHandles = long.Parse(handleSeed, NumberStyles.HexNumber, CultureInfo.InvariantCulture);
+                        this.chunk.Next();
+                        break;
+                    case HeaderVariableCode.Angbase:
+                        this.doc.DrawingVariables.Angbase = this.chunk.ReadDouble();
+                        this.chunk.Next();
+                        break;
+                    case HeaderVariableCode.Angdir:
+                        this.doc.DrawingVariables.Angdir = this.chunk.ReadShort();
+                        this.chunk.Next();
+                        break;
+                    case HeaderVariableCode.AttMode:
+                        this.doc.DrawingVariables.AttMode = (AttMode) this.chunk.ReadShort();
+                        this.chunk.Next();
+                        break;
+                    case HeaderVariableCode.AUnits:
+                        this.doc.DrawingVariables.AUnits = (AngleUnitType) this.chunk.ReadShort();
+                        this.chunk.Next();
+                        break;
+                    case HeaderVariableCode.AUprec:
+                        this.doc.DrawingVariables.AUprec = this.chunk.ReadShort();
+                        this.chunk.Next();
+                        break;
+                    case HeaderVariableCode.CeColor:
+                        this.doc.DrawingVariables.CeColor = AciColor.FromCadIndex(this.chunk.ReadShort());
+                        this.chunk.Next();
+                        break;
+                    case HeaderVariableCode.CeLtScale:
+                        this.doc.DrawingVariables.CeLtScale = this.chunk.ReadDouble();
+                        this.chunk.Next();
+                        break;
+                    case HeaderVariableCode.CeLtype:
+                        this.doc.DrawingVariables.CeLtype = this.DecodeEncodedNonAsciiCharacters(this.chunk.ReadString());
+                        this.chunk.Next();
+                        break;
+                    case HeaderVariableCode.CeLweight:
+                        this.doc.DrawingVariables.CeLweight = Lineweight.FromCadIndex(this.chunk.ReadShort());
+                        this.chunk.Next();
+                        break;
+                    case HeaderVariableCode.CLayer:
+                        this.doc.DrawingVariables.CLayer = this.DecodeEncodedNonAsciiCharacters(this.chunk.ReadString());
+                        this.chunk.Next();
+                        break;
+                    case HeaderVariableCode.CMLJust:
+                        this.doc.DrawingVariables.CMLJust = (MLineJustification) this.chunk.ReadShort();
+                        this.chunk.Next();
+                        break;
+                    case HeaderVariableCode.CMLScale:
+                        this.doc.DrawingVariables.CMLScale = this.chunk.ReadDouble();
+                        this.chunk.Next();
+                        break;
+                    case HeaderVariableCode.CMLStyle:
+                        string mLineStyleName = this.DecodeEncodedNonAsciiCharacters(this.chunk.ReadString());
+                        if (!string.IsNullOrEmpty(mLineStyleName))
+                            this.doc.DrawingVariables.CMLStyle = mLineStyleName;
+                        this.chunk.Next();
+                        break;
+                    case HeaderVariableCode.DimStyle:
+                        string dimStyleName = this.DecodeEncodedNonAsciiCharacters(this.chunk.ReadString());
+                        if (!string.IsNullOrEmpty(dimStyleName))
+                            this.doc.DrawingVariables.DimStyle = dimStyleName;
+                        this.chunk.Next();
+                        break;
+                    case HeaderVariableCode.TextSize:
+                        double size = this.chunk.ReadDouble();
+                        if (size > 0.0)
+                            this.doc.DrawingVariables.TextSize = size;
+                        this.chunk.Next();
+                        break;
+                    case HeaderVariableCode.TextStyle:
+                        string textStyleName = this.DecodeEncodedNonAsciiCharacters(this.chunk.ReadString());
+                        if (!string.IsNullOrEmpty(textStyleName))
+                            this.doc.DrawingVariables.TextStyle = textStyleName;
+                        this.chunk.Next();
+                        break;
+                    case HeaderVariableCode.LastSavedBy:
+                        this.doc.DrawingVariables.LastSavedBy = this.DecodeEncodedNonAsciiCharacters(this.chunk.ReadString());
+                        this.chunk.Next();
+                        break;
+                    case HeaderVariableCode.LUnits:
+                        this.doc.DrawingVariables.LUnits = (LinearUnitType) this.chunk.ReadShort();
+                        this.chunk.Next();
+                        break;
+                    case HeaderVariableCode.LUprec:
+                        this.doc.DrawingVariables.LUprec = this.chunk.ReadShort();
+                        this.chunk.Next();
+                        break;
+                    case HeaderVariableCode.DwgCodePage:
+                        this.doc.DrawingVariables.DwgCodePage = this.chunk.ReadString();
+                        this.chunk.Next();
+                        break;
+                    case HeaderVariableCode.Extnames:
+                        this.doc.DrawingVariables.Extnames = this.chunk.ReadBool();
+                        this.chunk.Next();
+                        break;
+                    case HeaderVariableCode.InsBase:
+                        Vector3 pos = Vector3.Zero;
+                        pos.X = this.chunk.ReadDouble();
+                        this.chunk.Next();
+                        pos.Y = this.chunk.ReadDouble();
+                        this.chunk.Next();
+                        pos.Z = this.chunk.ReadDouble();
+                        this.chunk.Next();
+                        this.doc.DrawingVariables.InsBase = pos;
+                        break;
+                    case HeaderVariableCode.InsUnits:
+                        this.doc.DrawingVariables.InsUnits = (DrawingUnits) this.chunk.ReadShort();
+                        this.chunk.Next();
+                        break;
+                    case HeaderVariableCode.LtScale:
+                        this.doc.DrawingVariables.LtScale = this.chunk.ReadDouble();
+                        this.chunk.Next();
+                        break;
+                    case HeaderVariableCode.LwDisplay:
+                        this.doc.DrawingVariables.LwDisplay = this.chunk.ReadBool();
+                        this.chunk.Next();
+                        break;
+                    case HeaderVariableCode.PdMode:
+                        this.doc.DrawingVariables.PdMode = (PointShape) this.chunk.ReadShort();
+                        this.chunk.Next();
+                        break;
+                    case HeaderVariableCode.PdSize:
+                        this.doc.DrawingVariables.PdSize = this.chunk.ReadDouble();
+                        this.chunk.Next();
+                        break;
+                    case HeaderVariableCode.PLineGen:
+                        this.doc.DrawingVariables.PLineGen = this.chunk.ReadShort();
+                        this.chunk.Next();
+                        break;
+                    case HeaderVariableCode.TdCreate:
+                        this.doc.DrawingVariables.TdCreate = DrawingTime.FromJulianCalendar(this.chunk.ReadDouble());
+                        this.chunk.Next();
+                        break;
+                    case HeaderVariableCode.TduCreate:
+                        this.doc.DrawingVariables.TduCreate = DrawingTime.FromJulianCalendar(this.chunk.ReadDouble());
+                        this.chunk.Next();
+                        break;
+                    case HeaderVariableCode.TdUpdate:
+                        this.doc.DrawingVariables.TdUpdate = DrawingTime.FromJulianCalendar(this.chunk.ReadDouble());
+                        this.chunk.Next();
+                        break;
+                    case HeaderVariableCode.TduUpdate:
+                        this.doc.DrawingVariables.TduUpdate = DrawingTime.FromJulianCalendar(this.chunk.ReadDouble());
+                        this.chunk.Next();
+                        break;
+                    case HeaderVariableCode.TdinDwg:
+                        this.doc.DrawingVariables.TdinDwg = DrawingTime.EditingTime(this.chunk.ReadDouble());
+                        this.chunk.Next();
+                        break;
+                    default:
+                        // some header variables have more than one entry
+                        while (this.chunk.Code != 0 && this.chunk.Code != 9)
+                            this.chunk.Next();
+                        break;
 
-                    if (this.chunk.Code != codeGroup)
-                        throw new DxfHeaderVariableException(varName, "Invalid variable name and code group convination.");
-
-                    switch (varName)
-                    {
-                        case HeaderVariableCode.AcadVer:
-                            DxfVersion acadVer = DxfVersion.Unknown;
-                            string version = this.chunk.ReadString();
-                            if (StringEnum.IsStringDefined(typeof (DxfVersion), version))
-                                acadVer = (DxfVersion) StringEnum.Parse(typeof (DxfVersion), version);
-                            if (acadVer < DxfVersion.AutoCad2000)
-                                throw new NotSupportedException("Only AutoCad2000 and higher dxf versions are supported.");
-                            this.doc.DrawingVariables.AcadVer = acadVer;
-                            break;
-                        case HeaderVariableCode.HandleSeed:
-                            string handleSeed = this.chunk.ReadString();
-                            this.doc.DrawingVariables.HandleSeed = handleSeed;
-                            this.doc.NumHandles = long.Parse(handleSeed, NumberStyles.HexNumber, CultureInfo.InvariantCulture);
-                            break;
-                        case HeaderVariableCode.Angbase:
-                            this.doc.DrawingVariables.Angbase = this.chunk.ReadDouble();
-                            break;
-                        case HeaderVariableCode.Angdir:
-                            this.doc.DrawingVariables.Angdir = this.chunk.ReadShort();
-                            break;
-                        case HeaderVariableCode.AttMode:
-                            this.doc.DrawingVariables.AttMode = (AttMode) this.chunk.ReadShort();
-                            break;
-                        case HeaderVariableCode.AUnits:
-                            this.doc.DrawingVariables.AUnits = (AngleUnitType) this.chunk.ReadShort();
-                            break;
-                        case HeaderVariableCode.AUprec:
-                            this.doc.DrawingVariables.AUprec = this.chunk.ReadShort();
-                            break;
-                        case HeaderVariableCode.CeColor:
-                            this.doc.DrawingVariables.CeColor = AciColor.FromCadIndex(this.chunk.ReadShort());
-                            break;
-                        case HeaderVariableCode.CeLtScale:
-                            this.doc.DrawingVariables.CeLtScale = this.chunk.ReadDouble();
-                            break;
-                        case HeaderVariableCode.CeLtype:
-                            this.doc.DrawingVariables.CeLtype = this.DecodeEncodedNonAsciiCharacters(this.chunk.ReadString());
-                            break;
-                        case HeaderVariableCode.CeLweight:
-                            this.doc.DrawingVariables.CeLweight = Lineweight.FromCadIndex(this.chunk.ReadShort());
-                            break;
-                        case HeaderVariableCode.CLayer:
-                            this.doc.DrawingVariables.CLayer = this.DecodeEncodedNonAsciiCharacters(this.chunk.ReadString());
-                            break;
-                        case HeaderVariableCode.CMLJust:
-                            this.doc.DrawingVariables.CMLJust = (MLineJustification) this.chunk.ReadShort();
-                            break;
-                        case HeaderVariableCode.CMLScale:
-                            this.doc.DrawingVariables.CMLScale = this.chunk.ReadDouble();
-                            break;
-                        case HeaderVariableCode.CMLStyle:
-                            string mLineStyleName = this.DecodeEncodedNonAsciiCharacters(this.chunk.ReadString());
-                            if (!string.IsNullOrEmpty(mLineStyleName))
-                                this.doc.DrawingVariables.CMLStyle = mLineStyleName;
-                            break;
-                        case HeaderVariableCode.DimStyle:
-                            string dimStyleName = this.DecodeEncodedNonAsciiCharacters(this.chunk.ReadString());
-                            if (!string.IsNullOrEmpty(dimStyleName))
-                                this.doc.DrawingVariables.DimStyle = dimStyleName;
-                            break;
-                        case HeaderVariableCode.TextSize:
-                            double size = this.chunk.ReadDouble();
-                            if (size > 0.0)
-                                this.doc.DrawingVariables.TextSize = size;
-                            break;
-                        case HeaderVariableCode.TextStyle:
-                            string textStyleName = this.DecodeEncodedNonAsciiCharacters(this.chunk.ReadString());
-                            if (!string.IsNullOrEmpty(textStyleName))
-                                this.doc.DrawingVariables.TextStyle = textStyleName;
-                            break;
-                        case HeaderVariableCode.LastSavedBy:
-                            this.doc.DrawingVariables.LastSavedBy = this.DecodeEncodedNonAsciiCharacters(this.chunk.ReadString());
-                            break;
-                        case HeaderVariableCode.LUnits:
-                            this.doc.DrawingVariables.LUnits = (LinearUnitType) this.chunk.ReadShort();
-                            break;
-                        case HeaderVariableCode.LUprec:
-                            this.doc.DrawingVariables.LUprec = this.chunk.ReadShort();
-                            break;
-                        case HeaderVariableCode.DwgCodePage:
-                            this.doc.DrawingVariables.DwgCodePage = this.chunk.ReadString();
-                            break;
-                        case HeaderVariableCode.Extnames:
-                            this.doc.DrawingVariables.Extnames = this.chunk.ReadBool();
-                            break;
-                        case HeaderVariableCode.InsUnits:
-                            this.doc.DrawingVariables.InsUnits = (DrawingUnits) this.chunk.ReadShort();
-                            break;
-                        case HeaderVariableCode.LtScale:
-                            this.doc.DrawingVariables.LtScale = this.chunk.ReadDouble();
-                            break;
-                        case HeaderVariableCode.LwDisplay:
-                            this.doc.DrawingVariables.LwDisplay = this.chunk.ReadBool();
-                            break;
-                        case HeaderVariableCode.PdMode:
-                            this.doc.DrawingVariables.PdMode = (PointShape) this.chunk.ReadShort();
-                            break;
-                        case HeaderVariableCode.PdSize:
-                            this.doc.DrawingVariables.PdSize = this.chunk.ReadDouble();
-                            break;
-                        case HeaderVariableCode.PLineGen:
-                            this.doc.DrawingVariables.PLineGen = this.chunk.ReadShort();
-                            break;
-                        case HeaderVariableCode.TdCreate:
-                            this.doc.DrawingVariables.TdCreate = DrawingTime.FromJulianCalendar(this.chunk.ReadDouble());
-                            break;
-                        case HeaderVariableCode.TduCreate:
-                            this.doc.DrawingVariables.TduCreate = DrawingTime.FromJulianCalendar(this.chunk.ReadDouble());
-                            break;
-                        case HeaderVariableCode.TdUpdate:
-                            this.doc.DrawingVariables.TdUpdate = DrawingTime.FromJulianCalendar(this.chunk.ReadDouble());
-                            break;
-                        case HeaderVariableCode.TduUpdate:
-                            this.doc.DrawingVariables.TduUpdate = DrawingTime.FromJulianCalendar(this.chunk.ReadDouble());
-                            break;
-                        case HeaderVariableCode.TdinDwg:
-                            this.doc.DrawingVariables.TdinDwg = DrawingTime.EditingTime(this.chunk.ReadDouble());
-                            break;
-                    }
                 }
-                // some header variables have more than one entry
-                while (this.chunk.Code != 0 && this.chunk.Code != 9)
-                    this.chunk.Next();
             }
         }
 
         private void ReadClasses()
         {
-            Debug.Assert(this.chunk.ReadString() == StringCode.ClassesSection);
+            Debug.Assert(this.chunk.ReadString() == DxfObjectCode.ClassesSection);
 
             this.chunk.Next();
-            while (this.chunk.ReadString() != StringCode.EndSection)
+            while (this.chunk.ReadString() != DxfObjectCode.EndSection)
             {
                 //read the class
                 do
@@ -541,10 +573,10 @@ namespace netDxf
 
         private void ReadTables()
         {
-            Debug.Assert(this.chunk.ReadString() == StringCode.TablesSection);
+            Debug.Assert(this.chunk.ReadString() == DxfObjectCode.TablesSection);
 
             this.chunk.Next();
-            while (this.chunk.ReadString() != StringCode.EndSection)
+            while (this.chunk.ReadString() != DxfObjectCode.EndSection)
             {
                 this.ReadTable();
             }
@@ -572,17 +604,17 @@ namespace netDxf
 
         private void ReadBlocks()
         {
-            Debug.Assert(this.chunk.ReadString() == StringCode.BlocksSection);
+            Debug.Assert(this.chunk.ReadString() == DxfObjectCode.BlocksSection);
 
             // the blocks list will be added to the document after reading the blocks section to handle possible nested insert cases.
             Dictionary<string, Block> blocks = new Dictionary<string, Block>(StringComparer.OrdinalIgnoreCase);
 
             this.chunk.Next();
-            while (this.chunk.ReadString() != StringCode.EndSection)
+            while (this.chunk.ReadString() != DxfObjectCode.EndSection)
             {
                 switch (this.chunk.ReadString())
                 {
-                    case StringCode.BeginBlock:
+                    case DxfObjectCode.BeginBlock:
                         Block block = this.ReadBlock();
                         blocks.Add(block.Name, block);
                         break;
@@ -631,10 +663,10 @@ namespace netDxf
 
         private void ReadEntities()
         {
-            Debug.Assert(this.chunk.ReadString() == StringCode.EntitiesSection);
+            Debug.Assert(this.chunk.ReadString() == DxfObjectCode.EntitiesSection);
 
             this.chunk.Next();
-            while (this.chunk.ReadString() != StringCode.EndSection)
+            while (this.chunk.ReadString() != DxfObjectCode.EndSection)
             {
                 this.ReadEntity(false);
             }
@@ -642,10 +674,10 @@ namespace netDxf
 
         private void ReadObjects()
         {
-            Debug.Assert(this.chunk.ReadString() == StringCode.ObjectsSection);
+            Debug.Assert(this.chunk.ReadString() == DxfObjectCode.ObjectsSection);
 
             this.chunk.Next();
-            while (this.chunk.ReadString() != StringCode.EndSection)
+            while (this.chunk.ReadString() != DxfObjectCode.EndSection)
             {
                 switch (this.chunk.ReadString())
                 {
@@ -703,9 +735,9 @@ namespace netDxf
 
         private void ReadThumbnailImage()
         {
-            Debug.Assert(this.chunk.ReadString() == StringCode.ThumbnailImageSection);
+            Debug.Assert(this.chunk.ReadString() == DxfObjectCode.ThumbnailImageSection);
 
-            while (this.chunk.ReadString() != StringCode.EndSection)
+            while (this.chunk.ReadString() != DxfObjectCode.EndSection)
             {
                 //read the thumbnail image
                 do
@@ -715,9 +747,9 @@ namespace netDxf
 
         private void ReadAcdsData()
         {
-            Debug.Assert(this.chunk.ReadString() == StringCode.AcdsDataSection);
+            Debug.Assert(this.chunk.ReadString() == DxfObjectCode.AcdsDataSection);
 
-            while (this.chunk.ReadString() != StringCode.EndSection)
+            while (this.chunk.ReadString() != DxfObjectCode.EndSection)
             {
                 //read the ACDSSCHEMA and ACDSRECORD, multiple entries
                 do
@@ -743,31 +775,31 @@ namespace netDxf
 
             switch (name)
             {
-                case StringCode.ApplicationIDTable:
+                case DxfObjectCode.ApplicationIDTable:
                     this.doc.ApplicationRegistries = new ApplicationRegistries(this.doc, numberOfEntries, handle);
                     break;
-                case StringCode.BlockRecordTable:
+                case DxfObjectCode.BlockRecordTable:
                     this.doc.Blocks = new BlockRecords(this.doc, numberOfEntries, handle);
                     return;
-                case StringCode.DimensionStyleTable:
+                case DxfObjectCode.DimensionStyleTable:
                     this.doc.DimensionStyles = new DimensionStyles(this.doc, numberOfEntries, handle);
                     break;
-                case StringCode.LayerTable:
+                case DxfObjectCode.LayerTable:
                     this.doc.Layers = new Layers(this.doc, numberOfEntries, handle);
                     break;
-                case StringCode.LineTypeTable:
+                case DxfObjectCode.LineTypeTable:
                     this.doc.LineTypes = new LineTypes(this.doc, numberOfEntries, handle);
                     break;
-                case StringCode.TextStyleTable:
+                case DxfObjectCode.TextStyleTable:
                     this.doc.TextStyles = new TextStyles(this.doc, numberOfEntries, handle);
                     break;
-                case StringCode.UcsTable:
+                case DxfObjectCode.UcsTable:
                     this.doc.UCSs = new UCSs(this.doc, numberOfEntries, handle);
                     break;
-                case StringCode.ViewTable:
+                case DxfObjectCode.ViewTable:
                     this.doc.Views = new Views(this.doc, numberOfEntries, handle);
                     break;
-                case StringCode.VportTable:
+                case DxfObjectCode.VportTable:
                     this.doc.VPorts = new VPorts(this.doc, numberOfEntries, handle);
                     break;
                 default:
@@ -777,7 +809,7 @@ namespace netDxf
 
         private void ReadTable()
         {
-            Debug.Assert(this.chunk.ReadString() == StringCode.Table);
+            Debug.Assert(this.chunk.ReadString() == DxfObjectCode.Table);
 
             string handle = null;
             this.chunk.Next();
@@ -813,7 +845,7 @@ namespace netDxf
             }
 
             // read table entries
-            while (this.chunk.ReadString() != StringCode.EndTable)
+            while (this.chunk.ReadString() != DxfObjectCode.EndTable)
             {
                 this.ReadTableEntry(handle); 
             }
@@ -826,7 +858,7 @@ namespace netDxf
             string dxfCode = this.chunk.ReadString();
             string handle = null;
 
-            while (this.chunk.ReadString() != StringCode.EndTable)
+            while (this.chunk.ReadString() != DxfObjectCode.EndTable)
             {
                 // table entry common codes
                 while (this.chunk.Code != 100)
@@ -862,7 +894,7 @@ namespace netDxf
 
                 switch (dxfCode)
                 {
-                    case StringCode.ApplicationIDTable:
+                    case DxfObjectCode.ApplicationIDTable:
                         ApplicationRegistry appReg = this.ReadApplicationId();
                         if (appReg != null)
                         {
@@ -870,7 +902,7 @@ namespace netDxf
                             this.doc.ApplicationRegistries.Add(appReg, false);
                         }
                         break;
-                    case StringCode.BlockRecordTable:
+                    case DxfObjectCode.BlockRecordTable:
                         BlockRecord record = this.ReadBlockRecord();
                         if (record != null)
                         {
@@ -878,7 +910,7 @@ namespace netDxf
                             this.blockRecords.Add(record.Name, record);
                         }
                         break;
-                    case StringCode.DimensionStyleTable:
+                    case DxfObjectCode.DimensionStyleTable:
                         DimensionStyle dimStyle = this.ReadDimensionStyle();
                         if (dimStyle != null)
                         {
@@ -886,7 +918,7 @@ namespace netDxf
                             this.doc.DimensionStyles.Add(dimStyle, false);
                         }
                         break;
-                    case StringCode.LayerTable:
+                    case DxfObjectCode.LayerTable:
                         Layer layer = this.ReadLayer();
                         if (layer != null)
                         {
@@ -894,7 +926,7 @@ namespace netDxf
                             this.doc.Layers.Add(layer, false);
                         }
                         break;
-                    case StringCode.LineTypeTable:
+                    case DxfObjectCode.LineTypeTable:
                         LineType lineType = this.ReadLineType();
                         if (lineType != null)
                         {
@@ -902,7 +934,7 @@ namespace netDxf
                             this.doc.LineTypes.Add(lineType, false);
                         }
                         break;
-                    case StringCode.TextStyleTable:
+                    case DxfObjectCode.TextStyleTable:
                         TextStyle style = this.ReadTextStyle();
                         if (style != null)
                         {
@@ -910,7 +942,7 @@ namespace netDxf
                             this.doc.TextStyles.Add(style, false);
                         }
                         break;
-                    case StringCode.UcsTable:
+                    case DxfObjectCode.UcsTable:
                         UCS ucs = this.ReadUCS();
                         if (ucs != null)
                         {
@@ -918,11 +950,11 @@ namespace netDxf
                             this.doc.UCSs.Add(ucs, false);
                         }
                         break;
-                    case StringCode.ViewTable:
+                    case DxfObjectCode.ViewTable:
                         this.ReadView();
                         //this.doc.Views.Add((View) entry);
                         break;
-                    case StringCode.VportTable:
+                    case DxfObjectCode.VportTable:
                         this.ReadVPort();
                         //this.doc.Vports.Add((VPort) entry);
                         break;
@@ -1468,7 +1500,7 @@ namespace netDxf
 
         private Block ReadBlock()
         {
-            Debug.Assert(this.chunk.ReadString() == StringCode.BeginBlock);
+            Debug.Assert(this.chunk.ReadString() == DxfObjectCode.BeginBlock);
 
             BlockRecord blockRecord;
             Layer layer = null;
@@ -1524,7 +1556,7 @@ namespace netDxf
             }
 
             // read block entities
-            while (this.chunk.ReadString() != StringCode.EndBlock)
+            while (this.chunk.ReadString() != DxfObjectCode.EndBlock)
             {
                 EntityObject entity = this.ReadEntity(true);
                 if (entity != null) blockEntities.Add(entity);
@@ -1553,7 +1585,7 @@ namespace netDxf
             }
 
             if (!this.blockRecords.TryGetValue(name, out blockRecord))
-                throw new DxfTableException(StringCode.BlockRecordTable, "The block record " + name + " is not defined");
+                throw new DxfTableException(DxfObjectCode.BlockRecordTable, "The block record " + name + " is not defined");
 
             BlockEnd end = new BlockEnd
             {
@@ -1714,7 +1746,7 @@ namespace netDxf
                 Position = point,
                 Normal = normal,
                 Alignment = alignment,
-                Text = text,
+                Prompt = text,
                 Value = value,
                 Flags = flags,
                 Style = style,
@@ -4095,7 +4127,7 @@ namespace netDxf
 
             if (this.chunk.ReadString() == DxfObjectCode.Attribute)
             {
-                while (this.chunk.ReadString() != StringCode.EndSequence)
+                while (this.chunk.ReadString() != DxfObjectCode.EndSequence)
                 {
                     Attribute attribute = this.ReadAttribute(block, isBlockEntity);
                     if (attribute != null)
@@ -4105,7 +4137,7 @@ namespace netDxf
 
             string endSequenceHandle = string.Empty;
             Layer endSequenceLayer = this.GetLayer(Layer.Default.Name);
-            if (this.chunk.ReadString() == StringCode.EndSequence)
+            if (this.chunk.ReadString() == DxfObjectCode.EndSequence)
             {
                 // read the end end sequence object until a new element is found
                 this.chunk.Next();
@@ -4728,7 +4760,7 @@ namespace netDxf
             }
 
             //begin to read the vertex list (althought it is not recommended the vertex list might have 0 entries)
-            while (this.chunk.ReadString() != StringCode.EndSequence)
+            while (this.chunk.ReadString() != DxfObjectCode.EndSequence)
             {
                 if (this.chunk.ReadString() == DxfObjectCode.Vertex)
                 {
@@ -5796,16 +5828,16 @@ namespace netDxf
             {
                 switch (entry.Value)
                 {
-                    case StringCode.GroupDictionary:
+                    case DxfObjectCode.GroupDictionary:
                         groupsHandle = entry.Key;
                         break;
-                    case StringCode.LayoutDictionary:
+                    case DxfObjectCode.LayoutDictionary:
                         layoutsHandle = entry.Key;
                         break;
-                    case StringCode.MLineStyleDictionary:
+                    case DxfObjectCode.MLineStyleDictionary:
                         mlineStylesHandle = entry.Key;
                         break;
-                    case StringCode.ImageDefDictionary:
+                    case DxfObjectCode.ImageDefDictionary:
                         imageDefsHandle = entry.Key;
                         break;
                 }

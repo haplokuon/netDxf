@@ -50,7 +50,7 @@ namespace netDxf.Collections
             : base(document,
                 new Dictionary<string, Layout>(capacity, StringComparer.OrdinalIgnoreCase),
                 new Dictionary<string, List<DxfObject>>(capacity, StringComparer.OrdinalIgnoreCase),
-                StringCode.LayoutDictionary,
+                DxfObjectCode.LayoutDictionary,
                 handle)
         {
             this.maxCapacity = short.MaxValue;

@@ -24,6 +24,9 @@ using System;
 
 namespace netDxf
 {
+    /// <summary>
+    /// Utility functions to handle DateTime conversions.
+    /// </summary>
     public class DrawingTime
     {
         /// <summary>
@@ -61,7 +64,7 @@ namespace netDxf
         }
 
         /// <summary>
-        /// Calculates the <see cref="DateTime">DateTime</see> from a date represented as &lt;Julian date&gt;.Fraction of day&gt;.
+        /// Calculates the <see cref="DateTime">DateTime</see> from a date represented as &lt;Julian date&gt;&lt;.Fraction of day&gt;.
         /// </summary>
         /// <param name="date">A date represented as &lt;Julian date&gt;.&lt;Fraction of day&gt;.</param>
         /// <returns>The <see cref="DateTime">DateTime</see> equivalent to the julian date.</returns>
@@ -93,19 +96,6 @@ namespace netDxf
             double decimalSeconds = fraction*86400;
             int seconds = (int)decimalSeconds;
             int milliseconds = (int)((decimalSeconds - seconds) * 1000);
-            //int milliseconds = (int)Math.Round((decimalSeconds-seconds)*1000);
-            //if (milliseconds >= 1000)
-            //    seconds += 1;
-            //if (seconds >= 60)
-            //    minutes += 1;
-            //if (minutes >= 60)
-            //    hours += 1;
-            //if (hours >= 24)
-            //    days += 1;
-            //if (days >= 365)
-            //    months += 1;
-            //if (months >= 12)
-            //    years += 1;
             return new DateTime(years, months, days, hours, minutes, seconds, milliseconds);
         }
 

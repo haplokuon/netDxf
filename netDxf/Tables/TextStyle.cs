@@ -42,7 +42,6 @@ namespace netDxf.Tables
         private double obliqueAngle;
         private double widthFactor;
 
-        private static readonly TextStyle standard;
         #endregion
 
         #region constants
@@ -52,17 +51,12 @@ namespace netDxf.Tables
         /// </summary>
         public static TextStyle Default
         {
-            get { return standard; }
+            get { return new TextStyle("Standard", "simplex.shx"); }
         }
 
         #endregion
 
         #region constructors
-
-        static TextStyle()
-        {
-            standard = new TextStyle("Standard", "simplex.shx");
-        }
 
         /// <summary>
         /// Initializes a new instance of the <c>TextStyle</c> class. The font file name, without the extension, will be used as the TextStyle name.
@@ -195,5 +189,38 @@ namespace netDxf.Tables
         }
 
         #endregion
+
+        #region overrides
+
+        /// <summary>
+        /// Creates a new TextStyle that is a copy of the current instance.
+        /// </summary>
+        /// <param name="newName">TextStyle name of the copy.</param>
+        /// <returns>A new TextStyle that is a copy of this instance.</returns>
+        public override TableObject Clone(string newName)
+        {
+            return new TextStyle(newName, this.font)
+            {
+                Height = this.height,
+                IsBackward = this.isBackward,
+                IsUpsideDown = this.isUpsideDown,
+                IsVertical = this.isVertical,
+                ObliqueAngle = this.obliqueAngle,
+                WidthFactor = this.widthFactor
+            };
+
+        }
+
+        /// <summary>
+        /// Creates a new TextStyle that is a copy of the current instance.
+        /// </summary>
+        /// <returns>A new TextStyle that is a copy of this instance.</returns>
+        public override object Clone()
+        {
+            return Clone(this.name);
+        }
+
+        #endregion
+
     }
 }

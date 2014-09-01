@@ -30,13 +30,13 @@ namespace netDxf.Tables
     {
         #region private fields
 
-        private Vector2 lowerLeftCorner = Vector2.Zero;
-        private Vector2 upperRightCorner = new Vector2(1, 1);
-        private Vector2 snapBasePoint = Vector2.Zero;
-        private Vector2 snapSpacing = new Vector2(0.5, 0.5);
-        private Vector2 gridSpacing = new Vector2(10, 10);
-        private Vector3 target = Vector3.Zero;
-        private Vector3 camera = Vector3.UnitZ;
+        private Vector2 lowerLeftCorner;
+        private Vector2 upperRightCorner;
+        private Vector2 snapBasePoint;
+        private Vector2 snapSpacing;
+        private Vector2 gridSpacing;
+        private Vector3 target;
+        private Vector3 camera;
 
         #endregion
 
@@ -51,18 +51,25 @@ namespace netDxf.Tables
 
         #region constructors
 
-        internal VPort(string name, bool checkName)
-            : base(name, DxfObjectCode.VPort, checkName)
-        {
-            this.reserved = name.Equals("*Active", StringComparison.OrdinalIgnoreCase);
-        }
-
         /// <summary>
         /// Initializes a new instance of the <c>Viewport</c> class.
         /// </summary>
         public VPort(string name)
             : this(name, true)
-        {          
+        {
+        }
+
+        internal VPort(string name, bool checkName)
+            : base(name, DxfObjectCode.VPort, checkName)
+        {
+            this.reserved = name.Equals("*Active", StringComparison.OrdinalIgnoreCase);
+            this.lowerLeftCorner = Vector2.Zero;
+            this.upperRightCorner = new Vector2(1, 1);
+            this.snapBasePoint = Vector2.Zero;
+            this.snapSpacing = new Vector2(0.5, 0.5);
+            this.gridSpacing = new Vector2(10, 10);
+            this.target = Vector3.Zero;
+            this.camera = Vector3.UnitZ;
         }
 
         #endregion
@@ -116,11 +123,42 @@ namespace netDxf.Tables
         /// </summary>
         public new VPorts Owner
         {
-            get { return (VPorts)this.owner; }
+            get { return (VPorts) this.owner; }
             internal set { this.owner = value; }
         }
 
         #endregion
 
+        #region overrides
+
+        /// <summary>
+        /// Creates a new VPort that is a copy of the current instance.
+        /// </summary>
+        /// <param name="newName">VPort name of the copy.</param>
+        /// <returns>A new VPort that is a copy of this instance.</returns>
+        public override TableObject Clone(string newName)
+        {
+            return new VPort(newName)
+            {
+                LowerLeftCorner = this.lowerLeftCorner,
+                UpperRightCorner = this.upperRightCorner,
+                SnapBasePoint = this.snapBasePoint,
+                SnapSpacing = this.snapSpacing,
+                GridSpacing = this.gridSpacing,
+                Target = this.target,
+                Camera = this.camera
+            };
+        }
+
+        /// <summary>
+        /// Creates a new VPort that is a copy of the current instance.
+        /// </summary>
+        /// <returns>A new VPort that is a copy of this instance.</returns>
+        public override object Clone()
+        {
+            return Clone(this.name);
+        }
+
+        #endregion
     }
 }

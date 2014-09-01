@@ -24,51 +24,20 @@ using netDxf.Collections;
 
 namespace netDxf.Tables
 {
-
-    public enum Viewmode
-    {
-        /// <summary>
-        /// Turned off.
-        /// </summary>
-        Off = 0,
-        /// <summary>
-        /// Perspective view active.
-        /// </summary>
-        Perspective = 1,
-        /// <summary>
-        /// Front clipping on.
-        /// </summary>
-        FrontClippingPlane = 2,
-        /// <summary>
-        /// Back clipping on.
-        /// </summary>
-        BackClippingPlane = 4,
-        /// <summary>
-        /// UCS Follow mode on.
-        /// </summary>
-        UCSFollow = 8,
-        /// <summary>
-        /// Front clip not at eye. If on, the front clip distance (FRONTZ) determines the front clipping plane.
-        /// If off, FRONTZ is ignored, and the front clipping plane is set to pass through the camera point (vectors behind the camera are not displayed).
-        /// This flag is ignored if the front-clipping bit (2) is off.
-        /// </summary>
-        FrontClipNotAtEye = 16
-    }
-
     public class View :
         TableObject
     {
         #region private fields
 
-        private Vector3 target = Vector3.Zero;
-        private Vector3 camera = Vector3.UnitZ;
-        private double height = 1.0;
-        private double width = 1.0;
-        private double rotation = 0.0;
-        private Viewmode viewmode = Viewmode.Off;
-        private double fov = 40.0;
-        private double frontClippingPlane = 0.0;
-        private double backClippingPlane = 0.0;
+        private Vector3 target;
+        private Vector3 camera;
+        private double height;
+        private double width;
+        private double rotation;
+        private ViewMode viewmode;
+        private double fov;
+        private double frontClippingPlane;
+        private double backClippingPlane;
 
         #endregion
 
@@ -85,6 +54,15 @@ namespace netDxf.Tables
             : base(name, DxfObjectCode.View, true)
         {
             this.reserved = false;
+            this.target = Vector3.Zero;
+            this.camera = Vector3.UnitZ;
+            this.height = 1.0;
+            this.width = 1.0;
+            this.rotation = 0.0;
+            this.viewmode = ViewMode.Off;
+            this.fov = 40.0;
+            this.frontClippingPlane = 0.0;
+            this.backClippingPlane = 0.0;
         }
 
         #endregion
@@ -121,7 +99,7 @@ namespace netDxf.Tables
             set { this.rotation = value; }
         }
 
-        public Viewmode Viewmode
+        public ViewMode Viewmode
         {
             get { return this.viewmode; }
             set { this.viewmode = value; }
@@ -150,8 +128,43 @@ namespace netDxf.Tables
         /// </summary>
         public new Views Owner
         {
-            get { return (Views)this.owner; }
+            get { return (Views) this.owner; }
             internal set { this.owner = value; }
+        }
+
+        #endregion
+
+        #region overrides
+
+        /// <summary>
+        /// Creates a new View that is a copy of the current instance.
+        /// </summary>
+        /// <param name="newName">View name of the copy.</param>
+        /// <returns>A new View that is a copy of this instance.</returns>
+        public override TableObject Clone(string newName)
+        {
+            return new View(newName)
+            {
+                Target = this.target,
+                Camera = this.camera,
+                Height = this.height,
+                Width = this.width,
+                Rotation = this.rotation,
+                Viewmode = this.viewmode,
+                Fov = this.fov,
+                FrontClippingPlane = this.frontClippingPlane,
+                BackClippingPlane = this.backClippingPlane
+            };
+
+        }
+
+        /// <summary>
+        /// Creates a new View that is a copy of the current instance.
+        /// </summary>
+        /// <returns>A new View that is a copy of this instance.</returns>
+        public override object Clone()
+        {
+            return Clone(this.name);
         }
 
         #endregion

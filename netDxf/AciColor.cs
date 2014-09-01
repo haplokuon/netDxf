@@ -426,7 +426,7 @@ namespace netDxf
         /// Converts the AciColor to a <see cref="Color">color</see>.
         /// </summary>
         /// <returns>A <see cref="Color">System.Drawing.Color</see> that represents the actual AciColor.</returns>
-        /// <remarks> A default color white will be used for byblock and bylayer colors.</remarks>
+        /// <remarks>A default color white will be used for byblock and bylayer colors.</remarks>
         public Color ToColor()
         {
             if (this.index < 1 || this.index > 255) //default color definition for byblock and bylayer colors
@@ -435,10 +435,11 @@ namespace netDxf
         }
 
         /// <summary>
-        /// Converts the Color to an <see cref="Color">AciColor</see>.
+        /// Converts a <see cref="Color">color</see> to an <see cref="Color">AciColor</see>.
         /// </summary>
+        /// <param name="color">A <see cref="Color">color</see>.</param>
         public void FromColor(Color color)
-        {
+        {   
             this.r = color.R;
             this.g = color.G;
             this.b = color.B;
@@ -712,17 +713,32 @@ namespace netDxf
                 };
         }
 
+        /// <summary>
+        /// Gets the entity 24-bit color value from an AciColor.
+        /// </summary>
+        /// <param name="color">A <see cref="AciColor">color</see>.</param>
+        /// <returns>A 24-bit color value.</returns>
         public static int ToTrueColor(AciColor color)
         {
             return BitConverter.ToInt32(new byte[]{color.B, color.G, color.R, 0}, 0);
         }
 
+        /// <summary>
+        /// Gets the <see cref="AciColor">color</see> from a 24-bit color value.
+        /// </summary>
+        /// <param name="value">A 24-bit color value.</param>
+        /// <returns>A <see cref="AciColor">color</see>.</returns>
         public static AciColor FromTrueColor(int value)
         {
             byte[] bytes = BitConverter.GetBytes(value);
             return new AciColor(bytes[2], bytes[1], bytes[0]);
         }
 
+        /// <summary>
+        /// Gets the <see cref="AciColor">color</see> from an index.
+        /// </summary>
+        /// <param name="index">A AciColor index.</param>
+        /// <returns>A <see cref="AciColor">color</see>.</returns>
         public static AciColor FromCadIndex(short index)
         {
             if (index == 0)
@@ -758,9 +774,9 @@ namespace netDxf
         #region implements ICloneable
 
         /// <summary>
-        /// Creates a new object that is a copy of the current instance.
+        /// Creates a new color that is a copy of the current instance.
         /// </summary>
-        /// <returns>A new object that is a copy of this instance.</returns>
+        /// <returns>A new color that is a copy of this instance.</returns>
         public object Clone()
         {
             AciColor color = new AciColor

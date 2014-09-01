@@ -1,3 +1,19 @@
+[0.9.1 - 2014/09/01]
++ Added constructor to Solid entity that takes three vertexes.
++ Added Load method to the Block class to create block from external dxf files (see LoadAndSaveBlocks() sample for more info).
++ Added Save method to the Block class to save a block to a dxf file (see LoadAndSaveBlocks() sample for more info).
++ Added the drawing variable $INSBASE that control the insertion base point for the current drawing.
++ Added AttributeDefinitions property to DxfDocument to support these cases. Now it is possible to add attribute definitions to a dxf document this will allow to create dxf to be use as blocks with attributes in other drawings.
++ The HeaderVariable class is now internal. All needed information can be accessed through the DxfDocument.DrawingVariables property.
++ Rename AttributeDefinitionDictionary.Keys to AttributeDefinitionDictionary.Tags.
++ Rename AttributeDefinitionDictionary.ConatinsKey to AttributeDefinitionDictionary.ContainsTag.
++ Rename AttributeDictionary.Keys to AttributeDictionary.Tags.
++ Rename AttributeDictionary.ConatinsKey to AttributeDictionary.ContainsTag.
++ Rename AttributeDefiniton.Text to AttributeDefinition.Prompt.
++ Updated "netDxf Documentation.chm".
++ (fixed) The Attribute class constructor was not copying the attribute definition properties inherited from the EntityObject base class.
++ (fixed) Issue Id #13211 Loading dxf file that contain attribute definitions (ATTDEF). This is the case of blocks that has been exploded or has been saved to a file.
+
 [0.9.0 - 2014/07/28]
 + netDxf now supports both text based and binary dxf files (see BinaryDxfFiles() sample for more info).
 + Added Mesh entity (see MeshEntity() sample for more info).

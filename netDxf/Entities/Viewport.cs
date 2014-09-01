@@ -60,7 +60,7 @@ namespace netDxf.Entities
         private Vector3 ucsOrigin;
         private Vector3 ucsXAxis;
         private Vector3 ucsYAxis;
-        public double elevation;
+        private double elevation;
         private EntityObject boundary;
 
         #endregion
@@ -438,16 +438,27 @@ namespace netDxf.Entities
         /// <returns>A new Viewport that is a copy of this instance.</returns>
         public override object Clone()
         {
+            Dictionary<string, XData> copyXData = null;
+            if (this.xData != null)
+            {
+                copyXData = new Dictionary<string, XData>();
+                foreach (KeyValuePair<string, XData> data in this.xData)
+                {
+                    copyXData.Add(data.Key, (XData)data.Value.Clone());
+                }
+            }
+
             Viewport viewport = new Viewport
             {
                 //EntityObject properties
-                Color = this.color,
-                Layer = this.layer,
-                LineType = this.lineType,
-                Lineweight = this.lineweight,
+                Layer = (Layer)this.layer.Clone(),
+                LineType = (LineType)this.lineType.Clone(),
+                Color = (AciColor)this.color.Clone(),
+                Lineweight = (Lineweight)this.lineweight.Clone(),
+                Transparency = (Transparency)this.transparency.Clone(),
                 LineTypeScale = this.lineTypeScale,
                 Normal = this.normal,
-                XData = this.xData,
+                XData = copyXData,
                 //Viewport properties
                 Center=this.center,
                 Width=this.width,
@@ -471,9 +482,11 @@ namespace netDxf.Entities
                 UcsOrigin = this.ucsOrigin,
                 UcsXAxis = this.ucsXAxis,
                 UcsYAxis = this.ucsYAxis,
-                Elevation = this.elevation,
-                ClippingBoundary = this.boundary
+                Elevation = this.elevation
             };
+
+            if (this.boundary != null)
+                viewport.ClippingBoundary = (EntityObject) this.boundary.Clone();
 
             viewport.FrozenLayers.AddRange(this.frozenLayers.ToArray());
             return viewport;

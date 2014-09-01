@@ -21,27 +21,33 @@
 #endregion
 
 using System;
+using netDxf.Entities;
 
-namespace netDxf.Header
+namespace netDxf.Collections
 {
     /// <summary>
-    /// Defines a header variable.
+    /// Represents the arguments thrown by the <see cref="AttributeDefinitionDictionary">AttributeDefinitionDictionary</see> events.
     /// </summary>
-    internal class HeaderVariable
+    public class AttributeDefinitionDictionaryEventArgs :
+        EventArgs
     {
         #region private fields
 
-        private readonly string name;
-        private object value;
+        private readonly AttributeDefinition item;
+        private bool cancel;
 
         #endregion
 
-        #region constructors
+        #region constructor
 
-        public HeaderVariable(string name, object value)
+        /// <summary>
+        /// Initializes a new instance of <c>AttributeDefinitionDictionaryEventArgs</c>.
+        /// </summary>
+        /// <param name="item">Item that is being added or removed from the dictionary.</param>
+        public AttributeDefinitionDictionaryEventArgs(AttributeDefinition item)
         {
-            this.name = name;
-            this.value = value;
+            this.item = item;
+            this.cancel = false;
         }
 
         #endregion
@@ -49,32 +55,23 @@ namespace netDxf.Header
         #region public properties
 
         /// <summary>
-        /// Gets the header variable name.
+        /// Get the item that is being added to or removed from the dictionary.
         /// </summary>
-        public string Name
+        public AttributeDefinition Item
         {
-            get { return this.name; }
+            get { return this.item; }
         }
 
         /// <summary>
-        /// Gets the header variable stored value.
+        /// Gets or sets if the operation must be canceled.
         /// </summary>
-        public object Value
+        /// <remarks>This property is used by the BeforeAddItem and BeforeRemoveItem events to cancel the add or remove operations.</remarks>
+        public bool Cancel
         {
-            get { return this.value; }
-            set { this.value = value; }
+            get { return this.cancel; }
+            set { this.cancel = value; }
         }
 
         #endregion
-
-        #region overrides
-
-        public override string ToString()
-        {
-            return String.Format("{0}:{1}", this.name, this.value);
-        }
-
-        #endregion
-
     }
 }

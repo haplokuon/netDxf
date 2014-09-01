@@ -29,7 +29,8 @@ namespace netDxf
     /// <summary>
     /// Represents the extended data information of an entity.
     /// </summary>
-    public class XData
+    public class XData :
+        ICloneable
     {
         #region private fields
 
@@ -92,6 +93,20 @@ namespace netDxf
         {
             return this.ApplicationRegistry.Name;
         }
+
+        #endregion
+
+        #region implements ICloneable
+
+        public object Clone()
+        {
+            return new XData((ApplicationRegistry) this.appReg.Clone())
+            {
+                XDataRecord = new List<XDataRecord>(this.xData)
+            };
+
+        }
+
         #endregion
 
     }

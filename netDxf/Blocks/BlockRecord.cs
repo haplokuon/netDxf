@@ -56,7 +56,7 @@ namespace netDxf.Blocks
                 throw (new ArgumentNullException("name"));
             this.name = name;
             this.layout = null;
-            this.units = BlockRecord.DefaultUnits;
+            this.units = DefaultUnits;
             this.allowExploding = true;
             this.scaleUniformly = false;
         }

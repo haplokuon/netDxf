@@ -50,7 +50,7 @@ namespace netDxf
         /// </summary>
         public static Transparency ByLayer
         {
-            get { return new Transparency { value = -1 }; }
+            get { return new Transparency {value = -1}; }
         }
 
         /// <summary>
@@ -70,7 +70,7 @@ namespace netDxf
         /// </summary>
         public Transparency()
         {
-            this.value = 0;
+            this.value = -1;
         }
 
         /// <summary>
@@ -128,6 +128,11 @@ namespace netDxf
 
         #region public methods
 
+        /// <summary>
+        /// Gets the transparency value from a <see cref="Transparency">transparency</see> object.
+        /// </summary>
+        /// <param name="transparency">A <see cref="Transparency">transparency</see>.</param>
+        /// <returns>A transparency value.</returns>
         public static int ToAlphaValue(Transparency transparency)
         {
             byte alpha = (byte)(255 * (100 - transparency.Value) / 100.0);
@@ -138,6 +143,11 @@ namespace netDxf
             return BitConverter.ToInt32(bytes, 0);
         }
 
+        /// <summary>
+        /// Gets the <see cref="Transparency">transparency</see> object from a transparency value.
+        /// </summary>
+        /// <param name="value">A transparency value.</param>
+        /// <returns>A <see cref="Transparency">transparency</see></returns>
         public static Transparency FromAlphaValue(int value)
         {
             byte[] bytes = BitConverter.GetBytes(value);
@@ -145,13 +155,17 @@ namespace netDxf
             return FromCadIndex(alpha);
         }
 
+        #endregion
+
+        #region private methods
+
         private static Transparency FromCadIndex(short alpha)
         {
             if (alpha == -1)
                 return ByLayer;
             if (alpha == 100)
                 return ByBlock;
-            
+
             return new Transparency(alpha);
         }
 
@@ -160,15 +174,12 @@ namespace netDxf
         #region implements ICloneable
 
         /// <summary>
-        /// Creates a new object that is a copy of the current instance.
+        /// Creates a new transparency that is a copy of the current instance.
         /// </summary>
-        /// <returns>A new object that is a copy of this instance.</returns>
+        /// <returns>A new transparency that is a copy of this instance.</returns>
         public Object Clone()
         {
-            return new Transparency
-                       {
-                           value = this.value
-                       };
+            return FromCadIndex(this.value);
         }
 
         #endregion

@@ -23,6 +23,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using netDxf.Tables;
 
 namespace netDxf.Entities
 {
@@ -146,14 +147,14 @@ namespace netDxf.Entities
                 {
                     Point point = new Point
                                       {
+                                          Layer = (Layer)this.layer.Clone(),
+                                          LineType = (LineType)this.lineType.Clone(),
+                                          Color = (AciColor)this.color.Clone(),
+                                          Lineweight = (Lineweight)this.lineweight.Clone(),
+                                          Transparency = (Transparency)this.transparency.Clone(),
+                                          LineTypeScale = this.lineTypeScale,
+                                          Normal = this.normal,
                                           Location = this.Vertexes[Math.Abs(face.VertexIndexes[0]) - 1].Location,
-                                          Color = this.Color,
-                                          IsVisible = this.IsVisible,
-                                          Layer = this.Layer,
-                                          LineType = this.LineType,
-                                          LineTypeScale = this.LineTypeScale,
-                                          Lineweight = this.Lineweight,
-                                          XData = this.XData
                                       };
                     entities.Add(point);
                     continue;
@@ -162,15 +163,15 @@ namespace netDxf.Entities
                 {
                     Line line = new Line
                     {
+                        Layer = (Layer)this.layer.Clone(),
+                        LineType = (LineType)this.lineType.Clone(),
+                        Color = (AciColor)this.color.Clone(),
+                        Lineweight = (Lineweight)this.lineweight.Clone(),
+                        Transparency = (Transparency)this.transparency.Clone(),
+                        LineTypeScale = this.lineTypeScale,
+                        Normal = this.normal,
                         StartPoint = this.Vertexes[Math.Abs(face.VertexIndexes[0]) - 1].Location,
                         EndPoint = this.Vertexes[Math.Abs(face.VertexIndexes[1]) - 1].Location,
-                        Color = this.Color,
-                        IsVisible = this.IsVisible,
-                        Layer = this.Layer,
-                        LineType = this.LineType,
-                        LineTypeScale = this.LineTypeScale,
-                        Lineweight = this.Lineweight,
-                        XData = this.XData
                     };
                     entities.Add(line);
                     continue;
@@ -200,18 +201,18 @@ namespace netDxf.Entities
 
                 Face3d face3d = new Face3d
                 {
+                    Layer = (Layer)this.layer.Clone(),
+                    LineType = (LineType)this.lineType.Clone(),
+                    Color = (AciColor)this.color.Clone(),
+                    Lineweight = (Lineweight)this.lineweight.Clone(),
+                    Transparency = (Transparency)this.transparency.Clone(),
+                    LineTypeScale = this.lineTypeScale,
+                    Normal = this.normal,
                     FirstVertex = v1,
                     SecondVertex = v2,
                     ThirdVertex = v3,
                     FourthVertex = v4,
                     EdgeFlags = edgeVisibility,
-                    Color = this.Color,
-                    IsVisible = this.IsVisible,
-                    Layer = this.Layer,
-                    LineType = this.LineType,
-                    LineTypeScale = this.LineTypeScale,
-                    Lineweight = this.Lineweight,
-                    XData = this.XData
                 };
 
                 entities.Add(face3d);
@@ -239,16 +240,28 @@ namespace netDxf.Entities
             {
                 copyFaces.Add((PolyfaceMeshFace) face.Clone());
             }
+
+            Dictionary<string, XData> copyXData = null;
+            if (this.xData != null)
+            {
+                copyXData = new Dictionary<string, XData>();
+                foreach (KeyValuePair<string, XData> data in this.xData)
+                {
+                    copyXData.Add(data.Key, (XData)data.Value.Clone());
+                }
+            }
+
             return new PolyfaceMesh(copyVertexes, copyFaces)
             {
                 //EntityObject properties
-                Color = this.color,
-                Layer = this.layer,
-                LineType = this.lineType,
-                Lineweight = this.lineweight,
+                Layer = (Layer)this.layer.Clone(),
+                LineType = (LineType)this.lineType.Clone(),
+                Color = (AciColor)this.color.Clone(),
+                Lineweight = (Lineweight)this.lineweight.Clone(),
+                Transparency = (Transparency)this.transparency.Clone(),
                 LineTypeScale = this.lineTypeScale,
                 Normal = this.normal,
-                XData = this.xData,
+                XData = copyXData,
                 //PolyfaceMesh properties
             };
         }

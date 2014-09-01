@@ -36,27 +36,25 @@ namespace netDxf.Tables
         private TextStyle textStyle;
 
         // lines
-        private double dimexo = 0.0625;
-        private double dimexe = 0.18;
+        private double dimexo;
+        private double dimexe;
 
         // symbols and arrows
-        private double dimasz = 0.18;
-        private double dimcen = 0.09;
+        private double dimasz;
+        private double dimcen;
 
         // text
         private double dimtxt = 0.18;
-        private short dimjust = 0;
-        private short dimtad = 1;
-        private double dimgap = 0.09;
-        private short dimadec = 0;
-        private short dimdec = 2;
-        private string dimpost = "<>";
-        private short dimtih = 0;
-        private short dimtoh = 0;
-        private char dimdsep = '.';
-        private short dimaunit = 0;
-
-        private static readonly DimensionStyle standard;
+        private short dimjust;
+        private short dimtad;
+        private double dimgap;
+        private short dimadec;
+        private short dimdec;
+        private string dimpost;
+        private short dimtih;
+        private short dimtoh;
+        private char dimdsep;
+        private short dimaunit;
 
         #endregion
 
@@ -67,26 +65,42 @@ namespace netDxf.Tables
         /// </summary>
         public static DimensionStyle Default
         {
-            get { return standard; }
+            get { return new DimensionStyle("Standard"); }
         }
 
         #endregion
 
         #region constructors
 
-        static DimensionStyle()
-        {
-            standard = new DimensionStyle("Standard");
-        }
-
         /// <summary>
         /// Initializes a new instance of the <c>DimensionStyle</c> class.
         /// </summary>
+        /// <param name="name">The dimension style name.</param>
         public DimensionStyle(string name)
             : base(name, DxfObjectCode.DimStyle, true)
         {
             this.reserved = name.Equals("Standard", StringComparison.OrdinalIgnoreCase);
             this.textStyle = TextStyle.Default;
+
+            this.dimexo = 0.0625;
+            this.dimexe = 0.18;
+
+            // symbols and arrows
+            this.dimasz = 0.18;
+            this.dimcen = 0.09;
+
+            // text
+            this.dimtxt = 0.18;
+            this.dimjust = 0;
+            this.dimtad = 1;
+            this.dimgap = 0.09;
+            this.dimadec = 0;
+            this.dimdec = 2;
+            this.dimpost = "<>";
+            this.dimtih = 0;
+            this.dimtoh = 0;
+            this.dimdsep = '.';
+            this.dimaunit = 0;
         }
 
         #endregion
@@ -270,6 +284,52 @@ namespace netDxf.Tables
         {
             get { return (DimensionStyles) this.owner; }
             internal set { this.owner = value; }
+        }
+
+        #endregion
+
+        #region overrides
+
+        /// <summary>
+        /// Creates a new DimensionStyle that is a copy of the current instance.
+        /// </summary>
+        /// <param name="newName">DimensionStyle name of the copy.</param>
+        /// <returns>A new DimensionStyle that is a copy of this instance.</returns>
+        public override TableObject Clone(string newName)
+        {
+            return new DimensionStyle(newName)
+            {
+                TextStyle = (TextStyle)this.textStyle.Clone(),
+                DIMEXO = this.dimexo,
+                DIMEXE = this.dimexe,
+
+                // symbols and arrows
+                DIMASZ = this.dimasz,
+                DIMCEN = this.dimcen,
+
+                // text
+                DIMTXT = this.dimtxt,
+                DIMJUST = this.dimjust,
+                DIMTAD = this.dimtad,
+                DIMGAP = this.dimgap,
+                DIMADEC = this.dimadec,
+                DIMDEC = this.dimdec,
+                DIMPOST = this.dimpost,
+                DIMTIH = this.dimtih,
+                DIMTOH = this.dimtoh,
+                DIMDSEP = this.dimdsep,
+                DIMAUNIT = this.dimaunit
+            };
+
+        }
+
+        /// <summary>
+        /// Creates a new DimensionStyle that is a copy of the current instance.
+        /// </summary>
+        /// <returns>A new DimensionStyle that is a copy of this instance.</returns>
+        public override object Clone()
+        {
+            return Clone(this.name);
         }
 
         #endregion

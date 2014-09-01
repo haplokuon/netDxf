@@ -23,10 +23,165 @@
 namespace netDxf
 {
     /// <summary>
-    /// Dxf entities codes (code 0).
+    /// Dxf string codes.
     /// </summary>
     public sealed class DxfObjectCode
     {
+        /// <summary>
+        /// Not defined.
+        /// </summary>
+        public const string Unknown = "";
+
+        /// <summary>
+        /// Header section.
+        /// </summary>
+        public const string HeaderSection = "HEADER";
+
+        /// <summary>
+        /// Classes section.
+        /// </summary>
+        public const string ClassesSection = "CLASSES";
+
+        /// <summary>
+        /// Class entry.
+        /// </summary>
+        public const string Class = "CLASS";
+
+        /// <summary>
+        /// Tables section.
+        /// </summary>
+        public const string TablesSection = "TABLES";
+
+        /// <summary>
+        /// Blocks section.
+        /// </summary>
+        public const string BlocksSection = "BLOCKS";
+
+        /// <summary>
+        /// Entities section.
+        /// </summary>
+        public const string EntitiesSection = "ENTITIES";
+
+        /// <summary>
+        /// Objects section.
+        /// </summary>
+        public const string ObjectsSection = "OBJECTS";
+
+        /// <summary>
+        /// Thumbnail section.
+        /// </summary>
+        public const string ThumbnailImageSection = "THUMBNAILIMAGE";
+
+        /// <summary>
+        /// AcdsData section. Currently it is used for storing the data for solids, regions, surfaces, and the preview image.
+        /// </summary>
+        public const string AcdsDataSection = "ACDSDATA";
+
+        /// <summary>
+        /// Begin section code.
+        /// </summary>
+        public const string BeginSection = "SECTION";
+
+        /// <summary>
+        /// End section code.
+        /// </summary>
+        public const string EndSection = "ENDSEC";
+
+        /// <summary>
+        /// Layers.
+        /// </summary>
+        public const string LayerTable = "LAYER";
+
+        /// <summary>
+        /// View ports.
+        /// </summary>
+        public const string VportTable = "VPORT";
+
+        /// <summary>
+        /// Views.
+        /// </summary>
+        public const string ViewTable = "VIEW";
+
+        /// <summary>
+        /// Ucs.
+        /// </summary>
+        public const string UcsTable = "UCS";
+
+        /// <summary>
+        /// Block records.
+        /// </summary>
+        public const string BlockRecordTable = "BLOCK_RECORD";
+
+        /// <summary>
+        /// Line types.
+        /// </summary>
+        public const string LineTypeTable = "LTYPE";
+
+        /// <summary>
+        /// text styles.
+        /// </summary>
+        public const string TextStyleTable = "STYLE";
+
+        /// <summary>
+        /// Dimension styles.
+        /// </summary>
+        public const string DimensionStyleTable = "DIMSTYLE";
+
+        /// <summary>
+        /// extended data application registry.
+        /// </summary>
+        public const string ApplicationIDTable = "APPID";
+
+        /// <summary>
+        /// Begin table code.
+        /// </summary>
+        public const string Table = "TABLE";
+
+        /// <summary>
+        /// End table code.
+        /// </summary>
+        public const string EndTable = "ENDTAB";
+
+        /// <summary>
+        /// Begin block code.
+        /// </summary>
+        public const string BeginBlock = "BLOCK";
+
+        /// <summary>
+        /// End block code.
+        /// </summary>
+        public const string EndBlock = "ENDBLK";
+
+        /// <summary>
+        /// Group dictionary
+        /// </summary>
+        public const string GroupDictionary = "ACAD_GROUP";
+
+        /// <summary>
+        /// Layouts dictionary
+        /// </summary>
+        public const string LayoutDictionary = "ACAD_LAYOUT";
+
+        /// <summary>
+        /// MLine styles dictionary
+        /// </summary>
+        public const string MLineStyleDictionary = "ACAD_MLINESTYLE";
+
+        /// <summary>
+        /// MLine styles dictionary
+        /// </summary>
+        public const string ImageDefDictionary = "ACAD_IMAGE_DICT";
+
+        /// <summary>
+        /// MLine styles dictionary
+        /// </summary>
+        public const string ImageVarsDictionary = "ACAD_IMAGE_VARS";
+
+        /// <summary>
+        /// End of file
+        /// </summary>
+        public const string EndOfFile = "EOF";
+
         /// <summary>
         /// Application registry.
         /// </summary>

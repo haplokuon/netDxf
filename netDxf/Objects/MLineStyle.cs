@@ -33,7 +33,6 @@ namespace netDxf.Objects
     public class MLineStyle :
         TableObject
     {
-
         #region private fields
 
         private MLineStyleFlags flags;
@@ -43,7 +42,6 @@ namespace netDxf.Objects
         private double endAngle;
         private List<MLineStyleElement> elements;
 
-        private static readonly MLineStyle standard;
         #endregion
 
         #region constants
@@ -53,17 +51,12 @@ namespace netDxf.Objects
         /// </summary>
         public static MLineStyle Default
         {
-            get { return standard; }
+            get { return new MLineStyle("Standard"); }
         }
 
         #endregion
 
         #region constructors
-
-        static MLineStyle()
-        {
-            standard = new MLineStyle("Standard");
-        }
 
         /// <summary>
         /// Initializes a new instance of the <c>MLineStyle</c> class.
@@ -82,10 +75,10 @@ namespace netDxf.Objects
             this.startAngle = 90.0;
             this.endAngle = 90.0;
             this.elements = new List<MLineStyleElement>
-                                {
-                                    new MLineStyleElement(0.5),
-                                    new MLineStyleElement(-0.5)
-                                };
+            {
+                new MLineStyleElement(0.5),
+                new MLineStyleElement(-0.5)
+            };
         }
 
         /// <summary>
@@ -97,7 +90,6 @@ namespace netDxf.Objects
         public MLineStyle(string name, List<MLineStyleElement> elements, string description = null)
             : base(name, DxfObjectCode.MLineStyle, true)
         {
-            
             if (elements == null)
                 throw new ArgumentNullException("elements");
             if (elements.Count < 1)
@@ -206,8 +198,39 @@ namespace netDxf.Objects
         /// </summary>
         public new MLineStyles Owner
         {
-            get { return (MLineStyles)this.owner; }
+            get { return (MLineStyles) this.owner; }
             internal set { this.owner = value; }
+        }
+
+        #endregion
+
+        #region overrides
+
+        /// <summary>
+        /// Creates a new MLineStyle that is a copy of the current instance.
+        /// </summary>
+        /// <param name="newName">MLineStyle name of the copy.</param>
+        /// <returns>A new MLineStyle that is a copy of this instance.</returns>
+        public override TableObject Clone(string newName)
+        {
+            return new MLineStyle(newName)
+            {
+                Flags = this.flags,
+                Description = this.description,
+                FillColor = (AciColor) this.fillColor.Clone(),
+                StartAngle = this.startAngle,
+                EndAngle = this.endAngle,
+                Elements = new List<MLineStyleElement>()
+            };
+        }
+
+        /// <summary>
+        /// Creates a new MLineStyle that is a copy of the current instance.
+        /// </summary>
+        /// <returns>A new MLineStyle that is a copy of this instance.</returns>
+        public override object Clone()
+        {
+            return Clone(this.name);
         }
 
         #endregion

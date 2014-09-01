@@ -42,8 +42,8 @@ namespace netDxf
     {
         #region private fields
 
-        private string activeSection = StringCode.Unknown;
-        private string activeTable = StringCode.Unknown;
+        private string activeSection = DxfObjectCode.Unknown;
+        private string activeTable = DxfObjectCode.Unknown;
         private ICodeValueWriter chunk;
         private DxfDocument doc;
         // here we will store strings already encoded <string: original, string: encoded>
@@ -89,7 +89,7 @@ namespace netDxf
                 groupDictionary.Entries.Add(group.Handle, group.Name);
             }
             dictionaries.Add(groupDictionary);
-            namedObjectDictionary.Entries.Add(groupDictionary.Handle, StringCode.GroupDictionary);
+            namedObjectDictionary.Entries.Add(groupDictionary.Handle, DxfObjectCode.GroupDictionary);
 
             // Layout dictionary
             DictionaryObject layoutDictionary = new DictionaryObject(namedObjectDictionary);
@@ -101,7 +101,7 @@ namespace netDxf
                     layoutDictionary.Entries.Add(layout.Handle, layout.Name);
                 }
                 dictionaries.Add(layoutDictionary);
-                namedObjectDictionary.Entries.Add(layoutDictionary.Handle, StringCode.LayoutDictionary);
+                namedObjectDictionary.Entries.Add(layoutDictionary.Handle, DxfObjectCode.LayoutDictionary);
             }
 
             // create the MLine style dictionary
@@ -114,7 +114,7 @@ namespace netDxf
                     mLineStyleDictionary.Entries.Add(mLineStyle.Handle, mLineStyle.Name);
                 }
                 dictionaries.Add(mLineStyleDictionary);
-                namedObjectDictionary.Entries.Add(mLineStyleDictionary.Handle, StringCode.MLineStyleDictionary);
+                namedObjectDictionary.Entries.Add(mLineStyleDictionary.Handle, DxfObjectCode.MLineStyleDictionary);
             }
 
             // create the image dictionary
@@ -129,8 +129,8 @@ namespace netDxf
 
                 dictionaries.Add(imageDefDictionary);
 
-                namedObjectDictionary.Entries.Add(imageDefDictionary.Handle, StringCode.ImageDefDictionary);
-                namedObjectDictionary.Entries.Add(this.doc.RasterVariables.Handle, StringCode.ImageVarsDictionary);
+                namedObjectDictionary.Entries.Add(imageDefDictionary.Handle, DxfObjectCode.ImageDefDictionary);
+                namedObjectDictionary.Entries.Add(this.doc.RasterVariables.Handle, DxfObjectCode.ImageVarsDictionary);
             }
 
             this.doc.DrawingVariables.HandleSeed = this.doc.NumHandles.ToString("X");
@@ -145,7 +145,7 @@ namespace netDxf
             }
 
             //HEADER SECTION
-            this.BeginSection(StringCode.HeaderSection);
+            this.BeginSection(DxfObjectCode.HeaderSection);
             foreach (HeaderVariable variable in this.doc.DrawingVariables.Values)
             {
                 this.WriteSystemVariable(variable);
@@ -153,7 +153,7 @@ namespace netDxf
             this.EndSection();
 
             //CLASSES SECTION
-            this.BeginSection(StringCode.ClassesSection);
+            this.BeginSection(DxfObjectCode.ClassesSection);
             this.WriteRasterVariablesClass(1);
             if (this.doc.ImageDefinitions.Items.Count > 0)
             {
@@ -164,7 +164,7 @@ namespace netDxf
             this.EndSection();
 
             //TABLES SECTION
-            this.BeginSection(StringCode.TablesSection);
+            this.BeginSection(DxfObjectCode.TablesSection);
 
             //registered application tables
             this.BeginTable(this.doc.ApplicationRegistries.CodeName, (short)this.doc.ApplicationRegistries.Count, this.doc.ApplicationRegistries.Handle);
@@ -241,7 +241,7 @@ namespace netDxf
             this.EndSection(); //End section tables
 
             //BLOCKS SECTION
-            this.BeginSection(StringCode.BlocksSection);
+            this.BeginSection(DxfObjectCode.BlocksSection);
             foreach (Block block in this.doc.Blocks.Items)
             {
                 Layout layout = null;
@@ -261,7 +261,7 @@ namespace netDxf
             this.EndSection(); //End section blocks
 
             //ENTITIES SECTION
-            this.BeginSection(StringCode.EntitiesSection);
+            this.BeginSection(DxfObjectCode.EntitiesSection);
             foreach (Layout layout in this.doc.Layouts)
             {
                 if (layout.AssociatedBlock.Name.StartsWith("*Paper_Space"))
@@ -294,7 +294,7 @@ namespace netDxf
             this.EndSection(); //End section entities
 
             //OBJECTS SECTION
-            this.BeginSection(StringCode.ObjectsSection);
+            this.BeginSection(DxfObjectCode.ObjectsSection);
 
             foreach (DictionaryObject dictionary in dictionaries)
             {
@@ -356,7 +356,7 @@ namespace netDxf
         /// </summary>
         private void Close()
         {
-            this.chunk.Write(0, StringCode.EndOfFile);
+            this.chunk.Write(0, DxfObjectCode.EndOfFile);
             this.chunk.Flush();
         }
 
@@ -367,9 +367,9 @@ namespace netDxf
         /// <remarks>There can be only one type section.</remarks>
         private void BeginSection(string section)
         {
-            Debug.Assert(this.activeSection == StringCode.Unknown);
+            Debug.Assert(this.activeSection == DxfObjectCode.Unknown);
 
-            this.chunk.Write(0, StringCode.BeginSection);
+            this.chunk.Write(0, DxfObjectCode.BeginSection);
             this.chunk.Write(2, section);          
             this.activeSection = section;
         }
@@ -379,10 +379,10 @@ namespace netDxf
         /// </summary>
         private void EndSection()
         {
-            Debug.Assert(this.activeSection != StringCode.Unknown);
+            Debug.Assert(this.activeSection != DxfObjectCode.Unknown);
 
-            this.chunk.Write(0, StringCode.EndSection);
-            this.activeSection = StringCode.Unknown;
+            this.chunk.Write(0, DxfObjectCode.EndSection);
+            this.activeSection = DxfObjectCode.Unknown;
         }
 
         /// <summary>
@@ -392,9 +392,9 @@ namespace netDxf
         /// <param name="handle">Handle assigned to this table</param>
         private void BeginTable(string table, short numEntries, string handle)
         {
-            Debug.Assert(this.activeSection == StringCode.TablesSection);
+            Debug.Assert(this.activeSection == DxfObjectCode.TablesSection);
 
-            this.chunk.Write(0, StringCode.Table);
+            this.chunk.Write(0, DxfObjectCode.Table);
             this.chunk.Write(2, table);
             this.chunk.Write(5, handle);
             this.chunk.Write(330, "0");
@@ -402,7 +402,7 @@ namespace netDxf
             this.chunk.Write(100, SubclassMarker.Table);
             this.chunk.Write(70, numEntries);
 
-            if (table == StringCode.DimensionStyleTable)
+            if (table == DxfObjectCode.DimensionStyleTable)
                 this.chunk.Write(100, SubclassMarker.DimensionStyleTable);
 
             this.activeTable = table;
@@ -413,10 +413,10 @@ namespace netDxf
         /// </summary>
         private void EndTable()
         {
-            Debug.Assert(this.activeSection != StringCode.Unknown);
+            Debug.Assert(this.activeSection != DxfObjectCode.Unknown);
 
-            this.chunk.Write(0, StringCode.EndTable);
-            this.activeTable = StringCode.Unknown;
+            this.chunk.Write(0, DxfObjectCode.EndTable);
+            this.activeTable = DxfObjectCode.Unknown;
         }
 
         #endregion
@@ -432,7 +432,7 @@ namespace netDxf
 
         private void WriteSystemVariable(HeaderVariable variable)
         {
-            Debug.Assert(this.activeSection == StringCode.HeaderSection);
+            Debug.Assert(this.activeSection == DxfObjectCode.HeaderSection);
 
             string name = variable.Name;
             object value = variable.Value;
@@ -441,140 +441,147 @@ namespace netDxf
             {
                 case HeaderVariableCode.AcadVer:
                     this.chunk.Write(9, name);
-                    this.chunk.Write(variable.CodeGroup, StringEnum.GetStringValue((DxfVersion)value));
+                    this.chunk.Write(1, StringEnum.GetStringValue((DxfVersion)value));
                     break;
                 case HeaderVariableCode.HandleSeed:
                     this.chunk.Write(9, name);
-                    this.chunk.Write(variable.CodeGroup, value);
+                    this.chunk.Write(5, value);
                     break;
                 case HeaderVariableCode.Angbase:
                     this.chunk.Write(9, name);
-                    this.chunk.Write(variable.CodeGroup, value);
+                    this.chunk.Write(50, value);
                     break;
                 case HeaderVariableCode.Angdir:
                     this.chunk.Write(9, name);
-                    this.chunk.Write(variable.CodeGroup, value);
+                    this.chunk.Write(70, value);
                     break;
                 case HeaderVariableCode.AttMode:
                     this.chunk.Write(9, name);
-                    this.chunk.Write(variable.CodeGroup, (short)(AttMode)value);
+                    this.chunk.Write(70, (short)(AttMode)value);
                     break;
                 case HeaderVariableCode.AUnits:
                     this.chunk.Write(9, name);
-                    this.chunk.Write(variable.CodeGroup, (short)(AngleUnitType)value);
+                    this.chunk.Write(70, (short)(AngleUnitType)value);
                     break;
                 case HeaderVariableCode.AUprec:
                     this.chunk.Write(9, name);
-                    this.chunk.Write(variable.CodeGroup, value);
+                    this.chunk.Write(70, value);
                     break;
                 case HeaderVariableCode.CeColor:
                     this.chunk.Write(9, name);
-                    this.chunk.Write(variable.CodeGroup, ((AciColor)value).Index);
+                    this.chunk.Write(62, ((AciColor)value).Index);
                     break;
                 case HeaderVariableCode.CeLtScale:
                     this.chunk.Write(9, name);
-                    this.chunk.Write(variable.CodeGroup, value);
+                    this.chunk.Write(40, value);
                     break;
                 case HeaderVariableCode.CeLtype:
                     this.chunk.Write(9, name);
-                    this.chunk.Write(variable.CodeGroup, EncodeNonAsciiCharacters((string)value));
+                    this.chunk.Write(6, EncodeNonAsciiCharacters((string)value));
                     break;
                 case HeaderVariableCode.CeLweight:
                     this.chunk.Write(9, name);
-                    this.chunk.Write(variable.CodeGroup, ((Lineweight)value).Value);
+                    this.chunk.Write(370, ((Lineweight)value).Value);
                     break;
                 case HeaderVariableCode.CLayer:
                     this.chunk.Write(9, name);
-                    this.chunk.Write(variable.CodeGroup, EncodeNonAsciiCharacters((string)value));
+                    this.chunk.Write(8, EncodeNonAsciiCharacters((string)value));
                     break;
                 case HeaderVariableCode.CMLJust:
                     this.chunk.Write(9, name);
-                    this.chunk.Write(variable.CodeGroup, (short)(MLineJustification)value);
+                    this.chunk.Write(70, (short)(MLineJustification)value);
                     break;
                 case HeaderVariableCode.CMLScale:
                     this.chunk.Write(9, name);
-                    this.chunk.Write(variable.CodeGroup, value);
+                    this.chunk.Write(40, value);
                     break;
                 case HeaderVariableCode.CMLStyle:
                     this.chunk.Write(9, name);
-                    this.chunk.Write(variable.CodeGroup, EncodeNonAsciiCharacters((string)value));
+                    this.chunk.Write(2, EncodeNonAsciiCharacters((string)value));
                     break;
                 case HeaderVariableCode.DimStyle:
                     this.chunk.Write(9, name);
-                    this.chunk.Write(variable.CodeGroup, EncodeNonAsciiCharacters((string)value));
+                    this.chunk.Write(2, EncodeNonAsciiCharacters((string)value));
                     break;
                 case HeaderVariableCode.TextSize:
                     this.chunk.Write(9, name);
-                    this.chunk.Write(variable.CodeGroup, value);
+                    this.chunk.Write(40, value);
                     break;
                 case HeaderVariableCode.TextStyle:
                     this.chunk.Write(9, name);
-                    this.chunk.Write(variable.CodeGroup, EncodeNonAsciiCharacters((string)value));
+                    this.chunk.Write(7, EncodeNonAsciiCharacters((string)value));
                     break;
                 case HeaderVariableCode.LastSavedBy:
                     if (this.doc.DrawingVariables.AcadVer <= DxfVersion.AutoCad2000) break;
                     this.chunk.Write(9, name);
-                    this.chunk.Write(variable.CodeGroup, EncodeNonAsciiCharacters((string)value));
+                    this.chunk.Write(1, EncodeNonAsciiCharacters((string)value));
                     break;
                 case HeaderVariableCode.LUnits:
                     this.chunk.Write(9, name);
-                    this.chunk.Write(variable.CodeGroup, (short)(LinearUnitType)value);
+                    this.chunk.Write(70, (short)(LinearUnitType)value);
                     break;
                 case HeaderVariableCode.LUprec:
                     this.chunk.Write(9, name);
-                    this.chunk.Write(variable.CodeGroup, value);
+                    this.chunk.Write(70, value);
                     break;
                 case HeaderVariableCode.DwgCodePage:
                     this.chunk.Write(9, name);
-                    this.chunk.Write(variable.CodeGroup, value);
+                    this.chunk.Write(3, value);
                     break;
                 case HeaderVariableCode.Extnames:
                     this.chunk.Write(9, name);
-                    this.chunk.Write(variable.CodeGroup, value);
+                    this.chunk.Write(290, value);
+                    break;
+                case HeaderVariableCode.InsBase:
+                    this.chunk.Write(9, name);
+                    Vector3 pos = (Vector3) value;
+                    this.chunk.Write(10, pos.X);
+                    this.chunk.Write(20, pos.Y);
+                    this.chunk.Write(30, pos.Z);
                     break;
                 case HeaderVariableCode.InsUnits:
                     this.chunk.Write(9, name);
-                    this.chunk.Write(variable.CodeGroup, (short)(DrawingUnits)value);
+                    this.chunk.Write(70, (short)(DrawingUnits)value);
                     break;
                 case HeaderVariableCode.LtScale:
                     this.chunk.Write(9, name);
-                    this.chunk.Write(variable.CodeGroup, value);
+                    this.chunk.Write(40, value);
                     break;
                 case HeaderVariableCode.LwDisplay:
                     this.chunk.Write(9, name);
-                    this.chunk.Write(variable.CodeGroup, value);
+                    this.chunk.Write(290, value);
                     break;
                 case HeaderVariableCode.PdMode:
                     this.chunk.Write(9, name);
-                    this.chunk.Write(variable.CodeGroup, (short)(PointShape)value);
+                    this.chunk.Write(70, (short)(PointShape)value);
                     break;
                 case HeaderVariableCode.PdSize:
                     this.chunk.Write(9, name);
-                    this.chunk.Write(variable.CodeGroup, value);
+                    this.chunk.Write(40, value);
                     break;
                 case HeaderVariableCode.PLineGen:
                     this.chunk.Write(9, name);
-                    this.chunk.Write(variable.CodeGroup, value);
+                    this.chunk.Write(70, value);
                     break;
                 case HeaderVariableCode.TdCreate:
                     this.chunk.Write(9, name);
-                    this.chunk.Write(variable.CodeGroup, DrawingTime.ToJulianCalendar((DateTime) value));
+                    this.chunk.Write(40, DrawingTime.ToJulianCalendar((DateTime) value));
                     break;
                 case HeaderVariableCode.TduCreate:
                     this.chunk.Write(9, name);
-                    this.chunk.Write(variable.CodeGroup, DrawingTime.ToJulianCalendar((DateTime) value));
+                    this.chunk.Write(40, DrawingTime.ToJulianCalendar((DateTime) value));
                     break;
                 case HeaderVariableCode.TdUpdate:
                     this.chunk.Write(9, name);
-                    this.chunk.Write(variable.CodeGroup, DrawingTime.ToJulianCalendar((DateTime) value));
+                    this.chunk.Write(40, DrawingTime.ToJulianCalendar((DateTime) value));
                     break;
                 case HeaderVariableCode.TduUpdate:
                     this.chunk.Write(9, name);
-                    this.chunk.Write(variable.CodeGroup, DrawingTime.ToJulianCalendar((DateTime) value));
+                    this.chunk.Write(40, DrawingTime.ToJulianCalendar((DateTime) value));
                     break;
                 case HeaderVariableCode.TdinDwg:
                     this.chunk.Write(9, name);
-                    this.chunk.Write(variable.CodeGroup, ((TimeSpan) value).TotalDays);
+                    this.chunk.Write(40, ((TimeSpan) value).TotalDays);
                     break;
             }
         }
@@ -585,7 +592,7 @@ namespace netDxf
 
         private void WriteImageClass(int count)
         {
-            this.chunk.Write(0, StringCode.Class);
+            this.chunk.Write(0, DxfObjectCode.Class);
             this.chunk.Write(1, DxfObjectCode.Image);
             this.chunk.Write(2, SubclassMarker.RasterImage);
             this.chunk.Write(3, "ISM");
@@ -599,7 +606,7 @@ namespace netDxf
 
         private void WriteImageDefClass(int count)
         {
-            this.chunk.Write(0, StringCode.Class);
+            this.chunk.Write(0, DxfObjectCode.Class);
             this.chunk.Write(1, DxfObjectCode.ImageDef);
             this.chunk.Write(2, SubclassMarker.RasterImageDef);
             this.chunk.Write(3, "ISM");
@@ -613,7 +620,7 @@ namespace netDxf
 
         private void WriteImageDefRectorClass(int count)
         {
-            this.chunk.Write(0, StringCode.Class);
+            this.chunk.Write(0, DxfObjectCode.Class);
             this.chunk.Write(1, DxfObjectCode.ImageDefReactor);
             this.chunk.Write(2, SubclassMarker.RasterImageDefReactor);
             this.chunk.Write(3, "ISM");
@@ -627,7 +634,7 @@ namespace netDxf
 
         private void WriteRasterVariablesClass(int count)
         {
-            this.chunk.Write(0, StringCode.Class);
+            this.chunk.Write(0, DxfObjectCode.Class);
             this.chunk.Write(1, DxfObjectCode.RasterVariables);
             this.chunk.Write(2, SubclassMarker.RasterVariables);
             this.chunk.Write(3, "ISM");
@@ -649,9 +656,9 @@ namespace netDxf
         /// <param name="appReg">Name of the application registry.</param>
         private void RegisterApplication(ApplicationRegistry appReg)
         {
-            Debug.Assert(this.activeTable == StringCode.ApplicationIDTable);
+            Debug.Assert(this.activeTable == DxfObjectCode.ApplicationIDTable);
 
-            this.chunk.Write(0, StringCode.ApplicationIDTable);
+            this.chunk.Write(0, DxfObjectCode.ApplicationIDTable);
             this.chunk.Write(5, appReg.Handle);
             this.chunk.Write(330, appReg.Owner.Handle);
 
@@ -669,7 +676,7 @@ namespace netDxf
         /// <param name="vp">Viewport.</param>
         private void WriteVPort(VPort vp)
         {
-            Debug.Assert(this.activeTable == StringCode.VportTable);
+            Debug.Assert(this.activeTable == DxfObjectCode.VportTable);
 
             this.chunk.Write(0, vp.CodeName);
             this.chunk.Write(5, vp.Handle);
@@ -717,7 +724,7 @@ namespace netDxf
         /// <param name="style">DimensionStyle.</param>
         private void WriteDimensionStyle(DimensionStyle style)
         {
-            Debug.Assert(this.activeTable == StringCode.DimensionStyleTable);
+            Debug.Assert(this.activeTable == DxfObjectCode.DimensionStyleTable);
 
             this.chunk.Write(0, style.CodeName);
             this.chunk.Write(105, style.Handle);
@@ -757,7 +764,7 @@ namespace netDxf
         /// <param name="blockRecord">Block.</param>
         private void WriteBlockRecord(BlockRecord blockRecord)
         {
-            Debug.Assert(this.activeTable == StringCode.BlockRecordTable);
+            Debug.Assert(this.activeTable == DxfObjectCode.BlockRecordTable);
 
             this.chunk.Write(0, blockRecord.CodeName);
             this.chunk.Write(5, blockRecord.Handle);
@@ -798,7 +805,7 @@ namespace netDxf
         /// <param name="tl">Line type.</param>
         private void WriteLineType(LineType tl)
         {
-            Debug.Assert(this.activeTable == StringCode.LineTypeTable);
+            Debug.Assert(this.activeTable == DxfObjectCode.LineTypeTable);
 
             this.chunk.Write(0, tl.CodeName);
             this.chunk.Write(5, tl.Handle);
@@ -830,7 +837,7 @@ namespace netDxf
         /// <param name="layer">Layer.</param>
         private void WriteLayer(Layer layer)
         {
-            Debug.Assert(this.activeTable == StringCode.LayerTable);
+            Debug.Assert(this.activeTable == DxfObjectCode.LayerTable);
 
             this.chunk.Write(0, layer.CodeName);
             this.chunk.Write(5, layer.Handle);
@@ -881,7 +888,7 @@ namespace netDxf
         /// <param name="style">TextStyle.</param>
         private void WriteTextStyle(TextStyle style)
         {
-            Debug.Assert(this.activeTable == StringCode.TextStyleTable);
+            Debug.Assert(this.activeTable == DxfObjectCode.TextStyleTable);
 
             this.chunk.Write(0, style.CodeName);
             this.chunk.Write(5, style.Handle);
@@ -926,7 +933,7 @@ namespace netDxf
         /// <param name="ucs">UCS.</param>
         private void WriteUCS(UCS ucs)
         {
-            Debug.Assert(this.activeTable == StringCode.UcsTable);
+            Debug.Assert(this.activeTable == DxfObjectCode.UcsTable);
 
             this.chunk.Write(0, ucs.CodeName);
             this.chunk.Write(5, ucs.Handle);
@@ -963,7 +970,7 @@ namespace netDxf
 
         private void WriteBlock(Block block, Layout layout)
         {
-            Debug.Assert(this.activeSection == StringCode.BlocksSection);
+            Debug.Assert(this.activeSection == DxfObjectCode.BlocksSection);
 
             string name = EncodeNonAsciiCharacters(block.Name);
 
@@ -993,6 +1000,7 @@ namespace netDxf
 
             foreach (AttributeDefinition attdef in block.AttributeDefinitions.Values)
             {
+                this.WriteEntityCommonCodes(attdef, null);
                 this.WriteAttributeDefinition(attdef);
             }
 
@@ -1031,7 +1039,7 @@ namespace netDxf
 
         private void WriteEntity(EntityObject entity, Layout layout)
         {
-            Debug.Assert(this.activeSection == StringCode.EntitiesSection || this.activeSection == StringCode.BlocksSection);
+            Debug.Assert(this.activeSection == DxfObjectCode.EntitiesSection || this.activeSection == DxfObjectCode.BlocksSection);
 
             WriteEntityCommonCodes(entity, layout);
 
@@ -1102,6 +1110,9 @@ namespace netDxf
                     break;
                 case EntityType.Mesh:
                     this.WriteMesh((Mesh)entity);
+                    break;
+                case EntityType.AttributeDefinition:
+                    this.WriteAttributeDefinition((AttributeDefinition) entity);
                     break;
                 default:
                     throw new ArgumentException("Entity unknown.", "entity");
@@ -2339,8 +2350,6 @@ namespace netDxf
 
         private void WriteAttributeDefinition(AttributeDefinition def)
         {
-            this.WriteEntityCommonCodes(def, null);
-
             this.chunk.Write(100, SubclassMarker.Text);
 
             this.chunk.Write(10, def.Position.X);
@@ -2420,7 +2429,7 @@ namespace netDxf
 
             this.chunk.Write(100, SubclassMarker.AttributeDefinition);
 
-            this.chunk.Write(3, EncodeNonAsciiCharacters(def.Text));
+            this.chunk.Write(3, EncodeNonAsciiCharacters(def.Prompt));
 
             this.chunk.Write(2, EncodeNonAsciiCharacters(def.Tag));
 
@@ -2685,7 +2694,7 @@ namespace netDxf
 
         private void WriteDictionary(DictionaryObject dictionary)
         {
-            this.chunk.Write(0, StringCode.Dictionary);
+            this.chunk.Write(0, DxfObjectCode.Dictionary);
             this.chunk.Write(5, dictionary.Handle);
             this.chunk.Write(330, dictionary.Owner.Handle);
 

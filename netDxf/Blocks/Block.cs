@@ -21,9 +21,11 @@
 #endregion
 
 using System;
-using netDxf.Entities;
-using netDxf.Tables;
+using System.Collections.Generic;
 using netDxf.Collections;
+using netDxf.Entities;
+using netDxf.Header;
+using netDxf.Tables;
 using Attribute = netDxf.Entities.Attribute;
 
 namespace netDxf.Blocks
@@ -43,8 +45,6 @@ namespace netDxf.Blocks
         private BlockTypeFlags flags;
         private Layer layer;
         private Vector3 position;
-        private static readonly Block modelSpace;
-        private static readonly Block paperSpace;
 
         #endregion
 
@@ -55,7 +55,7 @@ namespace netDxf.Blocks
         /// </summary>
         public static Block ModelSpace
         {
-            get { return modelSpace; }
+            get { return new Block("*Model_Space", false); }
         }
 
         /// <summary>
@@ -63,18 +63,12 @@ namespace netDxf.Blocks
         /// </summary>
         public static Block PaperSpace
         {
-            get { return paperSpace; }
+            get { return new Block("*Paper_Space", false); }
         }
 
         #endregion
 
         #region constructors
-
-        static Block()
-        {
-            modelSpace = new Block("*Model_Space", false);
-            paperSpace = new Block("*Paper_Space", false);
-        }
 
         /// <summary>
         /// Initializes a new instance of the <c>Block</c> class.
@@ -94,24 +88,24 @@ namespace netDxf.Blocks
             this.layer = Layer.Default;
 
             this.entities = new EntityCollection();
-            this.entities.BeforeAddItem += Entities_BeforeAddItem;
-            this.entities.AddItem += Entities_AddItem;
-            this.entities.BeforeRemoveItem += Entities_BeforeRemoveItem;
-            this.entities.RemoveItem += Entities_RemoveItem;
+            this.entities.BeforeAddItem += this.Entities_BeforeAddItem;
+            this.entities.AddItem += this.Entities_AddItem;
+            this.entities.BeforeRemoveItem += this.Entities_BeforeRemoveItem;
+            this.entities.RemoveItem += this.Entities_RemoveItem;
 
             this.attributes = new AttributeDefinitionDictionary();
-            this.attributes.BeforeAddItem += AttributeDefinitions_BeforeAddItem;
-            this.attributes.AddItem += AttributeDefinitions_ItemAdd;
-            this.attributes.BeforeRemoveItem += AttributeDefinitions_BeforeRemoveItem;
-            this.attributes.RemoveItem += AttributeDefinitions_RemoveItem;
+            this.attributes.BeforeAddItem += this.AttributeDefinitions_BeforeAddItem;
+            this.attributes.AddItem += this.AttributeDefinitions_ItemAdd;
+            this.attributes.BeforeRemoveItem += this.AttributeDefinitions_BeforeRemoveItem;
+            this.attributes.RemoveItem += this.AttributeDefinitions_RemoveItem;
 
             this.owner = new BlockRecord(name);
             this.flags = BlockTypeFlags.None;
             this.end = new BlockEnd
-                {
-                    Layer = this.layer,
-                    Owner = this.owner
-                };
+            {
+                Layer = this.layer,
+                Owner = this.owner
+            };
         }
 
         #endregion
@@ -202,7 +196,118 @@ namespace netDxf.Blocks
 
         #endregion
 
+        #region public methods
+
+        /// <summary>
+        /// Creates a block from an external dxf file.
+        /// </summary>
+        /// <param name="file">Dxf file name.</param>
+        /// <param name="name">Name of the new block. By default the file name without extension will be used.</param>
+        /// <returns>The block build from the dxf file content. It will return null if the file has not been able to load.</returns>
+        /// <remarks>Only the entities contained in ModelSpace will make part of the block.</remarks>
+        public static Block Load(string file, string name = null)
+        {
+#if DEBUG
+            DxfDocument dwg = DxfDocument.Load(file);
+#else
+            DxfDocument dwg;
+            try 
+            {
+                dwg = DxfDocument.Load(file);
+            }
+            catch
+            {
+                return null;
+            }
+#endif
+
+            string blkName = string.IsNullOrEmpty(name) ? dwg.Name : name;
+
+            Block block = new Block(blkName);
+            block.position = dwg.DrawingVariables.InsBase;
+            block.Record.Units = dwg.DrawingVariables.InsUnits;
+            List<DxfObject> entities = dwg.Layouts.GetReferences("Model");
+            foreach (DxfObject entity in entities)
+            {
+                Object clone = ((EntityObject) entity).Clone();
+                if (clone is AttributeDefinition)
+                {
+                    AttributeDefinition attdef = (AttributeDefinition) clone;
+                    block.AttributeDefinitions.Add(attdef);
+                }
+                else if (clone is EntityObject)
+                    block.Entities.Add((EntityObject) clone);
+            }
+
+            return block;
+        }
+
+        /// <summary>
+        /// Saves a block to a dxf file.
+        /// </summary>
+        /// <param name="file">Dxf file name.</param>
+        /// <param name="version">Version of the dxf database version.</param>
+        /// <param name="isBinary">Defines if the file will be saved as binary, by default it will be saved as text</param>
+        /// <returns>Return true if the file has been succesfully save, false otherwise.</returns>
+        public bool Save(string file, DxfVersion version, bool isBinary = false)
+        {
+            DxfDocument dwg = new DxfDocument(version);
+            dwg.DrawingVariables.InsBase = this.position;
+            dwg.DrawingVariables.InsUnits = this.Record.Units;
+            foreach (EntityObject entity in this.entities)
+            {
+                EntityObject clone = (EntityObject) entity.Clone();
+                dwg.AddEntity(clone);
+            }
+            foreach (AttributeDefinition attdef in this.attributes.Values)
+            {
+                AttributeDefinition clone = (AttributeDefinition) attdef.Clone();
+                dwg.AddEntity(clone);
+            }
+
+            return dwg.Save(file, isBinary);
+        }
+
+        #endregion
+
         #region overrides
+
+        /// <summary>
+        /// Creates a new Block that is a copy of the current instance.
+        /// </summary>
+        /// <param name="newName">GBlockroup name of the copy.</param>
+        /// <returns>A new Block that is a copy of this instance.</returns>
+        public override TableObject Clone(string newName)
+        {
+            Block copy = new Block(newName)
+            {
+                Description = this.description,
+                Flags = this.flags,
+                Layer = (Layer)this.layer.Clone(),
+                Position = this.position
+            };
+
+            foreach (EntityObject e in this.entities)
+            {
+                copy.entities.Add((EntityObject)e.Clone());
+            }
+            foreach (AttributeDefinition a in this.attributes.Values)
+            {
+                copy.attributes.Add(a);
+            }
+
+            return copy;
+
+        }
+
+        /// <summary>
+        /// Creates a new Block that is a copy of the current instance.
+        /// </summary>
+        /// <returns>A new Block that is a copy of this instance.</returns>
+        public override object Clone()
+        {
+            return Clone(this.name);
+        }
 
         /// <summary>
         /// Asigns a handle to the object based in a integer counter.
@@ -268,7 +373,7 @@ namespace netDxf.Blocks
             // null, attributes with the same tag, and attribute definitions already owned by another Block are not allowed in the attributes list.
             if (e.Item == null)
                 e.Cancel = true;
-            else if (this.attributes.ContainsKey(e.Item.Tag))
+            else if (this.attributes.ContainsTag(e.Item.Tag))
                 e.Cancel = true;
             else if (e.Item.Owner != null)
                 e.Cancel = true;
@@ -293,6 +398,5 @@ namespace netDxf.Blocks
         }
 
         #endregion
-
     }
 }

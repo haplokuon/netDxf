@@ -45,7 +45,7 @@ namespace netDxf.Collections
             : base(document,
             new Dictionary<string, Block>(capacity, StringComparer.OrdinalIgnoreCase),
             new Dictionary<string, List<DxfObject>>(capacity, StringComparer.OrdinalIgnoreCase),
-            StringCode.BlockRecordTable,
+            DxfObjectCode.BlockRecordTable,
             handle)
         {
             this.maxCapacity = short.MaxValue;

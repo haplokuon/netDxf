@@ -103,7 +103,7 @@ namespace netDxf.Header
         public const string CMLStyle = "$CMLSTYLE";
 
         /// <summary>
-        /// Current dimension style name
+        /// Current dimension style name.
         /// </summary>
         public const string DimStyle = "$DIMSTYLE";
 
@@ -146,6 +146,14 @@ namespace netDxf.Header
         /// and any special characters not used for other purposes by Microsoft Windows and AutoCAD.
         /// </remarks>
         public const string Extnames = "$EXTNAMES";
+
+        /// <summary>
+        /// Insertion base point for the current drawing.
+        /// </summary>
+        /// <remarks>
+        /// When you insert or externally reference the current drawing into other drawings, this base point is used as the insertion base point.
+        /// </remarks>
+        public const string InsBase = "$INSBASE";
 
         /// <summary>
         /// Default drawing units for AutoCAD DesignCenter blocks.

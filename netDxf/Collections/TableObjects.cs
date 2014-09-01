@@ -143,6 +143,7 @@ namespace netDxf.Collections
         /// <summary>
         /// Gets the <see cref="DxfObject">dxf objects</see> referenced by a T.
         /// </summary>
+        /// <param name="name">Table object name.</param>
         /// <returns>The list of DxfObjects that reference the specified table object.</returns>
         /// <remarks>If there is no table object with the specified name in the list the method will return null.</remarks>
         public List<DxfObject> GetReferences(string name)
@@ -157,6 +158,7 @@ namespace netDxf.Collections
         /// <summary>
         /// Gets the <see cref="DxfObject">dxf objects</see> referenced by a T.
         /// </summary>
+        /// <param name="item">Table object.</param>
         /// <returns>The list of DxfObjects that reference the specified table object.</returns>
         /// <remarks>If there is no specified table object in the list the method will return null.</remarks>
         public List<DxfObject> GetReferences(T item)

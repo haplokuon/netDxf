@@ -203,7 +203,7 @@ namespace netDxf
         /// <param name="u">Reference point.</param>
         /// <param name="distance">Distance from point u.</param>
         /// <param name="angle">Angle in radians.</param>
-        /// <returns></returns>
+        /// <returns>The polar point of the specified point.</returns>
         public static Vector2 Polar(Vector2 u, double distance, double angle)
         {
             Vector2 dir = new Vector2(Math.Cos(angle), Math.Sin(angle));

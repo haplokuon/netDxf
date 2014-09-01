@@ -29,8 +29,10 @@ namespace netDxf.Tables
     /// </summary>
     public abstract class TableObject :
         DxfObject,
+        ICloneable,
         IComparable,
-        IComparable<TableObject>
+        IComparable<TableObject>,
+        IEquatable<TableObject>
     {
 
         #region private fields
@@ -94,40 +96,6 @@ namespace netDxf.Tables
 
         #endregion
 
-        #region implements IComparable
-
-        /// <summary>
-        /// Compares the current TableObject with another TableObject of the same type.
-        /// </summary>
-        /// <param name="other">A TableObject to compare with this TableObject.</param>
-        /// <returns>
-        /// An integer that indicates the relative order of the table objects being compared.
-        /// The return value has the following meanings: Value Meaning Less than zero This object is less than the other parameter.
-        /// Zero This object is equal to other. Greater than zero This object is greater than other.
-        /// </returns>
-        /// <remarks>If both table objects are no of the same type it will return zero. The comparision is made by their names.</remarks>
-        public int CompareTo(object other)
-        {
-            return CompareTo((TableObject)other);
-        }
-
-        /// <summary>
-        /// Compares the current TableObject with another TableObject of the same type.
-        /// </summary>
-        /// <param name="other">A TableObject to compare with this TableObject.</param>
-        /// <returns>
-        /// An integer that indicates the relative order of the table objects being compared.
-        /// The return value has the following meanings: Value Meaning Less than zero This object is less than the other parameter.
-        /// Zero This object is equal to other. Greater than zero This object is greater than other.
-        /// </returns>
-        /// <remarks>If both table objects are no of the same type it will return zero. The comparision is made by their names.</remarks>
-        public int CompareTo(TableObject other)
-        {
-            return this.GetType() == other.GetType() ? String.Compare(this.Name, other.Name, StringComparison.OrdinalIgnoreCase) : 0;
-        }
-
-        #endregion
-
         #region public methods
 
         /// <summary>
@@ -166,6 +134,78 @@ namespace netDxf.Tables
             return this.Name;
         }
 
+
+        #endregion
+
+        #region implements IComparable
+
+        /// <summary>
+        /// Compares the current TableObject with another TableObject of the same type.
+        /// </summary>
+        /// <param name="other">A TableObject to compare with this TableObject.</param>
+        /// <returns>
+        /// An integer that indicates the relative order of the table objects being compared.
+        /// The return value has the following meanings: Value Meaning Less than zero This object is less than the other parameter.
+        /// Zero This object is equal to other. Greater than zero This object is greater than other.
+        /// </returns>
+        /// <remarks>If both table objects are no of the same type it will return zero. The comparision is made by their names.</remarks>
+        public int CompareTo(object other)
+        {
+            return CompareTo((TableObject)other);
+        }
+
+        /// <summary>
+        /// Compares the current TableObject with another TableObject of the same type.
+        /// </summary>
+        /// <param name="other">A TableObject to compare with this TableObject.</param>
+        /// <returns>
+        /// An integer that indicates the relative order of the table objects being compared.
+        /// The return value has the following meanings: Value Meaning Less than zero This object is less than the other parameter.
+        /// Zero This object is equal to other. Greater than zero This object is greater than other.
+        /// </returns>
+        /// <remarks>If both table objects are no of the same type it will return zero. The comparision is made by their names.</remarks>
+        public int CompareTo(TableObject other)
+        {
+            return this.GetType() == other.GetType() ? String.Compare(this.Name, other.Name, StringComparison.OrdinalIgnoreCase) : 0;
+        }
+
+        #endregion
+
+        #region implements IEquatable
+
+        /// <summary>
+        /// Check if two TableObject are equal.
+        /// </summary>
+        /// <param name="obj">Another TableObject to compare to.</param>
+        /// <returns>True if two TableObject are equal or false in anyother case.</returns>
+        /// <remarks>
+        /// Two TableObjects are considered equals if their names are the same, regardless of their internal values.
+        /// This is done this way because in a dxf two TableObjects cannot have the same name.
+        /// </remarks>
+        public bool Equals(TableObject obj)
+        {
+            if (this.GetType() != obj.GetType())
+                return false;
+
+            return String.Compare(this.Name, obj.Name, StringComparison.OrdinalIgnoreCase) == 0;
+        }
+
+        #endregion
+
+        #region ICloneable
+
+        /// <summary>
+        /// Creates a new table object that is a copy of the current instance.
+        /// </summary>
+        /// <param name="newName">TableObject name of the copy.</param>
+        /// <returns>A new table object that is a copy of this instance.</returns>
+        public abstract TableObject Clone(string newName);
+
+        /// <summary>
+        /// Creates a new table object that is a copy of the current instance.
+        /// </summary>
+        /// <returns>A new table object that is a copy of this instance.</returns>
+        public abstract object Clone();
 
         #endregion
 

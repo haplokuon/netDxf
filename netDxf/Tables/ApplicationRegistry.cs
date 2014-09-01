@@ -27,35 +27,25 @@ namespace netDxf.Tables
 {
 
     /// <summary>
-    /// Represents a registered application name to which the <see cref="netDxf.XData">extended data</see> is associated.
+    /// Represents a registered application name to which the <see cref="XData">extended data</see> is associated.
     /// </summary>
     public class ApplicationRegistry :
         TableObject
     {
-        #region private fields
-
-        private static readonly ApplicationRegistry defaultApp;
-
-        #endregion
 
         #region constants
 
         /// <summary>
         /// Gets the default application registry.
         /// </summary>
-        internal static ApplicationRegistry Default
+        public static ApplicationRegistry Default
         {
-            get { return defaultApp; }
+            get { return new ApplicationRegistry("ACAD"); }
         }
 
         #endregion
 
         #region constructors
-
-        static ApplicationRegistry()
-        {
-            defaultApp = new ApplicationRegistry("ACAD");
-        }
 
         /// <summary>
         /// Initializes a new instance of the <c>ApplicationRegistry</c> class.
@@ -85,48 +75,25 @@ namespace netDxf.Tables
         #region overrides
 
         /// <summary>
-        /// Determines whether the specified <see cref="netDxf.Tables.ApplicationRegistry" /> is equal to the current <see cref="netDxf.Tables.ApplicationRegistry" />.
+        /// Creates a new ApplicationRegistry that is a copy of the current instance.
         /// </summary>
-        /// <returns>
-        /// True if the specified <see cref="netDxf.Tables.ApplicationRegistry" /> is equal to the current <see cref="netDxf.Tables.ApplicationRegistry" />; otherwise, false.
-        /// </returns>
-        /// <remarks>Two <see cref="netDxf.Tables.ApplicationRegistry" /> instances are equal if their names are equal.</remarks>
-        /// <exception cref="T:System.NullReferenceException">
-        /// The <paramref name="obj" /> parameter is null.
-        /// </exception>
-        public bool Equals(ApplicationRegistry obj)
+        /// <param name="newName">ApplicationRegistry name of the copy.</param>
+        /// <returns>A new ApplicationRegistry that is a copy of this instance.</returns>
+        public override TableObject Clone(string newName)
         {
-            return obj.Name == this.Name;
+            return new ApplicationRegistry(newName);
         }
 
         /// <summary>
-        /// Determines whether the specified <see cref="T:System.Object" /> is equal to the current <see cref="T:System.Object" />.
+        /// Creates a new ApplicationRegistry that is a copy of the current instance.
         /// </summary>
-        /// <returns>
-        /// True if the specified <see cref="T:System.Object" /> is equal to the current <see cref="T:System.Object" />; otherwise, false.
-        /// </returns>
-        /// <param name="obj"> The <see cref="T:System.Object" /> to compare with the current <see cref="T:System.Object" />.</param>
-        /// <exception cref="T:System.NullReferenceException">
-        /// The <paramref name="obj" /> parameter is null.
-        /// </exception>
-        public override bool Equals(object obj)
+        /// <returns>A new ApplicationRegistry that is a copy of this instance.</returns>
+        public override object Clone()
         {
-            if (obj is ApplicationRegistry)
-                return this.Equals((ApplicationRegistry) obj);
-            return false;
-        }
-
-        ///<summary>
-        /// Serves as a hash function for a particular type. 
-        ///</summary>
-        ///<returns>
-        /// A hash code for the current <see cref="T:System.Object" />.
-        ///</returns>
-        public override int GetHashCode()
-        {
-            return this.Name.GetHashCode();
+            return Clone(this.name);
         }
 
         #endregion
+
     }
 }

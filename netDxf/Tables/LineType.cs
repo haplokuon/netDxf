@@ -41,10 +41,6 @@ namespace netDxf.Tables
         private string description;
         private List<double> segments;
 
-        private static readonly LineType byLayer;
-        private static readonly LineType byBlock;
-        private static readonly LineType continuous;
-
         #endregion
 
         #region constants
@@ -54,7 +50,7 @@ namespace netDxf.Tables
         /// </summary>
         public static LineType ByLayer
         {
-            get { return byLayer; }
+            get { return new LineType("ByLayer"); }
         }
 
         /// <summary>
@@ -62,7 +58,7 @@ namespace netDxf.Tables
         /// </summary>
         public static LineType ByBlock
         {
-            get { return byBlock; }
+            get { return new LineType("ByBlock"); }
         }
 
         /// <summary>
@@ -70,7 +66,7 @@ namespace netDxf.Tables
         /// </summary>
         public static LineType Continuous
         {
-            get { return continuous; }
+            get { return new LineType("Continuous", "Solid line"); }
         }
 
         /// <summary>
@@ -141,13 +137,6 @@ namespace netDxf.Tables
 
         #region constructors
 
-        static LineType()
-        {
-            byLayer = new LineType("ByLayer");
-            byBlock = new LineType("ByBlock");
-            continuous = new LineType("Continuous", "Solid line");
-        }
-
         /// <summary>
         /// Initializes a new instance of the <c>LineType</c> class.
         /// </summary>
@@ -211,6 +200,7 @@ namespace netDxf.Tables
         /// <summary>
         /// Gets the total length of the line type.
         /// </summary>
+        /// <returns>The total length of the line type.</returns>
         public double Length()
         {
             double result = 0.0;
@@ -277,6 +267,34 @@ namespace netDxf.Tables
                 }
             }
             return lineType;
+        }
+
+        #endregion
+
+        #region overrides
+
+        /// <summary>
+        /// Creates a new LineType that is a copy of the current instance.
+        /// </summary>
+        /// <param name="newName">LineType name of the copy.</param>
+        /// <returns>A new LineType that is a copy of this instance.</returns>
+        public override TableObject Clone(string newName)
+        {
+            return new LineType(newName)
+            {
+                Description = this.description,
+                Segments = new List<double>(this.segments)
+            };
+
+        }
+
+        /// <summary>
+        /// Creates a new LineType that is a copy of the current instance.
+        /// </summary>
+        /// <returns>A new LineType that is a copy of this instance.</returns>
+        public override object Clone()
+        {
+            return Clone(this.name);
         }
 
         #endregion

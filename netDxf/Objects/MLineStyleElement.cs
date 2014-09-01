@@ -1,7 +1,7 @@
-#region netDxf, Copyright(C) 2013 Daniel Carvajal, Licensed under LGPL.
+#region netDxf, Copyright(C) 2014 Daniel Carvajal, Licensed under LGPL.
 
 //                        netDxf library
-// Copyright (C) 2013 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2014 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -28,10 +28,10 @@ namespace netDxf.Objects
     /// <summary>
     /// Represent each of the elements that make up a MLineStyle.
     /// </summary>
-    public class MLineStyleElement
-        : IComparable<MLineStyleElement>
+    public class MLineStyleElement :
+        IComparable<MLineStyleElement>,
+        ICloneable
     {
-
         #region private fields
 
         private double offset;
@@ -73,8 +73,8 @@ namespace netDxf.Objects
         /// </summary>
         public double Offset
         {
-            get { return offset; }
-            set { offset = value; }
+            get { return this.offset; }
+            set { this.offset = value; }
         }
 
         /// <summary>
@@ -85,8 +85,8 @@ namespace netDxf.Objects
         /// </remarks>
         public AciColor Color
         {
-            get { return color; }
-            set { color = value; }
+            get { return this.color; }
+            set { this.color = value; }
         }
 
         /// <summary>
@@ -94,8 +94,8 @@ namespace netDxf.Objects
         /// </summary>
         public LineType LineType
         {
-            get { return lineType; }
-            set { lineType = value; }
+            get { return this.lineType; }
+            set { this.lineType = value; }
         }
 
         #endregion
@@ -118,6 +118,23 @@ namespace netDxf.Objects
 
         #endregion
 
+        #region implements ICloneable
+
+        /// <summary>
+        /// Creates a MLineStyleElement that is a copy of the current instance.
+        /// </summary>
+        /// <returns>A new MLineStyleElement is a copy of this instance.</returns>
+        public object Clone()
+        {
+            return new MLineStyleElement(this.offset)
+            {
+                Color = this.color,
+                LineType = (LineType) this.lineType.Clone()
+            };
+        }
+
+        #endregion
+
         #region overrides
 
         /// <summary>
@@ -126,10 +143,9 @@ namespace netDxf.Objects
         /// <returns>The string representation.</returns>
         public override string ToString()
         {
-            return string.Format("{0}, color:{1}, linetype:{2}", offset, color, lineType);
+            return string.Format("{0}, color:{1}, linetype:{2}", this.offset, this.color, this.lineType);
         }
 
         #endregion
-       
     }
 }

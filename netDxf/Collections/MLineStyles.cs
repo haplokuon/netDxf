@@ -44,7 +44,7 @@ namespace netDxf.Collections
             : base(document,
             new Dictionary<string, MLineStyle>(capacity, StringComparer.OrdinalIgnoreCase),
             new Dictionary<string, List<DxfObject>>(capacity, StringComparer.OrdinalIgnoreCase),
-            StringCode.MLineStyleDictionary,
+            DxfObjectCode.MLineStyleDictionary,
             handle)
         {
             this.maxCapacity = short.MaxValue;

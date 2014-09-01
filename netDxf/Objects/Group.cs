@@ -22,6 +22,7 @@
 
 using System;
 using netDxf.Collections;
+using netDxf.Entities;
 using netDxf.Tables;
 
 namespace netDxf.Objects
@@ -32,7 +33,6 @@ namespace netDxf.Objects
     public class Group :
         TableObject
     {
-
         #region private fields
 
         private string description;
@@ -69,12 +69,12 @@ namespace netDxf.Objects
         /// </summary>
         public string Description
         {
-            get { return description; }
+            get { return this.description; }
             set
             {
                 if (value == null)
-                    throw new ArgumentNullException("value"); 
-                description = value;
+                    throw new ArgumentNullException("value");
+                this.description = value;
             }
         }
 
@@ -83,8 +83,8 @@ namespace netDxf.Objects
         /// </summary>
         public bool IsUnnamed
         {
-            get { return isUnnamed; }
-            internal set { isUnnamed = value; }
+            get { return this.isUnnamed; }
+            internal set { this.isUnnamed = value; }
         }
 
         /// <summary>
@@ -92,8 +92,8 @@ namespace netDxf.Objects
         /// </summary>
         public bool IsSelectable
         {
-            get { return isSelectable; }
-            set { isSelectable = value; }
+            get { return this.isSelectable; }
+            set { this.isSelectable = value; }
         }
 
         /// <summary>
@@ -106,12 +106,12 @@ namespace netDxf.Objects
         /// </remarks>
         public EntityCollection Entities
         {
-            get { return entities; }
+            get { return this.entities; }
             set
             {
                 if (value == null)
                     throw new ArgumentNullException("value");
-                entities = value;
+                this.entities = value;
             }
         }
 
@@ -120,11 +120,47 @@ namespace netDxf.Objects
         /// </summary>
         public new Groups Owner
         {
-            get { return (Groups)this.owner; }
+            get { return (Groups) this.owner; }
             internal set { this.owner = value; }
         }
 
         #endregion
 
+        #region overrides
+
+        /// <summary>
+        /// Creates a new Group that is a copy of the current instance.
+        /// </summary>
+        /// <param name="newName">Group name of the copy.</param>
+        /// <returns>A new Group that is a copy of this instance.</returns>
+        public override TableObject Clone(string newName)
+        {
+            EntityCollection copy = new EntityCollection();
+            foreach (EntityObject e in this.entities)
+            {
+                copy.Add((EntityObject)e.Clone());
+            }
+
+            return new Group(newName)
+            {
+                Description = this.description,
+                IsSelectable = this.isSelectable,
+                Entities = copy
+            };
+        }
+
+        /// <summary>
+        /// Creates a new Group that is a copy of the current instance.
+        /// </summary>
+        /// <returns>A new Group that is a copy of this instance.</returns>
+        public override object Clone()
+        {
+            if(this.IsUnnamed)
+                return Clone(String.Empty);
+
+            return Clone(this.name);
+        }
+
+        #endregion
     }
 }
