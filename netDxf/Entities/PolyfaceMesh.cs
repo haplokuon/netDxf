@@ -241,17 +241,7 @@ namespace netDxf.Entities
                 copyFaces.Add((PolyfaceMeshFace) face.Clone());
             }
 
-            Dictionary<string, XData> copyXData = null;
-            if (this.xData != null)
-            {
-                copyXData = new Dictionary<string, XData>();
-                foreach (KeyValuePair<string, XData> data in this.xData)
-                {
-                    copyXData.Add(data.Key, (XData)data.Value.Clone());
-                }
-            }
-
-            return new PolyfaceMesh(copyVertexes, copyFaces)
+            PolyfaceMesh entity = new PolyfaceMesh(copyVertexes, copyFaces)
             {
                 //EntityObject properties
                 Layer = (Layer)this.layer.Clone(),
@@ -260,10 +250,15 @@ namespace netDxf.Entities
                 Lineweight = (Lineweight)this.lineweight.Clone(),
                 Transparency = (Transparency)this.transparency.Clone(),
                 LineTypeScale = this.lineTypeScale,
-                Normal = this.normal,
-                XData = copyXData,
+                Normal = this.normal
                 //PolyfaceMesh properties
             };
+
+            foreach (XData data in this.XData.Values)
+                entity.XData.Add((XData)data.Clone());
+
+            return entity;
+
         }
 
         #endregion

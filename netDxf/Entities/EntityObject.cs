@@ -21,8 +21,8 @@
 #endregion
 
 using System;
-using System.Collections.Generic;
 using netDxf.Blocks;
+using netDxf.Collections;
 using netDxf.Tables;
 
 namespace netDxf.Entities
@@ -45,7 +45,7 @@ namespace netDxf.Entities
         protected double lineTypeScale;
         protected bool isVisible;
         protected Vector3 normal;
-        protected Dictionary<string, XData> xData;
+        protected readonly XDataDictionary xData;
         protected DxfObject reactor;
 
 
@@ -65,7 +65,7 @@ namespace netDxf.Entities
             this.lineTypeScale = 1.0;
             this.isVisible = true;
             this.normal = Vector3.UnitZ;
-            this.xData = new Dictionary<string, XData>(StringComparer.OrdinalIgnoreCase);
+            this.xData = new XDataDictionary();
         }
 
         #endregion
@@ -211,17 +211,11 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets or sets the entity <see cref="XData">extende data</see> (key: ApplicationRegistry.Name, value: XData).
+        /// Gets the entity <see cref="XDataDictionary">extende data</see>.
         /// </summary>
-        public Dictionary<string, XData> XData
+        public XDataDictionary XData
         {
             get { return this.xData; }
-            set
-            {
-                if (value == null)
-                    throw new ArgumentNullException("value");
-                this.xData = value;
-            }
         }
 
         #endregion

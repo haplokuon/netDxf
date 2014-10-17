@@ -375,17 +375,7 @@ namespace netDxf.Entities
                 copyVertexes.Add((MLineVertex)vertex.Clone());
             }
 
-            Dictionary<string, XData> copyXData = null;
-            if (this.xData != null)
-            {
-                copyXData = new Dictionary<string, XData>();
-                foreach (KeyValuePair<string, XData> data in this.xData)
-                {
-                    copyXData.Add(data.Key, (XData)data.Value.Clone());
-                }
-            }
-
-            return new MLine
+            MLine entity = new MLine
             {
                 //EntityObject properties
                 Layer = (Layer)this.layer.Clone(),
@@ -395,7 +385,6 @@ namespace netDxf.Entities
                 Transparency = (Transparency)this.transparency.Clone(),
                 LineTypeScale = this.lineTypeScale,
                 Normal = this.normal,
-                XData = copyXData,
                 //MLine properties
                 Vertexes = copyVertexes,
                 Elevation = this.elevation,
@@ -406,6 +395,12 @@ namespace netDxf.Entities
                 Justification = this.justification,
                 Style = this.style
             };
+
+            foreach (XData data in this.XData.Values)
+                entity.XData.Add((XData)data.Clone());
+
+            return entity;
+
         }
 
         #endregion

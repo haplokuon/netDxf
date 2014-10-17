@@ -61,11 +61,11 @@ namespace netDxf.Entities
                 throw new ArgumentNullException("controlPoints", "The Spline control points list cannot be null.");
             if (controlPoints.Count < 2)
                 throw new ArgumentException("The number of control points must be equal or greater than 2.");
-            if(controlPoints.Count < degree + 1 )
+            if (controlPoints.Count < degree + 1)
                 throw new ArgumentException("The number of control points must be equal or greater than the spline degree + 1.");
             if (knots == null)
                 throw new ArgumentNullException("knots", "The Spline knots list cannot be null.");
-            if(knots.Length != controlPoints.Count + degree + 1)
+            if (knots.Length != controlPoints.Count + degree + 1)
                 throw new ArgumentException("The number of knots must be equals to the number of control points + spline degree + 1.");
 
             this.controlPoints = controlPoints;
@@ -82,7 +82,6 @@ namespace netDxf.Entities
                 this.isClosed = controlPoints[0].Location.Equals(controlPoints[controlPoints.Count - 1].Location);
                 this.flags = this.isClosed ? SplineTypeFlags.Closed | SplineTypeFlags.Rational : SplineTypeFlags.Rational;
             }
-
         }
 
         /// <summary>
@@ -93,7 +92,7 @@ namespace netDxf.Entities
         /// <remarks>By default the degree of the spline is equal three.</remarks>
         public Spline(List<SplineVertex> controlPoints, bool periodic = false)
             : this(controlPoints, 3, periodic)
-        {      
+        {
         }
 
         /// <summary>
@@ -127,7 +126,7 @@ namespace netDxf.Entities
                 this.flags = this.isClosed ? SplineTypeFlags.Closed | SplineTypeFlags.Rational : SplineTypeFlags.Rational;
             }
 
-            this.Create(controlPoints); 
+            this.Create(controlPoints);
         }
 
         #endregion
@@ -205,10 +204,11 @@ namespace netDxf.Entities
                 controlPoint.Weigth = weight;
             }
         }
+
         #endregion
 
         #region private methods
-        
+
         private bool PeriodicTest(List<SplineVertex> points, short d)
         {
             bool periodic = false;
@@ -229,7 +229,7 @@ namespace netDxf.Entities
                 SplineVertex vertex = new SplineVertex(controlPoint.Location, controlPoint.Weigth);
                 this.controlPoints.Add(vertex);
             }
-            
+
             for (int i = 0; i < replicate; i++)
             {
                 SplineVertex vertex = new SplineVertex(points[i].Location, points[i].Weigth);
@@ -239,7 +239,7 @@ namespace netDxf.Entities
             int numKnots = numControlPoints + this.degree + 1;
             this.knots = new double[numKnots];
 
-            double factor = 1.0 / (numControlPoints - this.degree);
+            double factor = 1.0/(numControlPoints - this.degree);
             if (!this.isPeriodic)
             {
                 int i;
@@ -247,15 +247,15 @@ namespace netDxf.Entities
                     this.knots[i] = 0.0;
 
                 for (; i < numControlPoints; i++)
-                    this.knots[i] = (i - this.degree) * factor;
+                    this.knots[i] = (i - this.degree);
 
                 for (; i < numKnots; i++)
-                    this.knots[i] = 1;
+                    this.knots[i] = numControlPoints - this.degree;
             }
             else
             {
                 for (int i = 0; i < numKnots; i++)
-                    this.knots[i] = (i - this.degree) * factor;
+                    this.knots[i] = (i - this.degree)*factor;
             }
         }
 
@@ -277,32 +277,161 @@ namespace netDxf.Entities
             double[] copyKnots = new double[this.knots.Length];
             this.knots.CopyTo(copyKnots, 0);
 
-            Dictionary<string, XData> copyXData = null;
-            if (this.xData != null)
-            {
-                copyXData = new Dictionary<string, XData>();
-                foreach (KeyValuePair<string, XData> data in this.xData)
-                {
-                    copyXData.Add(data.Key, (XData)data.Value.Clone());
-                }
-            }
-
-            return new Spline(copyControlPoints, copyKnots, this.degree)
+            Spline entity = new Spline(copyControlPoints, copyKnots, this.degree)
             {
                 //EntityObject properties
-                Layer = (Layer)this.layer.Clone(),
-                LineType = (LineType)this.lineType.Clone(),
-                Color = (AciColor)this.color.Clone(),
-                Lineweight = (Lineweight)this.lineweight.Clone(),
-                Transparency = (Transparency)this.transparency.Clone(),
+                Layer = (Layer) this.layer.Clone(),
+                LineType = (LineType) this.lineType.Clone(),
+                Color = (AciColor) this.color.Clone(),
+                Lineweight = (Lineweight) this.lineweight.Clone(),
+                Transparency = (Transparency) this.transparency.Clone(),
                 LineTypeScale = this.lineTypeScale,
-                Normal = this.normal,
-                XData = copyXData,
+                Normal = this.normal
                 //Spline properties
             };
+
+            foreach (XData data in this.XData.Values)
+                entity.XData.Add((XData) data.Clone());
+
+            return entity;
         }
 
         #endregion
 
+        #region Nurbs evaluator provided by mikau16 based on Michael V. implementation, roughly follows the notation of http://cs.mtu.edu/~shene/PUBLICATIONS/2004/NURBS.pdf
+
+        private Dictionary<Vector3, double> cache;
+
+        /// <summary>
+        /// Converts the spline in a list of vertexes.
+        /// </summary>
+        /// <param name="precision">Number of vertexes generated.</param>
+        /// <returns>A list vertexes that represents the spline.</returns>
+        public IList<Vector3> PolygonalVertexes(int precision)
+        {
+
+            this.cache = new Dictionary<Vector3, double>(); // for faster evaluation
+
+            double u_start;
+            double u_end;
+            List<Vector3> vertexes = new List<Vector3>();
+
+            // added a few fixes to make it work for open, closed, and periodic closed splines.
+            if (!this.IsClosed)
+            {
+                precision -= 1;
+                u_start = this.knots[0];
+                u_end = this.knots[this.knots.Length - 1];
+            }
+            else if (this.isPeriodic)
+            {
+                u_start = this.knots[this.degree];
+                u_end = this.knots[this.knots.Length - this.degree - 1];
+            }
+            else
+            {
+                u_start = this.knots[0];
+                u_end = this.knots[this.knots.Length - 1];
+            }
+
+            double u_delta = (u_end - u_start)/precision; // sample u uniformly from knots[initial] to knots[final]
+
+            // old for loop
+            //for (double u = u_start; u < u_end; u += u_delta)
+            //{
+            //    vertexes.Add(C(u));
+            //}
+
+            // for loop without doubles, they are very prone to round off errors
+            for (int i = 0; i < precision; i++)
+            {
+                double u = u_start + (u_delta*i);
+                vertexes.Add(this.C(u));
+            }
+
+            if (!this.IsClosed)
+            {
+                vertexes.Add(this.controlPoints[this.controlPoints.Count - 1].Location);
+            }
+
+
+            this.cache = null;
+
+            return vertexes;
+        }
+
+        /// <summary>
+        /// Converts the spline in a Polyline.
+        /// </summary>
+        /// <param name="precision">Number of vertexes generated.</param>
+        /// <returns>A new instance of <see cref="Polyline">Polyline</see> that represents the spline.</returns>
+        public Polyline ToPolyline(int precision)
+        {
+            IEnumerable<Vector3> vertexes = this.PolygonalVertexes(precision);
+
+            Polyline poly = new Polyline
+            {
+                Layer = (Layer) this.layer.Clone(),
+                LineType = (LineType) this.lineType.Clone(),
+                Color = (AciColor) this.color.Clone(),
+                Lineweight = (Lineweight) this.lineweight.Clone(),
+                Transparency = (Transparency) this.transparency.Clone(),
+                LineTypeScale = this.lineTypeScale,
+                Normal = this.normal,
+                IsClosed = this.isClosed
+            };
+            foreach (Vector3 v in vertexes)
+            {
+                poly.Vertexes.Add(new PolylineVertex(v));
+            }
+            return poly;
+        }
+
+        private Vector3 C(double u)
+        {
+            Vector3 vectorSum = new Vector3(0.0, 0.0, 0.0);
+            double denominatorSum = 0.0;
+
+            for (int j = 0; j < this.controlPoints.Count; j++)
+                denominatorSum += this.N(j, this.degree, u)*this.controlPoints[j].Weigth;
+
+            for (int i = 0; i < this.controlPoints.Count; i++)
+                vectorSum += (this.controlPoints[i].Weigth*this.N(i, this.degree, u))*this.controlPoints[i].Location;
+
+            // avoid possible diveded by zero error, this should never happen
+            if (Math.Abs(denominatorSum) < double.Epsilon)
+                return vectorSum;
+
+            return (1.0/denominatorSum)*vectorSum;
+        }
+
+        private double N(int i, int p, double u)
+        {
+            Vector3 key = new Vector3(i, p, u);
+            if (this.cache.ContainsKey(key))
+                return this.cache[key];
+
+            if (p <= 0)
+            {
+                if (this.knots[i] <= u && u < this.knots[i + 1])
+                    return 1;
+                return 0;
+            }
+
+            double leftCoefficient = 0;
+            if (!(Math.Abs(this.knots[i + p] - this.knots[i]) < double.Epsilon))
+                leftCoefficient = (u - this.knots[i])/(this.knots[i + p] - this.knots[i]);
+
+            double rightCoefficient = 0; // article contains error here, denominator is Knots[i + p + 1] - Knots[i + 1]
+            if (!(Math.Abs(this.knots[i + p + 1] - this.knots[i + 1]) < double.Epsilon))
+                rightCoefficient = (this.knots[i + p + 1] - u)/(this.knots[i + p + 1] - this.knots[i + 1]);
+
+            double toReturn = leftCoefficient*this.N(i, p - 1, u) + rightCoefficient*this.N(i + 1, p - 1, u);
+            this.cache.Add(key, toReturn);
+
+            return toReturn;
+        }
+
+        #endregion
     }
 }

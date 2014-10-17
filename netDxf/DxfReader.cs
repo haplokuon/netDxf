@@ -996,8 +996,8 @@ namespace netDxf
             DrawingUnits units = DrawingUnits.Unitless;
             bool allowExploding = true;
             bool scaleUniformly = false;
-
-            Dictionary<string, XData> xData = new Dictionary<string, XData>(StringComparer.OrdinalIgnoreCase);
+            List<XData> xData = new List<XData>();
+            XData designCenterData = null;
 
             this.chunk.Next();
 
@@ -1022,12 +1022,10 @@ namespace netDxf
                         this.chunk.Next();
                         break;
                     case 1001:
-                        XData xDataItem = this.ReadXDataRecord(this.chunk.ReadString());
-                        // to be safe if the xDataItem.ApplicationRegistry.Name already exists we will add the new entry to the existing one
-                        if (xData.ContainsKey(xDataItem.ApplicationRegistry.Name))
-                            xData[xDataItem.ApplicationRegistry.Name].XDataRecord.AddRange(xDataItem.XDataRecord);
-                        else
-                            xData.Add(xDataItem.ApplicationRegistry.Name, xDataItem);
+                        XData data = this.ReadXDataRecord(this.chunk.ReadString());
+                        xData.Add(data);
+                        if (data.ApplicationRegistry.Name.Equals(ApplicationRegistry.Default.Name, StringComparison.OrdinalIgnoreCase))
+                            designCenterData = data;
                         break;
                     default:
                         if (this.chunk.Code >= 1000 && this.chunk.Code <= 1071)
@@ -1038,30 +1036,33 @@ namespace netDxf
                 }
             }
 
-            // here is where dxf versions prior to AutoCad2007 stores the block units
-            XData designCenterData;
-            if (xData.TryGetValue(ApplicationRegistry.Default.Name, out designCenterData))
-            {
-                foreach (XDataRecord record in designCenterData.XDataRecord)
-                {
-                    // the second 1070 code is the one that stores the block units,
-                    // it will override the first 1070 that stores the Autodesk Design Center version number
-                    if (record.Code == XDataCode.Int16)
-                        units = (DrawingUnits) (short) record.Value;
-                }
-            }
-
             if (string.IsNullOrEmpty(name)) return null;
 
             // we need to check for generated blocks by dimensions, even if the dimension was deleted the block might persist in the drawing.
             this.CheckDimBlockName(name);
 
-            return new BlockRecord(name)
+            // here is where dxf versions prior to AutoCad2007 stores the block units
+            if (designCenterData != null)
+            {
+                foreach (XDataRecord data in designCenterData.XDataRecord)
+                {
+                    // the second 1070 code is the one that stores the block units,
+                    // it will override the first 1070 that stores the Autodesk Design Center version number
+                    if (data.Code == XDataCode.Int16)
+                        units = (DrawingUnits)(short)data.Value;
+                }
+            }
+
+            BlockRecord record = new BlockRecord(name)
             {
                 Units = units,
                 AllowExploding = allowExploding,
                 ScaleUniformly = scaleUniformly
             };
+
+            record.XData.AddRange(xData);
+
+            return record;
         }
 
         private DimensionStyle ReadDimensionStyle()
@@ -2158,6 +2159,7 @@ namespace netDxf
             List<Vector3> vertexes = null;
             List<int[]> faces = null;
             List<MeshEdge> edges = null;
+            List<XData> xData = new List<XData>();
 
             while (this.chunk.Code != 0)
             {
@@ -2190,15 +2192,26 @@ namespace netDxf
                             throw new NullReferenceException("The edges list is not initialized.");
                         ReadMeshEdgeCreases(edges, numCrease);
                         break;
+                    case 1001:
+                        xData.Add(this.ReadXDataRecord(this.chunk.ReadString()));
+                        break;
                     default:
+                        if (this.chunk.Code >= 1000 && this.chunk.Code <= 1071)
+                            throw new DxfInvalidCodeValueEntityException(this.chunk.Code, this.chunk.ReadString(),
+                                "The extended data of an entity must start with the application registry code.");
                         this.chunk.Next();
                         break;
                 }
             }
-            return new Mesh(vertexes, faces, edges)
+            Mesh entity = new Mesh(vertexes, faces, edges)
                         {
-                            SubdivisionLevel = (byte)subdivisionLevel
+                            SubdivisionLevel = (byte)subdivisionLevel,
                         };
+
+            entity.XData.AddRange(xData);
+
+            return entity;
+
         }
 
         private List<Vector3> ReadMeshVertexes(int count)
@@ -2291,7 +2304,7 @@ namespace netDxf
             Vector3 ucsXAxis = Vector3.UnitX;
             Vector3 ucsYAxis = Vector3.UnitY;
 
-            Dictionary<string, XData> xData = new Dictionary<string, XData>(StringComparer.OrdinalIgnoreCase);
+            List<XData> xData = new List<XData>();
 
             this.chunk.Next();
             while (this.chunk.Code != 0)
@@ -2461,12 +2474,7 @@ namespace netDxf
                         this.chunk.Next();
                         break;
                     case 1001:
-                        XData xDataItem = this.ReadXDataRecord(this.chunk.ReadString());
-                        // to be safe if the xDataItem.ApplicationRegistry.Name already exists we will add the new entry to the existing one
-                        if (xData.ContainsKey(xDataItem.ApplicationRegistry.Name))
-                            xData[xDataItem.ApplicationRegistry.Name].XDataRecord.AddRange(xDataItem.XDataRecord);
-                        else
-                            xData.Add(xDataItem.ApplicationRegistry.Name, xDataItem);
+                        xData.Add(this.ReadXDataRecord(this.chunk.ReadString()));
                         break;
                     default:
                         if (this.chunk.Code >= 1000 && this.chunk.Code <= 1071)
@@ -2487,7 +2495,8 @@ namespace netDxf
             viewport.UcsOrigin = ucsOrigin;
             viewport.UcsXAxis = ucsXAxis;
             viewport.UcsYAxis = ucsYAxis;
-            viewport.XData = xData;
+
+            viewport.XData.AddRange(xData);
 
             return viewport;
         }
@@ -2507,7 +2516,7 @@ namespace netDxf
             ImageClippingBoundaryType boundaryType = ImageClippingBoundaryType.Rectangular;
             ImageClippingBoundary clippingBoundary = null;
 
-            Dictionary<string, XData> xData = new Dictionary<string, XData>(StringComparer.OrdinalIgnoreCase);
+            List<XData> xData = new List<XData>();
             this.chunk.Next();
             while (this.chunk.Code != 0)
             {
@@ -2607,12 +2616,7 @@ namespace netDxf
                             clippingBoundary = null;
                         break;
                     case 1001:
-                        XData xDataItem = this.ReadXDataRecord(this.chunk.ReadString());
-                        // to be safe if the xDataItem.ApplicationRegistry.Name already exists we will add the new entry to the existing one
-                        if (xData.ContainsKey(xDataItem.ApplicationRegistry.Name))
-                            xData[xDataItem.ApplicationRegistry.Name].XDataRecord.AddRange(xDataItem.XDataRecord);
-                        else
-                            xData.Add(xDataItem.ApplicationRegistry.Name, xDataItem);
+                        xData.Add(this.ReadXDataRecord(this.chunk.ReadString()));
                         break;
                     default:
                         if (this.chunk.Code >= 1000 && this.chunk.Code <= 1071)
@@ -2643,9 +2647,10 @@ namespace netDxf
                 Brightness = brightness,
                 Contrast = contrast,
                 Fade = fade,
-                ClippingBoundary = clippingBoundary,
-                XData = xData
+                ClippingBoundary = clippingBoundary
             };
+
+            image.XData.AddRange(xData);
 
             this.imgToImgDefHandles.Add(image, imageDefHandle);
 
@@ -2660,7 +2665,7 @@ namespace netDxf
             double endAngle = 180.0;
             double thickness = 0.0;
             Vector3 normal = Vector3.UnitZ;
-            Dictionary<string, XData> xData = new Dictionary<string, XData>(StringComparer.OrdinalIgnoreCase);
+            List<XData> xData = new List<XData>();
 
             this.chunk.Next();
 
@@ -2709,12 +2714,7 @@ namespace netDxf
                         this.chunk.Next();
                         break;
                     case 1001:
-                        XData xDataItem = this.ReadXDataRecord(this.chunk.ReadString());
-                        // to be safe if the xDataItem.ApplicationRegistry.Name already exists we will add the new entry to the existing one
-                        if (xData.ContainsKey(xDataItem.ApplicationRegistry.Name))
-                            xData[xDataItem.ApplicationRegistry.Name].XDataRecord.AddRange(xDataItem.XDataRecord);
-                        else
-                            xData.Add(xDataItem.ApplicationRegistry.Name, xDataItem);
+                        xData.Add(this.ReadXDataRecord(this.chunk.ReadString()));
                         break;
                     default:
                         if (this.chunk.Code >= 1000 && this.chunk.Code <= 1071)
@@ -2729,16 +2729,19 @@ namespace netDxf
             // the center of an arc is given in object coordinates (different rules for the same concept).
             // It is a lot more intuitive to give the center in world coordinates and then define the orientation with the normal..
             Vector3 wcsCenter = MathHelper.Transform(center, normal, MathHelper.CoordinateSystem.Object, MathHelper.CoordinateSystem.World);
-            return new Arc
+            Arc entity = new Arc
             {
                 Center = wcsCenter,
                 Radius = radius,
                 StartAngle = startAngle,
                 EndAngle = endAngle,
                 Thickness = thickness,
-                Normal = normal,
-                XData = xData
+                Normal = normal
             };
+
+            entity.XData.AddRange(xData);
+
+            return entity;
         }
 
         private Circle ReadCircle()
@@ -2747,7 +2750,7 @@ namespace netDxf
             double radius = 1.0;
             double thickness = 0.0;
             Vector3 normal = Vector3.UnitZ;
-            Dictionary<string, XData> xData = new Dictionary<string, XData>(StringComparer.OrdinalIgnoreCase);
+            List<XData> xData = new List<XData>();
 
             this.chunk.Next();
             while (this.chunk.Code != 0)
@@ -2787,12 +2790,7 @@ namespace netDxf
                         this.chunk.Next();
                         break;
                     case 1001:
-                        XData xDataItem = this.ReadXDataRecord(this.chunk.ReadString());
-                        // to be safe if the xDataItem.ApplicationRegistry.Name already exists we will add the new entry to the existing one
-                        if (xData.ContainsKey(xDataItem.ApplicationRegistry.Name))
-                            xData[xDataItem.ApplicationRegistry.Name].XDataRecord.AddRange(xDataItem.XDataRecord);
-                        else
-                            xData.Add(xDataItem.ApplicationRegistry.Name, xDataItem);
+                        xData.Add(this.ReadXDataRecord(this.chunk.ReadString()));
                         break;
                     default:
                         if (this.chunk.Code >= 1000 && this.chunk.Code <= 1071)
@@ -2808,14 +2806,18 @@ namespace netDxf
             // It is a lot more intuitive to give the center in world coordinates and then define the orientation with the normal..
             Vector3 wcsCenter = MathHelper.Transform(center, normal, MathHelper.CoordinateSystem.Object, MathHelper.CoordinateSystem.World);
 
-            return new Circle
+            Circle entity = new Circle
             {
                 Center = wcsCenter,
                 Radius = radius,
                 Thickness = thickness,
-                Normal = normal,
-                XData = xData
+                Normal = normal
             };
+
+            entity.XData.AddRange(xData);
+
+            return entity;
+
         }
 
         private Dimension ReadDimension(bool isBlockEntity = false)
@@ -2989,7 +2991,7 @@ namespace netDxf
         {
             Vector3 firstRef = Vector3.Zero;
             Vector3 secondRef = Vector3.Zero;
-            Dictionary<string, XData> xData = new Dictionary<string, XData>(StringComparer.OrdinalIgnoreCase);
+            List<XData> xData = new List<XData>();
 
             while (this.chunk.Code != 0)
             {
@@ -3020,12 +3022,7 @@ namespace netDxf
                         this.chunk.Next();
                         break;
                     case 1001:
-                        XData xDataItem = this.ReadXDataRecord(this.chunk.ReadString());
-                        // to be safe if the xDataItem.ApplicationRegistry.Name already exists we will add the new entry to the existing one
-                        if (xData.ContainsKey(xDataItem.ApplicationRegistry.Name))
-                            xData[xDataItem.ApplicationRegistry.Name].XDataRecord.AddRange(xDataItem.XDataRecord);
-                        else
-                            xData.Add(xDataItem.ApplicationRegistry.Name, xDataItem);
+                        xData.Add(this.ReadXDataRecord(this.chunk.ReadString()));
                         break;
                     default:
                         if (this.chunk.Code >= 1000 && this.chunk.Code <= 1071)
@@ -3036,13 +3033,18 @@ namespace netDxf
                 }
             }
             double offset = Vector3.Distance(secondRef, defPoint);
-            return new AlignedDimension
+            
+            AlignedDimension entity = new AlignedDimension
             {
                 FirstReferencePoint = firstRef,
                 SecondReferencePoint = secondRef,
-                Offset = offset,
-                XData = xData
+                Offset = offset
             };
+
+            entity.XData.AddRange(xData);
+
+            return entity;
+
         }
 
         private LinearDimension ReadLinearDimension(Vector3 defPoint)
@@ -3050,7 +3052,7 @@ namespace netDxf
             Vector3 firtRef = Vector3.Zero;
             Vector3 secondRef = Vector3.Zero;
             double rot = 0.0;
-            Dictionary<string, XData> xData = new Dictionary<string, XData>(StringComparer.OrdinalIgnoreCase);
+            List<XData> xData = new List<XData>();
 
             while (this.chunk.Code != 0)
             {
@@ -3089,12 +3091,7 @@ namespace netDxf
                         this.chunk.Next();
                         break;
                     case 1001:
-                        XData xDataItem = this.ReadXDataRecord(this.chunk.ReadString());
-                        // to be safe if the xDataItem.ApplicationRegistry.Name already exists we will add the new entry to the existing one
-                        if (xData.ContainsKey(xDataItem.ApplicationRegistry.Name))
-                            xData[xDataItem.ApplicationRegistry.Name].XDataRecord.AddRange(xDataItem.XDataRecord);
-                        else
-                            xData.Add(xDataItem.ApplicationRegistry.Name, xDataItem);
+                        xData.Add(this.ReadXDataRecord(this.chunk.ReadString()));
                         break;
                     default:
                         if (this.chunk.Code >= 1000 && this.chunk.Code <= 1071)
@@ -3111,20 +3108,24 @@ namespace netDxf
             dir.Normalize();
             double offset = MathHelper.PointLineDistance(midPoint, origin, dir);
 
-            return new LinearDimension
+            LinearDimension entity = new LinearDimension
             {
                 FirstReferencePoint = firtRef,
                 SecondReferencePoint = secondRef,
                 Offset = offset,
-                Rotation = rot,
-                XData = xData
+                Rotation = rot
             };
+
+            entity.XData.AddRange(xData);
+
+            return entity;
+
         }
 
         private RadialDimension ReadRadialDimension(Vector3 defPoint, Vector3 normal)
         {
             Vector3 circunferenceRef = Vector3.Zero;
-            Dictionary<string, XData> xData = new Dictionary<string, XData>(StringComparer.OrdinalIgnoreCase);
+            List<XData> xData = new List<XData>();
 
             while (this.chunk.Code != 0)
             {
@@ -3146,12 +3147,7 @@ namespace netDxf
                         this.chunk.Next();
                         break;
                     case 1001:
-                        XData xDataItem = this.ReadXDataRecord(this.chunk.ReadString());
-                        // to be safe if the xDataItem.ApplicationRegistry.Name already exists we will add the new entry to the existing one
-                        if (xData.ContainsKey(xDataItem.ApplicationRegistry.Name))
-                            xData[xDataItem.ApplicationRegistry.Name].XDataRecord.AddRange(xDataItem.XDataRecord);
-                        else
-                            xData.Add(xDataItem.ApplicationRegistry.Name, xDataItem);
+                        xData.Add(this.ReadXDataRecord(this.chunk.ReadString()));
                         break;
                     default:
                         if (this.chunk.Code >= 1000 && this.chunk.Code <= 1071)
@@ -3170,19 +3166,24 @@ namespace netDxf
             Vector2 seconPoint = new Vector2(refPoint.X, refPoint.Y);
 
             double rotation = Vector2.Angle(firstPoint, seconPoint)*MathHelper.RadToDeg;
-            return new RadialDimension(defPoint, radius, rotation)
+            
+            RadialDimension entity = new RadialDimension(defPoint, radius, rotation)
             {
                 CenterPoint = defPoint,
                 Radius = radius,
-                Rotation = rotation,
-                XData = xData
+                Rotation = rotation
             };
+
+            entity.XData.AddRange(xData);
+
+            return entity;
+
         }
 
         private DiametricDimension ReadDiametricDimension(Vector3 defPoint, Vector3 normal)
         {
             Vector3 circunferenceRef = Vector3.Zero;
-            Dictionary<string, XData> xData = new Dictionary<string, XData>(StringComparer.OrdinalIgnoreCase);
+            List<XData> xData = new List<XData>();
 
             while (this.chunk.Code != 0)
             {
@@ -3204,12 +3205,7 @@ namespace netDxf
                         this.chunk.Next();
                         break;
                     case 1001:
-                        XData xDataItem = this.ReadXDataRecord(this.chunk.ReadString());
-                        // to be safe if the xDataItem.ApplicationRegistry.Name already exists we will add the new entry to the existing one
-                        if (xData.ContainsKey(xDataItem.ApplicationRegistry.Name))
-                            xData[xDataItem.ApplicationRegistry.Name].XDataRecord.AddRange(xDataItem.XDataRecord);
-                        else
-                            xData.Add(xDataItem.ApplicationRegistry.Name, xDataItem);
+                        xData.Add(this.ReadXDataRecord(this.chunk.ReadString()));
                         break;
                     default:
                         if (this.chunk.Code >= 1000 && this.chunk.Code <= 1071)
@@ -3229,13 +3225,17 @@ namespace netDxf
 
             double rotation = Vector2.Angle(firstPoint, seconPoint)*MathHelper.RadToDeg;
 
-            return new DiametricDimension
+            DiametricDimension entity = new DiametricDimension
             {
                 CenterPoint = Vector3.MidPoint(defPoint, circunferenceRef),
                 Diameter = diameter,
-                Rotation = rotation,
-                XData = xData
+                Rotation = rotation
             };
+
+            entity.XData.AddRange(xData);
+
+            return entity;
+
         }
 
         private Angular3PointDimension ReadAngular3PointDimension(Vector3 defPoint)
@@ -3244,7 +3244,7 @@ namespace netDxf
             Vector3 firstRef = Vector3.Zero;
             Vector3 secondRef = Vector3.Zero;
 
-            Dictionary<string, XData> xData = new Dictionary<string, XData>(StringComparer.OrdinalIgnoreCase);
+            List<XData> xData = new List<XData>();
 
             while (this.chunk.Code != 0)
             {
@@ -3287,12 +3287,7 @@ namespace netDxf
                         this.chunk.Next();
                         break;
                     case 1001:
-                        XData xDataItem = this.ReadXDataRecord(this.chunk.ReadString());
-                        // to be safe if the xDataItem.ApplicationRegistry.Name already exists we will add the new entry to the existing one
-                        if (xData.ContainsKey(xDataItem.ApplicationRegistry.Name))
-                            xData[xDataItem.ApplicationRegistry.Name].XDataRecord.AddRange(xDataItem.XDataRecord);
-                        else
-                            xData.Add(xDataItem.ApplicationRegistry.Name, xDataItem);
+                        xData.Add(this.ReadXDataRecord(this.chunk.ReadString()));
                         break;
                     default:
                         if (this.chunk.Code >= 1000 && this.chunk.Code <= 1071)
@@ -3303,14 +3298,18 @@ namespace netDxf
                 }
             }
 
-            return new Angular3PointDimension
+            Angular3PointDimension entity = new Angular3PointDimension
             {
                 CenterPoint = center,
                 FirstPoint = firstRef,
                 SecondPoint = secondRef,
-                Offset = Vector3.Distance(center, defPoint),
-                XData = xData
+                Offset = Vector3.Distance(center, defPoint)
             };
+
+            entity.XData.AddRange(xData);
+
+            return entity;
+
         }
 
         private Angular2LineDimension ReadAngular2LineDimension(Vector3 defPoint)
@@ -3320,7 +3319,7 @@ namespace netDxf
             Vector3 startSecondLine = Vector3.Zero;
             Vector3 arcDefinitionPoint = Vector3.Zero;
 
-            Dictionary<string, XData> xData = new Dictionary<string, XData>(StringComparer.OrdinalIgnoreCase);
+            List<XData> xData = new List<XData>();
 
             while (this.chunk.Code != 0)
             {
@@ -3375,12 +3374,7 @@ namespace netDxf
                         this.chunk.Next();
                         break;
                     case 1001:
-                        XData xDataItem = this.ReadXDataRecord(this.chunk.ReadString());
-                        // to be safe if the xDataItem.ApplicationRegistry.Name already exists we will add the new entry to the existing one
-                        if (xData.ContainsKey(xDataItem.ApplicationRegistry.Name))
-                            xData[xDataItem.ApplicationRegistry.Name].XDataRecord.AddRange(xDataItem.XDataRecord);
-                        else
-                            xData.Add(xDataItem.ApplicationRegistry.Name, xDataItem);
+                        xData.Add(this.ReadXDataRecord(this.chunk.ReadString()));
                         break;
                     default:
                         if (this.chunk.Code >= 1000 && this.chunk.Code <= 1071)
@@ -3390,16 +3384,20 @@ namespace netDxf
                         break;
                 }
             }
-            return new Angular2LineDimension
+            Angular2LineDimension entity = new Angular2LineDimension
             {
                 StartFirstLine = startFirstLine,
                 EndFirstLine = endFirstLine,
                 StartSecondLine = startSecondLine,
                 EndSecondLine = defPoint,
                 Offset = Vector3.Distance(startSecondLine, defPoint),
-                ArcDefinitionPoint = arcDefinitionPoint,
-                XData = xData
+                ArcDefinitionPoint = arcDefinitionPoint
             };
+
+            entity.XData.AddRange(xData);
+
+            return entity;
+
         }
 
         private OrdinateDimension ReadOrdinateDimension(Vector3 defPoint, OrdinateDimensionAxis axis, Vector3 normal, double rotation)
@@ -3407,7 +3405,7 @@ namespace netDxf
             Vector3 firstPoint = Vector3.Zero;
             Vector3 secondPoint = Vector3.Zero;
 
-            Dictionary<string, XData> xData = new Dictionary<string, XData>(StringComparer.OrdinalIgnoreCase);
+            List<XData> xData = new List<XData>();
 
             while (this.chunk.Code != 0)
             {
@@ -3438,12 +3436,7 @@ namespace netDxf
                         this.chunk.Next();
                         break;
                     case 1001:
-                        XData xDataItem = this.ReadXDataRecord(this.chunk.ReadString());
-                        // to be safe if the xDataItem.ApplicationRegistry.Name already exists we will add the new entry to the existing one
-                        if (xData.ContainsKey(xDataItem.ApplicationRegistry.Name))
-                            xData[xDataItem.ApplicationRegistry.Name].XDataRecord.AddRange(xDataItem.XDataRecord);
-                        else
-                            xData.Add(xDataItem.ApplicationRegistry.Name, xDataItem);
+                        xData.Add(this.ReadXDataRecord(this.chunk.ReadString()));
                         break;
                     default:
                         if (this.chunk.Code >= 1000 && this.chunk.Code <= 1071)
@@ -3464,15 +3457,19 @@ namespace netDxf
 
             double length = axis == OrdinateDimensionAxis.X ? secondRef.Y - firstRef.Y : secondRef.X - firstRef.X;
 
-            return new OrdinateDimension
+            OrdinateDimension entity = new OrdinateDimension
             {
                 Origin = defPoint,
                 ReferencePoint = firstRef,
                 Length = length,
                 Rotation = rotation,
-                Axis = axis,
-                XData = xData
+                Axis = axis
             };
+
+            entity.XData.AddRange(xData);
+
+            return entity;
+
         }
 
         private Ellipse ReadEllipse()
@@ -3483,7 +3480,7 @@ namespace netDxf
             double[] param = new double[2];
             double ratio = 0.0;
 
-            Dictionary<string, XData> xData = new Dictionary<string, XData>(StringComparer.OrdinalIgnoreCase);
+            List<XData> xData = new List<XData>();
 
             this.chunk.Next();
             while (this.chunk.Code != 0)
@@ -3539,12 +3536,7 @@ namespace netDxf
                         this.chunk.Next();
                         break;
                     case 1001:
-                        XData xDataItem = this.ReadXDataRecord(this.chunk.ReadString());
-                        // to be safe if the xDataItem.ApplicationRegistry.Name already exists we will add the new entry to the existing one
-                        if (xData.ContainsKey(xDataItem.ApplicationRegistry.Name))
-                            xData[xDataItem.ApplicationRegistry.Name].XDataRecord.AddRange(xDataItem.XDataRecord);
-                        else
-                            xData.Add(xDataItem.ApplicationRegistry.Name, xDataItem);
+                        xData.Add(this.ReadXDataRecord(this.chunk.ReadString()));
                         break;
                     default:
                         if (this.chunk.Code >= 1000 && this.chunk.Code <= 1071)
@@ -3563,15 +3555,17 @@ namespace netDxf
 
             double majorAxis = 2*axisPoint.Modulus();
             double minorAxis = majorAxis*ratio;
+
             Ellipse ellipse = new Ellipse
             {
                 MajorAxis = majorAxis,
                 MinorAxis = minorAxis,
                 Rotation = rotation*MathHelper.RadToDeg,
                 Center = center,
-                Normal = normal,
-                XData = xData
+                Normal = normal
             };
+
+            ellipse.XData.AddRange(xData);
 
             this.SetEllipseParameters(ellipse, param);
             return ellipse;
@@ -3583,7 +3577,7 @@ namespace netDxf
             Vector3 normal = Vector3.UnitZ;
             double thickness = 0.0;
             double rotation = 0.0;
-            Dictionary<string, XData> xData = new Dictionary<string, XData>(StringComparer.OrdinalIgnoreCase);
+            List<XData> xData = new List<XData>();
 
             this.chunk.Next();
             while (this.chunk.Code != 0)
@@ -3623,12 +3617,7 @@ namespace netDxf
                         this.chunk.Next();
                         break;
                     case 1001:
-                        XData xDataItem = this.ReadXDataRecord(this.chunk.ReadString());
-                        // to be safe if the xDataItem.ApplicationRegistry.Name already exists we will add the new entry to the existing one
-                        if (xData.ContainsKey(xDataItem.ApplicationRegistry.Name))
-                            xData[xDataItem.ApplicationRegistry.Name].XDataRecord.AddRange(xDataItem.XDataRecord);
-                        else
-                            xData.Add(xDataItem.ApplicationRegistry.Name, xDataItem);
+                        xData.Add(this.ReadXDataRecord(this.chunk.ReadString()));
                         break;
                     default:
                         if (this.chunk.Code >= 1000 && this.chunk.Code <= 1071)
@@ -3639,14 +3628,18 @@ namespace netDxf
                 }
             }
 
-            return new Point
+            Point entity = new Point
             {
                 Location = location,
                 Thickness = thickness,
                 Rotation = rotation,
-                Normal = normal,
-                XData = xData
+                Normal = normal
             };
+
+            entity.XData.AddRange(xData);
+
+            return entity;
+
         }
 
         private Face3d ReadFace3d()
@@ -3656,7 +3649,7 @@ namespace netDxf
             Vector3 v2 = Vector3.Zero;
             Vector3 v3 = Vector3.Zero;
             Face3dEdgeFlags flags = Face3dEdgeFlags.Visibles;
-            Dictionary<string, XData> xData = new Dictionary<string, XData>(StringComparer.OrdinalIgnoreCase);
+            List<XData> xData = new List<XData>();
 
             this.chunk.Next();
             while (this.chunk.Code != 0)
@@ -3716,12 +3709,7 @@ namespace netDxf
                         this.chunk.Next();
                         break;
                     case 1001:
-                        XData xDataItem = this.ReadXDataRecord(this.chunk.ReadString());
-                        // to be safe if the xDataItem.ApplicationRegistry.Name already exists we will add the new entry to the existing one
-                        if (xData.ContainsKey(xDataItem.ApplicationRegistry.Name))
-                            xData[xDataItem.ApplicationRegistry.Name].XDataRecord.AddRange(xDataItem.XDataRecord);
-                        else
-                            xData.Add(xDataItem.ApplicationRegistry.Name, xDataItem);
+                        xData.Add(this.ReadXDataRecord(this.chunk.ReadString()));
                         break;
                     default:
                         if (this.chunk.Code >= 1000 && this.chunk.Code <= 1071)
@@ -3732,15 +3720,20 @@ namespace netDxf
                         break;
                 }
             }
-            return new Face3d
+            
+            Face3d entity = new Face3d
             {
                 FirstVertex = v0,
                 SecondVertex = v1,
                 ThirdVertex = v2,
                 FourthVertex = v3,
-                EdgeFlags = flags,
-                XData = xData
+                EdgeFlags = flags
             };
+
+            entity.XData.AddRange(xData);
+
+            return entity;
+
         }
 
         private Solid ReadSolid()
@@ -3751,7 +3744,7 @@ namespace netDxf
             Vector3 v3 = Vector3.Zero;
             double thickness = 0.0;
             Vector3 normal = Vector3.UnitZ;
-            Dictionary<string, XData> xData = new Dictionary<string, XData>(StringComparer.OrdinalIgnoreCase);
+            List<XData> xData = new List<XData>();
 
             this.chunk.Next();
             while (this.chunk.Code != 0)
@@ -3823,12 +3816,7 @@ namespace netDxf
                         this.chunk.Next();
                         break;
                     case 1001:
-                        XData xDataItem = this.ReadXDataRecord(this.chunk.ReadString());
-                        // to be safe if the xDataItem.ApplicationRegistry.Name already exists we will add the new entry to the existing one
-                        if (xData.ContainsKey(xDataItem.ApplicationRegistry.Name))
-                            xData[xDataItem.ApplicationRegistry.Name].XDataRecord.AddRange(xDataItem.XDataRecord);
-                        else
-                            xData.Add(xDataItem.ApplicationRegistry.Name, xDataItem);
+                        xData.Add(this.ReadXDataRecord(this.chunk.ReadString()));
                         break;
                     default:
                         if (this.chunk.Code >= 1000 && this.chunk.Code <= 1071)
@@ -3840,16 +3828,20 @@ namespace netDxf
                 }
             }
 
-            return new Solid
+            Solid entity = new Solid
             {
                 FirstVertex = v0,
                 SecondVertex = v1,
                 ThirdVertex = v2,
                 FourthVertex = v3,
                 Thickness = thickness,
-                Normal = normal,
-                XData = xData
+                Normal = normal
             };
+
+            entity.XData.AddRange(xData);
+
+            return entity;
+
         }
 
         private Spline ReadSpline()
@@ -3888,7 +3880,7 @@ namespace netDxf
             double fitY = 0;
             double fitZ = 0;
 
-            Dictionary<string, XData> xData = new Dictionary<string, XData>(StringComparer.OrdinalIgnoreCase);
+            List<XData> xData = new List<XData>();
 
             this.chunk.Next();
             while (this.chunk.Code != 0)
@@ -4026,12 +4018,7 @@ namespace netDxf
                         this.chunk.Next();
                         break;
                     case 1001:
-                        XData xDataItem = this.ReadXDataRecord(this.chunk.ReadString());
-                        // to be safe if the xDataItem.ApplicationRegistry.Name already exists we will add the new entry to the existing one
-                        if (xData.ContainsKey(xDataItem.ApplicationRegistry.Name))
-                            xData[xDataItem.ApplicationRegistry.Name].XDataRecord.AddRange(xDataItem.XDataRecord);
-                        else
-                            xData.Add(xDataItem.ApplicationRegistry.Name, xDataItem);
+                        xData.Add(this.ReadXDataRecord(this.chunk.ReadString()));
                         break;
                     default:
                         if (this.chunk.Code >= 1000 && this.chunk.Code <= 1071)
@@ -4043,7 +4030,12 @@ namespace netDxf
                 }
             }
 
-            return new Spline(ctrlPoints, knots.ToArray(), degree);
+            Spline entity = new Spline(ctrlPoints, knots.ToArray(), degree);
+
+            entity.XData.AddRange(xData);
+
+            return entity;
+
         }
 
         private Insert ReadInsert(bool isBlockEntity = false)
@@ -4055,7 +4047,7 @@ namespace netDxf
             string blockName = null;
             Block block = null;
             List<Attribute> attributes = new List<Attribute>();
-            Dictionary<string, XData> xData = new Dictionary<string, XData>(StringComparer.OrdinalIgnoreCase);
+            List<XData> xData = new List<XData>();
             this.chunk.Next();
             while (this.chunk.Code != 0)
             {
@@ -4107,12 +4099,7 @@ namespace netDxf
                         this.chunk.Next();
                         break;
                     case 1001:
-                        XData xDataItem = this.ReadXDataRecord(this.chunk.ReadString());
-                        // to be safe if the xDataItem.ApplicationRegistry.Name already exists we will add the new entry to the existing one
-                        if (xData.ContainsKey(xDataItem.ApplicationRegistry.Name))
-                            xData[xDataItem.ApplicationRegistry.Name].XDataRecord.AddRange(xDataItem.XDataRecord);
-                        else
-                            xData.Add(xDataItem.ApplicationRegistry.Name, xDataItem);
+                        xData.Add(this.ReadXDataRecord(this.chunk.ReadString()));
                         break;
                     default:
                         if (this.chunk.Code >= 1000 && this.chunk.Code <= 1071)
@@ -4177,9 +4164,10 @@ namespace netDxf
                 Scale = scale,
                 Normal = normal,
                 Attributes = new AttributeDictionary(attributes),
-                EndSequence = end,
-                XData = xData
+                EndSequence = end
             };
+
+            insert.XData.AddRange(xData);
 
             // post process nested inserts
             if (isBlockEntity)
@@ -4194,7 +4182,7 @@ namespace netDxf
             Vector3 end = Vector3.Zero;
             Vector3 normal = Vector3.UnitZ;
             double thickness = 0.0;
-            Dictionary<string, XData> xData = new Dictionary<string, XData>(StringComparer.OrdinalIgnoreCase);
+            List<XData> xData = new List<XData>();
 
             this.chunk.Next();
             while (this.chunk.Code != 0)
@@ -4242,12 +4230,7 @@ namespace netDxf
                         this.chunk.Next();
                         break;
                     case 1001:
-                        XData xDataItem = this.ReadXDataRecord(this.chunk.ReadString());
-                        // to be safe if the xDataItem.ApplicationRegistry.Name already exists we will add the new entry to the existing one
-                        if (xData.ContainsKey(xDataItem.ApplicationRegistry.Name))
-                            xData[xDataItem.ApplicationRegistry.Name].XDataRecord.AddRange(xDataItem.XDataRecord);
-                        else
-                            xData.Add(xDataItem.ApplicationRegistry.Name, xDataItem);
+                        xData.Add(this.ReadXDataRecord(this.chunk.ReadString()));
                         break;
                     default:
                         if (this.chunk.Code >= 1000 && this.chunk.Code <= 1071)
@@ -4258,21 +4241,26 @@ namespace netDxf
                         break;
                 }
             }
-            return new Line
+            
+            Line entity = new Line
             {
                 StartPoint = start,
                 EndPoint = end,
                 Normal = normal,
-                Thickness = thickness,
-                XData = xData
+                Thickness = thickness
             };
+
+            entity.XData.AddRange(xData);
+
+            return entity;
+
         }
 
         private Ray ReadRay()
         {
             Vector3 origin = Vector3.Zero;
             Vector3 direction = Vector3.UnitX;
-            Dictionary<string, XData> xData = new Dictionary<string, XData>(StringComparer.OrdinalIgnoreCase);
+            List<XData> xData = new List<XData>();
 
             this.chunk.Next();
             while (this.chunk.Code != 0)
@@ -4304,12 +4292,7 @@ namespace netDxf
                         this.chunk.Next();
                         break;
                     case 1001:
-                        XData xDataItem = this.ReadXDataRecord(this.chunk.ReadString());
-                        // to be safe if the xDataItem.ApplicationRegistry.Name already exists we will add the new entry to the existing one
-                        if (xData.ContainsKey(xDataItem.ApplicationRegistry.Name))
-                            xData[xDataItem.ApplicationRegistry.Name].XDataRecord.AddRange(xDataItem.XDataRecord);
-                        else
-                            xData.Add(xDataItem.ApplicationRegistry.Name, xDataItem);
+                        xData.Add(this.ReadXDataRecord(this.chunk.ReadString()));
                         break;
                     default:
                         if (this.chunk.Code >= 1000 && this.chunk.Code <= 1071)
@@ -4321,19 +4304,23 @@ namespace netDxf
                 }
             }
 
-            return new Ray
+            Ray entity = new Ray
             {
                 Origin = origin,
-                Direction = direction,
-                XData = xData
+                Direction = direction
             };
+
+            entity.XData.AddRange(xData);
+
+            return entity;
+
         }
 
         private XLine ReadXLine()
         {
             Vector3 origin = Vector3.Zero;
             Vector3 direction = Vector3.UnitX;
-            Dictionary<string, XData> xData = new Dictionary<string, XData>(StringComparer.OrdinalIgnoreCase);
+            List<XData> xData = new List<XData>();
 
             this.chunk.Next();
             while (this.chunk.Code != 0)
@@ -4365,12 +4352,7 @@ namespace netDxf
                         this.chunk.Next();
                         break;
                     case 1001:
-                        XData xDataItem = this.ReadXDataRecord(this.chunk.ReadString());
-                        // to be safe if the xDataItem.ApplicationRegistry.Name already exists we will add the new entry to the existing one
-                        if (xData.ContainsKey(xDataItem.ApplicationRegistry.Name))
-                            xData[xDataItem.ApplicationRegistry.Name].XDataRecord.AddRange(xDataItem.XDataRecord);
-                        else
-                            xData.Add(xDataItem.ApplicationRegistry.Name, xDataItem);
+                        xData.Add(this.ReadXDataRecord(this.chunk.ReadString()));
                         break;
                     default:
                         if (this.chunk.Code >= 1000 && this.chunk.Code <= 1071)
@@ -4382,12 +4364,16 @@ namespace netDxf
                 }
             }
 
-            return new XLine
+            XLine entity = new XLine
             {
                 Origin = origin,
-                Direction = direction,
-                XData = xData
+                Direction = direction
             };
+
+            entity.XData.AddRange(xData);
+
+            return entity;
+
         }
 
         private MLine ReadMLine()
@@ -4401,7 +4387,7 @@ namespace netDxf
             double elevation = 0.0;
             Vector3 normal = Vector3.UnitZ;
             List<MLineVertex> segments = new List<MLineVertex>();
-            Dictionary<string, XData> xData = new Dictionary<string, XData>(StringComparer.OrdinalIgnoreCase);
+            List<XData> xData = new List<XData>();
 
             this.chunk.Next();
             while (this.chunk.Code != 0)
@@ -4465,12 +4451,7 @@ namespace netDxf
                         segments = this.ReadMLineSegments(numVertexes, numStyleElements, normal, out elevation);
                         break;
                     case 1001:
-                        XData xDataItem = this.ReadXDataRecord(this.chunk.ReadString());
-                        // to be safe if the xDataItem.ApplicationRegistry.Name already exists we will add the new entry to the existing one
-                        if (xData.ContainsKey(xDataItem.ApplicationRegistry.Name))
-                            xData[xDataItem.ApplicationRegistry.Name].XDataRecord.AddRange(xDataItem.XDataRecord);
-                        else
-                            xData.Add(xDataItem.ApplicationRegistry.Name, xDataItem);
+                        xData.Add(this.ReadXDataRecord(this.chunk.ReadString()));
                         break;
                     default:
                         if (this.chunk.Code >= 1000 && this.chunk.Code <= 1071)
@@ -4497,9 +4478,10 @@ namespace netDxf
                 Scale = scale,
                 Justification = justification,
                 Normal = normal,
-                Vertexes = segments,
-                XData = xData
+                Vertexes = segments
             };
+
+            mline.XData.AddRange(xData);
 
             // save the referenced style name for postprocessing
             this.mLineToStyleNames.Add(mline, styleName);
@@ -4591,7 +4573,7 @@ namespace netDxf
             double vX = 0.0;
             Vector3 normal = Vector3.UnitZ;
 
-            Dictionary<string, XData> xData = new Dictionary<string, XData>(StringComparer.OrdinalIgnoreCase);
+            List<XData> xData = new List<XData>();
 
             this.chunk.Next();
 
@@ -4660,12 +4642,7 @@ namespace netDxf
                         this.chunk.Next();
                         break;
                     case 1001:
-                        XData xDataItem = this.ReadXDataRecord(this.chunk.ReadString());
-                        // to be safe if the xDataItem.ApplicationRegistry.Name already exists we will add the new entry to the existing one
-                        if (xData.ContainsKey(xDataItem.ApplicationRegistry.Name))
-                            xData[xDataItem.ApplicationRegistry.Name].XDataRecord.AddRange(xDataItem.XDataRecord);
-                        else
-                            xData.Add(xDataItem.ApplicationRegistry.Name, xDataItem);
+                        xData.Add(this.ReadXDataRecord(this.chunk.ReadString()));
                         break;
                     default:
                         if (this.chunk.Code >= 1000 && this.chunk.Code <= 1071)
@@ -4677,15 +4654,19 @@ namespace netDxf
                 }
             }
 
-            return new LwPolyline
+            LwPolyline entity = new LwPolyline
             {
                 Vertexes = polVertexes,
                 Elevation = elevation,
                 Thickness = thickness,
                 Flags = flags,
-                Normal = normal,
-                XData = xData
+                Normal = normal
             };
+
+            entity.XData.AddRange(xData);
+
+            return entity;
+
         }
 
         private EntityObject ReadPolyline()
@@ -4700,7 +4681,7 @@ namespace netDxf
             double thickness = 0.0;
             Vector3 normal = Vector3.UnitZ;
             List<Vertex> vertexes = new List<Vertex>();
-            Dictionary<string, XData> xData = new Dictionary<string, XData>(StringComparer.OrdinalIgnoreCase);
+            List<XData> xData = new List<XData>();
 
             this.chunk.Next();
 
@@ -4742,12 +4723,7 @@ namespace netDxf
                         this.chunk.Next();
                         break;
                     case 1001:
-                        XData xDataItem = this.ReadXDataRecord(this.chunk.ReadString());
-                        // to be safe if the xDataItem.ApplicationRegistry.Name already exists we will add the new entry to the existing one
-                        if (xData.ContainsKey(xDataItem.ApplicationRegistry.Name))
-                            xData[xDataItem.ApplicationRegistry.Name].XDataRecord.AddRange(xDataItem.XDataRecord);
-                        else
-                            xData.Add(xDataItem.ApplicationRegistry.Name, xDataItem);
+                        xData.Add(this.ReadXDataRecord(this.chunk.ReadString()));
                         break;
                     default:
                         if (this.chunk.Code >= 1000 && this.chunk.Code <= 1071)
@@ -4873,7 +4849,7 @@ namespace netDxf
                 };
             }
 
-            pol.XData = xData;
+            pol.XData.AddRange(xData);
 
             return pol;
         }
@@ -4891,7 +4867,7 @@ namespace netDxf
             Vector3 normal = Vector3.UnitZ;
             short horizontalAlignment = 0;
             short verticalAlignment = 0;
-            Dictionary<string, XData> xData = new Dictionary<string, XData>(StringComparer.OrdinalIgnoreCase);
+            List<XData> xData = new List<XData>();
 
             this.chunk.Next();
             while (this.chunk.Code != 0)
@@ -4976,12 +4952,7 @@ namespace netDxf
                         this.chunk.Next();
                         break;
                     case 1001:
-                        XData xDataItem = this.ReadXDataRecord(this.chunk.ReadString());
-                        // to be safe if the xDataItem.ApplicationRegistry.Name already exists we will add the new entry to the existing one
-                        if (xData.ContainsKey(xDataItem.ApplicationRegistry.Name))
-                            xData[xDataItem.ApplicationRegistry.Name].XDataRecord.AddRange(xDataItem.XDataRecord);
-                        else
-                            xData.Add(xDataItem.ApplicationRegistry.Name, xDataItem);
+                        xData.Add(this.ReadXDataRecord(this.chunk.ReadString()));
                         break;
                     default:
                         if (this.chunk.Code >= 1000 && this.chunk.Code <= 1071)
@@ -5009,9 +4980,10 @@ namespace netDxf
                 Style = style,
                 Position = MathHelper.Transform(ocsBasePoint, normal, MathHelper.CoordinateSystem.Object, MathHelper.CoordinateSystem.World),
                 Normal = normal,
-                Alignment = alignment,
-                XData = xData
+                Alignment = alignment
             };
+
+            text.XData.AddRange(xData);
 
             return text;
         }
@@ -5029,7 +5001,7 @@ namespace netDxf
             MTextAttachmentPoint attachmentPoint = MTextAttachmentPoint.TopLeft;
             TextStyle style = this.GetTextStyle(TextStyle.Default.Name);
             string textString = string.Empty;
-            Dictionary<string, XData> xData = new Dictionary<string, XData>(StringComparer.OrdinalIgnoreCase);
+            List<XData> xData = new List<XData>();
 
             this.chunk.Next();
             while (this.chunk.Code != 0)
@@ -5116,12 +5088,7 @@ namespace netDxf
                         this.chunk.Next();
                         break;
                     case 1001:
-                        XData xDataItem = this.ReadXDataRecord(this.chunk.ReadString());
-                        // to be safe if the xDataItem.ApplicationRegistry.Name already exists we will add the new entry to the existing one
-                        if (xData.ContainsKey(xDataItem.ApplicationRegistry.Name))
-                            xData[xDataItem.ApplicationRegistry.Name].XDataRecord.AddRange(xDataItem.XDataRecord);
-                        else
-                            xData.Add(xDataItem.ApplicationRegistry.Name, xDataItem);
+                        xData.Add(this.ReadXDataRecord(this.chunk.ReadString()));
                         break;
                     default:
                         if (this.chunk.Code >= 1000 && this.chunk.Code <= 1071)
@@ -5135,7 +5102,7 @@ namespace netDxf
 
             textString = this.DecodeEncodedNonAsciiCharacters(textString);
 
-            return new MText
+            MText entity = new MText
             {
                 Value = textString,
                 Position = insertionPoint,
@@ -5147,9 +5114,13 @@ namespace netDxf
                 Rotation = isRotationDefined
                     ? rotation
                     : Vector2.Angle(direction)*MathHelper.RadToDeg,
-                Normal = normal,
-                XData = xData
+                Normal = normal
             };
+
+            entity.XData.AddRange(xData);
+
+            return entity;
+
         }
 
         private Hatch ReadHatch()
@@ -5160,7 +5131,7 @@ namespace netDxf
             Vector3 normal = Vector3.UnitZ;
             HatchPattern pattern = HatchPattern.Line;
             List<HatchBoundaryPath> paths = new List<HatchBoundaryPath>();
-            Dictionary<string, XData> xData = new Dictionary<string, XData>(StringComparer.OrdinalIgnoreCase);
+            List<XData> xData = new List<XData>();
 
             this.chunk.Next();
 
@@ -5209,12 +5180,7 @@ namespace netDxf
                         pattern.Fill = fill;
                         break;
                     case 1001:
-                        XData xDataItem = this.ReadXDataRecord(this.chunk.ReadString());
-                        // to be safe if the xDataItem.ApplicationRegistry.Name already exists we will add the new entry to the existing one
-                        if (xData.ContainsKey(xDataItem.ApplicationRegistry.Name))
-                            xData[xDataItem.ApplicationRegistry.Name].XDataRecord.AddRange(xDataItem.XDataRecord);
-                        else
-                            xData.Add(xDataItem.ApplicationRegistry.Name, xDataItem);
+                        xData.Add(this.ReadXDataRecord(this.chunk.ReadString()));
                         break;
                     default:
                         if (this.chunk.Code >= 1000 && this.chunk.Code <= 1071)
@@ -5226,30 +5192,34 @@ namespace netDxf
                 }
             }
 
+            if (paths.Count == 0) return null;
+
+            Hatch entity = new Hatch(pattern, paths)
+            {
+                Elevation = elevation,
+                Normal = normal
+            };
+
+            entity.XData.AddRange(xData);
+
             // here is where dxf stores the pattern origin
             XData patternOrigin;
             Vector2 origin = Vector2.Zero;
-            if (xData.TryGetValue(ApplicationRegistry.Default.Name, out patternOrigin))
+            if (entity.XData.TryGetValue(ApplicationRegistry.Default.Name, out patternOrigin))
             {
                 foreach (XDataRecord record in patternOrigin.XDataRecord)
                 {
                     if (record.Code == XDataCode.RealX)
-                        origin.X = (double) record.Value;
+                        origin.X = (double)record.Value;
                     else if (record.Code == XDataCode.RealY)
-                        origin.Y = (double) record.Value;
+                        origin.Y = (double)record.Value;
                     // record.Code == XDataCode.RealZ is always 0
                 }
             }
             pattern.Origin = origin;
 
-            if (paths.Count == 0) return null;
+            return entity;
 
-            return new Hatch(pattern, paths)
-            {
-                Elevation = elevation,
-                Normal = normal,
-                XData = xData
-            };
         }
 
         private List<HatchBoundaryPath> ReadHatchBoundaryPaths(int numPaths)
@@ -6781,9 +6751,7 @@ namespace netDxf
 
         private TextStyle GetTextStyleByHandle(string handle)
         {
-            TextStyle style = (TextStyle) this.doc.GetObjectByHandle(handle);
-            if (style == null)
-                throw new ArgumentException("The text style with handle " + handle + " does not exist.");
+            TextStyle style = this.doc.GetObjectByHandle(handle) as TextStyle ?? TextStyle.Default;
             return style;
         }
 
@@ -6875,11 +6843,9 @@ namespace netDxf
                     case XDataCode.ScaleFactor:
                         value = this.chunk.ReadDouble();
                         break;
-
                     case XDataCode.Int16:
                         value = this.chunk.ReadShort();
                         break;
-
                     case XDataCode.Int32:
                         value = this.chunk.ReadInt();
                         break;

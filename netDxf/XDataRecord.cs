@@ -39,7 +39,7 @@ namespace netDxf
         /// <summary>
         /// An extended data control string can be either “{”or “}”.
         /// These braces enable applications to organize their data by subdividing the data into lists.
-        /// The left brace begins a list, and the right brace terminates the most recent list. Lists can be nested
+        /// The left brace begins a list, and the right brace terminates the most recent list. Lists can be nested.
         /// </summary>
         public static XDataRecord OpenControlString
         {
@@ -49,7 +49,7 @@ namespace netDxf
         /// <summary>
         /// An extended data control string can be either "{" or "}".
         /// These braces enable applications to organize their data by subdividing the data into lists.
-        /// The left brace begins a list, and the right brace terminates the most recent list. Lists can be nested
+        /// The left brace begins a list, and the right brace terminates the most recent list. Lists can be nested.
         /// </summary>
         public static XDataRecord CloseControlString
         {

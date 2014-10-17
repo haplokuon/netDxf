@@ -172,6 +172,15 @@ namespace netDxf.Blocks
             get { return (BlockRecord) this.owner; }
         }
 
+        /// <summary>
+        /// Gets or sets the block-type flags (bit-coded values, may be combined).
+        /// </summary>
+        public BlockTypeFlags Flags
+        {
+            get { return this.flags; }
+            internal set { this.flags = value; }
+        }
+
         #endregion
 
         #region internal properties
@@ -183,15 +192,6 @@ namespace netDxf.Blocks
         {
             get { return this.end; }
             set { this.end = value; }
-        }
-
-        /// <summary>
-        /// Gets or sets the block-type flags (bit-coded values, may be combined).
-        /// </summary>
-        internal BlockTypeFlags Flags
-        {
-            get { return this.flags; }
-            set { this.flags = value; }
         }
 
         #endregion
@@ -254,15 +254,13 @@ namespace netDxf.Blocks
             DxfDocument dwg = new DxfDocument(version);
             dwg.DrawingVariables.InsBase = this.position;
             dwg.DrawingVariables.InsUnits = this.Record.Units;
-            foreach (EntityObject entity in this.entities)
+
+            Block copy = (Block) this.Clone();
+            dwg.AddEntity(copy.Entities);
+
+            foreach (AttributeDefinition attdef in copy.AttributeDefinitions.Values)
             {
-                EntityObject clone = (EntityObject) entity.Clone();
-                dwg.AddEntity(clone);
-            }
-            foreach (AttributeDefinition attdef in this.attributes.Values)
-            {
-                AttributeDefinition clone = (AttributeDefinition) attdef.Clone();
-                dwg.AddEntity(clone);
+                dwg.AddEntity(attdef);
             }
 
             return dwg.Save(file, isBinary);
@@ -275,7 +273,7 @@ namespace netDxf.Blocks
         /// <summary>
         /// Creates a new Block that is a copy of the current instance.
         /// </summary>
-        /// <param name="newName">GBlockroup name of the copy.</param>
+        /// <param name="newName">Block name of the copy.</param>
         /// <returns>A new Block that is a copy of this instance.</returns>
         public override TableObject Clone(string newName)
         {
@@ -293,7 +291,7 @@ namespace netDxf.Blocks
             }
             foreach (AttributeDefinition a in this.attributes.Values)
             {
-                copy.attributes.Add(a);
+                copy.attributes.Add((AttributeDefinition) a.Clone());
             }
 
             return copy;

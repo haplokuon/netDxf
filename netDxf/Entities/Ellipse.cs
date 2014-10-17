@@ -292,7 +292,7 @@ namespace netDxf.Entities
                 }
             }
 
-            return new Ellipse
+            Ellipse entity = new Ellipse
             {
                 //EntityObject properties
                 Layer = (Layer)this.layer.Clone(),
@@ -302,7 +302,6 @@ namespace netDxf.Entities
                 Transparency = (Transparency)this.transparency.Clone(),
                 LineTypeScale = this.lineTypeScale,
                 Normal = this.normal,
-                XData = copyXData,
                 //Ellipse properties
                 Center = this.center,
                 MajorAxis = this.majorAxis,
@@ -312,6 +311,12 @@ namespace netDxf.Entities
                 EndAngle = this.endAngle,
                 Thickness = this.thickness
             };
+
+            foreach (XData data in this.XData.Values)
+                entity.XData.Add((XData)data.Clone());
+
+            return entity;
+
         }
 
         #endregion

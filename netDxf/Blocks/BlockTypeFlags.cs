@@ -28,7 +28,7 @@ namespace netDxf.Blocks
     /// Block-type flags (bit-coded values, may be combined).
     /// </summary>
     [Flags]
-    internal enum BlockTypeFlags
+    public enum BlockTypeFlags
     {
         /// <summary>
         /// Indicates none of the following flags apply.

@@ -238,17 +238,7 @@ namespace netDxf.Entities
             foreach (Attribute att in this.attributes.Values)
                 copyAttributes.Add((Attribute)att.Clone());
 
-            Dictionary<string, XData> copyXData = null;
-            if (this.xData != null)
-            {
-                copyXData = new Dictionary<string, XData>();
-                foreach (KeyValuePair<string, XData> data in this.xData)
-                {
-                    copyXData.Add(data.Key, (XData)data.Value.Clone());
-                }
-            }
-
-            return new Insert
+            Insert entity = new Insert
                 {
                     //EntityObject properties
                     Layer = (Layer)this.layer.Clone(),
@@ -258,7 +248,6 @@ namespace netDxf.Entities
                     Transparency = (Transparency)this.transparency.Clone(),
                     LineTypeScale = this.lineTypeScale,
                     Normal = this.normal,
-                    XData = copyXData,
                     //Insert properties
                     Position = this.position,
                     Block = (Block) this.block.Clone(),
@@ -266,6 +255,11 @@ namespace netDxf.Entities
                     Rotation = this.rotation,
                     Attributes = new AttributeDictionary(copyAttributes)
                 };
+
+            foreach (XData data in this.XData.Values)
+                entity.XData.Add((XData)data.Clone());
+
+            return entity;
 
         }
 

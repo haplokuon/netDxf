@@ -213,7 +213,7 @@ namespace netDxf.Entities
 
         internal void AddPatternXData()
         {
-            if (this.XData.ContainsKey(ApplicationRegistry.Default.Name))
+            if (this.XData.ContainsAppId(ApplicationRegistry.Default.Name))
             {
                 XData xdataEntry = this.XData[ApplicationRegistry.Default.Name];
                 xdataEntry.XDataRecord.Clear();
@@ -227,13 +227,13 @@ namespace netDxf.Entities
                 xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.RealX, this.Pattern.Origin.X));
                 xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.RealY, this.Pattern.Origin.Y));
                 xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.RealZ, 0.0));
-                this.XData.Add(xdataEntry.ApplicationRegistry.Name, xdataEntry);
+                this.XData.Add(xdataEntry);
             }
 
             if (!(this.Pattern is HatchGradientPattern)) return;
 
             HatchGradientPattern grad = (HatchGradientPattern)this.Pattern;
-            if (this.XData.ContainsKey("GradientColor1ACI"))
+            if (this.XData.ContainsAppId("GradientColor1ACI"))
             {
                 XData xdataEntry = this.XData["GradientColor1ACI"];
                 XDataRecord record = new XDataRecord(XDataCode.Int16, grad.Color1.Index);
@@ -244,10 +244,10 @@ namespace netDxf.Entities
             {
                 XData xdataEntry = new XData(new ApplicationRegistry("GradientColor1ACI"));
                 xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, grad.Color1.Index));
-                this.XData.Add(xdataEntry.ApplicationRegistry.Name, xdataEntry);
+                this.XData.Add(xdataEntry);
             }
 
-            if (this.XData.ContainsKey("GradientColor2ACI"))
+            if (this.XData.ContainsAppId("GradientColor2ACI"))
             {
                 XData xdataEntry = this.XData["GradientColor2ACI"];
                 XDataRecord record = new XDataRecord(XDataCode.Int16, grad.Color2.Index);
@@ -258,7 +258,7 @@ namespace netDxf.Entities
             {
                 XData xdataEntry = new XData(new ApplicationRegistry("GradientColor2ACI"));
                 xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, grad.Color2.Index));
-                this.XData.Add(xdataEntry.ApplicationRegistry.Name, xdataEntry);
+                this.XData.Add(xdataEntry);
             }
         }
         #endregion
@@ -271,17 +271,7 @@ namespace netDxf.Entities
         /// <returns>A new Hatch that is a copy of this instance.</returns>
         public override object Clone()
         {
-            Dictionary<string, XData> copyXData = null;
-            if (this.xData != null)
-            {
-                copyXData = new Dictionary<string, XData>();
-                foreach (KeyValuePair<string, XData> data in this.xData)
-                {
-                    copyXData.Add(data.Key, (XData)data.Value.Clone());
-                }
-            }
-
-            return new Hatch(this.pattern, this.boundaryPaths)
+            Hatch entity = new Hatch(this.pattern, this.boundaryPaths)
                 {
                     //EntityObject properties
                     Layer = (Layer)this.layer.Clone(),
@@ -291,10 +281,15 @@ namespace netDxf.Entities
                     Transparency = (Transparency)this.transparency.Clone(),
                     LineTypeScale = this.lineTypeScale,
                     Normal = this.normal,
-                    XData = copyXData,
                     //Hatch properties
                     Elevation = this.elevation
                 };
+
+            foreach (XData data in this.XData.Values)
+                entity.XData.Add((XData)data.Clone());
+
+            return entity;
+
         }
 
         #endregion

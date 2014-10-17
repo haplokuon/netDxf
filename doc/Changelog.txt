@@ -1,3 +1,11 @@
+[0.9.2 - 2014/10/17]
++ Added PolygonalVertexes and ToPolyline methods to the Spline entity, thanks mikau16 (see "NubsEvaluator() sample for more info).
++ The entity's extended data information is now stored in a custom Dictionary (see "XDataInformation() sample for more info).
++ Added extended data for block records (see "DynamicBlocks() sample for more info).
++ The block Flags property getter is now public.
++ (fixed) Issue Id #13242 Read buggy dxf files that contain dimension styles that point to non existent text styles.
++ (fixed) Read and write the Mesh extended data.
+
 [0.9.1 - 2014/09/01]
 + Added constructor to Solid entity that takes three vertexes.
 + Added Load method to the Block class to create block from external dxf files (see LoadAndSaveBlocks() sample for more info).

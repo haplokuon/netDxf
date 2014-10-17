@@ -79,6 +79,7 @@
     <Compile Include="Collections\AttributeDefinitionDictionary.cs" />
     <Compile Include="Collections\AttributeDefinitionDictionaryEventArgs.cs" />
     <Compile Include="Collections\AttributeDictionary.cs" />
+    <Compile Include="Collections\XDataDictionary.cs" />
     <Compile Include="Collections\EntityCollection.cs" />
     <Compile Include="Collections\EntityCollectionEventArgs.cs" />
     <Compile Include="Collections\Layouts.cs" />

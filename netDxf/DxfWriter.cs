@@ -26,6 +26,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Text;
 using netDxf.Blocks;
+using netDxf.Collections;
 using netDxf.Entities;
 using netDxf.Header;
 using netDxf.Objects;
@@ -787,16 +788,7 @@ namespace netDxf
             this.chunk.Write(280, blockRecord.AllowExploding ? (short)1 : (short)0);
             this.chunk.Write(281, blockRecord.ScaleUniformly ? (short)1 : (short)0);
 
-            //if (this.doc.DrawingVariables.AcadVer >= DxfVersion.AutoCad2007)
-            //    return;
-
-            // for dxf versions prior to AutoCad2007 the block record units is stored in an extended data block
-            this.chunk.Write(1001, ApplicationRegistry.Default.Name); // the default application registry is always present in the document
-            this.chunk.Write(1000, "DesignCenter Data");
-            this.chunk.Write(1002, "{");
-            this.chunk.Write(1070, (short)1); // Autodesk Design Center version number.
-            this.chunk.Write(1070, (short)blockRecord.Units);
-            this.chunk.Write(1002, "}");
+            this.WriteXData(blockRecord.XData);
         }
 
         /// <summary>
@@ -1210,6 +1202,9 @@ namespace netDxf
             }
 
             this.chunk.Write(90, 0);
+
+            this.WriteXData(mesh.XData);
+
         }
 
         private void WriteArc(Arc arc)
@@ -2960,9 +2955,9 @@ namespace netDxf
             return new[] { atan1, atan2 };
         }
 
-        private void WriteXData(Dictionary<string, XData> xData)
+        private void WriteXData(XDataDictionary xData)
         {
-            foreach (string appReg in xData.Keys)
+            foreach (string appReg in xData.AppIds)
             {
                 this.chunk.Write(XDataCode.AppReg, EncodeNonAsciiCharacters(appReg));
 

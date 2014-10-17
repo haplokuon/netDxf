@@ -438,16 +438,6 @@ namespace netDxf.Entities
         /// <returns>A new Viewport that is a copy of this instance.</returns>
         public override object Clone()
         {
-            Dictionary<string, XData> copyXData = null;
-            if (this.xData != null)
-            {
-                copyXData = new Dictionary<string, XData>();
-                foreach (KeyValuePair<string, XData> data in this.xData)
-                {
-                    copyXData.Add(data.Key, (XData)data.Value.Clone());
-                }
-            }
-
             Viewport viewport = new Viewport
             {
                 //EntityObject properties
@@ -458,7 +448,6 @@ namespace netDxf.Entities
                 Transparency = (Transparency)this.transparency.Clone(),
                 LineTypeScale = this.lineTypeScale,
                 Normal = this.normal,
-                XData = copyXData,
                 //Viewport properties
                 Center=this.center,
                 Width=this.width,
@@ -484,6 +473,10 @@ namespace netDxf.Entities
                 UcsYAxis = this.ucsYAxis,
                 Elevation = this.elevation
             };
+
+            foreach (XData data in this.XData.Values)
+                viewport.XData.Add((XData)data.Clone());
+
 
             if (this.boundary != null)
                 viewport.ClippingBoundary = (EntityObject) this.boundary.Clone();

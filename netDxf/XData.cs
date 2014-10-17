@@ -98,6 +98,10 @@ namespace netDxf
 
         #region implements ICloneable
 
+        /// <summary>
+        /// Creates a new XData that is a copy of the current instance.
+        /// </summary>
+        /// <returns>A new XData that is a copy of this instance.</returns>
         public object Clone()
         {
             return new XData((ApplicationRegistry) this.appReg.Clone())

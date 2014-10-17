@@ -23,6 +23,7 @@
 using System;
 using netDxf.Collections;
 using netDxf.Objects;
+using netDxf.Tables;
 
 namespace netDxf.Blocks
 {
@@ -40,6 +41,7 @@ namespace netDxf.Blocks
         private DrawingUnits units;
         private bool allowExploding;
         private bool scaleUniformly;
+        private readonly XDataDictionary xData;
 
         #endregion
 
@@ -59,6 +61,8 @@ namespace netDxf.Blocks
             this.units = DefaultUnits;
             this.allowExploding = true;
             this.scaleUniformly = false;
+            this.xData = new XDataDictionary();
+            AddUnitsXData();
         }
 
         #endregion
@@ -92,7 +96,11 @@ namespace netDxf.Blocks
         public DrawingUnits Units
         {
             get { return this.units; }
-            set { this.units = value; }
+            set
+            {
+                this.units = value;
+                AddUnitsXData();
+            }
         }
 
         /// <summary>
@@ -145,6 +153,40 @@ namespace netDxf.Blocks
         public bool IsForInternalUseOnly
         {
             get { return this.name.StartsWith("*"); }
+        }
+
+        /// <summary>
+        /// Gets the block record <see cref="XDataDictionary">extende data</see>.
+        /// </summary>
+        public XDataDictionary XData
+        {
+            get { return this.xData; }
+        }
+
+        #endregion
+
+        #region private methods
+
+        private void AddUnitsXData()
+        {
+            // for dxf versions prior to AutoCad2007 the block record units is stored in an extended data block
+            XData xdataEntry;
+            if (this.XData.ContainsAppId(ApplicationRegistry.Default.Name))
+            {
+                xdataEntry = this.XData[ApplicationRegistry.Default.Name];
+                xdataEntry.XDataRecord.Clear();
+            }
+            else
+            {
+                xdataEntry = new XData(new ApplicationRegistry(ApplicationRegistry.Default.Name));
+                this.XData.Add(xdataEntry);
+            }
+
+            xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.String, "DesignCenter Data"));
+            xdataEntry.XDataRecord.Add(XDataRecord.OpenControlString);
+            xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short)1));
+            xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short)this.units));
+            xdataEntry.XDataRecord.Add(XDataRecord.CloseControlString);
         }
 
         #endregion

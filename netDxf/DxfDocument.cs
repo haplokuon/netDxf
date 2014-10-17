@@ -1024,7 +1024,7 @@ namespace netDxf
                     throw new ArgumentException("The entity " + entity.Type + " is not implemented or unknown.");
             }
 
-            foreach (string appReg in entity.XData.Keys)
+            foreach (string appReg in entity.XData.AppIds)
             {
                 entity.XData[appReg].ApplicationRegistry = this.appRegistries.Add(entity.XData[appReg].ApplicationRegistry);
                 this.appRegistries.References[appReg].Add(entity);
@@ -1179,7 +1179,7 @@ namespace netDxf
                 this.layouts.References[entity.Owner.Record.Layout.Name].Remove(entity);
                 this.layers.References[entity.Layer.Name].Remove(entity);
                 this.lineTypes.References[entity.LineType.Name].Remove(entity);
-                foreach (string appReg in entity.XData.Keys)
+                foreach (string appReg in entity.XData.AppIds)
                 {
                     this.appRegistries.References[appReg].Remove(entity);
                 }

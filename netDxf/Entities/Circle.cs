@@ -172,17 +172,7 @@ namespace netDxf.Entities
         /// <returns>A new Circle that is a copy of this instance.</returns>
         public override object Clone()
         {
-            Dictionary<string, XData> copyXData = null;
-            if (this.xData != null)
-            {
-                copyXData = new Dictionary<string, XData>();
-                foreach (KeyValuePair<string, XData> data in this.xData)
-                {
-                    copyXData.Add(data.Key, (XData)data.Value.Clone());
-                }
-            }
-
-            return new Circle
+            Circle entity = new Circle
             {
                 //EntityObject properties
                 Layer = (Layer)this.layer.Clone(),
@@ -192,12 +182,17 @@ namespace netDxf.Entities
                 Transparency = (Transparency)this.transparency.Clone(),
                 LineTypeScale = this.lineTypeScale,
                 Normal = this.normal,
-                XData = copyXData,
                 //Circle properties
                 Center = this.center,
                 Radius = this.radius,
                 Thickness = this.thickness
             };
+
+            foreach (XData data in this.xData.Values)
+                entity.XData.Add((XData)data.Clone());
+
+            return entity;
+
         }
 
         #endregion

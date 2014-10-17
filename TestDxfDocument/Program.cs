@@ -51,11 +51,18 @@ namespace TestDxfDocument
     /// </summary>
     public class Program
     {
-
         private static void Main()
         {
 
             Test();
+
+            #region Samples for fixes, new and modified features 0.9.2
+
+            NubsEvaluator();
+            XDataInformation();
+            DynamicBlocks();
+
+            #endregion
 
             #region Samples for fixes, new and modified features 0.9.1
 
@@ -69,7 +76,7 @@ namespace TestDxfDocument
             //CombiningTwoDrawings();
             //BinaryChunkXData();
             //BinaryDxfFiles();
-            //MeshEntity();
+            MeshEntity();
 
             #endregion
 
@@ -110,7 +117,6 @@ namespace TestDxfDocument
             //WriteSplineBoundaryHatch();
             //WriteNoInsertBlock();
             //WriteImage();
-            //SplineDrawing();
             //AddAndRemove();
             //LoadAndSave();
             //CleanDrawing();
@@ -148,6 +154,159 @@ namespace TestDxfDocument
             //WritePolyline3d();
             //WriteInsert();
         }
+
+        #region Samples for new and modified features 0.9.2
+
+        public static void NubsEvaluator()
+        {
+            Layer result = new Layer("Nurbs evaluator");
+            result.Color = AciColor.Red;
+
+            List<SplineVertex> ctrlPoints = new List<SplineVertex>
+                                                {
+                                                    new SplineVertex(new Vector3(0, 0, 0), 1.0),
+                                                    new SplineVertex(new Vector3(25, 50, 50), 2.0),
+                                                    new SplineVertex(new Vector3(50, 0, 100), 3.0),
+                                                    new SplineVertex(new Vector3(75, 50, 50), 4.0),
+                                                    new SplineVertex(new Vector3(100, 0, 0), 5.0)
+                                                };
+
+            // the constructor will generate a uniform knot vector 
+            Spline openSpline = new Spline(ctrlPoints, 3);
+
+            List<SplineVertex> ctrlPointsClosed = new List<SplineVertex>
+                                                {
+                                                    new SplineVertex(new Vector3(0, 0, 0)),
+                                                    new SplineVertex(new Vector3(25, 50, 0)),
+                                                    new SplineVertex(new Vector3(50, 0, 0)),
+                                                    new SplineVertex(new Vector3(75, 50, 0)),
+                                                    new SplineVertex(new Vector3(100, 0, 0)),
+                                                    new SplineVertex(new Vector3(0, 0, 0)) // closed spline non periodic we repeat the last control point
+                                                };
+            Spline closedNonPeriodicSpline = new Spline(ctrlPointsClosed, 3);
+
+            // the periodic spline will generate a periodic (unclamped) closed curve,
+            // as far as my tests have gone not all programs handle them correctly, most of them only handle clamped splines
+            Spline closedPeriodicSpline = new Spline(ctrlPoints, 4, true);
+            // always use spline vertex weights of 1.0 (default value) looks like that AutoCAD does not handle them correctly for periodic splines,
+            // but they work fine for non periodic splines
+            closedPeriodicSpline.SetUniformWeights(1.0);
+
+            // manually defining the control points and the knot vector (example a circle created with nurbs)
+            List<SplineVertex> circle = new List<SplineVertex>
+                                                {
+                                                    new SplineVertex(new Vector3(50, 0, 0), 1.0),
+                                                    new SplineVertex(new Vector3(100, 0, 0), 0.5),
+                                                    new SplineVertex(new Vector3(100, 100, 0), 0.5),
+                                                    new SplineVertex(new Vector3(50, 100, 0), 1.0),
+                                                    new SplineVertex(new Vector3(0, 100, 0), 0.5),
+                                                    new SplineVertex(new Vector3(0, 0, 0), 0.5),
+                                                    new SplineVertex(new Vector3(50, 0, 0), 1.0) // repeat the first point to close the circle
+                                                };
+
+            // the number of knots must be control points number + degree + 1
+            // Conics are 2nd degree curves
+            double[] knots = { 0.0, 0.0, 0.0, 1.0 / 4.0, 1.0 / 2.0, 1.0 / 2.0, 3.0 / 4.0, 1.0, 1.0, 1.0 };
+            Spline splineCircle = new Spline(circle, knots, 2);
+
+            DxfDocument dxf = new DxfDocument();
+
+            Polyline pol;
+
+            dxf.AddEntity(openSpline);
+            // we will convert the Spline to a Polyline
+            pol = openSpline.ToPolyline(100);
+            pol.Layer = result;
+            dxf.AddEntity(pol);
+
+            dxf.AddEntity(closedNonPeriodicSpline);
+            pol = closedNonPeriodicSpline.ToPolyline(100);
+            pol.Layer = result;
+            dxf.AddEntity(pol);
+
+            dxf.AddEntity(closedPeriodicSpline);
+            pol = closedPeriodicSpline.ToPolyline(100);
+            pol.Layer = result;
+            dxf.AddEntity(pol);
+
+            dxf.AddEntity(splineCircle);
+            pol = splineCircle.ToPolyline(100);
+            pol.Layer = result;
+            dxf.AddEntity(pol);
+
+            dxf.Save("spline.dxf");
+
+        }
+
+        public static void XDataInformation()
+        {
+            Line line = new Line(Vector2.Zero, Vector2.UnitY);
+            XData xdata = new XData(new ApplicationRegistry("a"));
+            //xdata.XDataRecord.Add(XDataRecord.OpenControlString);
+            xdata.XDataRecord.Add(XDataRecord.CloseControlString);
+            //xdata.XDataRecord.Add(new XDataRecord(XDataCode.String, "a"));
+            //xdata.XDataRecord.Add(new XDataRecord(XDataCode.Int32, 1));
+            //xdata.XDataRecord.Add(new XDataRecord(XDataCode.Real, 1.1));
+            //xdata.XDataRecord.Add(new XDataRecord(XDataCode.WorldDirectionX, 1.2));
+            line.XData.Add(xdata);
+            DxfDocument dwg = new DxfDocument();
+            dwg.AddEntity(line);
+            dwg.Save("Xdata.dxf");
+        }
+
+        public static void DynamicBlocks()
+        {
+            // netDxf can read dynamic blocks but you will loose the information related with the parameters, actions and constrains
+            // for every insert AutoCad creates a new block definition with the name *U#, where # is a positive integer
+            // except in the case where the dynamic block parameters are not modified, in this case the original block will be used instead
+
+            DxfDocument drawing;
+            drawing = DxfDocument.Load("..//samples//DynamicBlock.dxf");
+
+            Insert insert;
+            Block block;
+            string name;
+            EntityCollection entities;
+
+            // let's take a look at the block associated with the inserts
+            // the dynamic parameter of this insert was modified so the block name will be called *U#
+            insert = drawing.Inserts[0];
+            block = insert.Block;
+            // this is the block name
+            name = block.Name;
+            // the list of entities contained in the block are the ones defined in the original block definition modified by the dynamic parameter
+            entities = block.Entities;
+
+            // to access the original dynamic block we need to get firts the extended data associated with the BlockRecord,
+            // the application registry for this extended data always has the name "AcDbBlockRepBTag"
+            XData xdata = block.Record.XData["AcDbBlockRepBTag"];
+            string handle = null;
+            // the orinal dynamic block handle is stored in the extended data
+            foreach (XDataRecord data in xdata.XDataRecord)
+            {
+                if (data.Code == XDataCode.DatabaseHandle)
+                    handle = (string) data.Value;
+            }
+
+            // now we can the original dynamic block record
+            BlockRecord originalDynamicBlockRecord = (BlockRecord)drawing.GetObjectByHandle(handle);
+            string dynamicBlockName = originalDynamicBlockRecord.Name;
+            // if we need the original block instead of just the record, we can get it from the list of block since we know now its name
+            Block originalBlockRecord = drawing.Blocks[dynamicBlockName];
+
+            // the dynamic parameter of this insert was NOT modified so the block will be the original
+            insert = drawing.Inserts[1];
+            block = insert.Block;
+            // this is the block name
+            name = block.Name;
+            // the list of entities contained in the block are the ones defined in the original
+            entities = block.Entities;
+
+            // remember all dynamic parameters information will be lost
+            drawing.Save("Saved sample.dxf");
+        }
+
+        #endregion
 
         #region Samples for new and modified features 0.9.1
 
@@ -322,10 +481,7 @@ namespace TestDxfDocument
 
             // the XDataRecord will store the binary data as a byte array and not as a string as it use to be
             xdata.XDataRecord.Add(new XDataRecord(XDataCode.BinaryData, data));
-            line.XData = new Dictionary<string, XData>(StringComparer.OrdinalIgnoreCase)
-                             {
-                                 {xdata.ApplicationRegistry.Name, xdata},
-                             };
+            line.XData.Add(xdata);
 
             DxfDocument dxf = new DxfDocument();
             dxf.AddEntity(line);
@@ -476,9 +632,20 @@ namespace TestDxfDocument
             };
             Mesh mesh = new Mesh(vertexes, faces, edges);
             mesh.SubdivisionLevel = 3;
+
+            ApplicationRegistry newAppReg = dxf.ApplicationRegistries.Add(new ApplicationRegistry("netDxf"));
+
+            XData xdata = new XData(newAppReg);
+            xdata.XDataRecord.Add(new XDataRecord(XDataCode.String, "xdata string sample"));
+            xdata.XDataRecord.Add(new XDataRecord(XDataCode.Int32, 50000));
+            mesh.XData.Add(xdata);
+
             dxf.AddEntity(mesh);
 
             dxf.Save("mesh.dxf");
+
+            dxf = DxfDocument.Load("mesh.dxf");
+
         }
 
         #endregion
@@ -826,10 +993,7 @@ namespace TestDxfDocument
             xdata1.XDataRecord.Add(new XDataRecord(XDataCode.WorldSpacePositionZ, 0));
             xdata1.XDataRecord.Add(XDataRecord.CloseControlString);
 
-            insert2.XData = new Dictionary<string, XData>(StringComparer.OrdinalIgnoreCase)
-                             {
-                                 {xdata1.ApplicationRegistry.Name, xdata1},
-                             };
+            insert2.XData.Add(xdata1);
             dxf.AddEntity(insert2);
 
             // all entities support this feature
@@ -854,11 +1018,9 @@ namespace TestDxfDocument
             circle.Layer = new Layer("MyCircleLayer");
             // AutoCad 2000 does not support true colors, in that case an approximated color index will be used instead
             circle.Layer.Color = new AciColor(Color.MediumSlateBlue);
-            circle.XData = new Dictionary<string, XData>(StringComparer.OrdinalIgnoreCase)
-                             {
-                                 {xdata2.ApplicationRegistry.Name, xdata2},
-                                 {xdata3.ApplicationRegistry.Name, xdata3},
-                             };
+            circle.XData.Add(xdata2);
+            circle.XData.Add(xdata3);
+
             dxf.AddEntity(circle);
 
             dxf.Save("BlockWithAttributes.dxf");
@@ -1651,10 +1813,8 @@ namespace TestDxfDocument
             XData xdata1 = new XData(new ApplicationRegistry("netDxf"));
             xdata1.XDataRecord.Add(new XDataRecord(XDataCode.String, "extended data with netDxf"));
 
-            poly.XData = new Dictionary<string, XData>(StringComparer.OrdinalIgnoreCase)
-                             {
-                                 {xdata1.ApplicationRegistry.Name, xdata1},
-                             };
+            poly.XData.Add(xdata1);
+
             dxf.AddEntity(poly);
 
             Line line = new Line(new Vector2(10, 5), new Vector2(-10, -5));
@@ -1662,19 +1822,15 @@ namespace TestDxfDocument
             ApplicationRegistry myAppReg = new ApplicationRegistry("MyAppReg");
             XData xdata2 = new XData(myAppReg);
             xdata2.XDataRecord.Add(new XDataRecord(XDataCode.Distance, Vector3.Distance(line.StartPoint, line.EndPoint)));
-            line.XData = new Dictionary<string, XData>(StringComparer.OrdinalIgnoreCase)
-                             {
-                                 {myAppReg.Name, xdata2},
-                             };
+            line.XData.Add(xdata2);
+
             dxf.AddEntity(line);
 
             Circle circle = new Circle(Vector3.Zero, 15);
             XData xdata3 = new XData(myAppReg);
             xdata3.XDataRecord.Add(new XDataRecord(XDataCode.Real, circle.Radius));
-            circle.XData = new Dictionary<string, XData>(StringComparer.OrdinalIgnoreCase)
-                             {
-                                 {myAppReg.Name, xdata3},
-                             };
+            circle.XData.Add(xdata3);
+
             dxf.AddEntity(circle);
 
             dxf.Save("appreg.dxf");
@@ -1719,10 +1875,7 @@ namespace TestDxfDocument
             Line line = new Line(Vector2.Zero, 100 * Vector2.UnitX);
             XData xdata = new XData(newAppReg);
             xdata.XDataRecord.Add(new XDataRecord(XDataCode.String, "string of the new application registry"));
-            line.XData = new Dictionary<string, XData>(StringComparer.OrdinalIgnoreCase)
-                             {
-                                 {xdata.ApplicationRegistry.Name, xdata},
-                             };
+            line.XData.Add(xdata);
 
             dxf.AddEntity(line);
             dxf.Save("ApplicationRegistryTest.dxf");
@@ -2012,7 +2165,7 @@ namespace TestDxfDocument
             // The Save(string file, DxfVersion dxfVersion) and Load(string file) methods will still raise an exception if they are unable to create the FileStream.
             // On Debug mode they will raise any exception that migh occurr during the whole process.
             Line line = new Line(new Vector3(0, 0, 0), new Vector3(100, 100, 0));
-            bool ok;
+
             DxfDocument dxf = new DxfDocument();
             dxf.AddEntity(line);
             dxf.Save("test.dxf");
@@ -2192,10 +2345,7 @@ namespace TestDxfDocument
             xdata1.XDataRecord.Add(new XDataRecord(XDataCode.WorldSpacePositionY, image.Position.Y));
             xdata1.XDataRecord.Add(new XDataRecord(XDataCode.WorldSpacePositionZ, image.Position.Z));
             xdata1.XDataRecord.Add(XDataRecord.CloseControlString);
-            image.XData = new Dictionary<string, XData>(StringComparer.OrdinalIgnoreCase)
-                             {
-                                 {xdata1.ApplicationRegistry.Name, xdata1},
-                             };
+            image.XData.Add(xdata1);
 
             //image.Normal = new Vector3(1, 1, 1);
             //image.Rotation = 30;
@@ -2234,64 +2384,6 @@ namespace TestDxfDocument
             //dxf.RemoveEntity(image3);
             //dxf.RemoveEntity(image);
             //dxf.Save("image3.dxf");
-
-        }
-        private static void SplineDrawing()
-        {
-            List<SplineVertex> ctrlPoints = new List<SplineVertex>
-                                                {
-                                                    new SplineVertex(new Vector3(0, 0, 0), 1),
-                                                    new SplineVertex(new Vector3(25, 50, 0), 2),
-                                                    new SplineVertex(new Vector3(50, 0, 0), 3),
-                                                    new SplineVertex(new Vector3(75, 50, 0), 4),
-                                                    new SplineVertex(new Vector3(100, 0, 0), 5)
-                                                };
-
-            // the constructor will generate a uniform knot vector 
-            Spline openSpline = new Spline(ctrlPoints, 3);
-
-            List<SplineVertex> ctrlPointsClosed = new List<SplineVertex>
-                                                {
-                                                    new SplineVertex(new Vector3(0, 0, 0), 1),
-                                                    new SplineVertex(new Vector3(25, 50, 0), 2),
-                                                    new SplineVertex(new Vector3(50, 0, 0), 3),
-                                                    new SplineVertex(new Vector3(75, 50, 0), 4),
-                                                    new SplineVertex(new Vector3(100, 0, 0), 5),
-                                                    new SplineVertex(new Vector3(0, 0, 0), 1) // closed spline non periodic we repeat the last control point
-                                                };
-            Spline closedNonPeriodicSpline = new Spline(ctrlPointsClosed, 3);
-
-            // the periodic spline will generate a periodic (unclamped) closed curve,
-            // as far as my tests have gone not all programs handle them correctly, most of them only handle clamped splines
-            // seems that AutoCAD imports periodic closed splines correclty if all control point weights are equal to one.
-            // seems that internally AutoCAD converts periodic closed splines to nonperiodic (clamped) closed splines.
-            // my knowledge on nurbs is limited
-            Spline closedPeriodicSpline = new Spline(ctrlPoints, 3, true);
-            closedPeriodicSpline.SetUniformWeights(1.0);
-
-            // manually defining the control points and the knot vector (example a circle created with nurbs)
-            List<SplineVertex> circle = new List<SplineVertex>
-                                                {
-                                                    new SplineVertex(new Vector3(50, 0, 0), 1.0),
-                                                    new SplineVertex(new Vector3(100, 0, 0), 1.0/2.0),
-                                                    new SplineVertex(new Vector3(100, 100, 0), 1.0/2.0),
-                                                    new SplineVertex(new Vector3(50, 100, 0), 1.0),
-                                                    new SplineVertex(new Vector3(0, 100, 0), 1.0/2.0),
-                                                    new SplineVertex(new Vector3(0, 0, 0), 1.0/2.0),
-                                                    new SplineVertex(new Vector3(50, 0, 0), 1.0) // repeat the first point to close the circle
-                                                };
-
-            // the number of knots must be control points number + degree + 1
-            // Conics are 2nd degree curves
-            double[] knots = new[] {0, 0, 0, 1.0/4.0, 1.0/2.0, 1.0/2.0, 3.0/4.0, 1.0, 1.0, 1.0};
-            Spline splineCircle = new Spline(circle, knots, 2);
-
-            DxfDocument dxf = new DxfDocument();
-            //dxf.AddEntity(openSpline);
-            //dxf.AddEntity(closedNonPeriodicSpline);
-            dxf.AddEntity(closedPeriodicSpline);
-            //dxf.AddEntity(splineCircle);
-            dxf.Save("spline.dxf");
 
         }
         private static void AddAndRemove()
@@ -2548,14 +2640,8 @@ namespace TestDxfDocument
             xdata.XDataRecord.Add(new XDataRecord(XDataCode.Real, 15.5));
             xdata.XDataRecord.Add(new XDataRecord(XDataCode.Int32, 350));
             xdata.XDataRecord.Add(XDataRecord.CloseControlString);
-            dimX.XData = new Dictionary<string, XData>(StringComparer.OrdinalIgnoreCase)
-                             {
-                                 {xdata.ApplicationRegistry.Name, xdata}
-                             };
-            dimY.XData = new Dictionary<string, XData>(StringComparer.OrdinalIgnoreCase)
-                             {
-                                 {xdata.ApplicationRegistry.Name, xdata}
-                             };
+            dimX.XData.Add(xdata);
+            dimY.XData.Add(xdata);
             dxf.AddEntity(dimX);
             dxf.AddEntity(dimY);
             dxf.Save("linear dimension.dxf");
@@ -2592,10 +2678,7 @@ namespace TestDxfDocument
             xdata.XDataRecord.Add(new XDataRecord(XDataCode.Real, 15.5));
             xdata.XDataRecord.Add(new XDataRecord(XDataCode.Int32, 350));
             xdata.XDataRecord.Add(XDataRecord.CloseControlString);
-            dim1.XData = new Dictionary<string, XData>(StringComparer.OrdinalIgnoreCase)
-                             {
-                                 {xdata.ApplicationRegistry.Name, xdata}
-                             };
+            dim1.XData.Add(xdata);
 
             //dxf.AddEntity(line1);
             //dxf.AddEntity(line2);
@@ -2695,10 +2778,7 @@ namespace TestDxfDocument
             //options.Aligment = MTextFormattingOptions.TextAligment.Bottom;
             //mText.Write("Bottom", options);
 
-            mText.XData = new Dictionary<string, XData>(StringComparer.OrdinalIgnoreCase)
-                             {
-                                 {xdata.ApplicationRegistry.Name, xdata}
-                             };
+            mText.XData.Add(xdata);
             
             dxf.AddEntity(mText);
 
@@ -2953,10 +3033,7 @@ namespace TestDxfDocument
             xdata.XDataRecord.Add(new XDataRecord(XDataCode.Real, hatch.Pattern.Angle));
             xdata.XDataRecord.Add(XDataRecord.CloseControlString);
 
-            hatch.XData = new Dictionary<string, XData>(StringComparer.OrdinalIgnoreCase)
-                             {
-                                 {xdata.ApplicationRegistry.Name, xdata},
-                             };
+            hatch.XData.Add(xdata);
 
             //dxf.AddEntity(line1);
             //dxf.AddEntity(line2);
@@ -3413,11 +3490,8 @@ namespace TestDxfDocument
             circle.Layer.Color=AciColor.Yellow;
             circle.LineType = LineType.Dashed;
             circle.Normal = extrusion;
-            circle.XData = new Dictionary<string, XData>(StringComparer.OrdinalIgnoreCase)
-                             {
-                                 {xdata.ApplicationRegistry.Name, xdata},
-                                 {xdata2.ApplicationRegistry.Name, xdata2}
-                             };
+            circle.XData.Add(xdata);
+            circle.XData.Add(xdata2);
 
             dxf.AddEntity(circle);
 
@@ -3576,10 +3650,8 @@ namespace TestDxfDocument
             xdata.XDataRecord.Add(new XDataRecord(XDataCode.Int16, poly.Vertexes.Count));
             xdata.XDataRecord.Add(XDataRecord.CloseControlString);
 
-            poly.XData = new Dictionary<string, XData>(StringComparer.OrdinalIgnoreCase)
-                             {
-                                 {xdata.ApplicationRegistry.Name, xdata},
-                             }; 
+            poly.XData.Add(xdata);
+
             dxf.AddEntity(poly);
 
             dxf.Save("polyline.dxf");
