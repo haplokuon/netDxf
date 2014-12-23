@@ -101,6 +101,14 @@ namespace netDxf
             get { return new Vector2(0, 1); }
         }
 
+        /// <summary>
+        /// Represents a vector with not a number components.
+        /// </summary>
+        public static Vector2 NaN
+        {
+            get { return new Vector2(double.NaN, double.NaN); }
+        }
+
         #endregion
 
         #region public properties
@@ -164,6 +172,18 @@ namespace netDxf
         #endregion
 
         #region static methods
+
+        /// <summary>
+        ///  Returns a value indicating if any component of the specified vector evaluates to a value that is not a number <see cref="System.Double.NaN"/>.
+        /// </summary>
+        /// <param name="u">Vector2.</param>
+        /// <returns>Returns true if any component of the specified vector evaluates to <see cref="System.Double.NaN"/>; otherwise, false.</returns>
+        public static bool IsNaN(Vector2 u)
+        {
+            if (double.IsNaN(u.X) || double.IsNaN(u.Y))
+                return true;
+            return false;
+        }
 
         /// <summary>
         /// Obtains the dot product of two vectors.
@@ -253,12 +273,25 @@ namespace netDxf
         /// <returns>Angle in radians.</returns>
         public static double Angle(Vector2 u, Vector2 v)
         {
-            double dx = v.X - u.X;
-            double dy = v.Y - u.Y;
-            double angle = Math.Atan2(dy, dx);
-            if (angle < 0)
-                return MathHelper.TwoPI + angle;
-            return angle;
+            Vector2 dir = v - u;
+            return Angle(dir);
+        }
+
+        /// <summary>
+        /// Obtains the angle between two vectors.
+        /// </summary>
+        /// <param name="u">Vector2.</param>
+        /// <param name="v">Vector2.</param>
+        /// <returns>Angle in radians.</returns>
+        public static double AngleBetween(Vector2 u, Vector2 v)
+        {
+            double cos = DotProduct(u, v) / (u.Modulus() * v.Modulus());
+            if (cos >= 1.0)
+                return 0.0;
+            if (cos <= -1.0)
+                return Math.PI;
+
+            return Math.Acos(cos);
         }
 
         /// <summary>

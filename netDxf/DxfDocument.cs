@@ -904,21 +904,15 @@ namespace netDxf
                     if (!isBlockEntity) this.circles.Add((Circle) entity);
                     break;
                 case EntityType.Dimension:
-                    if (!isBlockEntity) this.dimensions.Add((Dimension) entity);
-                    ((Dimension) entity).Style = this.dimStyles.Add(((Dimension) entity).Style);
-                    this.dimStyles.References[((Dimension) entity).Style.Name].Add(entity);
-
+                    Dimension dim = (Dimension) entity;
+                    dim.Style = this.dimStyles.Add(dim.Style, assignHandle);
+                    this.dimStyles.References[dim.Style.Name].Add(dim);
                     // create the block that represent the dimension drawing
-                    Block dimBlock = ((Dimension) entity).Block;
-                    if (dimBlock == null)
-                    {
-                        dimBlock = ((Dimension) entity).BuildBlock("*D" + ++this.DimensionBlocksGenerated);
-                        if (this.blocks.Contains(dimBlock.Name))
-                            throw new ArgumentException("The list already contains the block: " + dimBlock.Name + ". The block names that start with *D are reserverd for dimensions");
-                        dimBlock.Flags = BlockTypeFlags.AnonymousBlock;
-                    }
-                    this.blocks.Add(dimBlock);
-                    this.blocks.References[dimBlock.Name].Add(entity);
+                    Block dimBlock = dim.Block;
+                    if(dimBlock == null) dimBlock = dim.BuildBlock("*D" + ++this.DimensionBlocksGenerated);
+                    dim.Block = this.blocks.Add(dimBlock);
+                    this.blocks.References[dimBlock.Name].Add(dim);
+                    if (!isBlockEntity) this.dimensions.Add(dim);
                     break;
                 case EntityType.Ellipse:
                     if (!isBlockEntity) this.ellipses.Add((Ellipse) entity);
@@ -935,20 +929,21 @@ namespace netDxf
                     if (!isBlockEntity) this.hatches.Add(hatch);
                     break;
                 case EntityType.Insert:
-                    ((Insert) entity).Block = this.blocks.Add(((Insert) entity).Block);
-                    this.blocks.References[((Insert) entity).Block.Name].Add(entity);
-                    foreach (Attribute attribute in ((Insert) entity).Attributes.Values)
+                    Insert insert = (Insert) entity;
+                    insert.Block = this.blocks.Add(insert.Block, assignHandle);
+                    this.blocks.References[insert.Block.Name].Add(insert);
+                    foreach (Attribute attribute in insert.Attributes.Values)
                     {
-                        attribute.Layer = this.layers.Add(attribute.Layer);
+                        attribute.Layer = this.layers.Add(attribute.Layer, assignHandle);
                         this.layers.References[attribute.Layer.Name].Add(attribute);
 
-                        attribute.LineType = this.lineTypes.Add(attribute.LineType);
+                        attribute.LineType = this.lineTypes.Add(attribute.LineType, assignHandle);
                         this.lineTypes.References[attribute.LineType.Name].Add(attribute);
 
-                        attribute.Style = this.textStyles.Add(attribute.Style);
+                        attribute.Style = this.textStyles.Add(attribute.Style, assignHandle);
                         this.textStyles.References[attribute.Style.Name].Add(attribute);
                     }
-                    if (!isBlockEntity) this.inserts.Add((Insert) entity);
+                    if (!isBlockEntity) this.inserts.Add(insert);
                     break;
                 case EntityType.LightWeightPolyline:
                     if (!isBlockEntity) this.lwPolylines.Add((LwPolyline) entity);
@@ -973,19 +968,19 @@ namespace netDxf
                     break;
                 case EntityType.Text:
                     Text text = (Text) entity;
-                    text.Style = this.textStyles.Add(text.Style);
-                    this.textStyles.References[text.Style.Name].Add(entity);
+                    text.Style = this.textStyles.Add(text.Style, assignHandle);
+                    this.textStyles.References[text.Style.Name].Add(text);
                     if (!isBlockEntity) this.texts.Add(text);
                     break;
                 case EntityType.MText:
                     MText mText = (MText)entity;
-                    mText.Style = this.textStyles.Add(mText.Style);
-                    this.textStyles.References[mText.Style.Name].Add(entity);
+                    mText.Style = this.textStyles.Add(mText.Style, assignHandle);
+                    this.textStyles.References[mText.Style.Name].Add(mText);
                     if (!isBlockEntity) this.mTexts.Add(mText);
                     break;
                 case EntityType.Image:
                     Image image = (Image) entity;
-                    image.Definition = this.imageDefs.Add(image.Definition);
+                    image.Definition = this.imageDefs.Add(image.Definition, assignHandle);
                     this.imageDefs.References[image.Definition.Name].Add(image);
                     if(!image.Definition.Reactors.ContainsKey(image.Handle))
                     {
@@ -996,9 +991,10 @@ namespace netDxf
                     if (!isBlockEntity) this.images.Add(image);
                     break;
                 case EntityType.MLine:
-                    ((MLine) entity).Style = this.mlineStyles.Add(((MLine) entity).Style);
-                    this.mlineStyles.References[((MLine) entity).Style.Name].Add(entity);
-                    if (!isBlockEntity) this.mLines.Add((MLine) entity);
+                    MLine mline = (MLine)entity;
+                    mline.Style = this.mlineStyles.Add(mline.Style, assignHandle);
+                    this.mlineStyles.References[mline.Style.Name].Add(mline);
+                    if (!isBlockEntity) this.mLines.Add(mline);
                     break;
                 case EntityType.Ray:
                     if (!isBlockEntity) this.rays.Add((Ray) entity);
@@ -1008,13 +1004,13 @@ namespace netDxf
                     break;
                 case EntityType.Viewport:
                     Viewport viewport = (Viewport) entity;
-                    if (!isBlockEntity) this.viewports.Add(viewport);
                     this.AddEntity(viewport.ClippingBoundary, isBlockEntity, assignHandle);
+                    if (!isBlockEntity) this.viewports.Add(viewport);
                     break;
                 case EntityType.AttributeDefinition:
                     AttributeDefinition attDef = (AttributeDefinition)entity;
-                    attDef.Style = this.textStyles.Add(attDef.Style);
-                    this.textStyles.References[attDef.Style.Name].Add(entity);
+                    attDef.Style = this.textStyles.Add(attDef.Style, assignHandle);
+                    this.textStyles.References[attDef.Style.Name].Add(attDef);
                     if (!isBlockEntity) this.attributeDefinitions.Add(attDef);
                     break;
                 case EntityType.Attribute:
@@ -1026,7 +1022,7 @@ namespace netDxf
 
             foreach (string appReg in entity.XData.AppIds)
             {
-                entity.XData[appReg].ApplicationRegistry = this.appRegistries.Add(entity.XData[appReg].ApplicationRegistry);
+                entity.XData[appReg].ApplicationRegistry = this.appRegistries.Add(entity.XData[appReg].ApplicationRegistry, assignHandle);
                 this.appRegistries.References[appReg].Add(entity);
             }
 
@@ -1038,10 +1034,10 @@ namespace netDxf
 
             this.AddedObjects.Add(entity.Handle, entity);
 
-            entity.Layer = this.layers.Add(entity.Layer);
+            entity.Layer = this.layers.Add(entity.Layer, assignHandle);
             this.layers.References[entity.Layer.Name].Add(entity);
 
-            entity.LineType = this.lineTypes.Add(entity.LineType);
+            entity.LineType = this.lineTypes.Add(entity.LineType, assignHandle);
             this.lineTypes.References[entity.LineType.Name].Add(entity);
             return true;
         }
@@ -1049,6 +1045,9 @@ namespace netDxf
         internal bool RemoveEntity(EntityObject entity, bool isBlockEntity)
         {
             if (entity == null)
+                return false;
+
+            if (entity.Handle == null)
                 return false;
 
             if (entity.Reactor != null)
@@ -1176,7 +1175,9 @@ namespace netDxf
 
             if (removed || isBlockEntity)
             {
-                this.layouts.References[entity.Owner.Record.Layout.Name].Remove(entity);
+                // entities that belong to a block definition are not associated with a Layout. 
+                if(!isBlockEntity)
+                    this.layouts.References[entity.Owner.Record.Layout.Name].Remove(entity);
                 this.layers.References[entity.Layer.Name].Remove(entity);
                 this.lineTypes.References[entity.LineType.Name].Remove(entity);
                 foreach (string appReg in entity.XData.AppIds)

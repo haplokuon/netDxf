@@ -1,7 +1,7 @@
-﻿#region netDxf, Copyright(C) 2013 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf, Copyright(C) 2014 Daniel Carvajal, Licensed under LGPL.
 
 //                        netDxf library
-// Copyright (C) 2013 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2014 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -21,7 +21,6 @@
 #endregion
 
 using System;
-using System.Collections.Generic;
 using netDxf.Blocks;
 using netDxf.Tables;
 
@@ -129,15 +128,23 @@ namespace netDxf.Entities
         public Angular2LineDimension(Vector3 startFirstLine, Vector3 endFirstLine, Vector3 startSecondLine, Vector3 endSecondLine, double offset, DimensionStyle style)
             : base(DimensionType.Angular)
         {
+            Vector3 dir1 = endFirstLine - startFirstLine;
+            Vector3 dir2 = endSecondLine - startSecondLine;
+            if (Vector3.AreParallel(dir1, dir2))
+                throw new ArgumentException("The two lines that define the dimension are parallel.");
+
             this.startFirstLine = startFirstLine;
             this.endFirstLine = endFirstLine;
             this.startSecondLine = startSecondLine;
             this.endSecondLine = endSecondLine;
+
+            if (MathHelper.IsZero(offset))
+                throw new ArgumentOutOfRangeException("offset", "The offset value cannot be zero.");
             this.offset = offset;
+
             if (style == null)
                 throw new ArgumentNullException("style", "The Dimension style cannot be null.");
-            this.style = style;
-            this.normal = this.CaluculateNormal();
+            this.style = style;            
         }
 
         #endregion
@@ -160,11 +167,7 @@ namespace netDxf.Entities
         public Vector3 StartFirstLine
         {
             get { return this.startFirstLine; }
-            set
-            {
-                this.startFirstLine = value;
-                this.normal = this.CaluculateNormal();
-            }
+            set { this.startFirstLine = value; }
         }
 
         /// <summary>
@@ -173,11 +176,7 @@ namespace netDxf.Entities
         public Vector3 EndFirstLine
         {
             get { return this.endFirstLine; }
-            set
-            {
-                this.endFirstLine = value;
-                this.normal = this.CaluculateNormal();
-            }
+            set { this.endFirstLine = value; }
         }
 
         /// <summary>
@@ -186,11 +185,7 @@ namespace netDxf.Entities
         public Vector3 StartSecondLine
         {
             get { return this.startSecondLine; }
-            set
-            {
-                this.startSecondLine = value;
-                this.normal = this.CaluculateNormal();
-            }
+            set { this.startSecondLine = value; }
         }
 
         /// <summary>
@@ -199,45 +194,53 @@ namespace netDxf.Entities
         public Vector3 EndSecondLine
         {
             get { return this.endSecondLine; }
-            set
-            {
-                this.endSecondLine = value;
-                this.normal = this.CaluculateNormal();
-            }
+            set { this.endSecondLine = value; }
         }
 
         /// <summary>
         /// Gets or sets the distance between the center point and the dimension line.
         /// </summary>
+        /// <remarks>Zero values are not allowed.</remarks>
         public double Offset
         {
             get { return this.offset; }
-            set { this.offset = value; }
+            set
+            {
+                if (MathHelper.IsZero(value))
+                    throw new ArgumentOutOfRangeException("value", "The offset value cannot be zero.");
+                this.offset = value;
+            }
         }
 
         /// <summary>
         /// Actual measurement.
         /// </summary>
+        /// <remarks>The dimension is always measured in the plane defined by the normal.</remarks>
         public override double Value
         {
             get
             {
-                Vector3 dir1 = this.endFirstLine - this.startFirstLine;
-                Vector3 dir2 = this.endSecondLine - this.startSecondLine;
-                double angle = Vector3.AngleBetween(dir1, dir2)*MathHelper.RadToDeg;
-                return angle < 0 ? 360 + angle : angle;
+                Vector3 refPoint;
+
+                refPoint = MathHelper.Transform(this.startFirstLine, this.normal, MathHelper.CoordinateSystem.World, MathHelper.CoordinateSystem.Object);
+                Vector2 ref1Start = new Vector2(refPoint.X, refPoint.Y);
+
+                refPoint = MathHelper.Transform(this.endFirstLine, this.normal, MathHelper.CoordinateSystem.World, MathHelper.CoordinateSystem.Object);
+                Vector2 ref1End = new Vector2(refPoint.X, refPoint.Y);
+
+                refPoint = MathHelper.Transform(this.startSecondLine, this.normal, MathHelper.CoordinateSystem.World, MathHelper.CoordinateSystem.Object);
+                Vector2 ref2Start = new Vector2(refPoint.X, refPoint.Y);
+
+                refPoint = MathHelper.Transform(this.endSecondLine, this.normal, MathHelper.CoordinateSystem.World, MathHelper.CoordinateSystem.Object);
+                Vector2 ref2End = new Vector2(refPoint.X, refPoint.Y);
+
+                Vector2 dirRef1 = ref1End - ref1Start;
+                Vector2 dirRef2 = ref2End - ref2Start;
+                if (Vector2.AreParallel(dirRef1, dirRef2))
+                    throw new ArgumentException("The two lines that define the dimension are parallel.");
+
+                return Vector2.AngleBetween(dirRef1, dirRef2) * MathHelper.RadToDeg;
             }
-        }
-
-        #endregion
-
-        #region private methods
-
-        private Vector3 CaluculateNormal()
-        {
-            Vector3 dir1 = this.endFirstLine - this.startFirstLine;
-            Vector3 dir2 = this.endSecondLine - this.startSecondLine;
-            return Vector3.CrossProduct(dir1, dir2);
         }
 
         #endregion
@@ -251,95 +254,7 @@ namespace netDxf.Entities
         /// <returns>The block that represents the actual dimension.</returns>
         internal override Block BuildBlock(string name)
         {
-            // we will build the dimension block in object coordinates with normal the dimension normal
-            Vector3 refPoint = MathHelper.Transform(this.startFirstLine, this.normal,
-                                                    MathHelper.CoordinateSystem.World,
-                                                    MathHelper.CoordinateSystem.Object);
-            Vector2 refStartFirst = new Vector2(refPoint.X, refPoint.Y);
-            double elev = refPoint.Z;
-
-            refPoint = MathHelper.Transform(this.endFirstLine, this.normal,
-                                            MathHelper.CoordinateSystem.World,
-                                            MathHelper.CoordinateSystem.Object);
-            Vector2 refEndFirst = new Vector2(refPoint.X, refPoint.Y);
-
-            refPoint = MathHelper.Transform(this.startSecondLine, this.normal,
-                                            MathHelper.CoordinateSystem.World,
-                                            MathHelper.CoordinateSystem.Object);
-            Vector2 refStartSecond = new Vector2(refPoint.X, refPoint.Y);
-
-            refPoint = MathHelper.Transform(this.endSecondLine, this.normal,
-                                            MathHelper.CoordinateSystem.World,
-                                            MathHelper.CoordinateSystem.Object);
-            Vector2 refEndSecond = new Vector2(refPoint.X, refPoint.Y);
-
-            double startAngle = Vector2.Angle(refStartFirst, refEndFirst);
-            double endAngle = Vector2.Angle(refStartSecond, refEndSecond);
-            Vector2 centerRef;
-            MathHelper.FindIntersection(refStartFirst, refEndFirst - refStartFirst, refStartSecond, refEndSecond - refStartSecond, out centerRef);
-
-            // reference points
-            Layer defPoints = new Layer("Defpoints") {Plot = false};
-            Point startFirstPoint = new Point(refStartFirst) {Layer = defPoints};
-            Point endFirstPoint = new Point(refEndFirst) {Layer = defPoints};
-            Point startSecondPoint = new Point(refStartSecond) {Layer = defPoints};
-            Point endSecondPoint = new Point(refEndSecond) {Layer = defPoints};
-
-            // dimension lines
-            Vector2 startArc = Vector2.Polar(centerRef, this.offset, startAngle);
-            Line startBorder = new Line(Vector2.Polar(refEndFirst, this.style.DIMEXO, startAngle),
-                                        Vector2.Polar(startArc, this.style.DIMEXE, startAngle));
-
-            Vector2 endArc = Vector2.Polar(centerRef, this.offset, endAngle);
-            Line endBorder = new Line(Vector2.Polar(refEndSecond, this.style.DIMEXO, endAngle),
-                                      Vector2.Polar(endArc, this.style.DIMEXE, endAngle));
-
-            Arc dimArc = new Arc(centerRef, this.offset, startAngle*MathHelper.RadToDeg, endAngle*MathHelper.RadToDeg);
-
-            // dimension arrows
-            Vector2 arrowRefBegin = Vector2.Polar(startArc, this.style.DIMASZ, startAngle + MathHelper.HalfPI);
-            Solid arrowBegin = new Solid(startArc,
-                                         Vector2.Polar(arrowRefBegin, -this.style.DIMASZ/6, startAngle),
-                                         Vector2.Polar(arrowRefBegin, this.style.DIMASZ/6, startAngle),
-                                         startArc);
-
-            Vector2 arrowRefEnd = Vector2.Polar(endArc, -this.style.DIMASZ, endAngle + MathHelper.HalfPI);
-            Solid arrowEnd = new Solid(endArc,
-                                       Vector2.Polar(arrowRefEnd, this.style.DIMASZ/6, endAngle),
-                                       Vector2.Polar(arrowRefEnd, -this.style.DIMASZ/6, endAngle),
-                                       endArc);
-
-            // dimension text
-            double aperture = this.Value;
-            double rotText = Vector2.Angle(endArc, startArc);
-            Vector2 midText = Vector2.Polar(centerRef, this.offset + this.style.DIMGAP, startAngle + aperture*MathHelper.DegToRad*0.5);
-
-            this.definitionPoint = this.endSecondLine;
-            this.midTextPoint = new Vector3(midText.X, midText.Y, elev); // this value is in OCS
-            this.arcDefinitionPoint = this.midTextPoint; // this value is in OCS
-
-            MText text = new MText(this.FormatDimensionText(aperture),
-                                   this.midTextPoint,
-                                   this.style.DIMTXT, 0.0, this.style.TextStyle)
-                {
-                    AttachmentPoint = MTextAttachmentPoint.BottomCenter,
-                    Rotation = rotText*MathHelper.RadToDeg
-                };
-
-            // drawing block
-            Block dim = new Block(name, false);
-            dim.Entities.Add(startFirstPoint);
-            dim.Entities.Add(endFirstPoint);
-            dim.Entities.Add(startSecondPoint);
-            dim.Entities.Add(endSecondPoint);
-            dim.Entities.Add(startBorder);
-            dim.Entities.Add(endBorder);
-            dim.Entities.Add(dimArc);
-            dim.Entities.Add(arrowBegin);
-            dim.Entities.Add(arrowEnd);
-            dim.Entities.Add(text);
-            this.block = dim;
-            return dim;
+            return DimensionBlock.Build(this, name);
         }
 
         /// <summary>
@@ -359,7 +274,7 @@ namespace netDxf.Entities
                     LineTypeScale = this.lineTypeScale,
                     Normal = this.normal,
                     //Dimension properties
-                    Style = this.style,
+                    Style = (DimensionStyle)this.style.Clone(),
                     AttachmentPoint = this.attachmentPoint,
                     LineSpacingStyle = this.lineSpacingStyle,
                     LineSpacingFactor = this.lineSpacing,

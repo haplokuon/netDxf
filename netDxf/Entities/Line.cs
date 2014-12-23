@@ -77,7 +77,7 @@ namespace netDxf.Entities
         #region public properties
 
         /// <summary>
-        /// Gets or sets the line <see cref="netDxf.Vector3">start point</see>.
+        /// Gets or sets the line <see cref="Vector3">start point</see>.
         /// </summary>
         public Vector3 StartPoint
         {
@@ -86,7 +86,7 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets or sets the line <see cref="netDxf.Vector3">end point</see>.
+        /// Gets or sets the line <see cref="Vector3">end point</see>.
         /// </summary>
         public Vector3 EndPoint
         {
@@ -94,6 +94,13 @@ namespace netDxf.Entities
             set { this.end = value; }
         }
 
+        /// <summary>
+        /// Gets the direction of the line.
+        /// </summary>
+        public Vector3 Direction
+        {
+            get { return this.end - this.start; }
+        }
         /// <summary>
         /// Gets or sets the line thickness.
         /// </summary>

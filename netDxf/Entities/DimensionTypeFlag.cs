@@ -20,12 +20,15 @@
 
 #endregion
 
+using System;
+
 namespace netDxf.Entities
 {
     /// <summary>
     /// Dimension type.
     /// </summary>
-    public enum DimensionType
+    [Flags]
+    internal enum DimensionTypeFlag
     {
         /// <summary>
         /// Rotated, horizontal, or vertical.
@@ -55,5 +58,17 @@ namespace netDxf.Entities
         /// Ordinate.
         /// </summary>
         Ordinate = 6,
+        /// <summary>
+        /// Indicates that the block reference (group code 2) is referenced by this dimension only.
+        /// </summary>
+        BlockReference = 32,
+        /// <summary>
+        /// Ordinate type. This is a bit value (bit 7) used only with integer value 6. If set, ordinate is X-type; if not set, ordinate is Y-type.
+        /// </summary>
+        OrdinteType = 64,
+        /// <summary>
+        /// This is a bit value (bit 8) added to the other group 70 values if the dimension text has been positioned at a user-defined location rather than at the default location.
+        /// </summary>
+        UserTextPosition = 128
     }
 }

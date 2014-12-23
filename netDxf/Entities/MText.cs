@@ -21,7 +21,6 @@
 #endregion
 
 using System;
-using System.Collections.Generic;
 using System.Text;
 using netDxf.Tables;
 
@@ -492,7 +491,7 @@ namespace netDxf.Entities
                     LineSpacingStyle = this.lineSpacingStyle,
                     RectangleWidth = this.rectangleWidth,
                     AttachmentPoint = this.attachmentPoint,
-                    Style = this.style,
+                    Style = (TextStyle)this.style.Clone(),
                     Value = this.value
                 };
 

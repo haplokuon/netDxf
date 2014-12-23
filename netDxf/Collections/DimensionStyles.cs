@@ -77,8 +77,38 @@ namespace netDxf.Collections
             this.document.AddedObjects.Add(style.Handle, style);
             this.list.Add(style.Name, style);
             this.references.Add(style.Name, new List<DxfObject>());
-            style.TextStyle = this.document.TextStyles.Add(style.TextStyle);
-            this.document.TextStyles.References[style.TextStyle.Name].Add(style);
+            
+            // add referenced textstyle
+            style.DIMTXSTY = this.document.TextStyles.Add(style.DIMTXSTY, assignHandle);
+            this.document.TextStyles.References[style.DIMTXSTY.Name].Add(style);
+
+            // add referenced blocks
+            if (style.DIMBLK != null)
+            {
+                style.DIMBLK = this.document.Blocks.Add(style.DIMBLK, assignHandle);
+                this.document.Blocks.References[style.DIMBLK.Name].Add(style);
+            }
+            if (style.DIMBLK1 != null)
+            {
+                style.DIMBLK1 = this.document.Blocks.Add(style.DIMBLK1, assignHandle);
+                this.document.Blocks.References[style.DIMBLK1.Name].Add(style);
+            }
+            if (style.DIMBLK2 != null)
+            {
+                style.DIMBLK2 = this.document.Blocks.Add(style.DIMBLK2, assignHandle);
+                this.document.Blocks.References[style.DIMBLK2.Name].Add(style);
+            }
+
+            // add referenced linetypes
+            style.DIMLTYPE = this.document.LineTypes.Add(style.DIMLTYPE, assignHandle);
+            this.document.LineTypes.References[style.DIMLTYPE.Name].Add(style);
+
+            style.DIMLTEX1 = this.document.LineTypes.Add(style.DIMLTEX1, assignHandle);
+            this.document.LineTypes.References[style.DIMLTEX1.Name].Add(style);
+
+            style.DIMLTEX2 = this.document.LineTypes.Add(style.DIMLTEX2, assignHandle);
+            this.document.LineTypes.References[style.DIMLTEX2.Name].Add(style);
+
             style.Owner = this;
             return style;
         }
@@ -115,8 +145,38 @@ namespace netDxf.Collections
                 return false;
 
             style.Owner = null;
-            this.document.TextStyles.References[style.TextStyle.Name].Remove(style);
+
+            // remove referenced textstyle
+            this.document.TextStyles.References[style.DIMTXSTY.Name].Remove(style);
             this.document.AddedObjects.Remove(style.Handle);
+
+            // remove referenced blocks
+            if (style.DIMBLK != null)
+            {
+                this.document.Blocks.References[style.DIMBLK.Name].Remove(style);
+                this.document.AddedObjects.Remove(style.DIMBLK.Handle);
+            }
+            if (style.DIMBLK1 != null)
+            {
+                this.document.Blocks.References[style.DIMBLK1.Name].Remove(style);
+                this.document.AddedObjects.Remove(style.DIMBLK1.Handle);
+            }
+            if (style.DIMBLK2 != null)
+            {
+                this.document.Blocks.References[style.DIMBLK2.Name].Remove(style);
+                this.document.AddedObjects.Remove(style.DIMBLK2.Handle);
+            }
+
+            // add referenced linetypes
+            this.document.LineTypes.References[style.DIMLTYPE.Name].Remove(style);
+            this.document.AddedObjects.Remove(style.DIMLTYPE.Handle);
+
+            this.document.LineTypes.References[style.DIMLTEX1.Name].Remove(style);
+            this.document.AddedObjects.Remove(style.DIMLTEX1.Handle);
+
+            this.document.LineTypes.References[style.DIMLTEX2.Name].Remove(style);
+            this.document.AddedObjects.Remove(style.DIMLTEX2.Handle);
+
             this.references.Remove(style.Name);
             this.list.Remove(style.Name);
 

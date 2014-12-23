@@ -1,3 +1,16 @@
+[0.9.3 - 2014/12/23]
++ Revised all dimension entities, they should be more reliable. Now, there should be no problems in the way reference points and offsets are supplied.
++ Added the DimensionStyles variable DIMCLRD, DIMLTYPE, and DIMLWD that control the dimension line drawing.
++ Added the DimensionStyles variable DIMCLRE, DIMLTEX1, DIMLTEX2, DIMLWE, DIMSE1, and DIMSE2 that control the extension line drawing.
++ Added the DimensionStyle variables DIMSAH, DIMBLK, DIMBLK1, and DIMBLK2 that control the dimension arrowheads.
++ Added the DimensionStyle variable DIMSCALE that controls the overall scale of the dimension.
++ Added the DimensionStyle variable DIMCLRT that controls the color of the dimension text.
++ Rename DimensionStyle.TextStyle to DimensionStyle.DIMTXSTY.
++ Updated solution to Visual Studio 2013. The old 2010 solution is saved as netDxf2010.sln.
++ (fixed) Issue Id #13306 netDxf fails to read dxf file with xData.
++ (fixed) Issue Id #13325 Vector3.AngleBetween() may return a value of "NaN" (Not a Number)
++ (fixed) Bug when trying to remove a block definition from a dxf document.
+
 [0.9.2 - 2014/10/17]
 + Added PolygonalVertexes and ToPolyline methods to the Spline entity, thanks mikau16 (see "NubsEvaluator() sample for more info).
 + The entity's extended data information is now stored in a custom Dictionary (see "XDataInformation() sample for more info).

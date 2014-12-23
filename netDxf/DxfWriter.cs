@@ -184,6 +184,8 @@ namespace netDxf
             this.EndTable();
 
             //line type tables
+            //The LTYPE table always precedes the LAYER table. I guess because the layers reference the line types,
+            //why this same rule is not applied to DIMSTYLE tables is a mistery, since they also reference text syles and block records
             this.BeginTable(this.doc.LineTypes.CodeName, (short)this.doc.LineTypes.Count, this.doc.LineTypes.Handle);
             foreach (LineType lineType in this.doc.LineTypes.Items)
             {
@@ -741,22 +743,58 @@ namespace netDxf
             this.chunk.Write(70, (short)0);
 
             this.chunk.Write(3, style.DIMPOST);
+            this.chunk.Write(40, style.DIMSCALE);
             this.chunk.Write(41, style.DIMASZ);
             this.chunk.Write(42, style.DIMEXO);
+            this.chunk.Write(43, style.DIMDLI);
             this.chunk.Write(44, style.DIMEXE);
+            this.chunk.Write(46, style.DIMDLE);
+
             this.chunk.Write(73, style.DIMTIH);
             this.chunk.Write(74, style.DIMTOH);
+            if (style.DIMSE1)
+                this.chunk.Write(75, (short)1);
+            else
+                this.chunk.Write(75, (short)0);
+            if (style.DIMSE2)
+                this.chunk.Write(76, (short)1);
+            else
+                this.chunk.Write(76, (short)0);
             this.chunk.Write(77, style.DIMTAD);
             this.chunk.Write(140, style.DIMTXT);
             this.chunk.Write(141, style.DIMCEN);
             this.chunk.Write(147, style.DIMGAP);
+            if (style.DIMSAH)
+                this.chunk.Write(173, (short)1);
+            else
+                this.chunk.Write(173, (short)0);
+            this.chunk.Write(176, style.DIMCLRD.Index);
+            this.chunk.Write(177, style.DIMCLRE.Index);
+            this.chunk.Write(178, style.DIMCLRT.Index);
             this.chunk.Write(179, style.DIMADEC);
             this.chunk.Write(271, style.DIMDEC);
             this.chunk.Write(275, style.DIMAUNIT);
             this.chunk.Write(278, (short)style.DIMDSEP);
             this.chunk.Write(280, style.DIMJUST);
 
-            this.chunk.Write(340, style.TextStyle.Handle);
+            this.chunk.Write(340, style.DIMTXSTY.Handle);
+
+            // CAUTION: The documentation says that the next three values are the handles of referenced BLOCK,
+            // but they are the handles of referenced BLOCK_RECORD
+            if (style.DIMBLK != null)
+                this.chunk.Write(342, style.DIMBLK.Record.Handle);
+            if (style.DIMBLK1 != null)
+                this.chunk.Write(343, style.DIMBLK1.Record.Handle);
+            if (style.DIMBLK2 != null)
+                this.chunk.Write(344, style.DIMBLK2.Record.Handle);
+
+            // CAUTION: The next three codes are undocumented in the official dxf docs
+            this.chunk.Write(345, style.DIMLTYPE.Handle);
+            this.chunk.Write(346, style.DIMLTEX1.Handle);
+            this.chunk.Write(347, style.DIMLTEX2.Handle);
+
+            this.chunk.Write(371, style.DIMLWD.Value);
+            this.chunk.Write(372, style.DIMLWE.Value);
         }
 
         /// <summary>
@@ -2140,9 +2178,9 @@ namespace netDxf
         {
             this.chunk.Write(100, SubclassMarker.RadialDimension);
 
-            this.chunk.Write(15, dim.CircunferencePoint.X);
-            this.chunk.Write(25, dim.CircunferencePoint.Y);
-            this.chunk.Write(35, dim.CircunferencePoint.Z);
+            this.chunk.Write(15, dim.ReferencePoint.X);
+            this.chunk.Write(25, dim.ReferencePoint.Y);
+            this.chunk.Write(35, dim.ReferencePoint.Z);
 
             this.chunk.Write(40, 0.0);
 
@@ -2153,9 +2191,9 @@ namespace netDxf
         {
             this.chunk.Write(100, SubclassMarker.DiametricDimension);
 
-            this.chunk.Write(15, dim.CircunferencePoint.X);
-            this.chunk.Write(25, dim.CircunferencePoint.Y);
-            this.chunk.Write(35, dim.CircunferencePoint.Z);
+            this.chunk.Write(15, dim.ReferencePoint.X);
+            this.chunk.Write(25, dim.ReferencePoint.Y);
+            this.chunk.Write(35, dim.ReferencePoint.Z);
 
             this.chunk.Write(40, 0.0);
 

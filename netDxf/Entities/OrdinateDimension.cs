@@ -166,52 +166,14 @@ namespace netDxf.Entities
 
         #region overrides
 
+        /// <summary>
+        /// Gets the the block that contains the entities that make up the dimension picture.
+        /// </summary>
+        /// <param name="name">Name to be asigned to the generated block.</param>
+        /// <returns>The block that represents the actual dimension.</returns>
         internal override Block BuildBlock(string name)
         {
-            this.definitionPoint = this.origin;
-            double angle = this.rotation * MathHelper.DegToRad;
-
-            Vector3 localPoint = MathHelper.Transform(this.origin, this.normal, MathHelper.CoordinateSystem.World, MathHelper.CoordinateSystem.Object);
-            Vector2 refCenter = new Vector2(localPoint.X, localPoint.Y);
-
-            double elev = localPoint.Z;
-            
-            Vector2 startPoint = refCenter + MathHelper.Transform(this.referencePoint, angle, MathHelper.CoordinateSystem.Object, MathHelper.CoordinateSystem.World);
-            this.firstPoint = MathHelper.Transform(new Vector3(startPoint.X, startPoint.Y, elev), this.normal, MathHelper.CoordinateSystem.Object, MathHelper.CoordinateSystem.World);
-
-            if (this.axis == OrdinateDimensionAxis.X)
-                angle += MathHelper.HalfPI;
-            Vector2 endPoint = Vector2.Polar(startPoint, this.length, angle);
-            this.secondPoint = MathHelper.Transform(new Vector3(endPoint.X, endPoint.Y, elev), this.normal, MathHelper.CoordinateSystem.Object, MathHelper.CoordinateSystem.World);
-
-            // reference points
-            Layer defPoints = new Layer("Defpoints") { Plot = false };
-            Point startRef = new Point(startPoint) { Layer = defPoints };
-            Point endRef = new Point(endPoint) { Layer = defPoints };
-
-            // dimension lines
-            Line dimLine = new Line(Vector2.Polar(startPoint, this.style.DIMEXO, angle), endPoint);
-
-            // dimension text
-            Vector2 midText = Vector2.Polar(startPoint, this.length + this.style.DIMGAP, angle);
-            this.midTextPoint = new Vector3(midText.X, midText.Y, elev); // this value is in OCS
-            
-            MText text = new MText(this.FormatDimensionText(this.Value),
-                                   midText,
-                                   this.style.DIMTXT, 0.0, this.style.TextStyle)
-            {
-                AttachmentPoint = MTextAttachmentPoint.MiddleLeft,
-                Rotation = angle * MathHelper.RadToDeg
-            };
-
-            // drawing block
-            Block dim = new Block(name, false);
-            dim.Entities.Add(startRef);
-            dim.Entities.Add(endRef);
-            dim.Entities.Add(dimLine);
-            dim.Entities.Add(text);
-            this.block = dim;
-            return dim;
+            return DimensionBlock.Build(this, name);
         }
 
         /// <summary>
@@ -231,7 +193,7 @@ namespace netDxf.Entities
                 LineTypeScale = this.lineTypeScale,
                 Normal = this.normal,
                 //Dimension properties
-                Style = this.style,
+                Style = (DimensionStyle)this.style.Clone(),
                 AttachmentPoint = this.attachmentPoint,
                 LineSpacingStyle = this.lineSpacingStyle,
                 LineSpacingFactor = this.lineSpacing,

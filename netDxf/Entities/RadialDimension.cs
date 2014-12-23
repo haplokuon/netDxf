@@ -35,9 +35,9 @@ namespace netDxf.Entities
     {
         #region private fields
 
-        private double radius;
-        private double rotation;
-        private Vector3 circunferencePoint;
+        private Vector3 center;
+        private Vector3 refPoint;
+        private double offset;
 
         #endregion
 
@@ -47,7 +47,7 @@ namespace netDxf.Entities
         /// Initializes a new instance of the <c>RadialDimension</c> class.
         /// </summary>
         public RadialDimension()
-            :this(Vector3.Zero,1.0,0.0)
+            : this(Vector3.Zero, Vector3.UnitX, 0.0, DimensionStyle.Default)
         {
         }
 
@@ -56,9 +56,10 @@ namespace netDxf.Entities
         /// </summary>
         /// <param name="arc"><see cref="Arc">Arc</see> to measure.</param>
         /// <param name="rotation">Rotation in degrees of the dimension line.</param>
+        /// <param name="offset">Distance between the reference point and the dimension text</param>
         /// <remarks>The center point and the definition point define the distance to be measure.</remarks>
-        public RadialDimension(Arc arc, double rotation)
-            : this(arc, rotation, DimensionStyle.Default)
+        public RadialDimension(Arc arc, double rotation, double offset)
+            : this(arc, rotation, offset, DimensionStyle.Default)
         {
         }
 
@@ -67,64 +68,114 @@ namespace netDxf.Entities
         /// </summary>
         /// <param name="arc"><see cref="Arc">Arc</see> to measure.</param>
         /// <param name="rotation">Rotation in degrees of the dimension line.</param>
+        /// <param name="offset">Distance between the reference point and the dimension text</param>
         /// <param name="style">The <see cref="DimensionStyle">style</see> to use with the dimension.</param>
         /// <remarks>The center point and the definition point define the distance to be measure.</remarks>
-        public RadialDimension(Arc arc, double rotation, DimensionStyle style)
-            : this(arc.Center, arc.Radius, rotation, style)
-        {
-            this.normal = arc.Normal;
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <c>RadialDimension</c> class.
-        /// </summary>
-        /// <param name="circle"><see cref="Circle">Circle</see> to measure.</param>
-        /// <param name="rotation">Rotation in degrees of the dimension line.</param>
-        /// <remarks>The center point and the definition point define the distance to be measure.</remarks>
-        public RadialDimension(Circle circle, double rotation)
-            : this(circle, rotation, DimensionStyle.Default)
-        {
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <c>RadialDimension</c> class.
-        /// </summary>
-        /// <param name="circle"><see cref="Circle">Circle</see> to measure.</param>
-        /// <param name="rotation">Rotation in degrees of the dimension line.</param>
-        /// <param name="style">The <see cref="DimensionStyle">style</see> to use with the dimension.</param>
-        /// <remarks>The center point and the definition point define the distance to be measure.</remarks>
-        public RadialDimension(Circle circle, double rotation, DimensionStyle style)
-            : this(circle.Center, circle.Radius, rotation, style )
-        {
-            this.normal = circle.Normal;
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <c>RadialDimension</c> class.
-        /// </summary>
-        /// <param name="centerPoint">Center <see cref="Vector3">point</see> of the circunference.</param>
-        /// <param name="radius">Radius value.</param>
-        /// <param name="rotation">Rotation in degrees of the dimension line.</param>
-        /// <remarks>The center point and the definition point define the distance to be measure.</remarks>
-        public RadialDimension(Vector3 centerPoint, double radius, double rotation)
-            : this(centerPoint, radius, rotation, DimensionStyle.Default)
-        {
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <c>RadialDimension</c> class.
-        /// </summary>
-        /// <param name="centerPoint">Center <see cref="Vector3">point</see> of the circunference.</param>
-        /// <param name="radius">Radius value.</param>
-        /// <param name="rotation">Rotation in degrees of the dimension line.</param>
-        /// <param name="style">The <see cref="DimensionStyle">style</see> to use with the dimension.</param>
-        /// <remarks>The center point and the definition point define the distance to be measure.</remarks>
-        public RadialDimension(Vector3 centerPoint, double radius, double rotation, DimensionStyle style)
+        public RadialDimension(Arc arc, double rotation, double offset, DimensionStyle style)
             : base(DimensionType.Radius)
         {
-            this.definitionPoint = centerPoint;
-            this.radius = radius;
-            this.rotation = MathHelper.NormalizeAngle(rotation);
+            double angle = rotation * MathHelper.DegToRad;
+            Vector3 point = MathHelper.Transform(new Vector3(arc.Radius * Math.Sin(angle), arc.Radius * Math.Cos(angle), 0.0), arc.Normal, MathHelper.CoordinateSystem.Object, MathHelper.CoordinateSystem.World);
+            this.center = arc.Center;
+            this.refPoint = arc.Center + point;
+            this.offset = offset;
+            if (style == null)
+                throw new ArgumentNullException("style", "The Dimension style cannot be null.");
+            this.style = style;
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <c>RadialDimension</c> class.
+        /// </summary>
+        /// <param name="circle"><see cref="Circle">Circle</see> to measure.</param>
+        /// <param name="rotation">Rotation in degrees of the dimension line.</param>
+        /// <param name="offset">Distance between the reference point and the dimension text</param>
+        /// <remarks>The center point and the definition point define the distance to be measure.</remarks>
+        public RadialDimension(Circle circle, double rotation, double offset)
+            : this(circle, rotation, offset, DimensionStyle.Default)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <c>RadialDimension</c> class.
+        /// </summary>
+        /// <param name="circle"><see cref="Circle">Circle</see> to measure.</param>
+        /// <param name="rotation">Rotation in degrees of the dimension line.</param>
+        /// <param name="offset">Distance between the reference point and the dimension text</param>
+        /// <param name="style">The <see cref="DimensionStyle">style</see> to use with the dimension.</param>
+        /// <remarks>The center point and the definition point define the distance to be measure.</remarks>
+        public RadialDimension(Circle circle, double rotation, double offset, DimensionStyle style)
+            : base(DimensionType.Radius)
+        {
+            double angle = rotation*MathHelper.DegToRad;
+            Vector3 point = MathHelper.Transform(new Vector3(circle.Radius * Math.Cos(angle), circle.Radius * Math.Sin(angle), 0.0), circle.Normal, MathHelper.CoordinateSystem.Object, MathHelper.CoordinateSystem.World);
+            this.center = circle.Center;
+            this.refPoint = circle.Center + point;
+
+            if (offset < 0.0)
+                throw new ArgumentOutOfRangeException("offset", "The offset value cannot be negative.");
+            this.offset = offset;
+
+            if (style == null)
+                throw new ArgumentNullException("style", "The Dimension style cannot be null.");
+            this.style = style;
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <c>RadialDimension</c> class.
+        /// </summary>
+        /// <param name="centerPoint">Center <see cref="Vector2">point</see> of the circunference.</param>
+        /// <param name="referencePoint"><see cref="Vector2">Point</see> on circle or arc.</param>
+        /// <param name="offset">Distance between the reference point and the dimension text</param>
+        /// <remarks>The center point and the definition point define the distance to be measure.</remarks>
+        public RadialDimension(Vector2 centerPoint, Vector2 referencePoint, double offset)
+            : this(new Vector3(centerPoint.X, centerPoint.Y, 0.0), new Vector3(referencePoint.X, referencePoint.Y, 0.0), offset, DimensionStyle.Default)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <c>RadialDimension</c> class.
+        /// </summary>
+        /// <param name="centerPoint">Center <see cref="Vector2">point</see> of the circunference.</param>
+        /// <param name="referencePoint"><see cref="Vector2">Point</see> on circle or arc.</param>
+        /// <param name="offset">Distance between the reference point and the dimension text</param>
+        /// <param name="style">The <see cref="DimensionStyle">style</see> to use with the dimension.</param>
+        /// <remarks>The center point and the definition point define the distance to be measure.</remarks>
+        public RadialDimension(Vector2 centerPoint, Vector2 referencePoint, double offset, DimensionStyle style)
+            : this(new Vector3(centerPoint.X, centerPoint.Y, 0.0), new Vector3(referencePoint.X, referencePoint.Y, 0.0), offset, style)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <c>RadialDimension</c> class.
+        /// </summary>
+        /// <param name="centerPoint">Center <see cref="Vector3">point</see> of the circunference.</param>
+        /// <param name="referencePoint"><see cref="Vector3">Point</see> on circle or arc.</param>
+        /// <param name="offset">Distance between the reference point and the dimension text</param>
+        /// <remarks>The center point and the definition point define the distance to be measure.</remarks>
+        public RadialDimension(Vector3 centerPoint, Vector3 referencePoint, double offset)
+            : this(centerPoint, referencePoint, offset, DimensionStyle.Default)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <c>RadialDimension</c> class.
+        /// </summary>
+        /// <param name="centerPoint">Center <see cref="Vector3">point</see> of the circunference.</param>
+        /// <param name="referencePoint"><see cref="Vector3">Point</see> on circle or arc.</param>
+        /// <param name="offset">Distance between the reference point and the dimension text</param>
+        /// <param name="style">The <see cref="DimensionStyle">style</see> to use with the dimension.</param>
+        /// <remarks>The center point and the definition point define the distance to be measure.</remarks>
+        public RadialDimension(Vector3 centerPoint, Vector3 referencePoint, double offset, DimensionStyle style)
+            : base(DimensionType.Radius)
+        {
+            this.center = centerPoint;
+            this.refPoint = referencePoint;
+
+            if (offset < 0.0)
+                throw new ArgumentOutOfRangeException("offset", "The offset value cannot be negative.");
+            this.offset = offset;
+
             if (style == null)
                 throw new ArgumentNullException("style", "The Dimension style cannot be null.");
             this.style = style;
@@ -132,47 +183,42 @@ namespace netDxf.Entities
 
         #endregion
 
-        #region internal properties
-
-        /// <summary>
-        /// Definition point for diameter, radius, and angular dimensions (in WCS).
-        /// </summary>
-        internal Vector3 CircunferencePoint
-        {
-            get { return this.circunferencePoint; }
-            set { this.circunferencePoint = value; }
-        }
-
-        #endregion
-
         #region public properties
 
         /// <summary>
-        /// Gets or sets the center <see cref="Vector3">point</see> of the circunference.
+        /// Gets or sets the center <see cref="Vector3">point</see> of the circunference (in WCS).
         /// </summary>
         public Vector3 CenterPoint
         {
-            get { return this.definitionPoint; }
-            set { this.definitionPoint = value; }
-        }
-
-
-        /// <summary>
-        /// Gets or sets the radius of the circunference.
-        /// </summary>
-        public double Radius
-        {
-            get { return this.radius; }
-            set { this.radius = value; }
+            get { return this.center; }
+            set { this.center = value; }
         }
 
         /// <summary>
-        /// Gets or sets the rotation of the dimension line.
+        /// Gets or sets the <see cref="Vector3">point</see> on circle or arc (in WCS).
         /// </summary>
-        public double Rotation
+        public Vector3 ReferencePoint
         {
-            get { return this.rotation; }
-            set { this.rotation = MathHelper.NormalizeAngle(value); }
+            get { return this.refPoint; }
+            set { this.refPoint = value; }
+        }
+
+        /// <summary>
+        /// Gets or sets the distance between the center point and the dimension text.
+        /// </summary>
+        /// <remarks>
+        /// If the value is close to half of the diameter, the offset will be 2*DIMASZ+DIMGAP*DIMSCALE.
+        /// If the value is set to zero the dimension will be shown at the center, both arrowheads will be shown and no center mark will be drawn.
+        /// </remarks>
+        public double Offset
+        {
+            get { return this.offset; }
+            set
+            {
+                if (value < 0.0)
+                    throw new ArgumentOutOfRangeException("value", "The offset value cannot be negative.");
+                this.offset = value;
+            }
         }
 
         /// <summary>
@@ -180,22 +226,12 @@ namespace netDxf.Entities
         /// </summary>
         public override double Value
         {
-            get { return this.radius; }
+            get { return Vector3.Distance(this.center, this.refPoint); }
         }
 
         #endregion
 
         #region overrides
-
-        /// <summary>
-        /// Format the value for the dimension text.
-        /// </summary>
-        /// <param name="dimValue">Dimension value.</param>
-        /// <returns>The formated text.</returns>
-        internal override string FormatDimensionText(double dimValue)
-        {
-            return "R" + base.FormatDimensionText(dimValue);
-        }
 
         /// <summary>
         /// Gets the the block that contains the entities that make up the dimension picture.
@@ -204,64 +240,7 @@ namespace netDxf.Entities
         /// <returns>The block that represents the actual dimension.</returns>
         internal override Block BuildBlock(string name)
         {
-            // we will build the dimension block in object coordinates with normal the dimension normal
-            Vector3 refPoint = MathHelper.Transform(this.definitionPoint, this.normal,
-                                                    MathHelper.CoordinateSystem.World,
-                                                    MathHelper.CoordinateSystem.Object);
-
-            Vector2 firstRef = new Vector2(refPoint.X, refPoint.Y);
-            double elev = refPoint.Z;
-            double refRotation = this.rotation*MathHelper.DegToRad;
-            Vector2 secondRef = Vector2.Polar(firstRef, this.radius, refRotation);
-            this.circunferencePoint = MathHelper.Transform(new Vector3(secondRef.X, secondRef.Y, elev), this.normal,
-                                                           MathHelper.CoordinateSystem.Object,
-                                                           MathHelper.CoordinateSystem.World);
-            // reference points
-            Layer defPoints = new Layer("Defpoints") { Plot = false };
-            Point startRef = new Point(firstRef) { Layer = defPoints };
-            Point endRef = new Point(secondRef) { Layer = defPoints };
-
-            // dimension lines
-            Line dimLine = new Line(firstRef, secondRef);
-
-            // center cross
-            double dist = Math.Abs(this.style.DIMCEN);
-            Vector2 c1 = new Vector2(0, -dist) + firstRef;
-            Vector2 c2 = new Vector2(0, dist) + firstRef;
-            Line crossLine1 = new Line(c1, c2);
-            c1 = new Vector2(-dist, 0) + firstRef;
-            c2 = new Vector2(dist, 0) + firstRef;
-            Line crossLine2 = new Line(c1, c2);
-
-            // dimension arrows
-            Vector2 arrowRef = Vector2.Polar(secondRef, -this.style.DIMASZ, refRotation);
-            Solid arrow = new Solid(secondRef,
-                                    Vector2.Polar(arrowRef, this.style.DIMASZ / 6, refRotation + MathHelper.HalfPI),
-                                    Vector2.Polar(arrowRef, -this.style.DIMASZ / 6, refRotation + MathHelper.HalfPI),
-                                    secondRef);
-
-
-            // dimension text
-            Vector2 midDimLine = Vector2.MidPoint(firstRef, secondRef);
-            this.midTextPoint = new Vector3(midDimLine.X, midDimLine.Y, elev); // this value is in OCS
-            MText text = new MText(this.FormatDimensionText(this.Value),
-                                   Vector2.Polar(midDimLine, this.style.DIMGAP, refRotation + MathHelper.HalfPI),
-                                   this.style.DIMTXT, 0.0, this.style.TextStyle)
-                             {
-                                 AttachmentPoint = MTextAttachmentPoint.BottomCenter,
-                                 Rotation = refRotation*MathHelper.RadToDeg
-                             };
-
-            Block dim = new Block(name, false);
-            dim.Entities.Add(startRef);
-            dim.Entities.Add(endRef);
-            dim.Entities.Add(dimLine);
-            dim.Entities.Add(crossLine1);
-            dim.Entities.Add(crossLine2);
-            dim.Entities.Add(arrow);
-            dim.Entities.Add(text);
-            this.block = dim;
-            return dim;
+            return DimensionBlock.Build(this, name);
         }
 
         /// <summary>
@@ -281,14 +260,14 @@ namespace netDxf.Entities
                 LineTypeScale = this.lineTypeScale,
                 Normal = this.normal,
                 //Dimension properties
-                Style = this.style,
+                Style = (DimensionStyle)this.style.Clone(),
                 AttachmentPoint = this.attachmentPoint,
                 LineSpacingStyle = this.lineSpacingStyle,
                 LineSpacingFactor = this.lineSpacing,
                 //RadialDimension properties
                 CenterPoint = this.definitionPoint,
-                Radius = this.radius,
-                Rotation = this.rotation
+                ReferencePoint = this.refPoint,
+                Offset = this.offset
             };
 
             foreach (XData data in this.XData.Values)

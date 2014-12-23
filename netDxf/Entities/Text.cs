@@ -240,7 +240,7 @@ namespace netDxf.Entities
                 WidthFactor = this.widthFactor,
                 ObliqueAngle = this.obliqueAngle,
                 Alignment = this.alignment,
-                Style = this.style,
+                Style = (TextStyle) this.style.Clone(),
                 Value = this.value
             };
 

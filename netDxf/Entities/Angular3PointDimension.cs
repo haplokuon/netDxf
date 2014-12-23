@@ -1,7 +1,7 @@
-﻿#region netDxf, Copyright(C) 2013 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf, Copyright(C) 2014 Daniel Carvajal, Licensed under LGPL.
 
 //                        netDxf library
-// Copyright (C) 2013 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2014 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -21,7 +21,6 @@
 #endregion
 
 using System;
-using System.Collections.Generic;
 using netDxf.Blocks;
 using netDxf.Tables;
 
@@ -72,25 +71,21 @@ namespace netDxf.Entities
         {
             this.center = arc.Center;
 
-            Vector3 refPoint = MathHelper.Transform(arc.Center, arc.Normal,
-                                                    MathHelper.CoordinateSystem.World,
-                                                    MathHelper.CoordinateSystem.Object);
+            Vector3 refPoint = MathHelper.Transform(arc.Center, arc.Normal, MathHelper.CoordinateSystem.World, MathHelper.CoordinateSystem.Object);
 
             Vector2 centerRef = new Vector2(refPoint.X, refPoint.Y);
             double elev = refPoint.Z;
 
-            Vector2 firstRef = Vector2.Polar(centerRef, arc.Radius, arc.StartAngle * MathHelper.DegToRad);
-            this.start = MathHelper.Transform(new Vector3(firstRef.X, firstRef.Y, elev), arc.Normal,
-                                                    MathHelper.CoordinateSystem.Object,
-                                                    MathHelper.CoordinateSystem.World);
+            Vector2 ref1 = Vector2.Polar(centerRef, arc.Radius, arc.StartAngle * MathHelper.DegToRad);
+            this.start = MathHelper.Transform(new Vector3(ref1.X, ref1.Y, elev), arc.Normal, MathHelper.CoordinateSystem.Object, MathHelper.CoordinateSystem.World);
 
-            Vector2 secondRef = Vector2.Polar(centerRef, arc.Radius, arc.EndAngle * MathHelper.DegToRad);
-            this.end = MathHelper.Transform(new Vector3(secondRef.X, secondRef.Y, elev), arc.Normal,
-                                                    MathHelper.CoordinateSystem.Object,
-                                                    MathHelper.CoordinateSystem.World);
+            Vector2 ref2 = Vector2.Polar(centerRef, arc.Radius, arc.EndAngle * MathHelper.DegToRad);
+            this.end = MathHelper.Transform(new Vector3(ref2.X, ref2.Y, elev), arc.Normal, MathHelper.CoordinateSystem.Object, MathHelper.CoordinateSystem.World);
 
-            this.normal = arc.Normal;
+            if (MathHelper.IsZero(offset))
+                throw new ArgumentOutOfRangeException("offset", "The offset value cannot be zero.");
             this.offset = offset;
+
             if (style == null)
                 throw new ArgumentNullException("style", "The Dimension style cannot be null.");
             this.style = style;      
@@ -145,12 +140,10 @@ namespace netDxf.Entities
             : base(DimensionType.Angular3Point)
         {
             this.center = centerPoint;
-
-            Vector3 dir1 = startPoint - centerPoint;
-            Vector3 dir2 = endPoint - centerPoint;
-            this.normal = Vector3.CrossProduct(dir1, dir2);
             this.start = startPoint;
             this.end = endPoint;
+            if (MathHelper.IsZero(offset))
+                throw new ArgumentOutOfRangeException("offset", "The offset value cannot be zero.");
             this.offset = offset;
             this.style = style;
         }
@@ -210,30 +203,38 @@ namespace netDxf.Entities
         /// <summary>
         /// Gets or sets the distance between the center point and the dimension line.
         /// </summary>
+        /// <remarks>Zero values are not allowed.</remarks>
         public double Offset
         {
             get { return this.offset; }
-            set { this.offset = value; }
+            set
+            {
+                if (MathHelper.IsZero(value))
+                    throw new ArgumentOutOfRangeException("value", "The offset value cannot be zero.");
+                this.offset = value;
+            }
         }
 
         /// <summary>
         /// Actual measurement.
         /// </summary>
+        /// <remarks>The dimension is always measured in the plane defined by the normal.</remarks>
         public override double Value
         {
             get
             {
-                Vector3 localPoint = MathHelper.Transform(this.center, this.normal, MathHelper.CoordinateSystem.World, MathHelper.CoordinateSystem.Object);
-                Vector2 refCenter = new Vector2(localPoint.X, localPoint.Y);
+                Vector3 refPoint;
+                
+                refPoint = MathHelper.Transform(this.center, this.normal, MathHelper.CoordinateSystem.World, MathHelper.CoordinateSystem.Object);
+                Vector2 refCenter = new Vector2(refPoint.X, refPoint.Y);
 
-                localPoint = MathHelper.Transform(this.start, this.normal, MathHelper.CoordinateSystem.World, MathHelper.CoordinateSystem.Object);
-                Vector2 refStart = new Vector2(localPoint.X, localPoint.Y);
+                refPoint = MathHelper.Transform(this.start, this.normal, MathHelper.CoordinateSystem.World, MathHelper.CoordinateSystem.Object);
+                Vector2 ref1 = new Vector2(refPoint.X, refPoint.Y);
 
-                localPoint = MathHelper.Transform(this.end, this.normal, MathHelper.CoordinateSystem.World, MathHelper.CoordinateSystem.Object);
-                Vector2 refEnd = new Vector2(localPoint.X, localPoint.Y);
+                refPoint = MathHelper.Transform(this.end, this.normal, MathHelper.CoordinateSystem.World, MathHelper.CoordinateSystem.Object);
+                Vector2 ref2 = new Vector2(refPoint.X, refPoint.Y);
 
-                double rotation = Vector2.Angle(refCenter, refStart);
-                double angle = (Vector2.Angle(refCenter, refEnd)  - rotation) * MathHelper.RadToDeg;
+                double angle = Vector2.Angle(refCenter, ref2) - Vector2.Angle(refCenter, ref1) * MathHelper.RadToDeg;
                 return angle < 0 ? 360 + angle : angle;
             }
         }
@@ -249,83 +250,7 @@ namespace netDxf.Entities
         /// <returns>The block that represents the actual dimension.</returns>
         internal override Block BuildBlock(string name)
         {
-            // we will build the dimension block in object coordinates with normal the dimension normal
-            Vector3 localPoint = MathHelper.Transform(this.center, this.normal, MathHelper.CoordinateSystem.World, MathHelper.CoordinateSystem.Object);
-            Vector2 refCenter = new Vector2(localPoint.X, localPoint.Y);
-
-            localPoint = MathHelper.Transform(this.start, this.normal, MathHelper.CoordinateSystem.World, MathHelper.CoordinateSystem.Object);
-            Vector2 refStart = new Vector2(localPoint.X, localPoint.Y);
-
-            localPoint = MathHelper.Transform(this.end, this.normal, MathHelper.CoordinateSystem.World, MathHelper.CoordinateSystem.Object);
-            Vector2 refEnd = new Vector2(localPoint.X, localPoint.Y);
-
-            double elev = localPoint.Z;
-
-            // reference points
-            Layer defPoints = new Layer("Defpoints") { Plot = false };
-            Point startRef = new Point(refStart) { Layer = defPoints };
-            Point endRef = new Point(refEnd) { Layer = defPoints };
-            Point centerPoint = new Point(refCenter) { Layer = defPoints };
-
-            // dimension lines
-            double startAngle = Vector2.Angle(refCenter, refStart);
-            double endAngle = Vector2.Angle(refCenter, refEnd);
-
-            Vector2 startArc = Vector2.Polar(refCenter, this.offset, startAngle);
-            Line startBorder = new Line(Vector2.Polar(refStart, this.style.DIMEXO, startAngle),
-                                        Vector2.Polar(startArc, this.style.DIMEXE, startAngle));
-
-            Vector2 endArc = Vector2.Polar(refCenter, this.offset, endAngle);
-            Line endBorder = new Line(Vector2.Polar(refEnd, this.style.DIMEXO, endAngle),
-                                      Vector2.Polar(endArc, this.style.DIMEXE, endAngle));
-
-            Arc dimArc = new Arc(refCenter, this.offset, startAngle * MathHelper.RadToDeg, endAngle * MathHelper.RadToDeg);
-
-
-            // dimension arrows
-            Vector2 arrowRefBegin = Vector2.Polar(startArc, this.style.DIMASZ, startAngle + MathHelper.HalfPI);
-            Solid arrowBegin = new Solid(startArc,
-                                         Vector2.Polar(arrowRefBegin, -this.style.DIMASZ / 6, startAngle),
-                                         Vector2.Polar(arrowRefBegin, this.style.DIMASZ / 6, startAngle),
-                                         startArc);
-
-            Vector2 arrowRefEnd = Vector2.Polar(endArc, -this.style.DIMASZ, endAngle + MathHelper.HalfPI);
-            Solid arrowEnd = new Solid(endArc,
-                                       Vector2.Polar(arrowRefEnd, this.style.DIMASZ / 6, endAngle),
-                                       Vector2.Polar(arrowRefEnd, -this.style.DIMASZ / 6, endAngle),
-                                       endArc);
-
-            // dimension text
-            double aperture = this.Value;
-            double rotText = Vector2.Angle(endArc, startArc);
-            Vector2 midText = Vector2.Polar(refCenter, this.offset + this.style.DIMGAP, startAngle + aperture * MathHelper.DegToRad * 0.5);
-            this.definitionPoint = MathHelper.Transform(new Vector3(midText.X, midText.Y, elev), this.normal,
-                                                    MathHelper.CoordinateSystem.Object,
-                                                    MathHelper.CoordinateSystem.World);
-
-            this.midTextPoint = new Vector3(midText.X, midText.Y, elev); // this value is in OCS
-            
-            MText text = new MText(this.FormatDimensionText(aperture),
-                                   this.midTextPoint,
-                                   this.style.DIMTXT, 0.0, this.style.TextStyle)
-            {
-                AttachmentPoint = MTextAttachmentPoint.BottomCenter,
-                Rotation = rotText * MathHelper.RadToDeg
-            };
-
-            // drawing block
-            Block dim = new Block(name, false);
-            dim.Entities.Add(startRef);
-            dim.Entities.Add(endRef);
-            dim.Entities.Add(centerPoint);
-            dim.Entities.Add(startBorder);
-            dim.Entities.Add(endBorder);
-            dim.Entities.Add(dimArc);
-            dim.Entities.Add(arrowBegin);
-            dim.Entities.Add(arrowEnd);
-            dim.Entities.Add(text);
-            this.block = dim;
-            return dim;
+            return DimensionBlock.Build(this, name);
         }
 
         /// <summary>
@@ -345,7 +270,7 @@ namespace netDxf.Entities
                 LineTypeScale = this.lineTypeScale,
                 Normal = this.normal,
                 //Dimension properties
-                Style = this.style,
+                Style = (DimensionStyle)this.style.Clone(),
                 AttachmentPoint = this.attachmentPoint,
                 LineSpacingStyle = this.lineSpacingStyle,
                 LineSpacingFactor = this.lineSpacing,

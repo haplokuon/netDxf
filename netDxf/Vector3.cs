@@ -114,6 +114,14 @@ namespace netDxf
             get { return new Vector3(0, 0, 1); }
         }
 
+        /// <summary>
+        /// Represents a vector with not a number components.
+        /// </summary>
+        public static Vector3 NaN
+        {
+            get { return new Vector3(double.NaN, double.NaN, double.NaN); }
+        }
+
         #endregion
 
         #region public properties
@@ -195,6 +203,18 @@ namespace netDxf
         #region static methods
 
         /// <summary>
+        ///  Returns a value indicating if any component of the specified vector evaluates to a value that is not a number <see cref="System.Double.NaN"/>.
+        /// </summary>
+        /// <param name="u">Vector3.</param>
+        /// <returns>Returns true if any component of the specified vector evaluates to <see cref="System.Double.NaN"/>; otherwise, false.</returns>
+        public static bool IsNaN(Vector3 u)
+        {
+            if (double.IsNaN(u.X) || double.IsNaN(u.Y) || double.IsNaN(u.Z))
+                return true;
+            return false;
+        }
+
+        /// <summary>
         /// Obtains the dot product of two vectors.
         /// </summary>
         /// <param name="u">Vector3.</param>
@@ -250,6 +270,11 @@ namespace netDxf
         public static double AngleBetween(Vector3 u, Vector3 v)
         {
             double cos = DotProduct(u, v)/(u.Modulus()*v.Modulus());
+            if (cos >= 1.0)
+                return 0.0;
+            if (cos <= -1.0)
+                return Math.PI;
+
             return Math.Acos(cos);
         }
 
@@ -288,7 +313,7 @@ namespace netDxf
             double a = u.Y*v.Z - u.Z*v.Y;
             double b = u.Z*v.X - u.X*v.Z;
             double c = u.X*v.Y - u.Y*v.X;
-            if (! MathHelper.IsZero(a, threshold))
+            if (!MathHelper.IsZero(a, threshold))
                 return false;
             if (!MathHelper.IsZero(b, threshold))
                 return false;

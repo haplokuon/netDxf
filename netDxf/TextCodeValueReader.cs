@@ -84,10 +84,10 @@ namespace netDxf
             {
                 string hex = string.Concat(this.value[i], this.value[++i]);
                 byte result;
-                if (byte.TryParse(hex, NumberStyles.AllowLeadingWhite | NumberStyles.AllowTrailingWhite, CultureInfo.InvariantCulture, out result))
+                if (byte.TryParse(hex, NumberStyles.AllowHexSpecifier | NumberStyles.AllowLeadingWhite | NumberStyles.AllowTrailingWhite, CultureInfo.InvariantCulture, out result))
                     bytes.Add(result);
                 else
-                    throw new Exception(string.Format("Value {0} not valid at line {1}", this.value, this.currentPosition));
+                    throw new Exception(string.Format("Value {0} not valid at line {1}", hex, this.currentPosition));
             }
             return bytes.ToArray();
         }

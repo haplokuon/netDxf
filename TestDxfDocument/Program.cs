@@ -21,16 +21,12 @@
 #endregion
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Drawing;
-using System.Globalization;
 using System.IO;
-using System.Runtime.InteropServices;
 using System.Text;
-using System.Threading;
+using System.Windows.Forms;
 using netDxf;
 using netDxf.Blocks;
 using netDxf.Collections;
@@ -51,16 +47,30 @@ namespace TestDxfDocument
     /// </summary>
     public class Program
     {
+
         private static void Main()
         {
 
             Test();
 
+            #region Samples for fixes, new and modified features 0.9.3
+
+            //RemoveBlock();
+            //LinearDimension();
+            //AlignedDimension();
+            //Angular2LineDimension();
+            //Angular3PointDimension();
+            //DiametricDimension();
+            //RadialDimension();
+            //OrdinateDimension();
+
+            #endregion
+
             #region Samples for fixes, new and modified features 0.9.2
 
-            NubsEvaluator();
-            XDataInformation();
-            DynamicBlocks();
+            //NubsEvaluator();
+            //XDataInformation();
+            //DynamicBlocks();
 
             #endregion
 
@@ -76,7 +86,7 @@ namespace TestDxfDocument
             //CombiningTwoDrawings();
             //BinaryChunkXData();
             //BinaryDxfFiles();
-            MeshEntity();
+            //MeshEntity();
 
             #endregion
 
@@ -154,6 +164,380 @@ namespace TestDxfDocument
             //WritePolyline3d();
             //WriteInsert();
         }
+
+        #region Samples for new and modified features 0.9.3
+   
+        private static void RemoveBlock()
+        {
+            DxfDocument dxf = new DxfDocument();
+            Block block = new Block("MyBlock");
+
+            Line line1 = new Line(new Vector3(-5, -5, 0), new Vector3(5, 5, 0));
+            Line line2 = new Line(new Vector3(5, -5, 0), new Vector3(-5, 5, 0));
+            block.Entities.Add(line1);
+            block.Entities.Add(line2);
+
+            Insert insert = new Insert(block);
+
+            dxf.AddEntity(insert);
+
+            bool ok;
+            // line1 is used by block and cannot be removed (ok = false)
+            ok = dxf.RemoveEntity(line1);
+            // block is used by insert and cannot be removed (ok = false)
+            ok = dxf.Blocks.Remove(block);
+            // it is safe to remove insert, it doesn't belong to anybody (ok = true)
+            ok = dxf.RemoveEntity(insert);
+            // it is safe to remove block, it doesn't belong to anybody (ok = true)
+            // at the same time, all entities that were part of the block have been also removed
+            ok = dxf.Blocks.Remove(block);
+            // obj is null the line1 does not exist in the document, the block was removed
+            DxfObject obj = dxf.GetObjectByHandle(line1.Handle);
+
+            Console.WriteLine("Press a key...");
+            Console.ReadKey();
+
+        }
+
+        private static DimensionStyle CreateDimStyle()
+        {
+            DimensionStyle myStyle = new DimensionStyle("MyStyle");
+            myStyle.DIMDLE = 0.18;
+            myStyle.DIMDEC = 2;
+            myStyle.DIMSCALE = 2.0;
+            myStyle.DIMSAH = true;
+            //myStyle.DIMLTEX1 = LineType.Dot;
+            myStyle.DIMCLRD = AciColor.Yellow;
+            //myStyle.DIMBLK = DimensionArrowhead.ArchitecturalTick;
+            myStyle.DIMBLK1 = DimensionArrowhead.Box;
+            myStyle.DIMBLK2 = DimensionArrowhead.DotBlank;
+            //myStyle.DIMSE1 = true;
+            //myStyle.DIMSE2 = true;
+
+            myStyle.DIMCLRT = AciColor.Red;
+
+            return myStyle;
+        }
+
+        private static void LinearDimension()
+        {
+            DxfDocument dwg1 = DxfDocument.Load("Drawing1.dxf");
+            dwg1.Save("Drawing1 saved.dxf");
+
+            DxfDocument dxf = new DxfDocument(DxfVersion.AutoCad2010);
+            DimensionStyle myStyle = CreateDimStyle();
+
+            Vector3 p2 = new Vector3(0, -5, 0);
+            Vector3 p1 = new Vector3(-5, 0, 0);
+
+            Line line1 = new Line(p1, p2)
+            {
+                Layer = new Layer("Reference line")
+                {
+                    Color = AciColor.Green
+                }
+            };
+            dxf.AddEntity(line1);
+
+            double offset = 4;
+            LinearDimension dimX1 = new LinearDimension(line1, offset, 0, myStyle);
+            LinearDimension dimY1 = new LinearDimension(line1, offset, 90, myStyle);
+            LinearDimension dim5 = new LinearDimension(line1, offset, -30, myStyle);
+            LinearDimension dim6 = new LinearDimension(line1, offset, -60, myStyle);
+
+            Vector3 p4 = new Vector3(6, -5, 0);
+            Vector3 p3 = new Vector3(11, 0, 0);
+            Line line2 = new Line(p3, p4)
+            {
+                Layer = new Layer("Reference line")
+                {
+                    Color = AciColor.Green
+                }
+            };
+            dxf.AddEntity(line2);
+            LinearDimension dimX2 = new LinearDimension(line2, offset, -30.0, myStyle);
+            LinearDimension dimY2 = new LinearDimension(line2, offset, -60.0, myStyle);
+            LinearDimension dim3 = new LinearDimension(line2, offset, 30.0, myStyle);
+            LinearDimension dim4 = new LinearDimension(line2, offset, 60.0, myStyle);
+
+            dxf.AddEntity(dimX1);
+            dxf.AddEntity(dimY1);
+            dxf.AddEntity(dimX2);
+            dxf.AddEntity(dimY2);
+            dxf.AddEntity(dim3);
+            dxf.AddEntity(dim4);
+            dxf.AddEntity(dim5);
+            dxf.AddEntity(dim6);
+            dxf.Save("dimension drawing.dxf");
+
+            DxfDocument dwg = DxfDocument.Load("dimension drawing.dxf");
+            dwg.Save("dimension drawing saved.dxf");
+
+            Console.WriteLine("Press a key...");
+            Console.ReadKey();
+        }
+        
+        private static void AlignedDimension()
+        {
+            DxfDocument dxf = new DxfDocument(DxfVersion.AutoCad2010);
+            DimensionStyle myStyle = CreateDimStyle();
+
+            Vector3 p1 = new Vector3(0, -5, 0);
+            Vector3 p2 = new Vector3(-5, 0, 0);
+
+            Line line1 = new Line(p1, p2)
+            {
+                Layer = new Layer("Reference line")
+                {
+                    Color = AciColor.Green
+                }
+            };
+            dxf.AddEntity(line1);
+
+            double offset = 4;
+            AlignedDimension dim1 = new AlignedDimension(line1, offset, myStyle);
+            AlignedDimension dim11 = new AlignedDimension(line1, -offset, myStyle);
+
+            Vector3 p3 = new Vector3(6, -5, 0);
+            Vector3 p4 = new Vector3(11, 0, 0);
+            Line line2 = new Line(p3, p4)
+            {
+                Layer = new Layer("Reference line")
+                {
+                    Color = AciColor.Green
+                }
+            };
+            dxf.AddEntity(line2);
+            AlignedDimension dim2 = new AlignedDimension(line2, offset, myStyle);
+            AlignedDimension dim21 = new AlignedDimension(line2, -offset, myStyle);
+
+            dxf.AddEntity(dim1);
+            dxf.AddEntity(dim11);
+            dxf.AddEntity(dim2);
+            dxf.AddEntity(dim21);
+
+            Console.WriteLine("Press a key...");
+            Console.ReadKey();
+            dxf.Save("dimension drawing.dxf");
+
+            DxfDocument dwg = DxfDocument.Load("dimension drawing.dxf");
+            dwg.Save("dimension drawing saved.dxf");
+
+            
+        }
+
+        private static void Angular2LineDimension()
+        {
+            DimensionStyle myStyle = CreateDimStyle();
+
+            double offset = 4;
+
+            Layer layer = new Layer("Layer1") {Color = AciColor.Blue};
+            Vector2 s1 = new Vector2(-2, 2);
+            Vector2 s2 = new Vector2(2, -2);
+
+            Vector2 e1 = new Vector2(-1,-3);
+            Vector2 e2 = new Vector2(1,3);
+
+            Line line1 = new Line(s1, s2){Layer = layer};
+            Line line2 = new Line(e1, e2){Layer = layer};
+            Angular2LineDimension dim1 = new Angular2LineDimension(line2, line1, offset, myStyle);
+
+            Line line3 = new Line(e1, e2) { Layer = layer };
+            Line line4 = new Line(s2, s1) { Layer = layer };
+            Angular2LineDimension dim2 = new Angular2LineDimension(line3, line4, offset, myStyle);
+
+            Angular2LineDimension dim3 = new Angular2LineDimension(line3, line1, -offset, myStyle);
+            Angular2LineDimension dim4 = new Angular2LineDimension(line4, line3, -offset, myStyle);
+
+            DxfDocument dxf = new DxfDocument();
+            dxf.AddEntity(line1);
+            dxf.AddEntity(line2);
+            dxf.AddEntity(dim1);
+            dxf.AddEntity(dim2);
+            dxf.AddEntity(dim3);
+            dxf.AddEntity(dim4);
+            Console.WriteLine("Press a key...");
+            Console.ReadKey();
+            dxf.Save("dimension drawing.dxf");
+            dxf = DxfDocument.Load("dimension drawing.dxf");
+            dxf.DrawingVariables.AcadVer = DxfVersion.AutoCad2010;
+            dxf.Save("dimension drawing saved.dxf");
+        }
+
+        private static void Angular3PointDimension()
+        {
+            DxfDocument dxf = new DxfDocument();
+            DimensionStyle myStyle = CreateDimStyle();
+
+            Vector3 center = new Vector3(1, 2, 0);
+            double radius = 2.42548;
+            Arc arc = new Arc(center, radius, -30, 60);
+            Angular3PointDimension dim1 = new Angular3PointDimension(arc, 5, myStyle);
+            Angular3PointDimension dim2 = new Angular3PointDimension(arc, -5, myStyle);
+            dxf.AddEntity(arc);
+            dxf.AddEntity(dim1);
+            dxf.AddEntity(dim2);
+            dxf.Save("dimension drawing.dxf");
+
+            dxf = DxfDocument.Load("dimension drawing.dxf");
+        }
+
+        private static void DiametricDimension()
+        {
+            
+            DxfDocument dxf = new DxfDocument();
+            DimensionStyle myStyle = CreateDimStyle();
+
+            Vector3 center = new Vector3(1, 2, 0);
+            double radius = 3;
+            Circle circle = new Circle(center, radius);
+            //circle.Normal = new Vector3(1, 1, 1);
+            double angle = MathHelper.HalfPI*0.5;
+            Vector3 refPoint = center + new Vector3(radius * Math.Cos(angle), radius * Math.Cos(angle), 0);
+
+
+            //DiametricDimension dim = new DiametricDimension(center, refPoint, -1.0, myStyle);
+            double offset = 0;
+            DiametricDimension dim1 = new DiametricDimension(circle, 0, offset, myStyle);
+            DiametricDimension dim2 = new DiametricDimension(circle, 45, offset, myStyle);
+            DiametricDimension dim3 = new DiametricDimension(circle, 90, offset, myStyle);
+            DiametricDimension dim4 = new DiametricDimension(circle, 120, offset, myStyle);
+            DiametricDimension dim5 = new DiametricDimension(circle, 180, offset, myStyle);
+            DiametricDimension dim6 = new DiametricDimension(circle, 220, offset, myStyle);
+            DiametricDimension dim7 = new DiametricDimension(circle, 270, offset, myStyle);
+            DiametricDimension dim8 = new DiametricDimension(circle, 330, offset, myStyle);
+
+            // if the dimension normal is not equal to the circle normal strange things might happen at the moment
+            //dim1.Normal = circle.Normal;
+            dxf.AddEntity(circle);
+            dxf.AddEntity(dim1);
+            dxf.AddEntity(dim2);
+            dxf.AddEntity(dim3);
+            dxf.AddEntity(dim4);
+            dxf.AddEntity(dim5);
+            dxf.AddEntity(dim6);
+            dxf.AddEntity(dim7);
+            dxf.AddEntity(dim8);
+            dxf.Save("dimension drawing.dxf");
+
+            dxf = DxfDocument.Load("dimension drawing.dxf");
+
+            DxfDocument doc = new DxfDocument();
+            foreach (var c in dxf.Circles)
+            {
+                doc.AddEntity((EntityObject) c.Clone());
+            }
+            foreach (var d in dxf.Dimensions)
+            {
+                doc.AddEntity((EntityObject) d.Clone());
+            }
+            doc.Save("dimension drawing saved.dxf");
+        }
+
+        private static void RadialDimension()
+        {
+            Font f = new Font("Arial",16);
+            string text = "3.6669";
+
+            Bitmap fakeImage = new Bitmap(1, 1);
+            fakeImage.SetResolution(96, 96);
+            Graphics g = Graphics.FromImage(fakeImage);
+
+            Size size = TextRenderer.MeasureText(text, f);
+           
+            SizeF sizeF = g.MeasureString(text, f, new PointF(100,0), StringFormat.GenericTypographic);
+
+
+            DxfDocument dxf = new DxfDocument();
+            DimensionStyle myStyle = CreateDimStyle();
+
+            Vector3 center = new Vector3(1, 2, 0);
+            double radius = 3;
+            Circle circle = new Circle(center, radius);
+            //circle.Normal = new Vector3(1, 1, 1);
+            double angle = MathHelper.HalfPI * 0.5;
+            Vector3 refPoint = center + new Vector3(radius * Math.Cos(angle), radius * Math.Cos(angle), 0);
+
+
+            //DiametricDimension dim = new DiametricDimension(center, refPoint, -1.0, myStyle);
+            double offset = radius;
+            RadialDimension dim1 = new RadialDimension(circle, 0, offset, myStyle);
+            RadialDimension dim2 = new RadialDimension(circle, 45, offset, myStyle);
+            RadialDimension dim3 = new RadialDimension(circle, 90, offset, myStyle);
+            RadialDimension dim4 = new RadialDimension(circle, 120, offset, myStyle);
+            RadialDimension dim5 = new RadialDimension(circle, 180, offset, myStyle);
+            RadialDimension dim6 = new RadialDimension(circle, 220, offset, myStyle);
+            RadialDimension dim7 = new RadialDimension(circle, 270, offset, myStyle);
+            RadialDimension dim8 = new RadialDimension(circle, 330, offset, myStyle);
+            // if the dimension normal is not equal to the circle normal strange things might happen at the moment
+            //dim1.Normal = circle.Normal;
+            dxf.AddEntity(circle);
+            //dxf.AddEntity(dim1);
+            //dxf.AddEntity(dim2);
+            //dxf.AddEntity(dim3);
+            //dxf.AddEntity(dim4);
+            //dxf.AddEntity(dim5);
+            //dxf.AddEntity(dim6);
+            //dxf.AddEntity(dim7);
+            //dxf.AddEntity(dim8);
+            dxf.Save("dimension drawing.dxf");
+
+            dxf = DxfDocument.Load("dimension drawing.dxf");
+
+            DxfDocument doc = new DxfDocument();
+            foreach (var c in dxf.Circles)
+            {
+                doc.AddEntity((EntityObject)c.Clone());
+            }
+            foreach (var d in dxf.Dimensions)
+            {
+                doc.AddEntity((EntityObject)d.Clone());
+            }
+            doc.Save("dimension drawing saved.dxf");
+        }
+
+        private static void OrdinateDimension()
+        {
+            DxfDocument dxf = new DxfDocument();
+
+            Vector3 origin = new Vector3(2, 1, 0);
+            Vector2 refX = new Vector2(1, 0);
+            Vector2 refY = new Vector2(0, 2);
+            double length = 3;
+            double angle = 30;
+            DimensionStyle myStyle = CreateDimStyle();
+
+            OrdinateDimension dimX1 = new OrdinateDimension(origin, refX, length, OrdinateDimensionAxis.X, 180, myStyle);
+            OrdinateDimension dimX2 = new OrdinateDimension(origin, refX, -length, OrdinateDimensionAxis.X, 180, myStyle);
+            OrdinateDimension dimY1 = new OrdinateDimension(origin, refY, length, OrdinateDimensionAxis.Y, 180, myStyle);
+            OrdinateDimension dimY2 = new OrdinateDimension(origin, refY, -length, OrdinateDimensionAxis.Y, 180, myStyle);
+
+            dxf.AddEntity(dimX1);
+            dxf.AddEntity(dimY1);
+            dxf.AddEntity(dimX2);
+            dxf.AddEntity(dimY2);
+
+            Line lineX = new Line(origin, origin + 5 * Vector3.UnitX);
+            Line lineY = new Line(origin, origin + 5 * Vector3.UnitY);
+
+            Vector2 point = Vector2.Polar(new Vector2(origin.X, origin.Y), 5, angle * MathHelper.DegToRad);
+            Line lineXRotate = new Line(origin, new Vector3(point.X, point.Y, 0));
+
+            point = Vector2.Polar(new Vector2(origin.X, origin.Y), 5, angle * MathHelper.DegToRad + MathHelper.HalfPI);
+            Line lineYRotate = new Line(origin, new Vector3(point.X, point.Y, 0));
+
+            dxf.AddEntity(lineX);
+            dxf.AddEntity(lineY);
+            //dxf.AddEntity(lineXRotate);
+            //dxf.AddEntity(lineYRotate);
+
+            dxf.Save("dimension drawing.dxf");
+
+            dxf = DxfDocument.Load("dimension drawing.dxf");
+        }
+
+        #endregion
 
         #region Samples for new and modified features 0.9.2
 
@@ -1372,7 +1756,7 @@ namespace TestDxfDocument
                             Console.WriteLine("Text style {0} not equal entity to {1}", style.Name, o.CodeName);
 
                     if (o is DimensionStyle)
-                        if (!ReferenceEquals(style, ((DimensionStyle)o).TextStyle))
+                        if (!ReferenceEquals(style, ((DimensionStyle)o).DIMTXSTY))
                             Console.WriteLine("Text style {0} not equal entity to {1}", style.Name, o.CodeName);
                 }
             }
@@ -1694,7 +2078,7 @@ namespace TestDxfDocument
             dxf.AddEntity(line);
 
             DimensionStyle myStyle = new DimensionStyle("MyStyle");
-            myStyle.TextStyle = new TextStyle("Tahoma.ttf");
+            myStyle.DIMTXSTY = new TextStyle("Tahoma.ttf");
             myStyle.DIMPOST = "<>mm";
             myStyle.DIMDEC = 2;
             double offset = 7;
@@ -1723,7 +2107,7 @@ namespace TestDxfDocument
             ok = dxf.Blocks.Remove(dimY.Block.Name);
 
             // no we can remove the unreferenced textStyle
-            ok = dxf.TextStyles.Remove(myStyle.TextStyle.Name);
+            ok = dxf.TextStyles.Remove(myStyle.DIMTXSTY.Name);
 
             dxf.Save("style3.dxf");
             dxf2 = DxfDocument.Load("style3.dxf");
@@ -2568,51 +2952,51 @@ namespace TestDxfDocument
         }
         private static void DiametricDimensionDrawing()
         {
-            DxfDocument dxf = new DxfDocument();
+            //DxfDocument dxf = new DxfDocument();
 
-            Vector3 center = new Vector3(1, 2, 0);
-            double radius = 2.42548;
-            Circle circle = new Circle(center, radius);
-            //circle.Normal = new Vector3(1, 1, 1);
-            DimensionStyle myStyle = new DimensionStyle("MyStyle");
-            myStyle.DIMPOST = "<>mm";
-            myStyle.DIMDEC = 2;
-            myStyle.DIMDSEP = ',';
+            //Vector3 center = new Vector3(1, 2, 0);
+            //double radius = 2.42548;
+            //Circle circle = new Circle(center, radius);
+            ////circle.Normal = new Vector3(1, 1, 1);
+            //DimensionStyle myStyle = new DimensionStyle("MyStyle");
+            //myStyle.DIMPOST = "<>mm";
+            //myStyle.DIMDEC = 2;
+            //myStyle.DIMDSEP = ',';
 
-            DiametricDimension dim = new DiametricDimension(circle, 30, myStyle);
-            dxf.AddEntity(circle);
-            dxf.AddEntity(dim);
-            dxf.Save("diametric dimension.dxf");
+            //DiametricDimension dim = new DiametricDimension(circle, 30, myStyle);
+            //dxf.AddEntity(circle);
+            //dxf.AddEntity(dim);
+            //dxf.Save("diametric dimension.dxf");
 
-            dxf.RemoveEntity(dim);
-            dxf.Save("diametric dimension removed.dxf");
+            //dxf.RemoveEntity(dim);
+            //dxf.Save("diametric dimension removed.dxf");
 
-            dxf = DxfDocument.Load("diametric dimension.dxf");
-            // remove entitiy with a handle
-            Dimension dimLoaded = (Dimension) dxf.GetObjectByHandle(dim.Handle);
-            dxf.RemoveEntity(dimLoaded);
-            dxf.Save("diametric dimension removed 2.dxf");
+            //dxf = DxfDocument.Load("diametric dimension.dxf");
+            //// remove entitiy with a handle
+            //Dimension dimLoaded = (Dimension) dxf.GetObjectByHandle(dim.Handle);
+            //dxf.RemoveEntity(dimLoaded);
+            //dxf.Save("diametric dimension removed 2.dxf");
 
         }
         private static void RadialDimensionDrawing()
         {
-            DxfDocument dxf = new DxfDocument();
+            //DxfDocument dxf = new DxfDocument();
 
-            Vector3 center = new Vector3(1, 2, 0);
-            double radius = 2.42548;
-            Circle circle = new Circle(center, radius);
-            circle.Normal = new Vector3(1, 1, 1);
-            DimensionStyle myStyle = new DimensionStyle("MyStyle");
-            myStyle.DIMPOST = "<>mm";
-            myStyle.DIMDEC = 2;
-            myStyle.DIMDSEP = ',';
+            //Vector3 center = new Vector3(1, 2, 0);
+            //double radius = 2.42548;
+            //Circle circle = new Circle(center, radius);
+            //circle.Normal = new Vector3(1, 1, 1);
+            //DimensionStyle myStyle = new DimensionStyle("MyStyle");
+            //myStyle.DIMPOST = "<>mm";
+            //myStyle.DIMDEC = 2;
+            //myStyle.DIMDSEP = ',';
             
-            RadialDimension dim = new RadialDimension(circle, 30, myStyle);
-            dxf.AddEntity(circle);
-            dxf.AddEntity(dim);
-            dxf.Save("radial dimension.dxf");
+            //RadialDimension dim = new RadialDimension(circle, 30, myStyle);
+            //dxf.AddEntity(circle);
+            //dxf.AddEntity(dim);
+            //dxf.Save("radial dimension.dxf");
 
-            dxf = DxfDocument.Load("radial dimension.dxf");
+            //dxf = DxfDocument.Load("radial dimension.dxf");
         }
         private static void LinearDimensionDrawing()
         {
@@ -2647,6 +3031,7 @@ namespace TestDxfDocument
             dxf.Save("linear dimension.dxf");
            // dxf = DxfDocument.Load("linear dimension.dxf");
         }
+
         private static void AlignedDimensionDrawing()
         {
             DxfDocument dxf = new DxfDocument();

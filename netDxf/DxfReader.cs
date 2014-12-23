@@ -50,7 +50,7 @@ namespace netDxf
         // here we will store strings already decoded <string: original, string: decoded>
         private Dictionary<string, string> decodedStrings;
 
-        // blocks records
+        // blocks records <string: name, string: blockRecord>
         private Dictionary<string, BlockRecord> blockRecords;
 
         // entities, they will be processed at the end <EntityObject: entity, string: owner handle>.
@@ -75,6 +75,9 @@ namespace netDxf
 
         // variables for post-processing
         private Dictionary<Group, List<string>> groupEntities;
+
+        // the order of each table group in the tables section may vary
+        private Dictionary<DimensionStyle, string[]> dimStyleToHandles;
 
         // the MLineStyles are defined, in the objects section, AFTER the MLine that references them,
         // temporarily this variables will store information to post process the MLine list
@@ -151,6 +154,7 @@ namespace netDxf
             // objects
             this.dictionaries = new Dictionary<string, DictionaryObject>(StringComparer.OrdinalIgnoreCase);
             this.groupEntities = new Dictionary<Group, List<string>>();
+            this.dimStyleToHandles = new Dictionary<DimensionStyle, string[]>();
             this.imageDefReactors = new Dictionary<string, ImageDefReactor>(StringComparer.OrdinalIgnoreCase);
             this.imgDefHandles = new Dictionary<string, ImageDef>(StringComparer.OrdinalIgnoreCase);
             this.imgToImgDefHandles = new Dictionary<Image, string>();
@@ -207,6 +211,40 @@ namespace netDxf
             }
             stream.Position = 0;
 
+            // postprocess the dimension style list to assign the variables DIMTXSTY, DIMBLK, DIMBLK1, DIMBLK2, DIMLTYPE, DILTEX1, and DIMLTEX2
+            foreach (KeyValuePair<DimensionStyle, string[]> pair in this.dimStyleToHandles)
+            {
+                DimensionStyle defaultDim = DimensionStyle.Default;
+
+                BlockRecord record;
+
+                record = this.doc.GetObjectByHandle(pair.Value[0]) as BlockRecord;
+                pair.Key.DIMBLK = record == null ? null : this.doc.Blocks[record.Name];
+
+                record = this.doc.GetObjectByHandle(pair.Value[1]) as BlockRecord;
+                pair.Key.DIMBLK1 = record == null ? null : this.doc.Blocks[record.Name];
+
+                record = this.doc.GetObjectByHandle(pair.Value[2]) as BlockRecord;
+                pair.Key.DIMBLK2 = record == null ? null : this.doc.Blocks[record.Name];
+
+                TextStyle txtStyle;
+
+                txtStyle = this.doc.GetObjectByHandle(pair.Value[3]) as TextStyle;
+                pair.Key.DIMTXSTY = txtStyle == null ? this.doc.TextStyles[defaultDim.DIMTXSTY.Name] : this.doc.TextStyles[txtStyle.Name];
+
+                LineType ltype;
+
+                ltype = this.doc.GetObjectByHandle(pair.Value[4]) as LineType;
+                pair.Key.DIMLTYPE = ltype == null ? this.doc.LineTypes[defaultDim.DIMLTYPE.Name] : this.doc.LineTypes[ltype.Name];
+
+                ltype = this.doc.GetObjectByHandle(pair.Value[5]) as LineType;
+                pair.Key.DIMLTEX1 = ltype == null ? this.doc.LineTypes[defaultDim.DIMLTEX1.Name] : this.doc.LineTypes[ltype.Name];
+
+                ltype = this.doc.GetObjectByHandle(pair.Value[6]) as LineType;
+                pair.Key.DIMLTEX2 = ltype == null ? this.doc.LineTypes[defaultDim.DIMLTEX2.Name] : this.doc.LineTypes[ltype.Name];
+
+            }
+
             // postprocess the image list to assign their image definitions.
             foreach (KeyValuePair<Image, string> pair in this.imgToImgDefHandles)
             {
@@ -227,6 +265,7 @@ namespace netDxf
                 mline.Style = this.GetMLineStyle(pair.Value);
             }
 
+            // add the dxf entities to the document
             foreach (KeyValuePair<EntityObject, string> pair in this.entityList)
             {
                 // this is the default layout in case the entity has not defined layout
@@ -582,24 +621,15 @@ namespace netDxf
             }
 
             // check if all table collections has been created
-            if (this.doc.ApplicationRegistries == null)
-                this.doc.ApplicationRegistries = new ApplicationRegistries(this.doc);
-            if (this.doc.Blocks == null)
-                this.doc.Blocks = new BlockRecords(this.doc);
-            if (this.doc.DimensionStyles == null)
-                this.doc.DimensionStyles = new DimensionStyles(this.doc);
-            if (this.doc.Layers == null)
-                this.doc.Layers = new Layers(this.doc);
-            if (this.doc.LineTypes == null)
-                this.doc.LineTypes = new LineTypes(this.doc);
-            if (this.doc.TextStyles == null)
-                this.doc.TextStyles = new TextStyles(this.doc);
-            if (this.doc.UCSs == null)
-                this.doc.UCSs = new UCSs(this.doc);
-            if (this.doc.Views == null)
-                this.doc.Views = new Views(this.doc);
-            if (this.doc.VPorts == null)
-                this.doc.VPorts = new VPorts(this.doc);
+            if (this.doc.ApplicationRegistries == null) this.doc.ApplicationRegistries = new ApplicationRegistries(this.doc);
+            if (this.doc.Blocks == null) this.doc.Blocks = new BlockRecords(this.doc);
+            if (this.doc.DimensionStyles == null) this.doc.DimensionStyles = new DimensionStyles(this.doc);
+            if (this.doc.Layers == null) this.doc.Layers = new Layers(this.doc);
+            if (this.doc.LineTypes == null) this.doc.LineTypes = new LineTypes(this.doc);
+            if (this.doc.TextStyles == null) this.doc.TextStyles = new TextStyles(this.doc);
+            if (this.doc.UCSs == null) this.doc.UCSs = new UCSs(this.doc);
+            if (this.doc.Views == null) this.doc.Views = new Views(this.doc);
+            if (this.doc.VPorts == null) this.doc.VPorts = new VPorts(this.doc);
         }
 
         private void ReadBlocks()
@@ -1071,26 +1101,48 @@ namespace netDxf
 
             DimensionStyle defaultDim = DimensionStyle.Default;
             string name = null;
-            string txtStyleHandle = null;
 
-            // lines
+            // dimension lines
+            AciColor dimclrd = defaultDim.DIMCLRD;
+            string dimltype = string.Empty; // handle for postprocessing
+            Lineweight dimlwd = defaultDim.DIMLWD;
+            double dimdle = defaultDim.DIMDLE;
+            double dimdli = defaultDim.DIMDLI;
+
+            // extension lines
+            AciColor dimclre = defaultDim.DIMCLRE;
+            string dimltex1 = string.Empty; // handle for postprocessing
+            string dimltex2 = string.Empty; // handle for postprocessing
+            Lineweight dimlwe = defaultDim.DIMLWE;
+            bool dimse1 = false;
+            bool dimse2 = false;
             double dimexo = defaultDim.DIMEXO;
             double dimexe = defaultDim.DIMEXE;
 
             // symbols and arrows
             double dimasz = defaultDim.DIMASZ;
             double dimcen = defaultDim.DIMCEN;
+            bool dimsah = defaultDim.DIMSAH;
+            string dimblk = string.Empty; // handle for postprocessing
+            string dimblk1 = string.Empty; // handle for postprocessing
+            string dimblk2 = string.Empty; // handle for postprocessing
+
+            // fit
+            double dimscale = defaultDim.DIMSCALE;
+            short dimtih = defaultDim.DIMTIH;
+            short dimtoh = defaultDim.DIMTOH;
 
             // text
+            string dimtxsty = string.Empty; // handle for postprocessing
             double dimtxt = defaultDim.DIMTXT;
             short dimjust = defaultDim.DIMJUST;
             short dimtad = defaultDim.DIMTAD;
             double dimgap = defaultDim.DIMGAP;
+
+            // primary units
             short dimadec = defaultDim.DIMADEC;
             short dimdec = defaultDim.DIMDEC;
             string dimpost = defaultDim.DIMPOST;
-            short dimtih = defaultDim.DIMTIH;
-            short dimtoh = defaultDim.DIMTOH;
             short dimaunit = defaultDim.DIMAUNIT;
             char dimdsep = defaultDim.DIMDSEP;
 
@@ -1106,14 +1158,29 @@ namespace netDxf
                     case 3:
                         dimpost = this.chunk.ReadString();
                         break;
+                    case 40:
+                        dimscale = this.chunk.ReadDouble();
+                        if (dimscale <= 0.0) dimscale = defaultDim.DIMSCALE;
+                        break;
                     case 41:
                         dimasz = this.chunk.ReadDouble();
+                        if (dimasz < 0.0) dimasz = defaultDim.DIMASZ;
                         break;
                     case 42:
                         dimexo = this.chunk.ReadDouble();
+                        if (dimexo < 0.0) dimexo = defaultDim.DIMEXO;
+                        break;
+                    case 43:
+                        dimdli = this.chunk.ReadDouble();
+                        if (dimdli < 0.0) dimdli = defaultDim.DIMDLI;
                         break;
                     case 44:
                         dimexe = this.chunk.ReadDouble();
+                        if (dimexe < 0.0) dimexe = defaultDim.DIMEXE;
+                        break;
+                    case 46:
+                        dimdle = this.chunk.ReadDouble();
+                        if (dimdle < 0.0) dimdle = defaultDim.DIMDLE;
                         break;
                     case 73:
                         dimtih = this.chunk.ReadShort();
@@ -1121,17 +1188,34 @@ namespace netDxf
                     case 74:
                         dimtoh = this.chunk.ReadShort();
                         break;
+                    case 75:
+                        dimse1 = this.chunk.ReadShort() != 0;
+                        break;
+                    case 76:
+                        dimse2 = this.chunk.ReadShort() != 0;
+                        break;
                     case 77:
                         dimtad = this.chunk.ReadShort();
                         break;
                     case 140:
                         dimtxt = this.chunk.ReadDouble();
+                        if (dimtxt <= 0.0) dimtxt = defaultDim.DIMTXT;
                         break;
                     case 141:
                         dimcen = this.chunk.ReadDouble();
                         break;
                     case 147:
                         dimgap = this.chunk.ReadDouble();
+                        if (dimgap < 0.0) dimgap = defaultDim.DIMGAP;
+                        break;
+                    case 173:
+                        dimsah = this.chunk.ReadShort() != 0;
+                        break;
+                    case 176:
+                        dimclrd = AciColor.FromCadIndex(this.chunk.ReadShort());
+                        break;
+                    case 177:
+                        dimclre = AciColor.FromCadIndex(this.chunk.ReadShort());
                         break;
                     case 179:
                         dimadec = this.chunk.ReadShort();
@@ -1149,33 +1233,85 @@ namespace netDxf
                         dimjust = this.chunk.ReadShort();
                         break;
                     case 340:
-                        txtStyleHandle = this.chunk.ReadString();
+                        dimtxsty = this.chunk.ReadString();
                         break;
+                    case 342:
+                        dimblk = this.chunk.ReadString();
+                        break;
+                    case 343:
+                        dimblk1 = this.chunk.ReadString();
+                        break;
+                    case 344:
+                        dimblk2 = this.chunk.ReadString();
+                        break;
+                    case 345:
+                        dimltype = this.chunk.ReadString();
+                        break;
+                    case 346:
+                        dimblk2 = this.chunk.ReadString();
+                        break;
+                    case 347:
+                        dimblk2 = this.chunk.ReadString();
+                        break;
+                    case 371:
+                        dimlwd = Lineweight.FromCadIndex(this.chunk.ReadShort());
+                        break;
+                    case 372:
+                        dimlwe = Lineweight.FromCadIndex(this.chunk.ReadShort());
+                        break;
+
                 }
                 this.chunk.Next();
             }
 
-            if (string.IsNullOrEmpty(name) || string.IsNullOrEmpty(txtStyleHandle)) return null;
+            if (string.IsNullOrEmpty(name)) return null;
 
-            return new DimensionStyle(name)
+            DimensionStyle dimStyle = new DimensionStyle(name)
             {
+                // dimension lines
+                DIMCLRD = dimclrd,
+                DIMLWD = dimlwd,
+                DIMDLI = dimdli,
+                DIMDLE = dimdle,
+
+                // extendion lines
+                DIMCLRE = dimclre,
+                DIMLWE = dimlwe,
+                DIMSE1 = dimse1,
+                DIMSE2 = dimse2,
                 DIMEXO = dimexo,
                 DIMEXE = dimexe,
+
+                // symbols and arrows
                 DIMASZ = dimasz,
-                DIMTXT = dimtxt,
                 DIMCEN = dimcen,
+                DIMSAH = dimsah,
+
+                // fit
+                DIMSCALE = dimscale,
+                DIMTIH = dimtih,
+                DIMTOH = dimtoh,
+
+                // text
+                DIMTXT = dimtxt,
                 DIMJUST = dimjust,
                 DIMTAD = dimtad,
                 DIMGAP = dimgap,
+
+                //primary units
                 DIMADEC = dimadec,
                 DIMDEC = dimdec,
                 DIMPOST = dimpost,
-                DIMTIH = dimtih,
-                DIMTOH = dimtoh,
-                DIMAUNIT = dimaunit,
                 DIMDSEP = dimdsep,
-                TextStyle = this.GetTextStyleByHandle(txtStyleHandle)
+                DIMAUNIT = dimaunit,
+
             };
+
+            // store information for postprocessing. The blocks, text styles, and line types definitions might appear after the dimesion style
+            string[] handles = {dimblk, dimblk1, dimblk2, dimtxsty, dimltype, dimltex1, dimltex2};
+            this.dimStyleToHandles.Add(dimStyle, handles);
+
+            return dimStyle;
         }
 
         private Layer ReadLayer()
@@ -3158,20 +3294,19 @@ namespace netDxf
                 }
             }
 
-            double radius = Vector3.Distance(defPoint, circunferenceRef);
-            Vector3 refPoint = MathHelper.Transform(defPoint, normal, MathHelper.CoordinateSystem.World, MathHelper.CoordinateSystem.Object);
-            Vector2 firstPoint = new Vector2(refPoint.X, refPoint.Y);
+            //double radius = Vector3.Distance(defPoint, circunferenceRef);
+            //Vector3 refPoint = MathHelper.Transform(defPoint, normal, MathHelper.CoordinateSystem.World, MathHelper.CoordinateSystem.Object);
+            //Vector2 firstPoint = new Vector2(refPoint.X, refPoint.Y);
 
-            refPoint = MathHelper.Transform(circunferenceRef, normal, MathHelper.CoordinateSystem.World, MathHelper.CoordinateSystem.Object);
-            Vector2 seconPoint = new Vector2(refPoint.X, refPoint.Y);
+            //refPoint = MathHelper.Transform(circunferenceRef, normal, MathHelper.CoordinateSystem.World, MathHelper.CoordinateSystem.Object);
+            //Vector2 seconPoint = new Vector2(refPoint.X, refPoint.Y);
 
-            double rotation = Vector2.Angle(firstPoint, seconPoint)*MathHelper.RadToDeg;
+            //double rotation = Vector2.Angle(firstPoint, seconPoint)*MathHelper.RadToDeg;
             
-            RadialDimension entity = new RadialDimension(defPoint, radius, rotation)
+            RadialDimension entity = new RadialDimension
             {
-                CenterPoint = defPoint,
-                Radius = radius,
-                Rotation = rotation
+                CenterPoint = Vector3.MidPoint(defPoint, circunferenceRef),
+                ReferencePoint = circunferenceRef
             };
 
             entity.XData.AddRange(xData);
@@ -3216,20 +3351,10 @@ namespace netDxf
                 }
             }
 
-            double diameter = Vector3.Distance(defPoint, circunferenceRef);
-            Vector3 refPoint = MathHelper.Transform(defPoint, normal, MathHelper.CoordinateSystem.World, MathHelper.CoordinateSystem.Object);
-            Vector2 firstPoint = new Vector2(refPoint.X, refPoint.Y);
-
-            refPoint = MathHelper.Transform(circunferenceRef, normal, MathHelper.CoordinateSystem.World, MathHelper.CoordinateSystem.Object);
-            Vector2 seconPoint = new Vector2(refPoint.X, refPoint.Y);
-
-            double rotation = Vector2.Angle(firstPoint, seconPoint)*MathHelper.RadToDeg;
-
             DiametricDimension entity = new DiametricDimension
             {
                 CenterPoint = Vector3.MidPoint(defPoint, circunferenceRef),
-                Diameter = diameter,
-                Rotation = rotation
+                ReferencePoint = circunferenceRef
             };
 
             entity.XData.AddRange(xData);
@@ -3874,7 +3999,7 @@ namespace netDxf
             Vector3? endTangent = null;
 
             // fit points variable (not used)
-            int numFitPoints = 0;
+            //int numFitPoints = 0;
             List<Vector3> fitPoints = new List<Vector3>();
             double fitX = 0;
             double fitY = 0;
@@ -5114,7 +5239,7 @@ namespace netDxf
                 Rotation = isRotationDefined
                     ? rotation
                     : Vector2.Angle(direction)*MathHelper.RadToDeg,
-                Normal = normal
+                Normal = normal,
             };
 
             entity.XData.AddRange(xData);
@@ -6765,7 +6890,7 @@ namespace netDxf
 
             // if an entity references a table object not defined in the tables section a new one will be created
             style = new DimensionStyle(name);
-            style.TextStyle = this.GetTextStyle(style.TextStyle.Name);
+            style.DIMTXSTY = this.GetTextStyle(style.DIMTXSTY.Name);
             this.doc.DimensionStyles.Add(style);
             return style;
         }

@@ -224,7 +224,7 @@ namespace netDxf
                     rasterUnits = 1;
                     break;
                 case ImageUnits.Feet:
-                    rasterUnits = 1;
+                    rasterUnits = 2;
                     break;
                 case ImageUnits.Yards:
                     rasterUnits = 10;
@@ -404,7 +404,7 @@ namespace netDxf
         public static double PointLineDistance(Vector3 q, Vector3 origin, Vector3 dir)
         {
             double t = Vector3.DotProduct(dir, q - origin);
-            Vector3 qPrime = origin + t*dir;
+            Vector3 qPrime = origin + t * dir;
             Vector3 vec = q - qPrime;
             double distanceSquared = Vector3.DotProduct(vec, vec);
             return Math.Sqrt(distanceSquared);
@@ -415,8 +415,8 @@ namespace netDxf
             Vector3 dir = end - start;
             dir.Normalize();
             Vector3 perp = Vector3.CrossProduct(normal, dir);
-            newStart = start + perp*offset;
-            newEnd = end + perp*offset;
+            newStart = start + perp * offset;
+            newEnd = end + perp * offset;
         }
 
         public static void OffsetLine(Vector2 start, Vector2 end, double offset, out Vector2 newStart, out Vector2 newEnd)
@@ -424,8 +424,8 @@ namespace netDxf
             Vector2 dir = end - start;
             dir.Normalize();
             Vector2 perp = Vector2.Perpendicular(dir);
-            newStart = start + perp*offset;
-            newEnd = end + perp*offset;
+            newStart = start + perp * offset;
+            newEnd = end + perp * offset;
         }
 
         /// <summary>
@@ -443,20 +443,20 @@ namespace netDxf
             // Use a relative error test to test for parallelism. This effectively is a threshold on the angle between D0 and D1.
             Vector2 vect = point1 - point0;
             double cross = Vector2.CrossProduct(dir0, dir1);
-            double sqrCross = cross*cross;
-            double sqrLen0 = dir0.X*dir0.X + dir0.Y*dir0.Y;
-            double sqrLen1 = dir1.X*dir1.X + dir1.Y*dir1.Y;
+            double sqrCross = cross * cross;
+            double sqrLen0 = dir0.X * dir0.X + dir0.Y * dir0.Y;
+            double sqrLen1 = dir1.X * dir1.X + dir1.Y * dir1.Y;
             if (sqrCross > threshold * sqrLen0 * sqrLen1)
             {
                 // lines are not parallel
-                double s = (vect.X*dir1.Y - vect.Y*dir1.X)/cross;
-                intersection = point0 + s*dir0;
+                double s = (vect.X * dir1.Y - vect.Y * dir1.X) / cross;
+                intersection = point0 + s * dir0;
                 return 0;
             }
             // lines are parallel
-            double sqrLenE = vect.X*vect.X + vect.Y*vect.Y;
-            cross = vect.X*dir0.Y - vect.Y*dir0.X;
-            sqrCross = cross*cross;
+            double sqrLenE = vect.X * vect.X + vect.Y * vect.Y;
+            cross = vect.X * dir0.Y - vect.Y * dir0.X;
+            sqrCross = cross * cross;
             if (sqrCross > threshold * sqrLen0 * sqrLenE)
             {
                 // lines are different

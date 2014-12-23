@@ -1,7 +1,7 @@
-﻿#region netDxf, Copyright(C) 2013 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf, Copyright(C) 2014 Daniel Carvajal, Licensed under LGPL.
 
 //                        netDxf library
-// Copyright (C) 2013 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2014 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -21,7 +21,6 @@
 #endregion
 
 using System;
-using System.Globalization;
 using netDxf.Blocks;
 using netDxf.Tables;
 
@@ -173,32 +172,11 @@ namespace netDxf.Entities
         /// Gets the the block that contains the entities that make up the dimension picture.
         /// </summary>
         /// <param name="name">Name to be asigned to the generated block.</param>
-        /// <returns>The block that represents the actual dimension.</returns>
+        /// <returns>
+        /// The block that represents the actual dimension.<br />
+        /// This method has been made public so it will be posible to be overriden by derivated classes. It 
+        /// </returns>
         internal abstract Block BuildBlock(string name);
-
-        /// <summary>
-        /// Format the value for the dimension text.
-        /// </summary>
-        /// <param name="dimValue">Dimension value.</param>
-        /// <returns>The formatted text.</returns>
-        internal virtual string FormatDimensionText(double dimValue)
-        {
-            string format;
-            string text;
-            NumberFormatInfo numberFormat = new NumberFormatInfo { NumberDecimalSeparator = this.style.DIMDSEP.ToString(CultureInfo.InvariantCulture) };
-            if (this is Angular3PointDimension || this is Angular2LineDimension)
-            {
-                format = "F" + this.style.DIMADEC;
-                text = dimValue.ToString(format, numberFormat) + Symbols.Degree;
-            }
-            else
-            {
-                format = "F" + this.style.DIMDEC;
-                text = dimValue.ToString(format, numberFormat);
-            }
-            text = this.style.DIMPOST.Replace("<>", text);
-            return text;
-        }
         
         #endregion
 

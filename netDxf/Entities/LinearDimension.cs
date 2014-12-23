@@ -21,7 +21,6 @@
 #endregion
 
 using System;
-using System.Collections.Generic;
 using netDxf.Blocks;
 using netDxf.Tables;
 
@@ -180,24 +179,21 @@ namespace netDxf.Entities
         /// <summary>
         /// Gets the actual measurement.
         /// </summary>
+        /// <remarks>The dimension is always measured in the plane defined by the normal.</remarks>
         public override double Value
         {
             get
             {
-                Vector3 refPoint = MathHelper.Transform(this.start, this.normal,
-                                                        MathHelper.CoordinateSystem.World,
-                                                        MathHelper.CoordinateSystem.Object);
+                Vector3 refPoint;
+                
+                refPoint = MathHelper.Transform(this.start, this.normal, MathHelper.CoordinateSystem.World, MathHelper.CoordinateSystem.Object);
+                Vector2 ref1 = new Vector2(refPoint.X, refPoint.Y);
+                
+                refPoint = MathHelper.Transform(this.end, this.normal, MathHelper.CoordinateSystem.World, MathHelper.CoordinateSystem.Object);
+                Vector2 ref2 = new Vector2(refPoint.X, refPoint.Y);
 
-                Vector2 firstRef = new Vector2(refPoint.X, refPoint.Y);
-                refPoint = MathHelper.Transform(this.end, this.normal,
-                                                MathHelper.CoordinateSystem.World,
-                                                MathHelper.CoordinateSystem.Object);
-
-                Vector2 secondRef = new Vector2(refPoint.X, refPoint.Y);
-
-                double refRot = Vector2.Angle(firstRef, secondRef);
-                double dimRot = this.rotation * MathHelper.DegToRad;
-                return Math.Abs(Vector2.Distance(firstRef, secondRef) * Math.Cos(dimRot - refRot));
+                double refRot = Vector2.Angle(ref1, ref2);
+                return Math.Abs(Vector2.Distance(ref1, ref2) * Math.Cos(this.rotation * MathHelper.DegToRad - refRot));
             }
         }
 
@@ -212,86 +208,7 @@ namespace netDxf.Entities
         /// <returns>The block that represents the actual dimension.</returns>
         internal override Block BuildBlock(string name)
         {
-            // we will build the dimension block in object coordinates with normal the dimension normal
-            Vector3 refPoint = MathHelper.Transform(this.start, this.normal,
-                                                    MathHelper.CoordinateSystem.World,
-                                                    MathHelper.CoordinateSystem.Object);
-
-            Vector2 firstRef = new Vector2(refPoint.X, refPoint.Y);
-            refPoint = MathHelper.Transform(this.end, this.normal,
-                                            MathHelper.CoordinateSystem.World,
-                                            MathHelper.CoordinateSystem.Object);
-
-            Vector2 secondRef = new Vector2(refPoint.X, refPoint.Y);
-
-            double measurement = this.Value;
-            double dimRot = this.rotation * MathHelper.DegToRad;
-            double elev = refPoint.Z;
-
-            Vector2 midRef = Vector2.MidPoint(firstRef, secondRef);
-
-            Vector2 midDimLine = Vector2.Polar(midRef, this.offset, dimRot + MathHelper.HalfPI);
-
-
-            Vector2 startDimLine = Vector2.Polar(midDimLine, measurement*0.5, dimRot + MathHelper.PI);
-            Vector2 endDimLine = Vector2.Polar(midDimLine, measurement*0.5, dimRot);
-
-            // reference points
-            Layer defPoints = new Layer("Defpoints") { Plot = false };
-            Point startRef = new Point(firstRef) { Layer = defPoints };
-            Point endRef = new Point(secondRef) { Layer = defPoints };
-            Point defPoint = new Point(endDimLine) { Layer = defPoints };
-
-            // dimension lines
-            Line startBorder = new Line(Vector2.Polar(firstRef, this.style.DIMEXO, dimRot + MathHelper.HalfPI),
-                                        Vector2.Polar(startDimLine, this.style.DIMEXE, dimRot + MathHelper.HalfPI));
-
-            Line endBorder = new Line(Vector2.Polar(secondRef, this.style.DIMEXO, dimRot + MathHelper.HalfPI),
-                                      Vector2.Polar(endDimLine, this.style.DIMEXE, dimRot + MathHelper.HalfPI));
-
-            Line dimLine = new Line(startDimLine, endDimLine);
-
-            this.definitionPoint = MathHelper.Transform(new Vector3(endDimLine.X, endDimLine.Y, elev), this.normal,
-                                                        MathHelper.CoordinateSystem.Object,
-                                                        MathHelper.CoordinateSystem.World);
-
-
-            // dimension arrows
-            Vector2 arrowRefBegin = Vector2.Polar(startDimLine, this.style.DIMASZ, dimRot);
-            Solid arrowBegin = new Solid(startDimLine,
-                                         Vector2.Polar(arrowRefBegin, -this.style.DIMASZ/6, dimRot + MathHelper.HalfPI),
-                                         Vector2.Polar(arrowRefBegin, this.style.DIMASZ/6, dimRot + MathHelper.HalfPI),
-                                         startDimLine);
-
-            Vector2 arrowRefEnd = Vector2.Polar(endDimLine, -this.style.DIMASZ, dimRot);
-            Solid arrowEnd = new Solid(endDimLine,
-                                       Vector2.Polar(arrowRefEnd, this.style.DIMASZ/6, dimRot + MathHelper.HalfPI),
-                                       Vector2.Polar(arrowRefEnd, -this.style.DIMASZ/6, dimRot + MathHelper.HalfPI),
-                                       endDimLine);
-
-            // dimension text
-            this.midTextPoint = new Vector3(midDimLine.X, midDimLine.Y, elev); // this value is in OCS
-            MText text = new MText(this.FormatDimensionText(this.Value),
-                                   Vector2.Polar(midDimLine, this.style.DIMGAP, dimRot + MathHelper.HalfPI),
-                                   this.style.DIMTXT, 0.0, this.style.TextStyle)
-                             {
-                                 AttachmentPoint = MTextAttachmentPoint.BottomCenter,
-                                 Rotation = this.rotation
-                             };
-
-            // drawing block
-            Block dim = new Block(name, false);
-            dim.Entities.Add(startRef);
-            dim.Entities.Add(endRef);
-            dim.Entities.Add(defPoint);
-            dim.Entities.Add(startBorder);
-            dim.Entities.Add(endBorder);
-            dim.Entities.Add(dimLine);
-            dim.Entities.Add(arrowBegin);
-            dim.Entities.Add(arrowEnd);
-            dim.Entities.Add(text);
-            this.block = dim;
-            return dim;
+            return DimensionBlock.Build(this, name);
         }
 
         /// <summary>
@@ -312,7 +229,7 @@ namespace netDxf.Entities
                 LineTypeScale = this.lineTypeScale,
                 Normal = this.normal,
                 //Dimension properties
-                Style = this.style,
+                Style = (DimensionStyle)this.style.Clone(),
                 AttachmentPoint = this.attachmentPoint,
                 LineSpacingStyle = this.lineSpacingStyle,
                 LineSpacingFactor = this.lineSpacing,

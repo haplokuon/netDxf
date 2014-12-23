@@ -91,6 +91,9 @@
     <Compile Include="Collections\ObservableDictionaryBaseEventArgs.cs" />
     <Compile Include="Collections\Views.cs" />
     <Compile Include="Collections\Vports.cs" />
+    <Compile Include="Entities\DimensionArrowhead.cs" />
+    <Compile Include="Entities\DimensionBlock.cs" />
+    <Compile Include="Entities\DimensionTypeFlag.cs" />
     <Compile Include="Entities\Mesh.cs" />
     <Compile Include="Entities\MeshEdge.cs" />
     <Compile Include="Entities\MLineFlags.cs" />
