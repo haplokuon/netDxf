@@ -1,7 +1,7 @@
-﻿#region netDxf, Copyright(C) 2014 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf, Copyright(C) 2015 Daniel Carvajal, Licensed under LGPL.
 
 //                        netDxf library
-// Copyright (C) 2014 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2015 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -70,14 +70,17 @@ namespace netDxf
         /// <returns>The <see cref="DateTime">DateTime</see> equivalent to the julian date.</returns>
         public static DateTime FromJulianCalendar(double date)
         {
+            if (date < 1721426 || date > 5373484)
+                throw new ArgumentOutOfRangeException("date", "The valid values range from 1721426 and 5373484 that correspond to January 1, 1 and December 31, 9999 respectively.");
+
             double julian = (int) date;
             double fraction = date - julian;
 
-            if (julian >= 2299161)
-            {
+            //if (julian >= 2299161)
+            //{
                 int temp = (int) ((julian - 1867216.25)/36524.25);
                 julian = julian + 1 + temp - (int) (temp/4.0);
-            }
+            //}
 
             int a = (int) julian + 1524;
             int b = (int) ((a - 122.1)/365.25);

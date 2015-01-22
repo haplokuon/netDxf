@@ -1,7 +1,7 @@
-﻿#region netDxf, Copyright(C) 2014 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf, Copyright(C) 2015 Daniel Carvajal, Licensed under LGPL.
 
 //                        netDxf library
-// Copyright (C) 2014 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2015 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -74,6 +74,7 @@ namespace netDxf
         private Dictionary<string, ImageDefReactor> imageDefReactors;
 
         // variables for post-processing
+        private Dictionary<Block, List<EntityObject>> blockEntities;
         private Dictionary<Group, List<string>> groupEntities;
 
         // the order of each table group in the tables section may vary
@@ -150,6 +151,7 @@ namespace netDxf
             this.nestedInserts = new Dictionary<Insert, string>();
             this.nestedDimensions = new Dictionary<Dimension, string>();
             this.blockRecords = new Dictionary<string, BlockRecord>(StringComparer.OrdinalIgnoreCase);
+            this.blockEntities = new Dictionary<Block, List<EntityObject>>();
 
             // objects
             this.dictionaries = new Dictionary<string, DictionaryObject>(StringComparer.OrdinalIgnoreCase);
@@ -263,6 +265,16 @@ namespace netDxf
             {
                 MLine mline = pair.Key;
                 mline.Style = this.GetMLineStyle(pair.Value);
+            }
+
+            // add entities to the blocks
+            foreach (KeyValuePair<Block, List<EntityObject>> pair in this.blockEntities)
+            {
+                Block block = pair.Key;
+                foreach (EntityObject entity in pair.Value)
+                {
+                    block.Entities.Add(entity);
+                }
             }
 
             // add the dxf entities to the document
@@ -421,6 +433,7 @@ namespace netDxf
             while (this.chunk.ReadString() != DxfObjectCode.EndSection)
             {
                 string varName = this.chunk.ReadString();
+                double julian;
                 this.chunk.Next();
 
                 switch (varName)
@@ -568,19 +581,35 @@ namespace netDxf
                         this.chunk.Next();
                         break;
                     case HeaderVariableCode.TdCreate:
-                        this.doc.DrawingVariables.TdCreate = DrawingTime.FromJulianCalendar(this.chunk.ReadDouble());
+                        julian = this.chunk.ReadDouble();
+                        if (julian < 1721426 || julian > 5373484)
+                            this.doc.DrawingVariables.TdCreate = DateTime.Now;
+                        else
+                            this.doc.DrawingVariables.TdCreate = DrawingTime.FromJulianCalendar(julian);
                         this.chunk.Next();
                         break;
                     case HeaderVariableCode.TduCreate:
-                        this.doc.DrawingVariables.TduCreate = DrawingTime.FromJulianCalendar(this.chunk.ReadDouble());
+                        julian = this.chunk.ReadDouble();
+                        if (julian < 1721426 || julian > 5373484)
+                            this.doc.DrawingVariables.TduCreate = DateTime.Now;
+                        else
+                            this.doc.DrawingVariables.TduCreate = DrawingTime.FromJulianCalendar(julian);
                         this.chunk.Next();
                         break;
                     case HeaderVariableCode.TdUpdate:
-                        this.doc.DrawingVariables.TdUpdate = DrawingTime.FromJulianCalendar(this.chunk.ReadDouble());
+                        julian = this.chunk.ReadDouble();
+                        if (julian < 1721426 || julian > 5373484)
+                            this.doc.DrawingVariables.TdUpdate = DateTime.Now;
+                        else
+                            this.doc.DrawingVariables.TdUpdate = DrawingTime.FromJulianCalendar(julian);
                         this.chunk.Next();
                         break;
                     case HeaderVariableCode.TduUpdate:
-                        this.doc.DrawingVariables.TduUpdate = DrawingTime.FromJulianCalendar(this.chunk.ReadDouble());
+                        julian = this.chunk.ReadDouble();
+                        if (julian < 1721426 || julian > 5373484)
+                            this.doc.DrawingVariables.TduUpdate = DateTime.Now;
+                        else
+                            this.doc.DrawingVariables.TduUpdate = DrawingTime.FromJulianCalendar(julian);
                         this.chunk.Next();
                         break;
                     case HeaderVariableCode.TdinDwg:
@@ -1052,7 +1081,8 @@ namespace netDxf
                         this.chunk.Next();
                         break;
                     case 1001:
-                        XData data = this.ReadXDataRecord(this.chunk.ReadString());
+                        string appId = this.DecodeEncodedNonAsciiCharacters(this.chunk.ReadString());
+                        XData data = this.ReadXDataRecord(appId);
                         xData.Add(data);
                         if (data.ApplicationRegistry.Name.Equals(ApplicationRegistry.Default.Name, StringComparison.OrdinalIgnoreCase))
                             designCenterData = data;
@@ -1359,7 +1389,7 @@ namespace netDxf
                         break;
                     case 6:
                         // the linetype names ByLayer or ByBlock are case unsensitive
-                        string lineTypeName = this.chunk.ReadString();
+                        string lineTypeName = this.DecodeEncodedNonAsciiCharacters(this.chunk.ReadString());
                         if (String.Compare(lineTypeName, "ByLayer", StringComparison.OrdinalIgnoreCase) == 0)
                             lineTypeName = "ByLayer";
                         else if (String.Compare(lineTypeName, "ByBlock", StringComparison.OrdinalIgnoreCase) == 0)
@@ -1645,7 +1675,8 @@ namespace netDxf
             string handle = string.Empty;
             BlockTypeFlags type = BlockTypeFlags.None;
             Vector3 basePoint = Vector3.Zero;
-            List<EntityObject> blockEntities = new List<EntityObject>();
+            List<EntityObject> entities = new List<EntityObject>();
+            List<AttributeDefinition> attDefs = new List<AttributeDefinition>();
 
             this.chunk.Next();
             while (this.chunk.Code != 0)
@@ -1657,7 +1688,8 @@ namespace netDxf
                         this.chunk.Next();
                         break;
                     case 8:
-                        layer = this.GetLayer(this.chunk.ReadString());
+                        string layerName = this.DecodeEncodedNonAsciiCharacters(this.chunk.ReadString());
+                        layer = this.GetLayer(layerName);
                         this.chunk.Next();
                         break;
                     case 2:
@@ -1696,7 +1728,13 @@ namespace netDxf
             while (this.chunk.ReadString() != DxfObjectCode.EndBlock)
             {
                 EntityObject entity = this.ReadEntity(true);
-                if (entity != null) blockEntities.Add(entity);
+                if (entity != null)
+                {
+                    if (entity is AttributeDefinition)
+                        attDefs.Add((AttributeDefinition) entity);
+                    else
+                        entities.Add(entity);
+                }
             }
 
             // read the end block object until a new element is found
@@ -1712,7 +1750,8 @@ namespace netDxf
                         this.chunk.Next();
                         break;
                     case 8:
-                        endBlockLayer = this.GetLayer(this.chunk.ReadString());
+                        string layerName = this.DecodeEncodedNonAsciiCharacters(this.chunk.ReadString());
+                        endBlockLayer = this.GetLayer(layerName);
                         this.chunk.Next();
                         break;
                     default:
@@ -1749,24 +1788,24 @@ namespace netDxf
                 // the list of entities in *Paper_Space# are stored in the block definition itself.
                 // As all this entities do not need an insert entity to have a visual representation,
                 // they will be stored in the global entities lists together with the rest of the entities of *Model_Space and *Paper_Space
-                foreach (EntityObject entity in blockEntities)
+                foreach (EntityObject entity in entities)
                     this.entityList.Add(entity, blockRecord.Handle);
 
                 // this kind of blocks do not store attribute definitions
             }
             else
             {
-                // add attribute definitions and entities
-                foreach (EntityObject entity in blockEntities)
+                
+                // add attribute definitions
+                foreach (AttributeDefinition attDef in attDefs)
                 {
-                    if (entity.Type == EntityType.AttributeDefinition)
-                        // autocad allows duplicate tags in attribute definitions, but this library does not
-                        // having duplicate tags is not recommended in any way, since there will be now way to know which is the definition
-                        // associated to the insert attribute
-                        block.AttributeDefinitions.Add((AttributeDefinition) entity);
-                    else
-                        block.Entities.Add(entity);
+                    // autocad allows duplicate tags in attribute definitions, but this library does not having duplicate tags is not recommended in any way,
+                    // since there will be now way to know which is the definition associated to the insert attribute
+                    block.AttributeDefinitions.Add(attDef);
                 }
+
+                // block entities for postprocessing (MLines and Images references other objects (MLineStyle and ImageDef) that will be defined later
+                this.blockEntities.Add(block, entities);
             }
 
             return block;
@@ -1834,7 +1873,8 @@ namespace netDxf
                         this.chunk.Next();
                         break;
                     case 7:
-                        style = this.GetTextStyle(this.chunk.ReadString());
+                        string styleName = this.DecodeEncodedNonAsciiCharacters(this.chunk.ReadString());
+                        style = this.GetTextStyle(styleName);
                         this.chunk.Next();
                         break;
                     case 40:
@@ -1942,7 +1982,8 @@ namespace netDxf
                     case 0:
                         throw new DxfEntityException(DxfObjectCode.Attribute, "Premature end of entity definition.");
                     case 8: //layer code
-                        layer = this.GetLayer(this.chunk.ReadString());
+                        string layerName = this.DecodeEncodedNonAsciiCharacters(this.chunk.ReadString());
+                        layer = this.GetLayer(layerName);
                         this.chunk.Next();
                         break;
                     case 62: //aci color code
@@ -1956,7 +1997,7 @@ namespace netDxf
                         break;
                     case 6: //type line code
                         // the linetype names ByLayer or ByBlock are case unsensitive
-                        string lineTypeName = this.chunk.ReadString();
+                        string lineTypeName = this.DecodeEncodedNonAsciiCharacters(this.chunk.ReadString());
                         if (String.Compare(lineTypeName, "ByLayer", StringComparison.OrdinalIgnoreCase) == 0)
                             lineTypeName = "ByLayer";
                         if (String.Compare(lineTypeName, "ByBlock", StringComparison.OrdinalIgnoreCase) == 0)
@@ -2028,7 +2069,8 @@ namespace netDxf
                         this.chunk.Next();
                         break;
                     case 7:
-                        style = this.GetTextStyle(this.chunk.ReadString());
+                        string styleName = this.DecodeEncodedNonAsciiCharacters(this.chunk.ReadString());
+                        style = this.GetTextStyle(styleName);
                         this.chunk.Next();
                         break;
                     case 40:
@@ -2150,7 +2192,8 @@ namespace netDxf
                     case 0:
                         throw new DxfEntityException(dxfCode, "Premature end of entity definition.");
                     case 8: //layer code
-                        layer = this.GetLayer(this.chunk.ReadString());
+                        string layerName = this.DecodeEncodedNonAsciiCharacters(this.chunk.ReadString());
+                        layer = this.GetLayer(layerName);
                         this.chunk.Next();
                         break;
                     case 62: //aci color code
@@ -2168,7 +2211,7 @@ namespace netDxf
                         break;
                     case 6: //type line code
                         // the linetype names ByLayer or ByBlock are case unsensitive
-                        string lineTypeName = this.chunk.ReadString();
+                        string lineTypeName = this.DecodeEncodedNonAsciiCharacters(this.chunk.ReadString());
                         if (String.Compare(lineTypeName, LineType.ByLayer.Name, StringComparison.OrdinalIgnoreCase) == 0)
                             lineTypeName = LineType.ByLayer.Name;
                         else if (String.Compare(lineTypeName, LineType.ByBlock.Name, StringComparison.OrdinalIgnoreCase) == 0)
@@ -2329,7 +2372,9 @@ namespace netDxf
                         ReadMeshEdgeCreases(edges, numCrease);
                         break;
                     case 1001:
-                        xData.Add(this.ReadXDataRecord(this.chunk.ReadString()));
+                        string appId = this.DecodeEncodedNonAsciiCharacters(this.chunk.ReadString());
+                        XData data = this.ReadXDataRecord(appId);
+                        xData.Add(data);
                         break;
                     default:
                         if (this.chunk.Code >= 1000 && this.chunk.Code <= 1071)
@@ -2610,7 +2655,9 @@ namespace netDxf
                         this.chunk.Next();
                         break;
                     case 1001:
-                        xData.Add(this.ReadXDataRecord(this.chunk.ReadString()));
+                        string appId = this.DecodeEncodedNonAsciiCharacters(this.chunk.ReadString());
+                        XData data = this.ReadXDataRecord(appId);
+                        xData.Add(data);
                         break;
                     default:
                         if (this.chunk.Code >= 1000 && this.chunk.Code <= 1071)
@@ -2752,7 +2799,9 @@ namespace netDxf
                             clippingBoundary = null;
                         break;
                     case 1001:
-                        xData.Add(this.ReadXDataRecord(this.chunk.ReadString()));
+                        string appId = this.DecodeEncodedNonAsciiCharacters(this.chunk.ReadString());
+                        XData data = this.ReadXDataRecord(appId);
+                        xData.Add(data);
                         break;
                     default:
                         if (this.chunk.Code >= 1000 && this.chunk.Code <= 1071)
@@ -2850,7 +2899,9 @@ namespace netDxf
                         this.chunk.Next();
                         break;
                     case 1001:
-                        xData.Add(this.ReadXDataRecord(this.chunk.ReadString()));
+                        string appId = this.DecodeEncodedNonAsciiCharacters(this.chunk.ReadString());
+                        XData data = this.ReadXDataRecord(appId);
+                        xData.Add(data);
                         break;
                     default:
                         if (this.chunk.Code >= 1000 && this.chunk.Code <= 1071)
@@ -2926,7 +2977,9 @@ namespace netDxf
                         this.chunk.Next();
                         break;
                     case 1001:
-                        xData.Add(this.ReadXDataRecord(this.chunk.ReadString()));
+                        string appId = this.DecodeEncodedNonAsciiCharacters(this.chunk.ReadString());
+                        XData data = this.ReadXDataRecord(appId);
+                        xData.Add(data);
                         break;
                     default:
                         if (this.chunk.Code >= 1000 && this.chunk.Code <= 1071)
@@ -2977,12 +3030,12 @@ namespace netDxf
                 switch (this.chunk.Code)
                 {
                     case 2:
-                        drawingBlockName = this.chunk.ReadString();
+                        drawingBlockName = this.DecodeEncodedNonAsciiCharacters(this.chunk.ReadString());
                         if (!isBlockEntity) drawingBlock = this.GetBlock(drawingBlockName);
                         this.chunk.Next();
                         break;
                     case 3:
-                        string styleName = this.chunk.ReadString();
+                        string styleName = this.DecodeEncodedNonAsciiCharacters(this.chunk.ReadString());
                         if (string.IsNullOrEmpty(styleName))
                             styleName = this.doc.DrawingVariables.DimStyle;
                         style = this.GetDimensionStyle(styleName);
@@ -3087,10 +3140,10 @@ namespace netDxf
                     dim = this.ReadLinearDimension(defPoint);
                     break;
                 case (DimensionTypeFlag.Radius):
-                    dim = this.ReadRadialDimension(defPoint, normal);
+                    dim = this.ReadRadialDimension(defPoint);
                     break;
                 case (DimensionTypeFlag.Diameter):
-                    dim = this.ReadDiametricDimension(defPoint, normal);
+                    dim = this.ReadDiametricDimension(defPoint);
                     break;
                 case (DimensionTypeFlag.Angular3Point):
                     dim = this.ReadAngular3PointDimension(defPoint);
@@ -3158,7 +3211,9 @@ namespace netDxf
                         this.chunk.Next();
                         break;
                     case 1001:
-                        xData.Add(this.ReadXDataRecord(this.chunk.ReadString()));
+                        string appId = this.DecodeEncodedNonAsciiCharacters(this.chunk.ReadString());
+                        XData data = this.ReadXDataRecord(appId);
+                        xData.Add(data);
                         break;
                     default:
                         if (this.chunk.Code >= 1000 && this.chunk.Code <= 1071)
@@ -3227,7 +3282,9 @@ namespace netDxf
                         this.chunk.Next();
                         break;
                     case 1001:
-                        xData.Add(this.ReadXDataRecord(this.chunk.ReadString()));
+                        string appId = this.DecodeEncodedNonAsciiCharacters(this.chunk.ReadString());
+                        XData data = this.ReadXDataRecord(appId);
+                        xData.Add(data);
                         break;
                     default:
                         if (this.chunk.Code >= 1000 && this.chunk.Code <= 1071)
@@ -3258,7 +3315,7 @@ namespace netDxf
 
         }
 
-        private RadialDimension ReadRadialDimension(Vector3 defPoint, Vector3 normal)
+        private RadialDimension ReadRadialDimension(Vector3 defPoint)
         {
             Vector3 circunferenceRef = Vector3.Zero;
             List<XData> xData = new List<XData>();
@@ -3283,7 +3340,9 @@ namespace netDxf
                         this.chunk.Next();
                         break;
                     case 1001:
-                        xData.Add(this.ReadXDataRecord(this.chunk.ReadString()));
+                        string appId = this.DecodeEncodedNonAsciiCharacters(this.chunk.ReadString());
+                        XData data = this.ReadXDataRecord(appId);
+                        xData.Add(data);
                         break;
                     default:
                         if (this.chunk.Code >= 1000 && this.chunk.Code <= 1071)
@@ -3293,15 +3352,6 @@ namespace netDxf
                         break;
                 }
             }
-
-            //double radius = Vector3.Distance(defPoint, circunferenceRef);
-            //Vector3 refPoint = MathHelper.Transform(defPoint, normal, MathHelper.CoordinateSystem.World, MathHelper.CoordinateSystem.Object);
-            //Vector2 firstPoint = new Vector2(refPoint.X, refPoint.Y);
-
-            //refPoint = MathHelper.Transform(circunferenceRef, normal, MathHelper.CoordinateSystem.World, MathHelper.CoordinateSystem.Object);
-            //Vector2 seconPoint = new Vector2(refPoint.X, refPoint.Y);
-
-            //double rotation = Vector2.Angle(firstPoint, seconPoint)*MathHelper.RadToDeg;
             
             RadialDimension entity = new RadialDimension
             {
@@ -3315,7 +3365,7 @@ namespace netDxf
 
         }
 
-        private DiametricDimension ReadDiametricDimension(Vector3 defPoint, Vector3 normal)
+        private DiametricDimension ReadDiametricDimension(Vector3 defPoint)
         {
             Vector3 circunferenceRef = Vector3.Zero;
             List<XData> xData = new List<XData>();
@@ -3340,7 +3390,9 @@ namespace netDxf
                         this.chunk.Next();
                         break;
                     case 1001:
-                        xData.Add(this.ReadXDataRecord(this.chunk.ReadString()));
+                        string appId = this.DecodeEncodedNonAsciiCharacters(this.chunk.ReadString());
+                        XData data = this.ReadXDataRecord(appId);
+                        xData.Add(data);
                         break;
                     default:
                         if (this.chunk.Code >= 1000 && this.chunk.Code <= 1071)
@@ -3412,7 +3464,9 @@ namespace netDxf
                         this.chunk.Next();
                         break;
                     case 1001:
-                        xData.Add(this.ReadXDataRecord(this.chunk.ReadString()));
+                        string appId = this.DecodeEncodedNonAsciiCharacters(this.chunk.ReadString());
+                        XData data = this.ReadXDataRecord(appId);
+                        xData.Add(data);
                         break;
                     default:
                         if (this.chunk.Code >= 1000 && this.chunk.Code <= 1071)
@@ -3499,7 +3553,9 @@ namespace netDxf
                         this.chunk.Next();
                         break;
                     case 1001:
-                        xData.Add(this.ReadXDataRecord(this.chunk.ReadString()));
+                        string appId = this.DecodeEncodedNonAsciiCharacters(this.chunk.ReadString());
+                        XData data = this.ReadXDataRecord(appId);
+                        xData.Add(data);
                         break;
                     default:
                         if (this.chunk.Code >= 1000 && this.chunk.Code <= 1071)
@@ -3561,7 +3617,9 @@ namespace netDxf
                         this.chunk.Next();
                         break;
                     case 1001:
-                        xData.Add(this.ReadXDataRecord(this.chunk.ReadString()));
+                        string appId = this.DecodeEncodedNonAsciiCharacters(this.chunk.ReadString());
+                        XData data = this.ReadXDataRecord(appId);
+                        xData.Add(data);
                         break;
                     default:
                         if (this.chunk.Code >= 1000 && this.chunk.Code <= 1071)
@@ -3661,7 +3719,9 @@ namespace netDxf
                         this.chunk.Next();
                         break;
                     case 1001:
-                        xData.Add(this.ReadXDataRecord(this.chunk.ReadString()));
+                        string appId = this.DecodeEncodedNonAsciiCharacters(this.chunk.ReadString());
+                        XData data = this.ReadXDataRecord(appId);
+                        xData.Add(data);
                         break;
                     default:
                         if (this.chunk.Code >= 1000 && this.chunk.Code <= 1071)
@@ -3742,7 +3802,9 @@ namespace netDxf
                         this.chunk.Next();
                         break;
                     case 1001:
-                        xData.Add(this.ReadXDataRecord(this.chunk.ReadString()));
+                        string appId = this.DecodeEncodedNonAsciiCharacters(this.chunk.ReadString());
+                        XData data = this.ReadXDataRecord(appId);
+                        xData.Add(data);
                         break;
                     default:
                         if (this.chunk.Code >= 1000 && this.chunk.Code <= 1071)
@@ -3834,7 +3896,9 @@ namespace netDxf
                         this.chunk.Next();
                         break;
                     case 1001:
-                        xData.Add(this.ReadXDataRecord(this.chunk.ReadString()));
+                        string appId = this.DecodeEncodedNonAsciiCharacters(this.chunk.ReadString());
+                        XData data = this.ReadXDataRecord(appId);
+                        xData.Add(data);
                         break;
                     default:
                         if (this.chunk.Code >= 1000 && this.chunk.Code <= 1071)
@@ -3941,7 +4005,9 @@ namespace netDxf
                         this.chunk.Next();
                         break;
                     case 1001:
-                        xData.Add(this.ReadXDataRecord(this.chunk.ReadString()));
+                        string appId = this.DecodeEncodedNonAsciiCharacters(this.chunk.ReadString());
+                        XData data = this.ReadXDataRecord(appId);
+                        xData.Add(data);
                         break;
                     default:
                         if (this.chunk.Code >= 1000 && this.chunk.Code <= 1071)
@@ -4143,7 +4209,9 @@ namespace netDxf
                         this.chunk.Next();
                         break;
                     case 1001:
-                        xData.Add(this.ReadXDataRecord(this.chunk.ReadString()));
+                        string appId = this.DecodeEncodedNonAsciiCharacters(this.chunk.ReadString());
+                        XData data = this.ReadXDataRecord(appId);
+                        xData.Add(data);
                         break;
                     default:
                         if (this.chunk.Code >= 1000 && this.chunk.Code <= 1071)
@@ -4179,7 +4247,7 @@ namespace netDxf
                 switch (this.chunk.Code)
                 {
                     case 2:
-                        blockName = this.chunk.ReadString();
+                        blockName = this.DecodeEncodedNonAsciiCharacters(this.chunk.ReadString());
                         if (!isBlockEntity) block = this.GetBlock(blockName);
                         this.chunk.Next();
                         break;
@@ -4224,7 +4292,9 @@ namespace netDxf
                         this.chunk.Next();
                         break;
                     case 1001:
-                        xData.Add(this.ReadXDataRecord(this.chunk.ReadString()));
+                        string appId = this.DecodeEncodedNonAsciiCharacters(this.chunk.ReadString());
+                        XData data = this.ReadXDataRecord(appId);
+                        xData.Add(data);
                         break;
                     default:
                         if (this.chunk.Code >= 1000 && this.chunk.Code <= 1071)
@@ -4235,7 +4305,6 @@ namespace netDxf
                         break;
                 }
             }
-
 
             if (this.chunk.ReadString() == DxfObjectCode.Attribute)
             {
@@ -4262,7 +4331,8 @@ namespace netDxf
                             this.chunk.Next();
                             break;
                         case 8:
-                            endSequenceLayer = this.GetLayer(this.chunk.ReadString());
+                            string layerName = this.DecodeEncodedNonAsciiCharacters(this.chunk.ReadString());
+                            endSequenceLayer = this.GetLayer(layerName);
                             this.chunk.Next();
                             break;
                         default:
@@ -4355,7 +4425,9 @@ namespace netDxf
                         this.chunk.Next();
                         break;
                     case 1001:
-                        xData.Add(this.ReadXDataRecord(this.chunk.ReadString()));
+                        string appId = this.DecodeEncodedNonAsciiCharacters(this.chunk.ReadString());
+                        XData data = this.ReadXDataRecord(appId);
+                        xData.Add(data);
                         break;
                     default:
                         if (this.chunk.Code >= 1000 && this.chunk.Code <= 1071)
@@ -4417,7 +4489,9 @@ namespace netDxf
                         this.chunk.Next();
                         break;
                     case 1001:
-                        xData.Add(this.ReadXDataRecord(this.chunk.ReadString()));
+                        string appId = this.DecodeEncodedNonAsciiCharacters(this.chunk.ReadString());
+                        XData data = this.ReadXDataRecord(appId);
+                        xData.Add(data);
                         break;
                     default:
                         if (this.chunk.Code >= 1000 && this.chunk.Code <= 1071)
@@ -4477,7 +4551,9 @@ namespace netDxf
                         this.chunk.Next();
                         break;
                     case 1001:
-                        xData.Add(this.ReadXDataRecord(this.chunk.ReadString()));
+                        string appId = this.DecodeEncodedNonAsciiCharacters(this.chunk.ReadString());
+                        XData data = this.ReadXDataRecord(appId);
+                        xData.Add(data);
                         break;
                     default:
                         if (this.chunk.Code >= 1000 && this.chunk.Code <= 1071)
@@ -4522,7 +4598,7 @@ namespace netDxf
                     case 2:
                         // the MLineStyle is defined in the objects sections after the definition of the entity, something similar happens with the image entity
                         // the MLineStyle will be applied to the MLine after parsing the whole file
-                        styleName = this.chunk.ReadString();
+                        styleName = this.DecodeEncodedNonAsciiCharacters(this.chunk.ReadString());
                         if (string.IsNullOrEmpty(styleName))
                             styleName = this.doc.DrawingVariables.CMLStyle;
                         this.chunk.Next();
@@ -4576,7 +4652,9 @@ namespace netDxf
                         segments = this.ReadMLineSegments(numVertexes, numStyleElements, normal, out elevation);
                         break;
                     case 1001:
-                        xData.Add(this.ReadXDataRecord(this.chunk.ReadString()));
+                        string appId = this.DecodeEncodedNonAsciiCharacters(this.chunk.ReadString());
+                        XData data = this.ReadXDataRecord(appId);
+                        xData.Add(data);
                         break;
                     default:
                         if (this.chunk.Code >= 1000 && this.chunk.Code <= 1071)
@@ -4767,7 +4845,9 @@ namespace netDxf
                         this.chunk.Next();
                         break;
                     case 1001:
-                        xData.Add(this.ReadXDataRecord(this.chunk.ReadString()));
+                        string appId = this.DecodeEncodedNonAsciiCharacters(this.chunk.ReadString());
+                        XData data = this.ReadXDataRecord(appId);
+                        xData.Add(data);
                         break;
                     default:
                         if (this.chunk.Code >= 1000 && this.chunk.Code <= 1071)
@@ -4848,7 +4928,9 @@ namespace netDxf
                         this.chunk.Next();
                         break;
                     case 1001:
-                        xData.Add(this.ReadXDataRecord(this.chunk.ReadString()));
+                        string appId = this.DecodeEncodedNonAsciiCharacters(this.chunk.ReadString());
+                        XData data = this.ReadXDataRecord(appId);
+                        xData.Add(data);
                         break;
                     default:
                         if (this.chunk.Code >= 1000 && this.chunk.Code <= 1071)
@@ -4883,7 +4965,8 @@ namespace netDxf
                         this.chunk.Next();
                         break;
                     case 8:
-                        endSequenceLayer = this.GetLayer(this.chunk.ReadString());
+                        string layerName = this.DecodeEncodedNonAsciiCharacters(this.chunk.ReadString());
+                        endSequenceLayer = this.GetLayer(layerName);
                         this.chunk.Next();
                         break;
                     default:
@@ -5050,7 +5133,7 @@ namespace netDxf
                         this.chunk.Next();
                         break;
                     case 7:
-                        string styleName = this.chunk.ReadString();
+                        string styleName = this.DecodeEncodedNonAsciiCharacters(this.chunk.ReadString());
                         if (string.IsNullOrEmpty(styleName))
                             styleName = this.doc.DrawingVariables.TextStyle;
                         style = this.GetTextStyle(styleName);
@@ -5077,7 +5160,9 @@ namespace netDxf
                         this.chunk.Next();
                         break;
                     case 1001:
-                        xData.Add(this.ReadXDataRecord(this.chunk.ReadString()));
+                        string appId = this.DecodeEncodedNonAsciiCharacters(this.chunk.ReadString());
+                        XData data = this.ReadXDataRecord(appId);
+                        xData.Add(data);
                         break;
                     default:
                         if (this.chunk.Code >= 1000 && this.chunk.Code <= 1071)
@@ -5190,7 +5275,7 @@ namespace netDxf
                         this.chunk.Next();
                         break;
                     case 7:
-                        string styleName = this.chunk.ReadString();
+                        string styleName = this.DecodeEncodedNonAsciiCharacters(this.chunk.ReadString());
                         if (string.IsNullOrEmpty(styleName))
                             styleName = this.doc.DrawingVariables.TextStyle;
                         style = this.GetTextStyle(styleName);
@@ -5213,7 +5298,9 @@ namespace netDxf
                         this.chunk.Next();
                         break;
                     case 1001:
-                        xData.Add(this.ReadXDataRecord(this.chunk.ReadString()));
+                        string appId = this.DecodeEncodedNonAsciiCharacters(this.chunk.ReadString());
+                        XData data = this.ReadXDataRecord(appId);
+                        xData.Add(data);
                         break;
                     default:
                         if (this.chunk.Code >= 1000 && this.chunk.Code <= 1071)
@@ -5305,7 +5392,9 @@ namespace netDxf
                         pattern.Fill = fill;
                         break;
                     case 1001:
-                        xData.Add(this.ReadXDataRecord(this.chunk.ReadString()));
+                        string appId = this.DecodeEncodedNonAsciiCharacters(this.chunk.ReadString());
+                        XData data = this.ReadXDataRecord(appId);
+                        xData.Add(data);
                         break;
                     default:
                         if (this.chunk.Code >= 1000 && this.chunk.Code <= 1071)
@@ -5811,7 +5900,8 @@ namespace netDxf
                         this.chunk.Next();
                         break;
                     case 8:
-                        layer = this.GetLayer(this.chunk.ReadString());
+                        string layerName = this.DecodeEncodedNonAsciiCharacters(this.chunk.ReadString());
+                        layer = this.GetLayer(layerName);
                         this.chunk.Next();
                         break;
                     case 62: //aci color code
@@ -5825,7 +5915,7 @@ namespace netDxf
                         break;
                     case 6:
                         // the linetype names ByLayer or ByBlock are case unsensitive
-                        string lineTypeName = this.chunk.ReadString();
+                        string lineTypeName = this.DecodeEncodedNonAsciiCharacters(this.chunk.ReadString());
                         if (String.Compare(lineTypeName, "ByLayer", StringComparison.OrdinalIgnoreCase) == 0)
                             lineTypeName = "ByLayer";
                         if (String.Compare(lineTypeName, "ByBlock", StringComparison.OrdinalIgnoreCase) == 0)
@@ -6254,7 +6344,7 @@ namespace netDxf
                 }
 
                 // the linetype names ByLayer or ByBlock are case unsensitive
-                string lineTypeName = this.chunk.ReadString(); // code 6
+                string lineTypeName = this.DecodeEncodedNonAsciiCharacters(this.chunk.ReadString()); // code 6
                 if (String.Compare(lineTypeName, "ByLayer", StringComparison.OrdinalIgnoreCase) == 0)
                     lineTypeName = "ByLayer";
                 if (String.Compare(lineTypeName, "ByBlock", StringComparison.OrdinalIgnoreCase) == 0)
@@ -6811,8 +6901,6 @@ namespace netDxf
 
         private ApplicationRegistry GetApplicationRegistry(string name)
         {
-            name = this.DecodeEncodedNonAsciiCharacters(name);
-
             ApplicationRegistry appReg;
             if (this.doc.ApplicationRegistries.TryGetValue(name, out appReg))
                 return appReg;
@@ -6833,8 +6921,6 @@ namespace netDxf
 
         private Layer GetLayer(string name)
         {
-            name = this.DecodeEncodedNonAsciiCharacters(name);
-
             Layer layer;
             if (this.doc.Layers.TryGetValue(name, out layer))
                 return layer;
@@ -6848,8 +6934,6 @@ namespace netDxf
 
         private LineType GetLineType(string name)
         {
-            name = this.DecodeEncodedNonAsciiCharacters(name);
-
             LineType lineType;
             if (this.doc.LineTypes.TryGetValue(name, out lineType))
                 return lineType;
@@ -6862,8 +6946,6 @@ namespace netDxf
 
         private TextStyle GetTextStyle(string name)
         {
-            name = this.DecodeEncodedNonAsciiCharacters(name);
-
             TextStyle style;
             if (this.doc.TextStyles.TryGetValue(name, out style))
                 return style;
@@ -6874,16 +6956,8 @@ namespace netDxf
             return style;
         }
 
-        private TextStyle GetTextStyleByHandle(string handle)
-        {
-            TextStyle style = this.doc.GetObjectByHandle(handle) as TextStyle ?? TextStyle.Default;
-            return style;
-        }
-
         private DimensionStyle GetDimensionStyle(string name)
         {
-            name = this.DecodeEncodedNonAsciiCharacters(name);
-
             DimensionStyle style;
             if (this.doc.DimensionStyles.TryGetValue(name, out style))
                 return style;
@@ -6897,8 +6971,6 @@ namespace netDxf
 
         private MLineStyle GetMLineStyle(string name)
         {
-            name = this.DecodeEncodedNonAsciiCharacters(name);
-
             MLineStyle style;
             if (this.doc.MlineStyles.TryGetValue(name, out style))
                 return style;

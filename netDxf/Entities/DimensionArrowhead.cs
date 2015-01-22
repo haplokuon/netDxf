@@ -1,7 +1,7 @@
-#region netDxf, Copyright(C) 2014 Daniel Carvajal, Licensed under LGPL.
+#region netDxf, Copyright(C) 2015 Daniel Carvajal, Licensed under LGPL.
 
 //                        netDxf library
-// Copyright (C) 2014 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2015 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -56,6 +56,9 @@ namespace netDxf.Entities
     {
         #region predefined dimensions arrowheads
 
+        /// <summary>
+        /// Dot arrowhead.
+        /// </summary>
         public static Block Dot
         {
             get
@@ -89,6 +92,9 @@ namespace netDxf.Entities
             }
         }
 
+        /// <summary>
+        /// Small dot arrowhead.
+        /// </summary>
         public static Block DotSmall
         {
             get
@@ -113,6 +119,9 @@ namespace netDxf.Entities
             }
         }
 
+        /// <summary>
+        /// Blank dot arrowhead.
+        /// </summary>
         public static Block DotBlank
         {
             get
@@ -141,6 +150,9 @@ namespace netDxf.Entities
             }
         }
 
+        /// <summary>
+        /// Origin indicator arrowhead.
+        /// </summary>
         public static Block OriginIndicator
         {
             get
@@ -169,6 +181,9 @@ namespace netDxf.Entities
             }
         }
 
+        /// <summary>
+        /// Origin indicator 2 arrowhead.
+        /// </summary>
         public static Block OriginIndicator2
         {
             get
@@ -206,6 +221,9 @@ namespace netDxf.Entities
             }
         }
 
+        /// <summary>
+        /// Open arrowhead.
+        /// </summary>
         public static Block Open
         {
             get
@@ -243,6 +261,9 @@ namespace netDxf.Entities
             }
         }
 
+        /// <summary>
+        /// Right angle arrowhead.
+        /// </summary>
         public static Block RightAngle
         {
             get
@@ -280,6 +301,9 @@ namespace netDxf.Entities
             }
         }
 
+        /// <summary>
+        /// Open 30 degree angle arrowhead.
+        /// </summary>
         public static Block Open30
         {
             get
@@ -317,6 +341,9 @@ namespace netDxf.Entities
             }
         }
 
+        /// <summary>
+        /// Closed arrowhead.
+        /// </summary>
         public static Block Closed
         {
             get
@@ -363,6 +390,9 @@ namespace netDxf.Entities
             }
         }
 
+        /// <summary>
+        /// Small blank dot arrowhead.
+        /// </summary>
         public static Block DotSmallBlank
         {
             get
@@ -382,6 +412,9 @@ namespace netDxf.Entities
             }
         }
 
+        /// <summary>
+        /// Empty arrowhead.
+        /// </summary>
         public static Block None
         {
             get
@@ -391,6 +424,9 @@ namespace netDxf.Entities
             }
         }
 
+        /// <summary>
+        /// Oblique arrowhead.
+        /// </summary>
         public static Block Oblique
         {
             get
@@ -410,6 +446,9 @@ namespace netDxf.Entities
             }
         }
 
+        /// <summary>
+        /// Filled box arrowhead.
+        /// </summary>
         public static Block BoxFilled
         {
             get
@@ -437,6 +476,9 @@ namespace netDxf.Entities
             }
         }
 
+        /// <summary>
+        /// Box arrowhead.
+        /// </summary>
         public static Block Box
         {
             get
@@ -492,6 +534,9 @@ namespace netDxf.Entities
             }
         }
 
+        /// <summary>
+        /// Blank closed arrowhead.
+        /// </summary>
         public static Block ClosedBlank
         {
             get
@@ -529,6 +574,9 @@ namespace netDxf.Entities
             }
         }
 
+        /// <summary>
+        /// Filled datum triangle arrowhead.
+        /// </summary>
         public static Block DatumTriangleFilled
         {
             get
@@ -547,6 +595,9 @@ namespace netDxf.Entities
             }
         }
 
+        /// <summary>
+        /// Datum triangle arrowhead.
+        /// </summary>
         public static Block DatumTriangle
         {
             get
@@ -584,6 +635,9 @@ namespace netDxf.Entities
             }
         }
 
+        /// <summary>
+        /// Integral symbol arrowhead.
+        /// </summary>
         public static Block Integral
         {
             get
@@ -612,6 +666,9 @@ namespace netDxf.Entities
             }
         }
 
+        /// <summary>
+        /// Architectural tick arrowhead.
+        /// </summary>
         public static Block ArchitecturalTick
         {
             get

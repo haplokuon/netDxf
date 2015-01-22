@@ -1,7 +1,7 @@
-﻿#region netDxf, Copyright(C) 2014 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf, Copyright(C) 2015 Daniel Carvajal, Licensed under LGPL.
 
 //                        netDxf library
-// Copyright (C) 2013 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2015 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -388,8 +388,14 @@ namespace netDxf.Entities
             if (string.IsNullOrEmpty(this.value))
                 return string.Empty;
 
+            string text = this.value;
+
+            //text = text.Replace("%%c", "Ø");
+            //text = text.Replace("%%d", "°");
+            //text = text.Replace("%%p", "±");
+            
             StringBuilder rawText = new StringBuilder();
-            CharEnumerator chars = this.value.GetEnumerator();
+            CharEnumerator chars = text.GetEnumerator();
 
             while (chars.MoveNext())
             {
@@ -424,36 +430,6 @@ namespace netDxf.Entities
                 else if (token == '{' | token == '}')
                 {
                     // discard group markers
-                }
-                else if (token == '%')
-                {
-                    if (chars.MoveNext())
-                        token = chars.Current;
-                    else
-                        return rawText.ToString(); // premature end of text
-
-                    if (token == '%')
-                    {
-                        if (chars.MoveNext())
-                            token = chars.Current;
-                        else
-                            return rawText.ToString(); // premature end of text
-
-                        switch (token)
-                        {
-                            case 'c':
-                                rawText.Append('Ø');
-                                break;
-                            case 'd':
-                                rawText.Append('°');
-                                break;
-                            case 'p':
-                                rawText.Append('±');
-                                break;
-                        }
-                    }
-                    else // char is just a single '%'
-                        rawText.Append(token);
                 }
                 else // char is what it is, a character
                     rawText.Append(token);

@@ -1,7 +1,7 @@
-﻿#region netDxf, Copyright(C) 2014 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf, Copyright(C) 2015 Daniel Carvajal, Licensed under LGPL.
 
 //                        netDxf library
-// Copyright (C) 2013 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2015 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -2937,7 +2937,7 @@ namespace netDxf
 
         private string EncodeNonAsciiCharacters(string text)
         {
-            // for dxf database version prior to AutoCad 2007 non ASCII characters, including the extended chart, must be encoded to the template \U+####,
+            // for dxf database version prior to AutoCad 2007 non ASCII characters must be encoded to the template \U+####,
             // where #### is the for digits hexadecimal number that represent that character.
             if (this.doc.DrawingVariables.AcadVer >= DxfVersion.AutoCad2007) return text;
 
@@ -2949,7 +2949,7 @@ namespace netDxf
             StringBuilder sb = new StringBuilder();
             foreach (char c in text)
             {
-                if (c > 255)
+                if (c > 127)
                     sb.Append(string.Concat("\\U+", String.Format("{0:X4}", Convert.ToInt32(c))));
                 else
                     sb.Append(c);
@@ -2962,7 +2962,7 @@ namespace netDxf
             // encoding of non ASCII characters, including the extended chart, using regular expresions, this code is slower
             //return Regex.Replace(
             //    text,
-            //    @"(?<char>[^\u0000-\u00ff]{1})",
+            //    @"(?<char>[^\u0000-\u007f]{1})",
             //    m => "\\U+" + String.Format("{0:X4}", Convert.ToInt32(m.Groups["char"].Value[0])));
 
         }

@@ -1,3 +1,11 @@
+[0.9.4 - 2015/01/22]
++ Updated "netDxf Documentation.chm".
++ (fixed) Issue Id #13399 FromJulianCalendar throw exception.
++ (fixed) Issue Id #13384 Possible mistake in MText.PlainText()?
++ (fixed) Bug while parsing blocks containing MLine or Image entities.
++ (fixed) Possible error while reading an insert entity. Its referenced block name was not being properly decoded.
++ (fixed) Encode non ASCII characters that seemed to affect only binary dxf files.
+
 [0.9.3 - 2014/12/23]
 + Revised all dimension entities, they should be more reliable. Now, there should be no problems in the way reference points and offsets are supplied.
 + Added the DimensionStyles variable DIMCLRD, DIMLTYPE, and DIMLWD that control the dimension line drawing.
