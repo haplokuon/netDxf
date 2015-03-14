@@ -112,7 +112,7 @@ namespace netDxf.Collections
         /// Removes a block.
         /// </summary>
         /// <param name="name"><see cref="Block">Block</see> name to remove from the document.</param>
-        /// <returns>True is the block has been successfully removed, or false otherwise.</returns>
+        /// <returns>True if the block has been successfully removed, or false otherwise.</returns>
         /// <remarks>Reserved blocks or any other referenced by objects cannot be removed.</remarks>
         public override bool Remove(string name)
         {
@@ -123,7 +123,7 @@ namespace netDxf.Collections
         /// Removes a block.
         /// </summary>
         /// <param name="block"><see cref="Block">Block</see> to remove from the document.</param>
-        /// <returns>True is the block has been successfully removed, or false otherwise.</returns>
+        /// <returns>True if the block has been successfully removed, or false otherwise.</returns>
         /// <remarks>Reserved blocks or any other referenced by objects cannot be removed.</remarks>
         public override bool Remove(Block block)
         {

@@ -27,7 +27,10 @@ namespace TestDxfDocument
     {
         private static void Main()
         {
-            Test();
+            // sample.dxf contains all supported entities by netDxf
+            string file = "sample.dxf";
+            //DxfDocument doc = Test(file, "output.log");
+            DxfDocument doc = Test(file);
 
             #region Samples for fixes, new and modified features 0.9.3
 
@@ -588,7 +591,7 @@ namespace TestDxfDocument
             pol = closedPeriodicSpline.ToPolyline(100);
             pol.Layer = result;
             dxf.AddEntity(pol);
-
+      
             dxf.AddEntity(splineCircle);
             pol = splineCircle.ToPolyline(100);
             pol.Layer = result;
@@ -1389,13 +1392,20 @@ namespace TestDxfDocument
 
         #endregion
 
-        private static void Test()
+        private static DxfDocument Test(string file, string output = null)
         {
-            // sample.dxf contains all supported entities by netDxf
-            string file = "sample.dxf";
-
             // check if the dxf actually exists
             FileInfo fileInfo = new FileInfo(file);
+
+            // optionally you can save the information to a text file
+            bool outputLog = !String.IsNullOrEmpty(output);
+            TextWriter writer = null;
+            if (outputLog)
+            {
+                writer = new StreamWriter(File.Create(output));
+                Console.SetOut(writer);
+            }
+
             if (!fileInfo.Exists)
             {
                 Console.WriteLine("THE FILE {0} DOES NOT EXIST", file);
@@ -1404,7 +1414,7 @@ namespace TestDxfDocument
                 Console.WriteLine("Press a key to continue...");
                 Console.ReadLine();
 
-                return;
+                return null;
             }
 
             bool isBinary;
@@ -1413,13 +1423,13 @@ namespace TestDxfDocument
             // check if the file is a dxf
             if (dxfVersion == DxfVersion.Unknown)
             {
-                Console.WriteLine("THE FILE {0} IS NOT A VALID DXF", file);
+                Console.WriteLine("THE FILE {0} IS NOT A VALID DXF OR THE DXF DOES NOT INCLUDE VERSION INFORMATION IN THE HEADER SECTION", file);
                 Console.WriteLine();
 
                 Console.WriteLine("Press a key to continue...");
                 Console.ReadLine();
 
-                return;
+                return null;
             }
 
             // check if the dxf file version is supported
@@ -1434,7 +1444,7 @@ namespace TestDxfDocument
                 Console.WriteLine("Press a key to continue...");
                 Console.ReadLine();
 
-                return;
+                return null;
             }
 
             DxfDocument dxf = DxfDocument.Load(file);
@@ -1449,9 +1459,10 @@ namespace TestDxfDocument
                 Console.WriteLine("Press a key to continue...");
                 Console.ReadLine();
 
-                return;
+                return null;
             }
 
+            // the dxf has been properly loaded, let's show some information about it
             Console.WriteLine("FILE NAME: {0}", file);
             Console.WriteLine("\tbinary dxf: {0}", isBinary);
             Console.WriteLine();            
@@ -1547,7 +1558,7 @@ namespace TestDxfDocument
 
             // the entities lists contain the geometry that has a graphical representation in the drawing across all layouts,
             // to get the entities that belongs to an specific layout you can get the references through the Layouts.GetReferences(name)
-            // or check the Entity.Owner.Record.Layout property
+            // or check the EntityObject.Owner.Record.Layout property
             Console.WriteLine("ENTITIES:");
             Console.WriteLine("\t{0}; count: {1}", EntityType.Arc, dxf.Arcs.Count);
             Console.WriteLine("\t{0}; count: {1}", EntityType.AttributeDefinition, dxf.AttributeDefinitions.Count);
@@ -1592,8 +1603,17 @@ namespace TestDxfDocument
             dxf.Save("binary test.dxf", true);
             DxfDocument test = DxfDocument.Load("binary test.dxf");
 
-            Console.WriteLine("Press a key to continue...");
-            Console.ReadLine();
+            if (outputLog)
+            {
+                writer.Flush();
+                writer.Close();
+            }
+            else
+            {
+                Console.WriteLine("Press a key to continue...");
+                Console.ReadLine();
+            }    
+            return dxf;
         }
 
         //private static void ExplodeInsert()
@@ -1606,7 +1626,7 @@ namespace TestDxfDocument
         //    insert.Layer = new Layer("Original block");
         //    insert.Layer.Color = AciColor.DarkGrey;
         //    dxf.AddEntity(insert);
-        //    List<EntityObject> explodedEntities = insert.Explode();
+        //    List<Entity> explodedEntities = insert.Explode();
         //    dxf.AddEntity(explodedEntities);
 
         //    dxf.Save("ExplodeInsert.dxf");
@@ -3546,7 +3566,7 @@ namespace TestDxfDocument
             poly.IsClosed = true;
 
             List<HatchBoundaryPath> boundary = new List<HatchBoundaryPath>() { new HatchBoundaryPath(new List<EntityObject>()) }; ;
-            //List<HatchBoundaryPath> boundary = new List<HatchBoundaryPath> {new HatchBoundaryPath(new List<EntityObject> {poly})};
+            //List<HatchBoundaryPath> boundary = new List<HatchBoundaryPath> {new HatchBoundaryPath(new List<Entity> {poly})};
             HatchGradientPattern pattern = new HatchGradientPattern(AciColor.Yellow, AciColor.Blue, HatchGradientPatternType.Linear);
             pattern.Origin = new Vector2(120, -365);
             Hatch hatch = new Hatch(pattern, boundary);

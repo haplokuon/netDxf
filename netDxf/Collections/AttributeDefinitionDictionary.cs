@@ -176,7 +176,7 @@ namespace netDxf.Collections
         /// Adds an <see cref="AttributeDefinition">attribute definition</see> to the current dictionary.
         /// </summary>
         /// <param name="item">The <see cref="AttributeDefinition">attribute definition</see> to add.</param>
-        /// <returns>True is the <see cref="AttributeDefinition">attribute definition</see> has been correctly added to the dictionary; otherwise, false.</returns>
+        /// <returns>True if the <see cref="AttributeDefinition">attribute definition</see> has been correctly added to the dictionary; otherwise, false.</returns>
         public bool Add(AttributeDefinition item)
         {
             if (OnBeforeAddItemEvent(item)) return false;

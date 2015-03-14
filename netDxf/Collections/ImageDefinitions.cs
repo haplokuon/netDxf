@@ -85,7 +85,7 @@ namespace netDxf.Collections
         /// Removes an image definition.
         /// </summary>
         /// <param name="name"><see cref="ImageDef">ImageDef</see> name to remove from the document.</param>
-        /// <returns>True is the image definition has been successfully removed, or false otherwise.</returns>
+        /// <returns>True if the image definition has been successfully removed, or false otherwise.</returns>
         /// <remarks>Any image definition referenced by objects cannot be removed.</remarks>
         public override bool Remove(string name)
         {
@@ -96,7 +96,7 @@ namespace netDxf.Collections
         /// Removes an image definition.
         /// </summary>
         /// <param name="imageDef"><see cref="ImageDef">ImageDef</see> to remove from the document.</param>
-        /// <returns>True is the image definition has been successfully removed, or false otherwise.</returns>
+        /// <returns>True if the image definition has been successfully removed, or false otherwise.</returns>
         /// <remarks>Any image definition referenced by objects cannot be removed.</remarks>
         public override bool Remove(ImageDef imageDef)
         {

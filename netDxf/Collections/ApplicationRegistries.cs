@@ -85,7 +85,7 @@ namespace netDxf.Collections
         /// Removes an application registry.
         /// </summary>
         /// <param name="name"><see cref="ApplicationRegistry">ApplicationRegistry</see> name to remove from the document.</param>
-        /// <returns>True is the application registry has been successfully removed, or false otherwise.</returns>
+        /// <returns>True if the application registry has been successfully removed, or false otherwise.</returns>
         /// <remarks>Reserved application registries or any other referenced by objects cannot be removed.</remarks>
         public override bool Remove(string name)
         {
@@ -96,7 +96,7 @@ namespace netDxf.Collections
         /// Removes an application registry.
         /// </summary>
         /// <param name="appReg"><see cref="ApplicationRegistry">ApplicationRegistry</see> to remove from the document.</param>
-        /// <returns>True is the application registry has been successfully removed, or false otherwise.</returns>
+        /// <returns>True if the application registry has been successfully removed, or false otherwise.</returns>
         /// <remarks>Reserved application registries or any other referenced by objects cannot be removed.</remarks>
         public override bool Remove(ApplicationRegistry appReg)
         {

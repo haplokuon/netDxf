@@ -97,9 +97,8 @@ namespace netDxf.Collections
         /// Deletes a group but keeps the grouped entities in the document.
         /// </summary>
         /// <param name="name"><see cref="Group">Group</see> name to remove from the document.</param>
-        /// <returns>True is the group has been successfully removed, or false otherwise.</returns>
-        /// <remarks>
-        /// Reserved group or any other referenced by objects cannot be removed.</remarks>
+        /// <returns>True if the group has been successfully removed, or false otherwise.</returns>
+        /// <remarks>Reserved group or any other referenced by objects cannot be removed.</remarks>
         public bool Ungroup(string name)
         {
             return Ungroup(this[name]);
@@ -109,7 +108,7 @@ namespace netDxf.Collections
         /// Deletes a group but keeps the grouped entities in the document.
         /// </summary>
         /// <param name="group"><see cref="Group">Group</see> to remove from the document.</param>
-        /// <returns>True is the group has been successfully removed, or false otherwise.</returns>
+        /// <returns>True if the group has been successfully removed, or false otherwise.</returns>
         /// <remarks>Reserved groups or any other referenced by objects cannot be removed.</remarks>
         public bool Ungroup(Group group)
         {
@@ -138,7 +137,7 @@ namespace netDxf.Collections
         /// Deletes a group and removes the grouped entities from the document.
         /// </summary>
         /// <param name="name"><see cref="Group">Group</see> name to remove from the document.</param>
-        /// <returns>True is the group has been successfully removed, or false otherwise.</returns>
+        /// <returns>True if the group has been successfully removed, or false otherwise.</returns>
         /// <remarks>Reserved groups or any other referenced by objects cannot be removed.</remarks>
         public override bool Remove(string name)
         {
@@ -149,19 +148,17 @@ namespace netDxf.Collections
         /// Deletes a group and removes the grouped entities from the document.
         /// </summary>
         /// <param name="group"><see cref="Group">Group</see> to remove from the document.</param>
-        /// <returns>True is the group has been successfully removed, or false otherwise.</returns>
+        /// <returns>True if the group has been successfully removed, or false otherwise.</returns>
         /// <remarks>Reserved groups or any other referenced by objects cannot be removed.</remarks>
         public override bool Remove(Group group)
         {
-            if (Ungroup(group))
+            if (!this.Ungroup(group)) return false;
+
+            foreach (EntityObject entity in group.Entities)
             {
-                foreach (EntityObject entity in group.Entities)
-                {
-                    this.document.RemoveEntity(entity);
-                }
-                return true;
+                this.document.RemoveEntity(entity);
             }
-            return false;
+            return true;
         }
 
         #endregion

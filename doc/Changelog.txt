@@ -1,3 +1,10 @@
+[0.9.5 - 2015/03/14]
++ Improved the Nurbs evaluator (thanks ThVoss).
++ (fixed) Bug with layouts not being registered as user of its associated block. This is related with proposed patch 17308 "Avoid removal of "*Paper_Space" block when using doc.Blocks.Clear()".
++ (fixed) Bug in DxfDocument.CheckDxfVersion with dxf files that do not include the dxf version in the header section. This is related with issue #13491.
++ (fixed) Workaround for layers not defining a linetype style.
++ (fixed) Bug introduced in previous update. The entity blocks were not properly registered in the document. This is only applicable to blocks imported from a dxf.
+
 [0.9.4 - 2015/01/22]
 + Updated "netDxf Documentation.chm".
 + (fixed) Issue Id #13399 FromJulianCalendar throw exception.

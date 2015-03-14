@@ -110,6 +110,9 @@ namespace netDxf.Collections
         /// <summary>
         /// Gets the maximum number of objects the collection can hold.
         /// </summary>
+        /// <remarks>
+        /// This is an aproximate value, the actual exact value is unknown. In any case is not recommended to get even close to this number for any practical use.
+        /// </remarks>
         public int MaxCapacity
         {
             get { return this.maxCapacity; }

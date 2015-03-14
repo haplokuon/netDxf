@@ -186,7 +186,7 @@ namespace netDxf.Entities
         #region public properties
 
         /// <summary>
-        /// Gets or sets the center <see cref="Vector3">point</see> of the circunference (in WCS).
+        /// Gets or sets the center <see cref="Vector3">point</see> of the circumference (in WCS).
         /// </summary>
         public Vector3 CenterPoint
         {
@@ -195,7 +195,7 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets or sets the <see cref="Vector3">point</see> on circle or arc (in WCS).
+        /// Gets or sets the <see cref="Vector3">point</see> on circumference or arc (in WCS).
         /// </summary>
         public Vector3 ReferencePoint
         {

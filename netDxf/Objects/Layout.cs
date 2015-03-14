@@ -319,6 +319,5 @@ namespace netDxf.Objects
 
         #endregion
 
-
     }
 }

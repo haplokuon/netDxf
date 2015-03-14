@@ -136,7 +136,7 @@ namespace netDxf.Collections
         /// Determines whether the dictionary contains an attribute with the specified tag.
         /// </summary>
         /// <param name="tag">The tag to locate in the dictionary.</param>
-        /// <returns>true if the dictionary contains an attribute with the tag; otherwise, false.</returns>
+        /// <returns>True if the dictionary contains an attribute with the tag; otherwise, false.</returns>
         public bool ContainsTag(string tag)
         {
             return this.innerDictionary.ContainsKey(tag);
@@ -146,7 +146,7 @@ namespace netDxf.Collections
         /// Determines whether the dictionary contains a specific attribute.
         /// </summary>
         /// <param name="attribute">The attribute to locate in the dictionary.</param>
-        /// <returns>true if the dictionary contains an attribute with the specified value; otherwise, false.</returns>
+        /// <returns>True if the dictionary contains an attribute with the specified value; otherwise, false.</returns>
         public bool ContainsValue(Attribute attribute)
         {
             return this.innerDictionary.ContainsValue(attribute);
@@ -157,7 +157,7 @@ namespace netDxf.Collections
         /// </summary>
         /// <param name="tag">The key of the value to tag.</param>
         /// <param name="attribute">When this method returns, contains the attribute associated with the specified tag, if the tag is found; otherwise, null. This parameter is passed uninitialized.</param>
-        /// <returns>true if the dictionary contains an attribute with the specified tagy; otherwise, false.</returns>
+        /// <returns>True if the dictionary contains an attribute with the specified tagy; otherwise, false.</returns>
         public bool TryGetValue(string tag, out Attribute attribute)
         {
             return this.innerDictionary.TryGetValue(tag, out attribute);

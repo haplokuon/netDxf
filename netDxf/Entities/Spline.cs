@@ -300,8 +300,6 @@ namespace netDxf.Entities
 
         #region Nurbs evaluator provided by mikau16 based on Michael V. implementation, roughly follows the notation of http://cs.mtu.edu/~shene/PUBLICATIONS/2004/NURBS.pdf
 
-        private Dictionary<Vector3, double> cache;
-
         /// <summary>
         /// Converts the spline in a list of vertexes.
         /// </summary>
@@ -309,9 +307,6 @@ namespace netDxf.Entities
         /// <returns>A list vertexes that represents the spline.</returns>
         public IList<Vector3> PolygonalVertexes(int precision)
         {
-
-            this.cache = new Dictionary<Vector3, double>(); // for faster evaluation
-
             double u_start;
             double u_end;
             List<Vector3> vertexes = new List<Vector3>();
@@ -334,15 +329,8 @@ namespace netDxf.Entities
                 u_end = this.knots[this.knots.Length - 1];
             }
 
-            double u_delta = (u_end - u_start)/precision; // sample u uniformly from knots[initial] to knots[final]
+            double u_delta = (u_end - u_start)/precision;
 
-            // old for loop
-            //for (double u = u_start; u < u_end; u += u_delta)
-            //{
-            //    vertexes.Add(C(u));
-            //}
-
-            // for loop without doubles, they are very prone to round off errors
             for (int i = 0; i < precision; i++)
             {
                 double u = u_start + (u_delta*i);
@@ -350,12 +338,7 @@ namespace netDxf.Entities
             }
 
             if (!this.IsClosed)
-            {
                 vertexes.Add(this.controlPoints[this.controlPoints.Count - 1].Location);
-            }
-
-
-            this.cache = null;
 
             return vertexes;
         }
@@ -389,47 +372,44 @@ namespace netDxf.Entities
 
         private Vector3 C(double u)
         {
-            Vector3 vectorSum = new Vector3(0.0, 0.0, 0.0);
+            Vector3 vectorSum = Vector3.Zero;
             double denominatorSum = 0.0;
 
-            for (int j = 0; j < this.controlPoints.Count; j++)
-                denominatorSum += this.N(j, this.degree, u)*this.controlPoints[j].Weigth;
-
+            // optimization suggested by ThVoss
             for (int i = 0; i < this.controlPoints.Count; i++)
-                vectorSum += (this.controlPoints[i].Weigth*this.N(i, this.degree, u))*this.controlPoints[i].Location;
+            {
+                double n = N(i, this.degree, u);
+                denominatorSum += n * this.controlPoints[i].Weigth;
+                vectorSum += (this.controlPoints[i].Weigth * n) * this.controlPoints[i].Location;
+            }
 
-            // avoid possible diveded by zero error, this should never happen
+            // avoid possible divided by zero error, this should never happen
             if (Math.Abs(denominatorSum) < double.Epsilon)
-                return vectorSum;
+                return Vector3.Zero;
 
-            return (1.0/denominatorSum)*vectorSum;
+            return (1.0 / denominatorSum) * vectorSum;
         }
 
         private double N(int i, int p, double u)
         {
-            Vector3 key = new Vector3(i, p, u);
-            if (this.cache.ContainsKey(key))
-                return this.cache[key];
 
             if (p <= 0)
             {
                 if (this.knots[i] <= u && u < this.knots[i + 1])
                     return 1;
-                return 0;
+                return 0.0;
             }
 
-            double leftCoefficient = 0;
+            double leftCoefficient = 0.0;
             if (!(Math.Abs(this.knots[i + p] - this.knots[i]) < double.Epsilon))
-                leftCoefficient = (u - this.knots[i])/(this.knots[i + p] - this.knots[i]);
+                leftCoefficient = (u - this.knots[i]) / (this.knots[i + p] - this.knots[i]);
 
-            double rightCoefficient = 0; // article contains error here, denominator is Knots[i + p + 1] - Knots[i + 1]
+            double rightCoefficient = 0.0; // article contains error here, denominator is Knots[i + p + 1] - Knots[i + 1]
             if (!(Math.Abs(this.knots[i + p + 1] - this.knots[i + 1]) < double.Epsilon))
-                rightCoefficient = (this.knots[i + p + 1] - u)/(this.knots[i + p + 1] - this.knots[i + 1]);
+                rightCoefficient = (this.knots[i + p + 1] - u) / (this.knots[i + p + 1] - this.knots[i + 1]);
 
-            double toReturn = leftCoefficient*this.N(i, p - 1, u) + rightCoefficient*this.N(i + 1, p - 1, u);
-            this.cache.Add(key, toReturn);
+            return leftCoefficient * this.N(i, p - 1, u) + rightCoefficient * this.N(i + 1, p - 1, u);
 
-            return toReturn;
         }
 
         #endregion

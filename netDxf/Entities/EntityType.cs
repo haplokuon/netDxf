@@ -103,11 +103,6 @@ namespace netDxf.Entities
         Spline,
 
         /// <summary>
-        /// Helix entity.
-        /// </summary>
-        Helix,
-
-        /// <summary>
         /// Block insertion entity.
         /// </summary>
         Insert,

@@ -85,7 +85,7 @@ namespace netDxf.Collections
         /// Removes view.
         /// </summary>
         /// <param name="name"><see cref="View">View</see> name to remove from the document.</param>
-        /// <returns>True is the view has been successfully removed, or false otherwise.</returns>
+        /// <returns>True if the view has been successfully removed, or false otherwise.</returns>
         /// <remarks>Reserved views or any other referenced by objects cannot be removed.</remarks>
         public override bool Remove(string name)
         {
@@ -96,7 +96,7 @@ namespace netDxf.Collections
         /// Removes a view.
         /// </summary>
         /// <param name="view"><see cref="View">View</see> to remove from the document.</param>
-        /// <returns>True is the view has been successfully removed, or false otherwise.</returns>
+        /// <returns>True if the view has been successfully removed, or false otherwise.</returns>
         /// <remarks>Reserved views or any other referenced by objects cannot be removed.</remarks>
         public override bool Remove(View view)
         {

@@ -87,7 +87,7 @@ namespace netDxf.Collections
         /// Removes a layer.
         /// </summary>
         /// <param name="name"><see cref="Layer">Layer</see> name to remove from the document.</param>
-        /// <returns>True is the layer has been successfully removed, or false otherwise.</returns>
+        /// <returns>True if the layer has been successfully removed, or false otherwise.</returns>
         /// <remarks>Reserved layers or any other referenced by objects cannot be removed.</remarks>
         public override bool Remove(string name)
         {
@@ -98,7 +98,7 @@ namespace netDxf.Collections
         /// Removes a layer.
         /// </summary>
         /// <param name="layer"><see cref="Layer">Layer</see> to remove from the document.</param>
-        /// <returns>True is the layer has been successfully removed, or false otherwise.</returns>
+        /// <returns>True if the layer has been successfully removed, or false otherwise.</returns>
         /// <remarks>Reserved layers or any other referenced by objects cannot be removed.</remarks>
         public override bool Remove(Layer layer)
         {

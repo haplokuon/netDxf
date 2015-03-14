@@ -53,10 +53,10 @@ namespace netDxf
         // blocks records <string: name, string: blockRecord>
         private Dictionary<string, BlockRecord> blockRecords;
 
-        // entities, they will be processed at the end <EntityObject: entity, string: owner handle>.
+        // entities, they will be processed at the end <Entity: entity, string: owner handle>.
         private Dictionary<EntityObject, string> entityList;
 
-        // viewports, they will be processed at the end <EntityObject: viewport, string: clipping boundary handle>.
+        // viewports, they will be processed at the end <Entity: viewport, string: clipping boundary handle>.
         private Dictionary<Viewport, string> viewports;
 
         // in nested blocks (blocks that contains Insert entities) the block definition might be defined AFTER the block that references them
@@ -124,7 +124,7 @@ namespace netDxf
                         this.chunk = new TextCodeValueReader(new StreamReader(stream, true));
                     else
                     {
-                        // if the file is no utf-8 use the codepage provided by the dxf file
+                        // if the file is not utf-8 use the codepage provided by the dxf file
                         if (string.IsNullOrEmpty(dwgcodepage))
                             throw (new DxfException("Unknown codepage for non unicode file."));
                         int codepage;
@@ -166,7 +166,7 @@ namespace netDxf
 
             // read the comments at the head of the file, any other comments will be ignored
             // they sometimes hold information about the program that has generated the dxf
-            // binary file do not contain any comments
+            // binary files do not contain any comments
             this.doc.Comments.Clear();
             while (this.chunk.Code == 999)
             {
@@ -267,13 +267,17 @@ namespace netDxf
                 mline.Style = this.GetMLineStyle(pair.Value);
             }
 
-            // add entities to the blocks
+            // postprocess the entities of the blocks
             foreach (KeyValuePair<Block, List<EntityObject>> pair in this.blockEntities)
             {
                 Block block = pair.Key;
                 foreach (EntityObject entity in pair.Value)
                 {
                     block.Entities.Add(entity);
+                    // now that we have all information required by the block entities we can add them to the document
+                    // entities like MLine and Image require information that is defined AFTER the block section,
+                    // this is the case of the MLineStyle and ImageDef that are described in the objects section
+                    this.doc.AddEntity(entity, true, false);
                 }
             }
 
@@ -714,6 +718,9 @@ namespace netDxf
             }
 
             // add the the blocks to the document
+            // the block entities will not be added to the document at this point
+            // entities like MLine and Image require information that is defined AFTER the block section,
+            // this is the case of the MLineStyle and ImageDef that are described in the objects section
             foreach (Block block in blocks.Values)
             {
                 this.doc.Blocks.Add(block, false);
@@ -1352,7 +1359,7 @@ namespace netDxf
             bool isVisible = true;
             bool plot = true;
             AciColor color = AciColor.Default;
-            LineType lineType = null;
+            LineType lineType = this.GetLineType(LineType.ByLayer.Name);
             Lineweight lineweight = Lineweight.Default;
             LayerFlags flags = LayerFlags.None;
             Transparency transparency = new Transparency(0);
@@ -2153,7 +2160,7 @@ namespace netDxf
             bool isVisible = true;
             Transparency transparency = Transparency.ByLayer;
 
-            EntityObject entity;
+            EntityObject entityObject;
 
             string dxfCode = this.chunk.ReadString();
             this.chunk.Next();
@@ -2245,91 +2252,91 @@ namespace netDxf
             switch (dxfCode)
             {
                 case DxfObjectCode.Arc:
-                    entity = this.ReadArc();
+                    entityObject = this.ReadArc();
                     break;
                 case DxfObjectCode.Circle:
-                    entity = this.ReadCircle();
+                    entityObject = this.ReadCircle();
                     break;
                 case DxfObjectCode.Dimension:
-                    entity = this.ReadDimension(isBlockEntity);
+                    entityObject = this.ReadDimension(isBlockEntity);
                     break;
                 case DxfObjectCode.Ellipse:
-                    entity = this.ReadEllipse();
+                    entityObject = this.ReadEllipse();
                     break;
                 case DxfObjectCode.Face3d:
-                    entity = this.ReadFace3d();
+                    entityObject = this.ReadFace3d();
                     break;
                 case DxfObjectCode.Hatch:
-                    entity = this.ReadHatch();
+                    entityObject = this.ReadHatch();
                     break;
                 case DxfObjectCode.Insert:
-                    entity = this.ReadInsert(isBlockEntity);
+                    entityObject = this.ReadInsert(isBlockEntity);
                     break;
                 case DxfObjectCode.Line:
-                    entity = this.ReadLine();
+                    entityObject = this.ReadLine();
                     break;
                 case DxfObjectCode.LightWeightPolyline:
-                    entity = this.ReadLwPolyline();
+                    entityObject = this.ReadLwPolyline();
                     break;
                 case DxfObjectCode.MText:
-                    entity = this.ReadMText();
+                    entityObject = this.ReadMText();
                     break;
                 case DxfObjectCode.Point:
-                    entity = this.ReadPoint();
+                    entityObject = this.ReadPoint();
                     break;
                 case DxfObjectCode.Polyline:
-                    entity = this.ReadPolyline();
+                    entityObject = this.ReadPolyline();
                     break;
                 case DxfObjectCode.Solid:
-                    entity = this.ReadSolid();
+                    entityObject = this.ReadSolid();
                     break;
                 case DxfObjectCode.Text:
-                    entity = this.ReadText();
+                    entityObject = this.ReadText();
                     break;
                 case DxfObjectCode.Spline:
-                    entity = this.ReadSpline();
+                    entityObject = this.ReadSpline();
                     break;
                 case DxfObjectCode.Image:
-                    entity = this.ReadImage();
+                    entityObject = this.ReadImage();
                     break;
                 case DxfObjectCode.MLine:
-                    entity = this.ReadMLine();
+                    entityObject = this.ReadMLine();
                     break;
                 case DxfObjectCode.Mesh:
-                    entity = this.ReadMesh();
+                    entityObject = this.ReadMesh();
                     break;
                 case DxfObjectCode.Ray:
-                    entity = this.ReadRay();
+                    entityObject = this.ReadRay();
                     break;
                 case DxfObjectCode.XLine:
-                    entity = this.ReadXLine();
+                    entityObject = this.ReadXLine();
                     break;
                 case DxfObjectCode.AttributeDefinition:
-                    entity = this.ReadAttributeDefinition();
+                    entityObject = this.ReadAttributeDefinition();
                     break;
                 case DxfObjectCode.Viewport:
-                    entity = this.ReadViewport();
+                    entityObject = this.ReadViewport();
                     break;
                 default:
                     this.ReadUnknowEntity();
                     return null;
             }
 
-            if (entity == null) return null;
+            if (entityObject == null) return null;
 
-            entity.Handle = handle;
-            entity.Layer = layer;
-            entity.Color = color;
-            entity.LineType = lineType;
-            entity.Lineweight = lineweight;
-            entity.LineTypeScale = linetypeScale;
-            entity.IsVisible = isVisible;
-            entity.Transparency = transparency;
+            entityObject.Handle = handle;
+            entityObject.Layer = layer;
+            entityObject.Color = color;
+            entityObject.LineType = lineType;
+            entityObject.Lineweight = lineweight;
+            entityObject.LineTypeScale = linetypeScale;
+            entityObject.IsVisible = isVisible;
+            entityObject.Transparency = transparency;
 
             // the entities list will be processed at the end
-            if (!isBlockEntity) this.entityList.Add(entity, owner);
+            if (!isBlockEntity) this.entityList.Add(entityObject, owner);
 
-            return entity;
+            return entityObject;
         }
 
         private Mesh ReadMesh()

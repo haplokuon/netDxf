@@ -147,7 +147,7 @@ namespace netDxf.Entities
         private IEnumerable<Vector2> PolygonalVertexes(int precision)
         {
             if (precision < 2)
-                throw new ArgumentOutOfRangeException("precision", precision, "The arc precision must be greater or equal to two");
+                throw new ArgumentOutOfRangeException("precision", precision, "The arc precision must be greater or equal to three");
 
             List<Vector2> ocsVertexes = new List<Vector2>();
             double start = this.startAngle*MathHelper.DegToRad;
@@ -173,8 +173,7 @@ namespace netDxf.Entities
         public LwPolyline ToPolyline(int precision)
         {
             IEnumerable<Vector2> vertexes = this.PolygonalVertexes(precision);
-            Vector3 ocsCenter = MathHelper.Transform(this.center, this.Normal, MathHelper.CoordinateSystem.World,
-                                                     MathHelper.CoordinateSystem.Object);
+            Vector3 ocsCenter = MathHelper.Transform(this.center, this.Normal, MathHelper.CoordinateSystem.World, MathHelper.CoordinateSystem.Object);
 
             LwPolyline poly = new LwPolyline
                 {

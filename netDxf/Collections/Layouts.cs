@@ -1,7 +1,7 @@
-#region netDxf, Copyright(C) 2014 Daniel Carvajal, Licensed under LGPL.
+#region netDxf, Copyright(C) 2015 Daniel Carvajal, Licensed under LGPL.
 
 //                        netDxf library
-// Copyright (C) 2014 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2015 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -22,6 +22,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using netDxf.Blocks;
 using netDxf.Entities;
 using netDxf.Objects;
@@ -81,15 +82,17 @@ namespace netDxf.Collections
             // create and add the corresponding PaperSpace block
             if (layout.IsPaperSpace && associatadBlock == null)
             {
-                int index = this.list.Count - 2;
-                string spaceName = index < 0 ? Block.PaperSpace.Name : string.Concat(Block.PaperSpace.Name, index);
+                // the PaperSpace block names follow the naming Paper_Space, Paper_Space0, Paper_Space1, ...
+                string spaceName = this.list.Count == 1 ? Block.PaperSpace.Name : string.Concat(Block.PaperSpace.Name, this.list.Count - 2);
                 associatadBlock = new Block(spaceName, false);
             }
 
             associatadBlock = this.document.Blocks.Add(associatadBlock);
+
             layout.AssociatedBlock = associatadBlock;
             associatadBlock.Record.Layout = layout;
             layout.Owner = this;
+            this.document.Blocks.References[associatadBlock.Name].Add(layout);
 
             if (layout.Viewport != null) layout.Viewport.Owner = associatadBlock;
 
@@ -101,6 +104,7 @@ namespace netDxf.Collections
             this.list.Add(layout.Name, layout);
 
             this.references.Add(layout.Name, new List<DxfObject>());
+
             return layout;
         }
 
@@ -108,7 +112,7 @@ namespace netDxf.Collections
         /// Deletes a layout and removes the layout entities from the document.
         /// </summary>
         /// <param name="name"><see cref="Layout">Layout</see> name to remove from the document.</param>
-        /// <returns>True is the layout has been successfully removed, or false otherwise.</returns>
+        /// <returns>True if the layout has been successfully removed, or false otherwise.</returns>
         /// <remarks>
         /// The ModelSpace layout cannot be remove. If all PaperSpace layouts have been removed a default PaperSpace will be created since it is required by the dxf implementation.<br />
         /// When a Layout is deleted all entities that has been added to it will also be removed.<br />
@@ -123,7 +127,7 @@ namespace netDxf.Collections
         /// Deletes a layout and removes the layout entities from the document.
         /// </summary>
         /// <param name="layout"><see cref="Layout">Layout</see> to remove from the document.</param>
-        /// <returns>True is the layout has been successfully removed, or false otherwise.</returns>
+        /// <returns>True if the layout has been successfully removed, or false otherwise.</returns>
         /// <remarks>Reserved layouts or any other referenced by objects cannot be removed.</remarks>
         public override bool Remove(Layout layout)
         {
@@ -153,6 +157,8 @@ namespace netDxf.Collections
                 // The ModelSpace block cannot be removed. 
                 if (l.IsPaperSpace)
                 {
+                    Debug.Assert(l.AssociatedBlock != null, String.Format("The layout {0} associated block cannot be null.", l.Name));
+                    this.document.Blocks.References[l.AssociatedBlock.Name].Remove(l);
                     this.document.Blocks.Remove(l.AssociatedBlock);
                     l.AssociatedBlock = null;
                 }
@@ -165,18 +171,20 @@ namespace netDxf.Collections
             this.list.Remove(layout.Name);
 
             // When a layout is removed we need to rebuild the PaperSpace block names, to follow the naming Paper_Space, Paper_Space0, Paper_Space1, ...
+            int index = 0;
             foreach (Layout l in this.list.Values)
             {
                 // Create and add the corresponding PaperSpace block
                 if (l.IsPaperSpace)
                 {
-                    int index = this.list.Count - 3;
-                    string spaceName = index < 0 ? Block.PaperSpace.Name : string.Concat(Block.PaperSpace.Name, index);
+                    string spaceName = index == 1 ? Block.PaperSpace.Name : string.Concat(Block.PaperSpace.Name, index - 2);
                     Block associatadBlock = new Block(spaceName, false);
                     associatadBlock = this.document.Blocks.Add(associatadBlock);
+                    this.document.Blocks.References[associatadBlock.Name].Add(l);
                     l.AssociatedBlock = associatadBlock;
                     associatadBlock.Record.Layout = l;
                 }
+                index += 1;
             }
 
             return true;

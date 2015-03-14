@@ -86,7 +86,7 @@ namespace netDxf.Collections
         /// Removes a user coordinate system.
         /// </summary>
         /// <param name="name"><see cref="UCS">User coordinate system</see> name to remove from the document.</param>
-        /// <returns>True is the user coordinate system has been successfully removed, or false otherwise.</returns>
+        /// <returns>True if the user coordinate system has been successfully removed, or false otherwise.</returns>
         /// <remarks>Reserved user coordinate system or any other referenced by objects cannot be removed.</remarks>
         public override bool Remove(string name)
         {
@@ -97,7 +97,7 @@ namespace netDxf.Collections
         /// Removes a user coordinate system.
         /// </summary>
         /// <param name="ucs"><see cref="UCS">User coordinate system</see> to remove from the document.</param>
-        /// <returns>True is the user coordinate system has been successfully removed, or false otherwise.</returns>
+        /// <returns>True if the user coordinate system has been successfully removed, or false otherwise.</returns>
         /// <remarks>Reserved user coordinate system or any other referenced by objects cannot be removed.</remarks>
         public override bool Remove(UCS ucs)
         {

@@ -117,7 +117,7 @@ namespace netDxf.Collections
         /// Removes a dimension style.
         /// </summary>
         /// <param name="name"><see cref="DimensionStyle">DimensionStyle</see> name to remove from the document.</param>
-        /// <returns>True is the dimension style has been successfully removed, or false otherwise.</returns>
+        /// <returns>True if the dimension style has been successfully removed, or false otherwise.</returns>
         /// <remarks>Reserved dimension styles or any other referenced by objects cannot be removed.</remarks>
         public override bool Remove(string name)
         {
@@ -128,7 +128,7 @@ namespace netDxf.Collections
         /// Removes a dimension style.
         /// </summary>
         /// <param name="style"><see cref="DimensionStyle">DimensionStyle</see> to remove from the document.</param>
-        /// <returns>True is the dimension style has been successfully removed, or false otherwise.</returns>
+        /// <returns>True if the dimension style has been successfully removed, or false otherwise.</returns>
         /// <remarks>Reserved dimension styles or any other referenced by objects cannot be removed.</remarks>
         public override bool Remove(DimensionStyle style)
         {

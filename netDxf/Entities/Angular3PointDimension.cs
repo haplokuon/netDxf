@@ -183,7 +183,7 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets or sets the angle start point of the dimension.
+        /// Gets or sets the angle start <see cref="Vector3">point</see> of the dimension.
         /// </summary>
         public Vector3 StartPoint
         {
@@ -192,7 +192,7 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets or sets the angle end point of the dimension.
+        /// Gets or sets the angle end <see cref="Vector3">point</see> of the dimension.
         /// </summary>
         public Vector3 EndPoint
         {
@@ -201,7 +201,7 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets or sets the distance between the center point and the dimension line.
+        /// Gets or sets the distance between the center <see cref="Vector3">point</see> and the dimension line.
         /// </summary>
         /// <remarks>Zero values are not allowed.</remarks>
         public double Offset

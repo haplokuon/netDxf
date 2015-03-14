@@ -1,6 +1,7 @@
 // Original source code
 // http://www.codeproject.com/KB/cs/stringenum.aspx
 // CodeBureau - Matt Simner
+// Licensed under The Code Project Open License (CPOL) http://www.codeproject.com/info/cpol10.aspx
 
 using System;
 using System.Collections;
@@ -193,7 +194,8 @@ namespace netDxf
                 //Check for equality then select actual enum value.
                 if (string.Compare(enumStringValue, stringValue, ignoreCase) == 0)
                 {
-                    output = Enum.Parse(type, fi.Name);
+                    if (Enum.IsDefined(type, fi.Name))
+                        output = Enum.Parse(type, fi.Name);
                     break;
                 }
             }

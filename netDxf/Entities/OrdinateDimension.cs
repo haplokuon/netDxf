@@ -20,7 +20,6 @@
 
 #endregion
 
-using System.Collections.Generic;
 using netDxf.Blocks;
 using netDxf.Tables;
 
@@ -32,7 +31,6 @@ namespace netDxf.Entities
     public class OrdinateDimension
         : Dimension
     {
-        
         #region private fields
 
         private Vector3 origin;
@@ -51,7 +49,7 @@ namespace netDxf.Entities
         /// Initializes a new instance of the <c>OrdinateDimension</c> class.
         /// </summary>
         public OrdinateDimension()
-            :this(Vector3.Zero, Vector2.UnitX, 0.1, 0.0, OrdinateDimensionAxis.Y)
+            : this(Vector3.Zero, Vector2.UnitX, 0.1, 0.0, OrdinateDimensionAxis.Y)
         {
         }
 
@@ -89,21 +87,21 @@ namespace netDxf.Entities
             this.axis = axis;
             this.style = style;
         }
-          
+
         #endregion
 
         #region internal properties
 
         internal Vector3 FirstPoint
         {
-            get { return firstPoint; }
-            set { firstPoint = value; }
+            get { return this.firstPoint; }
+            set { this.firstPoint = value; }
         }
 
         internal Vector3 SecondPoint
         {
-            get { return secondPoint; }
-            set { secondPoint = value; }
+            get { return this.secondPoint; }
+            set { this.secondPoint = value; }
         }
 
         #endregion
@@ -115,8 +113,8 @@ namespace netDxf.Entities
         /// </summary>
         public Vector3 Origin
         {
-            get { return origin; }
-            set { origin = value; }
+            get { return this.origin; }
+            set { this.origin = value; }
         }
 
         /// <summary>
@@ -124,8 +122,8 @@ namespace netDxf.Entities
         /// </summary>
         public Vector2 ReferencePoint
         {
-            get { return referencePoint; }
-            set { referencePoint = value; }
+            get { return this.referencePoint; }
+            set { this.referencePoint = value; }
         }
 
         /// <summary>
@@ -133,8 +131,8 @@ namespace netDxf.Entities
         /// </summary>
         public double Rotation
         {
-            get { return rotation; }
-            set { MathHelper.NormalizeAngle(rotation = value); }
+            get { return this.rotation; }
+            set { MathHelper.NormalizeAngle(this.rotation = value); }
         }
 
         /// <summary>
@@ -142,8 +140,8 @@ namespace netDxf.Entities
         /// </summary>
         public double Length
         {
-            get { return length; }
-            set { length = value; }
+            get { return this.length; }
+            set { this.length = value; }
         }
 
         /// <summary>
@@ -151,8 +149,8 @@ namespace netDxf.Entities
         /// </summary>
         public OrdinateDimensionAxis Axis
         {
-            get { return axis; }
-            set { axis = value; }
+            get { return this.axis; }
+            set { this.axis = value; }
         }
 
         /// <summary>
@@ -160,8 +158,9 @@ namespace netDxf.Entities
         /// </summary>
         public override double Value
         {
-            get { return this.axis == OrdinateDimensionAxis.X ? referencePoint.X : referencePoint.Y; }
+            get { return this.axis == OrdinateDimensionAxis.X ? this.referencePoint.X : this.referencePoint.Y; }
         }
+
         #endregion
 
         #region overrides
@@ -185,15 +184,15 @@ namespace netDxf.Entities
             OrdinateDimension entity = new OrdinateDimension
             {
                 //EntityObject properties
-                Layer = (Layer)this.layer.Clone(),
-                LineType = (LineType)this.lineType.Clone(),
-                Color = (AciColor)this.color.Clone(),
-                Lineweight = (Lineweight)this.lineweight.Clone(),
-                Transparency = (Transparency)this.transparency.Clone(),
+                Layer = (Layer) this.layer.Clone(),
+                LineType = (LineType) this.lineType.Clone(),
+                Color = (AciColor) this.color.Clone(),
+                Lineweight = (Lineweight) this.lineweight.Clone(),
+                Transparency = (Transparency) this.transparency.Clone(),
                 LineTypeScale = this.lineTypeScale,
                 Normal = this.normal,
                 //Dimension properties
-                Style = (DimensionStyle)this.style.Clone(),
+                Style = (DimensionStyle) this.style.Clone(),
                 AttachmentPoint = this.attachmentPoint,
                 LineSpacingStyle = this.lineSpacingStyle,
                 LineSpacingFactor = this.lineSpacing,
@@ -206,13 +205,11 @@ namespace netDxf.Entities
             };
 
             foreach (XData data in this.XData.Values)
-                entity.XData.Add((XData)data.Clone());
+                entity.XData.Add((XData) data.Clone());
 
             return entity;
-
         }
 
         #endregion
-        
     }
 }

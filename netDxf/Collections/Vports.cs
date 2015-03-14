@@ -85,7 +85,7 @@ namespace netDxf.Collections
         /// Removes a vport.
         /// </summary>
         /// <param name="name"><see cref="VPort">VPort</see> name to remove from the document.</param>
-        /// <returns>True is the vport has been successfully removed, or false otherwise.</returns>
+        /// <returns>True if the vport has been successfully removed, or false otherwise.</returns>
         /// <remarks>Reserved vports or any other referenced by objects cannot be removed.</remarks>
         public override bool Remove(string name)
         {
@@ -96,7 +96,7 @@ namespace netDxf.Collections
         /// Removes a vport.
         /// </summary>
         /// <param name="vport"><see cref="VPort">VPort</see> to remove from the document.</param>
-        /// <returns>True is the vport has been successfully removed, or false otherwise.</returns>
+        /// <returns>True if the vport has been successfully removed, or false otherwise.</returns>
         /// <remarks>Reserved vports or any other referenced by objects cannot be removed.</remarks>
         public override bool Remove(VPort vport)
         {

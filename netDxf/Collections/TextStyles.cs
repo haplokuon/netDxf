@@ -85,7 +85,7 @@ namespace netDxf.Collections
         /// Removes a text style.
         /// </summary>
         /// <param name="name"><see cref="TextStyle">TextStyle</see> name to remove from the document.</param>
-        /// <returns>True is the text style has been successfully removed, or false otherwise.</returns>
+        /// <returns>True if the text style has been successfully removed, or false otherwise.</returns>
         /// <remarks>Reserved text styles or any other referenced by objects cannot be removed.</remarks>
         public override bool Remove(string name)
         {
@@ -96,7 +96,7 @@ namespace netDxf.Collections
         /// Removes a text style.
         /// </summary>
         /// <param name="style"><see cref="TextStyle">TextStyle</see> to remove from the document.</param>
-        /// <returns>True is the text style has been successfully removed, or false otherwise.</returns>
+        /// <returns>True if the text style has been successfully removed, or false otherwise.</returns>
         /// <remarks>Reserved text styles or any other referenced by objects cannot be removed.</remarks>
         public override bool Remove(TextStyle style)
         {
