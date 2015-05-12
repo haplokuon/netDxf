@@ -1,23 +1,22 @@
-#region netDxf, Copyright(C) 2014 Daniel Carvajal, Licensed under LGPL.
-
-//                        netDxf library
-// Copyright (C) 2014 Daniel Carvajal (haplokuon@gmail.com)
+#region netDxf, Copyright(C) 2015 Daniel Carvajal, Licensed under LGPL.
 // 
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2.1 of the License, or (at your option) any later version.
-// 
-// The above copyright notice and this permission notice shall be included in all
-// copies or substantial portions of the Software.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-// FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-// COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-// IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-// CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. 
-
+//                         netDxf library
+//  Copyright (C) 2009-2015 Daniel Carvajal (haplokuon@gmail.com)
+//  
+//  This library is free software; you can redistribute it and/or
+//  modify it under the terms of the GNU Lesser General Public
+//  License as published by the Free Software Foundation; either
+//  version 2.1 of the License, or (at your option) any later version.
+//  
+//  The above copyright notice and this permission notice shall be included in all
+//  copies or substantial portions of the Software.
+//  
+//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+//  FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+//  COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+//  IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+//  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #endregion
 
 using System;
@@ -32,6 +31,24 @@ namespace netDxf.Objects
         IComparable<MLineStyleElement>,
         ICloneable
     {
+        #region delegates and events
+
+        public delegate void LineTypeChangeEventHandler(MLineStyleElement sender, TableObjectChangeEventArgs<LineType> e);
+        public event LineTypeChangeEventHandler LineTypeChange;
+        protected virtual LineType OnLineTypeChangeEvent(LineType oldLineType, LineType newLineType)
+        {
+            LineTypeChangeEventHandler ae = this.LineTypeChange;
+            if (ae != null)
+            {
+                TableObjectChangeEventArgs<LineType> eventArgs = new TableObjectChangeEventArgs<LineType>(oldLineType, newLineType);
+                ae(this, eventArgs);
+                return eventArgs.NewValue;
+            }
+            return newLineType;
+        }
+
+        #endregion
+
         #region private fields
 
         private double offset;
@@ -86,7 +103,12 @@ namespace netDxf.Objects
         public AciColor Color
         {
             get { return this.color; }
-            set { this.color = value; }
+            set
+            {
+                if (value == null)
+                    throw new ArgumentNullException("value");
+                this.color = value;
+            }
         }
 
         /// <summary>
@@ -95,7 +117,12 @@ namespace netDxf.Objects
         public LineType LineType
         {
             get { return this.lineType; }
-            set { this.lineType = value; }
+            set
+            {
+                if (value == null)
+                    throw new ArgumentNullException("value");
+                this.lineType = this.OnLineTypeChangeEvent(this.lineType, value);
+            }
         }
 
         #endregion
@@ -128,7 +155,7 @@ namespace netDxf.Objects
         {
             return new MLineStyleElement(this.offset)
             {
-                Color = this.color,
+                Color = (AciColor)this.color.Clone(),
                 LineType = (LineType) this.lineType.Clone()
             };
         }
@@ -143,7 +170,7 @@ namespace netDxf.Objects
         /// <returns>The string representation.</returns>
         public override string ToString()
         {
-            return string.Format("{0}, color:{1}, linetype:{2}", this.offset, this.color, this.lineType);
+            return string.Format("{0}, color:{1}, line type:{2}", this.offset, this.color, this.lineType);
         }
 
         #endregion

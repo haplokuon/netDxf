@@ -1,23 +1,22 @@
-﻿#region netDxf, Copyright(C) 2014 Daniel Carvajal, Licensed under LGPL.
-
-//                        netDxf library
-// Copyright (C) 2014 Daniel Carvajal (haplokuon@gmail.com)
+﻿#region netDxf, Copyright(C) 2015 Daniel Carvajal, Licensed under LGPL.
 // 
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2.1 of the License, or (at your option) any later version.
-// 
-// The above copyright notice and this permission notice shall be included in all
-// copies or substantial portions of the Software.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-// FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-// COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-// IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-// CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. 
-
+//                         netDxf library
+//  Copyright (C) 2009-2015 Daniel Carvajal (haplokuon@gmail.com)
+//  
+//  This library is free software; you can redistribute it and/or
+//  modify it under the terms of the GNU Lesser General Public
+//  License as published by the Free Software Foundation; either
+//  version 2.1 of the License, or (at your option) any later version.
+//  
+//  The above copyright notice and this permission notice shall be included in all
+//  copies or substantial portions of the Software.
+//  
+//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+//  FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+//  COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+//  IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+//  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #endregion
 
 using System;
@@ -33,6 +32,23 @@ namespace netDxf.Entities
     public class MLine:
         EntityObject
     {
+        #region delegates and events
+
+        public delegate void MLineStyleChangeEventHandler(MLine sender, TableObjectChangeEventArgs<MLineStyle> e);
+        public event MLineStyleChangeEventHandler MLineStyleChange;
+        protected virtual MLineStyle OnMLineStyleChangeEvent(MLineStyle oldMLineStyle, MLineStyle newMLineStyle)
+        {
+            MLineStyleChangeEventHandler ae = this.MLineStyleChange;
+            if (ae != null)
+            {
+                TableObjectChangeEventArgs<MLineStyle> eventArgs = new TableObjectChangeEventArgs<MLineStyle>(oldMLineStyle, newMLineStyle);
+                ae(this, eventArgs);
+                return eventArgs.NewValue;
+            }
+            return newMLineStyle;
+        }
+
+        #endregion
 
         #region private fields
 
@@ -63,7 +79,7 @@ namespace netDxf.Entities
         /// </summary>
         /// <param name="vertexes">Multiline <see cref="Vector2">vertex</see> location list in object coordinates.</param>
         /// <param name="isClosed">Sets if the multiline is closed</param>
-        public MLine(IEnumerable<Vector2> vertexes, bool isClosed = false)
+        public MLine(ICollection<Vector2> vertexes, bool isClosed = false)
             : this(vertexes, MLineStyle.Default, 1.0, isClosed)
         {
         }
@@ -74,7 +90,7 @@ namespace netDxf.Entities
         /// <param name="vertexes">Multiline <see cref="Vector2">vertex</see> location list in object coordinates.</param>
         /// <param name="scale">Multiline scale.</param>
         /// <param name="isClosed">Sets if the multiline is closed</param>
-        public MLine(IEnumerable<Vector2> vertexes, double scale, bool isClosed = false)
+        public MLine(ICollection<Vector2> vertexes, double scale, bool isClosed = false)
             : this(vertexes, MLineStyle.Default, scale, isClosed)
         {
         }
@@ -86,7 +102,7 @@ namespace netDxf.Entities
         /// <param name="style">MLine <see cref="MLineStyle">style.</see></param>
         /// <param name="scale">MLine scale.</param>
         /// <param name="isClosed">Sets if the multiline is closed</param>
-        public MLine(IEnumerable<Vector2> vertexes, MLineStyle style, double scale, bool isClosed = false)
+        public MLine(ICollection<Vector2> vertexes, MLineStyle style, double scale, bool isClosed = false)
             : base(EntityType.MLine, DxfObjectCode.MLine)
         {
             this.scale = scale;
@@ -113,12 +129,11 @@ namespace netDxf.Entities
         #region public properties
 
         /// <summary>
-        /// Gets or sets the multiline <see cref="MLineVertex">segments</see> list.
+        /// Gets the multiline <see cref="MLineVertex">segments</see> list.
         /// </summary>
         public List<MLineVertex> Vertexes
         {
             get { return this.vertexes; }
-            internal set { this.vertexes = value; }
         }
 
         /// <summary>
@@ -207,7 +222,7 @@ namespace netDxf.Entities
             {
                 if (value == null)
                     throw new ArgumentNullException("value", "The MLine style cannot be null.");
-                this.style = value;
+                this.style = this.OnMLineStyleChangeEvent(this.style, value);
             }
         }
 
@@ -232,12 +247,12 @@ namespace netDxf.Entities
         /// </summary>
         /// <remarks>
         /// <para>
-        /// This function will be called when the entity created or when setting its vertexes;
-        /// but, afterwards, this function will need to be called manually if any modification are done to the multiline.
+        /// This function will be called when the entity is created or when setting its vertexes;
+        /// but, afterwards, this function will need to be called manually if any modifications are done to the multiline.
         /// </para>
         /// <para>
         /// If the vertex distance list needs to be edited to represent trimmed multilines this function needs to be called prior any modification.
-        /// It will calculate the minimun information needed to build a correct multiline.
+        /// It will calculate the minimum information needed to build a correct multiline.
         /// </para>
         /// </remarks>
         public void CalculateVertexesInfo()
@@ -349,9 +364,9 @@ namespace netDxf.Entities
         /// Sets the positions of the multiline vertexes. 
         /// </summary>
         /// <param name="points">A list of <see cref="Vector3">points</see> that make up the multiline vertex list.</param>
-        public void SetVertexes(IEnumerable<Vector2> points)
+        public void SetVertexes(ICollection<Vector2> points)
         {
-            this.vertexes = new List<MLineVertex>();
+            this.vertexes = new List<MLineVertex>(points.Count);
             foreach (Vector2 point in points)
             {
                 this.vertexes.Add(new MLineVertex(point, Vector2.Zero, Vector2.Zero, null));
@@ -369,12 +384,7 @@ namespace netDxf.Entities
         /// <returns>A new MLine that is a copy of this instance.</returns>
         public override object Clone()
         {
-            List<MLineVertex> copyVertexes = new List<MLineVertex>();
-            foreach (MLineVertex vertex in this.vertexes)
-            {
-                copyVertexes.Add((MLineVertex)vertex.Clone());
-            }
-
+            
             MLine entity = new MLine
             {
                 //EntityObject properties
@@ -386,7 +396,6 @@ namespace netDxf.Entities
                 LineTypeScale = this.lineTypeScale,
                 Normal = this.normal,
                 //MLine properties
-                Vertexes = copyVertexes,
                 Elevation = this.elevation,
                 Scale = this.scale,
                 IsClosed = this.isClosed,
@@ -395,6 +404,8 @@ namespace netDxf.Entities
                 Justification = this.justification,
                 Style = this.style
             };
+            foreach (MLineVertex vertex in this.vertexes)
+                entity.vertexes.Add((MLineVertex)vertex.Clone());
 
             foreach (XData data in this.XData.Values)
                 entity.XData.Add((XData)data.Clone());

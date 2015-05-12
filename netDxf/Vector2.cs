@@ -1,23 +1,22 @@
-#region netDxf, Copyright(C) 2014 Daniel Carvajal, Licensed under LGPL.
-
-//                        netDxf library
-// Copyright (C) 2014 Daniel Carvajal (haplokuon@gmail.com)
+#region netDxf, Copyright(C) 2015 Daniel Carvajal, Licensed under LGPL.
 // 
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2.1 of the License, or (at your option) any later version.
-// 
-// The above copyright notice and this permission notice shall be included in all
-// copies or substantial portions of the Software.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-// FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-// COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-// IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-// CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. 
-
+//                         netDxf library
+//  Copyright (C) 2009-2015 Daniel Carvajal (haplokuon@gmail.com)
+//  
+//  This library is free software; you can redistribute it and/or
+//  modify it under the terms of the GNU Lesser General Public
+//  License as published by the Free Software Foundation; either
+//  version 2.1 of the License, or (at your option) any later version.
+//  
+//  The above copyright notice and this permission notice shall be included in all
+//  copies or substantial portions of the Software.
+//  
+//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+//  FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+//  COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+//  IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+//  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #endregion
 
 using System;
@@ -235,7 +234,7 @@ namespace netDxf
         /// </summary>
         /// <param name="u">Vector2.</param>
         /// <param name="v">Vector2.</param>
-        /// <returns>Distancie.</returns>
+        /// <returns>Distance.</returns>
         public static double Distance(Vector2 u, Vector2 v)
         {
             return (Math.Sqrt((u.X - v.X)*(u.X - v.X) + (u.Y - v.Y)*(u.Y - v.Y)));
@@ -311,7 +310,7 @@ namespace netDxf
         /// <param name="u">Vector2.</param>
         /// <param name="v">Vector2.</param>
         /// <param name="threshold">Tolerance used.</param>
-        /// <returns>True if are penpendicular or false in anyother case.</returns>
+        /// <returns>True if are perpendicular or false in any other case.</returns>
         public static bool ArePerpendicular(Vector2 u, Vector2 v, double threshold = MathHelper.Epsilon)
         {
             return MathHelper.IsZero(DotProduct(u, v), threshold);
@@ -323,7 +322,7 @@ namespace netDxf
         /// <param name="u">Vector2.</param>
         /// <param name="v">Vector2.</param>
         /// <param name="threshold">Tolerance used.</param>
-        /// <returns>True if are parallel or false in anyother case.</returns>
+        /// <returns>True if are parallel or false in any other case.</returns>
         public static bool AreParallel(Vector2 u, Vector2 v, double threshold = MathHelper.Epsilon)
         {
             double a = u.X*v.Y - u.Y*v.X;
@@ -334,11 +333,27 @@ namespace netDxf
         /// Rounds the components of a vector.
         /// </summary>
         /// <param name="u">Vector2.</param>
-        /// <param name="numDigits">Number of significative defcimal digits.</param>
+        /// <param name="numDigits">Number of decimal places in the return value.</param>
         /// <returns>Vector2.</returns>
         public static Vector2 Round(Vector2 u, int numDigits)
         {
             return new Vector2(Math.Round(u.X, numDigits), Math.Round(u.Y, numDigits));
+        }
+
+        /// <summary>
+        /// Normalizes the vector.
+        /// </summary>
+        /// <param name="u">Vector to normalize</param>
+        /// <returns>A normalized vector.</returns>
+        public static Vector2 Normalize(Vector2 u)
+        {
+            double mod = u.Modulus();
+            if (MathHelper.IsOne(mod))
+                return u; // the vector is already normalized
+            if (MathHelper.IsZero(mod))
+                return NaN;
+            double modInv = 1 / mod;
+            return new Vector2(u.x * modInv, u.y * modInv);
         }
 
         #endregion
@@ -350,7 +365,7 @@ namespace netDxf
         /// </summary>
         /// <param name="u">Vector2.</param>
         /// <param name="v">Vector2.</param>
-        /// <returns>True if the two components are equal or false in anyother case.</returns>
+        /// <returns>True if the two components are equal or false in any other case.</returns>
         public static bool operator ==(Vector2 u, Vector2 v)
         {
             return Equals(u, v);
@@ -361,7 +376,7 @@ namespace netDxf
         /// </summary>
         /// <param name="u">Vector2.</param>
         /// <param name="v">Vector2.</param>
-        /// <returns>True if the two components are different or false in anyother case.</returns>
+        /// <returns>True if the two components are different or false in any other case.</returns>
         public static bool operator !=(Vector2 u, Vector2 v)
         {
             return !Equals(u, v);
@@ -379,11 +394,11 @@ namespace netDxf
         }
 
         /// <summary>
-        /// Substracts two vectors.
+        /// Subtracts two vectors.
         /// </summary>
         /// <param name="u">Vector3.</param>
         /// <param name="v">Vector3.</param>
-        /// <returns>The substraction of u minus v.</returns>
+        /// <returns>The subtraction of u minus v.</returns>
         public static Vector2 operator -(Vector2 u, Vector2 v)
         {
             return new Vector2(u.X - v.X, u.Y - v.Y);
@@ -400,7 +415,7 @@ namespace netDxf
         }
 
         /// <summary>
-        /// Multuplies a vector with an scalar (same as a*u, conmutative property).
+        /// Multiplies a vector with an scalar (same as a*u, commutative property).
         /// </summary>
         /// <param name="u">Vector2.</param>
         /// <param name="a">Scalar.</param>
@@ -411,7 +426,7 @@ namespace netDxf
         }
 
         /// <summary>
-        /// Multuplies an scalar with a vector (same as u*a, conmutative property).
+        /// Multiplies an scalar with a vector (same as u*a, commutative property).
         /// </summary>
         /// <param name="a">Scalar.</param>
         /// <param name="u">Vector3.</param>
@@ -455,11 +470,16 @@ namespace netDxf
         public void Normalize()
         {
             double mod = this.Modulus();
+            if (MathHelper.IsOne(mod))
+                return; // the vector is already normalized
             if (MathHelper.IsZero(mod))
-                throw new ArithmeticException("Cannot normalize a zero vector.");
-            double modInv = 1/mod;
-            this.x *= modInv;
-            this.y *= modInv;
+                this = NaN;
+            else
+            {
+                double modInv = 1/mod;
+                this.x *= modInv;
+                this.y *= modInv;
+            }
         }
 
         /// <summary>
@@ -483,13 +503,13 @@ namespace netDxf
 
         #endregion
 
-        #region comparision methods
+        #region comparison methods
 
         /// <summary>
         /// Check if the components of two vectors are approximate equals.
         /// </summary>
         /// <param name="obj">Another Vector2 to compare to.</param>
-        /// <param name="threshold">Maximun tolerance.</param>
+        /// <param name="threshold">Maximum tolerance.</param>
         /// <returns>True if the three components are almost equal or false in any other case.</returns>
         public bool Equals(Vector2 obj, double threshold = MathHelper.Epsilon)
         {

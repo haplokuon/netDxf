@@ -1,23 +1,22 @@
-#region netDxf, Copyright(C) 2014 Daniel Carvajal, Licensed under LGPL.
-
-//                        netDxf library
-// Copyright (C) 2014 Daniel Carvajal (haplokuon@gmail.com)
+#region netDxf, Copyright(C) 2015 Daniel Carvajal, Licensed under LGPL.
 // 
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2.1 of the License, or (at your option) any later version.
-// 
-// The above copyright notice and this permission notice shall be included in all
-// copies or substantial portions of the Software.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-// FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-// COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-// IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-// CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. 
-
+//                         netDxf library
+//  Copyright (C) 2009-2015 Daniel Carvajal (haplokuon@gmail.com)
+//  
+//  This library is free software; you can redistribute it and/or
+//  modify it under the terms of the GNU Lesser General Public
+//  License as published by the Free Software Foundation; either
+//  version 2.1 of the License, or (at your option) any later version.
+//  
+//  The above copyright notice and this permission notice shall be included in all
+//  copies or substantial portions of the Software.
+//  
+//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+//  FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+//  COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+//  IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+//  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #endregion
 
 using System;
@@ -26,6 +25,7 @@ using System.Drawing;
 using System.IO;
 using netDxf.Collections;
 using netDxf.Tables;
+using netDxf.Units;
 
 namespace netDxf.Objects
 {
@@ -41,7 +41,7 @@ namespace netDxf.Objects
         private readonly int width;
         private readonly int height;
         private ImageResolutionUnits resolutionUnits;
-        // internally we will store the resolution in ppi
+        // internally we will store the resolution in PPI
         private double horizontalResolution;
         private double verticalResolution;
 
@@ -50,7 +50,7 @@ namespace netDxf.Objects
 
         #endregion
 
-        #region contructors
+        #region constructors
 
         /// <summary>
         /// Initializes a new instance of the <c>ImageDef</c> class.
@@ -59,7 +59,7 @@ namespace netDxf.Objects
         /// <param name="width">Image width in pixels.</param>
         /// <param name="horizontalResolution">Image horizontal resolution in pixels.</param>
         /// <param name="height">Image height in pixels.</param>
-        /// <param name="verticalResolution">Image vetical resolution in pixels.</param>
+        /// <param name="verticalResolution">Image vertical resolution in pixels.</param>
         /// <param name="units">Image resolution units.</param>
         /// <remarks>
         /// <para>
@@ -72,7 +72,7 @@ namespace netDxf.Objects
         /// Note (this is from the ACAD docs): AutoCAD 2000, AutoCAD LT 2000, and later releases do not support LZW-compressed TIFF files,
         /// with the exception of English language versions sold in the US and Canada.<br />
         /// If you have TIFF files that were created using LZW compression and want to insert them into a drawing 
-        /// you must resave the TIFF files with LZW compression disabled.
+        /// you must save the TIFF files with LZW compression disabled.
         /// </para>
         /// </remarks>
         public ImageDef(string fileName, int width, double horizontalResolution, int height, double verticalResolution, ImageResolutionUnits units)
@@ -101,14 +101,14 @@ namespace netDxf.Objects
         /// Note (this is from the ACAD docs): AutoCAD 2000, AutoCAD LT 2000, and later releases do not support LZW-compressed TIFF files,
         /// with the exception of English language versions sold in the US and Canada.<br />
         /// If you have TIFF files that were created using LZW compression and want to insert them into a drawing 
-        /// you must resave the TIFF files with LZW compression disabled.
+        /// you must save the TIFF files with LZW compression disabled.
         /// </para>
         /// </remarks>
         public ImageDef(string fileName, string name, int width, double horizontalResolution, int height, double verticalResolution, ImageResolutionUnits units)
             : base(name, DxfObjectCode.ImageDef, true)
         {
             if (string.IsNullOrEmpty(fileName))
-                throw new ArgumentNullException("fileName", "The image file name cannot be empty or null.");
+                throw new ArgumentNullException("fileName", "The image file name cannot be null or empty.");
 
             this.fileName = fileName;
             this.width = width;
@@ -130,14 +130,14 @@ namespace netDxf.Objects
         ///  </para>
         ///  <para>
         ///  Supported image formats: BMP, JPG, PNG, TIFF.<br />
-        ///  Eventhought AutoCAD supports more image formats, this constructor is restricted to the ones the net framework supports in common with AutoCAD.
+        ///  Even thought AutoCAD supports more image formats, this constructor is restricted to the ones the net framework supports in common with AutoCAD.
         ///  Use the generic constructor instead.
         ///  </para>
         ///  <para>
         ///  Note (this is from the ACAD docs): AutoCAD 2000, AutoCAD LT 2000, and later releases do not support LZW-compressed TIFF files,
         ///  with the exception of English language versions sold in the US and Canada.<br />
         ///  If you have TIFF files that were created using LZW compression and want to insert them into a drawing 
-        ///  you must resave the TIFF files with LZW compression disabled.
+        ///  you must save the TIFF files with LZW compression disabled.
         ///  </para>
         /// </remarks>
         public ImageDef(string fileName)
@@ -156,21 +156,21 @@ namespace netDxf.Objects
         ///  </para>
         ///  <para>
         ///  Supported image formats: BMP, JPG, PNG, TIFF.<br />
-        ///  Eventhought AutoCAD supports more image formats, this constructor is restricted to the ones the .net library supports in common with AutoCAD.
+        ///  Even thought AutoCAD supports more image formats, this constructor is restricted to the ones the .net library supports in common with AutoCAD.
         ///  Use the generic constructor instead.
         ///  </para>
         ///  <para>
         ///  Note (this is from the ACAD docs): AutoCAD 2000, AutoCAD LT 2000, and later releases do not support LZW-compressed TIFF files,
         ///  with the exception of English language versions sold in the US and Canada.<br />
         ///  If you have TIFF files that were created using LZW compression and want to insert them into a drawing 
-        ///  you must resave the TIFF files with LZW compression disabled.
+        ///  you must save the TIFF files with LZW compression disabled.
         ///  </para>
         /// </remarks>
         public ImageDef(string fileName, string name)
             : base(name, DxfObjectCode.ImageDef, true)
         {
             if (string.IsNullOrEmpty(fileName))
-                throw new ArgumentNullException("fileName", "The image file name cannot be empty or null.");
+                throw new ArgumentNullException("fileName", "The image file name cannot be null or empty.");
 
             FileInfo info = new FileInfo(fileName);
             if (!info.Exists)
@@ -308,10 +308,9 @@ namespace netDxf.Objects
         /// <returns>A new ImageDef that is a copy of this instance.</returns>
         public override object Clone()
         {
-            return Clone(this.name);
+            return this.Clone(this.name);
         }
 
         #endregion
-
     }
 }

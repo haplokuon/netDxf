@@ -1,8 +1,43 @@
+[1.0.0 - 2015/05/12]
++ Now it is possible to modify all properties of tables and entities even when they already belong to a document. See Modifying...() samples.
++ Now it is possible to modify the name of TableObjects such as application registries, layers, line types,ucss text styles, dimension styles, multiline styles, image definitions, groups, layout, and blocks.
++ Added .gitignore file.
++ Corrected lots of misspelling errors in comments.
++ Renamed AciColor.DarkGrey and AciColor.LightGrey to AciColor.DarkGray and AciColor.LightGray, respectively.
++ Renamed LwPolylineVertex.BeginWidth to LwPolylineVertex.StartWidth, this is how it's called in AutoCAD.
++ Renamed Dimension property Value to Measurement.
++ The lightweight polyline vertex start and end width values can only be zero or greater. An exception will be thrown in case of an out of range value.
++ Added Block.Create(DxfDocument doc, string name) method to generate a block from the content of a DxfDocument (only entities in the "Model" layout will be used). This is the same as the Load method but without the need of loading an external dxf first.
++ Added Block.ReadOnly property. Any attempt to modify a ReadOnly block will be discarded. This is the case of the *Model_Space and all *Paper_Space blocks.
++ Deleted the Ungroup method from the Groups class. Now, the Remove method does that function. It deletes the group but not the grouped entities, allowing that derived in undesirable results, since the entities in a group can belong to different layouts and even to blocks.
++ Attributes and attribute definitions positions are now stored in WCS as other entities like inserts, texts, mtexts,...
++ Added ObliqueAngle property to attributes and attribute definitions.
++ Revised insert TransformAttributes() method, it should be more reliable now.
++ The Attribute class inherits now directly from a DxfObject. It can only appear as part of an Insert entity and it cannot be individually added to a document.
++ The Attribute owner is now the insert entity to which it belongs.
++ The dimension drawing now supports all linear (DIMLUNIT) and angular (DIMAUNIT) unit types. See DimensionsLinearAndAngularUnits() sample.
++ Added DIMLFAC variable to the dimension styles.
++ Added DIMRND variable to the dimension styles.
++ Added request "Added UserText property to Dimension". See DimensionUserText() sample.
++ Added CurrentStyleSheet property to PlotSettings class.
++ Now the active dimension style defined in the drawing variables will not show as <style overrides> in AutoCAD.
++ Now it is possible to read and write the VPort but only the active one, called *Active, no multiview support.
++ Added the Viewport property to the DxfDocument for easy access to the *Active VPort. It describes the current view of the document.
++ Moved all enums and classes related with units and its formatting to the new "Units" namespace.
++ Moved unit conversion methods from the MathHelper class to the UntiHelper class in the "Units" namespace.
++ Moved all interfaces and classes related with the reading and writing of dxf files to the new "IO" namespace.
++ Workarounds for Layouts not properly linked to their associated Model/PaperSpace block while reading bad formatted dxfs.
++ Updated "netDxf Documentation.chm".
++ (fixed) Added missing read dimension style DIMCLRT code in the DxfReader.
++ (fixed) Reworked the way the file encoding is obtained. It seemed that the strings were not being properly decoded in binary files prior to AutoCad2007.
++ (fixed) Bug reading the axis of the Ordinate dimensions.
++ (fixed) When deleting a layout the entities owner were not being updated.
+
 [0.9.5 - 2015/03/14]
 + Improved the Nurbs evaluator (thanks ThVoss).
 + (fixed) Bug with layouts not being registered as user of its associated block. This is related with proposed patch 17308 "Avoid removal of "*Paper_Space" block when using doc.Blocks.Clear()".
 + (fixed) Bug in DxfDocument.CheckDxfVersion with dxf files that do not include the dxf version in the header section. This is related with issue #13491.
-+ (fixed) Workaround for layers not defining a linetype style.
++ (fixed) Workaround for layers not defining a line type style.
 + (fixed) Bug introduced in previous update. The entity blocks were not properly registered in the document. This is only applicable to blocks imported from a dxf.
 
 [0.9.4 - 2015/01/22]
@@ -109,7 +144,7 @@
 
 [0.6.2 - 2014/03/20]
 + All angle values now will be normalized to the range [0,360[. In the case of the ellipse if the start and end angles are equal it will be considered a full ellipse.
-+ (fixed) Load dxf files not encoded as utf8, all other files will use the supplied dxf codepage to get the proper encoding.
++ (fixed) Load dxf files not encoded as utf8, all other files will use the supplied dxf code page to get the proper encoding.
 + (fixed) Arc.ToPolyline method.
 + (fixed) Ellipse.ToPolyline method.
 + (fixed) Read entity linetype scale value.
@@ -117,7 +152,7 @@
 [0.6.1 - 2013/11/03]
 + Updated "netDxf Documentation.chm".
 + Rename Attribute definition and Attribute Id to Tag as it is the name given by the dxf documentation.
-+ (fixed) Loading dxf files with duplicate attribute definition tags in block attributes. Although AutoCad allows this behaviour this library does not. Having duplicate tags is not recommended in any way, since there will be no way to know which is the definition associated to the insert attribute.
++ (fixed) Loading dxf files with duplicate attribute definition tags in block attributes. Although AutoCad allows this behavior this library does not. Having duplicate tags is not recommended in any way, since there will be no way to know which is the definition associated to the insert attribute.
 + (fixed) Load dxf files containing a ThumbnailImage section.
 + (fixed) Load dxf file encoding.
 + (fixed) Big HandleSeed hex numbers. The NumHandles has been changed to long, hopefully this will solve the problem, but I don't know which is the largest handle hex number AutoCad can generate. The BigInteger class of the Net Framework 4.0 will solve this problem but at the moment this library maintains its compatibility with Net 2.0.
@@ -139,7 +174,7 @@
 
 [0.5.0 - 2013/07/16]
 + Lots of changes on how the document handles the tables, check the samples or ask in the forum in case of doubt.
-+ Added TableObjects class and derivatives for application registries, blocks, dimension styles, layers, line types, multiline styles, text styles, and image definitions collections to uniform its behaviour.
++ Added TableObjects class and derivatives for application registries, blocks, dimension styles, layers, line types, multiline styles, text styles, and image definitions collections to uniform its behavior.
 + Added Remove and Clear methods for table objects. Now it is possible to clean the document from empty layers, blocks without references,...
 + Added GetReferences method for table objects. Now it is possible to get the list of dxf objects that make use of a particular layer, block,...
 + Added CreateWCSBoundary method for hatches, it will generate a list of entities that makes the hatch boundaries expressed in world coordinates.
@@ -185,8 +220,8 @@
 
 [0.4.2 - 2013/04/07]
 + Read and write comments only at the head of the dxf file.
-+ Workaround/fixes due to inconsistences on dxf files generated by Sketchup and EASE. Now during the attribute initialization all attribute definition properties will be copied, so any changes made to the attribute definition will only be applied to new attribute instances and not to existing ones. This is due to some dxf files might generate INSERT entities that contains attributes that are not defined in the BLOCK, eventhought it might be incorrect, strictly speaking, AutoCad allows this behaviour.
-+ (fixed) AutoCad was giving an error with the LastSavedBy Header variable, this variable is not recongnized by AutoCad2000.
++ Workaround/fixes due to inconsistencies on dxf files generated by Sketchup and EASE. Now during the attribute initialization all attribute definition properties will be copied, so any changes made to the attribute definition will only be applied to new attribute instances and not to existing ones. This is due to some dxf files might generate INSERT entities that contains attributes that are not defined in the BLOCK, even thought it might be incorrect, strictly speaking, AutoCad allows this behavior.
++ (fixed) AutoCad was giving an error with the LastSavedBy Header variable, this variable is not recognized by AutoCad2000.
 + (fixed) Issue Id #11690 Insert Entity Scale.
 + (fixed) Error reading color in ReadVertex() method.
 

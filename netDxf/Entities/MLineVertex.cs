@@ -1,23 +1,22 @@
-﻿#region netDxf, Copyright(C) 2013 Daniel Carvajal, Licensed under LGPL.
-
-//                        netDxf library
-// Copyright (C) 2013 Daniel Carvajal (haplokuon@gmail.com)
+﻿#region netDxf, Copyright(C) 2015 Daniel Carvajal, Licensed under LGPL.
 // 
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2.1 of the License, or (at your option) any later version.
-// 
-// The above copyright notice and this permission notice shall be included in all
-// copies or substantial portions of the Software.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-// FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-// COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-// IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-// CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. 
-
+//                         netDxf library
+//  Copyright (C) 2009-2015 Daniel Carvajal (haplokuon@gmail.com)
+//  
+//  This library is free software; you can redistribute it and/or
+//  modify it under the terms of the GNU Lesser General Public
+//  License as published by the Free Software Foundation; either
+//  version 2.1 of the License, or (at your option) any later version.
+//  
+//  The above copyright notice and this permission notice shall be included in all
+//  copies or substantial portions of the Software.
+//  
+//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+//  FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+//  COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+//  IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+//  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #endregion
 
 using System;
@@ -58,12 +57,12 @@ namespace netDxf.Entities
         /// Gets the MLine vertex position.
         /// </summary>
         /// <remarks>
-        /// If this property is modified the function MLine.CalculateVertexesInfo() will need to be called manually to upadate the internal information.
+        /// If this property is modified the function MLine.CalculateVertexesInfo() will need to be called manually to update the internal information.
         /// </remarks>
         public Vector2 Location
         {
-            get { return location; }
-            set { location = value; }
+            get { return this.location; }
+            set { this.location = value; }
         }
 
         /// <summary>
@@ -71,7 +70,7 @@ namespace netDxf.Entities
         /// </summary>
         public Vector2 Direction
         {
-            get { return direction; }
+            get { return this.direction; }
         }
 
         /// <summary>
@@ -79,7 +78,7 @@ namespace netDxf.Entities
         /// </summary>
         public Vector2 Miter
         {
-            get { return miter; }
+            get { return this.miter; }
         }
 
         /// <summary>
@@ -95,12 +94,12 @@ namespace netDxf.Entities
         /// point where the line element's path intersects the miter vector.<br />
         /// The second value (index 1) is the distance along the line element's direction from the point,
         /// defined by the first value, to the actual start of the line element.<br />
-        /// The successive values list the start and stop points of the line element breaks or cuts in this segment of the mline.
+        /// The successive values list the start and stop points of the line element breaks or cuts in this segment of the multiline.
         /// </para>
         /// </remarks>
         public List<double>[] Distances
         {
-            get { return distances; }
+            get { return this.distances; }
         }
 
         #endregion
@@ -123,10 +122,10 @@ namespace netDxf.Entities
         public object Clone()
         {
             List<double>[] copyDistances = new List<double>[this.distances.Length];
-            for (int j = 0; j < this.distances.Length; j++)
+            for (int i = 0; i < this.distances.Length; i++)
             {
-                copyDistances[j] = new List<double>();
-                copyDistances[j].AddRange(this.distances[j]);
+                copyDistances[i] = new List<double>();
+                copyDistances[i].AddRange(this.distances[i]);
             }
             return new MLineVertex(this.location, this.direction, this.miter, copyDistances);
         }

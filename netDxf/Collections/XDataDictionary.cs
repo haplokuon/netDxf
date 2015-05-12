@@ -1,28 +1,28 @@
-﻿#region netDxf, Copyright(C) 2014 Daniel Carvajal, Licensed under LGPL.
-
-//                        netDxf library
-// Copyright (C) 2014 Daniel Carvajal (haplokuon@gmail.com)
+﻿#region netDxf, Copyright(C) 2015 Daniel Carvajal, Licensed under LGPL.
 // 
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2.1 of the License, or (at your option) any later version.
-// 
-// The above copyright notice and this permission notice shall be included in all
-// copies or substantial portions of the Software.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-// FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-// COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-// IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-// CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. 
-
+//                         netDxf library
+//  Copyright (C) 2009-2015 Daniel Carvajal (haplokuon@gmail.com)
+//  
+//  This library is free software; you can redistribute it and/or
+//  modify it under the terms of the GNU Lesser General Public
+//  License as published by the Free Software Foundation; either
+//  version 2.1 of the License, or (at your option) any later version.
+//  
+//  The above copyright notice and this permission notice shall be included in all
+//  copies or substantial portions of the Software.
+//  
+//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+//  FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+//  COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+//  IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+//  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #endregion
 
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using netDxf.Tables;
 
 namespace netDxf.Collections
 {
@@ -32,6 +32,29 @@ namespace netDxf.Collections
     public class XDataDictionary :
         IDictionary<string, XData>
     {
+        #region delegates and events
+
+        public delegate void AddAppRegEventHandler(XDataDictionary sender, ObservableCollectionEventArgs<ApplicationRegistry> e);
+        public delegate void RemoveAppRegEventHandler(XDataDictionary sender, ObservableCollectionEventArgs<ApplicationRegistry> e);
+
+        public event AddAppRegEventHandler AddAppReg;
+        public event RemoveAppRegEventHandler RemoveAppReg;
+
+        protected virtual void OnAddAppRegEvent(ApplicationRegistry item)
+        {
+            AddAppRegEventHandler ae = this.AddAppReg;
+            if (ae != null)
+                ae(this, new ObservableCollectionEventArgs<ApplicationRegistry>(item));
+        }
+
+        protected virtual void OnRemoveAppRegEvent(ApplicationRegistry item)
+        {
+            RemoveAppRegEventHandler ae = this.RemoveAppReg;
+            if (ae != null)
+                ae(this, new ObservableCollectionEventArgs<ApplicationRegistry>(item));
+        }
+
+        #endregion
 
         #region private fields
 
@@ -82,10 +105,11 @@ namespace netDxf.Collections
             get { return this.innerDictionary[appId]; }
             set
             {
-                if (value == null) throw new ArgumentNullException("value");
+                if (value == null)
+                    throw new ArgumentNullException("value");
                 if (!value.ApplicationRegistry.Name.Equals(appId, StringComparison.OrdinalIgnoreCase))
-                    throw new ArgumentException(String.Format("The extended data application registry name {0} must be equal to the specified appId {1}.", value.ApplicationRegistry.Name, appId));
-
+                    throw new ArgumentException(string.Format("The extended data application registry name {0} must be equal to the specified appId {1}.", value.ApplicationRegistry.Name, appId));
+                
                 this.innerDictionary[appId] = value;
             }
         }
@@ -130,20 +154,25 @@ namespace netDxf.Collections
         /// Adds an <see cref="XData">extended data</see> to the current dictionary.
         /// </summary>
         /// <param name="item">The <see cref="XData">extended data</see> to add.</param>
-        /// <returns>True is the <see cref="XData">extended data</see> has been correctly added to the dictionary; otherwise, false.</returns>
         /// <remarks>
         /// If the current dictionary already contains an appId equals to the extended data that is being added
         /// the <see cref="XDataRecord">XDataRecords</see> will be added to the existing one.
         /// </remarks>
-        public bool Add(XData item)
+        public void Add(XData item)
         {
-            if (item == null) throw new ArgumentNullException("item");
+            if (item == null)
+                throw new ArgumentNullException("item");
             XData xdata;
             if (this.innerDictionary.TryGetValue(item.ApplicationRegistry.Name, out xdata))
+            {
                 xdata.XDataRecord.AddRange(item.XDataRecord);
+            }
             else
+            {
                 this.innerDictionary.Add(item.ApplicationRegistry.Name, item);
-            return true;
+                item.ApplicationRegistry.NameChange += this.ApplicationRegistry_NameChange;
+                this.OnAddAppRegEvent(item.ApplicationRegistry);
+            }
         }
 
         /// <summary>
@@ -165,8 +194,12 @@ namespace netDxf.Collections
         /// <returns>True if the <see cref="XData">extended data</see> is successfully removed; otherwise, false.</returns>
         public bool Remove(string appId)
         {
-            if (!this.innerDictionary.ContainsKey(appId)) return false;
+            if (!this.innerDictionary.ContainsKey(appId))
+                return false;
+            XData xdata = this.innerDictionary[appId];
+            xdata.ApplicationRegistry.NameChange -= this.ApplicationRegistry_NameChange;
             this.innerDictionary.Remove(appId);
+            this.OnRemoveAppRegEvent(xdata.ApplicationRegistry);
             return true;
         }
 
@@ -175,7 +208,10 @@ namespace netDxf.Collections
         /// </summary>
         public void Clear()
         {
-            this.innerDictionary.Clear();
+            foreach (string appId in this.innerDictionary.Keys )
+            {
+                this.Remove(appId);
+            }
         }
 
         /// <summary>
@@ -249,8 +285,8 @@ namespace netDxf.Collections
 
         bool ICollection<KeyValuePair<string, XData>>.Remove(KeyValuePair<string, XData> item)
         {
-            if (!ReferenceEquals(item.Value, this.innerDictionary[item.Key])) return false;
-            return this.Remove(item.Key);
+            if (ReferenceEquals(item.Value, this.innerDictionary[item.Key]) && this.Remove(item.Key)) return true;
+            return false;
         }
 
         bool ICollection<KeyValuePair<string, XData>>.Contains(KeyValuePair<string, XData> item)
@@ -266,6 +302,17 @@ namespace netDxf.Collections
         IEnumerator IEnumerable.GetEnumerator()
         {
             return this.GetEnumerator();
+        }
+
+        #endregion
+
+        #region ApplicationRegistry events
+
+        private void ApplicationRegistry_NameChange(TableObject sender, TableObjectChangeEventArgs<string> e)
+        {
+            XData xdata = this.innerDictionary[e.OldValue];
+            this.innerDictionary.Remove(e.OldValue);
+            this.innerDictionary.Add(e.NewValue, xdata);
         }
 
         #endregion

@@ -1,23 +1,22 @@
-﻿#region netDxf, Copyright(C) 2014 Daniel Carvajal, Licensed under LGPL.
-
-//                        netDxf library
-// Copyright (C) 2014 Daniel Carvajal (haplokuon@gmail.com)
+﻿#region netDxf, Copyright(C) 2015 Daniel Carvajal, Licensed under LGPL.
 // 
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2.1 of the License, or (at your option) any later version.
-// 
-// The above copyright notice and this permission notice shall be included in all
-// copies or substantial portions of the Software.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-// FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-// COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-// IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-// CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. 
-
+//                         netDxf library
+//  Copyright (C) 2009-2015 Daniel Carvajal (haplokuon@gmail.com)
+//  
+//  This library is free software; you can redistribute it and/or
+//  modify it under the terms of the GNU Lesser General Public
+//  License as published by the Free Software Foundation; either
+//  version 2.1 of the License, or (at your option) any later version.
+//  
+//  The above copyright notice and this permission notice shall be included in all
+//  copies or substantial portions of the Software.
+//  
+//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+//  FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+//  COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+//  IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+//  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #endregion
 
 using System;
@@ -34,6 +33,57 @@ namespace netDxf.Entities
         DxfObject,
         ICloneable
     {
+        #region delegates and events
+
+        public delegate void LayerChangeEventHandler(EntityObject sender, TableObjectChangeEventArgs<Layer> e);
+        public event LayerChangeEventHandler LayerChange;
+        protected virtual Layer OnLayerChangeEvent(Layer oldLayer, Layer newLayer)
+        {
+            LayerChangeEventHandler ae = this.LayerChange;
+            if (ae != null)
+            {
+                TableObjectChangeEventArgs<Layer> eventArgs = new TableObjectChangeEventArgs<Layer>(oldLayer, newLayer);
+                ae(this, eventArgs);
+                return eventArgs.NewValue;
+            }
+            return newLayer;
+        }
+
+        public delegate void LineTypeChangeEventHandler(EntityObject sender, TableObjectChangeEventArgs<LineType> e);
+        public event LineTypeChangeEventHandler LineTypeChange;
+        protected virtual LineType OnLineTypeChangeEvent(LineType oldLineType, LineType newLineType)
+        {
+            LineTypeChangeEventHandler ae = this.LineTypeChange;
+            if (ae != null)
+            {
+                TableObjectChangeEventArgs<LineType> eventArgs = new TableObjectChangeEventArgs<LineType>(oldLineType, newLineType);
+                ae(this, eventArgs);
+                return eventArgs.NewValue;
+            }
+            return newLineType;
+        }
+
+        public delegate void XDataAddAppRegEventHandler(EntityObject sender, ObservableCollectionEventArgs<ApplicationRegistry> e);
+        public delegate void XDataRemoveAppRegEventHandler(EntityObject sender, ObservableCollectionEventArgs<ApplicationRegistry> e);
+
+        public event XDataAddAppRegEventHandler XDataAddAppReg;
+        public event XDataRemoveAppRegEventHandler XDataRemoveAppReg;
+
+        protected virtual void OnXDataAddAppRegEvent(ApplicationRegistry item)
+        {
+            XDataAddAppRegEventHandler ae = this.XDataAddAppReg;
+            if (ae != null)
+                ae(this, new ObservableCollectionEventArgs<ApplicationRegistry>(item));
+        }
+
+        protected virtual void OnXDataRemoveAppRegEvent(ApplicationRegistry item)
+        {
+            XDataRemoveAppRegEventHandler ae = this.XDataRemoveAppReg;
+            if (ae != null)
+                ae(this, new ObservableCollectionEventArgs<ApplicationRegistry>(item));
+        }
+        #endregion
+
         #region private fields
 
         private readonly EntityType type;
@@ -47,7 +97,6 @@ namespace netDxf.Entities
         protected Vector3 normal;
         protected readonly XDataDictionary xData;
         protected DxfObject reactor;
-
 
         #endregion
 
@@ -66,6 +115,8 @@ namespace netDxf.Entities
             this.isVisible = true;
             this.normal = Vector3.UnitZ;
             this.xData = new XDataDictionary();
+            this.xData.AddAppReg += this.XData_AddAppReg;
+            this.xData.RemoveAppReg += this.XData_RemoveAppReg;
         }
 
         #endregion
@@ -117,7 +168,7 @@ namespace netDxf.Entities
             {
                 if (value == null)
                     throw new ArgumentNullException("value");
-                this.layer = value;
+                this.layer = this.OnLayerChangeEvent(this.layer, value);
             }
         }
 
@@ -131,7 +182,7 @@ namespace netDxf.Entities
             {
                 if (value == null)
                     throw new ArgumentNullException("value");
-                this.lineType = value;
+                this.lineType = this.OnLineTypeChangeEvent(this.lineType, value);
             }
         }
 
@@ -164,7 +215,7 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets or sets the entity linetype scale.
+        /// Gets or sets the entity line type scale.
         /// </summary>
         public double LineTypeScale
         {
@@ -172,7 +223,7 @@ namespace netDxf.Entities
             set
             {
                 if (value <= 0)
-                    throw new ArgumentOutOfRangeException("value", value, "The linetype scale must be greater than zero.");
+                    throw new ArgumentOutOfRangeException("value", value, "The line type scale must be greater than zero.");
                 this.lineTypeScale = value;
             }
         }
@@ -196,8 +247,7 @@ namespace netDxf.Entities
             {
                 if (value == Vector3.Zero)
                     throw new ArgumentNullException("value", "The normal can not be the zero vector.");
-                this.normal = value;
-                this.normal.Normalize();
+                this.normal = Vector3.Normalize(value);
             }
         }
 
@@ -211,7 +261,7 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets the entity <see cref="XDataDictionary">extende data</see>.
+        /// Gets the entity <see cref="XDataDictionary">extended data</see>.
         /// </summary>
         public XDataDictionary XData
         {
@@ -240,6 +290,20 @@ namespace netDxf.Entities
         /// </summary>
         /// <returns>A new entity that is a copy of this instance.</returns>
         public abstract object Clone();
+
+        #endregion
+
+        #region XData events
+
+        private void XData_AddAppReg(XDataDictionary sender, ObservableCollectionEventArgs<ApplicationRegistry> e)
+        {           
+            this.OnXDataAddAppRegEvent(e.Item);
+        }
+
+        private void XData_RemoveAppReg(XDataDictionary sender, ObservableCollectionEventArgs<ApplicationRegistry> e)
+        {
+            this.OnXDataRemoveAppRegEvent(e.Item);
+        }
 
         #endregion
     }

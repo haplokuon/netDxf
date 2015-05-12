@@ -1,29 +1,29 @@
-#region netDxf, Copyright(C) 2014 Daniel Carvajal, Licensed under LGPL.
-
-//                        netDxf library
-// Copyright (C) 2014 Daniel Carvajal (haplokuon@gmail.com)
+#region netDxf, Copyright(C) 2015 Daniel Carvajal, Licensed under LGPL.
 // 
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2.1 of the License, or (at your option) any later version.
-// 
-// The above copyright notice and this permission notice shall be included in all
-// copies or substantial portions of the Software.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-// FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-// COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-// IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-// CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. 
-
+//                         netDxf library
+//  Copyright (C) 2009-2015 Daniel Carvajal (haplokuon@gmail.com)
+//  
+//  This library is free software; you can redistribute it and/or
+//  modify it under the terms of the GNU Lesser General Public
+//  License as published by the Free Software Foundation; either
+//  version 2.1 of the License, or (at your option) any later version.
+//  
+//  The above copyright notice and this permission notice shall be included in all
+//  copies or substantial portions of the Software.
+//  
+//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+//  FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+//  COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+//  IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+//  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #endregion
 
 using System;
 using System.Collections.Generic;
 using netDxf.Blocks;
 using netDxf.Entities;
+using netDxf.Tables;
 
 namespace netDxf.Collections
 {
@@ -33,7 +33,6 @@ namespace netDxf.Collections
     public sealed class BlockRecords :
         TableObjects<Block>
     {
-
         #region constructor
 
         internal BlockRecords(DxfDocument document, string handle = null)
@@ -49,7 +48,6 @@ namespace netDxf.Collections
             handle)
         {
             this.maxCapacity = short.MaxValue;
-
         }
 
         #endregion
@@ -60,6 +58,7 @@ namespace netDxf.Collections
         /// Adds a block to the list.
         /// </summary>
         /// <param name="block"><see cref="Block">Block</see> to add to the list.</param>
+        /// <param name="assignHandle">Specifies if a handle needs to be generated for the block parameter.</param>
         /// <returns>
         /// If a block already exists with the same name as the instance that is being added the method returns the existing block,
         /// if not it will return the new block.
@@ -67,13 +66,13 @@ namespace netDxf.Collections
         internal override Block Add(Block block, bool assignHandle)
         {
             if (this.list.Count >= this.maxCapacity)
-                throw new OverflowException(String.Format("Table overflow. The maximum number of elements the table {0} can have is {1}", this.codeName, this.maxCapacity));
+                throw new OverflowException(string.Format("Table overflow. The maximum number of elements the table {0} can have is {1}", this.codeName, this.maxCapacity));
 
             Block add;
             if (this.list.TryGetValue(block.Name, out add))
                 return add;
 
-            if(assignHandle)
+            if(assignHandle || string.IsNullOrEmpty(block.Handle))
                 this.document.NumHandles = block.AsignHandle(this.document.NumHandles);
 
             this.document.AddedObjects.Add(block.Handle, block);
@@ -82,28 +81,29 @@ namespace netDxf.Collections
             this.list.Add(block.Name, block);
             this.references.Add(block.Name, new List<DxfObject>());
 
-            block.Owner.Owner = this;
             block.Layer = this.document.Layers.Add(block.Layer);
             this.document.Layers.References[block.Layer.Name].Add(block);
 
             //for new block definitions configure its entities
-            foreach (EntityObject blockEntity in block.Entities)
+            foreach (EntityObject entity in block.Entities)
             {
-                this.document.AddEntity(blockEntity, true, assignHandle);
+                this.document.AddEntity(entity, true, assignHandle);
             }
 
             //for new block definitions configure its attributes
             foreach (AttributeDefinition attDef in block.AttributeDefinitions.Values)
             {
-                attDef.Layer = this.document.Layers.Add(attDef.Layer);
-                this.document.Layers.References[attDef.Layer.Name].Add(attDef);
-
-                attDef.LineType = this.document.LineTypes.Add(attDef.LineType);
-                this.document.LineTypes.References[attDef.LineType.Name].Add(attDef);
-
-                attDef.Style = this.document.TextStyles.Add(attDef.Style);
-                this.document.TextStyles.References[attDef.Style.Name].Add(attDef);
+                this.document.AddEntity(attDef, true, assignHandle);
             }
+
+            block.Record.Owner = this;
+
+            block.NameChange += this.Item_NameChange;
+            block.LayerChange += this.Block_LayerChange;
+            block.EntityAdded += this.Block_EntityAdded;
+            block.EntityRemoved += this.Block_EntityRemoved;
+            block.AttributeDefinitionAdded += this.Block_EntityAdded;
+            block.AttributeDefinitionRemoved += this.Block_EntityRemoved;
 
             return block;
         }
@@ -116,7 +116,7 @@ namespace netDxf.Collections
         /// <remarks>Reserved blocks or any other referenced by objects cannot be removed.</remarks>
         public override bool Remove(string name)
         {
-            return Remove(this[name]);
+            return this.Remove(this[name]);
         }
 
         /// <summary>
@@ -143,29 +143,85 @@ namespace netDxf.Collections
             this.document.Layers.References[block.Layer.Name].Remove(block);
 
             // we will remove all entities from the block definition
-            foreach (EntityObject o in block.Entities)
+            foreach (EntityObject entity in block.Entities)
             {
-                this.document.RemoveEntity(o, true);
+                this.document.RemoveEntity(entity, true);
             }
 
             // remove all attribute definitions from the associated layers
             foreach (AttributeDefinition attDef in block.AttributeDefinitions.Values)
             {
-                this.document.Layers.References[attDef.Layer.Name].Remove(attDef);
-                this.document.LineTypes.References[attDef.LineType.Name].Remove(attDef);
-                this.document.TextStyles.References[attDef.Style.Name].Remove(attDef);
+                this.document.RemoveEntity(attDef, true);
             }
 
-            block.Record.Owner = null;
             this.document.AddedObjects.Remove(block.Handle);
             this.references.Remove(block.Name);
             this.list.Remove(block.Name);
 
-            return true;
+            block.Record.Handle = null;
+            block.Record.Owner = null;
 
+            block.Handle = null;
+            block.Owner = null;
+
+            block.NameChange -= this.Item_NameChange;
+            block.LayerChange -= this.Block_LayerChange;
+            block.EntityAdded -= this.Block_EntityAdded;
+            block.EntityRemoved -= this.Block_EntityRemoved;
+            block.AttributeDefinitionAdded -= this.Block_EntityAdded;
+            block.AttributeDefinitionRemoved -= this.Block_EntityRemoved;
+
+            return true;
         }
 
         #endregion
 
+        #region block events
+
+        private void Item_NameChange(TableObject sender, TableObjectChangeEventArgs<string> e)
+        {
+            if (this.Contains(e.NewValue))
+                throw new ArgumentException("There is already another block with the same name.");
+
+            this.list.Remove(sender.Name);
+            this.list.Add(e.NewValue, (Block)sender);
+
+            List<DxfObject> refs = this.references[sender.Name];
+            this.references.Remove(sender.Name);
+            this.references.Add(e.NewValue, refs);
+        }
+
+        private void Block_LayerChange(Block sender, TableObjectChangeEventArgs<Layer> e)
+        {
+            this.document.Layers.References[e.OldValue.Name].Remove(sender);
+
+            e.NewValue = this.document.Layers.Add(e.NewValue);
+            this.document.Layers.References[e.NewValue.Name].Add(sender);
+        }
+
+        void Block_EntityAdded(TableObject sender, BlockEntityChangeEventArgs e)
+        {
+            if (e.Item.Owner != null)
+            {
+                // the block and its entities must belong to the same document
+                if (!ReferenceEquals(e.Item.Owner.Owner.Owner.Owner, this.owner))
+                    throw new ArgumentException("The block and the entity must belong to the same document. Clone it instead.");
+
+                // the entity cannot belong to another block
+                if(e.Item.Owner.Record.Layout == null)
+                    throw new ArgumentException("The entity cannot belong to another block. Clone it instead.");
+
+                // we will exchange the owner of the entity
+                this.document.RemoveEntity(e.Item);
+            }
+            this.document.AddEntity(e.Item, true, string.IsNullOrEmpty(e.Item.Handle));
+        }
+
+        private void Block_EntityRemoved(TableObject sender, BlockEntityChangeEventArgs e)
+        {
+            this.document.RemoveEntity(e.Item, true);
+        }
+
+        #endregion
     }
 }

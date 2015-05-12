@@ -1,37 +1,83 @@
-﻿#region netDxf, Copyright(C) 2014 Daniel Carvajal, Licensed under LGPL.
-
-//                        netDxf library
-// Copyright (C) 2014 Daniel Carvajal (haplokuon@gmail.com)
+﻿#region netDxf, Copyright(C) 2015 Daniel Carvajal, Licensed under LGPL.
 // 
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2.1 of the License, or (at your option) any later version.
-// 
-// The above copyright notice and this permission notice shall be included in all
-// copies or substantial portions of the Software.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-// FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-// COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-// IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-// CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. 
-
+//                         netDxf library
+//  Copyright (C) 2009-2015 Daniel Carvajal (haplokuon@gmail.com)
+//  
+//  This library is free software; you can redistribute it and/or
+//  modify it under the terms of the GNU Lesser General Public
+//  License as published by the Free Software Foundation; either
+//  version 2.1 of the License, or (at your option) any later version.
+//  
+//  The above copyright notice and this permission notice shall be included in all
+//  copies or substantial portions of the Software.
+//  
+//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+//  FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+//  COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+//  IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+//  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #endregion
 
 using System;
 using netDxf.Blocks;
 using netDxf.Collections;
+using netDxf.Units;
 
 namespace netDxf.Tables
 {
     /// <summary>
-    /// Represents as dimension style.
+    /// Represents a dimension style.
     /// </summary>
     public class DimensionStyle :
         TableObject
     {
+        #region delegates and events
+
+        public delegate void LineTypeChangeEventHandler(TableObject sender, TableObjectChangeEventArgs<LineType> e);
+        public event LineTypeChangeEventHandler LineTypeChange;
+        protected virtual LineType OnLineTypeChangeEvent(LineType oldLineType, LineType newLineType)
+        {
+            LineTypeChangeEventHandler ae = this.LineTypeChange;
+            if (ae != null)
+            {
+                TableObjectChangeEventArgs<LineType> eventArgs = new TableObjectChangeEventArgs<LineType>(oldLineType, newLineType);
+                ae(this, eventArgs);
+                return eventArgs.NewValue;
+            }
+            return newLineType;
+        }
+
+        public delegate void TextStyleChangeEventHandler(TableObject sender, TableObjectChangeEventArgs<TextStyle> e);
+        public event TextStyleChangeEventHandler TextStyleChange;
+        protected virtual TextStyle OnTextStyleChangeEvent(TextStyle oldTextStyle, TextStyle newTextStyle)
+        {
+            TextStyleChangeEventHandler ae = this.TextStyleChange;
+            if (ae != null)
+            {
+                TableObjectChangeEventArgs<TextStyle> eventArgs = new TableObjectChangeEventArgs<TextStyle>(oldTextStyle, newTextStyle);
+                ae(this, eventArgs);
+                return eventArgs.NewValue;
+            }
+            return newTextStyle;
+        }
+
+        public delegate void BlockChangeEventHandler(TableObject sender, TableObjectChangeEventArgs<Block> e);
+        public event BlockChangeEventHandler BlockChange;
+        protected virtual Block OnBlockChangeEvent(Block oldBlock, Block newBlock)
+        {
+            BlockChangeEventHandler ae = this.BlockChange;
+            if (ae != null)
+            {
+                TableObjectChangeEventArgs<Block> eventArgs = new TableObjectChangeEventArgs<Block>(this.dimblk, newBlock);
+                ae(this, eventArgs);
+                return eventArgs.NewValue;
+            }
+            return newBlock;
+        }
+
+        #endregion
+
         #region private fields
 
         // dimension lines
@@ -77,19 +123,33 @@ namespace netDxf.Tables
         private short dimdec;
         private string dimpost;
         private char dimdsep;
-        private short dimaunit;
-
+        private double dimlfac;
+        private LinearUnitType dimlunit;
+        private AngleUnitType dimaunit;
+        private FractionFormatType dimfrac;
+        private bool suppressLinearLeadingZeros;
+        private bool suppressLinearTrailingZeros;
+        private bool suppressAngularLeadingZeros;
+        private bool suppressAngularTrailingZeros;
+        private bool suppressZeroFeet;
+        private bool suppressZeroInches;
+        private double dimrnd;
 
         #endregion
 
         #region constants
 
         /// <summary>
+        /// Default dimension style name.
+        /// </summary>
+        public const string DefaultName = "Standard";
+
+        /// <summary>
         /// Gets the default dimension style.
         /// </summary>
         public static DimensionStyle Default
         {
-            get { return new DimensionStyle("Standard"); }
+            get { return new DimensionStyle(DefaultName); }
         }
 
         #endregion
@@ -103,6 +163,9 @@ namespace netDxf.Tables
         public DimensionStyle(string name)
             : base(name, DxfObjectCode.DimStyle, true)
         {
+            if (string.IsNullOrEmpty(name))
+                throw new ArgumentNullException("name", "The dimension style name should be at least one character long.");
+
             this.reserved = name.Equals("Standard", StringComparison.OrdinalIgnoreCase);
 
             // dimension lines
@@ -148,7 +211,17 @@ namespace netDxf.Tables
             this.dimtih = 0;
             this.dimtoh = 0;
             this.dimdsep = '.';
-            this.dimaunit = 0;
+            this.dimlfac = 1.0;
+            this.dimaunit = AngleUnitType.DecimalDegrees;
+            this.dimlunit = LinearUnitType.Decimal;
+            this.dimfrac = FractionFormatType.Horizontal;
+            this.suppressLinearLeadingZeros = false;
+            this.suppressLinearTrailingZeros = false;
+            this.suppressAngularLeadingZeros = false;
+            this.suppressAngularTrailingZeros = false;
+            this.suppressZeroFeet = true;
+            this.suppressZeroInches = true;
+            this.dimrnd = 0.0;
         }
 
         #endregion
@@ -162,16 +235,21 @@ namespace netDxf.Tables
         /// </summary>
         /// <remarks>
         /// Default: ByBlock<br />
-        /// Only indexed indexed aci colors are supported.
+        /// Only indexed AciColors are supported.
         /// </remarks>
         public AciColor DIMCLRD
         {
             get { return this.dimclrd; }
-            set { this.dimclrd = value; }
+            set
+            {
+                if (value == null)
+                    throw new ArgumentNullException("value");
+                this.dimclrd = value;
+            }
         }
 
         /// <summary>
-        /// Sets the linetype of the dimension line.
+        /// Sets the line type of the dimension line.
         /// </summary>
         /// <remarks>Default: ByBlock</remarks>
         public LineType DIMLTYPE
@@ -181,18 +259,23 @@ namespace netDxf.Tables
             {
                 if (value == null)
                     throw new ArgumentNullException("value");
-                this.dimltype = value;
+                this.dimltype = this.OnLineTypeChangeEvent(this.dimltype, value);
             }
         }
 
         /// <summary>
-        /// Assigns lineweight to dimension lines.
+        /// Assigns line weight to dimension lines.
         /// </summary>
         /// <remarks>Default: ByBlock</remarks>
         public Lineweight DIMLWD
         {
             get { return this.dimlwd; }
-            set { this.dimlwd = value; }
+            set
+            {
+                if (value == null)
+                    throw new ArgumentNullException("value");
+                this.dimlwd = value;
+            }
         }
 
         /// <summary>
@@ -205,7 +288,7 @@ namespace netDxf.Tables
             set
             {
                 if (value < 0)
-                    throw (new ArgumentOutOfRangeException("value", value, "The DIMDLE can not be less than zero."));
+                    throw (new ArgumentOutOfRangeException("value", value, "The DIMDLE must be equals or greater than zero."));
                 this.dimdle = value;
             }
         }
@@ -224,7 +307,7 @@ namespace netDxf.Tables
             set
             {
                 if (value < 0)
-                    throw (new ArgumentOutOfRangeException("value", value, "The DIMDLI can not be less than zero."));
+                    throw (new ArgumentOutOfRangeException("value", value, "The DIMDLI must be equals or greater than zero."));
                 this.dimdli = value;
             }
         }
@@ -238,16 +321,21 @@ namespace netDxf.Tables
         /// </summary>
         /// <remarks>
         /// Default: ByBlock<br />
-        /// Only indexed indexed aci colors are supported.
+        /// Only indexed AciColors are supported.
         /// </remarks>
         public AciColor DIMCLRE
         {
             get { return this.dimclre; }
-            set { this.dimclre = value; }
+            set
+            {
+                if (value == null)
+                    throw new ArgumentNullException("value");
+                this.dimclre = value;
+            }
         }
 
         /// <summary>
-        /// Sets the linetype of the first extension line.
+        /// Sets the line type of the first extension line.
         /// </summary>
         /// <remarks>Default: ByBlock</remarks>
         public LineType DIMLTEX1
@@ -257,12 +345,12 @@ namespace netDxf.Tables
             {
                 if (value == null)
                     throw new ArgumentNullException("value");
-                this.dimltex1 = value;
+                this.dimltex1 = this.OnLineTypeChangeEvent(this.dimltex1, value);
             }
         }
 
         /// <summary>
-        /// Sets the linetype of the second extension line.
+        /// Sets the line type of the second extension line.
         /// </summary>
         /// <remarks>Default: ByBlock</remarks>
         public LineType DIMLTEX2
@@ -272,18 +360,23 @@ namespace netDxf.Tables
             {
                 if (value == null)
                     throw new ArgumentNullException("value");
-                this.dimltex2 = value;
+                this.dimltex2 = this.OnLineTypeChangeEvent(this.dimltex2, value);
             }
         }
 
         /// <summary>
-        /// Assigns lineweight to extension lines.
+        /// Assigns line weight to extension lines.
         /// </summary>
         /// <remarks>Default: ByBlock</remarks>
         public Lineweight DIMLWE
         {
             get { return this.dimlwe; }
-            set { this.dimlwe = value; }
+            set
+            {
+                if (value == null)
+                    throw new ArgumentNullException("value");
+                this.dimlwe = value;
+            }
         }
 
         /// <summary>
@@ -316,7 +409,7 @@ namespace netDxf.Tables
             set
             {
                 if (value < 0)
-                    throw (new ArgumentOutOfRangeException("value", value, "The DIMEXO can not be less than zero."));
+                    throw (new ArgumentOutOfRangeException("value", value, "The DIMEXO must be equals or greater than zero."));
                 this.dimexo = value;
             }
         }
@@ -331,7 +424,7 @@ namespace netDxf.Tables
             set
             {
                 if (value < 0)
-                    throw (new ArgumentOutOfRangeException("value", value, "The DIMEXE can not be less than zero."));
+                    throw (new ArgumentOutOfRangeException("value", value, "The DIMEXE must be equals or greater than zero."));
                 this.dimexe = value;
             }
         }
@@ -350,7 +443,7 @@ namespace netDxf.Tables
             set
             {
                 if (value < 0)
-                    throw (new ArgumentOutOfRangeException("value", value, "The DIMASZ can not be less than zero."));
+                    throw (new ArgumentOutOfRangeException("value", value, "The DIMASZ must be equals or greater than zero."));
                 this.dimasz = value;
             }
         }
@@ -360,7 +453,7 @@ namespace netDxf.Tables
         /// </summary>
         /// <remarks>
         /// 0 - No center marks or lines are drawn.<br />
-        /// greter than 0 - Center marks are drawn.<br />
+        /// greater than 0 - Center marks are drawn.<br />
         /// lower than 0 - Center marks and centerlines are drawn.<br />
         /// The absolute value specifies the size of the center mark or centerline. 
         /// The size of the centerline is the length of the centerline segment that extends outside the circle or arc.
@@ -380,7 +473,7 @@ namespace netDxf.Tables
         /// <remarks>
         /// Default value: false.<br />
         /// false = Use arrowhead blocks set by DIMBLK.<br />
-        /// true = Use arrowhead blocks set by DIMBLK1 and DIMBLK2.<br />
+        /// true = Use arrowhead blocks set by DIMBLK1 and DIMBLK2.
         /// </remarks>
         public bool DIMSAH
         {
@@ -395,7 +488,7 @@ namespace netDxf.Tables
         public Block DIMBLK
         {
             get { return this.dimblk; }
-            set { this.dimblk = value; }
+            set { this.dimblk = value == null ? null : this.OnBlockChangeEvent(this.dimblk, value); }
         }
 
         /// <summary>
@@ -405,7 +498,7 @@ namespace netDxf.Tables
         public Block DIMBLK1
         {
             get { return this.dimblk1; }
-            set { this.dimblk1 = value; }
+            set { this.dimblk1 = value == null ? null : this.OnBlockChangeEvent(this.dimblk1, value); }
         }
 
         /// <summary>
@@ -415,8 +508,9 @@ namespace netDxf.Tables
         public Block DIMBLK2
         {
             get { return this.dimblk2; }
-            set { this.dimblk2 = value; }
+            set{ this.dimblk2 = value == null ? null : this.OnBlockChangeEvent(this.dimblk2, value); }
         }
+
         #endregion
 
         #region text appearance
@@ -432,18 +526,26 @@ namespace netDxf.Tables
             {
                 if (value == null)
                     throw new ArgumentNullException("value");
-                this.dimtxsty = value;
+                this.dimtxsty = this.OnTextStyleChangeEvent(this.dimtxsty, value);
             }
         }
 
         /// <summary>
-        /// Assigns colors to dimension text.
+        /// Gets or set the color of dimension text.
         /// </summary>
-        /// <remarks>Default: ByBlock</remarks>
+        /// <remarks>
+        /// Default: ByBlock<br />
+        /// Only indexed AciColors are supported.
+        /// </remarks>
         public AciColor DIMCLRT
         {
             get { return this.dimclrt; }
-            set { this.dimclrt = value; }
+            set
+            {
+                if (value == null)
+                    throw new ArgumentNullException("value");
+                this.dimclrt = value;
+            }
         }
 
         /// <summary>
@@ -456,7 +558,7 @@ namespace netDxf.Tables
             set
             {
                 if (value <= 0)
-                    throw (new ArgumentOutOfRangeException("value", value, "The DIMTXT can not be less than zero."));
+                    throw (new ArgumentOutOfRangeException("value", value, "The DIMTXT must be greater than zero."));
                 this.dimtxt = value;
             }
         }
@@ -471,7 +573,7 @@ namespace netDxf.Tables
             set
             {
                 if (value < 0)
-                    throw (new ArgumentOutOfRangeException("value", value, "The DIMGAP can not be less than zero."));
+                    throw (new ArgumentOutOfRangeException("value", value, "The DIMGAP must be equals or greater than zero."));
                 this.dimgap = value;
             }
         }
@@ -479,8 +581,12 @@ namespace netDxf.Tables
         /// <summary>
         /// Controls the horizontal positioning of dimension text.
         /// </summary>
-        /// <remarks>Default: Centered</remarks>
-        public short DIMJUST
+        /// <remarks>
+        /// Default: Centered
+        /// <br/>
+        /// Not implemented in the dimension drawing.
+        /// </remarks>
+        internal short DIMJUST
         {
             get { return this.dimjust; }
             set { this.dimjust = value; }
@@ -489,11 +595,28 @@ namespace netDxf.Tables
         /// <summary>
         /// Controls the vertical position of text in relation to the dimension line.
         /// </summary>
-        /// <remarks>Default: Above</remarks>
-        public short DIMTAD
+        /// <remarks>
+        /// Default: Above<br/>
+        /// Not implemented in the dimension drawing.
+        /// </remarks>
+        internal short DIMTAD
         {
             get { return this.dimtad; }
             set { this.dimtad = value; }
+        }
+
+        /// <summary>
+        /// Gets or sets the fraction format when DIMLUNIT is set to Architectural or Fractional.
+        /// </summary>
+        /// <remarks>
+        /// Horizontal stacking<br/>
+        /// Diagonal stacking<br/>
+        /// Not stacked (for example, 1/2)
+        /// </remarks>
+        public FractionFormatType DIMFRAC
+        {
+            get { return this.dimfrac; }
+            set { this.dimfrac = value; }
         }
 
         #endregion
@@ -513,7 +636,7 @@ namespace netDxf.Tables
             get { return this.dimscale; }
             set
             {
-                if (value < 0)
+                if (value <= 0)
                     throw (new ArgumentOutOfRangeException("value", value, "The DIMSCALE must be greater than zero."));
                 this.dimscale = value;
             }
@@ -522,8 +645,11 @@ namespace netDxf.Tables
         /// <summary>
         /// Controls the position of dimension text inside the extension lines for all dimension types except Ordinate.
         /// </summary>
-        /// <remarks>Default: 0</remarks>
-        public short DIMTIH
+        /// <remarks>
+        /// Default: 0<br/>
+        /// Not implemented in the dimension drawing.
+        /// </remarks>
+        internal short DIMTIH
         {
             get { return this.dimtih; }
             set { this.dimtih = value; }
@@ -532,8 +658,11 @@ namespace netDxf.Tables
         /// <summary>
         /// Controls the position of dimension text outside the extension lines.
         /// </summary>
-        /// <remarks>Default: 0</remarks>
-        public short DIMTOH
+        /// <remarks>
+        /// Default: 0<br/>
+        /// Not implemented in the dimension drawing.
+        /// </remarks>
+        internal short DIMTOH
         {
             get { return this.dimtoh; }
             set { this.dimtoh = value; }
@@ -546,21 +675,39 @@ namespace netDxf.Tables
         /// <summary>
         /// Sets the number of decimal places displayed for the primary units of a dimension.
         /// </summary>
-        /// <remarks>Default: 2</remarks>
+        /// <remarks>
+        /// Default: 2<br/>
+        /// It is recommended to use values in the range 0 to 8.<br/>
+        /// For architectural and fractional the precision used for the minimum fraction is 1/2^LinearDecimalPlaces.
+        /// </remarks>
         public short DIMDEC
         {
             get { return this.dimdec; }
-            set { this.dimdec = value; }
+            set
+            {
+                if (value < 0)
+                    throw new ArgumentOutOfRangeException("value", value, "The DIMDEC must be equals or greater than zero.");
+                this.dimdec = value;
+            }
         }
  
         /// <summary>
         /// Controls the number of precision places displayed in angular dimensions.
         /// </summary>
-        /// <remarks>Default: 0</remarks>
+        /// <remarks>
+        /// Default: 0<br/>
+        /// If set to -1 angular dimensions display the number of decimal places specified by DIMDEC.
+        /// It is recommended to use values in the range 0 to 8.
+        /// </remarks>
         public short DIMADEC
         {
             get { return this.dimadec; }
-            set { this.dimadec = value; }
+            set
+            {
+                if (value < -1)
+                    throw new ArgumentOutOfRangeException("value", value, "The DIMADEC must be equals or greater than zero.");
+                this.dimadec = value;
+            }
         }
 
         /// <summary>
@@ -590,18 +737,138 @@ namespace netDxf.Tables
         }
 
         /// <summary>
-        /// Gets the units format for angular dimensions.
+        /// Gets or sets a scale factor for linear dimension measurements
         /// </summary>
         /// <remarks>
-        /// 0 Decimal degrees
-        /// 1 Degrees/minutes/seconds
-        /// 2 Gradians
-        /// 3 Radians
+        /// All linear dimension distances, including radii, diameters, and coordinates, are multiplied by DIMLFAC before being converted to dimension text.<br />
+        /// Positive values of DIMLFAC are applied to dimensions in both model space and paper space; negative values are applied to paper space only.<br />
+        /// DIMLFAC has no effect on angular dimensions.
         /// </remarks>
-        public short DIMAUNIT
+        public double DIMLFAC
+        {
+            get { return this.dimlfac; }
+            set
+            {
+                if (MathHelper.IsZero(value)) throw new ArgumentOutOfRangeException("value", value, "The scale factor cannot be zero.");
+                this.dimlfac = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the units for all dimension types except angular.
+        /// </summary>
+        /// <remarks>
+        /// Scientific<br/>
+        /// Decimal<br/>
+        /// Engineering<br/>
+        /// Architectural<br/>
+        /// Fractional
+        /// </remarks>
+        public LinearUnitType DIMLUNIT
+        {
+            get { return this.dimlunit; }
+            set { this.dimlunit = value; }
+        }
+
+        /// <summary>
+        /// Gets or sets the units format for angular dimensions.
+        /// </summary>
+        /// <remarks>
+        /// Decimal degrees<br/>
+        /// Degrees/minutes/seconds<br/>
+        /// Gradians<br/>
+        /// Radians
+        /// </remarks>
+        public AngleUnitType DIMAUNIT
         {
             get { return this.dimaunit; }
-            set { this.dimaunit = value; }
+            set
+            {
+                if (value == AngleUnitType.SurveyorUnits)
+                    throw new ArgumentException("Surveyor's units are not applicable in angular dimensions.");
+                this.dimaunit = value;
+            }
+        }
+
+        /// <summary>
+        /// Suppresses leading zeros in linear decimal dimensions (for example, 0.5000 becomes .5000).
+        /// </summary>
+        /// <remarks>This value is part of the DIMDEC variable.</remarks>
+        public bool SuppressLinearLeadingZeros
+        {
+            get { return this.suppressLinearLeadingZeros; }
+            set { this.suppressLinearLeadingZeros = value; }
+        }
+
+        /// <summary>
+        /// Suppresses trailing zeros in linear decimal dimensions (for example, 12.5000 becomes 12.5).
+        /// </summary>
+        /// <remarks>This value is part of the DIMDEC variable.</remarks>
+        public bool SuppressLinearTrailingZeros
+        {
+            get { return this.suppressLinearTrailingZeros; }
+            set { this.suppressLinearTrailingZeros = value; }
+        }
+
+        /// <summary>
+        /// Suppresses leading zeros in angular decimal dimensions (for example, 0.5000 becomes .5000).
+        /// </summary>
+        /// <remarks>This value is part of the DIMADEC variable.</remarks>
+        public bool SuppressAngularLeadingZeros
+        {
+            get { return this.suppressAngularLeadingZeros; }
+            set { this.suppressAngularLeadingZeros = value; }
+        }
+
+        /// <summary>
+        /// Suppresses trailing zeros in angular decimal dimensions (for example, 12.5000 becomes 12.5).
+        /// </summary>
+        /// <remarks>This value is part of the DIMADEC variable.</remarks>
+        public bool SuppressAngularTrailingZeros
+        {
+            get { return this.suppressAngularTrailingZeros; }
+            set { this.suppressAngularTrailingZeros = value; }
+        }
+
+        /// <summary>
+        /// Suppresses zero feet in architectural dimensions.
+        /// </summary>
+        /// <remarks>This value is part of the DIMDEC variable.</remarks>
+        public bool SuppressZeroFeet
+        {
+            get { return this.suppressZeroFeet; }
+            set { this.suppressZeroFeet = value; }
+        }
+
+        /// <summary>
+        /// Suppresses zero inches in architectural dimensions.
+        /// </summary>
+        /// <remarks>This value is part of the DIMDEC variable.</remarks>
+        public bool SuppressZeroInches
+        {
+            get { return this.suppressZeroInches; }
+            set { this.suppressZeroInches = value; }
+        }
+
+        /// <summary>
+        /// Gets or sets the value to round all dimensioning distances.
+        /// </summary>
+        /// <remarks>
+        /// Default: 0 (no rounding off).<br/>
+        /// If DIMRND is set to 0.25, all distances round to the nearest 0.25 unit.
+        /// If you set DIMRND to 1.0, all distances round to the nearest integer.
+        /// Note that the number of digits edited after the decimal point depends on the precision set by DIMDEC.
+        /// DIMRND does not apply to angular dimensions.
+        /// </remarks>
+        public double DIMRND
+        {
+            get { return this.dimrnd; }
+            set
+            {
+                if (value < 0)
+                    throw new ArgumentOutOfRangeException("value", value, "The nearest value to round all distances must be equals or greater than zero.");
+                this.dimrnd = value;
+            }
         }
 
         #endregion
@@ -657,6 +924,7 @@ namespace netDxf.Tables
 
                 // text appearance
                 DIMTXSTY = (TextStyle)this.dimtxsty.Clone(),
+                DIMCLRT = (AciColor)this.dimclrt.Clone(),
                 DIMTXT = this.dimtxt,
                 DIMJUST = this.dimjust,
                 DIMTAD = this.dimtad,

@@ -1,23 +1,22 @@
-﻿#region netDxf, Copyright(C) 2014 Daniel Carvajal, Licensed under LGPL.
-
-//                        netDxf library
-// Copyright (C) 2014 Daniel Carvajal (haplokuon@gmail.com)
+﻿#region netDxf, Copyright(C) 2015 Daniel Carvajal, Licensed under LGPL.
 // 
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2.1 of the License, or (at your option) any later version.
-// 
-// The above copyright notice and this permission notice shall be included in all
-// copies or substantial portions of the Software.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-// FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-// COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-// IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-// CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. 
-
+//                         netDxf library
+//  Copyright (C) 2009-2015 Daniel Carvajal (haplokuon@gmail.com)
+//  
+//  This library is free software; you can redistribute it and/or
+//  modify it under the terms of the GNU Lesser General Public
+//  License as published by the Free Software Foundation; either
+//  version 2.1 of the License, or (at your option) any later version.
+//  
+//  The above copyright notice and this permission notice shall be included in all
+//  copies or substantial portions of the Software.
+//  
+//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+//  FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+//  COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+//  IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+//  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #endregion
 
 using System;
@@ -35,6 +34,38 @@ namespace netDxf.Entities
     public abstract class Dimension:
         EntityObject
     {
+        #region delegates and events
+
+        public delegate void DimensionStyleChangeEventHandler(Dimension sender, TableObjectChangeEventArgs<DimensionStyle> e);
+        public event DimensionStyleChangeEventHandler DimensionStyleChange;
+        protected virtual DimensionStyle OnDimensionStyleChangeEvent(DimensionStyle oldStyle, DimensionStyle newStyle)
+        {
+            DimensionStyleChangeEventHandler ae = this.DimensionStyleChange;
+            if (ae != null)
+            {
+                TableObjectChangeEventArgs<DimensionStyle> eventArgs = new TableObjectChangeEventArgs<DimensionStyle>(oldStyle, newStyle);
+                ae(this, eventArgs);
+                return eventArgs.NewValue;
+            }
+            return newStyle;
+        }
+
+        public delegate void DimensionBlockChangeEventHandler(Dimension sender, TableObjectChangeEventArgs<Block> e);
+        public event DimensionBlockChangeEventHandler DimensionBlockChange;
+        protected virtual Block OnDimensionBlockChangeEvent(Block oldBlock, Block newBlock)
+        {
+            DimensionBlockChangeEventHandler ae = this.DimensionBlockChange;
+            if (ae != null)
+            {
+                TableObjectChangeEventArgs<Block> eventArgs = new TableObjectChangeEventArgs<Block>(oldBlock, newBlock);
+                ae(this, eventArgs);
+                return eventArgs.NewValue;
+            }
+            return newBlock;
+        }
+
+        #endregion
+
         #region protected fields
 
         protected Vector3 definitionPoint;
@@ -44,6 +75,7 @@ namespace netDxf.Entities
         protected MTextAttachmentPoint attachmentPoint;
         protected MTextLineSpacingStyle lineSpacingStyle;
         protected Block block;
+        protected string userText;
         protected double lineSpacing;
 
         #endregion
@@ -64,6 +96,7 @@ namespace netDxf.Entities
             this.lineSpacing = 1.0;
             this.block = null;
             this.style = DimensionStyle.Default;
+            this.userText = null;
         }
 
         #endregion
@@ -98,7 +131,12 @@ namespace netDxf.Entities
         public DimensionStyle Style
         {
             get { return this.style; }
-            set { this.style = value; }
+            set
+            {
+                if (value == null)
+                    throw new ArgumentNullException("value");
+                this.style = this.OnDimensionStyleChangeEvent(this.style, value);
+            }
         }
 
         /// <summary>
@@ -112,7 +150,7 @@ namespace netDxf.Entities
         /// <summary>
         /// Gets the actual measurement.
         /// </summary>
-        public abstract double Value
+        public abstract double Measurement
         {
             get;
         }
@@ -164,21 +202,49 @@ namespace netDxf.Entities
             internal set { this.block = value; }
         }
 
+        /// <summary>
+        /// Gets or sets the dimension text explicitly.
+        /// </summary>
+        /// <remarks>
+        /// Dimension text explicitly entered by the user. Optional; default is the measurement.
+        /// If null or "&lt;&gt;", the dimension measurement is drawn as the text,
+        /// if " " (one blank space), the text is suppressed. Anything else is drawn as the text.
+        /// </remarks>
+        public string UserText
+        {
+            get { return this.userText; }
+            set { this.userText = value; }
+        }
+
         #endregion
 
         #region internal methods
 
         /// <summary>
-        /// Gets the the block that contains the entities that make up the dimension picture.
+        /// Gets the block that contains the entities that make up the dimension picture.
         /// </summary>
-        /// <param name="name">Name to be asigned to the generated block.</param>
-        /// <returns>
-        /// The block that represents the actual dimension.<br />
-        /// This method has been made public so it will be posible to be overriden by derivated classes. It 
-        /// </returns>
+        /// <param name="name">Name to be assigned to the generated block.</param>
+        /// <returns> The block that represents the actual dimension.</returns>
         internal abstract Block BuildBlock(string name);
         
         #endregion
 
+        #region public methods
+
+        /// <summary>
+        /// Rebuilds the block definition of the actual dimension.
+        /// </summary>
+        /// <remarks>
+        /// This method needs to be manually called to reflect any change made to the dimension style.<br />
+        /// The dimension must belong to a document.
+        /// </remarks>
+        public void RebuildBlock()
+        {
+            if (this.block == null) throw new ArgumentException("The dimension does not belong to a document.");
+            Block newBlock = this.BuildBlock(this.block.Name);
+            this.block = this.OnDimensionBlockChangeEvent(this.block, newBlock);
+        }
+
+        #endregion
     }
 }

@@ -28,7 +28,7 @@ namespace netDxf
         public StringEnum(Type enumType)
         {
             if (!enumType.IsEnum)
-                throw new ArgumentException(String.Format("Supplied type must be an Enum.  Type was {0}", enumType));
+                throw new ArgumentException(string.Format("Supplied type must be an Enum.  Type was {0}", enumType));
 
             this.enumType = enumType;
         }
@@ -75,7 +75,7 @@ namespace netDxf
         }
 
         /// <summary>
-        /// Gets the values as a 'bindable' list datasource.
+        /// Gets the values as a 'bindable' list data source.
         /// </summary>
         /// <returns>IList for data binding</returns>
         public IList GetListValues()
@@ -180,7 +180,7 @@ namespace netDxf
             string enumStringValue = null;
 
             if (!type.IsEnum)
-                throw new ArgumentException(String.Format("Supplied type must be an Enum.  Type was {0}", type));
+                throw new ArgumentException(string.Format("Supplied type must be an Enum.  Type was {0}", type));
 
             //Look for our string value associated with fields in this enum
             foreach (FieldInfo fi in type.GetFields())

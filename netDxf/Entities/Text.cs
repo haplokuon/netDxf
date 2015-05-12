@@ -1,27 +1,25 @@
-﻿#region netDxf, Copyright(C) 2014 Daniel Carvajal, Licensed under LGPL.
-
-//                        netDxf library
-// Copyright (C) 2013 Daniel Carvajal (haplokuon@gmail.com)
+﻿#region netDxf, Copyright(C) 2015 Daniel Carvajal, Licensed under LGPL.
 // 
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2.1 of the License, or (at your option) any later version.
-// 
-// The above copyright notice and this permission notice shall be included in all
-// copies or substantial portions of the Software.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-// FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-// COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-// IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-// CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. 
-
+//                         netDxf library
+//  Copyright (C) 2009-2015 Daniel Carvajal (haplokuon@gmail.com)
+//  
+//  This library is free software; you can redistribute it and/or
+//  modify it under the terms of the GNU Lesser General Public
+//  License as published by the Free Software Foundation; either
+//  version 2.1 of the License, or (at your option) any later version.
+//  
+//  The above copyright notice and this permission notice shall be included in all
+//  copies or substantial portions of the Software.
+//  
+//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+//  FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+//  COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+//  IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+//  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #endregion
 
 using System;
-using System.Collections.Generic;
 using netDxf.Tables;
 
 namespace netDxf.Entities
@@ -32,6 +30,24 @@ namespace netDxf.Entities
     public class Text :
         EntityObject
     {
+        #region delegates and events
+
+        public delegate void TextStyleChangeEventHandler(Text sender, TableObjectChangeEventArgs<TextStyle> e);
+        public event TextStyleChangeEventHandler TextStyleChange;
+        protected virtual TextStyle OnTextStyleChangeEvent(TextStyle oldTextStyle, TextStyle newTextStyle)
+        {
+            TextStyleChangeEventHandler ae = this.TextStyleChange;
+            if (ae != null)
+            {
+                TableObjectChangeEventArgs<TextStyle> eventArgs = new TableObjectChangeEventArgs<TextStyle>(oldTextStyle, newTextStyle);
+                ae(this, eventArgs );
+                 return eventArgs.NewValue;
+            }
+            return newTextStyle;
+        }
+
+        #endregion
+
         #region private fields
 
         private TextAlignment alignment;
@@ -108,7 +124,7 @@ namespace netDxf.Entities
                 throw new ArgumentNullException("style", "The Text style cannot be null.");
             this.style = style;
             if (height <= 0)
-                throw (new ArgumentOutOfRangeException("height", value, "The Text Height can not be zero or less."));
+                throw (new ArgumentOutOfRangeException("height", this.value, "The Text height must be greater than zero."));
             this.height = height;
             this.widthFactor = style.WidthFactor;
             this.obliqueAngle = style.ObliqueAngle;
@@ -146,7 +162,7 @@ namespace netDxf.Entities
             set
             {
                 if (value <= 0)
-                    throw (new ArgumentOutOfRangeException("value", value, "The Text Height must be greater than zero."));
+                    throw (new ArgumentOutOfRangeException("value", value, "The Text height must be greater than zero."));
                 this.height = value;
             }
         }
@@ -161,7 +177,7 @@ namespace netDxf.Entities
             set
             {
                 if (value < 0.01 || value > 100.0)
-                    throw (new ArgumentOutOfRangeException("value", value, "The Text WidthFactor valid values range from 0.01 to 100."));
+                    throw (new ArgumentOutOfRangeException("value", value, "The Text width factor valid values range from 0.01 to 100."));
                 this.widthFactor = value;
             }
         }
@@ -176,7 +192,7 @@ namespace netDxf.Entities
             set
             {
                 if (value < -85.0 || value > 85.0)
-                    throw (new ArgumentOutOfRangeException("value", value, "The Text ObliqueAngle valid values range from -85 to 85."));
+                    throw (new ArgumentOutOfRangeException("value", value, "The Text oblique angle valid values range from -85 to 85."));
                 this.obliqueAngle = value;
             }
         }
@@ -199,8 +215,8 @@ namespace netDxf.Entities
             set
             {
                 if (value == null)
-                    throw new ArgumentNullException("value", "The Text Style cannot be null.");
-                this.style = value;
+                    throw new ArgumentNullException("value", "The Text style cannot be null.");
+                this.style = this.OnTextStyleChangeEvent(this.style, value);
             }
         }
 
@@ -252,6 +268,5 @@ namespace netDxf.Entities
         }
 
         #endregion
-
     }
 }

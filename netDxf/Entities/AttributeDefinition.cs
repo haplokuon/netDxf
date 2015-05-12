@@ -1,27 +1,25 @@
-#region netDxf, Copyright(C) 2014 Daniel Carvajal, Licensed under LGPL.
-
-//                        netDxf library
-// Copyright (C) 2013 Daniel Carvajal (haplokuon@gmail.com)
+#region netDxf, Copyright(C) 2015 Daniel Carvajal, Licensed under LGPL.
 // 
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2.1 of the License, or (at your option) any later version.
-// 
-// The above copyright notice and this permission notice shall be included in all
-// copies or substantial portions of the Software.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-// FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-// COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-// IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-// CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. 
-
+//                         netDxf library
+//  Copyright (C) 2009-2015 Daniel Carvajal (haplokuon@gmail.com)
+//  
+//  This library is free software; you can redistribute it and/or
+//  modify it under the terms of the GNU Lesser General Public
+//  License as published by the Free Software Foundation; either
+//  version 2.1 of the License, or (at your option) any later version.
+//  
+//  The above copyright notice and this permission notice shall be included in all
+//  copies or substantial portions of the Software.
+//  
+//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+//  FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+//  COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+//  IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+//  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #endregion
 
 using System;
-using System.Collections.Generic;
 using netDxf.Tables;
 
 namespace netDxf.Entities
@@ -36,6 +34,24 @@ namespace netDxf.Entities
     public class AttributeDefinition :
         EntityObject
     {
+        #region delegates and events
+
+        public delegate void TextStyleChangeEventHandler(AttributeDefinition sender, TableObjectChangeEventArgs<TextStyle> e);
+        public event TextStyleChangeEventHandler TextStyleChange;
+        protected virtual TextStyle OnTextStyleChangeEvent(TextStyle oldTextStyle, TextStyle newTextStyle)
+        {
+            TextStyleChangeEventHandler ae = this.TextStyleChange;
+            if (ae != null)
+            {
+                TableObjectChangeEventArgs<TextStyle> eventArgs = new TableObjectChangeEventArgs<TextStyle>(oldTextStyle, newTextStyle);
+                ae(this, eventArgs);
+                 return eventArgs.NewValue;
+            }
+            return newTextStyle;
+        }
+
+        #endregion
+
         #region private fields
 
         private readonly string tag;
@@ -46,6 +62,7 @@ namespace netDxf.Entities
         private AttributeFlags flags;
         private double height;
         private double widthFactor;
+        private double obliqueAngle;
         private double rotation;
         private TextAlignment alignment;
 
@@ -54,7 +71,7 @@ namespace netDxf.Entities
         #region constructor
 
         /// <summary>
-        /// Intitializes a new instance of the <c>AttributeDefiniton</c> class.
+        /// Initializes a new instance of the <c>AttributeDefiniton</c> class.
         /// </summary>
         /// <param name="tag">Attribute identifier, the parameter <c>id</c> string cannot contain spaces.</param>
         public AttributeDefinition(string tag)
@@ -63,7 +80,7 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Intitializes a new instance of the <c>AttributeDefiniton</c> class.
+        /// Initializes a new instance of the <c>AttributeDefiniton</c> class.
         /// </summary>
         /// <param name="tag">Attribute identifier, the parameter <c>id</c> string cannot contain spaces.</param>
         /// <param name="style">Attribute <see cref="TextStyle">text style</see>.</param>
@@ -80,6 +97,7 @@ namespace netDxf.Entities
             this.style = style;
             this.height = MathHelper.IsZero(this.style.Height) ? 1.0 : style.Height;
             this.widthFactor = style.WidthFactor;
+            this.obliqueAngle = style.ObliqueAngle;
             this.rotation = 0.0;
             this.alignment = TextAlignment.BaselineLeft;
         }
@@ -135,6 +153,21 @@ namespace netDxf.Entities
         }
 
         /// <summary>
+        /// Gets or sets the font oblique angle.
+        /// </summary>
+        /// <remarks>Valid values range from -85 to 85. Default: 0.0.</remarks>
+        public double ObliqueAngle
+        {
+            get { return this.obliqueAngle; }
+            set
+            {
+                if (value < -85.0 || value > 85.0)
+                    throw (new ArgumentOutOfRangeException("value", value, "The oblique angle valid values range from -85 to 85."));
+                this.obliqueAngle = value;
+            }
+        }
+
+        /// <summary>
         /// Gets or sets the attribute default value.
         /// </summary>
         public object Value
@@ -156,12 +189,12 @@ namespace netDxf.Entities
             {
                 if (value == null)
                     throw new ArgumentNullException("value");
-               this.style = value;
+                this.style = this.OnTextStyleChangeEvent(this.style, value);
             }
         }
 
         /// <summary>
-        /// Gets or sets the attribute <see cref="Vector3">position</see> in local coordinates.
+        /// Gets or sets the attribute <see cref="Vector3">position</see> in object coordinates.
         /// </summary>
         public Vector3 Position
         {
@@ -221,6 +254,7 @@ namespace netDxf.Entities
                 Value = this.value,
                 Height = this.height,
                 WidthFactor = this.widthFactor,
+                ObliqueAngle = this.obliqueAngle,
                 Style = this.style,
                 Position = this.position,
                 Flags = this.flags,

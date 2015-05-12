@@ -1,23 +1,22 @@
-#region netDxf, Copyright(C) 2014 Daniel Carvajal, Licensed under LGPL.
-
-//                        netDxf library
-// Copyright (C) 2014 Daniel Carvajal (haplokuon@gmail.com)
+#region netDxf, Copyright(C) 2015 Daniel Carvajal, Licensed under LGPL.
 // 
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2.1 of the License, or (at your option) any later version.
-// 
-// The above copyright notice and this permission notice shall be included in all
-// copies or substantial portions of the Software.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-// FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-// COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-// IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-// CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. 
-
+//                         netDxf library
+//  Copyright (C) 2009-2015 Daniel Carvajal (haplokuon@gmail.com)
+//  
+//  This library is free software; you can redistribute it and/or
+//  modify it under the terms of the GNU Lesser General Public
+//  License as published by the Free Software Foundation; either
+//  version 2.1 of the License, or (at your option) any later version.
+//  
+//  The above copyright notice and this permission notice shall be included in all
+//  copies or substantial portions of the Software.
+//  
+//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+//  FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+//  COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+//  IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+//  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #endregion
 
 using System;
@@ -32,7 +31,6 @@ namespace netDxf.Collections
     public sealed class Views :
         TableObjects<View>
     {
-
         #region constructor
 
         internal Views(DxfDocument document, string handle = null)
@@ -58,6 +56,7 @@ namespace netDxf.Collections
         /// Adds a view to the list.
         /// </summary>
         /// <param name="view"><see cref="View">View</see> to add to the list.</param>
+        /// <param name="assignHandle">Specifies if a handle needs to be generated for the view parameter.</param>
         /// <returns>
         /// If a view already exists with the same name as the instance that is being added the method returns the existing view,
         /// if not it will return the new view.
@@ -65,19 +64,23 @@ namespace netDxf.Collections
         internal override View Add(View view, bool assignHandle)
         {
             if (this.list.Count >= this.maxCapacity)
-                throw new OverflowException(String.Format("Table overflow. The maximum number of elements the table {0} can have is {1}", this.codeName, this.maxCapacity));
+                throw new OverflowException(string.Format("Table overflow. The maximum number of elements the table {0} can have is {1}", this.codeName, this.maxCapacity));
 
             View add;
             if (this.list.TryGetValue(view.Name, out add))
                 return add;
 
-            if (assignHandle)
+            if (assignHandle || string.IsNullOrEmpty(view.Handle))
                 this.document.NumHandles = view.AsignHandle(this.document.NumHandles);
 
             this.document.AddedObjects.Add(view.Handle, view);
             this.list.Add(view.Name, view);
             this.references.Add(view.Name, new List<DxfObject>());
+
             view.Owner = this;
+
+            view.NameChange += this.Item_NameChange;
+
             return view;
         }
 
@@ -89,7 +92,7 @@ namespace netDxf.Collections
         /// <remarks>Reserved views or any other referenced by objects cannot be removed.</remarks>
         public override bool Remove(string name)
         {
-            return Remove(this[name]);
+            return this.Remove(this[name]);
         }
 
         /// <summary>
@@ -112,15 +115,35 @@ namespace netDxf.Collections
             if (this.references[view.Name].Count != 0)
                 return false;
 
-            view.Owner = null;
             this.document.AddedObjects.Remove(view.Handle);
             this.references.Remove(view.Name);
             this.list.Remove(view.Name);
+
+            view.Handle = null;
+            view.Owner = null;
+
+            view.NameChange -= this.Item_NameChange;
 
             return true;
         }
 
         #endregion
 
+        #region UCS events
+
+        private void Item_NameChange(TableObject sender, TableObjectChangeEventArgs<string> e)
+        {
+            if (this.Contains(e.NewValue))
+                throw new ArgumentException("There is already another View with the same name.");
+
+            this.list.Remove(sender.Name);
+            this.list.Add(e.NewValue, (View)sender);
+
+            List<DxfObject> refs = this.references[sender.Name];
+            this.references.Remove(sender.Name);
+            this.references.Add(e.NewValue, refs);
+        }
+
+        #endregion
     }
 }

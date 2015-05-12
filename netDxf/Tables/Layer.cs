@@ -1,23 +1,22 @@
-﻿#region netDxf, Copyright(C) 2014 Daniel Carvajal, Licensed under LGPL.
-
-//                        netDxf library
-// Copyright (C) 2013 Daniel Carvajal (haplokuon@gmail.com)
+﻿#region netDxf, Copyright(C) 2015 Daniel Carvajal, Licensed under LGPL.
 // 
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2.1 of the License, or (at your option) any later version.
-// 
-// The above copyright notice and this permission notice shall be included in all
-// copies or substantial portions of the Software.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-// FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-// COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-// IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-// CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. 
-
+//                         netDxf library
+//  Copyright (C) 2009-2015 Daniel Carvajal (haplokuon@gmail.com)
+//  
+//  This library is free software; you can redistribute it and/or
+//  modify it under the terms of the GNU Lesser General Public
+//  License as published by the Free Software Foundation; either
+//  version 2.1 of the License, or (at your option) any later version.
+//  
+//  The above copyright notice and this permission notice shall be included in all
+//  copies or substantial portions of the Software.
+//  
+//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+//  FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+//  COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+//  IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+//  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #endregion
 
 using System;
@@ -31,6 +30,24 @@ namespace netDxf.Tables
     public class Layer :
         TableObject
     {
+        #region delegates and events
+
+        public delegate void LineTypeChangeEventHandler(TableObject sender, TableObjectChangeEventArgs<LineType> e);
+        public event LineTypeChangeEventHandler LineTypeChange;
+        protected virtual LineType OnLineTypeChangeEvent(LineType oldLineType, LineType newLineType)
+        {
+            LineTypeChangeEventHandler ae = this.LineTypeChange;
+            if (ae != null)
+            {
+                TableObjectChangeEventArgs<LineType> eventArgs = new TableObjectChangeEventArgs<LineType>(oldLineType, newLineType);
+                ae(this, eventArgs);
+                return eventArgs.NewValue;
+            }
+            return newLineType;
+        }
+
+        #endregion
+
         #region private fields
 
         private AciColor color;
@@ -47,11 +64,16 @@ namespace netDxf.Tables
         #region constants
 
         /// <summary>
+        /// Default layer name.
+        /// </summary>
+        public const string DefaultName = "0";
+
+        /// <summary>
         /// Gets the default Layer 0.
         /// </summary>
         public static Layer Default
         {
-            get { return new Layer("0"); }
+            get { return new Layer(DefaultName); }
         }
 
         #endregion
@@ -65,6 +87,9 @@ namespace netDxf.Tables
         public Layer(string name)
             : base(name, DxfObjectCode.Layer, true)
         {
+            if (string.IsNullOrEmpty(name))
+                throw new ArgumentNullException("name", "The layer name should be at least one character long.");
+
             this.reserved = name.Equals("0", StringComparison.OrdinalIgnoreCase);
             this.color = AciColor.Default;
             this.lineType = LineType.Continuous;
@@ -88,7 +113,7 @@ namespace netDxf.Tables
             {
                 if (value == null)
                     throw new ArgumentNullException("value");
-                this.lineType = value;
+                this.lineType = this.OnLineTypeChangeEvent(this.lineType, value);
             }
         }
 
@@ -195,7 +220,7 @@ namespace netDxf.Tables
         {
             return new Layer(newName)
             {
-                Color = this.color,
+                Color = (AciColor)this.color.Clone(),
                 IsVisible = this.isVisible,
                 IsFrozen = this.isFrozen,
                 IsLocked = this.isLocked,
@@ -213,10 +238,9 @@ namespace netDxf.Tables
         /// <returns>A new Layer that is a copy of this instance.</returns>
         public override object Clone()
         {
-            return Clone(this.name);
+            return this.Clone(this.name);
         }
 
         #endregion
-
     }
 }

@@ -1,23 +1,22 @@
 ﻿#region netDxf, Copyright(C) 2015 Daniel Carvajal, Licensed under LGPL.
-
-//                        netDxf library
-// Copyright (C) 2015 Daniel Carvajal (haplokuon@gmail.com)
 // 
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2.1 of the License, or (at your option) any later version.
-// 
-// The above copyright notice and this permission notice shall be included in all
-// copies or substantial portions of the Software.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-// FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-// COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-// IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-// CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. 
-
+//                         netDxf library
+//  Copyright (C) 2009-2015 Daniel Carvajal (haplokuon@gmail.com)
+//  
+//  This library is free software; you can redistribute it and/or
+//  modify it under the terms of the GNU Lesser General Public
+//  License as published by the Free Software Foundation; either
+//  version 2.1 of the License, or (at your option) any later version.
+//  
+//  The above copyright notice and this permission notice shall be included in all
+//  copies or substantial portions of the Software.
+//  
+//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+//  FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+//  COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+//  IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+//  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #endregion
 
 using System;
@@ -46,7 +45,7 @@ namespace netDxf.Entities
     /// \F Font selection<br />
     /// <br />
     /// e.g. \Fgdt;o - GDT-tolerance<br />
-    /// e.g. \Fkroeger|b0|i0|c238|p10; - font Kroeger, non-bold, non-italic, codepage 238, pitch 10<br />
+    /// e.g. \Fkroeger|b0|i0|c238|p10; - font Kroeger, non-bold, non-italic, code page 238, pitch 10<br />
     /// <br />
     /// \S Stacking, fractions<br />
     /// <br />
@@ -84,6 +83,23 @@ namespace netDxf.Entities
     public class MText :
         EntityObject
     {
+        #region delegates and events
+
+        public delegate void TextStyleChangeEventHandler(MText sender, TableObjectChangeEventArgs<TextStyle> e);
+        public event TextStyleChangeEventHandler TextStyleChange;
+        protected virtual TextStyle OnTextStyleChangeEvent(TextStyle oldTextStyle, TextStyle newTextStyle)
+        {
+            TextStyleChangeEventHandler ae = this.TextStyleChange;
+            if (ae != null)
+            {
+                TableObjectChangeEventArgs<TextStyle> eventArgs = new TableObjectChangeEventArgs<TextStyle>(oldTextStyle, newTextStyle);
+                ae(this, eventArgs);
+                 return eventArgs.NewValue;
+            }
+            return newTextStyle;
+        }
+
+        #endregion
 
         #region private fields
 
@@ -212,7 +228,7 @@ namespace netDxf.Entities
             this.style = style;
             this.rectangleWidth = rectangleWidth;
             if (height <= 0.0)
-                throw (new ArgumentOutOfRangeException("height", this.value, "The MText height can not be zero or less."));
+                throw (new ArgumentOutOfRangeException("height", this.value, "The MText height must be greater than zero."));
             this.height = height;
             this.lineSpacing = 1.0;
             this.paragraphHeightFactor = 1.0;
@@ -304,7 +320,7 @@ namespace netDxf.Entities
             set
             {
                 if (value < 0.0)
-                    throw (new ArgumentOutOfRangeException("value", value, "The MText rectangle width must be positive."));
+                    throw (new ArgumentOutOfRangeException("value", value, "The MText rectangle width must be equals or greater than zero."));
                 this.rectangleWidth = value;
             }
         }
@@ -328,7 +344,7 @@ namespace netDxf.Entities
             {
                 if (value == null)
                     throw new ArgumentNullException("value", "The MText Style cannot be null.");
-                this.style = value;
+                this.style = this.OnTextStyleChangeEvent(this.style, value);
             }
         }
 

@@ -25,9 +25,8 @@ using System.Globalization;
 
 namespace netDxf
 {
-
     /// <summary>
-    /// Represents the lineweight of a layer or an entity.
+    /// Represents the line weight of a layer or an entity.
     /// </summary>
     public class Lineweight :
         ICloneable,
@@ -42,15 +41,15 @@ namespace netDxf
         #region constants
 
         /// <summary>
-        /// Gets the ByLayer lineweight.
+        /// Gets the ByLayer line weight.
         /// </summary>
         public static Lineweight ByLayer
         {
-            get { return new Lineweight {value = -1};}
+            get { return new Lineweight { value = -1 }; }
         }
 
         /// <summary>
-        /// Gets the ByBlock lineweight.
+        /// Gets the ByBlock line weight.
         /// </summary>
         public static Lineweight ByBlock
         {
@@ -58,7 +57,7 @@ namespace netDxf
         }
 
         /// <summary>
-        /// Gets the Default lineweight.
+        /// Gets the Default line weight.
         /// </summary>
         public static Lineweight Default
         {
@@ -80,14 +79,14 @@ namespace netDxf
         /// <summary>
         /// Initializes a new instance of the <c>Lineweight</c> class.
         /// </summary>
-        /// <param name="weight">Lineweight value range from 0 to 200.</param>
+        /// <param name="weight">Line weight value range from 0 to 200.</param>
         /// <remarks>
-        /// Accepted lineweight values range from 0 to 200, the reserved values - 1, -2, and -3 represents ByLayer, ByBlock, and Default lineweights.
+        /// Accepted line weight values range from 0 to 200, the reserved values - 1, -2, and -3 represents ByLayer, ByBlock, and Default line weights.
         /// </remarks>
         public Lineweight(short weight)
         {
             if (weight < 0 || weight > 200)
-                throw new ArgumentOutOfRangeException("weight", weight, "Accepted lineweight values range from 0 to 200.");
+                throw new ArgumentOutOfRangeException("weight", weight, "Accepted line weight values range from 0 to 200.");
             this.value = weight;
         }
 
@@ -96,7 +95,7 @@ namespace netDxf
         #region public properties
 
         /// <summary>
-        /// Defines if the lineweight is defined by layer.
+        /// Defines if the line weight is defined by layer.
         /// </summary>
         public bool IsByLayer
         {
@@ -104,7 +103,7 @@ namespace netDxf
         }
 
         /// <summary>
-        /// Defines if the lineweight is defined by block.
+        /// Defines if the line weight is defined by block.
         /// </summary>
         public bool IsByBlock
         {
@@ -112,7 +111,7 @@ namespace netDxf
         }
 
         /// <summary>
-        /// Defines if the lineweight is default.
+        /// Defines if the line weight is default.
         /// </summary>
         public bool IsDefault
         {
@@ -120,18 +119,18 @@ namespace netDxf
         }
 
         /// <summary>
-        /// Gets or sets the lineweight value range from 0 to 200, one unit is always 1/100 mm.
+        /// Gets or sets the line weight value range from 0 to 200, one unit is always 1/100 mm.
         /// </summary>
         /// <remarks>
-        /// Accepted lineweight values range from 0 to 200, the reserved values - 1, -2, and -3 represents ByLayer, ByBlock, and Default lineweights.
+        /// Accepted line weight values range from 0 to 200, the reserved values - 1, -2, and -3 represents ByLayer, ByBlock, and Default line weights.
         /// </remarks>
         public short Value
         {
-            get { return value; }
+            get { return this.value; }
             set
             {
                 if (value < 0 || value > 200)
-                    throw new ArgumentOutOfRangeException("value", value, "Accepted lineweight values range from 0 to 200.");
+                    throw new ArgumentOutOfRangeException("value", value, "Accepted line weight values range from 0 to 200.");
                 this.value = value;
             }
         }
@@ -141,10 +140,10 @@ namespace netDxf
         #region public methods
 
         /// <summary>
-        /// Gets a <see cref="Lineweight">Lineweight</see> from an index.
+        /// Gets a <see cref="Lineweight">line weight</see> from an index.
         /// </summary>
         /// <param name="index">A AciColor index.</param>
-        /// <returns>A <see cref="Lineweight">Lineweight</see>.</returns>
+        /// <returns>A <see cref="Lineweight">Line weight</see>.</returns>
         public static Lineweight FromCadIndex(short index)
         {
             Lineweight lineweight;
@@ -172,10 +171,10 @@ namespace netDxf
         #region implements ICloneable
 
         /// <summary>
-        /// Creates a new lineweight that is a copy of the current instance.
+        /// Creates a new line weight that is a copy of the current instance.
         /// </summary>
-        /// <returns>A new lineweight that is a copy of this instance.</returns>
-        public Object Clone()
+        /// <returns>A new line weight that is a copy of this instance.</returns>
+        public object Clone()
         {
             return new Lineweight { value = this.value };
         }
@@ -187,8 +186,8 @@ namespace netDxf
         /// <summary>
         /// Check if the components of two line weights are equal.
         /// </summary>
-        /// <param name="obj">Another Lineweight to compare to.</param>
-        /// <returns>True if their weights are equal or false in anyother case.</returns>
+        /// <param name="obj">Another line weight to compare to.</param>
+        /// <returns>True if their weights are equal or false in any other case.</returns>
         public bool Equals(Lineweight obj)
         {
             return obj.value == this.value;
@@ -215,6 +214,5 @@ namespace netDxf
         }
 
         #endregion
-
     }
 }

@@ -1,23 +1,22 @@
-﻿#region netDxf, Copyright(C) 2014 Daniel Carvajal, Licensed under LGPL.
-
-//                        netDxf library
-// Copyright (C) 2014 Daniel Carvajal (haplokuon@gmail.com)
+﻿#region netDxf, Copyright(C) 2015 Daniel Carvajal, Licensed under LGPL.
 // 
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2.1 of the License, or (at your option) any later version.
-// 
-// The above copyright notice and this permission notice shall be included in all
-// copies or substantial portions of the Software.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-// FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-// COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-// IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-// CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. 
-
+//                         netDxf library
+//  Copyright (C) 2009-2015 Daniel Carvajal (haplokuon@gmail.com)
+//  
+//  This library is free software; you can redistribute it and/or
+//  modify it under the terms of the GNU Lesser General Public
+//  License as published by the Free Software Foundation; either
+//  version 2.1 of the License, or (at your option) any later version.
+//  
+//  The above copyright notice and this permission notice shall be included in all
+//  copies or substantial portions of the Software.
+//  
+//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+//  FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+//  COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+//  IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+//  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #endregion
 
 using System;
@@ -106,7 +105,6 @@ namespace netDxf.Entities
             this.boundary = null;
         }
 
-
         #endregion
 
         #region public properties
@@ -139,7 +137,7 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Viewport status field:<br />
+        /// viewport status field:<br />
         /// -1 = On, but is fully off screen, or is one of the viewports that is not active because the $MAXACTVP count is currently being exceeded.<br />
         /// 0 = Off<br />
         /// 1 = Stacking value reserved for the layout view.
@@ -336,7 +334,7 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Entity that serves as the viewport's clipping boundary (only present if viewport is non-rectangular).
+        /// Entity that serves as the viewport clipping boundary (only present if viewport is non-rectangular).
         /// </summary>
         /// <remarks>
         /// Only closed lightweight polylines, closed polylines, circles, full ellipses and closed splines are allowed.<br />
@@ -418,12 +416,12 @@ namespace netDxf.Entities
         #region overrides
 
         /// <summary>
-        /// Asigns a handle to the object based in a integer counter.
+        /// Assigns a handle to the object based in a integer counter.
         /// </summary>
-        /// <param name="entityNumber">Number to asign.</param>
-        /// <returns>Next avaliable entity number.</returns>
+        /// <param name="entityNumber">Number to assign.</param>
+        /// <returns>Next available entity number.</returns>
         /// <remarks>
-        /// Some objects might consume more than one, is, for example, the case of polylines that will asign
+        /// Some objects might consume more than one, is, for example, the case of polylines that will assign
         /// automatically a handle to its vertexes. The entity number will be converted to an hexadecimal number.
         /// </remarks>
         internal override long AsignHandle(long entityNumber)
@@ -434,9 +432,9 @@ namespace netDxf.Entities
 
 
         /// <summary>
-        /// Creates a new Viewport that is a copy of the current instance.
+        /// Creates a new viewport that is a copy of the current instance.
         /// </summary>
-        /// <returns>A new Viewport that is a copy of this instance.</returns>
+        /// <returns>A new viewport that is a copy of this instance.</returns>
         public override object Clone()
         {
             Viewport viewport = new Viewport
@@ -449,7 +447,7 @@ namespace netDxf.Entities
                 Transparency = (Transparency)this.transparency.Clone(),
                 LineTypeScale = this.lineTypeScale,
                 Normal = this.normal,
-                //Viewport properties
+                //viewport properties
                 Center=this.center,
                 Width=this.width,
                 Height=this.height,
@@ -472,7 +470,7 @@ namespace netDxf.Entities
                 UcsOrigin = this.ucsOrigin,
                 UcsXAxis = this.ucsXAxis,
                 UcsYAxis = this.ucsYAxis,
-                Elevation = this.elevation
+                Elevation = this.elevation,
             };
 
             foreach (XData data in this.XData.Values)
@@ -487,6 +485,5 @@ namespace netDxf.Entities
         }
 
         #endregion
-
     }
 }

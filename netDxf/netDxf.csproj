@@ -68,29 +68,36 @@
     <Reference Include="System.Drawing" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="BinaryCodeValueReader.cs" />
-    <Compile Include="BinaryCodeValueWriter.cs" />
+    <Compile Include="Entities\AttributeChangeEventArgs.cs" />
+    <Compile Include="Entities\EndSequence.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="IO\BinaryCodeValueReader.cs" />
+    <Compile Include="IO\BinaryCodeValueWriter.cs" />
+    <Compile Include="Blocks\BlockEntityChangeEventArgs.cs" />
     <Compile Include="BoundingRectangle.cs" />
     <Compile Include="AciColor.cs" />
     <Compile Include="Blocks\Block.cs" />
-    <Compile Include="Blocks\BlockEnd.cs" />
+    <Compile Include="Blocks\EndBlock.cs" />
     <Compile Include="Blocks\BlockRecord.cs" />
     <Compile Include="Blocks\BlockTypeFlags.cs" />
     <Compile Include="Collections\AttributeDefinitionDictionary.cs" />
     <Compile Include="Collections\AttributeDefinitionDictionaryEventArgs.cs" />
     <Compile Include="Collections\AttributeDictionary.cs" />
-    <Compile Include="Collections\XDataDictionary.cs" />
     <Compile Include="Collections\EntityCollection.cs" />
     <Compile Include="Collections\EntityCollectionEventArgs.cs" />
-    <Compile Include="Collections\Layouts.cs" />
-    <Compile Include="Collections\ObservableCollectionBase.cs">
+    <Compile Include="Collections\ObservableCollection.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Collections\ObservableCollectionBaseEventArgs.cs" />
-    <Compile Include="Collections\ObservableDictionaryBase.cs" />
-    <Compile Include="Collections\ObservableDictionaryBaseEventArgs.cs" />
+    <Compile Include="Collections\ObservableCollectionEventArgs.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Collections\XDataDictionary.cs" />
+    <Compile Include="Collections\Layouts.cs" />
+    <Compile Include="Collections\ObservableDictionary.cs" />
+    <Compile Include="Collections\ObservableDictionaryEventArgs.cs" />
     <Compile Include="Collections\Views.cs" />
-    <Compile Include="Collections\Vports.cs" />
+    <Compile Include="Collections\VPorts.cs" />
     <Compile Include="Entities\DimensionArrowhead.cs" />
     <Compile Include="Entities\DimensionBlock.cs" />
     <Compile Include="Entities\DimensionTypeFlag.cs" />
@@ -98,15 +105,21 @@
     <Compile Include="Entities\MeshEdge.cs" />
     <Compile Include="Entities\MLineFlags.cs" />
     <Compile Include="Entities\MLineJustification.cs" />
+    <Compile Include="Objects\PlotPaperUnits.cs" />
+    <Compile Include="Units\FractionFormatType.cs" />
+    <Compile Include="Units\LinearUnitFormat.cs" />
+    <Compile Include="Objects\GroupEntityChangeEventArgs.cs" />
+    <Compile Include="Objects\MLineStyleElementChangeEventArgs.cs" />
+    <Compile Include="Tables\TableObjectChangeEventArgs.cs" />
     <Compile Include="Tables\ViewMode.cs" />
-    <Compile Include="TextCodeValueWriter.cs" />
-    <Compile Include="ICodeValueWriter.cs" />
+    <Compile Include="IO\TextCodeValueWriter.cs" />
+    <Compile Include="IO\ICodeValueWriter.cs" />
     <Compile Include="Entities\AttributeFlags.cs" />
     <Compile Include="Entities\Face3dEdgeFlags.cs" />
-    <Compile Include="ICodeValueReader.cs" />
-    <Compile Include="TextCodeValueReader.cs" />
+    <Compile Include="IO\ICodeValueReader.cs" />
+    <Compile Include="IO\TextCodeValueReader.cs" />
     <Compile Include="Transparency.cs" />
-    <Compile Include="EncodingType.cs" />
+    <Compile Include="IO\EncodingType.cs" />
     <Compile Include="Collections\ApplicationRegistries.cs" />
     <Compile Include="Collections\BlockRecords.cs" />
     <Compile Include="Collections\Groups.cs" />
@@ -128,8 +141,7 @@
     <Compile Include="Entities\ViewportStatusFlags.cs" />
     <Compile Include="Entities\XLine.cs" />
     <Compile Include="Entities\Ray.cs" />
-    <Compile Include="DrawingTime.cs" />
-    <Compile Include="Objects\DictionaryClonningFlag.cs" />
+    <Compile Include="Objects\DictionaryCloningFlags.cs" />
     <Compile Include="Objects\ImageDef.cs" />
     <Compile Include="Objects\ImageDefReactor.cs" />
     <Compile Include="Objects\ImageDisplayQuality.cs" />
@@ -171,7 +183,8 @@
     <Compile Include="Header\HeaderVariables.cs" />
     <Compile Include="Header\PointShape.cs" />
     <Compile Include="Lineweight.cs" />
-    <Compile Include="DrawingUnits.cs" />
+    <Compile Include="Units\AngleUnitType.cs" />
+    <Compile Include="Units\DrawingUnits.cs" />
     <Compile Include="Header\DxfVersion.cs" />
     <Compile Include="Header\HeaderVariableCode.cs" />
     <Compile Include="Entities\MTextLineSpacingStyle.cs" />
@@ -181,7 +194,6 @@
     <Compile Include="Objects\Group.cs" />
     <Compile Include="Objects\MLineStyleFlags.cs" />
     <Compile Include="Objects\PlotFlags.cs" />
-    <Compile Include="Objects\PlotPaperUnits.cs" />
     <Compile Include="Objects\PlotRotation.cs" />
     <Compile Include="Objects\PlotSettings.cs" />
     <Compile Include="Objects\RasterVariables.cs" />
@@ -191,12 +203,18 @@
     <Compile Include="Tables\View.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Units\AngleUnitFormat.cs" />
+    <Compile Include="Units\DrawingTime.cs" />
+    <Compile Include="Units\ImageResolutionUnits.cs" />
+    <Compile Include="Units\ImageUnits.cs" />
+    <Compile Include="Units\LinearUnitType.cs" />
+    <Compile Include="Units\UnitHelper.cs" />
+    <Compile Include="Units\UnitStyleFormat.cs" />
     <Compile Include="Vector2.cs" />
     <Compile Include="Vector3.cs" />
     <Compile Include="Matrix3.cs" />
     <Compile Include="DxfObjectCode.cs" />
     <Compile Include="Entities\Ellipse.cs" />
-    <Compile Include="Entities\EndSequence.cs" />
     <Compile Include="Entities\Solid.cs" />
     <Compile Include="Header\HeaderVariable.cs" />
     <Compile Include="DxfObject.cs" />
@@ -208,7 +226,7 @@
     <Compile Include="Tables\VPort.cs" />
     <Compile Include="Entities\TextAligment.cs" />
     <Compile Include="DxfDocument.cs" />
-    <Compile Include="DxfException.cs" />
+    <Compile Include="IO\DxfException.cs" />
     <Compile Include="Entities\Arc.cs" />
     <Compile Include="Entities\Attribute.cs">
       <SubType>Code</SubType>
@@ -227,7 +245,7 @@
     <Compile Include="Entities\Face3d.cs" />
     <Compile Include="Entities\PolyfaceMesh.cs" />
     <Compile Include="Entities\Text.cs" />
-    <Compile Include="DxfReader.cs" />
+    <Compile Include="IO\DxfReader.cs" />
     <Compile Include="Tables\TableObject.cs" />
     <Compile Include="Tables\Layer.cs" />
     <Compile Include="MathHelper.cs" />
@@ -235,7 +253,7 @@
     <Compile Include="Tables\TextStyle.cs" />
     <Compile Include="XData.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="DxfWriter.cs">
+    <Compile Include="IO\DxfWriter.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="XDataCode.cs" />

@@ -1,29 +1,29 @@
-#region netDxf, Copyright(C) 2014 Daniel Carvajal, Licensed under LGPL.
-
-//                        netDxf library
-// Copyright (C) 2014 Daniel Carvajal (haplokuon@gmail.com)
+#region netDxf, Copyright(C) 2015 Daniel Carvajal, Licensed under LGPL.
 // 
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2.1 of the License, or (at your option) any later version.
-// 
-// The above copyright notice and this permission notice shall be included in all
-// copies or substantial portions of the Software.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-// FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-// COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-// IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-// CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. 
-
+//                         netDxf library
+//  Copyright (C) 2009-2015 Daniel Carvajal (haplokuon@gmail.com)
+//  
+//  This library is free software; you can redistribute it and/or
+//  modify it under the terms of the GNU Lesser General Public
+//  License as published by the Free Software Foundation; either
+//  version 2.1 of the License, or (at your option) any later version.
+//  
+//  The above copyright notice and this permission notice shall be included in all
+//  copies or substantial portions of the Software.
+//  
+//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+//  FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+//  COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+//  IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+//  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #endregion
 
 using System;
 using netDxf.Collections;
 using netDxf.Objects;
 using netDxf.Tables;
+using netDxf.Units;
 
 namespace netDxf.Blocks
 {
@@ -35,9 +35,10 @@ namespace netDxf.Blocks
     {
         #region private fields
 
-        private readonly string name;
+        private string name;
         private Layout layout;
         private static DrawingUnits defaultUnits = DrawingUnits.Unitless;
+        private DrawingUnits documentUnits;
         private DrawingUnits units;
         private bool allowExploding;
         private bool scaleUniformly;
@@ -59,10 +60,11 @@ namespace netDxf.Blocks
             this.name = name;
             this.layout = null;
             this.units = DefaultUnits;
+            this.documentUnits = DefaultUnits;
             this.allowExploding = true;
             this.scaleUniformly = false;
             this.xData = new XDataDictionary();
-            AddUnitsXData();
+            this.AddUnitsXData();
         }
 
         #endregion
@@ -73,12 +75,13 @@ namespace netDxf.Blocks
         /// Gets the name of the block record.
         /// </summary>
         /// <remarks>
-        /// Block record names are case unsensitive.<br />
+        /// Block record names are case insensitive.<br />
         /// The block which name starts with "*" are for internal purpose only.
         /// </remarks>
         public string Name
         {
             get { return this.name; }
+            internal set { this.name = value; }
         }
 
         /// <summary>
@@ -99,7 +102,7 @@ namespace netDxf.Blocks
             set
             {
                 this.units = value;
-                AddUnitsXData();
+                this.AddUnitsXData();
             }
         }
 
@@ -156,11 +159,17 @@ namespace netDxf.Blocks
         }
 
         /// <summary>
-        /// Gets the block record <see cref="XDataDictionary">extende data</see>.
+        /// Gets the block record <see cref="XDataDictionary">extended data</see>.
         /// </summary>
         public XDataDictionary XData
         {
             get { return this.xData; }
+        }
+
+        public DrawingUnits DocumentUnits
+        {
+            get { return this.documentUnits; }
+            internal set { this.documentUnits = value; }
         }
 
         #endregion
@@ -171,14 +180,14 @@ namespace netDxf.Blocks
         {
             // for dxf versions prior to AutoCad2007 the block record units is stored in an extended data block
             XData xdataEntry;
-            if (this.XData.ContainsAppId(ApplicationRegistry.Default.Name))
+            if (this.XData.ContainsAppId(ApplicationRegistry.DefaultName))
             {
-                xdataEntry = this.XData[ApplicationRegistry.Default.Name];
+                xdataEntry = this.XData[ApplicationRegistry.DefaultName];
                 xdataEntry.XDataRecord.Clear();
             }
             else
             {
-                xdataEntry = new XData(new ApplicationRegistry(ApplicationRegistry.Default.Name));
+                xdataEntry = new XData(new ApplicationRegistry(ApplicationRegistry.DefaultName));
                 this.XData.Add(xdataEntry);
             }
 

@@ -1,23 +1,22 @@
-﻿#region netDxf, Copyright(C) 2014 Daniel Carvajal, Licensed under LGPL.
-
-//                        netDxf library
-// Copyright (C) 2014 Daniel Carvajal (haplokuon@gmail.com)
+﻿#region netDxf, Copyright(C) 2015 Daniel Carvajal, Licensed under LGPL.
 // 
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2.1 of the License, or (at your option) any later version.
-// 
-// The above copyright notice and this permission notice shall be included in all
-// copies or substantial portions of the Software.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-// FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-// COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-// IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-// CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. 
-
+//                         netDxf library
+//  Copyright (C) 2009-2015 Daniel Carvajal (haplokuon@gmail.com)
+//  
+//  This library is free software; you can redistribute it and/or
+//  modify it under the terms of the GNU Lesser General Public
+//  License as published by the Free Software Foundation; either
+//  version 2.1 of the License, or (at your option) any later version.
+//  
+//  The above copyright notice and this permission notice shall be included in all
+//  copies or substantial portions of the Software.
+//  
+//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+//  FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+//  COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+//  IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+//  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #endregion
 
 using System;
@@ -36,6 +35,7 @@ namespace netDxf.Objects
         private string plotterName;
         private string paperSizeName;
         private string viewName;
+        private string currentStyleSheet;
 
         private double left;
         private double bottom;
@@ -67,6 +67,7 @@ namespace netDxf.Objects
             this.plotterName = "none_device";
             this.paperSizeName = "ISO_A4_(210.00_x_297.00_MM)";
             this.viewName = string.Empty;
+            this.currentStyleSheet = string.Empty;
 
             this.left = 7.5;
             this.bottom = 20.0;
@@ -124,6 +125,15 @@ namespace netDxf.Objects
         {
             get { return this.viewName; }
             set { this.viewName = value; }
+        }
+
+        /// <summary>
+        /// Gets or sets the current style sheet name.
+        /// </summary>
+        public string CurrentStyleSheet
+        {
+            get { return this.currentStyleSheet; }
+            set { this.currentStyleSheet = value; }
         }
 
         /// <summary>
@@ -274,8 +284,9 @@ namespace netDxf.Objects
             {
                 PageSetupName = this.pageSetupName,
                 PlotterName = this.plotterName,
-                paperSizeName = this.paperSizeName,
+                PaperSizeName = this.paperSizeName,
                 ViewName = this.viewName,
+                CurrentStyleSheet = this.currentStyleSheet,
                 LeftMargin = this.left,
                 BottomMargin = this.bottom,
                 RightMargin = this.right,

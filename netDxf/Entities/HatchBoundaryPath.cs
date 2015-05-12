@@ -1,23 +1,22 @@
-﻿#region netDxf, Copyright(C) 2014 Daniel Carvajal, Licensed under LGPL.
-
-//                        netDxf library
-// Copyright (C) 2014 Daniel Carvajal (haplokuon@gmail.com)
+﻿#region netDxf, Copyright(C) 2015 Daniel Carvajal, Licensed under LGPL.
 // 
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2.1 of the License, or (at your option) any later version.
-// 
-// The above copyright notice and this permission notice shall be included in all
-// copies or substantial portions of the Software.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-// FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-// COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-// IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-// CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. 
-
+//                         netDxf library
+//  Copyright (C) 2009-2015 Daniel Carvajal (haplokuon@gmail.com)
+//  
+//  This library is free software; you can redistribute it and/or
+//  modify it under the terms of the GNU Lesser General Public
+//  License as published by the Free Software Foundation; either
+//  version 2.1 of the License, or (at your option) any later version.
+//  
+//  The above copyright notice and this permission notice shall be included in all
+//  copies or substantial portions of the Software.
+//  
+//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+//  FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+//  COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+//  IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+//  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #endregion
 
 using System;
@@ -32,12 +31,14 @@ namespace netDxf.Entities
     /// The entities that make a loop can be any combination of lines, polylines, circles, arcs, ellipses, and splines.<br />
     /// The entities that define a loop must define a closed path and they have to be on the same plane as the hatch, 
     /// if these conditions are not met the result will be unpredictable.<br />
-    /// The entitiy normal and the elevation will be ignored. Only the x and y coordinates of the line, ellipse, the circle, and spline will be used.
+    /// The entity normal and the elevation will be ignored. Only the x and y coordinates of the line, ellipse, the circle, and spline will be used.
     /// Circles, full ellipses, closed polylines, closed splines are closed paths so only one should exist in the edges list.
-    /// Lines, arcs, ellipse arcs, open polylines, and open splines are open paths so more enties should exist to make a closed loop.
+    /// Lines, arcs, ellipse arcs, open polylines, and open splines are open paths so more entities should exist to make a closed loop.
     /// </remarks>
     public class HatchBoundaryPath
     {
+        #region Hatch boundary path edge classes
+
         public enum EdgeType
         {
             Polyline = 0,
@@ -75,10 +76,9 @@ namespace netDxf.Entities
                 : base(EdgeType.Polyline)
             {
                 if (entity == null) throw new ArgumentNullException("entity");
-
-                if (entity is Entities.LwPolyline)
+                if (entity.Type == EntityType.LightWeightPolyline)
                 {
-                    LwPolyline poly = (LwPolyline) entity;
+                    Entities.LwPolyline poly = (Entities.LwPolyline)entity;
                     if (!poly.IsClosed) throw new ArgumentException("Only closed polyline are supported as hatch boundary edges.", "entity");
 
                     this.Vertexes = new Vector3[poly.Vertexes.Count];
@@ -88,7 +88,7 @@ namespace netDxf.Entities
                     }
                     this.IsClosed = true;
                 }
-                else if (entity is Entities.Polyline)
+                else if (entity.Type == EntityType.Polyline)
                 {
                     Entities.Polyline poly = (Entities.Polyline)entity;
                     if (!poly.IsClosed) throw new ArgumentException("Only closed polyline are supported as hatch boundary edges.", "entity");
@@ -173,7 +173,7 @@ namespace netDxf.Entities
             {
                 if (entity == null) throw new ArgumentNullException("entity");
 
-                if (entity is Entities.Arc)
+                if (entity.Type == EntityType.Arc)
                 {
                     Entities.Arc arc = (Entities.Arc) entity;
                     this.Center = new Vector2(arc.Center.X, arc.Center.Y);
@@ -182,7 +182,7 @@ namespace netDxf.Entities
                     this.EndAngle = arc.EndAngle;
                     this.IsCounterclockwise = true;
                 }
-                else if (entity is Entities.Circle)
+                else if (entity.Type == EntityType.Circle)
                 {
                     Entities.Circle circle = (Circle) entity;
                     this.Center = new Vector2(circle.Center.X, circle.Center.Y);
@@ -317,13 +317,15 @@ namespace netDxf.Entities
             public override EntityObject ConvertTo()
             {
                 List<SplineVertex> ctrl = new List<SplineVertex>(this.ControlPoints.Length);
-                foreach (Vector3 point in ControlPoints)
+                foreach (Vector3 point in this.ControlPoints)
                 {
                     ctrl.Add(new SplineVertex(point.X, point.Y, point.Z));
                 }
                 return new Entities.Spline(ctrl, this.Knots, this.Degree);
             }
         }
+
+        #endregion
 
         #region private fields
 
@@ -338,7 +340,7 @@ namespace netDxf.Entities
         /// Initializes a new instance of the <c>Hatch</c> class.
         /// </summary>
         /// <param name="edges">List of entities that makes a loop for the hatch boundary paths.</param>
-        public HatchBoundaryPath(IEnumerable<EntityObject> edges)
+        public HatchBoundaryPath(ICollection<EntityObject> edges)
         {
             if (edges == null)
                 throw new ArgumentNullException("edges");
@@ -386,10 +388,10 @@ namespace netDxf.Entities
 
             foreach (EntityObject entity in entities)
             {
-                if ((pathTypeFlag & HatchBoundaryPathTypeFlag.Polyline) == HatchBoundaryPathTypeFlag.Polyline)
+                if ((this.pathTypeFlag & HatchBoundaryPathTypeFlag.Polyline) == HatchBoundaryPathTypeFlag.Polyline)
                     if (this.edges.Count >= 1) throw new ArgumentException("Closed polylines cannot be combined with other entities to make a hatch boundary path.");
 
-                // it seems that AutoCad does not have problems on creating loops that theorically does not make sense, like, for example an internal loop that is made of a single arc.
+                // it seems that AutoCad does not have problems on creating loops that theoretically does not make sense, like, for example an internal loop that is made of a single arc.
                 // so if AutoCAD is ok with that I am too, the program that make use of this information will take care of this inconsistencies
                 switch (entity.Type)
                 {
@@ -426,7 +428,7 @@ namespace netDxf.Entities
                         this.edges.Add(Spline.ConvertFrom(entity));
                         break;
                     default:
-                        throw new ArgumentException("The entity type " + entity.Type + " unknown or not implemented as part of a hatch boundary.");
+                        throw new ArgumentException(string.Format("The entity type {0} cannot be part of a hatch boundary.", entity.Type));
                 }
             }
         }

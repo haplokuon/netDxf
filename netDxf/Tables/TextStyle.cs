@@ -1,23 +1,22 @@
-﻿#region netDxf, Copyright(C) 2014 Daniel Carvajal, Licensed under LGPL.
-
-//                        netDxf library
-// Copyright (C) 2014 Daniel Carvajal (haplokuon@gmail.com)
+﻿#region netDxf, Copyright(C) 2015 Daniel Carvajal, Licensed under LGPL.
 // 
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2.1 of the License, or (at your option) any later version.
-// 
-// The above copyright notice and this permission notice shall be included in all
-// copies or substantial portions of the Software.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-// FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-// COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-// IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-// CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. 
-
+//                         netDxf library
+//  Copyright (C) 2009-2015 Daniel Carvajal (haplokuon@gmail.com)
+//  
+//  This library is free software; you can redistribute it and/or
+//  modify it under the terms of the GNU Lesser General Public
+//  License as published by the Free Software Foundation; either
+//  version 2.1 of the License, or (at your option) any later version.
+//  
+//  The above copyright notice and this permission notice shall be included in all
+//  copies or substantial portions of the Software.
+//  
+//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+//  FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+//  COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+//  IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+//  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #endregion
 
 using System;
@@ -47,11 +46,16 @@ namespace netDxf.Tables
         #region constants
 
         /// <summary>
+        /// Default text style name.
+        /// </summary>
+        public const string DefaultName = "Standard";
+
+        /// <summary>
         /// Gets the default text style.
         /// </summary>
         public static TextStyle Default
         {
-            get { return new TextStyle("Standard", "simplex.shx"); }
+            get { return new TextStyle(DefaultName, "simplex.shx"); }
         }
 
         #endregion
@@ -75,8 +79,12 @@ namespace netDxf.Tables
         public TextStyle(string name, string font)
             : base(name, DxfObjectCode.TextStyle, true)
         {
+            if (string.IsNullOrEmpty(name))
+                throw new ArgumentNullException("name", "The text style name should be at least one character long.");
+
             if (string.IsNullOrEmpty(font))
                 throw (new ArgumentNullException("font"));
+
             this.reserved = name.Equals("Standard", StringComparison.OrdinalIgnoreCase);
             this.font = font;
             this.widthFactor = 1.0;
@@ -117,7 +125,7 @@ namespace netDxf.Tables
             set
             {
                 if (value < 0)
-                    throw (new ArgumentOutOfRangeException("value", value, "The height can not be less than zero."));
+                    throw (new ArgumentOutOfRangeException("value", value, "The TextStyle height must be equals or greater than zero."));
                 this.height = value;
             }
         }
@@ -132,7 +140,7 @@ namespace netDxf.Tables
             set
             {
                 if (value < 0.01 || value > 100.0)
-                    throw (new ArgumentOutOfRangeException("value", value, "The TextStyle WidthFactor valid values range from 0.01 to 100."));
+                    throw (new ArgumentOutOfRangeException("value", value, "The TextStyle width factor valid values range from 0.01 to 100."));
                 this.widthFactor = value;
             }
         }
@@ -147,7 +155,7 @@ namespace netDxf.Tables
             set
             {
                 if (value < -85.0 || value > 85.0)
-                    throw (new ArgumentOutOfRangeException("value", value, "The TextStyle ObliqueAngle valid values range from -85 to 85."));
+                    throw (new ArgumentOutOfRangeException("value", value, "The TextStyle oblique angle valid values range from -85 to 85."));
                 this.obliqueAngle = value;
             }
         }
@@ -217,10 +225,9 @@ namespace netDxf.Tables
         /// <returns>A new TextStyle that is a copy of this instance.</returns>
         public override object Clone()
         {
-            return Clone(this.name);
+            return this.Clone(this.name);
         }
 
         #endregion
-
     }
 }

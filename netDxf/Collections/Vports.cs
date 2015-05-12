@@ -1,23 +1,22 @@
-#region netDxf, Copyright(C) 2014 Daniel Carvajal, Licensed under LGPL.
-
-//                        netDxf library
-// Copyright (C) 2014 Daniel Carvajal (haplokuon@gmail.com)
+#region netDxf, Copyright(C) 2015 Daniel Carvajal, Licensed under LGPL.
 // 
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2.1 of the License, or (at your option) any later version.
-// 
-// The above copyright notice and this permission notice shall be included in all
-// copies or substantial portions of the Software.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-// FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-// COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-// IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-// CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. 
-
+//                         netDxf library
+//  Copyright (C) 2009-2015 Daniel Carvajal (haplokuon@gmail.com)
+//  
+//  This library is free software; you can redistribute it and/or
+//  modify it under the terms of the GNU Lesser General Public
+//  License as published by the Free Software Foundation; either
+//  version 2.1 of the License, or (at your option) any later version.
+//  
+//  The above copyright notice and this permission notice shall be included in all
+//  copies or substantial portions of the Software.
+//  
+//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+//  FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+//  COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+//  IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+//  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #endregion
 
 using System;
@@ -27,7 +26,7 @@ using netDxf.Tables;
 namespace netDxf.Collections
 {
     /// <summary>
-    /// Represents a collection of vports.
+    /// Represents a collection of viewports.
     /// </summary>
     public sealed class VPorts :
         TableObjects<VPort>
@@ -48,6 +47,18 @@ namespace netDxf.Collections
             handle)
         {
             this.maxCapacity = short.MaxValue;
+
+            if (this.list.Count >= this.maxCapacity)
+                throw new OverflowException(string.Format("Table overflow. The maximum number of elements the table {0} can have is {1}", this.codeName, this.maxCapacity));
+
+            // add the current document viewport, it is always present
+            VPort active = VPort.Active;
+            this.document.NumHandles = active.AsignHandle(this.document.NumHandles);
+
+            this.document.AddedObjects.Add(active.Handle, active);
+            this.list.Add(active.Name, active);
+            this.references.Add(active.Name, new List<DxfObject>());
+            active.Owner = this;
         }
 
         #endregion
@@ -55,69 +66,76 @@ namespace netDxf.Collections
         #region override methods
 
         /// <summary>
-        /// Adds an vport to the list.
+        /// Adds an viewports to the list.
         /// </summary>
         /// <param name="vport"><see cref="VPort">VPort</see> to add to the list.</param>
+        /// <param name="assignHandle">Specifies if a handle needs to be generated for the viewport parameter.</param>
         /// <returns>
-        /// If a vport already exists with the same name as the instance that is being added the method returns the existing vport,
-        /// if not it will return the new vport.
+        /// If a viewports already exists with the same name as the instance that is being added the method returns the existing viewports,
+        /// if not it will return the new viewports.
         /// </returns>
         internal override VPort Add(VPort vport, bool assignHandle)
         {
-            if (this.list.Count >= this.maxCapacity)
-                throw new OverflowException(String.Format("Table overflow. The maximum number of elements the table {0} can have is {1}", this.codeName, this.maxCapacity));
+            throw new ArgumentException("VPorts cannot be added to the collection. There is only one VPort in the list the \"*Active\".", "vport");
 
-            VPort add;
-            if (this.list.TryGetValue(vport.Name, out add))
-                return add;
+            //if (this.list.Count >= this.maxCapacity)
+            //    throw new OverflowException(String.Format("Table overflow. The maximum number of elements the table {0} can have is {1}", this.codeName, this.maxCapacity));
 
-            if (assignHandle)
-                this.document.NumHandles = vport.AsignHandle(this.document.NumHandles);
+            //VPort add;
+            //if (this.list.TryGetValue(vport.Name, out add))
+            //    return add;
 
-            this.document.AddedObjects.Add(vport.Handle, vport);
-            this.list.Add(vport.Name, vport);
-            this.references.Add(vport.Name, new List<DxfObject>());
-            vport.Owner = this;
-            return vport;
+            //if (assignHandle || string.IsNullOrEmpty(vport.Handle))
+            //    this.document.NumHandles = vport.AsignHandle(this.document.NumHandles);
+
+            //this.document.AddedObjects.Add(vport.Handle, vport);
+            //this.list.Add(vport.Name, vport);
+            //this.references.Add(vport.Name, new List<DxfObject>());
+            //vport.Owner = this;
+            //return vport;
         }
 
         /// <summary>
-        /// Removes a vport.
+        /// Removes a viewports.
         /// </summary>
         /// <param name="name"><see cref="VPort">VPort</see> name to remove from the document.</param>
-        /// <returns>True if the vport has been successfully removed, or false otherwise.</returns>
-        /// <remarks>Reserved vports or any other referenced by objects cannot be removed.</remarks>
+        /// <returns>True if the viewports has been successfully removed, or false otherwise.</returns>
+        /// <remarks>Reserved viewports or any other referenced by objects cannot be removed.</remarks>
         public override bool Remove(string name)
         {
-            return Remove(this[name]);
+            throw new ArgumentException("VPorts cannot be removed from the collection.", "name");
+
+            //return this.Remove(this[name]);
         }
 
         /// <summary>
-        /// Removes a vport.
+        /// Removes a viewports.
         /// </summary>
         /// <param name="vport"><see cref="VPort">VPort</see> to remove from the document.</param>
-        /// <returns>True if the vport has been successfully removed, or false otherwise.</returns>
-        /// <remarks>Reserved vports or any other referenced by objects cannot be removed.</remarks>
+        /// <returns>True if the viewports has been successfully removed, or false otherwise.</returns>
+        /// <remarks>Reserved viewports or any other referenced by objects cannot be removed.</remarks>
         public override bool Remove(VPort vport)
         {
-            if (vport == null)
-                return false;
+            throw new ArgumentException("VPorts cannot be removed from the collection.", "vport");
 
-            if (!this.Contains(vport))
-                return false;
+            //if (vport == null)
+            //    return false;
 
-            if (vport.IsReserved)
-                return false;
+            //if (!this.Contains(vport))
+            //    return false;
 
-            if (this.references[vport.Name].Count != 0)
-                return false;
+            //if (vport.IsReserved)
+            //    return false;
 
-            vport.Owner = null;
-            this.document.AddedObjects.Remove(vport.Handle);
-            this.references.Remove(vport.Name);
-            this.list.Remove(vport.Name);
+            //if (this.references[vport.Name].Count != 0)
+            //    return false;
 
-            return true;
+            //vport.Owner = null;
+            //this.document.AddedObjects.Remove(vport.Handle);
+            //this.references.Remove(vport.Name);
+            //this.list.Remove(vport.Name);
+
+            //return true;
         }
 
         #endregion

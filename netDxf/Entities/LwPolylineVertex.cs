@@ -1,23 +1,22 @@
-﻿#region netDxf, Copyright(C) 2012 Daniel Carvajal, Licensed under LGPL.
-
-//                        netDxf library
-// Copyright (C) 2012 Daniel Carvajal (haplokuon@gmail.com)
+﻿#region netDxf, Copyright(C) 2015 Daniel Carvajal, Licensed under LGPL.
 // 
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2.1 of the License, or (at your option) any later version.
-// 
-// The above copyright notice and this permission notice shall be included in all
-// copies or substantial portions of the Software.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-// FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-// COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-// IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-// CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. 
-
+//                         netDxf library
+//  Copyright (C) 2009-2015 Daniel Carvajal (haplokuon@gmail.com)
+//  
+//  This library is free software; you can redistribute it and/or
+//  modify it under the terms of the GNU Lesser General Public
+//  License as published by the Free Software Foundation; either
+//  version 2.1 of the License, or (at your option) any later version.
+//  
+//  The above copyright notice and this permission notice shall be included in all
+//  copies or substantial portions of the Software.
+//  
+//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+//  FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+//  COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+//  IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+//  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #endregion
 
 using System;
@@ -33,7 +32,7 @@ namespace netDxf.Entities
         #region private fields
 
         private Vector2 location;
-        private double beginWidth;
+        private double startWidth;
         private double endWidth;
         private double bulge;
 
@@ -70,7 +69,7 @@ namespace netDxf.Entities
         {
             this.location = location;
             this.bulge = bulge;
-            this.beginWidth = 0.0;
+            this.startWidth = 0.0;
             this.endWidth = 0.0;
         }
 
@@ -88,21 +87,33 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets or sets the light weight polyline begin width.
+        /// Gets or sets the light weight polyline start width.
         /// </summary>
-        public double BeginWidth
+        /// <remarks>Widths greater than zero produce wide lines.</remarks>
+        public double StartWidth
         {
-            get { return this.beginWidth; }
-            set { this.beginWidth = value; }
+            get { return this.startWidth; }
+            set
+            {
+                if (value < 0)
+                    throw new ArgumentOutOfRangeException("value", value, "The LwPolylineVertex width must be equals or greater than zero.");
+                this.startWidth = value;
+            }
         }
 
         /// <summary>
         /// Gets or sets the light weight polyline end width.
         /// </summary>
+        /// <remarks>Widths greater than zero produce wide lines.</remarks>
         public double EndWidth
         {
             get { return this.endWidth; }
-            set { this.endWidth = value; }
+            set
+            {
+                if (value < 0)
+                    throw new ArgumentOutOfRangeException("value", value, "The LwPolylineVertex width must be equals or greater than zero.");
+                this.endWidth = value;
+            }
         }
 
         /// <summary>
@@ -142,7 +153,7 @@ namespace netDxf.Entities
                 {
                     Location = this.location,
                     Bulge = this.bulge,
-                    BeginWidth = this.beginWidth,
+                    StartWidth = this.startWidth,
                     EndWidth = this.endWidth
                 };
         }

@@ -12,6 +12,7 @@ using netDxf.Entities;
 using netDxf.Header;
 using netDxf.Objects;
 using netDxf.Tables;
+using netDxf.Units;
 using Group = netDxf.Objects.Group;
 using Point = netDxf.Entities.Point;
 using Attribute = netDxf.Entities.Attribute;
@@ -31,6 +32,19 @@ namespace TestDxfDocument
             string file = "sample.dxf";
             //DxfDocument doc = Test(file, "output.log");
             DxfDocument doc = Test(file);
+
+            #region Samples for new and modified features 1.0.0
+
+            //ModifyingDocumentEntities();
+            //ModifyingBlockProperties();
+            //ModifyingMLineStyles();
+            //DimensionsLinearAndAngularUnits();
+            //ModifyingDimensionGeometryAndStyle();
+            //ModifyingGroups();
+            //ModifyingXData();
+            //DimensionUserText();
+
+            #endregion
 
             #region Samples for fixes, new and modified features 0.9.3
 
@@ -79,6 +93,7 @@ namespace TestDxfDocument
 
             #endregion
 
+            //NestedBlock();
             //DimensionNestedBlock();
             //EncodingTest();
             //CheckReferences();
@@ -144,8 +159,414 @@ namespace TestDxfDocument
             //WriteInsert();
         }
 
+        #region Samples for new and modified features 1.0.0
+
+        public static void ModifyingDocumentEntities()
+        {
+            Layer layer1 = new Layer("layer1");
+            Layer layer2 = new Layer("layer2");
+            Layer layer3 = new Layer("layer3");
+
+            LineType lineType1 = LineType.Dot;
+            LineType lineType2 = LineType.Dashed;
+
+            Line line = new Line(Vector2.Zero, Vector2.UnitX);
+            line.Layer = layer1;
+            line.LineType = lineType1;
+
+            DxfDocument doc = new DxfDocument();
+            doc.AddEntity(line);
+
+            // if the layer does not exist in the document it will be added automatically
+            line.Layer = layer2;
+            Debug.Assert(ReferenceEquals(line.Layer, doc.Layers[line.Layer.Name]), "References are not equal.");
+
+            // you can always add it first
+            doc.Layers.Add(layer3);
+            // layer3 is defined in the document
+            line.Layer = layer3;
+            Debug.Assert(ReferenceEquals(line.Layer, doc.Layers[line.Layer.Name]), "References are not equal.");
+
+            // same thing is applicable to line types
+            line.LineType = lineType2;
+            Debug.Assert(ReferenceEquals(line.LineType, doc.LineTypes[line.LineType.Name]), "References are not equal.");
+
+            doc.Save("entity.dxf");
+
+            // it is also possible to rename table objects
+            layer1.Name = "New layer1 name";
+            lineType1.Name = "DotDot";
+
+            // this operation is illegal, you cannot rename reserved table objects.
+            //doc.Layers[Layer.DefaultName].Name = "NewName";
+
+            doc.Save("test.dxf");
+        }
+
+        public static void ModifyingBlockProperties()
+        {
+            DxfDocument doc = new DxfDocument();
+            doc.DrawingVariables.InsUnits = DrawingUnits.Centimeters;
+            Line existingLine = new Line(new Vector2(-10, 10), new Vector2(10, -10));
+            doc.AddEntity(existingLine);
+
+            Block block = new Block("MyBlock");
+            block.Record.Units = DrawingUnits.Millimeters;
+
+            // this is incorrect we cannot add an entity that belongs to a document when the block does not belong to anyone.
+            //block.Entities.Add(existingLine);
+            doc.Blocks.Add(block);
+            // when the block and the entity that is being added belong to the same document, the entity will be removed from its current layout and added to the block
+            // you cannot add an entity that belongs to a different document or block. Clone it instead.
+            block.Entities.Add(existingLine);
+
+            // now we can modify the block properties even if it has been already added to the document
+            Line line = new Line(new Vector2(-10, -10), new Vector2(10, 10));
+
+            // when new entities that do not belong to anyone are added to an existing block, they will also be added to the document
+            block.Entities.Add(line);
+
+            DxfDocument doc2 = new DxfDocument();
+            Circle circle = new Circle(Vector2.Zero, 5);
+            doc2.AddEntity(circle);
+
+            // this is incorrect the circle already belongs to another document
+            //block.Entities.Add(circle);
+            // we need to clone it first
+            Circle circle2 = (Circle) circle.Clone();
+            circle2.Radius = 2.5;
+            block.Entities.Add(circle2);
+
+            //you could also remove circle2 from doc2 and add it to the block
+            doc2.RemoveEntity(circle);
+            block.Entities.Add(circle);
+
+            AttributeDefinition attDef = new AttributeDefinition("MyAttribute1");
+            attDef.Value = "MyValue1";
+            block.AttributeDefinitions.Add(attDef);
+
+            // the same that is applicable to entities is also true to attribute definitions
+            AttributeDefinition attDef2 = new AttributeDefinition("MyAttribute2");
+            attDef2.Value = "MyValue2";
+            attDef2.Alignment = TextAlignment.BaselineRight;
+            block.AttributeDefinitions.Add(attDef2);
+
+            Insert ins = new Insert(block);
+            doc.AddEntity(ins);
+
+            // if the insert has been added to a document, any new attribute definitions added to the block will not be reflected in the insert
+            // this mimics the behavior in AutoCad
+            AttributeDefinition attDef3 = new AttributeDefinition("MyAttribute3");
+            attDef3.Value = "MyValue3";
+            attDef3.Alignment = TextAlignment.TopCenter;
+            block.AttributeDefinitions.Add(attDef3);
+            ins.Rotation = 30;
+            // to update the insert attributes call the method Sync, this method will also call the method TransformAttributes
+            ins.Sync();
+
+            // the ins2 will have all three attributes
+            Insert ins2 = new Insert(block, new Vector2(20,0));
+            doc.AddEntity(ins2);
+
+            doc.Save("Test.dxf");
+
+            block.Name = "MyBlockRenamed";
+
+            doc.Save("BlockRename.dxf");
+
+            Test("BlockRename.dxf");
+        }
+
+        public static void ModifyingMLineStyles()
+        {
+            DxfDocument doc = new DxfDocument(DxfVersion.AutoCad2010);
+            doc.DrawingVariables.LtScale = 10;
+
+            List<Vector2> vertexes = new List<Vector2>
+                                         {
+                                             new Vector2(0, 0),
+                                             new Vector2(0, 150),
+                                             new Vector2(150, 150),
+                                             new Vector2(150, 0)
+                                         };
+
+            MLine mline = new MLine(vertexes);
+            mline.Scale = 20;
+            mline.Justification = MLineJustification.Zero;
+
+            MLineStyle style = new MLineStyle("MyStyle", "Personalized style.");
+            style.Elements.Add(new MLineStyleElement(0.25));
+            style.Elements.Add(new MLineStyleElement(-0.25));
+         
+            // if we add new elements directly to the list we need to sort the list,
+            style.Elements.Sort();           
+            style.Flags = MLineStyleFlags.EndInnerArcsCap | MLineStyleFlags.EndRoundCap | MLineStyleFlags.StartInnerArcsCap | MLineStyleFlags.StartRoundCap;
+
+            // AutoCad2000 dxf version does not support true colors for MLineStyle elements
+            style.Elements[0].Color = new AciColor(180, 230, 147);
+           
+            doc.AddEntity(mline);
+
+            // change the multi line style after it has been added to the document
+            mline.Style = style;
+            Debug.Assert(ReferenceEquals(mline.Style, doc.MlineStyles[mline.Style.Name]), "Reference not equals.");
+
+            // VERY IMPORTANT: We have modified the MLine after setting its vertexes so we need to manually call this method.
+            // It is also necessary when manually editing the vertex distances.
+            mline.CalculateVertexesInfo();
+            
+            // the line type will be automatically added to the document
+            foreach (MLineStyleElement e in style.Elements)
+            {
+                // making changes after the MLineStyle has been added to the document
+                e.LineType = LineType.Dashed;
+                Debug.Assert(ReferenceEquals(e.LineType, doc.LineTypes[e.LineType.Name]), "Reference not equals.");
+            }
+
+            MLine copy = (MLine) mline.Clone();
+            copy.Scale = 100;
+            doc.AddEntity(copy);
+            // once the entity has been added to the document, changing its style requires that the new style is also present in the document.
+            copy.Style = doc.MlineStyles["standard"];
+            // VERY IMPORTANT: We have modified the MLine after setting its vertexes so we need to manually call this method.
+            // It is also necessary when manually editing the vertex distances.
+            copy.CalculateVertexesInfo();
+
+            doc.Save("ModifyingMLineStyle.dxf");
+            Test("ModifyingMLineStyle.dxf");
+        }
+
+        public static void ModifyingDimensionGeometryAndStyle()
+        {
+            DimensionStyle style = new DimensionStyle("MyStyle");
+            Vector3 p1 = new Vector3(-2.5, 0, 0);
+            Vector3 p2 = new Vector3(2.5, 0, 0);
+
+            LinearDimension dim = new LinearDimension(p1, p2, 4, 0, style);
+
+            // This is illegal. Trying to rebuild the dimension block before it has been added to a document will throw an exception
+            //dim.RebuildBlock();
+
+            DxfDocument doc = new DxfDocument();
+            doc.AddEntity(dim);
+
+            // modifying the dimension style
+            dim.Style.DIMBLK = DimensionArrowhead.ArchitecturalTick;
+            // if we make any change to the dimension style, we need to manually call the RebuildBlock method to reflect the new changes
+            // since we will also modify the geometry of the dimension we will rebuild the block latter
+            //dim.RebuildBlock();
+
+            // the same kind of procedure needs to be done when modifying the geometry of a dimension
+            dim.FirstReferencePoint = new Vector3(-5.0, 0, 0);
+            dim.SecondReferencePoint = new Vector3(5.0, 0, 0);
+            // now that all necessary changes has been made, we will rebuild the block.
+            // this is an expensive operation, use it only when need it.
+
+            dim.Style.DIMBLK = DimensionArrowhead.Box;
+            dim.Style.DIMBLK = DimensionArrowhead.ArchitecturalTick;
+            Debug.Assert(ReferenceEquals(dim.Style.DIMBLK, doc.Blocks[dim.Style.DIMBLK.Name]), "References are not equal.");
+            Debug.Assert(ReferenceEquals(style.DIMBLK, doc.Blocks[style.DIMBLK.Name]), "References are not equal.");
+            //dim.Style.DIMBLK = null;
+
+            // VERY IMPORTANT: If any change is made to the dimension geometry and/or its style, we need to rebuild the drawing representation
+            // so the dimension block will reflect the new changes. This is only necessary for dimension that already belongs to a document.
+            // This process is automatically called when a new dimension is added to a document.
+            dim.RebuildBlock();
+            Debug.Assert(ReferenceEquals(dim.Block, doc.Blocks[dim.Block.Name]));
+
+            doc.Save("dimension.dxf");
+            Test("dimension.dxf");
+
+        }
+
+        public static void ModifyingGroups()
+        {
+            Line line1 = new Line(new Vector2(0, 0), new Vector2(100, 100));
+            line1.Color = AciColor.Red;
+            Line line2 = new Line(new Vector2(100, 0), new Vector2(200, 100));
+            line2.Color = AciColor.Yellow;
+            Line line3 = new Line(new Vector2(200, 0), new Vector2(300, 100));
+            line3.Color = AciColor.Magenta;
+
+            DxfDocument doc = new DxfDocument();
+
+            Block blk = new Block("MyBlock");
+            blk.Entities.Add(line1);
+            Insert ins = new Insert(blk);
+            doc.AddEntity(ins);
+
+            doc.AddEntity(line2);
+
+            Layout layout = new Layout("Layout1");
+            doc.Layouts.Add(layout);
+            doc.ActiveLayout = layout.Name;
+            doc.AddEntity(line3);
+            
+            // group
+            Group group = new Group("MyGroup");
+            doc.Groups.Add(group);
+
+            // the Add method will also add the entities contained in a group to the document (in the active layout).
+            doc.Groups.Add(group);
+
+            // when the group belongs to a document, all entities must belong to the same document.
+            // even if it does not sound very useful, a group can contain entities that belongs to different layouts and even blocks.
+            group.Entities.Add(line1);
+            group.Entities.Add(line2);
+            group.Entities.Add(line3);
+
+            Line line4 = new Line(new Vector2(300, 0), new Vector2(400, 100));
+            line4.Color = AciColor.Blue;
+            // if a new entity, that does not belong to any document, is added to the group, it will be added to the group document active layout.
+            doc.ActiveLayout = Layout.ModelSpaceName;
+            group.Entities.Add(line4);
+
+            Line line5 = new Line(new Vector2(400, 0), new Vector2(500, 100));
+            line5.Color = AciColor.Green;
+            DxfDocument doc2 = new DxfDocument();
+            doc2.AddEntity(line5);
+
+            // this is illegal, line5 belongs to another document.
+            //group.Entities.Add(line5);
+            // you need to clone the entity before adding it to the group. This is also the common practice to copy entities between documents.
+            group.Entities.Add((EntityObject) line5.Clone());
+
+            // remember removing a group only deletes it from the collection not the entities
+            //doc.Groups.Remove(group);
+            doc.Save("group.dxf");
+
+            doc = DxfDocument.Load("group.dxf");
+        }
+
+        public static void ModifyingXData()
+        {
+            Line line = new Line(Vector2.Zero, Vector2.UnitX);
+
+            ApplicationRegistry appReg = new ApplicationRegistry("netDxf");
+            XData xdata = new XData(appReg);
+            xdata.XDataRecord.Add(new XDataRecord(XDataCode.String, "Length"));
+            line.XData.Add(xdata);
+
+            DxfDocument doc = new DxfDocument();
+            doc.AddEntity(line);
+
+            // modifying existing extended data
+            line.XData[appReg.Name].XDataRecord.Add(new XDataRecord(XDataCode.Real, Vector3.Distance(line.StartPoint, line.EndPoint)));
+
+            // adding new extended data entry to an existing entity
+            ApplicationRegistry appReg2 = new ApplicationRegistry("newXData");
+            XData xdata2 = new XData(appReg2);
+            xdata2.XDataRecord.Add(new XDataRecord(XDataCode.String, "XData entries"));
+            line.XData.Add(xdata2);
+
+            Debug.Assert(ReferenceEquals(line.XData[appReg2.Name].ApplicationRegistry, doc.ApplicationRegistries[appReg2.Name]));
+
+            // deleting existing extended data
+            line.XData.Remove(appReg.Name);
+
+            // we can also change the name of the application registry name
+            doc.ApplicationRegistries["newXData"].Name = "netDxfRenamed";
+
+            doc.Save("xData.dxf");
+
+            doc = DxfDocument.Load("xData.dxf");
+        }
+
+        public static void DimensionsLinearAndAngularUnits()
+        {
+            DimensionStyle style = new DimensionStyle("MyStyle")
+            {
+                // DIMDEC defines the number of decimal places.
+                // For Architectural and Fractional units the minimum fraction is defined by 1/2^DIMDEC.
+                DIMDEC = 4,
+                DIMFRAC = FractionFormatType.Horizontal,
+                DIMLUNIT = LinearUnitType.Engineering,
+                SuppressLinearTrailingZeros = true,
+                SuppressZeroFeet = false,
+                SuppressZeroInches = false,
+                DIMLFAC = 10.0,
+                // the round off to nearest DIMRND is applied to the linear dimension measurement after applying the scale DIMLFAC
+                DIMRND = 0.025,
+                DIMADEC = 2,
+                DIMAUNIT = AngleUnitType.DegreesMinutesSeconds
+            };
+
+            Layer layer = new Layer("Layer1") { Color = AciColor.Blue };
+
+            Vector3 p1 = new Vector3(0, 0, 0);
+            Vector3 p2 = new Vector3(21.2548, 0, 0);
+
+            LinearDimension dim = new LinearDimension(p1, p2, 4, 0, style);
+
+            Vector2 s1 = new Vector2(-2, 2);
+            Vector2 s2 = new Vector2(2, -2);
+
+            Vector2 e1 = new Vector2(-1, -3);
+            Vector2 e2 = new Vector2(1, 3);
+
+            Line line1 = new Line(s1, s2) { Layer = layer };
+            Line line2 = new Line(e1, e2) { Layer = layer };
+            Angular2LineDimension dim1 = new Angular2LineDimension(line2, line1, 4, style);
+
+            DxfDocument doc = new DxfDocument();
+            doc.AddEntity(dim);
+            doc.AddEntity(dim1);
+            doc.Save("DimensionsLinearAndAngularUnits.dxf");
+
+            DxfDocument dxf = DxfDocument.Load("DimensionsLinearAndAngularUnits.dxf");
+        }
+
+        public static void DimensionUserText()
+        {
+            DxfDocument dxf = new DxfDocument(DxfVersion.AutoCad2010);
+
+            Vector3 p2 = new Vector3(0, 0, 0);
+            Vector3 p1 = new Vector3(5, 0, 0);
+
+            Line line1 = new Line(p1, p2)
+            {
+                Layer = new Layer("Reference line")
+                {
+                    Color = AciColor.Green
+                }
+            };
+            dxf.AddEntity(line1);
+
+            DimensionStyle style = new DimensionStyle("MyStyle");
+
+            double offset = 0.75;
+            LinearDimension dim = new LinearDimension(line1, offset, 0, style);
+            dim.UserText = null;    // 5.00 (this is the default behavior)
+            dxf.AddEntity(dim);
+
+            dim = new LinearDimension(line1, 2 * offset, 0, style);
+            dim.UserText = string.Empty;    // 5.00 (same behavior as null)
+            dxf.AddEntity(dim);
+
+            dim = new LinearDimension(line1, 3 * offset, 0, style);
+            dim.UserText = " ";    // No dimension text will be drawn (one blank space)
+            dxf.AddEntity(dim);
+
+            dim = new LinearDimension(line1, 4 * offset, 0, style);
+            dim.UserText = "<>";    // 5.00 (the characters <> will be substituted with the style.DIMPOST property)
+            dxf.AddEntity(dim);
+
+            dim = new LinearDimension(line1, 5 * offset, 0, style);
+            dim.UserText = "Length: <> mm"; // Length: 5.00 mm (the characters <> will be substituted with the style.DIMPOST property)
+            dxf.AddEntity(dim);
+
+            dim = new LinearDimension(line1, 6 * offset, 0, style);
+            dim.UserText = "User text"; // User text
+            dxf.AddEntity(dim);
+
+            dxf.Save("DimensionUserText.dxf");
+
+        }
+
+        #endregion
+
         #region Samples for new and modified features 0.9.3
-   
+
         private static void RemoveBlock()
         {
             DxfDocument dxf = new DxfDocument();
@@ -200,9 +621,6 @@ namespace TestDxfDocument
 
         private static void LinearDimension()
         {
-            DxfDocument dwg1 = DxfDocument.Load("Drawing1.dxf");
-            dwg1.Save("Drawing1 saved.dxf");
-
             DxfDocument dxf = new DxfDocument(DxfVersion.AutoCad2010);
             DimensionStyle myStyle = CreateDimStyle();
 
@@ -640,11 +1058,11 @@ namespace TestDxfDocument
             // the list of entities contained in the block are the ones defined in the original block definition modified by the dynamic parameter
             entities = block.Entities;
 
-            // to access the original dynamic block we need to get firts the extended data associated with the BlockRecord,
+            // to access the original dynamic block we need to get first the extended data associated with the BlockRecord,
             // the application registry for this extended data always has the name "AcDbBlockRepBTag"
             XData xdata = block.Record.XData["AcDbBlockRepBTag"];
             string handle = null;
-            // the orinal dynamic block handle is stored in the extended data
+            // the original dynamic block handle is stored in the extended data
             foreach (XDataRecord data in xdata.XDataRecord)
             {
                 if (data.Code == XDataCode.DatabaseHandle)
@@ -776,8 +1194,8 @@ namespace TestDxfDocument
 
             // adding the group entities to the document is not necessary, but doing so should not cause any harm
             // the AddEntity method will return false in those cases, since those entities are already in the document
-            Console.WriteLine(dxf.AddEntity(line1));
-            Console.WriteLine(dxf.AddEntity(line2));
+            dxf.AddEntity(line1);
+            dxf.AddEntity(line2);
 
             dxf.Save("group.dxf");
 
@@ -1058,10 +1476,10 @@ namespace TestDxfDocument
             // transparencies can only be applied to entities and layer
             Layer layer = new Layer("Layer with transparency");
             layer.Color = new AciColor(Color.MediumVioletRed);
-            // the transparency is expresed in percentage. Initially all Transparency values are initialized as ByLayer.
+            // the transparency is expressed in percentage. Initially all Transparency values are initialized as ByLayer.
             layer.Transparency.Value = 50;
             // You cannot use the reserved values 0 and 100 that represents ByLayer and ByBlock. Use Transparency.ByLayer and Transparency.ByBlock
-            // this behaviour is similar to the index in AciColor or the weight in Lineweight
+            // this behavior is similar to the index in AciColor or the weight in Lineweight
             // this is wrong and will rise and exception
             //layer.Transparency.Value = 0;
             // this is ok
@@ -1194,7 +1612,7 @@ namespace TestDxfDocument
             dxf.Layouts.Add(layout2);
             dxf.ActiveLayout = layout2.Name;
 
-            // Viewports might have a non rectangular boundary, in this case we will use an ellipse.
+            // viewports might have a non rectangular boundary, in this case we will use an ellipse.
             Ellipse ellipse = new Ellipse(new Vector2(100), 200, 150);
             Viewport viewport2 = new Viewport
             {
@@ -1203,14 +1621,23 @@ namespace TestDxfDocument
 
             // Add the viewport to the document. This will also add the ellipse to the document.
             dxf.AddEntity(viewport2);
-     
+
+            Layout layout3 = new Layout("AnyName");
+            dxf.Layouts.Add(layout3);
+            //layout can also be renamed
+            layout3.Name = "Layout3";
+            
+            dxf.Layouts.Remove(layout2.Name);
+
+            ShowDxfDocumentInformation(dxf);
+
             // Save the document as always.
             dxf.Save("PaperSpace.dxf");
 
 #region CAUTION - This is subject to change in the future, use it with care
 
             // You cannot directly remove the ellipse from the document since it has been attached to a viewport
-            bool ok = dxf.RemoveEntity(ellipse); // ok = false
+            bool ok = dxf.RemoveEntity(ellipse); // OK = false
 
             // If an entity has been attached to another, its reactor will point to its owner
             // This information is subject to change in the future to become a list, an entity can be attached to multiple objects;
@@ -1224,7 +1651,7 @@ namespace TestDxfDocument
             // another way of deleting the ellipse, is first to assign another clipping boundary to the viewport or just set it to null
             viewport2.ClippingBoundary = null;
             // now it will be possible to delete the ellipse. This will not delete the viewport.
-            ok = dxf.RemoveEntity(ellipse); // ok = true
+            ok = dxf.RemoveEntity(ellipse); // OK = true
 
             // Save the document if you want to test the changes
             dxf.Save("PaperSpace.dxf");
@@ -1248,10 +1675,15 @@ namespace TestDxfDocument
 
             // You can also remove any layout from the list, except the "Model".
             // Remember all entities that has been added to this layout will also be removed.
-            // This mimics the behaviour in AutoCad, when a layout is deleted all entities in it will also be deleted.
-            dxf.Layouts.Remove(layout2);
+            // This mimics the behavior in AutoCad, when a layout is deleted all entities in it will also be deleted.
+            dxfLoad.Layouts.Remove(layout1.Name);
 
-            dxf.Save("PaperSpace removed.dxf");
+            Layout layout4 = (Layout) layout2.Clone("Layout4");
+            dxfLoad.Layouts.Add(layout4);
+
+            ShowDxfDocumentInformation(dxfLoad);
+
+            dxfLoad.Save("PaperSpace removed.dxf");
 
         }
         private static void BlockWithAttributes()
@@ -1264,7 +1696,7 @@ namespace TestDxfDocument
             // The block position defines the base point when inserting an Insert entity.
             block.Position = new Vector3(10, 5, 0);
 
-            // create an attribute definition, the attdef tag must be unique as it is the way to identify the attribute.
+            // create an attribute definition, the attDef tag must be unique as it is the way to identify the attribute.
             // even thought AutoCad allows multiple attribute definition in block definitions, it is not recommended
             AttributeDefinition attdef = new AttributeDefinition("NewAttribute");
             // this is the text prompt shown to introduce the attribute value when a new Insert entity is inserted into the drawing
@@ -1282,15 +1714,15 @@ namespace TestDxfDocument
             txt.IsVertical = true;
             attdef.Style = txt;
             attdef.WidthFactor = 2;
-            // not all alignment options are avaliable for ttf fonts 
+            // not all alignment options are available for TTF fonts 
             attdef.Alignment = TextAlignment.MiddleCenter;
             attdef.Rotation = 90;
 
-            // remember, netDxf does not allow adding attribute definitions with the same tag, even thought AutoCad allows this behaviour, it is not recommended in anyway.
+            // remember, netDxf does not allow adding attribute definitions with the same tag, even thought AutoCad allows this behavior, it is not recommended in anyway.
             // internally attributes and their associated attribute definitions are handled through dictionaries,
-            // and the tags work as ids to easily identify the information stored in the attributte value.
+            // and the tags work as ids to easily identify the information stored in the attribute value.
             // When reading a file the attributes or attribute definitions with duplicate tags will be automatically removed.
-            // This is subject to change on public demand, it is possible to reimplement this behaviour with simple collections to allow for duplicate tags.
+            // This is subject to change on public demand, it is possible to reimplement this behavior with simple collections to allow for duplicate tags.
             block.AttributeDefinitions.Add(attdef);
 
             // The entities list defines the actual geometry of the block, they are expressed in th block local coordinates
@@ -1316,8 +1748,7 @@ namespace TestDxfDocument
             };
 
             // When the insert position, rotation, normal and/or scale are modified we need to transform the attributes.
-            // It is not recommended to manually change the attribute position and orientation and let the Insert entity handle the transformations to mantain them in the same local position.
-            // The attribute position and orientation are stored in WCS (world coordinate system) even if the documentation says they are in OCS (object coordinate system). The documentation is WRONG!.
+            // It is not recommended to manually change the attribute position and orientation and let the Insert entity handle the transformations to maintain them in the same local position.
             // In this particular case we have changed the position, normal and rotation.
             insert1.TransformAttributes();
             
@@ -1331,7 +1762,7 @@ namespace TestDxfDocument
 
             // optionally we can add the new layer to the document, if not the new layer will be added to the Layers collection when the insert entity is added to the document
             // in case a new layer is found in the list the add method will return the layer already stored in the list
-            // this behaviour is similar for all TableObject elements, all table object names must be unique (case insensitive)
+            // this behavior is similar for all TableObject elements, all table object names must be unique (case insensitive)
             layer = dxf.Layers.Add(layer);
 
             // assign the new layer to the insert
@@ -1392,13 +1823,249 @@ namespace TestDxfDocument
 
         #endregion
 
-        private static DxfDocument Test(string file, string output = null)
+        private static void ShowDxfDocumentInformation(DxfDocument dxf)
         {
-            // check if the dxf actually exists
-            FileInfo fileInfo = new FileInfo(file);
+            Console.WriteLine("FILE VERSION: {0}", dxf.DrawingVariables.AcadVer);
+            Console.WriteLine();
+            Console.WriteLine("FILE COMMENTS: {0}", dxf.Comments.Count);
+            foreach (var o in dxf.Comments)
+            {
+                Console.WriteLine("\t{0}", o);
+            }
+            Console.WriteLine();
+            Console.WriteLine("FILE TIME:");
+            Console.WriteLine("\tdrawing created (UTC): {0}.{1}", dxf.DrawingVariables.TduCreate, dxf.DrawingVariables.TduCreate.Millisecond.ToString("000"));
+            Console.WriteLine("\tdrawing last update (UTC): {0}.{1}", dxf.DrawingVariables.TduUpdate, dxf.DrawingVariables.TduUpdate.Millisecond.ToString("000"));
+            Console.WriteLine("\tdrawing edition time: {0}", dxf.DrawingVariables.TdinDwg);
+            Console.WriteLine();    
+            Console.WriteLine("APPLICATION REGISTRIES: {0}", dxf.ApplicationRegistries.Count);
+            foreach (var o in dxf.ApplicationRegistries)
+            {
+                Console.WriteLine("\t{0}; References count: {1}", o.Name, dxf.ApplicationRegistries.GetReferences(o.Name).Count);
+            }
+            Console.WriteLine();
 
+            Console.WriteLine("LAYERS: {0}", dxf.Layers.Count);
+            foreach (var o in dxf.Layers)
+            {
+                Console.WriteLine("\t{0}; References count: {1}", o.Name, dxf.Layers.GetReferences(o).Count);
+                Debug.Assert(ReferenceEquals(o.LineType, dxf.LineTypes[o.LineType.Name]), "Object reference not equal.");
+            }
+            Console.WriteLine();
+
+            Console.WriteLine("LINE TYPES: {0}", dxf.LineTypes.Count);
+            foreach (var o in dxf.LineTypes)
+            {
+                Console.WriteLine("\t{0}; References count: {1}", o.Name, dxf.LineTypes.GetReferences(o.Name).Count);
+            }
+            Console.WriteLine();
+
+            Console.WriteLine("TEXT STYLES: {0}", dxf.TextStyles.Count);
+            foreach (var o in dxf.TextStyles)
+            {
+                Console.WriteLine("\t{0}; References count: {1}", o.Name, dxf.TextStyles.GetReferences(o.Name).Count);
+            }
+            Console.WriteLine();
+
+            Console.WriteLine("DIMENSION STYLES: {0}", dxf.DimensionStyles.Count);
+            foreach (var o in dxf.DimensionStyles)
+            {
+                Console.WriteLine("\t{0}; References count: {1}", o.Name, dxf.DimensionStyles.GetReferences(o.Name).Count);
+                Debug.Assert(ReferenceEquals(o.DIMTXSTY, dxf.TextStyles[o.DIMTXSTY.Name]), "Object reference not equal.");
+                Debug.Assert(ReferenceEquals(o.DIMLTYPE, dxf.LineTypes[o.DIMLTYPE.Name]), "Object reference not equal.");
+                Debug.Assert(ReferenceEquals(o.DIMLTEX1, dxf.LineTypes[o.DIMLTEX1.Name]), "Object reference not equal.");
+                Debug.Assert(ReferenceEquals(o.DIMLTEX2, dxf.LineTypes[o.DIMLTEX2.Name]), "Object reference not equal.");
+                if (o.DIMBLK != null) Debug.Assert(ReferenceEquals(o.DIMBLK, dxf.Blocks[o.DIMBLK.Name]), "Object reference not equal.");
+                if (o.DIMBLK1 != null) Debug.Assert(ReferenceEquals(o.DIMBLK1, dxf.Blocks[o.DIMBLK1.Name]), "Object reference not equal.");
+                if (o.DIMBLK2 != null) Debug.Assert(ReferenceEquals(o.DIMBLK2, dxf.Blocks[o.DIMBLK2.Name]), "Object reference not equal.");
+            }
+            Console.WriteLine();
+
+            Console.WriteLine("MLINE STYLES: {0}", dxf.MlineStyles.Count);
+            foreach (var o in dxf.MlineStyles)
+            {
+                Console.WriteLine("\t{0}; References count: {1}", o.Name, dxf.MlineStyles.GetReferences(o.Name).Count);
+                foreach (var e in o.Elements)
+                {
+                    Debug.Assert(ReferenceEquals(e.LineType, dxf.LineTypes[e.LineType.Name]), "Object reference not equal.");
+                }
+            }
+            Console.WriteLine();
+
+            Console.WriteLine("UCSs: {0}", dxf.UCSs.Count);
+            foreach (var o in dxf.UCSs)
+            {
+                Console.WriteLine("\t{0}", o.Name);
+            }
+            Console.WriteLine();
+
+            Console.WriteLine("BLOCKS: {0}", dxf.Blocks.Count);
+            foreach (var o in dxf.Blocks)
+            {
+                Console.WriteLine("\t{0}; References count: {1}", o.Name, dxf.Blocks.GetReferences(o.Name).Count);
+                Debug.Assert(ReferenceEquals(o.Layer, dxf.Layers[o.Layer.Name]), "Object reference not equal.");
+
+                foreach (var e in o.Entities)
+                {
+                    Debug.Assert(ReferenceEquals(e.Layer, dxf.Layers[e.Layer.Name]), "Object reference not equal.");
+                    Debug.Assert(ReferenceEquals(e.LineType, dxf.LineTypes[e.LineType.Name]), "Object reference not equal.");
+                    Debug.Assert(ReferenceEquals(e.Owner, dxf.Blocks[o.Name]), "Object reference not equal.");
+                    foreach (var x in e.XData.Values)
+                    {
+                        Debug.Assert(ReferenceEquals(x.ApplicationRegistry, dxf.ApplicationRegistries[x.ApplicationRegistry.Name]), "Object reference not equal.");
+                    }
+
+                    Text txt = e as Text;
+                    if (txt != null) Debug.Assert(ReferenceEquals(txt.Style, dxf.TextStyles[txt.Style.Name]), "Object reference not equal.");
+
+                    MText mtxt = e as MText;
+                    if (mtxt != null) Debug.Assert(ReferenceEquals(mtxt.Style, dxf.TextStyles[mtxt.Style.Name]), "Object reference not equal.");
+
+                    Dimension dim = e as Dimension;
+                    if (dim != null)
+                    {
+                        Debug.Assert(ReferenceEquals(dim.Style, dxf.DimensionStyles[dim.Style.Name]), "Object reference not equal.");
+                        Debug.Assert(ReferenceEquals(dim.Block, dxf.Blocks[dim.Block.Name]), "Object reference not equal.");
+                    }
+
+                    MLine mline = e as MLine;
+                    if (mline != null) Debug.Assert(ReferenceEquals(mline.Style, dxf.MlineStyles[mline.Style.Name]), "Object reference not equal.");
+
+                    Image img = e as Image;
+                    if (img != null) Debug.Assert(ReferenceEquals(img.Definition, dxf.ImageDefinitions[img.Definition.Name]), "Object reference not equal.");
+
+                    Insert ins = e as Insert;
+                    if (ins != null)
+                    {
+                        Debug.Assert(ReferenceEquals(ins.Block, dxf.Blocks[ins.Block.Name]), "Object reference not equal.");
+                        foreach (var a in ins.Attributes.Values)
+                        {
+                            Debug.Assert(ReferenceEquals(a.Layer, dxf.Layers[a.Layer.Name]), "Object reference not equal.");
+                            Debug.Assert(ReferenceEquals(a.LineType, dxf.LineTypes[a.LineType.Name]), "Object reference not equal.");
+                            Debug.Assert(ReferenceEquals(a.Style, dxf.TextStyles[a.Style.Name]), "Object reference not equal.");
+                        }
+                    }
+                }
+
+                foreach (var a in o.AttributeDefinitions.Values)
+                {
+                    Debug.Assert(ReferenceEquals(a.Layer, dxf.Layers[a.Layer.Name]), "Object reference not equal.");
+                    Debug.Assert(ReferenceEquals(a.LineType, dxf.LineTypes[a.LineType.Name]), "Object reference not equal.");
+                    foreach (var x in a.XData.Values)
+                    {
+                        Debug.Assert(ReferenceEquals(x.ApplicationRegistry, dxf.ApplicationRegistries[x.ApplicationRegistry.Name]), "Object reference not equal.");
+                    }
+                }
+            }
+            Console.WriteLine();
+
+            Console.WriteLine("LAYOUTS: {0}", dxf.Layouts.Count);
+            foreach (var o in dxf.Layouts)
+            {
+                Debug.Assert(ReferenceEquals(o.AssociatedBlock, dxf.Blocks[o.AssociatedBlock.Name]), "Object reference not equal.");
+
+                Console.WriteLine("\t{0}; References count: {1}", o.Name, dxf.Layouts.GetReferences(o.Name).Count);
+                List<DxfObject> entities = dxf.Layouts.GetReferences(o.Name);
+                foreach (var e in entities)
+                {
+                    EntityObject entity = e as EntityObject;
+                    if (entity != null)
+                    {
+                        Debug.Assert(ReferenceEquals(entity.Layer, dxf.Layers[entity.Layer.Name]), "Object reference not equal.");
+                        Debug.Assert(ReferenceEquals(entity.LineType, dxf.LineTypes[entity.LineType.Name]), "Object reference not equal.");
+                        Debug.Assert(ReferenceEquals(entity.Owner, dxf.Blocks[o.AssociatedBlock.Name]), "Object reference not equal.");
+                        foreach (var x in entity.XData.Values)
+                        {
+                            Debug.Assert(ReferenceEquals(x.ApplicationRegistry, dxf.ApplicationRegistries[x.ApplicationRegistry.Name]), "Object reference not equal.");
+                        }
+                    }
+
+                    Text txt = e as Text;
+                    if(txt != null) Debug.Assert(ReferenceEquals(txt.Style, dxf.TextStyles[txt.Style.Name]), "Object reference not equal.");
+
+                    MText mtxt = e as MText;
+                    if (mtxt != null) Debug.Assert(ReferenceEquals(mtxt.Style, dxf.TextStyles[mtxt.Style.Name]), "Object reference not equal.");
+
+                    Dimension dim = e as Dimension;
+                    if (dim != null)
+                    {
+                        Debug.Assert(ReferenceEquals(dim.Style, dxf.DimensionStyles[dim.Style.Name]), "Object reference not equal.");
+                        Debug.Assert(ReferenceEquals(dim.Block, dxf.Blocks[dim.Block.Name]), "Object reference not equal.");
+                    }
+
+                    MLine mline = e as MLine;
+                    if (mline != null) Debug.Assert(ReferenceEquals(mline.Style, dxf.MlineStyles[mline.Style.Name]), "Object reference not equal.");
+
+                    Image img = e as Image;
+                    if (img != null) Debug.Assert(ReferenceEquals(img.Definition, dxf.ImageDefinitions[img.Definition.Name]), "Object reference not equal.");
+
+                    Insert ins = e as Insert;
+                    if (ins != null)
+                    {
+                        Debug.Assert(ReferenceEquals(ins.Block, dxf.Blocks[ins.Block.Name]), "Object reference not equal.");
+                        foreach (var a in ins.Attributes.Values)
+                        {
+                            Debug.Assert(ReferenceEquals(a.Layer, dxf.Layers[a.Layer.Name]), "Object reference not equal.");
+                            Debug.Assert(ReferenceEquals(a.LineType, dxf.LineTypes[a.LineType.Name]), "Object reference not equal.");
+                            Debug.Assert(ReferenceEquals(a.Style, dxf.TextStyles[a.Style.Name]), "Object reference not equal.");
+                        }
+                    }
+                }
+            }
+            Console.WriteLine();
+
+            Console.WriteLine("IMAGE DEFINITIONS: {0}", dxf.ImageDefinitions.Count);
+            foreach (var o in dxf.ImageDefinitions)
+            {
+                Console.WriteLine("\t{0}; File name: {1}; References count: {2}", o.Name, o.FileName, dxf.ImageDefinitions.GetReferences(o.Name).Count);
+            }
+            Console.WriteLine();
+
+            Console.WriteLine("GROUPS: {0}", dxf.Groups.Count);
+            foreach (var o in dxf.Groups)
+            {
+                Console.WriteLine("\t{0}; Entities count: {1}", o.Name, o.Entities.Count);
+            }
+            Console.WriteLine();
+
+            // the entities lists contain the geometry that has a graphical representation in the drawing across all layouts,
+            // to get the entities that belongs to an specific layout you can get the references through the Layouts.GetReferences(name)
+            // or check the EntityObject.Owner.Record.Layout property
+            Console.WriteLine("ENTITIES:");
+            Console.WriteLine("\t{0}; count: {1}", EntityType.Arc, dxf.Arcs.Count);
+            Console.WriteLine("\t{0}; count: {1}", EntityType.AttributeDefinition, dxf.AttributeDefinitions.Count);
+            Console.WriteLine("\t{0}; count: {1}", EntityType.Circle, dxf.Circles.Count);
+            Console.WriteLine("\t{0}; count: {1}", EntityType.Dimension, dxf.Dimensions.Count);
+            Console.WriteLine("\t{0}; count: {1}", EntityType.Ellipse, dxf.Ellipses.Count);
+            Console.WriteLine("\t{0}; count: {1}", EntityType.Face3D, dxf.Faces3d.Count);
+            Console.WriteLine("\t{0}; count: {1}", EntityType.Hatch, dxf.Hatches.Count);
+            Console.WriteLine("\t{0}; count: {1}", EntityType.Image, dxf.Images.Count);
+            Console.WriteLine("\t{0}; count: {1}", EntityType.Insert, dxf.Inserts.Count);
+            Console.WriteLine("\t{0}; count: {1}", EntityType.LightWeightPolyline, dxf.LwPolylines.Count);
+            Console.WriteLine("\t{0}; count: {1}", EntityType.Line, dxf.Lines.Count);
+            Console.WriteLine("\t{0}; count: {1}", EntityType.Mesh, dxf.Meshes.Count);
+            Console.WriteLine("\t{0}; count: {1}", EntityType.MLine, dxf.MLines.Count);
+            Console.WriteLine("\t{0}; count: {1}", EntityType.MText, dxf.MTexts.Count);
+            Console.WriteLine("\t{0}; count: {1}", EntityType.Point, dxf.Points.Count);
+            Console.WriteLine("\t{0}; count: {1}", EntityType.PolyfaceMesh, dxf.PolyfaceMeshes.Count);
+            Console.WriteLine("\t{0}; count: {1}", EntityType.Polyline, dxf.Polylines.Count);
+            Console.WriteLine("\t{0}; count: {1}", EntityType.Solid, dxf.Solids.Count);
+            Console.WriteLine("\t{0}; count: {1}", EntityType.Spline, dxf.Splines.Count);
+            Console.WriteLine("\t{0}; count: {1}", EntityType.Text, dxf.Texts.Count);
+            Console.WriteLine("\t{0}; count: {1}", EntityType.Ray, dxf.Rays.Count);
+            Console.WriteLine("\t{0}; count: {1}", EntityType.Viewport, dxf.Viewports.Count);
+            Console.WriteLine("\t{0}; count: {1}", EntityType.XLine, dxf.XLines.Count);
+            Console.WriteLine();
+
+
+            Console.WriteLine("Press a key to continue...");
+            Console.ReadLine();
+        }
+
+        private static DxfDocument Test(string file, string output = null)
+        {    
             // optionally you can save the information to a text file
-            bool outputLog = !String.IsNullOrEmpty(output);
+            bool outputLog = !string.IsNullOrEmpty(output);
             TextWriter writer = null;
             if (outputLog)
             {
@@ -1406,17 +2073,26 @@ namespace TestDxfDocument
                 Console.SetOut(writer);
             }
 
+            // check if the dxf actually exists
+            FileInfo fileInfo = new FileInfo(file);
+
             if (!fileInfo.Exists)
             {
                 Console.WriteLine("THE FILE {0} DOES NOT EXIST", file);
                 Console.WriteLine();
 
-                Console.WriteLine("Press a key to continue...");
-                Console.ReadLine();
-
+                if (outputLog)
+                {
+                    writer.Flush();
+                    writer.Close();
+                }
+                else
+                {
+                    Console.WriteLine("Press a key to continue...");
+                    Console.ReadLine();
+                }
                 return null;
             }
-
             bool isBinary;
             DxfVersion dxfVersion = DxfDocument.CheckDxfFileVersion(file, out isBinary);
 
@@ -1426,9 +2102,16 @@ namespace TestDxfDocument
                 Console.WriteLine("THE FILE {0} IS NOT A VALID DXF OR THE DXF DOES NOT INCLUDE VERSION INFORMATION IN THE HEADER SECTION", file);
                 Console.WriteLine();
 
-                Console.WriteLine("Press a key to continue...");
-                Console.ReadLine();
-
+                if (outputLog)
+                {
+                    writer.Flush();
+                    writer.Close();
+                }
+                else
+                {
+                    Console.WriteLine("Press a key to continue...");
+                    Console.ReadLine();
+                }
                 return null;
             }
 
@@ -1441,9 +2124,16 @@ namespace TestDxfDocument
                 Console.WriteLine("FILE VERSION: {0}", dxfVersion);
                 Console.WriteLine();
 
-                Console.WriteLine("Press a key to continue...");
-                Console.ReadLine();
-
+                if (outputLog)
+                {
+                    writer.Flush();
+                    writer.Close();
+                }
+                else
+                {
+                    Console.WriteLine("Press a key to continue...");
+                    Console.ReadLine();
+                }
                 return null;
             }
 
@@ -1459,6 +2149,16 @@ namespace TestDxfDocument
                 Console.WriteLine("Press a key to continue...");
                 Console.ReadLine();
 
+                if (outputLog)
+                {
+                    writer.Flush();
+                    writer.Close();
+                }
+                else
+                {
+                    Console.WriteLine("Press a key to continue...");
+                    Console.ReadLine();
+                }
                 return null;
             }
 
@@ -1490,6 +2190,7 @@ namespace TestDxfDocument
             foreach (var o in dxf.Layers)
             {
                 Console.WriteLine("\t{0}; References count: {1}", o.Name, dxf.Layers.GetReferences(o).Count);
+                Debug.Assert(ReferenceEquals(o.LineType, dxf.LineTypes[o.LineType.Name]), "Object reference not equal.");
             }
             Console.WriteLine();
 
@@ -1511,6 +2212,13 @@ namespace TestDxfDocument
             foreach (var o in dxf.DimensionStyles)
             {
                 Console.WriteLine("\t{0}; References count: {1}", o.Name, dxf.DimensionStyles.GetReferences(o.Name).Count);
+                Debug.Assert(ReferenceEquals(o.DIMTXSTY, dxf.TextStyles[o.DIMTXSTY.Name]), "Object reference not equal.");
+                Debug.Assert(ReferenceEquals(o.DIMLTYPE, dxf.LineTypes[o.DIMLTYPE.Name]), "Object reference not equal.");
+                Debug.Assert(ReferenceEquals(o.DIMLTEX1, dxf.LineTypes[o.DIMLTEX1.Name]), "Object reference not equal.");
+                Debug.Assert(ReferenceEquals(o.DIMLTEX2, dxf.LineTypes[o.DIMLTEX2.Name]), "Object reference not equal.");
+                if (o.DIMBLK != null) Debug.Assert(ReferenceEquals(o.DIMBLK, dxf.Blocks[o.DIMBLK.Name]), "Object reference not equal.");
+                if (o.DIMBLK1 != null) Debug.Assert(ReferenceEquals(o.DIMBLK1, dxf.Blocks[o.DIMBLK1.Name]), "Object reference not equal.");
+                if (o.DIMBLK2 != null) Debug.Assert(ReferenceEquals(o.DIMBLK2, dxf.Blocks[o.DIMBLK2.Name]), "Object reference not equal.");
             }
             Console.WriteLine();
 
@@ -1518,6 +2226,10 @@ namespace TestDxfDocument
             foreach (var o in dxf.MlineStyles)
             {
                 Console.WriteLine("\t{0}; References count: {1}", o.Name, dxf.MlineStyles.GetReferences(o.Name).Count);
+                foreach (var e in o.Elements)
+                {
+                    Debug.Assert(ReferenceEquals(e.LineType, dxf.LineTypes[e.LineType.Name]), "Object reference not equal.");
+                }
             }
             Console.WriteLine();
 
@@ -1532,13 +2244,114 @@ namespace TestDxfDocument
             foreach (var o in dxf.Blocks)
             {
                 Console.WriteLine("\t{0}; References count: {1}", o.Name, dxf.Blocks.GetReferences(o.Name).Count);
+                Debug.Assert(ReferenceEquals(o.Layer, dxf.Layers[o.Layer.Name]), "Object reference not equal.");
+
+                foreach (var e in o.Entities)
+                {
+                    Debug.Assert(ReferenceEquals(e.Layer, dxf.Layers[e.Layer.Name]), "Object reference not equal.");
+                    Debug.Assert(ReferenceEquals(e.LineType, dxf.LineTypes[e.LineType.Name]), "Object reference not equal.");
+                    Debug.Assert(ReferenceEquals(e.Owner, dxf.Blocks[o.Name]), "Object reference not equal.");
+                    foreach (var x in e.XData.Values)
+                    {
+                        Debug.Assert(ReferenceEquals(x.ApplicationRegistry, dxf.ApplicationRegistries[x.ApplicationRegistry.Name]), "Object reference not equal.");
+                    }
+
+                    Text txt = e as Text;
+                    if (txt != null) Debug.Assert(ReferenceEquals(txt.Style, dxf.TextStyles[txt.Style.Name]), "Object reference not equal.");
+
+                    MText mtxt = e as MText;
+                    if (mtxt != null) Debug.Assert(ReferenceEquals(mtxt.Style, dxf.TextStyles[mtxt.Style.Name]), "Object reference not equal.");
+
+                    Dimension dim = e as Dimension;
+                    if (dim != null)
+                    {
+                        Debug.Assert(ReferenceEquals(dim.Style, dxf.DimensionStyles[dim.Style.Name]), "Object reference not equal.");
+                        Debug.Assert(ReferenceEquals(dim.Block, dxf.Blocks[dim.Block.Name]), "Object reference not equal.");
+                    }
+
+                    MLine mline = e as MLine;
+                    if (mline != null) Debug.Assert(ReferenceEquals(mline.Style, dxf.MlineStyles[mline.Style.Name]), "Object reference not equal.");
+
+                    Image img = e as Image;
+                    if (img != null) Debug.Assert(ReferenceEquals(img.Definition, dxf.ImageDefinitions[img.Definition.Name]), "Object reference not equal.");
+
+                    Insert ins = e as Insert;
+                    if (ins != null)
+                    {
+                        Debug.Assert(ReferenceEquals(ins.Block, dxf.Blocks[ins.Block.Name]), "Object reference not equal.");
+                        foreach (var a in ins.Attributes.Values)
+                        {
+                            Debug.Assert(ReferenceEquals(a.Layer, dxf.Layers[a.Layer.Name]), "Object reference not equal.");
+                            Debug.Assert(ReferenceEquals(a.LineType, dxf.LineTypes[a.LineType.Name]), "Object reference not equal.");
+                            Debug.Assert(ReferenceEquals(a.Style, dxf.TextStyles[a.Style.Name]), "Object reference not equal.");
+                        }
+                    }
+                }
+
+                foreach (var a in o.AttributeDefinitions.Values)
+                {
+                    Debug.Assert(ReferenceEquals(a.Layer, dxf.Layers[a.Layer.Name]), "Object reference not equal.");
+                    Debug.Assert(ReferenceEquals(a.LineType, dxf.LineTypes[a.LineType.Name]), "Object reference not equal.");
+                    foreach (var x in a.XData.Values)
+                    {
+                        Debug.Assert(ReferenceEquals(x.ApplicationRegistry, dxf.ApplicationRegistries[x.ApplicationRegistry.Name]), "Object reference not equal.");
+                    }
+                }
             }
             Console.WriteLine();
 
             Console.WriteLine("LAYOUTS: {0}", dxf.Layouts.Count);
             foreach (var o in dxf.Layouts)
             {
+                Debug.Assert(ReferenceEquals(o.AssociatedBlock, dxf.Blocks[o.AssociatedBlock.Name]), "Object reference not equal.");
+
                 Console.WriteLine("\t{0}; References count: {1}", o.Name, dxf.Layouts.GetReferences(o.Name).Count);
+                List<DxfObject> entities = dxf.Layouts.GetReferences(o.Name);
+                foreach (var e in entities)
+                {
+                    EntityObject entity = e as EntityObject;
+                    if (entity != null)
+                    {
+                        Debug.Assert(ReferenceEquals(entity.Layer, dxf.Layers[entity.Layer.Name]), "Object reference not equal.");
+                        Debug.Assert(ReferenceEquals(entity.LineType, dxf.LineTypes[entity.LineType.Name]), "Object reference not equal.");
+                        Debug.Assert(ReferenceEquals(entity.Owner, dxf.Blocks[o.AssociatedBlock.Name]), "Object reference not equal.");
+                        foreach (var x in entity.XData.Values)
+                        {
+                            Debug.Assert(ReferenceEquals(x.ApplicationRegistry, dxf.ApplicationRegistries[x.ApplicationRegistry.Name]), "Object reference not equal.");
+                        }
+                    }
+
+                    Text txt = e as Text;
+                    if(txt != null) Debug.Assert(ReferenceEquals(txt.Style, dxf.TextStyles[txt.Style.Name]), "Object reference not equal.");
+
+                    MText mtxt = e as MText;
+                    if (mtxt != null) Debug.Assert(ReferenceEquals(mtxt.Style, dxf.TextStyles[mtxt.Style.Name]), "Object reference not equal.");
+
+                    Dimension dim = e as Dimension;
+                    if (dim != null)
+                    {
+                        Debug.Assert(ReferenceEquals(dim.Style, dxf.DimensionStyles[dim.Style.Name]), "Object reference not equal.");
+                        Debug.Assert(ReferenceEquals(dim.Block, dxf.Blocks[dim.Block.Name]), "Object reference not equal.");
+                    }
+
+                    MLine mline = e as MLine;
+                    if (mline != null) Debug.Assert(ReferenceEquals(mline.Style, dxf.MlineStyles[mline.Style.Name]), "Object reference not equal.");
+
+                    Image img = e as Image;
+                    if (img != null) Debug.Assert(ReferenceEquals(img.Definition, dxf.ImageDefinitions[img.Definition.Name]), "Object reference not equal.");
+
+                    Insert ins = e as Insert;
+                    if (ins != null)
+                    {
+                        Debug.Assert(ReferenceEquals(ins.Block, dxf.Blocks[ins.Block.Name]), "Object reference not equal.");
+                        foreach (var a in ins.Attributes.Values)
+                        {
+                            Debug.Assert(ReferenceEquals(a.Layer, dxf.Layers[a.Layer.Name]), "Object reference not equal.");
+                            Debug.Assert(ReferenceEquals(a.LineType, dxf.LineTypes[a.LineType.Name]), "Object reference not equal.");
+                            Debug.Assert(ReferenceEquals(a.Style, dxf.TextStyles[a.Style.Name]), "Object reference not equal.");
+                        }
+                    }
+                }
             }
             Console.WriteLine();
 
@@ -1612,7 +2425,7 @@ namespace TestDxfDocument
             {
                 Console.WriteLine("Press a key to continue...");
                 Console.ReadLine();
-            }    
+            }
             return dxf;
         }
 
@@ -2161,7 +2974,7 @@ namespace TestDxfDocument
 
             // if we try to get the LineTypeUses, we will find out that "MyStyle" appears several times,
             // this is due to that each MLineStyleElement of a MLineStyle has an associated LineType
-            uses = dxf.LineTypes.GetReferences(LineType.ByLayer.Name);
+            uses = dxf.LineTypes.GetReferences(LineType.ByLayerName);
 
             bool ok;
             ok = dxf.RemoveEntity(mline);
@@ -2287,7 +3100,7 @@ namespace TestDxfDocument
             Vector3 v1OCS = new Vector3(v1.Location.X, v1.Location.Y, lwp.Elevation);
             Vector3 v2OCS = new Vector3(v2.Location.X, v2.Location.Y, lwp.Elevation);
             Vector3 v3OCS = new Vector3(v3.Location.X, v3.Location.Y, lwp.Elevation);
-            List<Vector3> vertexesWCS = MathHelper.Transform(new List<Vector3> { v1OCS, v2OCS, v3OCS }, lwp.Normal, MathHelper.CoordinateSystem.Object, MathHelper.CoordinateSystem.World);
+            ICollection<Vector3> vertexesWCS = MathHelper.Transform(new List<Vector3> { v1OCS, v2OCS, v3OCS }, lwp.Normal, MathHelper.CoordinateSystem.Object, MathHelper.CoordinateSystem.World);
 
 
         }
@@ -2340,16 +3153,10 @@ namespace TestDxfDocument
             Line line3 = new Line(new Vector2(200, 0), new Vector2(300, 100));
 
             // named group
-            Group group1 = new Group("MyGroup")
-                {
-                    Entities = new EntityCollection {line1, line2}
-                };
+            Group group1 = new Group("MyGroup", new EntityObject[] {line1, line2});
 
             //unnamed group
-            Group group2 = new Group
-                {
-                    Entities = new EntityCollection { line1, line3 }
-                };
+            Group group2 = new Group(new EntityObject[] {line1, line3});
 
             DxfDocument dxf = new DxfDocument();
             // the AddGroup method will also add the entities contained in a group to the document.
@@ -2364,7 +3171,7 @@ namespace TestDxfDocument
             group1 = dxf.Groups[group1.Name];
             group2 = dxf.Groups[group2.Name];
             dxf.Groups.Remove(group1);
-            dxf.Groups.Ungroup(group2);
+            dxf.Groups.Remove(group2);
             dxf.Save("group copy.dxf");
 
 
@@ -2503,7 +3310,7 @@ namespace TestDxfDocument
             Line line = new Line(new Vector3(0, 0, 0), new Vector3(100, 100, 0));
             line.Color = new AciColor(152, 103, 136);
             // by default a color initialized with rgb components will be exported as true color
-            // you can override this behaviour with
+            // you can override this behavior with
             // line.Color.UseTrueColor = false;
 
             Layer layer = new Layer("MyLayer");
@@ -3027,7 +3834,6 @@ namespace TestDxfDocument
             dxf.Save("linear dimension.dxf");
            // dxf = DxfDocument.Load("linear dimension.dxf");
         }
-
         private static void AlignedDimensionDrawing()
         {
             DxfDocument dxf = new DxfDocument();
@@ -3592,7 +4398,6 @@ namespace TestDxfDocument
         }
         private static void LwPolyline()
         {
-
             DxfDocument dxf = new DxfDocument();
 
             LwPolyline poly = new LwPolyline();
@@ -3719,12 +4524,12 @@ namespace TestDxfDocument
             totalTime += crono.ElapsedMilliseconds;
             crono.Reset();
 
-            //crono.Start();
-            //dxf.DrawingVariables.AcadVer = DxfVersion.AutoCad2000;
-            //dxf.Save("speedtest (netDxf 2000).dxf");
-            //Console.WriteLine("Time saving file 2000 : " + crono.ElapsedMilliseconds / 1000.0f);
-            //totalTime += crono.ElapsedMilliseconds;
-            //crono.Reset();
+            crono.Start();
+            dxf.DrawingVariables.AcadVer = DxfVersion.AutoCad2000;
+            dxf.Save("speedtest (netDxf 2000).dxf");
+            Console.WriteLine("Time saving file 2000 : " + crono.ElapsedMilliseconds / 1000.0f);
+            totalTime += crono.ElapsedMilliseconds;
+            crono.Reset();
 
             crono.Start();
             dxf.DrawingVariables.AcadVer = DxfVersion.AutoCad2000;
@@ -3733,20 +4538,20 @@ namespace TestDxfDocument
             totalTime += crono.ElapsedMilliseconds;
             crono.Reset();
 
-            //crono.Start();
-            //dxf.DrawingVariables.AcadVer = DxfVersion.AutoCad2010;
-            //dxf.Save("speedtest (netDxf 2010).dxf");
-            //Console.WriteLine("Time saving file 2010 : " + crono.ElapsedMilliseconds / 1000.0f);
-            //totalTime += crono.ElapsedMilliseconds;
-            //crono.Reset();
+            crono.Start();
+            dxf.DrawingVariables.AcadVer = DxfVersion.AutoCad2010;
+            dxf.Save("speedtest (netDxf 2010).dxf");
+            Console.WriteLine("Time saving file 2010 : " + crono.ElapsedMilliseconds / 1000.0f);
+            totalTime += crono.ElapsedMilliseconds;
+            crono.Reset();
 
 
-            //crono.Start();
-            //dxf = DxfDocument.Load("speedtest (netDxf 2000).dxf");
-            //Console.WriteLine("Time loading file 2000: " + crono.ElapsedMilliseconds / 1000.0f);
-            //totalTime += crono.ElapsedMilliseconds;
-            //crono.Stop();
-            //crono.Reset();
+            crono.Start();
+            dxf = DxfDocument.Load("speedtest (netDxf 2000).dxf");
+            Console.WriteLine("Time loading file 2000: " + crono.ElapsedMilliseconds / 1000.0f);
+            totalTime += crono.ElapsedMilliseconds;
+            crono.Stop();
+            crono.Reset();
 
             crono.Start();
             dxf = DxfDocument.Load("speedtest (binary netDxf 2000).dxf");
@@ -3755,12 +4560,12 @@ namespace TestDxfDocument
             crono.Stop();
             crono.Reset();
 
-            //crono.Start();
-            //dxf = DxfDocument.Load("speedtest (netDxf 2010).dxf");
-            //Console.WriteLine("Time loading file 2010: " + crono.ElapsedMilliseconds / 1000.0f);
-            //totalTime += crono.ElapsedMilliseconds;
-            //crono.Stop();
-            //crono.Reset();
+            crono.Start();
+            dxf = DxfDocument.Load("speedtest (netDxf 2010).dxf");
+            Console.WriteLine("Time loading file 2010: " + crono.ElapsedMilliseconds / 1000.0f);
+            totalTime += crono.ElapsedMilliseconds;
+            crono.Stop();
+            crono.Reset();
 
             Console.WriteLine("Total time : " + totalTime / 1000.0f);
             Console.ReadLine();
@@ -3900,10 +4705,10 @@ namespace TestDxfDocument
             LwPolylineVertex polyVertex;
             List<LwPolylineVertex> polyVertexes = new List<LwPolylineVertex>();
             polyVertex = new LwPolylineVertex(new Vector2(-50, -50));
-            polyVertex.BeginWidth = 2;
+            polyVertex.StartWidth = 2;
             polyVertexes.Add(polyVertex);
             polyVertex = new LwPolylineVertex(new Vector2(50, -50));
-            polyVertex.BeginWidth = 1;
+            polyVertex.StartWidth = 1;
             polyVertexes.Add(polyVertex);
             polyVertex = new LwPolylineVertex(new Vector2(50, 50));
             polyVertex.Bulge = 1;
@@ -3921,10 +4726,10 @@ namespace TestDxfDocument
             LwPolylineVertex lwVertex;
             List<LwPolylineVertex> lwVertexes = new List<LwPolylineVertex>();
             lwVertex = new LwPolylineVertex(new Vector2(-25, -25));
-            lwVertex.BeginWidth = 2;
+            lwVertex.StartWidth = 2;
             lwVertexes.Add(lwVertex);
             lwVertex = new LwPolylineVertex(new Vector2(25, -25));
-            lwVertex.BeginWidth = 1;
+            lwVertex.StartWidth = 1;
             lwVertexes.Add(lwVertex);
             lwVertex = new LwPolylineVertex(new Vector2(25, 25));
             lwVertex.Bulge = 1;
@@ -4035,9 +4840,175 @@ namespace TestDxfDocument
 
             dxf.AddEntity(poly);
 
-            dxf.Save("polyline.dxf");
+            dxf.Save("polyline.dxf");           
+        }
+        private static void TestLayoutRemoval()
+        {
+            Line line1 = new Line(new Vector2(0, 0), new Vector2(100, 100));
+            Line line2 = new Line(new Vector2(100, 0), new Vector2(200, 100));
+            Line line3 = new Line(new Vector2(200, 0), new Vector2(300, 100));
+            Line line4 = new Line(new Vector2(200, 0), new Vector2(300, 100));
+            Line line5 = new Line(new Vector2(200, 0), new Vector2(300, 100));
 
-            
+            Layout layout1 = new Layout("Layout1");
+            Layout layout2 = new Layout("Layout2");
+            Layout layout3 = new Layout("Layout3");
+            Layout layout4 = new Layout("Layout4");
+
+            DxfDocument doc = new DxfDocument();
+            doc.Layouts.Add(layout1);
+            doc.Layouts.Add(layout2);
+            doc.Layouts.Add(layout3);
+            doc.Layouts.Add(layout4);
+
+            doc.AddEntity(line1);   // *Model_Space
+
+            doc.ActiveLayout = layout1.Name;
+            doc.AddEntity(line2);   // *Paper_Space
+
+            doc.ActiveLayout = layout2.Name;
+            doc.AddEntity(line3);   // *Paper_Space0
+
+            doc.ActiveLayout = layout3.Name;
+            doc.AddEntity(line4);   // *Paper_Space1
+
+            doc.ActiveLayout = layout4.Name;
+            doc.AddEntity(line5);   // *Paper_Space2
+
+            doc.Layouts.Remove(layout1);
+
+            Console.WriteLine(line2.Owner);
+            Console.WriteLine(ReferenceEquals(line3.Owner, layout2.AssociatedBlock));
+            Console.WriteLine(ReferenceEquals(line4.Owner, layout3.AssociatedBlock));
+            Console.WriteLine(ReferenceEquals(line5.Owner, layout4.AssociatedBlock));
+
+            Console.ReadKey();
+        }
+        private static void NestedBlock()
+        {
+            Block blockMM = new Block("BlockMM");
+            blockMM.Record.Units = DrawingUnits.Millimeters;
+            AttributeDefinition attDefMM = new AttributeDefinition("MyAttributeMM");
+            attDefMM.Height = 1.0;
+            attDefMM.Value = "This is block mm";
+            blockMM.AttributeDefinitions.Add(attDefMM);
+            Line line1MM = new Line(Vector2.Zero, Vector2.UnitX);
+            blockMM.Entities.Add(line1MM);
+            Insert insMM = new Insert(blockMM);
+            insMM.TransformAttributes();
+
+            Block blockCM = new Block("BlockCM");
+            blockCM.Record.Units = DrawingUnits.Centimeters;
+            AttributeDefinition attDefCM = new AttributeDefinition("MyAttributeCM");
+            attDefCM.Height = 1.0;
+            attDefCM.Value = "This is block cm";
+            blockCM.AttributeDefinitions.Add(attDefCM);
+            Line line1CM = new Line(Vector2.Zero, Vector2.UnitY);
+            blockCM.Entities.Add(line1CM);
+            blockCM.Entities.Add(insMM);
+            Insert insCM = new Insert(blockCM);
+
+            DxfDocument doc = new DxfDocument();
+            doc.DrawingVariables.InsUnits = DrawingUnits.Meters;
+            //doc.AddEntity(insMM);
+            doc.AddEntity(insCM);
+
+            doc.Save("test.dxf");
+        }
+        private static void BlockAttributeTransformation()
+        {
+
+            DxfDocument doc = DxfDocument.Load("Drawing1.dxf");
+            Insert ins = doc.Inserts[0];
+            Console.WriteLine(ins.Attributes["MYATTDEF"].Position);
+            Console.WriteLine(ins.Attributes["MYATTDEF"].Rotation);
+            Console.WriteLine(ins.Attributes["MYATTDEF"].Normal);
+            Console.WriteLine(ins.Attributes["MYATTDEF"].Height);
+            Console.WriteLine(ins.Attributes["MYATTDEF"].WidthFactor);
+            Console.WriteLine(ins.Attributes["MYATTDEF"].ObliqueAngle);
+            Console.WriteLine("...");
+            ins.TransformAttributes();
+            Console.WriteLine(ins.Attributes["MYATTDEF"].Position);
+            Console.WriteLine(ins.Attributes["MYATTDEF"].Rotation);
+            Console.WriteLine(ins.Attributes["MYATTDEF"].Normal);
+            Console.WriteLine(ins.Attributes["MYATTDEF"].Height);
+            Console.WriteLine(ins.Attributes["MYATTDEF"].WidthFactor);
+            Console.WriteLine(ins.Attributes["MYATTDEF"].ObliqueAngle);
+            Console.WriteLine("...");
+            Console.WriteLine("...");
+            Console.WriteLine("...");
+            Console.WriteLine("...");
+            DxfDocument doc2 = DxfDocument.Load("Drawing2.dxf");
+            Insert ins2 = doc2.Inserts[0];
+            Console.WriteLine(ins2.Attributes["MYATTDEF"].Position);
+            Console.WriteLine(ins2.Attributes["MYATTDEF"].Rotation);
+            Console.WriteLine(ins2.Attributes["MYATTDEF"].Normal);
+            Console.WriteLine(ins2.Attributes["MYATTDEF"].Height);
+            Console.WriteLine(ins2.Attributes["MYATTDEF"].WidthFactor);
+            Console.WriteLine(ins2.Attributes["MYATTDEF"].ObliqueAngle);
+            Console.WriteLine("...");
+            ins2.TransformAttributes();
+            Console.WriteLine(ins2.Attributes["MYATTDEF"].Position);
+            Console.WriteLine(ins2.Attributes["MYATTDEF"].Rotation);
+            Console.WriteLine(ins2.Attributes["MYATTDEF"].Normal);
+            Console.WriteLine(ins2.Attributes["MYATTDEF"].Height);
+            Console.WriteLine(ins2.Attributes["MYATTDEF"].WidthFactor);
+            Console.WriteLine(ins2.Attributes["MYATTDEF"].ObliqueAngle);
+            Console.WriteLine("...");
+            Console.WriteLine("...");
+            Console.WriteLine("...");
+            Console.WriteLine("...");
+            DxfDocument doc3 = DxfDocument.Load("Drawing3.dxf");
+            Insert ins3 = doc3.Inserts[0];
+            Console.WriteLine(ins3.Attributes["MYATTDEF"].Position);
+            Console.WriteLine(ins3.Attributes["MYATTDEF"].Rotation);
+            Console.WriteLine(ins3.Attributes["MYATTDEF"].Normal);
+            Console.WriteLine(ins3.Attributes["MYATTDEF"].Height);
+            Console.WriteLine(ins3.Attributes["MYATTDEF"].WidthFactor);
+            Console.WriteLine(ins3.Attributes["MYATTDEF"].ObliqueAngle);
+            Console.WriteLine("...");
+            ins3.TransformAttributes();
+            Console.WriteLine(ins3.Attributes["MYATTDEF"].Position);
+            Console.WriteLine(ins3.Attributes["MYATTDEF"].Rotation);
+            Console.WriteLine(ins3.Attributes["MYATTDEF"].Normal);
+            Console.WriteLine(ins3.Attributes["MYATTDEF"].Height);
+            Console.WriteLine(ins3.Attributes["MYATTDEF"].WidthFactor);
+            Console.WriteLine(ins3.Attributes["MYATTDEF"].ObliqueAngle);
+            Console.WriteLine("...");
+            Console.ReadKey();
+
+
+            doc3.Save("test.dxf");
+
+            //Block block = new Block("MyBlock");
+            //block.Entities.Add(new Line(new Vector2(-5, 0), new Vector2(5, 0)));
+
+            //AttributeDefinition attDef = new AttributeDefinition("MyAttribute");
+            //attDef.Prompt = "Enter a value:";
+            //attDef.Value = 0.0;
+            ////attDef.Normal = Vector3.UnitX;
+            //block.AttributeDefinitions.Add(attDef);
+
+            //Insert ins1 = new Insert(block);
+            //ins1.Attributes["MyAttribute"].Value = "Text";
+
+            //Insert ins2 = new Insert(block);
+            //ins2.Position = new Vector3(5, 7.5, 1);
+            //ins2.Rotation = 30;
+            //ins2.TransformAttributes();
+
+            //Insert ins3 = new Insert(block);
+            //ins3.Position = new Vector3(-5, -7.5, -1);
+            //ins3.Rotation = 30;
+            ////ins3.Normal = Vector3.UnitX;
+            //ins3.TransformAttributes();
+
+            //DxfDocument doc = new DxfDocument();
+            //doc.AddEntity(ins1);
+            ////doc.AddEntity(ins2);
+            ////doc.AddEntity(ins3);
+
+            //doc.Save("BlockAttributeTransformation.dxf");
         }
     }
 }

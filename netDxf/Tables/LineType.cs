@@ -1,23 +1,22 @@
-﻿#region netDxf, Copyright(C) 2014 Daniel Carvajal, Licensed under LGPL.
-
-//                        netDxf library
-// Copyright (C) 2014 Daniel Carvajal (haplokuon@gmail.com)
+﻿#region netDxf, Copyright(C) 2015 Daniel Carvajal, Licensed under LGPL.
 // 
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2.1 of the License, or (at your option) any later version.
-// 
-// The above copyright notice and this permission notice shall be included in all
-// copies or substantial portions of the Software.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-// FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-// COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-// IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-// CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. 
-
+//                         netDxf library
+//  Copyright (C) 2009-2015 Daniel Carvajal (haplokuon@gmail.com)
+//  
+//  This library is free software; you can redistribute it and/or
+//  modify it under the terms of the GNU Lesser General Public
+//  License as published by the Free Software Foundation; either
+//  version 2.1 of the License, or (at your option) any later version.
+//  
+//  The above copyright notice and this permission notice shall be included in all
+//  copies or substantial portions of the Software.
+//  
+//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+//  FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+//  COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+//  IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+//  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #endregion
 
 using System;
@@ -46,11 +45,21 @@ namespace netDxf.Tables
         #region constants
 
         /// <summary>
+        /// ByLayer line type name.
+        /// </summary>
+        public const string ByLayerName = "ByLayer";
+
+        /// <summary>
+        /// ByBlock line type name.
+        /// </summary>
+        public const string ByBlockName = "ByBlock";
+
+        /// <summary>
         /// Gets the ByLayer line type.
         /// </summary>
         public static LineType ByLayer
         {
-            get { return new LineType("ByLayer"); }
+            get { return new LineType(ByLayerName); }
         }
 
         /// <summary>
@@ -58,7 +67,7 @@ namespace netDxf.Tables
         /// </summary>
         public static LineType ByBlock
         {
-            get { return new LineType("ByBlock"); }
+            get { return new LineType(ByBlockName); }
         }
 
         /// <summary>
@@ -145,6 +154,9 @@ namespace netDxf.Tables
         public LineType(string name, string description = null)
             : base(name, DxfObjectCode.LineType, true)
         {
+            if (string.IsNullOrEmpty(name))
+                throw new ArgumentNullException("name", "The line type name should be at least one character long.");
+
             this.reserved = name.Equals("ByLayer", StringComparison.OrdinalIgnoreCase) ||
                             name.Equals("ByBlock", StringComparison.OrdinalIgnoreCase) ||
                             name.Equals("Continuous", StringComparison.OrdinalIgnoreCase);
@@ -162,11 +174,11 @@ namespace netDxf.Tables
         public string Description
         {
             get { return this.description; }
-            set { this.description = string.IsNullOrEmpty(value) ? string.Empty : value; }
+            set { this.description = value; }
         }
 
         /// <summary>
-        /// Gets or stes the list of line type segments.
+        /// Gets or sets the list of line type segments.
         /// </summary>
         /// <remarks>
         /// A positive decimal number denotes a pen-down (dash) segment of that length. 
@@ -212,12 +224,12 @@ namespace netDxf.Tables
         }
 
         /// <summary>
-        /// Creates a new line type from the definition in a lin file.
+        /// Creates a new line type from the definition in a .lin file.
         /// </summary>
         /// <remarks>Only simple line types are supported.</remarks>
         /// <param name="file">Lin file where the definition is located.</param>
         /// <param name="lineTypeName">Name of the line type definition that wants to be read (ignore case).</param>
-        /// <returns>A line type defined by the lin file.</returns>
+        /// <returns>A line type defined by the .lin file.</returns>
         public static LineType FromFile(string file, string lineTypeName)
         {
             LineType lineType = null;
@@ -227,7 +239,7 @@ namespace netDxf.Tables
                 while (!reader.EndOfStream)
                 {
                     string line = reader.ReadLine();
-                    if (line == null) throw new FileLoadException("Unknown error reading lin file.", file);
+                    if (line == null) throw new FileLoadException("Unknown error reading .lin file.", file);
                     // lines starting with semicolons are comments
                     if (line.StartsWith(";")) continue;
                     // every line type definition starts with '*'
@@ -245,7 +257,7 @@ namespace netDxf.Tables
 
                     // we have found the line type name, the next line of the file contains the line type definition
                     line = reader.ReadLine();
-                    if (line == null) throw new FileLoadException("Unknown error reading lin file.", file);
+                    if (line == null) throw new FileLoadException("Unknown error reading .lin file.", file);
                     lineType = new LineType(name, description);
 
                     string[] tokens = line.Split(',');
@@ -258,7 +270,7 @@ namespace netDxf.Tables
                             lineType.Segments.Add(segment);
                         else
                         {
-                            // only simple linetypes are supported.
+                            // only simple line types are supported.
                             lineType = null;
                             break;
                         }
@@ -294,7 +306,7 @@ namespace netDxf.Tables
         /// <returns>A new LineType that is a copy of this instance.</returns>
         public override object Clone()
         {
-            return Clone(this.name);
+            return this.Clone(this.name);
         }
 
         #endregion

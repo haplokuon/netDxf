@@ -1,23 +1,22 @@
-﻿#region netDxf, Copyright(C) 2014 Daniel Carvajal, Licensed under LGPL.
-
-//                        netDxf library
-// Copyright (C) 2014 Daniel Carvajal (haplokuon@gmail.com)
+﻿#region netDxf, Copyright(C) 2015 Daniel Carvajal, Licensed under LGPL.
 // 
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2.1 of the License, or (at your option) any later version.
-// 
-// The above copyright notice and this permission notice shall be included in all
-// copies or substantial portions of the Software.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-// FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-// COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-// IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-// CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. 
-
+//                         netDxf library
+//  Copyright (C) 2009-2015 Daniel Carvajal (haplokuon@gmail.com)
+//  
+//  This library is free software; you can redistribute it and/or
+//  modify it under the terms of the GNU Lesser General Public
+//  License as published by the Free Software Foundation; either
+//  version 2.1 of the License, or (at your option) any later version.
+//  
+//  The above copyright notice and this permission notice shall be included in all
+//  copies or substantial portions of the Software.
+//  
+//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+//  FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+//  COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+//  IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+//  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #endregion
 
 using System;
@@ -36,18 +35,10 @@ namespace netDxf.Collections
         #region delegates and events
 
         public delegate void BeforeAddItemEventHandler(AttributeDefinitionDictionary sender, AttributeDefinitionDictionaryEventArgs e);
-        public delegate void AddItemEventHandler(AttributeDefinitionDictionary sender, AttributeDefinitionDictionaryEventArgs e);
-        public delegate void RemoveItemEventHandler(AttributeDefinitionDictionary sender, AttributeDefinitionDictionaryEventArgs e);
-        public delegate void BeforeRemoveItemEventHandler(AttributeDefinitionDictionary sender, AttributeDefinitionDictionaryEventArgs e);
-
         public event BeforeAddItemEventHandler BeforeAddItem;
-        public event AddItemEventHandler AddItem;
-        public event BeforeRemoveItemEventHandler BeforeRemoveItem;
-        public event RemoveItemEventHandler RemoveItem;
-
         protected virtual bool OnBeforeAddItemEvent(AttributeDefinition item)
         {
-            BeforeAddItemEventHandler ae = BeforeAddItem;
+            BeforeAddItemEventHandler ae = this.BeforeAddItem;
             if (ae != null)
             {
                 AttributeDefinitionDictionaryEventArgs e = new AttributeDefinitionDictionaryEventArgs(item);
@@ -57,16 +48,20 @@ namespace netDxf.Collections
             return false;
         }
 
+        public delegate void AddItemEventHandler(AttributeDefinitionDictionary sender, AttributeDefinitionDictionaryEventArgs e);
+        public event AddItemEventHandler AddItem;
         protected virtual void OnAddItemEvent(AttributeDefinition item)
         {
-            AddItemEventHandler ae = AddItem;
+            AddItemEventHandler ae = this.AddItem;
             if (ae != null)
                 ae(this, new AttributeDefinitionDictionaryEventArgs(item));
         }
 
+        public delegate void RemoveItemEventHandler(AttributeDefinitionDictionary sender, AttributeDefinitionDictionaryEventArgs e);
+        public event BeforeRemoveItemEventHandler BeforeRemoveItem;
         protected virtual bool OnBeforeRemoveItemEvent(AttributeDefinition item)
         {
-            BeforeRemoveItemEventHandler ae = BeforeRemoveItem;
+            BeforeRemoveItemEventHandler ae = this.BeforeRemoveItem;
             if (ae != null)
             {
                 AttributeDefinitionDictionaryEventArgs e = new AttributeDefinitionDictionaryEventArgs(item);
@@ -75,10 +70,12 @@ namespace netDxf.Collections
             }
             return false;
         }
-
+        
+        public delegate void BeforeRemoveItemEventHandler(AttributeDefinitionDictionary sender, AttributeDefinitionDictionaryEventArgs e);
+        public event RemoveItemEventHandler RemoveItem;
         protected virtual void OnRemoveItemEvent(AttributeDefinition item)
         {
-            RemoveItemEventHandler ae = RemoveItem;
+            RemoveItemEventHandler ae = this.RemoveItem;
             if (ae != null)
                 ae(this, new AttributeDefinitionDictionaryEventArgs(item));
         }
@@ -128,11 +125,11 @@ namespace netDxf.Collections
 
                 AttributeDefinition remove = this.innerDictionary[tag];
 
-                if (OnBeforeRemoveItemEvent(remove)) return;
-                if (OnBeforeAddItemEvent(value)) return;
+                if (this.OnBeforeRemoveItemEvent(remove)) return;
+                if (this.OnBeforeAddItemEvent(value)) return;
                 this.innerDictionary[tag] = value;
-                OnAddItemEvent(value);
-                OnRemoveItemEvent(remove);
+                this.OnAddItemEvent(value);
+                this.OnRemoveItemEvent(remove);
             }
         }
 
@@ -173,19 +170,30 @@ namespace netDxf.Collections
         #region public methods
 
         /// <summary>
-        /// Adds an <see cref="AttributeDefinition">attribute definition</see> to the current dictionary.
+        /// Adds an <see cref="AttributeDefinition">attribute definition</see> to the dictionary.
         /// </summary>
         /// <param name="item">The <see cref="AttributeDefinition">attribute definition</see> to add.</param>
-        /// <returns>True if the <see cref="AttributeDefinition">attribute definition</see> has been correctly added to the dictionary; otherwise, false.</returns>
-        public bool Add(AttributeDefinition item)
+        public void Add(AttributeDefinition item)
         {
-            if (OnBeforeAddItemEvent(item)) return false;
-            if (item == null) throw new ArgumentNullException("item");
+            if(this.OnBeforeAddItemEvent(item))
+                throw new ArgumentException("The attribute definition cannot be added to the collection.", "item");
             this.innerDictionary.Add(item.Tag, item);
-            OnAddItemEvent(item);
-            return true;
+            this.OnAddItemEvent(item);
         }
-        
+
+        /// <summary>
+        /// Adds an <see cref="EntityObject">attribute definition</see> list to the dictionary.
+        /// </summary>
+        /// <param name="collection">The collection whose elements should be added.</param>
+        public void AddRange(IEnumerable<AttributeDefinition> collection)
+        {
+            if (collection == null)
+                throw new ArgumentNullException("collection");
+            // we will make room for so the collection will fit without having to resize the internal array during the Add method
+            foreach (AttributeDefinition item in collection)
+                this.Add(item);
+        }
+
         /// <summary>
         /// Removes an <see cref="AttributeDefinition">attribute definition</see> with the specified tag from the current dictionary.
         /// </summary>
@@ -195,9 +203,9 @@ namespace netDxf.Collections
         {
             AttributeDefinition remove;
             if (!this.innerDictionary.TryGetValue(tag, out remove)) return false;
-            if (OnBeforeRemoveItemEvent(remove)) return false;
+            if (this.OnBeforeRemoveItemEvent(remove)) return false;
             this.innerDictionary.Remove(tag);
-            OnRemoveItemEvent(remove);
+            this.OnRemoveItemEvent(remove);
             return true;
         }
 

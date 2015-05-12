@@ -79,10 +79,10 @@ namespace netDxf.Entities
         /// <summary>
         /// Initializes a new instance of the <c>Angular2LineDimension</c> class.
         /// </summary>
-        /// <param name="startFirstLine">Start <see cref="Vector2">point</see> of the first line that defines de angle to measure.</param>
-        /// <param name="endFirstLine">End <see cref="Vector2">point</see> of the first line that defines de angle to measure.</param>
-        /// <param name="startSecondLine">Start <see cref="Vector2">point</see> of the second line that defines de angle to measure.</param>
-        /// <param name="endSecondLine">End <see cref="Vector2">point</see> of the second line that defines de angle to measure.</param>
+        /// <param name="startFirstLine">Start <see cref="Vector2">point</see> of the first line that defines the angle to measure.</param>
+        /// <param name="endFirstLine">End <see cref="Vector2">point</see> of the first line that defines the angle to measure.</param>
+        /// <param name="startSecondLine">Start <see cref="Vector2">point</see> of the second line that defines the angle to measure.</param>
+        /// <param name="endSecondLine">End <see cref="Vector2">point</see> of the second line that defines the angle to measure.</param>
         /// <param name="offset">Distance between the center point and the dimension line.</param>
         public Angular2LineDimension(Vector2 startFirstLine, Vector2 endFirstLine, Vector2 startSecondLine, Vector2 endSecondLine, double offset)
             : this(new Vector3(startFirstLine.X, startFirstLine.Y, 0.0), new Vector3(endFirstLine.X, endFirstLine.Y, 0.0), new Vector3(startSecondLine.X, startSecondLine.Y, 0.0), new Vector3(endSecondLine.X, endSecondLine.Y, 0.0), offset, DimensionStyle.Default)
@@ -92,10 +92,10 @@ namespace netDxf.Entities
         /// <summary>
         /// Initializes a new instance of the <c>Angular2LineDimension</c> class.
         /// </summary>
-        /// <param name="startFirstLine">Start <see cref="Vector3">point</see> of the first line that defines de angle to measure.</param>
-        /// <param name="endFirstLine">End <see cref="Vector3">point</see> of the first line that defines de angle to measure.</param>
-        /// <param name="startSecondLine">Start <see cref="Vector3">point</see> of the second line that defines de angle to measure.</param>
-        /// <param name="endSecondLine">End <see cref="Vector3">point</see> of the second line that defines de angle to measure.</param>
+        /// <param name="startFirstLine">Start <see cref="Vector3">point</see> of the first line that defines the angle to measure.</param>
+        /// <param name="endFirstLine">End <see cref="Vector3">point</see> of the first line that defines the angle to measure.</param>
+        /// <param name="startSecondLine">Start <see cref="Vector3">point</see> of the second line that defines the angle to measure.</param>
+        /// <param name="endSecondLine">End <see cref="Vector3">point</see> of the second line that defines the angle to measure.</param>
         /// <param name="offset">Distance between the center point and the dimension line.</param>
         public Angular2LineDimension(Vector3 startFirstLine, Vector3 endFirstLine, Vector3 startSecondLine, Vector3 endSecondLine, double offset)
             : this(startFirstLine, endFirstLine, startSecondLine, endSecondLine, offset, DimensionStyle.Default)
@@ -105,10 +105,10 @@ namespace netDxf.Entities
         /// <summary>
         /// Initializes a new instance of the <c>Angular2LineDimension</c> class.
         /// </summary>
-        /// <param name="startFirstLine">Start <see cref="Vector2">point</see> of the first line that defines de angle to measure.</param>
-        /// <param name="endFirstLine">End <see cref="Vector2">point</see> of the first line that defines de angle to measure.</param>
-        /// <param name="startSecondLine">Start <see cref="Vector2">point</see> of the second line that defines de angle to measure.</param>
-        /// <param name="endSecondLine">End <see cref="Vector2">point</see> of the second line that defines de angle to measure.</param>
+        /// <param name="startFirstLine">Start <see cref="Vector2">point</see> of the first line that defines the angle to measure.</param>
+        /// <param name="endFirstLine">End <see cref="Vector2">point</see> of the first line that defines the angle to measure.</param>
+        /// <param name="startSecondLine">Start <see cref="Vector2">point</see> of the second line that defines the angle to measure.</param>
+        /// <param name="endSecondLine">End <see cref="Vector2">point</see> of the second line that defines the angle to measure.</param>
         /// <param name="offset">Distance between the center point and the dimension line.</param>
         /// <param name="style">The <see cref="DimensionStyle">style</see> to use with the dimension.</param>
         public Angular2LineDimension(Vector2 startFirstLine, Vector2 endFirstLine, Vector2 startSecondLine, Vector2 endSecondLine, double offset, DimensionStyle style)
@@ -119,10 +119,10 @@ namespace netDxf.Entities
         /// <summary>
         /// Initializes a new instance of the <c>Angular2LineDimension</c> class.
         /// </summary>
-        /// <param name="startFirstLine">Start <see cref="Vector3">point</see> of the first line that defines de angle to measure.</param>
-        /// <param name="endFirstLine">End <see cref="Vector3">point</see> of the first line that defines de angle to measure.</param>
-        /// <param name="startSecondLine">Start <see cref="Vector3">point</see> of the second line that defines de angle to measure.</param>
-        /// <param name="endSecondLine">End <see cref="Vector3">point</see> of the second line that defines de angle to measure.</param>
+        /// <param name="startFirstLine">Start <see cref="Vector3">point</see> of the first line that defines the angle to measure.</param>
+        /// <param name="endFirstLine">End <see cref="Vector3">point</see> of the first line that defines the angle to measure.</param>
+        /// <param name="startSecondLine">Start <see cref="Vector3">point</see> of the second line that defines the angle to measure.</param>
+        /// <param name="endSecondLine">End <see cref="Vector3">point</see> of the second line that defines the angle to measure.</param>
         /// <param name="offset">Distance between the center point and the dimension line.</param>
         /// <param name="style">The <see cref="DimensionStyle">style</see> to use with the dimension.</param>
         public Angular2LineDimension(Vector3 startFirstLine, Vector3 endFirstLine, Vector3 startSecondLine, Vector3 endSecondLine, double offset, DimensionStyle style)
@@ -162,7 +162,7 @@ namespace netDxf.Entities
         #region public properties
 
         /// <summary>
-        /// Start <see cref="Vector3">point</see> of the first line that defines de angle to measure.
+        /// Start <see cref="Vector3">point</see> of the first line that defines the angle to measure.
         /// </summary>
         public Vector3 StartFirstLine
         {
@@ -171,7 +171,7 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// End <see cref="Vector3">point</see> of the first line that defines de angle to measure.
+        /// End <see cref="Vector3">point</see> of the first line that defines the angle to measure.
         /// </summary>
         public Vector3 EndFirstLine
         {
@@ -180,7 +180,7 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Start <see cref="Vector3">point</see> of the second line that defines de angle to measure.
+        /// Start <see cref="Vector3">point</see> of the second line that defines the angle to measure.
         /// </summary>
         public Vector3 StartSecondLine
         {
@@ -189,7 +189,7 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// End <see cref="Vector3">point</see> of the second line that defines de angle to measure.
+        /// End <see cref="Vector3">point</see> of the second line that defines the angle to measure.
         /// </summary>
         public Vector3 EndSecondLine
         {
@@ -216,7 +216,7 @@ namespace netDxf.Entities
         /// Actual measurement.
         /// </summary>
         /// <remarks>The dimension is always measured in the plane defined by the normal.</remarks>
-        public override double Value
+        public override double Measurement
         {
             get
             {
@@ -248,9 +248,9 @@ namespace netDxf.Entities
         #region overrides
 
         /// <summary>
-        /// Gets the the block that contains the entities that make up the dimension picture.
+        /// Gets the block that contains the entities that make up the dimension picture.
         /// </summary>
-        /// <param name="name">Name to be asigned to the generated block.</param>
+        /// <param name="name">Name to be assigned to the generated block.</param>
         /// <returns>The block that represents the actual dimension.</returns>
         internal override Block BuildBlock(string name)
         {

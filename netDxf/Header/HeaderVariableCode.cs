@@ -1,23 +1,22 @@
-#region netDxf, Copyright(C) 2014 Daniel Carvajal, Licensed under LGPL.
-
-//                        netDxf library
-// Copyright (C) 2014 Daniel Carvajal (haplokuon@gmail.com)
+#region netDxf, Copyright(C) 2015 Daniel Carvajal, Licensed under LGPL.
 // 
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2.1 of the License, or (at your option) any later version.
-// 
-// The above copyright notice and this permission notice shall be included in all
-// copies or substantial portions of the Software.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-// FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-// COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-// IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-// CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. 
-
+//                         netDxf library
+//  Copyright (C) 2009-2015 Daniel Carvajal (haplokuon@gmail.com)
+//  
+//  This library is free software; you can redistribute it and/or
+//  modify it under the terms of the GNU Lesser General Public
+//  License as published by the Free Software Foundation; either
+//  version 2.1 of the License, or (at your option) any later version.
+//  
+//  The above copyright notice and this permission notice shall be included in all
+//  copies or substantial portions of the Software.
+//  
+//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+//  FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+//  COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+//  IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+//  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #endregion
 
 namespace netDxf.Header
@@ -68,7 +67,7 @@ namespace netDxf.Header
         public const string CeColor = "$CECOLOR";
 
         /// <summary>
-        /// Current entity linetype scale.
+        /// Current entity line type scale.
         /// </summary>
         public const string CeLtScale = "$CELTSCALE";
 
@@ -78,7 +77,7 @@ namespace netDxf.Header
         public const string CeLweight = "$CELWEIGHT";
 
         /// <summary>
-        /// Current entity linetype name.
+        /// Current entity line type name.
         /// </summary>
         public const string CeLtype = "$CELTYPE";
 
@@ -159,7 +158,7 @@ namespace netDxf.Header
         /// Default drawing units for AutoCAD DesignCenter blocks.
         /// </summary>
         /// <remarks>
-        /// Also applies to raster image units, eventhought they have the RasterVariables object and units in ImageDef.
+        /// Also applies to raster image units, even thought they have the RasterVariables object and units in ImageDef.
         /// </remarks>
         public const string InsUnits = "$INSUNITS";
 
@@ -179,7 +178,7 @@ namespace netDxf.Header
 
 
         /// <summary>
-        /// Global linetype scale.
+        /// Global line type scale.
         /// </summary>
         public const string LtScale = "$LTSCALE";
 
@@ -199,10 +198,10 @@ namespace netDxf.Header
         public const string PdSize = "$PDSIZE";
 
         /// <summary>
-        /// Governs the generation of linetype patterns around the vertices of a 2D polyline.
+        /// Governs the generation of line type patterns around the vertexes of a 2D polyline.
         /// </summary>
         /// <remarks>
-        /// 1 = Linetype is generated in a continuous pattern around vertices of the polyline.<br />
+        /// 1 = Line type is generated in a continuous pattern around vertexes of the polyline.<br />
         /// 0 = Each segment of the polyline starts and ends with a dash.
         /// </remarks>
         public const string PLineGen = "$PLINEGEN";

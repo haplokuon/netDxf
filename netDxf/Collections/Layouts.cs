@@ -1,31 +1,30 @@
 #region netDxf, Copyright(C) 2015 Daniel Carvajal, Licensed under LGPL.
-
-//                        netDxf library
-// Copyright (C) 2015 Daniel Carvajal (haplokuon@gmail.com)
 // 
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2.1 of the License, or (at your option) any later version.
-// 
-// The above copyright notice and this permission notice shall be included in all
-// copies or substantial portions of the Software.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-// FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-// COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-// IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-// CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. 
-
+//                         netDxf library
+//  Copyright (C) 2009-2015 Daniel Carvajal (haplokuon@gmail.com)
+//  
+//  This library is free software; you can redistribute it and/or
+//  modify it under the terms of the GNU Lesser General Public
+//  License as published by the Free Software Foundation; either
+//  version 2.1 of the License, or (at your option) any later version.
+//  
+//  The above copyright notice and this permission notice shall be included in all
+//  copies or substantial portions of the Software.
+//  
+//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+//  FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+//  COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+//  IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+//  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #endregion
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using netDxf.Blocks;
 using netDxf.Entities;
 using netDxf.Objects;
+using netDxf.Tables;
 
 namespace netDxf.Collections
 {
@@ -65,17 +64,21 @@ namespace netDxf.Collections
         /// Adds a layout to the list.
         /// </summary>
         /// <param name="layout"><see cref="Layout">Layout</see> to add to the list.</param>
+        /// <param name="assignHandle">Specifies if a handle needs to be generated for the layout parameter.</param>
         /// <returns>
         /// If a layout already exists with the same name as the instance that is being added the method returns the existing layout.
         /// </returns>
         internal override Layout Add(Layout layout, bool assignHandle)
         {
             if (this.list.Count >= this.maxCapacity)
-                throw new OverflowException(String.Format("Table overflow. The maximum number of elements the table {0} can have is {1}", this.codeName, this.maxCapacity));
+                throw new OverflowException(string.Format("Table overflow. The maximum number of elements the table {0} can have is {1}", this.codeName, this.maxCapacity));
 
             Layout add;
+
             if (this.list.TryGetValue(layout.Name, out add))
                 return add;
+
+            layout.Owner = this;
 
             Block associatadBlock = layout.AssociatedBlock;
 
@@ -83,27 +86,29 @@ namespace netDxf.Collections
             if (layout.IsPaperSpace && associatadBlock == null)
             {
                 // the PaperSpace block names follow the naming Paper_Space, Paper_Space0, Paper_Space1, ...
-                string spaceName = this.list.Count == 1 ? Block.PaperSpace.Name : string.Concat(Block.PaperSpace.Name, this.list.Count - 2);
-                associatadBlock = new Block(spaceName, false);
+                string spaceName = this.list.Count == 1 ? Block.DefaultPaperSpaceName : string.Concat(Block.DefaultPaperSpaceName, this.list.Count - 2);
+                associatadBlock = new Block(spaceName, false, null, null);
+                if (layout.TabOrder == 0) layout.TabOrder = (short)this.list.Count;
             }
 
             associatadBlock = this.document.Blocks.Add(associatadBlock);
 
             layout.AssociatedBlock = associatadBlock;
             associatadBlock.Record.Layout = layout;
-            layout.Owner = this;
             this.document.Blocks.References[associatadBlock.Name].Add(layout);
 
-            if (layout.Viewport != null) layout.Viewport.Owner = associatadBlock;
+            if (layout.Viewport != null)
+                layout.Viewport.Owner = associatadBlock;
 
-            if (assignHandle)
+            if (assignHandle || string.IsNullOrEmpty(layout.Handle))
                 this.document.NumHandles = layout.AsignHandle(this.document.NumHandles);
 
             this.document.AddedObjects.Add(layout.Handle, layout);
 
             this.list.Add(layout.Name, layout);
-
             this.references.Add(layout.Name, new List<DxfObject>());
+
+            layout.NameChange += this.Item_NameChange;
 
             return layout;
         }
@@ -140,15 +145,14 @@ namespace netDxf.Collections
             if (layout.IsReserved)
                 return false;
 
+            // remove the entities of the layout
             List<DxfObject> refObjects = this.references[layout.Name];
             if (refObjects.Count != 0)
             {
                 DxfObject[] entities = new DxfObject[refObjects.Count];
                 refObjects.CopyTo(entities);
                 foreach (DxfObject e in entities)
-                {
                     this.document.RemoveEntity(e as EntityObject);
-                }
             }
 
             // When a layout is removed we need to rebuild the PaperSpace block names, to follow the naming Paper_Space, Paper_Space0, Paper_Space1, ...
@@ -157,18 +161,22 @@ namespace netDxf.Collections
                 // The ModelSpace block cannot be removed. 
                 if (l.IsPaperSpace)
                 {
-                    Debug.Assert(l.AssociatedBlock != null, String.Format("The layout {0} associated block cannot be null.", l.Name));
                     this.document.Blocks.References[l.AssociatedBlock.Name].Remove(l);
                     this.document.Blocks.Remove(l.AssociatedBlock);
                     l.AssociatedBlock = null;
                 }
             }
 
-            layout.Owner = null;
-            layout.Viewport.Owner = null;
+            // remove the layout
             this.document.AddedObjects.Remove(layout.Handle);
             this.references.Remove(layout.Name);
             this.list.Remove(layout.Name);
+
+            layout.Handle = null;
+            layout.Owner = null;
+            layout.Viewport.Owner = null;
+
+            layout.NameChange -= this.Item_NameChange;
 
             // When a layout is removed we need to rebuild the PaperSpace block names, to follow the naming Paper_Space, Paper_Space0, Paper_Space1, ...
             int index = 0;
@@ -177,17 +185,37 @@ namespace netDxf.Collections
                 // Create and add the corresponding PaperSpace block
                 if (l.IsPaperSpace)
                 {
-                    string spaceName = index == 1 ? Block.PaperSpace.Name : string.Concat(Block.PaperSpace.Name, index - 2);
-                    Block associatadBlock = new Block(spaceName, false);
-                    associatadBlock = this.document.Blocks.Add(associatadBlock);
+                    string spaceName = index == 0 ? Block.PaperSpace.Name : string.Concat(Block.PaperSpace.Name, index - 1);
+                    Block associatadBlock = this.document.Blocks.Add(new Block(spaceName, false, null, null));
                     this.document.Blocks.References[associatadBlock.Name].Add(l);
                     l.AssociatedBlock = associatadBlock;
                     associatadBlock.Record.Layout = l;
-                }
-                index += 1;
-            }
+                    index += 1;
 
+                    // we need to redefine the owner of the layout entities
+                    l.Viewport.Owner = l.AssociatedBlock;
+                    foreach (DxfObject o in this.references[l.Name])
+                        o.Owner = l.AssociatedBlock;
+                }
+            }
             return true;
+        }
+
+        #endregion
+
+        #region LineType events
+
+        private void Item_NameChange(TableObject sender, TableObjectChangeEventArgs<string> e)
+        {
+            if (this.Contains(e.NewValue))
+                throw new ArgumentException("There is already another layout with the same name.");
+
+            this.list.Remove(sender.Name);
+            this.list.Add(e.NewValue, (Layout)sender);
+
+            List<DxfObject> refs = this.references[sender.Name];
+            this.references.Remove(sender.Name);
+            this.references.Add(e.NewValue, refs);
         }
 
         #endregion

@@ -1,29 +1,29 @@
-﻿#region netDxf, Copyright(C) 2014 Daniel Carvajal, Licensed under LGPL.
-
-//                        netDxf library
-// Copyright (C) 2014 Daniel Carvajal (haplokuon@gmail.com)
+﻿#region netDxf, Copyright(C) 2015 Daniel Carvajal, Licensed under LGPL.
 // 
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2.1 of the License, or (at your option) any later version.
-// 
-// The above copyright notice and this permission notice shall be included in all
-// copies or substantial portions of the Software.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-// FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-// COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-// IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-// CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. 
-
+//                         netDxf library
+//  Copyright (C) 2009-2015 Daniel Carvajal (haplokuon@gmail.com)
+//  
+//  This library is free software; you can redistribute it and/or
+//  modify it under the terms of the GNU Lesser General Public
+//  License as published by the Free Software Foundation; either
+//  version 2.1 of the License, or (at your option) any later version.
+//  
+//  The above copyright notice and this permission notice shall be included in all
+//  copies or substantial portions of the Software.
+//  
+//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+//  FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+//  COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+//  IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+//  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #endregion
 
 using System;
 using System.Collections.Generic;
 using System.Text;
 using netDxf.Entities;
+using netDxf.Units;
 
 namespace netDxf.Header
 {
@@ -192,7 +192,7 @@ namespace netDxf.Header
         }
 
         /// <summary>
-        /// Current entity linetype scale.
+        /// Current entity line type scale.
         /// </summary>
         /// <remarks>Default value: 1.0.</remarks>
         public double CeLtScale
@@ -201,13 +201,13 @@ namespace netDxf.Header
             set
             {
                 if (value <= 0)
-                    throw new ArgumentOutOfRangeException("value", value, "The current entity linetype scale must be greater than zero.");
+                    throw new ArgumentOutOfRangeException("value", value, "The current entity line type scale must be greater than zero.");
                 this.variables[HeaderVariableCode.CeLtScale].Value = value;
             }
         }
 
         /// <summary>
-        /// Current entity lineweight.
+        /// Current entity line weight.
         /// </summary>
         /// <remarks>Default value: -1 (ByLayer).</remarks>
         public Lineweight CeLweight
@@ -216,13 +216,13 @@ namespace netDxf.Header
             set
             {
                 if (value == null)
-                    throw new ArgumentNullException("value", "The current entity lineweight cannot be null.");
+                    throw new ArgumentNullException("value", "The current entity line weight cannot be null.");
                 this.variables[HeaderVariableCode.CeLweight].Value = value;
             }
         }
 
         /// <summary>
-        /// Current entity linetype name.
+        /// Current entity line type name.
         /// </summary>
         /// <remarks>Default value: ByLayer.</remarks>
         public string CeLtype
@@ -231,7 +231,7 @@ namespace netDxf.Header
             set
             {
                 if (string.IsNullOrEmpty(value))
-                    throw new ArgumentNullException("value", "The current entity linetype name cannot be null or empty.");
+                    throw new ArgumentNullException("value", "The current entity line type name cannot be null or empty.");
                 this.variables[HeaderVariableCode.CeLtype].Value = value;
             }
         }
@@ -296,7 +296,7 @@ namespace netDxf.Header
             set
             {
                 if (string.IsNullOrEmpty(value))
-                    throw new ArgumentNullException("value", "The current dimesion style name cannot be null or empty.");
+                    throw new ArgumentNullException("value", "The current dimension style name cannot be null or empty.");
                 this.variables[HeaderVariableCode.DimStyle].Value = value;
             }
         }
@@ -406,7 +406,7 @@ namespace netDxf.Header
         }
 
         /// <summary>
-        /// Specifies a drawing units value for automatic scaling of blocks, images, or xrefs when inserted or attached to a drawing.
+        /// Specifies a drawing units value for automatic scaling of blocks, images, or xRefs when inserted or attached to a drawing.
         /// </summary>
         /// <remarks>
         /// Default value: Unitless.<br />
@@ -432,7 +432,7 @@ namespace netDxf.Header
         }
 
         /// <summary>
-        /// Global linetype scale.
+        /// Global line type scale.
         /// </summary>
         /// <remarks>Default value: 1.0.</remarks>
         public double LtScale
@@ -441,18 +441,18 @@ namespace netDxf.Header
             set
             {
                 if (value <= 0)
-                    throw new ArgumentOutOfRangeException("value", value, "The global linetype scale must be greater than zero.");
+                    throw new ArgumentOutOfRangeException("value", value, "The global line type scale must be greater than zero.");
                 this.variables[HeaderVariableCode.LtScale].Value = value;
             }
         }
 
         /// <summary>
-        /// Controls the display of lineweights on the Model or Layout tab.
+        /// Controls the display of line weights on the Model or Layout tab.
         /// </summary>
         /// <remarks>
         /// Default value: false.<br />
-        /// false = Lineweight is not displayed.<br />
-        /// true = Lineweight is displayed.<br />
+        /// false = Line weight is not displayed.<br />
+        /// true = Line weight is displayed.<br />
         /// </remarks>
         public bool LwDisplay
         {
@@ -486,11 +486,11 @@ namespace netDxf.Header
         }
 
         /// <summary>
-        /// Governs the generation of linetype patterns around the vertices of a 2D polyline.
+        /// Governs the generation of line type patterns around the vertexes of a 2D polyline.
         /// </summary>
         /// <remarks>
         /// Default value: 0.<br />
-        /// 1 = Linetype is generated in a continuous pattern around vertices of the polyline.<br />
+        /// 1 = Line type is generated in a continuous pattern around vertexes of the polyline.<br />
         /// 0 = Each segment of the polyline starts and ends with a dash.
         /// </remarks>
         public short PLineGen

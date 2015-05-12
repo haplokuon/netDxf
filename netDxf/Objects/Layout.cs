@@ -1,23 +1,22 @@
-﻿#region netDxf, Copyright(C) 2014 Daniel Carvajal, Licensed under LGPL.
-
-//                        netDxf library
-// Copyright (C) 2014 Daniel Carvajal (haplokuon@gmail.com)
+﻿#region netDxf, Copyright(C) 2015 Daniel Carvajal, Licensed under LGPL.
 // 
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2.1 of the License, or (at your option) any later version.
-// 
-// The above copyright notice and this permission notice shall be included in all
-// copies or substantial portions of the Software.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-// FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-// COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-// IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-// CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. 
-
+//                         netDxf library
+//  Copyright (C) 2009-2015 Daniel Carvajal (haplokuon@gmail.com)
+//  
+//  This library is free software; you can redistribute it and/or
+//  modify it under the terms of the GNU Lesser General Public
+//  License as published by the Free Software Foundation; either
+//  version 2.1 of the License, or (at your option) any later version.
+//  
+//  The above copyright notice and this permission notice shall be included in all
+//  copies or substantial portions of the Software.
+//  
+//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+//  FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+//  COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+//  IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+//  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #endregion
 
 using System;
@@ -32,9 +31,9 @@ namespace netDxf.Objects
     /// Represents a layout.
     /// </summary>
     public class Layout :
-        TableObject
+        TableObject,
+        IComparable<Layout>
     {
-
         #region private fields
 
         private PlotSettings plot;
@@ -57,6 +56,11 @@ namespace netDxf.Objects
         #region constants
 
         /// <summary>
+        /// Layout ModelSpace name.
+        /// </summary>
+        public const string ModelSpaceName = "Model";
+
+        /// <summary>
         /// Gets the ModelSpace layout.
         /// </summary>
         /// <remarks>
@@ -64,7 +68,7 @@ namespace netDxf.Objects
         /// </remarks>
         public static Layout ModelSpace
         {
-            get { return new Layout("Model", Block.ModelSpace, new PlotSettings()); }
+            get { return new Layout(ModelSpaceName, Block.ModelSpace, new PlotSettings()); }
         }
 
         #endregion
@@ -83,11 +87,13 @@ namespace netDxf.Objects
         private Layout(string name, Block associatedBlock, PlotSettings plotSettings)
             : base(name, DxfObjectCode.Layout, true)
         {
-            if (name.Equals("Model", StringComparison.OrdinalIgnoreCase))
+            if (string.IsNullOrEmpty(name))
+                throw new ArgumentNullException("name", "The layout name should be at least one character long.");
+
+            if (name.Equals(ModelSpaceName, StringComparison.OrdinalIgnoreCase))
             {
                 this.reserved = true;
                 this.isPaperSpace = false;
-                this.tabOrder = 0;
                 this.viewport = null;
                 plotSettings.Flags = PlotFlags.Initializing | PlotFlags.UpdatePaper | PlotFlags.ModelType | PlotFlags.DrawViewportsFirst | PlotFlags.PrintLineweights | PlotFlags.PlotPlotStyles | PlotFlags.UseStandardScale;
             }
@@ -95,10 +101,10 @@ namespace netDxf.Objects
             {
                 this.reserved = false;
                 this.isPaperSpace = true;
-                this.tabOrder = 1;
                 this.viewport = new Viewport(1) { ViewCenter = new Vector2(50.0, 100.0) };
             }
 
+            this.tabOrder = 0;
             this.associatedBlock = associatedBlock;
             this.plot = plotSettings;
             this.minLimit = new Vector2(-20.0, -7.5);
@@ -111,6 +117,7 @@ namespace netDxf.Objects
             this.xAxis = Vector3.UnitX;
             this.yAxis = Vector3.UnitY;
         }
+
         #endregion
 
         #region public properties
@@ -119,7 +126,7 @@ namespace netDxf.Objects
         /// Gets or sets the tab order.
         /// </summary>
         /// <remarks>
-        /// Tab order. This number is an ordinal indicating this layout's ordering in the tab control that is
+        /// This number is an ordinal indicating this layout's ordering in the tab control that is
         /// attached to the AutoCAD drawing frame window. Note that the "Model" tab always appears
         /// as the first tab regardless of its tab order (always zero).
         /// </remarks>
@@ -233,9 +240,9 @@ namespace netDxf.Objects
         }
 
         /// <summary>
-        /// Gets the viewport associated with this layout. This is the viewport with Id 1 that represents the paperspace itself, it has no graphical representation, and does not show the model.
+        /// Gets the viewport associated with this layout. This is the viewport with Id 1 that represents the paper space itself, it has no graphical representation, and does not show the model.
         /// </summary>
-        /// <remarks>The ModelSpace layout does not requiere a viewport and it will always return null.</remarks>
+        /// <remarks>The ModelSpace layout does not require a viewport and it will always return null.</remarks>
         public Viewport Viewport
         {
             get { return this.viewport; }
@@ -269,11 +276,11 @@ namespace netDxf.Objects
         /// </summary>
         /// <param name="newName">Layout name of the copy.</param>
         /// <returns>A new Layout that is a copy of this instance.</returns>
-        /// <remarks>The Model Layout cannot be clonned.</remarks>
+        /// <remarks>The Model Layout cannot be cloned.</remarks>
         public override TableObject Clone(string newName)
         {
-            if (this.name == "Model" || newName == "Model")
-                throw new NotSupportedException("The Model layout cannot be clonned.");
+            if (this.name == ModelSpaceName || newName == ModelSpaceName)
+                throw new NotSupportedException("The Model layout cannot be cloned.");
 
             return new Layout(newName, null, (PlotSettings)this.plot.Clone())
             {
@@ -295,19 +302,19 @@ namespace netDxf.Objects
         /// Creates a new Layout that is a copy of the current instance.
         /// </summary>
         /// <returns>A new Layout that is a copy of this instance.</returns>
-        /// <remarks>The Model Layout cannot be clonned.</remarks>
+        /// <remarks>The Model Layout cannot be cloned.</remarks>
         public override object Clone()
         {
-            return Clone(this.name);
+            return this.Clone(this.name);
         }
 
         /// <summary>
-        /// Asigns a handle to the object based in a integer counter.
+        /// Assigns a handle to the object based in a integer counter.
         /// </summary>
-        /// <param name="entityNumber">Number to asign.</param>
-        /// <returns>Next avaliable entity number.</returns>
+        /// <param name="entityNumber">Number to assign.</param>
+        /// <returns>Next available entity number.</returns>
         /// <remarks>
-        /// Some objects might consume more than one, is, for example, the case of polylines that will asign
+        /// Some objects might consume more than one, is, for example, the case of polylines that will assign
         /// automatically a handle to its vertexes. The entity number will be converted to an hexadecimal number.
         /// </remarks>
         internal override long AsignHandle(long entityNumber)
@@ -315,6 +322,24 @@ namespace netDxf.Objects
             entityNumber = this.owner.AsignHandle(entityNumber);
             if(this.isPaperSpace) entityNumber = this.viewport.AsignHandle(entityNumber);
             return base.AsignHandle(entityNumber);
+        }
+
+        #endregion
+
+        #region implements IComparable
+
+        /// <summary>
+        /// Compares the current object with another object of the same type.
+        /// </summary>
+        /// <param name="other">An object to compare with this object.</param>
+        /// <returns>
+        /// A 32-bit signed integer that indicates the relative order of the objects being compared.
+        /// The return value has the following meanings: Value Meaning Less than zero This object is less than the other parameter.
+        /// Zero This object is equal to other. Greater than zero This object is greater than other.
+        /// </returns>
+        public int CompareTo(Layout other)
+        {
+            return this.tabOrder.CompareTo(other.tabOrder);
         }
 
         #endregion

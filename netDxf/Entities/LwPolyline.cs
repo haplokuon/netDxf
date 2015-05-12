@@ -1,23 +1,22 @@
-﻿#region netDxf, Copyright(C) 2013 Daniel Carvajal, Licensed under LGPL.
-
-//                        netDxf library
-// Copyright (C) 2013 Daniel Carvajal (haplokuon@gmail.com)
+﻿#region netDxf, Copyright(C) 2015 Daniel Carvajal, Licensed under LGPL.
 // 
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2.1 of the License, or (at your option) any later version.
-// 
-// The above copyright notice and this permission notice shall be included in all
-// copies or substantial portions of the Software.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-// FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-// COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-// IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-// CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. 
-
+//                         netDxf library
+//  Copyright (C) 2009-2015 Daniel Carvajal (haplokuon@gmail.com)
+//  
+//  This library is free software; you can redistribute it and/or
+//  modify it under the terms of the GNU Lesser General Public
+//  License as published by the Free Software Foundation; either
+//  version 2.1 of the License, or (at your option) any later version.
+//  
+//  The above copyright notice and this permission notice shall be included in all
+//  copies or substantial portions of the Software.
+//  
+//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+//  FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+//  COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+//  IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+//  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #endregion
 
 using System;
@@ -140,7 +139,7 @@ namespace netDxf.Entities
         {
             foreach (LwPolylineVertex v in this.vertexes)
             {
-                v.BeginWidth = width;
+                v.StartWidth = width;
                 v.EndWidth = width;
             }
         }
@@ -245,8 +244,8 @@ namespace netDxf.Entities
         /// </summary>
         /// <param name="bulgePrecision">Curve segments precision (a value of zero means that no approximation will be made).</param>
         /// <param name="weldThreshold">Tolerance to consider if two new generated vertexes are equal.</param>
-        /// <param name="bulgeThreshold">Minimun distance from which approximate curved segments of the polyline.</param>
-        /// <returns>A list of vertexes expresed in object coordinate system.</returns>
+        /// <param name="bulgeThreshold">Minimum distance from which approximate curved segments of the polyline.</param>
+        /// <returns>A list of vertexes expressed in object coordinate system.</returns>
         public IList<Vector2> PoligonalVertexes(int bulgePrecision, double weldThreshold, double bulgeThreshold)
         {
             List<Vector2> ocsVertexes = new List<Vector2>();
@@ -356,7 +355,5 @@ namespace netDxf.Entities
         }
 
         #endregion
-
-
     }
 }

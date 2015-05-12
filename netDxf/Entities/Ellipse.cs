@@ -1,23 +1,22 @@
-#region netDxf, Copyright(C) 2014 Daniel Carvajal, Licensed under LGPL.
-
-//                        netDxf library
-// Copyright (C) 2013 Daniel Carvajal (haplokuon@gmail.com)
+#region netDxf, Copyright(C) 2015 Daniel Carvajal, Licensed under LGPL.
 // 
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2.1 of the License, or (at your option) any later version.
-// 
-// The above copyright notice and this permission notice shall be included in all
-// copies or substantial portions of the Software.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-// FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-// COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-// IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-// CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. 
-
+//                         netDxf library
+//  Copyright (C) 2009-2015 Daniel Carvajal (haplokuon@gmail.com)
+//  
+//  This library is free software; you can redistribute it and/or
+//  modify it under the terms of the GNU Lesser General Public
+//  License as published by the Free Software Foundation; either
+//  version 2.1 of the License, or (at your option) any later version.
+//  
+//  The above copyright notice and this permission notice shall be included in all
+//  copies or substantial portions of the Software.
+//  
+//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+//  FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+//  COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+//  IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+//  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #endregion
 
 using System;
@@ -166,7 +165,7 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Checks if the the actual instance is a full ellipse.
+        /// Checks if the actual instance is a full ellipse.
         /// </summary>
         public bool IsFullEllipse
         {
@@ -175,7 +174,7 @@ namespace netDxf.Entities
 
         #endregion
 
-        #region methods
+        #region public methods
 
         /// <summary>
         /// Calculate the local point on the ellipse for a given angle relative to the center.
@@ -201,7 +200,7 @@ namespace netDxf.Entities
         /// Converts the ellipse in a list of vertexes.
         /// </summary>
         /// <param name="precision">Number of divisions.</param>
-        /// <returns>A list vertexes that represents the ellipse expresed in object coordinate system.</returns>
+        /// <returns>A list vertexes that represents the ellipse expressed in object coordinate system.</returns>
         public IList<Vector2> PolygonalVertexes(int precision)
         {
             List<Vector2> points = new List<Vector2>();
@@ -282,16 +281,6 @@ namespace netDxf.Entities
         /// <returns>A new Ellipse that is a copy of this instance.</returns>
         public override object Clone()
         {
-            Dictionary<string, XData> copyXData = null;
-            if (this.xData != null)
-            {
-                copyXData = new Dictionary<string, XData>();
-                foreach (KeyValuePair<string, XData> data in this.xData)
-                {
-                    copyXData.Add(data.Key, (XData)data.Value.Clone());
-                }
-            }
-
             Ellipse entity = new Ellipse
             {
                 //EntityObject properties

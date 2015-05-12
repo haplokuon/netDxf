@@ -1,23 +1,22 @@
-﻿#region netDxf, Copyright(C) 2014 Daniel Carvajal, Licensed under LGPL.
-
-//                        netDxf library
-// Copyright (C) 2014 Daniel Carvajal (haplokuon@gmail.com)
+﻿#region netDxf, Copyright(C) 2015 Daniel Carvajal, Licensed under LGPL.
 // 
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2.1 of the License, or (at your option) any later version.
-// 
-// The above copyright notice and this permission notice shall be included in all
-// copies or substantial portions of the Software.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-// FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-// COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-// IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-// CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. 
-
+//                         netDxf library
+//  Copyright (C) 2009-2015 Daniel Carvajal (haplokuon@gmail.com)
+//  
+//  This library is free software; you can redistribute it and/or
+//  modify it under the terms of the GNU Lesser General Public
+//  License as published by the Free Software Foundation; either
+//  version 2.1 of the License, or (at your option) any later version.
+//  
+//  The above copyright notice and this permission notice shall be included in all
+//  copies or substantial portions of the Software.
+//  
+//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+//  FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+//  COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+//  IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+//  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #endregion
 
 using System;
@@ -25,13 +24,12 @@ using System.Globalization;
 
 namespace netDxf
 {
-
     /// <summary>
     /// Represents the transparency of a layer or an entity.
     /// </summary>
     /// <remarks>
     /// When the transparency of an entity is ByLayer the code 440 will not appear in the dxf,
-    /// but for comparision purposes the ByLayer transparency is assigned a value of -1.
+    /// but for comparison purposes the ByLayer transparency is assigned a value of -1.
     /// </remarks>
     public class Transparency :
         ICloneable,
@@ -50,7 +48,7 @@ namespace netDxf
         /// </summary>
         public static Transparency ByLayer
         {
-            get { return new Transparency {value = -1}; }
+            get { return new Transparency { value = -1 }; }
         }
 
         /// <summary>
@@ -115,7 +113,7 @@ namespace netDxf
         /// </remarks>
         public short Value
         {
-            get { return value; }
+            get { return this.value; }
             set
             {
                 if (value < 0 || value > 90)
@@ -177,7 +175,7 @@ namespace netDxf
         /// Creates a new transparency that is a copy of the current instance.
         /// </summary>
         /// <returns>A new transparency that is a copy of this instance.</returns>
-        public Object Clone()
+        public object Clone()
         {
             return FromCadIndex(this.value);
         }
@@ -190,7 +188,7 @@ namespace netDxf
         /// Check if the components of two transparencies are equal.
         /// </summary>
         /// <param name="obj">Another transparency to compare to.</param>
-        /// <returns>True if their indexes are equal or false in anyother case.</returns>
+        /// <returns>True if their indexes are equal or false in any other case.</returns>
         public bool Equals(Transparency obj)
         {
             return obj.value == this.value;
@@ -215,6 +213,5 @@ namespace netDxf
         }
 
         #endregion
-
     }
 }

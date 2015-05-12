@@ -1,23 +1,22 @@
-﻿#region netDxf, Copyright(C) 2014 Daniel Carvajal, Licensed under LGPL.
-
-//                        netDxf library
-// Copyright (C) 2014 Daniel Carvajal (haplokuon@gmail.com)
+﻿#region netDxf, Copyright(C) 2015 Daniel Carvajal, Licensed under LGPL.
 // 
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2.1 of the License, or (at your option) any later version.
-// 
-// The above copyright notice and this permission notice shall be included in all
-// copies or substantial portions of the Software.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-// FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-// COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-// IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-// CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. 
-
+//                         netDxf library
+//  Copyright (C) 2009-2015 Daniel Carvajal (haplokuon@gmail.com)
+//  
+//  This library is free software; you can redistribute it and/or
+//  modify it under the terms of the GNU Lesser General Public
+//  License as published by the Free Software Foundation; either
+//  version 2.1 of the License, or (at your option) any later version.
+//  
+//  The above copyright notice and this permission notice shall be included in all
+//  copies or substantial portions of the Software.
+//  
+//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+//  FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+//  COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+//  IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+//  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #endregion
 
 namespace netDxf
@@ -88,47 +87,47 @@ namespace netDxf
         public const string EndSection = "ENDSEC";
 
         /// <summary>
-        /// Layers.
+        /// Layers table.
         /// </summary>
         public const string LayerTable = "LAYER";
 
         /// <summary>
-        /// View ports.
+        /// Viewports table.
         /// </summary>
         public const string VportTable = "VPORT";
 
         /// <summary>
-        /// Views.
+        /// Views table.
         /// </summary>
         public const string ViewTable = "VIEW";
 
         /// <summary>
-        /// Ucs.
+        /// User coordinate system table.
         /// </summary>
         public const string UcsTable = "UCS";
 
         /// <summary>
-        /// Block records.
+        /// Block records table.
         /// </summary>
         public const string BlockRecordTable = "BLOCK_RECORD";
 
         /// <summary>
-        /// Line types.
+        /// Line types table.
         /// </summary>
         public const string LineTypeTable = "LTYPE";
 
         /// <summary>
-        /// text styles.
+        /// Text styles table.
         /// </summary>
         public const string TextStyleTable = "STYLE";
 
         /// <summary>
-        /// Dimension styles.
+        /// Dimension styles table.
         /// </summary>
         public const string DimensionStyleTable = "DIMSTYLE";
 
         /// <summary>
-        /// extended data application registry.
+        /// Extended data application registries  table.
         /// </summary>
         public const string ApplicationIDTable = "APPID";
 
@@ -153,32 +152,32 @@ namespace netDxf
         public const string EndBlock = "ENDBLK";
 
         /// <summary>
-        /// Group dictionary
+        /// Group dictionary.
         /// </summary>
         public const string GroupDictionary = "ACAD_GROUP";
 
         /// <summary>
-        /// Layouts dictionary
+        /// Layouts dictionary.
         /// </summary>
         public const string LayoutDictionary = "ACAD_LAYOUT";
 
         /// <summary>
-        /// MLine styles dictionary
+        /// Multiline styles dictionary.
         /// </summary>
         public const string MLineStyleDictionary = "ACAD_MLINESTYLE";
 
         /// <summary>
-        /// MLine styles dictionary
+        /// Multiline styles dictionary.
         /// </summary>
         public const string ImageDefDictionary = "ACAD_IMAGE_DICT";
 
         /// <summary>
-        /// MLine styles dictionary
+        /// MLine styles dictionary.
         /// </summary>
         public const string ImageVarsDictionary = "ACAD_IMAGE_VARS";
 
         /// <summary>
-        /// End of file
+        /// End of file.
         /// </summary>
         public const string EndOfFile = "EOF";
 
@@ -218,7 +217,7 @@ namespace netDxf
         public const string TextStyle = "STYLE";
 
         /// <summary>
-        /// MLine style.
+        /// Multiline style.
         /// </summary>
         public const string MLineStyle = "MLINESTYLE";
 
@@ -228,7 +227,7 @@ namespace netDxf
         public const string View = "VIEW";
 
         /// <summary>
-        /// Ucs.
+        /// User coordinate system.
         /// </summary>
         public const string Ucs = "UCS";
 

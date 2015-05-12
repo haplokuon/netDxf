@@ -1,23 +1,22 @@
-﻿#region netDxf, Copyright(C) 2014 Daniel Carvajal, Licensed under LGPL.
-
-//                        netDxf library
-// Copyright (C) 2014 Daniel Carvajal (haplokuon@gmail.com)
+﻿#region netDxf, Copyright(C) 2015 Daniel Carvajal, Licensed under LGPL.
 // 
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2.1 of the License, or (at your option) any later version.
-// 
-// The above copyright notice and this permission notice shall be included in all
-// copies or substantial portions of the Software.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-// FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-// COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-// IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-// CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. 
-
+//                         netDxf library
+//  Copyright (C) 2009-2015 Daniel Carvajal (haplokuon@gmail.com)
+//  
+//  This library is free software; you can redistribute it and/or
+//  modify it under the terms of the GNU Lesser General Public
+//  License as published by the Free Software Foundation; either
+//  version 2.1 of the License, or (at your option) any later version.
+//  
+//  The above copyright notice and this permission notice shall be included in all
+//  copies or substantial portions of the Software.
+//  
+//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+//  FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+//  COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+//  IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+//  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #endregion
 
 using System;
@@ -29,7 +28,7 @@ using System.Threading;
 namespace netDxf
 {
     /// <summary>
-    /// Represents an ACI color (Autocad Color Index) that also supports true color.
+    /// Represents an ACI color (AutoCAD Color Index) that also supports true color.
     /// </summary>
     public class AciColor :
         ICloneable,
@@ -37,7 +36,7 @@ namespace netDxf
     {
         #region private fields
 
-        private static readonly Dictionary<byte, byte[]> aciColors = IndexRgb();
+        private static readonly Dictionary<byte, byte[]> AciColors = IndexRgb();
         private short index;
         private byte r;
         private byte g;
@@ -121,17 +120,17 @@ namespace netDxf
         }
 
         /// <summary>
-        /// Defines a default dark grey color.
+        /// Defines a default dark gray color.
         /// </summary>
-        public static AciColor DarkGrey
+        public static AciColor DarkGray
         {
             get { return new AciColor(8); }
         }
 
         /// <summary>
-        /// Defines a default light grey color.
+        /// Defines a default light gray color.
         /// </summary>
-        public static AciColor LightGrey
+        public static AciColor LightGray
         {
             get { return new AciColor(9); }
         }
@@ -205,14 +204,14 @@ namespace netDxf
         /// <remarks>
         /// By default the UseTrueColor will be set to false.<br />
         /// Accepted color index values range from 1 to 255.<br />
-        /// Indexes from 1 to 255 represents a color, the index 0 and 256 are reserved for bylayer and byblock colors.
+        /// Indexes from 1 to 255 represents a color, the index 0 and 256 are reserved for ByLayer and ByBlock colors.
         /// </remarks>
         public AciColor(short index)
         {
             if (index <= 0 || index >= 256)
                 throw new ArgumentOutOfRangeException("index", index, "Accepted color index values range from 1 to 255.");
 
-            byte[] rgb = aciColors[(byte)index];
+            byte[] rgb = AciColors[(byte)index];
             this.r = rgb[0];
             this.g = rgb[1];
             this.b = rgb[2];
@@ -282,7 +281,7 @@ namespace netDxf
         /// </summary>
         /// <remarks>
         /// Accepted color index values range from 1 to 255.
-        /// Indexes from 1 to 255 represents a color, the index 0 and 256 are reserved for bylayer and byblock colors.
+        /// Indexes from 1 to 255 represents a color, the index 0 and 256 are reserved for ByLayer and ByBlock colors.
         /// </remarks>
         public short Index
         {
@@ -292,7 +291,7 @@ namespace netDxf
                 if (value <= 0 || value >= 256)
                     throw new ArgumentOutOfRangeException("value", value, "Accepted color index values range from 1 to 255.");
 
-                byte[] rgb = aciColors[(byte)this.index];
+                byte[] rgb = AciColors[(byte)this.index];
                 this.r = rgb[0];
                 this.g = rgb[1];
                 this.b = rgb[2];
@@ -311,7 +310,7 @@ namespace netDxf
         /// <param name="hue">Hue (input values range from 0 to 1).</param>
         /// <param name="saturation">Saturation percentage (input values range from 0 to 1).</param>
         /// <param name="lightness">Lightness percentage (input values range from 0 to 1).</param>
-        /// <returns>An <see cref="Color">AciColor</see> that represents the acutal hsl value.</returns>
+        /// <returns>An <see cref="Color">AciColor</see> that represents the actual HSL value.</returns>
         public static AciColor FromHsl(double hue, double saturation, double lightness)
         {
             double red = lightness;
@@ -426,10 +425,10 @@ namespace netDxf
         /// Converts the AciColor to a <see cref="Color">color</see>.
         /// </summary>
         /// <returns>A <see cref="Color">System.Drawing.Color</see> that represents the actual AciColor.</returns>
-        /// <remarks>A default color white will be used for byblock and bylayer colors.</remarks>
+        /// <remarks>A default color white will be used for ByLayer and ByBlock colors.</remarks>
         public Color ToColor()
         {
-            if (this.index < 1 || this.index > 255) //default color definition for byblock and bylayer colors
+            if (this.index < 1 || this.index > 255) //default color definition for ByLayer and ByBlock colors
                 return Color.White;
             return Color.FromArgb(this.r, this.g, this.b);
         }
@@ -450,7 +449,7 @@ namespace netDxf
         /// <summary>
         /// Gets the complete list of indexed colors.
         /// </summary>
-        /// <returns>A dictionary that contains the indexed colors, the key represents the color index and the value the rgb components of the color.</returns>
+        /// <returns>A dictionary that contains the indexed colors, the key represents the color index and the value the RGB components of the color.</returns>
         public static Dictionary<byte, byte[]> IndexRgb()
         {
             return new Dictionary<byte, byte[]>
@@ -799,7 +798,7 @@ namespace netDxf
         /// Check if the components of two colors are equal.
         /// </summary>
         /// <param name="obj">Another color to compare to.</param>
-        /// <returns>True if the three components are equal or false in anyother case.</returns>
+        /// <returns>True if the three components are equal or false in any other case.</returns>
         public bool Equals(AciColor obj)
         {
                 return (obj.r == this.r) && (obj.g == this.g) && (obj.b == this.b);
@@ -810,20 +809,20 @@ namespace netDxf
         #region private methods
 
         /// <summary>
-        /// Obtains the approximate color index from the rgb components.
+        /// Obtains the approximate color index from the RGB components.
         /// </summary>
         /// <param name="r">Red component.</param>
         /// <param name="g">Green component.</param>
         /// <param name="b">Blue component.</param>
-        /// <returns>The approximate color index from the rgb components</returns>
+        /// <returns>The approximate color index from the RGB components</returns>
         /// <remarks>This conversion will never be accurate.</remarks>
         private static byte RgbToAci(byte r, byte g, byte b)
         {
             double prevDist = double.MaxValue;
             byte index = 0;
-            foreach (byte key in aciColors.Keys)
+            foreach (byte key in AciColors.Keys)
             {
-                byte[] color = aciColors[key];
+                byte[] color = AciColors[key];
                 double dist = Math.Abs(0.3 * (r - color[0]) + 0.59 * (g - color[1]) + 0.11 * (b - color[2]));
                 if (dist < prevDist)
                 {

@@ -1,23 +1,22 @@
-﻿#region netDxf, Copyright(C) 2014 Daniel Carvajal, Licensed under LGPL.
-
-//                        netDxf library
-// Copyright (C) 2014 Daniel Carvajal (haplokuon@gmail.com)
+﻿#region netDxf, Copyright(C) 2015 Daniel Carvajal, Licensed under LGPL.
 // 
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2.1 of the License, or (at your option) any later version.
-// 
-// The above copyright notice and this permission notice shall be included in all
-// copies or substantial portions of the Software.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-// FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-// COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-// IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-// CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. 
-
+//                         netDxf library
+//  Copyright (C) 2009-2015 Daniel Carvajal (haplokuon@gmail.com)
+//  
+//  This library is free software; you can redistribute it and/or
+//  modify it under the terms of the GNU Lesser General Public
+//  License as published by the Free Software Foundation; either
+//  version 2.1 of the License, or (at your option) any later version.
+//  
+//  The above copyright notice and this permission notice shall be included in all
+//  copies or substantial portions of the Software.
+//  
+//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+//  FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+//  COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+//  IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+//  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #endregion
 
 using System;
@@ -25,7 +24,7 @@ using System;
 namespace netDxf.Tables
 {
     /// <summary>
-    /// Defines classes that can be accesed by name. They are usually part of the dxf table section but can also be part of the objects section.
+    /// Defines classes that can be accessed by name. They are usually part of the dxf table section but can also be part of the objects section.
     /// </summary>
     public abstract class TableObject :
         DxfObject,
@@ -34,6 +33,22 @@ namespace netDxf.Tables
         IComparable<TableObject>,
         IEquatable<TableObject>
     {
+
+        #region delegates and events
+
+        public delegate void NameChangeEventHandler(TableObject sender, TableObjectChangeEventArgs<string> e);
+        public event NameChangeEventHandler NameChange;
+        protected virtual void OnNameChangeEvent(string oldName, string newName)
+        {
+            NameChangeEventHandler ae = this.NameChange;
+            if (ae != null)
+            {
+                TableObjectChangeEventArgs<string> eventArgs = new TableObjectChangeEventArgs<string>(oldName, newName);
+                ae(this, eventArgs);
+            }
+        }
+
+        #endregion
 
         #region private fields
 
@@ -74,15 +89,22 @@ namespace netDxf.Tables
         /// <summary>
         /// Gets the name of the table object.
         /// </summary>
-        /// <remarks>Table object names are case unsensitive.</remarks>
-        public string Name
+        /// <remarks>Table object names are case insensitive.</remarks>
+        public virtual string Name
         {
-            get { return name; }
-            internal set
+            get { return this.name; }
+            set
             {
                 if (string.IsNullOrEmpty(value))
                     throw (new ArgumentNullException("value"));
-                name = value;
+                if (this.IsReserved)
+                    throw new ArgumentException("Reserved table objects cannot be renamed.", "value");
+                if (!IsValidName(value))
+                    throw new ArgumentException("The following characters \\<>/?\":;*|,=` are not supported for table object names.", "value");
+                if (string.Equals(this.name, value, StringComparison.OrdinalIgnoreCase))
+                    return;
+                this.OnNameChangeEvent(this.name, value);
+                this.name = value;
             }
         }
 
@@ -148,10 +170,10 @@ namespace netDxf.Tables
         /// The return value has the following meanings: Value Meaning Less than zero This object is less than the other parameter.
         /// Zero This object is equal to other. Greater than zero This object is greater than other.
         /// </returns>
-        /// <remarks>If both table objects are no of the same type it will return zero. The comparision is made by their names.</remarks>
+        /// <remarks>If both table objects are no of the same type it will return zero. The comparison is made by their names.</remarks>
         public int CompareTo(object other)
         {
-            return CompareTo((TableObject)other);
+            return this.CompareTo((TableObject)other);
         }
 
         /// <summary>
@@ -163,10 +185,10 @@ namespace netDxf.Tables
         /// The return value has the following meanings: Value Meaning Less than zero This object is less than the other parameter.
         /// Zero This object is equal to other. Greater than zero This object is greater than other.
         /// </returns>
-        /// <remarks>If both table objects are no of the same type it will return zero. The comparision is made by their names.</remarks>
+        /// <remarks>If both table objects are no of the same type it will return zero. The comparison is made by their names.</remarks>
         public int CompareTo(TableObject other)
         {
-            return this.GetType() == other.GetType() ? String.Compare(this.Name, other.Name, StringComparison.OrdinalIgnoreCase) : 0;
+            return this.GetType() == other.GetType() ? string.Compare(this.Name, other.Name, StringComparison.OrdinalIgnoreCase) : 0;
         }
 
         #endregion
@@ -177,7 +199,7 @@ namespace netDxf.Tables
         /// Check if two TableObject are equal.
         /// </summary>
         /// <param name="obj">Another TableObject to compare to.</param>
-        /// <returns>True if two TableObject are equal or false in anyother case.</returns>
+        /// <returns>True if two TableObject are equal or false in any other case.</returns>
         /// <remarks>
         /// Two TableObjects are considered equals if their names are the same, regardless of their internal values.
         /// This is done this way because in a dxf two TableObjects cannot have the same name.
@@ -187,7 +209,7 @@ namespace netDxf.Tables
             if (this.GetType() != obj.GetType())
                 return false;
 
-            return String.Compare(this.Name, obj.Name, StringComparison.OrdinalIgnoreCase) == 0;
+            return string.Compare(this.Name, obj.Name, StringComparison.OrdinalIgnoreCase) == 0;
         }
 
         #endregion
@@ -208,6 +230,5 @@ namespace netDxf.Tables
         public abstract object Clone();
 
         #endregion
-
     }
 }

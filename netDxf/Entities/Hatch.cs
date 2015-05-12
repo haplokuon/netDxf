@@ -1,23 +1,22 @@
-﻿#region netDxf, Copyright(C) 2014 Daniel Carvajal, Licensed under LGPL.
-
-//                        netDxf library
-// Copyright (C) 2014 Daniel Carvajal (haplokuon@gmail.com)
+﻿#region netDxf, Copyright(C) 2015 Daniel Carvajal, Licensed under LGPL.
 // 
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2.1 of the License, or (at your option) any later version.
-// 
-// The above copyright notice and this permission notice shall be included in all
-// copies or substantial portions of the Software.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-// FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-// COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-// IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-// CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. 
-
+//                         netDxf library
+//  Copyright (C) 2009-2015 Daniel Carvajal (haplokuon@gmail.com)
+//  
+//  This library is free software; you can redistribute it and/or
+//  modify it under the terms of the GNU Lesser General Public
+//  License as published by the Free Software Foundation; either
+//  version 2.1 of the License, or (at your option) any later version.
+//  
+//  The above copyright notice and this permission notice shall be included in all
+//  copies or substantial portions of the Software.
+//  
+//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+//  FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+//  COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+//  IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+//  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #endregion
 
 using System;
@@ -47,7 +46,7 @@ namespace netDxf.Entities
         /// </summary>
         /// <remarks>
         /// The hatch boundary paths must be on the same plane as the hatch.
-        /// The normal and the elevation of the boundary paths will be omited (the hatch elevation and normal will be used instead).
+        /// The normal and the elevation of the boundary paths will be omitted (the hatch elevation and normal will be used instead).
         /// Only the x and y coordinates for the center of the line, ellipse, circle and arc will be used.
         /// </remarks>
         /// <param name="pattern"><see cref="HatchPattern">Hatch pattern</see>.</param>
@@ -123,7 +122,7 @@ namespace netDxf.Entities
         /// The generated list can be used to directly draw the hatch boundary given the normal and elevation of the hatch.
         /// All entities are in world coordinates except the LwPolyline boundary path since by definition its vertexes are expressed in object coordinates.
         /// This list differs in that the hatch entities list are in local coordinates of the hatch
-        /// while with this method the entities are transformed by the normal and elevetation of it.
+        /// while with this method the entities are transformed by the normal and elevation of it.
         /// </remarks>
         public List<EntityObject> CreateWCSBoundary()
         {
@@ -150,7 +149,7 @@ namespace netDxf.Entities
                             wcsBoundary.Add(ProcessLine((Line) entity, trans, pos));
                             break;
                         case (EntityType.LightWeightPolyline):
-                            // LwPolylines need an special threatement since their vertexes are expressed in object coordinates.
+                            // LwPolylines need an special treatment since their vertexes are expressed in object coordinates.
                             wcsBoundary.Add(ProcessLwPolyline((LwPolyline) entity, this.normal, this.elevation));
                             break;
                         case (EntityType.Spline):
@@ -213,9 +212,9 @@ namespace netDxf.Entities
 
         internal void AddPatternXData()
         {
-            if (this.XData.ContainsAppId(ApplicationRegistry.Default.Name))
+            if (this.XData.ContainsAppId(ApplicationRegistry.DefaultName))
             {
-                XData xdataEntry = this.XData[ApplicationRegistry.Default.Name];
+                XData xdataEntry = this.XData[ApplicationRegistry.DefaultName];
                 xdataEntry.XDataRecord.Clear();
                 xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.RealX, this.Pattern.Origin.X));
                 xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.RealY, this.Pattern.Origin.Y));
@@ -223,7 +222,7 @@ namespace netDxf.Entities
             }
             else
             {
-                XData xdataEntry = new XData(new ApplicationRegistry(ApplicationRegistry.Default.Name));
+                XData xdataEntry = new XData(new ApplicationRegistry(ApplicationRegistry.DefaultName));
                 xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.RealX, this.Pattern.Origin.X));
                 xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.RealY, this.Pattern.Origin.Y));
                 xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.RealZ, 0.0));
@@ -293,6 +292,5 @@ namespace netDxf.Entities
         }
 
         #endregion
-
     }
 }
