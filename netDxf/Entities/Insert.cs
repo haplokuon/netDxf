@@ -34,7 +34,6 @@ namespace netDxf.Entities
     public class Insert :
         EntityObject
     {
-
         #region delegates and events
 
         public delegate void AttributeAddedEventHandler(Insert sender, AttributeChangeEventArgs e);
@@ -299,9 +298,9 @@ namespace netDxf.Entities
                 double txtHeight = MathHelper.PointLineDistance(wcsTxtV, Vector3.Zero, Vector3.Normalize(wcsTxtU));
                 att.Height = txtHeight;
 
+                double txtAng = Vector2.Angle(new Vector2(txtU.X * insScale.X, txtU.Y * insScale.Y)) * MathHelper.RadToDeg;
                 if (Equals(attdef.Normal, Vector3.UnitZ))
                 {
-                    double txtAng = Vector2.Angle(new Vector2(txtU.X * insScale.X, txtU.Y * insScale.Y)) * MathHelper.RadToDeg;
                     att.Rotation = this.rotation + txtAng;
 
                     //double txtWidth = MathHelper.PointLineDistance(wcsTxtU, Vector3.Zero, Vector3.Normalize(wcsTxtV));
@@ -316,8 +315,7 @@ namespace netDxf.Entities
                 }
                 else
                 {
-                    double txtAng2 = Vector2.Angle(new Vector2(txtU.X * insScale.X, txtU.Y * insScale.Y)) * MathHelper.RadToDeg;
-                    att.Rotation = txtAng2;
+                    att.Rotation = txtAng;
                     att.WidthFactor = attdef.WidthFactor;
                     att.ObliqueAngle = attdef.ObliqueAngle;
                 }

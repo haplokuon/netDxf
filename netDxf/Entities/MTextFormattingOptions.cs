@@ -200,7 +200,12 @@ namespace netDxf.Entities
         public double ObliqueAngle
         {
             get { return this.obliqueAngle; }
-            set { this.obliqueAngle = MathHelper.NormalizeAngle(value); }
+            set
+            {
+                if (value < -85.0 || value > 85.0)
+                    throw (new ArgumentOutOfRangeException("value", value, "The oblique angle valid values range from -85 to 85."));
+                this.obliqueAngle = value;
+            }
         }
 
         /// <summary>
@@ -228,7 +233,12 @@ namespace netDxf.Entities
         public double WidthFactor
         {
             get { return this.widthFactor; }
-            set { this.widthFactor = value; }
+            set
+            {
+                if (value <= 0)
+                    throw (new ArgumentOutOfRangeException("value", value, "The width factor should be greater than zero."));
+                this.widthFactor = value;
+            }
         }
 
         #endregion

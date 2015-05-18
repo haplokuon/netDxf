@@ -100,7 +100,7 @@
     <Compile Include="Collections\VPorts.cs" />
     <Compile Include="Entities\DimensionArrowhead.cs" />
     <Compile Include="Entities\DimensionBlock.cs" />
-    <Compile Include="Entities\DimensionTypeFlag.cs" />
+    <Compile Include="Entities\DimensionTypeFlags.cs" />
     <Compile Include="Entities\Mesh.cs" />
     <Compile Include="Entities\MeshEdge.cs" />
     <Compile Include="Entities\MLineFlags.cs" />
@@ -132,7 +132,7 @@
     <Compile Include="Collections\TableObjects.cs" />
     <Compile Include="Collections\TextStyles.cs" />
     <Compile Include="Entities\EntityType.cs" />
-    <Compile Include="Entities\HatchBoundaryPathTypeFlag.cs" />
+    <Compile Include="Entities\HatchBoundaryPathTypeFlags.cs" />
     <Compile Include="Entities\HatchFillType.cs" />
     <Compile Include="Entities\HatchGradientPatternType.cs" />
     <Compile Include="Entities\HatchStyle.cs" />

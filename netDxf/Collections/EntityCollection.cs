@@ -231,7 +231,9 @@ namespace netDxf.Collections
         /// </summary>
         public void Clear()
         {
-            foreach (EntityObject item in this.innerArray)
+            EntityObject[] entities = new EntityObject[this.innerArray.Count];
+            this.innerArray.CopyTo(entities, 0);
+            foreach (EntityObject item in entities)
                 this.Remove(item);
         }
 

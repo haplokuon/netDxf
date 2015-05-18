@@ -208,7 +208,9 @@ namespace netDxf.Collections
         /// </summary>
         public void Clear()
         {
-            foreach (string appId in this.innerDictionary.Keys )
+            string[] ids = new string[this.innerDictionary.Count];
+            this.innerDictionary.Keys.CopyTo(ids, 0);
+            foreach (string appId in ids)
             {
                 this.Remove(appId);
             }

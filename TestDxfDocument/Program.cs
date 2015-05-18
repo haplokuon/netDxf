@@ -210,7 +210,10 @@ namespace TestDxfDocument
             Line existingLine = new Line(new Vector2(-10, 10), new Vector2(10, -10));
             doc.AddEntity(existingLine);
 
-            Block block = new Block("MyBlock");
+            AttributeDefinition attDef4 = new AttributeDefinition("MyAttribute4");
+            attDef4.Value = "MyValue4";
+            attDef4.Alignment = TextAlignment.TopCenter;
+            Block block = new Block("MyBlock", null, new List<AttributeDefinition>{attDef4});
             block.Record.Units = DrawingUnits.Millimeters;
 
             // this is incorrect we cannot add an entity that belongs to a document when the block does not belong to anyone.
@@ -261,6 +264,7 @@ namespace TestDxfDocument
             attDef3.Alignment = TextAlignment.TopCenter;
             block.AttributeDefinitions.Add(attDef3);
             ins.Rotation = 30;
+
             // to update the insert attributes call the method Sync, this method will also call the method TransformAttributes
             ins.Sync();
 
@@ -274,7 +278,7 @@ namespace TestDxfDocument
 
             doc.Save("BlockRename.dxf");
 
-            Test("BlockRename.dxf");
+            doc = Test("BlockRename.dxf");
         }
 
         public static void ModifyingMLineStyles()

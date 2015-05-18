@@ -934,7 +934,7 @@ namespace netDxf
 
                         attribute.LineType = this.lineTypes.Add(attribute.LineType, assignHandle);
                         this.lineTypes.References[attribute.LineType.Name].Add(attribute);
-                        attribute.LineTypeChange -= this.Entity_LineTypeChange;
+                        attribute.LineTypeChange += this.Entity_LineTypeChange;
 
                         attribute.Style = this.textStyles.Add(attribute.Style, assignHandle);
                         this.textStyles.References[attribute.Style.Name].Add(attribute);
@@ -1341,6 +1341,5 @@ namespace netDxf
         }
 
         #endregion
-
     }
 }

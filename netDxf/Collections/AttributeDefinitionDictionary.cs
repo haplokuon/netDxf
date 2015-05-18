@@ -214,9 +214,11 @@ namespace netDxf.Collections
         /// </summary>
         public void Clear()
         {
-            foreach (KeyValuePair<string, AttributeDefinition> item in this.innerDictionary)
+            string[] tags = new string[this.innerDictionary.Count];
+            this.innerDictionary.Keys.CopyTo(tags,0);
+            foreach (string tag in tags)
             {
-                this.Remove(item.Key);
+                this.Remove(tag);
             }
         }
 

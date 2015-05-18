@@ -242,7 +242,7 @@ namespace netDxf.Collections
         /// </summary>
         public void Clear()
         {
-            string[] names = new string[this.Count];
+            string[] names = new string[this.list.Count];
             this.list.Keys.CopyTo(names, 0);
             foreach (string o in names)
                 this.Remove(o);

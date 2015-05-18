@@ -65,6 +65,6 @@ namespace netDxf.Entities
         /// <summary>
         /// The line type pattern is generated continuously around the vertexes of this polyline.
         /// </summary>
-        ContinuousLineTypePatter = 128
+        ContinuousLineTypePattern = 128
     }
 }

@@ -330,7 +330,7 @@ namespace netDxf.Entities
         #region private fields
 
         private readonly List<Edge> edges;
-        private HatchBoundaryPathTypeFlag pathTypeFlag;
+        private HatchBoundaryPathTypeFlags pathTypeFlag;
 
         #endregion
 
@@ -345,7 +345,7 @@ namespace netDxf.Entities
             if (edges == null)
                 throw new ArgumentNullException("edges");
             this.edges = new List<Edge>();
-            this.pathTypeFlag = HatchBoundaryPathTypeFlag.Derived | HatchBoundaryPathTypeFlag.External;
+            this.pathTypeFlag = HatchBoundaryPathTypeFlags.Derived | HatchBoundaryPathTypeFlags.External;
             this.SetInternalInfo(edges);
         }
 
@@ -353,7 +353,7 @@ namespace netDxf.Entities
         {
             if (edges == null)
                 throw new ArgumentNullException("edges");
-            this.pathTypeFlag = HatchBoundaryPathTypeFlag.Derived | HatchBoundaryPathTypeFlag.External;
+            this.pathTypeFlag = HatchBoundaryPathTypeFlags.Derived | HatchBoundaryPathTypeFlags.External;
             this.edges = edges;
         }
 
@@ -372,7 +372,7 @@ namespace netDxf.Entities
         /// <summary>
         /// Gets the boundary path type flag.
         /// </summary>
-        public HatchBoundaryPathTypeFlag PathTypeFlag
+        public HatchBoundaryPathTypeFlags PathTypeFlag
         {
             get { return this.pathTypeFlag; }
             internal set { this.pathTypeFlag = value; }
@@ -382,13 +382,13 @@ namespace netDxf.Entities
 
         #region private methods
 
-        private void SetInternalInfo(IEnumerable<EntityObject> entities)
+        private void SetInternalInfo(ICollection<EntityObject> entities)
         {
             bool containsClosedPolyline = false;
 
             foreach (EntityObject entity in entities)
             {
-                if ((this.pathTypeFlag & HatchBoundaryPathTypeFlag.Polyline) == HatchBoundaryPathTypeFlag.Polyline)
+                if ((this.pathTypeFlag & HatchBoundaryPathTypeFlags.Polyline) == HatchBoundaryPathTypeFlags.Polyline)
                     if (this.edges.Count >= 1) throw new ArgumentException("Closed polylines cannot be combined with other entities to make a hatch boundary path.");
 
                 // it seems that AutoCad does not have problems on creating loops that theoretically does not make sense, like, for example an internal loop that is made of a single arc.
@@ -417,7 +417,7 @@ namespace netDxf.Entities
                         if (poly.IsClosed)
                         {
                             this.edges.Add(Polyline.ConvertFrom(entity)); // A polyline HatchBoundaryPath must be closed
-                            this.pathTypeFlag |= HatchBoundaryPathTypeFlag.Polyline;
+                            this.pathTypeFlag |= HatchBoundaryPathTypeFlags.Polyline;
                             containsClosedPolyline = true;
                         }
                         else

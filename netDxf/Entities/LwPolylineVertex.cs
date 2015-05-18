@@ -87,7 +87,7 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets or sets the light weight polyline start width.
+        /// Gets or sets the light weight polyline start segment width.
         /// </summary>
         /// <remarks>Widths greater than zero produce wide lines.</remarks>
         public double StartWidth
@@ -102,7 +102,7 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets or sets the light weight polyline end width.
+        /// Gets or sets the light weight polyline end segment width.
         /// </summary>
         /// <remarks>Widths greater than zero produce wide lines.</remarks>
         public double EndWidth

@@ -1213,16 +1213,11 @@ namespace netDxf.IO
             this.chunk.Write(8, blockLayer);
 
             this.chunk.Write(100, SubclassMarker.BlockBegin);
-
             this.chunk.Write(2, name);
-
-            //flags
-            this.chunk.Write(70, block.AttributeDefinitions.Count == 0 ? (short) block.Flags : (short) (block.Flags | BlockTypeFlags.NonConstantAttributeDefinitions));
-
+            this.chunk.Write(70, (short)block.Flags);
             this.chunk.Write(10, block.Position.X);
             this.chunk.Write(20, block.Position.Y);
             this.chunk.Write(30, block.Position.Z);
-
             this.chunk.Write(3, name);
 
             foreach (AttributeDefinition attdef in block.AttributeDefinitions.Values)
@@ -2090,7 +2085,7 @@ namespace netDxf.IO
             {
                 this.chunk.Write(92, (int) path.PathTypeFlag);
 
-                if ((path.PathTypeFlag & HatchBoundaryPathTypeFlag.Polyline) != HatchBoundaryPathTypeFlag.Polyline)
+                if ((path.PathTypeFlag & HatchBoundaryPathTypeFlags.Polyline) != HatchBoundaryPathTypeFlags.Polyline)
                     this.chunk.Write(93, path.Edges.Count);
 
                 foreach (HatchBoundaryPath.Edge entity in path.Edges)
@@ -2278,13 +2273,13 @@ namespace netDxf.IO
             this.chunk.Write(21, dim.MidTextPoint.Y);
             this.chunk.Write(31, dim.MidTextPoint.Z);
 
-            short flags = (short) (dim.DimensionType + (short) DimensionTypeFlag.BlockReference);
+            short flags = (short) (dim.DimensionType + (short) DimensionTypeFlags.BlockReference);
             if (dim.DimensionType == DimensionType.Ordinate)
             {
                 // even if the documentation says that code 51 is optional, rotated ordinate dimensions will not work correctly is this value is not provided
                 this.chunk.Write(51, 360 - ((OrdinateDimension) dim).Rotation);
                 if (((OrdinateDimension) dim).Axis == OrdinateDimensionAxis.X)
-                    flags += (short) DimensionTypeFlag.OrdinteType;
+                    flags += (short) DimensionTypeFlags.OrdinteType;
             }
 
             this.chunk.Write(70, flags);
@@ -2507,7 +2502,7 @@ namespace netDxf.IO
             this.chunk.Write(72, (short) mLine.Vertexes.Count);
             this.chunk.Write(73, (short) mLine.Style.Elements.Count);
 
-            // the MLine information is in OCS we need to saved in WCS
+            // the MLine information is in OCS we need to save it in WCS
             // this behavior is similar to the LWPolyline, the info is in OCS because these entities are strictly 2d. Normally they are used in the XY plane whose
             // normal is (0, 0, 1) so no transformation is needed, OCS are equal to WCS
             List<Vector3> ocsVertexes = new List<Vector3>();

@@ -184,9 +184,11 @@ namespace netDxf.Collections
 
         public void Clear()
         {
-            foreach (KeyValuePair<TKey, TValue> item in this.innerDictionary)
+            TKey[] keys = new TKey[this.innerDictionary.Count];
+            this.innerDictionary.Keys.CopyTo(keys, 0);
+            foreach (TKey key in keys)
             {
-                this.Remove(item.Key);
+                this.Remove(key);
             }
         }
 
@@ -227,6 +229,5 @@ namespace netDxf.Collections
 
 
         #endregion
-
     }
 }

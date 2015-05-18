@@ -3386,7 +3386,7 @@ namespace netDxf.IO
             Vector3 defPoint = Vector3.Zero;
             Vector3 midtxtPoint = Vector3.Zero;
             Vector3 normal = Vector3.UnitZ;
-            DimensionTypeFlag dimType = DimensionTypeFlag.Linear;
+            DimensionTypeFlags dimType = DimensionTypeFlags.Linear;
             MTextAttachmentPoint attachmentPoint = MTextAttachmentPoint.BottomCenter;
             MTextLineSpacingStyle lineSpacingStyle = MTextLineSpacingStyle.AtLeast;
             DimensionStyle style = DimensionStyle.Default;
@@ -3442,7 +3442,7 @@ namespace netDxf.IO
                         this.chunk.Next();
                         break;
                     case 70:
-                        dimType = (DimensionTypeFlag) this.chunk.ReadShort();
+                        dimType = (DimensionTypeFlags) this.chunk.ReadShort();
                         this.chunk.Next();
                         break;
                     case 71:
@@ -3494,40 +3494,40 @@ namespace netDxf.IO
             }
 
             // this is the result of the way the dxf use the DimensionTypeFlag enumeration, it is a mixture of a regular enumeration with flags
-            DimensionTypeFlag type = dimType;
+            DimensionTypeFlags type = dimType;
             OrdinateDimensionAxis axis = OrdinateDimensionAxis.Y;
-            if ((type & DimensionTypeFlag.BlockReference) == DimensionTypeFlag.BlockReference)
-                type -= DimensionTypeFlag.BlockReference;
-            if ((type & DimensionTypeFlag.OrdinteType) == DimensionTypeFlag.OrdinteType)
+            if ((type & DimensionTypeFlags.BlockReference) == DimensionTypeFlags.BlockReference)
+                type -= DimensionTypeFlags.BlockReference;
+            if ((type & DimensionTypeFlags.OrdinteType) == DimensionTypeFlags.OrdinteType)
             {
                 axis = OrdinateDimensionAxis.X;
-                type -= DimensionTypeFlag.OrdinteType;
+                type -= DimensionTypeFlags.OrdinteType;
             }
-            if ((type & DimensionTypeFlag.UserTextPosition) == DimensionTypeFlag.UserTextPosition)
-                type -= DimensionTypeFlag.UserTextPosition;
+            if ((type & DimensionTypeFlags.UserTextPosition) == DimensionTypeFlags.UserTextPosition)
+                type -= DimensionTypeFlags.UserTextPosition;
 
             Dimension dim;
             switch (type)
             {
-                case (DimensionTypeFlag.Aligned):
+                case (DimensionTypeFlags.Aligned):
                     dim = this.ReadAlignedDimension(defPoint);
                     break;
-                case (DimensionTypeFlag.Linear):
+                case (DimensionTypeFlags.Linear):
                     dim = this.ReadLinearDimension(defPoint);
                     break;
-                case (DimensionTypeFlag.Radius):
+                case (DimensionTypeFlags.Radius):
                     dim = this.ReadRadialDimension(defPoint);
                     break;
-                case (DimensionTypeFlag.Diameter):
+                case (DimensionTypeFlags.Diameter):
                     dim = this.ReadDiametricDimension(defPoint);
                     break;
-                case (DimensionTypeFlag.Angular3Point):
+                case (DimensionTypeFlags.Angular3Point):
                     dim = this.ReadAngular3PointDimension(defPoint);
                     break;
-                case (DimensionTypeFlag.Angular):
+                case (DimensionTypeFlags.Angular):
                     dim = this.ReadAngular2LineDimension(defPoint);
                     break;
-                case (DimensionTypeFlag.Ordinate):
+                case (DimensionTypeFlags.Ordinate):
                     dim = this.ReadOrdinateDimension(defPoint, axis, normal, dimRot);
                     break;
                 default:
@@ -5028,22 +5028,13 @@ namespace netDxf.IO
                 }
             }
 
-            bool isClosed = false;
-            bool noStartCaps = false;
-            bool noEndCaps = false;
-            if ((flags & MLineFlags.Closed) == MLineFlags.Closed) isClosed = true;
-            if ((flags & MLineFlags.NoStartCaps) == MLineFlags.NoStartCaps) noStartCaps = true;
-            if ((flags & MLineFlags.NoEndCaps) == MLineFlags.NoEndCaps) noEndCaps = true;
-
             MLine mline = new MLine
             {
-                IsClosed = isClosed,
-                NoStartCaps = noStartCaps,
-                NoEndCaps = noEndCaps,
                 Elevation = elevation,
                 Scale = scale,
                 Justification = justification,
                 Normal = normal,
+                Flags = flags
             };
             mline.Vertexes.AddRange(segments);
             mline.XData.AddRange(xData);
@@ -5230,15 +5221,8 @@ namespace netDxf.IO
                 Normal = normal
             };
 
-            // 
             if (constantWidth >= 0.0)
-            {
-                foreach (LwPolylineVertex vertex in entity.Vertexes)
-                {
-                    vertex.StartWidth = constantWidth;
-                    vertex.EndWidth = constantWidth;
-                }
-            }
+                entity.SetConstantWidth(constantWidth);
 
             entity.XData.AddRange(xData);
 
@@ -5249,10 +5233,10 @@ namespace netDxf.IO
         private EntityObject ReadPolyline()
         {
             // the entity Polyline in dxf can actually hold three kinds of entities
-            // polyline 3d is the generic polyline
+            // 3d polyline is the generic polyline
             // polyface mesh
-            // polylines 2d is the old way of writing polylines the AutoCAD2000 and newer always use LightweightPolylines to define a polyline 2d
-            // this way of reading polylines 2d is here for compatibility reasons with older dxf versions.
+            // polylines 2d is the old way of writing polylines the AutoCAD2000 and newer always use LwPolylines to define a 2d polyline
+            // this way of reading 2d polylines is here for compatibility reasons with older dxf versions.
             PolylineTypeFlags flags = PolylineTypeFlags.OpenPolyline;
             double elevation = 0.0;
             double thickness = 0.0;
@@ -5409,9 +5393,9 @@ namespace netDxf.IO
                     LwPolylineVertex vertex = new LwPolylineVertex
                     {
                         Location = new Vector2(v.Location.X, v.Location.Y),
-                        StartWidth = v.BeginThickness,
+                        StartWidth = v.StartWidth,
                         Bulge = v.Bulge,
-                        EndWidth = v.EndThickness,
+                        EndWidth = v.EndWidth,
                     };
 
                     polylineVertexes.Add(vertex);
@@ -5808,7 +5792,7 @@ namespace netDxf.IO
         {
             List<HatchBoundaryPath> paths = new List<HatchBoundaryPath>();
             this.chunk.Next();
-            HatchBoundaryPathTypeFlag pathTypeFlag = HatchBoundaryPathTypeFlag.Derived | HatchBoundaryPathTypeFlag.External;
+            HatchBoundaryPathTypeFlags pathTypeFlag = HatchBoundaryPathTypeFlags.Derived | HatchBoundaryPathTypeFlags.External;
             while (paths.Count < numPaths)
             {
                 HatchBoundaryPath path;
@@ -5816,15 +5800,15 @@ namespace netDxf.IO
                 switch (this.chunk.Code)
                 {
                     case 92:
-                        pathTypeFlag = (HatchBoundaryPathTypeFlag) this.chunk.ReadInt();
+                        pathTypeFlag = (HatchBoundaryPathTypeFlags) this.chunk.ReadInt();
                         // adding External and Derived to all path type flags solves an strange problem with code 98 not found,
                         // it seems related to the code 47 that appears before, only some combinations of flags are affected
                         // this is what the documentation says about code 47:
                         // Pixel size used to determine the density to perform various intersection and ray casting operations
                         // in hatch pattern computation for associative hatches and hatches created with the Flood method of hatching
-                        pathTypeFlag = pathTypeFlag | HatchBoundaryPathTypeFlag.External | HatchBoundaryPathTypeFlag.Derived;
+                        pathTypeFlag = pathTypeFlag | HatchBoundaryPathTypeFlags.External | HatchBoundaryPathTypeFlags.Derived;
 
-                        if ((pathTypeFlag & HatchBoundaryPathTypeFlag.Polyline) == HatchBoundaryPathTypeFlag.Polyline)
+                        if ((pathTypeFlag & HatchBoundaryPathTypeFlags.Polyline) == HatchBoundaryPathTypeFlags.Polyline)
                         {
                             path = this.ReadEdgePolylineBoundaryPath();
                             path.PathTypeFlag = pathTypeFlag;
@@ -6250,8 +6234,8 @@ namespace netDxf.IO
             AciColor color = AciColor.ByLayer;
             LineType lineType = LineType.ByLayer;
             Vector3 location = new Vector3();
-            double endThickness = 0.0;
-            double beginThickness = 0.0;
+            double startWidth = 0.0;
+            double endWidth = 0.0;
             double bulge = 0.0;
             List<short> vertexIndexes = new List<short>();
             VertexTypeFlags flags = VertexTypeFlags.PolylineVertex;
@@ -6303,11 +6287,13 @@ namespace netDxf.IO
                         this.chunk.Next();
                         break;
                     case 40:
-                        beginThickness = this.chunk.ReadDouble();
+                        startWidth = this.chunk.ReadDouble();
+                        if (startWidth < 0.0) startWidth = 0.0;
                         this.chunk.Next();
                         break;
                     case 41:
-                        endThickness = this.chunk.ReadDouble();
+                        endWidth = this.chunk.ReadDouble();
+                        if (endWidth < 0.0) endWidth = 0.0;
                         this.chunk.Next();
                         break;
                     case 42:
@@ -6344,10 +6330,10 @@ namespace netDxf.IO
             {
                 Flags = flags,
                 Location = location,
-                BeginThickness = beginThickness,
+                StartWidth = startWidth,
                 Bulge = bulge,
                 Color = color,
-                EndThickness = endThickness,
+                EndWidth = endWidth,
                 Layer = layer,
                 LineType = lineType,
                 VertexIndexes = vertexIndexes.ToArray(),

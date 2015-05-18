@@ -264,7 +264,9 @@ namespace netDxf.Collections
         /// </summary>
         public void Clear()
         {
-            foreach (T item in this.innerArray)
+            T[] items = new T[this.innerArray.Count];
+            this.innerArray.CopyTo(items, 0);
+            foreach (T item in items)
             {
                 this.Remove(item);
             }

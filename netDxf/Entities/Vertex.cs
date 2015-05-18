@@ -28,8 +28,7 @@ namespace netDxf.Entities
     /// Represents a dxf Vertex.
     /// </summary>
     /// <remarks>
-    /// The Vertex class holds all the information read from the dxf file even if its needed or not.
-    /// For internal use only.
+    /// The Vertex class holds all the information read from the dxf file even if its needed or not. For internal use only.
     /// </remarks>
     internal class Vertex :
         DxfObject   
@@ -39,8 +38,8 @@ namespace netDxf.Entities
         private VertexTypeFlags flags;
         private Vector3 location;
         private short[] vertexIndexes;
-        private double beginThickness;
-        private double endThickness;
+        private double startWidth;
+        private double endWidth;
         private double bulge;
         private AciColor color;
         private Layer layer;
@@ -101,10 +100,9 @@ namespace netDxf.Entities
             this.color = AciColor.ByLayer;
             this.lineType = LineType.ByLayer;
             this.bulge = 0.0;
-            this.beginThickness = 0.0;
-            this.endThickness = 0.0;
+            this.startWidth = 0.0;
+            this.endWidth = 0.0;
         }
-
 
         #endregion
 
@@ -126,21 +124,31 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets or sets the light weight polyline begin thickness.
+        /// Gets or sets the light weight polyline start segment width.
         /// </summary>
-        public double BeginThickness
+        public double StartWidth
         {
-            get { return this.beginThickness; }
-            set { this.beginThickness = value; }
+            get { return this.startWidth; }
+            set
+            {
+                if (value < 0)
+                    throw new ArgumentOutOfRangeException("value", value, "The Vertex width must be equals or greater than zero.");
+                this.startWidth = value;
+            }
         }
 
         /// <summary>
-        /// Gets or sets the light weight polyline end thickness.
+        /// Gets or sets the light weight polyline end segment width.
         /// </summary>
-        public double EndThickness
+        public double EndWidth
         {
-            get { return this.endThickness; }
-            set { this.endThickness = value; }
+            get { return this.endWidth; }
+            set
+            {
+                if (value < 0)
+                    throw new ArgumentOutOfRangeException("value", value, "The Vertex width must be equals or greater than zero.");
+                this.endWidth = value;
+            }
         }
 
         /// <summary>
@@ -157,9 +165,7 @@ namespace netDxf.Entities
             set
             {
                 if (this.bulge < 0.0 || this.bulge > 1.0f)
-                {
                     throw new ArgumentOutOfRangeException("value", value, "The bulge must be a value between zero and one");
-                }
                 this.bulge = value;
             }
         }
@@ -179,7 +185,12 @@ namespace netDxf.Entities
         public AciColor Color
         {
             get { return this.color; }
-            set { this.color = value; }
+           set
+           {
+               if (value == null)
+                   throw new ArgumentNullException("value");
+               this.color = value;
+           }
         }
 
         /// <summary>
@@ -188,7 +199,12 @@ namespace netDxf.Entities
         public Layer Layer
         {
             get { return this.layer; }
-            set { this.layer = value; }
+            set
+            {
+                if (value == null)
+                    throw new ArgumentNullException("value");
+                this.layer = value;
+            }
         }
 
         /// <summary>
@@ -197,7 +213,12 @@ namespace netDxf.Entities
         public LineType LineType
         {
             get { return this.lineType; }
-            set { this.lineType = value; }
+            set
+            {
+                if (value == null)
+                    throw new ArgumentNullException("value");
+                this.lineType = value;
+            }
         }
 
         #endregion

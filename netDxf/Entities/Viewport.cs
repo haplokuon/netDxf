@@ -351,7 +351,7 @@ namespace netDxf.Entities
 
                 if (value == null)
                 {
-                    this.status -= ViewportStatusFlags.NonRectangularClipping;
+                    this.status &= ~ViewportStatusFlags.NonRectangularClipping;
                     this.boundary = null;
                     return;
                 }
@@ -406,8 +406,7 @@ namespace netDxf.Entities
                 this.center = new Vector3(abbr.Center.X, abbr.Center.Y, 0.0);
                 this.boundary = value;
                 this.boundary.Reactor = this;
-                this.status |= ViewportStatusFlags.NonRectangularClipping;
-                
+                this.status |= ViewportStatusFlags.NonRectangularClipping;               
             }
         }
 

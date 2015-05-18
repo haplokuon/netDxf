@@ -55,9 +55,6 @@ namespace netDxf.Entities
         private double scale;
         private MLineStyle style;
         private MLineJustification justification;
-        private bool isClosed;
-        private bool noStartCaps;
-        private bool noEndCaps;
         private double elevation;
         private MLineFlags flags;
         private List<MLineVertex> vertexes;
@@ -115,9 +112,6 @@ namespace netDxf.Entities
 
             this.style = style;
             this.justification = MLineJustification.Zero;
-            this.isClosed = isClosed;
-            this.noStartCaps = false;
-            this.noEndCaps = false;
             this.elevation = 0.0;
             if (vertexes == null)
                 throw new ArgumentNullException("vertexes");
@@ -160,14 +154,13 @@ namespace netDxf.Entities
         /// </summary>
         public bool IsClosed
         {
-            get { return this.isClosed; }
+            get { return (this.flags & MLineFlags.Closed) == MLineFlags.Closed; }
             set
             {
-                if((this.flags & MLineFlags.Closed) == MLineFlags.Closed)
-                    this.flags -= MLineFlags.Closed;
-                if (value) 
+                if (value)
                     this.flags |= MLineFlags.Closed;
-                this.isClosed = value;
+                else
+                    this.flags &= ~MLineFlags.Closed;
             }
         }
 
@@ -176,14 +169,13 @@ namespace netDxf.Entities
         /// </summary>
         public bool NoStartCaps
         {
-            get { return this.noStartCaps; }
+            get { return (this.flags & MLineFlags.NoStartCaps) == MLineFlags.NoStartCaps; }
             set
             {
-                if ((this.flags & MLineFlags.NoStartCaps) == MLineFlags.NoStartCaps)
-                    this.flags -= MLineFlags.NoStartCaps;
                 if (value)
                     this.flags |= MLineFlags.NoStartCaps;
-                this.noStartCaps = value;
+                else
+                    this.flags &= ~MLineFlags.NoStartCaps;
             }
         }
 
@@ -192,14 +184,13 @@ namespace netDxf.Entities
         /// </summary>
         public bool NoEndCaps
         {
-            get { return this.noEndCaps; }
+            get { return (this.flags & MLineFlags.NoEndCaps) == MLineFlags.NoEndCaps; }
             set
             {
-                if ((this.flags & MLineFlags.NoEndCaps) == MLineFlags.NoEndCaps)
-                    this.flags -= MLineFlags.NoEndCaps;
                 if (value)
                     this.flags |= MLineFlags.NoEndCaps;
-                this.noEndCaps = value;
+                else
+                    this.flags &= ~MLineFlags.NoEndCaps;
             }
         }
 
@@ -236,6 +227,7 @@ namespace netDxf.Entities
         internal MLineFlags Flags
         {
             get { return this.flags; }
+            set { this.flags = value; }
         }
 
         #endregion
@@ -297,7 +289,7 @@ namespace netDxf.Entities
                         dir = this.vertexes[i + 1].Location - position;
                         dir.Normalize();
                     }
-                    if (this.isClosed)
+                    if (this.IsClosed)
                     {
                         mitter = prevDir - dir;
                         mitter.Normalize();
@@ -308,7 +300,7 @@ namespace netDxf.Entities
                 }
                 else if (i + 1 == this.vertexes.Count)
                 {
-                    if (this.isClosed)
+                    if (this.IsClosed)
                     {
                         if (Equals(this.vertexes[0].Location, position))
                             dir = Vector2.UnitY;
@@ -383,8 +375,7 @@ namespace netDxf.Entities
         /// </summary>
         /// <returns>A new MLine that is a copy of this instance.</returns>
         public override object Clone()
-        {
-            
+        {        
             MLine entity = new MLine
             {
                 //EntityObject properties
@@ -398,12 +389,11 @@ namespace netDxf.Entities
                 //MLine properties
                 Elevation = this.elevation,
                 Scale = this.scale,
-                IsClosed = this.isClosed,
-                NoStartCaps = this.noStartCaps,
-                NoEndCaps = this.noEndCaps,
                 Justification = this.justification,
-                Style = this.style
+                Style = this.style,
+                Flags = this.Flags
             };
+
             foreach (MLineVertex vertex in this.vertexes)
                 entity.vertexes.Add((MLineVertex)vertex.Clone());
 
@@ -415,6 +405,5 @@ namespace netDxf.Entities
         }
 
         #endregion
-
     }
 }

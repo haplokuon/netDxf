@@ -1,3 +1,11 @@
+[1.0.1 - 2015/05/18]
++ Added the property LineTypeGeneration to LwPolyline and Polyline entities to enable or disable if the line type pattern is generated continuously around the vertexes of the polyline.
++ (fixed) The MTextFormattingOptions property ObliqueAngle must be between -85 and 85 degrees.
++ (fixed) AttributeDefinitionDictionary.Clear() method.
++ (fixed) EntityCollection.Clear() method.
++ (fixed) XDataDictionary.Clear() method.
++ (fixed) When adding an insert entity to a document its attributes LineTypeChange events were not been registered.
+
 [1.0.0 - 2015/05/12]
 + Now it is possible to modify all properties of tables and entities even when they already belong to a document. See Modifying...() samples.
 + Now it is possible to modify the name of TableObjects such as application registries, layers, line types,ucss text styles, dimension styles, multiline styles, image definitions, groups, layout, and blocks.

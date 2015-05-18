@@ -93,7 +93,13 @@ namespace netDxf.Entities
         public bool IsClosed
         {
             get { return (this.flags & PolylineTypeFlags.ClosedPolylineOrClosedPolygonMeshInM) == PolylineTypeFlags.ClosedPolylineOrClosedPolygonMeshInM; }
-            set { this.flags = value ? PolylineTypeFlags.ClosedPolylineOrClosedPolygonMeshInM : PolylineTypeFlags.OpenPolyline; }
+            set
+            {
+                if (value)
+                    this.flags |= PolylineTypeFlags.ClosedPolylineOrClosedPolygonMeshInM;
+                else
+                    this.flags &= ~PolylineTypeFlags.ClosedPolylineOrClosedPolygonMeshInM;
+            }
         }
 
         /// <summary>
@@ -112,6 +118,21 @@ namespace netDxf.Entities
         {
             get { return this.elevation; }
             set { this.elevation = value; }
+        }
+
+        /// <summary>
+        /// Enable or disable if the line type pattern is generated continuously around the vertexes of the polyline.
+        /// </summary>
+        public bool LineTypeGeneration
+        {
+            get { return (this.flags & PolylineTypeFlags.ContinuousLineTypePattern) == PolylineTypeFlags.ContinuousLineTypePattern; }
+            set
+            {
+                if (value)
+                    this.flags |= PolylineTypeFlags.ContinuousLineTypePattern;
+                else
+                    this.flags &= ~PolylineTypeFlags.ContinuousLineTypePattern;
+            }
         }
 
         #endregion

@@ -527,6 +527,8 @@ namespace netDxf.Blocks
             if (this.readOnly) return;
             this.OnAttributeDefinitionAddedEvent(e.Item);
             e.Item.Owner = this;
+            // the block has attributes
+            this.flags |= BlockTypeFlags.NonConstantAttributeDefinitions;
         }
 
         private void AttributeDefinitions_BeforeRemoveItem(AttributeDefinitionDictionary sender, AttributeDefinitionDictionaryEventArgs e)
@@ -540,6 +542,8 @@ namespace netDxf.Blocks
             if (this.readOnly) return;
             this.OnAttributeDefinitionRemovedEvent(e.Item);
             e.Item.Owner = null;
+            if(this.attributes.Count == 0)
+                this.flags &= ~BlockTypeFlags.NonConstantAttributeDefinitions;
         }
 
         #endregion

@@ -435,6 +435,5 @@ namespace netDxf.Entities
         }
 
         #endregion
-
     }
 }
