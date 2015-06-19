@@ -20,6 +20,7 @@
 #endregion
 
 using System;
+using System.Collections.Generic;
 
 namespace netDxf.Entities
 {
@@ -177,7 +178,7 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets or sets the gradient definition; corresponds to the centered option on the gradient.
+        /// Gets or sets if the pattern is centered or not.
         /// </summary>
         /// <remarks>
         /// Each gradient has two definitions, shifted and unsifted. A shift value describes the blend of the two definitions that should be used.
@@ -198,6 +199,33 @@ namespace netDxf.Entities
             double h, s, l;
             AciColor.ToHsl(this.color1, out h, out s, out l);
             return AciColor.FromHsl(h, s, value);
+        }
+
+        #endregion
+
+        #region ICloneable
+
+        public override object Clone()
+        {
+            HatchGradientPattern copy = new HatchGradientPattern
+            {
+                // Pattern
+                Fill = this.fill,
+                Type = this.type,
+                Origin = this.origin,
+                Angle = this.angle,
+                Scale = this.scale,
+                Style = this.style,
+                // GraientPattern
+                GradientType = this.gradientType,
+                Color1 = (AciColor) this.color1.Clone(),
+                Color2 = (AciColor) this.color2.Clone(),
+                SingleColor = this.singleColor,
+                Tint = this.tint,
+                Centered = this.centered
+            };
+
+            return copy;
         }
 
         #endregion

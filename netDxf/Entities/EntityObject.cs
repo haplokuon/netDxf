@@ -20,6 +20,8 @@
 #endregion
 
 using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using netDxf.Blocks;
 using netDxf.Collections;
 using netDxf.Tables;
@@ -96,7 +98,7 @@ namespace netDxf.Entities
         protected bool isVisible;
         protected Vector3 normal;
         protected readonly XDataDictionary xData;
-        protected DxfObject reactor;
+        protected readonly List<DxfObject> reactors;
 
         #endregion
 
@@ -114,6 +116,7 @@ namespace netDxf.Entities
             this.lineTypeScale = 1.0;
             this.isVisible = true;
             this.normal = Vector3.UnitZ;
+            this.reactors = new List<DxfObject>();
             this.xData = new XDataDictionary();
             this.xData.AddAppReg += this.XData_AddAppReg;
             this.xData.RemoveAppReg += this.XData_RemoveAppReg;
@@ -124,16 +127,11 @@ namespace netDxf.Entities
         #region public properties
 
         /// <summary>
-        /// Gets the object that has been attached to this entity.
+        /// Gets the list of dxf objects that has been attached to this entity.
         /// </summary>
-        /// <remarks>
-        /// This information is subject to change in the future to become a list, an entity can be attached to multiple objects;
-        /// but at the moment only the viewport clipping boundary make use of this. Use this information with care.
-        /// </remarks>
-        public DxfObject Reactor
+        public ReadOnlyCollection<DxfObject> Reactors
         {
-            get { return this.reactor; }
-            internal set { this.reactor = value; }
+            get { return this.reactors.AsReadOnly(); }
         }
 
         /// <summary>
@@ -266,6 +264,20 @@ namespace netDxf.Entities
         public XDataDictionary XData
         {
             get { return this.xData; }
+        }
+
+        #endregion
+
+        #region internal methods
+
+        internal void AddReactor(DxfObject o)
+        {
+            this.reactors.Add(o);
+        }
+
+        internal bool RemoveReactor(DxfObject o)
+        {
+            return this.reactors.Remove(o);
         }
 
         #endregion

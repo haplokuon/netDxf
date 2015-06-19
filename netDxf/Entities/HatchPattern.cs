@@ -29,19 +29,20 @@ namespace netDxf.Entities
     /// <summary>
     /// Represents a <see cref="Hatch">hatch</see> pattern style.
     /// </summary>
-    public class HatchPattern
+    public class HatchPattern :
+        ICloneable
     {
         #region private fields
 
         private readonly string name;
-        private HatchStyle style;
-        private HatchFillType fill;
-        private HatchType type;
-        private Vector2 origin;
-        private double angle;
-        private double scale;
-        private string description;
-        private List<HatchPatternLineDefinition> lineDefinitions;
+        private readonly List<HatchPatternLineDefinition> lineDefinitions;
+        protected HatchStyle style;
+        protected HatchFillType fill;
+        protected HatchType type;
+        protected Vector2 origin;
+        protected double angle;
+        protected double scale;
+        protected string description;
 
         #endregion
 
@@ -155,8 +156,8 @@ namespace netDxf.Entities
                         Angle = 0,
                         Origin = Vector2.Zero,
                         Delta = new Vector2(0.03125, 0.0625),
-                        DashPattern = new List<double> {0, -0.0625}
                     };
+                lineDefinition.DashPattern.AddRange(new [] {0, -0.0625});
                 pattern.LineDefinitions.Add(lineDefinition);
                 pattern.type = HatchType.Predefined;
                 return pattern;
@@ -245,17 +246,11 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets or sets the definition of the lines that make up the pattern (not applicable in Solid fills).
+        /// Gets the definition of the lines that make up the pattern (not applicable in Solid fills).
         /// </summary>
         public List<HatchPatternLineDefinition> LineDefinitions
         {
             get { return this.lineDefinitions; }
-            set
-            {
-                if (value == null)
-                    throw new ArgumentNullException("value");
-                this.lineDefinitions = value;
-            }
         }
 
         #endregion
@@ -299,22 +294,21 @@ namespace netDxf.Entities
 
                     while (!reader.EndOfStream && !line.StartsWith("*") && !string.IsNullOrEmpty(line))
                     {
-                        List<double> dashPattern = new List<double>();
                         string[] tokens = line.Split(',');
                         double angle = double.Parse(tokens[0]);
                         Vector2 origin = new Vector2(double.Parse(tokens[1]), double.Parse(tokens[2]));
                         Vector2 delta = new Vector2(double.Parse(tokens[3]), double.Parse(tokens[4]));
-                        // the rest of the info is optional if it exists define the dash pattern definition
-                        for (int i = 5; i < tokens.Length; i++)
-                            dashPattern.Add(double.Parse(tokens[i]));
 
                         HatchPatternLineDefinition lineDefinition = new HatchPatternLineDefinition
                             {
                                 Angle = angle,
                                 Origin = origin,
                                 Delta = delta,
-                                DashPattern = dashPattern
                             };
+
+                        // the rest of the info is optional if it exists define the dash pattern definition
+                        for (int i = 5; i < tokens.Length; i++)
+                            lineDefinition.DashPattern.Add(double.Parse(tokens[i]));
 
                         pattern.lineDefinitions.Add(lineDefinition);
                         pattern.type = HatchType.UserDefined;
@@ -328,6 +322,28 @@ namespace netDxf.Entities
             }
 
             return pattern;
+        }
+
+        #endregion
+
+        #region ICloneable
+
+        public virtual object Clone()
+        {
+            HatchPattern copy = new HatchPattern(this.name, this.description)
+            {
+                Style = this.style,
+                Fill = this.fill,
+                Type = this.type,
+                Origin = this.origin,
+                Angle = this.angle,
+                Scale = this.scale,
+            };
+
+            foreach (HatchPatternLineDefinition def in this.lineDefinitions)
+                copy.LineDefinitions.Add((HatchPatternLineDefinition) def.Clone());
+
+            return copy;
         }
 
         #endregion

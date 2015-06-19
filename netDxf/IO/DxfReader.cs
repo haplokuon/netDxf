@@ -33,6 +33,7 @@ using netDxf.Objects;
 using netDxf.Tables;
 using netDxf.Units;
 using Attribute = netDxf.Entities.Attribute;
+using Trace = netDxf.Entities.Trace;
 
 namespace netDxf.IO
 {
@@ -42,6 +43,8 @@ namespace netDxf.IO
     internal sealed class DxfReader
     {
         #region private fields
+
+        private bool isBinary;
 
         private ICodeValueReader chunk;
         private DxfDocument doc;
@@ -55,8 +58,12 @@ namespace netDxf.IO
         // entities, they will be processed at the end <Entity: entity, string: owner handle>.
         private Dictionary<EntityObject, string> entityList;
 
-        // viewports, they will be processed at the end <Entity: viewport, string: clipping boundary handle>.
+        // Viewports, they will be processed at the end <Entity: Viewport, string: clipping boundary handle>.
         private Dictionary<Viewport, string> viewports;
+
+        private Dictionary<Hatch, List<HatchBoundaryPath>> hatchToPaths;
+        // HatchBoundaryPaths, they will be processed at the end <Entity: HatchBoundaryPath, string: entity contourn handle>.
+        private Dictionary<HatchBoundaryPath, List<string>> hatchContourns;
 
         // in nested blocks (blocks that contains Insert entities) the block definition might be defined AFTER the block that references them
         // temporarily these variables will store information to post process the nested block list
@@ -108,15 +115,14 @@ namespace netDxf.IO
             if (stream == null)
                 throw new ArgumentNullException("stream", "The stream cannot be null");
 
-            bool isBinary;
-            string dwgcodepage = CheckHeaderVariable(stream, HeaderVariableCode.DwgCodePage, out isBinary);
+            string dwgcodepage = CheckHeaderVariable(stream, HeaderVariableCode.DwgCodePage, out this.isBinary);
             
             try
             {
-                if (isBinary)
+                if (this.isBinary)
                 {
                     Encoding encoding;
-                    DxfVersion version = DxfDocument.CheckDxfFileVersion(stream, out isBinary);
+                    DxfVersion version = DxfDocument.CheckDxfFileVersion(stream, out this.isBinary);
                     if (version >= DxfVersion.AutoCad2007)
                         encoding = Encoding.UTF8; // the strings in a dxf binary file seems to be stored as UTF8 even if the file looks like ANSI
                     else
@@ -170,7 +176,8 @@ namespace netDxf.IO
 
             this.entityList = new Dictionary<EntityObject, string>();
             this.viewports = new Dictionary<Viewport, string>();
-
+            this.hatchToPaths = new Dictionary<Hatch, List<HatchBoundaryPath>>();
+            this.hatchContourns = new Dictionary<HatchBoundaryPath, List<string>>();
             this.decodedStrings = new Dictionary<string, string>();
 
             // blocks
@@ -345,9 +352,6 @@ namespace netDxf.IO
                 }
                 else
                 {
-                    this.doc.ActiveLayout = layout.Name;
-                    this.doc.AddEntity(pair.Key, false, false);
-
                     // apply the units scale to the insertion scale (this is for not nested blocks)
                     Insert insert = pair.Key as Insert;
                     if (insert != null)
@@ -355,6 +359,8 @@ namespace netDxf.IO
                         double scale = UnitHelper.ConversionFactor(this.doc.DrawingVariables.InsUnits, insert.Block.Record.Units);
                         insert.Scale *= scale;
                     }
+                    this.doc.ActiveLayout = layout.Name;
+                    this.doc.AddEntity(pair.Key, false, false);
                 }
             }
 
@@ -373,6 +379,23 @@ namespace netDxf.IO
                 EntityObject entity = this.doc.GetObjectByHandle(pair.Value) as EntityObject;
                 if (entity != null )
                     pair.Key.ClippingBoundary = entity;
+            }
+
+            // post process the hatch boundary paths
+            foreach (KeyValuePair<Hatch, List<HatchBoundaryPath>> pair in this.hatchToPaths)
+            {
+                Hatch hatch = pair.Key;
+                foreach (HatchBoundaryPath path in pair.Value)
+                {
+                    List<string> entities = this.hatchContourns[path];
+                    foreach (string handle in entities)
+                    {
+                        EntityObject entity = this.doc.GetObjectByHandle(handle) as EntityObject;
+                        if (entity != null)
+                            path.AddContour(entity);
+                    }
+                    hatch.BoundaryPaths.Add(path);
+                }
             }
 
             // post process group entities
@@ -736,7 +759,7 @@ namespace netDxf.IO
             {
                 Insert insert = pair.Key;
                 insert.Block = blocks[pair.Value];
-                foreach (Attribute att in insert.Attributes.Values)
+                foreach (Attribute att in insert.Attributes)
                 {
                     // attribute definitions might be null if an INSERT entity attribute has not been defined in the block
                     AttributeDefinition attDef;
@@ -2145,8 +2168,9 @@ namespace netDxf.IO
                 foreach (AttributeDefinition attDef in attDefs)
                 {
                     // AutoCAD allows duplicate tags in attribute definitions, but this library does not having duplicate tags is not recommended in any way,
-                    // since there will be now way to know which is the definition associated to the insert attribute
-                    block.AttributeDefinitions.Add(attDef);
+                    // since there will be no way to know which is the definition associated to the insert attribute
+                    if(!block.AttributeDefinitions.ContainsTag(attDef.Tag))
+                        block.AttributeDefinitions.Add(attDef);
                 }
                 // block entities for post processing (MLines and Images references other objects (MLineStyle and ImageDef) that will be defined later
                 this.blockEntities.Add(block, entities);
@@ -2559,6 +2583,7 @@ namespace netDxf.IO
             }
 
             // AcDbEntity common codes
+            Debug.Assert(this.chunk.ReadString() == SubclassMarker.Entity);
             this.chunk.Next();
             while (this.chunk.Code != 100)
             {
@@ -2657,6 +2682,9 @@ namespace netDxf.IO
                     break;
                 case DxfObjectCode.Solid:
                     entityObject = this.ReadSolid();
+                    break;
+                case DxfObjectCode.Trace:
+                    entityObject = this.ReadTrace();
                     break;
                 case DxfObjectCode.Text:
                     entityObject = this.ReadText();
@@ -4389,10 +4417,11 @@ namespace netDxf.IO
 
             Solid entity = new Solid
             {
-                FirstVertex = v0,
-                SecondVertex = v1,
-                ThirdVertex = v2,
-                FourthVertex = v3,
+                FirstVertex = new Vector2(v0.X, v0.Y),
+                SecondVertex = new Vector2(v1.X, v1.Y),
+                ThirdVertex = new Vector2(v2.X, v2.Y),
+                FourthVertex = new Vector2(v3.X, v3.Y),
+                Elevation = v0.Z,
                 Thickness = thickness,
                 Normal = normal
             };
@@ -4400,7 +4429,116 @@ namespace netDxf.IO
             entity.XData.AddRange(xData);
 
             return entity;
+        }
 
+        private Trace ReadTrace()
+        {
+            Vector3 v0 = Vector3.Zero;
+            Vector3 v1 = Vector3.Zero;
+            Vector3 v2 = Vector3.Zero;
+            Vector3 v3 = Vector3.Zero;
+            double thickness = 0.0;
+            Vector3 normal = Vector3.UnitZ;
+            List<XData> xData = new List<XData>();
+
+            this.chunk.Next();
+            while (this.chunk.Code != 0)
+            {
+                switch (this.chunk.Code)
+                {
+                    case 10:
+                        v0.X = this.chunk.ReadDouble();
+                        this.chunk.Next();
+                        break;
+                    case 20:
+                        v0.Y = this.chunk.ReadDouble();
+                        this.chunk.Next();
+                        break;
+                    case 30:
+                        v0.Z = this.chunk.ReadDouble();
+                        this.chunk.Next();
+                        break;
+                    case 11:
+                        v1.X = this.chunk.ReadDouble();
+                        this.chunk.Next();
+                        break;
+                    case 21:
+                        v1.Y = this.chunk.ReadDouble();
+                        this.chunk.Next();
+                        break;
+                    case 31:
+                        v1.Z = this.chunk.ReadDouble();
+                        this.chunk.Next();
+                        break;
+                    case 12:
+                        v2.X = this.chunk.ReadDouble();
+                        this.chunk.Next();
+                        break;
+                    case 22:
+                        v2.Y = this.chunk.ReadDouble();
+                        this.chunk.Next();
+                        break;
+                    case 32:
+                        v2.Z = this.chunk.ReadDouble();
+                        this.chunk.Next();
+                        break;
+                    case 13:
+                        v3.X = this.chunk.ReadDouble();
+                        this.chunk.Next();
+                        break;
+                    case 23:
+                        v3.Y = this.chunk.ReadDouble();
+                        this.chunk.Next();
+                        break;
+                    case 33:
+                        v3.Z = this.chunk.ReadDouble();
+                        this.chunk.Next();
+                        break;
+                    case 70:
+                        thickness = this.chunk.ReadDouble();
+                        this.chunk.Next();
+                        break;
+                    case 210:
+                        normal.X = this.chunk.ReadDouble();
+                        this.chunk.Next();
+                        break;
+                    case 220:
+                        normal.Y = this.chunk.ReadDouble();
+                        this.chunk.Next();
+                        break;
+                    case 230:
+                        normal.Z = this.chunk.ReadDouble();
+                        this.chunk.Next();
+                        break;
+                    case 1001:
+                        string appId = this.DecodeEncodedNonAsciiCharacters(this.chunk.ReadString());
+                        XData data = this.ReadXDataRecord(appId);
+                        xData.Add(data);
+                        break;
+                    default:
+                        if (this.chunk.Code >= 1000 && this.chunk.Code <= 1071)
+                            throw new DxfInvalidCodeValueEntityException(this.chunk.Code, this.chunk.ReadString(),
+                                "The extended data of an entity must start with the application registry code.");
+
+                        this.chunk.Next();
+                        break;
+                }
+            }
+
+            Trace entity = new Trace
+            {
+                FirstVertex = new Vector2(v0.X, v0.Y),
+                SecondVertex = new Vector2(v1.X, v1.Y),
+                ThirdVertex = new Vector2(v2.X, v2.Y),
+                FourthVertex = new Vector2(v3.X, v3.Y),
+                Elevation = v0.Z,
+                Thickness = thickness,
+                Normal = normal
+            };
+
+            entity.XData.AddRange(xData);
+
+            return entity;
         }
 
         private Spline ReadSpline()
@@ -4690,7 +4828,6 @@ namespace netDxf.IO
             }
 
             string endSequenceHandle = string.Empty;
-            //Layer endSequenceLayer = Layer.Default;
             if (this.chunk.ReadString() == DxfObjectCode.EndSequence)
             {
                 // read the end sequence object until a new element is found
@@ -4705,8 +4842,6 @@ namespace netDxf.IO
                             break;
                         case 8:
                             // the EndSquence layer and the Insert layer are the same
-                            //string layerName = this.DecodeEncodedNonAsciiCharacters(this.chunk.ReadString());
-                            //endSequenceLayer = this.GetLayer(layerName);
                             this.chunk.Next();
                             break;
                         default:
@@ -4724,7 +4859,7 @@ namespace netDxf.IO
             insert.Rotation = rotation;
             insert.Scale = scale;
             insert.Normal = normal;
-            insert.Attributes = new AttributeDictionary(attributes);
+            insert.Attributes = new AttributeCollection(attributes);
             insert.EndSequence.Handle = endSequenceHandle;
             insert.XData.AddRange(xData);
 
@@ -5665,6 +5800,8 @@ namespace netDxf.IO
             }
 
             textString = this.DecodeEncodedNonAsciiCharacters(textString);
+            // text dxf files stores the tabs as ^I in the MText texts, they will be replaced by the standard tab character
+            if(!this.isBinary) textString = textString.Replace("^I", "\t");
 
             MText entity = new MText
             {
@@ -5684,7 +5821,6 @@ namespace netDxf.IO
             entity.XData.AddRange(xData);
 
             return entity;
-
         }
 
         private Hatch ReadHatch()
@@ -5694,6 +5830,7 @@ namespace netDxf.IO
             double elevation = 0.0;
             Vector3 normal = Vector3.UnitZ;
             HatchPattern pattern = HatchPattern.Line;
+            bool associative = false;
             List<HatchBoundaryPath> paths = new List<HatchBoundaryPath>();
             List<XData> xData = new List<XData>();
 
@@ -5736,6 +5873,7 @@ namespace netDxf.IO
                         break;
                     case 71:
                         // Associativity flag (associative = 1; non-associative = 0); for MPolygon, solid-fill flag (has solid fill = 1; lacks solid fill = 0)
+                        if (this.chunk.ReadShort() != 0) associative = true;
                         this.chunk.Next();
                         break;
                     case 75:
@@ -5760,11 +5898,13 @@ namespace netDxf.IO
 
             if (paths.Count == 0) return null;
 
-            Hatch entity = new Hatch(pattern, paths)
+            Hatch entity = new Hatch(pattern, new List<HatchBoundaryPath>(), associative)
             {
                 Elevation = elevation,
                 Normal = normal
             };
+
+            this.hatchToPaths.Add(entity, paths);
 
             entity.XData.AddRange(xData);
 
@@ -5785,18 +5925,17 @@ namespace netDxf.IO
             pattern.Origin = origin;
 
             return entity;
-
         }
 
         private List<HatchBoundaryPath> ReadHatchBoundaryPaths(int numPaths)
         {
             List<HatchBoundaryPath> paths = new List<HatchBoundaryPath>();
-            this.chunk.Next();
             HatchBoundaryPathTypeFlags pathTypeFlag = HatchBoundaryPathTypeFlags.Derived | HatchBoundaryPathTypeFlags.External;
+
+            this.chunk.Next();
             while (paths.Count < numPaths)
             {
                 HatchBoundaryPath path;
-
                 switch (this.chunk.Code)
                 {
                     case 92:
@@ -5814,18 +5953,14 @@ namespace netDxf.IO
                             path.PathTypeFlag = pathTypeFlag;
                             paths.Add(path);
                         }
-                        this.chunk.Next();
+                        else
+                            this.chunk.Next();
                         break;
                     case 93:
                         int numEdges = this.chunk.ReadInt();
                         path = this.ReadEdgeBoundaryPath(numEdges);
                         path.PathTypeFlag = pathTypeFlag;
                         paths.Add(path);
-                        this.chunk.Next();
-                        break;
-                    case 330:
-                        // references to boundary objects, not supported
-                        this.chunk.Next();
                         break;
                     default:
                         this.chunk.Next();
@@ -5866,7 +6001,21 @@ namespace netDxf.IO
                 }
                 poly.Vertexes[i] = new Vector3(x, y, bulge);
             }
-            return new HatchBoundaryPath(new List<HatchBoundaryPath.Edge> {poly});
+            HatchBoundaryPath path = new HatchBoundaryPath(new List<HatchBoundaryPath.Edge> { poly });
+
+            // read all referenced entities
+            Debug.Assert(this.chunk.Code == 97, "The reference count code 97 was expected.");
+            int numBoundaryObjects = this.chunk.ReadInt();
+            this.hatchContourns.Add(path, new List<string>(numBoundaryObjects));
+            this.chunk.Next();
+            for (int i = 0; i < numBoundaryObjects; i++)
+            {
+                Debug.Assert(this.chunk.Code == 330, "The reference handle code 330 was expected.");
+                this.hatchContourns[path].Add(this.chunk.ReadString());
+                this.chunk.Next();
+            }
+
+            return path;
         }
 
         private HatchBoundaryPath ReadEdgeBoundaryPath(int numEdges)
@@ -5999,7 +6148,7 @@ namespace netDxf.IO
                             controlPoints[i] = new Vector3(x, y, w);
                         }
 
-                        // this information is only required for AutoCAD version 2010
+                        // this information is only required for AutoCAD version 2010 and newer
                         // stores information about spline fit point (the spline entity does not make use of this information)
                         if (this.doc.DrawingVariables.AcadVer >= DxfVersion.AutoCad2010)
                         {
@@ -6043,7 +6192,21 @@ namespace netDxf.IO
                 }
             }
 
-            return new HatchBoundaryPath(entities);
+            HatchBoundaryPath path = new HatchBoundaryPath(entities);
+
+            // read all referenced entities
+            Debug.Assert(this.chunk.Code == 97, "The reference count code 97 was expected.");
+            int numBoundaryObjects = this.chunk.ReadInt();
+            this.hatchContourns.Add(path, new List<string>(numBoundaryObjects));
+            this.chunk.Next();
+            for (int i = 0; i < numBoundaryObjects; i++)
+            {
+                Debug.Assert(this.chunk.Code == 330, "The reference handle code 330 was expected.");
+                this.hatchContourns[path].Add(this.chunk.ReadString());
+                this.chunk.Next();
+            }
+
+            return path;
         }
 
         private HatchPattern ReadHatchPattern(string name)
@@ -6120,7 +6283,7 @@ namespace netDxf.IO
             hatch.Style = style;
             hatch.Scale = scale;
             hatch.Type = type;
-            hatch.LineDefinitions = lineDefinitions;
+            hatch.LineDefinitions.AddRange(lineDefinitions);
             return hatch;
         }
 
@@ -6197,14 +6360,6 @@ namespace netDxf.IO
                 short numSegments = this.chunk.ReadShort(); // code 79
                 this.chunk.Next();
 
-                List<double> dashPattern = new List<double>();
-                for (int j = 0; j < numSegments; j++)
-                {
-                    // positive values means solid segments and negative values means spaces (one entry per element)
-                    dashPattern.Add(this.chunk.ReadDouble()/patternScale); // code 49
-                    this.chunk.Next();
-                }
-
                 // Pattern fill data. In theory this should hold the same information as the pat file but for unknown reason the dxf requires global data instead of local.
                 // this means we have to convert the global data into local, since we are storing the pattern line definition as it appears in the acad.pat file.
                 double sinOrigin = Math.Sin(patternAngle*MathHelper.DegToRad);
@@ -6215,13 +6370,21 @@ namespace netDxf.IO
                 double cosDelta = Math.Cos(angle*MathHelper.DegToRad);
                 delta = new Vector2(cosDelta*delta.X/patternScale + sinDelta*delta.Y/patternScale, -sinDelta*delta.X/patternScale + cosDelta*delta.Y/patternScale);
 
-                lineDefinitions.Add(new HatchPatternLineDefinition
+                HatchPatternLineDefinition lineDefiniton = new HatchPatternLineDefinition
                 {
                     Angle = angle - patternAngle,
                     Origin = origin,
                     Delta = delta,
-                    DashPattern = dashPattern
-                });
+                };
+
+                for (int j = 0; j < numSegments; j++)
+                {
+                    // positive values means solid segments and negative values means spaces (one entry per element)
+                    lineDefiniton.DashPattern.Add(this.chunk.ReadDouble() / patternScale); // code 49
+                    this.chunk.Next();
+                }
+
+                lineDefinitions.Add(lineDefiniton);
             }
 
             return lineDefinitions;

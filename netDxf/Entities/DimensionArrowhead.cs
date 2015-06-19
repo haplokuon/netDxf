@@ -454,7 +454,7 @@ namespace netDxf.Entities
             {
                 Block arrowhead = new Block("_BOXFILLED");
 
-                Solid solid = new Solid(new Vector3(-0.5, 0.5, 0.0), new Vector3(0.5, 0.5, 0.0), new Vector3(-0.5, -0.5, 0.0), new Vector3(0.5, -0.5, 0.0))
+                Solid solid = new Solid(new Vector2(-0.5, 0.5), new Vector2(0.5, 0.5), new Vector2(-0.5, -0.5), new Vector2(0.5, -0.5))
                 {
                     Layer = Layer.Default,
                     LineType = LineType.ByBlock,
@@ -582,7 +582,7 @@ namespace netDxf.Entities
             {
                 Block arrowhead = new Block("_DATUMFILLED");
 
-                Solid solid = new Solid(new Vector3(0.0, 0.5773502700000001, 0.0), new Vector3(-1.0, 0.0, 0.0), new Vector3(0.0, -0.5773502700000001, 0.0))
+                Solid solid = new Solid(new Vector2(0.0, 0.57735027), new Vector2(-1.0, 0.0), new Vector2(0.0, -0.57735027))
                 {
                     Layer = Layer.Default,
                     LineType = LineType.ByBlock,

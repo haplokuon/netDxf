@@ -63,7 +63,7 @@ namespace netDxf.Entities
         private Vector3 position;
         private Vector3 scale;
         private double rotation;
-        private AttributeDictionary attributes;
+        private AttributeCollection attributes;
 
         #endregion
 
@@ -73,7 +73,7 @@ namespace netDxf.Entities
             : base (EntityType.Insert, DxfObjectCode.Insert)
         {
             this.endSequence = new EndSequence();
-            this.attributes = new AttributeDictionary();
+            this.attributes = new AttributeCollection();
         }
 
         /// <summary>
@@ -123,7 +123,7 @@ namespace netDxf.Entities
                 atts.Add(att);
             }
 
-            this.attributes = new AttributeDictionary(atts);
+            this.attributes = new AttributeCollection(atts);
         }
 
         #endregion
@@ -133,7 +133,7 @@ namespace netDxf.Entities
         /// <summary>
         /// Gets the insert list of <see cref="Attribute">attributes</see>.
         /// </summary>
-        public AttributeDictionary Attributes
+        public AttributeCollection Attributes
         {
             get { return this.attributes; }
             internal set { this.attributes = value; }
@@ -192,39 +192,30 @@ namespace netDxf.Entities
         /// Updates the actual insert with the attribute properties currently defined in the block. This does not affect any values assigned to attributes in each block.
         /// </summary>
         /// <remarks>This method will automatically call the TransformAttributes method, to keep all attributes position and orientation up to date.</remarks>
+        /// <remarks></remarks>
         public void Sync()
         {
             List<Attribute> atts = new List<Attribute>(this.block.AttributeDefinitions.Count);
 
-            // remove all attributes that are not present in the actual insert
-            foreach (Attribute att in this.attributes.Values)
+            // remove all attributes in the actual insert
+            foreach (Attribute att in this.attributes)
             {
-                if (!this.block.AttributeDefinitions.ContainsTag(att.Tag))
-                {
-                    this.OnAttributeRemovedEvent(att);
-                    att.Handle = null;
-                    att.Owner = null;
-                }
+                this.OnAttributeRemovedEvent(att);
+                att.Handle = null;
+                att.Owner = null;
             }
 
-            // add any new attribute that might have been added to the block
+            // add any new attributes from the attribute definitions of the block
             foreach (AttributeDefinition attdef in this.block.AttributeDefinitions.Values)
-            {
-                if (this.attributes.ContainsTag(attdef.Tag))
+            {       
+                Attribute att = new Attribute(attdef)
                 {
-                    atts.Add(this.attributes[attdef.Tag]);
-                }
-                else
-                {
-                    Attribute att = new Attribute(attdef)
-                    {
-                        Owner = this
-                    };
-                    atts.Add(att);
-                    this.OnAttributeAddedEvent(att);
-                }        
+                    Owner = this
+                };
+                atts.Add(att);
+                this.OnAttributeAddedEvent(att);
             }
-            this.attributes = new AttributeDictionary(atts);
+            this.attributes = new AttributeCollection(atts);
 
             this.TransformAttributes();
         }
@@ -274,7 +265,7 @@ namespace netDxf.Entities
             Vector3 insScale = this.scale * UnitHelper.ConversionFactor(this.block.Record.Units, insUnits);
             Matrix3 insTrans = this.GetTransformation(insUnits);
 
-            foreach (Attribute att in this.attributes.Values)
+            foreach (Attribute att in this.attributes)
             {
                 AttributeDefinition attdef = att.Definition;
                 if (attdef == null) continue;
@@ -338,7 +329,7 @@ namespace netDxf.Entities
         internal override long AsignHandle(long entityNumber)
         {
             entityNumber = this.endSequence.AsignHandle(entityNumber);
-            foreach (Attribute attrib in this.attributes.Values)
+            foreach (Attribute attrib in this.attributes)
             {
                 entityNumber = attrib.AsignHandle(entityNumber);
             }
@@ -353,7 +344,7 @@ namespace netDxf.Entities
         public override object Clone()
         {
             List<Attribute> copyAttributes = new List<Attribute>();
-            foreach (Attribute att in this.attributes.Values)
+            foreach (Attribute att in this.attributes)
                 copyAttributes.Add((Attribute)att.Clone());
 
             Insert entity = new Insert
@@ -371,7 +362,7 @@ namespace netDxf.Entities
                     Block = (Block)this.block.Clone(),
                     Scale = this.scale,
                     Rotation = this.rotation,
-                    Attributes = new AttributeDictionary(copyAttributes)
+                    Attributes = new AttributeCollection(copyAttributes)
                 };
 
             foreach (XData data in this.XData.Values)

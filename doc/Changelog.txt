@@ -1,3 +1,15 @@
+[1.0.2 - 2015/06/19]
++ Associative hatches are now supported. See AssociativeHatches() sample.
++ Now you can safely add and remove boundary paths from a hatch. Hatches without boundaries will be discarded when saving.
++ The SOLID entity vertexes are now Vector2 and are stored in OCS (object coordinate system). See SolidEntity() sample.
++ Added the Trace entity, its functionality is exactly the same as the Solid. See TraceEntity() sample.
++ Regresion change. The Insert TransformAttributes() method will not be called automatically while adding it to the document, if needed do it manually. This is to avoid overriding the insert attributes position and orientation that were read from the dxf during the loading process.
++ Regresion change. The insert attributes is again a list and not a dictionary. This will avoid losing the attributes with the same tag even if the block attribute definitions do not support it or attributes without its corresponding definition.
++ (fixed) Issue Id #13492 MText inside block with tab character dxf binary.
++ (fixed) Issue Id #13493 Block insertion unit and attributes.
++ (fixed) Bug reading dxf files that contain blocks with attribute definitions with the same tag. The duplicate tags will be removed during the loading process. In any case, having duplicate tags is not recommended in anyway.
++ (fixed) Bug drawing LinearDimensions when both the reference points and the dimension line were in a straight line parallel to the Y axis.
+ 
 [1.0.1 - 2015/05/18]
 + Added the property LineTypeGeneration to LwPolyline and Polyline entities to enable or disable if the line type pattern is generated continuously around the vertexes of the polyline.
 + (fixed) The MTextFormattingOptions property ObliqueAngle must be between -85 and 85 degrees.

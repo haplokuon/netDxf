@@ -346,8 +346,8 @@ namespace netDxf.Entities
             get { return this.boundary; }
             set
             {
-                if (this.boundary != null)
-                    this.boundary.Reactor = null;
+                if(this.boundary != null)
+                    this.boundary.RemoveReactor(this);
 
                 if (value == null)
                 {
@@ -405,7 +405,7 @@ namespace netDxf.Entities
                 this.height = abbr.Height;
                 this.center = new Vector3(abbr.Center.X, abbr.Center.Y, 0.0);
                 this.boundary = value;
-                this.boundary.Reactor = this;
+                this.boundary.AddReactor(this);
                 this.status |= ViewportStatusFlags.NonRectangularClipping;               
             }
         }

@@ -297,6 +297,11 @@ namespace netDxf
         public const string Solid = "SOLID";
 
         /// <summary>
+        /// Trace.
+        /// </summary>
+        public const string Trace = "TRACE";
+
+        /// <summary>
         /// Text string.
         /// </summary>
         public const string Text = "TEXT";

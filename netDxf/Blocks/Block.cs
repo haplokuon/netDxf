@@ -480,6 +480,17 @@ namespace netDxf.Blocks
         private void Entities_AddItem(EntityCollection sender, EntityCollectionEventArgs e)
         {
             if (this.readOnly) return;
+            // if the entity is a hatch we will also add the boundary entities to the block
+            if (e.Item.Type == EntityType.Hatch)
+            {
+                Hatch hatch = (Hatch) e.Item;
+                foreach (HatchBoundaryPath path in hatch.BoundaryPaths)
+                {
+                    this.Hatch_BoundaryPathAdded(hatch, new ObservableCollectionEventArgs<HatchBoundaryPath>(path));
+                }            
+                hatch.HatchBoundaryPathAdded += this.Hatch_BoundaryPathAdded;
+                hatch.HatchBoundaryPathRemoved += this.Hatch_BoundaryPathRemoved;       
+            }
             this.OnEntityAddedEvent(e.Item);
             e.Item.Owner = this;
         }
@@ -493,10 +504,40 @@ namespace netDxf.Blocks
         private void Entities_RemoveItem(EntityCollection sender, EntityCollectionEventArgs e)
         {
             if (this.readOnly) return;
+            if (e.Item.Type == EntityType.Hatch)
+            {
+                Hatch hatch = (Hatch)e.Item;
+                foreach (HatchBoundaryPath path in hatch.BoundaryPaths)
+                {
+                    this.Hatch_BoundaryPathRemoved(hatch, new ObservableCollectionEventArgs<HatchBoundaryPath>(path));
+                } 
+                hatch.HatchBoundaryPathAdded -= this.Hatch_BoundaryPathAdded;
+                hatch.HatchBoundaryPathRemoved -= this.Hatch_BoundaryPathRemoved;
+            }
             this.OnEntityRemovedEvent(e.Item);
             e.Item.Owner = null;
         }
 
+        private void Hatch_BoundaryPathAdded(Hatch sender, ObservableCollectionEventArgs<HatchBoundaryPath> e)
+        {
+            foreach (EntityObject entity in e.Item.Entities)
+            {
+                if (entity.Owner != null)
+                {
+                    if (!ReferenceEquals(entity.Owner, this))
+                        throw new ArgumentException("The HatchBoundaryPath entity and the hatch must belong to the same block. Clone it instead.");
+                }
+                else
+                {
+                    this.Entities.Add(entity);
+                }
+            }
+        }
+
+        private void Hatch_BoundaryPathRemoved(Hatch sender, ObservableCollectionEventArgs<HatchBoundaryPath> e)
+        {
+            this.Entities.Remove(e.Item.Entities);
+        }
         #endregion
 
         #region Attributes dictionary events

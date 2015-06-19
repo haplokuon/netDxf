@@ -199,7 +199,8 @@ namespace netDxf.Collections
         /// <returns>True if the object has been added to the collection, or false otherwise.</returns>
         public void Add(T item)
         {
-            if (this.OnBeforeAddItemEvent(item)) return;
+            if (this.OnBeforeAddItemEvent(item))
+                throw new ArgumentException("The item cannot be added to the collection.", "item");
             this.innerArray.Add(item);
             this.OnAddItemEvent(item);
         }
@@ -210,7 +211,8 @@ namespace netDxf.Collections
         /// <param name="collection">The collection whose elements should be added.</param>
         public void AddRange(ICollection<T> collection)
         {
-            if (collection == null) throw new ArgumentNullException();
+            if (collection == null)
+                throw new ArgumentNullException("collection");
             // we will make room for so the collection will fit without having to resize the internal array during the Add method
             this.innerArray.Capacity += collection.Count;
             foreach (T item in collection)
@@ -225,8 +227,11 @@ namespace netDxf.Collections
         /// <returns>True if the object has been inserted to the collection; otherwise, false.</returns>
         public void Insert(int index, T item)
         {
-            if (this.OnBeforeRemoveItemEvent(this.innerArray[index])) return;
-            if (this.OnBeforeAddItemEvent(item)) return;
+            if (index < 0 || index >= this.innerArray.Count)
+                throw new ArgumentOutOfRangeException(string.Format("The parameter index {0} must be in between {1} and {2}.", index, 0, this.innerArray.Count));
+            if(this.OnBeforeRemoveItemEvent(this.innerArray[index])) return;
+            if (this.OnBeforeAddItemEvent(item))
+                throw new ArgumentException("The item cannot be added to the collection.", "item");
             this.OnRemoveItemEvent(this.innerArray[index]);
             this.innerArray.Insert(index, item);
             this.OnAddItemEvent(item);
@@ -246,13 +251,30 @@ namespace netDxf.Collections
             return true;
         }
 
+        /// <summary>
+        /// Removes the first occurrence of a specific object from the collection
+        /// </summary>
+        /// <param name="items">The list of objects to remove from the collection.</param>
+        /// <returns>True if object is successfully removed; otherwise, false.</returns>
+        public void Remove(ICollection<T> items)
+        {
+            foreach (T item in items)
+            {
+                if (!this.innerArray.Contains(item)) return;
+                if (this.OnBeforeRemoveItemEvent(item)) return;
+                this.innerArray.Remove(item);
+                this.OnRemoveItemEvent(item);
+            }
+        }
+
 		/// <summary>
         /// Removes the object at the specified index of the collection.
         /// </summary>
         /// <param name="index">The zero-based index of the object to remove.</param>
         public void RemoveAt(int index)
         {
-            if (index < 0 || index >= this.innerArray.Count) return;
+            if (index < 0 || index >= this.innerArray.Count)
+                throw new ArgumentOutOfRangeException(string.Format("The parameter index {0} must be in between {1} and {2}.", index, 0, this.innerArray.Count));
             T remove = this.innerArray[index];
             if (this.OnBeforeRemoveItemEvent(remove)) return;
             this.innerArray.RemoveAt(index);

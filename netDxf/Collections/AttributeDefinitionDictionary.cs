@@ -121,10 +121,11 @@ namespace netDxf.Collections
             get { return this.innerDictionary[tag]; }
             set
             {
-                if (value == null) throw new ArgumentNullException("value");
-
+                if (value == null)
+                    throw new ArgumentNullException("value");
+                if (string.Equals(tag, value.Tag))
+                    throw new ArgumentException(string.Format("The dictionary tag: {0}, and the attribute definition tag: {1}, must be the same", tag, value.Tag));
                 AttributeDefinition remove = this.innerDictionary[tag];
-
                 if (this.OnBeforeRemoveItemEvent(remove)) return;
                 if (this.OnBeforeAddItemEvent(value)) return;
                 this.innerDictionary[tag] = value;

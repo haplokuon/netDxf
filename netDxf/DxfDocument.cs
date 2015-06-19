@@ -80,6 +80,7 @@ namespace netDxf
         private readonly List<Dimension> dimensions;
         private readonly List<Ellipse> ellipses;
         private readonly List<Solid> solids;
+        private readonly List<Trace> traces;
         private readonly List<Face3d> faces3d;
         private readonly List<Insert> inserts;
         private readonly List<Line> lines;
@@ -169,6 +170,7 @@ namespace netDxf
             this.dimensions = new List<Dimension>();
             this.faces3d = new List<Face3d>();
             this.solids = new List<Solid>();
+            this.traces = new List<Trace>();
             this.inserts = new List<Insert>();
             this.lwPolylines = new List<LwPolyline>();
             this.polylines = new List<Polyline>();
@@ -402,6 +404,14 @@ namespace netDxf
         public ReadOnlyCollection<Solid> Solids
         {
             get { return this.solids.AsReadOnly(); }
+        }
+
+        /// <summary>
+        /// Gets the <see cref="Trace">traces</see> list.
+        /// </summary>
+        public ReadOnlyCollection<Trace> Traces
+        {
+            get { return this.traces.AsReadOnly(); }
         }
 
         /// <summary>
@@ -919,14 +929,24 @@ namespace netDxf
                     break;
                 case EntityType.Hatch:
                     Hatch hatch = (Hatch) entity;
-                    hatch.AddPatternXData();
-                    if (!isBlockEntity) this.hatches.Add(hatch);
+                    
+                    // the boundary entities of an associative hatch that belong to a block will be handle by that block
+                    if (!isBlockEntity)
+                    {
+                        foreach (HatchBoundaryPath path in hatch.BoundaryPaths)
+                        {
+                            this.Hatch_BoundaryPathAdded(hatch, new ObservableCollectionEventArgs<HatchBoundaryPath>(path));
+                        }
+                        hatch.HatchBoundaryPathAdded += this.Hatch_BoundaryPathAdded;
+                        hatch.HatchBoundaryPathRemoved += this.Hatch_BoundaryPathRemoved;
+                        this.hatches.Add(hatch);
+                    }
                     break;
                 case EntityType.Insert:
                     Insert insert = (Insert) entity;
                     insert.Block = this.blocks.Add(insert.Block, assignHandle);
                     this.blocks.References[insert.Block.Name].Add(insert);
-                    foreach (Attribute attribute in insert.Attributes.Values)
+                    foreach (Attribute attribute in insert.Attributes)
                     {
                         attribute.Layer = this.layers.Add(attribute.Layer, assignHandle);
                         this.layers.References[attribute.Layer.Name].Add(attribute);
@@ -942,7 +962,6 @@ namespace netDxf
                     }
                     insert.AttributeAdded += this.Insert_AttributeAdded;
                     insert.AttributeRemoved += this.Insert_AttributeRemoved;
-                    insert.TransformAttributes();
                     if (!isBlockEntity) this.inserts.Add(insert);
                     break;
                 case EntityType.LightWeightPolyline:
@@ -962,6 +981,9 @@ namespace netDxf
                     break;
                 case EntityType.Solid:
                     if (!isBlockEntity) this.solids.Add((Solid) entity);
+                    break;
+                case EntityType.Trace:
+                    if (!isBlockEntity) this.traces.Add((Trace)entity);
                     break;
                 case EntityType.Mesh:
                     if (!isBlockEntity) this.meshes.Add((Mesh) entity);
@@ -1052,7 +1074,7 @@ namespace netDxf
             if (entity.Owner == null)
                 return false;
 
-            if (entity.Reactor != null)
+            if (entity.Reactors.Count > 0)
                 return false;
 
             if (entity.Owner.Record.Layout==null)
@@ -1090,13 +1112,19 @@ namespace netDxf
                     if (!isBlockEntity) this.splines.Remove((Spline)entity);
                     break;
                 case EntityType.Hatch:
-                    if (!isBlockEntity) this.hatches.Remove((Hatch)entity);
+                    Hatch hatch = (Hatch) entity;
+                    if (!isBlockEntity)
+                    {
+                        hatch.HatchBoundaryPathAdded -= this.Hatch_BoundaryPathAdded;
+                        hatch.HatchBoundaryPathRemoved -= this.Hatch_BoundaryPathRemoved;
+                        this.hatches.Remove(hatch);
+                    }
                     break;
                 case EntityType.Insert:
                     Insert insert = (Insert)entity;
                     if (!isBlockEntity) this.inserts.Remove(insert);
                     this.blocks.References[insert.Block.Name].Remove(entity);
-                    foreach (Attribute att in insert.Attributes.Values)
+                    foreach (Attribute att in insert.Attributes)
                     {
                         this.layers.References[att.Layer.Name].Remove(att);
                         att.LayerChange -= this.Entity_LayerChange;
@@ -1125,6 +1153,9 @@ namespace netDxf
                     break;
                 case EntityType.Solid:
                     if (!isBlockEntity) this.solids.Remove((Solid)entity);
+                    break;
+                case EntityType.Trace:
+                    if (!isBlockEntity) this.traces.Remove((Trace)entity);
                     break;
                 case EntityType.Mesh:
                     if (!isBlockEntity) this.meshes.Remove((Mesh)entity);
@@ -1165,7 +1196,7 @@ namespace netDxf
                     // delete the viewport boundary entity in case there is one
                     if (viewport.ClippingBoundary != null)
                     {
-                        viewport.ClippingBoundary.Reactor = null;
+                        viewport.ClippingBoundary.RemoveReactor(viewport);
                         this.RemoveEntity(viewport.ClippingBoundary);
                     }
                     break;
@@ -1338,6 +1369,39 @@ namespace netDxf
 
             this.textStyles.References[e.Item.Style.Name].Remove(e.Item);
             e.Item.TextStyleChange += this.Entity_TextStyleChange;
+        }
+
+        private void Hatch_BoundaryPathAdded(Hatch sender, ObservableCollectionEventArgs<HatchBoundaryPath> e)
+        {
+            Layout layout = sender.Owner.Record.Layout;
+            foreach (EntityObject entity in e.Item.Entities)
+            {
+                // the hatch belongs to a layout
+                if (entity.Owner != null)
+                {
+                    // the hatch and its entities must belong to the same document or block
+                    if (!ReferenceEquals(entity.Owner.Record.Layout, layout))
+                        throw new ArgumentException("The HatchBoundaryPath entity and the hatch must belong to the same layout and document. Clone it instead.");
+                    // there is no need to do anything else we will not add the same entity twice
+                }
+                else
+                {
+                    // we will add the new entity to the same document and layout of the hatch
+                    string active = this.ActiveLayout;
+                    this.ActiveLayout = layout.Name;
+                    // the entity does not belong to anyone
+                    this.AddEntity(entity, false, true);
+                    this.ActiveLayout = active;
+                }
+            }
+        }
+
+        private void Hatch_BoundaryPathRemoved(Hatch sender, ObservableCollectionEventArgs<HatchBoundaryPath> e)
+        {
+            foreach (EntityObject entity in e.Item.Entities)
+            {
+                this.RemoveEntity(entity);            
+            }
         }
 
         #endregion

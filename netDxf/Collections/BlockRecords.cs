@@ -204,7 +204,7 @@ namespace netDxf.Collections
             if (e.Item.Owner != null)
             {
                 // the block and its entities must belong to the same document
-                if (!ReferenceEquals(e.Item.Owner.Owner.Owner.Owner, this.owner))
+                if (!ReferenceEquals(e.Item.Owner.Record.Owner.Owner, this.owner))
                     throw new ArgumentException("The block and the entity must belong to the same document. Clone it instead.");
 
                 // the entity cannot belong to another block

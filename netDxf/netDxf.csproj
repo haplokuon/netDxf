@@ -68,10 +68,12 @@
     <Reference Include="System.Drawing" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Collections\AttributeCollection.cs" />
     <Compile Include="Entities\AttributeChangeEventArgs.cs" />
     <Compile Include="Entities\EndSequence.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Entities\Trace.cs" />
     <Compile Include="IO\BinaryCodeValueReader.cs" />
     <Compile Include="IO\BinaryCodeValueWriter.cs" />
     <Compile Include="Blocks\BlockEntityChangeEventArgs.cs" />
@@ -83,7 +85,6 @@
     <Compile Include="Blocks\BlockTypeFlags.cs" />
     <Compile Include="Collections\AttributeDefinitionDictionary.cs" />
     <Compile Include="Collections\AttributeDefinitionDictionaryEventArgs.cs" />
-    <Compile Include="Collections\AttributeDictionary.cs" />
     <Compile Include="Collections\EntityCollection.cs" />
     <Compile Include="Collections\EntityCollectionEventArgs.cs" />
     <Compile Include="Collections\ObservableCollection.cs">

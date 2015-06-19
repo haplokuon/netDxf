@@ -97,6 +97,11 @@ namespace netDxf.Entities
         Solid,
 
         /// <summary>
+        /// Trace entity.
+        /// </summary>
+        Trace,
+
+        /// <summary>
         /// Spline (nonuniform rational B-splines NURBS).
         /// </summary>
         Spline,

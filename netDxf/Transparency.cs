@@ -135,9 +135,7 @@ namespace netDxf
         {
             byte alpha = (byte)(255 * (100 - transparency.Value) / 100.0);
             byte[] bytes = {alpha, 0, 0, 2};
-            if (transparency.IsByBlock)
-                bytes[3] = 1;
-
+            if (transparency.IsByBlock) bytes[3] = 1;
             return BitConverter.ToInt32(bytes, 0);
         }
 

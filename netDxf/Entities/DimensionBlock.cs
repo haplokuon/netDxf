@@ -367,8 +367,8 @@ namespace netDxf.Entities
         {
             short side = 1;
             double rot = (dimRot + angleRef)*MathHelper.RadToDeg;
-            rot = MathHelper.NormalizeAngle(side*rot);
-            if (rot >= 180 && rot < 360)
+            rot = MathHelper.NormalizeAngle(rot);
+            if (rot > 180 && rot <= 360)
                 side *= -1;
 
             Vector2 dir = v - u;

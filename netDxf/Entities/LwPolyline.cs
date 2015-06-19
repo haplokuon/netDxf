@@ -114,6 +114,7 @@ namespace netDxf.Entities
         /// <summary>
         /// Gets or sets the light weight polyline elevation.
         /// </summary>
+        /// <remarks>This is the distance from the origin to the plane of the light weight polyline.</remarks>
         public double Elevation
         {
             get { return this.elevation; }

@@ -190,7 +190,7 @@ namespace netDxf.Collections
         {
             if (index < 0 || index >= this.innerArray.Count)
                 throw new ArgumentOutOfRangeException(string.Format("The parameter index {0} must be in between {1} and {2}.", index, 0, this.innerArray.Count));
-            this.OnBeforeRemoveItemEvent(this.innerArray[index]);
+            if(this.OnBeforeRemoveItemEvent(this.innerArray[index])) return;
             if (this.OnBeforeAddItemEvent(item))
                 throw new ArgumentException("The entity cannot be added to the collection.", "item");
             this.OnRemoveItemEvent(this.innerArray[index]);
@@ -212,6 +212,21 @@ namespace netDxf.Collections
             return true;
         }
 
+        /// <summary>
+        /// Removes the first occurrence of a specific object from the collection
+        /// </summary>
+        /// <param name="items">The list of objects to remove from the collection.</param>
+        /// <returns>True if object is successfully removed; otherwise, false.</returns>
+        public void Remove(ICollection<EntityObject> items)
+        {
+            foreach (EntityObject item in items)
+            {
+                if (!this.innerArray.Contains(item)) return;
+                if (this.OnBeforeRemoveItemEvent(item)) return;
+                this.innerArray.Remove(item);
+                this.OnRemoveItemEvent(item);
+            }
+        }
         /// <summary>
         /// Removes the <see cref="EntityObject">entity</see> at the specified index of the collection.
         /// </summary>

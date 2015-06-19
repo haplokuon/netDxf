@@ -32,6 +32,7 @@ using netDxf.Objects;
 using netDxf.Tables;
 using netDxf.Units;
 using Attribute = netDxf.Entities.Attribute;
+using Trace = netDxf.Entities.Trace;
 
 namespace netDxf.IO
 {
@@ -42,6 +43,7 @@ namespace netDxf.IO
     {
         #region private fields
 
+        private bool isBinary;
         private string activeSection = DxfObjectCode.Unknown;
         private string activeTable = DxfObjectCode.Unknown;
         private ICodeValueWriter chunk;
@@ -57,9 +59,10 @@ namespace netDxf.IO
 
         #region public methods
 
-        public void Write(Stream stream, DxfDocument document, bool isBinary)
+        public void Write(Stream stream, DxfDocument document, bool binary)
         {
             this.doc = document;
+            this.isBinary = binary;
 
             if (this.doc.DrawingVariables.AcadVer < DxfVersion.AutoCad2000)
                 throw new NotSupportedException("Only AutoCad2000 and newer dxf versions are supported.");
@@ -72,6 +75,10 @@ namespace netDxf.IO
 
             // create the application registry AcCmTransparency in case it doesn't exists, it is required by the layer and entity transparency
             this.doc.ApplicationRegistries.Add(new ApplicationRegistry("AcCmTransparency"));
+
+            // create the application registry GradientColor1ACI and GradientColor2ACI in case they don't exists , they are required by the hatch gradient pattern
+            this.doc.ApplicationRegistries.Add(new ApplicationRegistry("GradientColor1ACI"));
+            this.doc.ApplicationRegistries.Add(new ApplicationRegistry("GradientColor2ACI"));
 
             // dictionaries
             List<DictionaryObject> dictionaries = new List<DictionaryObject>();
@@ -135,10 +142,10 @@ namespace netDxf.IO
 
             this.doc.DrawingVariables.HandleSeed = this.doc.NumHandles.ToString("X");
 
-            this.Open(stream, this.doc.DrawingVariables.AcadVer < DxfVersion.AutoCad2007 ? Encoding.Default : null, isBinary);
+            this.Open(stream, this.doc.DrawingVariables.AcadVer < DxfVersion.AutoCad2007 ? Encoding.Default : null);
 
             // The comment group, 999, is not used in binary DXF files.
-            if (!isBinary)
+            if (!this.isBinary)
             {
                 foreach (string comment in this.doc.Comments)
                     this.WriteComment(comment);
@@ -174,7 +181,7 @@ namespace netDxf.IO
             this.BeginTable(this.doc.ApplicationRegistries.CodeName, (short) this.doc.ApplicationRegistries.Count, this.doc.ApplicationRegistries.Handle);
             foreach (ApplicationRegistry id in this.doc.ApplicationRegistries.Items)
             {
-                this.RegisterApplication(id);
+                this.WriteApplicationRegistry(id);
             }
             this.EndTable();
 
@@ -247,7 +254,7 @@ namespace netDxf.IO
             foreach (Block block in this.doc.Blocks.Items)
             {
                 Layout layout = null;
-                if (block.Name.StartsWith("*Paper_Space"))
+                if (block.Name.StartsWith(Block.DefaultPaperSpaceName))
                 {
                     // the entities of the layouts associated with the blocks "*Paper_Space0", "*Paper_Space1",... are included in the Blocks Section
                     string index = block.Name.Remove(0, 12);
@@ -273,7 +280,7 @@ namespace netDxf.IO
                         this.WriteEntity(o as EntityObject, layout);
                     }
                 }
-                else if (layout.AssociatedBlock.Name.StartsWith("*Paper_Space"))
+                else if (layout.AssociatedBlock.Name.StartsWith(Block.DefaultPaperSpaceName))
                 {
                     // only the entities of the layout associated with the block "*Paper_Space" are included in the Entities Section
                     string index = layout.AssociatedBlock.Name.Remove(0, 12);
@@ -341,9 +348,9 @@ namespace netDxf.IO
         /// <summary>
         /// Open the dxf writer.
         /// </summary>
-        private void Open(Stream stream, Encoding encoding, bool isBinary)
+        private void Open(Stream stream, Encoding encoding)
         {
-            if (isBinary)
+            if (this.isBinary)
                 this.chunk = new BinaryCodeValueWriter(encoding == null ? new BinaryWriter(stream) : new BinaryWriter(stream, encoding));
             else
                 this.chunk = new TextCodeValueWriter(encoding == null ? new StreamWriter(stream) : new StreamWriter(stream, encoding));
@@ -809,7 +816,7 @@ namespace netDxf.IO
         /// Writes a new extended data application registry to the table section.
         /// </summary>
         /// <param name="appReg">Name of the application registry.</param>
-        private void RegisterApplication(ApplicationRegistry appReg)
+        private void WriteApplicationRegistry(ApplicationRegistry appReg)
         {
             Debug.Assert(this.activeTable == DxfObjectCode.ApplicationIDTable);
 
@@ -1024,7 +1031,30 @@ namespace netDxf.IO
             this.chunk.Write(280, blockRecord.AllowExploding ? (short) 1 : (short) 0);
             this.chunk.Write(281, blockRecord.ScaleUniformly ? (short) 1 : (short) 0);
 
+            this.AddBlockRecordUnitsXData(blockRecord);
             this.WriteXData(blockRecord.XData);
+        }
+
+        private void AddBlockRecordUnitsXData(BlockRecord record)
+        {
+            // for dxf versions prior to AutoCad2007 the block record units is stored in an extended data block
+            XData xdataEntry;
+            if (record.XData.ContainsAppId(ApplicationRegistry.DefaultName))
+            {
+                xdataEntry = record.XData[ApplicationRegistry.DefaultName];
+                xdataEntry.XDataRecord.Clear();
+            }
+            else
+            {
+                xdataEntry = new XData(new ApplicationRegistry(ApplicationRegistry.DefaultName));
+                record.XData.Add(xdataEntry);
+            }
+
+            xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.String, "DesignCenter Data"));
+            xdataEntry.XDataRecord.Add(XDataRecord.OpenControlString);
+            xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short)1));
+            xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short)record.Units));
+            xdataEntry.XDataRecord.Add(XDataRecord.CloseControlString);
         }
 
         /// <summary>
@@ -1260,6 +1290,9 @@ namespace netDxf.IO
         {
             Debug.Assert(this.activeSection == DxfObjectCode.EntitiesSection || this.activeSection == DxfObjectCode.BlocksSection);
 
+            // hatches with zero boundaries are not allowed
+            if (entity.Type == EntityType.Hatch && ((Hatch)entity).BoundaryPaths.Count == 0) return;
+
             this.WriteEntityCommonCodes(entity, layout);
 
             switch (entity.Type)
@@ -1290,6 +1323,9 @@ namespace netDxf.IO
                     break;
                 case EntityType.Solid:
                     this.WriteSolid((Solid) entity);
+                    break;
+                case EntityType.Trace:
+                    this.WriteTrace((Trace)entity);
                     break;
                 case EntityType.Insert:
                     this.WriteInsert((Insert) entity);
@@ -1343,10 +1379,13 @@ namespace netDxf.IO
             this.chunk.Write(0, entity.CodeName);
             this.chunk.Write(5, entity.Handle);
 
-            if (entity.Reactor != null)
+            if (entity.Reactors.Count > 0)
             {
                 this.chunk.Write(102, "{ACAD_REACTORS");
-                this.chunk.Write(330, entity.Reactor.Handle);
+                foreach (DxfObject o in entity.Reactors)
+                {
+                    this.chunk.Write(330, o.Handle);
+                }               
                 this.chunk.Write(102, "}");
             }
 
@@ -1520,21 +1559,22 @@ namespace netDxf.IO
         {
             this.chunk.Write(100, SubclassMarker.Solid);
 
+            // the vertexes are stored in OCS
             this.chunk.Write(10, solid.FirstVertex.X);
             this.chunk.Write(20, solid.FirstVertex.Y);
-            this.chunk.Write(30, solid.FirstVertex.Z);
+            this.chunk.Write(30, solid.Elevation);
 
             this.chunk.Write(11, solid.SecondVertex.X);
             this.chunk.Write(21, solid.SecondVertex.Y);
-            this.chunk.Write(31, solid.SecondVertex.Z);
+            this.chunk.Write(31, solid.Elevation);
 
             this.chunk.Write(12, solid.ThirdVertex.X);
             this.chunk.Write(22, solid.ThirdVertex.Y);
-            this.chunk.Write(32, solid.ThirdVertex.Z);
+            this.chunk.Write(32, solid.Elevation);
 
             this.chunk.Write(13, solid.FourthVertex.X);
             this.chunk.Write(23, solid.FourthVertex.Y);
-            this.chunk.Write(33, solid.FourthVertex.Z);
+            this.chunk.Write(33, solid.Elevation);
 
             this.chunk.Write(39, solid.Thickness);
 
@@ -1543,6 +1583,36 @@ namespace netDxf.IO
             this.chunk.Write(230, solid.Normal.Z);
 
             this.WriteXData(solid.XData);
+        }
+
+        private void WriteTrace(Trace trace)
+        {
+            this.chunk.Write(100, SubclassMarker.Trace);
+
+            // the vertexes are stored in OCS
+            this.chunk.Write(10, trace.FirstVertex.X);
+            this.chunk.Write(20, trace.FirstVertex.Y);
+            this.chunk.Write(30, trace.Elevation);
+
+            this.chunk.Write(11, trace.SecondVertex.X);
+            this.chunk.Write(21, trace.SecondVertex.Y);
+            this.chunk.Write(31, trace.Elevation);
+
+            this.chunk.Write(12, trace.ThirdVertex.X);
+            this.chunk.Write(22, trace.ThirdVertex.Y);
+            this.chunk.Write(32, trace.Elevation);
+
+            this.chunk.Write(13, trace.FourthVertex.X);
+            this.chunk.Write(23, trace.FourthVertex.Y);
+            this.chunk.Write(33, trace.Elevation);
+
+            this.chunk.Write(39, trace.Thickness);
+
+            this.chunk.Write(210, trace.Normal.X);
+            this.chunk.Write(220, trace.Normal.Y);
+            this.chunk.Write(230, trace.Normal.Z);
+
+            this.WriteXData(trace.XData);
         }
 
         private void WriteFace3D(Face3d face)
@@ -1582,7 +1652,7 @@ namespace netDxf.IO
             // the next two codes are purely cosmetic and writing them causes more bad than good.
             // internally AutoCad allows for an INT number of knots and control points,
             // but for some dumb decision Autodesk decided to define them in the dxf with codes 72 and 73 (16-bit integer value), this is a SHORT in net.
-            // I guess this is the result of legacy code, AutoCad do not use those values when importing the Spline entity
+            // I guess this is the result of legacy code, AutoCad do not use those values when importing Spline entities
             //this.chunk.Write(72, (short)spline.Knots.Length);
             //this.chunk.Write(73, (short)spline.ControlPoints.Count);
 
@@ -1591,7 +1661,6 @@ namespace netDxf.IO
             //this.chunk.Write(42, 0); 42 Knot tolerance (default = 0.0000001)
             //this.chunk.Write(43, 0); 43 Control-point tolerance (default = 0.0000001)
             //this.chunk.Write(44, 0); 44 Fit tolerance (default = 0.0000000001)
-
 
             foreach (double knot in spline.Knots)
                 this.chunk.Write(40, knot);
@@ -1641,7 +1710,7 @@ namespace netDxf.IO
 
                 this.WriteXData(insert.XData);
 
-                foreach (Attribute attrib in insert.Attributes.Values)
+                foreach (Attribute attrib in insert.Attributes)
                     this.WriteAttribute(attrib);
 
                 this.chunk.Write(0, insert.EndSequence.CodeName);
@@ -2065,7 +2134,10 @@ namespace netDxf.IO
 
             this.chunk.Write(70, (short) hatch.Pattern.Fill);
 
-            this.chunk.Write(71, (short) 0);
+            if(hatch.Associative)
+                this.chunk.Write(71, (short)1);
+            else
+                this.chunk.Write(71, (short)0);
 
             // boundary paths info
             this.WriteHatchBoundaryPaths(hatch.BoundaryPaths);
@@ -2073,10 +2145,59 @@ namespace netDxf.IO
             // pattern info
             this.WriteHatchPattern(hatch.Pattern);
 
+            // add the required extended data entries to the hatch XData
+            this.AddHatchPatternXData(hatch);
             this.WriteXData(hatch.XData);
         }
 
-        private void WriteHatchBoundaryPaths(List<HatchBoundaryPath> boundaryPaths)
+        private void AddHatchPatternXData(Hatch hatch)
+        {
+            XData xdataEntry;
+            if (hatch.XData.ContainsAppId(ApplicationRegistry.DefaultName))
+            {
+                xdataEntry = hatch.XData[ApplicationRegistry.DefaultName];
+                xdataEntry.XDataRecord.Clear();
+            }
+            else
+            {
+                xdataEntry = new XData(new ApplicationRegistry(ApplicationRegistry.DefaultName));
+                hatch.XData.Add(xdataEntry);
+            }
+            xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.RealX, hatch.Pattern.Origin.X));
+            xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.RealY, hatch.Pattern.Origin.Y));
+            xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.RealZ, 0.0));
+
+
+            HatchGradientPattern grad = hatch.Pattern as HatchGradientPattern;
+            if (grad == null) return;
+          
+            if (hatch.XData.ContainsAppId("GradientColor1ACI"))
+            {
+                xdataEntry = hatch.XData["GradientColor1ACI"];
+                xdataEntry.XDataRecord.Clear();
+            }
+            else
+            {
+                xdataEntry = new XData(new ApplicationRegistry("GradientColor1ACI"));
+                hatch.XData.Add(xdataEntry);
+            }
+            xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, grad.Color1.Index));
+
+
+            if (hatch.XData.ContainsAppId("GradientColor2ACI"))
+            {
+                xdataEntry = hatch.XData["GradientColor2ACI"];
+                xdataEntry.XDataRecord.Clear();
+            }
+            else
+            {
+                xdataEntry = new XData(new ApplicationRegistry("GradientColor2ACI"));
+                hatch.XData.Add(xdataEntry);
+            }
+            xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, grad.Color2.Index));
+        }
+
+        private void WriteHatchBoundaryPaths(ObservableCollection<HatchBoundaryPath> boundaryPaths)
         {
             this.chunk.Write(91, boundaryPaths.Count);
 
@@ -2091,7 +2212,11 @@ namespace netDxf.IO
                 foreach (HatchBoundaryPath.Edge entity in path.Edges)
                     this.WriteHatchBoundaryPathData(entity);
 
-                this.chunk.Write(97, 0); // associative hatches not supported
+                this.chunk.Write(97, path.Entities.Count);
+                foreach (EntityObject entity in path.Entities)
+                {
+                    this.chunk.Write(330, entity.Handle);
+                }
             }
         }
 

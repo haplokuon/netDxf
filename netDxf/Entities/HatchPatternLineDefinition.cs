@@ -19,21 +19,24 @@
 //  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #endregion
 
+using System;
 using System.Collections.Generic;
+using netDxf.Tables;
 
 namespace netDxf.Entities
 {
     /// <summary>
     /// Defines a single line thats is part of a <see cref="HatchPattern">hatch pattern</see>.
     /// </summary>
-    public class HatchPatternLineDefinition
+    public class HatchPatternLineDefinition :
+        ICloneable
     {
         #region private fields
 
         private double angle;
         private Vector2 origin;
         private Vector2 delta;
-        private List<double> dashPattern;
+        private readonly List<double> dashPattern;
 
         #endregion
 
@@ -86,7 +89,7 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets or sets the dash patter of the line it is equivalent as the segments of a <see cref="netDxf.Tables.LineType">LineType</see>.
+        /// Gets he dash pattern of the line it is equivalent as the segments of a <see cref="LineType">LineType</see>.
         /// </summary>
         /// <remarks>
         /// Positive values means solid segments and negative values means spaces (one entry per element).
@@ -94,9 +97,23 @@ namespace netDxf.Entities
         public List<double> DashPattern
         {
             get { return this.dashPattern; }
-            set { this.dashPattern = value; }
         }
 
         #endregion
+
+        public object Clone()
+        {
+            HatchPatternLineDefinition copy = new HatchPatternLineDefinition
+            {
+                Angle = this.angle,
+                Origin = this.origin,
+                Delta = this.delta,
+            };
+
+            foreach (double dash in this.dashPattern)
+                copy.DashPattern.Add(dash);
+
+            return copy;
+        }
     }
 }

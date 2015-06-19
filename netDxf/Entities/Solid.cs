@@ -31,77 +31,54 @@ namespace netDxf.Entities
     {
         #region private fields
 
-        private Vector3 firstVertex;
-        private Vector3 secondVertex;
-        private Vector3 thirdVertex;
-        private Vector3 fourthVertex;
+        private Vector2 firstVertex;
+        private Vector2 secondVertex;
+        private Vector2 thirdVertex;
+        private Vector2 fourthVertex;
+        private double elevation;
         private double thickness;
 
         #endregion
 
         #region constructors
+
         /// <summary>
         /// Initializes a new instance of the <c>Solid</c> class.
         /// </summary>
         public Solid()
-            : this(Vector3.Zero, Vector3.Zero, Vector3.Zero, Vector3.Zero)
+            : this(Vector2.Zero, Vector2.Zero, Vector2.Zero, Vector2.Zero)
         {
         }
 
         /// <summary>
         /// Initializes a new instance of the <c>Solid</c> class.
         /// </summary>
-        /// <param name="firstVertex">Solid <see cref="Vector2">first vertex</see>.</param>
-        /// <param name="secondVertex">Solid <see cref="Vector2">second vertex</see>.</param>
-        /// <param name="thirdVertex">Solid <see cref="Vector2">third vertex</see>.</param>
+        /// <param name="firstVertex">Solid <see cref="Vector2">first vertex</see> in OCS (object coordinate system).</param>
+        /// <param name="secondVertex">Solid <see cref="Vector2">second vertex</see> in OCS (object coordinate system).</param>
+        /// <param name="thirdVertex">Solid <see cref="Vector2">third vertex</see> in OCS (object coordinate system).</param>
         public Solid(Vector2 firstVertex, Vector2 secondVertex, Vector2 thirdVertex)
-            : this(new Vector3(firstVertex.X, firstVertex.Y, 0.0),
-                   new Vector3(secondVertex.X, secondVertex.Y, 0.0),
-                   new Vector3(thirdVertex.X, thirdVertex.Y, 0.0),
-                   new Vector3(thirdVertex.X, thirdVertex.Y, 0.0))
+            : this(new Vector2(firstVertex.X, firstVertex.Y),
+                   new Vector2(secondVertex.X, secondVertex.Y),
+                   new Vector2(thirdVertex.X, thirdVertex.Y),
+                   new Vector2(thirdVertex.X, thirdVertex.Y))
         {
         }
 
         /// <summary>
         /// Initializes a new instance of the <c>Solid</c> class.
         /// </summary>
-        /// <param name="firstVertex">Solid <see cref="Vector2">first vertex</see>.</param>
-        /// <param name="secondVertex">Solid <see cref="Vector2">second vertex</see>.</param>
-        /// <param name="thirdVertex">Solid <see cref="Vector2">third vertex</see>.</param>
-        /// <param name="fourthVertex">Solid <see cref="Vector2">fourth vertex</see>.</param>
+        /// <param name="firstVertex">Solid <see cref="Vector2">first vertex</see> in OCS (object coordinate system).</param>
+        /// <param name="secondVertex">Solid <see cref="Vector2">second vertex</see> in OCS (object coordinate system).</param>
+        /// <param name="thirdVertex">Solid <see cref="Vector2">third vertex</see> in OCS (object coordinate system).</param>
+        /// <param name="fourthVertex">Solid <see cref="Vector2">fourth vertex</see> in OCS (object coordinate system).</param>
         public Solid(Vector2 firstVertex, Vector2 secondVertex, Vector2 thirdVertex, Vector2 fourthVertex)
-            : this(new Vector3(firstVertex.X, firstVertex.Y, 0.0),
-                   new Vector3(secondVertex.X, secondVertex.Y, 0.0),
-                   new Vector3(thirdVertex.X, thirdVertex.Y, 0.0),
-                   new Vector3(fourthVertex.X, fourthVertex.Y, 0.0))
-        {
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <c>Solid</c> class.
-        /// </summary>
-        /// <param name="firstVertex">Solid <see cref="Vector3">first vertex</see>.</param>
-        /// <param name="secondVertex">Solid <see cref="Vector3">second vertex</see>.</param>
-        /// <param name="thirdVertex">Solid <see cref="Vector3">third vertex</see>.</param>
-        public Solid(Vector3 firstVertex, Vector3 secondVertex, Vector3 thirdVertex)
-            : this(firstVertex, secondVertex, thirdVertex, thirdVertex)
-        {           
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <c>Solid</c> class.
-        /// </summary>
-        /// <param name="firstVertex">Solid <see cref="Vector3">first vertex</see>.</param>
-        /// <param name="secondVertex">Solid <see cref="Vector3">second vertex</see>.</param>
-        /// <param name="thirdVertex">Solid <see cref="Vector3">third vertex</see>.</param>
-        /// <param name="fourthVertex">Solid <see cref="Vector3">fourth vertex</see>.</param>
-        public Solid(Vector3 firstVertex, Vector3 secondVertex, Vector3 thirdVertex, Vector3 fourthVertex)
             : base(EntityType.Solid, DxfObjectCode.Solid)
         {
             this.firstVertex = firstVertex;
             this.secondVertex = secondVertex;
             this.thirdVertex = thirdVertex;
             this.fourthVertex = fourthVertex;
+            this.elevation = 0.0;
             this.thickness = 0.0;
         }
 
@@ -110,39 +87,49 @@ namespace netDxf.Entities
         #region public properties
 
         /// <summary>
-        /// Gets or sets the first solid <see cref="Vector3">vertex</see>.
+        /// Gets or sets the first solid <see cref="Vector2">vertex in OCS (object coordinate system).</see>.
         /// </summary>
-        public Vector3 FirstVertex
+        public Vector2 FirstVertex
         {
             get { return this.firstVertex; }
             set { this.firstVertex = value; }
         }
 
         /// <summary>
-        /// Gets or sets the second solid <see cref="Vector3">vertex</see>.
+        /// Gets or sets the second solid <see cref="Vector2">vertex in OCS (object coordinate system).</see>.
         /// </summary>
-        public Vector3 SecondVertex
+        public Vector2 SecondVertex
         {
             get { return this.secondVertex; }
             set { this.secondVertex = value; }
         }
 
         /// <summary>
-        /// Gets or sets the third solid <see cref="Vector3">vertex</see>.
+        /// Gets or sets the third solid <see cref="Vector2">vertex in OCS (object coordinate system).</see>.
         /// </summary>
-        public Vector3 ThirdVertex
+        public Vector2 ThirdVertex
         {
             get { return this.thirdVertex; }
             set { this.thirdVertex = value; }
         }
 
         /// <summary>
-        /// Gets or sets the fourth solid <see cref="Vector3">vertex</see>.
+        /// Gets or sets the fourth solid <see cref="Vector2">vertex in OCS (object coordinate system).</see>.
         /// </summary>
-        public Vector3 FourthVertex
+        public Vector2 FourthVertex
         {
             get { return this.fourthVertex; }
             set { this.fourthVertex = value; }
+        }
+
+        /// <summary>
+        /// Gets or sets the solid elevation.
+        /// </summary>
+        /// <remarks>This is the distance from the origin to the plane of the solid.</remarks>
+        public double Elevation
+        {
+            get { return this.elevation; }
+            set { this.elevation = value; }
         }
 
         /// <summary>
@@ -190,6 +177,5 @@ namespace netDxf.Entities
         }
 
         #endregion
-
     }
 }

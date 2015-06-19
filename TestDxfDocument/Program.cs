@@ -17,7 +17,7 @@ using Group = netDxf.Objects.Group;
 using Point = netDxf.Entities.Point;
 using Attribute = netDxf.Entities.Attribute;
 using Image = netDxf.Entities.Image;
-
+using Trace = netDxf.Entities.Trace;
 
 namespace TestDxfDocument
 {
@@ -32,6 +32,14 @@ namespace TestDxfDocument
             string file = "sample.dxf";
             //DxfDocument doc = Test(file, "output.log");
             DxfDocument doc = Test(file);
+
+            #region Samples for new and modified features 1.0.2
+
+            AssociativeHatches();
+            TraceEntity();
+            SolidEntity();
+
+            #endregion
 
             #region Samples for new and modified features 1.0.0
 
@@ -158,6 +166,128 @@ namespace TestDxfDocument
             //WritePolyline3d();
             //WriteInsert();
         }
+
+        #region Samples for new and modified features 1.0.2
+
+        private static void AssociativeHatches()
+        {
+            //DxfDocument dxf = new DxfDocument(DxfVersion.AutoCad2010);
+
+            //LwPolyline poly = new LwPolyline();
+            //poly.Vertexes.Add(new LwPolylineVertex(-10, -10));
+            //poly.Vertexes.Add(new LwPolylineVertex(10, -10));
+            //poly.Vertexes.Add(new LwPolylineVertex(10, 10));
+            //poly.Vertexes.Add(new LwPolylineVertex(-10, 10));
+            //poly.IsClosed = true;
+            //dxf.AddEntity(poly);
+
+            //HatchBoundaryPath boundary = new HatchBoundaryPath(new List<EntityObject> {poly});
+            //HatchPattern pattern = HatchPattern.Line;
+            //pattern.Scale = 10;
+            //pattern.Angle = 45;
+            //Hatch hatch = new Hatch(pattern, true);
+            //hatch.BoundaryPaths.Add(boundary);
+            //dxf.AddEntity(hatch);
+            //dxf.Save("Hatch.dxf");
+
+
+            DxfDocument dxf = new DxfDocument(DxfVersion.AutoCad2010);
+
+            LwPolyline poly = new LwPolyline();
+            poly.Vertexes.Add(new LwPolylineVertex(-10, -10));
+            poly.Vertexes.Add(new LwPolylineVertex(10, -10));
+            poly.Vertexes.Add(new LwPolylineVertex(10, 10));
+            poly.Vertexes.Add(new LwPolylineVertex(-10, 10));
+            // optionally you can the normal of the polyline, by default it is the UnitZ vector
+            //poly.Normal = new Vector3(1.0);
+            poly.IsClosed = true;
+
+
+            HatchBoundaryPath boundary = new HatchBoundaryPath(new List<EntityObject> { poly });
+            HatchPattern pattern = HatchPattern.Line;
+            pattern.Scale = 10;
+            pattern.Angle = 45;
+
+            // the hatch boundary can be set in the hatch constructor or it can be added later
+            //Hatch hatch = new Hatch(pattern, new[]{boundary}, true);
+
+            Hatch hatch = new Hatch(pattern, true);
+            // you will need to manually set the hatch normal to the boundary normal if it is not the UnitZ,
+            // to work properly all boundary entities must belong to the same plane
+            //hatch.Normal = poly.Normal;
+
+            // the hatch boundary can be set in the hatch constructor or it can be added later, remember hatches with no boundaries will not be saved
+            hatch.BoundaryPaths.Add(boundary);
+            Circle circle = new Circle(Vector2.Zero, 5);
+            // all boundary entities should have the same normal, by default it is the UnitZ
+            // the hatch will not handle the normals of the different boundary path, you will have to make sure they all lay on the same plane
+            //circle.Normal = poly.Normal;
+
+            hatch.BoundaryPaths.Add(new HatchBoundaryPath(new List<EntityObject> { circle }));
+            // when an associative hatch is added to a document the referenced boundary entities will be added too
+            dxf.AddEntity(hatch);
+            dxf.Save("Hatch.dxf");
+
+
+            DxfDocument dxf2 = DxfDocument.Load("Hatch.dxf");
+            // you can remove boundaries from a hatch
+            dxf2.Hatches[0].BoundaryPaths.Remove(dxf2.Hatches[0].BoundaryPaths[1]);
+            dxf2.Save("Hatch remove boundary.dxf");
+
+
+            DxfDocument dxf3 = DxfDocument.Load("Hatch.dxf");
+            // unlinking the boundary entities from a hatch will not automatically remove them from the document, you can use the returned list to delete them
+            // unlinking the boundary will make the hatch non-associative 
+            List<EntityObject> oldBoundary = dxf3.Hatches[0].UnLinkBoundary();
+            dxf3.RemoveEntity(oldBoundary);
+
+            // we can recreate the hatch boundary and optionally linking it, thus making it associative,
+            // if the hatch is associative and belongs to a document the new entities will also be automatically added to the same document
+            List<EntityObject> newBoundary = dxf3.Hatches[0].CreateBoundary(true);
+
+            dxf3.Save("Hatch new contour.dxf");
+        }
+
+        private static void TraceEntity()
+        {
+            // The Trace entity behaves exactly as the Solid, they have the same properties and have the same graphical representation.
+            // They are a different entity since in AutoCad they show as two distinct types of objects.
+            // In any case, it is recommended to always use the Solid in its place.
+            Vector2 a = new Vector2(-1, -1);
+            Vector2 b = new Vector2(1, -1);
+            Vector2 c = new Vector2(-1, 1);
+            Vector2 d = new Vector2(1, 1);
+
+            Trace trace = new Trace(a, b, c, d);
+            trace.Normal = new Vector3(1, 1, 0);
+            trace.Elevation = 2;
+
+            DxfDocument doc = new DxfDocument();
+            doc.AddEntity(trace);
+            doc.Save("TraceEntity.dxf");
+        }
+
+        private static void SolidEntity()
+        {
+            // The solid vertexes are expressed in OCS (object coordinate system)
+            // Now they are stored as Vector2 to force all vertexes to lay on a plane, this is similar as how the LwPolyline works.
+            // The Z coordinate is controlled by the elevation property of the Solid.
+            Vector2 a = new Vector2(-1, -1);
+            Vector2 b = new Vector2(1, -1);
+            Vector2 c = new Vector2(-1, 1);
+            Vector2 d = new Vector2(1, 1);
+
+            Solid solid = new Solid(a, b, c, d);
+            solid.Normal = new Vector3(1, 1, 0);
+
+            solid.Elevation = 2;
+
+            DxfDocument doc = new DxfDocument();
+            doc.AddEntity(solid);
+            doc.Save("SolidEntity.dxf");
+        }
+
+        #endregion
 
         #region Samples for new and modified features 1.0.0
 
@@ -671,11 +801,11 @@ namespace TestDxfDocument
             dxf.AddEntity(dim6);
             dxf.Save("dimension drawing.dxf");
 
-            DxfDocument dwg = DxfDocument.Load("dimension drawing.dxf");
-            dwg.Save("dimension drawing saved.dxf");
+            //DxfDocument dwg = DxfDocument.Load("dimension drawing.dxf");
+            //dwg.Save("dimension drawing saved.dxf");
 
-            Console.WriteLine("Press a key...");
-            Console.ReadKey();
+            //Console.WriteLine("Press a key...");
+            //Console.ReadKey();
         }
         
         private static void AlignedDimension()
@@ -717,12 +847,13 @@ namespace TestDxfDocument
             dxf.AddEntity(dim2);
             dxf.AddEntity(dim21);
 
-            Console.WriteLine("Press a key...");
-            Console.ReadKey();
             dxf.Save("dimension drawing.dxf");
 
-            DxfDocument dwg = DxfDocument.Load("dimension drawing.dxf");
-            dwg.Save("dimension drawing saved.dxf");
+            //Console.WriteLine("Press a key...");
+            //Console.ReadKey();
+
+            //DxfDocument dwg = DxfDocument.Load("dimension drawing.dxf");
+            //dwg.Save("dimension drawing saved.dxf");
 
             
         }
@@ -1150,7 +1281,7 @@ namespace TestDxfDocument
             ICollection<string> tags = block.AttributeDefinitions.Tags;
 
             // we can assign values to the insert attributes
-            foreach (Attribute att in insert.Attributes.Values)
+            foreach (Attribute att in insert.Attributes)
             {
                 att.Value = string.Format("{0} value", att.Tag);
             }
@@ -1647,7 +1778,7 @@ namespace TestDxfDocument
             // This information is subject to change in the future to become a list, an entity can be attached to multiple objects;
             // but at the moment only the viewport clipping boundary make use of this.
             // This is the way AutoCad also handles hatch and dimension associativity, that I might implement in the future
-            DxfObject reactor = ellipse.Reactor; // in this case reactor points to viewport2
+            DxfObject reactor = ellipse.Reactors[0]; // in this case reactor points to viewport2
 
             // You need to delete the viewport instead. This deletes the viewport and the ellipse
             //dxf.RemoveEntity(viewport2);
@@ -1757,7 +1888,7 @@ namespace TestDxfDocument
             insert1.TransformAttributes();
             
             // Once the insert has been created we can modify the attributes properties, the list cannot be modified only the items stored in it
-            insert1.Attributes[attdef.Tag].Value = 24;
+            insert1.Attributes[0].Value = 24;
 
             // Modifying directly the layer might not get the desired results. Create one or get one from the layers table, modify it and assign it to the insert
             // One thing to note, if there is already a layer with the same name, the existing one in the layers table will override the new one, when the entity is added to the document.
@@ -1780,7 +1911,7 @@ namespace TestDxfDocument
             Insert insert2 = new Insert(block, new Vector3(10, 5, 0));
 
             // as before now we can change the insert2 attribute value
-            insert2.Attributes[attdef.Tag].Value = 34;
+            insert2.Attributes[0].Value = 34;
 
             // additionally we can insert extended data information
             XData xdata1 = new XData(new ApplicationRegistry("netDxf"));
@@ -1942,7 +2073,7 @@ namespace TestDxfDocument
                     if (ins != null)
                     {
                         Debug.Assert(ReferenceEquals(ins.Block, dxf.Blocks[ins.Block.Name]), "Object reference not equal.");
-                        foreach (var a in ins.Attributes.Values)
+                        foreach (var a in ins.Attributes)
                         {
                             Debug.Assert(ReferenceEquals(a.Layer, dxf.Layers[a.Layer.Name]), "Object reference not equal.");
                             Debug.Assert(ReferenceEquals(a.LineType, dxf.LineTypes[a.LineType.Name]), "Object reference not equal.");
@@ -2007,7 +2138,7 @@ namespace TestDxfDocument
                     if (ins != null)
                     {
                         Debug.Assert(ReferenceEquals(ins.Block, dxf.Blocks[ins.Block.Name]), "Object reference not equal.");
-                        foreach (var a in ins.Attributes.Values)
+                        foreach (var a in ins.Attributes)
                         {
                             Debug.Assert(ReferenceEquals(a.Layer, dxf.Layers[a.Layer.Name]), "Object reference not equal.");
                             Debug.Assert(ReferenceEquals(a.LineType, dxf.LineTypes[a.LineType.Name]), "Object reference not equal.");
@@ -2283,7 +2414,7 @@ namespace TestDxfDocument
                     if (ins != null)
                     {
                         Debug.Assert(ReferenceEquals(ins.Block, dxf.Blocks[ins.Block.Name]), "Object reference not equal.");
-                        foreach (var a in ins.Attributes.Values)
+                        foreach (var a in ins.Attributes)
                         {
                             Debug.Assert(ReferenceEquals(a.Layer, dxf.Layers[a.Layer.Name]), "Object reference not equal.");
                             Debug.Assert(ReferenceEquals(a.LineType, dxf.LineTypes[a.LineType.Name]), "Object reference not equal.");
@@ -2348,7 +2479,7 @@ namespace TestDxfDocument
                     if (ins != null)
                     {
                         Debug.Assert(ReferenceEquals(ins.Block, dxf.Blocks[ins.Block.Name]), "Object reference not equal.");
-                        foreach (var a in ins.Attributes.Values)
+                        foreach (var a in ins.Attributes)
                         {
                             Debug.Assert(ReferenceEquals(a.Layer, dxf.Layers[a.Layer.Name]), "Object reference not equal.");
                             Debug.Assert(ReferenceEquals(a.LineType, dxf.LineTypes[a.LineType.Name]), "Object reference not equal.");
@@ -2676,7 +2807,7 @@ namespace TestDxfDocument
                 {
                     new HatchBoundaryPath(new List<EntityObject> {poly})
                 };
-            Hatch hatch = new Hatch(pattern, boundary);
+            Hatch hatch = new Hatch(pattern, boundary, true);
             
             DxfDocument dxf = new DxfDocument();
             dxf.AddEntity(poly);
@@ -2812,8 +2943,8 @@ namespace TestDxfDocument
 
             Insert insert = new Insert(block, new Vector2(5, 5));
             insert.Layer = layer3;
-            insert.Attributes[attdef.Tag].Layer = new Layer("attLayer");
-            insert.Attributes[attdef.Tag].LineType = LineType.Dashed;
+            insert.Attributes[0].Layer = new Layer("attLayer");
+            insert.Attributes[0].LineType = LineType.Dashed;
             dxf.AddEntity(insert);
 
             dxf.Save("test.dxf");
@@ -2874,7 +3005,7 @@ namespace TestDxfDocument
             block.AttributeDefinitions.Add(attdef);
 
             Insert insert = new Insert(block, new Vector2(5, 5));
-            insert.Attributes[attdef.Tag].Style = new TextStyle("Arial.ttf");
+            insert.Attributes[0].Style = new TextStyle("Arial.ttf");
 
             dxf.AddEntity(insert);
 
@@ -3125,8 +3256,8 @@ namespace TestDxfDocument
             Line line3 = new Line(new Vector2(150, 150), new Vector2(150, 0));
             Line line4 = new Line(new Vector2(150, 0), new Vector2(0, 0));
 
-
-            HatchGradientPattern gradient = new HatchGradientPattern(AciColor.Red, AciColor.Blue, HatchGradientPatternType.Linear);
+            AciColor color = new AciColor(63, 79, 127);
+            HatchGradientPattern gradient = new HatchGradientPattern(color, AciColor.Blue, HatchGradientPatternType.Linear);
             //HatchGradientPattern gradient = new HatchGradientPattern(AciColor.Red, 0.75, HatchGradientPatternType.Linear);
             gradient.Angle = 30;
 
@@ -3134,7 +3265,7 @@ namespace TestDxfDocument
                                                    {
                                                        new HatchBoundaryPath(new List<EntityObject> {pol})
                                                    };
-            Hatch hatch = new Hatch(gradient, boundary);
+            Hatch hatch = new Hatch(gradient, boundary, true);
             
             // gradients are only supported for AutoCad2004 and later
             DxfDocument dxf = new DxfDocument(DxfVersion.AutoCad2004);
@@ -3144,8 +3275,6 @@ namespace TestDxfDocument
             //DxfDocument dxf2 = DxfDocument.Load("gradient test.dxf");
 
             //dxf.DrawingVariables.AcadVer = DxfVersion.AutoCad2000;
-
-            //AciColor color = new AciColor(63, 79, 127);
 
             //dxf.Save("gradient test 2000.dxf");
 
@@ -3471,7 +3600,7 @@ namespace TestDxfDocument
 
             HatchBoundaryPath path = new HatchBoundaryPath(new List<EntityObject> {spline});
             boundary.Add(path);
-            Hatch hatch = new Hatch(HatchPattern.Line, boundary);
+            Hatch hatch = new Hatch(HatchPattern.Line, boundary, true);
             hatch.Pattern.Angle = 45;
             hatch.Pattern.Scale = 10;
 
@@ -3490,7 +3619,7 @@ namespace TestDxfDocument
             List<HatchBoundaryPath> boundary2 = new List<HatchBoundaryPath>();
             HatchBoundaryPath path2 = new HatchBoundaryPath(new List<EntityObject> { openSpline, line });
             boundary2.Add(path2);
-            Hatch hatch2 = new Hatch(HatchPattern.Line, boundary2);
+            Hatch hatch2 = new Hatch(HatchPattern.Line, boundary2, true);
             hatch2.Pattern.Angle = 45;
             hatch2.Pattern.Scale = 10;
 
@@ -3991,8 +4120,8 @@ namespace TestDxfDocument
                                                         };  
 
             // create the hatch in this case we will use the predefined Solid hatch pattern and our circle as the boundary path
-            Hatch hatch = new Hatch(HatchPattern.Solid, boundary);
-
+            //Hatch hatch = new Hatch(HatchPattern.Solid, boundary);
+            Hatch hatch = new Hatch(HatchPattern.Line, boundary, true);
             // to give a color to the hatch, we have to options:
 
             // create a new layer with a color for the hatch (in this case by default the hatch will have a ByLayer color)
@@ -4139,7 +4268,7 @@ namespace TestDxfDocument
             line2.DashPattern.Add(-4);
             pattern.LineDefinitions.Add(line2);
 
-            Hatch hatch = new Hatch(pattern, boundary);
+            Hatch hatch = new Hatch(pattern, boundary, true);
             hatch.Layer = new Layer("hatch")
             {
                 Color = AciColor.Red,
@@ -4205,7 +4334,7 @@ namespace TestDxfDocument
             List<HatchBoundaryPath> boundary = new List<HatchBoundaryPath>{
                                                                             new HatchBoundaryPath(new List<EntityObject>{line1, line2, line3, line4})
                                                                           };
-            Hatch hatch = new Hatch(HatchPattern.Line, boundary);
+            Hatch hatch = new Hatch(HatchPattern.Line, boundary, true);
             hatch.Layer = new Layer("hatch")
             {
                 Color = AciColor.Red,
@@ -4231,7 +4360,7 @@ namespace TestDxfDocument
             //dxf.AddEntity(line3);
             //dxf.AddEntity(line4);
             dxf.AddEntity(hatch);
-            dxf.AddEntity(hatch.CreateWCSBoundary());
+            dxf.AddEntity(hatch.CreateBoundary(true));
 
             dxf.Save("hatchTest.dxf");
         }
@@ -4268,7 +4397,7 @@ namespace TestDxfDocument
                                                                             new HatchBoundaryPath(new List<EntityObject>{poly2}),
                                                                             new HatchBoundaryPath(new List<EntityObject>{poly3}),
                                                                           };
-            Hatch hatch = new Hatch(HatchPattern.Net, boundary);
+            Hatch hatch = new Hatch(HatchPattern.Net, boundary, true);
             hatch.Layer = new Layer("hatch")
                               {
                                   Color = AciColor.Red,
@@ -4282,7 +4411,7 @@ namespace TestDxfDocument
             //dxf.AddEntity(poly2);
             //dxf.AddEntity(poly3);
             dxf.AddEntity(hatch);
-            dxf.AddEntity(hatch.CreateWCSBoundary());
+            dxf.AddEntity(hatch.CreateBoundary(true));
 
             dxf.Save("hatchTest1.dxf");
             dxf = DxfDocument.Load("hatchTest1.dxf");
@@ -4309,16 +4438,16 @@ namespace TestDxfDocument
                                                                             new HatchBoundaryPath(new List<EntityObject>{ellipse})
                                                                           };
 
-            Hatch hatch = new Hatch(HatchPattern.Line, boundary);
+            Hatch hatch = new Hatch(HatchPattern.Line, boundary, false);
             hatch.Pattern.Angle = 150;
             hatch.Pattern.Scale = 5;
-            hatch.Normal = new Vector3(1,1,1);
-            hatch.Elevation = 23;
+            //hatch.Normal = new Vector3(1,1,1);
+            //hatch.Elevation = 23;
             //dxf.AddEntity(poly);
             //dxf.AddEntity(circle);
             //dxf.AddEntity(ellipse);
             dxf.AddEntity(hatch);
-            dxf.AddEntity(hatch.CreateWCSBoundary());
+            hatch.CreateBoundary(true);
             dxf.Save("hatchTest2.dxf");
             dxf = DxfDocument.Load("hatchTest2.dxf");
             dxf.Save("hatchTest2 copy.dxf");
@@ -4345,22 +4474,23 @@ namespace TestDxfDocument
             poly2.Vertexes.Add(new LwPolylineVertex(0, -4));
             poly2.Vertexes.Add(new LwPolylineVertex(8, 0));
 
-            Arc arc = new Arc(Vector3.Zero,8,180,0);
-            Line line =new Line(new Vector3(8,0,0), new Vector3(-8,0,0));
+            //Arc arc = new Arc(Vector3.Zero,8,180,0);
+            //Line line =new Line(new Vector3(8,0,0), new Vector3(-8,0,0));
 
             List<HatchBoundaryPath> boundary = new List<HatchBoundaryPath>{
                                                                             new HatchBoundaryPath(new List<EntityObject>{poly}),
                                                                             new HatchBoundaryPath(new List<EntityObject>{poly2, ellipse})
                                                                           };
 
-            Hatch hatch = new Hatch(HatchPattern.Line, boundary);
+            Hatch hatch = new Hatch(HatchPattern.Line, boundary, true);
             hatch.Pattern.Angle = 45;
-            dxf.AddEntity(poly);
-            dxf.AddEntity(ellipse);
-            //dxf.AddEntity(arc);
-            //dxf.AddEntity(line);
-            dxf.AddEntity(poly2);
+            //dxf.AddEntity(poly);
+            //dxf.AddEntity(ellipse);
+            ////dxf.AddEntity(arc);
+            ////dxf.AddEntity(line);
+            //dxf.AddEntity(poly2);
             dxf.AddEntity(hatch);
+
 
             dxf.Save("hatchTest3.dxf");
         }
@@ -4379,9 +4509,9 @@ namespace TestDxfDocument
             //List<HatchBoundaryPath> boundary = new List<HatchBoundaryPath> {new HatchBoundaryPath(new List<Entity> {poly})};
             HatchGradientPattern pattern = new HatchGradientPattern(AciColor.Yellow, AciColor.Blue, HatchGradientPatternType.Linear);
             pattern.Origin = new Vector2(120, -365);
-            Hatch hatch = new Hatch(pattern, boundary);
+            Hatch hatch = new Hatch(pattern, boundary, true);
             dxf.AddEntity(hatch);
-            dxf.AddEntity(hatch.CreateWCSBoundary());
+            dxf.AddEntity(hatch.CreateBoundary(true));
             
             dxf.Save("HatchTest4.dxf");
             dxf = DxfDocument.Load("HatchTest4.dxf");
@@ -4431,16 +4561,17 @@ namespace TestDxfDocument
             dxf.Save("polyline.dxf");
 
         }
+
         private static void Solid()
         {
 
             DxfDocument dxf = new DxfDocument();
 
             Solid solid = new Solid();
-            solid.FirstVertex=new Vector3(0,0,0);
-            solid.SecondVertex  = new Vector3(1, 0, 0);
-            solid.ThirdVertex  = new Vector3(0, 1, 0);
-            solid.FourthVertex  = new Vector3(1, 1, 0);
+            solid.FirstVertex=new Vector2(0,0);
+            solid.SecondVertex  = new Vector2(1, 0);
+            solid.ThirdVertex  = new Vector2(0, 1);
+            solid.FourthVertex  = new Vector2(1, 1);
             dxf.AddEntity(solid);
 
             dxf.Save("solid.dxf");
@@ -4592,10 +4723,10 @@ namespace TestDxfDocument
             nestedBlock.AttributeDefinitions.Add(attdef);
 
             Insert nestedInsert = new Insert(nestedBlock, new Vector3(0, 0, 0)); // the position will be relative to the position of the insert that nest it
-            nestedInsert.Attributes[attdef.Tag].Value = 24;
+            nestedInsert.Attributes[0].Value = 24;
 
             Insert nestedInsert2 = new Insert(nestedBlock, new Vector3(-20, 0, 0)); // the position will be relative to the position of the insert that nest it
-            nestedInsert2.Attributes[attdef.Tag].Value = -20;
+            nestedInsert2.Attributes[0].Value = -20;
 
             Block block = new Block("MyBlock");
             block.Entities.Add(new Line(new Vector3(-5, -5, 0), new Vector3(5, 5, 0)));
@@ -4924,60 +5055,60 @@ namespace TestDxfDocument
 
             DxfDocument doc = DxfDocument.Load("Drawing1.dxf");
             Insert ins = doc.Inserts[0];
-            Console.WriteLine(ins.Attributes["MYATTDEF"].Position);
-            Console.WriteLine(ins.Attributes["MYATTDEF"].Rotation);
-            Console.WriteLine(ins.Attributes["MYATTDEF"].Normal);
-            Console.WriteLine(ins.Attributes["MYATTDEF"].Height);
-            Console.WriteLine(ins.Attributes["MYATTDEF"].WidthFactor);
-            Console.WriteLine(ins.Attributes["MYATTDEF"].ObliqueAngle);
+            Console.WriteLine(ins.Attributes[0].Position);
+            Console.WriteLine(ins.Attributes[0].Rotation);
+            Console.WriteLine(ins.Attributes[0].Normal);
+            Console.WriteLine(ins.Attributes[0].Height);
+            Console.WriteLine(ins.Attributes[0].WidthFactor);
+            Console.WriteLine(ins.Attributes[0].ObliqueAngle);
             Console.WriteLine("...");
             ins.TransformAttributes();
-            Console.WriteLine(ins.Attributes["MYATTDEF"].Position);
-            Console.WriteLine(ins.Attributes["MYATTDEF"].Rotation);
-            Console.WriteLine(ins.Attributes["MYATTDEF"].Normal);
-            Console.WriteLine(ins.Attributes["MYATTDEF"].Height);
-            Console.WriteLine(ins.Attributes["MYATTDEF"].WidthFactor);
-            Console.WriteLine(ins.Attributes["MYATTDEF"].ObliqueAngle);
+            Console.WriteLine(ins.Attributes[0].Position);
+            Console.WriteLine(ins.Attributes[0].Rotation);
+            Console.WriteLine(ins.Attributes[0].Normal);
+            Console.WriteLine(ins.Attributes[0].Height);
+            Console.WriteLine(ins.Attributes[0].WidthFactor);
+            Console.WriteLine(ins.Attributes[0].ObliqueAngle);
             Console.WriteLine("...");
             Console.WriteLine("...");
             Console.WriteLine("...");
             Console.WriteLine("...");
             DxfDocument doc2 = DxfDocument.Load("Drawing2.dxf");
             Insert ins2 = doc2.Inserts[0];
-            Console.WriteLine(ins2.Attributes["MYATTDEF"].Position);
-            Console.WriteLine(ins2.Attributes["MYATTDEF"].Rotation);
-            Console.WriteLine(ins2.Attributes["MYATTDEF"].Normal);
-            Console.WriteLine(ins2.Attributes["MYATTDEF"].Height);
-            Console.WriteLine(ins2.Attributes["MYATTDEF"].WidthFactor);
-            Console.WriteLine(ins2.Attributes["MYATTDEF"].ObliqueAngle);
+            Console.WriteLine(ins2.Attributes[0].Position);
+            Console.WriteLine(ins2.Attributes[0].Rotation);
+            Console.WriteLine(ins2.Attributes[0].Normal);
+            Console.WriteLine(ins2.Attributes[0].Height);
+            Console.WriteLine(ins2.Attributes[0].WidthFactor);
+            Console.WriteLine(ins2.Attributes[0].ObliqueAngle);
             Console.WriteLine("...");
             ins2.TransformAttributes();
-            Console.WriteLine(ins2.Attributes["MYATTDEF"].Position);
-            Console.WriteLine(ins2.Attributes["MYATTDEF"].Rotation);
-            Console.WriteLine(ins2.Attributes["MYATTDEF"].Normal);
-            Console.WriteLine(ins2.Attributes["MYATTDEF"].Height);
-            Console.WriteLine(ins2.Attributes["MYATTDEF"].WidthFactor);
-            Console.WriteLine(ins2.Attributes["MYATTDEF"].ObliqueAngle);
+            Console.WriteLine(ins2.Attributes[0].Position);
+            Console.WriteLine(ins2.Attributes[0].Rotation);
+            Console.WriteLine(ins2.Attributes[0].Normal);
+            Console.WriteLine(ins2.Attributes[0].Height);
+            Console.WriteLine(ins2.Attributes[0].WidthFactor);
+            Console.WriteLine(ins2.Attributes[0].ObliqueAngle);
             Console.WriteLine("...");
             Console.WriteLine("...");
             Console.WriteLine("...");
             Console.WriteLine("...");
             DxfDocument doc3 = DxfDocument.Load("Drawing3.dxf");
             Insert ins3 = doc3.Inserts[0];
-            Console.WriteLine(ins3.Attributes["MYATTDEF"].Position);
-            Console.WriteLine(ins3.Attributes["MYATTDEF"].Rotation);
-            Console.WriteLine(ins3.Attributes["MYATTDEF"].Normal);
-            Console.WriteLine(ins3.Attributes["MYATTDEF"].Height);
-            Console.WriteLine(ins3.Attributes["MYATTDEF"].WidthFactor);
-            Console.WriteLine(ins3.Attributes["MYATTDEF"].ObliqueAngle);
+            Console.WriteLine(ins3.Attributes[0].Position);
+            Console.WriteLine(ins3.Attributes[0].Rotation);
+            Console.WriteLine(ins3.Attributes[0].Normal);
+            Console.WriteLine(ins3.Attributes[0].Height);
+            Console.WriteLine(ins3.Attributes[0].WidthFactor);
+            Console.WriteLine(ins3.Attributes[0].ObliqueAngle);
             Console.WriteLine("...");
             ins3.TransformAttributes();
-            Console.WriteLine(ins3.Attributes["MYATTDEF"].Position);
-            Console.WriteLine(ins3.Attributes["MYATTDEF"].Rotation);
-            Console.WriteLine(ins3.Attributes["MYATTDEF"].Normal);
-            Console.WriteLine(ins3.Attributes["MYATTDEF"].Height);
-            Console.WriteLine(ins3.Attributes["MYATTDEF"].WidthFactor);
-            Console.WriteLine(ins3.Attributes["MYATTDEF"].ObliqueAngle);
+            Console.WriteLine(ins3.Attributes[0].Position);
+            Console.WriteLine(ins3.Attributes[0].Rotation);
+            Console.WriteLine(ins3.Attributes[0].Normal);
+            Console.WriteLine(ins3.Attributes[0].Height);
+            Console.WriteLine(ins3.Attributes[0].WidthFactor);
+            Console.WriteLine(ins3.Attributes[0].ObliqueAngle);
             Console.WriteLine("...");
             Console.ReadKey();
 
