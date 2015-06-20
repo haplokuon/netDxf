@@ -36,8 +36,8 @@ namespace TestDxfDocument
             #region Samples for new and modified features 1.0.2
 
             AssociativeHatches();
-            TraceEntity();
-            SolidEntity();
+            //TraceEntity();
+            //SolidEntity();
 
             #endregion
 
@@ -171,26 +171,6 @@ namespace TestDxfDocument
 
         private static void AssociativeHatches()
         {
-            //DxfDocument dxf = new DxfDocument(DxfVersion.AutoCad2010);
-
-            //LwPolyline poly = new LwPolyline();
-            //poly.Vertexes.Add(new LwPolylineVertex(-10, -10));
-            //poly.Vertexes.Add(new LwPolylineVertex(10, -10));
-            //poly.Vertexes.Add(new LwPolylineVertex(10, 10));
-            //poly.Vertexes.Add(new LwPolylineVertex(-10, 10));
-            //poly.IsClosed = true;
-            //dxf.AddEntity(poly);
-
-            //HatchBoundaryPath boundary = new HatchBoundaryPath(new List<EntityObject> {poly});
-            //HatchPattern pattern = HatchPattern.Line;
-            //pattern.Scale = 10;
-            //pattern.Angle = 45;
-            //Hatch hatch = new Hatch(pattern, true);
-            //hatch.BoundaryPaths.Add(boundary);
-            //dxf.AddEntity(hatch);
-            //dxf.Save("Hatch.dxf");
-
-
             DxfDocument dxf = new DxfDocument(DxfVersion.AutoCad2010);
 
             LwPolyline poly = new LwPolyline();
@@ -232,7 +212,15 @@ namespace TestDxfDocument
             DxfDocument dxf2 = DxfDocument.Load("Hatch.dxf");
             // you can remove boundaries from a hatch
             dxf2.Hatches[0].BoundaryPaths.Remove(dxf2.Hatches[0].BoundaryPaths[1]);
-            dxf2.Save("Hatch remove boundary.dxf");
+            // and add new ones
+            LwPolyline p = new LwPolyline();
+            p.Vertexes.Add(new LwPolylineVertex(-20, -20));
+            p.Vertexes.Add(new LwPolylineVertex(20, -20));
+            p.Vertexes.Add(new LwPolylineVertex(20, 20));
+            p.Vertexes.Add(new LwPolylineVertex(-20, 20));
+            p.IsClosed = true;
+            dxf2.Hatches[0].BoundaryPaths.Add(new HatchBoundaryPath(new List<EntityObject> { p }));
+            dxf2.Save("Hatch add and remove boundaries.dxf");
 
 
             DxfDocument dxf3 = DxfDocument.Load("Hatch.dxf");
@@ -246,6 +234,20 @@ namespace TestDxfDocument
             List<EntityObject> newBoundary = dxf3.Hatches[0].CreateBoundary(true);
 
             dxf3.Save("Hatch new contour.dxf");
+
+            DxfDocument dxf4 = DxfDocument.Load("Hatch.dxf");
+            // if the hatch is associative, it is possible to modify the entities that make the boundary
+            // for non-associative the list of entities will contain zero items
+            if (dxf4.Hatches[0].Associative)
+            {
+                // this will only work for associative hatches
+                HatchBoundaryPath path = dxf4.Hatches[0].BoundaryPaths[0];
+                LwPolyline entity = (LwPolyline) path.Entities[0];
+                entity.Vertexes[2].Location = new Vector2(15, 15);
+                // after modifying the boundary entities, it is necessary to rebuild the edges
+                path.UpdateEdges();
+                dxf4.Save("Hatch change boundary.dxf");
+            }
         }
 
         private static void TraceEntity()

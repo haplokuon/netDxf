@@ -168,27 +168,27 @@ namespace netDxf.Collections
 
         void ICollection<Attribute>.Add(Attribute item)
         {
-            throw new NotImplementedException();
+            throw new FieldAccessException("The collection is for read only purposes.");
         }
 
         void ICollection<Attribute>.Clear()
         {
-            throw new NotImplementedException();
+            throw new FieldAccessException("The collection is for read only purposes.");
         }
 
         void IList<Attribute>.Insert(int index, Attribute item)
         {
-            throw new NotImplementedException();
+            throw new FieldAccessException("The collection is for read only purposes.");
         }
 
         bool ICollection<Attribute>.Remove(Attribute item)
         {
-            throw new NotImplementedException();
+            throw new FieldAccessException("The collection is for read only purposes.");
         }
 
         void IList<Attribute>.RemoveAt(int index)
         {
-            throw new NotImplementedException();
+            throw new FieldAccessException("The collection is for read only purposes.");
         }
 
         IEnumerator IEnumerable.GetEnumerator()

@@ -512,6 +512,7 @@ namespace netDxf.Entities
         private void SetInternalInfo(ICollection<EntityObject> entities)
         {
             bool containsClosedPolyline = false;
+            this.edges.Clear();
 
             foreach (EntityObject entity in entities)
             {
