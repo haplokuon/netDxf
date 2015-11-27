@@ -38,17 +38,14 @@ namespace netDxf.Entities
             /// Bottom.
             /// </summary>
             Bottom = 0,
-
             /// <summary>
             /// Center.
             /// </summary>
             Center = 1,
-
             /// <summary>
             /// Top.
             /// </summary>
             Top = 2,
-
             /// <summary>
             /// Current value (no changes).
             /// </summary>
@@ -203,7 +200,7 @@ namespace netDxf.Entities
             set
             {
                 if (value < -85.0 || value > 85.0)
-                    throw (new ArgumentOutOfRangeException("value", value, "The oblique angle valid values range from -85 to 85."));
+                    throw new ArgumentOutOfRangeException("value", value, "The oblique angle valid values range from -85 to 85.");
                 this.obliqueAngle = value;
             }
         }
@@ -236,7 +233,7 @@ namespace netDxf.Entities
             set
             {
                 if (value <= 0)
-                    throw (new ArgumentOutOfRangeException("value", value, "The width factor should be greater than zero."));
+                    throw new ArgumentOutOfRangeException("value", value, "The width factor should be greater than zero.");
                 this.widthFactor = value;
             }
         }

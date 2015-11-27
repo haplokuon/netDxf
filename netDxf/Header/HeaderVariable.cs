@@ -19,8 +19,6 @@
 //  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #endregion
 
-using System;
-
 namespace netDxf.Header
 {
     /// <summary>
@@ -70,10 +68,9 @@ namespace netDxf.Header
 
         public override string ToString()
         {
-            return String.Format("{0}:{1}", this.name, this.value);
+            return string.Format("{0}:{1}", this.name, this.value);
         }
 
         #endregion
-
     }
 }

@@ -55,8 +55,18 @@ namespace netDxf.Entities
             : base(EntityType.PolyfaceMesh, DxfObjectCode.Polyline)
         {
             this.flags = PolylineTypeFlags.PolyfaceMesh;
+            if (vertexes == null)
+                throw new ArgumentNullException("vertexes");
+            if (vertexes.Count < 3)
+                throw new ArgumentOutOfRangeException("vertexes", "The polyface mesh faces list requires at least three points.");
             this.vertexes = vertexes;
+
+            if (faces == null)
+                throw new ArgumentNullException("vertexes");
+            if (faces.Count < 1)
+                throw new ArgumentOutOfRangeException("vertexes", "The polyface mesh faces list requires at least one face.");
             this.faces = faces;
+
             this.endSequence = new EndSequence();
         }
 
@@ -153,7 +163,7 @@ namespace netDxf.Entities
                                           Transparency = (Transparency)this.transparency.Clone(),
                                           LineTypeScale = this.lineTypeScale,
                                           Normal = this.normal,
-                                          Location = this.Vertexes[Math.Abs(face.VertexIndexes[0]) - 1].Location,
+                                          Position = this.Vertexes[Math.Abs(face.VertexIndexes[0]) - 1].Location,
                                       };
                     entities.Add(point);
                     continue;
@@ -181,7 +191,7 @@ namespace netDxf.Entities
                 short indexV1 = face.VertexIndexes[0];
                 short indexV2 = face.VertexIndexes[1];
                 short indexV3 = face.VertexIndexes[2];
-                // Polyface mesh faces are made of 3 or 4 vertexes, we will repeat the third vertex if the face vertexes is three
+                // Polyface mesh faces are made of 3 or 4 vertexes, we will repeat the third vertex if the number of face vertexes is three
                 int indexV4 = face.VertexIndexes.Length == 3 ? face.VertexIndexes[2] : face.VertexIndexes[3];
 
                 if (indexV1 < 0)

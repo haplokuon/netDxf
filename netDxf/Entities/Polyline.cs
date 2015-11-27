@@ -34,13 +34,31 @@ namespace netDxf.Entities
         #region private fields
 
         private readonly EndSequence endSequence;
-        private List<PolylineVertex> vertexes;
+        private readonly List<PolylineVertex> vertexes;
         private PolylineTypeFlags flags;
-        private readonly PolylineSmoothType smoothType;
+        private PolylineSmoothType smoothType;
 
         #endregion
 
         #region constructors
+
+        /// <summary>
+        /// Initializes a new instance of the <c>Polyline3d</c> class.
+        /// </summary>
+        /// <param name="vertexes">3d polyline <see cref="Vector3">vertex</see> list.</param>
+        /// <param name="isClosed">Sets if the polyline is closed.</param>
+        public Polyline(IList<Vector3> vertexes, bool isClosed = false)
+            : base(EntityType.Polyline, DxfObjectCode.Polyline)
+        {
+            if (vertexes == null)
+                throw new ArgumentNullException("vertexes");
+            this.vertexes = new List<PolylineVertex>(vertexes.Count);
+            foreach (Vector3 vertex in vertexes)
+                this.vertexes.Add(new PolylineVertex(vertex));
+            this.flags = isClosed ? PolylineTypeFlags.ClosedPolylineOrClosedPolygonMeshInM | PolylineTypeFlags.Polyline3D : PolylineTypeFlags.Polyline3D;
+            this.smoothType = PolylineSmoothType.NoSmooth;
+            this.endSequence = new EndSequence();
+        }
 
         /// <summary>
         /// Initializes a new instance of the <c>Polyline3d</c> class.
@@ -71,17 +89,11 @@ namespace netDxf.Entities
         #region public properties
 
         /// <summary>
-        /// Gets or sets the polyline <see cref="PolylineVertex">vertex</see> list.
+        /// Gets the polyline <see cref="PolylineVertex">vertex</see> list.
         /// </summary>
         public List<PolylineVertex> Vertexes
         {
             get { return this.vertexes; }
-            set
-            {
-                if (value == null)
-                    throw new ArgumentNullException("value");
-                this.vertexes = value;
-            }
         }
 
         /// <summary>
@@ -114,17 +126,19 @@ namespace netDxf.Entities
             }
         }
 
-        /// <summary>
-        /// Gets the curve smooth type.
-        /// </summary>
-        public PolylineSmoothType SmoothType
-        {
-            get { return this.smoothType; }
-        }
 
         #endregion
 
         #region internal properties
+
+        /// <summary>
+        /// Gets or sets the curve smooth type.
+        /// </summary>
+        internal PolylineSmoothType SmoothType
+        {
+            get { return this.smoothType; }
+            set { this.smoothType = value; }
+        }
 
         /// <summary>
         /// Gets the polyline type.
@@ -148,6 +162,14 @@ namespace netDxf.Entities
         #region public methods
 
         /// <summary>
+        /// Switch the polyline direction.
+        /// </summary>
+        public void Reverse()
+        {
+            this.vertexes.Reverse();
+        }
+
+        /// <summary>
         /// Decompose the actual polyline in a list of <see cref="Line">lines</see>.
         /// </summary>
         /// <returns>A list of <see cref="Line">lines</see> that made up the polyline.</returns>
@@ -163,13 +185,13 @@ namespace netDxf.Entities
                 if (index == this.Vertexes.Count - 1)
                 {
                     if (!this.IsClosed) break;
-                    start = vertex.Location;
-                    end = this.vertexes[0].Location;
+                    start = vertex.Position;
+                    end = this.vertexes[0].Position;
                 }
                 else
                 {
-                    start = vertex.Location;
-                    end = this.vertexes[index + 1].Location;
+                    start = vertex.Position;
+                    end = this.vertexes[index + 1].Position;
                 }
 
                 entities.Add(new Line
@@ -221,11 +243,6 @@ namespace netDxf.Entities
         /// <returns>A new Polyline that is a copy of this instance.</returns>
         public override object Clone()
         {
-            List<PolylineVertex> copyVertexes = new List<PolylineVertex>();
-            foreach (PolylineVertex vertex in this.vertexes)
-            {
-                copyVertexes.Add((PolylineVertex) vertex.Clone());
-            }
 
             Polyline entity = new Polyline
             {
@@ -238,9 +255,11 @@ namespace netDxf.Entities
                 LineTypeScale = this.lineTypeScale,
                 Normal = this.normal,
                 //Polyline properties
-                Vertexes = copyVertexes,
                 Flags = this.flags
             };
+
+            foreach (PolylineVertex vertex in this.vertexes)
+                entity.Vertexes.Add((PolylineVertex) vertex.Clone());
 
             foreach (XData data in this.XData.Values)
                 entity.XData.Add((XData)data.Clone());

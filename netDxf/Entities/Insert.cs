@@ -117,7 +117,7 @@ namespace netDxf.Entities
             {
                 Attribute att = new Attribute(attdef)
                 {
-                    Position = attdef.Position + this.position - this.block.Position,
+                    Position = attdef.Position + this.position - this.block.Origin,
                     Owner = this
                 };
                 atts.Add(att);
@@ -270,17 +270,17 @@ namespace netDxf.Entities
                 AttributeDefinition attdef = att.Definition;
                 if (attdef == null) continue;
 
-                Vector3 wcsAtt = insTrans * (attdef.Position - this.block.Position);
+                Vector3 wcsAtt = insTrans * (attdef.Position - this.block.Origin);
                 att.Position = this.position + wcsAtt; 
 
                 Vector2 txtU = new Vector2(attdef.WidthFactor, 0.0);
-                txtU = MathHelper.Transform(txtU, attdef.Rotation * MathHelper.DegToRad, MathHelper.CoordinateSystem.Object, MathHelper.CoordinateSystem.World);
-                Vector3 ocsTxtU = MathHelper.Transform(new Vector3(txtU.X, txtU.Y, 0.0), attdef.Normal, MathHelper.CoordinateSystem.Object, MathHelper.CoordinateSystem.World);
+                txtU = MathHelper.Transform(txtU, attdef.Rotation * MathHelper.DegToRad, CoordinateSystem.Object, CoordinateSystem.World);
+                Vector3 ocsTxtU = MathHelper.Transform(new Vector3(txtU.X, txtU.Y, 0.0), attdef.Normal, CoordinateSystem.Object, CoordinateSystem.World);
                 Vector3 wcsTxtU = insTrans * ocsTxtU;
 
                 Vector2 txtV = new Vector2(0.0, attdef.Height);
-                txtV = MathHelper.Transform(txtV, attdef.Rotation * MathHelper.DegToRad, MathHelper.CoordinateSystem.Object, MathHelper.CoordinateSystem.World);
-                Vector3 ocsTxtV = MathHelper.Transform(new Vector3(txtV.X, txtV.Y, 0.0), attdef.Normal, MathHelper.CoordinateSystem.Object, MathHelper.CoordinateSystem.World);
+                txtV = MathHelper.Transform(txtV, attdef.Rotation * MathHelper.DegToRad, CoordinateSystem.Object, CoordinateSystem.World);
+                Vector3 ocsTxtV = MathHelper.Transform(new Vector3(txtV.X, txtV.Y, 0.0), attdef.Normal, CoordinateSystem.Object, CoordinateSystem.World);
                 Vector3 wcsTxtV = insTrans * ocsTxtV;
 
                 Vector3 txtNormal = Vector3.CrossProduct(wcsTxtU, wcsTxtV);

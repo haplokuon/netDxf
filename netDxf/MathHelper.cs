@@ -29,41 +29,6 @@ namespace netDxf
     /// </summary>
     public class MathHelper
     {
-        #region enumerations
-
-        /// <summary>
-        /// Defines the coordinate system reference.
-        /// </summary>
-        public enum CoordinateSystem
-        {
-            /// <summary>
-            /// World coordinates.
-            /// </summary>
-            World,
-
-            /// <summary>
-            /// Object coordinates.
-            /// </summary>
-            Object
-        }
-
-        /// <summary>
-        /// Specifies the direction of an angle.
-        /// </summary>
-        public enum AngleDirection
-        {
-            /// <summary>
-            /// Clockwise (left handedness).
-            /// </summary>
-            CW = 0,
-            /// <summary>
-            /// Counterclockwise (right handedness).
-            /// </summary>
-            CCW = 1
-        }
-
-        #endregion
-
         #region constants
 
         /// <summary>
@@ -183,7 +148,7 @@ namespace netDxf
         /// <param name="from">Point coordinate system.</param>
         /// <param name="to">Coordinate system of the transformed point.</param>
         /// <returns>Transformed point list.</returns>
-        public static ICollection<Vector2> Transform(ICollection<Vector2> points, double rotation, CoordinateSystem from, CoordinateSystem to)
+        public static IList<Vector2> Transform(IList<Vector2> points, double rotation, CoordinateSystem from, CoordinateSystem to)
         {
             // if the rotation is 0 no transformation is needed the transformation matrix is the identity
             if (IsZero(rotation)) return points;
@@ -242,7 +207,7 @@ namespace netDxf
         /// <param name="from">Points coordinate system.</param>
         /// <param name="to">Coordinate system of the transformed points.</param>
         /// <returns>Transformed point list.</returns>
-        public static ICollection<Vector3> Transform(ICollection<Vector3> points, Vector3 zAxis, CoordinateSystem from, CoordinateSystem to)
+        public static IList<Vector3> Transform(IList<Vector3> points, Vector3 zAxis, CoordinateSystem from, CoordinateSystem to)
         {
             if (zAxis.Equals(Vector3.UnitZ)) return points;
 
@@ -325,6 +290,54 @@ namespace netDxf
             Vector2 vec = p - pPrime;
             double distanceSquared = Vector2.DotProduct(vec, vec);
             return Math.Sqrt(distanceSquared);
+        }
+
+        /// <summary>
+        /// Checks if a point is inside a line segment.
+        /// </summary>
+        /// <param name="p">A point.</param>
+        /// <param name="start">Segment start point.</param>
+        /// <param name="end">Segment end point.</param>
+        /// <returns>Zero if the point is inside the segment, 1 if the point is after the end point, and -1 if the point is before the start point.</returns>
+        public static int PointInSegment(Vector3 p, Vector3 start, Vector3 end)
+        {
+            Vector3 dir = end - start;
+            Vector3 pPrime = p - start;
+            double t = Vector3.DotProduct(dir, pPrime);
+            if (t <= 0)
+            {
+                return -1;
+            }
+            double dot = Vector3.DotProduct(dir, dir);
+            if (t >= dot)
+            {
+                return 1;
+            }
+            return 0;
+        }
+
+        /// <summary>
+        /// Checks if a point is inside a line segment.
+        /// </summary>
+        /// <param name="p">A point.</param>
+        /// <param name="start">Segment start point.</param>
+        /// <param name="end">Segment end point.</param>
+        /// <returns>Zero if the point is inside the segment, 1 if the point is after the end point, and -1 if the point is before the start point.</returns>
+        public static int PointInSegment(Vector2 p, Vector2 start, Vector2 end)
+        {
+            Vector2 dir = end - start;
+            Vector2 pPrime = p - start;
+            double t = Vector2.DotProduct(dir, pPrime);
+            if (t <= 0)
+            {
+                return -1;
+            }
+            double dot = Vector2.DotProduct(dir, dir);
+            if (t >= dot)
+            {
+                return 1;
+            }
+            return 0;
         }
 
         public static void OffsetLine(Vector3 start, Vector3 end, Vector3 normal, double offset, out Vector3 newStart, out Vector3 newEnd)

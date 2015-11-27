@@ -79,7 +79,7 @@ namespace netDxf.Collections
 
             view.Owner = this;
 
-            view.NameChange += this.Item_NameChange;
+            view.NameChanged += this.Item_NameChanged;
 
             return view;
         }
@@ -122,7 +122,7 @@ namespace netDxf.Collections
             view.Handle = null;
             view.Owner = null;
 
-            view.NameChange -= this.Item_NameChange;
+            view.NameChanged -= this.Item_NameChanged;
 
             return true;
         }
@@ -131,7 +131,7 @@ namespace netDxf.Collections
 
         #region UCS events
 
-        private void Item_NameChange(TableObject sender, TableObjectChangeEventArgs<string> e)
+        private void Item_NameChanged(TableObject sender, TableObjectChangedEventArgs<string> e)
         {
             if (this.Contains(e.NewValue))
                 throw new ArgumentException("There is already another View with the same name.");

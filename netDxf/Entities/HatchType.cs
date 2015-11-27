@@ -30,12 +30,10 @@ namespace netDxf.Entities
         /// User defined.
         /// </summary>
         UserDefined = 0,
-
         /// <summary>
         /// Predefined.
         /// </summary>
         Predefined = 1,
-
         /// <summary>
         /// Custom.
         /// </summary>

@@ -105,7 +105,7 @@ namespace netDxf.Units
         /// <returns>The converted value to the new drawing units.</returns>
         public static double ConvertUnit(double value, DrawingUnits from, DrawingUnits to)
         {
-            return value *ConversionFactor(from, to);
+            return value * ConversionFactor(from, to);
         }
 
         /// <summary>
@@ -127,11 +127,11 @@ namespace netDxf.Units
         /// <returns>The conversion factor between the units.</returns>
         public static double ConversionFactor(ImageUnits from, DrawingUnits to)
         {
-            // more on the dxf format none sense, they don't even use the same integers for the drawing and image units
+            // more on the dxf format none sense, they don't even use the same integers for the drawing and the image units
             int rasterUnits = 0;
             switch (from)
             {
-                case ImageUnits.None:
+                case ImageUnits.Unitless:
                     rasterUnits = 0;
                     break;
                 case ImageUnits.Millimeters:

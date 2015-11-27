@@ -64,6 +64,7 @@ namespace netDxf
         public const string Point = "AcDbPoint";
         public const string Vertex = "AcDbVertex";
         public const string Polyline = "AcDb2dPolyline";
+        public const string Leader = "AcDbLeader";
         public const string LightWeightPolyline = "AcDbPolyline";
         public const string PolylineVertex = "AcDb2dVertex ";
         public const string Polyline3d = "AcDb3dPolyline";
@@ -74,9 +75,13 @@ namespace netDxf
         public const string Solid = "AcDbTrace";
         public const string Trace = "AcDbTrace";
         public const string Text = "AcDbText";
+        public const string Tolerance = "AcDbFcf";
+        public const string Wipeout = "AcDbWipeout";
         public const string Mesh = "AcDbSubDMesh";
         public const string MText = "AcDbMText";
         public const string Hatch = "AcDbHatch";
+        public const string Underlay = "AcDbUnderlayReference";
+        public const string UnderlayDefinition = "AcDbUnderlayDefinition";
         public const string Viewport = "AcDbViewport";
         public const string Attribute = "AcDbAttribute";
         public const string AttributeDefinition = "AcDbAttributeDefinition";

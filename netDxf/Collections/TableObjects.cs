@@ -33,8 +33,7 @@ namespace netDxf.Collections
     /// <typeparam name="T"><see cref="TableObject">TableObject</see>.</typeparam>
     public abstract class TableObjects<T> :
         DxfObject,
-        IEnumerable<T> where T : TableObject
-        
+        IEnumerable<T> where T : TableObject     
     {
         #region private fields
 
@@ -271,6 +270,5 @@ namespace netDxf.Collections
         }
 
         #endregion
-
     }
 }

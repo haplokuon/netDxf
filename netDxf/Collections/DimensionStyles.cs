@@ -32,7 +32,6 @@ namespace netDxf.Collections
     public sealed class DimensionStyles :
         TableObjects<DimensionStyle>
     {
-
         #region constructor
 
         internal DimensionStyles(DxfDocument document, string handle = null)
@@ -84,6 +83,12 @@ namespace netDxf.Collections
             this.document.TextStyles.References[style.DIMTXSTY.Name].Add(style);
 
             // add referenced blocks
+            if (style.DIMLDRBLK != null)
+            {
+                style.DIMLDRBLK = this.document.Blocks.Add(style.DIMLDRBLK, assignHandle);
+                this.document.Blocks.References[style.DIMLDRBLK.Name].Add(style);
+            }
+
             if (style.DIMBLK != null)
             {
                 style.DIMBLK = this.document.Blocks.Add(style.DIMBLK, assignHandle);
@@ -112,10 +117,10 @@ namespace netDxf.Collections
 
             style.Owner = this;
 
-            style.NameChange += this.Item_NameChange;
-            style.LineTypeChange += this.DimensionStyleLineTypeChange;
-            style.TextStyleChange += this.DimensionStyleTextStyleChange;
-            style.BlockChange += this.DimensionStyleBlockChange;
+            style.NameChanged += this.Item_NameChanged;
+            style.LineTypeChanged += this.DimensionStyleLineTypeChanged;
+            style.TextStyleChanged += this.DimensionStyleTextStyleChanged;
+            style.BlockChanged += this.DimensionStyleBlockChanged;
 
             return style;
         }
@@ -173,10 +178,10 @@ namespace netDxf.Collections
             style.Handle = null;
             style.Owner = null;
 
-            style.NameChange -= this.Item_NameChange;
-            style.LineTypeChange -= this.DimensionStyleLineTypeChange;
-            style.TextStyleChange -= this.DimensionStyleTextStyleChange;
-            style.BlockChange -= this.DimensionStyleBlockChange;
+            style.NameChanged -= this.Item_NameChanged;
+            style.LineTypeChanged -= this.DimensionStyleLineTypeChanged;
+            style.TextStyleChanged -= this.DimensionStyleTextStyleChanged;
+            style.BlockChanged -= this.DimensionStyleBlockChanged;
 
             return true;
         }
@@ -185,7 +190,7 @@ namespace netDxf.Collections
 
         #region TableObject events
 
-        private void Item_NameChange(TableObject sender, TableObjectChangeEventArgs<string> e)
+        private void Item_NameChanged(TableObject sender, TableObjectChangedEventArgs<string> e)
         {
             if (this.Contains(e.NewValue))
                 throw new ArgumentException("There is already another dimension style with the same name.");
@@ -198,7 +203,7 @@ namespace netDxf.Collections
             this.references.Add(e.NewValue, refs);
         }
 
-        private void DimensionStyleLineTypeChange(TableObject sender, TableObjectChangeEventArgs<LineType> e)
+        private void DimensionStyleLineTypeChanged(TableObject sender, TableObjectChangedEventArgs<LineType> e)
         {
             this.document.LineTypes.References[e.OldValue.Name].Remove(sender);
 
@@ -206,7 +211,7 @@ namespace netDxf.Collections
             this.document.LineTypes.References[e.NewValue.Name].Add(sender);
         }
 
-        private void DimensionStyleTextStyleChange(TableObject sender, TableObjectChangeEventArgs<TextStyle> e)
+        private void DimensionStyleTextStyleChanged(TableObject sender, TableObjectChangedEventArgs<TextStyle> e)
         {
             this.document.TextStyles.References[e.OldValue.Name].Remove(sender);
 
@@ -214,7 +219,7 @@ namespace netDxf.Collections
             this.document.TextStyles.References[e.NewValue.Name].Add(sender);
         }
 
-        private void DimensionStyleBlockChange(TableObject sender, TableObjectChangeEventArgs<Block> e)
+        private void DimensionStyleBlockChanged(TableObject sender, TableObjectChangedEventArgs<Block> e)
         {
             if (e.OldValue != null) this.document.Blocks.References[e.OldValue.Name].Remove(sender);
 

@@ -31,7 +31,7 @@ namespace netDxf.Entities
     {
         #region private fields
 
-        private Vector2 location;
+        private Vector2 position;
         private double startWidth;
         private double endWidth;
         private double bulge;
@@ -63,11 +63,11 @@ namespace netDxf.Entities
         /// <summary>
         /// Initializes a new instance of the <c>LwPolylineVertex</c> class.
         /// </summary>
-        /// <param name="location">Lightweight polyline <see cref="Vector2">vertex</see> coordinates.</param>
+        /// <param name="position">Lightweight polyline <see cref="Vector2">vertex</see> coordinates.</param>
         /// <param name="bulge">Vertex bulge.</param>
-        public LwPolylineVertex(Vector2 location, double bulge = 0.0)
+        public LwPolylineVertex(Vector2 position, double bulge = 0.0)
         {
-            this.location = location;
+            this.position = position;
             this.bulge = bulge;
             this.startWidth = 0.0;
             this.endWidth = 0.0;
@@ -78,12 +78,12 @@ namespace netDxf.Entities
         #region public properties
 
         /// <summary>
-        /// Gets or sets the light weight polyline vertex <see cref="Vector2">location</see>.
+        /// Gets or sets the light weight polyline vertex <see cref="Vector2">position</see>.
         /// </summary>
-        public Vector2 Location
+        public Vector2 Position
         {
-            get { return this.location; }
-            set { this.location = value; }
+            get { return this.position; }
+            set { this.position = value; }
         }
 
         /// <summary>
@@ -140,7 +140,7 @@ namespace netDxf.Entities
         /// <returns>The string representation.</returns>
         public override string ToString()
         {
-            return String.Format("{0}: ({1})", "LwPolylineVertex", this.location);
+            return string.Format("{0}: ({1})", "LwPolylineVertex", this.position);
         }
 
         /// <summary>
@@ -151,7 +151,7 @@ namespace netDxf.Entities
         {
             return new LwPolylineVertex
                 {
-                    Location = this.location,
+                    Position = this.position,
                     Bulge = this.bulge,
                     StartWidth = this.startWidth,
                     EndWidth = this.endWidth

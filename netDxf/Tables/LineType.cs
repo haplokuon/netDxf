@@ -152,7 +152,12 @@ namespace netDxf.Tables
         /// <param name="name">Line type name.</param>
         /// <param name="description">Line type description (optional).</param>
         public LineType(string name, string description = null)
-            : base(name, DxfObjectCode.LineType, true)
+            : this(name, description, true)
+        {
+        }
+
+        internal LineType(string name, string description, bool checkName)
+            : base(name, DxfObjectCode.LineType, checkName)
         {
             if (string.IsNullOrEmpty(name))
                 throw new ArgumentNullException("name", "The line type name should be at least one character long.");
@@ -310,6 +315,5 @@ namespace netDxf.Tables
         }
 
         #endregion
-
     }
 }

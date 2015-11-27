@@ -30,12 +30,10 @@ namespace netDxf.Entities
         /// Hatch "odd parity" area.
         /// </summary>
         Normal = 0,
-
         /// <summary>
         /// Hatch outermost area only.
         /// </summary>
         Outer = 1,
-
         /// <summary>
         /// Hatch through entire area.
         /// </summary>

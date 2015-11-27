@@ -52,7 +52,7 @@ namespace netDxf.Collections
         /// Initializes a new instance of <c>AttributeCollection</c> with the specified collection of attributes.
         /// </summary>
         /// <param name="attributes">The collection of attributes from which build the dictionary.</param>
-        public AttributeCollection(ICollection<Attribute> attributes)
+        public AttributeCollection(IList<Attribute> attributes)
         {
             if (attributes == null)
                 throw new ArgumentNullException("attributes");
@@ -163,7 +163,6 @@ namespace netDxf.Collections
 
         #endregion
 
-
         #region private methods
 
         void ICollection<Attribute>.Add(Attribute item)
@@ -197,10 +196,5 @@ namespace netDxf.Collections
         }
 
         #endregion
-
-
-
-
-
     }
 }

@@ -108,7 +108,7 @@ namespace netDxf.Collections
             this.list.Add(layout.Name, layout);
             this.references.Add(layout.Name, new List<DxfObject>());
 
-            layout.NameChange += this.Item_NameChange;
+            layout.NameChanged += this.Item_NameChanged;
 
             return layout;
         }
@@ -176,7 +176,7 @@ namespace netDxf.Collections
             layout.Owner = null;
             layout.Viewport.Owner = null;
 
-            layout.NameChange -= this.Item_NameChange;
+            layout.NameChanged -= this.Item_NameChanged;
 
             // When a layout is removed we need to rebuild the PaperSpace block names, to follow the naming Paper_Space, Paper_Space0, Paper_Space1, ...
             int index = 0;
@@ -205,7 +205,7 @@ namespace netDxf.Collections
 
         #region LineType events
 
-        private void Item_NameChange(TableObject sender, TableObjectChangeEventArgs<string> e)
+        private void Item_NameChanged(TableObject sender, TableObjectChangedEventArgs<string> e)
         {
             if (this.Contains(e.NewValue))
                 throw new ArgumentException("There is already another layout with the same name.");

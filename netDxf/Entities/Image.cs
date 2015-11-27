@@ -38,13 +38,13 @@ namespace netDxf.Entities
         private double width;
         private double height;
         private double rotation;
-        private ImageDef imageDef;
+        private ImageDefinition imageDefinition;
         private bool clipping;
         private short brightness;
         private short contrast;
         private short fade;
         private ImageDisplayFlags displayOptions;
-        private ImageClippingBoundary clippingBoundary;
+        private ClippingBoundary clippingBoundary;
 
         #endregion
 
@@ -61,7 +61,7 @@ namespace netDxf.Entities
         /// <param name="imageDefinition">Image definition.</param>
         /// <param name="position">Image <see cref="Vector2">position</see> in world coordinates.</param>
         /// <param name="size">Image <see cref="Vector2">size</see> in world coordinates.</param>
-        public Image(ImageDef imageDefinition, Vector2 position, Vector2 size)
+        public Image(ImageDefinition imageDefinition, Vector2 position, Vector2 size)
             : this(imageDefinition, new Vector3(position.X, position.Y, 0.0), size.X, size.Y)
         {
         }
@@ -72,7 +72,7 @@ namespace netDxf.Entities
         /// <param name="imageDefinition">Image definition.</param>
         /// <param name="position">Image <see cref="Vector3">position</see> in world coordinates.</param>
         /// <param name="size">Image <see cref="Vector2">size</see> in world coordinates.</param>
-        public Image(ImageDef imageDefinition, Vector3 position, Vector2 size)
+        public Image(ImageDefinition imageDefinition, Vector3 position, Vector2 size)
             :this(imageDefinition, position, size.X, size.Y)
         {
         }
@@ -84,7 +84,7 @@ namespace netDxf.Entities
         /// <param name="position">Image <see cref="Vector2">position</see> in world coordinates.</param>
         /// <param name="width">Image width in world coordinates.</param>
         /// <param name="height">Image height in world coordinates.</param>
-        public Image(ImageDef imageDefinition, Vector2 position, double width, double height)
+        public Image(ImageDefinition imageDefinition, Vector2 position, double width, double height)
             : this(imageDefinition, new Vector3(position.X, position.Y, 0.0), width, height)
         {
         }
@@ -96,10 +96,10 @@ namespace netDxf.Entities
         /// <param name="position">Image <see cref="Vector3">position</see> in world coordinates.</param>
         /// <param name="width">Image width in world coordinates.</param>
         /// <param name="height">Image height in world coordinates.</param>
-        public Image(ImageDef imageDefinition, Vector3 position, double width, double height)
+        public Image(ImageDefinition imageDefinition, Vector3 position, double width, double height)
             : base(EntityType.Image, DxfObjectCode.Image)
         {
-            this.imageDef = imageDefinition;
+            this.imageDefinition = imageDefinition;
             this.position = position;
             this.width = width;
             this.height = height;
@@ -109,7 +109,7 @@ namespace netDxf.Entities
             this.contrast = 50;
             this.fade = 0;
             this.displayOptions = ImageDisplayFlags.ShowImage | ImageDisplayFlags.ShowImageWhenNotAlignedWithScreen | ImageDisplayFlags.UseClippingBoundary;
-            this.clippingBoundary = new ImageClippingBoundary(-0.5, -0.5, imageDefinition.Width, imageDefinition.Height);
+            this.clippingBoundary = new ClippingBoundary(-0.5, -0.5, imageDefinition.Width, imageDefinition.Height);
         }
 
         #endregion
@@ -153,12 +153,12 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets the <see cref="ImageDef">image definition</see>.
+        /// Gets the <see cref="ImageDefinition">image definition</see>.
         /// </summary>
-        public ImageDef Definition
+        public ImageDefinition Definition
         {
-            get { return this.imageDef; }
-            internal set { this.imageDef = value; }
+            get { return this.imageDefinition; }
+            internal set { this.imageDefinition = value; }
         }
 
         /// <summary>
@@ -225,12 +225,12 @@ namespace netDxf.Entities
         /// Gets or sets the image clipping boundary.
         /// </summary>
         /// <remarks>
-        /// Set as null to restore the default clipping boundary.
+        /// Set as null to restore the default clipping boundary, show the full image without clipping.
         /// </remarks>
-        public ImageClippingBoundary ClippingBoundary
+        public ClippingBoundary ClippingBoundary
         {
             get { return this.clippingBoundary; }
-            set { this.clippingBoundary = value ?? new ImageClippingBoundary(-0.5, -0.5, this.imageDef.Width, this.imageDef.Height); }
+            set { this.clippingBoundary = value ?? new ClippingBoundary(-0.5, -0.5, this.imageDefinition.Width, this.imageDefinition.Height); }
         }
 
         #endregion
@@ -258,13 +258,13 @@ namespace netDxf.Entities
                 Height = this.height,
                 Width = this.width,
                 Rotation = this.rotation,
-                Definition = (ImageDef) this.imageDef.Clone(),
+                Definition = (ImageDefinition) this.imageDefinition.Clone(),
                 Clipping = this.clipping,
                 Brightness = this.brightness,
                 Contrast = this.contrast,
                 Fade = this.fade,
                 DisplayOptions = this.displayOptions,
-                ClippingBoundary = (ImageClippingBoundary) this.clippingBoundary.Clone()
+                ClippingBoundary = (ClippingBoundary) this.clippingBoundary.Clone()
             };
 
             foreach (XData data in this.XData.Values)

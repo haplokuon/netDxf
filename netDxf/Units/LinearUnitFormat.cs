@@ -69,7 +69,7 @@ namespace netDxf.Units
         /// <param name="length">The length value.</param>
         /// <param name="format">The unit style format.</param>
         /// <returns>A string that represents the length in feet and fractional inches.</returns>
-        /// <remarks>The Architectural format assume that each drawing unit represents one inch.</remarks>
+        /// <remarks>The Architectural format assumes that each drawing unit represents one inch.</remarks>
         public static string ToArchitectural(double length, UnitStyleFormat format)
         {
             int feet = (int)(length / 12);
@@ -146,7 +146,7 @@ namespace netDxf.Units
         /// <param name="length">The length value.</param>
         /// <param name="format">The unit style format.</param>
         /// <returns>A string that represents the length in feet and decimal inches.</returns>
-        /// <remarks>The Engineering format assume that each drawing unit represents one inch.</remarks>
+        /// <remarks>The Engineering format assumes that each drawing unit represents one inch.</remarks>
         public static string ToEngineering(double length, UnitStyleFormat format)
         {
             NumberFormatInfo numberFormat = new NumberFormatInfo
@@ -175,7 +175,7 @@ namespace netDxf.Units
             string feetStr = feet + format.FeetSymbol + format.FeetInchesSeparator;
             if (format.SupressZeroFeet && feet == 0) feetStr = string.Empty;
 
-            return string.Format(numberFormat, feetStr + inches.ToString(DecimalNumberFormat(format), numberFormat) + format.InchesSymbol);
+            return string.Format(numberFormat, feetStr + "{0}" + format.InchesSymbol, inches.ToString(DecimalNumberFormat(format), numberFormat));
         }
 
         /// <summary>
@@ -235,7 +235,7 @@ namespace netDxf.Units
 
         private static void GetFraction(double number, int precision, out int numerator, out int denominator)
         {
-            numerator = Convert.ToInt32(((number - (int)number) * precision));
+            numerator = Convert.ToInt32((number - (int)number) * precision);
             int commonFactor = GetGCD(numerator, precision);
             if (commonFactor <= 0) commonFactor = 1;
             numerator = numerator / commonFactor;
@@ -254,6 +254,7 @@ namespace netDxf.Units
             }
             return a;
         }
+
         #endregion
     }
 }

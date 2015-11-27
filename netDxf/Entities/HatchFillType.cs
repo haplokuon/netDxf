@@ -30,7 +30,6 @@ namespace netDxf.Entities
         /// Pattern fill.
         /// </summary>
         PatternFill = 0,
-
         /// <summary>
         /// Solid fill.
         /// </summary>

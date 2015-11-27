@@ -36,28 +36,28 @@ namespace netDxf.Entities
     {
         #region delegates and events
 
-        public delegate void DimensionStyleChangeEventHandler(Dimension sender, TableObjectChangeEventArgs<DimensionStyle> e);
-        public event DimensionStyleChangeEventHandler DimensionStyleChange;
-        protected virtual DimensionStyle OnDimensionStyleChangeEvent(DimensionStyle oldStyle, DimensionStyle newStyle)
+        public delegate void DimensionStyleChangedEventHandler(Dimension sender, TableObjectChangedEventArgs<DimensionStyle> e);
+        public event DimensionStyleChangedEventHandler DimensionStyleChanged;
+        protected virtual DimensionStyle OnDimensionStyleChangedEvent(DimensionStyle oldStyle, DimensionStyle newStyle)
         {
-            DimensionStyleChangeEventHandler ae = this.DimensionStyleChange;
+            DimensionStyleChangedEventHandler ae = this.DimensionStyleChanged;
             if (ae != null)
             {
-                TableObjectChangeEventArgs<DimensionStyle> eventArgs = new TableObjectChangeEventArgs<DimensionStyle>(oldStyle, newStyle);
+                TableObjectChangedEventArgs<DimensionStyle> eventArgs = new TableObjectChangedEventArgs<DimensionStyle>(oldStyle, newStyle);
                 ae(this, eventArgs);
                 return eventArgs.NewValue;
             }
             return newStyle;
         }
 
-        public delegate void DimensionBlockChangeEventHandler(Dimension sender, TableObjectChangeEventArgs<Block> e);
-        public event DimensionBlockChangeEventHandler DimensionBlockChange;
-        protected virtual Block OnDimensionBlockChangeEvent(Block oldBlock, Block newBlock)
+        public delegate void DimensionBlockChangedEventHandler(Dimension sender, TableObjectChangedEventArgs<Block> e);
+        public event DimensionBlockChangedEventHandler DimensionBlockChanged;
+        protected virtual Block OnDimensionBlockChangedEvent(Block oldBlock, Block newBlock)
         {
-            DimensionBlockChangeEventHandler ae = this.DimensionBlockChange;
+            DimensionBlockChangedEventHandler ae = this.DimensionBlockChanged;
             if (ae != null)
             {
-                TableObjectChangeEventArgs<Block> eventArgs = new TableObjectChangeEventArgs<Block>(oldBlock, newBlock);
+                TableObjectChangedEventArgs<Block> eventArgs = new TableObjectChangedEventArgs<Block>(oldBlock, newBlock);
                 ae(this, eventArgs);
                 return eventArgs.NewValue;
             }
@@ -135,7 +135,7 @@ namespace netDxf.Entities
             {
                 if (value == null)
                     throw new ArgumentNullException("value");
-                this.style = this.OnDimensionStyleChangeEvent(this.style, value);
+                this.style = this.OnDimensionStyleChangedEvent(this.style, value);
             }
         }
 
@@ -238,11 +238,11 @@ namespace netDxf.Entities
         /// This method needs to be manually called to reflect any change made to the dimension style.<br />
         /// The dimension must belong to a document.
         /// </remarks>
-        public void RebuildBlock()
+        public void Update()
         {
             if (this.block == null) throw new ArgumentException("The dimension does not belong to a document.");
             Block newBlock = this.BuildBlock(this.block.Name);
-            this.block = this.OnDimensionBlockChangeEvent(this.block, newBlock);
+            this.block = this.OnDimensionBlockChangedEvent(this.block, newBlock);
         }
 
         #endregion

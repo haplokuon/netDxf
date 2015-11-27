@@ -102,7 +102,7 @@ namespace netDxf.Collections
 
             group.Owner = this;
 
-            group.NameChange += this.Item_NameChange;
+            group.NameChanged += this.Item_NameChanged;
             group.EntityAdded += this.Group_EntityAdded;
             group.EntityRemoved += this.Group_EntityRemoved;
 
@@ -144,7 +144,7 @@ namespace netDxf.Collections
             group.Handle = null;
             group.Owner = null;
 
-            group.NameChange -= this.Item_NameChange;
+            group.NameChanged -= this.Item_NameChanged;
             group.EntityAdded -= this.Group_EntityAdded;
             group.EntityRemoved -= this.Group_EntityRemoved;
 
@@ -155,7 +155,7 @@ namespace netDxf.Collections
 
         #region Group events
 
-        private void Item_NameChange(TableObject sender, TableObjectChangeEventArgs<string> e)
+        private void Item_NameChanged(TableObject sender, TableObjectChangedEventArgs<string> e)
         {
             if (this.Contains(e.NewValue))
                 throw new ArgumentException("There is already another dimension style with the same name.");

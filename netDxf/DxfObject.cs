@@ -28,7 +28,7 @@ namespace netDxf
     {
         #region protected fields
 
-        protected readonly string codeName;
+        protected string codeName;
         protected string handle;
         protected DxfObject owner;
 

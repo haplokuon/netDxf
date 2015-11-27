@@ -170,10 +170,10 @@ namespace netDxf.Entities
             {
                 Vector3 refPoint;
 
-                refPoint = MathHelper.Transform(this.firstRefPoint, this.normal, MathHelper.CoordinateSystem.World, MathHelper.CoordinateSystem.Object);
+                refPoint = MathHelper.Transform(this.firstRefPoint, this.normal, CoordinateSystem.World, CoordinateSystem.Object);
                 Vector2 ref1 = new Vector2(refPoint.X, refPoint.Y);
 
-                refPoint = MathHelper.Transform(this.secondRefPoint, this.normal, MathHelper.CoordinateSystem.World, MathHelper.CoordinateSystem.Object);
+                refPoint = MathHelper.Transform(this.secondRefPoint, this.normal, CoordinateSystem.World, CoordinateSystem.Object);
                 Vector2 ref2 = new Vector2(refPoint.X, refPoint.Y);
 
                 return Vector2.Distance(ref1, ref2);

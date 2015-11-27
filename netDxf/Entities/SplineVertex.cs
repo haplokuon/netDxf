@@ -31,7 +31,7 @@ namespace netDxf.Entities
     {
         #region private fields
 
-        private Vector3 location;
+        private Vector3 position;
         private double weigth;
 
         #endregion
@@ -53,23 +53,23 @@ namespace netDxf.Entities
         /// <summary>
         /// Initializes a new instance of the <c>SplineVertex</c> class.
         /// </summary>
-        /// <param name="location">Spline control point <see cref="Vector2">vertex</see> coordinates.</param>
+        /// <param name="position">Spline control point <see cref="Vector2">vertex</see> coordinates.</param>
         /// <param name="weigth">Weight of the spline control point (default 1.0).</param>
-        public SplineVertex(Vector2 location, double weigth = 1.0)
-            : this(new Vector3(location.X, location.Y, 0.0), weigth)
+        public SplineVertex(Vector2 position, double weigth = 1.0)
+            : this(new Vector3(position.X, position.Y, 0.0), weigth)
         {
         }
 
         /// <summary>
         /// Initializes a new instance of the <c>SplineVertex</c> class.
         /// </summary>
-        /// <param name="location">Spline control point <see cref="Vector3">vertex</see> coordinates.</param>
+        /// <param name="position">Spline control point <see cref="Vector3">vertex</see> coordinates.</param>
         /// <param name="weight">Weight of the spline control point (default 1.0).</param>
-        public SplineVertex(Vector3 location, double weight = 1.0)
+        public SplineVertex(Vector3 position, double weight = 1.0)
         {
             if (weight <= 0)
-                throw (new ArgumentOutOfRangeException("weight", weight, "The spline vertex weight must be greater than zero."));
-            this.location = location;
+                throw new ArgumentOutOfRangeException("weight", weight, "The spline vertex weight must be greater than zero.");
+            this.position = position;
             this.weigth = weight;
         }
 
@@ -80,10 +80,10 @@ namespace netDxf.Entities
         /// <summary>
         /// Get or sets the spline control point <see cref="Vector3">vertex</see> coordinates.
         /// </summary>
-        public Vector3 Location
+        public Vector3 Position
         {
-            get { return this.location; }
-            set { this.location = value; }
+            get { return this.position; }
+            set { this.position = value; }
         }
 
         /// <summary>
@@ -95,7 +95,7 @@ namespace netDxf.Entities
             set
             {
                 if (value <= 0)
-                    throw (new ArgumentOutOfRangeException("value", value, "The spline vertex weight must be greater than zero."));
+                    throw new ArgumentOutOfRangeException("value", value, "The spline vertex weight must be greater than zero.");
                 this.weigth = value;
             }
         }
@@ -110,7 +110,7 @@ namespace netDxf.Entities
         /// <returns>A string text.</returns>
         public override string ToString()
         {
-            return string.Format("{0}: ({1}) w={2}", "SplineVertex", this.Location, this.Weigth);
+            return string.Format("{0}: ({1}) w={2}", "SplineVertex", this.Position, this.Weigth);
         }
 
         /// <summary>
@@ -119,7 +119,7 @@ namespace netDxf.Entities
         /// <returns>A new Spline that is a copy of this instance.</returns>
         public object Clone()
         {
-            return new SplineVertex(this.location, this.weigth);
+            return new SplineVertex(this.position, this.weigth);
         }
 
         /// <summary>
@@ -129,7 +129,7 @@ namespace netDxf.Entities
         /// <returns>A string text.</returns>
         public string ToString(IFormatProvider provider)
         {
-            return string.Format("{0}: ({1}) w={2}", "SplineVertex", this.Location.ToString(provider), this.Weigth.ToString(provider));
+            return string.Format("{0}: ({1}) w={2}", "SplineVertex", this.Position.ToString(provider), this.Weigth.ToString(provider));
         }
 
         #endregion

@@ -28,9 +28,9 @@ namespace netDxf.Units
     public enum ImageUnits
     {
         /// <summary>
-        /// None.
+        /// No units.
         /// </summary>
-        None = 0,
+        Unitless = 0,
         /// <summary>
         /// Millimeters.
         /// </summary>

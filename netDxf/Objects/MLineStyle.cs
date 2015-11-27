@@ -52,14 +52,14 @@ namespace netDxf.Objects
                 ae(this, new MLineStyleElementChangeEventArgs(item));
         }
 
-        public delegate void MLineStyleElementLineTypeChangeEventHandler(MLineStyle sender, TableObjectChangeEventArgs<LineType> e);
-        public event MLineStyleElementLineTypeChangeEventHandler MLineStyleElementLineTypeChange;
-        protected virtual LineType OnMLineStyleElementLineTypeChangeEvent(LineType oldLineType, LineType newLineType)
+        public delegate void MLineStyleElementLineTypeChangedEventHandler(MLineStyle sender, TableObjectChangedEventArgs<LineType> e);
+        public event MLineStyleElementLineTypeChangedEventHandler MLineStyleElementLineTypeChanged;
+        protected virtual LineType OnMLineStyleElementLineTypeChangedEvent(LineType oldLineType, LineType newLineType)
         {
-            MLineStyleElementLineTypeChangeEventHandler ae = this.MLineStyleElementLineTypeChange;
+            MLineStyleElementLineTypeChangedEventHandler ae = this.MLineStyleElementLineTypeChanged;
             if (ae != null)
             {
-                TableObjectChangeEventArgs<LineType> eventArgs = new TableObjectChangeEventArgs<LineType>(oldLineType, newLineType);
+                TableObjectChangedEventArgs<LineType> eventArgs = new TableObjectChangedEventArgs<LineType>(oldLineType, newLineType);
                 ae(this, eventArgs);
                 return eventArgs.NewValue;
             }
@@ -115,7 +115,7 @@ namespace netDxf.Objects
         /// <param name="name">MLine style name.</param>
         /// <param name="elements">Elements of the multiline.</param>
         /// <param name="description">MLine style description (optional).</param>
-        public MLineStyle(string name, ICollection<MLineStyleElement> elements, string description = null)
+        public MLineStyle(string name, IList<MLineStyleElement> elements, string description = null)
             : base(name, DxfObjectCode.MLineStyle, true)
         {
             if (string.IsNullOrEmpty(name))
@@ -281,7 +281,7 @@ namespace netDxf.Objects
         private void Elements_AddItem(ObservableCollection<MLineStyleElement> sender, ObservableCollectionEventArgs<MLineStyleElement> e)
         {
             this.OnMLineStyleElementAddedEvent(e.Item);
-            e.Item.LineTypeChange += this.MLineStyleElement_LineTypeChange;
+            e.Item.LineTypeChanged += this.MLineStyleElement_LineTypeChanged;
         }
 
         private void Elements_BeforeRemoveItem(ObservableCollection<MLineStyleElement> sender, ObservableCollectionEventArgs<MLineStyleElement> e)
@@ -291,16 +291,16 @@ namespace netDxf.Objects
         private void Elements_RemoveItem(ObservableCollection<MLineStyleElement> sender, ObservableCollectionEventArgs<MLineStyleElement> e)
         {
             this.OnMLineStyleElementRemovedEvent(e.Item);
-            e.Item.LineTypeChange -= this.MLineStyleElement_LineTypeChange;
+            e.Item.LineTypeChanged -= this.MLineStyleElement_LineTypeChanged;
         }
 
         #endregion
 
         #region MLineStyleElement events
 
-        void MLineStyleElement_LineTypeChange(MLineStyleElement sender, TableObjectChangeEventArgs<LineType> e)
+        private void MLineStyleElement_LineTypeChanged(MLineStyleElement sender, TableObjectChangedEventArgs<LineType> e)
         {
-            e.NewValue = this.OnMLineStyleElementLineTypeChangeEvent(e.OldValue, e.NewValue);
+            e.NewValue = this.OnMLineStyleElementLineTypeChangedEvent(e.OldValue, e.NewValue);
         }
 
         #endregion

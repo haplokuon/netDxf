@@ -28,6 +28,10 @@ namespace netDxf
     /// <summary>
     /// Represents the extended data information of an entity.
     /// </summary>
+    /// <remarks>
+    /// Do not store your own data under the ACAD application registry it is used by some entities to store special data,
+    /// it might be overwritten when the file is saved. Instead, create a new application registry and store your data there.
+    /// </remarks>
     public class XData :
         ICloneable
     {

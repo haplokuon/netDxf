@@ -101,6 +101,12 @@ namespace netDxf.Entities
 
         #endregion
 
+        #region overrides
+
+        /// <summary>
+        /// Creates a new HatchPatternLineDefinition that is a copy of the current instance.
+        /// </summary>
+        /// <returns>A new HatchPatternLineDefinition that is a copy of this instance.</returns>
         public object Clone()
         {
             HatchPatternLineDefinition copy = new HatchPatternLineDefinition
@@ -115,5 +121,7 @@ namespace netDxf.Entities
 
             return copy;
         }
+
+        #endregion
     }
 }

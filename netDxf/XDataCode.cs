@@ -30,54 +30,45 @@ namespace netDxf
         /// Strings in extended data can be up to 255 bytes long.
         /// </summary>
         public const short String = 1000;
-
         /// <summary>
         /// Application names can be up to 31 bytes long.
         /// </summary>
         internal const short AppReg = 1001;
-
         /// <summary>
         /// An extended data control string can be either “{” or “}”.
         /// These braces enable applications to organize their data by subdividing the data into lists.
-        /// The left brace begins a list, and the right brace terminates the most recent list. Lists can be nested
+        /// The left brace begins a list, and the right brace terminates the most recent list. Lists can be nested.
         /// </summary>
         internal const short ControlString = 1002;
-
         /// <summary>
         /// Name of the layer associated with the extended data
         /// </summary>
         public const short LayerName = 1003;
-
         /// <summary>
         /// Binary data is organized into variable-length chunks.
         /// The maximum length of each chunk is 127 bytes.
         /// The binary data is represented as a string of hexadecimal digits, two per binary byte.
         /// </summary>
         public const short BinaryData = 1004;
-
         /// <summary>
         /// Handles of entities in the drawing database.
         /// </summary>
         public const short DatabaseHandle = 1005;
-
         /// <summary>
         /// Three real values, in the order X, Y, Z.
         /// They can be used as a point or vector record. AutoCAD never alters their value.
         /// </summary>
         public const short RealX = 1010;
-
         /// <summary>
         /// Three real values, in the order X, Y, Z.
         /// They can be used as a point or vector record. AutoCAD never alters their value.
         /// </summary>
         public const short RealY = 1020;
-
         /// <summary>
         /// Three real values, in the order X, Y, Z.
         /// They can be used as a point or vector record. AutoCAD never alters their value.
         /// </summary>
         public const short RealZ = 1030;
-
         /// <summary>
         /// Unlike a simple 3D point, the world space coordinates are moved, scaled, rotated, and mirrored 
         /// along with the parent entity to which the extended data belongs. 
@@ -85,7 +76,6 @@ namespace netDxf
         /// this point lies within the select window
         /// </summary>
         public const short WorldSpacePositionX = 1011;
-
         /// <summary>
         /// Unlike a simple 3D point, the world space coordinates are moved, scaled, rotated, and mirrored 
         /// along with the parent entity to which the extended data belongs. 
@@ -93,7 +83,6 @@ namespace netDxf
         /// this point lies within the select window
         /// </summary>
         public const short WorldSpacePositionY = 1021;
-
         /// <summary>
         /// Unlike a simple 3D point, the world space coordinates are moved, scaled, rotated, and mirrored 
         /// along with the parent entity to which the extended data belongs. 
@@ -101,58 +90,47 @@ namespace netDxf
         /// this point lies within the select window
         /// </summary>
         public const short WorldSpacePositionZ = 1031;
-
         /// <summary>
         /// Also a 3D point that is scaled, rotated, and mirrored along with the parent (but is not moved or stretched)
         /// </summary>
         public const short WorldSpaceDisplacementX = 1012;
-
         /// <summary>
         /// Also a 3D point that is scaled, rotated, and mirrored along with the parent (but is not moved or stretched)
         /// </summary>
         public const short WorldSpaceDisplacementY = 1022;
-
         /// <summary>
         /// Also a 3D point that is scaled, rotated, and mirrored along with the parent (but is not moved or stretched)
         /// </summary>
         public const short WorldSpaceDisplacementZ = 1032;
-
         /// <summary>
         /// Also a 3D point that is rotated and mirrored along with the parent (but is not moved, scaled, or stretched)
         /// </summary>
         public const short WorldDirectionX = 1013;
-
         /// <summary>
         /// Also a 3D point that is rotated and mirrored along with the parent (but is not moved, scaled, or stretched)
         /// </summary>
         public const short WorldDirectionY = 1023;
-
         /// <summary>
         /// Also a 3D point that is rotated and mirrored along with the parent (but is not moved, scaled, or stretched)
         /// </summary>
         public const short WorldDirectionZ = 1033;
-
         /// <summary>
         /// A real value.
         /// </summary>
         public const short Real = 1040;
-
         /// <summary>
         /// A real value that is scaled along with the parent entity
         /// </summary>
         public const short Distance = 1041;
-
         /// <summary>
         /// Also a real value that is scaled along with the parent.
         /// The difference between a distance and a scale factor is application-defined
         /// </summary>
         public const short ScaleFactor = 1042;
-
         /// <summary>
         /// A 16-bit integer (signed or unsigned).
         /// </summary>
         public const short Int16 = 1070;
-
         /// <summary>
         /// A 32-bit signed integer.
         /// </summary>

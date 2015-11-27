@@ -24,10 +24,13 @@ using netDxf.Entities;
 
 namespace netDxf.Blocks
 {
+    /// <summary>
+    /// Represents the arguments thrown when an entity or an attribute definition is added ore removed from a <see cref="Block">Block</see>.
+    /// </summary>
     public class BlockEntityChangeEventArgs :
         EventArgs
     {
-         #region private fields
+        #region private fields
 
         private readonly EntityObject item;
 

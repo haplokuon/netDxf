@@ -20,7 +20,10 @@
 #endregion
 
 using System;
+using System.Drawing;
+using System.Drawing.Text;
 using System.IO;
+using Microsoft.Win32;
 using netDxf.Collections;
 
 namespace netDxf.Tables
@@ -34,6 +37,8 @@ namespace netDxf.Tables
         #region private fields
 
         private readonly string font;
+        private readonly string fontFamilyName;
+        private readonly bool registered;
         private double height;
         private bool isBackward;
         private bool isUpsideDown;
@@ -77,22 +82,46 @@ namespace netDxf.Tables
         /// <param name="name">Text style name.</param>
         /// <param name="font">Text style font file name.</param>
         public TextStyle(string name, string font)
-            : base(name, DxfObjectCode.TextStyle, true)
+            : this(name, font, true)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <c>TextStyle</c> class.
+        /// </summary>
+        /// <param name="name">Text style name.</param>
+        /// <param name="font">Text style font file name.</param>
+        /// <param name="checkName">Specifies if the style name has to be checked.</param>
+        internal TextStyle(string name, string font, bool checkName)
+            : base(name, DxfObjectCode.TextStyle, checkName)
         {
             if (string.IsNullOrEmpty(name))
                 throw new ArgumentNullException("name", "The text style name should be at least one character long.");
 
             if (string.IsNullOrEmpty(font))
-                throw (new ArgumentNullException("font"));
+                throw new ArgumentNullException("font");
 
             this.reserved = name.Equals("Standard", StringComparison.OrdinalIgnoreCase);
             this.font = font;
+            this.fontFamilyName = string.Empty;
             this.widthFactor = 1.0;
             this.obliqueAngle = 0.0;
             this.height = 0.0;
             this.isVertical = false;
             this.isBackward = false;
             this.isUpsideDown = false;
+            
+            if (Path.GetExtension(font).Equals(".ttf", StringComparison.OrdinalIgnoreCase))
+            {
+                string familyName;
+                PrivateFontCollection privateFontCollection = new PrivateFontCollection();
+                privateFontCollection.AddFontFile(font);
+                FontFamily[] fontFamilies = privateFontCollection.Families;
+                familyName = fontFamilies[0].Name;
+                string registeredFileName = FontFileFromFamilyName(familyName);
+                this.registered = !string.IsNullOrEmpty(registeredFileName);
+                this.fontFamilyName = familyName;
+            }
         }
 
         #endregion
@@ -125,7 +154,7 @@ namespace netDxf.Tables
             set
             {
                 if (value < 0)
-                    throw (new ArgumentOutOfRangeException("value", value, "The TextStyle height must be equals or greater than zero."));
+                    throw new ArgumentOutOfRangeException("value", value, "The TextStyle height must be equals or greater than zero.");
                 this.height = value;
             }
         }
@@ -140,7 +169,7 @@ namespace netDxf.Tables
             set
             {
                 if (value < 0.01 || value > 100.0)
-                    throw (new ArgumentOutOfRangeException("value", value, "The TextStyle width factor valid values range from 0.01 to 100."));
+                    throw new ArgumentOutOfRangeException("value", value, "The TextStyle width factor valid values range from 0.01 to 100.");
                 this.widthFactor = value;
             }
         }
@@ -155,7 +184,7 @@ namespace netDxf.Tables
             set
             {
                 if (value < -85.0 || value > 85.0)
-                    throw (new ArgumentOutOfRangeException("value", value, "The TextStyle oblique angle valid values range from -85 to 85."));
+                    throw new ArgumentOutOfRangeException("value", value, "The TextStyle oblique angle valid values range from -85 to 85.");
                 this.obliqueAngle = value;
             }
         }
@@ -194,6 +223,37 @@ namespace netDxf.Tables
         {
             get { return (TextStyles)this.owner; }
             internal set { this.owner = value; }
+        }
+
+        #endregion
+
+        #region internal properties
+
+        internal string FontFamilyName
+        {
+            get { return this.fontFamilyName; }
+        }
+
+        internal bool Registered
+        {
+            get { return this.registered; }
+        }
+
+        #endregion
+
+        #region internal methods
+
+        internal static string FontFileFromFamilyName(string familyName)
+        {
+            RegistryKey fonts;
+
+            fonts = Registry.LocalMachine.OpenSubKey(@"Software\Microsoft\Windows NT\CurrentVersion\Fonts", false);
+            if (fonts != null) return fonts.GetValue(familyName) as string;
+
+            fonts = Registry.LocalMachine.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Fonts", false);
+            if (fonts != null) return fonts.GetValue(familyName) as string;
+
+            return null;
         }
 
         #endregion

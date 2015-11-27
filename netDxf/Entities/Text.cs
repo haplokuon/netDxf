@@ -32,14 +32,14 @@ namespace netDxf.Entities
     {
         #region delegates and events
 
-        public delegate void TextStyleChangeEventHandler(Text sender, TableObjectChangeEventArgs<TextStyle> e);
-        public event TextStyleChangeEventHandler TextStyleChange;
-        protected virtual TextStyle OnTextStyleChangeEvent(TextStyle oldTextStyle, TextStyle newTextStyle)
+        public delegate void TextStyleChangedEventHandler(Text sender, TableObjectChangedEventArgs<TextStyle> e);
+        public event TextStyleChangedEventHandler TextStyleChanged;
+        protected virtual TextStyle OnTextStyleChangedEvent(TextStyle oldTextStyle, TextStyle newTextStyle)
         {
-            TextStyleChangeEventHandler ae = this.TextStyleChange;
+            TextStyleChangedEventHandler ae = this.TextStyleChanged;
             if (ae != null)
             {
-                TableObjectChangeEventArgs<TextStyle> eventArgs = new TableObjectChangeEventArgs<TextStyle>(oldTextStyle, newTextStyle);
+                TableObjectChangedEventArgs<TextStyle> eventArgs = new TableObjectChangedEventArgs<TextStyle>(oldTextStyle, newTextStyle);
                 ae(this, eventArgs );
                  return eventArgs.NewValue;
             }
@@ -124,7 +124,7 @@ namespace netDxf.Entities
                 throw new ArgumentNullException("style", "The Text style cannot be null.");
             this.style = style;
             if (height <= 0)
-                throw (new ArgumentOutOfRangeException("height", this.value, "The Text height must be greater than zero."));
+                throw new ArgumentOutOfRangeException("height", this.value, "The Text height must be greater than zero.");
             this.height = height;
             this.widthFactor = style.WidthFactor;
             this.obliqueAngle = style.ObliqueAngle;
@@ -162,7 +162,7 @@ namespace netDxf.Entities
             set
             {
                 if (value <= 0)
-                    throw (new ArgumentOutOfRangeException("value", value, "The Text height must be greater than zero."));
+                    throw new ArgumentOutOfRangeException("value", value, "The Text height must be greater than zero.");
                 this.height = value;
             }
         }
@@ -177,7 +177,7 @@ namespace netDxf.Entities
             set
             {
                 if (value < 0.01 || value > 100.0)
-                    throw (new ArgumentOutOfRangeException("value", value, "The Text width factor valid values range from 0.01 to 100."));
+                    throw new ArgumentOutOfRangeException("value", value, "The Text width factor valid values range from 0.01 to 100.");
                 this.widthFactor = value;
             }
         }
@@ -192,7 +192,7 @@ namespace netDxf.Entities
             set
             {
                 if (value < -85.0 || value > 85.0)
-                    throw (new ArgumentOutOfRangeException("value", value, "The Text oblique angle valid values range from -85 to 85."));
+                    throw new ArgumentOutOfRangeException("value", value, "The Text oblique angle valid values range from -85 to 85.");
                 this.obliqueAngle = value;
             }
         }
@@ -216,7 +216,7 @@ namespace netDxf.Entities
             {
                 if (value == null)
                     throw new ArgumentNullException("value", "The Text style cannot be null.");
-                this.style = this.OnTextStyleChangeEvent(this.style, value);
+                this.style = this.OnTextStyleChangedEvent(this.style, value);
             }
         }
 

@@ -89,6 +89,8 @@ namespace netDxf.Entities
 
                 if (style.DIMRND > 0.0)
                     measure = MathHelper.RoundToNearest(measure * scale, style.DIMRND);
+                else
+                    measure *= scale;
 
                 switch (style.DIMLUNIT)
                 {
@@ -110,7 +112,7 @@ namespace netDxf.Entities
                     case LinearUnitType.WindowsDesktop:
                         unitFormat.LinearDecimalPlaces = (short) Thread.CurrentThread.CurrentCulture.NumberFormat.NumberDecimalDigits;
                         unitFormat.DecimalSeparator = Thread.CurrentThread.CurrentCulture.NumberFormat.NumberDecimalSeparator;
-                        text = LinearUnitFormat.ToDecimal(measure, unitFormat);
+                        text = LinearUnitFormat.ToDecimal(measure * style.DIMLFAC, unitFormat);
                         break;
                 }
             }
@@ -209,21 +211,10 @@ namespace netDxf.Entities
 
         private static Line DimensionRadialLine(Vector2 start, Vector2 end, double rotation, short reversed, DimensionStyle style)
         {
-            double ext1 = style.DIMASZ * style.DIMSCALE;
-            double ext2 = -style.DIMASZ * style.DIMSCALE;
-
+            double ext = -style.DIMASZ * style.DIMSCALE;
             Block block;
 
-            block = style.DIMSAH ? style.DIMBLK1 : style.DIMBLK;
-            if (block != null)
-            {
-                if (block.Name.Equals("_OBLIQUE", StringComparison.OrdinalIgnoreCase) ||
-                    block.Name.Equals("_ARCHTICK", StringComparison.OrdinalIgnoreCase) ||
-                    block.Name.Equals("_INTEGRAL", StringComparison.OrdinalIgnoreCase) ||
-                    block.Name.Equals("_NONE", StringComparison.OrdinalIgnoreCase))
-                    ext1 = -style.DIMDLE * style.DIMSCALE;
-            }
-
+            // the radial dimension only has an arrowhead at its end
             block = style.DIMSAH ? style.DIMBLK2 : style.DIMBLK;
             if (block != null)
             {
@@ -231,11 +222,11 @@ namespace netDxf.Entities
                     block.Name.Equals("_ARCHTICK", StringComparison.OrdinalIgnoreCase) ||
                     block.Name.Equals("_INTEGRAL", StringComparison.OrdinalIgnoreCase) ||
                     block.Name.Equals("_NONE", StringComparison.OrdinalIgnoreCase))
-                    ext2 = style.DIMDLE * style.DIMSCALE;
+                    ext = style.DIMDLE * style.DIMSCALE;
             }
 
             //start = Vector2.Polar(start, reversed * ext1, rotation);
-            end = Vector2.Polar(end, reversed * ext2, rotation);
+            end = Vector2.Polar(end, reversed * ext, rotation);
 
             return new Line(start, end)
             {
@@ -368,7 +359,7 @@ namespace netDxf.Entities
             short side = 1;
             double rot = (dimRot + angleRef)*MathHelper.RadToDeg;
             rot = MathHelper.NormalizeAngle(rot);
-            if (rot > 180 && rot <= 360)
+            if (rot >= 180 && rot < 360)
                 side *= -1;
 
             Vector2 dir = v - u;
@@ -409,11 +400,11 @@ namespace netDxf.Entities
             // we will build the dimension block in object coordinates with normal the dimension normal
             Vector3 refPoint;
 
-            refPoint = MathHelper.Transform(dim.FirstReferencePoint, dim.Normal, MathHelper.CoordinateSystem.World, MathHelper.CoordinateSystem.Object);
+            refPoint = MathHelper.Transform(dim.FirstReferencePoint, dim.Normal, CoordinateSystem.World, CoordinateSystem.Object);
             ref1 = new Vector2(refPoint.X, refPoint.Y);
             double elevation = refPoint.Z;
 
-            refPoint = MathHelper.Transform(dim.SecondReferencePoint, dim.Normal, MathHelper.CoordinateSystem.World, MathHelper.CoordinateSystem.Object);
+            refPoint = MathHelper.Transform(dim.SecondReferencePoint, dim.Normal, CoordinateSystem.World, CoordinateSystem.Object);
             ref2 = new Vector2(refPoint.X, refPoint.Y);
 
             double dimRotation = dim.Rotation*MathHelper.DegToRad;
@@ -452,7 +443,7 @@ namespace netDxf.Entities
             MText mText = DimensionText(Vector2.Polar(midDim, style.DIMGAP * style.DIMSCALE, extRot), dimRotation, text, style);
             if (mText != null) entities.Add(mText);
 
-            dim.DefinitionPoint = MathHelper.Transform(new Vector3(dimRef2.X, dimRef2.Y, elevation), dim.Normal, MathHelper.CoordinateSystem.Object, MathHelper.CoordinateSystem.World);
+            dim.DefinitionPoint = MathHelper.Transform(new Vector3(dimRef2.X, dimRef2.Y, elevation), dim.Normal, CoordinateSystem.Object, CoordinateSystem.World);
             dim.MidTextPoint = new Vector3(midDim.X, midDim.Y, elevation); // this value is in OCS
 
             // drawing block
@@ -473,11 +464,11 @@ namespace netDxf.Entities
             // we will build the dimension block in object coordinates with normal the dimension normal
             Vector3 refPoint;
 
-            refPoint = MathHelper.Transform(dim.FirstReferencePoint, dim.Normal, MathHelper.CoordinateSystem.World, MathHelper.CoordinateSystem.Object);
+            refPoint = MathHelper.Transform(dim.FirstReferencePoint, dim.Normal, CoordinateSystem.World, CoordinateSystem.Object);
             ref1 = new Vector2(refPoint.X, refPoint.Y);
             double elevation = refPoint.Z;
 
-            refPoint = MathHelper.Transform(dim.SecondReferencePoint, dim.Normal, MathHelper.CoordinateSystem.World, MathHelper.CoordinateSystem.Object);
+            refPoint = MathHelper.Transform(dim.SecondReferencePoint, dim.Normal, CoordinateSystem.World, CoordinateSystem.Object);
             ref2 = new Vector2(refPoint.X, refPoint.Y);
 
             double refAngle = Vector2.Angle(ref1, ref2);
@@ -512,12 +503,12 @@ namespace netDxf.Entities
             // dimension text
             string text = FormatDimensionText(measure, false, dim.UserText, style, dim.Owner.Record.Layout);
 
-            double textRot = (refAngle + (1 - reversed)*MathHelper.HalfPI);
+            double textRot = refAngle + (1 - reversed)*MathHelper.HalfPI;
 
             MText mText = DimensionText(Vector2.Polar(midDim, reversed * style.DIMGAP * style.DIMSCALE, extRot), textRot, text, style);
             if (mText != null) entities.Add(mText);
 
-            dim.DefinitionPoint = MathHelper.Transform(new Vector3(dimRef2.X, dimRef2.Y, elevation), dim.Normal, MathHelper.CoordinateSystem.Object, MathHelper.CoordinateSystem.World);
+            dim.DefinitionPoint = MathHelper.Transform(new Vector3(dimRef2.X, dimRef2.Y, elevation), dim.Normal, CoordinateSystem.Object, CoordinateSystem.World);
             dim.MidTextPoint = new Vector3(midDim.X, midDim.Y, elevation); // this value is in OCS
 
             // drawing block
@@ -527,24 +518,26 @@ namespace netDxf.Entities
         public static Block Build(Angular2LineDimension dim, string name)
         {
             double offset = dim.Offset;
+            double side = Math.Sign(dim.Offset);
             double measure = dim.Measurement;
             DimensionStyle style = dim.Style;
             List<EntityObject> entities = new List<EntityObject>();
 
             // we will build the dimension block in object coordinates with normal the dimension normal
+            IList<Vector3> ocsPoints = MathHelper.Transform(new[]{dim.StartFirstLine, dim.EndFirstLine, dim.StartSecondLine, dim.EndSecondLine}, dim.Normal, CoordinateSystem.World, CoordinateSystem.Object);
             Vector3 refPoint;
-
-            refPoint = MathHelper.Transform(dim.StartFirstLine, dim.Normal, MathHelper.CoordinateSystem.World, MathHelper.CoordinateSystem.Object);
+            
+            refPoint = ocsPoints[0];
             Vector2 ref1Start = new Vector2(refPoint.X, refPoint.Y);
             double elevation = refPoint.Z;
 
-            refPoint = MathHelper.Transform(dim.EndFirstLine, dim.Normal, MathHelper.CoordinateSystem.World, MathHelper.CoordinateSystem.Object);
+            refPoint = ocsPoints[1];
             Vector2 ref1End = new Vector2(refPoint.X, refPoint.Y);
 
-            refPoint = MathHelper.Transform(dim.StartSecondLine, dim.Normal, MathHelper.CoordinateSystem.World, MathHelper.CoordinateSystem.Object);
+            refPoint = ocsPoints[2];
             Vector2 ref2Start = new Vector2(refPoint.X, refPoint.Y);
 
-            refPoint = MathHelper.Transform(dim.EndSecondLine, dim.Normal, MathHelper.CoordinateSystem.World, MathHelper.CoordinateSystem.Object);
+            refPoint = ocsPoints[3];
             Vector2 ref2End = new Vector2(refPoint.X, refPoint.Y);
 
             Vector2 dirRef1 = ref1End - ref1Start;
@@ -571,7 +564,7 @@ namespace netDxf.Entities
                 endAngle = tmp;
             }
             short reversed = 1;
-            if (offset < 0)
+            if (side < 0)
             {
                 Vector2 tmp1 = ref1Start;
                 Vector2 tmp2 = ref2Start;
@@ -604,17 +597,38 @@ namespace netDxf.Entities
             entities.Add(StartArrowHead(dimRef1, (1 - reversed)*MathHelper.HalfPI + angle1 + startAngle - MathHelper.HalfPI, style));
             entities.Add(EndArrowHead(dimRef2, (1 - reversed)*MathHelper.HalfPI + angle2 + endAngle + MathHelper.HalfPI, style));
 
-            // dimension lines
-            double dimexo = Math.Sign(offset)*style.DIMEXO*style.DIMSCALE;
-            double dimexe = Math.Sign(offset)*style.DIMEXE*style.DIMSCALE;
-            if (!style.DIMSE1) entities.Add(ExtensionLine(Vector2.Polar(ref1End, dimexo, startAngle), Vector2.Polar(dimRef1, dimexe, startAngle), style, style.DIMLTEX1));
-            if (!style.DIMSE2) entities.Add(ExtensionLine(Vector2.Polar(ref2End, dimexo, endAngle), Vector2.Polar(dimRef2, dimexe, endAngle), style, style.DIMLTEX1));
+            // dimension lines         
+            double dimexo = side * style.DIMEXO * style.DIMSCALE;
+            double dimexe = side * style.DIMEXE * style.DIMSCALE;
+            // the dimension line is only drawn if the end of the extension line is outside the line segment
+            int t;
+            t = MathHelper.PointInSegment(dimRef1, ref1Start, ref1End);
+            if (!style.DIMSE1 && t != 0)
+            {
+                Vector2 s;
+                if (t < 0)
+                    s = Vector2.Polar(ref1Start, t * dimexo, startAngle);
+                else
+                    s = Vector2.Polar(ref1End, t*dimexo, startAngle);
+                entities.Add(ExtensionLine(s, Vector2.Polar(dimRef1, t*dimexe, startAngle), style, style.DIMLTEX1));
+            }
+
+            t = MathHelper.PointInSegment(dimRef2, ref2Start, ref2End);
+            if (!style.DIMSE2 && t != 0)
+            {
+                Vector2 s;
+                if (t < 0)
+                    s = Vector2.Polar(ref2Start, t * dimexo, endAngle);
+                else
+                    s = Vector2.Polar(ref2End, t * dimexo, endAngle);
+                entities.Add(ExtensionLine(s, Vector2.Polar(dimRef2, t*dimexe, endAngle), style, style.DIMLTEX1));
+            }
 
             // dimension text
             string text = FormatDimensionText(measure, true, dim.UserText, style, dim.Owner.Record.Layout);
 
             double extRot = startAngle + aperture*0.5;
-            double textRot = (extRot - MathHelper.HalfPI);
+            double textRot = extRot - MathHelper.HalfPI;
 
             MText mText = DimensionText(Vector2.Polar(midDim, style.DIMGAP * style.DIMSCALE, extRot), textRot, text, style);
             if (mText != null) entities.Add(mText);
@@ -629,25 +643,34 @@ namespace netDxf.Entities
 
         public static Block Build(Angular3PointDimension dim, string name)
         {
-            double offset = dim.Offset;
+            double offset = Math.Abs(dim.Offset);
+            double side = Math.Sign(dim.Offset);
             double measure = dim.Measurement;
             double aperture = measure*MathHelper.DegToRad;
             DimensionStyle style = dim.Style;
             List<EntityObject> entities = new List<EntityObject>();
 
             // we will build the dimension block in object coordinates with normal the dimension normal
+            IList<Vector3> ocsPoints = MathHelper.Transform(new[] { dim.CenterPoint, dim.StartPoint, dim.EndPoint}, dim.Normal, CoordinateSystem.World, CoordinateSystem.Object);
             Vector3 refPoint;
 
-            refPoint = MathHelper.Transform(dim.CenterPoint, dim.Normal, MathHelper.CoordinateSystem.World, MathHelper.CoordinateSystem.Object);
+            refPoint = ocsPoints[0];
             Vector2 refCenter = new Vector2(refPoint.X, refPoint.Y);
 
-            refPoint = MathHelper.Transform(dim.StartPoint, dim.Normal, MathHelper.CoordinateSystem.World, MathHelper.CoordinateSystem.Object);
+            refPoint = ocsPoints[1];
             Vector2 ref1 = new Vector2(refPoint.X, refPoint.Y);
 
-            refPoint = MathHelper.Transform(dim.EndPoint, dim.Normal, MathHelper.CoordinateSystem.World, MathHelper.CoordinateSystem.Object);
+            refPoint = ocsPoints[2];
             Vector2 ref2 = new Vector2(refPoint.X, refPoint.Y);
 
             double elevation = refPoint.Z;
+
+            if (side < 0)
+            {
+                Vector2 tmp = ref1;
+                ref1 = ref2;
+                ref2 = tmp;
+            }
 
             double startAngle = Vector2.Angle(refCenter, ref1);
             double endAngle = Vector2.Angle(refCenter, ref2);
@@ -674,20 +697,26 @@ namespace netDxf.Entities
             entities.Add( EndArrowHead(dimRef2, angle2 + endAngle + MathHelper.HalfPI, style));
 
             // dimension lines
-            double dimexo = Math.Sign(offset) * style.DIMEXO * style.DIMSCALE;
-            double dimexe = Math.Sign(offset) * style.DIMEXE * style.DIMSCALE;
-            if (!style.DIMSE1) entities.Add( ExtensionLine(Vector2.Polar(ref1, dimexo, startAngle), Vector2.Polar(dimRef1, dimexe, startAngle), style, style.DIMLTEX1));
-            if (!style.DIMSE2) entities.Add( ExtensionLine(Vector2.Polar(ref2, dimexo, endAngle), Vector2.Polar(dimRef2, dimexe, endAngle), style, style.DIMLTEX1));
+            double dimexo = style.DIMEXO * style.DIMSCALE;
+            double dimexe = style.DIMEXE * style.DIMSCALE;
+            if (!style.DIMSE1) entities.Add(ExtensionLine(Vector2.Polar(ref1, dimexo, startAngle), Vector2.Polar(dimRef1, dimexe, startAngle), style, style.DIMLTEX1));
+            if (!style.DIMSE2) entities.Add(ExtensionLine(Vector2.Polar(ref2, dimexo, endAngle), Vector2.Polar(dimRef2, dimexe, endAngle), style, style.DIMLTEX1));
 
             // dimension text
             string text = FormatDimensionText(measure, true, dim.UserText, style, dim.Owner.Record.Layout);
 
             double textRot = midRot - MathHelper.HalfPI;
-
-            MText mText = DimensionText(Vector2.Polar(midDim, style.DIMGAP * style.DIMSCALE, midRot), textRot, text, style);
+            double gap = style.DIMGAP*style.DIMSCALE;
+            if (textRot < MathHelper.PI)
+            {
+                textRot += MathHelper.PI;
+                gap *= -1;
+            }
+                
+            MText mText = DimensionText(Vector2.Polar(midDim, gap , midRot), textRot, text, style);
             if (mText != null) entities.Add(mText);
 
-            dim.DefinitionPoint = MathHelper.Transform(new Vector3(midDim.X, midDim.Y, elevation), dim.Normal, MathHelper.CoordinateSystem.Object, MathHelper.CoordinateSystem.World);
+            dim.DefinitionPoint = MathHelper.Transform(new Vector3(midDim.X, midDim.Y, elevation), dim.Normal, CoordinateSystem.Object, CoordinateSystem.World);
             dim.MidTextPoint = new Vector3(midDim.X, midDim.Y, elevation); // this value is in OCS
 
             // drawing block
@@ -698,18 +727,19 @@ namespace netDxf.Entities
         {
             double offset = dim.Offset;
             double measure = dim.Measurement;
+            double radius = measure * 0.5;
             DimensionStyle style = dim.Style;
             List<EntityObject> entities = new List<EntityObject>();
 
             // we will build the dimension block in object coordinates with normal the dimension normal
             Vector3 refPoint;
 
-            refPoint = MathHelper.Transform(dim.CenterPoint, dim.Normal, MathHelper.CoordinateSystem.World, MathHelper.CoordinateSystem.Object);
+            refPoint = MathHelper.Transform(dim.CenterPoint, dim.Normal, CoordinateSystem.World, CoordinateSystem.Object);
 
             Vector2 centerRef = new Vector2(refPoint.X, refPoint.Y);
             double elev = refPoint.Z;
 
-            refPoint = MathHelper.Transform(dim.ReferencePoint, dim.Normal, MathHelper.CoordinateSystem.World, MathHelper.CoordinateSystem.Object);
+            refPoint = MathHelper.Transform(dim.ReferencePoint, dim.Normal, CoordinateSystem.World, CoordinateSystem.Object);
             Vector2 ref1 = new Vector2(refPoint.X, refPoint.Y);
 
             double angleRef = Vector2.Angle(centerRef, ref1);
@@ -719,18 +749,23 @@ namespace netDxf.Entities
             if(angleRef>MathHelper.HalfPI && angleRef<=MathHelper.ThreeHalfPI)
                 reverse = -1;
 
-            short side = 1;
+            short side;
             double minOffset = 2 * style.DIMASZ + style.DIMGAP * style.DIMSCALE;
-            if (offset > (measure*0.5 - minOffset) && offset < measure*0.5)
+            
+            if (offset >= radius && offset <= radius + minOffset)
             {
-                offset = measure * 0.5 - minOffset;
-                side = 1;
-            }
-            else if (offset >= measure*0.5 && offset < (measure*0.5 + minOffset))
-            {
-                offset = measure * 0.5 + minOffset;
+                offset = radius + minOffset;
                 side = -1;
             }
+            else if (offset >= radius - minOffset && offset <= radius)
+            {
+                offset = radius - minOffset;
+                side = 1;
+            }
+            else if (offset > radius)
+                side = -1;
+            else
+                side = 1;
 
             Vector2 dimRef = Vector2.Polar(centerRef, offset, angleRef);
 
@@ -739,10 +774,10 @@ namespace netDxf.Entities
             entities.Add(new Point(ref1) { Layer = defPoints });
 
             // dimension lines
-            entities.Add( DimensionRadialLine(dimRef, ref1, angleRef, side, style));
+            entities.Add(DimensionRadialLine(dimRef, ref1, angleRef, side, style));
 
             // center cross
-            entities.AddRange(CenterCross(centerRef, measure * 0.5, style));
+            entities.AddRange(CenterCross(centerRef, radius, style));
 
             // dimension arrows
             entities.Add(EndArrowHead(ref1, (1 - side) * MathHelper.HalfPI + angleRef, style));
@@ -761,7 +796,7 @@ namespace netDxf.Entities
                 entities.Add(mText);
             }
 
-            dim.DefinitionPoint = MathHelper.Transform(new Vector3(ref2.X, ref2.Y, elev), dim.Normal, MathHelper.CoordinateSystem.Object, MathHelper.CoordinateSystem.World);
+            dim.DefinitionPoint = MathHelper.Transform(new Vector3(ref2.X, ref2.Y, elev), dim.Normal, CoordinateSystem.Object, CoordinateSystem.World);
             dim.MidTextPoint = new Vector3(dimRef.X, dimRef.Y, elev); // this value is in OCS
 
             return new Block(name, false, entities, null);
@@ -777,12 +812,12 @@ namespace netDxf.Entities
             // we will build the dimension block in object coordinates with normal the dimension normal
             Vector3 refPoint;
 
-            refPoint = MathHelper.Transform(dim.CenterPoint, dim.Normal, MathHelper.CoordinateSystem.World, MathHelper.CoordinateSystem.Object);
+            refPoint = MathHelper.Transform(dim.CenterPoint, dim.Normal, CoordinateSystem.World, CoordinateSystem.Object);
 
             Vector2 centerRef = new Vector2(refPoint.X, refPoint.Y);
             double elev = refPoint.Z;
 
-            refPoint = MathHelper.Transform(dim.ReferencePoint, dim.Normal, MathHelper.CoordinateSystem.World, MathHelper.CoordinateSystem.Object);
+            refPoint = MathHelper.Transform(dim.ReferencePoint, dim.Normal, CoordinateSystem.World, CoordinateSystem.Object);
             Vector2 ref1 = new Vector2(refPoint.X, refPoint.Y);
 
             double angleRef = Vector2.Angle(centerRef, ref1);
@@ -792,18 +827,22 @@ namespace netDxf.Entities
             if (angleRef > MathHelper.HalfPI && angleRef <= MathHelper.ThreeHalfPI)
                 reverse = -1;
 
-            short side = 1;
+            short side;
             double minOffset = 2 * style.DIMASZ + style.DIMGAP * style.DIMSCALE;
-            if (offset > (measure - minOffset) && offset < measure)
-            {
-                offset = measure - minOffset;
-                side = 1;
-            }
-            else if (offset >= measure && offset < (measure + minOffset))
+            if (offset >= measure && offset <= measure + minOffset)
             {
                 offset = measure + minOffset;
                 side = -1;
             }
+            else if (offset >= measure - minOffset && offset <= measure)
+            {
+                offset = measure - minOffset;
+                side = 1;
+            }     
+            else if (offset > measure)
+                side = -1;
+            else
+                side = 1;
 
             Vector2 dimRef = Vector2.Polar(centerRef, offset, angleRef);
 
@@ -834,7 +873,7 @@ namespace netDxf.Entities
                 entities.Add(mText);
             }
 
-            dim.DefinitionPoint = MathHelper.Transform(new Vector3(ref2.X, ref2.Y, elev), dim.Normal, MathHelper.CoordinateSystem.Object, MathHelper.CoordinateSystem.World);
+            dim.DefinitionPoint = MathHelper.Transform(new Vector3(ref2.X, ref2.Y, elev), dim.Normal, CoordinateSystem.Object, CoordinateSystem.World);
             dim.MidTextPoint = new Vector3(dimRef.X, dimRef.Y, elev); // this value is in OCS
 
             return new Block(name, false, entities, null);
@@ -851,29 +890,29 @@ namespace netDxf.Entities
             dim.DefinitionPoint = dim.Origin;
             double angle = dim.Rotation * MathHelper.DegToRad;
 
-            Vector3 localPoint = MathHelper.Transform(dim.Origin, dim.Normal, MathHelper.CoordinateSystem.World, MathHelper.CoordinateSystem.Object);
+            Vector3 localPoint = MathHelper.Transform(dim.Origin, dim.Normal, CoordinateSystem.World, CoordinateSystem.Object);
             Vector2 refCenter = new Vector2(localPoint.X, localPoint.Y);
 
             double elev = localPoint.Z;
 
-            Vector2 startPoint = refCenter + MathHelper.Transform(dim.ReferencePoint, angle, MathHelper.CoordinateSystem.Object, MathHelper.CoordinateSystem.World);
-            dim.FirstPoint = MathHelper.Transform(new Vector3(startPoint.X, startPoint.Y, elev), dim.Normal, MathHelper.CoordinateSystem.Object, MathHelper.CoordinateSystem.World);
+            Vector2 startPoint = refCenter + MathHelper.Transform(dim.ReferencePoint, angle, CoordinateSystem.Object, CoordinateSystem.World);
+            dim.FirstPoint = MathHelper.Transform(new Vector3(startPoint.X, startPoint.Y, elev), dim.Normal, CoordinateSystem.Object, CoordinateSystem.World);
 
             if (dim.Axis == OrdinateDimensionAxis.X)
                 angle += MathHelper.HalfPI;
             Vector2 endPoint = Vector2.Polar(startPoint, dim.Length, angle);
-            dim.SecondPoint = MathHelper.Transform(new Vector3(endPoint.X, endPoint.Y, elev), dim.Normal, MathHelper.CoordinateSystem.Object, MathHelper.CoordinateSystem.World);
+            dim.SecondPoint = MathHelper.Transform(new Vector3(endPoint.X, endPoint.Y, elev), dim.Normal, CoordinateSystem.Object, CoordinateSystem.World);
 
             // reference points
             Layer defPoints = new Layer("Defpoints") { Plot = false };
+            entities.Add(new Point(refCenter) { Layer = defPoints });
             entities.Add(new Point(startPoint) { Layer = defPoints });
-            entities.Add(new Point(endPoint) { Layer = defPoints });
 
             short side = 1;
             if (dim.Length < 0) side = -1;
 
             // dimension lines
-            entities.Add(new Line(Vector2.Polar(startPoint, style.DIMEXO * style.DIMSCALE, angle), endPoint));
+            entities.Add(new Line(Vector2.Polar(startPoint, side * style.DIMEXO * style.DIMSCALE, angle), endPoint));
 
             // dimension text
             Vector2 midText = Vector2.Polar(startPoint, dim.Length + side * style.DIMGAP * style.DIMSCALE, angle);

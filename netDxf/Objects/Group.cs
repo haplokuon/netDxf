@@ -19,7 +19,6 @@
 //  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #endregion
 
-using System;
 using System.Collections.Generic;
 using netDxf.Collections;
 using netDxf.Entities;
@@ -106,7 +105,7 @@ namespace netDxf.Objects
         /// <remarks>
         /// If the name is set to null or empty, a unique name will be generated when it is added to the document.
         /// </remarks>
-        public Group(ICollection<EntityObject> entities)
+        public Group(IList<EntityObject> entities)
             : this(string.Empty, entities)
         {
         }
@@ -119,7 +118,7 @@ namespace netDxf.Objects
         /// <remarks>
         /// If the name is set to null or empty, a unique name will be generated when it is added to the document.
         /// </remarks>
-        public Group(string name, ICollection<EntityObject> entities)
+        public Group(string name, IList<EntityObject> entities)
             : base(name, DxfObjectCode.Group, !string.IsNullOrEmpty(name))
         {
             this.isUnnamed = string.IsNullOrEmpty(name);

@@ -101,7 +101,7 @@ namespace netDxf.Entities
         /// <param name="pattern"><see cref="HatchPattern">Hatch pattern</see>.</param>
         /// <param name="paths">A list of <see cref="HatchBoundaryPath">boundary paths</see>.</param>
         /// <param name="associative">Defines if the hatch is associative or not.</param>
-        public Hatch(HatchPattern pattern, ICollection<HatchBoundaryPath> paths, bool associative)
+        public Hatch(HatchPattern pattern, IList<HatchBoundaryPath> paths, bool associative)
             : base(EntityType.Hatch, DxfObjectCode.Hatch)
         {
             if (pattern == null)
@@ -221,23 +221,23 @@ namespace netDxf.Entities
                     EntityObject entity = edge.ConvertTo();
                     switch (entity.Type)
                     {
-                        case (EntityType.Arc):
+                        case EntityType.Arc:
                             boundary.Add(ProcessArc((Arc) entity, trans, pos));
                             break;
-                        case (EntityType.Circle):
+                        case EntityType.Circle:
                             boundary.Add(ProcessCircle((Circle) entity, trans, pos));
                             break;
-                        case (EntityType.Ellipse):
+                        case EntityType.Ellipse:
                             boundary.Add(ProcessEllipse((Ellipse) entity, trans, pos));
                             break;
-                        case (EntityType.Line):
+                        case EntityType.Line:
                             boundary.Add(ProcessLine((Line) entity, trans, pos));
                             break;
-                        case (EntityType.LightWeightPolyline):
+                        case EntityType.LightWeightPolyline:
                             // LwPolylines need an special treatment since their vertexes are expressed in object coordinates.
                             boundary.Add(ProcessLwPolyline((LwPolyline) entity, this.normal, this.elevation));
                             break;
-                        case (EntityType.Spline):
+                        case EntityType.Spline:
                             boundary.Add(ProcessSpline((Spline) entity, trans, pos));
                             break;
                     }
@@ -296,7 +296,7 @@ namespace netDxf.Entities
         private static Spline ProcessSpline(Spline spline, Matrix3 trans, Vector3 pos)
         {
             foreach (SplineVertex vertex in spline.ControlPoints)
-                vertex.Location = trans*vertex.Location + pos;
+                vertex.Position = trans*vertex.Position + pos;
 
             spline.Normal = trans*spline.Normal;
             return spline;
@@ -384,6 +384,5 @@ namespace netDxf.Entities
         }
 
         #endregion
-
     }
 }

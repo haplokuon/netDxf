@@ -32,8 +32,8 @@ namespace netDxf.Entities
     { 
         #region private fields
 
-        private readonly VertexTypeFlags flags;
-        private Vector3 location;
+        private VertexTypeFlags flags;
+        private Vector3 position;
 
         #endregion
 
@@ -61,25 +61,25 @@ namespace netDxf.Entities
         /// <summary>
         /// Initializes a new instance of the <c>PolylineVertex</c> class.
         /// </summary>
-        /// <param name="location">Polyline <see cref="Vector3">vertex</see> coordinates.</param>
-        public PolylineVertex(Vector3 location)
+        /// <param name="position">Polyline <see cref="Vector3">vertex</see> coordinates.</param>
+        public PolylineVertex(Vector3 position)
             : base(DxfObjectCode.Vertex)
         {
             this.flags = VertexTypeFlags.Polyline3dVertex;
-            this.location = location;
+            this.position = position;
         }
 
         #endregion
 
         #region public properties
 
-       /// <summary>
-        /// Gets or sets the vertex <see cref="Vector3">location</see>.
+        /// <summary>
+        /// Gets or sets the vertex <see cref="Vector3">position</see>.
         /// </summary>
-        public Vector3 Location
+        public Vector3 Position
         {
-            get { return this.location; }
-            set { this.location = value; }
+            get { return this.position; }
+            set { this.position = value; }
         }
 
         /// <summary>
@@ -88,6 +88,7 @@ namespace netDxf.Entities
         internal VertexTypeFlags Flags
         {
             get { return this.flags; }
+            set { this.flags = value; }
         }
 
         #endregion
@@ -100,7 +101,7 @@ namespace netDxf.Entities
         /// <returns>The string representation.</returns>
         public override string ToString()
         {
-            return String.Format("{0}: ({1})", "PolylineVertex", this.location);
+            return string.Format("{0}: ({1})", "PolylineVertex", this.position);
         }
 
         /// <summary>
@@ -109,7 +110,7 @@ namespace netDxf.Entities
         /// <returns>A new PolylineVertex that is a copy of this instance.</returns>
         public object Clone()
         {
-            return new PolylineVertex(this.location);
+            return new PolylineVertex(this.position);
         }
 
         #endregion

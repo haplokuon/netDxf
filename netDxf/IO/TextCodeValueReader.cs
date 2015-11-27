@@ -62,7 +62,7 @@ namespace netDxf.IO
             string readCode = this.reader.ReadLine();
             this.currentPosition += 1;
             if (!short.TryParse(readCode, NumberStyles.Integer, CultureInfo.InvariantCulture, out this.code))
-                throw (new Exception(string.Format("Code {0} not valid at line {1}", this.code, this.currentPosition)));
+                throw new Exception(string.Format("Code {0} not valid at line {1}", this.code, this.currentPosition));
             this.value = this.reader.ReadLine();
             this.currentPosition += 1;
         }

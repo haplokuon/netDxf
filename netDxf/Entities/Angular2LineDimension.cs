@@ -21,6 +21,7 @@
 #endregion
 
 using System;
+using System.Collections.Generic;
 using netDxf.Blocks;
 using netDxf.Tables;
 
@@ -144,7 +145,7 @@ namespace netDxf.Entities
 
             if (style == null)
                 throw new ArgumentNullException("style", "The Dimension style cannot be null.");
-            this.style = style;            
+            this.style = style;
         }
 
         #endregion
@@ -200,7 +201,7 @@ namespace netDxf.Entities
         /// <summary>
         /// Gets or sets the distance between the center point and the dimension line.
         /// </summary>
-        /// <remarks>Zero values are not allowed.</remarks>
+        /// <remarks>Zero values are not allowed, and even if negative values are permitted they are not recommended.</remarks>
         public double Offset
         {
             get { return this.offset; }
@@ -220,18 +221,19 @@ namespace netDxf.Entities
         {
             get
             {
+                IList<Vector3> ocsPoints = MathHelper.Transform(new[] { this.startFirstLine, this.endFirstLine, this.startSecondLine, this.endSecondLine }, this.normal, CoordinateSystem.World, CoordinateSystem.Object);
                 Vector3 refPoint;
 
-                refPoint = MathHelper.Transform(this.startFirstLine, this.normal, MathHelper.CoordinateSystem.World, MathHelper.CoordinateSystem.Object);
+                refPoint = ocsPoints[0];
                 Vector2 ref1Start = new Vector2(refPoint.X, refPoint.Y);
 
-                refPoint = MathHelper.Transform(this.endFirstLine, this.normal, MathHelper.CoordinateSystem.World, MathHelper.CoordinateSystem.Object);
+                refPoint = ocsPoints[1];
                 Vector2 ref1End = new Vector2(refPoint.X, refPoint.Y);
 
-                refPoint = MathHelper.Transform(this.startSecondLine, this.normal, MathHelper.CoordinateSystem.World, MathHelper.CoordinateSystem.Object);
+                refPoint = ocsPoints[2];
                 Vector2 ref2Start = new Vector2(refPoint.X, refPoint.Y);
 
-                refPoint = MathHelper.Transform(this.endSecondLine, this.normal, MathHelper.CoordinateSystem.World, MathHelper.CoordinateSystem.Object);
+                refPoint = ocsPoints[3];
                 Vector2 ref2End = new Vector2(refPoint.X, refPoint.Y);
 
                 Vector2 dirRef1 = ref1End - ref1Start;

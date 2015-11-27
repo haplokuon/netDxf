@@ -172,7 +172,7 @@ namespace netDxf.Entities
         public LwPolyline ToPolyline(int precision)
         {
             IEnumerable<Vector2> vertexes = this.PolygonalVertexes(precision);
-            Vector3 ocsCenter = MathHelper.Transform(this.center, this.Normal, MathHelper.CoordinateSystem.World, MathHelper.CoordinateSystem.Object);
+            Vector3 ocsCenter = MathHelper.Transform(this.center, this.Normal, CoordinateSystem.World, CoordinateSystem.Object);
 
             LwPolyline poly = new LwPolyline
                 {

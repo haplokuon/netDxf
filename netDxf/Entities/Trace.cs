@@ -180,6 +180,5 @@ namespace netDxf.Entities
         }
 
         #endregion
-
     }
 }

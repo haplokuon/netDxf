@@ -29,11 +29,11 @@ namespace netDxf.Units
         /// <summary>
         /// Horizontal stacking.
         /// </summary>
-        Horizontal=0,
+        Horizontal = 0,
         /// <summary>
         /// Diagonal stacking.
         /// </summary>
-        Diagonal=1,
+        Diagonal = 1,
         /// <summary>
         /// Not stacked (for example, 1/2).
         /// </summary>

@@ -56,6 +56,7 @@ namespace netDxf.Collections
         /// Adds an application registry to the list.
         /// </summary>
         /// <param name="appReg"><see cref="ApplicationRegistry">ApplicationRegistry</see> to add to the list.</param>
+        /// <param name="assignHandle">Checks if the appReg parameter requires a handle.</param>
         /// <returns>
         /// If a an application registry already exists with the same name as the instance that is being added the method returns the existing application registry,
         /// if not it will return the new application registry.
@@ -77,7 +78,7 @@ namespace netDxf.Collections
             this.references.Add(appReg.Name, new List<DxfObject>());
             appReg.Owner = this;
 
-            appReg.NameChange += this.Item_NameChange;
+            appReg.NameChanged += this.Item_NameChanged;
 
             return appReg;
         }
@@ -121,7 +122,7 @@ namespace netDxf.Collections
             appReg.Handle = null;
             appReg.Owner = null;
 
-            appReg.NameChange -= this.Item_NameChange;
+            appReg.NameChanged -= this.Item_NameChanged;
 
             return true;
         }
@@ -130,7 +131,7 @@ namespace netDxf.Collections
 
         #region TableObject events
 
-        private void Item_NameChange(TableObject sender, TableObjectChangeEventArgs<string> e)
+        private void Item_NameChanged(TableObject sender, TableObjectChangedEventArgs<string> e)
         {
             if (this.Contains(e.NewValue))
                 throw new ArgumentException("There is already another application registry with the same name.");
@@ -144,6 +145,5 @@ namespace netDxf.Collections
         }
 
         #endregion
-
     }
 }

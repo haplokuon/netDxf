@@ -36,7 +36,7 @@ namespace netDxf.Entities
         #region private fields
 
         private VertexTypeFlags flags;
-        private Vector3 location;
+        private Vector3 position;
         private short[] vertexIndexes;
         private double startWidth;
         private double endWidth;
@@ -60,9 +60,9 @@ namespace netDxf.Entities
         /// <summary>
         /// Initializes a new instance of the <c>Vertex</c> class.
         /// </summary>
-        /// <param name="location">Vertex <see cref="netDxf.Vector2">location</see>.</param>
-        public Vertex(Vector2 location)
-            : this(new Vector3(location.X, location.Y, 0.0))
+        /// <param name="position">Vertex <see cref="Vector2">location</see>.</param>
+        public Vertex(Vector2 position)
+            : this(new Vector3(position.X, position.Y, 0.0))
         {
         }
 
@@ -90,12 +90,12 @@ namespace netDxf.Entities
         /// <summary>
         /// Initializes a new instance of the <c>Vertex</c> class.
         /// </summary>
-        /// <param name="location">Vertex <see cref="netDxf.Vector3">location</see>.</param>
-        public Vertex(Vector3 location)
+        /// <param name="position">Vertex <see cref="Vector3">location</see>.</param>
+        public Vertex(Vector3 position)
             : base(DxfObjectCode.Vertex)
         {
             this.flags = VertexTypeFlags.PolylineVertex;
-            this.location = location;
+            this.position = position;
             this.layer = Layer.Default;
             this.color = AciColor.ByLayer;
             this.lineType = LineType.ByLayer;
@@ -109,12 +109,12 @@ namespace netDxf.Entities
         #region public properties
         
         /// <summary>
-        /// Gets or sets the polyline vertex <see cref="netDxf.Vector3">location</see>.
+        /// Gets or sets the polyline vertex <see cref="Vector3">location</see>.
         /// </summary>
-        public Vector3 Location
+        public Vector3 Position
         {
-            get { return this.location; }
-            set { this.location = value; }
+            get { return this.position; }
+            set { this.position = value; }
         }
 
         public short[] VertexIndexes

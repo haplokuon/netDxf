@@ -34,42 +34,42 @@ namespace netDxf.Tables
     {
         #region delegates and events
 
-        public delegate void LineTypeChangeEventHandler(TableObject sender, TableObjectChangeEventArgs<LineType> e);
-        public event LineTypeChangeEventHandler LineTypeChange;
-        protected virtual LineType OnLineTypeChangeEvent(LineType oldLineType, LineType newLineType)
+        public delegate void LineTypeChangedEventHandler(TableObject sender, TableObjectChangedEventArgs<LineType> e);
+        public event LineTypeChangedEventHandler LineTypeChanged;
+        protected virtual LineType OnLineTypeChangedEvent(LineType oldLineType, LineType newLineType)
         {
-            LineTypeChangeEventHandler ae = this.LineTypeChange;
+            LineTypeChangedEventHandler ae = this.LineTypeChanged;
             if (ae != null)
             {
-                TableObjectChangeEventArgs<LineType> eventArgs = new TableObjectChangeEventArgs<LineType>(oldLineType, newLineType);
+                TableObjectChangedEventArgs<LineType> eventArgs = new TableObjectChangedEventArgs<LineType>(oldLineType, newLineType);
                 ae(this, eventArgs);
                 return eventArgs.NewValue;
             }
             return newLineType;
         }
 
-        public delegate void TextStyleChangeEventHandler(TableObject sender, TableObjectChangeEventArgs<TextStyle> e);
-        public event TextStyleChangeEventHandler TextStyleChange;
-        protected virtual TextStyle OnTextStyleChangeEvent(TextStyle oldTextStyle, TextStyle newTextStyle)
+        public delegate void TextStyleChangedEventHandler(TableObject sender, TableObjectChangedEventArgs<TextStyle> e);
+        public event TextStyleChangedEventHandler TextStyleChanged;
+        protected virtual TextStyle OnTextStyleChangedEvent(TextStyle oldTextStyle, TextStyle newTextStyle)
         {
-            TextStyleChangeEventHandler ae = this.TextStyleChange;
+            TextStyleChangedEventHandler ae = this.TextStyleChanged;
             if (ae != null)
             {
-                TableObjectChangeEventArgs<TextStyle> eventArgs = new TableObjectChangeEventArgs<TextStyle>(oldTextStyle, newTextStyle);
+                TableObjectChangedEventArgs<TextStyle> eventArgs = new TableObjectChangedEventArgs<TextStyle>(oldTextStyle, newTextStyle);
                 ae(this, eventArgs);
                 return eventArgs.NewValue;
             }
             return newTextStyle;
         }
 
-        public delegate void BlockChangeEventHandler(TableObject sender, TableObjectChangeEventArgs<Block> e);
-        public event BlockChangeEventHandler BlockChange;
-        protected virtual Block OnBlockChangeEvent(Block oldBlock, Block newBlock)
+        public delegate void BlockChangedEventHandler(TableObject sender, TableObjectChangedEventArgs<Block> e);
+        public event BlockChangedEventHandler BlockChanged;
+        protected virtual Block OnBlockChangedEvent(Block oldBlock, Block newBlock)
         {
-            BlockChangeEventHandler ae = this.BlockChange;
+            BlockChangedEventHandler ae = this.BlockChanged;
             if (ae != null)
             {
-                TableObjectChangeEventArgs<Block> eventArgs = new TableObjectChangeEventArgs<Block>(this.dimblk, newBlock);
+                TableObjectChangedEventArgs<Block> eventArgs = new TableObjectChangedEventArgs<Block>(oldBlock, newBlock);
                 ae(this, eventArgs);
                 return eventArgs.NewValue;
             }
@@ -101,6 +101,7 @@ namespace netDxf.Tables
         private double dimasz;
         private double dimcen;
         private bool dimsah;
+        private Block dimldrblk;
         private Block dimblk;
         private Block dimblk1;
         private Block dimblk2;
@@ -161,7 +162,12 @@ namespace netDxf.Tables
         /// </summary>
         /// <param name="name">The dimension style name.</param>
         public DimensionStyle(string name)
-            : base(name, DxfObjectCode.DimStyle, true)
+            : this(name, true)
+        {
+        }
+
+        internal DimensionStyle(string name, bool checkName)
+            : base(name, DxfObjectCode.DimStyle, checkName)
         {
             if (string.IsNullOrEmpty(name))
                 throw new ArgumentNullException("name", "The dimension style name should be at least one character long.");
@@ -189,6 +195,7 @@ namespace netDxf.Tables
             this.dimasz = 0.18;
             this.dimcen = 0.09;
             this.dimsah = false;
+            this.dimldrblk = null;
             this.dimblk = null;
             this.dimblk1 = null;
             this.dimblk2 = null;
@@ -259,7 +266,7 @@ namespace netDxf.Tables
             {
                 if (value == null)
                     throw new ArgumentNullException("value");
-                this.dimltype = this.OnLineTypeChangeEvent(this.dimltype, value);
+                this.dimltype = this.OnLineTypeChangedEvent(this.dimltype, value);
             }
         }
 
@@ -288,7 +295,7 @@ namespace netDxf.Tables
             set
             {
                 if (value < 0)
-                    throw (new ArgumentOutOfRangeException("value", value, "The DIMDLE must be equals or greater than zero."));
+                    throw new ArgumentOutOfRangeException("value", value, "The DIMDLE must be equals or greater than zero.");
                 this.dimdle = value;
             }
         }
@@ -307,7 +314,7 @@ namespace netDxf.Tables
             set
             {
                 if (value < 0)
-                    throw (new ArgumentOutOfRangeException("value", value, "The DIMDLI must be equals or greater than zero."));
+                    throw new ArgumentOutOfRangeException("value", value, "The DIMDLI must be equals or greater than zero.");
                 this.dimdli = value;
             }
         }
@@ -345,7 +352,7 @@ namespace netDxf.Tables
             {
                 if (value == null)
                     throw new ArgumentNullException("value");
-                this.dimltex1 = this.OnLineTypeChangeEvent(this.dimltex1, value);
+                this.dimltex1 = this.OnLineTypeChangedEvent(this.dimltex1, value);
             }
         }
 
@@ -360,7 +367,7 @@ namespace netDxf.Tables
             {
                 if (value == null)
                     throw new ArgumentNullException("value");
-                this.dimltex2 = this.OnLineTypeChangeEvent(this.dimltex2, value);
+                this.dimltex2 = this.OnLineTypeChangedEvent(this.dimltex2, value);
             }
         }
 
@@ -409,7 +416,7 @@ namespace netDxf.Tables
             set
             {
                 if (value < 0)
-                    throw (new ArgumentOutOfRangeException("value", value, "The DIMEXO must be equals or greater than zero."));
+                    throw new ArgumentOutOfRangeException("value", value, "The DIMEXO must be equals or greater than zero.");
                 this.dimexo = value;
             }
         }
@@ -424,7 +431,7 @@ namespace netDxf.Tables
             set
             {
                 if (value < 0)
-                    throw (new ArgumentOutOfRangeException("value", value, "The DIMEXE must be equals or greater than zero."));
+                    throw new ArgumentOutOfRangeException("value", value, "The DIMEXE must be equals or greater than zero.");
                 this.dimexe = value;
             }
         }
@@ -443,7 +450,7 @@ namespace netDxf.Tables
             set
             {
                 if (value < 0)
-                    throw (new ArgumentOutOfRangeException("value", value, "The DIMASZ must be equals or greater than zero."));
+                    throw new ArgumentOutOfRangeException("value", value, "The DIMASZ must be equals or greater than zero.");
                 this.dimasz = value;
             }
         }
@@ -482,13 +489,23 @@ namespace netDxf.Tables
         }
 
         /// <summary>
+        /// Gets or sets the arrowhead block for leaders.
+        /// </summary>
+        /// <remarks>Default: null. Closed filled.</remarks>
+        public Block DIMLDRBLK
+        {
+            get { return this.dimldrblk; }
+            set { this.dimldrblk = value == null ? null : this.OnBlockChangedEvent(this.dimldrblk, value); }
+        }
+
+        /// <summary>
         /// Gets or sets the arrowhead block displayed at the ends of dimension lines.
         /// </summary>
         /// <remarks>Default: null. Closed filled.</remarks>
         public Block DIMBLK
         {
             get { return this.dimblk; }
-            set { this.dimblk = value == null ? null : this.OnBlockChangeEvent(this.dimblk, value); }
+            set { this.dimblk = value == null ? null : this.OnBlockChangedEvent(this.dimblk, value); }
         }
 
         /// <summary>
@@ -498,7 +515,7 @@ namespace netDxf.Tables
         public Block DIMBLK1
         {
             get { return this.dimblk1; }
-            set { this.dimblk1 = value == null ? null : this.OnBlockChangeEvent(this.dimblk1, value); }
+            set { this.dimblk1 = value == null ? null : this.OnBlockChangedEvent(this.dimblk1, value); }
         }
 
         /// <summary>
@@ -508,7 +525,7 @@ namespace netDxf.Tables
         public Block DIMBLK2
         {
             get { return this.dimblk2; }
-            set{ this.dimblk2 = value == null ? null : this.OnBlockChangeEvent(this.dimblk2, value); }
+            set{ this.dimblk2 = value == null ? null : this.OnBlockChangedEvent(this.dimblk2, value); }
         }
 
         #endregion
@@ -526,7 +543,7 @@ namespace netDxf.Tables
             {
                 if (value == null)
                     throw new ArgumentNullException("value");
-                this.dimtxsty = this.OnTextStyleChangeEvent(this.dimtxsty, value);
+                this.dimtxsty = this.OnTextStyleChangedEvent(this.dimtxsty, value);
             }
         }
 
@@ -558,7 +575,7 @@ namespace netDxf.Tables
             set
             {
                 if (value <= 0)
-                    throw (new ArgumentOutOfRangeException("value", value, "The DIMTXT must be greater than zero."));
+                    throw new ArgumentOutOfRangeException("value", value, "The DIMTXT must be greater than zero.");
                 this.dimtxt = value;
             }
         }
@@ -573,7 +590,7 @@ namespace netDxf.Tables
             set
             {
                 if (value < 0)
-                    throw (new ArgumentOutOfRangeException("value", value, "The DIMGAP must be equals or greater than zero."));
+                    throw new ArgumentOutOfRangeException("value", value, "The DIMGAP must be equals or greater than zero.");
                 this.dimgap = value;
             }
         }
@@ -637,7 +654,7 @@ namespace netDxf.Tables
             set
             {
                 if (value <= 0)
-                    throw (new ArgumentOutOfRangeException("value", value, "The DIMSCALE must be greater than zero."));
+                    throw new ArgumentOutOfRangeException("value", value, "The DIMSCALE must be greater than zero.");
                 this.dimscale = value;
             }
         }
@@ -938,6 +955,7 @@ namespace netDxf.Tables
                 DIMAUNIT = this.dimaunit
             };
 
+            if (this.dimldrblk != null) copy.DIMLDRBLK = (Block)this.dimldrblk.Clone();
             if (this.dimblk != null) copy.DIMBLK = (Block) this.dimblk.Clone();
             if (this.dimblk1 != null) copy.DIMBLK1 = (Block) this.dimblk1.Clone();
             if (this.dimblk2 != null) copy.DIMBLK2 = (Block) this.dimblk2.Clone();

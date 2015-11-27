@@ -263,7 +263,7 @@ namespace netDxf
             Matrix3 resultado = new Matrix3();
             if (MathHelper.IsZero(det))
             {
-                throw (new ArithmeticException("The matrix is not invertible."));
+                throw new ArithmeticException("The matrix is not invertible.");
             }
             det = 1/det;
 

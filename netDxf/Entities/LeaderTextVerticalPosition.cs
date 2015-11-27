@@ -19,59 +19,32 @@
 //  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #endregion
 
-using System;
-
-namespace netDxf.Tables
+namespace netDxf.Entities
 {
-
     /// <summary>
-    /// 
+    /// Defines the vertical position of a leader with a text annotation.
     /// </summary>
-    /// <typeparam name="T"></typeparam>
-    public class TableObjectChangeEventArgs<T> :
-        EventArgs
+    public enum LeaderTextVerticalPosition
     {
-        #region private fields
-
-        private readonly T oldValue;
-        private T newValue;
-
-        #endregion
-
-        #region constructor
-
         /// <summary>
-        /// Initializes a new instance of <c>TableObjectModifiedEventArgs</c>.
+        /// The text annotation is placed in the leader hook with respect of its alignment point.
         /// </summary>
-        /// <param name="oldTable">The previous table object.</param>
-        /// <param name="newTable">The new table object.</param>
-        public TableObjectChangeEventArgs(T oldTable, T newTable)
-        {
-            this.oldValue = oldTable;
-            this.newValue = newTable;
-        }
-
-        #endregion
-
-        #region public properties
-
+        Centered = 0,
         /// <summary>
-        /// Gets the previous property value.
+        /// The text annotation is placed above the leader hook line.
         /// </summary>
-        public T OldValue
-        {
-            get { return this.oldValue; }
-        }
-
+        Above = 1,
         /// <summary>
-        /// Gets or sets the new property value.
+        /// This options seems to have no effect.
         /// </summary>
-        public T NewValue
-        {
-            get { return this.newValue; }
-            set { this.newValue = value; }
-        }
-
-        #endregion
+        Outside = 2,
+        /// <summary>
+        /// This options seems to have no effect.
+        /// </summary>
+        JIS = 3,
+        /// <summary>
+        /// This options seems to have no effect.
+        /// </summary>
+        Bellow = 4
     }
 }

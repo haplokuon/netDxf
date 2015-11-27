@@ -31,7 +31,6 @@ namespace netDxf.Collections
     public sealed class VPorts :
         TableObjects<VPort>
     {
-
         #region constructor
 
         internal VPorts(DxfDocument document, string handle = null)
@@ -139,6 +138,5 @@ namespace netDxf.Collections
         }
 
         #endregion
-
     }
 }

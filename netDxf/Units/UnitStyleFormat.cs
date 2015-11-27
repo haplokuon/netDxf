@@ -23,7 +23,6 @@ using System;
 
 namespace netDxf.Units
 {
-
     /// <summary>
     /// Represents the parameters to convert linear and angular units to its string representation.
     /// </summary>
@@ -54,6 +53,9 @@ namespace netDxf.Units
 
         #region constructors
 
+        /// <summary>
+        /// Initializes a new instance of the <c>UnitStyleFormat</c> class.
+        /// </summary>
         public UnitStyleFormat()
         {
             this.linearDecimalPlaces = 2;

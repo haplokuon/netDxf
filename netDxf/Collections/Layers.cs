@@ -81,8 +81,8 @@ namespace netDxf.Collections
 
             layer.Owner = this;
 
-            layer.NameChange += this.Item_NameChange;
-            layer.LineTypeChange += this.LayerLineTypeChange;
+            layer.NameChanged += this.Item_NameChanged;
+            layer.LineTypeChanged += this.LayerLineTypeChanged;
 
             return layer;
         }      
@@ -126,8 +126,8 @@ namespace netDxf.Collections
             layer.Handle = null;
             layer.Owner = null;
 
-            layer.NameChange -= this.Item_NameChange;
-            layer.LineTypeChange -= this.LayerLineTypeChange;
+            layer.NameChanged -= this.Item_NameChanged;
+            layer.LineTypeChanged -= this.LayerLineTypeChanged;
 
             return true;
         }
@@ -136,7 +136,7 @@ namespace netDxf.Collections
 
         #region Layer events
 
-        private void Item_NameChange(TableObject sender, TableObjectChangeEventArgs<string> e)
+        private void Item_NameChanged(TableObject sender, TableObjectChangedEventArgs<string> e)
         {
             if (this.Contains(e.NewValue))
                 throw new ArgumentException("There is already another layer with the same name.");
@@ -149,7 +149,7 @@ namespace netDxf.Collections
             this.references.Add(e.NewValue, refs);
         }
 
-        private void LayerLineTypeChange(TableObject sender, TableObjectChangeEventArgs<LineType> e)
+        private void LayerLineTypeChanged(TableObject sender, TableObjectChangedEventArgs<LineType> e)
         {
             this.document.LineTypes.References[e.OldValue.Name].Remove(sender);
 

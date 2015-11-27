@@ -51,10 +51,10 @@ namespace netDxf.Units
             }
 
             int a = year/100;
-            int b = 2 - a + (a/4);
+            int b = 2 - a + a/4;
             int c;
             if (year < 0)
-                c = (int) ((365.25*year) - 0.75);
+                c = (int) (365.25*year - 0.75);
             else
                 c = (int) (365.25*year);
 

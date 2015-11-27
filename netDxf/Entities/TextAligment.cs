@@ -86,7 +86,5 @@ namespace netDxf.Entities
         /// Fit (if vertical alignment = 0)
         /// </summary>
         Fit
-
-
     }
 }

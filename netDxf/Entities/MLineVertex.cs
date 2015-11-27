@@ -19,7 +19,6 @@
 //  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #endregion
 
-using System;
 using System.Collections.Generic;
 
 namespace netDxf.Entities
@@ -29,7 +28,6 @@ namespace netDxf.Entities
     /// </summary>
     public class MLineVertex
     {
-
         #region private fields
 
         private Vector2 location;
@@ -112,7 +110,7 @@ namespace netDxf.Entities
         /// <returns>The string representation.</returns>
         public override string ToString()
         {
-            return String.Format("{0}: ({1})", "MLineVertex", this.location);
+            return string.Format("{0}: ({1})", "MLineVertex", this.location);
         }
 
         /// <summary>

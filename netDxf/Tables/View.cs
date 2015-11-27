@@ -51,7 +51,12 @@ namespace netDxf.Tables
         /// Initializes a new instance of the <c>View</c> class.
         /// </summary>
         public View(string name)
-            : base(name, DxfObjectCode.View, true)
+            : this(name, true)
+        {
+        }
+
+        internal View(string name, bool checkName)
+            : base(name, DxfObjectCode.View, checkName)
         {
             if (string.IsNullOrEmpty(name))
                 throw new ArgumentNullException("name", "The view name should be at least one character long.");

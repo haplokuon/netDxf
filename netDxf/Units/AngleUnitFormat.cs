@@ -65,17 +65,14 @@ namespace netDxf.Units
             };
 
             if(format.AngularDecimalPlaces == 0)
-                return string.Format(numberFormat, (int)Math.Round(degrees, 0) + format.DegreesSymbol);
-            if (format.AngularDecimalPlaces == 1)
-                return string.Format(numberFormat, (int)degrees + format.DegreesSymbol + (int)Math.Round(minutes, 0) + format.MinutesSymbol);
-            if (format.AngularDecimalPlaces == 2)
-                return string.Format(numberFormat, (int)degrees + format.DegreesSymbol + (int)minutes + format.MinutesSymbol + (int)Math.Round(seconds, 0) + format.SecondsSymbol);
-            if(MathHelper.IsZero(seconds))
-                return string.Format(numberFormat, (int)degrees + format.DegreesSymbol + (int)minutes + format.MinutesSymbol + (int)Math.Round(seconds, 0) + format.SecondsSymbol);
-
-            string f = DecimalNumberFormat(format);
-            f = f.Substring(0, f.Length - 2);
-            return string.Format(numberFormat, (int)degrees + format.DegreesSymbol + (int)minutes + format.MinutesSymbol + seconds.ToString(f, numberFormat) + format.SecondsSymbol);
+                return string.Format(numberFormat, "{0}" + format.DegreesSymbol, (int)Math.Round(degrees, 0));
+            if (format.AngularDecimalPlaces == 1 || format.AngularDecimalPlaces == 2)
+                return string.Format(numberFormat, "{0}" + format.DegreesSymbol + "{1}" + format.MinutesSymbol, (int)degrees, (int)Math.Round(minutes, 0));
+            if (format.AngularDecimalPlaces == 3 || format.AngularDecimalPlaces == 4)
+                return string.Format(numberFormat, "{0}" + format.DegreesSymbol + "{1}" + format.MinutesSymbol + "{2}" + format.SecondsSymbol, (int)degrees, (int)minutes, (int)Math.Round(seconds, 0));
+            // the suppression of leading or trailing zeros is not applicable to DegreesMinutesSeconds angles format
+            string f = "0." + new string('0', format.AngularDecimalPlaces - 4);
+            return string.Format(numberFormat, "{0}" + format.DegreesSymbol + "{1}" + format.MinutesSymbol + "{2}" + format.SecondsSymbol, (int)degrees, (int)minutes, seconds.ToString(f, numberFormat));
         }
 
         /// <summary>

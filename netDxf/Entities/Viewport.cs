@@ -382,7 +382,7 @@ namespace netDxf.Entities
                         List<Vector2> pPoints = new List<Vector2>();
                         foreach (PolylineVertex point in pol.Vertexes)
                         {
-                            pPoints.Add(new Vector2(point.Location.X, point.Location.Y));
+                            pPoints.Add(new Vector2(point.Position.X, point.Position.Y));
                         }
                         abbr = new BoundingRectangle(pPoints);
                         break;
@@ -393,7 +393,7 @@ namespace netDxf.Entities
                         List<Vector2> sPoints = new List<Vector2>();
                         foreach (SplineVertex point in spline.ControlPoints)
                         {
-                            sPoints.Add(new Vector2(point.Location.X, point.Location.Y));
+                            sPoints.Add(new Vector2(point.Position.X, point.Position.Y));
                         }
                         abbr = new BoundingRectangle(sPoints);
                         break;

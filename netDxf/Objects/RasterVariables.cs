@@ -47,7 +47,7 @@ namespace netDxf.Objects
         {
             this.displayFrame = true;
             this.quality = ImageDisplayQuality.High;
-            this.units = ImageUnits.Millimeters;
+            this.units = ImageUnits.Unitless;
         }
 
         #endregion
@@ -76,8 +76,9 @@ namespace netDxf.Objects
         /// Gets or sets the AutoCAD units for inserting images.
         /// </summary>
         /// <remarks>
+        /// Default: None<br />
         /// This is what one AutoCAD unit is equal to for the purpose of inserting and scaling images with an associated resolution.
-        /// It is recommended to use the same units as the header variable InsUnits.
+        /// It is recommended to use the same units as the header variable InsUnits, or just use none to avoid any unwanted scaling when inserting images into the drawing.
         /// </remarks>
         public ImageUnits Units
         {

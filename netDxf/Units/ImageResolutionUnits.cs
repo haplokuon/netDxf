@@ -29,13 +29,11 @@ namespace netDxf.Units
         /// <summary>
         /// No units.
         /// </summary>
-        NoUnits = 0,
-
+        Unitless = 0,
         /// <summary>
         /// Centimeters.
         /// </summary>
         Centimeters = 2,
-
         /// <summary>
         /// Inches.
         /// </summary>

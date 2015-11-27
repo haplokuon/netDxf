@@ -31,7 +31,7 @@ namespace netDxf.Entities
     {
         #region private fields
 
-        private Vector3 location;
+        private Vector3 position;
         private double thickness;
         private double rotation;
 
@@ -42,11 +42,11 @@ namespace netDxf.Entities
         /// <summary>
         /// Initializes a new instance of the <c>Point</c> class.
         /// </summary>
-        /// <param name="location">Point <see cref="Vector3">location</see>.</param>
-        public Point(Vector3 location)
+        /// <param name="position">Point <see cref="Vector3">position</see>.</param>
+        public Point(Vector3 position)
             : base(EntityType.Point, DxfObjectCode.Point)
         {
-            this.location = location;
+            this.position = position;
             this.thickness = 0.0f;
             this.rotation = 0.0;
         }
@@ -54,9 +54,9 @@ namespace netDxf.Entities
         /// <summary>
         /// Initializes a new instance of the <c>Point</c> class.
         /// </summary>
-        /// <param name="location">Point <see cref="Vector2">location</see>.</param>
-        public Point(Vector2 location)
-            : this(new Vector3(location.X, location.Y, 0.0))
+        /// <param name="position">Point <see cref="Vector2">position</see>.</param>
+        public Point(Vector2 position)
+            : this(new Vector3(position.X, position.Y, 0.0))
         {
         }
 
@@ -85,12 +85,12 @@ namespace netDxf.Entities
         #region public properties
 
         /// <summary>
-        /// Gets or sets the point <see cref="netDxf.Vector3">location</see>.
+        /// Gets or sets the point <see cref="Vector3">position</see>.
         /// </summary>
-        public Vector3 Location
+        public Vector3 Position
         {
-            get { return this.location; }
-            set { this.location = value; }
+            get { return this.position; }
+            set { this.position = value; }
         }
 
         /// <summary>
@@ -132,7 +132,7 @@ namespace netDxf.Entities
                 LineTypeScale = this.lineTypeScale,
                 Normal = this.normal,
                 //Point properties
-                Location = this.location,
+                Position = this.position,
                 Rotation = this.rotation,
                 Thickness = this.thickness
             };
@@ -145,6 +145,5 @@ namespace netDxf.Entities
         }
 
         #endregion
-
     }
 }

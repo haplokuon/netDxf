@@ -38,5 +38,9 @@ namespace netDxf.Entities
         /// Cubic B-spline curve.
         /// </summary>
         Cubic = 6,
+        /// <summary>
+        /// Bezier surface.
+        /// </summary>
+        BezierSurface = 8
     }
 }

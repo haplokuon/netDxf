@@ -99,7 +99,7 @@ namespace netDxf.Entities
         /// <returns>The string representation.</returns>
         public override string ToString()
         {
-            return String.Format("{0}: {1}", "PolyfaceMeshVertex", this.location);
+            return string.Format("{0}: {1}", "PolyfaceMeshVertex", this.location);
         }
 
         /// <summary>

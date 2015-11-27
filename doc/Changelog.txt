@@ -1,3 +1,44 @@
+[1.1.0 - 2015/11/27]
++ Added Underlay entity (DGN, DWF, and PDF underlays). See UnderlayEntity() sample.
++ Added Tolerance entity. See ToleranceEntity() sample.
++ Added Leader entity. See LeaderEntity() sample.
++ Added Wipeout entity. See WipeoutEntity() sample.
++ Added a constructor to the Block class to create an external reference.
++ Added the drawing variable PSLTSCALE that controls the paper space linetype scaling.
++ Added a constructor to the Spline class to create a curve from a set of fit points. See SplineFitPoints() sample.
++ The Spline knot vector is now stored as a List<double> instead of a double[].
++ The AciColor.IndexRgb() method is now a public static readonly field instead of a public static method.
++ The CoordinateSystem and AngleDirection enums are now directly under the netDxf and netDxf.Units namespaces, respectively, and not inside the MathHelper class.
++ The default RasterVariables units is now Unitless, to avoid any unwanted scaling when inserting external images into the drawing.
++ The ClippingBoundary Vertexes property will return now a ReadOnlyCollection.
++ Renamed PolylineVertex.Location property to PolylineVertex.Position.
++ Renamed LwPolylineVertex.Location property to LwPolylineVertex.Position.
++ Renamed SplineVertex.Location property to SplineVertex.Position.
++ Renamed Point.Location property to Point.Position.
++ Renamed the ImageClippingBoundary class to ClippingBoundary and moved to the netDxf namespace. 
++ Renamed the ImageClippingBoundaryType enum to ClippingBoundaryType and moved to the netDxf namespace.
++ Renamed Block.Position property to Block.Origin.
++ Renamed ImageDef class to ImageDefinition.
++ Renamed ImageDefReactor class to ImageDefinitionReactor.
++ Renamed MLine.CalculateVertexesInfo method to MLine.Update.
++ Renamed Dimension.RebuildBlock method to Dimension.Update.
++ Renamde HatchBoundaryPath.UpdateEdges method to HatchBoundaryPath.Update.
++ Renamed ImageResolutionUnits.NoUnits to ImageResolutionUnits.Unitless.
++ Renamed ImageUnits.None to ImageUnits.Unitless.
++ Updated "netDxf Documentation.chm".
++ (fixed) Issue Id #13496 Failed to load file. Now it is possible to load dxf files with externally referenced blocks.
++ (fixed) Issue Id #13497 .net dxf fails to load dxf with missing references.
++ (fixed) When an associative hatch is deleted the boundary entities were not being unlinked.
++ (fixed) The Block.Create and Block.Save methods were not working properly.
++ (fixed) Bug in the DimensionStyle OnBlockChangeEvent.
++ (fixed) Issue Id #13499 A problem about Angular3PointDimension
++ (fixed) Block drawing in Angular2LineDimension.
++ (fixed) Bug creating a hatch boundary from a full ellipse.
++ (fixed) Workaround for some types of true type fonts when they are used in a TextStyle. This fix requires reading the OS Registry and will only work under Windows, check the TextSytle internal method FontFileFromFamilyName.
++ (fixed) The vertexes of the image clipping boundary are expressed in local coordinates of the actual image entity with its true dimensions, and not relative to the width and height of its definition.
++ (fixed) Bug reading the dimension style arrowheads, and the dimension and extension lines linetypes.
++ (fixed) Issue Id #13506 A problem about dimension measurement scale. And a few other glithces related with the dimension drawings.
+
 [1.0.3 - 2015/06/20]
 + (fixed) Bug with HatchBoundaryPath.UpdateEdges() method, the old edges data was not being cleared.
 
@@ -73,8 +114,8 @@
 
 [0.9.3 - 2014/12/23]
 + Revised all dimension entities, they should be more reliable. Now, there should be no problems in the way reference points and offsets are supplied.
-+ Added the DimensionStyles variable DIMCLRD, DIMLTYPE, and DIMLWD that control the dimension line drawing.
-+ Added the DimensionStyles variable DIMCLRE, DIMLTEX1, DIMLTEX2, DIMLWE, DIMSE1, and DIMSE2 that control the extension line drawing.
++ Added the DimensionStyles variables DIMCLRD, DIMLTYPE, and DIMLWD that control the dimension line drawing.
++ Added the DimensionStyles variables DIMCLRE, DIMLTEX1, DIMLTEX2, DIMLWE, DIMSE1, and DIMSE2 that control the extension line drawing.
 + Added the DimensionStyle variables DIMSAH, DIMBLK, DIMBLK1, and DIMBLK2 that control the dimension arrowheads.
 + Added the DimensionStyle variable DIMSCALE that controls the overall scale of the dimension.
 + Added the DimensionStyle variable DIMCLRT that controls the color of the dimension text.
@@ -96,7 +137,7 @@
 + Added constructor to Solid entity that takes three vertexes.
 + Added Load method to the Block class to create block from external dxf files (see LoadAndSaveBlocks() sample for more info).
 + Added Save method to the Block class to save a block to a dxf file (see LoadAndSaveBlocks() sample for more info).
-+ Added the drawing variable $INSBASE that control the insertion base point for the current drawing.
++ Added the drawing variable $INSBASE that controls the insertion base point for the current drawing.
 + Added AttributeDefinitions property to DxfDocument to support these cases. Now it is possible to add attribute definitions to a dxf document this will allow to create dxf to be use as blocks with attributes in other drawings.
 + The HeaderVariable class is now internal. All needed information can be accessed through the DxfDocument.DrawingVariables property.
 + Rename AttributeDefinitionDictionary.Keys to AttributeDefinitionDictionary.Tags.
@@ -118,7 +159,7 @@
 + Rename EdgeFlags to Face3dEdgeFlags.
 + Rename XDataCode.Integer and XDataCode.Long to XDataCode.Int16 and XDataCode.Int32, respectively, to better reflect the kind of variable stored. In net a 16 bit integer is a short and a 32 bit integer is an int.
 + Workaround for possible erroneous number of knots and/or number of control points values in Spline entities while importing dxf files.
-+ Changed several variable types to accommodate to the type defined by the dxf codes, this is now a lot more important in binary dxf (see changelog.txt for more details).
++ Changed several variable types to accommodate to the type defined by the dxf codes, this is now a lot more important in binary dxf.
 	HeaderVariable property CodeGroup is now short (it was int).
 	XDataRecord property Code is now short (it was int).
 	Image brightness, contrast, and fade are now shorts (they were floats).
@@ -145,8 +186,8 @@
 + Added Viewports.
 + Added Transparency to Layers and Entities.
 + Added method PlainText() to MText class that will return the text without the formatting codes.
-+ Added the drawing variables $TDCREATE, $TDUCREATE, $TDUPDATE, and $TDUUPDATE; that control the drawing creation and last update in local and universal time(UTC).
-+ Added the drawing variable $TDINDWG that control the drawing editing time.
++ Added the drawing variables $TDCREATE, $TDUCREATE, $TDUPDATE, and $TDUUPDATE that control the drawing creation and last update in local and universal time(UTC).
++ Added the drawing variable $TDINDWG that controls the drawing editing time.
 + Now you can set the document and block drawing units, and image units. See the DocumentUnits() sample in the TestDxfDocument project.
 + Reworked the hatch boundary path information, this will also fix a problem with arc boundary paths that were defined CW instead of the common CCW. It still possible to retrieve entities that make the hatch boundary path with the method Hatch.CreateWCSBoundary().
 + Reworked how the entities and attribute definitions are stored in a block. See the BlockWidthAttributes() sample in the TestDxfDocument project.

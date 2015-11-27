@@ -185,10 +185,10 @@ namespace netDxf.Entities
             {
                 Vector3 refPoint;
                 
-                refPoint = MathHelper.Transform(this.start, this.normal, MathHelper.CoordinateSystem.World, MathHelper.CoordinateSystem.Object);
+                refPoint = MathHelper.Transform(this.start, this.normal, CoordinateSystem.World, CoordinateSystem.Object);
                 Vector2 ref1 = new Vector2(refPoint.X, refPoint.Y);
                 
-                refPoint = MathHelper.Transform(this.end, this.normal, MathHelper.CoordinateSystem.World, MathHelper.CoordinateSystem.Object);
+                refPoint = MathHelper.Transform(this.end, this.normal, CoordinateSystem.World, CoordinateSystem.Object);
                 Vector2 ref2 = new Vector2(refPoint.X, refPoint.Y);
 
                 double refRot = Vector2.Angle(ref1, ref2);
@@ -247,6 +247,5 @@ namespace netDxf.Entities
         }
 
         #endregion
-
     }
 }

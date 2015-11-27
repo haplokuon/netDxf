@@ -34,425 +34,12 @@ namespace netDxf
         ICloneable,
         IEquatable<AciColor>
     {
-        #region private fields
-
-        private static readonly Dictionary<byte, byte[]> AciColors = IndexRgb();
-        private short index;
-        private byte r;
-        private byte g;
-        private byte b;
-        private bool useTrueColor;
-
-        #endregion
-
-        #region constants
+        #region list of the indexed colors
 
         /// <summary>
-        /// Gets the ByLayer color.
+        /// A dictionary that contains the indexed colors, the key represents the color index and the value the RGB components of the color.
         /// </summary>
-        public static AciColor ByLayer
-        {
-            get { return new AciColor {index = 256}; }
-        }
-
-        /// <summary>
-        /// Gets the ByBlock color.
-        /// </summary>
-        public static AciColor ByBlock
-        {
-            get { return new AciColor {index = 0}; }
-        }
-
-        /// <summary>
-        /// Defines a default red color.
-        /// </summary>
-        public static AciColor Red
-        {
-            get { return new AciColor(1); }
-        }
-
-        /// <summary>
-        /// Defines a default yellow color.
-        /// </summary>
-        public static AciColor Yellow
-        {
-            get { return new AciColor(2); }
-        }
-
-        /// <summary>
-        /// Defines a default green color.
-        /// </summary>
-        public static AciColor Green
-        {
-            get { return new AciColor(3); }
-        }
-
-        /// <summary>
-        /// Defines a default cyan color.
-        /// </summary>
-        public static AciColor Cyan
-        {
-            get { return new AciColor(4); }
-        }
-
-        /// <summary>
-        /// Defines a default blue color.
-        /// </summary>
-        public static AciColor Blue
-        {
-            get { return new AciColor(5); }
-        }
-
-        /// <summary>
-        /// Defines a default magenta color.
-        /// </summary>
-        public static AciColor Magenta
-        {
-            get { return new AciColor(6); }
-        }
-
-        /// <summary>
-        /// Defines a default white/black color.
-        /// </summary>
-        public static AciColor Default
-        {
-            get { return new AciColor(7); }
-        }
-
-        /// <summary>
-        /// Defines a default dark gray color.
-        /// </summary>
-        public static AciColor DarkGray
-        {
-            get { return new AciColor(8); }
-        }
-
-        /// <summary>
-        /// Defines a default light gray color.
-        /// </summary>
-        public static AciColor LightGray
-        {
-            get { return new AciColor(9); }
-        }
-
-        #endregion
-
-        #region constructors
-
-        /// <summary>
-        /// Initializes a new instance of the <c>AciColor</c> class with black/white color index 7.
-        /// </summary>
-        public AciColor()
-            : this(7)
-        {
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <c>AciColor</c> class.
-        /// </summary>
-        ///<param name="r">Red component.</param>
-        ///<param name="g">Green component.</param>
-        ///<param name="b">Blue component.</param>
-        /// <remarks>By default the UseTrueColor will be set to true.</remarks>
-        public AciColor(byte r, byte g, byte b)
-        {
-            this.r = r;
-            this.g = g;
-            this.b = b;
-            this.useTrueColor = true;
-            this.index = RgbToAci(this.r, this.g, this.b);
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <c>AciColor</c> class.
-        /// </summary>
-        ///<param name="r">Red component.</param>
-        ///<param name="g">Green component.</param>
-        ///<param name="b">Blue component.</param>
-        /// <remarks>By default the UseTrueColor will be set to true.</remarks>
-        public AciColor(float r, float g, float b)
-            : this((byte) (r*255), (byte) (g*255), (byte) (b*255))
-        {
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <c>AciColor</c> class.
-        /// </summary>
-        ///<param name="r">Red component.</param>
-        ///<param name="g">Green component.</param>
-        ///<param name="b">Blue component.</param>
-        /// <remarks>By default the UseTrueColor will be set to true.</remarks>
-        public AciColor(double r, double g, double b)
-            : this((byte) (r*255), (byte) (g*255), (byte) (b*255))
-        {
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <c>AciColor</c> class.
-        /// </summary>
-        ///<param name="color">A <see cref="Color">color</see>.</param>
-        /// <remarks>By default the UseTrueColor will be set to true.</remarks>
-        public AciColor(Color color)
-            : this(color.R, color.G, color.B)
-        {
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <c>AciColor</c> class.
-        /// </summary>
-        /// <param name="index">Color index.</param>
-        /// <remarks>
-        /// By default the UseTrueColor will be set to false.<br />
-        /// Accepted color index values range from 1 to 255.<br />
-        /// Indexes from 1 to 255 represents a color, the index 0 and 256 are reserved for ByLayer and ByBlock colors.
-        /// </remarks>
-        public AciColor(short index)
-        {
-            if (index <= 0 || index >= 256)
-                throw new ArgumentOutOfRangeException("index", index, "Accepted color index values range from 1 to 255.");
-
-            byte[] rgb = AciColors[(byte)index];
-            this.r = rgb[0];
-            this.g = rgb[1];
-            this.b = rgb[2];
-            this.useTrueColor = false;
-            this.index = index;
-        }
-
-        #endregion
-
-        #region public properties
-
-        /// <summary>
-        /// Defines if the color is defined by layer.
-        /// </summary>
-        public bool IsByLayer
-        {
-            get { return this.index == 256; }
-        }
-
-        /// <summary>
-        /// Defines if the color is defined by block.
-        /// </summary>
-        public bool IsByBlock
-        {
-            get { return this.index == 0; }
-        }
-
-        /// <summary>
-        /// Gets the red component of the AciColor.
-        /// </summary>
-        public byte R
-        {
-            get { return this.r; }
-        }
-
-        /// <summary>
-        /// Gets the green component of the AciColor.
-        /// </summary>
-        public byte G
-        {
-            get { return this.g; }
-        }
-
-        /// <summary>
-        /// Gets the blue component of the AciColor.
-        /// </summary>
-        public byte B
-        {
-            get { return this.b; }
-        }
-
-        /// <summary>
-        /// Get or set if the AciColor should use true color values.
-        /// </summary>
-        /// <remarks>
-        /// By default the constructors that use r, g, b values will set this boolean to true
-        /// while the constants and constructor that use a short will set it to false.
-        /// </remarks>
-        public bool UseTrueColor
-        {
-            get { return this.useTrueColor; }
-            set { this.useTrueColor = value; }
-        }
-
-        /// <summary>
-        /// Gets or sets the color index.
-        /// </summary>
-        /// <remarks>
-        /// Accepted color index values range from 1 to 255.
-        /// Indexes from 1 to 255 represents a color, the index 0 and 256 are reserved for ByLayer and ByBlock colors.
-        /// </remarks>
-        public short Index
-        {
-            get { return this.index; }
-            set
-            {
-                if (value <= 0 || value >= 256)
-                    throw new ArgumentOutOfRangeException("value", value, "Accepted color index values range from 1 to 255.");
-
-                byte[] rgb = AciColors[(byte)this.index];
-                this.r = rgb[0];
-                this.g = rgb[1];
-                this.b = rgb[2];
-                this.useTrueColor = false;
-                this.index = value;
-            }
-        }
-
-        #endregion
-
-        #region public methods
-
-        /// <summary>
-        /// Converts HSL (hue, saturation, lightness) value to an <see cref="AciColor">AciColor</see>.
-        /// </summary>
-        /// <param name="hue">Hue (input values range from 0 to 1).</param>
-        /// <param name="saturation">Saturation percentage (input values range from 0 to 1).</param>
-        /// <param name="lightness">Lightness percentage (input values range from 0 to 1).</param>
-        /// <returns>An <see cref="Color">AciColor</see> that represents the actual HSL value.</returns>
-        public static AciColor FromHsl(double hue, double saturation, double lightness)
-        {
-            double red = lightness;
-            double green = lightness;
-            double blue = lightness;
-            double v = (lightness <= 0.5) ? (lightness*(1.0 + saturation)) : (lightness + saturation - lightness*saturation);
-            if (v > 0)
-            {
-                double m = lightness + lightness - v;
-                double sv = (v - m)/v;
-                hue *= 6.0;
-                int sextant = (int) hue;
-                double fract = hue - sextant;
-                double vsf = v*sv*fract;
-                double mid1 = m + vsf;
-                double mid2 = v - vsf;
-                switch (sextant)
-                {
-                    case 0 | 6:
-                        red = v;
-                        green = mid1;
-                        blue = m;
-                        break;
-                    case 1:
-                        red = mid2;
-                        green = v;
-                        blue = m;
-                        break;
-                    case 2:
-                        red = m;
-                        green = v;
-                        blue = mid1;
-                        break;
-                    case 3:
-                        red = m;
-                        green = mid2;
-                        blue = v;
-                        break;
-                    case 4:
-                        red = mid1;
-                        green = m;
-                        blue = v;
-                        break;
-                    case 5:
-                        red = v;
-                        green = m;
-                        blue = mid2;
-                        break;
-                }
-            }
-            return new AciColor(red, green, blue);
-        }
-
-        /// <summary>
-        /// Converts the RGB (red, green, blue) components of an <see cref="AciColor">AciColor</see> to HSL (hue, saturation, lightness) values.
-        /// </summary>
-        /// <param name="color">A <see cref="AciColor">color</see>.</param>
-        /// <param name="hue">Hue (output values range from 0 to 1).</param>
-        /// <param name="saturation">Saturation (output values range from 0 to 1).</param>
-        /// <param name="lightness">Lightness (output values range from 0 to 1).</param>
-        public static void ToHsl(AciColor color, out double hue, out double saturation, out double lightness)
-        {
-            double red = color.R/255.0;
-            double green = color.G/255.0;
-            double blue = color.B/255.0;
-
-            hue = 0;
-            saturation = 0;
-            double v = Math.Max(red, green);
-            v = Math.Max(v, blue);
-            double m = Math.Min(red, green);
-            m = Math.Min(m, blue);
-
-            lightness = (m + v)/2.0;
-            if (lightness <= 0.0)
-                return;
-
-            double vm = v - m;
-            saturation = vm;
-            if (saturation > 0.0)
-                saturation /= (lightness <= 0.5) ? (v + m) : (2.0 - v - m);
-            else
-                return;
-
-            double red2 = (v - red)/vm;
-            double green2 = (v - green)/vm;
-            double blue2 = (v - blue)/vm;
-
-            if (MathHelper.IsEqual(red, v))
-                hue = (MathHelper.IsEqual(green, m) ? 5.0 + blue2 : 1.0 - green2);
-            else if (MathHelper.IsEqual(green, v))
-                hue = (MathHelper.IsEqual(blue, m) ? 1.0 + red2 : 3.0 - blue2);
-            else
-                hue = (MathHelper.IsEqual(red, m) ? 3.0 + green2 : 5.0 - red2);
-
-            hue /= 6.0;
-        }
-
-        /// <summary>
-        /// Converts the RGB (red, green, blue) components of an <see cref="AciColor">AciColor</see> to HSL (hue, saturation, lightness) values.
-        /// </summary>
-        /// <param name="color">A <see cref="AciColor">color</see>.</param>
-        /// <returns>A Vector3 where the three coordinates x, y, z represents the hue, saturation, and lightness components (output values range from 0 to 1).</returns>
-        public static Vector3 ToHsl(AciColor color)
-        {
-            double h, s, l;
-            ToHsl(color, out h, out s, out l);
-            return new Vector3(h, s, l);
-        }
-
-        /// <summary>
-        /// Converts the AciColor to a <see cref="Color">color</see>.
-        /// </summary>
-        /// <returns>A <see cref="Color">System.Drawing.Color</see> that represents the actual AciColor.</returns>
-        /// <remarks>A default color white will be used for ByLayer and ByBlock colors.</remarks>
-        public Color ToColor()
-        {
-            if (this.index < 1 || this.index > 255) //default color definition for ByLayer and ByBlock colors
-                return Color.White;
-            return Color.FromArgb(this.r, this.g, this.b);
-        }
-
-        /// <summary>
-        /// Converts a <see cref="Color">color</see> to an <see cref="Color">AciColor</see>.
-        /// </summary>
-        /// <param name="color">A <see cref="Color">color</see>.</param>
-        public void FromColor(Color color)
-        {   
-            this.r = color.R;
-            this.g = color.G;
-            this.b = color.B;
-            this.useTrueColor = true;
-            this.index = RgbToAci(this.r, this.g, this.b);
-        }
-
-        /// <summary>
-        /// Gets the complete list of indexed colors.
-        /// </summary>
-        /// <returns>A dictionary that contains the indexed colors, the key represents the color index and the value the RGB components of the color.</returns>
-        public static Dictionary<byte, byte[]> IndexRgb()
-        {
-            return new Dictionary<byte, byte[]>
+        public static readonly Dictionary<byte, byte[]> IndexRgb = new Dictionary<byte, byte[]>
                 {
                     {1, new byte[] {255, 0, 0}},
                     {2, new byte[] {255, 255, 0}},
@@ -710,6 +297,418 @@ namespace netDxf
                     {254, new byte[] {204, 204, 204}},
                     {255, new byte[] {255, 255, 255}}
                 };
+
+        #endregion
+
+        #region private fields
+
+        private short index;
+        private byte r;
+        private byte g;
+        private byte b;
+        private bool useTrueColor;
+
+        #endregion
+
+        #region constants
+
+        /// <summary>
+        /// Gets the ByLayer color.
+        /// </summary>
+        public static AciColor ByLayer
+        {
+            get { return new AciColor {index = 256}; }
+        }
+
+        /// <summary>
+        /// Gets the ByBlock color.
+        /// </summary>
+        public static AciColor ByBlock
+        {
+            get { return new AciColor {index = 0}; }
+        }
+
+        /// <summary>
+        /// Defines a default red color.
+        /// </summary>
+        public static AciColor Red
+        {
+            get { return new AciColor(1); }
+        }
+
+        /// <summary>
+        /// Defines a default yellow color.
+        /// </summary>
+        public static AciColor Yellow
+        {
+            get { return new AciColor(2); }
+        }
+
+        /// <summary>
+        /// Defines a default green color.
+        /// </summary>
+        public static AciColor Green
+        {
+            get { return new AciColor(3); }
+        }
+
+        /// <summary>
+        /// Defines a default cyan color.
+        /// </summary>
+        public static AciColor Cyan
+        {
+            get { return new AciColor(4); }
+        }
+
+        /// <summary>
+        /// Defines a default blue color.
+        /// </summary>
+        public static AciColor Blue
+        {
+            get { return new AciColor(5); }
+        }
+
+        /// <summary>
+        /// Defines a default magenta color.
+        /// </summary>
+        public static AciColor Magenta
+        {
+            get { return new AciColor(6); }
+        }
+
+        /// <summary>
+        /// Defines a default white/black color.
+        /// </summary>
+        public static AciColor Default
+        {
+            get { return new AciColor(7); }
+        }
+
+        /// <summary>
+        /// Defines a default dark gray color.
+        /// </summary>
+        public static AciColor DarkGray
+        {
+            get { return new AciColor(8); }
+        }
+
+        /// <summary>
+        /// Defines a default light gray color.
+        /// </summary>
+        public static AciColor LightGray
+        {
+            get { return new AciColor(9); }
+        }
+
+        #endregion
+
+        #region constructors
+
+        /// <summary>
+        /// Initializes a new instance of the <c>AciColor</c> class with black/white color index 7.
+        /// </summary>
+        public AciColor()
+            : this(7)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <c>AciColor</c> class.
+        /// </summary>
+        ///<param name="r">Red component.</param>
+        ///<param name="g">Green component.</param>
+        ///<param name="b">Blue component.</param>
+        /// <remarks>By default the UseTrueColor will be set to true.</remarks>
+        public AciColor(byte r, byte g, byte b)
+        {
+            this.r = r;
+            this.g = g;
+            this.b = b;
+            this.useTrueColor = true;
+            this.index = RgbToAci(this.r, this.g, this.b);
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <c>AciColor</c> class.
+        /// </summary>
+        ///<param name="r">Red component.</param>
+        ///<param name="g">Green component.</param>
+        ///<param name="b">Blue component.</param>
+        /// <remarks>By default the UseTrueColor will be set to true.</remarks>
+        public AciColor(float r, float g, float b)
+            : this((byte) (r*255), (byte) (g*255), (byte) (b*255))
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <c>AciColor</c> class.
+        /// </summary>
+        ///<param name="r">Red component.</param>
+        ///<param name="g">Green component.</param>
+        ///<param name="b">Blue component.</param>
+        /// <remarks>By default the UseTrueColor will be set to true.</remarks>
+        public AciColor(double r, double g, double b)
+            : this((byte) (r*255), (byte) (g*255), (byte) (b*255))
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <c>AciColor</c> class.
+        /// </summary>
+        ///<param name="color">A <see cref="Color">color</see>.</param>
+        /// <remarks>By default the UseTrueColor will be set to true.</remarks>
+        public AciColor(Color color)
+            : this(color.R, color.G, color.B)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <c>AciColor</c> class.
+        /// </summary>
+        /// <param name="index">Color index.</param>
+        /// <remarks>
+        /// By default the UseTrueColor will be set to false.<br />
+        /// Accepted color index values range from 1 to 255.<br />
+        /// Indexes from 1 to 255 represents a color, the index 0 and 256 are reserved for ByLayer and ByBlock colors.
+        /// </remarks>
+        public AciColor(short index)
+        {
+            if (index <= 0 || index >= 256)
+                throw new ArgumentOutOfRangeException("index", index, "Accepted color index values range from 1 to 255.");
+
+            byte[] rgb = IndexRgb[(byte)index];
+            this.r = rgb[0];
+            this.g = rgb[1];
+            this.b = rgb[2];
+            this.useTrueColor = false;
+            this.index = index;
+        }
+
+        #endregion
+
+        #region public properties
+
+        /// <summary>
+        /// Defines if the color is defined by layer.
+        /// </summary>
+        public bool IsByLayer
+        {
+            get { return this.index == 256; }
+        }
+
+        /// <summary>
+        /// Defines if the color is defined by block.
+        /// </summary>
+        public bool IsByBlock
+        {
+            get { return this.index == 0; }
+        }
+
+        /// <summary>
+        /// Gets the red component of the AciColor.
+        /// </summary>
+        public byte R
+        {
+            get { return this.r; }
+        }
+
+        /// <summary>
+        /// Gets the green component of the AciColor.
+        /// </summary>
+        public byte G
+        {
+            get { return this.g; }
+        }
+
+        /// <summary>
+        /// Gets the blue component of the AciColor.
+        /// </summary>
+        public byte B
+        {
+            get { return this.b; }
+        }
+
+        /// <summary>
+        /// Get or set if the AciColor should use true color values.
+        /// </summary>
+        /// <remarks>
+        /// By default the constructors that use r, g, b values will set this boolean to true
+        /// while the constants and constructor that use a short will set it to false.
+        /// </remarks>
+        public bool UseTrueColor
+        {
+            get { return this.useTrueColor; }
+            set { this.useTrueColor = value; }
+        }
+
+        /// <summary>
+        /// Gets or sets the color index.
+        /// </summary>
+        /// <remarks>
+        /// Accepted color index values range from 1 to 255.
+        /// Indexes from 1 to 255 represents a color, the index 0 and 256 are reserved for ByLayer and ByBlock colors.
+        /// </remarks>
+        public short Index
+        {
+            get { return this.index; }
+            set
+            {
+                if (value <= 0 || value >= 256)
+                    throw new ArgumentOutOfRangeException("value", value, "Accepted color index values range from 1 to 255.");
+
+                byte[] rgb = IndexRgb[(byte)this.index];
+                this.r = rgb[0];
+                this.g = rgb[1];
+                this.b = rgb[2];
+                this.useTrueColor = false;
+                this.index = value;
+            }
+        }
+
+        #endregion
+
+        #region public methods
+
+        /// <summary>
+        /// Converts HSL (hue, saturation, lightness) value to an <see cref="AciColor">AciColor</see>.
+        /// </summary>
+        /// <param name="hue">Hue (input values range from 0 to 1).</param>
+        /// <param name="saturation">Saturation percentage (input values range from 0 to 1).</param>
+        /// <param name="lightness">Lightness percentage (input values range from 0 to 1).</param>
+        /// <returns>An <see cref="Color">AciColor</see> that represents the actual HSL value.</returns>
+        public static AciColor FromHsl(double hue, double saturation, double lightness)
+        {
+            double red = lightness;
+            double green = lightness;
+            double blue = lightness;
+            double v = lightness <= 0.5 ? lightness*(1.0 + saturation) : lightness + saturation - lightness*saturation;
+            if (v > 0)
+            {
+                double m = lightness + lightness - v;
+                double sv = (v - m)/v;
+                hue *= 6.0;
+                int sextant = (int) hue;
+                double fract = hue - sextant;
+                double vsf = v*sv*fract;
+                double mid1 = m + vsf;
+                double mid2 = v - vsf;
+                switch (sextant)
+                {
+                    case 0 | 6:
+                        red = v;
+                        green = mid1;
+                        blue = m;
+                        break;
+                    case 1:
+                        red = mid2;
+                        green = v;
+                        blue = m;
+                        break;
+                    case 2:
+                        red = m;
+                        green = v;
+                        blue = mid1;
+                        break;
+                    case 3:
+                        red = m;
+                        green = mid2;
+                        blue = v;
+                        break;
+                    case 4:
+                        red = mid1;
+                        green = m;
+                        blue = v;
+                        break;
+                    case 5:
+                        red = v;
+                        green = m;
+                        blue = mid2;
+                        break;
+                }
+            }
+            return new AciColor(red, green, blue);
+        }
+
+        /// <summary>
+        /// Converts the RGB (red, green, blue) components of an <see cref="AciColor">AciColor</see> to HSL (hue, saturation, lightness) values.
+        /// </summary>
+        /// <param name="color">A <see cref="AciColor">color</see>.</param>
+        /// <param name="hue">Hue (output values range from 0 to 1).</param>
+        /// <param name="saturation">Saturation (output values range from 0 to 1).</param>
+        /// <param name="lightness">Lightness (output values range from 0 to 1).</param>
+        public static void ToHsl(AciColor color, out double hue, out double saturation, out double lightness)
+        {
+            double red = color.R/255.0;
+            double green = color.G/255.0;
+            double blue = color.B/255.0;
+
+            hue = 0;
+            saturation = 0;
+            double v = Math.Max(red, green);
+            v = Math.Max(v, blue);
+            double m = Math.Min(red, green);
+            m = Math.Min(m, blue);
+
+            lightness = (m + v)/2.0;
+            if (lightness <= 0.0)
+                return;
+
+            double vm = v - m;
+            saturation = vm;
+            if (saturation > 0.0)
+                saturation /= (lightness <= 0.5) ? v + m : 2.0 - v - m;
+            else
+                return;
+
+            double red2 = (v - red)/vm;
+            double green2 = (v - green)/vm;
+            double blue2 = (v - blue)/vm;
+
+            if (MathHelper.IsEqual(red, v))
+                hue = MathHelper.IsEqual(green, m) ? 5.0 + blue2 : 1.0 - green2;
+            else if (MathHelper.IsEqual(green, v))
+                hue = MathHelper.IsEqual(blue, m) ? 1.0 + red2 : 3.0 - blue2;
+            else
+                hue = MathHelper.IsEqual(red, m) ? 3.0 + green2 : 5.0 - red2;
+
+            hue /= 6.0;
+        }
+
+        /// <summary>
+        /// Converts the RGB (red, green, blue) components of an <see cref="AciColor">AciColor</see> to HSL (hue, saturation, lightness) values.
+        /// </summary>
+        /// <param name="color">A <see cref="AciColor">color</see>.</param>
+        /// <returns>A Vector3 where the three coordinates x, y, z represents the hue, saturation, and lightness components (output values range from 0 to 1).</returns>
+        public static Vector3 ToHsl(AciColor color)
+        {
+            double h, s, l;
+            ToHsl(color, out h, out s, out l);
+            return new Vector3(h, s, l);
+        }
+
+        /// <summary>
+        /// Converts the AciColor to a <see cref="Color">color</see>.
+        /// </summary>
+        /// <returns>A <see cref="Color">System.Drawing.Color</see> that represents the actual AciColor.</returns>
+        /// <remarks>A default color white will be used for ByLayer and ByBlock colors.</remarks>
+        public Color ToColor()
+        {
+            if (this.index < 1 || this.index > 255) //default color definition for ByLayer and ByBlock colors
+                return Color.White;
+            return Color.FromArgb(this.r, this.g, this.b);
+        }
+
+        /// <summary>
+        /// Converts a <see cref="Color">color</see> to an <see cref="Color">AciColor</see>.
+        /// </summary>
+        /// <param name="color">A <see cref="Color">color</see>.</param>
+        public void FromColor(Color color)
+        {   
+            this.r = color.R;
+            this.g = color.G;
+            this.b = color.B;
+            this.useTrueColor = true;
+            this.index = RgbToAci(this.r, this.g, this.b);
         }
 
         /// <summary>
@@ -736,10 +735,17 @@ namespace netDxf
         /// <summary>
         /// Gets the <see cref="AciColor">color</see> from an index.
         /// </summary>
-        /// <param name="index">A AciColor index.</param>
+        /// <param name="index">A CAD indexed AciColor index.</param>
         /// <returns>A <see cref="AciColor">color</see>.</returns>
+        /// <remarks>
+        /// Accepted index values range from 0 to 256. An index 0 represents a ByBlock color and an index 256 is a ByLayer color;
+        /// any other value will return one of the 255 indexed AciColors.
+        /// </remarks>
         public static AciColor FromCadIndex(short index)
         {
+            if (index < 0 || index > 256)
+                throw new ArgumentOutOfRangeException("index", index, "Accepted CAD indexed AciColor values range from 0 to 256.");
+
             if (index == 0)
                 return ByBlock;
             if (index == 256)
@@ -820,9 +826,9 @@ namespace netDxf
         {
             double prevDist = double.MaxValue;
             byte index = 0;
-            foreach (byte key in AciColors.Keys)
+            foreach (byte key in IndexRgb.Keys)
             {
-                byte[] color = AciColors[key];
+                byte[] color = IndexRgb[key];
                 double dist = Math.Abs(0.3 * (r - color[0]) + 0.59 * (g - color[1]) + 0.11 * (b - color[2]));
                 if (dist < prevDist)
                 {

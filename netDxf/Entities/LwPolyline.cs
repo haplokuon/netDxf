@@ -36,7 +36,7 @@ namespace netDxf.Entities
     {
         #region private fields
 
-        private List<LwPolylineVertex> vertexes;
+        private readonly List<LwPolylineVertex> vertexes;
         private PolylineTypeFlags flags;
         private double elevation;
         private double thickness;
@@ -51,6 +51,24 @@ namespace netDxf.Entities
         public LwPolyline()
             : this(new List<LwPolylineVertex>())
         {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <c>LwPolyline</c> class.
+        /// </summary>
+        /// <param name="vertexes">LwPolyline <see cref="Vector2">vertex</see> list in object coordinates.</param>
+        /// <param name="isClosed">Sets if the polyline is closed.</param>
+        public LwPolyline(IList<Vector2> vertexes, bool isClosed = false)
+            : base(EntityType.LightWeightPolyline, DxfObjectCode.LightWeightPolyline)
+        {
+            if (vertexes == null)
+                throw new ArgumentNullException("vertexes", "The LwPolyline vertexes list cannot be null.");
+            this.vertexes = new List<LwPolylineVertex>(vertexes.Count);
+            foreach (Vector2 vertex in vertexes)
+                this.vertexes.Add(new LwPolylineVertex(vertex));
+            this.elevation = 0.0;
+            this.thickness = 0.0;
+            this.flags = isClosed ? PolylineTypeFlags.ClosedPolylineOrClosedPolygonMeshInM : PolylineTypeFlags.OpenPolyline;
         }
 
         /// <summary>
@@ -79,12 +97,6 @@ namespace netDxf.Entities
         public List<LwPolylineVertex> Vertexes
         {
             get { return this.vertexes; }
-            set
-            {
-                if (value == null)
-                    throw new ArgumentNullException("value", "The LwPolyline vertexes list cannot be null.");
-                this.vertexes = value;
-            }
         }
 
         /// <summary>
@@ -154,6 +166,14 @@ namespace netDxf.Entities
         #region public methods
 
         /// <summary>
+        /// Switch the polyline direction.
+        /// </summary>
+        public void Reverse()
+        {
+            this.vertexes.Reverse();
+        }
+
+        /// <summary>
         /// Sets a constant width for all the polyline segments.
         /// </summary>
         /// <param name="width">Polyline width.</param>
@@ -183,23 +203,23 @@ namespace netDxf.Entities
                 if (index == this.Vertexes.Count - 1)
                 {
                     if (!this.IsClosed) break;
-                    p1 = new Vector2(vertex.Location.X, vertex.Location.Y);
-                    p2 = new Vector2(this.vertexes[0].Location.X, this.vertexes[0].Location.Y);
+                    p1 = new Vector2(vertex.Position.X, vertex.Position.Y);
+                    p2 = new Vector2(this.vertexes[0].Position.X, this.vertexes[0].Position.Y);
                 }
                 else
                 {
-                    p1 = new Vector2(vertex.Location.X, vertex.Location.Y);
-                    p2 = new Vector2(this.vertexes[index + 1].Location.X, this.vertexes[index + 1].Location.Y);
+                    p1 = new Vector2(vertex.Position.X, vertex.Position.Y);
+                    p2 = new Vector2(this.vertexes[index + 1].Position.X, this.vertexes[index + 1].Position.Y);
                 }
                 if (MathHelper.IsZero(bulge))
                 {
                     // the polyline edge is a line
                     Vector3 start = MathHelper.Transform(new Vector3(p1.X, p1.Y, this.elevation), this.normal,
-                                                            MathHelper.CoordinateSystem.Object,
-                                                            MathHelper.CoordinateSystem.World);
+                                                            CoordinateSystem.Object,
+                                                            CoordinateSystem.World);
                     Vector3 end = MathHelper.Transform(new Vector3(p2.X, p2.Y, this.elevation), this.normal,
-                                                        MathHelper.CoordinateSystem.Object,
-                                                        MathHelper.CoordinateSystem.World);
+                                                        CoordinateSystem.Object,
+                                                        CoordinateSystem.World);
 
                     entities.Add(new Line
                     {
@@ -237,8 +257,8 @@ namespace netDxf.Entities
                         startAngle = endAngle - MathHelper.RadToDeg * theta;
                     }
                     Vector3 point = MathHelper.Transform(new Vector3(center.X, center.Y, this.elevation), this.normal,
-                                                            MathHelper.CoordinateSystem.Object,
-                                                            MathHelper.CoordinateSystem.World);
+                                                            CoordinateSystem.Object,
+                                                            CoordinateSystem.World);
                     entities.Add(new Arc
                                      {
                                          Layer = (Layer)this.layer.Clone(),
@@ -282,13 +302,13 @@ namespace netDxf.Entities
 
                 if (index == this.Vertexes.Count - 1)
                 {
-                    p1 = new Vector2(vertex.Location.X, vertex.Location.Y);
-                    p2 = new Vector2(this.vertexes[0].Location.X, this.vertexes[0].Location.Y);
+                    p1 = new Vector2(vertex.Position.X, vertex.Position.Y);
+                    p2 = new Vector2(this.vertexes[0].Position.X, this.vertexes[0].Position.Y);
                 }
                 else
                 {
-                    p1 = new Vector2(vertex.Location.X, vertex.Location.Y);
-                    p2 = new Vector2(this.vertexes[index + 1].Location.X, this.vertexes[index + 1].Location.Y);
+                    p1 = new Vector2(vertex.Position.X, vertex.Position.Y);
+                    p2 = new Vector2(this.vertexes[index + 1].Position.X, this.vertexes[index + 1].Position.Y);
                 }
 
                 if (!p1.Equals(p2, weldThreshold))
@@ -314,7 +334,7 @@ namespace netDxf.Entities
                             for (int i = 1; i <= bulgePrecision; i++)
                             {
                                 Vector2 curvePoint = new Vector2();
-                                Vector2 prevCurvePoint = new Vector2(this.vertexes[this.vertexes.Count - 1].Location.X, this.vertexes[this.vertexes.Count - 1].Location.Y);
+                                Vector2 prevCurvePoint = new Vector2(this.vertexes[this.vertexes.Count - 1].Position.X, this.vertexes[this.vertexes.Count - 1].Position.Y);
                                 curvePoint.X = center.X + Math.Cos(i*angle)*a1.X - Math.Sin(i*angle)*a1.Y;
                                 curvePoint.Y = center.Y + Math.Sin(i*angle)*a1.X + Math.Cos(i*angle)*a1.Y;
 
@@ -346,12 +366,6 @@ namespace netDxf.Entities
         /// <returns>A new LwPolyline that is a copy of this instance.</returns>
         public override object Clone()
         {
-            List<LwPolylineVertex> copyVertexes = new List<LwPolylineVertex>();
-            foreach (LwPolylineVertex vertex in this.vertexes)
-            {
-                copyVertexes.Add((LwPolylineVertex) vertex.Clone());
-            }
-
             LwPolyline entity = new LwPolyline
                 {
                     //EntityObject properties
@@ -363,11 +377,13 @@ namespace netDxf.Entities
                     LineTypeScale = this.lineTypeScale,
                     Normal = this.normal,
                     //LwPolyline properties
-                    Vertexes = copyVertexes,
                     Elevation = this.elevation,
                     Thickness = this.thickness,
                     Flags = this.flags
                 };
+
+            foreach (LwPolylineVertex vertex in this.vertexes)
+                entity.Vertexes.Add((LwPolylineVertex) vertex.Clone());
 
             foreach (XData data in this.XData.Values)
                 entity.XData.Add((XData)data.Clone());

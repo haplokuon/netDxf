@@ -91,7 +91,12 @@ namespace netDxf.Entities
         public double Radius
         {
             get { return this.radius; }
-            set { this.radius = value; }
+            set
+            {
+                if (value <= 0)
+                    throw new ArgumentOutOfRangeException("value", value, "The circle radius must be greater than zero.");
+                this.radius = value;
+            }
         }
 
         /// <summary>
@@ -139,7 +144,7 @@ namespace netDxf.Entities
         public LwPolyline ToPolyline(int precision)
         {
             IEnumerable<Vector2> vertexes = this.PolygonalVertexes(precision);
-            Vector3 ocsCenter = MathHelper.Transform(this.Center, this.normal, MathHelper.CoordinateSystem.World, MathHelper.CoordinateSystem.Object);
+            Vector3 ocsCenter = MathHelper.Transform(this.Center, this.normal, CoordinateSystem.World, CoordinateSystem.Object);
 
             LwPolyline poly = new LwPolyline
                                 {
@@ -191,7 +196,6 @@ namespace netDxf.Entities
                 entity.XData.Add((XData)data.Clone());
 
             return entity;
-
         }
 
         #endregion

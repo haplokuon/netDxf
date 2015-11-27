@@ -31,8 +31,8 @@ namespace netDxf
     {
         #region private fields
 
-        protected Vector2 min;
-        protected Vector2 max;
+        private Vector2 min;
+        private Vector2 max;
 
         #endregion
 
@@ -57,7 +57,6 @@ namespace netDxf
             double height = Math.Sqrt(c * c + d * d) * 2;
             this.min = new Vector2(center.X - width * 0.5, center.Y - height * 0.5);
             this.max = new Vector2(center.X + width * 0.5, center.Y + height * 0.5);
-
         }
 
         /// <summary>
@@ -98,7 +97,7 @@ namespace netDxf
         /// Initializes a new axis aligned bounding rectangle.
         /// </summary>
         /// <param name="points">A list of Vector2.</param>
-        public BoundingRectangle(ICollection<Vector2> points)
+        public BoundingRectangle(IList<Vector2> points)
         {
             if (points == null)
                 throw new ArgumentNullException("points", "The list cannot be null.");
@@ -222,6 +221,7 @@ namespace netDxf
                     min[i] = aabr1.Min[i];
                 else
                     min[i] = aabr2.Min[i];
+
                 if (aabr1.Max[i] >= aabr2.Max[i])
                     max[i] = aabr1.Max[i];
                 else
@@ -235,7 +235,7 @@ namespace netDxf
         /// </summary>
         /// <param name="rectangles">A list of bounding rectangles.</param>
         /// <returns>The resulting bounding rectangle.</returns>
-        public static BoundingRectangle Union(IEnumerable<BoundingRectangle> rectangles)
+        public static BoundingRectangle Union(IList<BoundingRectangle> rectangles)
         {
             BoundingRectangle rtnAABR = null;
             foreach (BoundingRectangle aabr in rectangles)

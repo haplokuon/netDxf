@@ -28,7 +28,8 @@ namespace netDxf
     /// <summary>
     /// Represent a three component vector of double precision.
     /// </summary>
-    public struct Vector3
+    public struct Vector3 :
+        IEquatable<Vector3>
     {
         #region private fields
 
@@ -172,7 +173,7 @@ namespace netDxf
 
                         return this.z;
                     default:
-                        throw (new ArgumentOutOfRangeException("index"));
+                        throw new ArgumentOutOfRangeException("index");
                 }
             }
             set
@@ -192,7 +193,7 @@ namespace netDxf
                         this.z = value;
                         break;
                     default:
-                        throw (new ArgumentOutOfRangeException("index"));
+                        throw new ArgumentOutOfRangeException("index");
                 }
             }
         }
@@ -221,7 +222,7 @@ namespace netDxf
         /// <returns>The dot product.</returns>
         public static double DotProduct(Vector3 u, Vector3 v)
         {
-            return (u.X*v.X) + (u.Y*v.Y) + (u.Z*v.Z);
+            return u.X*v.X + u.Y*v.Y + u.Z*v.Z;
         }
 
         /// <summary>
@@ -246,7 +247,7 @@ namespace netDxf
         /// <returns>Distance.</returns>
         public static double Distance(Vector3 u, Vector3 v)
         {
-            return (Math.Sqrt((u.X - v.X)*(u.X - v.X) + (u.Y - v.Y)*(u.Y - v.Y) + (u.Z - v.Z)*(u.Z - v.Z)));
+            return Math.Sqrt((u.X - v.X)*(u.X - v.X) + (u.Y - v.Y)*(u.Y - v.Y) + (u.Z - v.Z)*(u.Z - v.Z));
         }
 
         /// <summary>
@@ -330,9 +331,7 @@ namespace netDxf
         /// <returns>The rounded vector.</returns>
         public static Vector3 Round(Vector3 u, int numDigits)
         {
-            return new Vector3((Math.Round(u.X, numDigits)),
-                               (Math.Round(u.Y, numDigits)),
-                               (Math.Round(u.Z, numDigits)));
+            return new Vector3(Math.Round(u.X, numDigits), Math.Round(u.Y, numDigits), Math.Round(u.Z, numDigits));
         }
 
         /// <summary>
@@ -504,11 +503,21 @@ namespace netDxf
         /// Check if the components of two vectors are approximate equal.
         /// </summary>
         /// <param name="obj">Vector3.</param>
+        /// <returns>True if the three components are almost equal or false in any other case.</returns>
+        public bool Equals(Vector3 obj)
+        {
+            return this.Equals(obj, MathHelper.Epsilon);
+        }
+
+        /// <summary>
+        /// Check if the components of two vectors are approximate equal.
+        /// </summary>
+        /// <param name="obj">Vector3.</param>
         /// <param name="threshold">Maximum tolerance.</param>
         /// <returns>True if the three components are almost equal or false in any other case.</returns>
-        public bool Equals(Vector3 obj, double threshold = MathHelper.Epsilon)
+        public bool Equals(Vector3 obj, double threshold)
         {
-            return ((MathHelper.IsEqual(obj.X, this.x, threshold)) && (MathHelper.IsEqual(obj.Y, this.y, threshold)) && (MathHelper.IsEqual(obj.Z, this.z, threshold)));
+            return MathHelper.IsEqual(obj.X, this.x, threshold) && MathHelper.IsEqual(obj.Y, this.y, threshold) && MathHelper.IsEqual(obj.Z, this.z, threshold);
         }
 
         /// <summary>
@@ -529,7 +538,7 @@ namespace netDxf
         /// <returns>A 32-bit signed integer that is the hash code for this instance.</returns>
         public override int GetHashCode()
         {
-            return unchecked(this.X.GetHashCode() ^ this.Y.GetHashCode() ^ this.Z.GetHashCode());
+            return this.X.GetHashCode() ^ this.Y.GetHashCode() ^ this.Z.GetHashCode();
         }
 
         #endregion

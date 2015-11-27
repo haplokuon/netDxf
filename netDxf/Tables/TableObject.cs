@@ -33,17 +33,16 @@ namespace netDxf.Tables
         IComparable<TableObject>,
         IEquatable<TableObject>
     {
-
         #region delegates and events
 
-        public delegate void NameChangeEventHandler(TableObject sender, TableObjectChangeEventArgs<string> e);
-        public event NameChangeEventHandler NameChange;
-        protected virtual void OnNameChangeEvent(string oldName, string newName)
+        public delegate void NameChangedEventHandler(TableObject sender, TableObjectChangedEventArgs<string> e);
+        public event NameChangedEventHandler NameChanged;
+        protected virtual void OnNameChangedEvent(string oldName, string newName)
         {
-            NameChangeEventHandler ae = this.NameChange;
+            NameChangedEventHandler ae = this.NameChanged;
             if (ae != null)
             {
-                TableObjectChangeEventArgs<string> eventArgs = new TableObjectChangeEventArgs<string>(oldName, newName);
+                TableObjectChangedEventArgs<string> eventArgs = new TableObjectChangedEventArgs<string>(oldName, newName);
                 ae(this, eventArgs);
             }
         }
@@ -55,7 +54,7 @@ namespace netDxf.Tables
         /// <summary>
         /// Gets the array of characters not supported as table object names.
         /// </summary>
-        public static readonly string[] InvalidCharacters = { "\\", "<", ">", "/", "?", "\"", ":", ";", "*", "|", ",", "=", "`" };
+        public static readonly string[] InvalidCharacters = { "\\", "/", ":", "*", "?", "\"", "<", ">", "|", ";", ",", "=", "`" };
         protected bool reserved;
         protected string name;
 
@@ -96,14 +95,14 @@ namespace netDxf.Tables
             set
             {
                 if (string.IsNullOrEmpty(value))
-                    throw (new ArgumentNullException("value"));
+                    throw new ArgumentNullException("value");
                 if (this.IsReserved)
                     throw new ArgumentException("Reserved table objects cannot be renamed.", "value");
                 if (!IsValidName(value))
                     throw new ArgumentException("The following characters \\<>/?\":;*|,=` are not supported for table object names.", "value");
                 if (string.Equals(this.name, value, StringComparison.OrdinalIgnoreCase))
                     return;
-                this.OnNameChangeEvent(this.name, value);
+                this.OnNameChangedEvent(this.name, value);
                 this.name = value;
             }
         }
@@ -209,7 +208,7 @@ namespace netDxf.Tables
             if (this.GetType() != obj.GetType())
                 return false;
 
-            return string.Compare(this.Name, obj.Name, StringComparison.OrdinalIgnoreCase) == 0;
+            return string.Equals(this.Name, obj.Name, StringComparison.OrdinalIgnoreCase);
         }
 
         #endregion

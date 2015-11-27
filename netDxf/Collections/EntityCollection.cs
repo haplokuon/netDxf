@@ -171,7 +171,7 @@ namespace netDxf.Collections
         /// Adds an <see cref="EntityObject">entity</see> list to the end of the collection.
         /// </summary>
         /// <param name="collection">The collection whose elements should be added.</param>
-        public void AddRange(ICollection<EntityObject> collection)
+        public void AddRange(IList<EntityObject> collection)
         {
             if (collection == null)
                 throw new ArgumentNullException("collection");
@@ -217,7 +217,7 @@ namespace netDxf.Collections
         /// </summary>
         /// <param name="items">The list of objects to remove from the collection.</param>
         /// <returns>True if object is successfully removed; otherwise, false.</returns>
-        public void Remove(ICollection<EntityObject> items)
+        public void Remove(IList<EntityObject> items)
         {
             foreach (EntityObject item in items)
             {

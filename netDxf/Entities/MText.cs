@@ -85,14 +85,14 @@ namespace netDxf.Entities
     {
         #region delegates and events
 
-        public delegate void TextStyleChangeEventHandler(MText sender, TableObjectChangeEventArgs<TextStyle> e);
-        public event TextStyleChangeEventHandler TextStyleChange;
-        protected virtual TextStyle OnTextStyleChangeEvent(TextStyle oldTextStyle, TextStyle newTextStyle)
+        public delegate void TextStyleChangedEventHandler(MText sender, TableObjectChangedEventArgs<TextStyle> e);
+        public event TextStyleChangedEventHandler TextStyleChanged;
+        protected virtual TextStyle OnTextStyleChangedEvent(TextStyle oldTextStyle, TextStyle newTextStyle)
         {
-            TextStyleChangeEventHandler ae = this.TextStyleChange;
+            TextStyleChangedEventHandler ae = this.TextStyleChanged;
             if (ae != null)
             {
-                TableObjectChangeEventArgs<TextStyle> eventArgs = new TableObjectChangeEventArgs<TextStyle>(oldTextStyle, newTextStyle);
+                TableObjectChangedEventArgs<TextStyle> eventArgs = new TableObjectChangedEventArgs<TextStyle>(oldTextStyle, newTextStyle);
                 ae(this, eventArgs);
                  return eventArgs.NewValue;
             }
@@ -228,7 +228,7 @@ namespace netDxf.Entities
             this.style = style;
             this.rectangleWidth = rectangleWidth;
             if (height <= 0.0)
-                throw (new ArgumentOutOfRangeException("height", this.value, "The MText height must be greater than zero."));
+                throw new ArgumentOutOfRangeException("height", this.value, "The MText height must be greater than zero.");
             this.height = height;
             this.lineSpacing = 1.0;
             this.paragraphHeightFactor = 1.0;
@@ -258,7 +258,7 @@ namespace netDxf.Entities
             set
             {
                 if (value <= 0)
-                    throw (new ArgumentOutOfRangeException("value", value, "The MText height must be greater than zero."));
+                    throw new ArgumentOutOfRangeException("value", value, "The MText height must be greater than zero.");
                 this.height = value;
             }
         }
@@ -320,7 +320,7 @@ namespace netDxf.Entities
             set
             {
                 if (value < 0.0)
-                    throw (new ArgumentOutOfRangeException("value", value, "The MText rectangle width must be equals or greater than zero."));
+                    throw new ArgumentOutOfRangeException("value", value, "The MText rectangle width must be equals or greater than zero.");
                 this.rectangleWidth = value;
             }
         }
@@ -344,12 +344,12 @@ namespace netDxf.Entities
             {
                 if (value == null)
                     throw new ArgumentNullException("value", "The MText Style cannot be null.");
-                this.style = this.OnTextStyleChangeEvent(this.style, value);
+                this.style = this.OnTextStyleChangedEvent(this.style, value);
             }
         }
 
         /// <summary>
-        /// Gets or sets the Text <see cref="Vector2">position</see> in world coordinates..
+        /// Gets or sets the Text <see cref="Vector3">position</see> in world coordinates..
         /// </summary>
         public Vector3 Position
         {

@@ -54,7 +54,12 @@ namespace netDxf.Tables
         /// </summary>
         /// <param name="name">Layer name.</param>
         public ApplicationRegistry(string name)
-            : base(name, DxfObjectCode.AppId, true)
+            : this(name, true)
+        {
+        }
+
+        internal ApplicationRegistry(string name, bool checkName)
+            : base(name, DxfObjectCode.AppId, checkName)
         {
             if (string.IsNullOrEmpty(name))
                 throw new ArgumentNullException("name", "The application registry name should be at least one character long.");

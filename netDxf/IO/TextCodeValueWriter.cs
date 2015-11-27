@@ -294,7 +294,7 @@ namespace netDxf.IO
             StringBuilder sb = new StringBuilder();
             for (int i = 0; i < value.Length; i++)
             {
-                sb.Append(String.Format("{0:X2}", value[i]));
+                sb.Append(string.Format("{0:X2}", value[i]));
             }
             this.writer.WriteLine(sb.ToString());
         }

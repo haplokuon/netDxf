@@ -34,14 +34,14 @@ namespace netDxf.Entities
     {
         #region delegates and events
 
-        public delegate void MLineStyleChangeEventHandler(MLine sender, TableObjectChangeEventArgs<MLineStyle> e);
-        public event MLineStyleChangeEventHandler MLineStyleChange;
-        protected virtual MLineStyle OnMLineStyleChangeEvent(MLineStyle oldMLineStyle, MLineStyle newMLineStyle)
+        public delegate void MLineStyleChangedEventHandler(MLine sender, TableObjectChangedEventArgs<MLineStyle> e);
+        public event MLineStyleChangedEventHandler MLineStyleChanged;
+        protected virtual MLineStyle OnMLineStyleChangedEvent(MLineStyle oldMLineStyle, MLineStyle newMLineStyle)
         {
-            MLineStyleChangeEventHandler ae = this.MLineStyleChange;
+            MLineStyleChangedEventHandler ae = this.MLineStyleChanged;
             if (ae != null)
             {
-                TableObjectChangeEventArgs<MLineStyle> eventArgs = new TableObjectChangeEventArgs<MLineStyle>(oldMLineStyle, newMLineStyle);
+                TableObjectChangedEventArgs<MLineStyle> eventArgs = new TableObjectChangedEventArgs<MLineStyle>(oldMLineStyle, newMLineStyle);
                 ae(this, eventArgs);
                 return eventArgs.NewValue;
             }
@@ -57,7 +57,7 @@ namespace netDxf.Entities
         private MLineJustification justification;
         private double elevation;
         private MLineFlags flags;
-        private List<MLineVertex> vertexes;
+        private readonly List<MLineVertex> vertexes;
 
         #endregion
 
@@ -76,7 +76,7 @@ namespace netDxf.Entities
         /// </summary>
         /// <param name="vertexes">Multiline <see cref="Vector2">vertex</see> location list in object coordinates.</param>
         /// <param name="isClosed">Sets if the multiline is closed</param>
-        public MLine(ICollection<Vector2> vertexes, bool isClosed = false)
+        public MLine(IList<Vector2> vertexes, bool isClosed = false)
             : this(vertexes, MLineStyle.Default, 1.0, isClosed)
         {
         }
@@ -87,7 +87,7 @@ namespace netDxf.Entities
         /// <param name="vertexes">Multiline <see cref="Vector2">vertex</see> location list in object coordinates.</param>
         /// <param name="scale">Multiline scale.</param>
         /// <param name="isClosed">Sets if the multiline is closed</param>
-        public MLine(ICollection<Vector2> vertexes, double scale, bool isClosed = false)
+        public MLine(IList<Vector2> vertexes, double scale, bool isClosed = false)
             : this(vertexes, MLineStyle.Default, scale, isClosed)
         {
         }
@@ -99,7 +99,7 @@ namespace netDxf.Entities
         /// <param name="style">MLine <see cref="MLineStyle">style.</see></param>
         /// <param name="scale">MLine scale.</param>
         /// <param name="isClosed">Sets if the multiline is closed</param>
-        public MLine(ICollection<Vector2> vertexes, MLineStyle style, double scale, bool isClosed = false)
+        public MLine(IList<Vector2> vertexes, MLineStyle style, double scale, bool isClosed = false)
             : base(EntityType.MLine, DxfObjectCode.MLine)
         {
             this.scale = scale;
@@ -115,7 +115,10 @@ namespace netDxf.Entities
             this.elevation = 0.0;
             if (vertexes == null)
                 throw new ArgumentNullException("vertexes");
-            this.SetVertexes(vertexes);
+            this.vertexes = new List<MLineVertex>(vertexes.Count);
+            foreach (Vector2 point in vertexes)
+                this.vertexes.Add(new MLineVertex(point, Vector2.Zero, Vector2.Zero, null));
+            this.Update();
         }
 
         #endregion
@@ -123,7 +126,7 @@ namespace netDxf.Entities
         #region public properties
 
         /// <summary>
-        /// Gets the multiline <see cref="MLineVertex">segments</see> list.
+        /// Gets the multiline <see cref="MLineVertex">vertexes</see> list.
         /// </summary>
         public List<MLineVertex> Vertexes
         {
@@ -213,7 +216,7 @@ namespace netDxf.Entities
             {
                 if (value == null)
                     throw new ArgumentNullException("value", "The MLine style cannot be null.");
-                this.style = this.OnMLineStyleChangeEvent(this.style, value);
+                this.style = this.OnMLineStyleChangedEvent(this.style, value);
             }
         }
 
@@ -233,21 +236,20 @@ namespace netDxf.Entities
         #endregion
 
         #region public methods
-        
+
         /// <summary>
         /// Calculates the internal information of the multiline vertexes.
         /// </summary>
         /// <remarks>
         /// <para>
-        /// This function will be called when the entity is created or when setting its vertexes;
-        /// but, afterwards, this function will need to be called manually if any modifications are done to the multiline.
+        /// This function needs to be called manually when any modifications are done to the multiline.
         /// </para>
         /// <para>
-        /// If the vertex distance list needs to be edited to represent trimmed multilines this function needs to be called prior any modification.
+        /// If the vertex distance list needs to be edited to represent trimmed multilines this function needs to be called prior to any modification.
         /// It will calculate the minimum information needed to build a correct multiline.
         /// </para>
         /// </remarks>
-        public void CalculateVertexesInfo()
+        public void Update()
         {
             if (this.vertexes.Count == 0)
                 return;
@@ -267,7 +269,7 @@ namespace netDxf.Entities
             }
 
             Vector2 prevDir;
-            if (Equals(this.vertexes[0].Location, this.vertexes[this.vertexes.Count - 1].Location))
+            if (this.vertexes[0].Location.Equals(this.vertexes[this.vertexes.Count - 1].Location))
                 prevDir = Vector2.UnitY;
             else
             {
@@ -282,7 +284,7 @@ namespace netDxf.Entities
                 Vector2 dir;
                 if (i == 0)
                 {
-                    if (Equals(this.vertexes[i + 1].Location, position))
+                    if (this.vertexes[i + 1].Location.Equals(position))
                         dir = Vector2.UnitY;
                     else
                     {
@@ -295,14 +297,14 @@ namespace netDxf.Entities
                         mitter.Normalize();
                     }
                     else
-                        mitter = MathHelper.Transform(dir, this.style.StartAngle * MathHelper.DegToRad, MathHelper.CoordinateSystem.Object, MathHelper.CoordinateSystem.World);
+                        mitter = MathHelper.Transform(dir, this.style.StartAngle * MathHelper.DegToRad, CoordinateSystem.Object, CoordinateSystem.World);
 
                 }
                 else if (i + 1 == this.vertexes.Count)
                 {
                     if (this.IsClosed)
                     {
-                        if (Equals(this.vertexes[0].Location, position))
+                        if (this.vertexes[0].Location.Equals(position))
                             dir = Vector2.UnitY;
                         else
                         {
@@ -315,13 +317,13 @@ namespace netDxf.Entities
                     else
                     {
                         dir = prevDir;
-                        mitter = MathHelper.Transform(dir, this.style.EndAngle * MathHelper.DegToRad, MathHelper.CoordinateSystem.Object, MathHelper.CoordinateSystem.World);
+                        mitter = MathHelper.Transform(dir, this.style.EndAngle * MathHelper.DegToRad, CoordinateSystem.Object, CoordinateSystem.World);
                     }
 
                 }
                 else
                 {
-                    if (Equals(this.vertexes[i + 1].Location, position))
+                    if (this.vertexes[i + 1].Location.Equals(position))
                         dir = Vector2.UnitY;
                     else
                     {
@@ -350,20 +352,6 @@ namespace netDxf.Entities
 
                 this.vertexes[i] = new MLineVertex(position, dir, mitter, distances);
             }
-        }
-
-        /// <summary>
-        /// Sets the positions of the multiline vertexes. 
-        /// </summary>
-        /// <param name="points">A list of <see cref="Vector3">points</see> that make up the multiline vertex list.</param>
-        public void SetVertexes(ICollection<Vector2> points)
-        {
-            this.vertexes = new List<MLineVertex>(points.Count);
-            foreach (Vector2 point in points)
-            {
-                this.vertexes.Add(new MLineVertex(point, Vector2.Zero, Vector2.Zero, null));
-            }
-            this.CalculateVertexesInfo();
         }
         
         #endregion

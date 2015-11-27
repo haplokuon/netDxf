@@ -158,7 +158,7 @@ namespace netDxf.Header
         /// Default drawing units for AutoCAD DesignCenter blocks.
         /// </summary>
         /// <remarks>
-        /// Also applies to raster image units, even thought they have the RasterVariables object and units in ImageDef.
+        /// Also applies to raster image units, even thought they have the RasterVariables object and units in ImageDefinition.
         /// </remarks>
         public const string InsUnits = "$INSUNITS";
 
@@ -205,6 +205,15 @@ namespace netDxf.Header
         /// 0 = Each segment of the polyline starts and ends with a dash.
         /// </remarks>
         public const string PLineGen = "$PLINEGEN";
+
+        /// <summary>
+        /// Controls paper space line type scaling.
+        /// </summary>
+        /// <remarks>
+        /// 1 = No special line type scaling.<br />
+        /// 0 = Viewport scaling governs line type scaling.
+        /// </remarks>
+        public const string PsLtScale = "$PSLTSCALE";
 
         /// <summary>
         /// Local date/time of drawing creation.

@@ -73,7 +73,7 @@ namespace netDxf.Entities
             : base(DimensionType.Diameter)
         {
             double angle = rotation * MathHelper.DegToRad;
-            Vector3 point = MathHelper.Transform(new Vector3(arc.Radius * Math.Sin(angle), arc.Radius * Math.Cos(angle), 0.0), arc.Normal, MathHelper.CoordinateSystem.Object, MathHelper.CoordinateSystem.World);
+            Vector3 point = MathHelper.Transform(new Vector3(arc.Radius * Math.Sin(angle), arc.Radius * Math.Cos(angle), 0.0), arc.Normal, CoordinateSystem.Object, CoordinateSystem.World);
             this.center = arc.Center;
             this.refPoint = arc.Center + point;
             this.offset = offset;
@@ -106,7 +106,7 @@ namespace netDxf.Entities
             : base(DimensionType.Diameter)
         {
             double angle = rotation*MathHelper.DegToRad;
-            Vector3 point = MathHelper.Transform(new Vector3(circle.Radius * Math.Cos(angle), circle.Radius * Math.Sin(angle), 0.0), circle.Normal, MathHelper.CoordinateSystem.Object, MathHelper.CoordinateSystem.World);
+            Vector3 point = MathHelper.Transform(new Vector3(circle.Radius * Math.Cos(angle), circle.Radius * Math.Sin(angle), 0.0), circle.Normal, CoordinateSystem.Object, CoordinateSystem.World);
             this.center = circle.Center;
             this.refPoint = circle.Center + point;
 

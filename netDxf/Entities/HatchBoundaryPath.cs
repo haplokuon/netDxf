@@ -87,7 +87,7 @@ namespace netDxf.Entities
                     this.Vertexes = new Vector3[poly.Vertexes.Count];
                     for (int i = 0; i < poly.Vertexes.Count; i++)
                     {
-                        this.Vertexes[i] = new Vector3(poly.Vertexes[i].Location.X, poly.Vertexes[i].Location.Y, poly.Vertexes[i].Bulge);
+                        this.Vertexes[i] = new Vector3(poly.Vertexes[i].Position.X, poly.Vertexes[i].Position.Y, poly.Vertexes[i].Bulge);
                     }
                     this.IsClosed = true;
                 }
@@ -99,7 +99,7 @@ namespace netDxf.Entities
                     this.Vertexes = new Vector3[poly.Vertexes.Count];
                     for (int i = 0; i < poly.Vertexes.Count; i++)
                     {
-                        this.Vertexes[i] = new Vector3(poly.Vertexes[i].Location.X, poly.Vertexes[i].Location.Y, 0.0);
+                        this.Vertexes[i] = new Vector3(poly.Vertexes[i].Position.X, poly.Vertexes[i].Position.Y, 0.0);
                     }
                     this.IsClosed = true;
                 }
@@ -283,8 +283,16 @@ namespace netDxf.Entities
                 double cosine = 0.5 * ellipse.MajorAxis * Math.Cos(ellipse.Rotation * MathHelper.DegToRad);
                 this.EndMajorAxis = new Vector2(cosine, sine);
                 this.MinorRatio = ellipse.MinorAxis / ellipse.MajorAxis;
-                this.StartAngle = ellipse.StartAngle;
-                this.EndAngle = ellipse.EndAngle;
+                if (ellipse.IsFullEllipse)
+                {
+                    this.StartAngle = 0;
+                    this.EndAngle = 360;
+                }
+                else
+                {
+                    this.StartAngle = ellipse.StartAngle;
+                    this.EndAngle = ellipse.EndAngle;
+                }
                 this.IsCounterclockwise = true;
             }
 
@@ -299,8 +307,8 @@ namespace netDxf.Entities
                 Vector3 axisPoint = new Vector3(this.EndMajorAxis.X, this.EndMajorAxis.Y, 0.0);
                 Vector3 ocsAxisPoint = MathHelper.Transform(axisPoint,
                                                             Vector3.UnitZ,
-                                                            MathHelper.CoordinateSystem.World,
-                                                            MathHelper.CoordinateSystem.Object);
+                                                            CoordinateSystem.World,
+                                                            CoordinateSystem.Object);
                 double rotation = Vector2.Angle(new Vector2(ocsAxisPoint.X, ocsAxisPoint.Y)) * MathHelper.RadToDeg;
                 double majorAxis = 2 * axisPoint.Modulus();
                 return new Entities.Ellipse
@@ -355,15 +363,17 @@ namespace netDxf.Entities
                 this.Degree = spline.Degree;
                 this.IsRational = (spline.Flags & SplineTypeFlags.Rational) == SplineTypeFlags.Rational;
                 this.IsPeriodic = spline.IsPeriodic;
-                this.Knots = new double[spline.Knots.Length];
-                for (int i = 0; i < spline.Knots.Length; i++)
-                {
-                    this.Knots[i] = spline.Knots[i];
-                }
+                if (spline.ControlPoints.Count == 0)
+                    throw new ArgumentException("The HatchBoundaryPath spline edge requires a spline entity with control points.", "entity");
                 this.ControlPoints = new Vector3[spline.ControlPoints.Count];
                 for (int i = 0; i < spline.ControlPoints.Count; i++)
                 {
-                    this.ControlPoints[i] = new Vector3(spline.ControlPoints[i].Location.X, spline.ControlPoints[i].Location.Y, spline.ControlPoints[i].Weigth);
+                    this.ControlPoints[i] = new Vector3(spline.ControlPoints[i].Position.X, spline.ControlPoints[i].Position.Y, spline.ControlPoints[i].Weigth);
+                }
+                this.Knots = new double[spline.Knots.Count];
+                for (int i = 0; i < spline.Knots.Count; i++)
+                {
+                    this.Knots[i] = spline.Knots[i];
                 }
             }
 
@@ -379,7 +389,7 @@ namespace netDxf.Entities
                 {
                     ctrl.Add(new SplineVertex(point.X, point.Y, point.Z));
                 }
-                return new Entities.Spline(ctrl, this.Knots, this.Degree);
+                return new Entities.Spline(ctrl, new List<double>(this.Knots), this.Degree);
             }
 
             public override object Clone()
@@ -421,7 +431,7 @@ namespace netDxf.Entities
         /// Initializes a new instance of the <c>Hatch</c> class.
         /// </summary>
         /// <param name="edges">List of entities that makes a loop for the hatch boundary paths.</param>
-        public HatchBoundaryPath(ICollection<EntityObject> edges)
+        public HatchBoundaryPath(IList<EntityObject> edges)
         {
             if (edges == null)
                 throw new ArgumentNullException("edges");
@@ -500,7 +510,7 @@ namespace netDxf.Entities
         /// It is necessary to manually call this method when changes to the boundary entities are made. This is only applicable to associative hatches,
         /// non-associative hatches has no associated boundary entities.
         /// </remarks>
-        public void UpdateEdges()
+        public void Update()
         {
             this.SetInternalInfo(this.contour);
         }
@@ -509,7 +519,7 @@ namespace netDxf.Entities
 
         #region private methods
 
-        private void SetInternalInfo(ICollection<EntityObject> entities)
+        private void SetInternalInfo(IList<EntityObject> entities)
         {
             bool containsClosedPolyline = false;
             this.edges.Clear();

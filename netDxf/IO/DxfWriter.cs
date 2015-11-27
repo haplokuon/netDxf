@@ -111,6 +111,41 @@ namespace netDxf.IO
                 namedObjectDictionary.Entries.Add(layoutDictionary.Handle, DxfObjectCode.LayoutDictionary);
             }
 
+            // create the Underlay definitions dictionary
+            DictionaryObject dgnDefinitionDictionary = new DictionaryObject(namedObjectDictionary);
+            this.doc.NumHandles = dgnDefinitionDictionary.AsignHandle(this.doc.NumHandles);
+            if (this.doc.UnderlayDgnDefinitions.Count > 0)
+            {
+                foreach (UnderlayDgnDefinition underlayDef in this.doc.UnderlayDgnDefinitions.Items)
+                {
+                    dgnDefinitionDictionary.Entries.Add(underlayDef.Handle, underlayDef.Name);
+                    dictionaries.Add(dgnDefinitionDictionary);
+                    namedObjectDictionary.Entries.Add(dgnDefinitionDictionary.Handle, DxfObjectCode.UnderlayDgnDefinitionDictionary);
+                }
+            }
+            DictionaryObject dwfDefinitionDictionary = new DictionaryObject(namedObjectDictionary);
+            this.doc.NumHandles = dwfDefinitionDictionary.AsignHandle(this.doc.NumHandles);
+            if (this.doc.UnderlayDwfDefinitions.Count > 0)
+            {
+                foreach (UnderlayDwfDefinition underlayDef in this.doc.UnderlayDwfDefinitions.Items)
+                {
+                    dwfDefinitionDictionary.Entries.Add(underlayDef.Handle, underlayDef.Name);
+                    dictionaries.Add(dwfDefinitionDictionary);
+                    namedObjectDictionary.Entries.Add(dwfDefinitionDictionary.Handle, DxfObjectCode.UnderlayDwfDefinitionDictionary);
+                }
+            }
+            DictionaryObject pdfDefinitionDictionary = new DictionaryObject(namedObjectDictionary);
+            this.doc.NumHandles = pdfDefinitionDictionary.AsignHandle(this.doc.NumHandles);
+            if (this.doc.UnderlayPdfDefinitions.Count > 0)
+            {
+                foreach (UnderlayPdfDefinition underlayDef in this.doc.UnderlayPdfDefinitions.Items)
+                {
+                    pdfDefinitionDictionary.Entries.Add(underlayDef.Handle, underlayDef.Name);
+                    dictionaries.Add(pdfDefinitionDictionary);
+                    namedObjectDictionary.Entries.Add(pdfDefinitionDictionary.Handle, DxfObjectCode.UnderlayPdfDefinitionDictionary);
+                }
+            }
+
             // create the MLine style dictionary
             DictionaryObject mLineStyleDictionary = new DictionaryObject(namedObjectDictionary);
             this.doc.NumHandles = mLineStyleDictionary.AsignHandle(this.doc.NumHandles);
@@ -129,7 +164,7 @@ namespace netDxf.IO
             this.doc.NumHandles = imageDefDictionary.AsignHandle(this.doc.NumHandles);
             if (this.doc.ImageDefinitions.Count > 0)
             {
-                foreach (ImageDef imageDef in this.doc.ImageDefinitions.Items)
+                foreach (ImageDefinition imageDef in this.doc.ImageDefinitions.Items)
                 {
                     imageDefDictionary.Entries.Add(imageDef.Handle, imageDef.Name);
                 }
@@ -320,13 +355,26 @@ namespace netDxf.IO
                 this.WriteMLineStyle(style, mLineStyleDictionary.Handle);
             }
 
+            foreach (UnderlayDgnDefinition underlayDef in this.doc.UnderlayDgnDefinitions.Items)
+            {
+                this.WriteUnderlayDefinition(underlayDef, dgnDefinitionDictionary.Handle);
+            }
+            foreach (UnderlayDwfDefinition underlayDef in this.doc.UnderlayDwfDefinitions.Items)
+            {
+                this.WriteUnderlayDefinition(underlayDef, dwfDefinitionDictionary.Handle);
+            }
+            foreach (UnderlayPdfDefinition underlayDef in this.doc.UnderlayPdfDefinitions.Items)
+            {
+                this.WriteUnderlayDefinition(underlayDef, pdfDefinitionDictionary.Handle);
+            }
+
             // the raster variables dictionary is only needed when the drawing has image entities
             if (this.doc.ImageDefinitions.Count > 0)
             {
                 this.WriteRasterVariables(this.doc.RasterVariables, imageDefDictionary.Handle);
-                foreach (ImageDef imageDef in this.doc.ImageDefinitions.Items)
+                foreach (ImageDefinition imageDef in this.doc.ImageDefinitions.Items)
                 {
-                    foreach (ImageDefReactor reactor in imageDef.Reactors.Values)
+                    foreach (ImageDefinitionReactor reactor in imageDef.Reactors.Values)
                     {
                         this.WriteImageDefReactor(reactor);
                     }
@@ -457,7 +505,7 @@ namespace netDxf.IO
                     break;
                 case HeaderVariableCode.Angdir:
                     this.chunk.Write(9, name);
-                    this.chunk.Write(70, value);
+                    this.chunk.Write(70, (short) (AngleDirection) value);
                     break;
                 case HeaderVariableCode.AttMode:
                     this.chunk.Write(9, name);
@@ -567,6 +615,10 @@ namespace netDxf.IO
                     this.chunk.Write(9, name);
                     this.chunk.Write(70, value);
                     break;
+                case HeaderVariableCode.PsLtScale:
+                    this.chunk.Write(9, name);
+                    this.chunk.Write(70, value);
+                    break;
                 case HeaderVariableCode.TdCreate:
                     this.chunk.Write(9, name);
                     this.chunk.Write(40, DrawingTime.ToJulianCalendar((DateTime) value));
@@ -621,6 +673,9 @@ namespace netDxf.IO
 
             this.chunk.Write(9, "$DIMBLK2");
             this.chunk.Write(1, style.DIMBLK2 == null ? "" : this.EncodeNonAsciiCharacters(style.DIMBLK2.Name));
+
+            this.chunk.Write(9, "$DIMLDRBLK");
+            this.chunk.Write(1, style.DIMLDRBLK == null ? "" : this.EncodeNonAsciiCharacters(style.DIMLDRBLK.Name));
 
             this.chunk.Write(9, "$DIMCEN");
             this.chunk.Write(40, style.DIMCEN);
@@ -986,6 +1041,8 @@ namespace netDxf.IO
 
             // CAUTION: The documentation says that the next three values are the handles of referenced BLOCK,
             // but they are the handles of referenced BLOCK_RECORD
+            if (style.DIMLDRBLK != null)
+                this.chunk.Write(341, style.DIMLDRBLK.Record.Handle);
             if (style.DIMBLK != null)
                 this.chunk.Write(342, style.DIMBLK.Record.Handle);
             if (style.DIMBLK1 != null)
@@ -1133,8 +1190,8 @@ namespace netDxf.IO
             if (layer.Transparency.Value > 0)
             {
                 int alpha = Transparency.ToAlphaValue(layer.Transparency);
-                this.chunk.Write(1001, "AcCmTransparency");
-                this.chunk.Write(1071, alpha);
+                this.chunk.Write(XDataCode.AppReg, "AcCmTransparency");
+                this.chunk.Write(XDataCode.Int32, alpha);
             }
         }
 
@@ -1156,7 +1213,8 @@ namespace netDxf.IO
 
             this.chunk.Write(2, this.EncodeNonAsciiCharacters(style.Name));
 
-            this.chunk.Write(3, this.EncodeNonAsciiCharacters(style.FontName));
+            if (!style.Registered)
+                this.chunk.Write(3, this.EncodeNonAsciiCharacters(style.FontName));
 
             this.chunk.Write(70, style.IsVertical ? (short) 4 : (short) 0);
 
@@ -1181,6 +1239,12 @@ namespace netDxf.IO
             this.chunk.Write(41, style.WidthFactor);
             this.chunk.Write(42, style.Height);
             this.chunk.Write(50, style.ObliqueAngle);
+
+            if (style.Registered)
+            {
+                this.chunk.Write(XDataCode.AppReg, "ACAD");
+                this.chunk.Write(XDataCode.String, this.EncodeNonAsciiCharacters(style.FontFamilyName));
+            }
         }
 
         /// <summary>
@@ -1243,11 +1307,12 @@ namespace netDxf.IO
             this.chunk.Write(8, blockLayer);
 
             this.chunk.Write(100, SubclassMarker.BlockBegin);
+            if (block.IsXRef) this.chunk.Write(1, this.EncodeNonAsciiCharacters(block.XrefFile));
             this.chunk.Write(2, name);
             this.chunk.Write(70, (short)block.Flags);
-            this.chunk.Write(10, block.Position.X);
-            this.chunk.Write(20, block.Position.Y);
-            this.chunk.Write(30, block.Position.Z);
+            this.chunk.Write(10, block.Origin.X);
+            this.chunk.Write(20, block.Origin.Y);
+            this.chunk.Write(30, block.Origin.Z);
             this.chunk.Write(3, name);
 
             foreach (AttributeDefinition attdef in block.AttributeDefinitions.Values)
@@ -1289,85 +1354,104 @@ namespace netDxf.IO
         private void WriteEntity(EntityObject entity, Layout layout)
         {
             Debug.Assert(this.activeSection == DxfObjectCode.EntitiesSection || this.activeSection == DxfObjectCode.BlocksSection);
+            Debug.Assert(entity != null);
 
             // hatches with zero boundaries are not allowed
             if (entity.Type == EntityType.Hatch && ((Hatch)entity).BoundaryPaths.Count == 0) return;
+            // leader entities with less than two vertexes are not allowed
+            if (entity.Type == EntityType.Leader && ((Leader)entity).Vertexes.Count < 2) return;
+            // polyline entities with less than two vertexes are not allowed
+            if (entity.Type == EntityType.Polyline && ((Polyline)entity).Vertexes.Count < 2) return;
+            // lwPolyline entities with less than two vertexes are not allowed
+            if (entity.Type == EntityType.LightWeightPolyline && ((LwPolyline)entity).Vertexes.Count < 2) return;
 
             this.WriteEntityCommonCodes(entity, layout);
 
             switch (entity.Type)
             {
-                case EntityType.Ray:
-                    this.WriteRay((Ray) entity);
-                    break;
-                case EntityType.XLine:
-                    this.WriteXLine((XLine) entity);
-                    break;
                 case EntityType.Arc:
                     this.WriteArc((Arc) entity);
+                    break;
+                case EntityType.AttributeDefinition:
+                    this.WriteAttributeDefinition((AttributeDefinition)entity);
                     break;
                 case EntityType.Circle:
                     this.WriteCircle((Circle) entity);
                     break;
+                case EntityType.Dimension:
+                    this.WriteDimension((Dimension)entity);
+                    break;
                 case EntityType.Ellipse:
                     this.WriteEllipse((Ellipse) entity);
-                    break;
-                case EntityType.Point:
-                    this.WritePoint((Point) entity);
                     break;
                 case EntityType.Face3D:
                     this.WriteFace3D((Face3d) entity);
                     break;
-                case EntityType.Spline:
-                    this.WriteSpline((Spline) entity);
+                case EntityType.Hatch:
+                    this.WriteHatch((Hatch)entity);
                     break;
-                case EntityType.Solid:
-                    this.WriteSolid((Solid) entity);
-                    break;
-                case EntityType.Trace:
-                    this.WriteTrace((Trace)entity);
+                case EntityType.Image:
+                    this.WriteImage((Image)entity);
                     break;
                 case EntityType.Insert:
                     this.WriteInsert((Insert) entity);
                     break;
-                case EntityType.Line:
-                    this.WriteLine((Line) entity);
+                case EntityType.Leader:
+                    this.WriteLeader((Leader)entity);
                     break;
                 case EntityType.LightWeightPolyline:
                     this.WriteLightWeightPolyline((LwPolyline) entity);
                     break;
-                case EntityType.Polyline:
-                    this.WritePolyline((Polyline) entity);
+                case EntityType.Line:
+                    this.WriteLine((Line) entity);
+                    break;
+                case EntityType.Mesh:
+                    this.WriteMesh((Mesh)entity);
+                    break;
+                case EntityType.MLine:
+                    this.WriteMLine((MLine)entity);
+                    break;
+                case EntityType.MText:
+                    this.WriteMText((MText)entity);
+                    break;
+                case EntityType.Point:
+                    this.WritePoint((Point) entity);
                     break;
                 case EntityType.PolyfaceMesh:
                     this.WritePolyfaceMesh((PolyfaceMesh) entity);
                     break;
+                case EntityType.Polyline:
+                    this.WritePolyline((Polyline) entity);
+                    break;
+                case EntityType.Ray:
+                    this.WriteRay((Ray) entity);
+                    break;
+                case EntityType.Solid:
+                    this.WriteSolid((Solid) entity);
+                    break;
+                case EntityType.Spline:
+                    this.WriteSpline((Spline) entity);
+                    break;
                 case EntityType.Text:
                     this.WriteText((Text) entity);
                     break;
-                case EntityType.MText:
-                    this.WriteMText((MText) entity);
+                case EntityType.Tolerance:
+                    this.WriteTolerance((Tolerance) entity);
                     break;
-                case EntityType.Hatch:
-                    this.WriteHatch((Hatch) entity);
+                case EntityType.Trace:
+                    this.WriteTrace((Trace)entity);
                     break;
-                case EntityType.Dimension:
-                    this.WriteDimension((Dimension) entity);
-                    break;
-                case EntityType.Image:
-                    this.WriteImage((Image) entity);
-                    break;
-                case EntityType.MLine:
-                    this.WriteMLine((MLine) entity);
+                case EntityType.Underlay:
+                    this.WriteUnderlay((Underlay) entity);
                     break;
                 case EntityType.Viewport:
                     this.WriteViewport((Viewport) entity);
                     break;
-                case EntityType.Mesh:
-                    this.WriteMesh((Mesh) entity);
+                case EntityType.Wipeout:
+                    this.WriteWipeout((Wipeout) entity);
                     break;
-                case EntityType.AttributeDefinition:
-                    this.WriteAttributeDefinition((AttributeDefinition) entity);
+                case EntityType.XLine:
+                    this.WriteXLine((XLine) entity);
                     break;
                 default:
                     throw new ArgumentException("Entity unknown.", "entity");
@@ -1389,7 +1473,7 @@ namespace netDxf.IO
                 this.chunk.Write(102, "}");
             }
 
-            this.chunk.Write(330, entity.Owner.Owner.Handle);
+            this.chunk.Write(330, entity.Owner.Record.Handle);
 
             this.chunk.Write(100, SubclassMarker.Entity);
 
@@ -1410,6 +1494,275 @@ namespace netDxf.IO
             this.chunk.Write(370, entity.Lineweight.Value);
             this.chunk.Write(48, entity.LineTypeScale);
             this.chunk.Write(60, entity.IsVisible ? (short) 0 : (short) 1);
+        }
+
+        private void WriteWipeout(Wipeout wipeout)
+        {
+            this.chunk.Write(100, SubclassMarker.Wipeout);
+
+            BoundingRectangle br = new BoundingRectangle(wipeout.ClippingBoundary.Vertexes);
+            
+            Vector3 ocsInsPoint = new Vector3(br.Min.X, br.Min.Y, wipeout.Elevation);
+            double w = br.Width;
+            double h = br.Height;
+            double max = w >= h ? w : h;
+            Vector3 ocsUx = new Vector3(max, 0.0, 0.0);
+            Vector3 ocsUy = new Vector3(0.0, max, 0.0);
+
+            IList<Vector3> wcsPoints = MathHelper.Transform(new List<Vector3>{ocsInsPoint, ocsUx, ocsUy}, wipeout.Normal, CoordinateSystem.Object, CoordinateSystem.World);
+
+            // Insertion point in WCS
+            this.chunk.Write(10, wcsPoints[0].X);
+            this.chunk.Write(20, wcsPoints[0].Y);
+            this.chunk.Write(30, wcsPoints[0].Z);
+
+            // U vector in WCS
+            this.chunk.Write(11, wcsPoints[1].X);
+            this.chunk.Write(21, wcsPoints[1].Y);
+            this.chunk.Write(31, wcsPoints[1].Z);
+
+            // V vector in WCS
+            this.chunk.Write(12, wcsPoints[2].X);
+            this.chunk.Write(22, wcsPoints[2].Y);
+            this.chunk.Write(32, wcsPoints[2].Z);
+
+            this.chunk.Write(13, 1.0);
+            this.chunk.Write(23, 1.0);
+
+            //this.chunk.Write(280, wipeout.ShowClippingFrame ? (short) 1 : (short) 0);
+            this.chunk.Write(280, (short)1);
+            this.chunk.Write(281, (short)50);
+            this.chunk.Write(282, (short)50);
+            this.chunk.Write(283, (short)0);
+
+            this.chunk.Write(71, (short)wipeout.ClippingBoundary.Type);
+
+            if (wipeout.ClippingBoundary.Type == ClippingBoundaryType.Polygonal)
+                this.chunk.Write(91, wipeout.ClippingBoundary.Vertexes.Count + 1);
+            else
+                this.chunk.Write(91, wipeout.ClippingBoundary.Vertexes.Count);
+
+            foreach (Vector2 vertex in wipeout.ClippingBoundary.Vertexes)
+            {
+                double x = (vertex.X - ocsInsPoint.X)/max - 0.5;
+                double y = -((vertex.Y - ocsInsPoint.Y) / max - 0.5);
+                this.chunk.Write(14, x);
+                this.chunk.Write(24, y);
+            }
+
+            // for unknown reasons the wipeout with a polygonal clipping boundary requires to repeat the first vertex
+            if (wipeout.ClippingBoundary.Type == ClippingBoundaryType.Polygonal)
+            {
+                this.chunk.Write(14, (wipeout.ClippingBoundary.Vertexes[0].X - ocsInsPoint.X) / max - 0.5);
+                this.chunk.Write(24, -((wipeout.ClippingBoundary.Vertexes[0].Y - ocsInsPoint.Y) / max - 0.5));
+            }
+
+            this.WriteXData(wipeout.XData);
+        }
+
+        private void WriteUnderlay(Underlay underlay)
+        {
+            this.chunk.Write(100, SubclassMarker.Underlay);
+
+            this.chunk.Write(340, underlay.Definition.Handle);
+
+            Vector3 ocsPosition = MathHelper.Transform(underlay.Position, underlay.Normal, CoordinateSystem.World, CoordinateSystem.Object);
+            this.chunk.Write(10, ocsPosition.X);
+            this.chunk.Write(20, ocsPosition.Y);
+            this.chunk.Write(30, ocsPosition.Z);
+
+            this.chunk.Write(41, underlay.Scale.X);
+            this.chunk.Write(42, underlay.Scale.Y);
+            this.chunk.Write(43, underlay.Scale.Z);
+
+            this.chunk.Write(50, underlay.Rotation);
+
+            this.chunk.Write(210, underlay.Normal.X);
+            this.chunk.Write(220, underlay.Normal.Y);
+            this.chunk.Write(230, underlay.Normal.Z);
+
+            this.chunk.Write(280, (short) underlay.DisplayOptions);
+
+            this.chunk.Write(281, underlay.Contrast);
+            this.chunk.Write(282, underlay.Fade);
+
+            if (underlay.ClippingBoundary != null)
+            {
+                foreach (Vector2 vertex in underlay.ClippingBoundary.Vertexes)
+                {
+                    this.chunk.Write(11, vertex.X);
+                    this.chunk.Write(21, vertex.Y);
+                }
+            }
+        }
+
+        private void WriteTolerance(Tolerance tolerance)
+        {
+            this.chunk.Write(100, SubclassMarker.Tolerance);
+
+            this.chunk.Write(3, this.EncodeNonAsciiCharacters(tolerance.Style.Name));
+
+            this.chunk.Write(10, tolerance.Position.X);
+            this.chunk.Write(20, tolerance.Position.Y);
+            this.chunk.Write(30, tolerance.Position.Z);
+
+            string rep = tolerance.ToStringRepresentation();
+            this.chunk.Write(1, this.EncodeNonAsciiCharacters(rep));
+
+            this.chunk.Write(210, tolerance.Normal.X);
+            this.chunk.Write(220, tolerance.Normal.Y);
+            this.chunk.Write(230, tolerance.Normal.Z);
+
+            double angle = tolerance.Rotation*MathHelper.DegToRad;
+            Vector3 xAxis = new Vector3(Math.Cos(angle), Math.Sin(angle), 0.0);
+            xAxis = MathHelper.Transform(xAxis, tolerance.Normal, CoordinateSystem.Object, CoordinateSystem.World);
+
+            this.chunk.Write(11, xAxis.X);
+            this.chunk.Write(21, xAxis.Y);
+            this.chunk.Write(31, xAxis.Z);
+
+        }
+
+        private void WriteLeader(Leader leader)
+        {
+            this.chunk.Write(100, SubclassMarker.Leader);
+
+            this.chunk.Write(3, leader.Style.Name);
+
+            if(leader.ShowArrowhead)
+                this.chunk.Write(71, (short)1);
+            else
+                this.chunk.Write(71, (short)0);
+
+            this.chunk.Write(72, (short)leader.PathType);
+
+            if (leader.Annotation != null)
+            {
+                switch (leader.Annotation.Type)
+                {
+                    case EntityType.MText:
+                        this.chunk.Write(73, (short) 0);
+                        break;
+                    case EntityType.Insert:
+                        this.chunk.Write(73, (short) 2);
+                        break;
+                    default:
+                        this.chunk.Write(73, (short) 3);
+                        break;
+                }
+            }
+            else
+            {
+                this.chunk.Write(73, (short)3);                
+            }
+
+            Vector2 v = leader.Vertexes[leader.Vertexes.Count - 1] - leader.Vertexes[leader.Vertexes.Count - 2];
+            if (v.Equals(Vector2.Zero)) throw new Exception(string.Format("The last and previous vertex of the leader with handle {0} cannot be the same", leader.Handle));
+            int side = v.X < 0 ? -1 : 1;
+
+            if (side < 0)
+                this.chunk.Write(74, (short)1);
+            else
+                this.chunk.Write(74, (short)0);
+
+            if (leader.HasHookline)
+                this.chunk.Write(75, (short)1);
+            else
+                this.chunk.Write(75, (short)0);
+
+            //this.chunk.Write(40, 0.0);
+            //this.chunk.Write(41, 0.0);
+
+            // in the dxf the leader vertexes list is in WCS
+            Vector2 dir = side * Vector2.UnitX;
+            List<Vector3> ocsVertexes = new List<Vector3>();
+            if (leader.HasHookline)
+            {
+                Vector2 hook = leader.Vertexes[leader.Vertexes.Count - 1];
+                MText text = leader.Annotation as MText;
+                if (text != null)
+                {
+                    double rotation = text.Rotation*MathHelper.DegToRad;
+                    double sin = Math.Sin(rotation);
+                    double cos = Math.Cos(rotation);
+                    dir = new Vector2(cos, sin);
+                    Vector2 position = hook + new Vector2(side * leader.Style.DIMGAP * leader.Style.DIMSCALE, leader.Style.DIMGAP * leader.Style.DIMSCALE);
+                    Vector2 a = hook - position;
+                    a = MathHelper.Transform(a, rotation, CoordinateSystem.Object, CoordinateSystem.World);
+                    hook = a + position;
+                }
+
+                Vector2 vertex = hook + dir * leader.Style.DIMASZ * leader.Style.DIMSCALE;
+                for (int i = 0; i < leader.Vertexes.Count - 1; i++)
+                    ocsVertexes.Add(new Vector3(leader.Vertexes[i].X, leader.Vertexes[i].Y, leader.Elevation));
+
+                ocsVertexes.Add(new Vector3(vertex.X, vertex.Y, leader.Elevation));
+                ocsVertexes.Add(new Vector3(hook.X, hook.Y, leader.Elevation));
+            }
+            else
+            {
+                for (int i = 0; i < leader.Vertexes.Count; i++)
+                    ocsVertexes.Add(new Vector3(leader.Vertexes[i].X, leader.Vertexes[i].Y, leader.Elevation));
+            }
+
+            IList<Vector3> wcsVertexes = MathHelper.Transform(ocsVertexes, leader.Normal, CoordinateSystem.Object, CoordinateSystem.World);
+            this.chunk.Write(76, (short)wcsVertexes.Count);
+            foreach (Vector3 vertex in wcsVertexes)
+            {
+                this.chunk.Write(10, vertex.X);
+                this.chunk.Write(20, vertex.Y);
+                this.chunk.Write(30, vertex.Z);
+            }
+
+            this.chunk.Write(77, leader.LineColor.Index);
+
+            if (leader.Annotation != null) this.chunk.Write(340, leader.Annotation.Handle);
+
+            this.chunk.Write(210, leader.Normal.X);
+            this.chunk.Write(220, leader.Normal.Y);
+            this.chunk.Write(230, leader.Normal.Z);
+
+            Vector3 xDir = MathHelper.Transform(new Vector3(dir.X, dir.Y, 0.0), leader.Normal, CoordinateSystem.Object, CoordinateSystem.World);
+            xDir.Normalize();
+            this.chunk.Write(211, xDir.X);
+            this.chunk.Write(221, xDir.Y);
+            this.chunk.Write(231, xDir.Z);
+
+            Vector3 wcsOffset = MathHelper.Transform(new Vector3(leader.Offset.X, leader.Offset.Y, leader.Elevation), leader.Normal, CoordinateSystem.Object, CoordinateSystem.World);
+            this.chunk.Write(213, wcsOffset.X);
+            this.chunk.Write(223, wcsOffset.Y);
+            this.chunk.Write(233, wcsOffset.Z);
+
+            // leader text vertical position info
+            this.AddLeaderTextPositionXData(leader);
+
+            this.WriteXData(leader.XData);
+        }
+
+        private void AddLeaderTextPositionXData(Leader leader)
+        {
+             MText mText = leader.Annotation as MText;
+            if (mText != null)
+            {
+                XData xdataEntry;
+                if (leader.XData.ContainsAppId(ApplicationRegistry.DefaultName))
+                {
+                    xdataEntry = leader.XData[ApplicationRegistry.DefaultName];
+                    xdataEntry.XDataRecord.Clear();
+                }
+                else
+                {
+                    xdataEntry = new XData(new ApplicationRegistry(ApplicationRegistry.DefaultName));
+                    leader.XData.Add(xdataEntry);
+                }
+                xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.String, "DSTYLE"));
+                xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.ControlString, "{"));
+                xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short)70));
+                xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short)mText.AttachmentPoint));
+                xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short)77));
+                xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short)leader.TextVerticalPosition));
+                xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.ControlString, "}"));
+            }
         }
 
         private void WriteMesh(Mesh mesh)
@@ -1479,7 +1832,7 @@ namespace netDxf.IO
             // this is just an example of the weird Autodesk dxf way of doing things, while an ellipse the center is given in world coordinates,
             // the center of an arc is given in object coordinates (different rules for the same concept).
             // It is a lot more intuitive to give the center in world coordinates and then define the orientation with the normal..
-            Vector3 ocsCenter = MathHelper.Transform(arc.Center, arc.Normal, MathHelper.CoordinateSystem.World, MathHelper.CoordinateSystem.Object);
+            Vector3 ocsCenter = MathHelper.Transform(arc.Center, arc.Normal, CoordinateSystem.World, CoordinateSystem.Object);
 
             this.chunk.Write(10, ocsCenter.X);
             this.chunk.Write(20, ocsCenter.Y);
@@ -1505,7 +1858,7 @@ namespace netDxf.IO
             // this is just an example of the stupid autodesk dxf way of doing things, while an ellipse the center is given in world coordinates,
             // the center of a circle is given in object coordinates (different rules for the same concept).
             // It is a lot more intuitive to give the center in world coordinates and then define the orientation with the normal..
-            Vector3 ocsCenter = MathHelper.Transform(circle.Center, circle.Normal, MathHelper.CoordinateSystem.World, MathHelper.CoordinateSystem.Object);
+            Vector3 ocsCenter = MathHelper.Transform(circle.Center, circle.Normal, CoordinateSystem.World, CoordinateSystem.Object);
 
             this.chunk.Write(10, ocsCenter.X);
             this.chunk.Write(20, ocsCenter.Y);
@@ -1535,8 +1888,8 @@ namespace netDxf.IO
             double cosine = 0.5*ellipse.MajorAxis*Math.Cos(ellipse.Rotation*MathHelper.DegToRad);
             Vector3 axisPoint = MathHelper.Transform(new Vector3(cosine, sine, 0),
                 ellipse.Normal,
-                MathHelper.CoordinateSystem.Object,
-                MathHelper.CoordinateSystem.World);
+                CoordinateSystem.Object,
+                CoordinateSystem.World);
 
             this.chunk.Write(11, axisPoint.X);
             this.chunk.Write(21, axisPoint.Y);
@@ -1644,9 +1997,18 @@ namespace netDxf.IO
         {
             this.chunk.Write(100, SubclassMarker.Spline);
 
-            short flag = (short) spline.Flags;
-            if (spline.IsClosed) flag += (short) SplineTypeFlags.Unknown4;
-            this.chunk.Write(70, flag);
+            short flags = (short) spline.Flags;
+
+            if (spline.CreationMethod == SplineCreationMethod.FitPoints)
+            {
+                flags += (short) SplineTypeFlags.FitPointCreationMethod;
+                flags += (short) spline.KnotParameterization;
+            }
+
+            if (spline.IsPeriodic)
+                flags += (short) SplineTypeFlags.ClosedPeriodicSpline;
+
+            this.chunk.Write(70, flags);
             this.chunk.Write(71, spline.Degree);
 
             // the next two codes are purely cosmetic and writing them causes more bad than good.
@@ -1655,12 +2017,25 @@ namespace netDxf.IO
             // I guess this is the result of legacy code, AutoCad do not use those values when importing Spline entities
             //this.chunk.Write(72, (short)spline.Knots.Length);
             //this.chunk.Write(73, (short)spline.ControlPoints.Count);
+            //this.chunk.Write(74, (short)spline.FitPoints.Count);
 
-            //this.chunk.Write(74, 0); Number of fit points (if any).
+            this.chunk.Write(42, spline.KnotTolerance);
+            this.chunk.Write(43, spline.CtrlPointTolerance);
+            this.chunk.Write(44, spline.FitTolerance);
 
-            //this.chunk.Write(42, 0); 42 Knot tolerance (default = 0.0000001)
-            //this.chunk.Write(43, 0); 43 Control-point tolerance (default = 0.0000001)
-            //this.chunk.Write(44, 0); 44 Fit tolerance (default = 0.0000000001)
+            if (spline.StartTangent != null)
+            {
+                this.chunk.Write(12, spline.StartTangent.Value.X);
+                this.chunk.Write(22, spline.StartTangent.Value.Y);
+                this.chunk.Write(32, spline.StartTangent.Value.Z);
+            }
+
+            if (spline.EndTangent != null)
+            {
+                this.chunk.Write(13, spline.EndTangent.Value.X);
+                this.chunk.Write(23, spline.EndTangent.Value.Y);
+                this.chunk.Write(33, spline.EndTangent.Value.Z);
+            }
 
             foreach (double knot in spline.Knots)
                 this.chunk.Write(40, knot);
@@ -1668,10 +2043,18 @@ namespace netDxf.IO
             foreach (SplineVertex point in spline.ControlPoints)
             {
                 this.chunk.Write(41, point.Weigth);
-                this.chunk.Write(10, point.Location.X);
-                this.chunk.Write(20, point.Location.Y);
-                this.chunk.Write(30, point.Location.Z);
+                this.chunk.Write(10, point.Position.X);
+                this.chunk.Write(20, point.Position.Y);
+                this.chunk.Write(30, point.Position.Z);
             }
+
+            foreach (Vector3 point in spline.FitPoints)
+            {
+                this.chunk.Write(11, point.X);
+                this.chunk.Write(21, point.Y);
+                this.chunk.Write(31, point.Z);
+            }
+
 
             this.WriteXData(spline.XData);
         }
@@ -1683,7 +2066,7 @@ namespace netDxf.IO
             this.chunk.Write(2, this.EncodeNonAsciiCharacters(insert.Block.Name));
 
             // It is a lot more intuitive to give the center in world coordinates and then define the orientation with the normal.
-            Vector3 ocsInsertion = MathHelper.Transform(insert.Position, insert.Normal, MathHelper.CoordinateSystem.World, MathHelper.CoordinateSystem.Object);
+            Vector3 ocsInsertion = MathHelper.Transform(insert.Position, insert.Normal, CoordinateSystem.World, CoordinateSystem.Object);
 
             this.chunk.Write(10, ocsInsertion.X);
             this.chunk.Write(20, ocsInsertion.Y);
@@ -1787,8 +2170,8 @@ namespace netDxf.IO
 
             foreach (LwPolylineVertex v in polyline.Vertexes)
             {
-                this.chunk.Write(10, v.Location.X);
-                this.chunk.Write(20, v.Location.Y);
+                this.chunk.Write(10, v.Position.X);
+                this.chunk.Write(20, v.Position.Y);
                 this.chunk.Write(40, v.StartWidth);
                 this.chunk.Write(41, v.EndWidth);
                 this.chunk.Write(42, v.Bulge);
@@ -1834,9 +2217,9 @@ namespace netDxf.IO
                     this.chunk.Write(420, AciColor.ToTrueColor(polyline.Color));
                 this.chunk.Write(100, SubclassMarker.Vertex);
                 this.chunk.Write(100, SubclassMarker.Polyline3dVertex);
-                this.chunk.Write(10, v.Location.X);
-                this.chunk.Write(20, v.Location.Y);
-                this.chunk.Write(30, v.Location.Z);
+                this.chunk.Write(10, v.Position.X);
+                this.chunk.Write(20, v.Position.Y);
+                this.chunk.Write(30, v.Position.Z);
                 this.chunk.Write(70, (short) v.Flags);
             }
 
@@ -1919,9 +2302,9 @@ namespace netDxf.IO
         {
             this.chunk.Write(100, SubclassMarker.Point);
 
-            this.chunk.Write(10, point.Location.X);
-            this.chunk.Write(20, point.Location.Y);
-            this.chunk.Write(30, point.Location.Z);
+            this.chunk.Write(10, point.Position.X);
+            this.chunk.Write(20, point.Position.Y);
+            this.chunk.Write(30, point.Position.Z);
 
             this.chunk.Write(39, point.Thickness);
 
@@ -1943,7 +2326,7 @@ namespace netDxf.IO
 
             // another example of this OCS vs WCS non sense.
             // while the MText position is written in WCS the position of the Text is written in OCS (different rules for the same concept).
-            Vector3 ocsBasePoint = MathHelper.Transform(text.Position, text.Normal, MathHelper.CoordinateSystem.World, MathHelper.CoordinateSystem.Object);
+            Vector3 ocsBasePoint = MathHelper.Transform(text.Position, text.Normal, CoordinateSystem.World, CoordinateSystem.Object);
 
             this.chunk.Write(10, ocsBasePoint.X);
             this.chunk.Write(20, ocsBasePoint.Y);
@@ -2301,6 +2684,23 @@ namespace netDxf.IO
                     if (spline.IsRational) this.chunk.Write(42, point.Z);
                 }
 
+                //this.chunk.Write(96, spline.FitPoints.Length);
+                //foreach (Vector2 point in spline.FitPoints)
+                //{
+                //    this.chunk.Write(11, point.X);
+                //    this.chunk.Write(21, point.Y);
+                //}
+                //if (spline.StartTangent != null)
+                //{
+                //    this.chunk.Write(12, spline.StartTangent.Value.X);
+                //    this.chunk.Write(22, spline.StartTangent.Value.Y);
+                //}
+                //if (spline.EndTangent != null)
+                //{
+                //    this.chunk.Write(12, spline.EndTangent.Value.X);
+                //    this.chunk.Write(22, spline.EndTangent.Value.Y);
+                //}
+
                 // this information is only required for AutoCAD version 2010
                 // stores information about spline fit points (the spline entity has no fit points and no tangent info)
                 // another dxf inconsistency!; while the number of fit points of Spline entity is written as a short (code 74)
@@ -2361,7 +2761,7 @@ namespace netDxf.IO
                 double angle = line.Angle + pattern.Angle;
                 // Pattern fill data.
                 // In theory this should hold the same information as the pat file but for unknown reason the dxf requires global data instead of local,
-                // it's a guess the documentation is kind of obscure.
+                // it's a guess the documentation is kinda obscure.
                 // This means we have to apply the pattern rotation and scale to the line definitions
                 this.chunk.Write(53, angle);
 
@@ -2420,25 +2820,25 @@ namespace netDxf.IO
 
             switch (dim.DimensionType)
             {
-                case (DimensionType.Aligned):
+                case DimensionType.Aligned:
                     this.WriteAlignedDimension((AlignedDimension) dim);
                     break;
-                case (DimensionType.Linear):
+                case DimensionType.Linear:
                     this.WriteLinearDimension((LinearDimension) dim);
                     break;
-                case (DimensionType.Radius):
+                case DimensionType.Radius:
                     this.WriteRadialDimension((RadialDimension) dim);
                     break;
-                case (DimensionType.Diameter):
+                case DimensionType.Diameter:
                     this.WriteDiametricDimension((DiametricDimension) dim);
                     break;
-                case (DimensionType.Angular3Point):
+                case DimensionType.Angular3Point:
                     this.WriteAngular3PointDimension((Angular3PointDimension) dim);
                     break;
-                case (DimensionType.Angular):
+                case DimensionType.Angular:
                     this.WriteAngular2LineDimension((Angular2LineDimension) dim);
                     break;
-                case (DimensionType.Ordinate):
+                case DimensionType.Ordinate:
                     this.WriteOrdinateDimension((OrdinateDimension) dim);
                     break;
             }
@@ -2577,19 +2977,23 @@ namespace netDxf.IO
             this.chunk.Write(30, image.Position.Z);
 
             double factor = UnitHelper.ConversionFactor(this.doc.RasterVariables.Units, this.doc.DrawingVariables.InsUnits);
-            Vector2 u = MathHelper.Transform(new Vector2(image.Width/image.Definition.Width, 0.0), image.Rotation*MathHelper.DegToRad, MathHelper.CoordinateSystem.Object, MathHelper.CoordinateSystem.World);
-            Vector3 uWcs = MathHelper.Transform(new Vector3(u.X, u.Y, 0.0), image.Normal, MathHelper.CoordinateSystem.Object, MathHelper.CoordinateSystem.World);
-            uWcs *= factor;
-            this.chunk.Write(11, uWcs.X);
-            this.chunk.Write(21, uWcs.Y);
-            this.chunk.Write(31, uWcs.Z);
+            Vector2 u = new Vector2(image.Width/image.Definition.Width, 0.0);
+            Vector2 v = new Vector2(0.0, image.Height/image.Definition.Height);
+            IList<Vector2> ocsUV = MathHelper.Transform(new List<Vector2>{u, v}, image.Rotation * MathHelper.DegToRad, CoordinateSystem.Object, CoordinateSystem.World);
 
-            Vector2 v = MathHelper.Transform(new Vector2(0.0, image.Height/image.Definition.Height), image.Rotation*MathHelper.DegToRad, MathHelper.CoordinateSystem.Object, MathHelper.CoordinateSystem.World);
-            Vector3 vWcs = MathHelper.Transform(new Vector3(v.X, v.Y, 0.0), image.Normal, MathHelper.CoordinateSystem.Object, MathHelper.CoordinateSystem.World);
-            vWcs *= factor;
-            this.chunk.Write(12, vWcs.X);
-            this.chunk.Write(22, vWcs.Y);
-            this.chunk.Write(32, vWcs.Z);
+            Vector3 ocsU = new Vector3(ocsUV[0].X, ocsUV[0].Y, 0.0);
+            Vector3 ocsV = new Vector3(ocsUV[1].X, ocsUV[1].Y, 0.0);
+            IList<Vector3> wcsUV = MathHelper.Transform(new List<Vector3> {ocsU, ocsV}, image.Normal, CoordinateSystem.Object, CoordinateSystem.World);
+
+            Vector3 wcsU = wcsUV[0] * factor;
+            this.chunk.Write(11, wcsU.X);
+            this.chunk.Write(21, wcsU.Y);
+            this.chunk.Write(31, wcsU.Z);
+
+            Vector3 wcsV = wcsUV[1] * factor;
+            this.chunk.Write(12, wcsV.X);
+            this.chunk.Write(22, wcsV.Y);
+            this.chunk.Write(32, wcsV.Z);
 
             this.chunk.Write(13, (double) image.Definition.Width);
             this.chunk.Write(23, (double) image.Definition.Height);
@@ -2606,8 +3010,8 @@ namespace netDxf.IO
             this.chunk.Write(91, image.ClippingBoundary.Vertexes.Count);
             foreach (Vector2 vertex in image.ClippingBoundary.Vertexes)
             {
-                this.chunk.Write(14, vertex.X);
-                this.chunk.Write(24, vertex.Y);
+                this.chunk.Write(14, vertex.X / u.X);
+                this.chunk.Write(24, vertex.Y / v.Y);
             }
 
             this.WriteXData(image.XData);
@@ -2635,7 +3039,7 @@ namespace netDxf.IO
             {
                 ocsVertexes.Add(new Vector3(segment.Location.X, segment.Location.Y, mLine.Elevation));
             }
-            ICollection<Vector3> vertexes = MathHelper.Transform(ocsVertexes, mLine.Normal, MathHelper.CoordinateSystem.Object, MathHelper.CoordinateSystem.World);
+            IList<Vector3> vertexes = MathHelper.Transform(ocsVertexes, mLine.Normal, CoordinateSystem.Object, CoordinateSystem.World);
 
             Vector3[] wcsVertexes = new Vector3[vertexes.Count];
             vertexes.CopyTo(wcsVertexes, 0);
@@ -2666,12 +3070,12 @@ namespace netDxf.IO
 
                 // the directions are written in world coordinates
                 Vector2 dir = mLine.Vertexes[i].Direction;
-                Vector3 wcsDir = MathHelper.Transform(new Vector3(dir.X, dir.Y, mLine.Elevation), mLine.Normal, MathHelper.CoordinateSystem.Object, MathHelper.CoordinateSystem.World);
+                Vector3 wcsDir = MathHelper.Transform(new Vector3(dir.X, dir.Y, mLine.Elevation), mLine.Normal, CoordinateSystem.Object, CoordinateSystem.World);
                 this.chunk.Write(12, wcsDir.X);
                 this.chunk.Write(22, wcsDir.Y);
                 this.chunk.Write(32, wcsDir.Z);
                 Vector2 mitter = mLine.Vertexes[i].Miter;
-                Vector3 wcsMitter = MathHelper.Transform(new Vector3(mitter.X, mitter.Y, mLine.Elevation), mLine.Normal, MathHelper.CoordinateSystem.Object, MathHelper.CoordinateSystem.World);
+                Vector3 wcsMitter = MathHelper.Transform(new Vector3(mitter.X, mitter.Y, mLine.Elevation), mLine.Normal, CoordinateSystem.Object, CoordinateSystem.World);
                 this.chunk.Write(13, wcsMitter.X);
                 this.chunk.Write(23, wcsMitter.Y);
                 this.chunk.Write(33, wcsMitter.Z);
@@ -2694,7 +3098,7 @@ namespace netDxf.IO
         {
             this.chunk.Write(100, SubclassMarker.Text);
 
-            Vector3 ocsInsertion = MathHelper.Transform(def.Position, def.Normal, MathHelper.CoordinateSystem.World, MathHelper.CoordinateSystem.Object);
+            Vector3 ocsInsertion = MathHelper.Transform(def.Position, def.Normal, CoordinateSystem.World, CoordinateSystem.Object);
 
             this.chunk.Write(10, ocsInsertion.X);
             this.chunk.Write(20, ocsInsertion.Y);
@@ -2836,7 +3240,7 @@ namespace netDxf.IO
             this.chunk.Write(0, attrib.CodeName);
             this.chunk.Write(5, attrib.Handle);
 
-            this.chunk.Write(330, attrib.Owner.Owner.Handle);
+            this.chunk.Write(330, attrib.Owner.Handle);
 
             this.chunk.Write(100, SubclassMarker.Entity);
 
@@ -2857,7 +3261,7 @@ namespace netDxf.IO
 
             this.chunk.Write(100, SubclassMarker.Text);
 
-            Vector3 ocsInsertion = MathHelper.Transform(attrib.Position, attrib.Normal, MathHelper.CoordinateSystem.World, MathHelper.CoordinateSystem.Object);
+            Vector3 ocsInsertion = MathHelper.Transform(attrib.Position, attrib.Normal, CoordinateSystem.World, CoordinateSystem.Object);
 
             this.chunk.Write(10, ocsInsertion.X);
             this.chunk.Write(20, ocsInsertion.Y);
@@ -3080,7 +3484,51 @@ namespace netDxf.IO
             }
         }
 
-        private void WriteImageDefReactor(ImageDefReactor reactor)
+        private void WriteUnderlayDefinition(UnderlayDefinition underlayDef, string ownerHandle)
+        {
+            this.chunk.Write(0, underlayDef.CodeName);
+            this.chunk.Write(5, underlayDef.Handle);
+            this.chunk.Write(102, "{ACAD_REACTORS");
+            List<DxfObject> objects = null;
+            switch (underlayDef.Type)
+            {
+                case UnderlayType.DGN:
+                    objects = this.doc.UnderlayDgnDefinitions.References[underlayDef.Name];
+                    break;
+                case UnderlayType.DWF:
+                    objects = this.doc.UnderlayDwfDefinitions.References[underlayDef.Name];
+                    break;
+                case UnderlayType.PDF:
+                    objects = this.doc.UnderlayPdfDefinitions.References[underlayDef.Name];
+                    break;
+            }
+            if (objects == null) throw new NullReferenceException("Underlay references list cannot be null");
+            foreach (DxfObject o in objects)
+            {
+                Underlay underlay = o as Underlay;
+                if (underlay != null)
+                    this.chunk.Write(330, underlay.Handle);
+            }
+            this.chunk.Write(102, "}");
+            this.chunk.Write(330, ownerHandle);
+
+            this.chunk.Write(100, SubclassMarker.UnderlayDefinition);
+            this.chunk.Write(1, this.EncodeNonAsciiCharacters(underlayDef.FileName));
+            switch (underlayDef.Type)
+            {
+                case UnderlayType.DGN:
+                    this.chunk.Write(2, this.EncodeNonAsciiCharacters(((UnderlayDgnDefinition)underlayDef).Layout));
+                    break;
+                case UnderlayType.DWF:
+                    this.chunk.Write(2, string.Empty);
+                    break;
+                case UnderlayType.PDF:
+                    this.chunk.Write(2, this.EncodeNonAsciiCharacters(((UnderlayPdfDefinition)underlayDef).Page));
+                    break;
+            }   
+        }
+
+        private void WriteImageDefReactor(ImageDefinitionReactor reactor)
         {
             this.chunk.Write(0, reactor.CodeName);
             this.chunk.Write(5, reactor.Handle);
@@ -3091,14 +3539,14 @@ namespace netDxf.IO
             this.chunk.Write(330, reactor.ImageHandle);
         }
 
-        private void WriteImageDef(ImageDef imageDef, string ownerHandle)
+        private void WriteImageDef(ImageDefinition imageDefinition, string ownerHandle)
         {
-            this.chunk.Write(0, imageDef.CodeName);
-            this.chunk.Write(5, imageDef.Handle);
+            this.chunk.Write(0, imageDefinition.CodeName);
+            this.chunk.Write(5, imageDefinition.Handle);
 
             this.chunk.Write(102, "{ACAD_REACTORS");
             this.chunk.Write(330, ownerHandle);
-            foreach (ImageDefReactor reactor in imageDef.Reactors.Values)
+            foreach (ImageDefinitionReactor reactor in imageDefinition.Reactors.Values)
             {
                 this.chunk.Write(330, reactor.Handle);
             }
@@ -3107,19 +3555,19 @@ namespace netDxf.IO
             this.chunk.Write(330, ownerHandle);
 
             this.chunk.Write(100, SubclassMarker.RasterImageDef);
-            this.chunk.Write(1, imageDef.FileName);
+            this.chunk.Write(1, imageDefinition.FileName);
 
-            this.chunk.Write(10, (double) imageDef.Width);
-            this.chunk.Write(20, (double) imageDef.Height);
+            this.chunk.Write(10, (double) imageDefinition.Width);
+            this.chunk.Write(20, (double) imageDefinition.Height);
 
             // The documentation says that this is the size of one pixel in AutoCAD units, but it seems that this is always the size of one pixel in millimeters
             // this value is used to calculate the image resolution in PPI or PPC, and the default image size.
-            double factor = UnitHelper.ConversionFactor((ImageUnits) imageDef.ResolutionUnits, DrawingUnits.Millimeters);
-            this.chunk.Write(11, factor/imageDef.HorizontalResolution);
-            this.chunk.Write(21, factor/imageDef.VerticalResolution);
+            double factor = UnitHelper.ConversionFactor((ImageUnits) imageDefinition.ResolutionUnits, DrawingUnits.Millimeters);
+            this.chunk.Write(11, factor/imageDefinition.HorizontalResolution);
+            this.chunk.Write(21, factor/imageDefinition.VerticalResolution);
 
             this.chunk.Write(280, (short) 1);
-            this.chunk.Write(281, (short) imageDef.ResolutionUnits);
+            this.chunk.Write(281, (short) imageDefinition.ResolutionUnits);
         }
 
         private void WriteRasterVariables(RasterVariables variables, string ownerHandle)
@@ -3316,10 +3764,10 @@ namespace netDxf.IO
                 Vector2 endPoint = new Vector2(ellipse.Center.X, ellipse.Center.Y) + ellipse.PolarCoordinateRelativeToCenter(ellipse.EndAngle);
                 double a = ellipse.MajorAxis*0.5;
                 double b = ellipse.MinorAxis*0.5;
-                double px1 = ((startPoint.X - ellipse.Center.X)/a);
-                double py1 = ((startPoint.Y - ellipse.Center.Y)/b);
-                double px2 = ((endPoint.X - ellipse.Center.X)/a);
-                double py2 = ((endPoint.Y - ellipse.Center.Y)/b);
+                double px1 = (startPoint.X - ellipse.Center.X)/a;
+                double py1 = (startPoint.Y - ellipse.Center.Y)/b;
+                double px2 = (endPoint.X - ellipse.Center.X)/a;
+                double py2 = (endPoint.Y - ellipse.Center.Y)/b;
 
                 atan1 = Math.Atan2(py1, px1);
                 atan2 = Math.Atan2(py2, px2);

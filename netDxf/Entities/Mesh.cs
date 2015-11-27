@@ -63,7 +63,7 @@ namespace netDxf.Entities
             if (faces == null)
                 throw new ArgumentNullException("faces", "The Mesh faces list cannot be null.");
             if (faces.Count > MaxFaces)
-                throw new ArgumentOutOfRangeException("faces", faces.Count, String.Format("The maximum number of faces in a mesh is {0}", MaxFaces));
+                throw new ArgumentOutOfRangeException("faces", faces.Count, string.Format("The maximum number of faces in a mesh is {0}", MaxFaces));
             this.faces = faces;
             this.edges = edges;
             this.subdivisionLevel = 0;
@@ -94,11 +94,7 @@ namespace netDxf.Entities
         /// </summary>
         public ReadOnlyCollection<MeshEdge> Edges
         {
-            get
-            {
-                if (this.edges == null) return null;
-                return this.edges.AsReadOnly();
-            }
+            get { return this.edges == null ? null : this.edges.AsReadOnly(); }
         }
 
         /// <summary>

@@ -81,6 +81,7 @@ namespace netDxf
         public IList GetListValues()
         {
             Type underlyingType = Enum.GetUnderlyingType(this.enumType);
+
             ArrayList values = new ArrayList();
             //Look for our string value associated with fields in this enum
             foreach (FieldInfo fi in this.enumType.GetFields())
@@ -89,7 +90,12 @@ namespace netDxf
                 StringValueAttribute[] attrs = fi.GetCustomAttributes(typeof (StringValueAttribute), false) as StringValueAttribute[];
                 if (attrs != null)
                     if (attrs.Length > 0)
-                        values.Add(new DictionaryEntry(Convert.ChangeType(Enum.Parse(this.enumType, fi.Name), underlyingType), attrs[0].Value));
+                    {
+                        object str = Convert.ChangeType(Enum.Parse(this.enumType, fi.Name), underlyingType);
+                        if (str == null)
+                            throw new Exception();
+                        values.Add(new DictionaryEntry(str, attrs[0].Value));
+                    }
             }
 
             return values;

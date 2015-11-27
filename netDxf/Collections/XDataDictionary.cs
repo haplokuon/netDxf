@@ -76,7 +76,7 @@ namespace netDxf.Collections
         /// Initializes a new instance of <c>XDataDictionary</c> and has the specified items.
         /// </summary>
         /// <param name="items">The list of <see cref="XData">extended data</see> items initially stored.</param>
-        public XDataDictionary(ICollection<XData> items)
+        public XDataDictionary(IList<XData> items)
         {
             this.innerDictionary = new Dictionary<string, XData>(items.Count, StringComparer.OrdinalIgnoreCase);
             this.AddRange(items);
@@ -107,7 +107,7 @@ namespace netDxf.Collections
             {
                 if (value == null)
                     throw new ArgumentNullException("value");
-                if (!value.ApplicationRegistry.Name.Equals(appId, StringComparison.OrdinalIgnoreCase))
+                if (!string.Equals(value.ApplicationRegistry.Name, appId, StringComparison.OrdinalIgnoreCase))
                     throw new ArgumentException(string.Format("The extended data application registry name {0} must be equal to the specified appId {1}.", value.ApplicationRegistry.Name, appId));
                 
                 this.innerDictionary[appId] = value;
@@ -170,7 +170,7 @@ namespace netDxf.Collections
             else
             {
                 this.innerDictionary.Add(item.ApplicationRegistry.Name, item);
-                item.ApplicationRegistry.NameChange += this.ApplicationRegistry_NameChange;
+                item.ApplicationRegistry.NameChanged += this.ApplicationRegistry_NameChanged;
                 this.OnAddAppRegEvent(item.ApplicationRegistry);
             }
         }
@@ -179,7 +179,7 @@ namespace netDxf.Collections
         /// Adds a list of <see cref="XData">extended data</see> to the current dictionary.
         /// </summary>
         /// <param name="items">The list of <see cref="XData">extended data</see> to add.</param>
-        public void AddRange(ICollection<XData> items)
+        public void AddRange(IList<XData> items)
         {
             foreach (XData data in items)
             {
@@ -197,7 +197,7 @@ namespace netDxf.Collections
             if (!this.innerDictionary.ContainsKey(appId))
                 return false;
             XData xdata = this.innerDictionary[appId];
-            xdata.ApplicationRegistry.NameChange -= this.ApplicationRegistry_NameChange;
+            xdata.ApplicationRegistry.NameChanged -= this.ApplicationRegistry_NameChanged;
             this.innerDictionary.Remove(appId);
             this.OnRemoveAppRegEvent(xdata.ApplicationRegistry);
             return true;
@@ -310,7 +310,7 @@ namespace netDxf.Collections
 
         #region ApplicationRegistry events
 
-        private void ApplicationRegistry_NameChange(TableObject sender, TableObjectChangeEventArgs<string> e)
+        private void ApplicationRegistry_NameChanged(TableObject sender, TableObjectChangedEventArgs<string> e)
         {
             XData xdata = this.innerDictionary[e.OldValue];
             this.innerDictionary.Remove(e.OldValue);

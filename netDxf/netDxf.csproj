@@ -53,13 +53,13 @@
     <PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>pdbonly</DebugType>
+    <DebugType>none</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <DebugSymbols>true</DebugSymbols>
+    <DebugSymbols>false</DebugSymbols>
     <DocumentationFile>bin\Release\netDxf.xml</DocumentationFile>
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
@@ -68,12 +68,37 @@
     <Reference Include="System.Drawing" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Units\AngleDirection.cs" />
     <Compile Include="Collections\AttributeCollection.cs" />
+    <Compile Include="Collections\UnderlayDgnDefinitions.cs" />
+    <Compile Include="Collections\UnderlayDwfDefinitions.cs" />
+    <Compile Include="Collections\UnderlayPdfDefinitions.cs" />
+    <Compile Include="CoordinateSystem.cs" />
     <Compile Include="Entities\AttributeChangeEventArgs.cs" />
+    <Compile Include="ClippingBoundaryType.cs" />
+    <Compile Include="Entities\DatumReferenceValue.cs" />
     <Compile Include="Entities\EndSequence.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Entities\Leader.cs" />
+    <Compile Include="Entities\LeaderPathType.cs" />
+    <Compile Include="Entities\LeaderTextVerticalPosition.cs" />
+    <Compile Include="Entities\SplineCreationMethod.cs" />
+    <Compile Include="Entities\SplineKnotParameterization.cs" />
+    <Compile Include="Entities\Tolerance.cs" />
+    <Compile Include="Entities\ToleranceEntry.cs" />
+    <Compile Include="Entities\ToleranceValue.cs" />
+    <Compile Include="Entities\ToleranceMaterialCondition.cs" />
+    <Compile Include="Entities\ToleranceGeometricSymbol.cs" />
     <Compile Include="Entities\Trace.cs" />
+    <Compile Include="Entities\Underlay.cs" />
+    <Compile Include="Entities\UnderlayDisplayFlags.cs" />
+    <Compile Include="Entities\Wipeout.cs" />
+    <Compile Include="Objects\UnderlayDefinition.cs" />
+    <Compile Include="Objects\UnderlayDwfDefinition.cs" />
+    <Compile Include="Objects\UnderlayDgnDefinition.cs" />
+    <Compile Include="Objects\UnderlayPdfDefinition.cs" />
+    <Compile Include="Objects\UnderlayType.cs" />
     <Compile Include="IO\BinaryCodeValueReader.cs" />
     <Compile Include="IO\BinaryCodeValueWriter.cs" />
     <Compile Include="Blocks\BlockEntityChangeEventArgs.cs" />
@@ -111,7 +136,7 @@
     <Compile Include="Units\LinearUnitFormat.cs" />
     <Compile Include="Objects\GroupEntityChangeEventArgs.cs" />
     <Compile Include="Objects\MLineStyleElementChangeEventArgs.cs" />
-    <Compile Include="Tables\TableObjectChangeEventArgs.cs" />
+    <Compile Include="Tables\TableObjectChangedEventArgs.cs" />
     <Compile Include="Tables\ViewMode.cs" />
     <Compile Include="IO\TextCodeValueWriter.cs" />
     <Compile Include="IO\ICodeValueWriter.cs" />
@@ -143,8 +168,8 @@
     <Compile Include="Entities\XLine.cs" />
     <Compile Include="Entities\Ray.cs" />
     <Compile Include="Objects\DictionaryCloningFlags.cs" />
-    <Compile Include="Objects\ImageDef.cs" />
-    <Compile Include="Objects\ImageDefReactor.cs" />
+    <Compile Include="Objects\ImageDefinition.cs" />
+    <Compile Include="Objects\ImageDefinitionReactor.cs" />
     <Compile Include="Objects\ImageDisplayQuality.cs" />
     <Compile Include="Objects\Layout.cs" />
     <Compile Include="Objects\MLineStyle.cs" />
@@ -154,7 +179,7 @@
     <Compile Include="Entities\Angular2LineDimension.cs" />
     <Compile Include="Entities\DiametricDimension.cs" />
     <Compile Include="Entities\HatchGradientPattern.cs" />
-    <Compile Include="Entities\ImageClippingBoundary.cs" />
+    <Compile Include="ClippingBoundary.cs" />
     <Compile Include="Entities\ImageDisplayFlags.cs" />
     <Compile Include="Entities\Image.cs" />
     <Compile Include="Entities\MLine.cs" />

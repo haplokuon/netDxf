@@ -32,14 +32,14 @@ namespace netDxf.Tables
     {
         #region delegates and events
 
-        public delegate void LineTypeChangeEventHandler(TableObject sender, TableObjectChangeEventArgs<LineType> e);
-        public event LineTypeChangeEventHandler LineTypeChange;
-        protected virtual LineType OnLineTypeChangeEvent(LineType oldLineType, LineType newLineType)
+        public delegate void LineTypeChangedEventHandler(TableObject sender, TableObjectChangedEventArgs<LineType> e);
+        public event LineTypeChangedEventHandler LineTypeChanged;
+        protected virtual LineType OnLineTypeChangedEvent(LineType oldLineType, LineType newLineType)
         {
-            LineTypeChangeEventHandler ae = this.LineTypeChange;
+            LineTypeChangedEventHandler ae = this.LineTypeChanged;
             if (ae != null)
             {
-                TableObjectChangeEventArgs<LineType> eventArgs = new TableObjectChangeEventArgs<LineType>(oldLineType, newLineType);
+                TableObjectChangedEventArgs<LineType> eventArgs = new TableObjectChangedEventArgs<LineType>(oldLineType, newLineType);
                 ae(this, eventArgs);
                 return eventArgs.NewValue;
             }
@@ -85,7 +85,12 @@ namespace netDxf.Tables
         /// </summary>
         /// <param name="name">Layer name.</param>
         public Layer(string name)
-            : base(name, DxfObjectCode.Layer, true)
+            : this(name, true)
+        {
+        }
+
+        internal Layer(string name, bool checkName)
+            : base(name, DxfObjectCode.Layer, checkName)
         {
             if (string.IsNullOrEmpty(name))
                 throw new ArgumentNullException("name", "The layer name should be at least one character long.");
@@ -113,7 +118,7 @@ namespace netDxf.Tables
             {
                 if (value == null)
                     throw new ArgumentNullException("value");
-                this.lineType = this.OnLineTypeChangeEvent(this.lineType, value);
+                this.lineType = this.OnLineTypeChangedEvent(this.lineType, value);
             }
         }
 

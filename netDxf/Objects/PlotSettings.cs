@@ -278,7 +278,7 @@ namespace netDxf.Objects
         /// Creates a new plot settings that is a copy of the current instance.
         /// </summary>
         /// <returns>A new plot settings that is a copy of this instance.</returns>
-        public Object Clone()
+        public object Clone()
         {
             return new PlotSettings
             {

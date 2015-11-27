@@ -20,7 +20,6 @@
 #endregion
 
 using System;
-using netDxf.IO;
 
 namespace netDxf.IO
 {

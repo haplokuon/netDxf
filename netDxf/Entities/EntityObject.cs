@@ -37,28 +37,28 @@ namespace netDxf.Entities
     {
         #region delegates and events
 
-        public delegate void LayerChangeEventHandler(EntityObject sender, TableObjectChangeEventArgs<Layer> e);
-        public event LayerChangeEventHandler LayerChange;
-        protected virtual Layer OnLayerChangeEvent(Layer oldLayer, Layer newLayer)
+        public delegate void LayerChangedEventHandler(EntityObject sender, TableObjectChangedEventArgs<Layer> e);
+        public event LayerChangedEventHandler LayerChanged;
+        protected virtual Layer OnLayerChangedEvent(Layer oldLayer, Layer newLayer)
         {
-            LayerChangeEventHandler ae = this.LayerChange;
+            LayerChangedEventHandler ae = this.LayerChanged;
             if (ae != null)
             {
-                TableObjectChangeEventArgs<Layer> eventArgs = new TableObjectChangeEventArgs<Layer>(oldLayer, newLayer);
+                TableObjectChangedEventArgs<Layer> eventArgs = new TableObjectChangedEventArgs<Layer>(oldLayer, newLayer);
                 ae(this, eventArgs);
                 return eventArgs.NewValue;
             }
             return newLayer;
         }
 
-        public delegate void LineTypeChangeEventHandler(EntityObject sender, TableObjectChangeEventArgs<LineType> e);
-        public event LineTypeChangeEventHandler LineTypeChange;
-        protected virtual LineType OnLineTypeChangeEvent(LineType oldLineType, LineType newLineType)
+        public delegate void LineTypeChangedEventHandler(EntityObject sender, TableObjectChangedEventArgs<LineType> e);
+        public event LineTypeChangedEventHandler LineTypeChanged;
+        protected virtual LineType OnLineTypeChangedEvent(LineType oldLineType, LineType newLineType)
         {
-            LineTypeChangeEventHandler ae = this.LineTypeChange;
+            LineTypeChangedEventHandler ae = this.LineTypeChanged;
             if (ae != null)
             {
-                TableObjectChangeEventArgs<LineType> eventArgs = new TableObjectChangeEventArgs<LineType>(oldLineType, newLineType);
+                TableObjectChangedEventArgs<LineType> eventArgs = new TableObjectChangedEventArgs<LineType>(oldLineType, newLineType);
                 ae(this, eventArgs);
                 return eventArgs.NewValue;
             }
@@ -145,7 +145,7 @@ namespace netDxf.Entities
         /// <summary>
         /// Gets or sets the entity <see cref="AciColor">color</see>.
         /// </summary>
-        public AciColor Color
+        public virtual AciColor Color
         {
             get { return this.color; }
             set
@@ -159,35 +159,35 @@ namespace netDxf.Entities
         /// <summary>
         /// Gets or sets the entity <see cref="Layer">layer</see>.
         /// </summary>
-        public Layer Layer
+        public virtual Layer Layer
         {
             get { return this.layer; }
             set
             {
                 if (value == null)
                     throw new ArgumentNullException("value");
-                this.layer = this.OnLayerChangeEvent(this.layer, value);
+                this.layer = this.OnLayerChangedEvent(this.layer, value);
             }
         }
 
         /// <summary>
         /// Gets or sets the entity <see cref="LineType">line type</see>.
         /// </summary>
-        public LineType LineType
+        public virtual LineType LineType
         {
             get { return this.lineType; }
             set
             {
                 if (value == null)
                     throw new ArgumentNullException("value");
-                this.lineType = this.OnLineTypeChangeEvent(this.lineType, value);
+                this.lineType = this.OnLineTypeChangedEvent(this.lineType, value);
             }
         }
 
         /// <summary>
         /// Gets or sets the entity line weight, one unit is always 1/100 mm (default = ByLayer).
         /// </summary>
-        public Lineweight Lineweight
+        public virtual Lineweight Lineweight
         {
             get { return this.lineweight; }
             set
@@ -201,7 +201,7 @@ namespace netDxf.Entities
         /// <summary>
         /// Gets or sets layer transparency (default: ByLayer).
         /// </summary>
-        public Transparency Transparency
+        public virtual Transparency Transparency
         {
             get { return this.transparency; }
             set
@@ -215,7 +215,7 @@ namespace netDxf.Entities
         /// <summary>
         /// Gets or sets the entity line type scale.
         /// </summary>
-        public double LineTypeScale
+        public virtual double LineTypeScale
         {
             get { return this.lineTypeScale; }
             set
@@ -229,7 +229,7 @@ namespace netDxf.Entities
         /// <summary>
         /// Gets or set the entity visibility.
         /// </summary>
-        public bool IsVisible
+        public virtual bool IsVisible
         {
             get { return this.isVisible; }
             set { this.isVisible = value; }
@@ -238,7 +238,7 @@ namespace netDxf.Entities
         /// <summary>
         /// Gets or sets the entity <see cref="Vector3">normal</see>.
         /// </summary>
-        public Vector3 Normal
+        public virtual Vector3 Normal
         {
             get { return this.normal; }
             set

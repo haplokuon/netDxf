@@ -110,6 +110,20 @@ namespace netDxf.Entities
 
         #endregion
 
+        #region public properties
+
+        /// <summary>
+        /// Switch the line direction.
+        /// </summary>
+        public void Reverse()
+        {
+            Vector3 tmp = this.start;
+            this.start = this.end;
+            this.end = tmp;
+        }
+
+        #endregion
+
         #region overrides
 
         /// <summary>
@@ -142,6 +156,5 @@ namespace netDxf.Entities
         }
 
         #endregion
-
     }
 }

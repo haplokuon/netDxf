@@ -98,8 +98,8 @@ namespace netDxf.Collections
 
             block.Record.Owner = this;
 
-            block.NameChange += this.Item_NameChange;
-            block.LayerChange += this.Block_LayerChange;
+            block.NameChanged += this.Item_NameChanged;
+            block.LayerChanged += this.Block_LayerChanged;
             block.EntityAdded += this.Block_EntityAdded;
             block.EntityRemoved += this.Block_EntityRemoved;
             block.AttributeDefinitionAdded += this.Block_EntityAdded;
@@ -164,8 +164,8 @@ namespace netDxf.Collections
             block.Handle = null;
             block.Owner = null;
 
-            block.NameChange -= this.Item_NameChange;
-            block.LayerChange -= this.Block_LayerChange;
+            block.NameChanged -= this.Item_NameChanged;
+            block.LayerChanged -= this.Block_LayerChanged;
             block.EntityAdded -= this.Block_EntityAdded;
             block.EntityRemoved -= this.Block_EntityRemoved;
             block.AttributeDefinitionAdded -= this.Block_EntityAdded;
@@ -176,9 +176,9 @@ namespace netDxf.Collections
 
         #endregion
 
-        #region block events
+        #region Block events
 
-        private void Item_NameChange(TableObject sender, TableObjectChangeEventArgs<string> e)
+        private void Item_NameChanged(TableObject sender, TableObjectChangedEventArgs<string> e)
         {
             if (this.Contains(e.NewValue))
                 throw new ArgumentException("There is already another block with the same name.");
@@ -191,7 +191,7 @@ namespace netDxf.Collections
             this.references.Add(e.NewValue, refs);
         }
 
-        private void Block_LayerChange(Block sender, TableObjectChangeEventArgs<Layer> e)
+        private void Block_LayerChanged(Block sender, TableObjectChangedEventArgs<Layer> e)
         {
             this.document.Layers.References[e.OldValue.Name].Remove(sender);
 

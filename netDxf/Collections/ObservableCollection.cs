@@ -209,7 +209,7 @@ namespace netDxf.Collections
         /// Adds an object list to the end of the collection.
         /// </summary>
         /// <param name="collection">The collection whose elements should be added.</param>
-        public void AddRange(ICollection<T> collection)
+        public void AddRange(IList<T> collection)
         {
             if (collection == null)
                 throw new ArgumentNullException("collection");
@@ -256,7 +256,7 @@ namespace netDxf.Collections
         /// </summary>
         /// <param name="items">The list of objects to remove from the collection.</param>
         /// <returns>True if object is successfully removed; otherwise, false.</returns>
-        public void Remove(ICollection<T> items)
+        public void Remove(IList<T> items)
         {
             foreach (T item in items)
             {

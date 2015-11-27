@@ -20,6 +20,7 @@
 #endregion
 
 using System;
+using System.Collections.Generic;
 using netDxf.Blocks;
 using netDxf.Tables;
 
@@ -70,16 +71,16 @@ namespace netDxf.Entities
         {
             this.center = arc.Center;
 
-            Vector3 refPoint = MathHelper.Transform(arc.Center, arc.Normal, MathHelper.CoordinateSystem.World, MathHelper.CoordinateSystem.Object);
+            Vector3 refPoint = MathHelper.Transform(arc.Center, arc.Normal, CoordinateSystem.World, CoordinateSystem.Object);
 
             Vector2 centerRef = new Vector2(refPoint.X, refPoint.Y);
             double elev = refPoint.Z;
 
             Vector2 ref1 = Vector2.Polar(centerRef, arc.Radius, arc.StartAngle * MathHelper.DegToRad);
-            this.start = MathHelper.Transform(new Vector3(ref1.X, ref1.Y, elev), arc.Normal, MathHelper.CoordinateSystem.Object, MathHelper.CoordinateSystem.World);
+            this.start = MathHelper.Transform(new Vector3(ref1.X, ref1.Y, elev), arc.Normal, CoordinateSystem.Object, CoordinateSystem.World);
 
             Vector2 ref2 = Vector2.Polar(centerRef, arc.Radius, arc.EndAngle * MathHelper.DegToRad);
-            this.end = MathHelper.Transform(new Vector3(ref2.X, ref2.Y, elev), arc.Normal, MathHelper.CoordinateSystem.Object, MathHelper.CoordinateSystem.World);
+            this.end = MathHelper.Transform(new Vector3(ref2.X, ref2.Y, elev), arc.Normal, CoordinateSystem.Object, CoordinateSystem.World);
 
             if (MathHelper.IsZero(offset))
                 throw new ArgumentOutOfRangeException("offset", "The offset value cannot be zero.");
@@ -87,7 +88,7 @@ namespace netDxf.Entities
 
             if (style == null)
                 throw new ArgumentNullException("style", "The Dimension style cannot be null.");
-            this.style = style;      
+            this.style = style;
         }
 
         /// <summary>
@@ -202,7 +203,10 @@ namespace netDxf.Entities
         /// <summary>
         /// Gets or sets the distance between the center <see cref="Vector3">point</see> and the dimension line.
         /// </summary>
-        /// <remarks>Zero values are not allowed.</remarks>
+        /// <remarks>
+        /// Zero values are not allowed, and even if negative values are permitted they are not recommended.<br />
+        /// Setting a negative value is equivalent as switching the start and end points.
+        /// </remarks>
         public double Offset
         {
             get { return this.offset; }
@@ -222,19 +226,27 @@ namespace netDxf.Entities
         {
             get
             {
+                IList<Vector3> ocsPoints = MathHelper.Transform(new[] { this.center, this.start, this.end }, this.normal, CoordinateSystem.World, CoordinateSystem.Object);
                 Vector3 refPoint;
-                
-                refPoint = MathHelper.Transform(this.center, this.normal, MathHelper.CoordinateSystem.World, MathHelper.CoordinateSystem.Object);
+
+                refPoint = ocsPoints[0];
                 Vector2 refCenter = new Vector2(refPoint.X, refPoint.Y);
 
-                refPoint = MathHelper.Transform(this.start, this.normal, MathHelper.CoordinateSystem.World, MathHelper.CoordinateSystem.Object);
+                refPoint = ocsPoints[1];
                 Vector2 ref1 = new Vector2(refPoint.X, refPoint.Y);
 
-                refPoint = MathHelper.Transform(this.end, this.normal, MathHelper.CoordinateSystem.World, MathHelper.CoordinateSystem.Object);
+                refPoint = ocsPoints[2];
                 Vector2 ref2 = new Vector2(refPoint.X, refPoint.Y);
 
-                double angle = Vector2.Angle(refCenter, ref2) - Vector2.Angle(refCenter, ref1) * MathHelper.RadToDeg;
-                return angle < 0 ? 360 + angle : angle;
+                if (this.offset < 0)
+                {
+                    Vector2 tmp = ref1;
+                    ref1 = ref2;
+                    ref2 = tmp;
+                }
+
+                double angle = (Vector2.Angle(refCenter, ref2) - Vector2.Angle(refCenter, ref1)) * MathHelper.RadToDeg;
+                return MathHelper.NormalizeAngle(angle);
             }
         }
 
@@ -288,6 +300,5 @@ namespace netDxf.Entities
         }
 
         #endregion
-
     }
 }

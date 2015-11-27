@@ -56,7 +56,7 @@ namespace netDxf.Header
                 {HeaderVariableCode.LastSavedBy, new HeaderVariable(HeaderVariableCode.LastSavedBy, Environment.UserName)},
                 {HeaderVariableCode.HandleSeed, new HeaderVariable(HeaderVariableCode.HandleSeed, "1")},
                 {HeaderVariableCode.Angbase, new HeaderVariable(HeaderVariableCode.Angbase, 0.0)},
-                {HeaderVariableCode.Angdir, new HeaderVariable(HeaderVariableCode.Angdir, (short) 0)},
+                {HeaderVariableCode.Angdir, new HeaderVariable(HeaderVariableCode.Angdir, AngleDirection.CCW)},
                 {HeaderVariableCode.AttMode, new HeaderVariable(HeaderVariableCode.AttMode, AttMode.Normal)},
                 {HeaderVariableCode.AUnits, new HeaderVariable(HeaderVariableCode.AUnits, AngleUnitType.DecimalDegrees)},
                 {HeaderVariableCode.AUprec, new HeaderVariable(HeaderVariableCode.AUprec, (short) 0)},
@@ -81,11 +81,12 @@ namespace netDxf.Header
                 {HeaderVariableCode.PdMode, new HeaderVariable(HeaderVariableCode.PdMode, PointShape.Dot)},
                 {HeaderVariableCode.PdSize, new HeaderVariable(HeaderVariableCode.PdSize, 0.0)},
                 {HeaderVariableCode.PLineGen, new HeaderVariable(HeaderVariableCode.PLineGen, (short) 0)},
+                {HeaderVariableCode.PsLtScale, new HeaderVariable(HeaderVariableCode.PsLtScale, (short) 1)},
                 {HeaderVariableCode.TdCreate, new HeaderVariable(HeaderVariableCode.TdCreate, DateTime.Now)},
                 {HeaderVariableCode.TduCreate, new HeaderVariable(HeaderVariableCode.TduCreate, DateTime.UtcNow)},
                 {HeaderVariableCode.TdUpdate, new HeaderVariable(HeaderVariableCode.TdUpdate, DateTime.Now)},
                 {HeaderVariableCode.TduUpdate, new HeaderVariable(HeaderVariableCode.TduUpdate, DateTime.UtcNow)},
-                {HeaderVariableCode.TdinDwg, new HeaderVariable(HeaderVariableCode.TdinDwg, new TimeSpan())},
+                {HeaderVariableCode.TdinDwg, new HeaderVariable(HeaderVariableCode.TdinDwg, new TimeSpan())}
             };
         }
 
@@ -122,7 +123,7 @@ namespace netDxf.Header
         }
 
         /// <summary>
-        /// Angle 0 direction.
+        /// Angle 0 base.
         /// </summary>
         /// <remarks>Default value: 0.</remarks>
         public double Angbase
@@ -132,19 +133,19 @@ namespace netDxf.Header
         }
 
         /// <summary>
-        /// 1 = Clockwise angles, 0 = Counterclockwise.
+        /// The angle direction.
         /// </summary>
-        /// <remarks>Default value: 0.</remarks>
-        public short Angdir
+        /// <remarks>Default value: CCW.</remarks>
+        public AngleDirection Angdir
         {
-            get { return (short)this.variables[HeaderVariableCode.Angdir].Value; }
+            get { return (AngleDirection) this.variables[HeaderVariableCode.Angdir].Value; }
             internal set { this.variables[HeaderVariableCode.Angdir].Value = value; }
         }
 
         /// <summary>
         /// Attribute visibility.
         /// </summary>
-        /// <remarks>Default value: AttMode.Normal.</remarks>
+        /// <remarks>Default value: Normal.</remarks>
         public AttMode AttMode
         {
             get { return (AttMode)this.variables[HeaderVariableCode.AttMode].Value; }
@@ -501,6 +502,25 @@ namespace netDxf.Header
                 if (value != 0 && value != 1)
                     throw new ArgumentOutOfRangeException("value", value, "Accepted values are 0 or 1.");
                 this.variables[HeaderVariableCode.PLineGen].Value = value;
+            }
+        }
+
+        /// <summary>
+        /// Controls paper space line type scaling.
+        /// </summary>
+        /// <remarks>
+        /// Default value: 1.<br />
+        /// 1 = No special line type scaling.<br />
+        /// 0 = Viewport scaling governs line type scaling.
+        /// </remarks>
+        public short PsLtScale
+        {
+            get { return (short)this.variables[HeaderVariableCode.PsLtScale].Value; }
+            set
+            {
+                if (value != 0 && value != 1)
+                    throw new ArgumentOutOfRangeException("value", value, "Accepted values are 0 or 1.");
+                this.variables[HeaderVariableCode.PsLtScale].Value = value;
             }
         }
 

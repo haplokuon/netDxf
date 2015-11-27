@@ -39,42 +39,43 @@ namespace netDxf.Entities
         ICloneable
     {
         #region delegates and events
-        public delegate void LayerChangeEventHandler(Attribute sender, TableObjectChangeEventArgs<Layer> e);
-        public event LayerChangeEventHandler LayerChange;
-        protected virtual Layer OnLayerChangeEvent(Layer oldLayer, Layer newLayer)
+
+        public delegate void LayerChangedEventHandler(Attribute sender, TableObjectChangedEventArgs<Layer> e);
+        public event LayerChangedEventHandler LayerChanged;
+        protected virtual Layer OnLayerChangedEvent(Layer oldLayer, Layer newLayer)
         {
-            LayerChangeEventHandler ae = this.LayerChange;
+            LayerChangedEventHandler ae = this.LayerChanged;
             if (ae != null)
             {
-                TableObjectChangeEventArgs<Layer> eventArgs = new TableObjectChangeEventArgs<Layer>(oldLayer, newLayer);
+                TableObjectChangedEventArgs<Layer> eventArgs = new TableObjectChangedEventArgs<Layer>(oldLayer, newLayer);
                 ae(this, eventArgs);
                 return eventArgs.NewValue;
             }
             return newLayer;
         }
 
-        public delegate void LineTypeChangeEventHandler(Attribute sender, TableObjectChangeEventArgs<LineType> e);
-        public event LineTypeChangeEventHandler LineTypeChange;
-        protected virtual LineType OnLineTypeChangeEvent(LineType oldLineType, LineType newLineType)
+        public delegate void LineTypeChangedEventHandler(Attribute sender, TableObjectChangedEventArgs<LineType> e);
+        public event LineTypeChangedEventHandler LineTypeChanged;
+        protected virtual LineType OnLineTypeChangedEvent(LineType oldLineType, LineType newLineType)
         {
-            LineTypeChangeEventHandler ae = this.LineTypeChange;
+            LineTypeChangedEventHandler ae = this.LineTypeChanged;
             if (ae != null)
             {
-                TableObjectChangeEventArgs<LineType> eventArgs = new TableObjectChangeEventArgs<LineType>(oldLineType, newLineType);
+                TableObjectChangedEventArgs<LineType> eventArgs = new TableObjectChangedEventArgs<LineType>(oldLineType, newLineType);
                 ae(this, eventArgs);
                 return eventArgs.NewValue;
             }
             return newLineType;
         }
 
-       public delegate void TextStyleChangeEventHandler(Attribute sender, TableObjectChangeEventArgs<TextStyle> e);
-        public event TextStyleChangeEventHandler TextStyleChange;
-        protected virtual TextStyle OnTextStyleChangeEvent(TextStyle oldTextStyle, TextStyle newTextStyle)
+        public delegate void TextStyleChangedEventHandler(Attribute sender, TableObjectChangedEventArgs<TextStyle> e);
+        public event TextStyleChangedEventHandler TextStyleChanged;
+        protected virtual TextStyle OnTextStyleChangedEvent(TextStyle oldTextStyle, TextStyle newTextStyle)
         {
-            TextStyleChangeEventHandler ae = this.TextStyleChange;
+            TextStyleChangedEventHandler ae = this.TextStyleChanged;
             if (ae != null)
             {
-                TableObjectChangeEventArgs<TextStyle> eventArgs = new TableObjectChangeEventArgs<TextStyle>(oldTextStyle, newTextStyle);
+                TableObjectChangedEventArgs<TextStyle> eventArgs = new TableObjectChangedEventArgs<TextStyle>(oldTextStyle, newTextStyle);
                 ae(this, eventArgs);
                 return eventArgs.NewValue;
             }
@@ -180,7 +181,7 @@ namespace netDxf.Entities
             {
                 if (value == null)
                     throw new ArgumentNullException("value");
-                this.layer = this.OnLayerChangeEvent(this.layer, value);
+                this.layer = this.OnLayerChangedEvent(this.layer, value);
             }
         }
 
@@ -194,7 +195,7 @@ namespace netDxf.Entities
             {
                 if (value == null)
                     throw new ArgumentNullException("value");
-                this.lineType = this.OnLineTypeChangeEvent(this.lineType, value);
+                this.lineType = this.OnLineTypeChangedEvent(this.lineType, value);
             }
         }
 
@@ -300,7 +301,7 @@ namespace netDxf.Entities
             set
             {
                 if (value <= 0)
-                    throw (new ArgumentOutOfRangeException("value", value, "The height should be greater than zero."));
+                    throw new ArgumentOutOfRangeException("value", value, "The height should be greater than zero.");
                 this.height = value;
             }
         }
@@ -314,7 +315,7 @@ namespace netDxf.Entities
             set
             {
                 if (value <= 0)
-                    throw (new ArgumentOutOfRangeException("value", value, "The width factor should be greater than zero."));
+                    throw new ArgumentOutOfRangeException("value", value, "The width factor should be greater than zero.");
                 this.widthFactor = value;
             }
         }
@@ -329,7 +330,7 @@ namespace netDxf.Entities
             set
             {
                 if (value < -85.0 || value > 85.0)
-                    throw (new ArgumentOutOfRangeException("value", value, "The oblique angle valid values range from -85 to 85."));
+                    throw new ArgumentOutOfRangeException("value", value, "The oblique angle valid values range from -85 to 85.");
                 this.obliqueAngle = value;
             }
         }
@@ -356,7 +357,7 @@ namespace netDxf.Entities
             {
                 if (value == null)
                     throw new ArgumentNullException("value");
-                this.style = this.OnTextStyleChangeEvent(this.style, value);
+                this.style = this.OnTextStyleChangedEvent(this.style, value);
             }
         }
 

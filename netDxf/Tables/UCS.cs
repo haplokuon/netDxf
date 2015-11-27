@@ -47,7 +47,12 @@ namespace netDxf.Tables
         /// </summary>
         /// <param name="name">User coordinate system name.</param>
         public UCS(string name)
-            : base(name, DxfObjectCode.Ucs, true)
+            : this(name, true)
+        {
+        }
+
+        internal UCS(string name, bool checkName)
+            : base(name, DxfObjectCode.Ucs, checkName)
         {
             if (string.IsNullOrEmpty(name))
                 throw new ArgumentNullException("name", "The UCS name should be at least one character long.");
@@ -70,9 +75,14 @@ namespace netDxf.Tables
         /// The x-axis direction and y-axis direction must be perpendicular.
         /// </remarks>
         public UCS(string name, Vector3 origin, Vector3 xDirection, Vector3 yDirection)
-            : base(name, DxfObjectCode.Ucs, true)
+            : this(name, origin, xDirection, yDirection, true)
         {
-            if(!Vector3.ArePerpendicular(xDirection, yDirection))
+        }
+
+        internal UCS(string name, Vector3 origin, Vector3 xDirection, Vector3 yDirection, bool checkName)
+            : base(name, DxfObjectCode.Ucs, checkName)
+        {
+            if (!Vector3.ArePerpendicular(xDirection, yDirection))
                 throw new ArgumentException("X-axis direction and Y-axis direction must be perpendicular.");
             this.origin = origin;
             this.xAxis = xDirection;
