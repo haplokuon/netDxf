@@ -70,7 +70,7 @@ namespace netDxf.Units
         public static DateTime FromJulianCalendar(double date)
         {
             if (date < 1721426 || date > 5373484)
-                throw new ArgumentOutOfRangeException("date", "The valid values range from 1721426 and 5373484 that correspond to January 1, 1 and December 31, 9999 respectively.");
+                throw new ArgumentOutOfRangeException(nameof(date), "The valid values range from 1721426 and 5373484 that correspond to January 1, 1 and December 31, 9999 respectively.");
 
             double julian = (int) date;
             double fraction = date - julian;

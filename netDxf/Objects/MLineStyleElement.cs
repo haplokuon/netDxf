@@ -106,7 +106,7 @@ namespace netDxf.Objects
             set
             {
                 if (value == null)
-                    throw new ArgumentNullException("value");
+                    throw new ArgumentNullException(nameof(value));
                 this.color = value;
             }
         }
@@ -120,7 +120,7 @@ namespace netDxf.Objects
             set
             {
                 if (value == null)
-                    throw new ArgumentNullException("value");
+                    throw new ArgumentNullException(nameof(value));
                 this.lineType = this.OnLineTypeChangedEvent(this.lineType, value);
             }
         }

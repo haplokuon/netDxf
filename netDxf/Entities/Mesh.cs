@@ -58,12 +58,12 @@ namespace netDxf.Entities
             : base(EntityType.Mesh, DxfObjectCode.Mesh)
         {
             if (vertexes == null)
-                throw new ArgumentNullException("vertexes", "The Mesh vertexes list cannot be null.");
+                throw new ArgumentNullException(nameof(vertexes), "The Mesh vertexes list cannot be null.");
             this.vertexes = vertexes;
             if (faces == null)
-                throw new ArgumentNullException("faces", "The Mesh faces list cannot be null.");
+                throw new ArgumentNullException(nameof(faces), "The Mesh faces list cannot be null.");
             if (faces.Count > MaxFaces)
-                throw new ArgumentOutOfRangeException("faces", faces.Count, string.Format("The maximum number of faces in a mesh is {0}", MaxFaces));
+                throw new ArgumentOutOfRangeException(nameof(faces), faces.Count, string.Format("The maximum number of faces in a mesh is {0}", MaxFaces));
             this.faces = faces;
             this.edges = edges;
             this.subdivisionLevel = 0;

@@ -132,7 +132,7 @@ namespace netDxf.Entities
             set
             {
                 if (value < 0)
-                    throw new ArgumentOutOfRangeException("value", value, "The Vertex width must be equals or greater than zero.");
+                    throw new ArgumentOutOfRangeException(nameof(value), value, "The Vertex width must be equals or greater than zero.");
                 this.startWidth = value;
             }
         }
@@ -146,7 +146,7 @@ namespace netDxf.Entities
             set
             {
                 if (value < 0)
-                    throw new ArgumentOutOfRangeException("value", value, "The Vertex width must be equals or greater than zero.");
+                    throw new ArgumentOutOfRangeException(nameof(value), value, "The Vertex width must be equals or greater than zero.");
                 this.endWidth = value;
             }
         }
@@ -165,7 +165,7 @@ namespace netDxf.Entities
             set
             {
                 if (this.bulge < 0.0 || this.bulge > 1.0f)
-                    throw new ArgumentOutOfRangeException("value", value, "The bulge must be a value between zero and one");
+                    throw new ArgumentOutOfRangeException(nameof(value), value, "The bulge must be a value between zero and one");
                 this.bulge = value;
             }
         }
@@ -188,7 +188,7 @@ namespace netDxf.Entities
            set
            {
                if (value == null)
-                   throw new ArgumentNullException("value");
+                   throw new ArgumentNullException(nameof(value));
                this.color = value;
            }
         }
@@ -202,7 +202,7 @@ namespace netDxf.Entities
             set
             {
                 if (value == null)
-                    throw new ArgumentNullException("value");
+                    throw new ArgumentNullException(nameof(value));
                 this.layer = value;
             }
         }
@@ -216,7 +216,7 @@ namespace netDxf.Entities
             set
             {
                 if (value == null)
-                    throw new ArgumentNullException("value");
+                    throw new ArgumentNullException(nameof(value));
                 this.lineType = value;
             }
         }

@@ -172,7 +172,7 @@ namespace netDxf.Header
             set
             {
                 if (value < 0 || value > 8)
-                    throw new ArgumentOutOfRangeException("value", "Valid values are integers from 0 to 8.");
+                    throw new ArgumentOutOfRangeException(nameof(value), "Valid values are integers from 0 to 8.");
                 this.variables[HeaderVariableCode.AUprec].Value = value;
             }
         }
@@ -187,7 +187,7 @@ namespace netDxf.Header
             set
             {
                 if (value == null)
-                    throw new ArgumentNullException("value", "The current entity color cannot be null.");
+                    throw new ArgumentNullException(nameof(value), "The current entity color cannot be null.");
                 this.variables[HeaderVariableCode.CeColor].Value = value;
             }
         }
@@ -202,7 +202,7 @@ namespace netDxf.Header
             set
             {
                 if (value <= 0)
-                    throw new ArgumentOutOfRangeException("value", value, "The current entity line type scale must be greater than zero.");
+                    throw new ArgumentOutOfRangeException(nameof(value), value, "The current entity line type scale must be greater than zero.");
                 this.variables[HeaderVariableCode.CeLtScale].Value = value;
             }
         }
@@ -217,7 +217,7 @@ namespace netDxf.Header
             set
             {
                 if (value == null)
-                    throw new ArgumentNullException("value", "The current entity line weight cannot be null.");
+                    throw new ArgumentNullException(nameof(value), "The current entity line weight cannot be null.");
                 this.variables[HeaderVariableCode.CeLweight].Value = value;
             }
         }
@@ -232,7 +232,7 @@ namespace netDxf.Header
             set
             {
                 if (string.IsNullOrEmpty(value))
-                    throw new ArgumentNullException("value", "The current entity line type name cannot be null or empty.");
+                    throw new ArgumentNullException(nameof(value), "The current entity line type name cannot be null or empty.");
                 this.variables[HeaderVariableCode.CeLtype].Value = value;
             }
         }
@@ -247,7 +247,7 @@ namespace netDxf.Header
             set
             {
                 if (string.IsNullOrEmpty(value))
-                    throw new ArgumentNullException("value", "The current layer name cannot be null or empty.");
+                    throw new ArgumentNullException(nameof(value), "The current layer name cannot be null or empty.");
                 this.variables[HeaderVariableCode.CLayer].Value = value;
             }
         }
@@ -282,7 +282,7 @@ namespace netDxf.Header
             set
             {
                 if (string.IsNullOrEmpty(value))
-                    throw new ArgumentNullException("value", "The current multiline style name cannot be null or empty.");
+                    throw new ArgumentNullException(nameof(value), "The current multiline style name cannot be null or empty.");
                 this.variables[HeaderVariableCode.CMLStyle].Value = value;
             }
         }
@@ -297,7 +297,7 @@ namespace netDxf.Header
             set
             {
                 if (string.IsNullOrEmpty(value))
-                    throw new ArgumentNullException("value", "The current dimension style name cannot be null or empty.");
+                    throw new ArgumentNullException(nameof(value), "The current dimension style name cannot be null or empty.");
                 this.variables[HeaderVariableCode.DimStyle].Value = value;
             }
         }
@@ -312,7 +312,7 @@ namespace netDxf.Header
             set
             {
                 if (value <= 0)
-                    throw new ArgumentOutOfRangeException("value", value, "The default text height must be greater than zero.");
+                    throw new ArgumentOutOfRangeException(nameof(value), value, "The default text height must be greater than zero.");
                 this.variables[HeaderVariableCode.TextSize].Value = value;
             }
         }
@@ -327,7 +327,7 @@ namespace netDxf.Header
             set
             {
                 if (string.IsNullOrEmpty(value))
-                    throw new ArgumentNullException("value", "The current text style name cannot be null or empty.");
+                    throw new ArgumentNullException(nameof(value), "The current text style name cannot be null or empty.");
                 this.variables[HeaderVariableCode.TextStyle].Value = value;
             }
         }
@@ -360,7 +360,7 @@ namespace netDxf.Header
             set
             {
                 if (value < 0 || value > 8)
-                    throw new ArgumentOutOfRangeException("value", "Valid values are integers from 0 to 8.");
+                    throw new ArgumentOutOfRangeException(nameof(value), "Valid values are integers from 0 to 8.");
                 this.variables[HeaderVariableCode.LUprec].Value = value;
             }
         }
@@ -442,7 +442,7 @@ namespace netDxf.Header
             set
             {
                 if (value <= 0)
-                    throw new ArgumentOutOfRangeException("value", value, "The global line type scale must be greater than zero.");
+                    throw new ArgumentOutOfRangeException(nameof(value), value, "The global line type scale must be greater than zero.");
                 this.variables[HeaderVariableCode.LtScale].Value = value;
             }
         }
@@ -500,7 +500,7 @@ namespace netDxf.Header
             set
             {
                 if (value != 0 && value != 1)
-                    throw new ArgumentOutOfRangeException("value", value, "Accepted values are 0 or 1.");
+                    throw new ArgumentOutOfRangeException(nameof(value), value, "Accepted values are 0 or 1.");
                 this.variables[HeaderVariableCode.PLineGen].Value = value;
             }
         }
@@ -519,7 +519,7 @@ namespace netDxf.Header
             set
             {
                 if (value != 0 && value != 1)
-                    throw new ArgumentOutOfRangeException("value", value, "Accepted values are 0 or 1.");
+                    throw new ArgumentOutOfRangeException(nameof(value), value, "Accepted values are 0 or 1.");
                 this.variables[HeaderVariableCode.PsLtScale].Value = value;
             }
         }

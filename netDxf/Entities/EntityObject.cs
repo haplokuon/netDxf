@@ -151,7 +151,7 @@ namespace netDxf.Entities
             set
             {
                 if (value == null)
-                    throw new ArgumentNullException("value");
+                    throw new ArgumentNullException(nameof(value));
                 this.color = value;
             }
         }
@@ -165,7 +165,7 @@ namespace netDxf.Entities
             set
             {
                 if (value == null)
-                    throw new ArgumentNullException("value");
+                    throw new ArgumentNullException(nameof(value));
                 this.layer = this.OnLayerChangedEvent(this.layer, value);
             }
         }
@@ -179,7 +179,7 @@ namespace netDxf.Entities
             set
             {
                 if (value == null)
-                    throw new ArgumentNullException("value");
+                    throw new ArgumentNullException(nameof(value));
                 this.lineType = this.OnLineTypeChangedEvent(this.lineType, value);
             }
         }
@@ -193,7 +193,7 @@ namespace netDxf.Entities
             set
             {
                 if (value == null)
-                    throw new ArgumentNullException("value");
+                    throw new ArgumentNullException(nameof(value));
                 this.lineweight = value;
             }
         }
@@ -207,7 +207,7 @@ namespace netDxf.Entities
             set
             {
                 if (value == null)
-                    throw new ArgumentNullException("value");
+                    throw new ArgumentNullException(nameof(value));
                 this.transparency = value;
             }
         }
@@ -221,7 +221,7 @@ namespace netDxf.Entities
             set
             {
                 if (value <= 0)
-                    throw new ArgumentOutOfRangeException("value", value, "The line type scale must be greater than zero.");
+                    throw new ArgumentOutOfRangeException(nameof(value), value, "The line type scale must be greater than zero.");
                 this.lineTypeScale = value;
             }
         }
@@ -244,7 +244,7 @@ namespace netDxf.Entities
             set
             {
                 if (value == Vector3.Zero)
-                    throw new ArgumentNullException("value", "The normal can not be the zero vector.");
+                    throw new ArgumentNullException(nameof(value), "The normal can not be the zero vector.");
                 this.normal = Vector3.Normalize(value);
             }
         }

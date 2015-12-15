@@ -88,7 +88,7 @@ namespace netDxf.Entities
             : base(EntityType.AttributeDefinition, DxfObjectCode.AttributeDefinition)
         {
             if (tag.Contains(" "))
-                throw new ArgumentException("The tag string cannot contain spaces.", "tag");
+                throw new ArgumentException("The tag string cannot contain spaces.", nameof(tag));
             this.tag = tag;
             this.flags = AttributeFlags.Visible;
             this.prompt = string.Empty;
@@ -133,7 +133,7 @@ namespace netDxf.Entities
             set
             {
                 if (value <= 0)
-                    throw new ArgumentOutOfRangeException("value", value, "The height should be greater than zero.");
+                    throw new ArgumentOutOfRangeException(nameof(value), value, "The height should be greater than zero.");
                 this.height = value;
             }
         }
@@ -147,7 +147,7 @@ namespace netDxf.Entities
             set
             {
                 if (value <= 0)
-                    throw new ArgumentOutOfRangeException("value", value, "The width factor should be greater than zero.");
+                    throw new ArgumentOutOfRangeException(nameof(value), value, "The width factor should be greater than zero.");
                 this.widthFactor = value;
             }
         }
@@ -162,7 +162,7 @@ namespace netDxf.Entities
             set
             {
                 if (value < -85.0 || value > 85.0)
-                    throw new ArgumentOutOfRangeException("value", value, "The oblique angle valid values range from -85 to 85.");
+                    throw new ArgumentOutOfRangeException(nameof(value), value, "The oblique angle valid values range from -85 to 85.");
                 this.obliqueAngle = value;
             }
         }
@@ -188,7 +188,7 @@ namespace netDxf.Entities
             set
             {
                 if (value == null)
-                    throw new ArgumentNullException("value");
+                    throw new ArgumentNullException(nameof(value));
                 this.style = this.OnTextStyleChangedEvent(this.style, value);
             }
         }

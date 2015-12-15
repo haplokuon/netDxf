@@ -96,12 +96,12 @@ namespace netDxf.Tables
             : base(name, DxfObjectCode.TextStyle, checkName)
         {
             if (string.IsNullOrEmpty(name))
-                throw new ArgumentNullException("name", "The text style name should be at least one character long.");
+                throw new ArgumentNullException(nameof(name), "The text style name should be at least one character long.");
 
             if (string.IsNullOrEmpty(font))
-                throw new ArgumentNullException("font");
+                throw new ArgumentNullException(nameof(font));
 
-            this.reserved = name.Equals("Standard", StringComparison.OrdinalIgnoreCase);
+            this.reserved = name.Equals(DefaultName, StringComparison.OrdinalIgnoreCase);
             this.font = font;
             this.fontFamilyName = string.Empty;
             this.widthFactor = 1.0;
@@ -113,11 +113,10 @@ namespace netDxf.Tables
             
             if (Path.GetExtension(font).Equals(".ttf", StringComparison.OrdinalIgnoreCase))
             {
-                string familyName;
                 PrivateFontCollection privateFontCollection = new PrivateFontCollection();
                 privateFontCollection.AddFontFile(font);
                 FontFamily[] fontFamilies = privateFontCollection.Families;
-                familyName = fontFamilies[0].Name;
+                string familyName = fontFamilies[0].Name;
                 string registeredFileName = FontFileFromFamilyName(familyName);
                 this.registered = !string.IsNullOrEmpty(registeredFileName);
                 this.fontFamilyName = familyName;
@@ -154,7 +153,7 @@ namespace netDxf.Tables
             set
             {
                 if (value < 0)
-                    throw new ArgumentOutOfRangeException("value", value, "The TextStyle height must be equals or greater than zero.");
+                    throw new ArgumentOutOfRangeException(nameof(value), value, "The TextStyle height must be equals or greater than zero.");
                 this.height = value;
             }
         }
@@ -169,7 +168,7 @@ namespace netDxf.Tables
             set
             {
                 if (value < 0.01 || value > 100.0)
-                    throw new ArgumentOutOfRangeException("value", value, "The TextStyle width factor valid values range from 0.01 to 100.");
+                    throw new ArgumentOutOfRangeException(nameof(value), value, "The TextStyle width factor valid values range from 0.01 to 100.");
                 this.widthFactor = value;
             }
         }
@@ -184,7 +183,7 @@ namespace netDxf.Tables
             set
             {
                 if (value < -85.0 || value > 85.0)
-                    throw new ArgumentOutOfRangeException("value", value, "The TextStyle oblique angle valid values range from -85 to 85.");
+                    throw new ArgumentOutOfRangeException(nameof(value), value, "The TextStyle oblique angle valid values range from -85 to 85.");
                 this.obliqueAngle = value;
             }
         }

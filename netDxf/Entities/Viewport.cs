@@ -149,7 +149,7 @@ namespace netDxf.Entities
             set
             {
                 if (value < -1)
-                    throw new ArgumentOutOfRangeException("value", "The stacking value must be greater than -1.");
+                    throw new ArgumentOutOfRangeException(nameof(value), "The stacking value must be greater than -1.");
                 this.stacking = value;
             }
         }

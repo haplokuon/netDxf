@@ -85,7 +85,7 @@ namespace netDxf
         public Lineweight(short weight)
         {
             if (weight < 0 || weight > 200)
-                throw new ArgumentOutOfRangeException("weight", weight, "Accepted line weight values range from 0 to 200.");
+                throw new ArgumentOutOfRangeException(nameof(weight), weight, "Accepted line weight values range from 0 to 200.");
             this.value = weight;
         }
 
@@ -129,7 +129,7 @@ namespace netDxf
             set
             {
                 if (value < 0 || value > 200)
-                    throw new ArgumentOutOfRangeException("value", value, "Accepted line weight values range from 0 to 200.");
+                    throw new ArgumentOutOfRangeException(nameof(value), value, "Accepted line weight values range from 0 to 200.");
                 this.value = value;
             }
         }

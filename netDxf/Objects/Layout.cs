@@ -88,7 +88,7 @@ namespace netDxf.Objects
             : base(name, DxfObjectCode.Layout, true)
         {
             if (string.IsNullOrEmpty(name))
-                throw new ArgumentNullException("name", "The layout name should be at least one character long.");
+                throw new ArgumentNullException(nameof(name), "The layout name should be at least one character long.");
 
             if (name.Equals(ModelSpaceName, StringComparison.OrdinalIgnoreCase))
             {
@@ -136,7 +136,7 @@ namespace netDxf.Objects
             set
             {
                 if (value <= 0)
-                    throw new ArgumentException("The tab order index must be greater than zero.", "value");
+                    throw new ArgumentException("The tab order index must be greater than zero.", nameof(value));
                 this.tabOrder = value;
             }
         }

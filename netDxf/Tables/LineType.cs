@@ -55,6 +55,11 @@ namespace netDxf.Tables
         public const string ByBlockName = "ByBlock";
 
         /// <summary>
+        /// Default line type name.
+        /// </summary>
+        public const string DefaultName = "Continuous";
+
+        /// <summary>
         /// Gets the ByLayer line type.
         /// </summary>
         public static LineType ByLayer
@@ -75,7 +80,7 @@ namespace netDxf.Tables
         /// </summary>
         public static LineType Continuous
         {
-            get { return new LineType("Continuous", "Solid line"); }
+            get { return new LineType(DefaultName, "Solid line"); }
         }
 
         /// <summary>
@@ -160,11 +165,11 @@ namespace netDxf.Tables
             : base(name, DxfObjectCode.LineType, checkName)
         {
             if (string.IsNullOrEmpty(name))
-                throw new ArgumentNullException("name", "The line type name should be at least one character long.");
+                throw new ArgumentNullException(nameof(name), "The line type name should be at least one character long.");
 
-            this.reserved = name.Equals("ByLayer", StringComparison.OrdinalIgnoreCase) ||
-                            name.Equals("ByBlock", StringComparison.OrdinalIgnoreCase) ||
-                            name.Equals("Continuous", StringComparison.OrdinalIgnoreCase);
+            this.reserved = name.Equals(ByLayerName, StringComparison.OrdinalIgnoreCase) ||
+                            name.Equals(ByBlockName, StringComparison.OrdinalIgnoreCase) ||
+                            name.Equals(DefaultName, StringComparison.OrdinalIgnoreCase);
             this.description = string.IsNullOrEmpty(description) ? string.Empty : description;
             this.segments = new List<double>();
         }
@@ -196,7 +201,7 @@ namespace netDxf.Tables
             set
             {
                 if (value == null)
-                    throw new ArgumentNullException("value");
+                    throw new ArgumentNullException(nameof(value));
                 this.segments = value;
             }
         }

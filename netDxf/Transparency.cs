@@ -81,7 +81,7 @@ namespace netDxf
         public Transparency(short value)
         {
             if (value < 0 || value > 90)
-                throw new ArgumentOutOfRangeException("value", value, "Accepted transparency values range from 0 to 90.");
+                throw new ArgumentOutOfRangeException(nameof(value), value, "Accepted transparency values range from 0 to 90.");
             this.value = value;
         }
 
@@ -117,7 +117,7 @@ namespace netDxf
             set
             {
                 if (value < 0 || value > 90)
-                    throw new ArgumentOutOfRangeException("value", value, "Accepted transparency values range from 0 to 90.");
+                    throw new ArgumentOutOfRangeException(nameof(value), value, "Accepted transparency values range from 0 to 90.");
                 this.value = value;
             }
         }

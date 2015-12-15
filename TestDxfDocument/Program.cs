@@ -195,7 +195,7 @@ namespace TestDxfDocument
             //WritePolyline3d();
             //WriteInsert();
 
-        #endregion
+            #endregion
         }
 
         #region Samples for new and modified features 1.1.0
@@ -1029,8 +1029,8 @@ namespace TestDxfDocument
             DxfDocument dxf = new DxfDocument(DxfVersion.AutoCad2010);
             DimensionStyle myStyle = CreateDimStyle();
 
-            Vector3 p2 = new Vector3(0, -5, 0);
-            Vector3 p1 = new Vector3(-5, 0, 0);
+            Vector3 p1 = new Vector3(0, -5, 0);
+            Vector3 p2 = new Vector3(-5, 0, 0);
 
             Line line1 = new Line(p1, p2)
             {
@@ -1047,8 +1047,8 @@ namespace TestDxfDocument
             LinearDimension dim5 = new LinearDimension(line1, offset, -30, myStyle);
             LinearDimension dim6 = new LinearDimension(line1, offset, -60, myStyle);
 
-            Vector3 p4 = new Vector3(6, -5, 0);
-            Vector3 p3 = new Vector3(11, 0, 0);
+            Vector3 p3 = new Vector3(6, -5, 0);
+            Vector3 p4 = new Vector3(11, 0, 0);
             Line line2 = new Line(p3, p4)
             {
                 Layer = new Layer("Reference line")
@@ -2901,6 +2901,87 @@ namespace TestDxfDocument
         //    dxf.Save("ExplodeInsert.dxf");
         //}
 
+        private static void LinearDimensionTests()
+        {
+            DxfDocument dxf1 = new DxfDocument();
+            Vector2 pt1 = new Vector2(15, -5);
+            Vector2 pt2 = new Vector2(5, 5);
+            double offset = 10;
+
+            LinearDimension ld1z = new LinearDimension(pt1, pt2, offset, 30);
+            LinearDimension ld2z = new LinearDimension(pt1, pt2, offset, 45);
+            LinearDimension ld3z = new LinearDimension(pt1, pt2, offset, 90);
+            LinearDimension ld4z = new LinearDimension(pt1, pt2, offset, 135);
+            LinearDimension ld5z = new LinearDimension(pt1, pt2, offset, 180);
+            LinearDimension ld6z = new LinearDimension(pt1, pt2, offset, 220);
+            LinearDimension ld7z = new LinearDimension(pt2, pt1, offset, 270);
+
+            dxf1.AddEntity(ld1z);
+            dxf1.AddEntity(ld2z);
+            dxf1.AddEntity(ld3z);
+            dxf1.AddEntity(ld4z);
+            dxf1.AddEntity(ld5z);
+            dxf1.AddEntity(ld6z);
+            dxf1.AddEntity(ld7z);
+
+            Line line = new Line(pt1, pt2);
+            line.Color = AciColor.Yellow;
+            dxf1.AddEntity(line);
+
+            dxf1.Save("test2.dxf");
+
+            DxfDocument dxf2 = new DxfDocument();
+
+            LinearDimension ld1 = new LinearDimension(new Vector2(0, 0), new Vector2(0, 15), 1, 90);
+            LinearDimension ld1b = new LinearDimension(new Vector2(0, 0), new Vector2(0, 15), 1, 100);
+            LinearDimension ld1c = new LinearDimension(new Vector2(0, 0), new Vector2(0, 15), 1, 80);
+
+            LinearDimension ld2 = new LinearDimension(new Vector2(5, 15), new Vector2(5, 0), 1, 90);
+            LinearDimension ld3 = new LinearDimension(new Vector2(10, 0), new Vector2(10, 15), -1, 270);
+
+            LinearDimension ld4 = new LinearDimension(new Vector2(15, 0), new Vector2(15, 15), 1, 270);
+            LinearDimension ld4b = new LinearDimension(new Vector2(15, 0), new Vector2(15, 15), 1, 300);
+            LinearDimension ld4c = new LinearDimension(new Vector2(15, 0), new Vector2(15, 15), 1, 240);
+
+            LinearDimension ld5 = new LinearDimension(new Vector2(15, 0), new Vector2(0, 0), 1, 0);
+            LinearDimension ld6 = new LinearDimension(new Vector2(0, 0), new Vector2(15, 0), -1, 0);
+
+            AlignedDimension ld1a = new AlignedDimension(new Vector2(0, 0), new Vector2(0, 15), 1);
+            ld1a.Color = AciColor.Yellow;
+            AlignedDimension ld2a = new AlignedDimension(new Vector2(5, 15), new Vector2(5, 0), 1);
+            ld2a.Color = AciColor.Yellow;
+            AlignedDimension ld3a = new AlignedDimension(new Vector2(10, 0), new Vector2(10, 15), -1);
+            ld3a.Color = AciColor.Yellow;
+            AlignedDimension ld4a = new AlignedDimension(new Vector2(15, 0), new Vector2(15, 15), 1);
+            ld4a.Color = AciColor.Yellow;
+            AlignedDimension ld5a = new AlignedDimension(new Vector2(15, 0), new Vector2(0, 0), 1);
+            ld5a.Color = AciColor.Yellow;
+            AlignedDimension ld6a = new AlignedDimension(new Vector2(0, 0), new Vector2(15, 0), -1);
+            ld6a.Color = AciColor.Yellow;
+
+            dxf2.AddEntity(ld1);
+            dxf2.AddEntity(ld1b);
+            dxf2.AddEntity(ld1c);
+
+            dxf2.AddEntity(ld2);
+            dxf2.AddEntity(ld3);
+
+            dxf2.AddEntity(ld4);
+            dxf2.AddEntity(ld4b);
+            dxf2.AddEntity(ld4c);
+
+            dxf2.AddEntity(ld5);
+            dxf2.AddEntity(ld6);
+
+            dxf2.AddEntity(ld1a);
+            dxf2.AddEntity(ld2a);
+            dxf2.AddEntity(ld3a);
+            dxf2.AddEntity(ld4a);
+            dxf2.AddEntity(ld5a);
+            dxf2.AddEntity(ld6a);
+
+            dxf2.Save("test1.dxf");
+        }
         private static void TestingTrueTypeFonts()
         {
             DxfDocument dxfText = new DxfDocument();

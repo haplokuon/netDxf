@@ -104,7 +104,7 @@ namespace netDxf.Entities
         {
             this.scale = scale;
             if (style == null)
-                throw new ArgumentNullException("style", "The MLine style cannot be null.");
+                throw new ArgumentNullException(nameof(style), "The MLine style cannot be null.");
             if (isClosed)
                 this.flags = MLineFlags.Has | MLineFlags.Closed;
             else
@@ -114,7 +114,7 @@ namespace netDxf.Entities
             this.justification = MLineJustification.Zero;
             this.elevation = 0.0;
             if (vertexes == null)
-                throw new ArgumentNullException("vertexes");
+                throw new ArgumentNullException(nameof(vertexes));
             this.vertexes = new List<MLineVertex>(vertexes.Count);
             foreach (Vector2 point in vertexes)
                 this.vertexes.Add(new MLineVertex(point, Vector2.Zero, Vector2.Zero, null));
@@ -215,7 +215,7 @@ namespace netDxf.Entities
             set
             {
                 if (value == null)
-                    throw new ArgumentNullException("value", "The MLine style cannot be null.");
+                    throw new ArgumentNullException(nameof(value), "The MLine style cannot be null.");
                 this.style = this.OnMLineStyleChangedEvent(this.style, value);
             }
         }

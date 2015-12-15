@@ -170,9 +170,9 @@ namespace netDxf.Tables
             : base(name, DxfObjectCode.DimStyle, checkName)
         {
             if (string.IsNullOrEmpty(name))
-                throw new ArgumentNullException("name", "The dimension style name should be at least one character long.");
+                throw new ArgumentNullException(nameof(name), "The dimension style name should be at least one character long.");
 
-            this.reserved = name.Equals("Standard", StringComparison.OrdinalIgnoreCase);
+            this.reserved = name.Equals(DefaultName, StringComparison.OrdinalIgnoreCase);
 
             // dimension lines
             this.dimclrd = AciColor.ByBlock;
@@ -250,7 +250,7 @@ namespace netDxf.Tables
             set
             {
                 if (value == null)
-                    throw new ArgumentNullException("value");
+                    throw new ArgumentNullException(nameof(value));
                 this.dimclrd = value;
             }
         }
@@ -265,7 +265,7 @@ namespace netDxf.Tables
             set
             {
                 if (value == null)
-                    throw new ArgumentNullException("value");
+                    throw new ArgumentNullException(nameof(value));
                 this.dimltype = this.OnLineTypeChangedEvent(this.dimltype, value);
             }
         }
@@ -280,7 +280,7 @@ namespace netDxf.Tables
             set
             {
                 if (value == null)
-                    throw new ArgumentNullException("value");
+                    throw new ArgumentNullException(nameof(value));
                 this.dimlwd = value;
             }
         }
@@ -295,7 +295,7 @@ namespace netDxf.Tables
             set
             {
                 if (value < 0)
-                    throw new ArgumentOutOfRangeException("value", value, "The DIMDLE must be equals or greater than zero.");
+                    throw new ArgumentOutOfRangeException(nameof(value), value, "The DIMDLE must be equals or greater than zero.");
                 this.dimdle = value;
             }
         }
@@ -314,7 +314,7 @@ namespace netDxf.Tables
             set
             {
                 if (value < 0)
-                    throw new ArgumentOutOfRangeException("value", value, "The DIMDLI must be equals or greater than zero.");
+                    throw new ArgumentOutOfRangeException(nameof(value), value, "The DIMDLI must be equals or greater than zero.");
                 this.dimdli = value;
             }
         }
@@ -336,7 +336,7 @@ namespace netDxf.Tables
             set
             {
                 if (value == null)
-                    throw new ArgumentNullException("value");
+                    throw new ArgumentNullException(nameof(value));
                 this.dimclre = value;
             }
         }
@@ -351,7 +351,7 @@ namespace netDxf.Tables
             set
             {
                 if (value == null)
-                    throw new ArgumentNullException("value");
+                    throw new ArgumentNullException(nameof(value));
                 this.dimltex1 = this.OnLineTypeChangedEvent(this.dimltex1, value);
             }
         }
@@ -366,7 +366,7 @@ namespace netDxf.Tables
             set
             {
                 if (value == null)
-                    throw new ArgumentNullException("value");
+                    throw new ArgumentNullException(nameof(value));
                 this.dimltex2 = this.OnLineTypeChangedEvent(this.dimltex2, value);
             }
         }
@@ -381,7 +381,7 @@ namespace netDxf.Tables
             set
             {
                 if (value == null)
-                    throw new ArgumentNullException("value");
+                    throw new ArgumentNullException(nameof(value));
                 this.dimlwe = value;
             }
         }
@@ -416,7 +416,7 @@ namespace netDxf.Tables
             set
             {
                 if (value < 0)
-                    throw new ArgumentOutOfRangeException("value", value, "The DIMEXO must be equals or greater than zero.");
+                    throw new ArgumentOutOfRangeException(nameof(value), value, "The DIMEXO must be equals or greater than zero.");
                 this.dimexo = value;
             }
         }
@@ -431,7 +431,7 @@ namespace netDxf.Tables
             set
             {
                 if (value < 0)
-                    throw new ArgumentOutOfRangeException("value", value, "The DIMEXE must be equals or greater than zero.");
+                    throw new ArgumentOutOfRangeException(nameof(value), value, "The DIMEXE must be equals or greater than zero.");
                 this.dimexe = value;
             }
         }
@@ -450,7 +450,7 @@ namespace netDxf.Tables
             set
             {
                 if (value < 0)
-                    throw new ArgumentOutOfRangeException("value", value, "The DIMASZ must be equals or greater than zero.");
+                    throw new ArgumentOutOfRangeException(nameof(value), value, "The DIMASZ must be equals or greater than zero.");
                 this.dimasz = value;
             }
         }
@@ -542,7 +542,7 @@ namespace netDxf.Tables
             set
             {
                 if (value == null)
-                    throw new ArgumentNullException("value");
+                    throw new ArgumentNullException(nameof(value));
                 this.dimtxsty = this.OnTextStyleChangedEvent(this.dimtxsty, value);
             }
         }
@@ -560,7 +560,7 @@ namespace netDxf.Tables
             set
             {
                 if (value == null)
-                    throw new ArgumentNullException("value");
+                    throw new ArgumentNullException(nameof(value));
                 this.dimclrt = value;
             }
         }
@@ -575,7 +575,7 @@ namespace netDxf.Tables
             set
             {
                 if (value <= 0)
-                    throw new ArgumentOutOfRangeException("value", value, "The DIMTXT must be greater than zero.");
+                    throw new ArgumentOutOfRangeException(nameof(value), value, "The DIMTXT must be greater than zero.");
                 this.dimtxt = value;
             }
         }
@@ -590,7 +590,7 @@ namespace netDxf.Tables
             set
             {
                 if (value < 0)
-                    throw new ArgumentOutOfRangeException("value", value, "The DIMGAP must be equals or greater than zero.");
+                    throw new ArgumentOutOfRangeException(nameof(value), value, "The DIMGAP must be equals or greater than zero.");
                 this.dimgap = value;
             }
         }
@@ -654,7 +654,7 @@ namespace netDxf.Tables
             set
             {
                 if (value <= 0)
-                    throw new ArgumentOutOfRangeException("value", value, "The DIMSCALE must be greater than zero.");
+                    throw new ArgumentOutOfRangeException(nameof(value), value, "The DIMSCALE must be greater than zero.");
                 this.dimscale = value;
             }
         }
@@ -703,7 +703,7 @@ namespace netDxf.Tables
             set
             {
                 if (value < 0)
-                    throw new ArgumentOutOfRangeException("value", value, "The DIMDEC must be equals or greater than zero.");
+                    throw new ArgumentOutOfRangeException(nameof(value), value, "The DIMDEC must be equals or greater than zero.");
                 this.dimdec = value;
             }
         }
@@ -722,7 +722,7 @@ namespace netDxf.Tables
             set
             {
                 if (value < -1)
-                    throw new ArgumentOutOfRangeException("value", value, "The DIMADEC must be equals or greater than zero.");
+                    throw new ArgumentOutOfRangeException(nameof(value), value, "The DIMADEC must be equals or greater than zero.");
                 this.dimadec = value;
             }
         }
@@ -766,7 +766,7 @@ namespace netDxf.Tables
             get { return this.dimlfac; }
             set
             {
-                if (MathHelper.IsZero(value)) throw new ArgumentOutOfRangeException("value", value, "The scale factor cannot be zero.");
+                if (MathHelper.IsZero(value)) throw new ArgumentOutOfRangeException(nameof(value), value, "The scale factor cannot be zero.");
                 this.dimlfac = value;
             }
         }
@@ -883,7 +883,7 @@ namespace netDxf.Tables
             set
             {
                 if (value < 0)
-                    throw new ArgumentOutOfRangeException("value", value, "The nearest value to round all distances must be equals or greater than zero.");
+                    throw new ArgumentOutOfRangeException(nameof(value), value, "The nearest value to round all distances must be equals or greater than zero.");
                 this.dimrnd = value;
             }
         }

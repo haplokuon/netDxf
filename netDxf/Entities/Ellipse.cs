@@ -107,7 +107,7 @@ namespace netDxf.Entities
             set
             {
                 if (value <= 0)
-                    throw new ArgumentOutOfRangeException("value", value, "The major axis value must be greater than zero.");
+                    throw new ArgumentOutOfRangeException(nameof(value), value, "The major axis value must be greater than zero.");
                 this.majorAxis = value;
             }
         }
@@ -121,7 +121,7 @@ namespace netDxf.Entities
             set
             {
                 if (value <= 0)
-                    throw new ArgumentOutOfRangeException("value", value, "The minor axis value must be greater than zero.");
+                    throw new ArgumentOutOfRangeException(nameof(value), value, "The minor axis value must be greater than zero.");
                 this.minorAxis = value;
             }
         }

@@ -78,7 +78,7 @@ namespace netDxf.Entities
             this.refPoint = arc.Center + point;
             this.offset = offset;
             if (style == null)
-                throw new ArgumentNullException("style", "The Dimension style cannot be null.");
+                throw new ArgumentNullException(nameof(style), "The Dimension style cannot be null.");
             this.style = style;
         }
 
@@ -111,11 +111,11 @@ namespace netDxf.Entities
             this.refPoint = circle.Center + point;
 
             if (offset < 0.0)
-                throw new ArgumentOutOfRangeException("offset", "The offset value cannot be negative.");
+                throw new ArgumentOutOfRangeException(nameof(offset), "The offset value cannot be negative.");
             this.offset = offset;
 
             if (style == null)
-                throw new ArgumentNullException("style", "The Dimension style cannot be null.");
+                throw new ArgumentNullException(nameof(style), "The Dimension style cannot be null.");
             this.style = style;
         }
 
@@ -171,11 +171,11 @@ namespace netDxf.Entities
             this.refPoint = referencePoint;
 
             if (offset < 0.0)
-                throw new ArgumentOutOfRangeException("offset", "The offset value cannot be negative.");
+                throw new ArgumentOutOfRangeException(nameof(offset), "The offset value cannot be negative.");
             this.offset = offset;
 
             if (style == null)
-                throw new ArgumentNullException("style", "The Dimension style cannot be null.");
+                throw new ArgumentNullException(nameof(style), "The Dimension style cannot be null.");
             this.style = style;
         }
 
@@ -214,7 +214,7 @@ namespace netDxf.Entities
             set
             {
                 if (value < 0.0)
-                    throw new ArgumentOutOfRangeException("value", "The offset value cannot be negative.");
+                    throw new ArgumentOutOfRangeException(nameof(value), "The offset value cannot be negative.");
                 this.offset = value;
             }
         }

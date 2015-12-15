@@ -71,7 +71,7 @@ namespace netDxf.Tables
             : base(name, DxfObjectCode.VPort, checkName)
         {
             if (string.IsNullOrEmpty(name))
-                throw new ArgumentNullException("name", "The viewport name should be at least one character long.");
+                throw new ArgumentNullException(nameof(name), "The viewport name should be at least one character long.");
 
             this.reserved = name.Equals("*Active", StringComparison.OrdinalIgnoreCase);
             this.center = Vector2.Zero;
@@ -135,7 +135,7 @@ namespace netDxf.Tables
             set
             {
                 if (value == Vector3.Zero)
-                    throw new ArgumentNullException("value", "The normal can not be the zero vector.");
+                    throw new ArgumentNullException(nameof(value), "The normal can not be the zero vector.");
                 this.direction = Vector3.Normalize(value);
             }
         }
@@ -167,7 +167,7 @@ namespace netDxf.Tables
             set
             {
                 if (value <= 0)
-                    throw new ArgumentOutOfRangeException("value", value, "The VPort aspect ratio must be greater than zero.");
+                    throw new ArgumentOutOfRangeException(nameof(value), value, "The VPort aspect ratio must be greater than zero.");
                 this.aspectRatio = value;
             }
         }

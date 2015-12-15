@@ -200,7 +200,7 @@ namespace netDxf.Collections
         public void Add(T item)
         {
             if (this.OnBeforeAddItemEvent(item))
-                throw new ArgumentException("The item cannot be added to the collection.", "item");
+                throw new ArgumentException("The item cannot be added to the collection.", nameof(item));
             this.innerArray.Add(item);
             this.OnAddItemEvent(item);
         }
@@ -212,7 +212,7 @@ namespace netDxf.Collections
         public void AddRange(IList<T> collection)
         {
             if (collection == null)
-                throw new ArgumentNullException("collection");
+                throw new ArgumentNullException(nameof(collection));
             // we will make room for so the collection will fit without having to resize the internal array during the Add method
             this.innerArray.Capacity += collection.Count;
             foreach (T item in collection)
@@ -231,7 +231,7 @@ namespace netDxf.Collections
                 throw new ArgumentOutOfRangeException(string.Format("The parameter index {0} must be in between {1} and {2}.", index, 0, this.innerArray.Count));
             if(this.OnBeforeRemoveItemEvent(this.innerArray[index])) return;
             if (this.OnBeforeAddItemEvent(item))
-                throw new ArgumentException("The item cannot be added to the collection.", "item");
+                throw new ArgumentException("The item cannot be added to the collection.", nameof(item));
             this.OnRemoveItemEvent(this.innerArray[index]);
             this.innerArray.Insert(index, item);
             this.OnAddItemEvent(item);

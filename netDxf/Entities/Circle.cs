@@ -94,7 +94,7 @@ namespace netDxf.Entities
             set
             {
                 if (value <= 0)
-                    throw new ArgumentOutOfRangeException("value", value, "The circle radius must be greater than zero.");
+                    throw new ArgumentOutOfRangeException(nameof(value), value, "The circle radius must be greater than zero.");
                 this.radius = value;
             }
         }
@@ -120,7 +120,7 @@ namespace netDxf.Entities
         public IList<Vector2> PolygonalVertexes(int precision)
         {
             if (precision < 3)
-                throw new ArgumentOutOfRangeException("precision", precision, "The circle precision must be greater or equal to three");
+                throw new ArgumentOutOfRangeException(nameof(precision), precision, "The circle precision must be greater or equal to three");
 
             List<Vector2> ocsVertexes = new List<Vector2>();
 

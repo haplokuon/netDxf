@@ -83,11 +83,11 @@ namespace netDxf.Entities
             this.end = MathHelper.Transform(new Vector3(ref2.X, ref2.Y, elev), arc.Normal, CoordinateSystem.Object, CoordinateSystem.World);
 
             if (MathHelper.IsZero(offset))
-                throw new ArgumentOutOfRangeException("offset", "The offset value cannot be zero.");
+                throw new ArgumentOutOfRangeException(nameof(offset), "The offset value cannot be zero.");
             this.offset = offset;
 
             if (style == null)
-                throw new ArgumentNullException("style", "The Dimension style cannot be null.");
+                throw new ArgumentNullException(nameof(style), "The Dimension style cannot be null.");
             this.style = style;
         }
 
@@ -143,7 +143,7 @@ namespace netDxf.Entities
             this.start = startPoint;
             this.end = endPoint;
             if (MathHelper.IsZero(offset))
-                throw new ArgumentOutOfRangeException("offset", "The offset value cannot be zero.");
+                throw new ArgumentOutOfRangeException(nameof(offset), "The offset value cannot be zero.");
             this.offset = offset;
             this.style = style;
         }
@@ -213,7 +213,7 @@ namespace netDxf.Entities
             set
             {
                 if (MathHelper.IsZero(value))
-                    throw new ArgumentOutOfRangeException("value", "The offset value cannot be zero.");
+                    throw new ArgumentOutOfRangeException(nameof(value), "The offset value cannot be zero.");
                 this.offset = value;
             }
         }

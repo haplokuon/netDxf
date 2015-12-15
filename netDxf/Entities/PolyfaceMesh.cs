@@ -56,15 +56,15 @@ namespace netDxf.Entities
         {
             this.flags = PolylineTypeFlags.PolyfaceMesh;
             if (vertexes == null)
-                throw new ArgumentNullException("vertexes");
+                throw new ArgumentNullException(nameof(vertexes));
             if (vertexes.Count < 3)
-                throw new ArgumentOutOfRangeException("vertexes", "The polyface mesh faces list requires at least three points.");
+                throw new ArgumentOutOfRangeException(nameof(vertexes), "The polyface mesh faces list requires at least three points.");
             this.vertexes = vertexes;
 
             if (faces == null)
-                throw new ArgumentNullException("vertexes");
+                throw new ArgumentNullException(nameof(vertexes));
             if (faces.Count < 1)
-                throw new ArgumentOutOfRangeException("vertexes", "The polyface mesh faces list requires at least one face.");
+                throw new ArgumentOutOfRangeException(nameof(vertexes), "The polyface mesh faces list requires at least one face.");
             this.faces = faces;
 
             this.endSequence = new EndSequence();

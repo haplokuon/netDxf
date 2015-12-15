@@ -74,7 +74,7 @@ namespace netDxf
         public ClippingBoundary(IList<Vector2> vertexes)
         {
             if (vertexes.Count < 3)
-                throw new ArgumentException("The number of vertexes for the polygonal clipping boundary must be equal or greater than three.", "vertexes");
+                throw new ArgumentException("The number of vertexes for the polygonal clipping boundary must be equal or greater than three.", nameof(vertexes));
 
             this.type = ClippingBoundaryType.Polygonal;
             this.vertexes = new List<Vector2>(vertexes);

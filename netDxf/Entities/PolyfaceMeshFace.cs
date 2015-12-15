@@ -65,9 +65,9 @@ namespace netDxf.Entities
             : base(DxfObjectCode.Vertex)
         {
             if (vertexIndexes == null)
-                throw new ArgumentNullException("vertexIndexes");
+                throw new ArgumentNullException(nameof(vertexIndexes));
             if (vertexIndexes.Length>4)
-                throw new ArgumentOutOfRangeException("vertexIndexes", vertexIndexes.Length, "The maximum number of vertexes per face is 4");
+                throw new ArgumentOutOfRangeException(nameof(vertexIndexes), vertexIndexes.Length, "The maximum number of vertexes per face is 4");
             
             this.flags = VertexTypeFlags.PolyfaceMeshVertex;
             this.vertexIndexes = vertexIndexes;
@@ -86,9 +86,9 @@ namespace netDxf.Entities
             set
             {
                 if (value == null) 
-                    throw new ArgumentNullException("value");
+                    throw new ArgumentNullException(nameof(value));
                 if (value.Length > 4)
-                    throw new ArgumentOutOfRangeException("value", this.vertexIndexes.Length, "The maximum number of index vertexes in a face is 4");
+                    throw new ArgumentOutOfRangeException(nameof(value), this.vertexIndexes.Length, "The maximum number of index vertexes in a face is 4");
 
                 this.vertexIndexes = value;
             }

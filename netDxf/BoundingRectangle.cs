@@ -100,7 +100,7 @@ namespace netDxf
         public BoundingRectangle(IList<Vector2> points)
         {
             if (points == null)
-                throw new ArgumentNullException("points", "The list cannot be null.");
+                throw new ArgumentNullException(nameof(points), "The list cannot be null.");
 
             double minX = double.MaxValue;
             double minY = double.MaxValue;

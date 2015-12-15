@@ -122,7 +122,7 @@ namespace netDxf.Collections
             get { return this.innerArray[index]; }
             set
             {
-                if (value == null) throw new ArgumentNullException("value");
+                if (value == null) throw new ArgumentNullException(nameof(value));
 
                 EntityObject remove = this.innerArray[index];
 
@@ -162,7 +162,7 @@ namespace netDxf.Collections
         public void Add(EntityObject item)
         {
             if (this.OnBeforeAddItemEvent(item))
-                throw new ArgumentException("The entity cannot be added to the collection.", "item");
+                throw new ArgumentException("The entity cannot be added to the collection.", nameof(item));
             this.innerArray.Add(item);
             this.OnAddItemEvent(item);
         }
@@ -174,7 +174,7 @@ namespace netDxf.Collections
         public void AddRange(IList<EntityObject> collection)
         {
             if (collection == null)
-                throw new ArgumentNullException("collection");
+                throw new ArgumentNullException(nameof(collection));
             // we will make room for so the collection will fit without having to resize the internal array during the Add method
             this.innerArray.Capacity += collection.Count;
             foreach (EntityObject item in collection)
@@ -192,7 +192,7 @@ namespace netDxf.Collections
                 throw new ArgumentOutOfRangeException(string.Format("The parameter index {0} must be in between {1} and {2}.", index, 0, this.innerArray.Count));
             if(this.OnBeforeRemoveItemEvent(this.innerArray[index])) return;
             if (this.OnBeforeAddItemEvent(item))
-                throw new ArgumentException("The entity cannot be added to the collection.", "item");
+                throw new ArgumentException("The entity cannot be added to the collection.", nameof(item));
             this.OnRemoveItemEvent(this.innerArray[index]);
             this.innerArray.Insert(index, item);
             this.OnAddItemEvent(item);

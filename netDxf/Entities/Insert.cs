@@ -104,7 +104,7 @@ namespace netDxf.Entities
             : base(EntityType.Insert, DxfObjectCode.Insert)
         {
             if (block == null)
-                throw new ArgumentNullException("block");
+                throw new ArgumentNullException(nameof(block));
             
             this.block = block;
             this.position = position;

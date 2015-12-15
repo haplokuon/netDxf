@@ -219,7 +219,7 @@ namespace netDxf
             set
             {
                 if (value == null)
-                    throw new ArgumentNullException("value");
+                    throw new ArgumentNullException(nameof(value));
                 this.comments = value;
             }
         }
@@ -644,7 +644,7 @@ namespace netDxf
             set
             {
                 if (!this.layouts.Contains(value))
-                    throw new ArgumentException("The layout " + value + " does not exist.", "value");
+                    throw new ArgumentException("The layout " + value + " does not exist.", nameof(value));
                 this.activeLayout = value;
             }
         }
@@ -657,7 +657,7 @@ namespace netDxf
             get { return this.rasterVariables; }
             set
             {
-                if (value == null) throw new ArgumentNullException("value");
+                if (value == null) throw new ArgumentNullException(nameof(value));
                 if (string.IsNullOrEmpty(value.Handle))
                     this.NumHandles = value.AsignHandle(this.NumHandles);
                 this.AddedObjects.Add(value.Handle, value);
@@ -949,11 +949,11 @@ namespace netDxf
         {
             // null entities are not allowed
             if (entity == null) 
-                throw new ArgumentNullException("entity");
+                throw new ArgumentNullException(nameof(entity));
 
             // entities already owned by another document are not allowed
             if (entity.Owner != null && !isBlockEntity)
-                throw new ArgumentException("The entity already belongs to a document. Clone it instead.", "entity");
+                throw new ArgumentException("The entity already belongs to a document. Clone it instead.", nameof(entity));
             
             // assign a handle
             if (assignHandle || string.IsNullOrEmpty(entity.Handle))
@@ -1219,9 +1219,7 @@ namespace netDxf
                     this.dimStyles.References[leader.Style.Name].Remove(entity);
                     leader.LeaderStyleChanged -= this.Leader_DimStyleChanged;
                     if (leader.Annotation != null)
-                    {
                         leader.Annotation.RemoveReactor(leader);
-                    }
                     break;
                 case EntityType.Tolerance:
                     Tolerance tolerance = (Tolerance)entity;

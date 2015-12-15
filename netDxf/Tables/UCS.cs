@@ -55,7 +55,7 @@ namespace netDxf.Tables
             : base(name, DxfObjectCode.Ucs, checkName)
         {
             if (string.IsNullOrEmpty(name))
-                throw new ArgumentNullException("name", "The UCS name should be at least one character long.");
+                throw new ArgumentNullException(nameof(name), "The UCS name should be at least one character long.");
 
             this.origin = Vector3.Zero;
             this.xAxis = Vector3.UnitX;

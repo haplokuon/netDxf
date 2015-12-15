@@ -68,7 +68,7 @@ namespace netDxf
         public Vector2(IList<double> array)
         {
             if (array.Count != 2)
-                throw new ArgumentOutOfRangeException("array", array.Count, "The dimension of the array must be two");
+                throw new ArgumentOutOfRangeException(nameof(array), array.Count, "The dimension of the array must be two");
             this.x = array[0];
             this.y = array[1];
         }
@@ -148,7 +148,7 @@ namespace netDxf
                         return this.y;
                     default:
 
-                        throw new ArgumentOutOfRangeException("index");
+                        throw new ArgumentOutOfRangeException(nameof(index));
                 }
             }
             set
@@ -164,7 +164,7 @@ namespace netDxf
                         break;
                     default:
 
-                        throw new ArgumentOutOfRangeException("index");
+                        throw new ArgumentOutOfRangeException(nameof(index));
                 }
             }
         }

@@ -104,9 +104,9 @@ namespace netDxf.Entities
             : base(EntityType.Spline, DxfObjectCode.Spline)
         {
             if (degree < 1 || degree > 10)
-                throw new ArgumentOutOfRangeException("degree", degree, "The spline degree valid values range from 1 to 10.");
+                throw new ArgumentOutOfRangeException(nameof(degree), degree, "The spline degree valid values range from 1 to 10.");
             if (controlPoints == null)
-                throw new ArgumentNullException("controlPoints", "The Spline control points list cannot be null.");
+                throw new ArgumentNullException(nameof(controlPoints), "The Spline control points list cannot be null.");
             if (controlPoints.Count < 2)
                 throw new ArgumentException("The number of control points must be equal or greater than 2.");
             if (controlPoints.Count < degree + 1)
@@ -140,15 +140,15 @@ namespace netDxf.Entities
             : base(EntityType.Spline, DxfObjectCode.Spline)
         {
             if (degree < 1 || degree > 10)
-                throw new ArgumentOutOfRangeException("degree", degree, "The spline degree valid values range from 1 to 10.");
+                throw new ArgumentOutOfRangeException(nameof(degree), degree, "The spline degree valid values range from 1 to 10.");
             if (controlPoints == null)
-                throw new ArgumentNullException("controlPoints", "The Spline control points list cannot be null.");
+                throw new ArgumentNullException(nameof(controlPoints), "The Spline control points list cannot be null.");
             if (controlPoints.Count < 2)
                 throw new ArgumentException("The number of control points must be equal or greater than 2.");
             if (controlPoints.Count < degree + 1)
                 throw new ArgumentException("The number of control points must be equal or greater than the spline degree + 1.");
             if (knots == null)
-                throw new ArgumentNullException("knots", "The Spline knots list cannot be null.");
+                throw new ArgumentNullException(nameof(knots), "The Spline knots list cannot be null.");
             if (knots.Count != controlPoints.Count + degree + 1)
                 throw new ArgumentException("The number of knots must be equals to the number of control points + spline degree + 1.");
 
@@ -230,7 +230,7 @@ namespace netDxf.Entities
             set
             {
                 if (value <= 0)
-                    throw new ArgumentOutOfRangeException("value", value, "The knot tolerance must be greater than zero.");
+                    throw new ArgumentOutOfRangeException(nameof(value), value, "The knot tolerance must be greater than zero.");
                 this.knotTolerance = value;
             }
         }
@@ -244,7 +244,7 @@ namespace netDxf.Entities
             set
             {
                 if (value <= 0)
-                    throw new ArgumentOutOfRangeException("value", value, "The control point tolerance must be greater than zero.");
+                    throw new ArgumentOutOfRangeException(nameof(value), value, "The control point tolerance must be greater than zero.");
                 this.ctrlPointTolerance = value;
             }
         }
@@ -258,7 +258,7 @@ namespace netDxf.Entities
             set
             {
                 if (value <= 0)
-                    throw new ArgumentOutOfRangeException("value", value, "The fit tolerance must be greater than zero.");
+                    throw new ArgumentOutOfRangeException(nameof(value), value, "The fit tolerance must be greater than zero.");
                 this.fitTolerance = value;
             }
         }

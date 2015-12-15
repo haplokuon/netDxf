@@ -123,7 +123,7 @@ namespace netDxf.Entities
             return text;
         }
 
-        private static Line DimensionLine(Vector2 start, Vector2 end, double rotation, short reversed, DimensionStyle style)
+        private static Line DimensionLine(Vector2 start, Vector2 end, double rotation, DimensionStyle style)
         {
             double ext1 = style.DIMASZ*style.DIMSCALE;
             double ext2 = -style.DIMASZ*style.DIMSCALE;
@@ -150,8 +150,8 @@ namespace netDxf.Entities
                     ext2 = style.DIMDLE*style.DIMSCALE;
             }
 
-            start = Vector2.Polar(start, reversed*ext1, rotation);
-            end = Vector2.Polar(end, reversed*ext2, rotation);
+            start = Vector2.Polar(start, ext1, rotation);
+            end = Vector2.Polar(end, ext2, rotation);
 
             return new Line(start, end)
             {
@@ -354,21 +354,6 @@ namespace netDxf.Entities
             return lines;
         }
 
-        private static short ReverseEnds(Vector2 u, Vector2 v, double dimRot, double angleRef)
-        {
-            short side = 1;
-            double rot = (dimRot + angleRef)*MathHelper.RadToDeg;
-            rot = MathHelper.NormalizeAngle(rot);
-            if (rot >= 180 && rot < 360)
-                side *= -1;
-
-            Vector2 dir = v - u;
-            if (dir.X*dir.Y < 0)
-                side *= -1;
-
-            return side;
-        }
-
         private static Vector2 FindIntersection(Vector2 point0, Vector2 dir0, Vector2 point1, Vector2 dir1, double threshold = MathHelper.Epsilon)
         {
             // test for parallelism.
@@ -392,8 +377,8 @@ namespace netDxf.Entities
             Vector2 ref2;
             Vector2 dimRef1;
             Vector2 dimRef2;
-            short reversed;
             double measure = dim.Measurement;
+            bool reversed = false;
             DimensionStyle style = dim.Style;
             List<EntityObject> entities = new List<EntityObject>();
 
@@ -406,48 +391,79 @@ namespace netDxf.Entities
 
             refPoint = MathHelper.Transform(dim.SecondReferencePoint, dim.Normal, CoordinateSystem.World, CoordinateSystem.Object);
             ref2 = new Vector2(refPoint.X, refPoint.Y);
-
-            double dimRotation = dim.Rotation*MathHelper.DegToRad;
-            double refAngle = Vector2.Angle(ref1, ref2);
-            reversed = ReverseEnds(ref1, ref2, dimRotation, refAngle);
-
             Vector2 midRef = Vector2.MidPoint(ref1, ref2);
-            Vector2 midDim = Vector2.Polar(midRef, dim.Offset, dimRotation + MathHelper.HalfPI);
+            //double refAngle = Vector2.Angle(ref1, ref2);
+            //if (refAngle > MathHelper.HalfPI && refAngle <= MathHelper.ThreeHalfPI)
+            //{
+            //    Vector2 tmp = ref1;
+            //    ref1 = ref2;
+            //    ref2 = tmp;
+            //}
 
-            dimRef1 = Vector2.Polar(midDim, -reversed*measure*0.5, dimRotation);
-            dimRef2 = Vector2.Polar(midDim, reversed*measure*0.5, dimRotation);
+            double dimRotation = dim.Rotation * MathHelper.DegToRad;
+            Vector2 dimRef1tmp = new Vector2(-measure * 0.5, dim.Offset);
+            Vector2 dimRef2tmp = new Vector2(measure * 0.5, dim.Offset);
+            dimRef1 = MathHelper.Transform(dimRef1tmp, dimRotation, CoordinateSystem.Object, CoordinateSystem.World) + midRef;
+            dimRef2 = MathHelper.Transform(dimRef2tmp, dimRotation, CoordinateSystem.Object, CoordinateSystem.World) + midRef;
+            Vector2 midDim = Vector2.MidPoint(dimRef1, dimRef2);
+            double relativeAngle = Vector2.AngleBetween(ref2 - ref1, dimRef2 - dimRef1);
+            if (relativeAngle > MathHelper.HalfPI && relativeAngle <= MathHelper.ThreeHalfPI)
+            {
+                Vector2 tmp = ref1;
+                ref1 = ref2;
+                ref2 = tmp;
+                reversed = true;
+            }
 
             // reference points
-            Layer defPointLayer = new Layer("Defpoints") {Plot = false};
-            entities.Add(new Point(ref1) {Layer = defPointLayer});
-            entities.Add(new Point(ref2) {Layer = defPointLayer});
-            entities.Add(new Point(dimRef2) {Layer = defPointLayer});
+            Layer defPointLayer = new Layer("Defpoints") { Plot = false };
+            entities.Add(new Point(ref1) { Layer = defPointLayer });
+            entities.Add(new Point(ref2) { Layer = defPointLayer });
+            entities.Add(reversed
+                ? new Point(dimRef1) {Layer = defPointLayer}
+                : new Point(dimRef2) {Layer = defPointLayer});
 
             // dimension line
-            entities.Add(DimensionLine(dimRef1, dimRef2, dimRotation, reversed, style));
+            entities.Add(DimensionLine(dimRef1, dimRef2, dimRotation, style));
 
             // extension lines
-            double dimexo = Math.Sign(dim.Offset)*style.DIMEXO*style.DIMSCALE;
-            double dimexe = Math.Sign(dim.Offset)*style.DIMEXE*style.DIMSCALE;
-            double extRot = dimRotation + MathHelper.HalfPI;
-            if (!style.DIMSE1) entities.Add(ExtensionLine(Vector2.Polar(ref1, dimexo, extRot), Vector2.Polar(dimRef1, dimexe, extRot), style, style.DIMLTEX1));
+            Vector2 dirRef1 = Vector2.Normalize(dimRef1 - ref1);
+            Vector2 dirRef2 = Vector2.Normalize(dimRef2 - ref2);
+            double dimexo = style.DIMEXO * style.DIMSCALE;
+            double dimexe = style.DIMEXE * style.DIMSCALE;
+            if (!style.DIMSE1)
+                entities.Add(ExtensionLine(ref1 + dimexo * dirRef1, dimRef1 + dimexe * dirRef1, style, style.DIMLTEX1));
+            if (!style.DIMSE2)
+                entities.Add(ExtensionLine(ref2 + dimexo * dirRef2, dimRef2 + dimexe * dirRef2, style, style.DIMLTEX2));
 
-            if (!style.DIMSE2) entities.Add(ExtensionLine(Vector2.Polar(ref2, dimexo, extRot), Vector2.Polar(dimRef2, dimexe, extRot), style, style.DIMLTEX2));
-
-            entities.Add(StartArrowHead(dimRef1, Vector2.Angle(dimRef2, dimRef1), style));
-            entities.Add(EndArrowHead(dimRef2, Vector2.Angle(dimRef1, dimRef2), style));
+            // dimension arrowheads
+            if (reversed)
+            {
+                entities.Add(StartArrowHead(dimRef2, dimRotation, style));
+                entities.Add(EndArrowHead(dimRef1, dimRotation + MathHelper.PI, style));
+            }
+            else
+            {
+                entities.Add(StartArrowHead(dimRef1, dimRotation + MathHelper.PI, style));
+                entities.Add(EndArrowHead(dimRef2, dimRotation, style));
+            }
 
             // dimension text
             string text = FormatDimensionText(measure, false, dim.UserText, style, dim.Owner.Record.Layout);
 
-            MText mText = DimensionText(Vector2.Polar(midDim, style.DIMGAP * style.DIMSCALE, extRot), dimRotation, text, style);
+            double textRot = dimRotation;
+            if (textRot > MathHelper.HalfPI && textRot <= MathHelper.ThreeHalfPI)
+                textRot += MathHelper.PI;
+
+            MText mText = DimensionText(Vector2.Polar(midDim, style.DIMGAP * style.DIMSCALE, textRot + MathHelper.HalfPI), textRot, text, style);
             if (mText != null) entities.Add(mText);
 
-            dim.DefinitionPoint = MathHelper.Transform(new Vector3(dimRef2.X, dimRef2.Y, elevation), dim.Normal, CoordinateSystem.Object, CoordinateSystem.World);
+            Vector3 defPoint = reversed ? new Vector3(dimRef1.X, dimRef1.Y, elevation) : new Vector3(dimRef2.X, dimRef2.Y, elevation);
+            dim.DefinitionPoint = MathHelper.Transform(defPoint, dim.Normal, CoordinateSystem.Object, CoordinateSystem.World);
             dim.MidTextPoint = new Vector3(midDim.X, midDim.Y, elevation); // this value is in OCS
 
             // drawing block
-            return new Block(name, false, entities, null) {Flags = BlockTypeFlags.AnonymousBlock};           
+            return new Block(name, false, entities, null) { Flags = BlockTypeFlags.AnonymousBlock };
         }
 
         public static Block Build(AlignedDimension dim, string name)
@@ -456,15 +472,14 @@ namespace netDxf.Entities
             Vector2 ref2;
             Vector2 dimRef1;
             Vector2 dimRef2;
-            short reversed;
+            bool reversed = false;
             double measure = dim.Measurement;
             DimensionStyle style = dim.Style;
             List<EntityObject> entities = new List<EntityObject>();
 
             // we will build the dimension block in object coordinates with normal the dimension normal
-            Vector3 refPoint;
 
-            refPoint = MathHelper.Transform(dim.FirstReferencePoint, dim.Normal, CoordinateSystem.World, CoordinateSystem.Object);
+            Vector3 refPoint = MathHelper.Transform(dim.FirstReferencePoint, dim.Normal, CoordinateSystem.World, CoordinateSystem.Object);
             ref1 = new Vector2(refPoint.X, refPoint.Y);
             double elevation = refPoint.Z;
 
@@ -472,47 +487,62 @@ namespace netDxf.Entities
             ref2 = new Vector2(refPoint.X, refPoint.Y);
 
             double refAngle = Vector2.Angle(ref1, ref2);
-
-            reversed = ReverseEnds(ref1, ref2, 0.0, refAngle);
+            if (refAngle > MathHelper.HalfPI && refAngle <= MathHelper.ThreeHalfPI)
+            {
+                Vector2 tmp = ref1;
+                ref1 = ref2;
+                ref2 = tmp;
+                refAngle += MathHelper.PI;
+                reversed = true;
+            }
 
             dimRef1 = Vector2.Polar(ref1, dim.Offset, refAngle + MathHelper.HalfPI);
             dimRef2 = Vector2.Polar(ref2, dim.Offset, refAngle + MathHelper.HalfPI);
-
             Vector2 midDim = Vector2.MidPoint(dimRef1, dimRef2);
 
             // reference points
-            Layer defPointLayer = new Layer("Defpoints") {Plot = false};
-            entities.Add(new Point(ref1) {Layer = defPointLayer});
-            entities.Add(new Point(ref2) {Layer = defPointLayer});
-            entities.Add(new Point(dimRef2) {Layer = defPointLayer});
+            Layer defPointLayer = new Layer("Defpoints") { Plot = false };
+            entities.Add(new Point(ref1) { Layer = defPointLayer });
+            entities.Add(new Point(ref2) { Layer = defPointLayer });
+            entities.Add(reversed
+                ? new Point(dimRef1) {Layer = defPointLayer}
+                : new Point(dimRef2) {Layer = defPointLayer});
 
             // dimension lines
-            entities.Add(DimensionLine(dimRef1, dimRef2, refAngle, 1, style));
+            entities.Add(DimensionLine(dimRef1, dimRef2, refAngle, style));
 
             // extension lines    
-            double dimexo = Math.Sign(dim.Offset)*style.DIMEXO*style.DIMSCALE;
-            double dimexe = Math.Sign(dim.Offset)*style.DIMEXE*style.DIMSCALE;
-            double extRot = refAngle + MathHelper.HalfPI;
-            if (!style.DIMSE1) entities.Add(ExtensionLine(Vector2.Polar(ref1, dimexo, extRot), Vector2.Polar(dimRef1, dimexe, extRot), style, style.DIMLTEX1));
-            if (!style.DIMSE2) entities.Add(ExtensionLine(Vector2.Polar(ref2, dimexo, extRot), Vector2.Polar(dimRef2, dimexe, extRot), style, style.DIMLTEX2));
+            double dimexo = Math.Sign(dim.Offset) * style.DIMEXO * style.DIMSCALE;
+            double dimexe = Math.Sign(dim.Offset) * style.DIMEXE * style.DIMSCALE;
+            if (!style.DIMSE1)
+                entities.Add(ExtensionLine(Vector2.Polar(ref1, dimexo, refAngle + MathHelper.HalfPI), Vector2.Polar(dimRef1, dimexe, refAngle + MathHelper.HalfPI), style, style.DIMLTEX1));
+            if (!style.DIMSE2)
+                entities.Add(ExtensionLine(Vector2.Polar(ref2, dimexo, refAngle + MathHelper.HalfPI), Vector2.Polar(dimRef2, dimexe, refAngle + MathHelper.HalfPI), style, style.DIMLTEX2));
 
-            // dimension arrows
-            entities.Add(StartArrowHead(dimRef1, Vector2.Angle(dimRef2, dimRef1), style));
-            entities.Add(EndArrowHead(dimRef2, Vector2.Angle(dimRef1, dimRef2), style));
+            // dimension arrowheads
+            if (reversed)
+            {
+                entities.Add(StartArrowHead(dimRef2, refAngle, style));
+                entities.Add(EndArrowHead(dimRef1, refAngle + MathHelper.PI, style));
+            }
+            else
+            {
+                entities.Add(StartArrowHead(dimRef1, refAngle + MathHelper.PI, style));
+                entities.Add(EndArrowHead(dimRef2, refAngle, style));
+            }
 
             // dimension text
             string text = FormatDimensionText(measure, false, dim.UserText, style, dim.Owner.Record.Layout);
 
-            double textRot = refAngle + (1 - reversed)*MathHelper.HalfPI;
-
-            MText mText = DimensionText(Vector2.Polar(midDim, reversed * style.DIMGAP * style.DIMSCALE, extRot), textRot, text, style);
+            MText mText = DimensionText(Vector2.Polar(midDim, style.DIMGAP * style.DIMSCALE, refAngle + MathHelper.HalfPI), refAngle, text, style);
             if (mText != null) entities.Add(mText);
 
-            dim.DefinitionPoint = MathHelper.Transform(new Vector3(dimRef2.X, dimRef2.Y, elevation), dim.Normal, CoordinateSystem.Object, CoordinateSystem.World);
+            Vector3 defPoint = reversed ? new Vector3(dimRef1.X, dimRef1.Y, elevation) : new Vector3(dimRef2.X, dimRef2.Y, elevation);
+            dim.DefinitionPoint = MathHelper.Transform(defPoint, dim.Normal, CoordinateSystem.Object, CoordinateSystem.World);
             dim.MidTextPoint = new Vector3(midDim.X, midDim.Y, elevation); // this value is in OCS
 
             // drawing block
-            return new Block(name, false, entities, null) {Flags = BlockTypeFlags.AnonymousBlock};
+            return new Block(name, false, entities, null) { Flags = BlockTypeFlags.AnonymousBlock };
         }
 
         public static Block Build(Angular2LineDimension dim, string name)
@@ -606,10 +636,7 @@ namespace netDxf.Entities
             if (!style.DIMSE1 && t != 0)
             {
                 Vector2 s;
-                if (t < 0)
-                    s = Vector2.Polar(ref1Start, t * dimexo, startAngle);
-                else
-                    s = Vector2.Polar(ref1End, t*dimexo, startAngle);
+                s = Vector2.Polar(t < 0 ? ref1Start : ref1End, t * dimexo, startAngle);
                 entities.Add(ExtensionLine(s, Vector2.Polar(dimRef1, t*dimexe, startAngle), style, style.DIMLTEX1));
             }
 

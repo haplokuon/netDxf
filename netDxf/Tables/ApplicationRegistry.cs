@@ -62,9 +62,9 @@ namespace netDxf.Tables
             : base(name, DxfObjectCode.AppId, checkName)
         {
             if (string.IsNullOrEmpty(name))
-                throw new ArgumentNullException("name", "The application registry name should be at least one character long.");
+                throw new ArgumentNullException(nameof(name), "The application registry name should be at least one character long.");
 
-            this.reserved = name.Equals("ACAD", StringComparison.OrdinalIgnoreCase);
+            this.reserved = name.Equals(DefaultName, StringComparison.OrdinalIgnoreCase);
         }
 
         #endregion

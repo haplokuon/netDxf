@@ -1454,7 +1454,7 @@ namespace netDxf.IO
                     this.WriteXLine((XLine) entity);
                     break;
                 default:
-                    throw new ArgumentException("Entity unknown.", "entity");
+                    throw new ArgumentException("Entity unknown.", nameof(entity));
             }
         }
 

@@ -74,7 +74,7 @@ namespace netDxf.Tables
             if (checkName)
             {
                 if (!IsValidName(name))
-                    throw new ArgumentException("The following characters \\<>/?\":;*|,=` are not supported for table object names.", "name");
+                    throw new ArgumentException("The following characters \\<>/?\":;*|,=` are not supported for table object names.", nameof(name));
             }
 
             this.name = name;
@@ -95,11 +95,11 @@ namespace netDxf.Tables
             set
             {
                 if (string.IsNullOrEmpty(value))
-                    throw new ArgumentNullException("value");
+                    throw new ArgumentNullException(nameof(value));
                 if (this.IsReserved)
-                    throw new ArgumentException("Reserved table objects cannot be renamed.", "value");
+                    throw new ArgumentException("Reserved table objects cannot be renamed.", nameof(value));
                 if (!IsValidName(value))
-                    throw new ArgumentException("The following characters \\<>/?\":;*|,=` are not supported for table object names.", "value");
+                    throw new ArgumentException("The following characters \\<>/?\":;*|,=` are not supported for table object names.", nameof(value));
                 if (string.Equals(this.name, value, StringComparison.OrdinalIgnoreCase))
                     return;
                 this.OnNameChangedEvent(this.name, value);

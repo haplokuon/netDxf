@@ -98,7 +98,7 @@ namespace netDxf.Entities
             set
             {
                 if (value == null)
-                    throw new ArgumentNullException("value", "The wipeout clipping boundary cannot be null.");
+                    throw new ArgumentNullException(nameof(value), "The wipeout clipping boundary cannot be null.");
                 this.clippingBoundary = value;
             }
         }

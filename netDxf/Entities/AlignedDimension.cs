@@ -125,7 +125,7 @@ namespace netDxf.Entities
             this.secondRefPoint = secondPoint;
             this.offset = offset;
             if (style == null)
-                throw new ArgumentNullException("style", "The Dimension style cannot be null.");
+                throw new ArgumentNullException(nameof(style), "The Dimension style cannot be null.");
             this.style = style;
         }
 

@@ -54,7 +54,7 @@ namespace netDxf.Blocks
             : base(DxfObjectCode.BlockRecord)
         {
             if (string.IsNullOrEmpty(name))
-                throw new ArgumentNullException("name");
+                throw new ArgumentNullException(nameof(name));
             this.name = name;
             this.layout = null;
             this.units = DefaultUnits;

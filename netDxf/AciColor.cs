@@ -474,7 +474,7 @@ namespace netDxf
         public AciColor(short index)
         {
             if (index <= 0 || index >= 256)
-                throw new ArgumentOutOfRangeException("index", index, "Accepted color index values range from 1 to 255.");
+                throw new ArgumentOutOfRangeException(nameof(index), index, "Accepted color index values range from 1 to 255.");
 
             byte[] rgb = IndexRgb[(byte)index];
             this.r = rgb[0];
@@ -554,7 +554,7 @@ namespace netDxf
             set
             {
                 if (value <= 0 || value >= 256)
-                    throw new ArgumentOutOfRangeException("value", value, "Accepted color index values range from 1 to 255.");
+                    throw new ArgumentOutOfRangeException(nameof(value), value, "Accepted color index values range from 1 to 255.");
 
                 byte[] rgb = IndexRgb[(byte)this.index];
                 this.r = rgb[0];
@@ -744,7 +744,7 @@ namespace netDxf
         public static AciColor FromCadIndex(short index)
         {
             if (index < 0 || index > 256)
-                throw new ArgumentOutOfRangeException("index", index, "Accepted CAD indexed AciColor values range from 0 to 256.");
+                throw new ArgumentOutOfRangeException(nameof(index), index, "Accepted CAD indexed AciColor values range from 0 to 256.");
 
             if (index == 0)
                 return ByBlock;

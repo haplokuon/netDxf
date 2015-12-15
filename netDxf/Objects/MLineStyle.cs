@@ -91,7 +91,7 @@ namespace netDxf.Objects
         /// </summary>
         public static MLineStyle Default
         {
-            get { return new MLineStyle("Standard"); }
+            get { return new MLineStyle(DefaultName); }
         }
 
         #endregion
@@ -119,12 +119,11 @@ namespace netDxf.Objects
             : base(name, DxfObjectCode.MLineStyle, true)
         {
             if (string.IsNullOrEmpty(name))
-                throw new ArgumentNullException("name", "The multiline style name should be at least one character long.");
-
+                throw new ArgumentNullException(nameof(name), "The multiline style name should be at least one character long.");
             if (elements == null)
-                throw new ArgumentNullException("elements");
+                throw new ArgumentNullException(nameof(elements));
             if (elements.Count < 1)
-                throw new ArgumentOutOfRangeException("elements", elements.Count, "The elements list must have at least one element.");
+                throw new ArgumentOutOfRangeException(nameof(elements), elements.Count, "The elements list must have at least one element.");
             
             this.elements = new ObservableCollection<MLineStyleElement>(elements.Count);
             this.elements.BeforeAddItem += this.Elements_BeforeAddItem;
@@ -176,7 +175,7 @@ namespace netDxf.Objects
             set
             {
                 if (value == null)
-                    throw new ArgumentNullException("value");
+                    throw new ArgumentNullException(nameof(value));
                 this.fillColor = value;
             }
         }
@@ -190,7 +189,7 @@ namespace netDxf.Objects
             set
             {
                 if (value < 10.0 || value > 170.0)
-                    throw new ArgumentOutOfRangeException("value", value, "The MLine style start angle valid values range from 10 to 170 degrees.");
+                    throw new ArgumentOutOfRangeException(nameof(value), value, "The MLine style start angle valid values range from 10 to 170 degrees.");
                 this.startAngle = value;
             }
         }
@@ -204,7 +203,7 @@ namespace netDxf.Objects
             set
             {
                 if (value < 10.0 || value > 170.0)
-                    throw new ArgumentOutOfRangeException("value", value, "The MLine style end angle valid values range from 10 to 170 degrees.");
+                    throw new ArgumentOutOfRangeException(nameof(value), value, "The MLine style end angle valid values range from 10 to 170 degrees.");
                 this.endAngle = value;
             }
         }

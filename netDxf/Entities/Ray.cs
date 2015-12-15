@@ -93,7 +93,7 @@ namespace netDxf.Entities
             set
             {
                 if (value == Vector3.Zero)
-                    throw new ArgumentNullException("value", "The direction can not be the zero vector.");
+                    throw new ArgumentNullException(nameof(value), "The direction can not be the zero vector.");
                 this.direction = value;
                 this.direction.Normalize();
             }

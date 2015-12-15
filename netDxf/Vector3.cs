@@ -72,7 +72,7 @@ namespace netDxf
         public Vector3(IList<double> array)
         {
             if (array.Count != 3)
-                throw new ArgumentOutOfRangeException("array", array.Count, "The dimension of the array must be three.");
+                throw new ArgumentOutOfRangeException(nameof(array), array.Count, "The dimension of the array must be three.");
             this.x = array[0];
             this.y = array[1];
             this.z = array[2];
@@ -164,16 +164,13 @@ namespace netDxf
                 switch (index)
                 {
                     case 0:
-
                         return this.x;
                     case 1:
-
                         return this.y;
                     case 2:
-
                         return this.z;
                     default:
-                        throw new ArgumentOutOfRangeException("index");
+                        throw new ArgumentOutOfRangeException(nameof(index));
                 }
             }
             set
@@ -181,19 +178,16 @@ namespace netDxf
                 switch (index)
                 {
                     case 0:
-
                         this.x = value;
                         break;
                     case 1:
-
                         this.y = value;
                         break;
                     case 2:
-
                         this.z = value;
                         break;
                     default:
-                        throw new ArgumentOutOfRangeException("index");
+                        throw new ArgumentOutOfRangeException(nameof(index));
                 }
             }
         }

@@ -59,7 +59,7 @@ namespace netDxf.Tables
             : base(name, DxfObjectCode.View, checkName)
         {
             if (string.IsNullOrEmpty(name))
-                throw new ArgumentNullException("name", "The view name should be at least one character long.");
+                throw new ArgumentNullException(nameof(name), "The view name should be at least one character long.");
 
             this.reserved = false;
             this.target = Vector3.Zero;

@@ -185,7 +185,7 @@ namespace netDxf.Entities
             set
             {
                 if (value <= 0)
-                    throw new ArgumentOutOfRangeException("value", value, "The character percentage height must be greater than zero.");
+                    throw new ArgumentOutOfRangeException(nameof(value), value, "The character percentage height must be greater than zero.");
                 this.heightFactor = value;
             }
         }
@@ -200,7 +200,7 @@ namespace netDxf.Entities
             set
             {
                 if (value < -85.0 || value > 85.0)
-                    throw new ArgumentOutOfRangeException("value", value, "The oblique angle valid values range from -85 to 85.");
+                    throw new ArgumentOutOfRangeException(nameof(value), value, "The oblique angle valid values range from -85 to 85.");
                 this.obliqueAngle = value;
             }
         }
@@ -218,7 +218,7 @@ namespace netDxf.Entities
             set
             {
                 if (value < 0.75 || value > 4)
-                    throw new ArgumentOutOfRangeException("value", value, "The character space valid values range from a minimum of .75 to 4");
+                    throw new ArgumentOutOfRangeException(nameof(value), value, "The character space valid values range from a minimum of .75 to 4");
                 this.characterSpaceFactor = value;
             }
         }
@@ -233,7 +233,7 @@ namespace netDxf.Entities
             set
             {
                 if (value <= 0)
-                    throw new ArgumentOutOfRangeException("value", value, "The width factor should be greater than zero.");
+                    throw new ArgumentOutOfRangeException(nameof(value), value, "The width factor should be greater than zero.");
                 this.widthFactor = value;
             }
         }

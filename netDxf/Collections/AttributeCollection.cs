@@ -55,7 +55,7 @@ namespace netDxf.Collections
         public AttributeCollection(IList<Attribute> attributes)
         {
             if (attributes == null)
-                throw new ArgumentNullException("attributes");
+                throw new ArgumentNullException(nameof(attributes));
             this.innerArray = new List<Attribute>(attributes);
         }
 

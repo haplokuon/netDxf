@@ -94,7 +94,7 @@ namespace netDxf.Units
             set
             {
                 if (value < 0)
-                    throw new ArgumentOutOfRangeException("value", value, "The number of decimal places must be equals or greater than zero.");
+                    throw new ArgumentOutOfRangeException(nameof(value), value, "The number of decimal places must be equals or greater than zero.");
                 this.linearDecimalPlaces = value;
             }
         }
@@ -108,7 +108,7 @@ namespace netDxf.Units
             set
             {
                 if (value < 0)
-                    throw new ArgumentOutOfRangeException("value", value, "The number of decimal places must be equals or greater than zero.");
+                    throw new ArgumentOutOfRangeException(nameof(value), value, "The number of decimal places must be equals or greater than zero.");
                 this.angularDecimalPlaces = value;
             }
         }

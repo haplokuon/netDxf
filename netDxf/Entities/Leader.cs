@@ -82,9 +82,9 @@ namespace netDxf.Entities
             : base(EntityType.Leader, DxfObjectCode.Leader)
         {
             if (vertexes == null)
-                throw new ArgumentNullException("vertexes");
+                throw new ArgumentNullException(nameof(vertexes));
             if (vertexes.Count < 2)
-                throw new ArgumentOutOfRangeException("vertexes", "The leader vertexes list requires at least two points.");
+                throw new ArgumentOutOfRangeException(nameof(vertexes), "The leader vertexes list requires at least two points.");
             this.vertexes = new List<Vector2>(vertexes);
             this.style = style;
             this.hasHookline = false;
@@ -112,9 +112,9 @@ namespace netDxf.Entities
             : base(EntityType.Leader, DxfObjectCode.Leader)
         {
             if (vertexes == null)
-                throw new ArgumentNullException("vertexes");
+                throw new ArgumentNullException(nameof(vertexes));
             if (vertexes.Count < 2)
-                throw new ArgumentOutOfRangeException("vertexes", "The leader vertexes list requires at least two points.");
+                throw new ArgumentOutOfRangeException(nameof(vertexes), "The leader vertexes list requires at least two points.");
             this.vertexes = new List<Vector2>(vertexes);
             this.style = style;
             this.hasHookline = true;
@@ -143,9 +143,9 @@ namespace netDxf.Entities
             : base(EntityType.Leader, DxfObjectCode.Leader)
         {
             if (vertexes == null)
-                throw new ArgumentNullException("vertexes");
+                throw new ArgumentNullException(nameof(vertexes));
             if (vertexes.Count < 2)
-                throw new ArgumentOutOfRangeException("vertexes", "The leader vertexes list requires at least two points.");
+                throw new ArgumentOutOfRangeException(nameof(vertexes), "The leader vertexes list requires at least two points.");
             this.vertexes = new List<Vector2>(vertexes);
             this.style = style;
             this.hasHookline = false;
@@ -174,9 +174,9 @@ namespace netDxf.Entities
             : base(EntityType.Leader, DxfObjectCode.Leader)
         {
             if (vertexes == null)
-                throw new ArgumentNullException("vertexes");
+                throw new ArgumentNullException(nameof(vertexes));
             if (vertexes.Count < 2)
-                throw new ArgumentOutOfRangeException("vertexes", "The leader vertexes list requires at least two points.");
+                throw new ArgumentOutOfRangeException(nameof(vertexes), "The leader vertexes list requires at least two points.");
             this.vertexes = new List<Vector2>(vertexes);
             this.style = style;
             this.hasHookline = false;
@@ -203,7 +203,7 @@ namespace netDxf.Entities
             set
             {
                 if (value == Vector3.Zero)
-                    throw new ArgumentNullException("value", "The normal can not be the zero vector.");
+                    throw new ArgumentNullException(nameof(value), "The normal can not be the zero vector.");
                 Vector3 newNormal = Vector3.Normalize(value);
                 this.ChangeAnnotationCoordinateSystem(newNormal, this.elevation);
                 this.normal = newNormal;
@@ -219,7 +219,7 @@ namespace netDxf.Entities
             set
             {
                 if (value == null)
-                    throw new ArgumentNullException("value");
+                    throw new ArgumentNullException(nameof(value));
                 this.style = this.OnDimensionStyleChangedEvent(this.style, value);
             }
         }
@@ -309,7 +309,7 @@ namespace netDxf.Entities
             set
             {
                 if (value == null)
-                    throw new ArgumentNullException("value");
+                    throw new ArgumentNullException(nameof(value));
                 this.lineColor = value;
             }
         }

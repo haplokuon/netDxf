@@ -214,7 +214,7 @@ namespace netDxf.Collections
         public T Add(T item)
         {
             if (item == null)
-                throw new ArgumentNullException("item");
+                throw new ArgumentNullException(nameof(item));
             return this.Add(item, true);
         }
 

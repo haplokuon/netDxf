@@ -108,7 +108,7 @@ namespace netDxf.Objects
             : base(name, DxfObjectCode.ImageDef, false)
         {
             if (string.IsNullOrEmpty(fileName))
-                throw new ArgumentNullException("fileName", "The image file name cannot be null or empty.");
+                throw new ArgumentNullException(nameof(fileName), "The image file name cannot be null or empty.");
 
             this.fileName = fileName;
             this.width = width;
@@ -170,7 +170,7 @@ namespace netDxf.Objects
             : base(name, DxfObjectCode.ImageDef, false)
         {
             if (string.IsNullOrEmpty(fileName))
-                throw new ArgumentNullException("fileName", "The image file name cannot be null or empty.");
+                throw new ArgumentNullException(nameof(fileName), "The image file name cannot be null or empty.");
 
             FileInfo info = new FileInfo(fileName);
             if (!info.Exists)

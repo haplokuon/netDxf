@@ -96,7 +96,7 @@ namespace netDxf.Entities
             set
             {
                 if (value < 0)
-                    throw new ArgumentOutOfRangeException("value", value, "The LwPolylineVertex width must be equals or greater than zero.");
+                    throw new ArgumentOutOfRangeException(nameof(value), value, "The LwPolylineVertex width must be equals or greater than zero.");
                 this.startWidth = value;
             }
         }
@@ -111,7 +111,7 @@ namespace netDxf.Entities
             set
             {
                 if (value < 0)
-                    throw new ArgumentOutOfRangeException("value", value, "The LwPolylineVertex width must be equals or greater than zero.");
+                    throw new ArgumentOutOfRangeException(nameof(value), value, "The LwPolylineVertex width must be equals or greater than zero.");
                 this.endWidth = value;
             }
         }

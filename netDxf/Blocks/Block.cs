@@ -146,7 +146,7 @@ namespace netDxf.Blocks
             : this(name)
         {
             if (string.IsNullOrEmpty(xrefFile))
-                throw new ArgumentNullException("xrefFile", "An external referenced block must point to a valid dwg file.");
+                throw new ArgumentNullException(nameof(xrefFile), "An external referenced block must point to a valid dwg file.");
 
             this.readOnly = true;
             this.xrefFile = xrefFile;
@@ -188,7 +188,7 @@ namespace netDxf.Blocks
             : base(name, DxfObjectCode.Block, checkName)
         {
             if (string.IsNullOrEmpty(name))
-                throw new ArgumentNullException("name");
+                throw new ArgumentNullException(nameof(name));
 
             this.reserved = string.Equals(name, DefaultModelSpaceName, StringComparison.OrdinalIgnoreCase);
             this.readOnly = this.reserved || name.StartsWith(DefaultPaperSpaceName, StringComparison.OrdinalIgnoreCase);
@@ -235,7 +235,7 @@ namespace netDxf.Blocks
             set
             {
                 if (this.name.StartsWith("*"))
-                    throw new ArgumentException("Blocks for internal use cannot be renamed.", "value");
+                    throw new ArgumentException("Blocks for internal use cannot be renamed.", nameof(value));
                 base.Name = value;
                 this.Record.Name = value;
             }
@@ -277,7 +277,7 @@ namespace netDxf.Blocks
             set
             {
                 if (value == null)
-                    throw new ArgumentNullException("value", "The block layer cannot be null.");
+                    throw new ArgumentNullException(nameof(value), "The block layer cannot be null.");
                 this.layer = this.OnLayerChangedEvent(this.layer, value);
             }
         }

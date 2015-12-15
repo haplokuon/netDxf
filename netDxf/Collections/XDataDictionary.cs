@@ -106,7 +106,7 @@ namespace netDxf.Collections
             set
             {
                 if (value == null)
-                    throw new ArgumentNullException("value");
+                    throw new ArgumentNullException(nameof(value));
                 if (!string.Equals(value.ApplicationRegistry.Name, appId, StringComparison.OrdinalIgnoreCase))
                     throw new ArgumentException(string.Format("The extended data application registry name {0} must be equal to the specified appId {1}.", value.ApplicationRegistry.Name, appId));
                 
@@ -161,7 +161,7 @@ namespace netDxf.Collections
         public void Add(XData item)
         {
             if (item == null)
-                throw new ArgumentNullException("item");
+                throw new ArgumentNullException(nameof(item));
             XData xdata;
             if (this.innerDictionary.TryGetValue(item.ApplicationRegistry.Name, out xdata))
             {

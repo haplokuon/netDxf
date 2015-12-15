@@ -121,7 +121,7 @@ namespace netDxf.IO
         public DxfDocument Read(Stream stream)
         {
             if (stream == null)
-                throw new ArgumentNullException("stream", "The stream cannot be null");
+                throw new ArgumentNullException(nameof(stream), "The stream cannot be null");
 
             string dwgcodepage = CheckHeaderVariable(stream, HeaderVariableCode.DwgCodePage, out this.isBinary);
             
@@ -3436,7 +3436,7 @@ namespace netDxf.IO
         private List<Vector3> ReadMeshVertexes(int count)
         {
             if (count <= 0)
-                throw new ArgumentOutOfRangeException("count", count, "The number of vertexes must be greater than zero.");
+                throw new ArgumentOutOfRangeException(nameof(count), count, "The number of vertexes must be greater than zero.");
 
             List<Vector3> vertexes = new List<Vector3>(count);
             for (int i = 0; i < count; i++)
@@ -6624,9 +6624,7 @@ namespace netDxf.IO
                 Style = style,
                 LineSpacingFactor = lineSpacing,
                 AttachmentPoint = attachmentPoint,
-                Rotation = isRotationDefined
-                    ? rotation
-                    : Vector2.Angle(direction)*MathHelper.RadToDeg,
+                Rotation = isRotationDefined ? rotation : Vector2.Angle(direction)*MathHelper.RadToDeg,
                 Normal = normal,
             };
 
@@ -6855,9 +6853,11 @@ namespace netDxf.IO
                         double lY2 = this.chunk.ReadDouble(); // code 21
                         this.chunk.Next();
 
-                        HatchBoundaryPath.Line line = new HatchBoundaryPath.Line();
-                        line.Start = new Vector2(lX1, lY1);
-                        line.End = new Vector2(lX2, lY2);
+                        HatchBoundaryPath.Line line = new HatchBoundaryPath.Line
+                        {
+                            Start = new Vector2(lX1, lY1),
+                            End = new Vector2(lX2, lY2)
+                        };
                         entities.Add(line);
                         break;
                     case HatchBoundaryPath.EdgeType.Arc:
@@ -6876,12 +6876,14 @@ namespace netDxf.IO
                         bool aCCW = this.chunk.ReadShort() != 0; // code 73
                         this.chunk.Next();
 
-                        HatchBoundaryPath.Arc arc = new HatchBoundaryPath.Arc();
-                        arc.Center = new Vector2(aX, aY);
-                        arc.Radius = aR;
-                        arc.StartAngle = aStart;
-                        arc.EndAngle = aEnd;
-                        arc.IsCounterclockwise = aCCW;
+                        HatchBoundaryPath.Arc arc = new HatchBoundaryPath.Arc
+                        {
+                            Center = new Vector2(aX, aY),
+                            Radius = aR,
+                            StartAngle = aStart,
+                            EndAngle = aEnd,
+                            IsCounterclockwise = aCCW
+                        };
                         entities.Add(arc);
                         break;
                     case HatchBoundaryPath.EdgeType.Ellipse:
@@ -6904,13 +6906,15 @@ namespace netDxf.IO
                         bool eCCW = this.chunk.ReadShort() != 0; // code 73
                         this.chunk.Next();
 
-                        HatchBoundaryPath.Ellipse ellipse = new HatchBoundaryPath.Ellipse();
-                        ellipse.Center = new Vector2(eX, eY);
-                        ellipse.EndMajorAxis = new Vector2(eAxisX, eAxisY);
-                        ellipse.MinorRatio = eAxisRatio;
-                        ellipse.StartAngle = eStart;
-                        ellipse.EndAngle = eEnd;
-                        ellipse.IsCounterclockwise = eCCW;
+                        HatchBoundaryPath.Ellipse ellipse = new HatchBoundaryPath.Ellipse
+                        {
+                            Center = new Vector2(eX, eY),
+                            EndMajorAxis = new Vector2(eAxisX, eAxisY),
+                            MinorRatio = eAxisRatio,
+                            StartAngle = eStart,
+                            EndAngle = eEnd,
+                            IsCounterclockwise = eCCW
+                        };
 
                         entities.Add(ellipse);
                         break;
@@ -6992,12 +6996,14 @@ namespace netDxf.IO
                             }
                         }
 
-                        HatchBoundaryPath.Spline spline = new HatchBoundaryPath.Spline();
-                        spline.Degree = degree;
-                        spline.IsPeriodic = isPeriodic;
-                        spline.IsRational = isRational;
-                        spline.ControlPoints = controlPoints;
-                        spline.Knots = knots;
+                        HatchBoundaryPath.Spline spline = new HatchBoundaryPath.Spline
+                        {
+                            Degree = degree,
+                            IsPeriodic = isPeriodic,
+                            IsRational = isRational,
+                            ControlPoints = controlPoints,
+                            Knots = knots
+                        };
 
                         entities.Add(spline);
                         break;
@@ -7090,8 +7096,9 @@ namespace netDxf.IO
             }
 
             if (!isGradient)
-                hatch = new HatchPattern(name) {Angle = angle};
+                hatch = new HatchPattern(name);
 
+            hatch.Angle = angle;
             hatch.Style = style;
             hatch.Scale = scale;
             hatch.Type = type;
