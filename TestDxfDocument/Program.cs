@@ -1,7 +1,7 @@
-﻿#region netDxf, Copyright(C) 2015 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf, Copyright(C) 2016 Daniel Carvajal, Licensed under LGPL.
 // 
 //                         netDxf library
-//  Copyright (C) 2009-2015 Daniel Carvajal (haplokuon@gmail.com)
+//  Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
 //  
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -47,7 +47,20 @@ namespace TestDxfDocument
     {
         private static void Main()
         {
+
             DxfDocument doc = Test(@"sample.dxf");
+
+            #region Samples for new and modified features 1.1.2
+
+            //LinearDimensionTest();
+            //AlignedDimensionTest();
+            //Angular2LineDimensionTest();
+            //Angular3PointDimensionTest();
+            //DiametricDimensionTest();
+            //RadialDimensionTest();
+            //OrdinateDimensionTest();
+
+            #endregion
 
             #region Samples for new and modified features 1.1.0
 
@@ -197,6 +210,299 @@ namespace TestDxfDocument
 
             #endregion
         }
+
+        #region Samples for new and modified features 1.1.2
+
+        private static void LinearDimensionTest()
+        {
+            DxfDocument doc = new DxfDocument();
+
+            Vector3 p1 = new Vector3(-5, 5, 0);
+            Vector3 p2 = new Vector3(5, -5, 0);
+
+            //Vector3 p1 = new Vector3(-5, -5, 0);
+            //Vector3 p2 = new Vector3(5, 5, 0);
+
+            Line line1 = new Line(p1, p2)
+            {
+                Layer = new Layer("Reference line")
+                {
+                    Color = AciColor.Green
+                }
+            };
+            doc.AddEntity(line1);
+
+            double offset = 6;
+            LinearDimension dimX1 = new LinearDimension(line1, offset, 0);
+            dimX1.SetDimensionLinePosition(new Vector2(6,6));
+            LinearDimension dimY1 = new LinearDimension(line1, offset, 90);
+            LinearDimension dim5 = new LinearDimension(line1, offset, 180);
+            LinearDimension dim6 = new LinearDimension(line1, offset, 270);
+
+            doc.AddEntity(dimX1);
+            doc.AddEntity(dimY1);
+            doc.AddEntity(dim5);
+            doc.AddEntity(dim6);
+            doc.Save("test1.dxf");
+
+            doc = DxfDocument.Load("test1.dxf");
+            foreach (Dimension d in doc.Dimensions)
+            {
+                d.Update();
+            }
+            doc.AddEntity((EntityObject)dimX1.Clone());
+            doc.AddEntity((EntityObject)dimY1.Clone());
+            doc.AddEntity((EntityObject)dim5.Clone());
+            doc.AddEntity((EntityObject)dim6.Clone());
+            doc.Save("test2.dxf");
+        }
+        private static void AlignedDimensionTest()
+        {
+            DxfDocument doc = new DxfDocument();
+            double offset = 1;
+            Line line = new Line(new Vector3(10, 6, 0), new Vector3(1, 3, 0));
+            AlignedDimension dim = new AlignedDimension(line, -offset);
+
+            Line line1 = new Line(new Vector3(0, 0, 0), new Vector3(10, 0, 0));
+            AlignedDimension dim1 = new AlignedDimension(line1, offset);
+            dim1.SetDimensionLinePosition(new Vector2(20, -2));
+
+            Line line2 = new Line(new Vector3(0, 10, 0), new Vector3(0, 0, 0));
+            AlignedDimension dim2 = new AlignedDimension(line2, offset);
+
+            Line line3 = new Line(new Vector3(0, 0, 0), new Vector3(0, 0, 10));
+            AlignedDimension dim3 = new AlignedDimension(line3, offset, Vector3.UnitY);
+            dim3.Elevation = 1;
+
+            doc.AddEntity(new List<EntityObject> { line, dim, line1, dim1, line2, dim2, line3, dim3 });
+
+            doc.Save("test1.dxf");
+
+            doc = DxfDocument.Load("test1.dxf");
+            foreach (Dimension d in doc.Dimensions)
+            {
+                d.Update();
+            }
+            doc.AddEntity((EntityObject)dim.Clone());
+            doc.AddEntity((EntityObject)dim1.Clone());
+            doc.AddEntity((EntityObject)dim2.Clone());
+            doc.AddEntity((EntityObject)dim3.Clone());
+            doc.Save("test2.dxf");
+
+        }
+        private static void Angular2LineDimensionTest()
+        {
+            double offset = 4;
+
+            Layer layer = new Layer("Layer1") { Color = AciColor.Blue };
+            Vector2 start1 = new Vector2(-2, 2);
+            Vector2 end1 = new Vector2(2, -2);
+            Vector2 start2 = new Vector2(-1, -3);
+            Vector2 end2 = new Vector2(1, 3);
+
+            Vector2 p1 = new Vector2(2, 0);
+            Vector2 p2 = new Vector2(0, 2);
+            Vector2 p3 = new Vector2(-2, 0);
+            Vector2 p4 = new Vector2(0, -2);
+
+            Line line1 = new Line(start1, end1) { Layer = layer };
+            Line line2 = new Line(start2, end2) { Layer = layer };
+
+            Angular2LineDimension dim1 = new Angular2LineDimension(line2, line1, offset);
+            dim1.SetDimensionLinePosition(p1);
+
+            Angular2LineDimension dim2 = new Angular2LineDimension(line1, line2, offset);
+            dim2.SetDimensionLinePosition(p2);
+
+            Angular2LineDimension dim3 = new Angular2LineDimension(line1, line2, offset);
+            dim3.SetDimensionLinePosition(p3);
+
+            Angular2LineDimension dim4 = new Angular2LineDimension(line1, line2, offset);
+            dim4.SetDimensionLinePosition(p4);
+
+            DxfDocument dxf = new DxfDocument();
+            dxf.AddEntity(line1);
+            dxf.AddEntity(line2);
+            dxf.AddEntity(dim1);
+            dxf.AddEntity(dim2);
+            dxf.AddEntity(dim3);
+            dxf.AddEntity(dim4);
+            dxf.Save("test1.dxf");
+
+            dxf = DxfDocument.Load("test1.dxf");
+            foreach (var d in dxf.Dimensions)
+                d.Update();
+            dxf.AddEntity((EntityObject)dim1.Clone());
+            dxf.AddEntity((EntityObject)dim2.Clone());
+            dxf.AddEntity((EntityObject)dim3.Clone());
+            dxf.AddEntity((EntityObject)dim4.Clone());
+            dxf.Save("test2.dxf");
+        }
+        private static void Angular3PointDimensionTest()
+        {
+            DxfDocument dxf = new DxfDocument();
+            Vector2 center = new Vector2(0, 0);
+            Vector2 start = new Vector2(7, 1);
+            Vector2 end = new Vector2(1, 7);
+            Angular3PointDimension dim1 = new Angular3PointDimension(center, start, end, 4);
+            dim1.SetDimensionLinePosition(new Vector2(0,2));
+
+            Arc arc = new Arc(center, 2, Vector2.Angle(start) * MathHelper.RadToDeg, Vector2.Angle(end) * MathHelper.RadToDeg);
+            Angular3PointDimension dim2 = new Angular3PointDimension(arc, 4);
+            dxf.AddEntity(arc);
+            dxf.AddEntity(dim1);
+            dxf.AddEntity(dim2);
+            dxf.Save("test1.dxf");
+
+            dxf = DxfDocument.Load("test1.dxf");
+
+            foreach (var d in dxf.Dimensions)
+                d.Update();
+
+            dxf.AddEntity((EntityObject)dim1.Clone());
+            dxf.AddEntity((EntityObject)dim2.Clone());
+            dxf.Save("test2.dxf");
+        }
+        private static void DiametricDimensionTest()
+        {
+            DxfDocument dxf = new DxfDocument();
+            Vector3 center = new Vector3(1, 2, 0);
+            double radius = 3;
+            Circle circle = new Circle(center, radius);
+            double offset = 2;
+            DiametricDimension dim1 = new DiametricDimension(circle, 0, offset);
+            dim1.SetDimensionLinePosition(new Vector2(radius+offset,2));
+            DiametricDimension dim2 = new DiametricDimension(circle, 45, offset);
+            DiametricDimension dim3 = new DiametricDimension(circle, 90, offset);
+            DiametricDimension dim4 = new DiametricDimension(circle, 120, offset);
+            DiametricDimension dim5 = new DiametricDimension(circle, 180, offset);
+            DiametricDimension dim6 = new DiametricDimension(circle, 220, offset);
+            DiametricDimension dim7 = new DiametricDimension(circle, 270, offset);
+            DiametricDimension dim8 = new DiametricDimension(circle, 330, offset);
+
+            dxf.AddEntity(circle);
+            dxf.AddEntity(dim1);
+            dxf.AddEntity(dim2);
+            dxf.AddEntity(dim3);
+            dxf.AddEntity(dim4);
+            dxf.AddEntity(dim5);
+            dxf.AddEntity(dim6);
+            dxf.AddEntity(dim7);
+            dxf.AddEntity(dim8);
+            dxf.Save("test1.dxf");
+
+            dxf = DxfDocument.Load("test1.dxf");
+            foreach (var d in dxf.Dimensions)
+            {
+                d.Update();
+            }
+            dxf.AddEntity((EntityObject)dim1.Clone());
+            dxf.AddEntity((EntityObject)dim2.Clone());
+            dxf.AddEntity((EntityObject)dim3.Clone());
+            dxf.AddEntity((EntityObject)dim4.Clone());
+            dxf.AddEntity((EntityObject)dim5.Clone());
+            dxf.AddEntity((EntityObject)dim6.Clone());
+            dxf.AddEntity((EntityObject)dim7.Clone());
+            dxf.AddEntity((EntityObject)dim8.Clone());
+
+            dxf.Save("test2.dxf");
+        }
+        private static void RadialDimensionTest()
+        {
+            DxfDocument dxf = new DxfDocument();
+            Vector3 center = new Vector3(1, 2, 0);
+            double radius = 3;
+            Circle circle = new Circle(center, radius);
+
+            double offset = 3;
+            RadialDimension dim1 = new RadialDimension(circle, 0, offset);
+            dim1.SetDimensionLinePosition(new Vector2(3,2));
+            RadialDimension dim2 = new RadialDimension(circle, 45, offset);
+            RadialDimension dim3 = new RadialDimension(circle, 90, offset);
+            RadialDimension dim4 = new RadialDimension(circle, 120, offset);
+            RadialDimension dim5 = new RadialDimension(circle, 180, offset);
+            RadialDimension dim6 = new RadialDimension(circle, 220, offset);
+            RadialDimension dim7 = new RadialDimension(circle, 270, offset);
+            RadialDimension dim8 = new RadialDimension(circle, 330, offset);
+
+            dxf.AddEntity(circle);
+            dxf.AddEntity(dim1);
+            dxf.AddEntity(dim2);
+            dxf.AddEntity(dim3);
+            dxf.AddEntity(dim4);
+            dxf.AddEntity(dim5);
+            dxf.AddEntity(dim6);
+            dxf.AddEntity(dim7);
+            dxf.AddEntity(dim8);
+            dxf.Save("test1.dxf");
+
+            dxf = DxfDocument.Load("test1.dxf");
+            foreach (var d in dxf.Dimensions)
+            {
+                d.Update();
+            }
+            dxf.AddEntity((EntityObject)dim1.Clone());
+            dxf.AddEntity((EntityObject)dim2.Clone());
+            dxf.AddEntity((EntityObject)dim3.Clone());
+            dxf.AddEntity((EntityObject)dim4.Clone());
+            dxf.AddEntity((EntityObject)dim5.Clone());
+            dxf.AddEntity((EntityObject)dim6.Clone());
+            dxf.AddEntity((EntityObject)dim7.Clone());
+            dxf.AddEntity((EntityObject)dim8.Clone());
+
+            dxf.Save("test2.dxf");
+        }
+        private static void OrdinateDimensionTest()
+        {
+            DxfDocument dxf = new DxfDocument();
+
+            Vector2 origin = new Vector2(2, 1);
+            Vector2 refX = new Vector2(1, 0);
+            Vector2 refY = new Vector2(0, 2);
+            double length = 3;
+            double angle = 30;
+            DimensionStyle myStyle = CreateDimStyle();
+
+            OrdinateDimension dimX1 = new OrdinateDimension(origin, refX, length, OrdinateDimensionAxis.X, 0, myStyle);
+            OrdinateDimension dimX2 = new OrdinateDimension(origin, refX, length, OrdinateDimensionAxis.X, angle, myStyle);
+            OrdinateDimension dimY1 = new OrdinateDimension(origin, refY, length, OrdinateDimensionAxis.Y, 0, myStyle);
+            OrdinateDimension dimY2 = new OrdinateDimension(origin, refY, length, OrdinateDimensionAxis.Y, angle, myStyle);
+
+            dxf.AddEntity(dimX1);
+            dxf.AddEntity(dimY1);
+            dxf.AddEntity(dimX2);
+            dxf.AddEntity(dimY2);
+
+            Line lineX = new Line(origin, origin + 5 * Vector2.UnitX);
+            Line lineY = new Line(origin, origin + 5 * Vector2.UnitY);
+
+            Vector2 point = Vector2.Polar(new Vector2(origin.X, origin.Y), 5, angle * MathHelper.DegToRad);
+            Line lineXRotate = new Line(origin, new Vector2(point.X, point.Y));
+
+            point = Vector2.Polar(new Vector2(origin.X, origin.Y), 5, angle * MathHelper.DegToRad + MathHelper.HalfPI);
+            Line lineYRotate = new Line(origin, new Vector2(point.X, point.Y));
+
+            dxf.AddEntity(lineX);
+            dxf.AddEntity(lineY);
+            dxf.AddEntity(lineXRotate);
+            dxf.AddEntity(lineYRotate);
+
+            dxf.Save("test1.dxf");
+
+            dxf = DxfDocument.Load("test1.dxf");
+            foreach (var d in dxf.Dimensions)
+            {
+                d.Update();
+            }
+            dxf.AddEntity((EntityObject)dimX1.Clone());
+            dxf.AddEntity((EntityObject)dimX2.Clone());
+            dxf.AddEntity((EntityObject)dimY1.Clone());
+            dxf.AddEntity((EntityObject)dimY2.Clone());
+
+            dxf.Save("test2.dxf");
+        }
+
+        #endregion
 
         #region Samples for new and modified features 1.1.0
 
@@ -744,8 +1050,8 @@ namespace TestDxfDocument
         public static void ModifyingDimensionGeometryAndStyle()
         {
             DimensionStyle style = new DimensionStyle("MyStyle");
-            Vector3 p1 = new Vector3(-2.5, 0, 0);
-            Vector3 p2 = new Vector3(2.5, 0, 0);
+            Vector2 p1 = new Vector2(-2.5, 0);
+            Vector2 p2 = new Vector2(2.5, 0);
 
             LinearDimension dim = new LinearDimension(p1, p2, 4, 0, style);
 
@@ -762,8 +1068,8 @@ namespace TestDxfDocument
             //dim.RebuildBlock();
 
             // the same kind of procedure needs to be done when modifying the geometry of a dimension
-            dim.FirstReferencePoint = new Vector3(-5.0, 0, 0);
-            dim.SecondReferencePoint = new Vector3(5.0, 0, 0);
+            dim.FirstReferencePoint = new Vector2(-5.0, 0);
+            dim.SecondReferencePoint = new Vector2(5.0, 0);
             // now that all necessary changes has been made, we will rebuild the block.
             // this is an expensive operation, use it only when need it.
 
@@ -898,8 +1204,8 @@ namespace TestDxfDocument
 
             Layer layer = new Layer("Layer1") { Color = AciColor.Blue };
 
-            Vector3 p1 = new Vector3(0, 0, 0);
-            Vector3 p2 = new Vector3(21.2548, 0, 0);
+            Vector2 p1 = new Vector2(0, 0);
+            Vector2 p2 = new Vector2(21.2548, 02);
 
             LinearDimension dim = new LinearDimension(p1, p2, 4, 0, style);
 
@@ -940,27 +1246,27 @@ namespace TestDxfDocument
             DimensionStyle style = new DimensionStyle("MyStyle");
 
             double offset = 0.75;
-            LinearDimension dim = new LinearDimension(line1, offset, 0, style);
+            LinearDimension dim = new LinearDimension(line1, offset, 0, Vector3.UnitZ, style);
             dim.UserText = null;    // 5.00 (this is the default behavior)
             dxf.AddEntity(dim);
 
-            dim = new LinearDimension(line1, 2 * offset, 0, style);
+            dim = new LinearDimension(line1, 2 * offset, 0, Vector3.UnitZ, style);
             dim.UserText = string.Empty;    // 5.00 (same behavior as null)
             dxf.AddEntity(dim);
 
-            dim = new LinearDimension(line1, 3 * offset, 0, style);
+            dim = new LinearDimension(line1, 3 * offset, 0, Vector3.UnitZ, style);
             dim.UserText = " ";    // No dimension text will be drawn (one blank space)
             dxf.AddEntity(dim);
 
-            dim = new LinearDimension(line1, 4 * offset, 0, style);
+            dim = new LinearDimension(line1, 4 * offset, 0, Vector3.UnitZ, style);
             dim.UserText = "<>";    // 5.00 (the characters <> will be substituted with the style.DIMPOST property)
             dxf.AddEntity(dim);
 
-            dim = new LinearDimension(line1, 5 * offset, 0, style);
+            dim = new LinearDimension(line1, 5 * offset, 0, Vector3.UnitZ, style);
             dim.UserText = "Length: <> mm"; // Length: 5.00 mm (the characters <> will be substituted with the style.DIMPOST property)
             dxf.AddEntity(dim);
 
-            dim = new LinearDimension(line1, 6 * offset, 0, style);
+            dim = new LinearDimension(line1, 6 * offset, 0, Vector3.UnitZ, style);
             dim.UserText = "User text"; // User text
             dxf.AddEntity(dim);
 
@@ -1042,10 +1348,10 @@ namespace TestDxfDocument
             dxf.AddEntity(line1);
 
             double offset = 4;
-            LinearDimension dimX1 = new LinearDimension(line1, offset, 0, myStyle);
-            LinearDimension dimY1 = new LinearDimension(line1, offset, 90, myStyle);
-            LinearDimension dim5 = new LinearDimension(line1, offset, -30, myStyle);
-            LinearDimension dim6 = new LinearDimension(line1, offset, -60, myStyle);
+            LinearDimension dimX1 = new LinearDimension(line1, offset, 0, Vector3.UnitZ, myStyle);
+            LinearDimension dimY1 = new LinearDimension(line1, offset, 90, Vector3.UnitZ, myStyle);
+            LinearDimension dim5 = new LinearDimension(line1, offset, -30, Vector3.UnitZ, myStyle);
+            LinearDimension dim6 = new LinearDimension(line1, offset, -60, Vector3.UnitZ, myStyle);
 
             Vector3 p3 = new Vector3(6, -5, 0);
             Vector3 p4 = new Vector3(11, 0, 0);
@@ -1057,10 +1363,10 @@ namespace TestDxfDocument
                 }
             };
             dxf.AddEntity(line2);
-            LinearDimension dimX2 = new LinearDimension(line2, offset, -30.0, myStyle);
-            LinearDimension dimY2 = new LinearDimension(line2, offset, -60.0, myStyle);
-            LinearDimension dim3 = new LinearDimension(line2, offset, 30.0, myStyle);
-            LinearDimension dim4 = new LinearDimension(line2, offset, 60.0, myStyle);
+            LinearDimension dimX2 = new LinearDimension(line2, offset, -30.0, Vector3.UnitZ, myStyle);
+            LinearDimension dimY2 = new LinearDimension(line2, offset, -60.0, Vector3.UnitZ, myStyle);
+            LinearDimension dim3 = new LinearDimension(line2, offset, 30.0, Vector3.UnitZ, myStyle);
+            LinearDimension dim4 = new LinearDimension(line2, offset, 60.0, Vector3.UnitZ, myStyle);
 
             dxf.AddEntity(dimX1);
             dxf.AddEntity(dimY1);
@@ -1097,8 +1403,8 @@ namespace TestDxfDocument
             dxf.AddEntity(line1);
 
             double offset = 4;
-            AlignedDimension dim1 = new AlignedDimension(line1, offset, myStyle);
-            AlignedDimension dim11 = new AlignedDimension(line1, -offset, myStyle);
+            AlignedDimension dim1 = new AlignedDimension(line1, offset, Vector3.UnitZ, myStyle);
+            AlignedDimension dim11 = new AlignedDimension(line1, -offset, Vector3.UnitZ, myStyle);
 
             Vector3 p3 = new Vector3(6, -5, 0);
             Vector3 p4 = new Vector3(11, 0, 0);
@@ -1110,8 +1416,8 @@ namespace TestDxfDocument
                 }
             };
             dxf.AddEntity(line2);
-            AlignedDimension dim2 = new AlignedDimension(line2, offset, myStyle);
-            AlignedDimension dim21 = new AlignedDimension(line2, -offset, myStyle);
+            AlignedDimension dim2 = new AlignedDimension(line2, offset, Vector3.UnitZ, myStyle);
+            AlignedDimension dim21 = new AlignedDimension(line2, -offset, Vector3.UnitZ, myStyle);
 
             dxf.AddEntity(dim1);
             dxf.AddEntity(dim11);
@@ -1296,7 +1602,7 @@ namespace TestDxfDocument
         {
             DxfDocument dxf = new DxfDocument();
 
-            Vector3 origin = new Vector3(2, 1, 0);
+            Vector2 origin = new Vector2(2, 1);
             Vector2 refX = new Vector2(1, 0);
             Vector2 refY = new Vector2(0, 2);
             double length = 3;
@@ -1313,14 +1619,14 @@ namespace TestDxfDocument
             dxf.AddEntity(dimX2);
             dxf.AddEntity(dimY2);
 
-            Line lineX = new Line(origin, origin + 5 * Vector3.UnitX);
-            Line lineY = new Line(origin, origin + 5 * Vector3.UnitY);
+            Line lineX = new Line(origin, origin + 5 * Vector2.UnitX);
+            Line lineY = new Line(origin, origin + 5 * Vector2.UnitY);
 
             Vector2 point = Vector2.Polar(new Vector2(origin.X, origin.Y), 5, angle * MathHelper.DegToRad);
-            Line lineXRotate = new Line(origin, new Vector3(point.X, point.Y, 0));
+            Line lineXRotate = new Line(origin, new Vector2(point.X, point.Y));
 
             point = Vector2.Polar(new Vector2(origin.X, origin.Y), 5, angle * MathHelper.DegToRad + MathHelper.HalfPI);
-            Line lineYRotate = new Line(origin, new Vector3(point.X, point.Y, 0));
+            Line lineYRotate = new Line(origin, new Vector2(point.X, point.Y));
 
             dxf.AddEntity(lineX);
             dxf.AddEntity(lineY);
@@ -1770,12 +2076,11 @@ namespace TestDxfDocument
         }
         private static void MeshEntity()
         {
-            DxfDocument dxf = new DxfDocument();
 
             // construct a simple cube (see the AutoCad documentation for more information about creating meshes)
 
             // the mesh data is always defined at level 0 (no subdivision)
-            // 8 vertices
+            // 8 vertexes
             List<Vector3> vertexes = new List<Vector3>
                                             {
                                                 new Vector3(-5, -5, -5),
@@ -1823,6 +2128,8 @@ namespace TestDxfDocument
             Mesh mesh = new Mesh(vertexes, faces, edges);
             mesh.SubdivisionLevel = 3;
 
+            DxfDocument dxf = new DxfDocument();
+
             ApplicationRegistry newAppReg = dxf.ApplicationRegistries.Add(new ApplicationRegistry("netDxf"));
 
             XData xdata = new XData(newAppReg);
@@ -1834,8 +2141,14 @@ namespace TestDxfDocument
 
             dxf.Save("mesh.dxf");
 
-            dxf = DxfDocument.Load("mesh.dxf");
+            //dxf = DxfDocument.Load("mesh.dxf");
 
+            dxf = DxfDocument.Load(@"..\samples\RenderMode2.dxf");
+            //dxf.DrawingVariables.AcadVer = DxfVersion.AutoCad2004;
+            //dxf.Viewport.RenderMode = RenderMode.HiddenLine;
+            //dxf.Viewports[0].RenderMode = RenderMode.GouraudShadedWithWireframe;
+
+            dxf.Save("mesh2.dxf");
         }
 
         #endregion
@@ -2903,85 +3216,93 @@ namespace TestDxfDocument
 
         private static void LinearDimensionTests()
         {
-            DxfDocument dxf1 = new DxfDocument();
-            Vector2 pt1 = new Vector2(15, -5);
-            Vector2 pt2 = new Vector2(5, 5);
-            double offset = 10;
+            //DxfDocument dxf1 = new DxfDocument();
+            //Vector2 pt1 = new Vector2(15, -5);
+            //Vector2 pt2 = new Vector2(5, 5);
+            //double offset = 10;
 
-            LinearDimension ld1z = new LinearDimension(pt1, pt2, offset, 30);
-            LinearDimension ld2z = new LinearDimension(pt1, pt2, offset, 45);
-            LinearDimension ld3z = new LinearDimension(pt1, pt2, offset, 90);
-            LinearDimension ld4z = new LinearDimension(pt1, pt2, offset, 135);
-            LinearDimension ld5z = new LinearDimension(pt1, pt2, offset, 180);
-            LinearDimension ld6z = new LinearDimension(pt1, pt2, offset, 220);
-            LinearDimension ld7z = new LinearDimension(pt2, pt1, offset, 270);
+            //LinearDimension ld1z = new LinearDimension(pt1, pt2, offset, 30);
+            //LinearDimension ld2z = new LinearDimension(pt1, pt2, offset, 45);
+            //LinearDimension ld3z = new LinearDimension(pt1, pt2, offset, 90);
+            //LinearDimension ld4z = new LinearDimension(pt1, pt2, offset, 135);
+            //LinearDimension ld5z = new LinearDimension(pt1, pt2, offset, 180);
+            //LinearDimension ld6z = new LinearDimension(pt1, pt2, offset, 220);
+            //LinearDimension ld7z = new LinearDimension(pt2, pt1, offset, 270);
 
-            dxf1.AddEntity(ld1z);
-            dxf1.AddEntity(ld2z);
-            dxf1.AddEntity(ld3z);
-            dxf1.AddEntity(ld4z);
-            dxf1.AddEntity(ld5z);
-            dxf1.AddEntity(ld6z);
-            dxf1.AddEntity(ld7z);
+            //dxf1.AddEntity(ld1z);
+            //dxf1.AddEntity(ld2z);
+            //dxf1.AddEntity(ld3z);
+            //dxf1.AddEntity(ld4z);
+            //dxf1.AddEntity(ld5z);
+            //dxf1.AddEntity(ld6z);
+            //dxf1.AddEntity(ld7z);
 
-            Line line = new Line(pt1, pt2);
-            line.Color = AciColor.Yellow;
-            dxf1.AddEntity(line);
+            //Line line = new Line(pt1, pt2);
+            //line.Color = AciColor.Yellow;
+            //dxf1.AddEntity(line);
 
-            dxf1.Save("test2.dxf");
+            //dxf1.Save("test2.dxf");
 
             DxfDocument dxf2 = new DxfDocument();
 
-            LinearDimension ld1 = new LinearDimension(new Vector2(0, 0), new Vector2(0, 15), 1, 90);
-            LinearDimension ld1b = new LinearDimension(new Vector2(0, 0), new Vector2(0, 15), 1, 100);
-            LinearDimension ld1c = new LinearDimension(new Vector2(0, 0), new Vector2(0, 15), 1, 80);
+            //LinearDimension ld1 = new LinearDimension(new Vector2(0, 0), new Vector2(0, 15), 1, 90);
+            //LinearDimension ld1b = new LinearDimension(new Vector2(0, 0), new Vector2(0, 15), 1, 100);
+            //LinearDimension ld1c = new LinearDimension(new Vector2(0, 0), new Vector2(0, 15), 1, 80);
 
-            LinearDimension ld2 = new LinearDimension(new Vector2(5, 15), new Vector2(5, 0), 1, 90);
-            LinearDimension ld3 = new LinearDimension(new Vector2(10, 0), new Vector2(10, 15), -1, 270);
+            //LinearDimension ld2 = new LinearDimension(new Vector2(5, 15), new Vector2(5, 0), 1, 90);
+            LinearDimension ld3 = new LinearDimension(new Vector2(10, 15),new Vector2(10, 0), 1, 90);
+            //ld3.SetDimensionLinePosition(new Vector3(9, 1, 0));
+            //LinearDimension ld4 = new LinearDimension(new Vector2(15, 0), new Vector2(15, 15), 1, 270);
+            //LinearDimension ld4b = new LinearDimension(new Vector2(15, 0), new Vector2(15, 15), 1, 300);
+            //LinearDimension ld4c = new LinearDimension(new Vector2(15, 0), new Vector2(15, 15), 1, 240);
 
-            LinearDimension ld4 = new LinearDimension(new Vector2(15, 0), new Vector2(15, 15), 1, 270);
-            LinearDimension ld4b = new LinearDimension(new Vector2(15, 0), new Vector2(15, 15), 1, 300);
-            LinearDimension ld4c = new LinearDimension(new Vector2(15, 0), new Vector2(15, 15), 1, 240);
+            //LinearDimension ld5 = new LinearDimension(new Vector2(15, 0), new Vector2(0, 0), 1, 0);
+            //LinearDimension ld6 = new LinearDimension(new Vector2(15, 0),new Vector2(0, 0),  1, 0);
 
-            LinearDimension ld5 = new LinearDimension(new Vector2(15, 0), new Vector2(0, 0), 1, 0);
-            LinearDimension ld6 = new LinearDimension(new Vector2(0, 0), new Vector2(15, 0), -1, 0);
+            //AlignedDimension ld1a = new AlignedDimension(new Vector2(0, 0), new Vector2(0, 15), 1);
+            //ld1a.Color = AciColor.Yellow;
+            //AlignedDimension ld2a = new AlignedDimension(new Vector2(5, 15), new Vector2(5, 0), 1);
+            //ld2a.Color = AciColor.Yellow;
+            //AlignedDimension ld3a = new AlignedDimension(new Vector2(10, 0), new Vector2(10, 15), -1);
+            //ld3a.Color = AciColor.Yellow;
+            //AlignedDimension ld4a = new AlignedDimension(new Vector2(15, 0), new Vector2(15, 15), 1);
+            //ld4a.Color = AciColor.Yellow;
+            //AlignedDimension ld5a = new AlignedDimension(new Vector2(15, 0), new Vector2(0, 0), 1);
+            //ld5a.Color = AciColor.Yellow;
+            //AlignedDimension ld6a = new AlignedDimension(new Vector2(0, 0), new Vector2(15, 0), -1);
+            //ld6a.Color = AciColor.Yellow;
 
-            AlignedDimension ld1a = new AlignedDimension(new Vector2(0, 0), new Vector2(0, 15), 1);
-            ld1a.Color = AciColor.Yellow;
-            AlignedDimension ld2a = new AlignedDimension(new Vector2(5, 15), new Vector2(5, 0), 1);
-            ld2a.Color = AciColor.Yellow;
-            AlignedDimension ld3a = new AlignedDimension(new Vector2(10, 0), new Vector2(10, 15), -1);
-            ld3a.Color = AciColor.Yellow;
-            AlignedDimension ld4a = new AlignedDimension(new Vector2(15, 0), new Vector2(15, 15), 1);
-            ld4a.Color = AciColor.Yellow;
-            AlignedDimension ld5a = new AlignedDimension(new Vector2(15, 0), new Vector2(0, 0), 1);
-            ld5a.Color = AciColor.Yellow;
-            AlignedDimension ld6a = new AlignedDimension(new Vector2(0, 0), new Vector2(15, 0), -1);
-            ld6a.Color = AciColor.Yellow;
+            //dxf2.AddEntity(ld1);
+            //dxf2.AddEntity(ld1b);
+            //dxf2.AddEntity(ld1c);
 
-            dxf2.AddEntity(ld1);
-            dxf2.AddEntity(ld1b);
-            dxf2.AddEntity(ld1c);
-
-            dxf2.AddEntity(ld2);
+            //dxf2.AddEntity(ld2);
             dxf2.AddEntity(ld3);
 
-            dxf2.AddEntity(ld4);
-            dxf2.AddEntity(ld4b);
-            dxf2.AddEntity(ld4c);
+            //dxf2.AddEntity(ld4);
+            //dxf2.AddEntity(ld4b);
+            //dxf2.AddEntity(ld4c);
 
-            dxf2.AddEntity(ld5);
-            dxf2.AddEntity(ld6);
+            //dxf2.AddEntity(ld5);
+            //dxf2.AddEntity(ld6);
 
-            dxf2.AddEntity(ld1a);
-            dxf2.AddEntity(ld2a);
-            dxf2.AddEntity(ld3a);
-            dxf2.AddEntity(ld4a);
-            dxf2.AddEntity(ld5a);
-            dxf2.AddEntity(ld6a);
+            //dxf2.AddEntity(ld1a);
+            //dxf2.AddEntity(ld2a);
+            //dxf2.AddEntity(ld3a);
+            //dxf2.AddEntity(ld4a);
+            //dxf2.AddEntity(ld5a);
+            //dxf2.AddEntity(ld6a);
 
             dxf2.Save("test1.dxf");
+
+            DxfDocument load = DxfDocument.Load("test1.dxf");
+            load.Dimensions[0].Update();
+            //load.Dimensions[1].Update();
+            load.AddEntity((EntityObject)ld3.Clone());
+            //load.AddEntity((EntityObject)ld6.Clone());
+            load.Save("test2.dxf");
         }
+
         private static void TestingTrueTypeFonts()
         {
             DxfDocument dxfText = new DxfDocument();
@@ -3174,7 +3495,7 @@ namespace TestDxfDocument
             DimensionStyle myStyle = new DimensionStyle("MyStyle");
             myStyle.DIMPOST = "<>mm";
             myStyle.DIMDEC = 2;
-            LinearDimension dim = new LinearDimension(line, 7, 0.0, myStyle);
+            LinearDimension dim = new LinearDimension(line, 7, 0.0, Vector3.UnitZ, myStyle);
 
             Block nestedBlock = new Block("NestedBlock");
             nestedBlock.Entities.Add(line);
@@ -3446,9 +3767,9 @@ namespace TestDxfDocument
             myStyle.DIMPOST = "<>mm";
             myStyle.DIMDEC = 2;
             double offset = 7;
-            LinearDimension dimX = new LinearDimension(line, offset, 0.0, myStyle);
+            LinearDimension dimX = new LinearDimension(line, offset, 0.0, Vector3.UnitZ, myStyle);
             dimX.Rotation += 30.0;
-            LinearDimension dimY = new LinearDimension(line, offset, 90.0, myStyle);
+            LinearDimension dimY = new LinearDimension(line, offset, 90.0, Vector3.UnitZ, myStyle);
             dimY.Rotation += 30.0;
 
             dxf.AddEntity(dimX);
@@ -4138,12 +4459,8 @@ namespace TestDxfDocument
             circle.Layer = layer2;
 
             double offset = -0.9;
-            Vector3 p1 = new Vector3(1, 2, 0);
-            Vector3 p2 = new Vector3(2, 6, 0);
-            Line line1 = new Line(p1, p2);
-            Vector3 l1;
-            Vector3 l2;
-            MathHelper.OffsetLine(line1.StartPoint, line1.EndPoint, line1.Normal, offset, out l1, out l2);
+            Vector2 p1 = new Vector2(1, 2);
+            Vector2 p2 = new Vector2(2, 6);
 
             DimensionStyle myStyle = new DimensionStyle("MyDimStyle");
             myStyle.DIMPOST = "<>mm";
@@ -4226,7 +4543,7 @@ namespace TestDxfDocument
         {
             DxfDocument dxf = new DxfDocument();
 
-            Vector3 origin = new Vector3(2, 1, 0);
+            Vector2 origin = new Vector2(2, 1);
             Vector2 refX = new Vector2(1, 0);
             Vector2 refY = new Vector2(0, 2);
             double length = 3;
@@ -4245,14 +4562,14 @@ namespace TestDxfDocument
             dxf.AddEntity(dimX2);
             dxf.AddEntity(dimY2);
 
-            Line lineX = new Line(origin, origin+5 * Vector3.UnitX);
-            Line lineY = new Line(origin, origin+5 * Vector3.UnitY);
+            Line lineX = new Line(origin, origin+5 * Vector2.UnitX);
+            Line lineY = new Line(origin, origin+5 * Vector2.UnitY);
 
             Vector2 point = Vector2.Polar(new Vector2(origin.X, origin.Y), 5, angle * MathHelper.DegToRad);
-            Line lineXRotate = new Line(origin, new Vector3(point.X, point.Y, 0));
+            Line lineXRotate = new Line(origin, new Vector2(point.X, point.Y));
 
             point = Vector2.Polar(new Vector2(origin.X, origin.Y), 5, angle * MathHelper.DegToRad + MathHelper.HalfPI);
-            Line lineYRotate = new Line(origin, new Vector3(point.X, point.Y, 0));
+            Line lineYRotate = new Line(origin, new Vector2(point.X, point.Y));
 
             dxf.AddEntity(lineX);
             dxf.AddEntity(lineY);
@@ -4369,9 +4686,9 @@ namespace TestDxfDocument
             myStyle.DIMPOST = "<>mm";
             myStyle.DIMDEC = 2;
             double offset = 7;
-            LinearDimension dimX = new LinearDimension(line, offset,0.0, myStyle);
+            LinearDimension dimX = new LinearDimension(line, offset,0.0, Vector3.UnitZ, myStyle);
             dimX.Rotation += 30.0;
-            LinearDimension dimY = new LinearDimension(line, offset, 90.0, myStyle);
+            LinearDimension dimY = new LinearDimension(line, offset, 90.0, Vector3.UnitZ, myStyle);
             dimY.Rotation += 30.0;
 
             XData xdata = new XData(new ApplicationRegistry("other application"));
@@ -4392,19 +4709,16 @@ namespace TestDxfDocument
         {
             DxfDocument dxf = new DxfDocument();
             double offset = -0.9;
-            Vector3 p1 = new Vector3(1, 2, 0);
-            Vector3 p2 = new Vector3(2, 6, 0);
+            Vector2 p1 = new Vector2(1, 2);
+            Vector2 p2 = new Vector2(2, 6);
             Line line1 = new Line(p1, p2);
-            Vector3 l1;
-            Vector3 l2;
-            MathHelper.OffsetLine(line1.StartPoint, line1.EndPoint, line1.Normal, offset, out l1, out l2);
 
             DimensionStyle myStyle = new DimensionStyle("MyStyle");
             myStyle.DIMPOST = "<>mm";
             AlignedDimension dim1 = new AlignedDimension(p1, p2, offset, myStyle);
 
-            Vector3 p3 = p1 + new Vector3(4, 0, 0);
-            Vector3 p4 = p2 + new Vector3(4, 0, 0);
+            Vector2 p3 = p1 + new Vector2(4, 0);
+            Vector2 p4 = p2 + new Vector2(4, 0);
             Line line2 = new Line(p3, p4);
             AlignedDimension dim2 = new AlignedDimension(p3, p4, -offset, myStyle);
 

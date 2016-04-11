@@ -1,7 +1,7 @@
-﻿#region netDxf, Copyright(C) 2015 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf, Copyright(C) 2016 Daniel Carvajal, Licensed under LGPL.
 // 
 //                         netDxf library
-//  Copyright (C) 2009-2015 Daniel Carvajal (haplokuon@gmail.com)
+//  Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
 //  
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -33,8 +33,8 @@ namespace netDxf.Entities
     {
         #region private fields
 
-        private Vector3 center;
-        private Vector3 refPoint;
+        private Vector2 center;
+        private Vector2 refPoint;
         private double offset;
 
         #endregion
@@ -45,7 +45,7 @@ namespace netDxf.Entities
         /// Initializes a new instance of the <c>DiametricDimension</c> class.
         /// </summary>
         public DiametricDimension()
-            : this(Vector3.Zero, Vector3.UnitX, 0.0, DimensionStyle.Default)
+            : this(Vector2.Zero, Vector2.UnitX, 0.0, DimensionStyle.Default)
         {
         }
 
@@ -72,11 +72,12 @@ namespace netDxf.Entities
         public DiametricDimension(Arc arc, double rotation, double offset, DimensionStyle style)
             : base(DimensionType.Diameter)
         {
-            double angle = rotation * MathHelper.DegToRad;
-            Vector3 point = MathHelper.Transform(new Vector3(arc.Radius * Math.Sin(angle), arc.Radius * Math.Cos(angle), 0.0), arc.Normal, CoordinateSystem.Object, CoordinateSystem.World);
-            this.center = arc.Center;
-            this.refPoint = arc.Center + point;
+            Vector3 ocsCenter = MathHelper.Transform(arc.Center, arc.Normal, CoordinateSystem.World, CoordinateSystem.Object);
+            this.center = new Vector2(ocsCenter.X, ocsCenter.Y);
+            this.elevation = ocsCenter.Z;
+            this.refPoint = Vector2.Polar(this.center, arc.Radius, rotation*MathHelper.DegToRad);
             this.offset = offset;
+            this.normal = arc.Normal;
             if (style == null)
                 throw new ArgumentNullException(nameof(style), "The Dimension style cannot be null.");
             this.style = style;
@@ -105,15 +106,14 @@ namespace netDxf.Entities
         public DiametricDimension(Circle circle, double rotation, double offset, DimensionStyle style)
             : base(DimensionType.Diameter)
         {
-            double angle = rotation*MathHelper.DegToRad;
-            Vector3 point = MathHelper.Transform(new Vector3(circle.Radius * Math.Cos(angle), circle.Radius * Math.Sin(angle), 0.0), circle.Normal, CoordinateSystem.Object, CoordinateSystem.World);
-            this.center = circle.Center;
-            this.refPoint = circle.Center + point;
-
+            Vector3 ocsCenter = MathHelper.Transform(circle.Center, circle.Normal, CoordinateSystem.World, CoordinateSystem.Object);
+            this.center = new Vector2(ocsCenter.X, ocsCenter.Y);
+            this.elevation = ocsCenter.Z;
+            this.refPoint = Vector2.Polar(this.center, circle.Radius, rotation * MathHelper.DegToRad);
             if (offset < 0.0)
                 throw new ArgumentOutOfRangeException(nameof(offset), "The offset value cannot be negative.");
             this.offset = offset;
-
+            this.normal = circle.Normal;
             if (style == null)
                 throw new ArgumentNullException(nameof(style), "The Dimension style cannot be null.");
             this.style = style;
@@ -127,7 +127,7 @@ namespace netDxf.Entities
         /// <param name="offset">Distance between the reference point and the dimension text</param>
         /// <remarks>The center point and the definition point define the distance to be measure.</remarks>
         public DiametricDimension(Vector2 centerPoint, Vector2 referencePoint, double offset)
-            : this(new Vector3(centerPoint.X, centerPoint.Y, 0.0), new Vector3(referencePoint.X, referencePoint.Y, 0.0), offset, DimensionStyle.Default)
+            : this(centerPoint, referencePoint, offset, DimensionStyle.Default)
         {
         }
 
@@ -140,31 +140,6 @@ namespace netDxf.Entities
         /// <param name="style">The <see cref="DimensionStyle">style</see> to use with the dimension.</param>
         /// <remarks>The center point and the definition point define the distance to be measure.</remarks>
         public DiametricDimension(Vector2 centerPoint, Vector2 referencePoint, double offset, DimensionStyle style)
-            : this(new Vector3(centerPoint.X, centerPoint.Y, 0.0), new Vector3(referencePoint.X, referencePoint.Y, 0.0), offset, style)
-        {
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <c>DiametricDimension</c> class.
-        /// </summary>
-        /// <param name="centerPoint">Center <see cref="Vector3">point</see> of the circumference.</param>
-        /// <param name="referencePoint"><see cref="Vector3">Point</see> on circle or arc.</param>
-        /// <param name="offset">Distance between the reference point and the dimension text</param>
-        /// <remarks>The center point and the definition point define the distance to be measure.</remarks>
-        public DiametricDimension(Vector3 centerPoint, Vector3 referencePoint, double offset)
-            : this(centerPoint, referencePoint, offset, DimensionStyle.Default)
-        {
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <c>DiametricDimension</c> class.
-        /// </summary>
-        /// <param name="centerPoint">Center <see cref="Vector3">point</see> of the circumference.</param>
-        /// <param name="referencePoint"><see cref="Vector3">Point</see> on circle or arc.</param>
-        /// <param name="offset">Distance between the reference point and the dimension text</param>
-        /// <param name="style">The <see cref="DimensionStyle">style</see> to use with the dimension.</param>
-        /// <remarks>The center point and the definition point define the distance to be measure.</remarks>
-        public DiametricDimension(Vector3 centerPoint, Vector3 referencePoint, double offset, DimensionStyle style)
             : base(DimensionType.Diameter)
         {
             this.center = centerPoint;
@@ -184,18 +159,18 @@ namespace netDxf.Entities
         #region public properties
 
         /// <summary>
-        /// Gets or sets the center <see cref="Vector3">point</see> of the circumference (in WCS).
+        /// Gets or sets the center <see cref="Vector2">point</see> of the circumference in OCS (object coordinate system).
         /// </summary>
-        public Vector3 CenterPoint
+        public Vector2 CenterPoint
         {
             get { return this.center; }
             set { this.center = value; }
         }
 
         /// <summary>
-        /// Gets or sets the <see cref="Vector3">point</see> on circumference or arc (in WCS).
+        /// Gets or sets the <see cref="Vector2">point</see> on circumference or arc in OCS (object coordinate system).
         /// </summary>
-        public Vector3 ReferencePoint
+        public Vector2 ReferencePoint
         {
             get { return this.refPoint; }
             set { this.refPoint = value; }
@@ -224,7 +199,23 @@ namespace netDxf.Entities
         /// </summary>
         public override double Measurement
         {
-            get { return 2 * Vector3.Distance(this.center, this.refPoint); }
+            get { return 2 * Vector2.Distance(this.center, this.refPoint); }
+        }
+
+        #endregion
+
+        #region public methods
+
+        /// <summary>
+        /// Calculates the reference point and dimension offset from a point along the dimension line.
+        /// </summary>
+        /// <param name="point">Point along the dimension line.</param>
+        public void SetDimensionLinePosition(Vector2 point)
+        {
+            double radius = Vector2.Distance(this.center, this.refPoint);
+            double rotation = Vector2.Angle(this.center, point);
+            this.refPoint = Vector2.Polar(this.center, radius, rotation);
+            this.offset = Vector2.Distance(this.center, point);
         }
 
         #endregion
@@ -265,14 +256,14 @@ namespace netDxf.Entities
                 //DiametricDimension properties
                 CenterPoint = this.center,
                 ReferencePoint = this.refPoint,
-                Offset = this.offset
+                Offset = this.offset,
+                Elevation = this.elevation
             };
 
             foreach (XData data in this.xData.Values)
                 entity.XData.Add((XData)data.Clone());
 
             return entity;
-
         }
 
         #endregion

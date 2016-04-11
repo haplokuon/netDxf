@@ -1,7 +1,7 @@
-﻿#region netDxf, Copyright(C) 2015 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf, Copyright(C) 2016 Daniel Carvajal, Licensed under LGPL.
 // 
 //                         netDxf library
-//  Copyright (C) 2009-2015 Daniel Carvajal (haplokuon@gmail.com)
+//  Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
 //  
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -77,6 +77,7 @@ namespace netDxf.Entities
         protected Block block;
         protected string userText;
         protected double lineSpacing;
+        protected double elevation;
 
         #endregion
 
@@ -97,6 +98,7 @@ namespace netDxf.Entities
             this.block = null;
             this.style = DimensionStyle.Default;
             this.userText = null;
+            this.elevation = 0.0;
         }
 
         #endregion
@@ -214,6 +216,15 @@ namespace netDxf.Entities
         {
             get { return this.userText; }
             set { this.userText = value; }
+        }
+
+        /// <summary>
+        /// Gets or sets the dimension elevation, its position along its normal.
+        /// </summary>
+        public double Elevation
+        {
+            get { return this.elevation; }
+            set { this.elevation = value; }
         }
 
         #endregion

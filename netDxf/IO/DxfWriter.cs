@@ -1,7 +1,8 @@
-﻿#region netDxf, Copyright(C) 2015 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf, Copyright(C) 2016 Daniel Carvajal, Licensed under LGPL.
+
 // 
 //                         netDxf library
-//  Copyright (C) 2009-2015 Daniel Carvajal (haplokuon@gmail.com)
+//  Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
 //  
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -17,6 +18,7 @@
 //  COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
 //  IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 //  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
 #endregion
 
 using System;
@@ -1213,8 +1215,7 @@ namespace netDxf.IO
 
             this.chunk.Write(2, this.EncodeNonAsciiCharacters(style.Name));
 
-            if (!style.Registered)
-                this.chunk.Write(3, this.EncodeNonAsciiCharacters(style.FontName));
+            this.chunk.Write(3, this.EncodeNonAsciiCharacters(style.FontFile));
 
             this.chunk.Write(70, style.IsVertical ? (short) 4 : (short) 0);
 
@@ -1239,12 +1240,6 @@ namespace netDxf.IO
             this.chunk.Write(41, style.WidthFactor);
             this.chunk.Write(42, style.Height);
             this.chunk.Write(50, style.ObliqueAngle);
-
-            if (style.Registered)
-            {
-                this.chunk.Write(XDataCode.AppReg, "ACAD");
-                this.chunk.Write(XDataCode.String, this.EncodeNonAsciiCharacters(style.FontFamilyName));
-            }
         }
 
         /// <summary>
@@ -2848,13 +2843,21 @@ namespace netDxf.IO
         {
             this.chunk.Write(100, SubclassMarker.AlignedDimension);
 
-            this.chunk.Write(13, dim.FirstReferencePoint.X);
-            this.chunk.Write(23, dim.FirstReferencePoint.Y);
-            this.chunk.Write(33, dim.FirstReferencePoint.Z);
+            IList<Vector3> wcsPoints = MathHelper.Transform(
+                new[]
+                {
+                    new Vector3(dim.FirstReferencePoint.X, dim.FirstReferencePoint.Y, dim.Elevation),
+                    new Vector3(dim.SecondReferencePoint.X, dim.SecondReferencePoint.Y, dim.Elevation)
+                },
+                dim.Normal, CoordinateSystem.Object, CoordinateSystem.World);
 
-            this.chunk.Write(14, dim.SecondReferencePoint.X);
-            this.chunk.Write(24, dim.SecondReferencePoint.Y);
-            this.chunk.Write(34, dim.SecondReferencePoint.Z);
+            this.chunk.Write(13, wcsPoints[0].X);
+            this.chunk.Write(23, wcsPoints[0].Y);
+            this.chunk.Write(33, wcsPoints[0].Z);
+
+            this.chunk.Write(14, wcsPoints[1].X);
+            this.chunk.Write(24, wcsPoints[1].Y);
+            this.chunk.Write(34, wcsPoints[1].Z);
 
             this.WriteXData(dim.XData);
         }
@@ -2863,13 +2866,21 @@ namespace netDxf.IO
         {
             this.chunk.Write(100, SubclassMarker.AlignedDimension);
 
-            this.chunk.Write(13, dim.FirstReferencePoint.X);
-            this.chunk.Write(23, dim.FirstReferencePoint.Y);
-            this.chunk.Write(33, dim.FirstReferencePoint.Z);
+            IList<Vector3> wcsPoints = MathHelper.Transform(
+                new[]
+                {
+                    new Vector3(dim.FirstReferencePoint.X, dim.FirstReferencePoint.Y, dim.Elevation),
+                    new Vector3(dim.SecondReferencePoint.X, dim.SecondReferencePoint.Y, dim.Elevation)
+                },
+                dim.Normal, CoordinateSystem.Object, CoordinateSystem.World);
 
-            this.chunk.Write(14, dim.SecondReferencePoint.X);
-            this.chunk.Write(24, dim.SecondReferencePoint.Y);
-            this.chunk.Write(34, dim.SecondReferencePoint.Z);
+            this.chunk.Write(13, wcsPoints[0].X);
+            this.chunk.Write(23, wcsPoints[0].Y);
+            this.chunk.Write(33, wcsPoints[0].Z);
+
+            this.chunk.Write(14, wcsPoints[1].X);
+            this.chunk.Write(24, wcsPoints[1].Y);
+            this.chunk.Write(34, wcsPoints[1].Z);
 
             this.chunk.Write(50, dim.Rotation);
 
@@ -2885,9 +2896,10 @@ namespace netDxf.IO
         {
             this.chunk.Write(100, SubclassMarker.RadialDimension);
 
-            this.chunk.Write(15, dim.ReferencePoint.X);
-            this.chunk.Write(25, dim.ReferencePoint.Y);
-            this.chunk.Write(35, dim.ReferencePoint.Z);
+            Vector3 wcsPoint = MathHelper.Transform(new Vector3(dim.ReferencePoint.X, dim.ReferencePoint.Y, dim.Elevation), dim.Normal, CoordinateSystem.Object, CoordinateSystem.World);
+            this.chunk.Write(15, wcsPoint.X);
+            this.chunk.Write(25, wcsPoint.Y);
+            this.chunk.Write(35, wcsPoint.Z);
 
             this.chunk.Write(40, 0.0);
 
@@ -2898,9 +2910,10 @@ namespace netDxf.IO
         {
             this.chunk.Write(100, SubclassMarker.DiametricDimension);
 
-            this.chunk.Write(15, dim.ReferencePoint.X);
-            this.chunk.Write(25, dim.ReferencePoint.Y);
-            this.chunk.Write(35, dim.ReferencePoint.Z);
+            Vector3 wcsPoint = MathHelper.Transform(new Vector3(dim.ReferencePoint.X, dim.ReferencePoint.Y, dim.Elevation), dim.Normal, CoordinateSystem.Object, CoordinateSystem.World);
+            this.chunk.Write(15, wcsPoint.X);
+            this.chunk.Write(25, wcsPoint.Y);
+            this.chunk.Write(35, wcsPoint.Z);
 
             this.chunk.Write(40, 0.0);
 
@@ -2911,17 +2924,26 @@ namespace netDxf.IO
         {
             this.chunk.Write(100, SubclassMarker.Angular3PointDimension);
 
-            this.chunk.Write(13, dim.FirstPoint.X);
-            this.chunk.Write(23, dim.FirstPoint.Y);
-            this.chunk.Write(33, dim.FirstPoint.Z);
+            IList<Vector3> wcsPoints = MathHelper.Transform(
+                new[]
+                {
+                    new Vector3(dim.StartPoint.X, dim.StartPoint.Y, dim.Elevation),
+                    new Vector3(dim.EndPoint.X, dim.EndPoint.Y, dim.Elevation),
+                    new Vector3(dim.CenterPoint.X, dim.CenterPoint.Y, dim.Elevation)
+                },
+                dim.Normal, CoordinateSystem.Object, CoordinateSystem.World);
+            
+            this.chunk.Write(13, wcsPoints[0].X);
+            this.chunk.Write(23, wcsPoints[0].Y);
+            this.chunk.Write(33, wcsPoints[0].Z);
 
-            this.chunk.Write(14, dim.SecondPoint.X);
-            this.chunk.Write(24, dim.SecondPoint.Y);
-            this.chunk.Write(34, dim.SecondPoint.Z);
+            this.chunk.Write(14, wcsPoints[1].X);
+            this.chunk.Write(24, wcsPoints[1].Y);
+            this.chunk.Write(34, wcsPoints[1].Z);
 
-            this.chunk.Write(15, dim.CenterPoint.X);
-            this.chunk.Write(25, dim.CenterPoint.Y);
-            this.chunk.Write(35, dim.CenterPoint.Z);
+            this.chunk.Write(15, wcsPoints[2].X);
+            this.chunk.Write(25, wcsPoints[2].Y);
+            this.chunk.Write(35, wcsPoints[2].Z);
 
             this.chunk.Write(40, 0.0);
 
@@ -2932,17 +2954,26 @@ namespace netDxf.IO
         {
             this.chunk.Write(100, SubclassMarker.Angular2LineDimension);
 
-            this.chunk.Write(13, dim.StartFirstLine.X);
-            this.chunk.Write(23, dim.StartFirstLine.Y);
-            this.chunk.Write(33, dim.StartFirstLine.Z);
+            IList<Vector3> wcsPoints = MathHelper.Transform(
+                new[]
+                {
+                    new Vector3(dim.StartFirstLine.X, dim.StartFirstLine.Y, dim.Elevation),
+                    new Vector3(dim.EndFirstLine.X, dim.EndFirstLine.Y, dim.Elevation),
+                    new Vector3(dim.StartSecondLine.X, dim.StartSecondLine.Y, dim.Elevation)
+                },
+                dim.Normal, CoordinateSystem.Object, CoordinateSystem.World);
 
-            this.chunk.Write(14, dim.EndFirstLine.X);
-            this.chunk.Write(24, dim.EndFirstLine.Y);
-            this.chunk.Write(34, dim.EndFirstLine.Z);
+            this.chunk.Write(13, wcsPoints[0].X);
+            this.chunk.Write(23, wcsPoints[0].Y);
+            this.chunk.Write(33, wcsPoints[0].Z);
 
-            this.chunk.Write(15, dim.StartSecondLine.X);
-            this.chunk.Write(25, dim.StartSecondLine.Y);
-            this.chunk.Write(35, dim.StartSecondLine.Z);
+            this.chunk.Write(14, wcsPoints[1].X);
+            this.chunk.Write(24, wcsPoints[1].Y);
+            this.chunk.Write(34, wcsPoints[1].Z);
+
+            this.chunk.Write(15, wcsPoints[2].X);
+            this.chunk.Write(25, wcsPoints[2].Y);
+            this.chunk.Write(35, wcsPoints[2].Z);
 
             this.chunk.Write(16, dim.ArcDefinitionPoint.X);
             this.chunk.Write(26, dim.ArcDefinitionPoint.Y);

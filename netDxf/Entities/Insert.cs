@@ -1,7 +1,7 @@
-﻿#region netDxf, Copyright(C) 2015 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf, Copyright(C) 2016 Daniel Carvajal, Licensed under LGPL.
 // 
 //                         netDxf library
-//  Copyright (C) 2009-2015 Daniel Carvajal (haplokuon@gmail.com)
+//  Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
 //  
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -239,8 +239,7 @@ namespace netDxf.Entities
         /// Recalculate the attributes position, normal, rotation, text height, width factor, and oblique angle from the values applied to the insertion.
         /// </summary>
         /// <remarks>
-        /// This method is called automatically when the Insert is added to a document.
-        /// Subsequent changes to the insert, the block, or the document insertion units will require this method to be called manually.<br />
+        /// Changes to the insert, the block, or the document insertion units will require this method to be called manually.<br />
         /// The attributes position, normal, rotation, text height, width factor, and oblique angle values includes the transformations applied to the insertion,
         /// if required this method will calculate the proper values according to the ones defined by the attribute definition.<br />
         /// All the attribute values can be changed manually independently to its definition,

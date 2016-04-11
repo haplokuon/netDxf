@@ -1,27 +1,25 @@
-﻿#region netDxf, Copyright(C) 2015 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf library, Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
 // 
-//                         netDxf library
-//  Copyright (C) 2009-2015 Daniel Carvajal (haplokuon@gmail.com)
-//  
-//  This library is free software; you can redistribute it and/or
-//  modify it under the terms of the GNU Lesser General Public
-//  License as published by the Free Software Foundation; either
-//  version 2.1 of the License, or (at your option) any later version.
-//  
-//  The above copyright notice and this permission notice shall be included in all
-//  copies or substantial portions of the Software.
-//  
-//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-//  FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-//  COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-//  IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-//  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+//                        netDxf library
+// Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+// 
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2.1 of the License, or (at your option) any later version.
+// 
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+// FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+// COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+// IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+// CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #endregion
 
 using System;
-using System.Drawing;
-using System.Drawing.Text;
 using System.IO;
 using Microsoft.Win32;
 using netDxf.Collections;
@@ -37,8 +35,6 @@ namespace netDxf.Tables
         #region private fields
 
         private readonly string font;
-        private readonly string fontFamilyName;
-        private readonly bool registered;
         private double height;
         private bool isBackward;
         private bool isUpsideDown;
@@ -96,31 +92,20 @@ namespace netDxf.Tables
             : base(name, DxfObjectCode.TextStyle, checkName)
         {
             if (string.IsNullOrEmpty(name))
-                throw new ArgumentNullException(nameof(name), "The text style name should be at least one character long.");
+                throw new ArgumentNullException(nameof(name),
+                    "The text style name should be at least one character long.");
 
             if (string.IsNullOrEmpty(font))
                 throw new ArgumentNullException(nameof(font));
 
             this.reserved = name.Equals(DefaultName, StringComparison.OrdinalIgnoreCase);
             this.font = font;
-            this.fontFamilyName = string.Empty;
             this.widthFactor = 1.0;
             this.obliqueAngle = 0.0;
             this.height = 0.0;
             this.isVertical = false;
             this.isBackward = false;
             this.isUpsideDown = false;
-            
-            if (Path.GetExtension(font).Equals(".ttf", StringComparison.OrdinalIgnoreCase))
-            {
-                PrivateFontCollection privateFontCollection = new PrivateFontCollection();
-                privateFontCollection.AddFontFile(font);
-                FontFamily[] fontFamilies = privateFontCollection.Families;
-                string familyName = fontFamilies[0].Name;
-                string registeredFileName = FontFileFromFamilyName(familyName);
-                this.registered = !string.IsNullOrEmpty(registeredFileName);
-                this.fontFamilyName = familyName;
-            }
         }
 
         #endregion
@@ -130,7 +115,7 @@ namespace netDxf.Tables
         /// <summary>
         /// Gets the text style font file name.
         /// </summary>
-        public string FontName
+        public string FontFile
         {
             get { return this.font; }
         }
@@ -153,7 +138,8 @@ namespace netDxf.Tables
             set
             {
                 if (value < 0)
-                    throw new ArgumentOutOfRangeException(nameof(value), value, "The TextStyle height must be equals or greater than zero.");
+                    throw new ArgumentOutOfRangeException(nameof(value), value,
+                        "The TextStyle height must be equals or greater than zero.");
                 this.height = value;
             }
         }
@@ -168,7 +154,8 @@ namespace netDxf.Tables
             set
             {
                 if (value < 0.01 || value > 100.0)
-                    throw new ArgumentOutOfRangeException(nameof(value), value, "The TextStyle width factor valid values range from 0.01 to 100.");
+                    throw new ArgumentOutOfRangeException(nameof(value), value,
+                        "The TextStyle width factor valid values range from 0.01 to 100.");
                 this.widthFactor = value;
             }
         }
@@ -183,7 +170,8 @@ namespace netDxf.Tables
             set
             {
                 if (value < -85.0 || value > 85.0)
-                    throw new ArgumentOutOfRangeException(nameof(value), value, "The TextStyle oblique angle valid values range from -85 to 85.");
+                    throw new ArgumentOutOfRangeException(nameof(value), value,
+                        "The TextStyle oblique angle valid values range from -85 to 85.");
                 this.obliqueAngle = value;
             }
         }
@@ -220,29 +208,21 @@ namespace netDxf.Tables
         /// </summary>
         public new TextStyles Owner
         {
-            get { return (TextStyles)this.owner; }
+            get { return (TextStyles) this.owner; }
             internal set { this.owner = value; }
         }
 
         #endregion
 
-        #region internal properties
+        #region public methods
 
-        internal string FontFamilyName
-        {
-            get { return this.fontFamilyName; }
-        }
-
-        internal bool Registered
-        {
-            get { return this.registered; }
-        }
-
-        #endregion
-
-        #region internal methods
-
-        internal static string FontFileFromFamilyName(string familyName)
+        /// <summary>
+        /// Obtains the file name of a font from its family name.
+        /// </summary>
+        /// <param name="familyName">Font family name.</param>
+        /// <returns>The font file name registered under the supplied family name.</returns>
+        /// <remarks>This method looks into the registry to locate the font file name and it is only guarantee to work under Windows.</remarks>
+        public static string FontFileFromFamilyName(string familyName)
         {
             RegistryKey fonts;
 
@@ -275,7 +255,6 @@ namespace netDxf.Tables
                 ObliqueAngle = this.obliqueAngle,
                 WidthFactor = this.widthFactor
             };
-
         }
 
         /// <summary>

@@ -1,7 +1,8 @@
-﻿#region netDxf, Copyright(C) 2015 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf, Copyright(C) 2016 Daniel Carvajal, Licensed under LGPL.
+
 // 
 //                         netDxf library
-//  Copyright (C) 2009-2015 Daniel Carvajal (haplokuon@gmail.com)
+//  Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
 //  
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -17,6 +18,7 @@
 //  COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
 //  IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 //  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
 #endregion
 
 using System;
@@ -1730,6 +1732,9 @@ namespace netDxf.IO
                             lineTypeName = LineType.ByLayerName;
                         else if (string.Equals(lineTypeName, LineType.ByBlockName, StringComparison.OrdinalIgnoreCase))
                             lineTypeName = LineType.ByBlockName;
+
+                        // layer with line types with invalid names or that are defined in external drawings will be given the default continuous line type
+                        if (!TableObject.IsValidName(lineTypeName)) lineTypeName = LineType.DefaultName;
                         lineType = this.GetLineType(lineTypeName);
 
                         this.chunk.Next();
@@ -2021,7 +2026,7 @@ namespace netDxf.IO
             double ratio = 1.0;
             bool showGrid = true;
             bool snapMode = false;
-
+            
             this.chunk.Next();
 
             while (this.chunk.Code != 0)
@@ -2092,6 +2097,8 @@ namespace netDxf.IO
             }
 
             if (string.IsNullOrEmpty(name) || !TableObject.IsValidName(name)) return null;
+                
+            if(!name.Equals(VPort.DefaultName, StringComparison.OrdinalIgnoreCase))  return null;
 
             return new VPort(name, false)
             {
@@ -2104,7 +2111,7 @@ namespace netDxf.IO
                 ViewHeight = height,
                 ViewAspectRatio = ratio,
                 ShowGrid = showGrid,
-                SnapMode = snapMode
+                SnapMode = snapMode,
             };
         }
 
@@ -3517,7 +3524,7 @@ namespace netDxf.IO
             Vector3 ucsOrigin = Vector3.Zero;
             Vector3 ucsXAxis = Vector3.UnitX;
             Vector3 ucsYAxis = Vector3.UnitY;
-
+            
             List<XData> xData = new List<XData>();
 
             this.chunk.Next();
@@ -4178,22 +4185,22 @@ namespace netDxf.IO
             switch (type)
             {
                 case DimensionTypeFlags.Aligned:
-                    dim = this.ReadAlignedDimension(defPoint);
+                    dim = this.ReadAlignedDimension(defPoint, normal);
                     break;
                 case DimensionTypeFlags.Linear:
-                    dim = this.ReadLinearDimension(defPoint);
+                    dim = this.ReadLinearDimension(defPoint, normal);
                     break;
                 case DimensionTypeFlags.Radius:
-                    dim = this.ReadRadialDimension(defPoint, midtxtPoint);
+                    dim = this.ReadRadialDimension(defPoint, midtxtPoint, normal);
                     break;
                 case DimensionTypeFlags.Diameter:
-                    dim = this.ReadDiametricDimension(defPoint, midtxtPoint);
+                    dim = this.ReadDiametricDimension(defPoint, midtxtPoint, normal);
                     break;
                 case DimensionTypeFlags.Angular3Point:
                     dim = this.ReadAngular3PointDimension(defPoint, normal);
                     break;
                 case DimensionTypeFlags.Angular:
-                    dim = this.ReadAngular2LineDimension(defPoint);
+                    dim = this.ReadAngular2LineDimension(defPoint, normal);
                     break;
                 case DimensionTypeFlags.Ordinate:
                     dim = this.ReadOrdinateDimension(defPoint, axis, normal, dimRot);
@@ -4221,7 +4228,7 @@ namespace netDxf.IO
             return dim;
         }
 
-        private AlignedDimension ReadAlignedDimension(Vector3 defPoint)
+        private AlignedDimension ReadAlignedDimension(Vector3 defPoint, Vector3 normal)
         {
             Vector3 firstRef = Vector3.Zero;
             Vector3 secondRef = Vector3.Zero;
@@ -4268,23 +4275,32 @@ namespace netDxf.IO
                         break;
                 }
             }
-            double offset = Vector3.Distance(secondRef, defPoint);
-            
+
+            IList<Vector3> ocsPoints = MathHelper.Transform(
+                new List<Vector3>
+                {
+                    firstRef, secondRef, defPoint
+                },
+                normal, CoordinateSystem.World, CoordinateSystem.Object);
+
             AlignedDimension entity = new AlignedDimension
             {
-                FirstReferencePoint = firstRef,
-                SecondReferencePoint = secondRef,
-                Offset = offset
+                FirstReferencePoint = new Vector2(ocsPoints[0].X, ocsPoints[0].Y),
+                SecondReferencePoint = new Vector2(ocsPoints[1].X, ocsPoints[1].Y),
+                Elevation = ocsPoints[2].Z,
+                Normal = normal
             };
+
+            entity.SetDimensionLinePosition(new Vector2(ocsPoints[2].X, ocsPoints[2].Y));
 
             entity.XData.AddRange(xData);
 
             return entity;
         }
 
-        private LinearDimension ReadLinearDimension(Vector3 defPoint)
+        private LinearDimension ReadLinearDimension(Vector3 defPoint, Vector3 normal)
         {
-            Vector3 firtRef = Vector3.Zero;
+            Vector3 firstRef = Vector3.Zero;
             Vector3 secondRef = Vector3.Zero;
             double rot = 0.0;
             List<XData> xData = new List<XData>();
@@ -4294,15 +4310,15 @@ namespace netDxf.IO
                 switch (this.chunk.Code)
                 {
                     case 13:
-                        firtRef.X = this.chunk.ReadDouble();
+                        firstRef.X = this.chunk.ReadDouble();
                         this.chunk.Next();
                         break;
                     case 23:
-                        firtRef.Y = this.chunk.ReadDouble();
+                        firstRef.Y = this.chunk.ReadDouble();
                         this.chunk.Next();
                         break;
                     case 33:
-                        firtRef.Z = this.chunk.ReadDouble();
+                        firstRef.Z = this.chunk.ReadDouble();
                         this.chunk.Next();
                         break;
                     case 14:
@@ -4339,26 +4355,31 @@ namespace netDxf.IO
                 }
             }
 
-            Vector3 midPoint = Vector3.MidPoint(firtRef, secondRef);
-            Vector3 origin = defPoint;
-            Vector3 dir = new Vector3(Math.Cos(rot*MathHelper.DegToRad), Math.Sin(rot*MathHelper.DegToRad), 0.0);
-            dir.Normalize();
-            double offset = MathHelper.PointLineDistance(midPoint, origin, dir);
+            IList<Vector3> ocsPoints = MathHelper.Transform(
+                new List<Vector3>
+                {
+                    firstRef, secondRef, defPoint
+                },
+                normal, CoordinateSystem.World, CoordinateSystem.Object);
 
             LinearDimension entity = new LinearDimension
             {
-                FirstReferencePoint = firtRef,
-                SecondReferencePoint = secondRef,
-                Offset = offset,
-                Rotation = rot
+                FirstReferencePoint = new Vector2(ocsPoints[0].X, ocsPoints[0].Y),
+                SecondReferencePoint = new Vector2(ocsPoints[1].X, ocsPoints[1].Y),
+                Rotation = rot,
+                Elevation = ocsPoints[2].Z,
+                Normal = normal
             };
+
+            Vector2 point = new Vector2(ocsPoints[2].X, ocsPoints[2].Y);
+            entity.SetDimensionLinePosition(point);
 
             entity.XData.AddRange(xData);
 
             return entity;
         }
 
-        private RadialDimension ReadRadialDimension(Vector3 defPoint, Vector3 midtxtPoint)
+        private RadialDimension ReadRadialDimension(Vector3 defPoint, Vector3 midtxtPoint, Vector3 normal)
         {
             Vector3 circunferenceRef = Vector3.Zero;
             List<XData> xData = new List<XData>();
@@ -4396,11 +4417,20 @@ namespace netDxf.IO
                 }
             }
 
+            IList<Vector3> ocsPoints = MathHelper.Transform(
+            new List<Vector3>
+            {
+                circunferenceRef, defPoint
+            },
+            normal, CoordinateSystem.World, CoordinateSystem.Object);
+
             double offset = Vector3.Distance(defPoint, midtxtPoint);
             RadialDimension entity = new RadialDimension
             {
-                CenterPoint = Vector3.MidPoint(defPoint, circunferenceRef),
-                ReferencePoint = circunferenceRef,
+                CenterPoint = new Vector2(ocsPoints[1].X, ocsPoints[1].Y),
+                ReferencePoint = new Vector2(ocsPoints[0].X, ocsPoints[0].Y),
+                Elevation = ocsPoints[1].Z,
+                Normal = normal,
                 Offset = offset
             };
 
@@ -4409,7 +4439,7 @@ namespace netDxf.IO
             return entity;
         }
 
-        private DiametricDimension ReadDiametricDimension(Vector3 defPoint, Vector3 midtxtPoint)
+        private DiametricDimension ReadDiametricDimension(Vector3 defPoint, Vector3 midtxtPoint, Vector3 normal)
         {
             Vector3 circunferenceRef = Vector3.Zero;
             List<XData> xData = new List<XData>();
@@ -4447,12 +4477,21 @@ namespace netDxf.IO
                 }
             }
 
-            Vector3 center = Vector3.MidPoint(defPoint, circunferenceRef);
+            IList<Vector3> ocsPoints = MathHelper.Transform(
+            new List<Vector3>
+            {
+                circunferenceRef, defPoint
+            },
+            normal, CoordinateSystem.World, CoordinateSystem.Object);
+
+            Vector3 center = Vector3.MidPoint(ocsPoints[0], ocsPoints[1]);
             double offset = Vector3.Distance(center, midtxtPoint);
             DiametricDimension entity = new DiametricDimension
             {
-                CenterPoint = center,
-                ReferencePoint = circunferenceRef,
+                CenterPoint = new Vector2(center.X, center.Y),
+                ReferencePoint = new Vector2(ocsPoints[0].X, ocsPoints[0].Y),
+                Elevation = ocsPoints[1].Z,
+                Normal = normal,
                 Offset = offset
             };
 
@@ -4523,44 +4562,27 @@ namespace netDxf.IO
                 }
             }
 
-            IList<Vector3> ocsPoints = MathHelper.Transform(new[] {center, firstRef, secondRef, defPoint}, normal, CoordinateSystem.World, CoordinateSystem.Object);
-            Vector3 refPoint;
-
-            refPoint = ocsPoints[0];
-            Vector2 refCenter = new Vector2(refPoint.X, refPoint.Y);
-
-            refPoint = ocsPoints[1];
-            Vector2 ref1 = new Vector2(refPoint.X, refPoint.Y);
-
-            refPoint = ocsPoints[2];
-            Vector2 ref2 = new Vector2(refPoint.X, refPoint.Y);
-
-            refPoint = ocsPoints[3];
-            Vector2 midTxt = new Vector2(refPoint.X, refPoint.Y);
-
-            double aperture = (Vector2.Angle(refCenter, ref2) - Vector2.Angle(refCenter, ref1)) * MathHelper.RadToDeg;
-            aperture = MathHelper.NormalizeAngle(aperture);
-            double angle = (Vector2.Angle(refCenter, ref2) - Vector2.Angle(refCenter, midTxt)) * MathHelper.RadToDeg;
-            angle = MathHelper.NormalizeAngle(angle);
-
-            double offset = Vector3.Distance(center, defPoint);
-            if (angle > aperture)
-                offset *= -1;
+            IList<Vector3> ocsPoints = MathHelper.Transform(
+                new[]
+                {
+                    center, firstRef, secondRef, defPoint
+                },
+                normal, CoordinateSystem.World, CoordinateSystem.Object);
 
             Angular3PointDimension entity = new Angular3PointDimension
             {
-                CenterPoint = center,
-                FirstPoint = firstRef,
-                SecondPoint = secondRef,
-                Offset = offset
+                CenterPoint = new Vector2(ocsPoints[0].X, ocsPoints[0].Y),
+                StartPoint = new Vector2(ocsPoints[1].X, ocsPoints[1].Y),
+                EndPoint = new Vector2(ocsPoints[2].X, ocsPoints[2].Y),
             };
 
+            entity.SetDimensionLinePosition(new Vector2(ocsPoints[3].X, ocsPoints[3].Y));
             entity.XData.AddRange(xData);
 
             return entity;
         }
 
-        private Angular2LineDimension ReadAngular2LineDimension(Vector3 defPoint)
+        private Angular2LineDimension ReadAngular2LineDimension(Vector3 defPoint, Vector3 normal)
         {
             Vector3 startFirstLine = Vector3.Zero;
             Vector3 endFirstLine = Vector3.Zero;
@@ -4635,16 +4657,23 @@ namespace netDxf.IO
                 }
             }
 
+            IList<Vector3> ocsPoints = MathHelper.Transform(
+                new[]
+                {
+                    startFirstLine, endFirstLine, startSecondLine, defPoint
+                },
+                normal, CoordinateSystem.World, CoordinateSystem.Object);
+
             Angular2LineDimension entity = new Angular2LineDimension
             {
-                StartFirstLine = startFirstLine,
-                EndFirstLine = endFirstLine,
-                StartSecondLine = startSecondLine,
-                EndSecondLine = defPoint,
-                Offset = Vector3.Distance(startSecondLine, defPoint),
-                ArcDefinitionPoint = arcDefinitionPoint
+                StartFirstLine = new Vector2(ocsPoints[0].X, ocsPoints[0].Y),
+                EndFirstLine = new Vector2(ocsPoints[1].X, ocsPoints[1].Y),
+                StartSecondLine = new Vector2(ocsPoints[2].X, ocsPoints[2].Y),
+                EndSecondLine = new Vector2(ocsPoints[3].X, ocsPoints[3].Y),
+                Elevation = arcDefinitionPoint.Z
             };
 
+            entity.SetDimensionLinePosition(new Vector2(arcDefinitionPoint.X, arcDefinitionPoint.Y));
             entity.XData.AddRange(xData);
 
             return entity;
@@ -4699,9 +4728,11 @@ namespace netDxf.IO
                 }
             }
             Vector3 localPoint = MathHelper.Transform(defPoint, normal, CoordinateSystem.World, CoordinateSystem.Object);
+
             Vector2 refCenter = new Vector2(localPoint.X, localPoint.Y);
 
             localPoint = MathHelper.Transform(firstPoint, normal, CoordinateSystem.World, CoordinateSystem.Object);
+
             Vector2 firstRef = MathHelper.Transform(new Vector2(localPoint.X, localPoint.Y) - refCenter, rotation*MathHelper.DegToRad, CoordinateSystem.World, CoordinateSystem.Object);
 
             localPoint = MathHelper.Transform(secondPoint, normal, CoordinateSystem.World, CoordinateSystem.Object);
@@ -4711,7 +4742,7 @@ namespace netDxf.IO
 
             OrdinateDimension entity = new OrdinateDimension
             {
-                Origin = defPoint,
+                Origin = refCenter,
                 ReferencePoint = firstRef,
                 Length = length,
                 Rotation = rotation,
@@ -7583,6 +7614,9 @@ namespace netDxf.IO
                     lineTypeName = LineType.ByLayerName;
                 if (string.Equals(lineTypeName, LineType.ByBlockName, StringComparison.OrdinalIgnoreCase))
                     lineTypeName = LineType.ByBlockName;
+
+                // layer with line types with invalid names or that are defined in external drawings will be given the default continuous line type
+                if (!TableObject.IsValidName(lineTypeName)) lineTypeName = LineType.DefaultName;
                 LineType lineType = this.GetLineType(lineTypeName);
                 this.chunk.Next();
 

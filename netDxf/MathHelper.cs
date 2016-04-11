@@ -1,7 +1,7 @@
-﻿#region netDxf, Copyright(C) 2015 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf, Copyright(C) 2016 Daniel Carvajal, Licensed under LGPL.
 // 
 //                         netDxf library
-//  Copyright (C) 2009-2015 Daniel Carvajal (haplokuon@gmail.com)
+//  Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
 //  
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -340,24 +340,6 @@ namespace netDxf
             return 0;
         }
 
-        public static void OffsetLine(Vector3 start, Vector3 end, Vector3 normal, double offset, out Vector3 newStart, out Vector3 newEnd)
-        {
-            Vector3 dir = end - start;
-            dir.Normalize();
-            Vector3 perp = Vector3.CrossProduct(normal, dir);
-            newStart = start + perp * offset;
-            newEnd = end + perp * offset;
-        }
-
-        public static void OffsetLine(Vector2 start, Vector2 end, double offset, out Vector2 newStart, out Vector2 newEnd)
-        {
-            Vector2 dir = end - start;
-            dir.Normalize();
-            Vector2 perp = Vector2.Perpendicular(dir);
-            newStart = start + perp * offset;
-            newEnd = end + perp * offset;
-        }
-
         /// <summary>
         /// Calculates the intersection point of two lines.
         /// </summary>
@@ -365,37 +347,20 @@ namespace netDxf
         /// <param name="dir0">First line direction.</param>
         /// <param name="point1">Second line origin point.</param>
         /// <param name="dir1">Second line direction.</param>
-        /// <param name="intersection">Intersection point of the two lines.</param>
         /// <param name="threshold">Tolerance.</param>
-        /// <returns>0 if there is an intersection point, 1 if the lines are parallel or 2 if the lines are the same.</returns>
-        public static int FindIntersection(Vector2 point0, Vector2 dir0, Vector2 point1, Vector2 dir1, out Vector2 intersection, double threshold = Epsilon)
+        /// <returns>The intersection point between the two line.</returns>
+        /// <remarks>If the lines are parallel the method will return a <see cref="Vector2.NaN">Vector2.NaN</see>.</remarks>
+        public static Vector2 FindIntersection(Vector2 point0, Vector2 dir0, Vector2 point1, Vector2 dir1, double threshold = Epsilon)
         {
-            // Use a relative error test to test for parallelism. This effectively is a threshold on the angle between D0 and D1.
+            // test for parallelism.
+            if (Vector2.AreParallel(dir0, dir1, threshold))
+                return new Vector2(double.NaN, double.NaN);
+
+            // lines are not parallel
             Vector2 vect = point1 - point0;
             double cross = Vector2.CrossProduct(dir0, dir1);
-            double sqrCross = cross * cross;
-            double sqrLen0 = dir0.X * dir0.X + dir0.Y * dir0.Y;
-            double sqrLen1 = dir1.X * dir1.X + dir1.Y * dir1.Y;
-            if (sqrCross > threshold * sqrLen0 * sqrLen1)
-            {
-                // lines are not parallel
-                double s = (vect.X * dir1.Y - vect.Y * dir1.X) / cross;
-                intersection = point0 + s * dir0;
-                return 0;
-            }
-            // lines are parallel
-            double sqrLenE = vect.X * vect.X + vect.Y * vect.Y;
-            cross = vect.X * dir0.Y - vect.Y * dir0.X;
-            sqrCross = cross * cross;
-            if (sqrCross > threshold * sqrLen0 * sqrLenE)
-            {
-                // lines are different
-                intersection = Vector2.Zero;
-                return 1;
-            }
-            // lines are the same
-            intersection = Vector2.Zero;
-            return 2;
+            double s = (vect.X*dir1.Y - vect.Y*dir1.X)/cross;
+            return point0 + s*dir0;
         }
 
         /// <summary>

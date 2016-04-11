@@ -1,7 +1,7 @@
-﻿#region netDxf, Copyright(C) 2015 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf, Copyright(C) 2016 Daniel Carvajal, Licensed under LGPL.
 // 
 //                         netDxf library
-//  Copyright (C) 2009-2015 Daniel Carvajal (haplokuon@gmail.com)
+//  Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
 //  
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -33,8 +33,8 @@ namespace netDxf.Entities
     {
         #region private fields
 
-        private Vector3 start;
-        private Vector3 end;
+        private Vector2 firstRefPoint;
+        private Vector2 secondRefPoint;
         private double offset;
         private double rotation;
 
@@ -46,7 +46,7 @@ namespace netDxf.Entities
         /// Initializes a new instance of the <c>LinearDimension</c> class.
         /// </summary>
         public LinearDimension()
-            : this(Vector3.Zero, Vector3.UnitX, 0.1, 0.0)
+            : this(Vector2.Zero, Vector2.UnitX, 0.1, 0.0)
         {
         }
 
@@ -58,7 +58,7 @@ namespace netDxf.Entities
         /// <param name="rotation">Rotation in degrees of the dimension line.</param>
         /// <remarks>The reference points define the distance to be measure.</remarks>
         public LinearDimension(Line referenceLine, double offset, double rotation)
-            : this(referenceLine, offset, rotation, DimensionStyle.Default)
+            : this(referenceLine, offset, rotation, Vector3.UnitZ, DimensionStyle.Default)
         {
         }
 
@@ -69,11 +69,49 @@ namespace netDxf.Entities
         /// <param name="offset">Distance between the reference line and the dimension line.</param>
         /// <param name="rotation">Rotation in degrees of the dimension line.</param>
         /// <param name="style">The <see cref="DimensionStyle">style</see> to use with the dimension.</param>
-        /// <remarks>The reference line define the distance to be measure.</remarks>
+        /// <remarks>The reference points define the distance to be measure.</remarks>
         public LinearDimension(Line referenceLine, double offset, double rotation, DimensionStyle style)
-            : this(referenceLine.StartPoint, referenceLine.EndPoint, offset, rotation, style)
+            : this(referenceLine, offset, rotation, Vector3.UnitZ, style)
         {
-            this.normal = referenceLine.Normal;
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <c>LinearDimension</c> class.
+        /// </summary>
+        /// <param name="referenceLine">Reference <see cref="Line">line</see> of the dimension.</param>
+        /// <param name="offset">Distance between the reference line and the dimension line.</param>
+        /// <param name="rotation">Rotation in degrees of the dimension line.</param>
+        /// <param name="normal">Normal vector of the plane where the dimension is defined.</param>
+        /// <remarks>The reference points define the distance to be measure.</remarks>
+        public LinearDimension(Line referenceLine, double offset, double rotation, Vector3 normal)
+            : this(referenceLine, offset, rotation, normal, DimensionStyle.Default)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <c>LinearDimension</c> class.
+        /// </summary>
+        /// <param name="referenceLine">Reference <see cref="Line">line</see> of the dimension.</param>
+        /// <param name="offset">Distance between the reference line and the dimension line.</param>
+        /// <param name="rotation">Rotation in degrees of the dimension line.</param>
+        /// <param name="normal">Normal vector of the plane where the dimension is defined.</param>
+        /// <param name="style">The <see cref="DimensionStyle">style</see> to use with the dimension.</param>
+        /// <remarks>The reference line define the distance to be measure.</remarks>
+        public LinearDimension(Line referenceLine, double offset, double rotation, Vector3 normal, DimensionStyle style)
+            : base(DimensionType.Linear)
+        {
+            Vector3 ocsPoint;
+            ocsPoint = MathHelper.Transform(referenceLine.StartPoint, normal, CoordinateSystem.World, CoordinateSystem.Object);
+            this.firstRefPoint = new Vector2(ocsPoint.X, ocsPoint.Y);
+            ocsPoint = MathHelper.Transform(referenceLine.EndPoint, normal, CoordinateSystem.World, CoordinateSystem.Object);
+            this.secondRefPoint = new Vector2(ocsPoint.X, ocsPoint.Y);
+            this.offset = offset;
+            this.rotation = MathHelper.NormalizeAngle(rotation);
+            if (style == null)
+                throw new ArgumentNullException(nameof(style), "The Dimension style cannot be null.");
+            this.style = style;
+            this.normal = normal;
+            this.elevation = ocsPoint.Z;
         }
 
         /// <summary>
@@ -85,19 +123,6 @@ namespace netDxf.Entities
         /// <param name="rotation">Rotation in degrees of the dimension line.</param>
         /// <remarks>The reference points define the distance to be measure.</remarks>
         public LinearDimension(Vector2 firstPoint, Vector2 secondPoint, double offset, double rotation)
-            : this(new Vector3(firstPoint.X, firstPoint.Y, 0.0), new Vector3(secondPoint.X, secondPoint.Y, 0.0), offset, rotation, DimensionStyle.Default)
-        {
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <c>LinearDimension</c> class.
-        /// </summary>
-        /// <param name="firstPoint">First reference <see cref="Vector3">point</see> of the dimension.</param>
-        /// <param name="secondPoint">Second reference <see cref="Vector3">point</see> of the dimension.</param>
-        /// <param name="offset">Distance between the mid point reference line and the dimension line.</param>
-        /// <param name="rotation">Rotation in degrees of the dimension line.</param>
-        /// <remarks>The reference points define the distance to be measure.</remarks>
-        public LinearDimension(Vector3 firstPoint, Vector3 secondPoint, double offset, double rotation)
             : this(firstPoint, secondPoint, offset, rotation, DimensionStyle.Default)
         {
         }
@@ -112,25 +137,13 @@ namespace netDxf.Entities
         /// <param name="style">The <see cref="DimensionStyle">style</see> to use with the dimension.</param>
         /// <remarks>The reference points define the distance to be measure.</remarks>
         public LinearDimension(Vector2 firstPoint, Vector2 secondPoint, double offset, double rotation, DimensionStyle style)
-            : this(new Vector3(firstPoint.X, firstPoint.Y, 0.0), new Vector3(secondPoint.X, secondPoint.Y, 0.0), offset, rotation, style)
-        {
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <c>LinearDimension</c> class.
-        /// </summary>
-        /// <param name="firstPoint">First reference <see cref="Vector3">point</see> of the dimension.</param>
-        /// <param name="secondPoint">Second reference <see cref="Vector3">point</see> of the dimension.</param>
-        /// <param name="offset">Distance between the mid point reference line and the dimension line.</param>
-        /// <param name="rotation">Rotation in degrees of the dimension line.</param>
-        /// <param name="style">The <see cref="DimensionStyle">style</see> to use with the dimension.</param>
-        /// <remarks>The reference points define the distance to be measure.</remarks>
-        public LinearDimension(Vector3 firstPoint, Vector3 secondPoint, double offset, double rotation, DimensionStyle style)
             : base(DimensionType.Linear)
         {
-            this.start = firstPoint;
-            this.end = secondPoint;
+            this.firstRefPoint = firstPoint;
+            this.secondRefPoint = secondPoint;
             this.offset = offset;
+            if (style == null)
+                throw new ArgumentNullException(nameof(style), "The Dimension style cannot be null.");
             this.style = style;
             this.rotation = MathHelper.NormalizeAngle(rotation);
         }
@@ -140,21 +153,21 @@ namespace netDxf.Entities
         #region public properties
 
         /// <summary>
-        /// Gets or sets the first definition point of the dimension.
+        /// Gets or sets the first definition point of the dimension in OCS (object coordinate system).
         /// </summary>
-        public Vector3 FirstReferencePoint
+        public Vector2 FirstReferencePoint
         {
-            get { return this.start; }
-            set { this.start = value; }
+            get { return this.firstRefPoint; }
+            set { this.firstRefPoint = value; }
         }
 
         /// <summary>
-        /// Gets or sets the second definition point of the dimension.
+        /// Gets or sets the second definition point of the dimension in OCS (object coordinate system).
         /// </summary>
-        public Vector3 SecondReferencePoint
+        public Vector2 SecondReferencePoint
         {
-            get { return this.end; }
-            set { this.end = value; }
+            get { return this.secondRefPoint; }
+            set { this.secondRefPoint = value; }
         }
 
         /// <summary>
@@ -183,17 +196,33 @@ namespace netDxf.Entities
         {
             get
             {
-                Vector3 refPoint;
-                
-                refPoint = MathHelper.Transform(this.start, this.normal, CoordinateSystem.World, CoordinateSystem.Object);
-                Vector2 ref1 = new Vector2(refPoint.X, refPoint.Y);
-                
-                refPoint = MathHelper.Transform(this.end, this.normal, CoordinateSystem.World, CoordinateSystem.Object);
-                Vector2 ref2 = new Vector2(refPoint.X, refPoint.Y);
-
-                double refRot = Vector2.Angle(ref1, ref2);
-                return Math.Abs(Vector2.Distance(ref1, ref2) * Math.Cos(this.rotation * MathHelper.DegToRad - refRot));
+                double refRot = Vector2.Angle(this.firstRefPoint, this.secondRefPoint);
+                return Math.Abs(Vector2.Distance(this.firstRefPoint, this.secondRefPoint) * Math.Cos(this.rotation * MathHelper.DegToRad - refRot));
             }
+        }
+
+        #endregion
+
+        #region public methods
+
+        /// <summary>
+        /// Calculates the dimension offset from a point along the dimension line.
+        /// </summary>
+        /// <param name="point">Point along the dimension line.</param>
+        public void SetDimensionLinePosition(Vector2 point)
+        {
+            Vector2 midRef = Vector2.MidPoint(this.firstRefPoint, this.secondRefPoint);
+            double dimRotation = this.rotation * MathHelper.DegToRad;
+            Vector2 dimDir = new Vector2(Math.Cos(dimRotation), Math.Sin(dimRotation));
+            Vector2 refDir = Vector2.Normalize(this.secondRefPoint - this.firstRefPoint);
+            Vector2 offsetDir = point - this.firstRefPoint;
+            double cross = Vector2.CrossProduct(refDir, offsetDir);
+            this.offset = MathHelper.PointLineDistance(midRef, point, dimDir);
+            if (cross < 0)
+                this.offset *= -1;
+            double relativeAngle = Vector2.AngleBetween(refDir, dimDir);
+            if (relativeAngle > MathHelper.HalfPI && relativeAngle <= MathHelper.ThreeHalfPI)
+                this.offset *= -1;
         }
 
         #endregion
@@ -233,10 +262,11 @@ namespace netDxf.Entities
                 LineSpacingStyle = this.lineSpacingStyle,
                 LineSpacingFactor = this.lineSpacing,
                 //LinearDimension properties
-                FirstReferencePoint = this.start,
-                SecondReferencePoint = this.end,
+                FirstReferencePoint = this.firstRefPoint,
+                SecondReferencePoint = this.secondRefPoint,
                 Rotation = this.rotation,
-                Offset = this.offset
+                Offset = this.offset,
+                Elevation = this.elevation
             };
 
             foreach (XData data in this.XData.Values)

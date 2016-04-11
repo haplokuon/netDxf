@@ -1,7 +1,7 @@
-#region netDxf, Copyright(C) 2015 Daniel Carvajal, Licensed under LGPL.
+#region netDxf, Copyright(C) 2016 Daniel Carvajal, Licensed under LGPL.
 // 
 //                         netDxf library
-//  Copyright (C) 2009-2015 Daniel Carvajal (haplokuon@gmail.com)
+//  Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
 //  
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -85,6 +85,17 @@ namespace netDxf.Entities
         /// <param name="tag">Attribute identifier, the parameter <c>id</c> string cannot contain spaces.</param>
         /// <param name="style">Attribute <see cref="TextStyle">text style</see>.</param>
         public AttributeDefinition(string tag, TextStyle style)
+            : this(tag, MathHelper.IsZero(style.Height) ? 1.0 : style.Height, style)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <c>AttributeDefiniton</c> class.
+        /// </summary>
+        /// <param name="tag">Attribute identifier, the parameter <c>id</c> string cannot contain spaces.</param>
+        /// <param name="textHeight">Height of the attribute definition text.</param>
+        /// <param name="style">Attribute <see cref="TextStyle">text style</see>.</param>
+        public AttributeDefinition(string tag, double textHeight, TextStyle style)
             : base(EntityType.AttributeDefinition, DxfObjectCode.AttributeDefinition)
         {
             if (tag.Contains(" "))
@@ -94,8 +105,12 @@ namespace netDxf.Entities
             this.prompt = string.Empty;
             this.value = null;
             this.position = Vector3.Zero;
+            if (style == null)
+                throw new ArgumentNullException(nameof(style), "The attribute definition text style cannot be null.");
             this.style = style;
-            this.height = MathHelper.IsZero(this.style.Height) ? 1.0 : style.Height;
+            if (textHeight <= 0)
+                throw new ArgumentOutOfRangeException(nameof(textHeight), this.value, "The attribute definition text height must be greater than zero.");
+            this.height = textHeight;
             this.widthFactor = style.WidthFactor;
             this.obliqueAngle = style.ObliqueAngle;
             this.rotation = 0.0;

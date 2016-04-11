@@ -1,7 +1,7 @@
-#region netDxf, Copyright(C) 2015 Daniel Carvajal, Licensed under LGPL.
+#region netDxf, Copyright(C) 2016 Daniel Carvajal, Licensed under LGPL.
 // 
 //                         netDxf library
-//  Copyright (C) 2009-2015 Daniel Carvajal (haplokuon@gmail.com)
+//  Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
 //  
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -72,7 +72,7 @@ namespace netDxf.Collections
 
             // if no name has been given to the group a generic name will be created
             if (group.IsUnnamed && string.IsNullOrEmpty(group.Name))
-                group.Name = "*A" + ++this.document.GroupNamesGenerated;
+                group.SetUnNammed("*A" + ++this.document.GroupNamesGenerated);
 
             Group add;
             if (this.list.TryGetValue(group.Name, out add))
@@ -136,6 +136,11 @@ namespace netDxf.Collections
 
             if (group.IsReserved)
                 return false;
+
+            foreach (EntityObject entity in group.Entities)
+            {
+                entity.RemoveReactor(group);
+            }
 
             this.document.AddedObjects.Remove(group.Handle);
             this.references.Remove(group.Name);

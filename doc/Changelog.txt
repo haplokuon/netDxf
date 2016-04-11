@@ -1,3 +1,13 @@
+[1.1.2 - 2016/4/11]
++ All dimension geometry uses local 2d coordinates. For the default normal vector (0,0,1) nothing has changed besides droping the Z component.
++ Added the method SetDimensionLinePosition to dimension entities to set the offset from a point along the dimension line.
++ Added constructor to the AttributeDefinition that takes a tag, a text height, and a text style as arguments.
++ Deleted all code related with the "A generic error ocurred in GDI+" exception until a better fix is implemented.
++ (fixed) If an entity belongs to a group it cannot be removed without removing it first from the group to which it belongs. The group will appear in the reactors list of that entity.
++ (fixed) Bugs with reading and writing dimension entities.
++ (fixed) Bug when adding unnamed groups to a document.
++ (fixed) Issue Id #13509 Failed to open dxf.
+
 [1.1.1 - 2015/12/15]
 + Updated solution to Visual Studio 2015, the previous 2013 solution is saved as netDxf2013.sln.
 + (fixed) Issue Id #13507 Vertical Linear Dimensions Drawn Crossed.

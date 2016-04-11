@@ -1,7 +1,7 @@
-﻿#region netDxf, Copyright(C) 2015 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf, Copyright(C) 2016 Daniel Carvajal, Licensed under LGPL.
 // 
 //                         netDxf library
-//  Copyright (C) 2009-2015 Daniel Carvajal (haplokuon@gmail.com)
+//  Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
 //  
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -20,6 +20,7 @@
 #endregion
 
 using System.Collections.Generic;
+using System.Diagnostics;
 using netDxf.Collections;
 using netDxf.Entities;
 using netDxf.Tables;
@@ -57,8 +58,8 @@ namespace netDxf.Objects
         #region private fields
 
         private string description;
-        private bool isUnnamed;
         private bool isSelectable;
+        private bool isUnnamed;
         private readonly EntityCollection entities;
 
         #endregion
@@ -201,6 +202,16 @@ namespace netDxf.Objects
 
         #endregion
 
+        #region internal methods
+
+        internal void SetUnNammed(string generatedName)
+        {
+            Debug.Assert(!string.IsNullOrEmpty(generatedName), "The group name cannot be null.");
+            this.name = generatedName;
+        }
+
+        #endregion
+
         #region overrides
 
         /// <summary>
@@ -250,6 +261,7 @@ namespace netDxf.Objects
 
         private void Entities_AddItem(EntityCollection sender, EntityCollectionEventArgs e)
         {
+            e.Item.AddReactor(this);
             this.OnEntityAddedEvent(e.Item);
         }
 
@@ -259,6 +271,7 @@ namespace netDxf.Objects
 
         private void Entities_RemoveItem(EntityCollection sender, EntityCollectionEventArgs e)
         {
+            e.Item.RemoveReactor(this);
             this.OnEntityRemovedEvent(e.Item);
         }
 

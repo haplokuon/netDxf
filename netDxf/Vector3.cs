@@ -1,7 +1,7 @@
-#region netDxf, Copyright(C) 2015 Daniel Carvajal, Licensed under LGPL.
+#region netDxf, Copyright(C) 2016 Daniel Carvajal, Licensed under LGPL.
 // 
 //                         netDxf library
-//  Copyright (C) 2009-2015 Daniel Carvajal (haplokuon@gmail.com)
+//  Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
 //  
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -280,7 +280,7 @@ namespace netDxf
         /// <returns>Vector3.</returns>
         public static Vector3 MidPoint(Vector3 u, Vector3 v)
         {
-            return new Vector3((v.X + u.X)*0.5F, (v.Y + u.Y)*0.5F, (v.Z + u.Z)*0.5F);
+            return new Vector3((v.X + u.X)*0.5, (v.Y + u.Y)*0.5, (v.Z + u.Z)*0.5);
         }
 
         /// <summary>
@@ -304,16 +304,14 @@ namespace netDxf
         /// <returns>True if are parallel or false in any other case.</returns>
         public static bool AreParallel(Vector3 u, Vector3 v, double threshold = MathHelper.Epsilon)
         {
-            double a = u.Y*v.Z - u.Z*v.Y;
-            double b = u.Z*v.X - u.X*v.Z;
-            double c = u.X*v.Y - u.Y*v.X;
-            if (!MathHelper.IsZero(a, threshold))
-                return false;
-            if (!MathHelper.IsZero(b, threshold))
-                return false;
-            if (!MathHelper.IsZero(c, threshold))
-                return false;
+            Vector3 cross = CrossProduct(u, v);
 
+            if (!MathHelper.IsZero(cross.X, threshold))
+                return false;
+            if (!MathHelper.IsZero(cross.Y, threshold))
+                return false;
+            if (!MathHelper.IsZero(cross.Z, threshold))
+                return false;
             return true;
         }
 
