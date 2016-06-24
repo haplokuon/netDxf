@@ -1,22 +1,23 @@
-﻿#region netDxf, Copyright(C) 2015 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf library, Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+
+//                        netDxf library
+// Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
 // 
-//                         netDxf library
-//  Copyright (C) 2009-2015 Daniel Carvajal (haplokuon@gmail.com)
-//  
-//  This library is free software; you can redistribute it and/or
-//  modify it under the terms of the GNU Lesser General Public
-//  License as published by the Free Software Foundation; either
-//  version 2.1 of the License, or (at your option) any later version.
-//  
-//  The above copyright notice and this permission notice shall be included in all
-//  copies or substantial portions of the Software.
-//  
-//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-//  FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-//  COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-//  IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-//  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2.1 of the License, or (at your option) any later version.
+// 
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+// FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+// COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+// IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+// CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
 #endregion
 
 using System;
@@ -27,21 +28,24 @@ namespace netDxf.Entities
     /// <summary>
     /// Represents a Text <see cref="EntityObject">entity</see>.
     /// </summary>
+    /// <remarks>It</remarks>
     public class Text :
         EntityObject
     {
         #region delegates and events
 
         public delegate void TextStyleChangedEventHandler(Text sender, TableObjectChangedEventArgs<TextStyle> e);
+
         public event TextStyleChangedEventHandler TextStyleChanged;
+
         protected virtual TextStyle OnTextStyleChangedEvent(TextStyle oldTextStyle, TextStyle newTextStyle)
         {
             TextStyleChangedEventHandler ae = this.TextStyleChanged;
             if (ae != null)
             {
                 TableObjectChangedEventArgs<TextStyle> eventArgs = new TableObjectChangedEventArgs<TextStyle>(oldTextStyle, newTextStyle);
-                ae(this, eventArgs );
-                 return eventArgs.NewValue;
+                ae(this, eventArgs);
+                return eventArgs.NewValue;
             }
             return newTextStyle;
         }
@@ -66,7 +70,7 @@ namespace netDxf.Entities
         /// <summary>
         /// Initializes a new instance of the <c>Text</c> class.
         /// </summary>
-        public Text() 
+        public Text()
             : this(string.Empty, Vector3.Zero, 1.0, TextStyle.Default)
         {
         }
@@ -119,9 +123,9 @@ namespace netDxf.Entities
             this.value = text;
             this.position = position;
             this.alignment = TextAlignment.BaselineLeft;
-            this.normal = Vector3.UnitZ;
+            this.Normal = Vector3.UnitZ;
             if (style == null)
-                throw new ArgumentNullException(nameof(style), "The Text style cannot be null.");
+                throw new ArgumentNullException(nameof(style));
             this.style = style;
             if (height <= 0)
                 throw new ArgumentOutOfRangeException(nameof(height), this.value, "The Text height must be greater than zero.");
@@ -215,7 +219,7 @@ namespace netDxf.Entities
             set
             {
                 if (value == null)
-                    throw new ArgumentNullException(nameof(value), "The Text style cannot be null.");
+                    throw new ArgumentNullException(nameof(value));
                 this.style = this.OnTextStyleChangedEvent(this.style, value);
             }
         }
@@ -242,13 +246,14 @@ namespace netDxf.Entities
             Text entity = new Text
             {
                 //EntityObject properties
-                Layer = (Layer)this.layer.Clone(),
-                LineType = (LineType)this.lineType.Clone(),
-                Color = (AciColor)this.color.Clone(),
-                Lineweight = (Lineweight)this.lineweight.Clone(),
-                Transparency = (Transparency)this.transparency.Clone(),
-                LineTypeScale = this.lineTypeScale,
-                Normal = this.normal,
+                Layer = (Layer) this.Layer.Clone(),
+                Linetype = (Linetype) this.Linetype.Clone(),
+                Color = (AciColor) this.Color.Clone(),
+                Lineweight = this.Lineweight,
+                Transparency = (Transparency) this.Transparency.Clone(),
+                LinetypeScale = this.LinetypeScale,
+                Normal = this.Normal,
+                IsVisible = this.IsVisible,
                 //Text properties
                 Position = this.position,
                 Rotation = this.rotation,
@@ -261,10 +266,9 @@ namespace netDxf.Entities
             };
 
             foreach (XData data in this.XData.Values)
-                entity.XData.Add((XData)data.Clone());
+                entity.XData.Add((XData) data.Clone());
 
             return entity;
-
         }
 
         #endregion

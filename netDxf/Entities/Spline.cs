@@ -1,27 +1,27 @@
-﻿#region netDxf, Copyright(C) 2015 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf library, Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+
+//                        netDxf library
+// Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
 // 
-//                         netDxf library
-//  Copyright (C) 2009-2015 Daniel Carvajal (haplokuon@gmail.com)
-//  
-//  This library is free software; you can redistribute it and/or
-//  modify it under the terms of the GNU Lesser General Public
-//  License as published by the Free Software Foundation; either
-//  version 2.1 of the License, or (at your option) any later version.
-//  
-//  The above copyright notice and this permission notice shall be included in all
-//  copies or substantial portions of the Software.
-//  
-//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-//  FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-//  COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-//  IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-//  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2.1 of the License, or (at your option) any later version.
+// 
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+// FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+// COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+// IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+// CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
 #endregion
 
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using netDxf.Tables;
 
 namespace netDxf.Entities
@@ -44,7 +44,7 @@ namespace netDxf.Entities
         private double fitTolerance = 0.0000000001;
         private List<SplineVertex> controlPoints;
         private List<double> knots;
-        private readonly SplineTypeFlags flags;
+        private readonly SplinetypeFlags flags;
         private readonly short degree;
         private readonly bool isClosed;
         private readonly bool isPeriodic;
@@ -58,18 +58,19 @@ namespace netDxf.Entities
         /// </summary>
         /// <param name="fitPoints">Spline fit points.</param>
         /// <remarks>Spline entities created with a list of fit points cannot be used as a boundary path in a hatch.</remarks>
-        public Spline(List<Vector3> fitPoints)
+        public Spline(IEnumerable<Vector3> fitPoints)
             : base(EntityType.Spline, DxfObjectCode.Spline)
         {
             this.degree = 3;
             this.isPeriodic = false;
             this.controlPoints = new List<SplineVertex>();
             this.knots = new List<double>();
-
-            this.fitPoints = fitPoints;
+            if (fitPoints == null)
+                throw new ArgumentNullException(nameof(fitPoints));
+            this.fitPoints = new List<Vector3>(fitPoints);
             this.creationMethod = SplineCreationMethod.FitPoints;
-            this.isClosed = fitPoints[0].Equals(fitPoints[fitPoints.Count - 1]);
-            this.flags = this.isClosed ? SplineTypeFlags.Closed | SplineTypeFlags.Rational : SplineTypeFlags.Rational;
+            this.isClosed = this.fitPoints[0].Equals(this.fitPoints[this.fitPoints.Count - 1]);
+            this.flags = this.isClosed ? SplinetypeFlags.Closed | SplinetypeFlags.Rational : SplinetypeFlags.Rational;
         }
 
         /// <summary>
@@ -87,9 +88,19 @@ namespace netDxf.Entities
         /// Initializes a new instance of the <c>Spline</c> class.
         /// </summary>
         /// <param name="controlPoints">Spline control points.</param>
+        /// <remarks>By default the degree of the spline is equal three.</remarks>
+        public Spline(List<SplineVertex> controlPoints)
+            : this(controlPoints, 3, false)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <c>Spline</c> class.
+        /// </summary>
+        /// <param name="controlPoints">Spline control points.</param>
         /// <param name="periodic">Sets if the spline as periodic closed (default false).</param>
         /// <remarks>By default the degree of the spline is equal three.</remarks>
-        public Spline(List<SplineVertex> controlPoints, bool periodic = false)
+        public Spline(List<SplineVertex> controlPoints, bool periodic)
             : this(controlPoints, 3, periodic)
         {
         }
@@ -99,14 +110,24 @@ namespace netDxf.Entities
         /// </summary>
         /// <param name="controlPoints">Spline control points.</param>
         /// <param name="degree">Degree of the spline curve.  Valid values are 1 (linear), degree 2 (quadratic), degree 3 (cubic), and so on up to degree 10.</param>
+        public Spline(List<SplineVertex> controlPoints, short degree)
+            : this(controlPoints, degree, false)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <c>Spline</c> class.
+        /// </summary>
+        /// <param name="controlPoints">Spline control points.</param>
+        /// <param name="degree">Degree of the spline curve.  Valid values are 1 (linear), degree 2 (quadratic), degree 3 (cubic), and so on up to degree 10.</param>
         /// <param name="periodic">Sets if the spline as periodic closed (default false).</param>
-        public Spline(List<SplineVertex> controlPoints, short degree, bool periodic = false)
+        public Spline(List<SplineVertex> controlPoints, short degree, bool periodic)
             : base(EntityType.Spline, DxfObjectCode.Spline)
         {
             if (degree < 1 || degree > 10)
                 throw new ArgumentOutOfRangeException(nameof(degree), degree, "The spline degree valid values range from 1 to 10.");
             if (controlPoints == null)
-                throw new ArgumentNullException(nameof(controlPoints), "The Spline control points list cannot be null.");
+                throw new ArgumentNullException(nameof(controlPoints));
             if (controlPoints.Count < 2)
                 throw new ArgumentException("The number of control points must be equal or greater than 2.");
             if (controlPoints.Count < degree + 1)
@@ -120,12 +141,12 @@ namespace netDxf.Entities
             if (this.isPeriodic)
             {
                 this.isClosed = true;
-                this.flags = SplineTypeFlags.Closed | SplineTypeFlags.Periodic | SplineTypeFlags.Rational;
+                this.flags = SplinetypeFlags.Closed | SplinetypeFlags.Periodic | SplinetypeFlags.Rational;
             }
             else
             {
                 this.isClosed = controlPoints[0].Position.Equals(controlPoints[controlPoints.Count - 1].Position);
-                this.flags = this.isClosed ? SplineTypeFlags.Closed | SplineTypeFlags.Rational : SplineTypeFlags.Rational;
+                this.flags = this.isClosed ? SplinetypeFlags.Closed | SplinetypeFlags.Rational : SplinetypeFlags.Rational;
             }
             this.Create(controlPoints);
         }
@@ -142,13 +163,13 @@ namespace netDxf.Entities
             if (degree < 1 || degree > 10)
                 throw new ArgumentOutOfRangeException(nameof(degree), degree, "The spline degree valid values range from 1 to 10.");
             if (controlPoints == null)
-                throw new ArgumentNullException(nameof(controlPoints), "The Spline control points list cannot be null.");
+                throw new ArgumentNullException(nameof(controlPoints));
             if (controlPoints.Count < 2)
                 throw new ArgumentException("The number of control points must be equal or greater than 2.");
             if (controlPoints.Count < degree + 1)
                 throw new ArgumentException("The number of control points must be equal or greater than the spline degree + 1.");
             if (knots == null)
-                throw new ArgumentNullException(nameof(knots), "The Spline knots list cannot be null.");
+                throw new ArgumentNullException(nameof(knots));
             if (knots.Count != controlPoints.Count + degree + 1)
                 throw new ArgumentException("The number of knots must be equals to the number of control points + spline degree + 1.");
 
@@ -162,12 +183,12 @@ namespace netDxf.Entities
             if (this.isPeriodic)
             {
                 this.isClosed = true;
-                this.flags = SplineTypeFlags.Closed | SplineTypeFlags.Periodic | SplineTypeFlags.Rational;
+                this.flags = SplinetypeFlags.Closed | SplinetypeFlags.Periodic | SplinetypeFlags.Rational;
             }
             else
             {
                 this.isClosed = controlPoints[0].Position.Equals(controlPoints[controlPoints.Count - 1].Position);
-                this.flags = this.isClosed ? SplineTypeFlags.Closed | SplineTypeFlags.Rational : SplineTypeFlags.Rational;
+                this.flags = this.isClosed ? SplinetypeFlags.Closed | SplinetypeFlags.Rational : SplinetypeFlags.Rational;
             }
         }
 
@@ -293,18 +314,18 @@ namespace netDxf.Entities
         /// <summary>
         /// Gets the spline <see cref="SplineVertex">control points</see> list.
         /// </summary>
-        public ReadOnlyCollection<SplineVertex> ControlPoints
+        public IReadOnlyList<SplineVertex> ControlPoints
         {
-            get { return this.controlPoints.AsReadOnly(); }
+            get { return this.controlPoints; }
         }
 
         /// <summary>
         /// Gets the spline knot vector.
         /// </summary>
         /// <remarks>By default a uniform knot vector is created.</remarks>
-        public ReadOnlyCollection<double> Knots
+        public IReadOnlyList<double> Knots
         {
-            get { return this.knots.AsReadOnly(); }
+            get { return this.knots; }
         }
 
         #endregion
@@ -314,7 +335,7 @@ namespace netDxf.Entities
         /// <summary>
         /// Gets the spline type.
         /// </summary>
-        internal SplineTypeFlags Flags
+        internal SplinetypeFlags Flags
         {
             get { return this.flags; }
         }
@@ -409,13 +430,14 @@ namespace netDxf.Entities
                 entity = new Spline(new List<Vector3>(this.fitPoints))
                 {
                     //EntityObject properties
-                    Layer = (Layer) this.layer.Clone(),
-                    LineType = (LineType) this.lineType.Clone(),
-                    Color = (AciColor) this.color.Clone(),
-                    Lineweight = (Lineweight) this.lineweight.Clone(),
-                    Transparency = (Transparency) this.transparency.Clone(),
-                    LineTypeScale = this.lineTypeScale,
-                    Normal = this.normal,
+                    Layer = (Layer) this.Layer.Clone(),
+                    Linetype = (Linetype) this.Linetype.Clone(),
+                    Color = (AciColor) this.Color.Clone(),
+                    Lineweight = this.Lineweight,
+                    Transparency = (Transparency) this.Transparency.Clone(),
+                    LinetypeScale = this.LinetypeScale,
+                    Normal = this.Normal,
+                    IsVisible = this.IsVisible,
                     //Spline properties
                     KnotParameterization = this.KnotParameterization,
                     StartTangent = this.startTangent,
@@ -434,17 +456,17 @@ namespace netDxf.Entities
                 entity = new Spline(copyControlPoints, copyKnots, this.degree)
                 {
                     //EntityObject properties
-                    Layer = (Layer) this.layer.Clone(),
-                    LineType = (LineType) this.lineType.Clone(),
-                    Color = (AciColor) this.color.Clone(),
-                    Lineweight = (Lineweight) this.lineweight.Clone(),
-                    Transparency = (Transparency) this.transparency.Clone(),
-                    LineTypeScale = this.lineTypeScale,
-                    Normal = this.normal
+                    Layer = (Layer) this.Layer.Clone(),
+                    Linetype = (Linetype) this.Linetype.Clone(),
+                    Color = (AciColor) this.Color.Clone(),
+                    Lineweight = this.Lineweight,
+                    Transparency = (Transparency) this.Transparency.Clone(),
+                    LinetypeScale = this.LinetypeScale,
+                    Normal = this.Normal
                     //Spline properties
                 };
             }
-            
+
 
             foreach (XData data in this.XData.Values)
                 entity.XData.Add((XData) data.Clone());
@@ -463,7 +485,8 @@ namespace netDxf.Entities
         /// <returns>A list vertexes that represents the spline.</returns>
         public List<Vector3> PolygonalVertexes(int precision)
         {
-            if (this.controlPoints.Count == 0) throw new NotSupportedException("A spline entity with control points is required.");
+            if (this.controlPoints.Count == 0)
+                throw new NotSupportedException("A spline entity with control points is required.");
 
             double u_start;
             double u_end;
@@ -512,13 +535,13 @@ namespace netDxf.Entities
 
             Polyline poly = new Polyline
             {
-                Layer = (Layer) this.layer.Clone(),
-                LineType = (LineType) this.lineType.Clone(),
-                Color = (AciColor) this.color.Clone(),
-                Lineweight = (Lineweight) this.lineweight.Clone(),
-                Transparency = (Transparency) this.transparency.Clone(),
-                LineTypeScale = this.lineTypeScale,
-                Normal = this.normal,
+                Layer = (Layer) this.Layer.Clone(),
+                Linetype = (Linetype) this.Linetype.Clone(),
+                Color = (AciColor) this.Color.Clone(),
+                Lineweight = this.Lineweight,
+                Transparency = (Transparency) this.Transparency.Clone(),
+                LinetypeScale = this.LinetypeScale,
+                Normal = this.Normal,
                 IsClosed = this.isClosed
             };
             foreach (Vector3 v in vertexes)
@@ -537,20 +560,19 @@ namespace netDxf.Entities
             for (int i = 0; i < this.controlPoints.Count; i++)
             {
                 double n = this.N(i, this.degree, u);
-                denominatorSum += n * this.controlPoints[i].Weigth;
-                vectorSum += this.controlPoints[i].Weigth * n * this.controlPoints[i].Position;
+                denominatorSum += n*this.controlPoints[i].Weigth;
+                vectorSum += this.controlPoints[i].Weigth*n*this.controlPoints[i].Position;
             }
 
             // avoid possible divided by zero error, this should never happen
             if (Math.Abs(denominatorSum) < double.Epsilon)
                 return Vector3.Zero;
 
-            return (1.0 / denominatorSum) * vectorSum;
+            return (1.0/denominatorSum)*vectorSum;
         }
 
         private double N(int i, int p, double u)
         {
-
             if (p <= 0)
             {
                 if (this.knots[i] <= u && u < this.knots[i + 1])
@@ -560,14 +582,13 @@ namespace netDxf.Entities
 
             double leftCoefficient = 0.0;
             if (!(Math.Abs(this.knots[i + p] - this.knots[i]) < double.Epsilon))
-                leftCoefficient = (u - this.knots[i]) / (this.knots[i + p] - this.knots[i]);
+                leftCoefficient = (u - this.knots[i])/(this.knots[i + p] - this.knots[i]);
 
             double rightCoefficient = 0.0; // article contains error here, denominator is Knots[i + p + 1] - Knots[i + 1]
             if (!(Math.Abs(this.knots[i + p + 1] - this.knots[i + 1]) < double.Epsilon))
-                rightCoefficient = (this.knots[i + p + 1] - u) / (this.knots[i + p + 1] - this.knots[i + 1]);
+                rightCoefficient = (this.knots[i + p + 1] - u)/(this.knots[i + p + 1] - this.knots[i + 1]);
 
-            return leftCoefficient * this.N(i, p - 1, u) + rightCoefficient * this.N(i + 1, p - 1, u);
-
+            return leftCoefficient*this.N(i, p - 1, u) + rightCoefficient*this.N(i + 1, p - 1, u);
         }
 
         #endregion

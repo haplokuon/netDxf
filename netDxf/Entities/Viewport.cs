@@ -1,22 +1,23 @@
-﻿#region netDxf, Copyright(C) 2016 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf library, Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+
+//                        netDxf library
+// Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
 // 
-//                         netDxf library
-//  Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
-//  
-//  This library is free software; you can redistribute it and/or
-//  modify it under the terms of the GNU Lesser General Public
-//  License as published by the Free Software Foundation; either
-//  version 2.1 of the License, or (at your option) any later version.
-//  
-//  The above copyright notice and this permission notice shall be included in all
-//  copies or substantial portions of the Software.
-//  
-//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-//  FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-//  COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-//  IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-//  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2.1 of the License, or (at your option) any later version.
+// 
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+// FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+// COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+// IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+// CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
 #endregion
 
 using System;
@@ -346,7 +347,7 @@ namespace netDxf.Entities
             get { return this.boundary; }
             set
             {
-                if(this.boundary != null)
+                if (this.boundary != null)
                     this.boundary.RemoveReactor(this);
 
                 if (value == null)
@@ -376,7 +377,7 @@ namespace netDxf.Entities
                         abbr = new BoundingRectangle(lwPol.PoligonalVertexes(6, MathHelper.Epsilon, MathHelper.Epsilon));
                         break;
                     case EntityType.Polyline:
-                        Polyline pol = (Polyline)value;
+                        Polyline pol = (Polyline) value;
                         if (!pol.IsClosed)
                             throw new ArgumentException("The polyline must be closed.");
                         List<Vector2> pPoints = new List<Vector2>();
@@ -406,7 +407,7 @@ namespace netDxf.Entities
                 this.center = new Vector3(abbr.Center.X, abbr.Center.Y, 0.0);
                 this.boundary = value;
                 this.boundary.AddReactor(this);
-                this.status |= ViewportStatusFlags.NonRectangularClipping;               
+                this.status |= ViewportStatusFlags.NonRectangularClipping;
             }
         }
 
@@ -425,7 +426,8 @@ namespace netDxf.Entities
         /// </remarks>
         internal override long AsignHandle(long entityNumber)
         {
-            if (this.boundary != null) entityNumber = this.boundary.AsignHandle(entityNumber);
+            if (this.boundary != null)
+                entityNumber = this.boundary.AsignHandle(entityNumber);
             return base.AsignHandle(entityNumber);
         }
 
@@ -439,28 +441,29 @@ namespace netDxf.Entities
             Viewport viewport = new Viewport
             {
                 //EntityObject properties
-                Layer = (Layer)this.layer.Clone(),
-                LineType = (LineType)this.lineType.Clone(),
-                Color = (AciColor)this.color.Clone(),
-                Lineweight = (Lineweight)this.lineweight.Clone(),
-                Transparency = (Transparency)this.transparency.Clone(),
-                LineTypeScale = this.lineTypeScale,
-                Normal = this.normal,
+                Layer = (Layer) this.Layer.Clone(),
+                Linetype = (Linetype) this.Linetype.Clone(),
+                Color = (AciColor) this.Color.Clone(),
+                Lineweight = this.Lineweight,
+                Transparency = (Transparency) this.Transparency.Clone(),
+                LinetypeScale = this.LinetypeScale,
+                Normal = this.Normal,
+                IsVisible = this.IsVisible,
                 //viewport properties
-                Center=this.center,
-                Width=this.width,
-                Height=this.height,
+                Center = this.center,
+                Width = this.width,
+                Height = this.height,
                 Stacking = this.stacking,
                 Id = this.id,
                 ViewCenter = this.viewCenter,
-                SnapBase=this.snapBase,
-                SnapSpacing=this.snapSpacing,
+                SnapBase = this.snapBase,
+                SnapSpacing = this.snapSpacing,
                 GridSpacing = this.gridSpacing,
                 ViewDirection = this.viewDirection,
                 ViewTarget = this.viewTarget,
                 LensLength = this.lensLength,
                 FrontClipPlane = this.frontClipPlane,
-                BackClipPlane=this.backClipPlane,
+                BackClipPlane = this.backClipPlane,
                 ViewHeight = this.viewHeight,
                 SnapAngle = this.snapAngle,
                 TwistAngle = this.twistAngle,
@@ -473,7 +476,7 @@ namespace netDxf.Entities
             };
 
             foreach (XData data in this.XData.Values)
-                viewport.XData.Add((XData)data.Clone());
+                viewport.XData.Add((XData) data.Clone());
 
 
             if (this.boundary != null)

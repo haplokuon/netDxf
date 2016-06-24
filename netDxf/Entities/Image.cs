@@ -1,22 +1,23 @@
-﻿#region netDxf, Copyright(C) 2015 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf library, Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+
+//                        netDxf library
+// Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
 // 
-//                         netDxf library
-//  Copyright (C) 2009-2015 Daniel Carvajal (haplokuon@gmail.com)
-//  
-//  This library is free software; you can redistribute it and/or
-//  modify it under the terms of the GNU Lesser General Public
-//  License as published by the Free Software Foundation; either
-//  version 2.1 of the License, or (at your option) any later version.
-//  
-//  The above copyright notice and this permission notice shall be included in all
-//  copies or substantial portions of the Software.
-//  
-//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-//  FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-//  COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-//  IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-//  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2.1 of the License, or (at your option) any later version.
+// 
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+// FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+// COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+// IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+// CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
 #endregion
 
 using System;
@@ -25,12 +26,11 @@ using netDxf.Tables;
 
 namespace netDxf.Entities
 {
-
     /// <summary>
     /// Represents a raster image <see cref="EntityObject">entity</see>.
     /// </summary>
     public class Image :
-        EntityObject 
+        EntityObject
     {
         #region private fields
 
@@ -73,7 +73,7 @@ namespace netDxf.Entities
         /// <param name="position">Image <see cref="Vector3">position</see> in world coordinates.</param>
         /// <param name="size">Image <see cref="Vector2">size</see> in world coordinates.</param>
         public Image(ImageDefinition imageDefinition, Vector3 position, Vector2 size)
-            :this(imageDefinition, position, size.X, size.Y)
+            : this(imageDefinition, position, size.X, size.Y)
         {
         }
 
@@ -99,6 +99,9 @@ namespace netDxf.Entities
         public Image(ImageDefinition imageDefinition, Vector3 position, double width, double height)
             : base(EntityType.Image, DxfObjectCode.Image)
         {
+            if (imageDefinition == null)
+                throw new ArgumentNullException(nameof(imageDefinition));
+
             this.imageDefinition = imageDefinition;
             this.position = position;
             this.width = width;
@@ -246,13 +249,14 @@ namespace netDxf.Entities
             Image entity = new Image
             {
                 //EntityObject properties
-                Layer = (Layer)this.layer.Clone(),
-                LineType = (LineType)this.lineType.Clone(),
-                Color = (AciColor)this.color.Clone(),
-                Lineweight = (Lineweight)this.lineweight.Clone(),
-                Transparency = (Transparency)this.transparency.Clone(),
-                LineTypeScale = this.lineTypeScale,
-                Normal = this.normal,
+                Layer = (Layer) this.Layer.Clone(),
+                Linetype = (Linetype) this.Linetype.Clone(),
+                Color = (AciColor) this.Color.Clone(),
+                Lineweight = this.Lineweight,
+                Transparency = (Transparency) this.Transparency.Clone(),
+                LinetypeScale = this.LinetypeScale,
+                Normal = this.Normal,
+                IsVisible = this.IsVisible,
                 //Image properties
                 Position = this.position,
                 Height = this.height,
@@ -268,10 +272,9 @@ namespace netDxf.Entities
             };
 
             foreach (XData data in this.XData.Values)
-                entity.XData.Add((XData)data.Clone());
+                entity.XData.Add((XData) data.Clone());
 
             return entity;
-
         }
 
         #endregion

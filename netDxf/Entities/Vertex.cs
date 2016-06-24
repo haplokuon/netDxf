@@ -1,22 +1,23 @@
-﻿#region netDxf, Copyright(C) 2015 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf library, Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+
+//                        netDxf library
+// Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
 // 
-//                         netDxf library
-//  Copyright (C) 2009-2015 Daniel Carvajal (haplokuon@gmail.com)
-//  
-//  This library is free software; you can redistribute it and/or
-//  modify it under the terms of the GNU Lesser General Public
-//  License as published by the Free Software Foundation; either
-//  version 2.1 of the License, or (at your option) any later version.
-//  
-//  The above copyright notice and this permission notice shall be included in all
-//  copies or substantial portions of the Software.
-//  
-//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-//  FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-//  COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-//  IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-//  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2.1 of the License, or (at your option) any later version.
+// 
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+// FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+// COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+// IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+// CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
 #endregion
 
 using System;
@@ -31,7 +32,7 @@ namespace netDxf.Entities
     /// The Vertex class holds all the information read from the dxf file even if its needed or not. For internal use only.
     /// </remarks>
     internal class Vertex :
-        DxfObject   
+        DxfObject
     {
         #region private fields
 
@@ -43,7 +44,7 @@ namespace netDxf.Entities
         private double bulge;
         private AciColor color;
         private Layer layer;
-        private LineType lineType;
+        private Linetype linetype;
 
         #endregion
 
@@ -98,7 +99,7 @@ namespace netDxf.Entities
             this.position = position;
             this.layer = Layer.Default;
             this.color = AciColor.ByLayer;
-            this.lineType = LineType.ByLayer;
+            this.linetype = Linetype.ByLayer;
             this.bulge = 0.0;
             this.startWidth = 0.0;
             this.endWidth = 0.0;
@@ -107,7 +108,7 @@ namespace netDxf.Entities
         #endregion
 
         #region public properties
-        
+
         /// <summary>
         /// Gets or sets the polyline vertex <see cref="Vector3">location</see>.
         /// </summary>
@@ -176,21 +177,21 @@ namespace netDxf.Entities
         public VertexTypeFlags Flags
         {
             get { return this.flags; }
-            set { this.flags = value;}
+            set { this.flags = value; }
         }
 
-       /// <summary>
+        /// <summary>
         /// Gets or sets the entity color.
         /// </summary>
         public AciColor Color
         {
             get { return this.color; }
-           set
-           {
-               if (value == null)
-                   throw new ArgumentNullException(nameof(value));
-               this.color = value;
-           }
+            set
+            {
+                if (value == null)
+                    throw new ArgumentNullException(nameof(value));
+                this.color = value;
+            }
         }
 
         /// <summary>
@@ -210,14 +211,14 @@ namespace netDxf.Entities
         /// <summary>
         /// Gets or sets the entity line type.
         /// </summary>
-        public LineType LineType
+        public Linetype Linetype
         {
-            get { return this.lineType; }
+            get { return this.linetype; }
             set
             {
                 if (value == null)
                     throw new ArgumentNullException(nameof(value));
-                this.lineType = value;
+                this.linetype = value;
             }
         }
 

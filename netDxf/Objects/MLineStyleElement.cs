@@ -1,22 +1,23 @@
-#region netDxf, Copyright(C) 2015 Daniel Carvajal, Licensed under LGPL.
+#region netDxf library, Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+
+//                        netDxf library
+// Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
 // 
-//                         netDxf library
-//  Copyright (C) 2009-2015 Daniel Carvajal (haplokuon@gmail.com)
-//  
-//  This library is free software; you can redistribute it and/or
-//  modify it under the terms of the GNU Lesser General Public
-//  License as published by the Free Software Foundation; either
-//  version 2.1 of the License, or (at your option) any later version.
-//  
-//  The above copyright notice and this permission notice shall be included in all
-//  copies or substantial portions of the Software.
-//  
-//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-//  FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-//  COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-//  IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-//  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2.1 of the License, or (at your option) any later version.
+// 
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+// FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+// COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+// IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+// CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
 #endregion
 
 using System;
@@ -33,18 +34,20 @@ namespace netDxf.Objects
     {
         #region delegates and events
 
-        public delegate void LineTypeChangedEventHandler(MLineStyleElement sender, TableObjectChangedEventArgs<LineType> e);
-        public event LineTypeChangedEventHandler LineTypeChanged;
-        protected virtual LineType OnLineTypeChangedEvent(LineType oldLineType, LineType newLineType)
+        public delegate void LinetypeChangedEventHandler(MLineStyleElement sender, TableObjectChangedEventArgs<Linetype> e);
+
+        public event LinetypeChangedEventHandler LinetypeChanged;
+
+        protected virtual Linetype OnLinetypeChangedEvent(Linetype oldLinetype, Linetype newLinetype)
         {
-            LineTypeChangedEventHandler ae = this.LineTypeChanged;
+            LinetypeChangedEventHandler ae = this.LinetypeChanged;
             if (ae != null)
             {
-                TableObjectChangedEventArgs<LineType> eventArgs = new TableObjectChangedEventArgs<LineType>(oldLineType, newLineType);
+                TableObjectChangedEventArgs<Linetype> eventArgs = new TableObjectChangedEventArgs<Linetype>(oldLinetype, newLinetype);
                 ae(this, eventArgs);
                 return eventArgs.NewValue;
             }
-            return newLineType;
+            return newLinetype;
         }
 
         #endregion
@@ -53,7 +56,7 @@ namespace netDxf.Objects
 
         private double offset;
         private AciColor color;
-        private LineType lineType;
+        private Linetype linetype;
 
         #endregion
 
@@ -64,7 +67,7 @@ namespace netDxf.Objects
         /// </summary>
         /// <param name="offset">Element offset.</param>
         public MLineStyleElement(double offset)
-            : this(offset, AciColor.ByLayer, LineType.ByLayer)
+            : this(offset, AciColor.ByLayer, Linetype.ByLayer)
         {
         }
 
@@ -73,12 +76,12 @@ namespace netDxf.Objects
         /// </summary>
         /// <param name="offset">Element offset.</param>
         /// <param name="color">Element color.</param>
-        /// <param name="lineType">Element line type.</param>
-        public MLineStyleElement(double offset, AciColor color, LineType lineType)
+        /// <param name="linetype">Element line type.</param>
+        public MLineStyleElement(double offset, AciColor color, Linetype linetype)
         {
             this.offset = offset;
             this.color = color;
-            this.lineType = lineType;
+            this.linetype = linetype;
         }
 
         #endregion
@@ -114,14 +117,14 @@ namespace netDxf.Objects
         /// <summary>
         /// Gets or sets the element line type.
         /// </summary>
-        public LineType LineType
+        public Linetype Linetype
         {
-            get { return this.lineType; }
+            get { return this.linetype; }
             set
             {
                 if (value == null)
                     throw new ArgumentNullException(nameof(value));
-                this.lineType = this.OnLineTypeChangedEvent(this.lineType, value);
+                this.linetype = this.OnLinetypeChangedEvent(this.linetype, value);
             }
         }
 
@@ -140,7 +143,54 @@ namespace netDxf.Objects
         /// </returns>
         public int CompareTo(MLineStyleElement other)
         {
+            if (other == null)
+                throw new ArgumentNullException(nameof(other));
+
             return this.offset.CompareTo(other.offset);
+        }
+
+        /// <summary>
+        /// Check if two MLineStyleElement are equal.
+        /// </summary>
+        /// <param name="other">Another MLineStyleElement to compare to.</param>
+        /// <returns>True if two MLineStyleElement are equal or false in any other case.</returns>
+        /// <remarks>
+        /// Two MLineStyleElement are considered equals if their offsets are the same.
+        /// </remarks>
+        public override bool Equals(object other)
+        {
+            if (other == null)
+                return false;
+
+            if (this.GetType() != other.GetType())
+                return false;
+
+            return this.Equals((MLineStyleElement) other);
+        }
+
+        /// <summary>
+        /// Check if two MLineStyleElement are equal.
+        /// </summary>
+        /// <param name="other">Another MLineStyleElement to compare to.</param>
+        /// <returns>True if two MLineStyleElement are equal or false in any other case.</returns>
+        /// <remarks>
+        /// Two MLineStyleElement are considered equals if their offsets are the same.
+        /// </remarks>
+        public bool Equals(MLineStyleElement other)
+        {
+            if (other == null)
+                return false;
+
+            return MathHelper.IsEqual(this.offset, other.offset);
+        }
+
+        /// <summary>
+        /// Returns the hash code for this instance.
+        /// </summary>
+        /// <returns>A 32-bit signed integer that is the hash code for this instance.</returns>
+        public override int GetHashCode()
+        {
+            return this.Offset.GetHashCode();
         }
 
         #endregion
@@ -155,8 +205,8 @@ namespace netDxf.Objects
         {
             return new MLineStyleElement(this.offset)
             {
-                Color = (AciColor)this.color.Clone(),
-                LineType = (LineType) this.lineType.Clone()
+                Color = (AciColor) this.Color.Clone(),
+                Linetype = (Linetype) this.linetype.Clone()
             };
         }
 
@@ -170,7 +220,7 @@ namespace netDxf.Objects
         /// <returns>The string representation.</returns>
         public override string ToString()
         {
-            return string.Format("{0}, color:{1}, line type:{2}", this.offset, this.color, this.lineType);
+            return string.Format("{0}, color:{1}, line type:{2}", this.offset, this.color, this.linetype);
         }
 
         #endregion

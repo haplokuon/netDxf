@@ -1,22 +1,23 @@
-﻿#region netDxf, Copyright(C) 2015 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf library, Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+
+//                        netDxf library
+// Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
 // 
-//                         netDxf library
-//  Copyright (C) 2009-2015 Daniel Carvajal (haplokuon@gmail.com)
-//  
-//  This library is free software; you can redistribute it and/or
-//  modify it under the terms of the GNU Lesser General Public
-//  License as published by the Free Software Foundation; either
-//  version 2.1 of the License, or (at your option) any later version.
-//  
-//  The above copyright notice and this permission notice shall be included in all
-//  copies or substantial portions of the Software.
-//  
-//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-//  FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-//  COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-//  IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-//  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2.1 of the License, or (at your option) any later version.
+// 
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+// FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+// COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+// IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+// CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
 #endregion
 
 using System;
@@ -101,10 +102,7 @@ namespace netDxf.Header
         /// <exception cref="NotSupportedException">Only AutoCad2000 and higher dxf versions are supported.</exception>
         public DxfVersion AcadVer
         {
-            get
-            {
-                return (DxfVersion)this.variables[HeaderVariableCode.AcadVer].Value;
-            }
+            get { return (DxfVersion) this.variables[HeaderVariableCode.AcadVer].Value; }
             set
             {
                 if (value < DxfVersion.AutoCad2000)
@@ -148,7 +146,7 @@ namespace netDxf.Header
         /// <remarks>Default value: Normal.</remarks>
         public AttMode AttMode
         {
-            get { return (AttMode)this.variables[HeaderVariableCode.AttMode].Value; }
+            get { return (AttMode) this.variables[HeaderVariableCode.AttMode].Value; }
             set { this.variables[HeaderVariableCode.AttMode].Value = value; }
         }
 
@@ -158,7 +156,7 @@ namespace netDxf.Header
         /// <remarks>Default value: Decimal degrees.</remarks>
         public AngleUnitType AUnits
         {
-            get { return (AngleUnitType)this.variables[HeaderVariableCode.AUnits].Value; }
+            get { return (AngleUnitType) this.variables[HeaderVariableCode.AUnits].Value; }
             set { this.variables[HeaderVariableCode.AUnits].Value = value; }
         }
 
@@ -187,7 +185,7 @@ namespace netDxf.Header
             set
             {
                 if (value == null)
-                    throw new ArgumentNullException(nameof(value), "The current entity color cannot be null.");
+                    throw new ArgumentNullException(nameof(value));
                 this.variables[HeaderVariableCode.CeColor].Value = value;
             }
         }
@@ -214,12 +212,7 @@ namespace netDxf.Header
         public Lineweight CeLweight
         {
             get { return (Lineweight) this.variables[HeaderVariableCode.CeLweight].Value; }
-            set
-            {
-                if (value == null)
-                    throw new ArgumentNullException(nameof(value), "The current entity line weight cannot be null.");
-                this.variables[HeaderVariableCode.CeLweight].Value = value;
-            }
+            set { this.variables[HeaderVariableCode.CeLweight].Value = value; }
         }
 
         /// <summary>
@@ -232,7 +225,7 @@ namespace netDxf.Header
             set
             {
                 if (string.IsNullOrEmpty(value))
-                    throw new ArgumentNullException(nameof(value), "The current entity line type name cannot be null or empty.");
+                    throw new ArgumentNullException(nameof(value), "The current entity line type name should be at least one character long.");
                 this.variables[HeaderVariableCode.CeLtype].Value = value;
             }
         }
@@ -247,7 +240,7 @@ namespace netDxf.Header
             set
             {
                 if (string.IsNullOrEmpty(value))
-                    throw new ArgumentNullException(nameof(value), "The current layer name cannot be null or empty.");
+                    throw new ArgumentNullException(nameof(value), "The current layer name should be at least one character long.");
                 this.variables[HeaderVariableCode.CLayer].Value = value;
             }
         }
@@ -258,7 +251,7 @@ namespace netDxf.Header
         /// <remarks>Default value: 0 (Top).</remarks>
         public MLineJustification CMLJust
         {
-            get { return (MLineJustification)this.variables[HeaderVariableCode.CMLJust].Value; }
+            get { return (MLineJustification) this.variables[HeaderVariableCode.CMLJust].Value; }
             set { this.variables[HeaderVariableCode.CMLJust].Value = value; }
         }
 
@@ -282,7 +275,7 @@ namespace netDxf.Header
             set
             {
                 if (string.IsNullOrEmpty(value))
-                    throw new ArgumentNullException(nameof(value), "The current multiline style name cannot be null or empty.");
+                    throw new ArgumentNullException(nameof(value), "The current multiline style name should be at least one character long.");
                 this.variables[HeaderVariableCode.CMLStyle].Value = value;
             }
         }
@@ -297,7 +290,7 @@ namespace netDxf.Header
             set
             {
                 if (string.IsNullOrEmpty(value))
-                    throw new ArgumentNullException(nameof(value), "The current dimension style name cannot be null or empty.");
+                    throw new ArgumentNullException(nameof(value), "The current dimension style name should be at least one character long.");
                 this.variables[HeaderVariableCode.DimStyle].Value = value;
             }
         }
@@ -327,7 +320,7 @@ namespace netDxf.Header
             set
             {
                 if (string.IsNullOrEmpty(value))
-                    throw new ArgumentNullException(nameof(value), "The current text style name cannot be null or empty.");
+                    throw new ArgumentNullException(nameof(value), "The current text style name should be at least one character long.");
                 this.variables[HeaderVariableCode.TextStyle].Value = value;
             }
         }
@@ -341,7 +334,7 @@ namespace netDxf.Header
         /// </remarks>
         public LinearUnitType LUnits
         {
-            get { return (LinearUnitType)this.variables[HeaderVariableCode.LUnits].Value; }
+            get { return (LinearUnitType) this.variables[HeaderVariableCode.LUnits].Value; }
             set
             {
                 if (value == LinearUnitType.Architectural || value == LinearUnitType.Engineering)
@@ -356,7 +349,7 @@ namespace netDxf.Header
         /// <remarks>Valid values are integers from 0 to 8. Default value: 4.</remarks>
         public short LUprec
         {
-            get { return (short)this.variables[HeaderVariableCode.LUprec].Value; }
+            get { return (short) this.variables[HeaderVariableCode.LUprec].Value; }
             set
             {
                 if (value < 0 || value > 8)
@@ -415,7 +408,7 @@ namespace netDxf.Header
         /// </remarks>
         public DrawingUnits InsUnits
         {
-            get { return (DrawingUnits)this.variables[HeaderVariableCode.InsUnits].Value; }
+            get { return (DrawingUnits) this.variables[HeaderVariableCode.InsUnits].Value; }
             set { this.variables[HeaderVariableCode.InsUnits].Value = value; }
         }
 
@@ -467,7 +460,7 @@ namespace netDxf.Header
         /// <remarks>Default value: PointShape.Dot.</remarks>
         public PointShape PdMode
         {
-            get { return (PointShape)this.variables[HeaderVariableCode.PdMode].Value; }
+            get { return (PointShape) this.variables[HeaderVariableCode.PdMode].Value; }
             set { this.variables[HeaderVariableCode.PdMode].Value = value; }
         }
 
@@ -496,7 +489,7 @@ namespace netDxf.Header
         /// </remarks>
         public short PLineGen
         {
-            get { return (short)this.variables[HeaderVariableCode.PLineGen].Value; }
+            get { return (short) this.variables[HeaderVariableCode.PLineGen].Value; }
             set
             {
                 if (value != 0 && value != 1)
@@ -515,7 +508,7 @@ namespace netDxf.Header
         /// </remarks>
         public short PsLtScale
         {
-            get { return (short)this.variables[HeaderVariableCode.PsLtScale].Value; }
+            get { return (short) this.variables[HeaderVariableCode.PsLtScale].Value; }
             set
             {
                 if (value != 0 && value != 1)
@@ -530,7 +523,7 @@ namespace netDxf.Header
         /// <remarks>This date/time is local to the time zone where the file was created.</remarks>
         public DateTime TdCreate
         {
-            get { return (DateTime)this.variables[HeaderVariableCode.TdCreate].Value; }
+            get { return (DateTime) this.variables[HeaderVariableCode.TdCreate].Value; }
             set { this.variables[HeaderVariableCode.TdCreate].Value = value; }
         }
 
@@ -539,7 +532,7 @@ namespace netDxf.Header
         /// </summary>
         public DateTime TduCreate
         {
-            get { return (DateTime)this.variables[HeaderVariableCode.TduCreate].Value; }
+            get { return (DateTime) this.variables[HeaderVariableCode.TduCreate].Value; }
             set { this.variables[HeaderVariableCode.TduCreate].Value = value; }
         }
 
@@ -549,8 +542,8 @@ namespace netDxf.Header
         /// <remarks>This date/time is local to the time zone where the file was created.</remarks>
         public DateTime TdUpdate
         {
-            get { return (DateTime)this.variables[HeaderVariableCode.TdUpdate].Value; }
-            set { this.variables[HeaderVariableCode.TdUpdate].Value =value; }
+            get { return (DateTime) this.variables[HeaderVariableCode.TdUpdate].Value; }
+            set { this.variables[HeaderVariableCode.TdUpdate].Value = value; }
         }
 
         /// <summary>
@@ -558,7 +551,7 @@ namespace netDxf.Header
         /// </summary>
         public DateTime TduUpdate
         {
-            get { return (DateTime)this.variables[HeaderVariableCode.TduUpdate].Value; }
+            get { return (DateTime) this.variables[HeaderVariableCode.TduUpdate].Value; }
             set { this.variables[HeaderVariableCode.TduUpdate].Value = value; }
         }
 
@@ -567,7 +560,7 @@ namespace netDxf.Header
         /// </summary>
         public TimeSpan TdinDwg
         {
-            get { return (TimeSpan)this.variables[HeaderVariableCode.TdinDwg].Value; }
+            get { return (TimeSpan) this.variables[HeaderVariableCode.TdinDwg].Value; }
             set { this.variables[HeaderVariableCode.TdinDwg].Value = value; }
         }
 

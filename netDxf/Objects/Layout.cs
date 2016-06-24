@@ -1,22 +1,23 @@
-﻿#region netDxf, Copyright(C) 2015 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf library, Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+
+//                        netDxf library
+// Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
 // 
-//                         netDxf library
-//  Copyright (C) 2009-2015 Daniel Carvajal (haplokuon@gmail.com)
-//  
-//  This library is free software; you can redistribute it and/or
-//  modify it under the terms of the GNU Lesser General Public
-//  License as published by the Free Software Foundation; either
-//  version 2.1 of the License, or (at your option) any later version.
-//  
-//  The above copyright notice and this permission notice shall be included in all
-//  copies or substantial portions of the Software.
-//  
-//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-//  FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-//  COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-//  IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-//  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2.1 of the License, or (at your option) any later version.
+// 
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+// FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+// COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+// IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+// CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
 #endregion
 
 using System;
@@ -92,16 +93,16 @@ namespace netDxf.Objects
 
             if (name.Equals(ModelSpaceName, StringComparison.OrdinalIgnoreCase))
             {
-                this.reserved = true;
+                this.IsReserved = true;
                 this.isPaperSpace = false;
                 this.viewport = null;
                 plotSettings.Flags = PlotFlags.Initializing | PlotFlags.UpdatePaper | PlotFlags.ModelType | PlotFlags.DrawViewportsFirst | PlotFlags.PrintLineweights | PlotFlags.PlotPlotStyles | PlotFlags.UseStandardScale;
             }
             else
             {
-                this.reserved = false;
+                this.IsReserved = false;
                 this.isPaperSpace = true;
-                this.viewport = new Viewport(1) { ViewCenter = new Vector2(50.0, 100.0) };
+                this.viewport = new Viewport(1) {ViewCenter = new Vector2(50.0, 100.0)};
             }
 
             this.tabOrder = 0;
@@ -254,8 +255,8 @@ namespace netDxf.Objects
         /// </summary>
         public new Layouts Owner
         {
-            get { return (Layouts)this.owner; }
-            internal set { this.owner = value; }
+            get { return (Layouts) base.Owner; }
+            internal set { base.Owner = value; }
         }
 
         /// <summary>
@@ -279,10 +280,10 @@ namespace netDxf.Objects
         /// <remarks>The Model Layout cannot be cloned.</remarks>
         public override TableObject Clone(string newName)
         {
-            if (this.name == ModelSpaceName || newName == ModelSpaceName)
+            if (this.Name == ModelSpaceName || newName == ModelSpaceName)
                 throw new NotSupportedException("The Model layout cannot be cloned.");
 
-            return new Layout(newName, null, (PlotSettings)this.plot.Clone())
+            return new Layout(newName, null, (PlotSettings) this.plot.Clone())
             {
                 TabOrder = this.tabOrder,
                 MinLimit = this.minLimit,
@@ -294,7 +295,7 @@ namespace netDxf.Objects
                 UcsOrigin = this.origin,
                 UcsXAxis = this.xAxis,
                 UcsYAxis = this.yAxis,
-                Viewport = (Viewport)this.viewport.Clone()
+                Viewport = (Viewport) this.viewport.Clone()
             };
         }
 
@@ -305,7 +306,7 @@ namespace netDxf.Objects
         /// <remarks>The Model Layout cannot be cloned.</remarks>
         public override object Clone()
         {
-            return this.Clone(this.name);
+            return this.Clone(this.Name);
         }
 
         /// <summary>
@@ -319,8 +320,9 @@ namespace netDxf.Objects
         /// </remarks>
         internal override long AsignHandle(long entityNumber)
         {
-            entityNumber = this.owner.AsignHandle(entityNumber);
-            if(this.isPaperSpace) entityNumber = this.viewport.AsignHandle(entityNumber);
+            entityNumber = this.Owner.AsignHandle(entityNumber);
+            if (this.isPaperSpace)
+                entityNumber = this.viewport.AsignHandle(entityNumber);
             return base.AsignHandle(entityNumber);
         }
 
@@ -339,6 +341,9 @@ namespace netDxf.Objects
         /// </returns>
         public int CompareTo(Layout other)
         {
+            if (other == null)
+                throw new ArgumentNullException(nameof(other));
+
             return this.tabOrder.CompareTo(other.tabOrder);
         }
 

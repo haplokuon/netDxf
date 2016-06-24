@@ -1,26 +1,28 @@
-﻿#region netDxf, Copyright(C) 2016 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf library, Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+
+//                        netDxf library
+// Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
 // 
-//                         netDxf library
-//  Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
-//  
-//  This library is free software; you can redistribute it and/or
-//  modify it under the terms of the GNU Lesser General Public
-//  License as published by the Free Software Foundation; either
-//  version 2.1 of the License, or (at your option) any later version.
-//  
-//  The above copyright notice and this permission notice shall be included in all
-//  copies or substantial portions of the Software.
-//  
-//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-//  FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-//  COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-//  IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-//  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2.1 of the License, or (at your option) any later version.
+// 
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+// FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+// COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+// IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+// CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
 #endregion
 
 using System;
 using netDxf.Blocks;
+using netDxf.Collections;
 using netDxf.Tables;
 
 namespace netDxf.Entities
@@ -31,13 +33,15 @@ namespace netDxf.Entities
     /// <reamarks>
     /// Once a dimension is added to the dxf document, its properties should not be modified or the changes will not be reflected in the saved dxf file.
     /// </reamarks>
-    public abstract class Dimension:
+    public abstract class Dimension :
         EntityObject
     {
         #region delegates and events
 
         public delegate void DimensionStyleChangedEventHandler(Dimension sender, TableObjectChangedEventArgs<DimensionStyle> e);
+
         public event DimensionStyleChangedEventHandler DimensionStyleChanged;
+
         protected virtual DimensionStyle OnDimensionStyleChangedEvent(DimensionStyle oldStyle, DimensionStyle newStyle)
         {
             DimensionStyleChangedEventHandler ae = this.DimensionStyleChanged;
@@ -51,7 +55,9 @@ namespace netDxf.Entities
         }
 
         public delegate void DimensionBlockChangedEventHandler(Dimension sender, TableObjectChangedEventArgs<Block> e);
+
         public event DimensionBlockChangedEventHandler DimensionBlockChanged;
+
         protected virtual Block OnDimensionBlockChangedEvent(Block oldBlock, Block newBlock)
         {
             DimensionBlockChangedEventHandler ae = this.DimensionBlockChanged;
@@ -66,18 +72,45 @@ namespace netDxf.Entities
 
         #endregion
 
+        #region delegates and events for style overrides
+
+        public delegate void DimensionStyleOverrideAddedEventHandler(Dimension sender, DimensionStyleOverrideChangeEventArgs e);
+
+        public event DimensionStyleOverrideAddedEventHandler DimensionStyleOverrideAdded;
+
+        protected virtual void OnDimensionStyleOverrideAddedEvent(DimensionStyleOverride item)
+        {
+            DimensionStyleOverrideAddedEventHandler ae = this.DimensionStyleOverrideAdded;
+            if (ae != null)
+                ae(this, new DimensionStyleOverrideChangeEventArgs(item));
+        }
+
+        public delegate void DimensionStyleOverrideRemovedEventHandler(Dimension sender, DimensionStyleOverrideChangeEventArgs e);
+
+        public event DimensionStyleOverrideRemovedEventHandler DimensionStyleOverrideRemoved;
+
+        protected virtual void OnDimensionStyleOverrideRemovedEvent(DimensionStyleOverride item)
+        {
+            DimensionStyleOverrideRemovedEventHandler ae = this.DimensionStyleOverrideRemoved;
+            if (ae != null)
+                ae(this, new DimensionStyleOverrideChangeEventArgs(item));
+        }
+
+        #endregion
+
         #region protected fields
 
-        protected Vector3 definitionPoint;
-        protected Vector3 midTextPoint;
-        protected DimensionStyle style;
-        protected DimensionType dimensionType;
-        protected MTextAttachmentPoint attachmentPoint;
-        protected MTextLineSpacingStyle lineSpacingStyle;
-        protected Block block;
-        protected string userText;
-        protected double lineSpacing;
-        protected double elevation;
+        private Vector3 definitionPoint;
+        private Vector3 midTextPoint;
+        private DimensionStyle style;
+        private readonly DimensionType dimensionType;
+        private MTextAttachmentPoint attachmentPoint;
+        private MTextLineSpacingStyle lineSpacingStyle;
+        private Block block;
+        private string userText;
+        private double lineSpacing;
+        private double elevation;
+        private readonly DimensionStyleOverrideDictionary styleOverrides;
 
         #endregion
 
@@ -99,6 +132,11 @@ namespace netDxf.Entities
             this.style = DimensionStyle.Default;
             this.userText = null;
             this.elevation = 0.0;
+            this.styleOverrides = new DimensionStyleOverrideDictionary();
+            this.styleOverrides.BeforeAddItem += this.StyleOverrides_BeforeAddItem;
+            this.styleOverrides.AddItem += this.StyleOverrides_AddItem;
+            this.styleOverrides.BeforeRemoveItem += this.StyleOverrides_BeforeRemoveItem;
+            this.styleOverrides.RemoveItem += this.StyleOverrides_RemoveItem;
         }
 
         #endregion
@@ -142,6 +180,15 @@ namespace netDxf.Entities
         }
 
         /// <summary>
+        /// Gets the dimension style overrides list.
+        /// </summary>
+        /// <remarks>Any dimension style value stored in this list will override its corresponding value in the assigned style to the dimension.</remarks>
+        public DimensionStyleOverrideDictionary StyleOverrides
+        {
+            get { return this.styleOverrides; }
+        }
+
+        /// <summary>
         /// Gets the dimension type.
         /// </summary>
         public DimensionType DimensionType
@@ -152,10 +199,7 @@ namespace netDxf.Entities
         /// <summary>
         /// Gets the actual measurement.
         /// </summary>
-        public abstract double Measurement
-        {
-            get;
-        }
+        public abstract double Measurement { get; }
 
         /// <summary>
         /// Gets or sets the dimension text attachment point.
@@ -237,7 +281,7 @@ namespace netDxf.Entities
         /// <param name="name">Name to be assigned to the generated block.</param>
         /// <returns> The block that represents the actual dimension.</returns>
         internal abstract Block BuildBlock(string name);
-        
+
         #endregion
 
         #region public methods
@@ -251,9 +295,36 @@ namespace netDxf.Entities
         /// </remarks>
         public void Update()
         {
-            if (this.block == null) throw new ArgumentException("The dimension does not belong to a document.");
+            if (this.block == null)
+                return;
             Block newBlock = this.BuildBlock(this.block.Name);
             this.block = this.OnDimensionBlockChangedEvent(this.block, newBlock);
+        }
+
+        #endregion
+
+        #region Dimension style overrides events
+
+        private void StyleOverrides_BeforeAddItem(DimensionStyleOverrideDictionary sender, DimensionStyleOverrideDictionaryEventArgs e)
+        {
+            DimensionStyleOverride old;
+            if (sender.TryGetValue(e.Item.Type, out old))
+                if (ReferenceEquals(old.Value, e.Item.Value))
+                    e.Cancel = true;
+        }
+
+        private void StyleOverrides_AddItem(DimensionStyleOverrideDictionary sender, DimensionStyleOverrideDictionaryEventArgs e)
+        {
+            this.OnDimensionStyleOverrideAddedEvent(e.Item);
+        }
+
+        private void StyleOverrides_BeforeRemoveItem(DimensionStyleOverrideDictionary sender, DimensionStyleOverrideDictionaryEventArgs e)
+        {
+        }
+
+        private void StyleOverrides_RemoveItem(DimensionStyleOverrideDictionary sender, DimensionStyleOverrideDictionaryEventArgs e)
+        {
+            this.OnDimensionStyleOverrideRemovedEvent(e.Item);
         }
 
         #endregion

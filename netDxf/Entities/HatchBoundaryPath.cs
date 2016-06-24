@@ -1,27 +1,27 @@
-﻿#region netDxf, Copyright(C) 2015 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf library, Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+
+//                        netDxf library
+// Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
 // 
-//                         netDxf library
-//  Copyright (C) 2009-2015 Daniel Carvajal (haplokuon@gmail.com)
-//  
-//  This library is free software; you can redistribute it and/or
-//  modify it under the terms of the GNU Lesser General Public
-//  License as published by the Free Software Foundation; either
-//  version 2.1 of the License, or (at your option) any later version.
-//  
-//  The above copyright notice and this permission notice shall be included in all
-//  copies or substantial portions of the Software.
-//  
-//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-//  FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-//  COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-//  IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-//  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2.1 of the License, or (at your option) any later version.
+// 
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+// FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+// COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+// IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+// CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
 #endregion
 
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 
 namespace netDxf.Entities
 {
@@ -37,7 +37,7 @@ namespace netDxf.Entities
     /// Lines, arcs, ellipse arcs, open polylines, and open splines are open paths so more entities should exist to make a closed loop.
     /// </remarks>
     public class HatchBoundaryPath :
-        ICloneable 
+        ICloneable
     {
         #region Hatch boundary path edge classes
 
@@ -78,11 +78,13 @@ namespace netDxf.Entities
             public Polyline(EntityObject entity)
                 : base(EdgeType.Polyline)
             {
-                if (entity == null) throw new ArgumentNullException(nameof(entity));
+                if (entity == null)
+                    throw new ArgumentNullException(nameof(entity));
                 if (entity.Type == EntityType.LightWeightPolyline)
                 {
-                    Entities.LwPolyline poly = (Entities.LwPolyline)entity;
-                    if (!poly.IsClosed) throw new ArgumentException("Only closed polyline are supported as hatch boundary edges.", nameof(entity));
+                    Entities.LwPolyline poly = (Entities.LwPolyline) entity;
+                    if (!poly.IsClosed)
+                        throw new ArgumentException("Only closed polyline are supported as hatch boundary edges.", nameof(entity));
 
                     this.Vertexes = new Vector3[poly.Vertexes.Count];
                     for (int i = 0; i < poly.Vertexes.Count; i++)
@@ -93,8 +95,9 @@ namespace netDxf.Entities
                 }
                 else if (entity.Type == EntityType.Polyline)
                 {
-                    Entities.Polyline poly = (Entities.Polyline)entity;
-                    if (!poly.IsClosed) throw new ArgumentException("Only closed polyline are supported as hatch boundary edges.", nameof(entity));
+                    Entities.Polyline poly = (Entities.Polyline) entity;
+                    if (!poly.IsClosed)
+                        throw new ArgumentException("Only closed polyline are supported as hatch boundary edges.", nameof(entity));
 
                     this.Vertexes = new Vector3[poly.Vertexes.Count];
                     for (int i = 0; i < poly.Vertexes.Count; i++)
@@ -104,7 +107,7 @@ namespace netDxf.Entities
                     this.IsClosed = true;
                 }
                 else
-                    throw new ArgumentException("The entity is not a LwPolyline or a Polyline", nameof(entity));               
+                    throw new ArgumentException("The entity is not a LwPolyline or a Polyline", nameof(entity));
             }
 
             public static Polyline ConvertFrom(EntityObject entity)
@@ -152,10 +155,12 @@ namespace netDxf.Entities
             public Line(EntityObject entity)
                 : base(EdgeType.Line)
             {
-                if (entity == null) throw new ArgumentNullException(nameof(entity));
+                if (entity == null)
+                    throw new ArgumentNullException(nameof(entity));
 
                 Entities.Line line = entity as Entities.Line;
-                if (line == null) throw new ArgumentException("The entity is not a Line", nameof(entity));
+                if (line == null)
+                    throw new ArgumentException("The entity is not a Line", nameof(entity));
 
                 this.Start = new Vector2(line.StartPoint.X, line.StartPoint.Y);
                 this.End = new Vector2(line.EndPoint.X, line.EndPoint.Y);
@@ -200,7 +205,8 @@ namespace netDxf.Entities
             public Arc(EntityObject entity)
                 : base(EdgeType.Arc)
             {
-                if (entity == null) throw new ArgumentNullException(nameof(entity));
+                if (entity == null)
+                    throw new ArgumentNullException(nameof(entity));
 
                 switch (entity.Type)
                 {
@@ -234,7 +240,7 @@ namespace netDxf.Entities
             {
                 if (MathHelper.IsEqual(MathHelper.NormalizeAngle(this.StartAngle), MathHelper.NormalizeAngle(this.EndAngle)))
                     return new Entities.Circle(this.Center, this.Radius);
-                if(this.IsCounterclockwise)
+                if (this.IsCounterclockwise)
                     return new Entities.Arc(this.Center, this.Radius, this.StartAngle, this.EndAngle);
 
                 return new Entities.Arc(this.Center, this.Radius, 360 - this.EndAngle, 360 - this.StartAngle);
@@ -273,20 +279,22 @@ namespace netDxf.Entities
             public Ellipse(EntityObject entity)
                 : base(EdgeType.Ellipse)
             {
-                if (entity == null) throw new ArgumentNullException(nameof(entity));
+                if (entity == null)
+                    throw new ArgumentNullException(nameof(entity));
 
                 Entities.Ellipse ellipse = entity as Entities.Ellipse;
-                if (ellipse == null) throw new ArgumentException("The entity is not an Ellipse", nameof(entity));
+                if (ellipse == null)
+                    throw new ArgumentException("The entity is not an Ellipse", nameof(entity));
 
                 this.Center = new Vector2(ellipse.Center.X, ellipse.Center.Y);
-                double sine = 0.5 * ellipse.MajorAxis * Math.Sin(ellipse.Rotation * MathHelper.DegToRad);
-                double cosine = 0.5 * ellipse.MajorAxis * Math.Cos(ellipse.Rotation * MathHelper.DegToRad);
+                double sine = 0.5*ellipse.MajorAxis*Math.Sin(ellipse.Rotation*MathHelper.DegToRad);
+                double cosine = 0.5*ellipse.MajorAxis*Math.Cos(ellipse.Rotation*MathHelper.DegToRad);
                 this.EndMajorAxis = new Vector2(cosine, sine);
-                this.MinorRatio = ellipse.MinorAxis / ellipse.MajorAxis;
+                this.MinorRatio = ellipse.MinorAxis/ellipse.MajorAxis;
                 if (ellipse.IsFullEllipse)
                 {
-                    this.StartAngle = 0;
-                    this.EndAngle = 360;
+                    this.StartAngle = 0.0;
+                    this.EndAngle = 360.0;
                 }
                 else
                 {
@@ -306,15 +314,15 @@ namespace netDxf.Entities
                 Vector3 center = new Vector3(this.Center.X, this.Center.Y, 0.0);
                 Vector3 axisPoint = new Vector3(this.EndMajorAxis.X, this.EndMajorAxis.Y, 0.0);
                 Vector3 ocsAxisPoint = MathHelper.Transform(axisPoint,
-                                                            Vector3.UnitZ,
-                                                            CoordinateSystem.World,
-                                                            CoordinateSystem.Object);
-                double rotation = Vector2.Angle(new Vector2(ocsAxisPoint.X, ocsAxisPoint.Y)) * MathHelper.RadToDeg;
-                double majorAxis = 2 * axisPoint.Modulus();
+                    Vector3.UnitZ,
+                    CoordinateSystem.World,
+                    CoordinateSystem.Object);
+                double rotation = Vector2.Angle(new Vector2(ocsAxisPoint.X, ocsAxisPoint.Y))*MathHelper.RadToDeg;
+                double majorAxis = 2*axisPoint.Modulus();
                 return new Entities.Ellipse
                 {
                     MajorAxis = majorAxis,
-                    MinorAxis = majorAxis * this.MinorRatio,
+                    MinorAxis = majorAxis*this.MinorRatio,
                     Rotation = rotation,
                     Center = center,
                     StartAngle = this.IsCounterclockwise ? this.StartAngle : 360 - this.EndAngle,
@@ -355,13 +363,15 @@ namespace netDxf.Entities
             public Spline(EntityObject entity)
                 : base(EdgeType.Spline)
             {
-                if (entity == null) throw new ArgumentNullException(nameof(entity));
+                if (entity == null)
+                    throw new ArgumentNullException(nameof(entity));
 
                 Entities.Spline spline = entity as Entities.Spline;
-                if (spline == null) throw new ArgumentException("The entity is not an Spline", nameof(entity));
+                if (spline == null)
+                    throw new ArgumentException("The entity is not an Spline", nameof(entity));
 
                 this.Degree = spline.Degree;
-                this.IsRational = (spline.Flags & SplineTypeFlags.Rational) == SplineTypeFlags.Rational;
+                this.IsRational = spline.Flags.HasFlag(SplinetypeFlags.Rational);
                 this.IsPeriodic = spline.IsPeriodic;
                 if (spline.ControlPoints.Count == 0)
                     throw new ArgumentException("The HatchBoundaryPath spline edge requires a spline entity with control points.", nameof(entity));
@@ -401,7 +411,6 @@ namespace netDxf.Entities
                     IsPeriodic = this.IsPeriodic,
                     Knots = new double[this.Knots.Length],
                     ControlPoints = new Vector3[this.ControlPoints.Length],
-                    
                 };
                 for (int i = 0; i < this.Knots.Length; i++)
                 {
@@ -421,7 +430,7 @@ namespace netDxf.Entities
 
         private readonly List<EntityObject> contour;
         private readonly List<Edge> edges;
-        private HatchBoundaryPathTypeFlags pathTypeFlag;
+        private HatchBoundaryPathTypeFlags pathType;
 
         #endregion
 
@@ -431,23 +440,23 @@ namespace netDxf.Entities
         /// Initializes a new instance of the <c>Hatch</c> class.
         /// </summary>
         /// <param name="edges">List of entities that makes a loop for the hatch boundary paths.</param>
-        public HatchBoundaryPath(IList<EntityObject> edges)
+        public HatchBoundaryPath(IEnumerable<EntityObject> edges)
         {
             if (edges == null)
                 throw new ArgumentNullException(nameof(edges));
             this.edges = new List<Edge>();
-            this.pathTypeFlag = HatchBoundaryPathTypeFlags.Derived | HatchBoundaryPathTypeFlags.External;
+            this.pathType = HatchBoundaryPathTypeFlags.Derived | HatchBoundaryPathTypeFlags.External;
             this.contour = new List<EntityObject>(edges);
-            this.SetInternalInfo(edges);
+            this.Update();
         }
 
-        internal HatchBoundaryPath(List<Edge> edges)
+        internal HatchBoundaryPath(IEnumerable<Edge> edges)
         {
             if (edges == null)
                 throw new ArgumentNullException(nameof(edges));
-            this.pathTypeFlag = HatchBoundaryPathTypeFlags.Derived | HatchBoundaryPathTypeFlags.External;
+            this.pathType = HatchBoundaryPathTypeFlags.Derived | HatchBoundaryPathTypeFlags.External;
             this.contour = new List<EntityObject>();
-            this.edges = edges;
+            this.edges = new List<Edge>(edges);
         }
 
         #endregion
@@ -457,27 +466,27 @@ namespace netDxf.Entities
         /// <summary>
         /// Gets the list of entities that makes a loop for the hatch boundary paths.
         /// </summary>
-        public ReadOnlyCollection<Edge> Edges
+        public IReadOnlyList<Edge> Edges
         {
-            get { return this.edges.AsReadOnly(); }
+            get { return this.edges; }
         }
 
         /// <summary>
         /// Gets the boundary path type flag.
         /// </summary>
-        public HatchBoundaryPathTypeFlags PathTypeFlag
+        public HatchBoundaryPathTypeFlags PathType
         {
-            get { return this.pathTypeFlag; }
-            internal set { this.pathTypeFlag = value; }
+            get { return this.pathType; }
+            internal set { this.pathType = value; }
         }
 
         /// <summary>
         /// Gets the list of entities that makes the boundary.
         /// </summary>
         /// <remarks>If the boundary path belongs to a non-associative hatch this list will contain zero entities.</remarks>
-        public ReadOnlyCollection<EntityObject> Entities
+        public IReadOnlyList<EntityObject> Entities
         {
-            get { return this.contour.AsReadOnly(); }
+            get { return this.contour; }
         }
 
         #endregion
@@ -519,50 +528,57 @@ namespace netDxf.Entities
 
         #region private methods
 
-        private void SetInternalInfo(IList<EntityObject> entities)
+        private void SetInternalInfo(IEnumerable<EntityObject> entities)
         {
             bool containsClosedPolyline = false;
             this.edges.Clear();
 
             foreach (EntityObject entity in entities)
             {
-                if ((this.pathTypeFlag & HatchBoundaryPathTypeFlags.Polyline) == HatchBoundaryPathTypeFlags.Polyline)
-                    if (this.edges.Count >= 1) throw new ArgumentException("Closed polylines cannot be combined with other entities to make a hatch boundary path.");
+                if (this.pathType.HasFlag(HatchBoundaryPathTypeFlags.Polyline))
+                    if (this.edges.Count >= 1)
+                        throw new ArgumentException("Closed polylines cannot be combined with other entities to make a hatch boundary path.");
 
                 // it seems that AutoCad does not have problems on creating loops that theoretically does not make sense, like, for example an internal loop that is made of a single arc.
                 // so if AutoCAD is ok with that I am too, the program that make use of this information will take care of this inconsistencies
                 switch (entity.Type)
                 {
                     case EntityType.Arc:
-                        if (containsClosedPolyline) throw new ArgumentException("Closed polylines cannot be combined with other entities to make a hatch boundary path.");
+                        if (containsClosedPolyline)
+                            throw new ArgumentException("Closed polylines cannot be combined with other entities to make a hatch boundary path.");
                         this.edges.Add(Arc.ConvertFrom(entity));
                         break;
                     case EntityType.Circle:
-                        if (containsClosedPolyline) throw new ArgumentException("Closed polylines cannot be combined with other entities to make a hatch boundary path.");
+                        if (containsClosedPolyline)
+                            throw new ArgumentException("Closed polylines cannot be combined with other entities to make a hatch boundary path.");
                         this.edges.Add(Arc.ConvertFrom(entity));
                         break;
                     case EntityType.Ellipse:
-                        if (containsClosedPolyline) throw new ArgumentException("Closed polylines cannot be combined with other entities to make a hatch boundary path.");
+                        if (containsClosedPolyline)
+                            throw new ArgumentException("Closed polylines cannot be combined with other entities to make a hatch boundary path.");
                         this.edges.Add(Ellipse.ConvertFrom(entity));
                         break;
                     case EntityType.Line:
-                        if (containsClosedPolyline) throw new ArgumentException("Closed polylines cannot be combined with other entities to make a hatch boundary path.");
+                        if (containsClosedPolyline)
+                            throw new ArgumentException("Closed polylines cannot be combined with other entities to make a hatch boundary path.");
                         this.edges.Add(Line.ConvertFrom(entity));
                         break;
                     case EntityType.LightWeightPolyline:
-                        if (containsClosedPolyline) throw new ArgumentException("Closed polylines cannot be combined with other entities to make a hatch boundary path.");
+                        if (containsClosedPolyline)
+                            throw new ArgumentException("Closed polylines cannot be combined with other entities to make a hatch boundary path.");
                         LwPolyline poly = (LwPolyline) entity;
                         if (poly.IsClosed)
                         {
                             this.edges.Add(Polyline.ConvertFrom(entity)); // A polyline HatchBoundaryPath must be closed
-                            this.pathTypeFlag |= HatchBoundaryPathTypeFlags.Polyline;
+                            this.pathType |= HatchBoundaryPathTypeFlags.Polyline;
                             containsClosedPolyline = true;
                         }
                         else
                             this.SetInternalInfo(poly.Explode()); // open polylines will always be exploded, only one polyline can be present in a path
                         break;
                     case EntityType.Spline:
-                        if (containsClosedPolyline) throw new ArgumentException("Closed polylines cannot be combined with other entities to make a hatch boundary path.");
+                        if (containsClosedPolyline)
+                            throw new ArgumentException("Closed polylines cannot be combined with other entities to make a hatch boundary path.");
                         this.edges.Add(Spline.ConvertFrom(entity));
                         break;
                     default:
@@ -587,7 +603,7 @@ namespace netDxf.Entities
 
             HatchBoundaryPath copy = new HatchBoundaryPath(copyEdges)
             {
-                pathTypeFlag = this.pathTypeFlag
+                pathType = this.pathType
             };
 
             return copy;

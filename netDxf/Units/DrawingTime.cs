@@ -1,22 +1,23 @@
-﻿#region netDxf, Copyright(C) 2015 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf library, Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+
+//                        netDxf library
+// Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
 // 
-//                         netDxf library
-//  Copyright (C) 2009-2015 Daniel Carvajal (haplokuon@gmail.com)
-//  
-//  This library is free software; you can redistribute it and/or
-//  modify it under the terms of the GNU Lesser General Public
-//  License as published by the Free Software Foundation; either
-//  version 2.1 of the License, or (at your option) any later version.
-//  
-//  The above copyright notice and this permission notice shall be included in all
-//  copies or substantial portions of the Software.
-//  
-//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-//  FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-//  COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-//  IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-//  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2.1 of the License, or (at your option) any later version.
+// 
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+// FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+// COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+// IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+// CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
 #endregion
 
 using System;
@@ -26,7 +27,7 @@ namespace netDxf.Units
     /// <summary>
     /// Utility functions to handle DateTime conversions.
     /// </summary>
-    public class DrawingTime
+    public static class DrawingTime
     {
         /// <summary>
         /// Calculates a date represented as &lt;Julian date&gt;.&lt;Fraction of day&gt; from a <see cref="DateTime">DateTime</see> instance.
@@ -42,7 +43,7 @@ namespace netDxf.Units
             double minute = date.Minute;
             double second = date.Second;
             double millisecond = date.Millisecond;
-            double fraction = day + hour/24.0 + minute/1440.0 + (second + millisecond / 1000)/86400.0;
+            double fraction = day + hour/24.0 + minute/1440.0 + (second + millisecond/1000)/86400.0;
 
             if (month < 3)
             {
@@ -91,10 +92,10 @@ namespace netDxf.Units
             fraction -= hours/24.0;
             int minutes = (int) (fraction*1440);
             fraction -= minutes/1440.0;
-            
+
             double decimalSeconds = fraction*86400;
-            int seconds = (int)decimalSeconds;
-            int milliseconds = (int)((decimalSeconds - seconds) * 1000);
+            int seconds = (int) decimalSeconds;
+            int milliseconds = (int) ((decimalSeconds - seconds)*1000);
             return new DateTime(years, months, days, hours, minutes, seconds, milliseconds);
         }
 
@@ -115,8 +116,8 @@ namespace netDxf.Units
             fraction -= minutes/1440.0;
 
             double decimalSeconds = fraction*86400;
-            int seconds = (int)decimalSeconds;
-            int milliseconds = (int)((decimalSeconds-seconds)*1000);
+            int seconds = (int) decimalSeconds;
+            int milliseconds = (int) ((decimalSeconds - seconds)*1000);
 
             return new TimeSpan(days, hours, minutes, seconds, milliseconds);
         }

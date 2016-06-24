@@ -1,22 +1,23 @@
-﻿#region netDxf, Copyright(C) 2015 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf library, Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+
+//                        netDxf library
+// Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
 // 
-//                         netDxf library
-//  Copyright (C) 2009-2015 Daniel Carvajal (haplokuon@gmail.com)
-//  
-//  This library is free software; you can redistribute it and/or
-//  modify it under the terms of the GNU Lesser General Public
-//  License as published by the Free Software Foundation; either
-//  version 2.1 of the License, or (at your option) any later version.
-//  
-//  The above copyright notice and this permission notice shall be included in all
-//  copies or substantial portions of the Software.
-//  
-//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-//  FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-//  COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-//  IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-//  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2.1 of the License, or (at your option) any later version.
+// 
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+// FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+// COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+// IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+// CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
 #endregion
 
 using System;
@@ -35,7 +36,9 @@ namespace netDxf.Entities
         #region delegates and events
 
         public delegate void ToleranceStyleChangedEventHandler(Tolerance sender, TableObjectChangedEventArgs<DimensionStyle> e);
+
         public event ToleranceStyleChangedEventHandler ToleranceStyleChanged;
+
         protected virtual DimensionStyle OnDimensionStyleChangedEvent(DimensionStyle oldStyle, DimensionStyle newStyle)
         {
             ToleranceStyleChangedEventHandler ae = this.ToleranceStyleChanged;
@@ -80,7 +83,7 @@ namespace netDxf.Entities
         /// <param name="tolerance"></param>
         public Tolerance(ToleranceEntry tolerance)
             : this(tolerance, Vector3.Zero)
-        {          
+        {
         }
 
         /// <summary>
@@ -216,16 +219,16 @@ namespace netDxf.Entities
 
             if (this.entry1 != null)
             {
-                value.Append(this.ToleranceEntryToString(this.entry1));
+                value.Append(ToleranceEntryToString(this.entry1));
                 newLine = true;
             }
-                
+
             if (this.entry2 != null)
             {
                 if (newLine)
                     value.Append("^J");
 
-                value.Append(this.ToleranceEntryToString(this.entry2));
+                value.Append(ToleranceEntryToString(this.entry2));
                 newLine = true;
             }
 
@@ -235,7 +238,7 @@ namespace netDxf.Entities
                     value.Append("^J");
 
                 value.Append(this.height);
-                if(this.showProjectedToleranceZoneSymbol)
+                if (this.showProjectedToleranceZoneSymbol)
                     value.Append("{\\Fgdt;p}");
                 newLine = true;
             }
@@ -331,12 +334,12 @@ namespace netDxf.Entities
         /// <param name="result">If the conversion has been successful, it contains the tolerance entity equivalent to the string representation; otherwise, null.</param>
         /// <returns>True if the string was converted successfully; otherwise, false.</returns>
         public static bool TryParseRepresentation(string s, out Tolerance result)
-        {         
+        {
             try
             {
                 result = ParseRepresentation(s);
             }
-            catch (Exception)
+            catch
             {
                 result = null;
                 return false;
@@ -348,7 +351,7 @@ namespace netDxf.Entities
 
         #region private ToString methods
 
-        private string ToleranceEntryToString(ToleranceEntry entry)
+        private static string ToleranceEntryToString(ToleranceEntry entry)
         {
             StringBuilder value = new StringBuilder();
             switch (entry.GeometricSymbol)
@@ -368,47 +371,47 @@ namespace netDxf.Entities
                     value.Append("{\\Fgdt;f}");
                     break;
                 case ToleranceGeometricSymbol.Perpendicularity:
-                    value.Append( "{\\Fgdt;b}");
+                    value.Append("{\\Fgdt;b}");
                     break;
                 case ToleranceGeometricSymbol.Angularity:
-                    value.Append( "{\\Fgdt;a}");
+                    value.Append("{\\Fgdt;a}");
                     break;
                 case ToleranceGeometricSymbol.Cylindricity:
-                    value.Append( "{\\Fgdt;g}");
+                    value.Append("{\\Fgdt;g}");
                     break;
                 case ToleranceGeometricSymbol.Flatness:
-                    value.Append( "{\\Fgdt;c}");
+                    value.Append("{\\Fgdt;c}");
                     break;
                 case ToleranceGeometricSymbol.Roundness:
-                    value.Append( "{\\Fgdt;e}");
+                    value.Append("{\\Fgdt;e}");
                     break;
                 case ToleranceGeometricSymbol.Straightness:
-                    value.Append( "{\\Fgdt;u}");
+                    value.Append("{\\Fgdt;u}");
                     break;
                 case ToleranceGeometricSymbol.ProfileSurface:
-                    value.Append( "{\\Fgdt;d}");
+                    value.Append("{\\Fgdt;d}");
                     break;
                 case ToleranceGeometricSymbol.ProfileLine:
-                    value.Append( "{\\Fgdt;k}");
+                    value.Append("{\\Fgdt;k}");
                     break;
                 case ToleranceGeometricSymbol.CircularRunout:
-                    value.Append( "{\\Fgdt;h}");
+                    value.Append("{\\Fgdt;h}");
                     break;
                 case ToleranceGeometricSymbol.TotalRunOut:
                     value.Append("{\\Fgdt;t}");
                     break;
             }
 
-            value.Append(this.ToleranceValueToString(entry.Tolerance1));
-            value.Append(this.ToleranceValueToString(entry.Tolerance2));
-            value.Append(this.DatumValueToString(entry.Datum1));
-            value.Append(this.DatumValueToString(entry.Datum2));
-            value.Append(this.DatumValueToString(entry.Datum3));
+            value.Append(ToleranceValueToString(entry.Tolerance1));
+            value.Append(ToleranceValueToString(entry.Tolerance2));
+            value.Append(DatumValueToString(entry.Datum1));
+            value.Append(DatumValueToString(entry.Datum2));
+            value.Append(DatumValueToString(entry.Datum3));
 
             return value.ToString();
         }
 
-        private string ToleranceValueToString(ToleranceValue tolerance)
+        private static string ToleranceValueToString(ToleranceValue tolerance)
         {
             StringBuilder value = new StringBuilder();
             value.Append("%%v");
@@ -437,7 +440,7 @@ namespace netDxf.Entities
             return value.ToString();
         }
 
-        private string DatumValueToString(DatumReferenceValue datum)
+        private static string DatumValueToString(DatumReferenceValue datum)
         {
             StringBuilder value = new StringBuilder();
             value.Append("%%v");
@@ -632,7 +635,8 @@ namespace netDxf.Entities
 
         private static ToleranceValue ParseToleranceValue(string s)
         {
-            if (string.IsNullOrEmpty(s)) return null;
+            if (string.IsNullOrEmpty(s))
+                return null;
 
             bool hasDiameterSymbol = false;
             StringBuilder value = new StringBuilder();
@@ -668,7 +672,8 @@ namespace netDxf.Entities
 
         private static DatumReferenceValue ParseDatumReferenceValue(string s)
         {
-            if (string.IsNullOrEmpty(s)) return null;
+            if (string.IsNullOrEmpty(s))
+                return null;
 
             StringBuilder value = new StringBuilder();
             ToleranceMaterialCondition mat = ToleranceMaterialCondition.None;
@@ -706,13 +711,14 @@ namespace netDxf.Entities
             Tolerance entity = new Tolerance
             {
                 //EntityObject properties
-                Layer = (Layer)this.layer.Clone(),
-                LineType = (LineType)this.lineType.Clone(),
-                Color = (AciColor)this.color.Clone(),
-                Lineweight = (Lineweight)this.lineweight.Clone(),
-                Transparency = (Transparency)this.transparency.Clone(),
-                LineTypeScale = this.lineTypeScale,
-                Normal = this.normal,
+                Layer = (Layer) this.Layer.Clone(),
+                Linetype = (Linetype) this.Linetype.Clone(),
+                Color = (AciColor) this.Color.Clone(),
+                Lineweight = this.Lineweight,
+                Transparency = (Transparency) this.Transparency.Clone(),
+                LinetypeScale = this.LinetypeScale,
+                Normal = this.Normal,
+                IsVisible = this.IsVisible,
                 //Tolerance properties
                 Entry1 = (ToleranceEntry) this.entry1.Clone(),
                 Entry2 = (ToleranceEntry) this.entry2.Clone(),
@@ -724,8 +730,8 @@ namespace netDxf.Entities
                 Rotation = this.rotation
             };
 
-            foreach (XData data in this.xData.Values)
-                entity.XData.Add((XData)data.Clone());
+            foreach (XData data in this.XData.Values)
+                entity.XData.Add((XData) data.Clone());
 
             return entity;
         }

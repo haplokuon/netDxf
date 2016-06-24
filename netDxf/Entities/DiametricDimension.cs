@@ -1,22 +1,23 @@
-﻿#region netDxf, Copyright(C) 2016 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf library, Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+
+//                        netDxf library
+// Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
 // 
-//                         netDxf library
-//  Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
-//  
-//  This library is free software; you can redistribute it and/or
-//  modify it under the terms of the GNU Lesser General Public
-//  License as published by the Free Software Foundation; either
-//  version 2.1 of the License, or (at your option) any later version.
-//  
-//  The above copyright notice and this permission notice shall be included in all
-//  copies or substantial portions of the Software.
-//  
-//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-//  FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-//  COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-//  IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-//  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2.1 of the License, or (at your option) any later version.
+// 
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+// FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+// COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+// IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+// CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
 #endregion
 
 using System;
@@ -72,15 +73,19 @@ namespace netDxf.Entities
         public DiametricDimension(Arc arc, double rotation, double offset, DimensionStyle style)
             : base(DimensionType.Diameter)
         {
+            if (arc == null)
+                throw new ArgumentNullException(nameof(arc));
+
             Vector3 ocsCenter = MathHelper.Transform(arc.Center, arc.Normal, CoordinateSystem.World, CoordinateSystem.Object);
             this.center = new Vector2(ocsCenter.X, ocsCenter.Y);
-            this.elevation = ocsCenter.Z;
             this.refPoint = Vector2.Polar(this.center, arc.Radius, rotation*MathHelper.DegToRad);
             this.offset = offset;
-            this.normal = arc.Normal;
+
             if (style == null)
-                throw new ArgumentNullException(nameof(style), "The Dimension style cannot be null.");
-            this.style = style;
+                throw new ArgumentNullException(nameof(style));
+            this.Style = style;
+            this.Normal = arc.Normal;
+            this.Elevation = ocsCenter.Z;
         }
 
         /// <summary>
@@ -106,17 +111,21 @@ namespace netDxf.Entities
         public DiametricDimension(Circle circle, double rotation, double offset, DimensionStyle style)
             : base(DimensionType.Diameter)
         {
+            if (circle == null)
+                throw new ArgumentNullException(nameof(circle));
+
             Vector3 ocsCenter = MathHelper.Transform(circle.Center, circle.Normal, CoordinateSystem.World, CoordinateSystem.Object);
             this.center = new Vector2(ocsCenter.X, ocsCenter.Y);
-            this.elevation = ocsCenter.Z;
-            this.refPoint = Vector2.Polar(this.center, circle.Radius, rotation * MathHelper.DegToRad);
+            this.refPoint = Vector2.Polar(this.center, circle.Radius, rotation*MathHelper.DegToRad);
             if (offset < 0.0)
                 throw new ArgumentOutOfRangeException(nameof(offset), "The offset value cannot be negative.");
             this.offset = offset;
-            this.normal = circle.Normal;
+
             if (style == null)
-                throw new ArgumentNullException(nameof(style), "The Dimension style cannot be null.");
-            this.style = style;
+                throw new ArgumentNullException(nameof(style));
+            this.Style = style;
+            this.Normal = circle.Normal;
+            this.Elevation = ocsCenter.Z;
         }
 
         /// <summary>
@@ -150,8 +159,8 @@ namespace netDxf.Entities
             this.offset = offset;
 
             if (style == null)
-                throw new ArgumentNullException(nameof(style), "The Dimension style cannot be null.");
-            this.style = style;
+                throw new ArgumentNullException(nameof(style));
+            this.Style = style;
         }
 
         #endregion
@@ -188,7 +197,7 @@ namespace netDxf.Entities
             get { return this.offset; }
             set
             {
-                if (value<0.0)
+                if (value < 0.0)
                     throw new ArgumentOutOfRangeException(nameof(value), "The offset value cannot be negative.");
                 this.offset = value;
             }
@@ -199,7 +208,7 @@ namespace netDxf.Entities
         /// </summary>
         public override double Measurement
         {
-            get { return 2 * Vector2.Distance(this.center, this.refPoint); }
+            get { return 2*Vector2.Distance(this.center, this.refPoint); }
         }
 
         #endregion
@@ -241,27 +250,28 @@ namespace netDxf.Entities
             DiametricDimension entity = new DiametricDimension
             {
                 //EntityObject properties
-                Layer = (Layer)this.layer.Clone(),
-                LineType = (LineType)this.lineType.Clone(),
-                Color = (AciColor)this.color.Clone(),
-                Lineweight = (Lineweight)this.lineweight.Clone(),
-                Transparency = (Transparency)this.transparency.Clone(),
-                LineTypeScale = this.lineTypeScale,
-                Normal = this.normal,
+                Layer = (Layer) this.Layer.Clone(),
+                Linetype = (Linetype) this.Linetype.Clone(),
+                Color = (AciColor) this.Color.Clone(),
+                Lineweight = this.Lineweight,
+                Transparency = (Transparency) this.Transparency.Clone(),
+                LinetypeScale = this.LinetypeScale,
+                Normal = this.Normal,
+                IsVisible = this.IsVisible,
                 //Dimension properties
-                Style = (DimensionStyle)this.style.Clone(),
-                AttachmentPoint = this.attachmentPoint,
-                LineSpacingStyle = this.lineSpacingStyle,
-                LineSpacingFactor = this.lineSpacing,
+                Style = (DimensionStyle) this.Style.Clone(),
+                AttachmentPoint = this.AttachmentPoint,
+                LineSpacingStyle = this.LineSpacingStyle,
+                LineSpacingFactor = this.LineSpacingFactor,
                 //DiametricDimension properties
                 CenterPoint = this.center,
                 ReferencePoint = this.refPoint,
                 Offset = this.offset,
-                Elevation = this.elevation
+                Elevation = this.Elevation
             };
 
-            foreach (XData data in this.xData.Values)
-                entity.XData.Add((XData)data.Clone());
+            foreach (XData data in this.XData.Values)
+                entity.XData.Add((XData) data.Clone());
 
             return entity;
         }

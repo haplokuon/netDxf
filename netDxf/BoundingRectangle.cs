@@ -1,22 +1,23 @@
-﻿#region netDxf, Copyright(C) 2015 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf library, Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+
+//                        netDxf library
+// Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
 // 
-//                         netDxf library
-//  Copyright (C) 2009-2015 Daniel Carvajal (haplokuon@gmail.com)
-//  
-//  This library is free software; you can redistribute it and/or
-//  modify it under the terms of the GNU Lesser General Public
-//  License as published by the Free Software Foundation; either
-//  version 2.1 of the License, or (at your option) any later version.
-//  
-//  The above copyright notice and this permission notice shall be included in all
-//  copies or substantial portions of the Software.
-//  
-//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-//  FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-//  COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-//  IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-//  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2.1 of the License, or (at your option) any later version.
+// 
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+// FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+// COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+// IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+// CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
 #endregion
 
 using System;
@@ -48,15 +49,15 @@ namespace netDxf
         public BoundingRectangle(Vector2 center, double majorAxis, double minorAxis, double rotation)
         {
             double rot = rotation*MathHelper.DegToRad;
-            double a = majorAxis * 0.5 * Math.Cos(rot);
-            double b = minorAxis * 0.5 * Math.Sin(rot);
-            double c = majorAxis * 0.5 * Math.Sin(rot);
-            double d = minorAxis * 0.5 * Math.Cos(rot);
+            double a = majorAxis*0.5*Math.Cos(rot);
+            double b = minorAxis*0.5*Math.Sin(rot);
+            double c = majorAxis*0.5*Math.Sin(rot);
+            double d = minorAxis*0.5*Math.Cos(rot);
 
-            double width = Math.Sqrt(a * a + b * b) * 2;
-            double height = Math.Sqrt(c * c + d * d) * 2;
-            this.min = new Vector2(center.X - width * 0.5, center.Y - height * 0.5);
-            this.max = new Vector2(center.X + width * 0.5, center.Y + height * 0.5);
+            double width = Math.Sqrt(a*a + b*b)*2;
+            double height = Math.Sqrt(c*c + d*d)*2;
+            this.min = new Vector2(center.X - width*0.5, center.Y - height*0.5);
+            this.max = new Vector2(center.X + width*0.5, center.Y + height*0.5);
         }
 
         /// <summary>
@@ -78,8 +79,8 @@ namespace netDxf
         /// <param name="height">Height of the bounding rectangle.</param>
         public BoundingRectangle(Vector2 center, double width, double height)
         {
-            this.min = new Vector2(center.X - width * 0.5, center.Y - height * 0.5);
-            this.max = new Vector2(center.X + width * 0.5, center.Y + height * 0.5);
+            this.min = new Vector2(center.X - width*0.5, center.Y - height*0.5);
+            this.max = new Vector2(center.X + width*0.5, center.Y + height*0.5);
         }
 
         /// <summary>
@@ -97,24 +98,20 @@ namespace netDxf
         /// Initializes a new axis aligned bounding rectangle.
         /// </summary>
         /// <param name="points">A list of Vector2.</param>
-        public BoundingRectangle(IList<Vector2> points)
+        public BoundingRectangle(IEnumerable<Vector2> points)
         {
             if (points == null)
-                throw new ArgumentNullException(nameof(points), "The list cannot be null.");
+                throw new ArgumentNullException(nameof(points));
 
             double minX = double.MaxValue;
             double minY = double.MaxValue;
             double maxX = double.MinValue;
             double maxY = double.MinValue;
 
-            if (points.Count == 0)
-            {
-                this.min = new Vector2(double.MinValue, double.MinValue);
-                this.max = new Vector2(double.MaxValue, double.MaxValue);
-                return;
-            }
+            bool any = false;
             foreach (Vector2 point in points)
             {
+                any = true;
                 if (minX > point.X)
                     minX = point.X;
                 if (minY > point.Y)
@@ -124,9 +121,16 @@ namespace netDxf
                 if (maxY < point.Y)
                     maxY = point.Y;
             }
-
-            this.min = new Vector2(minX, minY);
-            this.max = new Vector2(maxX, maxY);
+            if (any)
+            {
+                this.min = new Vector2(minX, minY);
+                this.max = new Vector2(maxX, maxY);
+            }
+            else
+            {
+                this.min = new Vector2(double.MinValue, double.MinValue);
+                this.max = new Vector2(double.MaxValue, double.MaxValue);
+            }
         }
 
         #endregion
@@ -156,7 +160,7 @@ namespace netDxf
         /// </summary>
         public Vector2 Center
         {
-            get { return (this.min + this.max) * 0.5; }
+            get { return (this.min + this.max)*0.5; }
         }
 
         /// <summary>
@@ -164,7 +168,7 @@ namespace netDxf
         /// </summary>
         public double Radius
         {
-            get { return Vector2.Distance(this.min, this.max) * 0.5; }
+            get { return Vector2.Distance(this.min, this.max)*0.5; }
         }
 
         /// <summary>
@@ -235,8 +239,11 @@ namespace netDxf
         /// </summary>
         /// <param name="rectangles">A list of bounding rectangles.</param>
         /// <returns>The resulting bounding rectangle.</returns>
-        public static BoundingRectangle Union(IList<BoundingRectangle> rectangles)
+        public static BoundingRectangle Union(IEnumerable<BoundingRectangle> rectangles)
         {
+            if (rectangles == null)
+                throw new ArgumentNullException(nameof(rectangles));
+
             BoundingRectangle rtnAABR = null;
             foreach (BoundingRectangle aabr in rectangles)
                 rtnAABR = Union(rtnAABR, aabr);

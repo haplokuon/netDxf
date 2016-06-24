@@ -1,22 +1,23 @@
-﻿#region netDxf, Copyright(C) 2015 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf library, Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+
+//                        netDxf library
+// Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
 // 
-//                         netDxf library
-//  Copyright (C) 2009-2015 Daniel Carvajal (haplokuon@gmail.com)
-//  
-//  This library is free software; you can redistribute it and/or
-//  modify it under the terms of the GNU Lesser General Public
-//  License as published by the Free Software Foundation; either
-//  version 2.1 of the License, or (at your option) any later version.
-//  
-//  The above copyright notice and this permission notice shall be included in all
-//  copies or substantial portions of the Software.
-//  
-//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-//  FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-//  COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-//  IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-//  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2.1 of the License, or (at your option) any later version.
+// 
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+// FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+// COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+// IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+// CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
 #endregion
 
 using System;
@@ -35,7 +36,9 @@ namespace netDxf.Entities
         #region delegates and events
 
         public delegate void HatchBoundaryPathAddedEventHandler(Hatch sender, ObservableCollectionEventArgs<HatchBoundaryPath> e);
+
         public event HatchBoundaryPathAddedEventHandler HatchBoundaryPathAdded;
+
         protected virtual void OnHatchBoundaryPathAddedEvent(HatchBoundaryPath item)
         {
             HatchBoundaryPathAddedEventHandler ae = this.HatchBoundaryPathAdded;
@@ -44,7 +47,9 @@ namespace netDxf.Entities
         }
 
         public delegate void HatchBoundaryPathRemovedEventHandler(Hatch sender, ObservableCollectionEventArgs<HatchBoundaryPath> e);
+
         public event HatchBoundaryPathRemovedEventHandler HatchBoundaryPathRemoved;
+
         protected virtual void OnHatchBoundaryPathRemovedEvent(HatchBoundaryPath item)
         {
             HatchBoundaryPathRemovedEventHandler ae = this.HatchBoundaryPathRemoved;
@@ -101,27 +106,28 @@ namespace netDxf.Entities
         /// <param name="pattern"><see cref="HatchPattern">Hatch pattern</see>.</param>
         /// <param name="paths">A list of <see cref="HatchBoundaryPath">boundary paths</see>.</param>
         /// <param name="associative">Defines if the hatch is associative or not.</param>
-        public Hatch(HatchPattern pattern, IList<HatchBoundaryPath> paths, bool associative)
+        public Hatch(HatchPattern pattern, IEnumerable<HatchBoundaryPath> paths, bool associative)
             : base(EntityType.Hatch, DxfObjectCode.Hatch)
         {
             if (pattern == null)
                 throw new ArgumentNullException(nameof(pattern));
             if (paths == null)
                 throw new ArgumentNullException(nameof(paths));
-            
+
             this.pattern = pattern;
-            this.boundaryPaths = new ObservableCollection<HatchBoundaryPath>(paths.Count);
+            this.boundaryPaths = new ObservableCollection<HatchBoundaryPath>();
             this.boundaryPaths.BeforeAddItem += this.BoundaryPaths_BeforeAddItem;
             this.boundaryPaths.AddItem += this.BoundaryPaths_AddItem;
             this.boundaryPaths.BeforeRemoveItem += this.BoundaryPaths_BeforeRemoveItem;
             this.boundaryPaths.RemoveItem += this.BoundaryPaths_RemoveItem;
 
             this.associative = associative;
-           
+
             foreach (HatchBoundaryPath path in paths)
             {
-                if (!this.associative) path.ClearContour();
-                this.boundaryPaths.Add(path);               
+                if (!this.associative)
+                    path.ClearContour();
+                this.boundaryPaths.Add(path);
             }
         }
 
@@ -179,7 +185,7 @@ namespace netDxf.Entities
         /// Unlinks the boundary from the hatch, turning the associative property to false.
         /// </summary>
         /// <returns>The list of unlinked entities from the boundary of the hatch.</returns>
-        /// <remarks>The entities that make the hatch boundaries will not be deleted if they already belong to a document.</remarks>
+        /// <remarks>The entities that make the hatch boundaries will not be deleted from the document if they already belong to one.</remarks>
         public List<EntityObject> UnLinkBoundary()
         {
             List<EntityObject> boundary = new List<EntityObject>();
@@ -203,16 +209,18 @@ namespace netDxf.Entities
         /// <returns>A list of entities that makes the boundary of the hatch.</returns>
         /// <remarks>
         /// If the actual hatch is already associative, the old boundary entities will be unlinked, but not deleted from the hatch document.
-        /// The new boundary entities will be added to the same layout and document as the hatch, in case it belongs to one.<br/>
+        /// If linkBoundary is true, the new boundary entities will be added to the same layout and document as the hatch, in case it belongs to one,
+        /// so, in this case, if you also try to add the return list to the document it will cause an error.<br/>
         /// All entities are in world coordinates except the LwPolyline boundary path since by definition its vertexes are expressed in object coordinates.
         /// </remarks>
         public List<EntityObject> CreateBoundary(bool linkBoundary)
         {
-            if (this.associative) this.UnLinkBoundary();
+            if (this.associative)
+                this.UnLinkBoundary();
 
             this.associative = linkBoundary;
             List<EntityObject> boundary = new List<EntityObject>();
-            Matrix3 trans = MathHelper.ArbitraryAxis(this.normal);
+            Matrix3 trans = MathHelper.ArbitraryAxis(this.Normal);
             Vector3 pos = trans*new Vector3(0.0, 0.0, this.elevation);
             foreach (HatchBoundaryPath path in this.boundaryPaths)
             {
@@ -235,7 +243,7 @@ namespace netDxf.Entities
                             break;
                         case EntityType.LightWeightPolyline:
                             // LwPolylines need an special treatment since their vertexes are expressed in object coordinates.
-                            boundary.Add(ProcessLwPolyline((LwPolyline) entity, this.normal, this.elevation));
+                            boundary.Add(ProcessLwPolyline((LwPolyline) entity, this.Normal, this.elevation));
                             break;
                         case EntityType.Spline:
                             boundary.Add(ProcessSpline((Spline) entity, trans, pos));
@@ -314,24 +322,25 @@ namespace netDxf.Entities
         public override object Clone()
         {
             Hatch entity = new Hatch((HatchPattern) this.pattern.Clone(), false)
-                {
-                    //EntityObject properties
-                    Layer = (Layer)this.layer.Clone(),
-                    LineType = (LineType)this.lineType.Clone(),
-                    Color = (AciColor)this.color.Clone(),
-                    Lineweight = (Lineweight)this.lineweight.Clone(),
-                    Transparency = (Transparency)this.transparency.Clone(),
-                    LineTypeScale = this.lineTypeScale,
-                    Normal = this.normal,
-                    //Hatch properties
-                    Elevation = this.elevation
-                };
+            {
+                //EntityObject properties
+                Layer = (Layer) this.Layer.Clone(),
+                Linetype = (Linetype) this.Linetype.Clone(),
+                Color = (AciColor) this.Color.Clone(),
+                Lineweight = this.Lineweight,
+                Transparency = (Transparency) this.Transparency.Clone(),
+                LinetypeScale = this.LinetypeScale,
+                Normal = this.Normal,
+                IsVisible = this.IsVisible,
+                //Hatch properties
+                Elevation = this.elevation
+            };
 
             foreach (HatchBoundaryPath path in this.boundaryPaths)
                 entity.boundaryPaths.Add((HatchBoundaryPath) path.Clone());
 
             foreach (XData data in this.XData.Values)
-                entity.XData.Add((XData)data.Clone());
+                entity.XData.Add((XData) data.Clone());
 
             return entity;
         }

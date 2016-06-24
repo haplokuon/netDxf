@@ -1,22 +1,23 @@
-﻿#region netDxf, Copyright(C) 2015 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf library, Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+
+//                        netDxf library
+// Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
 // 
-//                         netDxf library
-//  Copyright (C) 2009-2015 Daniel Carvajal (haplokuon@gmail.com)
-//  
-//  This library is free software; you can redistribute it and/or
-//  modify it under the terms of the GNU Lesser General Public
-//  License as published by the Free Software Foundation; either
-//  version 2.1 of the License, or (at your option) any later version.
-//  
-//  The above copyright notice and this permission notice shall be included in all
-//  copies or substantial portions of the Software.
-//  
-//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-//  FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-//  COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-//  IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-//  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2.1 of the License, or (at your option) any later version.
+// 
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+// FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+// COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+// IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+// CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
 #endregion
 
 using System;
@@ -29,25 +30,26 @@ namespace netDxf.Collections
     /// <summary>
     /// Represents a dictionary of <see cref="XData">XData</see>.
     /// </summary>
-    public class XDataDictionary :
+    public sealed class XDataDictionary :
         IDictionary<string, XData>
     {
         #region delegates and events
 
         public delegate void AddAppRegEventHandler(XDataDictionary sender, ObservableCollectionEventArgs<ApplicationRegistry> e);
+
         public delegate void RemoveAppRegEventHandler(XDataDictionary sender, ObservableCollectionEventArgs<ApplicationRegistry> e);
 
         public event AddAppRegEventHandler AddAppReg;
         public event RemoveAppRegEventHandler RemoveAppReg;
 
-        protected virtual void OnAddAppRegEvent(ApplicationRegistry item)
+        private void OnAddAppRegEvent(ApplicationRegistry item)
         {
             AddAppRegEventHandler ae = this.AddAppReg;
             if (ae != null)
                 ae(this, new ObservableCollectionEventArgs<ApplicationRegistry>(item));
         }
 
-        protected virtual void OnRemoveAppRegEvent(ApplicationRegistry item)
+        private void OnRemoveAppRegEvent(ApplicationRegistry item)
         {
             RemoveAppRegEventHandler ae = this.RemoveAppReg;
             if (ae != null)
@@ -76,9 +78,9 @@ namespace netDxf.Collections
         /// Initializes a new instance of <c>XDataDictionary</c> and has the specified items.
         /// </summary>
         /// <param name="items">The list of <see cref="XData">extended data</see> items initially stored.</param>
-        public XDataDictionary(IList<XData> items)
+        public XDataDictionary(IEnumerable<XData> items)
         {
-            this.innerDictionary = new Dictionary<string, XData>(items.Count, StringComparer.OrdinalIgnoreCase);
+            this.innerDictionary = new Dictionary<string, XData>(StringComparer.OrdinalIgnoreCase);
             this.AddRange(items);
         }
 
@@ -109,7 +111,7 @@ namespace netDxf.Collections
                     throw new ArgumentNullException(nameof(value));
                 if (!string.Equals(value.ApplicationRegistry.Name, appId, StringComparison.OrdinalIgnoreCase))
                     throw new ArgumentException(string.Format("The extended data application registry name {0} must be equal to the specified appId {1}.", value.ApplicationRegistry.Name, appId));
-                
+
                 this.innerDictionary[appId] = value;
             }
         }
@@ -179,8 +181,11 @@ namespace netDxf.Collections
         /// Adds a list of <see cref="XData">extended data</see> to the current dictionary.
         /// </summary>
         /// <param name="items">The list of <see cref="XData">extended data</see> to add.</param>
-        public void AddRange(IList<XData> items)
+        public void AddRange(IEnumerable<XData> items)
         {
+            if (items == null)
+                throw new ArgumentNullException(nameof(items));
+
             foreach (XData data in items)
             {
                 this.Add(data);
@@ -287,18 +292,19 @@ namespace netDxf.Collections
 
         bool ICollection<KeyValuePair<string, XData>>.Remove(KeyValuePair<string, XData> item)
         {
-            if (ReferenceEquals(item.Value, this.innerDictionary[item.Key]) && this.Remove(item.Key)) return true;
+            if (ReferenceEquals(item.Value, this.innerDictionary[item.Key]) && this.Remove(item.Key))
+                return true;
             return false;
         }
 
         bool ICollection<KeyValuePair<string, XData>>.Contains(KeyValuePair<string, XData> item)
         {
-            return ((IDictionary<string, XData>)this.innerDictionary).Contains(item);
+            return ((IDictionary<string, XData>) this.innerDictionary).Contains(item);
         }
 
         void ICollection<KeyValuePair<string, XData>>.CopyTo(KeyValuePair<string, XData>[] array, int arrayIndex)
         {
-            ((IDictionary<string, XData>)this.innerDictionary).CopyTo(array, arrayIndex);
+            ((IDictionary<string, XData>) this.innerDictionary).CopyTo(array, arrayIndex);
         }
 
         IEnumerator IEnumerable.GetEnumerator()

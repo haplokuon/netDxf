@@ -1,22 +1,23 @@
-﻿#region netDxf, Copyright(C) 2015 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf library, Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+
+//                        netDxf library
+// Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
 // 
-//                         netDxf library
-//  Copyright (C) 2009-2015 Daniel Carvajal (haplokuon@gmail.com)
-//  
-//  This library is free software; you can redistribute it and/or
-//  modify it under the terms of the GNU Lesser General Public
-//  License as published by the Free Software Foundation; either
-//  version 2.1 of the License, or (at your option) any later version.
-//  
-//  The above copyright notice and this permission notice shall be included in all
-//  copies or substantial portions of the Software.
-//  
-//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-//  FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-//  COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-//  IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-//  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2.1 of the License, or (at your option) any later version.
+// 
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+// FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+// COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+// IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+// CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
 #endregion
 
 namespace netDxf
@@ -28,9 +29,9 @@ namespace netDxf
     {
         #region protected fields
 
-        protected string codeName;
-        protected string handle;
-        protected DxfObject owner;
+        private string codename;
+        private string handle;
+        private DxfObject owner;
 
         #endregion
 
@@ -39,10 +40,10 @@ namespace netDxf
         /// <summary>
         /// Initializes a new instance of the <c>DxfObject</c> class.
         /// </summary>
-        /// <param name="codeName">Object name.</param>
-        protected DxfObject(string codeName)
+        /// <param name="codename">Object name.</param>
+        protected DxfObject(string codename)
         {
-            this.codeName = codeName;
+            this.codename = codename;
             this.handle = null;
             this.owner = null;
         }
@@ -56,7 +57,8 @@ namespace netDxf
         /// </summary>
         public string CodeName
         {
-            get { return this.codeName; }
+            get { return this.codename; }
+            internal set { this.codename = value; }
         }
 
         /// <summary>
@@ -66,16 +68,16 @@ namespace netDxf
         public string Handle
         {
             get { return this.handle; }
-            internal set{ this.handle = value; }
+            internal set { this.handle = value; }
         }
 
         /// <summary>
         /// Gets the owner of the actual dxf object.
         /// </summary>
-        internal virtual DxfObject Owner
+        public DxfObject Owner
         {
             get { return this.owner; }
-            set { this.owner = value; }
+            internal set { this.owner = value; }
         }
 
         #endregion
@@ -107,7 +109,7 @@ namespace netDxf
         /// <returns>A string text.</returns>
         public override string ToString()
         {
-            return this.codeName;
+            return this.codename;
         }
 
         #endregion

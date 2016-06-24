@@ -1,22 +1,23 @@
-﻿#region netDxf, Copyright(C) 2015 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf library, Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+
+//                        netDxf library
+// Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
 // 
-//                         netDxf library
-//  Copyright (C) 2009-2015 Daniel Carvajal (haplokuon@gmail.com)
-//  
-//  This library is free software; you can redistribute it and/or
-//  modify it under the terms of the GNU Lesser General Public
-//  License as published by the Free Software Foundation; either
-//  version 2.1 of the License, or (at your option) any later version.
-//  
-//  The above copyright notice and this permission notice shall be included in all
-//  copies or substantial portions of the Software.
-//  
-//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-//  FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-//  COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-//  IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-//  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2.1 of the License, or (at your option) any later version.
+// 
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+// FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+// COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+// IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+// CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
 #endregion
 
 using System;
@@ -35,7 +36,9 @@ namespace netDxf.Collections
         #region delegates and events
 
         public delegate void BeforeAddItemEventHandler(EntityCollection sender, EntityCollectionEventArgs e);
+
         public event BeforeAddItemEventHandler BeforeAddItem;
+
         protected virtual bool OnBeforeAddItemEvent(EntityObject item)
         {
             BeforeAddItemEventHandler ae = this.BeforeAddItem;
@@ -49,7 +52,9 @@ namespace netDxf.Collections
         }
 
         public delegate void AddItemEventHandler(EntityCollection sender, EntityCollectionEventArgs e);
+
         public event AddItemEventHandler AddItem;
+
         protected virtual void OnAddItemEvent(EntityObject item)
         {
             AddItemEventHandler ae = this.AddItem;
@@ -58,7 +63,9 @@ namespace netDxf.Collections
         }
 
         public delegate void RemoveItemEventHandler(EntityCollection sender, EntityCollectionEventArgs e);
+
         public event BeforeRemoveItemEventHandler BeforeRemoveItem;
+
         protected virtual bool OnBeforeRemoveItemEvent(EntityObject item)
         {
             BeforeRemoveItemEventHandler ae = this.BeforeRemoveItem;
@@ -72,7 +79,9 @@ namespace netDxf.Collections
         }
 
         public delegate void BeforeRemoveItemEventHandler(EntityCollection sender, EntityCollectionEventArgs e);
+
         public event RemoveItemEventHandler RemoveItem;
+
         protected virtual void OnRemoveItemEvent(EntityObject item)
         {
             RemoveItemEventHandler ae = this.RemoveItem;
@@ -84,7 +93,7 @@ namespace netDxf.Collections
 
         #region private fields
 
-        protected List<EntityObject> innerArray;
+        private readonly List<EntityObject> innerArray;
 
         #endregion
 
@@ -104,7 +113,8 @@ namespace netDxf.Collections
         /// <param name="capacity">The number of items the collection can initially store.</param>
         public EntityCollection(int capacity)
         {
-            if (capacity < 0) throw new ArgumentOutOfRangeException();
+            if (capacity < 0)
+                throw new ArgumentOutOfRangeException(nameof(capacity), "The collection capacity cannot be negative.");
             this.innerArray = new List<EntityObject>(capacity);
         }
 
@@ -122,12 +132,15 @@ namespace netDxf.Collections
             get { return this.innerArray[index]; }
             set
             {
-                if (value == null) throw new ArgumentNullException(nameof(value));
+                if (value == null)
+                    throw new ArgumentNullException(nameof(value));
 
                 EntityObject remove = this.innerArray[index];
 
-                if(this.OnBeforeRemoveItemEvent(remove)) return;
-                if (this.OnBeforeAddItemEvent(value)) return;
+                if (this.OnBeforeRemoveItemEvent(remove))
+                    return;
+                if (this.OnBeforeAddItemEvent(value))
+                    return;
                 this.innerArray[index] = value;
                 this.OnAddItemEvent(value);
                 this.OnRemoveItemEvent(remove);
@@ -171,12 +184,10 @@ namespace netDxf.Collections
         /// Adds an <see cref="EntityObject">entity</see> list to the end of the collection.
         /// </summary>
         /// <param name="collection">The collection whose elements should be added.</param>
-        public void AddRange(IList<EntityObject> collection)
+        public void AddRange(IEnumerable<EntityObject> collection)
         {
             if (collection == null)
                 throw new ArgumentNullException(nameof(collection));
-            // we will make room for so the collection will fit without having to resize the internal array during the Add method
-            this.innerArray.Capacity += collection.Count;
             foreach (EntityObject item in collection)
                 this.Add(item);
         }
@@ -190,7 +201,8 @@ namespace netDxf.Collections
         {
             if (index < 0 || index >= this.innerArray.Count)
                 throw new ArgumentOutOfRangeException(string.Format("The parameter index {0} must be in between {1} and {2}.", index, 0, this.innerArray.Count));
-            if(this.OnBeforeRemoveItemEvent(this.innerArray[index])) return;
+            if (this.OnBeforeRemoveItemEvent(this.innerArray[index]))
+                return;
             if (this.OnBeforeAddItemEvent(item))
                 throw new ArgumentException("The entity cannot be added to the collection.", nameof(item));
             this.OnRemoveItemEvent(this.innerArray[index]);
@@ -205,8 +217,10 @@ namespace netDxf.Collections
         /// <returns>True if <see cref="EntityObject">entity</see> is successfully removed; otherwise, false.</returns>
         public bool Remove(EntityObject item)
         {
-            if (!this.innerArray.Contains(item)) return false;
-            if (this.OnBeforeRemoveItemEvent(item)) return false;
+            if (!this.innerArray.Contains(item))
+                return false;
+            if (this.OnBeforeRemoveItemEvent(item))
+                return false;
             this.innerArray.Remove(item);
             this.OnRemoveItemEvent(item);
             return true;
@@ -217,16 +231,22 @@ namespace netDxf.Collections
         /// </summary>
         /// <param name="items">The list of objects to remove from the collection.</param>
         /// <returns>True if object is successfully removed; otherwise, false.</returns>
-        public void Remove(IList<EntityObject> items)
+        public void Remove(IEnumerable<EntityObject> items)
         {
+            if (items == null)
+                throw new ArgumentNullException(nameof(items));
+
             foreach (EntityObject item in items)
             {
-                if (!this.innerArray.Contains(item)) return;
-                if (this.OnBeforeRemoveItemEvent(item)) return;
+                if (!this.innerArray.Contains(item))
+                    return;
+                if (this.OnBeforeRemoveItemEvent(item))
+                    return;
                 this.innerArray.Remove(item);
                 this.OnRemoveItemEvent(item);
             }
         }
+
         /// <summary>
         /// Removes the <see cref="EntityObject">entity</see> at the specified index of the collection.
         /// </summary>
@@ -236,7 +256,8 @@ namespace netDxf.Collections
             if (index < 0 || index >= this.innerArray.Count)
                 throw new ArgumentOutOfRangeException(string.Format("The parameter index {0} must be in between {1} and {2}.", index, 0, this.innerArray.Count));
             EntityObject remove = this.innerArray[index];
-            if (this.OnBeforeRemoveItemEvent(remove)) return;
+            if (this.OnBeforeRemoveItemEvent(remove))
+                return;
             this.innerArray.RemoveAt(index);
             this.OnRemoveItemEvent(remove);
         }
@@ -293,7 +314,7 @@ namespace netDxf.Collections
 
         #endregion
 
-        #region private fields
+        #region private methods
 
         void ICollection<EntityObject>.Add(EntityObject item)
         {
@@ -309,7 +330,6 @@ namespace netDxf.Collections
         {
             return this.GetEnumerator();
         }
-
 
         #endregion
     }

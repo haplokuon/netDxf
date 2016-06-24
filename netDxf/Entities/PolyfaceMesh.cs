@@ -1,27 +1,27 @@
-﻿#region netDxf, Copyright(C) 2015 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf library, Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+
+//                        netDxf library
+// Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
 // 
-//                         netDxf library
-//  Copyright (C) 2009-2015 Daniel Carvajal (haplokuon@gmail.com)
-//  
-//  This library is free software; you can redistribute it and/or
-//  modify it under the terms of the GNU Lesser General Public
-//  License as published by the Free Software Foundation; either
-//  version 2.1 of the License, or (at your option) any later version.
-//  
-//  The above copyright notice and this permission notice shall be included in all
-//  copies or substantial portions of the Software.
-//  
-//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-//  FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-//  COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-//  IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-//  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2.1 of the License, or (at your option) any later version.
+// 
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+// FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+// COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+// IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+// CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
 #endregion
 
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using netDxf.Tables;
 
 namespace netDxf.Entities
@@ -39,7 +39,7 @@ namespace netDxf.Entities
 
         private readonly List<PolyfaceMeshFace> faces;
         private readonly List<PolyfaceMeshVertex> vertexes;
-        private readonly PolylineTypeFlags flags;
+        private readonly PolylinetypeFlags flags;
         private readonly EndSequence endSequence;
 
         #endregion
@@ -51,23 +51,23 @@ namespace netDxf.Entities
         /// </summary>
         /// <param name="vertexes">Polyface mesh <see cref="PolyfaceMeshVertex">vertex</see> list.</param>
         /// <param name="faces">Polyface mesh <see cref="PolyfaceMeshFace">faces</see> list.</param>
-        public PolyfaceMesh(List<PolyfaceMeshVertex> vertexes, List<PolyfaceMeshFace> faces)
+        public PolyfaceMesh(IEnumerable<PolyfaceMeshVertex> vertexes, IEnumerable<PolyfaceMeshFace> faces)
             : base(EntityType.PolyfaceMesh, DxfObjectCode.Polyline)
         {
-            this.flags = PolylineTypeFlags.PolyfaceMesh;
+            this.flags = PolylinetypeFlags.PolyfaceMesh;
             if (vertexes == null)
                 throw new ArgumentNullException(nameof(vertexes));
-            if (vertexes.Count < 3)
-                throw new ArgumentOutOfRangeException(nameof(vertexes), "The polyface mesh faces list requires at least three points.");
-            this.vertexes = vertexes;
+            this.vertexes = new List<PolyfaceMeshVertex>(vertexes);
+            if (this.vertexes.Count < 3)
+                throw new ArgumentOutOfRangeException(nameof(vertexes), this.vertexes.Count, "The polyface mesh faces list requires at least three points.");
 
             if (faces == null)
                 throw new ArgumentNullException(nameof(vertexes));
-            if (faces.Count < 1)
-                throw new ArgumentOutOfRangeException(nameof(vertexes), "The polyface mesh faces list requires at least one face.");
-            this.faces = faces;
+            this.faces = new List<PolyfaceMeshFace>(faces);
+            if (this.faces.Count < 1)
+                throw new ArgumentOutOfRangeException(nameof(vertexes), this.faces.Count, "The polyface mesh faces list requires at least one face.");
 
-            this.endSequence = new EndSequence();
+            this.endSequence = new EndSequence(this);
         }
 
         #endregion
@@ -77,17 +77,17 @@ namespace netDxf.Entities
         /// <summary>
         /// Gets or sets the polyface mesh <see cref="PolyfaceMeshVertex">vertexes</see>.
         /// </summary>
-        public ReadOnlyCollection<PolyfaceMeshVertex> Vertexes
+        public IReadOnlyList<PolyfaceMeshVertex> Vertexes
         {
-            get { return this.vertexes.AsReadOnly(); }
+            get { return this.vertexes; }
         }
 
         /// <summary>
         /// Gets or sets the polyface mesh <see cref="PolyfaceMeshFace">faces</see>.
         /// </summary>
-        public ReadOnlyCollection<PolyfaceMeshFace> Faces
+        public IReadOnlyList<PolyfaceMeshFace> Faces
         {
-            get { return this.faces.AsReadOnly(); }
+            get { return this.faces; }
         }
 
         #endregion
@@ -97,7 +97,7 @@ namespace netDxf.Entities
         /// <summary>
         /// Gets the polyface mesh flag type.
         /// </summary>
-        internal PolylineTypeFlags Flags
+        internal PolylinetypeFlags Flags
         {
             get { return this.flags; }
         }
@@ -130,7 +130,7 @@ namespace netDxf.Entities
             {
                 entityNumber = v.AsignHandle(entityNumber);
             }
-            foreach(PolyfaceMeshFace f in this.faces)
+            foreach (PolyfaceMeshFace f in this.faces)
             {
                 entityNumber = f.AsignHandle(entityNumber);
             }
@@ -152,33 +152,33 @@ namespace netDxf.Entities
 
             foreach (PolyfaceMeshFace face in this.Faces)
             {
-                if (face.VertexIndexes.Length == 1)
+                if (face.VertexIndexes.Count == 1)
                 {
                     Point point = new Point
-                                      {
-                                          Layer = (Layer)this.layer.Clone(),
-                                          LineType = (LineType)this.lineType.Clone(),
-                                          Color = (AciColor)this.color.Clone(),
-                                          Lineweight = (Lineweight)this.lineweight.Clone(),
-                                          Transparency = (Transparency)this.transparency.Clone(),
-                                          LineTypeScale = this.lineTypeScale,
-                                          Normal = this.normal,
-                                          Position = this.Vertexes[Math.Abs(face.VertexIndexes[0]) - 1].Location,
-                                      };
+                    {
+                        Layer = (Layer) this.Layer.Clone(),
+                        Linetype = (Linetype) this.Linetype.Clone(),
+                        Color = (AciColor) this.Color.Clone(),
+                        Lineweight = this.Lineweight,
+                        Transparency = (Transparency) this.Transparency.Clone(),
+                        LinetypeScale = this.LinetypeScale,
+                        Normal = this.Normal,
+                        Position = this.Vertexes[Math.Abs(face.VertexIndexes[0]) - 1].Location,
+                    };
                     entities.Add(point);
                     continue;
                 }
-                if (face.VertexIndexes.Length == 2)
+                if (face.VertexIndexes.Count == 2)
                 {
                     Line line = new Line
                     {
-                        Layer = (Layer)this.layer.Clone(),
-                        LineType = (LineType)this.lineType.Clone(),
-                        Color = (AciColor)this.color.Clone(),
-                        Lineweight = (Lineweight)this.lineweight.Clone(),
-                        Transparency = (Transparency)this.transparency.Clone(),
-                        LineTypeScale = this.lineTypeScale,
-                        Normal = this.normal,
+                        Layer = (Layer) this.Layer.Clone(),
+                        Linetype = (Linetype) this.Linetype.Clone(),
+                        Color = (AciColor) this.Color.Clone(),
+                        Lineweight = this.Lineweight,
+                        Transparency = (Transparency) this.Transparency.Clone(),
+                        LinetypeScale = this.LinetypeScale,
+                        Normal = this.Normal,
                         StartPoint = this.Vertexes[Math.Abs(face.VertexIndexes[0]) - 1].Location,
                         EndPoint = this.Vertexes[Math.Abs(face.VertexIndexes[1]) - 1].Location,
                     };
@@ -192,7 +192,7 @@ namespace netDxf.Entities
                 short indexV2 = face.VertexIndexes[1];
                 short indexV3 = face.VertexIndexes[2];
                 // Polyface mesh faces are made of 3 or 4 vertexes, we will repeat the third vertex if the number of face vertexes is three
-                int indexV4 = face.VertexIndexes.Length == 3 ? face.VertexIndexes[2] : face.VertexIndexes[3];
+                int indexV4 = face.VertexIndexes.Count == 3 ? face.VertexIndexes[2] : face.VertexIndexes[3];
 
                 if (indexV1 < 0)
                     edgeVisibility = edgeVisibility | Face3dEdgeFlags.First;
@@ -210,13 +210,13 @@ namespace netDxf.Entities
 
                 Face3d face3d = new Face3d
                 {
-                    Layer = (Layer)this.layer.Clone(),
-                    LineType = (LineType)this.lineType.Clone(),
-                    Color = (AciColor)this.color.Clone(),
-                    Lineweight = (Lineweight)this.lineweight.Clone(),
-                    Transparency = (Transparency)this.transparency.Clone(),
-                    LineTypeScale = this.lineTypeScale,
-                    Normal = this.normal,
+                    Layer = (Layer) this.Layer.Clone(),
+                    Linetype = (Linetype) this.Linetype.Clone(),
+                    Color = (AciColor) this.Color.Clone(),
+                    Lineweight = this.Lineweight,
+                    Transparency = (Transparency) this.Transparency.Clone(),
+                    LinetypeScale = this.LinetypeScale,
+                    Normal = this.Normal,
                     FirstVertex = v1,
                     SecondVertex = v2,
                     ThirdVertex = v3,
@@ -253,21 +253,21 @@ namespace netDxf.Entities
             PolyfaceMesh entity = new PolyfaceMesh(copyVertexes, copyFaces)
             {
                 //EntityObject properties
-                Layer = (Layer)this.layer.Clone(),
-                LineType = (LineType)this.lineType.Clone(),
-                Color = (AciColor)this.color.Clone(),
-                Lineweight = (Lineweight)this.lineweight.Clone(),
-                Transparency = (Transparency)this.transparency.Clone(),
-                LineTypeScale = this.lineTypeScale,
-                Normal = this.normal
+                Layer = (Layer) this.Layer.Clone(),
+                Linetype = (Linetype) this.Linetype.Clone(),
+                Color = (AciColor) this.Color.Clone(),
+                Lineweight = this.Lineweight,
+                Transparency = (Transparency) this.Transparency.Clone(),
+                LinetypeScale = this.LinetypeScale,
+                Normal = this.Normal,
+                IsVisible = this.IsVisible,
                 //PolyfaceMesh properties
             };
 
             foreach (XData data in this.XData.Values)
-                entity.XData.Add((XData)data.Clone());
+                entity.XData.Add((XData) data.Clone());
 
             return entity;
-
         }
 
         #endregion

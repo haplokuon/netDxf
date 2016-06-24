@@ -1,5 +1,5 @@
 ﻿#region netDxf library, Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
-// 
+
 //                        netDxf library
 // Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
 // 
@@ -17,11 +17,14 @@
 // COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
 // IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
 #endregion
 
 using System;
+using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
-using Microsoft.Win32;
+using System.Windows.Media;
 using netDxf.Collections;
 
 namespace netDxf.Tables
@@ -41,6 +44,8 @@ namespace netDxf.Tables
         private bool isVertical;
         private double obliqueAngle;
         private double widthFactor;
+        private readonly GlyphTypeface glyphTypeface;
+        private readonly string fontFamilyName;
 
         #endregion
 
@@ -66,7 +71,8 @@ namespace netDxf.Tables
         /// <summary>
         /// Initializes a new instance of the <c>TextStyle</c> class. The font file name, without the extension, will be used as the TextStyle name.
         /// </summary>
-        /// <param name="font">Text style font file name.</param>
+        /// <param name="font">Text style font file name with full or relative path.</param>
+        /// <remarks>If the font file is a true type and is not found in the specified path, the constructor will try to find it in the system font folder.</remarks>
         public TextStyle(string font)
             : this(Path.GetFileNameWithoutExtension(font), font)
         {
@@ -76,7 +82,8 @@ namespace netDxf.Tables
         /// Initializes a new instance of the <c>TextStyle</c> class.
         /// </summary>
         /// <param name="name">Text style name.</param>
-        /// <param name="font">Text style font file name.</param>
+        /// <param name="font">Text style font file name with full or relative path.</param>
+        /// <remarks>If the font file is a true type and is not found in the specified path, the constructor will try to find it in the system font folder.</remarks>
         public TextStyle(string name, string font)
             : this(name, font, true)
         {
@@ -86,19 +93,19 @@ namespace netDxf.Tables
         /// Initializes a new instance of the <c>TextStyle</c> class.
         /// </summary>
         /// <param name="name">Text style name.</param>
-        /// <param name="font">Text style font file name.</param>
+        /// <param name="font">Text style font file name with full or relative path.</param>
         /// <param name="checkName">Specifies if the style name has to be checked.</param>
+        /// <remarks>If the font file is a true type and is not found in the specified path, the constructor will try to find it in the system font folder.</remarks>
         internal TextStyle(string name, string font, bool checkName)
             : base(name, DxfObjectCode.TextStyle, checkName)
         {
             if (string.IsNullOrEmpty(name))
-                throw new ArgumentNullException(nameof(name),
-                    "The text style name should be at least one character long.");
+                throw new ArgumentNullException(nameof(name), "The text style name should be at least one character long.");
 
             if (string.IsNullOrEmpty(font))
                 throw new ArgumentNullException(nameof(font));
 
-            this.reserved = name.Equals(DefaultName, StringComparison.OrdinalIgnoreCase);
+            this.IsReserved = name.Equals(DefaultName, StringComparison.OrdinalIgnoreCase);
             this.font = font;
             this.widthFactor = 1.0;
             this.obliqueAngle = 0.0;
@@ -106,6 +113,35 @@ namespace netDxf.Tables
             this.isVertical = false;
             this.isBackward = false;
             this.isUpsideDown = false;
+            this.glyphTypeface = null;
+            this.fontFamilyName = Path.GetFileNameWithoutExtension(font);
+
+            // the following information is only applied to ttf not shx fonts
+            if (!Path.GetExtension(font).Equals(".ttf", StringComparison.OrdinalIgnoreCase))
+                return;
+
+            // try to find the file in the specified directory, if not try it in the fonts system folder
+            string fontFile;
+            if (File.Exists(font))
+                fontFile = Path.GetFullPath(font);
+            else
+            {
+                string file = Path.GetFileName(font);
+                fontFile = string.Format("{0}{1}{2}", Environment.GetFolderPath(Environment.SpecialFolder.Fonts), Path.DirectorySeparatorChar, file);
+                // if the ttf does not even exist in the font system folder 
+                if (!File.Exists(fontFile))
+                    return;
+                this.font = file;
+            }
+            this.glyphTypeface = new GlyphTypeface(new Uri(fontFile));
+            this.fontFamilyName = this.glyphTypeface.FamilyNames[CultureInfo.GetCultureInfo(1033)];
+            if (string.IsNullOrEmpty(this.fontFamilyName))
+            {
+                ICollection<string> names = this.glyphTypeface.FamilyNames.Values;
+                IEnumerator<string> enumerator = names.GetEnumerator();
+                enumerator.MoveNext();
+                this.fontFamilyName = enumerator.Current;
+            }
         }
 
         #endregion
@@ -121,11 +157,19 @@ namespace netDxf.Tables
         }
 
         /// <summary>
-        /// Gets the style font file name without the extension.
+        /// Gets the style font family name.
         /// </summary>
-        public string FontNameWithoutExtension
+        public string FontFamilyName
         {
-            get { return Path.GetFileNameWithoutExtension(this.font); }
+            get { return this.fontFamilyName; }
+        }
+
+        /// <summary>
+        /// Gets the GliphTypface associated with the font file, this is only applicable to true type fonts.
+        /// </summary>
+        public GlyphTypeface GlyphTypeface
+        {
+            get { return this.glyphTypeface; }
         }
 
         /// <summary>
@@ -138,8 +182,7 @@ namespace netDxf.Tables
             set
             {
                 if (value < 0)
-                    throw new ArgumentOutOfRangeException(nameof(value), value,
-                        "The TextStyle height must be equals or greater than zero.");
+                    throw new ArgumentOutOfRangeException(nameof(value), value, "The TextStyle height must be equals or greater than zero.");
                 this.height = value;
             }
         }
@@ -154,8 +197,7 @@ namespace netDxf.Tables
             set
             {
                 if (value < 0.01 || value > 100.0)
-                    throw new ArgumentOutOfRangeException(nameof(value), value,
-                        "The TextStyle width factor valid values range from 0.01 to 100.");
+                    throw new ArgumentOutOfRangeException(nameof(value), value, "The TextStyle width factor valid values range from 0.01 to 100.");
                 this.widthFactor = value;
             }
         }
@@ -170,8 +212,7 @@ namespace netDxf.Tables
             set
             {
                 if (value < -85.0 || value > 85.0)
-                    throw new ArgumentOutOfRangeException(nameof(value), value,
-                        "The TextStyle oblique angle valid values range from -85 to 85.");
+                    throw new ArgumentOutOfRangeException(nameof(value), value, "The TextStyle oblique angle valid values range from -85 to 85.");
                 this.obliqueAngle = value;
             }
         }
@@ -208,31 +249,8 @@ namespace netDxf.Tables
         /// </summary>
         public new TextStyles Owner
         {
-            get { return (TextStyles) this.owner; }
-            internal set { this.owner = value; }
-        }
-
-        #endregion
-
-        #region public methods
-
-        /// <summary>
-        /// Obtains the file name of a font from its family name.
-        /// </summary>
-        /// <param name="familyName">Font family name.</param>
-        /// <returns>The font file name registered under the supplied family name.</returns>
-        /// <remarks>This method looks into the registry to locate the font file name and it is only guarantee to work under Windows.</remarks>
-        public static string FontFileFromFamilyName(string familyName)
-        {
-            RegistryKey fonts;
-
-            fonts = Registry.LocalMachine.OpenSubKey(@"Software\Microsoft\Windows NT\CurrentVersion\Fonts", false);
-            if (fonts != null) return fonts.GetValue(familyName) as string;
-
-            fonts = Registry.LocalMachine.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Fonts", false);
-            if (fonts != null) return fonts.GetValue(familyName) as string;
-
-            return null;
+            get { return (TextStyles) base.Owner; }
+            internal set { base.Owner = value; }
         }
 
         #endregion
@@ -263,7 +281,7 @@ namespace netDxf.Tables
         /// <returns>A new TextStyle that is a copy of this instance.</returns>
         public override object Clone()
         {
-            return this.Clone(this.name);
+            return this.Clone(this.Name);
         }
 
         #endregion

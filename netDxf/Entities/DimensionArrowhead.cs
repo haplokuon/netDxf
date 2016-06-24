@@ -1,22 +1,23 @@
-#region netDxf, Copyright(C) 2015 Daniel Carvajal, Licensed under LGPL.
+#region netDxf library, Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+
+//                        netDxf library
+// Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
 // 
-//                         netDxf library
-//  Copyright (C) 2009-2015 Daniel Carvajal (haplokuon@gmail.com)
-//  
-//  This library is free software; you can redistribute it and/or
-//  modify it under the terms of the GNU Lesser General Public
-//  License as published by the Free Software Foundation; either
-//  version 2.1 of the License, or (at your option) any later version.
-//  
-//  The above copyright notice and this permission notice shall be included in all
-//  copies or substantial portions of the Software.
-//  
-//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-//  FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-//  COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-//  IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-//  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2.1 of the License, or (at your option) any later version.
+// 
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+// FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+// COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+// IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+// CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
 #endregion
 
 using System.Collections.Generic;
@@ -37,7 +38,7 @@ namespace netDxf.Entities
     /// "_ORIGIN" = origin indicator<br/>
     /// "_ORIGIN2" = origin indicator 2<br/>
     /// "_OPEN" = open<br/>
-    /// "_OPEN90" = right angle<br/>
+    /// "_OPEN90" = open 90 (right angle)<br/>
     /// "_OPEN30" = open 30<br/>
     /// "_CLOSED" = closed<br/>
     /// "_SMALL" = dot small blank<br/>
@@ -51,7 +52,7 @@ namespace netDxf.Entities
     /// "_INTEGRAL" = integral<br/>
     /// "_ARCHTICK" = architectural tick<br/>
     /// </remarks>
-    public sealed class DimensionArrowhead
+    public static class DimensionArrowhead
     {
         #region predefined dimensions arrowheads
 
@@ -69,10 +70,10 @@ namespace netDxf.Entities
                     new LwPolylineVertex(-0.25, 0.0, 1.0),
                     new LwPolylineVertex(0.25, 0.0, 1.0)
                 };
-                LwPolyline pol = new LwPolyline(vertexes)
+                LwPolyline pol = new LwPolyline(vertexes, true)
                 {
                     Layer = Layer.Default,
-                    LineType = LineType.ByBlock,
+                    Linetype = Linetype.ByBlock,
                     Color = AciColor.ByBlock
                 };
                 pol.SetConstantWidth(0.5);
@@ -81,7 +82,7 @@ namespace netDxf.Entities
                 Line line = new Line(new Vector3(-0.5, 0.0, 0.0), new Vector3(-1.0, 0.0, 0.0))
                 {
                     Layer = Layer.Default,
-                    LineType = LineType.ByBlock,
+                    Linetype = Linetype.ByBlock,
                     Color = AciColor.ByBlock,
                     Lineweight = Lineweight.ByBlock
                 };
@@ -105,10 +106,10 @@ namespace netDxf.Entities
                     new LwPolylineVertex(-0.0625, 0.0, 1.0),
                     new LwPolylineVertex(0.0625, 0.0, 1.0)
                 };
-                LwPolyline pol = new LwPolyline(vertexes)
+                LwPolyline pol = new LwPolyline(vertexes, true)
                 {
                     Layer = Layer.Default,
-                    LineType = LineType.ByBlock,
+                    Linetype = Linetype.ByBlock,
                     Color = AciColor.ByBlock
                 };
                 pol.SetConstantWidth(0.5);
@@ -130,7 +131,7 @@ namespace netDxf.Entities
                 Circle circle = new Circle(new Vector3(0.0, 0.0, 0.0), 0.5)
                 {
                     Layer = Layer.Default,
-                    LineType = LineType.ByBlock,
+                    Linetype = Linetype.ByBlock,
                     Color = AciColor.ByBlock,
                     Lineweight = Lineweight.ByBlock
                 };
@@ -139,7 +140,7 @@ namespace netDxf.Entities
                 Line line = new Line(new Vector3(-0.5, 0.0, 0.0), new Vector3(-1.0, 0.0, 0.0))
                 {
                     Layer = Layer.Default,
-                    LineType = LineType.ByBlock,
+                    Linetype = Linetype.ByBlock,
                     Color = AciColor.ByBlock,
                     Lineweight = Lineweight.ByBlock
                 };
@@ -161,7 +162,7 @@ namespace netDxf.Entities
                 Circle circle = new Circle(new Vector3(0.0, 0.0, 0.0), 0.5)
                 {
                     Layer = Layer.Default,
-                    LineType = LineType.ByBlock,
+                    Linetype = Linetype.ByBlock,
                     Color = AciColor.ByBlock,
                     Lineweight = Lineweight.ByBlock
                 };
@@ -170,7 +171,7 @@ namespace netDxf.Entities
                 Line line = new Line(new Vector3(0.0, 0.0, 0.0), new Vector3(-1.0, 0.0, 0.0))
                 {
                     Layer = Layer.Default,
-                    LineType = LineType.ByBlock,
+                    Linetype = Linetype.ByBlock,
                     Color = AciColor.ByBlock,
                     Lineweight = Lineweight.ByBlock
                 };
@@ -192,7 +193,7 @@ namespace netDxf.Entities
                 Circle circle1 = new Circle(new Vector3(0.0, 0.0, 0.0), 0.5)
                 {
                     Layer = Layer.Default,
-                    LineType = LineType.ByBlock,
+                    Linetype = Linetype.ByBlock,
                     Color = AciColor.ByBlock,
                     Lineweight = Lineweight.ByBlock
                 };
@@ -201,7 +202,7 @@ namespace netDxf.Entities
                 Circle circle2 = new Circle(new Vector3(0.0, 0.0, 0.0), 0.25)
                 {
                     Layer = Layer.Default,
-                    LineType = LineType.ByBlock,
+                    Linetype = Linetype.ByBlock,
                     Color = AciColor.ByBlock,
                     Lineweight = Lineweight.ByBlock
                 };
@@ -210,7 +211,7 @@ namespace netDxf.Entities
                 Line line = new Line(new Vector3(-0.5, 0.0, 0.0), new Vector3(-1.0, 0.0, 0.0))
                 {
                     Layer = Layer.Default,
-                    LineType = LineType.ByBlock,
+                    Linetype = Linetype.ByBlock,
                     Color = AciColor.ByBlock,
                     Lineweight = Lineweight.ByBlock
                 };
@@ -232,7 +233,7 @@ namespace netDxf.Entities
                 Line line1 = new Line(new Vector3(-1.0, 0.1666666666666666, 0.0), new Vector3(0.0, 0.0, 0.0))
                 {
                     Layer = Layer.Default,
-                    LineType = LineType.ByBlock,
+                    Linetype = Linetype.ByBlock,
                     Color = AciColor.ByBlock,
                     Lineweight = Lineweight.ByBlock
                 };
@@ -241,7 +242,7 @@ namespace netDxf.Entities
                 Line line2 = new Line(new Vector3(0.0, 0.0, 0.0), new Vector3(-1.0, -0.1666666666666666, 0.0))
                 {
                     Layer = Layer.Default,
-                    LineType = LineType.ByBlock,
+                    Linetype = Linetype.ByBlock,
                     Color = AciColor.ByBlock,
                     Lineweight = Lineweight.ByBlock
                 };
@@ -250,7 +251,7 @@ namespace netDxf.Entities
                 Line line3 = new Line(new Vector3(0.0, 0.0, 0.0), new Vector3(-1.0, 0.0, 0.0))
                 {
                     Layer = Layer.Default,
-                    LineType = LineType.ByBlock,
+                    Linetype = Linetype.ByBlock,
                     Color = AciColor.ByBlock,
                     Lineweight = Lineweight.ByBlock
                 };
@@ -261,9 +262,9 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Right angle arrowhead.
+        /// Open 90 degree arrowhead (right angle arrowhead).
         /// </summary>
-        public static Block RightAngle
+        public static Block Open90
         {
             get
             {
@@ -272,7 +273,7 @@ namespace netDxf.Entities
                 Line line1 = new Line(new Vector3(-0.5, 0.5, 0.0), new Vector3(0.0, 0.0, 0.0))
                 {
                     Layer = Layer.Default,
-                    LineType = LineType.ByBlock,
+                    Linetype = Linetype.ByBlock,
                     Color = AciColor.ByBlock,
                     Lineweight = Lineweight.ByBlock
                 };
@@ -281,7 +282,7 @@ namespace netDxf.Entities
                 Line line2 = new Line(new Vector3(0.0, 0.0, 0.0), new Vector3(-0.5, -0.5, 0.0))
                 {
                     Layer = Layer.Default,
-                    LineType = LineType.ByBlock,
+                    Linetype = Linetype.ByBlock,
                     Color = AciColor.ByBlock,
                     Lineweight = Lineweight.ByBlock
                 };
@@ -290,7 +291,7 @@ namespace netDxf.Entities
                 Line line3 = new Line(new Vector3(0.0, 0.0, 0.0), new Vector3(-1.0, 0.0, 0.0))
                 {
                     Layer = Layer.Default,
-                    LineType = LineType.ByBlock,
+                    Linetype = Linetype.ByBlock,
                     Color = AciColor.ByBlock,
                     Lineweight = Lineweight.ByBlock
                 };
@@ -312,7 +313,7 @@ namespace netDxf.Entities
                 Line line1 = new Line(new Vector3(-1.0, 0.26794919, 0.0), new Vector3(0.0, 0.0, 0.0))
                 {
                     Layer = Layer.Default,
-                    LineType = LineType.ByBlock,
+                    Linetype = Linetype.ByBlock,
                     Color = AciColor.ByBlock,
                     Lineweight = Lineweight.ByBlock
                 };
@@ -321,7 +322,7 @@ namespace netDxf.Entities
                 Line line2 = new Line(new Vector3(0.0, 0.0, 0.0), new Vector3(-1.0, -0.26794919, 0.0))
                 {
                     Layer = Layer.Default,
-                    LineType = LineType.ByBlock,
+                    Linetype = Linetype.ByBlock,
                     Color = AciColor.ByBlock,
                     Lineweight = Lineweight.ByBlock
                 };
@@ -330,7 +331,7 @@ namespace netDxf.Entities
                 Line line3 = new Line(new Vector3(0.0, 0.0, 0.0), new Vector3(-1.0, 0.0, 0.0))
                 {
                     Layer = Layer.Default,
-                    LineType = LineType.ByBlock,
+                    Linetype = Linetype.ByBlock,
                     Color = AciColor.ByBlock,
                     Lineweight = Lineweight.ByBlock
                 };
@@ -352,7 +353,7 @@ namespace netDxf.Entities
                 Line line1 = new Line(new Vector3(-1.0, 0.1666666666666666, 0.0), new Vector3(0.0, 0.0, 0.0))
                 {
                     Layer = Layer.Default,
-                    LineType = LineType.ByBlock,
+                    Linetype = Linetype.ByBlock,
                     Color = AciColor.ByBlock,
                     Lineweight = Lineweight.ByBlock
                 };
@@ -361,7 +362,7 @@ namespace netDxf.Entities
                 Line line2 = new Line(new Vector3(0.0, 0.0, 0.0), new Vector3(-1.0, -0.1666666666666666, 0.0))
                 {
                     Layer = Layer.Default,
-                    LineType = LineType.ByBlock,
+                    Linetype = Linetype.ByBlock,
                     Color = AciColor.ByBlock,
                     Lineweight = Lineweight.ByBlock
                 };
@@ -370,7 +371,7 @@ namespace netDxf.Entities
                 Line line3 = new Line(new Vector3(-1.0, 0.1666666666666666, 0.0), new Vector3(-1.0, -0.1666666666666666, 0.0))
                 {
                     Layer = Layer.Default,
-                    LineType = LineType.ByBlock,
+                    Linetype = Linetype.ByBlock,
                     Color = AciColor.ByBlock,
                     Lineweight = Lineweight.ByBlock
                 };
@@ -379,7 +380,7 @@ namespace netDxf.Entities
                 Line line4 = new Line(new Vector3(0.0, 0.0, 0.0), new Vector3(-1.0, 0.0, 0.0))
                 {
                     Layer = Layer.Default,
-                    LineType = LineType.ByBlock,
+                    Linetype = Linetype.ByBlock,
                     Color = AciColor.ByBlock,
                     Lineweight = Lineweight.ByBlock
                 };
@@ -401,7 +402,7 @@ namespace netDxf.Entities
                 Circle circle = new Circle(new Vector3(0.0, 0.0, 0.0), 0.25)
                 {
                     Layer = Layer.Default,
-                    LineType = LineType.ByBlock,
+                    Linetype = Linetype.ByBlock,
                     Color = AciColor.ByBlock,
                     Lineweight = Lineweight.ByBlock
                 };
@@ -435,7 +436,7 @@ namespace netDxf.Entities
                 Line line = new Line(new Vector3(-0.5, -0.5, 0.0), new Vector3(0.5, 0.5, 0.0))
                 {
                     Layer = Layer.Default,
-                    LineType = LineType.ByBlock,
+                    Linetype = Linetype.ByBlock,
                     Color = AciColor.ByBlock,
                     Lineweight = Lineweight.ByBlock
                 };
@@ -457,15 +458,15 @@ namespace netDxf.Entities
                 Solid solid = new Solid(new Vector2(-0.5, 0.5), new Vector2(0.5, 0.5), new Vector2(-0.5, -0.5), new Vector2(0.5, -0.5))
                 {
                     Layer = Layer.Default,
-                    LineType = LineType.ByBlock,
-                    Color = AciColor.ByBlock,
+                    Linetype = Linetype.ByBlock,
+                    Color = AciColor.ByBlock
                 };
                 arrowhead.Entities.Add(solid);
 
                 Line line = new Line(new Vector3(-0.5, 0.0, 0.0), new Vector3(-1.0, 0.0, 0.0))
                 {
                     Layer = Layer.Default,
-                    LineType = LineType.ByBlock,
+                    Linetype = Linetype.ByBlock,
                     Color = AciColor.ByBlock,
                     Lineweight = Lineweight.ByBlock
                 };
@@ -487,7 +488,7 @@ namespace netDxf.Entities
                 Line line1 = new Line(new Vector3(-0.5, -0.5, 0.0), new Vector3(0.5, -0.5, 0.0))
                 {
                     Layer = Layer.Default,
-                    LineType = LineType.ByBlock,
+                    Linetype = Linetype.ByBlock,
                     Color = AciColor.ByBlock,
                     Lineweight = Lineweight.ByBlock
                 };
@@ -496,7 +497,7 @@ namespace netDxf.Entities
                 Line line2 = new Line(new Vector3(0.5, -0.5, 0.0), new Vector3(0.5, 0.5, 0.0))
                 {
                     Layer = Layer.Default,
-                    LineType = LineType.ByBlock,
+                    Linetype = Linetype.ByBlock,
                     Color = AciColor.ByBlock,
                     Lineweight = Lineweight.ByBlock
                 };
@@ -505,7 +506,7 @@ namespace netDxf.Entities
                 Line line3 = new Line(new Vector3(0.5, 0.5, 0.0), new Vector3(-0.5, 0.5, 0.0))
                 {
                     Layer = Layer.Default,
-                    LineType = LineType.ByBlock,
+                    Linetype = Linetype.ByBlock,
                     Color = AciColor.ByBlock,
                     Lineweight = Lineweight.ByBlock
                 };
@@ -514,7 +515,7 @@ namespace netDxf.Entities
                 Line line4 = new Line(new Vector3(-0.5, 0.5, 0.0), new Vector3(-0.5, -0.5, 0.0))
                 {
                     Layer = Layer.Default,
-                    LineType = LineType.ByBlock,
+                    Linetype = Linetype.ByBlock,
                     Color = AciColor.ByBlock,
                     Lineweight = Lineweight.ByBlock
                 };
@@ -523,7 +524,7 @@ namespace netDxf.Entities
                 Line line5 = new Line(new Vector3(-0.5, 0.0, 0.0), new Vector3(-1.0, 0.0, 0.0))
                 {
                     Layer = Layer.Default,
-                    LineType = LineType.ByBlock,
+                    Linetype = Linetype.ByBlock,
                     Color = AciColor.ByBlock,
                     Lineweight = Lineweight.ByBlock
                 };
@@ -545,7 +546,7 @@ namespace netDxf.Entities
                 Line line1 = new Line(new Vector3(-1.0, 0.1666666666666666, 0.0), new Vector3(0.0, 0.0, 0.0))
                 {
                     Layer = Layer.Default,
-                    LineType = LineType.ByBlock,
+                    Linetype = Linetype.ByBlock,
                     Color = AciColor.ByBlock,
                     Lineweight = Lineweight.ByBlock
                 };
@@ -554,7 +555,7 @@ namespace netDxf.Entities
                 Line line2 = new Line(new Vector3(0.0, 0.0, 0.0), new Vector3(-1.0, -0.1666666666666666, 0.0))
                 {
                     Layer = Layer.Default,
-                    LineType = LineType.ByBlock,
+                    Linetype = Linetype.ByBlock,
                     Color = AciColor.ByBlock,
                     Lineweight = Lineweight.ByBlock
                 };
@@ -563,7 +564,7 @@ namespace netDxf.Entities
                 Line line3 = new Line(new Vector3(-1.0, 0.1666666666666666, 0.0), new Vector3(-1.0, -0.1666666666666666, 0.0))
                 {
                     Layer = Layer.Default,
-                    LineType = LineType.ByBlock,
+                    Linetype = Linetype.ByBlock,
                     Color = AciColor.ByBlock,
                     Lineweight = Lineweight.ByBlock
                 };
@@ -585,8 +586,8 @@ namespace netDxf.Entities
                 Solid solid = new Solid(new Vector2(0.0, 0.57735027), new Vector2(-1.0, 0.0), new Vector2(0.0, -0.57735027))
                 {
                     Layer = Layer.Default,
-                    LineType = LineType.ByBlock,
-                    Color = AciColor.ByBlock,
+                    Linetype = Linetype.ByBlock,
+                    Color = AciColor.ByBlock
                 };
                 arrowhead.Entities.Add(solid);
 
@@ -606,7 +607,7 @@ namespace netDxf.Entities
                 Line line1 = new Line(new Vector3(0.0, 0.5773502700000001, 0.0), new Vector3(-1.0, 0.0, 0.0))
                 {
                     Layer = Layer.Default,
-                    LineType = LineType.ByBlock,
+                    Linetype = Linetype.ByBlock,
                     Color = AciColor.ByBlock,
                     Lineweight = Lineweight.ByBlock
                 };
@@ -615,7 +616,7 @@ namespace netDxf.Entities
                 Line line2 = new Line(new Vector3(-1.0, 0.0, 0.0), new Vector3(0.0, -0.5773502700000001, 0.0))
                 {
                     Layer = Layer.Default,
-                    LineType = LineType.ByBlock,
+                    Linetype = Linetype.ByBlock,
                     Color = AciColor.ByBlock,
                     Lineweight = Lineweight.ByBlock
                 };
@@ -624,7 +625,7 @@ namespace netDxf.Entities
                 Line line3 = new Line(new Vector3(0.0, -0.5773502700000001, 0.0), new Vector3(0.0, 0.5773502700000001, 0.0))
                 {
                     Layer = Layer.Default,
-                    LineType = LineType.ByBlock,
+                    Linetype = Linetype.ByBlock,
                     Color = AciColor.ByBlock,
                     Lineweight = Lineweight.ByBlock
                 };
@@ -646,7 +647,7 @@ namespace netDxf.Entities
                 Arc arc1 = new Arc(new Vector3(0.44488802, -0.09133463, 0.0), 0.4541666700000001, 101.9999999980395, 167.9999999799193)
                 {
                     Layer = Layer.Default,
-                    LineType = LineType.ByBlock,
+                    Linetype = Linetype.ByBlock,
                     Color = AciColor.ByBlock,
                     Lineweight = Lineweight.ByBlock
                 };
@@ -655,7 +656,7 @@ namespace netDxf.Entities
                 Arc arc2 = new Arc(new Vector3(-0.44488802, 0.09133463, 0.0), 0.4541666700000001, 282.0000000215427, 348.0000000034225)
                 {
                     Layer = Layer.Default,
-                    LineType = LineType.ByBlock,
+                    Linetype = Linetype.ByBlock,
                     Color = AciColor.ByBlock,
                     Lineweight = Lineweight.ByBlock
                 };
@@ -679,10 +680,10 @@ namespace netDxf.Entities
                     new LwPolylineVertex(-0.5, -0.5),
                     new LwPolylineVertex(0.5, 0.5)
                 };
-                LwPolyline pol = new LwPolyline(vertexes)
+                LwPolyline pol = new LwPolyline(vertexes, false)
                 {
                     Layer = Layer.Default,
-                    LineType = LineType.ByBlock,
+                    Linetype = Linetype.ByBlock,
                     Color = AciColor.ByBlock
                 };
 

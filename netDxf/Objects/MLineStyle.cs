@@ -1,22 +1,23 @@
-#region netDxf, Copyright(C) 2015 Daniel Carvajal, Licensed under LGPL.
+#region netDxf library, Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+
+//                        netDxf library
+// Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
 // 
-//                         netDxf library
-//  Copyright (C) 2009-2015 Daniel Carvajal (haplokuon@gmail.com)
-//  
-//  This library is free software; you can redistribute it and/or
-//  modify it under the terms of the GNU Lesser General Public
-//  License as published by the Free Software Foundation; either
-//  version 2.1 of the License, or (at your option) any later version.
-//  
-//  The above copyright notice and this permission notice shall be included in all
-//  copies or substantial portions of the Software.
-//  
-//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-//  FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-//  COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-//  IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-//  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2.1 of the License, or (at your option) any later version.
+// 
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+// FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+// COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+// IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+// CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
 #endregion
 
 using System;
@@ -35,7 +36,9 @@ namespace netDxf.Objects
         #region delegates and events
 
         public delegate void MLineStyleElementAddedEventHandler(MLineStyle sender, MLineStyleElementChangeEventArgs e);
+
         public event MLineStyleElementAddedEventHandler MLineStyleElementAdded;
+
         protected virtual void OnMLineStyleElementAddedEvent(MLineStyleElement item)
         {
             MLineStyleElementAddedEventHandler ae = this.MLineStyleElementAdded;
@@ -44,7 +47,9 @@ namespace netDxf.Objects
         }
 
         public delegate void MLineStyleElementRemovedEventHandler(MLineStyle sender, MLineStyleElementChangeEventArgs e);
+
         public event MLineStyleElementRemovedEventHandler MLineStyleElementRemoved;
+
         protected virtual void OnMLineStyleElementRemovedEvent(MLineStyleElement item)
         {
             MLineStyleElementRemovedEventHandler ae = this.MLineStyleElementRemoved;
@@ -52,18 +57,20 @@ namespace netDxf.Objects
                 ae(this, new MLineStyleElementChangeEventArgs(item));
         }
 
-        public delegate void MLineStyleElementLineTypeChangedEventHandler(MLineStyle sender, TableObjectChangedEventArgs<LineType> e);
-        public event MLineStyleElementLineTypeChangedEventHandler MLineStyleElementLineTypeChanged;
-        protected virtual LineType OnMLineStyleElementLineTypeChangedEvent(LineType oldLineType, LineType newLineType)
+        public delegate void MLineStyleElementLinetypeChangedEventHandler(MLineStyle sender, TableObjectChangedEventArgs<Linetype> e);
+
+        public event MLineStyleElementLinetypeChangedEventHandler MLineStyleElementLinetypeChanged;
+
+        protected virtual Linetype OnMLineStyleElementLinetypeChangedEvent(Linetype oldLinetype, Linetype newLinetype)
         {
-            MLineStyleElementLineTypeChangedEventHandler ae = this.MLineStyleElementLineTypeChanged;
+            MLineStyleElementLinetypeChangedEventHandler ae = this.MLineStyleElementLinetypeChanged;
             if (ae != null)
             {
-                TableObjectChangedEventArgs<LineType> eventArgs = new TableObjectChangedEventArgs<LineType>(oldLineType, newLineType);
+                TableObjectChangedEventArgs<Linetype> eventArgs = new TableObjectChangedEventArgs<Linetype>(oldLinetype, newLinetype);
                 ae(this, eventArgs);
                 return eventArgs.NewValue;
             }
-            return newLineType;
+            return newLinetype;
         }
 
         #endregion
@@ -102,11 +109,31 @@ namespace netDxf.Objects
         /// Initializes a new instance of the <c>MLineStyle</c> class.
         /// </summary>
         /// <param name="name">MLine style name.</param>
-        /// <param name="description">MLine style description (optional).</param>
         /// <remarks>By default the multiline style has to elements with offsets 0.5 y -0.5.</remarks>
-        public MLineStyle(string name, string description = null)
-            : this(name, new[] { new MLineStyleElement(0.5), new MLineStyleElement(-0.5) }, description)
-        {         
+        public MLineStyle(string name)
+            : this(name, new[] {new MLineStyleElement(0.5), new MLineStyleElement(-0.5)}, string.Empty)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <c>MLineStyle</c> class.
+        /// </summary>
+        /// <param name="name">MLine style name.</param>
+        /// <param name="description">MLine style description.</param>
+        /// <remarks>By default the multiline style has to elements with offsets 0.5 y -0.5.</remarks>
+        public MLineStyle(string name, string description)
+            : this(name, new[] {new MLineStyleElement(0.5), new MLineStyleElement(-0.5)}, description)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <c>MLineStyle</c> class.
+        /// </summary>
+        /// <param name="name">MLine style name.</param>
+        /// <param name="elements">Elements of the multiline.</param>
+        public MLineStyle(string name, IEnumerable<MLineStyleElement> elements)
+            : this(name, elements, string.Empty)
+        {
         }
 
         /// <summary>
@@ -115,23 +142,23 @@ namespace netDxf.Objects
         /// <param name="name">MLine style name.</param>
         /// <param name="elements">Elements of the multiline.</param>
         /// <param name="description">MLine style description (optional).</param>
-        public MLineStyle(string name, IList<MLineStyleElement> elements, string description = null)
+        public MLineStyle(string name, IEnumerable<MLineStyleElement> elements, string description)
             : base(name, DxfObjectCode.MLineStyle, true)
         {
             if (string.IsNullOrEmpty(name))
                 throw new ArgumentNullException(nameof(name), "The multiline style name should be at least one character long.");
             if (elements == null)
                 throw new ArgumentNullException(nameof(elements));
-            if (elements.Count < 1)
-                throw new ArgumentOutOfRangeException(nameof(elements), elements.Count, "The elements list must have at least one element.");
-            
-            this.elements = new ObservableCollection<MLineStyleElement>(elements.Count);
+            this.elements = new ObservableCollection<MLineStyleElement>();
+
             this.elements.BeforeAddItem += this.Elements_BeforeAddItem;
             this.elements.AddItem += this.Elements_AddItem;
             this.elements.BeforeRemoveItem += this.Elements_BeforeRemoveItem;
             this.elements.RemoveItem += this.Elements_RemoveItem;
 
             this.elements.AddRange(elements);
+            if (this.elements.Count < 1)
+                throw new ArgumentOutOfRangeException(nameof(elements), this.elements.Count, "The elements list must have at least one element.");
             this.elements.Sort(); // the elements list must be ordered
 
             this.flags = MLineStyleFlags.None;
@@ -225,8 +252,8 @@ namespace netDxf.Objects
         /// </summary>
         public new MLineStyles Owner
         {
-            get { return (MLineStyles) this.owner; }
-            internal set { this.owner = value; }
+            get { return (MLineStyles) base.Owner; }
+            internal set { base.Owner = value; }
         }
 
         #endregion
@@ -243,7 +270,7 @@ namespace netDxf.Objects
             List<MLineStyleElement> copyElements = new List<MLineStyleElement>();
             foreach (MLineStyleElement e in this.elements)
             {
-                copyElements.Add((MLineStyleElement)e.Clone());
+                copyElements.Add((MLineStyleElement) e.Clone());
             }
             return new MLineStyle(newName, copyElements)
             {
@@ -261,7 +288,7 @@ namespace netDxf.Objects
         /// <returns>A new MLineStyle that is a copy of this instance.</returns>
         public override object Clone()
         {
-            return this.Clone(this.name);
+            return this.Clone(this.Name);
         }
 
         #endregion
@@ -280,7 +307,7 @@ namespace netDxf.Objects
         private void Elements_AddItem(ObservableCollection<MLineStyleElement> sender, ObservableCollectionEventArgs<MLineStyleElement> e)
         {
             this.OnMLineStyleElementAddedEvent(e.Item);
-            e.Item.LineTypeChanged += this.MLineStyleElement_LineTypeChanged;
+            e.Item.LinetypeChanged += this.MLineStyleElement_LinetypeChanged;
         }
 
         private void Elements_BeforeRemoveItem(ObservableCollection<MLineStyleElement> sender, ObservableCollectionEventArgs<MLineStyleElement> e)
@@ -290,16 +317,16 @@ namespace netDxf.Objects
         private void Elements_RemoveItem(ObservableCollection<MLineStyleElement> sender, ObservableCollectionEventArgs<MLineStyleElement> e)
         {
             this.OnMLineStyleElementRemovedEvent(e.Item);
-            e.Item.LineTypeChanged -= this.MLineStyleElement_LineTypeChanged;
+            e.Item.LinetypeChanged -= this.MLineStyleElement_LinetypeChanged;
         }
 
         #endregion
 
         #region MLineStyleElement events
 
-        private void MLineStyleElement_LineTypeChanged(MLineStyleElement sender, TableObjectChangedEventArgs<LineType> e)
+        private void MLineStyleElement_LinetypeChanged(MLineStyleElement sender, TableObjectChangedEventArgs<Linetype> e)
         {
-            e.NewValue = this.OnMLineStyleElementLineTypeChangedEvent(e.OldValue, e.NewValue);
+            e.NewValue = this.OnMLineStyleElementLinetypeChangedEvent(e.OldValue, e.NewValue);
         }
 
         #endregion

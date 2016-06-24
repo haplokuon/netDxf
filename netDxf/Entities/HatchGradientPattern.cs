@@ -1,22 +1,23 @@
-﻿#region netDxf, Copyright(C) 2015 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf library, Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+
+//                        netDxf library
+// Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
 // 
-//                         netDxf library
-//  Copyright (C) 2009-2015 Daniel Carvajal (haplokuon@gmail.com)
-//  
-//  This library is free software; you can redistribute it and/or
-//  modify it under the terms of the GNU Lesser General Public
-//  License as published by the Free Software Foundation; either
-//  version 2.1 of the License, or (at your option) any later version.
-//  
-//  The above copyright notice and this permission notice shall be included in all
-//  copies or substantial portions of the Software.
-//  
-//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-//  FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-//  COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-//  IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-//  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2.1 of the License, or (at your option) any later version.
+// 
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+// FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+// COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+// IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+// CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
 #endregion
 
 using System;
@@ -48,8 +49,16 @@ namespace netDxf.Entities
         /// <summary>
         /// Initializes a new instance of the <c>HatchGradientPattern</c> class as a default linear gradient. 
         /// </summary>
+        public HatchGradientPattern()
+            : this(string.Empty)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <c>HatchGradientPattern</c> class as a default linear gradient. 
+        /// </summary>
         /// <param name="description">Description of the pattern (optional, this information is not saved in the dxf file). By default it will use the supplied name.</param>
-        public HatchGradientPattern(string description = null)
+        public HatchGradientPattern(string description)
             : base("SOLID", description)
         {
             this.color1 = AciColor.Blue;
@@ -66,8 +75,19 @@ namespace netDxf.Entities
         /// <param name="color">Gradient <see cref="AciColor">color</see>.</param>
         /// <param name="tint">Gradient tint.</param>
         /// <param name="type">Gradient <see cref="HatchGradientPatternType">type</see>.</param>
+        public HatchGradientPattern(AciColor color, double tint, HatchGradientPatternType type)
+            : this(color, tint, type, string.Empty)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <c>HatchGradientPattern</c> class as a single color gradient. 
+        /// </summary>
+        /// <param name="color">Gradient <see cref="AciColor">color</see>.</param>
+        /// <param name="tint">Gradient tint.</param>
+        /// <param name="type">Gradient <see cref="HatchGradientPatternType">type</see>.</param>
         /// <param name="description">Description of the pattern (optional, this information is not saved in the dxf file). By default it will use the supplied name.</param>
-        public HatchGradientPattern(AciColor color, double tint, HatchGradientPatternType type, string description = null)
+        public HatchGradientPattern(AciColor color, double tint, HatchGradientPatternType type, string description)
             : base("SOLID", description)
         {
             if (color == null)
@@ -86,8 +106,19 @@ namespace netDxf.Entities
         /// <param name="color1">Gradient <see cref="AciColor">color</see> 1.</param>
         /// <param name="color2">Gradient <see cref="AciColor">color</see> 2.</param>
         /// <param name="type">Gradient <see cref="HatchGradientPatternType">type</see>.</param>
+        public HatchGradientPattern(AciColor color1, AciColor color2, HatchGradientPatternType type)
+            : this(color1, color2, type, string.Empty)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <c>HatchGradientPattern</c> class as a two color gradient. 
+        /// </summary>
+        /// <param name="color1">Gradient <see cref="AciColor">color</see> 1.</param>
+        /// <param name="color2">Gradient <see cref="AciColor">color</see> 2.</param>
+        /// <param name="type">Gradient <see cref="HatchGradientPatternType">type</see>.</param>
         /// <param name="description">Description of the pattern (optional, this information is not saved in the dxf file). By default it will use the supplied name.</param>
-        public HatchGradientPattern(AciColor color1, AciColor color2, HatchGradientPatternType type, string description = null)
+        public HatchGradientPattern(AciColor color1, AciColor color2, HatchGradientPatternType type, string description)
             : base("SOLID", description)
         {
             if (color1 == null)
@@ -209,12 +240,12 @@ namespace netDxf.Entities
             HatchGradientPattern copy = new HatchGradientPattern
             {
                 // Pattern
-                Fill = this.fill,
-                Type = this.type,
-                Origin = this.origin,
-                Angle = this.angle,
-                Scale = this.scale,
-                Style = this.style,
+                Fill = this.Fill,
+                Type = this.Type,
+                Origin = this.Origin,
+                Angle = this.Angle,
+                Scale = this.Scale,
+                Style = this.Style,
                 // GraientPattern
                 GradientType = this.gradientType,
                 Color1 = (AciColor) this.color1.Clone(),

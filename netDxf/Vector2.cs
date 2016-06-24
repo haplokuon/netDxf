@@ -1,26 +1,26 @@
-#region netDxf, Copyright(C) 2016 Daniel Carvajal, Licensed under LGPL.
+#region netDxf library, Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+
+//                        netDxf library
+// Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
 // 
-//                         netDxf library
-//  Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
-//  
-//  This library is free software; you can redistribute it and/or
-//  modify it under the terms of the GNU Lesser General Public
-//  License as published by the Free Software Foundation; either
-//  version 2.1 of the License, or (at your option) any later version.
-//  
-//  The above copyright notice and this permission notice shall be included in all
-//  copies or substantial portions of the Software.
-//  
-//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-//  FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-//  COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-//  IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-//  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2.1 of the License, or (at your option) any later version.
+// 
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+// FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+// COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+// IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+// CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
 #endregion
 
 using System;
-using System.Collections.Generic;
 using System.Threading;
 
 namespace netDxf
@@ -65,10 +65,13 @@ namespace netDxf
         /// Initializes a new instance of Vector2.
         /// </summary>
         /// <param name="array">Array of two elements that represents the vector.</param>
-        public Vector2(IList<double> array)
+        public Vector2(double[] array)
         {
-            if (array.Count != 2)
-                throw new ArgumentOutOfRangeException(nameof(array), array.Count, "The dimension of the array must be two");
+            if (array == null)
+                throw new ArgumentNullException(nameof(array));
+
+            if (array.Length != 2)
+                throw new ArgumentOutOfRangeException(nameof(array), array.Length, "The dimension of the array must be two");
             this.x = array[0];
             this.y = array[1];
         }
@@ -174,15 +177,13 @@ namespace netDxf
         #region static methods
 
         /// <summary>
-        ///  Returns a value indicating if any component of the specified vector evaluates to a value that is not a number <see cref="System.Double.NaN"/>.
+        /// Returns a value indicating if any component of the specified vector evaluates to a value that is not a number <see cref="System.Double.NaN"/>.
         /// </summary>
         /// <param name="u">Vector2.</param>
         /// <returns>Returns true if any component of the specified vector evaluates to <see cref="System.Double.NaN"/>; otherwise, false.</returns>
         public static bool IsNaN(Vector2 u)
         {
-            if (double.IsNaN(u.X) || double.IsNaN(u.Y))
-                return true;
-            return false;
+            return double.IsNaN(u.X) || double.IsNaN(u.Y);
         }
 
         /// <summary>
@@ -208,7 +209,7 @@ namespace netDxf
         }
 
         /// <summary>
-        /// Obtains the counter clockwise perpendicular vector .
+        /// Obtains the counter clockwise perpendicular vector.
         /// </summary>
         /// <param name="u">Vector2.</param>
         /// <returns>Vector2.</returns>
@@ -285,7 +286,7 @@ namespace netDxf
         /// <returns>Angle in radians.</returns>
         public static double AngleBetween(Vector2 u, Vector2 v)
         {
-            double cos = DotProduct(u, v) / (u.Modulus() * v.Modulus());
+            double cos = DotProduct(u, v)/(u.Modulus()*v.Modulus());
             if (cos >= 1.0)
                 return 0.0;
             if (cos <= -1.0)
@@ -310,9 +311,20 @@ namespace netDxf
         /// </summary>
         /// <param name="u">Vector2.</param>
         /// <param name="v">Vector2.</param>
+        /// <returns>True if are perpendicular or false in any other case.</returns>
+        public static bool ArePerpendicular(Vector2 u, Vector2 v)
+        {
+            return ArePerpendicular(u, v, MathHelper.Epsilon);
+        }
+
+        /// <summary>
+        /// Checks if two vectors are perpendicular.
+        /// </summary>
+        /// <param name="u">Vector2.</param>
+        /// <param name="v">Vector2.</param>
         /// <param name="threshold">Tolerance used.</param>
         /// <returns>True if are perpendicular or false in any other case.</returns>
-        public static bool ArePerpendicular(Vector2 u, Vector2 v, double threshold = MathHelper.Epsilon)
+        public static bool ArePerpendicular(Vector2 u, Vector2 v, double threshold)
         {
             return MathHelper.IsZero(DotProduct(u, v), threshold);
         }
@@ -322,11 +334,21 @@ namespace netDxf
         /// </summary>
         /// <param name="u">Vector2.</param>
         /// <param name="v">Vector2.</param>
+        /// <returns>True if are parallel or false in any other case.</returns>
+        public static bool AreParallel(Vector2 u, Vector2 v)
+        {
+            return AreParallel(u, v, MathHelper.Epsilon);
+        }
+
+        /// <summary>
+        /// Checks if two vectors are parallel.
+        /// </summary>
+        /// <param name="u">Vector2.</param>
+        /// <param name="v">Vector2.</param>
         /// <param name="threshold">Tolerance used.</param>
         /// <returns>True if are parallel or false in any other case.</returns>
-        public static bool AreParallel(Vector2 u, Vector2 v, double threshold = MathHelper.Epsilon)
+        public static bool AreParallel(Vector2 u, Vector2 v, double threshold)
         {
-            double cross = u.X* v.Y - u.Y * v.X;
             return MathHelper.IsZero(CrossProduct(u, v), threshold);
         }
 
@@ -353,8 +375,8 @@ namespace netDxf
                 return u; // the vector is already normalized
             if (MathHelper.IsZero(mod))
                 return NaN;
-            double modInv = 1 / mod;
-            return new Vector2(u.x * modInv, u.y * modInv);
+            double modInv = 1/mod;
+            return new Vector2(u.x*modInv, u.y*modInv);
         }
 
         #endregion
@@ -395,12 +417,34 @@ namespace netDxf
         }
 
         /// <summary>
+        /// Adds two vectors.
+        /// </summary>
+        /// <param name="u">Vector2.</param>
+        /// <param name="v">Vector2.</param>
+        /// <returns>The addition of u plus v.</returns>
+        public static Vector2 Add(Vector2 u, Vector2 v)
+        {
+            return new Vector2(u.X + v.X, u.Y + v.Y);
+        }
+
+        /// <summary>
         /// Subtracts two vectors.
         /// </summary>
         /// <param name="u">Vector3.</param>
         /// <param name="v">Vector3.</param>
         /// <returns>The subtraction of u minus v.</returns>
         public static Vector2 operator -(Vector2 u, Vector2 v)
+        {
+            return new Vector2(u.X - v.X, u.Y - v.Y);
+        }
+
+        /// <summary>
+        /// Subtracts two vectors.
+        /// </summary>
+        /// <param name="u">Vector3.</param>
+        /// <param name="v">Vector3.</param>
+        /// <returns>The subtraction of u minus v.</returns>
+        public static Vector2 Subtract(Vector2 u, Vector2 v)
         {
             return new Vector2(u.X - v.X, u.Y - v.Y);
         }
@@ -416,7 +460,17 @@ namespace netDxf
         }
 
         /// <summary>
-        /// Multiplies a vector with an scalar (same as a*u, commutative property).
+        /// Negates a vector.
+        /// </summary>
+        /// <param name="u">Vector2.</param>
+        /// <returns>The negative vector of u.</returns>
+        public static Vector2 Negate(Vector2 u)
+        {
+            return new Vector2(-u.X, -u.Y);
+        }
+
+        /// <summary>
+        /// Multiplies a vector with an scalar.
         /// </summary>
         /// <param name="u">Vector2.</param>
         /// <param name="a">Scalar.</param>
@@ -427,22 +481,44 @@ namespace netDxf
         }
 
         /// <summary>
-        /// Multiplies an scalar with a vector (same as u*a, commutative property).
+        /// Multiplies a vector with an scalar.
+        /// </summary>
+        /// <param name="u">Vector2.</param>
+        /// <param name="a">Scalar.</param>
+        /// <returns>The multiplication of u times a.</returns>
+        public static Vector2 Multiply(Vector2 u, double a)
+        {
+            return new Vector2(u.X*a, u.Y*a);
+        }
+
+        /// <summary>
+        /// Multiplies an scalar with a vector.
         /// </summary>
         /// <param name="a">Scalar.</param>
         /// <param name="u">Vector3.</param>
-        /// <returns>The multiplication of a times u.</returns>
+        /// <returns>The multiplication of u times a.</returns>
         public static Vector2 operator *(double a, Vector2 u)
         {
             return new Vector2(u.X*a, u.Y*a);
         }
 
         /// <summary>
-        /// Divides a vector with an scalar (not same as a/v).
+        /// Multiplies an scalar with a vector.
         /// </summary>
-        /// <param name="a">Vector3.</param>
-        /// <param name="u">Scalar.</param>
-        /// <returns>The multiplication of a times u.</returns>
+        /// <param name="a">Scalar.</param>
+        /// <param name="u">Vector3.</param>
+        /// <returns>The multiplication of u times a.</returns>
+        public static Vector2 Multiply(double a, Vector2 u)
+        {
+            return new Vector2(u.X*a, u.Y*a);
+        }
+
+        /// <summary>
+        /// Divides a vector with an scalar.
+        /// </summary>
+        /// <param name="u">Vector3.</param>
+        /// <param name="a">Scalar.</param>
+        /// <returns>The division of u times a.</returns>
         public static Vector2 operator /(Vector2 u, double a)
         {
             double invEscalar = 1/a;
@@ -450,12 +526,12 @@ namespace netDxf
         }
 
         /// <summary>
-        /// Divides an scalar with a vector (not same as v/a).
+        /// Divides a vector with an scalar.
         /// </summary>
-        /// <param name="a">Vector3.</param>
-        /// <param name="u">Scalar.</param>
-        /// <returns>The multiplication of a times u.</returns>
-        public static Vector2 operator /(double a, Vector2 u)
+        /// <param name="u">Vector3.</param>
+        /// <param name="a">Scalar.</param>
+        /// <returns>The division of u times a.</returns>
+        public static Vector2 Divide(Vector2 u, double a)
         {
             double invEscalar = 1/a;
             return new Vector2(u.X*invEscalar, u.Y*invEscalar);
@@ -498,8 +574,7 @@ namespace netDxf
         /// <returns>Array.</returns>
         public double[] ToArray()
         {
-            double[] u = {this.x, this.y};
-            return u;
+            return new[] {this.x, this.y};
         }
 
         #endregion
@@ -507,35 +582,58 @@ namespace netDxf
         #region comparison methods
 
         /// <summary>
-        /// Check if the components of two vectors are approximate equals.
+        /// Check if the components of two vectors are approximate equal.
         /// </summary>
-        /// <param name="obj">Another Vector2 to compare to.</param>
-        /// <returns>True if the three components are almost equal or false in any other case.</returns>
-        public bool Equals(Vector2 obj)
+        /// <param name="a">Vector3.</param>
+        /// <param name="b">Vector3.</param>
+        /// <returns>True if the two components are almost equal or false in any other case.</returns>
+        public static bool Equals(Vector2 a, Vector2 b)
         {
-            return this.Equals(obj, MathHelper.Epsilon);
+            return a.Equals(b, MathHelper.Epsilon);
+        }
+
+        /// <summary>
+        /// Check if the components of two vectors are approximate equal.
+        /// </summary>
+        /// <param name="a">Vector3.</param>
+        /// <param name="b">Vector3.</param>
+        /// <param name="threshold">Maximum tolerance.</param>
+        /// <returns>True if the two components are almost equal or false in any other case.</returns>
+        public static bool Equals(Vector2 a, Vector2 b, double threshold)
+        {
+            return a.Equals(b, threshold);
         }
 
         /// <summary>
         /// Check if the components of two vectors are approximate equals.
         /// </summary>
-        /// <param name="obj">Another Vector2 to compare to.</param>
+        /// <param name="other">Another Vector2 to compare to.</param>
+        /// <returns>True if the three components are almost equal or false in any other case.</returns>
+        public bool Equals(Vector2 other)
+        {
+            return this.Equals(other, MathHelper.Epsilon);
+        }
+
+        /// <summary>
+        /// Check if the components of two vectors are approximate equals.
+        /// </summary>
+        /// <param name="other">Another Vector2 to compare to.</param>
         /// <param name="threshold">Maximum tolerance.</param>
         /// <returns>True if the three components are almost equal or false in any other case.</returns>
-        public bool Equals(Vector2 obj, double threshold)
+        public bool Equals(Vector2 other, double threshold)
         {
-            return MathHelper.IsEqual(obj.X, this.x, threshold) && MathHelper.IsEqual(obj.Y, this.y, threshold);
+            return MathHelper.IsEqual(other.X, this.x, threshold) && MathHelper.IsEqual(other.Y, this.y, threshold);
         }
 
         /// <summary>
         /// Indicates whether this instance and a specified object are equal.
         /// </summary>
-        /// <param name="obj">Another object to compare to.</param>
+        /// <param name="other">Another object to compare to.</param>
         /// <returns>True if obj and this instance are the same type and represent the same value; otherwise, false.</returns>
-        public override bool Equals(object obj)
+        public override bool Equals(object other)
         {
-            if (obj is Vector2)
-                return this.Equals((Vector2) obj);
+            if (other is Vector2)
+                return this.Equals((Vector2) other);
             return false;
         }
 

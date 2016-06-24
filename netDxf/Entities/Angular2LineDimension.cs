@@ -1,5 +1,5 @@
-﻿#region netDxf, Copyright(C) 2016 Daniel Carvajal, Licensed under LGPL.
-//
+﻿#region netDxf library, Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+
 //                        netDxf library
 // Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
 // 
@@ -16,7 +16,8 @@
 // FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
 // COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
 // IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-// CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. 
+// CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
 #endregion
 
 using System;
@@ -98,6 +99,11 @@ namespace netDxf.Entities
         public Angular2LineDimension(Line firstLine, Line secondLine, double offset, Vector3 normal, DimensionStyle style)
             : base(DimensionType.Angular)
         {
+            if (firstLine == null)
+                throw new ArgumentNullException(nameof(firstLine));
+            if (secondLine == null)
+                throw new ArgumentNullException(nameof(secondLine));
+
             if (Vector3.AreParallel(firstLine.Direction, secondLine.Direction))
                 throw new ArgumentException("The two lines that define the dimension are parallel.");
 
@@ -116,16 +122,15 @@ namespace netDxf.Entities
             this.endFirstLine = new Vector2(ocsPoints[1].X, ocsPoints[1].Y);
             this.startSecondLine = new Vector2(ocsPoints[2].X, ocsPoints[2].Y);
             this.endSecondLine = new Vector2(ocsPoints[3].X, ocsPoints[3].Y);
-            this.normal = normal;
-            this.elevation = ocsPoints[0].Z;
-
             if (MathHelper.IsZero(offset))
                 throw new ArgumentOutOfRangeException(nameof(offset), "The offset value cannot be zero.");
             this.offset = offset;
 
             if (style == null)
-                throw new ArgumentNullException(nameof(style), "The Dimension style cannot be null.");
-           this.style = style;
+                throw new ArgumentNullException(nameof(style));
+            this.Style = style;
+            this.Normal = normal;
+            this.Elevation = ocsPoints[0].Z;
         }
 
         /// <summary>
@@ -168,8 +173,8 @@ namespace netDxf.Entities
             this.offset = offset;
 
             if (style == null)
-                throw new ArgumentNullException(nameof(style), "The Dimension style cannot be null.");
-            this.style = style;
+                throw new ArgumentNullException(nameof(style));
+            this.Style = style;
         }
 
         #endregion
@@ -247,10 +252,7 @@ namespace netDxf.Entities
             {
                 Vector2 dirRef1 = this.endFirstLine - this.startFirstLine;
                 Vector2 dirRef2 = this.endSecondLine - this.startSecondLine;
-                if (Vector2.AreParallel(dirRef1, dirRef2))
-                    throw new ArgumentException("The two lines that define the dimension are parallel.");
-
-                return Vector2.AngleBetween(dirRef1, dirRef2) * MathHelper.RadToDeg;
+                return Vector2.AngleBetween(dirRef1, dirRef2)*MathHelper.RadToDeg;
             }
         }
 
@@ -263,13 +265,15 @@ namespace netDxf.Entities
         /// </summary>
         /// <param name="point">Point along the dimension line.</param>
         public void SetDimensionLinePosition(Vector2 point)
-        {            
+        {
             Vector2 dirRef1 = this.endFirstLine - this.startFirstLine;
             Vector2 dirRef2 = this.endSecondLine - this.startSecondLine;
             Vector2 center = MathHelper.FindIntersection(this.startFirstLine, dirRef1, this.startSecondLine, dirRef2);
-            if(Vector2.IsNaN(center))
+
+            if (Vector2.IsNaN(center))
                 throw new ArgumentException("The two lines that define the dimension are parallel.");
             Vector2 dirOffset = point - center;
+
             this.offset = Vector2.Distance(center, point);
             double cross = Vector2.CrossProduct(dirRef1, dirRef2);
             if (cross < 0)
@@ -286,7 +290,7 @@ namespace netDxf.Entities
             double crossStart = Vector2.CrossProduct(dirRef1, dirOffset);
             double crossEnd = Vector2.CrossProduct(dirRef2, dirOffset);
             if (crossStart >= 0 && crossEnd < 0)
-            {              
+            {
             }
             if (crossStart >= 0 && crossEnd >= 0)
             {
@@ -335,32 +339,32 @@ namespace netDxf.Entities
             Angular2LineDimension entity = new Angular2LineDimension
             {
                 //EntityObject properties
-                Layer = (Layer)this.layer.Clone(),
-                LineType = (LineType)this.lineType.Clone(),
-                Color = (AciColor)this.color.Clone(),
-                Lineweight = (Lineweight)this.lineweight.Clone(),
-                Transparency = (Transparency)this.transparency.Clone(),
-                LineTypeScale = this.lineTypeScale,
-                Normal = this.normal,
+                Layer = (Layer) this.Layer.Clone(),
+                Linetype = (Linetype) this.Linetype.Clone(),
+                Color = (AciColor) this.Color.Clone(),
+                Lineweight = this.Lineweight,
+                Transparency = (Transparency) this.Transparency.Clone(),
+                LinetypeScale = this.LinetypeScale,
+                Normal = this.Normal,
+                IsVisible = this.IsVisible,
                 //Dimension properties
-                Style = (DimensionStyle)this.style.Clone(),
-                AttachmentPoint = this.attachmentPoint,
-                LineSpacingStyle = this.lineSpacingStyle,
-                LineSpacingFactor = this.lineSpacing,
+                Style = (DimensionStyle) this.Style.Clone(),
+                AttachmentPoint = this.AttachmentPoint,
+                LineSpacingStyle = this.LineSpacingStyle,
+                LineSpacingFactor = this.LineSpacingFactor,
                 //Angular2LineDimension properties
                 StartFirstLine = this.startFirstLine,
                 EndFirstLine = this.endFirstLine,
                 StartSecondLine = this.startSecondLine,
                 EndSecondLine = this.endSecondLine,
                 Offset = this.offset,
-                Elevation = this.elevation
+                Elevation = this.Elevation
             };
 
             foreach (XData data in this.XData.Values)
-                entity.XData.Add((XData)data.Clone());
+                entity.XData.Add((XData) data.Clone());
 
             return entity;
-
         }
 
         #endregion

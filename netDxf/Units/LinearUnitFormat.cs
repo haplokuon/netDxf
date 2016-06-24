@@ -1,22 +1,23 @@
-﻿#region netDxf, Copyright(C) 2015 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf library, Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+
+//                        netDxf library
+// Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
 // 
-//                         netDxf library
-//  Copyright (C) 2009-2015 Daniel Carvajal (haplokuon@gmail.com)
-//  
-//  This library is free software; you can redistribute it and/or
-//  modify it under the terms of the GNU Lesser General Public
-//  License as published by the Free Software Foundation; either
-//  version 2.1 of the License, or (at your option) any later version.
-//  
-//  The above copyright notice and this permission notice shall be included in all
-//  copies or substantial portions of the Software.
-//  
-//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-//  FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-//  COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-//  IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-//  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2.1 of the License, or (at your option) any later version.
+// 
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+// FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+// COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+// IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+// CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
 #endregion
 
 using System;
@@ -27,7 +28,7 @@ namespace netDxf.Units
     /// <summary>
     /// Utility methods to format a decimal number to its different string representations.
     /// </summary>
-    public sealed class LinearUnitFormat
+    public static class LinearUnitFormat
     {
         #region public methods
 
@@ -39,12 +40,15 @@ namespace netDxf.Units
         /// <returns>A string that represents the length in scientific units.</returns>
         public static string ToScientific(double length, UnitStyleFormat format)
         {
+            if (format == null)
+                throw new ArgumentNullException(nameof(format));
+
             NumberFormatInfo numberFormat = new NumberFormatInfo
             {
                 NumberDecimalSeparator = format.DecimalSeparator
             };
 
-            return length.ToString(DecimalNumberFormat(format)+ "E+00", numberFormat);
+            return length.ToString(DecimalNumberFormat(format) + "E+00", numberFormat);
         }
 
         /// <summary>
@@ -55,6 +59,9 @@ namespace netDxf.Units
         /// <returns>A string that represents the length in decimal units.</returns>
         public static string ToDecimal(double length, UnitStyleFormat format)
         {
+            if (format == null)
+                throw new ArgumentNullException(nameof(format));
+
             NumberFormatInfo numberFormat = new NumberFormatInfo
             {
                 NumberDecimalSeparator = format.DecimalSeparator
@@ -72,29 +79,32 @@ namespace netDxf.Units
         /// <remarks>The Architectural format assumes that each drawing unit represents one inch.</remarks>
         public static string ToArchitectural(double length, UnitStyleFormat format)
         {
-            int feet = (int)(length / 12);
-            double inchesDec = length - 12 * feet;
-            int inches = (int)inchesDec;
+            if (format == null)
+                throw new ArgumentNullException(nameof(format));
+
+            int feet = (int) (length/12);
+            double inchesDec = length - 12*feet;
+            int inches = (int) inchesDec;
 
             if (MathHelper.IsZero(inchesDec))
             {
                 if (feet == 0)
                 {
-                    if(format.SupressZeroFeet)
+                    if (format.SupressZeroFeet)
                         return "0" + format.InchesSymbol;
                     if (format.SupressZeroInches)
                         return "0" + format.FeetSymbol;
                     return "0" + format.FeetSymbol + format.FeetInchesSeparator + "0" + format.InchesSymbol;
                 }
-                if(format.SupressZeroInches)
+                if (format.SupressZeroInches)
                     return string.Format("{0}" + format.FeetSymbol, feet);
-                
+
                 return string.Format("{0}" + format.FeetSymbol + format.FeetInchesSeparator + "0" + format.InchesSymbol, feet);
             }
 
             int numerator;
             int denominator;
-            GetFraction(inchesDec, (short)Math.Pow(2, format.LinearDecimalPlaces), out numerator, out denominator);
+            GetFraction(inchesDec, (short) Math.Pow(2, format.LinearDecimalPlaces), out numerator, out denominator);
 
             if (numerator == 0)
             {
@@ -124,7 +134,8 @@ namespace netDxf.Units
 
             string text = string.Empty;
             string feetStr = feet + format.FeetSymbol + format.FeetInchesSeparator;
-            if (format.SupressZeroFeet && feet == 0) feetStr = string.Empty;
+            if (format.SupressZeroFeet && feet == 0)
+                feetStr = string.Empty;
             switch (format.FractionType)
             {
                 case FractionFormatType.Diagonal:
@@ -149,12 +160,15 @@ namespace netDxf.Units
         /// <remarks>The Engineering format assumes that each drawing unit represents one inch.</remarks>
         public static string ToEngineering(double length, UnitStyleFormat format)
         {
+            if (format == null)
+                throw new ArgumentNullException(nameof(format));
+
             NumberFormatInfo numberFormat = new NumberFormatInfo
             {
                 NumberDecimalSeparator = format.DecimalSeparator
             };
-            int feet = (int)(length / 12);
-            double inches = length - 12 * feet;
+            int feet = (int) (length/12);
+            double inches = length - 12*feet;
 
             if (MathHelper.IsZero(inches))
             {
@@ -173,7 +187,8 @@ namespace netDxf.Units
             }
 
             string feetStr = feet + format.FeetSymbol + format.FeetInchesSeparator;
-            if (format.SupressZeroFeet && feet == 0) feetStr = string.Empty;
+            if (format.SupressZeroFeet && feet == 0)
+                feetStr = string.Empty;
 
             return string.Format(numberFormat, feetStr + "{0}" + format.InchesSymbol, inches.ToString(DecimalNumberFormat(format), numberFormat));
         }
@@ -186,12 +201,15 @@ namespace netDxf.Units
         /// <returns>A string that represents the length in fractional units.</returns>
         public static string ToFractional(double length, UnitStyleFormat format)
         {
-            int num = (int)length;
+            if (format == null)
+                throw new ArgumentNullException(nameof(format));
+
+            int num = (int) length;
             int numerator;
             int denominator;
-            GetFraction(length, (short)Math.Pow(2, format.LinearDecimalPlaces), out numerator, out denominator);
+            GetFraction(length, (short) Math.Pow(2, format.LinearDecimalPlaces), out numerator, out denominator);
             if (numerator == 0)
-                return string.Format("{0}", (int)length);
+                return string.Format("{0}", (int) length);
 
             string text = string.Empty;
             switch (format.FractionType)
@@ -235,11 +253,12 @@ namespace netDxf.Units
 
         private static void GetFraction(double number, int precision, out int numerator, out int denominator)
         {
-            numerator = Convert.ToInt32((number - (int)number) * precision);
+            numerator = Convert.ToInt32((number - (int) number)*precision);
             int commonFactor = GetGCD(numerator, precision);
-            if (commonFactor <= 0) commonFactor = 1;
-            numerator = numerator / commonFactor;
-            denominator = precision / commonFactor;
+            if (commonFactor <= 0)
+                commonFactor = 1;
+            numerator = numerator/commonFactor;
+            denominator = precision/commonFactor;
         }
 
         private static int GetGCD(int number1, int number2)
@@ -248,7 +267,7 @@ namespace netDxf.Units
             int b = number2;
             while (b != 0)
             {
-                int count = a % b;
+                int count = a%b;
                 a = b;
                 b = count;
             }

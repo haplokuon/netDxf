@@ -1,26 +1,28 @@
-﻿#region netDxf, Copyright(C) 2015 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf library, Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+
+//                        netDxf library
+// Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
 // 
-//                         netDxf library
-//  Copyright (C) 2009-2015 Daniel Carvajal (haplokuon@gmail.com)
-//  
-//  This library is free software; you can redistribute it and/or
-//  modify it under the terms of the GNU Lesser General Public
-//  License as published by the Free Software Foundation; either
-//  version 2.1 of the License, or (at your option) any later version.
-//  
-//  The above copyright notice and this permission notice shall be included in all
-//  copies or substantial portions of the Software.
-//  
-//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-//  FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-//  COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-//  IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-//  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2.1 of the License, or (at your option) any later version.
+// 
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+// FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+// COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+// IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+// CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
 #endregion
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Text;
 
@@ -42,7 +44,7 @@ namespace netDxf.IO
             StringBuilder sb = new StringBuilder(18);
             for (int i = 0; i < 18; i++)
             {
-                sb.Append((char)sentinel[i]);
+                sb.Append((char) sentinel[i]);
             }
             if (sb.ToString() != "AutoCAD Binary DXF")
                 throw new ArgumentException("Not a valid binary dxf.");
@@ -177,7 +179,7 @@ namespace netDxf.IO
 
         public byte ReadByte()
         {
-            return (byte)this.value;
+            return (byte) this.value;
         }
 
         public byte[] ReadBytes()
@@ -192,7 +194,7 @@ namespace netDxf.IO
 
         public int ReadInt()
         {
-            return (int)this.value;
+            return (int) this.value;
         }
 
         public long ReadLong()
@@ -208,12 +210,21 @@ namespace netDxf.IO
 
         public double ReadDouble()
         {
-            return (double)this.value;
+            return (double) this.value;
         }
 
         public string ReadString()
         {
-            return (string)this.value;
+            return (string) this.value;
+        }
+
+        public string ReadHex()
+        {
+            long test;
+            if (long.TryParse((string) this.value, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out test))
+                return test.ToString("X");
+
+            throw new Exception(string.Format("Value {0} not valid at line {1}", this.value, this.CurrentPosition));
         }
 
         public override string ToString()

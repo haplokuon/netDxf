@@ -1,22 +1,23 @@
-#region netDxf, Copyright(C) 2015 Daniel Carvajal, Licensed under LGPL.
+#region netDxf library, Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+
+//                        netDxf library
+// Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
 // 
-//                         netDxf library
-//  Copyright (C) 2009-2015 Daniel Carvajal (haplokuon@gmail.com)
-//  
-//  This library is free software; you can redistribute it and/or
-//  modify it under the terms of the GNU Lesser General Public
-//  License as published by the Free Software Foundation; either
-//  version 2.1 of the License, or (at your option) any later version.
-//  
-//  The above copyright notice and this permission notice shall be included in all
-//  copies or substantial portions of the Software.
-//  
-//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-//  FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-//  COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-//  IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-//  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2.1 of the License, or (at your option) any later version.
+// 
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+// FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+// COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+// IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+// CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
 #endregion
 
 using System;
@@ -35,18 +36,18 @@ namespace netDxf.Collections
         #region constructor
 
         internal DimensionStyles(DxfDocument document, string handle = null)
-            : this(document,0,handle)
+            : this(document, 0, handle)
         {
         }
 
         internal DimensionStyles(DxfDocument document, int capacity, string handle = null)
             : base(document,
-            new Dictionary<string, DimensionStyle>(capacity, StringComparer.OrdinalIgnoreCase),
-            new Dictionary<string, List<DxfObject>>(capacity, StringComparer.OrdinalIgnoreCase),
-            DxfObjectCode.DimensionStyleTable,
-            handle)
+                new Dictionary<string, DimensionStyle>(capacity, StringComparer.OrdinalIgnoreCase),
+                new Dictionary<string, List<DxfObject>>(capacity, StringComparer.OrdinalIgnoreCase),
+                DxfObjectCode.DimensionStyleTable,
+                handle)
         {
-            this.maxCapacity = short.MaxValue;
+            this.MaxCapacity = short.MaxValue;
         }
 
         #endregion
@@ -64,61 +65,58 @@ namespace netDxf.Collections
         /// </returns>
         internal override DimensionStyle Add(DimensionStyle style, bool assignHandle)
         {
-            if (this.list.Count >= this.maxCapacity)
-                throw new OverflowException(string.Format("Table overflow. The maximum number of elements the table {0} can have is {1}", this.codeName, this.maxCapacity));
+            if (this.list.Count >= this.MaxCapacity)
+                throw new OverflowException(string.Format("Table overflow. The maximum number of elements the table {0} can have is {1}", this.CodeName, this.MaxCapacity));
+            if (style == null)
+                throw new ArgumentNullException(nameof(style));
 
             DimensionStyle add;
             if (this.list.TryGetValue(style.Name, out add))
                 return add;
 
             if (assignHandle || string.IsNullOrEmpty(style.Handle))
-                this.document.NumHandles = style.AsignHandle(this.document.NumHandles);
+                this.Owner.NumHandles = style.AsignHandle(this.Owner.NumHandles);
 
-            this.document.AddedObjects.Add(style.Handle, style);
+            this.Owner.AddedObjects.Add(style.Handle, style);
             this.list.Add(style.Name, style);
             this.references.Add(style.Name, new List<DxfObject>());
-            
+
             // add referenced text style
-            style.DIMTXSTY = this.document.TextStyles.Add(style.DIMTXSTY, assignHandle);
-            this.document.TextStyles.References[style.DIMTXSTY.Name].Add(style);
+            style.TextStyle = this.Owner.TextStyles.Add(style.TextStyle, assignHandle);
+            this.Owner.TextStyles.References[style.TextStyle.Name].Add(style);
 
             // add referenced blocks
-            if (style.DIMLDRBLK != null)
+            if (style.LeaderArrow != null)
             {
-                style.DIMLDRBLK = this.document.Blocks.Add(style.DIMLDRBLK, assignHandle);
-                this.document.Blocks.References[style.DIMLDRBLK.Name].Add(style);
+                style.LeaderArrow = this.Owner.Blocks.Add(style.LeaderArrow, assignHandle);
+                this.Owner.Blocks.References[style.LeaderArrow.Name].Add(style);
             }
 
-            if (style.DIMBLK != null)
+            if (style.DimArrow1 != null)
             {
-                style.DIMBLK = this.document.Blocks.Add(style.DIMBLK, assignHandle);
-                this.document.Blocks.References[style.DIMBLK.Name].Add(style);
+                style.DimArrow1 = this.Owner.Blocks.Add(style.DimArrow1, assignHandle);
+                this.Owner.Blocks.References[style.DimArrow1.Name].Add(style);
             }
-            if (style.DIMBLK1 != null)
+            if (style.DimArrow2 != null)
             {
-                style.DIMBLK1 = this.document.Blocks.Add(style.DIMBLK1, assignHandle);
-                this.document.Blocks.References[style.DIMBLK1.Name].Add(style);
-            }
-            if (style.DIMBLK2 != null)
-            {
-                style.DIMBLK2 = this.document.Blocks.Add(style.DIMBLK2, assignHandle);
-                this.document.Blocks.References[style.DIMBLK2.Name].Add(style);
+                style.DimArrow2 = this.Owner.Blocks.Add(style.DimArrow2, assignHandle);
+                this.Owner.Blocks.References[style.DimArrow2.Name].Add(style);
             }
 
             // add referenced line types
-            style.DIMLTYPE = this.document.LineTypes.Add(style.DIMLTYPE, assignHandle);
-            this.document.LineTypes.References[style.DIMLTYPE.Name].Add(style);
+            style.DimLineLinetype = this.Owner.Linetypes.Add(style.DimLineLinetype, assignHandle);
+            this.Owner.Linetypes.References[style.DimLineLinetype.Name].Add(style);
 
-            style.DIMLTEX1 = this.document.LineTypes.Add(style.DIMLTEX1, assignHandle);
-            this.document.LineTypes.References[style.DIMLTEX1.Name].Add(style);
+            style.ExtLine1Linetype = this.Owner.Linetypes.Add(style.ExtLine1Linetype, assignHandle);
+            this.Owner.Linetypes.References[style.ExtLine1Linetype.Name].Add(style);
 
-            style.DIMLTEX2 = this.document.LineTypes.Add(style.DIMLTEX2, assignHandle);
-            this.document.LineTypes.References[style.DIMLTEX2.Name].Add(style);
+            style.ExtLine2Linetype = this.Owner.Linetypes.Add(style.ExtLine2Linetype, assignHandle);
+            this.Owner.Linetypes.References[style.ExtLine2Linetype.Name].Add(style);
 
             style.Owner = this;
 
             style.NameChanged += this.Item_NameChanged;
-            style.LineTypeChanged += this.DimensionStyleLineTypeChanged;
+            style.LinetypeChanged += this.DimensionStyleLinetypeChanged;
             style.TextStyleChanged += this.DimensionStyleTextStyleChanged;
             style.BlockChanged += this.DimensionStyleBlockChanged;
 
@@ -139,49 +137,50 @@ namespace netDxf.Collections
         /// <summary>
         /// Removes a dimension style.
         /// </summary>
-        /// <param name="style"><see cref="DimensionStyle">DimensionStyle</see> to remove from the document.</param>
+        /// <param name="item"><see cref="DimensionStyle">DimensionStyle</see> to remove from the document.</param>
         /// <returns>True if the dimension style has been successfully removed, or false otherwise.</returns>
         /// <remarks>Reserved dimension styles or any other referenced by objects cannot be removed.</remarks>
-        public override bool Remove(DimensionStyle style)
+        public override bool Remove(DimensionStyle item)
         {
-            if (style == null)
+            if (item == null)
                 return false;
 
-            if (!this.Contains(style))
+            if (!this.Contains(item))
                 return false;
 
-            if (style.IsReserved)
+            if (item.IsReserved)
                 return false;
 
-            if (this.references[style.Name].Count != 0)
+            if (this.references[item.Name].Count != 0)
                 return false;
 
-            this.document.AddedObjects.Remove(style.Handle);
+            this.Owner.AddedObjects.Remove(item.Handle);
 
 
             // remove referenced text style
-            this.document.TextStyles.References[style.DIMTXSTY.Name].Remove(style);
+            this.Owner.TextStyles.References[item.TextStyle.Name].Remove(item);
 
             // remove referenced blocks
-            if (style.DIMBLK != null) this.document.Blocks.References[style.DIMBLK.Name].Remove(style);
-            if (style.DIMBLK1 != null) this.document.Blocks.References[style.DIMBLK1.Name].Remove(style);
-            if (style.DIMBLK2 != null) this.document.Blocks.References[style.DIMBLK2.Name].Remove(style);
+            if (item.DimArrow1 != null)
+                this.Owner.Blocks.References[item.DimArrow1.Name].Remove(item);
+            if (item.DimArrow2 != null)
+                this.Owner.Blocks.References[item.DimArrow2.Name].Remove(item);
 
             // remove referenced line types
-            this.document.LineTypes.References[style.DIMLTYPE.Name].Remove(style);
-            this.document.LineTypes.References[style.DIMLTEX1.Name].Remove(style);
-            this.document.LineTypes.References[style.DIMLTEX2.Name].Remove(style);
+            this.Owner.Linetypes.References[item.DimLineLinetype.Name].Remove(item);
+            this.Owner.Linetypes.References[item.ExtLine1Linetype.Name].Remove(item);
+            this.Owner.Linetypes.References[item.ExtLine2Linetype.Name].Remove(item);
 
-            this.references.Remove(style.Name);
-            this.list.Remove(style.Name);
+            this.references.Remove(item.Name);
+            this.list.Remove(item.Name);
 
-            style.Handle = null;
-            style.Owner = null;
+            item.Handle = null;
+            item.Owner = null;
 
-            style.NameChanged -= this.Item_NameChanged;
-            style.LineTypeChanged -= this.DimensionStyleLineTypeChanged;
-            style.TextStyleChanged -= this.DimensionStyleTextStyleChanged;
-            style.BlockChanged -= this.DimensionStyleBlockChanged;
+            item.NameChanged -= this.Item_NameChanged;
+            item.LinetypeChanged -= this.DimensionStyleLinetypeChanged;
+            item.TextStyleChanged -= this.DimensionStyleTextStyleChanged;
+            item.BlockChanged -= this.DimensionStyleBlockChanged;
 
             return true;
         }
@@ -196,35 +195,37 @@ namespace netDxf.Collections
                 throw new ArgumentException("There is already another dimension style with the same name.");
 
             this.list.Remove(sender.Name);
-            this.list.Add(e.NewValue, (DimensionStyle)sender);
+            this.list.Add(e.NewValue, (DimensionStyle) sender);
 
             List<DxfObject> refs = this.references[sender.Name];
             this.references.Remove(sender.Name);
             this.references.Add(e.NewValue, refs);
         }
 
-        private void DimensionStyleLineTypeChanged(TableObject sender, TableObjectChangedEventArgs<LineType> e)
+        private void DimensionStyleLinetypeChanged(TableObject sender, TableObjectChangedEventArgs<Linetype> e)
         {
-            this.document.LineTypes.References[e.OldValue.Name].Remove(sender);
+            this.Owner.Linetypes.References[e.OldValue.Name].Remove(sender);
 
-            e.NewValue = this.document.LineTypes.Add(e.NewValue);
-            this.document.LineTypes.References[e.NewValue.Name].Add(sender);
+            e.NewValue = this.Owner.Linetypes.Add(e.NewValue);
+            this.Owner.Linetypes.References[e.NewValue.Name].Add(sender);
         }
 
         private void DimensionStyleTextStyleChanged(TableObject sender, TableObjectChangedEventArgs<TextStyle> e)
         {
-            this.document.TextStyles.References[e.OldValue.Name].Remove(sender);
+            this.Owner.TextStyles.References[e.OldValue.Name].Remove(sender);
 
-            e.NewValue = this.document.TextStyles.Add(e.NewValue);
-            this.document.TextStyles.References[e.NewValue.Name].Add(sender);
+            e.NewValue = this.Owner.TextStyles.Add(e.NewValue);
+            this.Owner.TextStyles.References[e.NewValue.Name].Add(sender);
         }
 
         private void DimensionStyleBlockChanged(TableObject sender, TableObjectChangedEventArgs<Block> e)
         {
-            if (e.OldValue != null) this.document.Blocks.References[e.OldValue.Name].Remove(sender);
+            if (e.OldValue != null)
+                this.Owner.Blocks.References[e.OldValue.Name].Remove(sender);
 
-            e.NewValue = this.document.Blocks.Add(e.NewValue);
-            if (e.NewValue != null) this.document.Blocks.References[e.NewValue.Name].Add(sender);
+            e.NewValue = this.Owner.Blocks.Add(e.NewValue);
+            if (e.NewValue != null)
+                this.Owner.Blocks.References[e.NewValue.Name].Add(sender);
         }
 
         #endregion

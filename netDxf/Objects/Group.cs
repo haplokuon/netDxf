@@ -1,26 +1,26 @@
-﻿#region netDxf, Copyright(C) 2016 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf library, Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+
+//                        netDxf library
+// Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
 // 
-//                         netDxf library
-//  Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
-//  
-//  This library is free software; you can redistribute it and/or
-//  modify it under the terms of the GNU Lesser General Public
-//  License as published by the Free Software Foundation; either
-//  version 2.1 of the License, or (at your option) any later version.
-//  
-//  The above copyright notice and this permission notice shall be included in all
-//  copies or substantial portions of the Software.
-//  
-//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-//  FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-//  COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-//  IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-//  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2.1 of the License, or (at your option) any later version.
+// 
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+// FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+// COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+// IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+// CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
 #endregion
 
 using System.Collections.Generic;
-using System.Diagnostics;
 using netDxf.Collections;
 using netDxf.Entities;
 using netDxf.Tables;
@@ -36,7 +36,9 @@ namespace netDxf.Objects
         #region delegates and events
 
         public delegate void EntityAddedEventHandler(Group sender, GroupEntityChangeEventArgs e);
+
         public event EntityAddedEventHandler EntityAdded;
+
         protected virtual void OnEntityAddedEvent(EntityObject item)
         {
             EntityAddedEventHandler ae = this.EntityAdded;
@@ -45,7 +47,9 @@ namespace netDxf.Objects
         }
 
         public delegate void EntityRemovedEventHandler(Group sender, GroupEntityChangeEventArgs e);
+
         public event EntityRemovedEventHandler EntityRemoved;
+
         protected virtual void OnEntityRemovedEvent(EntityObject item)
         {
             EntityRemovedEventHandler ae = this.EntityRemoved;
@@ -106,7 +110,7 @@ namespace netDxf.Objects
         /// <remarks>
         /// If the name is set to null or empty, a unique name will be generated when it is added to the document.
         /// </remarks>
-        public Group(IList<EntityObject> entities)
+        public Group(IEnumerable<EntityObject> entities)
             : this(string.Empty, entities)
         {
         }
@@ -119,7 +123,7 @@ namespace netDxf.Objects
         /// <remarks>
         /// If the name is set to null or empty, a unique name will be generated when it is added to the document.
         /// </remarks>
-        public Group(string name, IList<EntityObject> entities)
+        public Group(string name, IEnumerable<EntityObject> entities)
             : base(name, DxfObjectCode.Group, !string.IsNullOrEmpty(name))
         {
             this.isUnnamed = string.IsNullOrEmpty(name);
@@ -141,9 +145,9 @@ namespace netDxf.Objects
         /// Gets the name of the table object.
         /// </summary>
         /// <remarks>Table object names are case insensitive.</remarks>
-        public override string Name
+        public new string Name
         {
-            get { return this.name; }
+            get { return base.Name; }
             set
             {
                 base.Name = value;
@@ -196,18 +200,8 @@ namespace netDxf.Objects
         /// </summary>
         public new Groups Owner
         {
-            get { return (Groups) this.owner; }
-            internal set { this.owner = value; }
-        }
-
-        #endregion
-
-        #region internal methods
-
-        internal void SetUnNammed(string generatedName)
-        {
-            Debug.Assert(!string.IsNullOrEmpty(generatedName), "The group name cannot be null.");
-            this.name = generatedName;
+            get { return (Groups) base.Owner; }
+            internal set { base.Owner = value; }
         }
 
         #endregion
@@ -227,7 +221,7 @@ namespace netDxf.Objects
             {
                 copy[i] = (EntityObject) this.entities[i].Clone();
             }
-          
+
             return new Group(newName, copy)
             {
                 Description = this.description,
@@ -241,7 +235,7 @@ namespace netDxf.Objects
         /// <returns>A new Group that is a copy of this instance.</returns>
         public override object Clone()
         {
-            return this.Clone(this.IsUnnamed ? string.Empty : this.name);
+            return this.Clone(this.IsUnnamed ? string.Empty : this.Name);
         }
 
         #endregion

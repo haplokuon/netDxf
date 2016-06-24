@@ -1,22 +1,23 @@
-﻿#region netDxf, Copyright(C) 2015 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf library, Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+
+//                        netDxf library
+// Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
 // 
-//                         netDxf library
-//  Copyright (C) 2009-2015 Daniel Carvajal (haplokuon@gmail.com)
-//  
-//  This library is free software; you can redistribute it and/or
-//  modify it under the terms of the GNU Lesser General Public
-//  License as published by the Free Software Foundation; either
-//  version 2.1 of the License, or (at your option) any later version.
-//  
-//  The above copyright notice and this permission notice shall be included in all
-//  copies or substantial portions of the Software.
-//  
-//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-//  FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-//  COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-//  IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-//  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2.1 of the License, or (at your option) any later version.
+// 
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+// FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+// COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+// IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+// CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
 #endregion
 
 using System;
@@ -27,10 +28,10 @@ using Attribute = netDxf.Entities.Attribute;
 namespace netDxf.Collections
 {
     /// <summary>
-    /// Represents a collection of <see cref="Attribute">Attributes</see>.
+    /// Represents a collection of <see cref="Entities.Attribute">Attributes</see>.
     /// </summary>
-    public class AttributeCollection :
-        IList<Attribute>
+    public sealed class AttributeCollection :
+        IReadOnlyList<Attribute>
     {
         #region private fields
 
@@ -52,7 +53,7 @@ namespace netDxf.Collections
         /// Initializes a new instance of <c>AttributeCollection</c> with the specified collection of attributes.
         /// </summary>
         /// <param name="attributes">The collection of attributes from which build the dictionary.</param>
-        public AttributeCollection(IList<Attribute> attributes)
+        public AttributeCollection(IEnumerable<Attribute> attributes)
         {
             if (attributes == null)
                 throw new ArgumentNullException(nameof(attributes));
@@ -74,7 +75,7 @@ namespace netDxf.Collections
         /// <summary>
         /// Gets a value indicating whether the collection is read-only.
         /// </summary>
-        public virtual bool IsReadOnly
+        public static bool IsReadOnly
         {
             get { return true; }
         }
@@ -89,16 +90,6 @@ namespace netDxf.Collections
             get { return this.innerArray[index]; }
         }
 
-        #endregion
-
-        #region private properties
-
-        Attribute IList<Attribute>.this[int index]
-        {
-            get { return this.innerArray[index]; }
-            set { throw new FieldAccessException("The collection is for read only purposes."); }
-        }
- 
         #endregion
 
         #region public methods
@@ -140,13 +131,13 @@ namespace netDxf.Collections
         /// <returns>The first occurrence of the attribute with the specified attribute definition tag within the entire collection.</returns>
         public Attribute AttributeWithTag(string tag)
         {
-            if (string.IsNullOrEmpty(tag)) return null;
+            if (string.IsNullOrEmpty(tag))
+                return null;
             foreach (Attribute att in this.innerArray)
             {
                 if (att.Definition != null)
-                {
-                    if (string.Equals(tag, att.Definition.Tag, StringComparison.OrdinalIgnoreCase)) return att;
-                }
+                    if (string.Equals(tag, att.Tag, StringComparison.OrdinalIgnoreCase))
+                        return att;
             }
 
             return null;
@@ -164,31 +155,6 @@ namespace netDxf.Collections
         #endregion
 
         #region private methods
-
-        void ICollection<Attribute>.Add(Attribute item)
-        {
-            throw new FieldAccessException("The collection is for read only purposes.");
-        }
-
-        void ICollection<Attribute>.Clear()
-        {
-            throw new FieldAccessException("The collection is for read only purposes.");
-        }
-
-        void IList<Attribute>.Insert(int index, Attribute item)
-        {
-            throw new FieldAccessException("The collection is for read only purposes.");
-        }
-
-        bool ICollection<Attribute>.Remove(Attribute item)
-        {
-            throw new FieldAccessException("The collection is for read only purposes.");
-        }
-
-        void IList<Attribute>.RemoveAt(int index)
-        {
-            throw new FieldAccessException("The collection is for read only purposes.");
-        }
 
         IEnumerator IEnumerable.GetEnumerator()
         {

@@ -1,22 +1,23 @@
-#region netDxf, Copyright(C) 2015 Daniel Carvajal, Licensed under LGPL.
+#region netDxf library, Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+
+//                        netDxf library
+// Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
 // 
-//                         netDxf library
-//  Copyright (C) 2009-2015 Daniel Carvajal (haplokuon@gmail.com)
-//  
-//  This library is free software; you can redistribute it and/or
-//  modify it under the terms of the GNU Lesser General Public
-//  License as published by the Free Software Foundation; either
-//  version 2.1 of the License, or (at your option) any later version.
-//  
-//  The above copyright notice and this permission notice shall be included in all
-//  copies or substantial portions of the Software.
-//  
-//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-//  FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-//  COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-//  IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-//  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2.1 of the License, or (at your option) any later version.
+// 
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+// FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+// COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+// IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+// CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
 #endregion
 
 using System;
@@ -26,19 +27,17 @@ using netDxf.Tables;
 
 namespace netDxf.Collections
 {
-
     /// <summary>
     /// Represents a list of table objects
     /// </summary>
     /// <typeparam name="T"><see cref="TableObject">TableObject</see>.</typeparam>
     public abstract class TableObjects<T> :
         DxfObject,
-        IEnumerable<T> where T : TableObject     
+        IEnumerable<T> where T : TableObject
     {
         #region private fields
 
-        protected int maxCapacity = int.MaxValue;
-        protected readonly DxfDocument document;
+        private int maxCapacity = int.MaxValue;
         protected readonly Dictionary<string, T> list;
         protected readonly Dictionary<string, List<DxfObject>> references;
 
@@ -51,21 +50,20 @@ namespace netDxf.Collections
         {
             this.list = list;
             this.references = references;
-            this.owner = document;
-            this.document = document;
+            this.Owner = document;
 
             if (string.IsNullOrEmpty(handle))
-                this.document.NumHandles = base.AsignHandle(this.document.NumHandles);
+                this.Owner.NumHandles = base.AsignHandle(this.Owner.NumHandles);
             else
-                this.handle = handle;
+                this.Handle = handle;
 
-            this.document.AddedObjects.Add(this.handle, this);
+            this.Owner.AddedObjects.Add(this.Handle, this);
         }
 
         #endregion
 
         #region public properties
-        
+
         /// <summary>
         /// Gets a table object from the list by name.
         /// </summary>
@@ -114,6 +112,7 @@ namespace netDxf.Collections
         public int MaxCapacity
         {
             get { return this.maxCapacity; }
+            internal set { this.maxCapacity = value; }
         }
 
         /// <summary>
@@ -121,8 +120,8 @@ namespace netDxf.Collections
         /// </summary>
         public new DxfDocument Owner
         {
-            get { return (DxfDocument)this.owner; }
-            internal set { this.owner = value; }
+            get { return (DxfDocument) base.Owner; }
+            internal set { base.Owner = value; }
         }
 
         #endregion
@@ -146,14 +145,12 @@ namespace netDxf.Collections
         /// </summary>
         /// <param name="name">Table object name.</param>
         /// <returns>The list of DxfObjects that reference the specified table object.</returns>
-        /// <remarks>If there is no table object with the specified name in the list the method will return null.</remarks>
+        /// <remarks>If there is no table object with the specified name in the list the method an empty list.</remarks>
         public List<DxfObject> GetReferences(string name)
         {
             if (!this.Contains(name))
-                return null;
-            List<DxfObject> objects = new List<DxfObject>();
-            objects.AddRange(this.references[name]);
-            return objects;
+                return new List<DxfObject>();
+            return new List<DxfObject>(this.references[name]);
         }
 
         /// <summary>
@@ -161,14 +158,12 @@ namespace netDxf.Collections
         /// </summary>
         /// <param name="item">Table object.</param>
         /// <returns>The list of DxfObjects that reference the specified table object.</returns>
-        /// <remarks>If there is no specified table object in the list the method will return null.</remarks>
+        /// <remarks>If there is no specified table object in the list the method will return an empty list.</remarks>
         public List<DxfObject> GetReferences(T item)
         {
-            if (!this.Contains(item.Name))
-                return null;
-            List<DxfObject> objects = new List<DxfObject>();
-            objects.AddRange(this.references[item.Name]);
-            return objects;
+            if (item == null)
+                throw new ArgumentNullException(nameof(item));
+            return this.GetReferences(item.Name);
         }
 
         /// <summary>
@@ -247,7 +242,7 @@ namespace netDxf.Collections
                 this.Remove(o);
         }
 
-	    #endregion
+        #endregion
 
         #region implements IEnumerator<T>
 

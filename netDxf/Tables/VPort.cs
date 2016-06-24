@@ -1,5 +1,5 @@
 ﻿#region netDxf library, Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
-// 
+
 //                        netDxf library
 // Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
 // 
@@ -17,6 +17,7 @@
 // COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
 // IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
 #endregion
 
 using System;
@@ -78,7 +79,7 @@ namespace netDxf.Tables
             if (string.IsNullOrEmpty(name))
                 throw new ArgumentNullException(nameof(name), "The viewport name should be at least one character long.");
 
-            this.reserved = name.Equals("*Active", StringComparison.OrdinalIgnoreCase);
+            this.IsReserved = name.Equals("*Active", StringComparison.OrdinalIgnoreCase);
             this.center = Vector2.Zero;
             this.snapBasePoint = Vector2.Zero;
             this.snapSpacing = new Vector2(0.5);
@@ -139,9 +140,9 @@ namespace netDxf.Tables
             get { return this.direction; }
             set
             {
-                if (value == Vector3.Zero)
-                    throw new ArgumentNullException(nameof(value), "The normal can not be the zero vector.");
                 this.direction = Vector3.Normalize(value);
+                if (Vector3.IsNaN(this.direction))
+                    throw new ArgumentException("The direction can not be the zero vector.", nameof(value));
             }
         }
 
@@ -201,8 +202,8 @@ namespace netDxf.Tables
         /// </summary>
         public new VPorts Owner
         {
-            get { return (VPorts) this.owner; }
-            internal set { this.owner = value; }
+            get { return (VPorts) base.Owner; }
+            internal set { base.Owner = value; }
         }
 
         #endregion
@@ -236,7 +237,7 @@ namespace netDxf.Tables
         /// <returns>A new VPort that is a copy of this instance.</returns>
         public override object Clone()
         {
-            return this.Clone(this.name);
+            return this.Clone(this.Name);
         }
 
         #endregion

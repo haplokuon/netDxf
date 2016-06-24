@@ -1,22 +1,23 @@
-#region netDxf, Copyright(C) 2015 Daniel Carvajal, Licensed under LGPL.
+#region netDxf library, Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+
+//                        netDxf library
+// Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
 // 
-//                         netDxf library
-//  Copyright (C) 2009-2015 Daniel Carvajal (haplokuon@gmail.com)
-//  
-//  This library is free software; you can redistribute it and/or
-//  modify it under the terms of the GNU Lesser General Public
-//  License as published by the Free Software Foundation; either
-//  version 2.1 of the License, or (at your option) any later version.
-//  
-//  The above copyright notice and this permission notice shall be included in all
-//  copies or substantial portions of the Software.
-//  
-//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-//  FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-//  COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-//  IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-//  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2.1 of the License, or (at your option) any later version.
+// 
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+// FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+// COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+// IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+// CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
 #endregion
 
 using System;
@@ -35,17 +36,17 @@ namespace netDxf.Collections
 
         internal ApplicationRegistries(DxfDocument document, string handle = null)
             : this(document, 0, handle)
-        {         
+        {
         }
 
         internal ApplicationRegistries(DxfDocument document, int capacity, string handle = null)
             : base(document,
-            new Dictionary<string, ApplicationRegistry>(capacity, StringComparer.OrdinalIgnoreCase),
-            new Dictionary<string, List<DxfObject>>(capacity, StringComparer.OrdinalIgnoreCase),
-            DxfObjectCode.ApplicationIDTable,
-            handle)
+                new Dictionary<string, ApplicationRegistry>(capacity, StringComparer.OrdinalIgnoreCase),
+                new Dictionary<string, List<DxfObject>>(capacity, StringComparer.OrdinalIgnoreCase),
+                DxfObjectCode.ApplicationIdTable,
+                handle)
         {
-            this.maxCapacity = short.MaxValue;
+            this.MaxCapacity = short.MaxValue;
         }
 
         #endregion
@@ -63,17 +64,19 @@ namespace netDxf.Collections
         /// </returns>
         internal override ApplicationRegistry Add(ApplicationRegistry appReg, bool assignHandle)
         {
-            if (this.list.Count >= this.maxCapacity)
-                throw new OverflowException(string.Format("Table overflow. The maximum number of elements the table {0} can have is {1}", this.codeName, this.maxCapacity));
+            if (this.list.Count >= this.MaxCapacity)
+                throw new OverflowException(string.Format("Table overflow. The maximum number of elements the table {0} can have is {1}", this.CodeName, this.MaxCapacity));
+            if (appReg == null)
+                throw new ArgumentNullException(nameof(appReg));
 
             ApplicationRegistry add;
             if (this.list.TryGetValue(appReg.Name, out add))
                 return add;
 
-            if(assignHandle || string.IsNullOrEmpty(appReg.Handle))
-                this.document.NumHandles = appReg.AsignHandle(this.document.NumHandles);
+            if (assignHandle || string.IsNullOrEmpty(appReg.Handle))
+                this.Owner.NumHandles = appReg.AsignHandle(this.Owner.NumHandles);
 
-            this.document.AddedObjects.Add(appReg.Handle, appReg);
+            this.Owner.AddedObjects.Add(appReg.Handle, appReg);
             this.list.Add(appReg.Name, appReg);
             this.references.Add(appReg.Name, new List<DxfObject>());
             appReg.Owner = this;
@@ -97,32 +100,31 @@ namespace netDxf.Collections
         /// <summary>
         /// Removes an application registry.
         /// </summary>
-        /// <param name="appReg"><see cref="ApplicationRegistry">ApplicationRegistry</see> to remove from the document.</param>
+        /// <param name="item"><see cref="ApplicationRegistry">ApplicationRegistry</see> to remove from the document.</param>
         /// <returns>True if the application registry has been successfully removed, or false otherwise.</returns>
         /// <remarks>Reserved application registries or any other referenced by objects cannot be removed.</remarks>
-        public override bool Remove(ApplicationRegistry appReg)
+        public override bool Remove(ApplicationRegistry item)
         {
-            if (appReg == null)
+            if (item == null)
                 return false;
 
-            if (!this.Contains(appReg))
+            if (!this.Contains(item))
                 return false;
 
-            if (appReg.IsReserved)
+            if (item.IsReserved)
                 return false;
 
-            if (this.references[appReg.Name].Count != 0)
+            if (this.references[item.Name].Count != 0)
                 return false;
 
-            
-            this.document.AddedObjects.Remove(appReg.Handle);
-            this.references.Remove(appReg.Name);
-            this.list.Remove(appReg.Name);
+            this.Owner.AddedObjects.Remove(item.Handle);
+            this.references.Remove(item.Name);
+            this.list.Remove(item.Name);
 
-            appReg.Handle = null;
-            appReg.Owner = null;
+            item.Handle = null;
+            item.Owner = null;
 
-            appReg.NameChanged -= this.Item_NameChanged;
+            item.NameChanged -= this.Item_NameChanged;
 
             return true;
         }

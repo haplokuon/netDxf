@@ -1,22 +1,23 @@
-﻿#region netDxf, Copyright(C) 2015 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf library, Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+
+//                        netDxf library
+// Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
 // 
-//                         netDxf library
-//  Copyright (C) 2009-2015 Daniel Carvajal (haplokuon@gmail.com)
-//  
-//  This library is free software; you can redistribute it and/or
-//  modify it under the terms of the GNU Lesser General Public
-//  License as published by the Free Software Foundation; either
-//  version 2.1 of the License, or (at your option) any later version.
-//  
-//  The above copyright notice and this permission notice shall be included in all
-//  copies or substantial portions of the Software.
-//  
-//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-//  FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-//  COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-//  IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-//  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2.1 of the License, or (at your option) any later version.
+// 
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+// FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+// COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+// IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+// CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
 #endregion
 
 using System;
@@ -37,7 +38,7 @@ namespace netDxf.Entities
         #region private fields
 
         private readonly List<LwPolylineVertex> vertexes;
-        private PolylineTypeFlags flags;
+        private PolylinetypeFlags flags;
         private double elevation;
         private double thickness;
 
@@ -57,34 +58,52 @@ namespace netDxf.Entities
         /// Initializes a new instance of the <c>LwPolyline</c> class.
         /// </summary>
         /// <param name="vertexes">LwPolyline <see cref="Vector2">vertex</see> list in object coordinates.</param>
-        /// <param name="isClosed">Sets if the polyline is closed.</param>
-        public LwPolyline(IList<Vector2> vertexes, bool isClosed = false)
+        public LwPolyline(IEnumerable<Vector2> vertexes)
+            : this(vertexes, false)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <c>LwPolyline</c> class.
+        /// </summary>
+        /// <param name="vertexes">LwPolyline <see cref="Vector2">vertex</see> list in object coordinates.</param>
+        /// <param name="isClosed">Sets if the polyline is closed, by default it will create an open polyline.</param>
+        public LwPolyline(IEnumerable<Vector2> vertexes, bool isClosed)
             : base(EntityType.LightWeightPolyline, DxfObjectCode.LightWeightPolyline)
         {
             if (vertexes == null)
-                throw new ArgumentNullException(nameof(vertexes), "The LwPolyline vertexes list cannot be null.");
-            this.vertexes = new List<LwPolylineVertex>(vertexes.Count);
+                throw new ArgumentNullException(nameof(vertexes));
+            this.vertexes = new List<LwPolylineVertex>();
             foreach (Vector2 vertex in vertexes)
                 this.vertexes.Add(new LwPolylineVertex(vertex));
             this.elevation = 0.0;
             this.thickness = 0.0;
-            this.flags = isClosed ? PolylineTypeFlags.ClosedPolylineOrClosedPolygonMeshInM : PolylineTypeFlags.OpenPolyline;
+            this.flags = isClosed ? PolylinetypeFlags.ClosedPolylineOrClosedPolygonMeshInM : PolylinetypeFlags.OpenPolyline;
         }
 
         /// <summary>
         /// Initializes a new instance of the <c>LwPolyline</c> class.
         /// </summary>
         /// <param name="vertexes">LwPolyline <see cref="LwPolylineVertex">vertex</see> list in object coordinates.</param>
-        /// <param name="isClosed">Sets if the polyline is closed.</param>
-        public LwPolyline(List<LwPolylineVertex> vertexes, bool isClosed = false)
+        public LwPolyline(IEnumerable<LwPolylineVertex> vertexes)
+            : this(vertexes, false)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <c>LwPolyline</c> class.
+        /// </summary>
+        /// <param name="vertexes">LwPolyline <see cref="LwPolylineVertex">vertex</see> list in object coordinates.</param>
+        /// <param name="isClosed">Sets if the polyline is closed  (default: false).</param>
+        public LwPolyline(IEnumerable<LwPolylineVertex> vertexes, bool isClosed)
             : base(EntityType.LightWeightPolyline, DxfObjectCode.LightWeightPolyline)
         {
             if (vertexes == null)
-                throw new ArgumentNullException(nameof(vertexes), "The LwPolyline vertexes list cannot be null.");
-            this.vertexes = vertexes;
+                throw new ArgumentNullException(nameof(vertexes));
+            this.vertexes = new List<LwPolylineVertex>(vertexes);
             this.elevation = 0.0;
             this.thickness = 0.0;
-            this.flags = isClosed ? PolylineTypeFlags.ClosedPolylineOrClosedPolygonMeshInM : PolylineTypeFlags.OpenPolyline;
+            this.flags = isClosed ? PolylinetypeFlags.ClosedPolylineOrClosedPolygonMeshInM : PolylinetypeFlags.OpenPolyline;
         }
 
         #endregion
@@ -104,13 +123,13 @@ namespace netDxf.Entities
         /// </summary>
         public bool IsClosed
         {
-            get { return (this.flags & PolylineTypeFlags.ClosedPolylineOrClosedPolygonMeshInM) == PolylineTypeFlags.ClosedPolylineOrClosedPolygonMeshInM; }
+            get { return this.flags.HasFlag(PolylinetypeFlags.ClosedPolylineOrClosedPolygonMeshInM); }
             set
             {
                 if (value)
-                    this.flags |= PolylineTypeFlags.ClosedPolylineOrClosedPolygonMeshInM;
+                    this.flags |= PolylinetypeFlags.ClosedPolylineOrClosedPolygonMeshInM;
                 else
-                    this.flags &= ~PolylineTypeFlags.ClosedPolylineOrClosedPolygonMeshInM;
+                    this.flags &= ~PolylinetypeFlags.ClosedPolylineOrClosedPolygonMeshInM;
             }
         }
 
@@ -136,15 +155,15 @@ namespace netDxf.Entities
         /// <summary>
         /// Enable or disable if the line type pattern is generated continuously around the vertexes of the polyline.
         /// </summary>
-        public bool LineTypeGeneration
+        public bool LinetypeGeneration
         {
-            get { return (this.flags & PolylineTypeFlags.ContinuousLineTypePattern) == PolylineTypeFlags.ContinuousLineTypePattern; }
+            get { return this.flags.HasFlag(PolylinetypeFlags.ContinuousLinetypePattern); }
             set
             {
                 if (value)
-                    this.flags |= PolylineTypeFlags.ContinuousLineTypePattern;
+                    this.flags |= PolylinetypeFlags.ContinuousLinetypePattern;
                 else
-                    this.flags &= ~PolylineTypeFlags.ContinuousLineTypePattern;
+                    this.flags &= ~PolylinetypeFlags.ContinuousLinetypePattern;
             }
         }
 
@@ -155,11 +174,11 @@ namespace netDxf.Entities
         /// <summary>
         /// Gets the light weight polyline type.
         /// </summary>
-        internal PolylineTypeFlags Flags
+        internal PolylinetypeFlags Flags
         {
             get { return this.flags; }
             set { this.flags = value; }
-        }   
+        }
 
         #endregion
 
@@ -202,7 +221,8 @@ namespace netDxf.Entities
 
                 if (index == this.Vertexes.Count - 1)
                 {
-                    if (!this.IsClosed) break;
+                    if (!this.IsClosed)
+                        break;
                     p1 = new Vector2(vertex.Position.X, vertex.Position.Y);
                     p2 = new Vector2(this.vertexes[0].Position.X, this.vertexes[0].Position.Y);
                 }
@@ -214,22 +234,18 @@ namespace netDxf.Entities
                 if (MathHelper.IsZero(bulge))
                 {
                     // the polyline edge is a line
-                    Vector3 start = MathHelper.Transform(new Vector3(p1.X, p1.Y, this.elevation), this.normal,
-                                                            CoordinateSystem.Object,
-                                                            CoordinateSystem.World);
-                    Vector3 end = MathHelper.Transform(new Vector3(p2.X, p2.Y, this.elevation), this.normal,
-                                                        CoordinateSystem.Object,
-                                                        CoordinateSystem.World);
+                    Vector3 start = MathHelper.Transform(new Vector3(p1.X, p1.Y, this.elevation), this.Normal, CoordinateSystem.Object, CoordinateSystem.World);
+                    Vector3 end = MathHelper.Transform(new Vector3(p2.X, p2.Y, this.elevation), this.Normal, CoordinateSystem.Object, CoordinateSystem.World);
 
                     entities.Add(new Line
                     {
-                        Layer = (Layer)this.layer.Clone(),
-                        LineType = (LineType)this.lineType.Clone(),
-                        Color = (AciColor)this.color.Clone(),
-                        Lineweight = (Lineweight)this.lineweight.Clone(),
-                        Transparency = (Transparency)this.transparency.Clone(),
-                        LineTypeScale = this.lineTypeScale,
-                        Normal = this.normal,
+                        Layer = (Layer) this.Layer.Clone(),
+                        Linetype = (Linetype) this.Linetype.Clone(),
+                        Color = (AciColor) this.Color.Clone(),
+                        Lineweight = this.Lineweight,
+                        Transparency = (Transparency) this.Transparency.Clone(),
+                        LinetypeScale = this.LinetypeScale,
+                        Normal = this.Normal,
                         StartPoint = start,
                         EndPoint = end,
                         Thickness = this.Thickness,
@@ -238,42 +254,42 @@ namespace netDxf.Entities
                 else
                 {
                     // the polyline edge is an arc
-                    double theta = 4 * Math.Atan(Math.Abs(bulge));
+                    double theta = 4*Math.Atan(Math.Abs(bulge));
                     double c = Vector2.Distance(p1, p2);
-                    double r = (c / 2) / Math.Sin(theta / 2);
-                    double gamma = (Math.PI - theta) / 2;
-                    double phi = Vector2.Angle(p1, p2) + Math.Sign(bulge) * gamma;
-                    Vector2 center = new Vector2(p1.X + r * Math.Cos(phi), p1.Y + r * Math.Sin(phi));
+                    double r = (c/2)/Math.Sin(theta/2);
+                    double gamma = (Math.PI - theta)/2;
+                    double phi = Vector2.Angle(p1, p2) + Math.Sign(bulge)*gamma;
+                    Vector2 center = new Vector2(p1.X + r*Math.Cos(phi), p1.Y + r*Math.Sin(phi));
                     double startAngle;
                     double endAngle;
                     if (bulge > 0)
                     {
-                        startAngle = MathHelper.RadToDeg * Vector2.Angle(p1 - center);
-                        endAngle = startAngle + MathHelper.RadToDeg * theta;
+                        startAngle = MathHelper.RadToDeg*Vector2.Angle(p1 - center);
+                        endAngle = startAngle + MathHelper.RadToDeg*theta;
                     }
                     else
                     {
-                        endAngle = MathHelper.RadToDeg * Vector2.Angle(p1 - center);
-                        startAngle = endAngle - MathHelper.RadToDeg * theta;
+                        endAngle = MathHelper.RadToDeg*Vector2.Angle(p1 - center);
+                        startAngle = endAngle - MathHelper.RadToDeg*theta;
                     }
-                    Vector3 point = MathHelper.Transform(new Vector3(center.X, center.Y, this.elevation), this.normal,
-                                                            CoordinateSystem.Object,
-                                                            CoordinateSystem.World);
+                    Vector3 point = MathHelper.Transform(new Vector3(center.X, center.Y, this.elevation), this.Normal,
+                        CoordinateSystem.Object,
+                        CoordinateSystem.World);
                     entities.Add(new Arc
-                                     {
-                                         Layer = (Layer)this.layer.Clone(),
-                                         LineType = (LineType)this.lineType.Clone(),
-                                         Color = (AciColor)this.color.Clone(),
-                                         Lineweight = (Lineweight)this.lineweight.Clone(),
-                                         Transparency = (Transparency)this.transparency.Clone(),
-                                         LineTypeScale = this.lineTypeScale,
-                                         Normal = this.normal,
-                                         Center = point,
-                                         Radius = r,
-                                         StartAngle = startAngle,
-                                         EndAngle = endAngle,
-                                         Thickness = this.Thickness,
-                                     });
+                    {
+                        Layer = (Layer) this.Layer.Clone(),
+                        Linetype = (Linetype) this.Linetype.Clone(),
+                        Color = (AciColor) this.Color.Clone(),
+                        Lineweight = this.Lineweight,
+                        Transparency = (Transparency) this.Transparency.Clone(),
+                        LinetypeScale = this.LinetypeScale,
+                        Normal = this.Normal,
+                        Center = point,
+                        Radius = r,
+                        StartAngle = startAngle,
+                        EndAngle = endAngle,
+                        Thickness = this.Thickness,
+                    });
                 }
                 index++;
             }
@@ -288,7 +304,7 @@ namespace netDxf.Entities
         /// <param name="weldThreshold">Tolerance to consider if two new generated vertexes are equal.</param>
         /// <param name="bulgeThreshold">Minimum distance from which approximate curved segments of the polyline.</param>
         /// <returns>A list of vertexes expressed in object coordinate system.</returns>
-        public IList<Vector2> PoligonalVertexes(int bulgePrecision, double weldThreshold, double bulgeThreshold)
+        public List<Vector2> PoligonalVertexes(int bulgePrecision, double weldThreshold, double bulgeThreshold)
         {
             List<Vector2> ocsVertexes = new List<Vector2>();
 
@@ -322,14 +338,14 @@ namespace netDxf.Entities
                         double c = Vector2.Distance(p1, p2);
                         if (c >= bulgeThreshold)
                         {
-                            double s = (c / 2) * Math.Abs(bulge);
-                            double r = ((c / 2) * (c / 2) + s * s) / (2 * s);
-                            double theta = 4 * Math.Atan(Math.Abs(bulge));
-                            double gamma = (Math.PI - theta) / 2;
-                            double phi = Vector2.Angle(p1, p2) + Math.Sign(bulge) * gamma;
-                            Vector2 center = new Vector2(p1.X + r * Math.Cos(phi), p1.Y + r * Math.Sin(phi));
+                            double s = (c/2)*Math.Abs(bulge);
+                            double r = ((c/2)*(c/2) + s*s)/(2*s);
+                            double theta = 4*Math.Atan(Math.Abs(bulge));
+                            double gamma = (Math.PI - theta)/2;
+                            double phi = Vector2.Angle(p1, p2) + Math.Sign(bulge)*gamma;
+                            Vector2 center = new Vector2(p1.X + r*Math.Cos(phi), p1.Y + r*Math.Sin(phi));
                             Vector2 a1 = p1 - center;
-                            double angle = Math.Sign(bulge) * theta / (bulgePrecision + 1);
+                            double angle = Math.Sign(bulge)*theta/(bulgePrecision + 1);
                             ocsVertexes.Add(p1);
                             for (int i = 1; i <= bulgePrecision; i++)
                             {
@@ -367,29 +383,29 @@ namespace netDxf.Entities
         public override object Clone()
         {
             LwPolyline entity = new LwPolyline
-                {
-                    //EntityObject properties
-                    Layer = (Layer)this.layer.Clone(),
-                    LineType = (LineType)this.lineType.Clone(),
-                    Color = (AciColor)this.color.Clone(),
-                    Lineweight = (Lineweight)this.lineweight.Clone(),
-                    Transparency = (Transparency)this.transparency.Clone(),
-                    LineTypeScale = this.lineTypeScale,
-                    Normal = this.normal,
-                    //LwPolyline properties
-                    Elevation = this.elevation,
-                    Thickness = this.thickness,
-                    Flags = this.flags
-                };
+            {
+                //EntityObject properties
+                Layer = (Layer) this.Layer.Clone(),
+                Linetype = (Linetype) this.Linetype.Clone(),
+                Color = (AciColor) this.Color.Clone(),
+                Lineweight = this.Lineweight,
+                Transparency = (Transparency) this.Transparency.Clone(),
+                LinetypeScale = this.LinetypeScale,
+                Normal = this.Normal,
+                IsVisible = this.IsVisible,
+                //LwPolyline properties
+                Elevation = this.elevation,
+                Thickness = this.thickness,
+                Flags = this.flags
+            };
 
             foreach (LwPolylineVertex vertex in this.vertexes)
                 entity.Vertexes.Add((LwPolylineVertex) vertex.Clone());
 
             foreach (XData data in this.XData.Values)
-                entity.XData.Add((XData)data.Clone());
+                entity.XData.Add((XData) data.Clone());
 
             return entity;
-
         }
 
         #endregion

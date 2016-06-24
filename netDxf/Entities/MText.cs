@@ -1,22 +1,23 @@
-﻿#region netDxf, Copyright(C) 2015 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf library, Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+
+//                        netDxf library
+// Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
 // 
-//                         netDxf library
-//  Copyright (C) 2009-2015 Daniel Carvajal (haplokuon@gmail.com)
-//  
-//  This library is free software; you can redistribute it and/or
-//  modify it under the terms of the GNU Lesser General Public
-//  License as published by the Free Software Foundation; either
-//  version 2.1 of the License, or (at your option) any later version.
-//  
-//  The above copyright notice and this permission notice shall be included in all
-//  copies or substantial portions of the Software.
-//  
-//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-//  FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-//  COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-//  IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-//  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2.1 of the License, or (at your option) any later version.
+// 
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+// FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+// COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+// IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+// CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
 #endregion
 
 using System;
@@ -86,7 +87,9 @@ namespace netDxf.Entities
         #region delegates and events
 
         public delegate void TextStyleChangedEventHandler(MText sender, TableObjectChangedEventArgs<TextStyle> e);
+
         public event TextStyleChangedEventHandler TextStyleChanged;
+
         protected virtual TextStyle OnTextStyleChangedEvent(TextStyle oldTextStyle, TextStyle newTextStyle)
         {
             TextStyleChangedEventHandler ae = this.TextStyleChanged;
@@ -94,7 +97,7 @@ namespace netDxf.Entities
             {
                 TableObjectChangedEventArgs<TextStyle> eventArgs = new TableObjectChangedEventArgs<TextStyle>(oldTextStyle, newTextStyle);
                 ae(this, eventArgs);
-                 return eventArgs.NewValue;
+                return eventArgs.NewValue;
             }
             return newTextStyle;
         }
@@ -224,7 +227,7 @@ namespace netDxf.Entities
             this.position = position;
             this.attachmentPoint = MTextAttachmentPoint.TopLeft;
             if (style == null)
-                throw new ArgumentNullException(nameof(style), "The Text style cannot be null.");
+                throw new ArgumentNullException(nameof(style));
             this.style = style;
             this.rectangleWidth = rectangleWidth;
             if (height <= 0.0)
@@ -343,7 +346,7 @@ namespace netDxf.Entities
             set
             {
                 if (value == null)
-                    throw new ArgumentNullException(nameof(value), "The MText Style cannot be null.");
+                    throw new ArgumentNullException(nameof(value));
                 this.style = this.OnTextStyleChangedEvent(this.style, value);
             }
         }
@@ -374,8 +377,17 @@ namespace netDxf.Entities
         /// Adds the text to the existing paragraph. 
         /// </summary>
         /// <param name="text">Text string.</param>
+        public void Write(string text)
+        {
+            this.Write(text, null);
+        }
+
+        /// <summary>
+        /// Adds the text to the existing paragraph. 
+        /// </summary>
+        /// <param name="text">Text string.</param>
         /// <param name="options">Text formatting options.</param>
-        public void Write(string text, MTextFormattingOptions options = null)
+        public void Write(string text, MTextFormattingOptions options)
         {
             if (options == null)
                 this.value += text;
@@ -409,7 +421,7 @@ namespace netDxf.Entities
             //text = text.Replace("%%c", "Ø");
             //text = text.Replace("%%d", "°");
             //text = text.Replace("%%p", "±");
-            
+
             StringBuilder rawText = new StringBuilder();
             CharEnumerator chars = text.GetEnumerator();
 
@@ -426,8 +438,11 @@ namespace netDxf.Entities
                     if (token == '\\' | token == '{' | token == '}') // escape chars
                         rawText.Append(token);
                     else if (token == 'L' | token == 'l' | token == 'O' | token == 'o' | token == 'K' | token == 'k' | token == 'P' | token == 'X') // one char commands
-                        if (token == 'P') rawText.Append(Environment.NewLine);
-                        else { } // discard other commands
+                        if (token == 'P')
+                            rawText.Append(Environment.NewLine);
+                        else
+                        {
+                        } // discard other commands
                     else // formatting commands of more than one character always terminate in ';'
                     {
                         bool stacking = token == 'S'; // we want to preserve the text under the stacking command
@@ -449,7 +464,6 @@ namespace netDxf.Entities
                 }
                 else // char is what it is, a character
                     rawText.Append(token);
-
             }
             return rawText.ToString();
         }
@@ -465,33 +479,33 @@ namespace netDxf.Entities
         public override object Clone()
         {
             MText entity = new MText
-                {
-                    //EntityObject properties
-                    Layer = (Layer)this.layer.Clone(),
-                    LineType = (LineType)this.lineType.Clone(),
-                    Color = (AciColor)this.color.Clone(),
-                    Lineweight = (Lineweight)this.lineweight.Clone(),
-                    Transparency = (Transparency)this.transparency.Clone(),
-                    LineTypeScale = this.lineTypeScale,
-                    Normal = this.normal,
-                    //MText properties
-                    Position = this.position,
-                    Rotation = this.rotation,
-                    Height = this.height,
-                    LineSpacingFactor = this.lineSpacing,
-                    ParagraphHeightFactor = this.paragraphHeightFactor,
-                    LineSpacingStyle = this.lineSpacingStyle,
-                    RectangleWidth = this.rectangleWidth,
-                    AttachmentPoint = this.attachmentPoint,
-                    Style = (TextStyle)this.style.Clone(),
-                    Value = this.value
-                };
+            {
+                //EntityObject properties
+                Layer = (Layer) this.Layer.Clone(),
+                Linetype = (Linetype) this.Linetype.Clone(),
+                Color = (AciColor) this.Color.Clone(),
+                Lineweight = this.Lineweight,
+                Transparency = (Transparency) this.Transparency.Clone(),
+                LinetypeScale = this.LinetypeScale,
+                Normal = this.Normal,
+                IsVisible = this.IsVisible,
+                //MText properties
+                Position = this.position,
+                Rotation = this.rotation,
+                Height = this.height,
+                LineSpacingFactor = this.lineSpacing,
+                ParagraphHeightFactor = this.paragraphHeightFactor,
+                LineSpacingStyle = this.lineSpacingStyle,
+                RectangleWidth = this.rectangleWidth,
+                AttachmentPoint = this.attachmentPoint,
+                Style = (TextStyle) this.style.Clone(),
+                Value = this.value
+            };
 
             foreach (XData data in this.XData.Values)
-                entity.XData.Add((XData)data.Clone());
+                entity.XData.Add((XData) data.Clone());
 
             return entity;
-
         }
 
         #endregion

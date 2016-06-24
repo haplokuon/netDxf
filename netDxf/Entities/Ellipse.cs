@@ -1,22 +1,23 @@
-#region netDxf, Copyright(C) 2015 Daniel Carvajal, Licensed under LGPL.
+#region netDxf library, Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+
+//                        netDxf library
+// Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
 // 
-//                         netDxf library
-//  Copyright (C) 2009-2015 Daniel Carvajal (haplokuon@gmail.com)
-//  
-//  This library is free software; you can redistribute it and/or
-//  modify it under the terms of the GNU Lesser General Public
-//  License as published by the Free Software Foundation; either
-//  version 2.1 of the License, or (at your option) any later version.
-//  
-//  The above copyright notice and this permission notice shall be included in all
-//  copies or substantial portions of the Software.
-//  
-//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-//  FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-//  COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-//  IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-//  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2.1 of the License, or (at your option) any later version.
+// 
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+// FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+// COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+// IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+// CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
 #endregion
 
 using System;
@@ -169,7 +170,12 @@ namespace netDxf.Entities
         /// </summary>
         public bool IsFullEllipse
         {
-            get { return MathHelper.IsEqual(this.startAngle, this.endAngle); }
+            get
+            {
+                double a = MathHelper.IsEqual(this.startAngle, 360.0) ? 0.0 : this.startAngle;
+                double b = MathHelper.IsEqual(this.endAngle, 360.0) ? 0.0 : this.endAngle;
+                return MathHelper.IsEqual(a, b);
+            }
         }
 
         #endregion
@@ -201,7 +207,7 @@ namespace netDxf.Entities
         /// </summary>
         /// <param name="precision">Number of divisions.</param>
         /// <returns>A list vertexes that represents the ellipse expressed in object coordinate system.</returns>
-        public IList<Vector2> PolygonalVertexes(int precision)
+        public List<Vector2> PolygonalVertexes(int precision)
         {
             List<Vector2> points = new List<Vector2>();
             double beta = this.rotation*MathHelper.DegToRad;
@@ -216,8 +222,8 @@ namespace netDxf.Entities
                     double sinalpha = Math.Sin(alpha);
                     double cosalpha = Math.Cos(alpha);
 
-                    double pointX = 0.5f*(this.majorAxis*cosalpha*cosbeta - this.minorAxis*sinalpha*sinbeta);
-                    double pointY = 0.5f*(this.majorAxis*cosalpha*sinbeta + this.minorAxis*sinalpha*cosbeta);
+                    double pointX = 0.5*(this.majorAxis*cosalpha*cosbeta - this.minorAxis*sinalpha*sinbeta);
+                    double pointY = 0.5*(this.majorAxis*cosalpha*sinbeta + this.minorAxis*sinalpha*cosbeta);
 
                     points.Add(new Vector2(pointX, pointY));
                 }
@@ -252,13 +258,13 @@ namespace netDxf.Entities
             Vector3 ocsCenter = MathHelper.Transform(this.center, this.Normal, CoordinateSystem.World, CoordinateSystem.Object);
             LwPolyline poly = new LwPolyline
             {
-                Layer = (Layer)this.layer.Clone(),
-                LineType = (LineType)this.lineType.Clone(),
-                Color = (AciColor)this.color.Clone(),
-                Lineweight = (Lineweight)this.lineweight.Clone(),
-                Transparency = (Transparency)this.transparency.Clone(),
-                LineTypeScale = this.lineTypeScale,
-                Normal = this.normal,
+                Layer = (Layer) this.Layer.Clone(),
+                Linetype = (Linetype) this.Linetype.Clone(),
+                Color = (AciColor) this.Color.Clone(),
+                Lineweight = this.Lineweight,
+                Transparency = (Transparency) this.Transparency.Clone(),
+                LinetypeScale = this.LinetypeScale,
+                Normal = this.Normal,
                 Elevation = ocsCenter.Z,
                 Thickness = this.Thickness,
                 IsClosed = this.IsFullEllipse
@@ -284,13 +290,14 @@ namespace netDxf.Entities
             Ellipse entity = new Ellipse
             {
                 //EntityObject properties
-                Layer = (Layer)this.layer.Clone(),
-                LineType = (LineType)this.lineType.Clone(),
-                Color = (AciColor)this.color.Clone(),
-                Lineweight = (Lineweight)this.lineweight.Clone(),
-                Transparency = (Transparency)this.transparency.Clone(),
-                LineTypeScale = this.lineTypeScale,
-                Normal = this.normal,
+                Layer = (Layer) this.Layer.Clone(),
+                Linetype = (Linetype) this.Linetype.Clone(),
+                Color = (AciColor) this.Color.Clone(),
+                Lineweight = this.Lineweight,
+                Transparency = (Transparency) this.Transparency.Clone(),
+                LinetypeScale = this.LinetypeScale,
+                Normal = this.Normal,
+                IsVisible = this.IsVisible,
                 //Ellipse properties
                 Center = this.center,
                 MajorAxis = this.majorAxis,
@@ -302,10 +309,9 @@ namespace netDxf.Entities
             };
 
             foreach (XData data in this.XData.Values)
-                entity.XData.Add((XData)data.Clone());
+                entity.XData.Add((XData) data.Clone());
 
             return entity;
-
         }
 
         #endregion

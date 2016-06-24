@@ -1,22 +1,23 @@
-﻿#region netDxf, Copyright(C) 2016 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf library, Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+
+//                        netDxf library
+// Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
 // 
-//                         netDxf library
-//  Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
-//  
-//  This library is free software; you can redistribute it and/or
-//  modify it under the terms of the GNU Lesser General Public
-//  License as published by the Free Software Foundation; either
-//  version 2.1 of the License, or (at your option) any later version.
-//  
-//  The above copyright notice and this permission notice shall be included in all
-//  copies or substantial portions of the Software.
-//  
-//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-//  FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-//  COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-//  IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-//  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2.1 of the License, or (at your option) any later version.
+// 
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+// FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+// COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+// IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+// CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
 #endregion
 
 using System;
@@ -100,6 +101,9 @@ namespace netDxf.Entities
         public LinearDimension(Line referenceLine, double offset, double rotation, Vector3 normal, DimensionStyle style)
             : base(DimensionType.Linear)
         {
+            if (referenceLine == null)
+                throw new ArgumentNullException(nameof(referenceLine));
+
             Vector3 ocsPoint;
             ocsPoint = MathHelper.Transform(referenceLine.StartPoint, normal, CoordinateSystem.World, CoordinateSystem.Object);
             this.firstRefPoint = new Vector2(ocsPoint.X, ocsPoint.Y);
@@ -107,11 +111,12 @@ namespace netDxf.Entities
             this.secondRefPoint = new Vector2(ocsPoint.X, ocsPoint.Y);
             this.offset = offset;
             this.rotation = MathHelper.NormalizeAngle(rotation);
+
             if (style == null)
-                throw new ArgumentNullException(nameof(style), "The Dimension style cannot be null.");
-            this.style = style;
-            this.normal = normal;
-            this.elevation = ocsPoint.Z;
+                throw new ArgumentNullException(nameof(style));
+            this.Style = style;
+            this.Normal = normal;
+            this.Elevation = ocsPoint.Z;
         }
 
         /// <summary>
@@ -142,10 +147,10 @@ namespace netDxf.Entities
             this.firstRefPoint = firstPoint;
             this.secondRefPoint = secondPoint;
             this.offset = offset;
-            if (style == null)
-                throw new ArgumentNullException(nameof(style), "The Dimension style cannot be null.");
-            this.style = style;
             this.rotation = MathHelper.NormalizeAngle(rotation);
+            if (style == null)
+                throw new ArgumentNullException(nameof(style));
+            this.Style = style;
         }
 
         #endregion
@@ -197,7 +202,7 @@ namespace netDxf.Entities
             get
             {
                 double refRot = Vector2.Angle(this.firstRefPoint, this.secondRefPoint);
-                return Math.Abs(Vector2.Distance(this.firstRefPoint, this.secondRefPoint) * Math.Cos(this.rotation * MathHelper.DegToRad - refRot));
+                return Math.Abs(Vector2.Distance(this.firstRefPoint, this.secondRefPoint)*Math.Cos(this.rotation*MathHelper.DegToRad - refRot));
             }
         }
 
@@ -212,7 +217,7 @@ namespace netDxf.Entities
         public void SetDimensionLinePosition(Vector2 point)
         {
             Vector2 midRef = Vector2.MidPoint(this.firstRefPoint, this.secondRefPoint);
-            double dimRotation = this.rotation * MathHelper.DegToRad;
+            double dimRotation = this.rotation*MathHelper.DegToRad;
             Vector2 dimDir = new Vector2(Math.Cos(dimRotation), Math.Sin(dimRotation));
             Vector2 refDir = Vector2.Normalize(this.secondRefPoint - this.firstRefPoint);
             Vector2 offsetDir = point - this.firstRefPoint;
@@ -245,35 +250,34 @@ namespace netDxf.Entities
         /// <returns>A new LinearDimension that is a copy of this instance.</returns>
         public override object Clone()
         {
-
             LinearDimension entity = new LinearDimension
             {
                 //EntityObject properties
-                Layer = (Layer)this.layer.Clone(),
-                LineType = (LineType)this.lineType.Clone(),
-                Color = (AciColor)this.color.Clone(),
-                Lineweight = (Lineweight)this.lineweight.Clone(),
-                Transparency = (Transparency)this.transparency.Clone(),
-                LineTypeScale = this.lineTypeScale,
-                Normal = this.normal,
+                Layer = (Layer) this.Layer.Clone(),
+                Linetype = (Linetype) this.Linetype.Clone(),
+                Color = (AciColor) this.Color.Clone(),
+                Lineweight = this.Lineweight,
+                Transparency = (Transparency) this.Transparency.Clone(),
+                LinetypeScale = this.LinetypeScale,
+                Normal = this.Normal,
+                IsVisible = this.IsVisible,
                 //Dimension properties
-                Style = (DimensionStyle)this.style.Clone(),
-                AttachmentPoint = this.attachmentPoint,
-                LineSpacingStyle = this.lineSpacingStyle,
-                LineSpacingFactor = this.lineSpacing,
+                Style = (DimensionStyle) this.Style.Clone(),
+                AttachmentPoint = this.AttachmentPoint,
+                LineSpacingStyle = this.LineSpacingStyle,
+                LineSpacingFactor = this.LineSpacingFactor,
                 //LinearDimension properties
                 FirstReferencePoint = this.firstRefPoint,
                 SecondReferencePoint = this.secondRefPoint,
                 Rotation = this.rotation,
                 Offset = this.offset,
-                Elevation = this.elevation
+                Elevation = this.Elevation
             };
 
             foreach (XData data in this.XData.Values)
-                entity.XData.Add((XData)data.Clone());
+                entity.XData.Add((XData) data.Clone());
 
             return entity;
-
         }
 
         #endregion

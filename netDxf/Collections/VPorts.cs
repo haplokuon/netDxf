@@ -1,22 +1,23 @@
-#region netDxf, Copyright(C) 2015 Daniel Carvajal, Licensed under LGPL.
+#region netDxf library, Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+
+//                        netDxf library
+// Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
 // 
-//                         netDxf library
-//  Copyright (C) 2009-2015 Daniel Carvajal (haplokuon@gmail.com)
-//  
-//  This library is free software; you can redistribute it and/or
-//  modify it under the terms of the GNU Lesser General Public
-//  License as published by the Free Software Foundation; either
-//  version 2.1 of the License, or (at your option) any later version.
-//  
-//  The above copyright notice and this permission notice shall be included in all
-//  copies or substantial portions of the Software.
-//  
-//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-//  FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-//  COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-//  IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-//  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2.1 of the License, or (at your option) any later version.
+// 
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+// FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+// COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+// IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+// CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
 #endregion
 
 using System;
@@ -34,27 +35,27 @@ namespace netDxf.Collections
         #region constructor
 
         internal VPorts(DxfDocument document, string handle = null)
-            : this(document,0,handle)
+            : this(document, 0, handle)
         {
         }
 
         internal VPorts(DxfDocument document, int capacity, string handle = null)
             : base(document,
-            new Dictionary<string, VPort>(capacity, StringComparer.OrdinalIgnoreCase),
-            new Dictionary<string, List<DxfObject>>(capacity, StringComparer.OrdinalIgnoreCase),
-            DxfObjectCode.VportTable,
-            handle)
+                new Dictionary<string, VPort>(capacity, StringComparer.OrdinalIgnoreCase),
+                new Dictionary<string, List<DxfObject>>(capacity, StringComparer.OrdinalIgnoreCase),
+                DxfObjectCode.VportTable,
+                handle)
         {
-            this.maxCapacity = short.MaxValue;
+            this.MaxCapacity = short.MaxValue;
 
-            if (this.list.Count >= this.maxCapacity)
-                throw new OverflowException(string.Format("Table overflow. The maximum number of elements the table {0} can have is {1}", this.codeName, this.maxCapacity));
+            if (this.list.Count >= this.MaxCapacity)
+                throw new OverflowException(string.Format("Table overflow. The maximum number of elements the table {0} can have is {1}", this.CodeName, this.MaxCapacity));
 
             // add the current document viewport, it is always present
             VPort active = VPort.Active;
-            this.document.NumHandles = active.AsignHandle(this.document.NumHandles);
+            this.Owner.NumHandles = active.AsignHandle(this.Owner.NumHandles);
 
-            this.document.AddedObjects.Add(active.Handle, active);
+            this.Owner.AddedObjects.Add(active.Handle, active);
             this.list.Add(active.Name, active);
             this.references.Add(active.Name, new List<DxfObject>());
             active.Owner = this;
@@ -78,7 +79,7 @@ namespace netDxf.Collections
             throw new ArgumentException("VPorts cannot be added to the collection. There is only one VPort in the list the \"*Active\".", nameof(vport));
 
             //if (this.list.Count >= this.maxCapacity)
-            //    throw new OverflowException(String.Format("Table overflow. The maximum number of elements the table {0} can have is {1}", this.codeName, this.maxCapacity));
+            //    throw new OverflowException(string.Format("Table overflow. The maximum number of elements the table {0} can have is {1}", this.codeName, this.maxCapacity));
 
             //VPort add;
             //if (this.list.TryGetValue(vport.Name, out add))
@@ -110,12 +111,12 @@ namespace netDxf.Collections
         /// <summary>
         /// Removes a viewports.
         /// </summary>
-        /// <param name="vport"><see cref="VPort">VPort</see> to remove from the document.</param>
+        /// <param name="item"><see cref="VPort">VPort</see> to remove from the document.</param>
         /// <returns>True if the viewports has been successfully removed, or false otherwise.</returns>
         /// <remarks>Reserved viewports or any other referenced by objects cannot be removed.</remarks>
-        public override bool Remove(VPort vport)
+        public override bool Remove(VPort item)
         {
-            throw new ArgumentException("VPorts cannot be removed from the collection.", nameof(vport));
+            throw new ArgumentException("VPorts cannot be removed from the collection.", nameof(item));
 
             //if (vport == null)
             //    return false;

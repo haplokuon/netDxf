@@ -1,27 +1,27 @@
-﻿#region netDxf, Copyright(C) 2015 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf library, Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+
+//                        netDxf library
+// Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
 // 
-//                         netDxf library
-//  Copyright (C) 2009-2015 Daniel Carvajal (haplokuon@gmail.com)
-//  
-//  This library is free software; you can redistribute it and/or
-//  modify it under the terms of the GNU Lesser General Public
-//  License as published by the Free Software Foundation; either
-//  version 2.1 of the License, or (at your option) any later version.
-//  
-//  The above copyright notice and this permission notice shall be included in all
-//  copies or substantial portions of the Software.
-//  
-//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-//  FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-//  COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-//  IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-//  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2.1 of the License, or (at your option) any later version.
+// 
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+// FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+// COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+// IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+// CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
 #endregion
 
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using netDxf.Blocks;
 using netDxf.Collections;
 using netDxf.Tables;
@@ -38,7 +38,9 @@ namespace netDxf.Entities
         #region delegates and events
 
         public delegate void LayerChangedEventHandler(EntityObject sender, TableObjectChangedEventArgs<Layer> e);
+
         public event LayerChangedEventHandler LayerChanged;
+
         protected virtual Layer OnLayerChangedEvent(Layer oldLayer, Layer newLayer)
         {
             LayerChangedEventHandler ae = this.LayerChanged;
@@ -51,21 +53,24 @@ namespace netDxf.Entities
             return newLayer;
         }
 
-        public delegate void LineTypeChangedEventHandler(EntityObject sender, TableObjectChangedEventArgs<LineType> e);
-        public event LineTypeChangedEventHandler LineTypeChanged;
-        protected virtual LineType OnLineTypeChangedEvent(LineType oldLineType, LineType newLineType)
+        public delegate void LinetypeChangedEventHandler(EntityObject sender, TableObjectChangedEventArgs<Linetype> e);
+
+        public event LinetypeChangedEventHandler LinetypeChanged;
+
+        protected virtual Linetype OnLinetypeChangedEvent(Linetype oldLinetype, Linetype newLinetype)
         {
-            LineTypeChangedEventHandler ae = this.LineTypeChanged;
+            LinetypeChangedEventHandler ae = this.LinetypeChanged;
             if (ae != null)
             {
-                TableObjectChangedEventArgs<LineType> eventArgs = new TableObjectChangedEventArgs<LineType>(oldLineType, newLineType);
+                TableObjectChangedEventArgs<Linetype> eventArgs = new TableObjectChangedEventArgs<Linetype>(oldLinetype, newLinetype);
                 ae(this, eventArgs);
                 return eventArgs.NewValue;
             }
-            return newLineType;
+            return newLinetype;
         }
 
         public delegate void XDataAddAppRegEventHandler(EntityObject sender, ObservableCollectionEventArgs<ApplicationRegistry> e);
+
         public delegate void XDataRemoveAppRegEventHandler(EntityObject sender, ObservableCollectionEventArgs<ApplicationRegistry> e);
 
         public event XDataAddAppRegEventHandler XDataAddAppReg;
@@ -84,21 +89,22 @@ namespace netDxf.Entities
             if (ae != null)
                 ae(this, new ObservableCollectionEventArgs<ApplicationRegistry>(item));
         }
+
         #endregion
 
         #region private fields
 
         private readonly EntityType type;
-        protected AciColor color;
-        protected Layer layer;
-        protected LineType lineType;
-        protected Lineweight lineweight;
-        protected Transparency transparency;
-        protected double lineTypeScale;
-        protected bool isVisible;
-        protected Vector3 normal;
-        protected readonly XDataDictionary xData;
-        protected readonly List<DxfObject> reactors;
+        private AciColor color;
+        private Layer layer;
+        private Linetype linetype;
+        private Lineweight lineweight;
+        private Transparency transparency;
+        private double linetypeScale;
+        private bool isVisible;
+        private Vector3 normal;
+        private readonly XDataDictionary xData;
+        private readonly List<DxfObject> reactors;
 
         #endregion
 
@@ -110,10 +116,10 @@ namespace netDxf.Entities
             this.type = type;
             this.color = AciColor.ByLayer;
             this.layer = Layer.Default;
-            this.lineType = LineType.ByLayer;
+            this.linetype = Linetype.ByLayer;
             this.lineweight = Lineweight.ByLayer;
             this.transparency = Transparency.ByLayer;
-            this.lineTypeScale = 1.0;
+            this.linetypeScale = 1.0;
             this.isVisible = true;
             this.normal = Vector3.UnitZ;
             this.reactors = new List<DxfObject>();
@@ -129,9 +135,9 @@ namespace netDxf.Entities
         /// <summary>
         /// Gets the list of dxf objects that has been attached to this entity.
         /// </summary>
-        public ReadOnlyCollection<DxfObject> Reactors
+        public IReadOnlyList<DxfObject> Reactors
         {
-            get { return this.reactors.AsReadOnly(); }
+            get { return this.reactors; }
         }
 
         /// <summary>
@@ -145,7 +151,7 @@ namespace netDxf.Entities
         /// <summary>
         /// Gets or sets the entity <see cref="AciColor">color</see>.
         /// </summary>
-        public virtual AciColor Color
+        public AciColor Color
         {
             get { return this.color; }
             set
@@ -159,7 +165,7 @@ namespace netDxf.Entities
         /// <summary>
         /// Gets or sets the entity <see cref="Layer">layer</see>.
         /// </summary>
-        public virtual Layer Layer
+        public Layer Layer
         {
             get { return this.layer; }
             set
@@ -171,37 +177,32 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets or sets the entity <see cref="LineType">line type</see>.
+        /// Gets or sets the entity <see cref="Linetype">line type</see>.
         /// </summary>
-        public virtual LineType LineType
+        public Linetype Linetype
         {
-            get { return this.lineType; }
+            get { return this.linetype; }
             set
             {
                 if (value == null)
                     throw new ArgumentNullException(nameof(value));
-                this.lineType = this.OnLineTypeChangedEvent(this.lineType, value);
+                this.linetype = this.OnLinetypeChangedEvent(this.linetype, value);
             }
         }
 
         /// <summary>
-        /// Gets or sets the entity line weight, one unit is always 1/100 mm (default = ByLayer).
+        /// Gets or sets the entity <see cref="Lineweight">line weight</see>, one unit is always 1/100 mm (default = ByLayer).
         /// </summary>
-        public virtual Lineweight Lineweight
+        public Lineweight Lineweight
         {
             get { return this.lineweight; }
-            set
-            {
-                if (value == null)
-                    throw new ArgumentNullException(nameof(value));
-                this.lineweight = value;
-            }
+            set { this.lineweight = value; }
         }
 
         /// <summary>
-        /// Gets or sets layer transparency (default: ByLayer).
+        /// Gets or sets layer <see cref="Transparency">transparency</see> (default: ByLayer).
         /// </summary>
-        public virtual Transparency Transparency
+        public Transparency Transparency
         {
             get { return this.transparency; }
             set
@@ -215,21 +216,21 @@ namespace netDxf.Entities
         /// <summary>
         /// Gets or sets the entity line type scale.
         /// </summary>
-        public virtual double LineTypeScale
+        public double LinetypeScale
         {
-            get { return this.lineTypeScale; }
+            get { return this.linetypeScale; }
             set
             {
                 if (value <= 0)
                     throw new ArgumentOutOfRangeException(nameof(value), value, "The line type scale must be greater than zero.");
-                this.lineTypeScale = value;
+                this.linetypeScale = value;
             }
         }
 
         /// <summary>
         /// Gets or set the entity visibility.
         /// </summary>
-        public virtual bool IsVisible
+        public bool IsVisible
         {
             get { return this.isVisible; }
             set { this.isVisible = value; }
@@ -238,14 +239,14 @@ namespace netDxf.Entities
         /// <summary>
         /// Gets or sets the entity <see cref="Vector3">normal</see>.
         /// </summary>
-        public virtual Vector3 Normal
+        public Vector3 Normal
         {
             get { return this.normal; }
             set
             {
-                if (value == Vector3.Zero)
-                    throw new ArgumentNullException(nameof(value), "The normal can not be the zero vector.");
                 this.normal = Vector3.Normalize(value);
+                if (Vector3.IsNaN(this.normal))
+                    throw new ArgumentException("The normal can not be the zero vector.", nameof(value));
             }
         }
 
@@ -254,8 +255,8 @@ namespace netDxf.Entities
         /// </summary>
         public new Block Owner
         {
-            get { return (Block) this.owner; }
-            internal set { this.owner = value; }
+            get { return (Block) base.Owner; }
+            internal set { base.Owner = value; }
         }
 
         /// <summary>
@@ -308,7 +309,7 @@ namespace netDxf.Entities
         #region XData events
 
         private void XData_AddAppReg(XDataDictionary sender, ObservableCollectionEventArgs<ApplicationRegistry> e)
-        {           
+        {
             this.OnXDataAddAppRegEvent(e.Item);
         }
 

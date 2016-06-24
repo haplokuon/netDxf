@@ -1,22 +1,23 @@
-﻿#region netDxf, Copyright(C) 2015 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf library, Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+
+//                        netDxf library
+// Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
 // 
-//                         netDxf library
-//  Copyright (C) 2009-2015 Daniel Carvajal (haplokuon@gmail.com)
-//  
-//  This library is free software; you can redistribute it and/or
-//  modify it under the terms of the GNU Lesser General Public
-//  License as published by the Free Software Foundation; either
-//  version 2.1 of the License, or (at your option) any later version.
-//  
-//  The above copyright notice and this permission notice shall be included in all
-//  copies or substantial portions of the Software.
-//  
-//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-//  FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-//  COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-//  IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-//  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2.1 of the License, or (at your option) any later version.
+// 
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+// FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+// COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+// IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+// CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
 #endregion
 
 using System;
@@ -48,14 +49,23 @@ namespace netDxf.Entities
         {
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <c>LwPolylineVertex</c> class.
+        /// </summary>
+        /// <param name="x">X coordinate.</param>
+        /// <param name="y">Y coordinate.</param>
+        public LwPolylineVertex(double x, double y)
+            : this(new Vector2(x, y), 0.0)
+        {
+        }
 
         /// <summary>
         /// Initializes a new instance of the <c>LwPolylineVertex</c> class.
         /// </summary>
         /// <param name="x">X coordinate.</param>
         /// <param name="y">Y coordinate.</param>
-        /// <param name="bulge">Vertex bulge.</param>
-        public LwPolylineVertex(double x, double y, double bulge = 0.0)
+        /// <param name="bulge">Vertex bulge  (default: 0.0).</param>
+        public LwPolylineVertex(double x, double y, double bulge)
             : this(new Vector2(x, y), bulge)
         {
         }
@@ -64,8 +74,17 @@ namespace netDxf.Entities
         /// Initializes a new instance of the <c>LwPolylineVertex</c> class.
         /// </summary>
         /// <param name="position">Lightweight polyline <see cref="Vector2">vertex</see> coordinates.</param>
-        /// <param name="bulge">Vertex bulge.</param>
-        public LwPolylineVertex(Vector2 position, double bulge = 0.0)
+        public LwPolylineVertex(Vector2 position)
+            : this(position, 0.0)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <c>LwPolylineVertex</c> class.
+        /// </summary>
+        /// <param name="position">Lightweight polyline <see cref="Vector2">vertex</see> coordinates.</param>
+        /// <param name="bulge">Vertex bulge  (default: 0.0).</param>
+        public LwPolylineVertex(Vector2 position, double bulge)
         {
             this.position = position;
             this.bulge = bulge;
@@ -150,12 +169,12 @@ namespace netDxf.Entities
         public object Clone()
         {
             return new LwPolylineVertex
-                {
-                    Position = this.position,
-                    Bulge = this.bulge,
-                    StartWidth = this.startWidth,
-                    EndWidth = this.endWidth
-                };
+            {
+                Position = this.position,
+                Bulge = this.bulge,
+                StartWidth = this.startWidth,
+                EndWidth = this.endWidth
+            };
         }
 
         #endregion

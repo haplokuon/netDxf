@@ -1,22 +1,23 @@
-﻿#region netDxf, Copyright(C) 2015 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf library, Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+
+//                        netDxf library
+// Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
 // 
-//                         netDxf library
-//  Copyright (C) 2009-2015 Daniel Carvajal (haplokuon@gmail.com)
-//  
-//  This library is free software; you can redistribute it and/or
-//  modify it under the terms of the GNU Lesser General Public
-//  License as published by the Free Software Foundation; either
-//  version 2.1 of the License, or (at your option) any later version.
-//  
-//  The above copyright notice and this permission notice shall be included in all
-//  copies or substantial portions of the Software.
-//  
-//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-//  FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-//  COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-//  IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-//  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2.1 of the License, or (at your option) any later version.
+// 
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+// FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+// COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+// IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+// CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
 #endregion
 
 using System;
@@ -29,13 +30,15 @@ namespace netDxf.Entities
     /// <summary>
     /// Represents a multiline <see cref="EntityObject">entity</see>.
     /// </summary>
-    public class MLine:
+    public class MLine :
         EntityObject
     {
         #region delegates and events
 
         public delegate void MLineStyleChangedEventHandler(MLine sender, TableObjectChangedEventArgs<MLineStyle> e);
+
         public event MLineStyleChangedEventHandler MLineStyleChanged;
+
         protected virtual MLineStyle OnMLineStyleChangedEvent(MLineStyle oldMLineStyle, MLineStyle newMLineStyle)
         {
             MLineStyleChangedEventHandler ae = this.MLineStyleChanged;
@@ -75,8 +78,17 @@ namespace netDxf.Entities
         /// Initializes a new instance of the <c>MLine</c> class.
         /// </summary>
         /// <param name="vertexes">Multiline <see cref="Vector2">vertex</see> location list in object coordinates.</param>
-        /// <param name="isClosed">Sets if the multiline is closed</param>
-        public MLine(IList<Vector2> vertexes, bool isClosed = false)
+        public MLine(IEnumerable<Vector2> vertexes)
+            : this(vertexes, MLineStyle.Default, 1.0, false)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <c>MLine</c> class.
+        /// </summary>
+        /// <param name="vertexes">Multiline <see cref="Vector2">vertex</see> location list in object coordinates.</param>
+        /// <param name="isClosed">Sets if the multiline is closed  (default: false).</param>
+        public MLine(IEnumerable<Vector2> vertexes, bool isClosed)
             : this(vertexes, MLineStyle.Default, 1.0, isClosed)
         {
         }
@@ -86,8 +98,18 @@ namespace netDxf.Entities
         /// </summary>
         /// <param name="vertexes">Multiline <see cref="Vector2">vertex</see> location list in object coordinates.</param>
         /// <param name="scale">Multiline scale.</param>
-        /// <param name="isClosed">Sets if the multiline is closed</param>
-        public MLine(IList<Vector2> vertexes, double scale, bool isClosed = false)
+        public MLine(IEnumerable<Vector2> vertexes, double scale)
+            : this(vertexes, MLineStyle.Default, scale, false)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <c>MLine</c> class.
+        /// </summary>
+        /// <param name="vertexes">Multiline <see cref="Vector2">vertex</see> location list in object coordinates.</param>
+        /// <param name="scale">Multiline scale.</param>
+        /// <param name="isClosed">Sets if the multiline is closed  (default: false).</param>
+        public MLine(IEnumerable<Vector2> vertexes, double scale, bool isClosed)
             : this(vertexes, MLineStyle.Default, scale, isClosed)
         {
         }
@@ -98,13 +120,24 @@ namespace netDxf.Entities
         /// <param name="vertexes">MLine <see cref="Vector2">vertex</see> location list in object coordinates.</param>
         /// <param name="style">MLine <see cref="MLineStyle">style.</see></param>
         /// <param name="scale">MLine scale.</param>
-        /// <param name="isClosed">Sets if the multiline is closed</param>
-        public MLine(IList<Vector2> vertexes, MLineStyle style, double scale, bool isClosed = false)
+        public MLine(IEnumerable<Vector2> vertexes, MLineStyle style, double scale)
+            : this(vertexes, style, scale, false)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <c>MLine</c> class.
+        /// </summary>
+        /// <param name="vertexes">MLine <see cref="Vector2">vertex</see> location list in object coordinates.</param>
+        /// <param name="style">MLine <see cref="MLineStyle">style.</see></param>
+        /// <param name="scale">MLine scale.</param>
+        /// <param name="isClosed">Sets if the multiline is closed  (default: false).</param>
+        public MLine(IEnumerable<Vector2> vertexes, MLineStyle style, double scale, bool isClosed)
             : base(EntityType.MLine, DxfObjectCode.MLine)
         {
             this.scale = scale;
             if (style == null)
-                throw new ArgumentNullException(nameof(style), "The MLine style cannot be null.");
+                throw new ArgumentNullException(nameof(style));
             if (isClosed)
                 this.flags = MLineFlags.Has | MLineFlags.Closed;
             else
@@ -115,7 +148,7 @@ namespace netDxf.Entities
             this.elevation = 0.0;
             if (vertexes == null)
                 throw new ArgumentNullException(nameof(vertexes));
-            this.vertexes = new List<MLineVertex>(vertexes.Count);
+            this.vertexes = new List<MLineVertex>();
             foreach (Vector2 point in vertexes)
                 this.vertexes.Add(new MLineVertex(point, Vector2.Zero, Vector2.Zero, null));
             this.Update();
@@ -157,7 +190,7 @@ namespace netDxf.Entities
         /// </summary>
         public bool IsClosed
         {
-            get { return (this.flags & MLineFlags.Closed) == MLineFlags.Closed; }
+            get { return this.flags.HasFlag(MLineFlags.Closed); }
             set
             {
                 if (value)
@@ -172,7 +205,7 @@ namespace netDxf.Entities
         /// </summary>
         public bool NoStartCaps
         {
-            get { return (this.flags & MLineFlags.NoStartCaps) == MLineFlags.NoStartCaps; }
+            get { return this.flags.HasFlag(MLineFlags.NoStartCaps); }
             set
             {
                 if (value)
@@ -187,7 +220,7 @@ namespace netDxf.Entities
         /// </summary>
         public bool NoEndCaps
         {
-            get { return (this.flags & MLineFlags.NoEndCaps) == MLineFlags.NoEndCaps; }
+            get { return this.flags.HasFlag(MLineFlags.NoEndCaps); }
             set
             {
                 if (value)
@@ -215,7 +248,7 @@ namespace netDxf.Entities
             set
             {
                 if (value == null)
-                    throw new ArgumentNullException(nameof(value), "The MLine style cannot be null.");
+                    throw new ArgumentNullException(nameof(value));
                 this.style = this.OnMLineStyleChangedEvent(this.style, value);
             }
         }
@@ -297,8 +330,7 @@ namespace netDxf.Entities
                         mitter.Normalize();
                     }
                     else
-                        mitter = MathHelper.Transform(dir, this.style.StartAngle * MathHelper.DegToRad, CoordinateSystem.Object, CoordinateSystem.World);
-
+                        mitter = MathHelper.Transform(dir, this.style.StartAngle*MathHelper.DegToRad, CoordinateSystem.Object, CoordinateSystem.World);
                 }
                 else if (i + 1 == this.vertexes.Count)
                 {
@@ -317,9 +349,8 @@ namespace netDxf.Entities
                     else
                     {
                         dir = prevDir;
-                        mitter = MathHelper.Transform(dir, this.style.EndAngle * MathHelper.DegToRad, CoordinateSystem.Object, CoordinateSystem.World);
+                        mitter = MathHelper.Transform(dir, this.style.EndAngle*MathHelper.DegToRad, CoordinateSystem.Object, CoordinateSystem.World);
                     }
-
                 }
                 else
                 {
@@ -342,18 +373,18 @@ namespace netDxf.Entities
                 double cos = Math.Cos(angleMitter + (MathHelper.HalfPI - angleDir));
                 for (int j = 0; j < this.style.Elements.Count; j++)
                 {
-                    double distance = (this.style.Elements[j].Offset + reference) / cos;
+                    double distance = (this.style.Elements[j].Offset + reference)/cos;
                     distances[j] = new List<double>
-                                               {
-                                                   distance*this.scale,
-                                                   0.0
-                                               };
+                    {
+                        distance*this.scale,
+                        0.0
+                    };
                 }
 
                 this.vertexes[i] = new MLineVertex(position, dir, mitter, distances);
             }
         }
-        
+
         #endregion
 
         #region overrides
@@ -363,17 +394,18 @@ namespace netDxf.Entities
         /// </summary>
         /// <returns>A new MLine that is a copy of this instance.</returns>
         public override object Clone()
-        {        
+        {
             MLine entity = new MLine
             {
                 //EntityObject properties
-                Layer = (Layer)this.layer.Clone(),
-                LineType = (LineType)this.lineType.Clone(),
-                Color = (AciColor)this.color.Clone(),
-                Lineweight = (Lineweight)this.lineweight.Clone(),
-                Transparency = (Transparency)this.transparency.Clone(),
-                LineTypeScale = this.lineTypeScale,
-                Normal = this.normal,
+                Layer = (Layer) this.Layer.Clone(),
+                Linetype = (Linetype) this.Linetype.Clone(),
+                Color = (AciColor) this.Color.Clone(),
+                Lineweight = this.Lineweight,
+                Transparency = (Transparency) this.Transparency.Clone(),
+                LinetypeScale = this.LinetypeScale,
+                Normal = this.Normal,
+                IsVisible = this.IsVisible,
                 //MLine properties
                 Elevation = this.elevation,
                 Scale = this.scale,
@@ -383,13 +415,12 @@ namespace netDxf.Entities
             };
 
             foreach (MLineVertex vertex in this.vertexes)
-                entity.vertexes.Add((MLineVertex)vertex.Clone());
+                entity.vertexes.Add((MLineVertex) vertex.Clone());
 
             foreach (XData data in this.XData.Values)
-                entity.XData.Add((XData)data.Clone());
+                entity.XData.Add((XData) data.Clone());
 
             return entity;
-
         }
 
         #endregion

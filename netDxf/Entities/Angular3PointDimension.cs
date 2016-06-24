@@ -1,22 +1,23 @@
-﻿#region netDxf, Copyright(C) 2016 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf library, Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+
+//                        netDxf library
+// Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
 // 
-//                         netDxf library
-//  Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
-//  
-//  This library is free software; you can redistribute it and/or
-//  modify it under the terms of the GNU Lesser General Public
-//  License as published by the Free Software Foundation; either
-//  version 2.1 of the License, or (at your option) any later version.
-//  
-//  The above copyright notice and this permission notice shall be included in all
-//  copies or substantial portions of the Software.
-//  
-//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-//  FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-//  COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-//  IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-//  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2.1 of the License, or (at your option) any later version.
+// 
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+// FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+// COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+// IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+// CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
 #endregion
 
 using System;
@@ -69,21 +70,23 @@ namespace netDxf.Entities
         public Angular3PointDimension(Arc arc, double offset, DimensionStyle style)
             : base(DimensionType.Angular3Point)
         {
+            if (arc == null)
+                throw new ArgumentNullException(nameof(arc));
+
             Vector3 refPoint = MathHelper.Transform(arc.Center, arc.Normal, CoordinateSystem.World, CoordinateSystem.Object);
             this.center = new Vector2(refPoint.X, refPoint.Y);
-            this.start = Vector2.Polar(this.center, arc.Radius, arc.StartAngle * MathHelper.DegToRad);
-            this.end = Vector2.Polar(this.center, arc.Radius, arc.EndAngle * MathHelper.DegToRad);
-            this.elevation = refPoint.Z;
+            this.start = Vector2.Polar(this.center, arc.Radius, arc.StartAngle*MathHelper.DegToRad);
+            this.end = Vector2.Polar(this.center, arc.Radius, arc.EndAngle*MathHelper.DegToRad);
 
             if (MathHelper.IsZero(offset))
                 throw new ArgumentOutOfRangeException(nameof(offset), "The offset value cannot be zero.");
             this.offset = offset;
 
             if (style == null)
-                throw new ArgumentNullException(nameof(style), "The Dimension style cannot be null.");
-            this.style = style;
-
-            this.normal = arc.Normal;
+                throw new ArgumentNullException(nameof(style));
+            this.Style = style;
+            this.Normal = arc.Normal;
+            this.Elevation = refPoint.Z;
         }
 
         /// <summary>
@@ -116,9 +119,10 @@ namespace netDxf.Entities
                 throw new ArgumentOutOfRangeException(nameof(offset), "The offset value cannot be zero.");
             this.offset = offset;
             if (style == null)
-                throw new ArgumentNullException(nameof(style), "The Dimension style cannot be null.");
-            this.style = style;
+                throw new ArgumentNullException(nameof(style));
+            this.Style = style;
         }
+
         #endregion
 
         #region public properties
@@ -186,7 +190,7 @@ namespace netDxf.Entities
                     ref2 = tmp;
                 }
 
-                double angle = (Vector2.Angle(this.center, ref2) - Vector2.Angle(this.center, ref1)) * MathHelper.RadToDeg;
+                double angle = (Vector2.Angle(this.center, ref2) - Vector2.Angle(this.center, ref1))*MathHelper.RadToDeg;
                 return MathHelper.NormalizeAngle(angle);
             }
         }
@@ -201,9 +205,9 @@ namespace netDxf.Entities
         /// <param name="point">Point along the dimension line.</param>
         public void SetDimensionLinePosition(Vector2 point)
         {
-            double aperture = (Vector2.Angle(this.center, this.end) - Vector2.Angle(this.center, this.start)) * MathHelper.RadToDeg;
+            double aperture = (Vector2.Angle(this.center, this.end) - Vector2.Angle(this.center, this.start))*MathHelper.RadToDeg;
             aperture = MathHelper.NormalizeAngle(aperture);
-            double angle = (Vector2.Angle(this.center, this.end) - Vector2.Angle(this.center, point)) * MathHelper.RadToDeg;
+            double angle = (Vector2.Angle(this.center, this.end) - Vector2.Angle(this.center, point))*MathHelper.RadToDeg;
             angle = MathHelper.NormalizeAngle(angle);
             this.offset = Vector2.Distance(this.center, point);
             if (angle > aperture)
@@ -233,31 +237,31 @@ namespace netDxf.Entities
             Angular3PointDimension entity = new Angular3PointDimension
             {
                 //EntityObject properties
-                Layer = (Layer)this.layer.Clone(),
-                LineType = (LineType)this.lineType.Clone(),
-                Color = (AciColor)this.color.Clone(),
-                Lineweight = (Lineweight)this.lineweight.Clone(),
-                Transparency = (Transparency)this.transparency.Clone(),
-                LineTypeScale = this.lineTypeScale,
-                Normal = this.normal,
+                Layer = (Layer) this.Layer.Clone(),
+                Linetype = (Linetype) this.Linetype.Clone(),
+                Color = (AciColor) this.Color.Clone(),
+                Lineweight = this.Lineweight,
+                Transparency = (Transparency) this.Transparency.Clone(),
+                LinetypeScale = this.LinetypeScale,
+                Normal = this.Normal,
+                IsVisible = this.IsVisible,
                 //Dimension properties
-                Style = (DimensionStyle)this.style.Clone(),
-                AttachmentPoint = this.attachmentPoint,
-                LineSpacingStyle = this.lineSpacingStyle,
-                LineSpacingFactor = this.lineSpacing,
+                Style = (DimensionStyle) this.Style.Clone(),
+                AttachmentPoint = this.AttachmentPoint,
+                LineSpacingStyle = this.LineSpacingStyle,
+                LineSpacingFactor = this.LineSpacingFactor,
                 //Angular3PointDimension properties
                 CenterPoint = this.center,
                 StartPoint = this.start,
                 EndPoint = this.end,
                 Offset = this.offset,
-                Elevation = this.elevation
+                Elevation = this.Elevation
             };
 
             foreach (XData data in this.XData.Values)
-                entity.XData.Add((XData)data.Clone());
+                entity.XData.Add((XData) data.Clone());
 
             return entity;
-
         }
 
         #endregion

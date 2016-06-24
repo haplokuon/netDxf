@@ -1,22 +1,23 @@
-#region netDxf, Copyright(C) 2016 Daniel Carvajal, Licensed under LGPL.
+#region netDxf library, Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+
+//                        netDxf library
+// Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
 // 
-//                         netDxf library
-//  Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
-//  
-//  This library is free software; you can redistribute it and/or
-//  modify it under the terms of the GNU Lesser General Public
-//  License as published by the Free Software Foundation; either
-//  version 2.1 of the License, or (at your option) any later version.
-//  
-//  The above copyright notice and this permission notice shall be included in all
-//  copies or substantial portions of the Software.
-//  
-//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-//  FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-//  COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-//  IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-//  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2.1 of the License, or (at your option) any later version.
+// 
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+// FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+// COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+// IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+// CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
 #endregion
 
 using System;
@@ -37,18 +38,18 @@ namespace netDxf.Collections
         #region constructor
 
         internal Groups(DxfDocument document, string handle = null)
-            : this(document,0,handle)
+            : this(document, 0, handle)
         {
         }
 
         internal Groups(DxfDocument document, int capacity, string handle = null)
             : base(document,
-            new Dictionary<string, Group>(capacity, StringComparer.OrdinalIgnoreCase),
-            new Dictionary<string, List<DxfObject>>(capacity, StringComparer.OrdinalIgnoreCase),
-            DxfObjectCode.GroupDictionary,
-            handle)
+                new Dictionary<string, Group>(capacity, StringComparer.OrdinalIgnoreCase),
+                new Dictionary<string, List<DxfObject>>(capacity, StringComparer.OrdinalIgnoreCase),
+                DxfObjectCode.GroupDictionary,
+                handle)
         {
-            this.maxCapacity = int.MaxValue;
+            this.MaxCapacity = int.MaxValue;
         }
 
         #endregion
@@ -67,21 +68,23 @@ namespace netDxf.Collections
         /// </returns>
         internal override Group Add(Group group, bool assignHandle)
         {
-            if (this.list.Count >= this.maxCapacity)
-                throw new OverflowException(string.Format("Table overflow. The maximum number of elements the table {0} can have is {1}", this.codeName, this.maxCapacity));
+            if (this.list.Count >= this.MaxCapacity)
+                throw new OverflowException(string.Format("Table overflow. The maximum number of elements the table {0} can have is {1}", this.CodeName, this.MaxCapacity));
+            if (group == null)
+                throw new ArgumentNullException(nameof(group));
 
             // if no name has been given to the group a generic name will be created
             if (group.IsUnnamed && string.IsNullOrEmpty(group.Name))
-                group.SetUnNammed("*A" + ++this.document.GroupNamesGenerated);
+                group.SetName("*A" + ++this.Owner.GroupNamesGenerated, false);
 
             Group add;
             if (this.list.TryGetValue(group.Name, out add))
                 return add;
 
             if (assignHandle || string.IsNullOrEmpty(group.Handle))
-                this.document.NumHandles = group.AsignHandle(this.document.NumHandles);
+                this.Owner.NumHandles = group.AsignHandle(this.Owner.NumHandles);
 
-            this.document.AddedObjects.Add(group.Handle, group);
+            this.Owner.AddedObjects.Add(group.Handle, group);
             this.list.Add(group.Name, group);
             this.references.Add(group.Name, new List<DxfObject>());
             foreach (EntityObject entity in group.Entities)
@@ -89,13 +92,13 @@ namespace netDxf.Collections
                 if (entity.Owner != null)
                 {
                     // the group and its entities must belong to the same document
-                    if (!ReferenceEquals(entity.Owner.Owner.Owner.Owner, this.owner))
+                    if (!ReferenceEquals(entity.Owner.Owner.Owner.Owner, this.Owner))
                         throw new ArgumentException("The group and their entities must belong to the same document. Clone them instead.");
                 }
                 else
                 {
                     // only entities not owned by anyone need to be added
-                    this.document.AddEntity(entity);
+                    this.Owner.AddEntity(entity);
                 }
                 this.references[group.Name].Add(entity);
             }
@@ -123,35 +126,35 @@ namespace netDxf.Collections
         /// <summary>
         /// Deletes a group.
         /// </summary>
-        /// <param name="group"><see cref="Group">Group</see> to remove from the document.</param>
+        /// <param name="item"><see cref="Group">Group</see> to remove from the document.</param>
         /// <returns>True if the group has been successfully removed, or false otherwise.</returns>
         /// <remarks>Removing a group only deletes it from the collection, the entities that once belonged to the group are not deleted.</remarks>
-        public override bool Remove(Group group)
+        public override bool Remove(Group item)
         {
-            if (group == null)
+            if (item == null)
                 return false;
 
-            if (!this.Contains(group))
+            if (!this.Contains(item))
                 return false;
 
-            if (group.IsReserved)
+            if (item.IsReserved)
                 return false;
 
-            foreach (EntityObject entity in group.Entities)
+            foreach (EntityObject entity in item.Entities)
             {
-                entity.RemoveReactor(group);
+                entity.RemoveReactor(item);
             }
 
-            this.document.AddedObjects.Remove(group.Handle);
-            this.references.Remove(group.Name);
-            this.list.Remove(group.Name);
+            this.Owner.AddedObjects.Remove(item.Handle);
+            this.references.Remove(item.Name);
+            this.list.Remove(item.Name);
 
-            group.Handle = null;
-            group.Owner = null;
+            item.Handle = null;
+            item.Owner = null;
 
-            group.NameChanged -= this.Item_NameChanged;
-            group.EntityAdded -= this.Group_EntityAdded;
-            group.EntityRemoved -= this.Group_EntityRemoved;
+            item.NameChanged -= this.Item_NameChanged;
+            item.EntityAdded -= this.Group_EntityAdded;
+            item.EntityRemoved -= this.Group_EntityRemoved;
 
             return true;
         }
@@ -166,7 +169,7 @@ namespace netDxf.Collections
                 throw new ArgumentException("There is already another dimension style with the same name.");
 
             this.list.Remove(sender.Name);
-            this.list.Add(e.NewValue, (Group)sender);
+            this.list.Add(e.NewValue, (Group) sender);
 
             List<DxfObject> refs = this.references[sender.Name];
             this.references.Remove(sender.Name);
@@ -178,13 +181,13 @@ namespace netDxf.Collections
             if (e.Item.Owner != null)
             {
                 // the group and its entities must belong to the same document
-                if (!ReferenceEquals(e.Item.Owner.Owner.Owner.Owner, this.owner))
+                if (!ReferenceEquals(e.Item.Owner.Owner.Owner.Owner, this.Owner))
                     throw new ArgumentException("The group and the entity must belong to the same document. Clone it instead.");
             }
             else
             {
                 // only entities not owned by anyone will be added
-                this.document.AddEntity(e.Item);
+                this.Owner.AddEntity(e.Item);
             }
 
             this.references[sender.Name].Add(e.Item);

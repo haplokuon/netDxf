@@ -10,7 +10,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>netDxf</RootNamespace>
     <AssemblyName>netDxf</AssemblyName>
-    <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <FileUpgradeFlags>
     </FileUpgradeFlags>
@@ -39,6 +39,7 @@
     <IsWebBootstrapper>false</IsWebBootstrapper>
     <UseApplicationTrust>false</UseApplicationTrust>
     <BootstrapperEnabled>true</BootstrapperEnabled>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -49,8 +50,10 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>3</WarningLevel>
     <DocumentationFile>bin\Debug\netDxf.xml</DocumentationFile>
-    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisRuleSet>BasicDesignGuidelineRules.ruleset</CodeAnalysisRuleSet>
     <PlatformTarget>AnyCPU</PlatformTarget>
+    <Prefer32Bit>false</Prefer32Bit>
+    <RunCodeAnalysis>false</RunCodeAnalysis>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>none</DebugType>
@@ -61,13 +64,32 @@
     <WarningLevel>4</WarningLevel>
     <DebugSymbols>false</DebugSymbols>
     <DocumentationFile>bin\Release\netDxf.xml</DocumentationFile>
-    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisRuleSet>
+    </CodeAnalysisRuleSet>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup>
+    <StartupObject />
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="PresentationCore" />
     <Reference Include="System" />
     <Reference Include="System.Drawing" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Collections\DimensionStyleOverrideDictionaryEventArgs.cs" />
+    <Compile Include="Collections\DimensionStyleOverrideDictionary.cs" />
+    <Compile Include="Collections\ObservableCollection.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Collections\ObservableCollectionEventArgs.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Collections\ObservableDictionary.cs" />
+    <Compile Include="Collections\ObservableDictionaryEventArgs.cs" />
+    <Compile Include="Tables\DimensionStyleOverride.cs" />
+    <Compile Include="Tables\DimensionStyleOverrideChangeEventArgs.cs" />
+    <Compile Include="Tables\DimensionStyleOverrideType.cs" />
     <Compile Include="Units\AngleDirection.cs" />
     <Compile Include="Collections\AttributeCollection.cs" />
     <Compile Include="Collections\UnderlayDgnDefinitions.cs" />
@@ -112,16 +134,8 @@
     <Compile Include="Collections\AttributeDefinitionDictionaryEventArgs.cs" />
     <Compile Include="Collections\EntityCollection.cs" />
     <Compile Include="Collections\EntityCollectionEventArgs.cs" />
-    <Compile Include="Collections\ObservableCollection.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Collections\ObservableCollectionEventArgs.cs">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="Collections\XDataDictionary.cs" />
     <Compile Include="Collections\Layouts.cs" />
-    <Compile Include="Collections\ObservableDictionary.cs" />
-    <Compile Include="Collections\ObservableDictionaryEventArgs.cs" />
     <Compile Include="Collections\Views.cs" />
     <Compile Include="Collections\VPorts.cs" />
     <Compile Include="Entities\DimensionArrowhead.cs" />
@@ -153,7 +167,7 @@
     <Compile Include="Collections\DimensionStyles.cs" />
     <Compile Include="Collections\ImageDefinitions.cs" />
     <Compile Include="Collections\Layers.cs" />
-    <Compile Include="Collections\LineTypes.cs" />
+    <Compile Include="Collections\Linetypes.cs" />
     <Compile Include="Collections\MLineStyles.cs" />
     <Compile Include="Collections\TableObjects.cs" />
     <Compile Include="Collections\TextStyles.cs" />
@@ -252,7 +266,6 @@
     <Compile Include="Tables\VPort.cs" />
     <Compile Include="Entities\TextAligment.cs" />
     <Compile Include="DxfDocument.cs" />
-    <Compile Include="IO\DxfException.cs" />
     <Compile Include="Entities\Arc.cs" />
     <Compile Include="Entities\Attribute.cs">
       <SubType>Code</SubType>
@@ -275,7 +288,7 @@
     <Compile Include="Tables\TableObject.cs" />
     <Compile Include="Tables\Layer.cs" />
     <Compile Include="MathHelper.cs" />
-    <Compile Include="Tables\LineType.cs" />
+    <Compile Include="Tables\Linetype.cs" />
     <Compile Include="Tables\TextStyle.cs" />
     <Compile Include="XData.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

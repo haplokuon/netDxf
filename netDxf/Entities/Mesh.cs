@@ -1,27 +1,27 @@
-﻿#region netDxf, Copyright(C) 2015 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf library, Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+
+//                        netDxf library
+// Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
 // 
-//                         netDxf library
-//  Copyright (C) 2009-2015 Daniel Carvajal (haplokuon@gmail.com)
-//  
-//  This library is free software; you can redistribute it and/or
-//  modify it under the terms of the GNU Lesser General Public
-//  License as published by the Free Software Foundation; either
-//  version 2.1 of the License, or (at your option) any later version.
-//  
-//  The above copyright notice and this permission notice shall be included in all
-//  copies or substantial portions of the Software.
-//  
-//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-//  FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-//  COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-//  IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-//  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2.1 of the License, or (at your option) any later version.
+// 
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+// FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+// COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+// IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+// CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
 #endregion
 
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using netDxf.Tables;
 
 namespace netDxf.Entities
@@ -39,9 +39,9 @@ namespace netDxf.Entities
         #region private fields
 
         private const int MaxFaces = 16000000;
-        private readonly List<Vector3> vertexes;
-        private readonly List<int[]> faces;
-        private readonly List<MeshEdge> edges;
+        private readonly IReadOnlyList<Vector3> vertexes;
+        private readonly IReadOnlyList<int[]> faces;
+        private readonly IReadOnlyList<MeshEdge> edges;
         private byte subdivisionLevel;
 
         #endregion
@@ -53,19 +53,29 @@ namespace netDxf.Entities
         /// </summary>
         /// <param name="vertexes">Mesh vertex list.</param>
         /// <param name="faces">Mesh faces list.</param>
-        /// <param name="edges">Mesh edges list, this parameter is optional and only really useful when it is required to assign creases values to edges.</param>
-        public Mesh(List<Vector3> vertexes, List<int[]> faces, List<MeshEdge> edges = null)
+        public Mesh(IEnumerable<Vector3> vertexes, IEnumerable<int[]> faces)
+            : this(vertexes, faces, null)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <c>Mesh</c> class.
+        /// </summary>
+        /// <param name="vertexes">Mesh vertex list.</param>
+        /// <param name="faces">Mesh faces list.</param>
+        /// <param name="edges">Mesh edges list, this parameter is only really useful when it is required to assign creases values to edges.</param>
+        public Mesh(IEnumerable<Vector3> vertexes, IEnumerable<int[]> faces, IEnumerable<MeshEdge> edges)
             : base(EntityType.Mesh, DxfObjectCode.Mesh)
         {
             if (vertexes == null)
-                throw new ArgumentNullException(nameof(vertexes), "The Mesh vertexes list cannot be null.");
-            this.vertexes = vertexes;
+                throw new ArgumentNullException(nameof(vertexes));
+            this.vertexes = new List<Vector3>(vertexes);
             if (faces == null)
-                throw new ArgumentNullException(nameof(faces), "The Mesh faces list cannot be null.");
-            if (faces.Count > MaxFaces)
-                throw new ArgumentOutOfRangeException(nameof(faces), faces.Count, string.Format("The maximum number of faces in a mesh is {0}", MaxFaces));
-            this.faces = faces;
-            this.edges = edges;
+                throw new ArgumentNullException(nameof(faces));
+            this.faces = new List<int[]>(faces);
+            if (this.faces.Count > MaxFaces)
+                throw new ArgumentOutOfRangeException(nameof(faces), this.faces.Count, string.Format("The maximum number of faces in a mesh is {0}", MaxFaces));
+            this.edges = edges == null ? new List<MeshEdge>() : new List<MeshEdge>(edges);
             this.subdivisionLevel = 0;
         }
 
@@ -76,25 +86,25 @@ namespace netDxf.Entities
         /// <summary>
         /// Gets the mesh vertexes list.
         /// </summary>
-        public ReadOnlyCollection<Vector3> Vertexes
+        public IReadOnlyList<Vector3> Vertexes
         {
-            get { return this.vertexes.AsReadOnly(); }
+            get { return this.vertexes; }
         }
 
         /// <summary>
         /// Gets the mesh faces list.
         /// </summary>
-        public ReadOnlyCollection<int[]> Faces
+        public IReadOnlyList<int[]> Faces
         {
-            get { return this.faces.AsReadOnly(); }
+            get { return this.faces; }
         }
 
         /// <summary>
         /// Gets the mesh edges list.
         /// </summary>
-        public ReadOnlyCollection<MeshEdge> Edges
+        public IReadOnlyList<MeshEdge> Edges
         {
-            get { return this.edges == null ? null : this.edges.AsReadOnly(); }
+            get { return this.edges; }
         }
 
         /// <summary>
@@ -123,7 +133,7 @@ namespace netDxf.Entities
             List<int[]> copyFaces = new List<int[]>(this.faces.Count);
             List<MeshEdge> copyEdges = null;
 
-            copyVertexes.AddRange(this.vertexes.ToArray());
+            copyVertexes.AddRange(this.vertexes);
             foreach (int[] face in this.faces)
             {
                 int[] copyFace = new int[face.Length];
@@ -142,22 +152,22 @@ namespace netDxf.Entities
             Mesh entity = new Mesh(copyVertexes, copyFaces, copyEdges)
             {
                 //EntityObject properties
-                Layer = (Layer)this.layer.Clone(),
-                LineType = (LineType)this.lineType.Clone(),
-                Color = (AciColor)this.color.Clone(),
-                Lineweight = (Lineweight)this.lineweight.Clone(),
-                Transparency = (Transparency)this.transparency.Clone(),
-                LineTypeScale = this.lineTypeScale,
-                Normal = this.normal,
+                Layer = (Layer) this.Layer.Clone(),
+                Linetype = (Linetype) this.Linetype.Clone(),
+                Color = (AciColor) this.Color.Clone(),
+                Lineweight = this.Lineweight,
+                Transparency = (Transparency) this.Transparency.Clone(),
+                LinetypeScale = this.LinetypeScale,
+                Normal = this.Normal,
+                IsVisible = this.IsVisible,
                 //Mesh properties
                 SubdivisionLevel = this.subdivisionLevel
             };
 
             foreach (XData data in this.XData.Values)
-                entity.XData.Add((XData)data.Clone());
+                entity.XData.Add((XData) data.Clone());
 
             return entity;
-
         }
 
         #endregion

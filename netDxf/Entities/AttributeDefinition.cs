@@ -1,22 +1,23 @@
-#region netDxf, Copyright(C) 2016 Daniel Carvajal, Licensed under LGPL.
+#region netDxf library, Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+
+//                        netDxf library
+// Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
 // 
-//                         netDxf library
-//  Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
-//  
-//  This library is free software; you can redistribute it and/or
-//  modify it under the terms of the GNU Lesser General Public
-//  License as published by the Free Software Foundation; either
-//  version 2.1 of the License, or (at your option) any later version.
-//  
-//  The above copyright notice and this permission notice shall be included in all
-//  copies or substantial portions of the Software.
-//  
-//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-//  FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-//  COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-//  IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-//  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2.1 of the License, or (at your option) any later version.
+// 
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+// FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+// COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+// IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+// CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
 #endregion
 
 using System;
@@ -25,7 +26,7 @@ using netDxf.Tables;
 namespace netDxf.Entities
 {
     /// <summary>
-    /// Represents a attribute definition <see cref="EntityObject">entity</see>.
+    /// Represents an attribute definition <see cref="EntityObject">entity</see>.
     /// </summary>
     /// <remarks>
     /// AutoCad allows to have duplicate tags in the attribute definitions list, but this library does not.
@@ -37,7 +38,9 @@ namespace netDxf.Entities
         #region delegates and events
 
         public delegate void TextStyleChangedEventHandler(AttributeDefinition sender, TableObjectChangedEventArgs<TextStyle> e);
+
         public event TextStyleChangedEventHandler TextStyleChange;
+
         protected virtual TextStyle OnTextStyleChangedEvent(TextStyle oldTextStyle, TextStyle newTextStyle)
         {
             TextStyleChangedEventHandler ae = this.TextStyleChange;
@@ -45,7 +48,7 @@ namespace netDxf.Entities
             {
                 TableObjectChangedEventArgs<TextStyle> eventArgs = new TableObjectChangedEventArgs<TextStyle>(oldTextStyle, newTextStyle);
                 ae(this, eventArgs);
-                 return eventArgs.NewValue;
+                return eventArgs.NewValue;
             }
             return newTextStyle;
         }
@@ -82,11 +85,27 @@ namespace netDxf.Entities
         /// <summary>
         /// Initializes a new instance of the <c>AttributeDefiniton</c> class.
         /// </summary>
-        /// <param name="tag">Attribute identifier, the parameter <c>id</c> string cannot contain spaces.</param>
+        /// <param name="tag">Attribute identifier.</param>
         /// <param name="style">Attribute <see cref="TextStyle">text style</see>.</param>
         public AttributeDefinition(string tag, TextStyle style)
-            : this(tag, MathHelper.IsZero(style.Height) ? 1.0 : style.Height, style)
+            : base(EntityType.AttributeDefinition, DxfObjectCode.AttributeDefinition)
         {
+            if (string.IsNullOrEmpty(tag))
+                throw new ArgumentNullException(nameof(tag));
+
+            this.tag = tag;
+            this.flags = AttributeFlags.Visible;
+            this.prompt = string.Empty;
+            this.value = null;
+            this.position = Vector3.Zero;
+            if (style == null)
+                throw new ArgumentNullException(nameof(style));
+            this.style = style;
+            this.height = MathHelper.IsZero(style.Height) ? 1.0 : style.Height;
+            this.widthFactor = style.WidthFactor;
+            this.obliqueAngle = style.ObliqueAngle;
+            this.rotation = 0.0;
+            this.alignment = TextAlignment.BaselineLeft;
         }
 
         /// <summary>
@@ -98,6 +117,9 @@ namespace netDxf.Entities
         public AttributeDefinition(string tag, double textHeight, TextStyle style)
             : base(EntityType.AttributeDefinition, DxfObjectCode.AttributeDefinition)
         {
+            if (string.IsNullOrEmpty(tag))
+                throw new ArgumentNullException(nameof(tag));
+
             if (tag.Contains(" "))
                 throw new ArgumentException("The tag string cannot contain spaces.", nameof(tag));
             this.tag = tag;
@@ -106,9 +128,9 @@ namespace netDxf.Entities
             this.value = null;
             this.position = Vector3.Zero;
             if (style == null)
-                throw new ArgumentNullException(nameof(style), "The attribute definition text style cannot be null.");
+                throw new ArgumentNullException(nameof(style));
             this.style = style;
-            if (textHeight <= 0)
+            if (textHeight <= 0.0)
                 throw new ArgumentOutOfRangeException(nameof(textHeight), this.value, "The attribute definition text height must be greater than zero.");
             this.height = textHeight;
             this.widthFactor = style.WidthFactor;
@@ -257,13 +279,14 @@ namespace netDxf.Entities
             AttributeDefinition entity = new AttributeDefinition(this.tag)
             {
                 //EntityObject properties
-                Layer = (Layer)this.layer.Clone(),
-                LineType = (LineType)this.lineType.Clone(),
-                Color = (AciColor)this.color.Clone(),
-                Lineweight = (Lineweight)this.lineweight.Clone(),
-                Transparency = (Transparency)this.transparency.Clone(),
-                LineTypeScale = this.lineTypeScale,
-                Normal = this.normal,
+                Layer = (Layer) this.Layer.Clone(),
+                Linetype = (Linetype) this.Linetype.Clone(),
+                Color = (AciColor) this.Color.Clone(),
+                Lineweight = this.Lineweight,
+                Transparency = (Transparency) this.Transparency.Clone(),
+                LinetypeScale = this.LinetypeScale,
+                Normal = this.Normal,
+                IsVisible = this.IsVisible,
                 //Attribute definition properties
                 Prompt = this.prompt,
                 Value = this.value,
@@ -277,11 +300,10 @@ namespace netDxf.Entities
                 Alignment = this.alignment
             };
 
-            foreach (XData data in this.xData.Values)
-                entity.XData.Add((XData)data.Clone());
+            foreach (XData data in this.XData.Values)
+                entity.XData.Add((XData) data.Clone());
 
             return entity;
-
         }
 
         #endregion

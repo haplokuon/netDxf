@@ -1,217 +1,166 @@
-﻿#region netDxf, Copyright(C) 2015 Daniel Carvajal, Licensed under LGPL.
-// 
-//                         netDxf library
-//  Copyright (C) 2009-2015 Daniel Carvajal (haplokuon@gmail.com)
-//  
-//  This library is free software; you can redistribute it and/or
-//  modify it under the terms of the GNU Lesser General Public
-//  License as published by the Free Software Foundation; either
-//  version 2.1 of the License, or (at your option) any later version.
-//  
-//  The above copyright notice and this permission notice shall be included in all
-//  copies or substantial portions of the Software.
-//  
-//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-//  FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-//  COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-//  IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-//  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-#endregion
+﻿#region netDxf library, Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
 
-using System;
-using System.Globalization;
+//                        netDxf library
+// Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+// 
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2.1 of the License, or (at your option) any later version.
+// 
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+// FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+// COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+// IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+// CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+#endregion
 
 namespace netDxf
 {
     /// <summary>
     /// Represents the line weight of a layer or an entity.
     /// </summary>
-    public class Lineweight :
-        ICloneable,
-        IEquatable<Lineweight>
+    /// <remarks>The enum numeric value correspond to 1/100 mm.</remarks>
+    public enum Lineweight
     {
-        #region private fields
-
-        private short value;
-
-        #endregion
-
-        #region constants
+        /// <summary>
+        /// Default lineweight.
+        /// </summary>
+        Default = -3,
 
         /// <summary>
-        /// Gets the ByLayer line weight.
+        /// Lineweight defined by block.
         /// </summary>
-        public static Lineweight ByLayer
-        {
-            get { return new Lineweight { value = -1 }; }
-        }
+        ByBlock = -2,
 
         /// <summary>
-        /// Gets the ByBlock line weight.
+        /// Lineweight defined by layer.
         /// </summary>
-        public static Lineweight ByBlock
-        {
-            get { return new Lineweight { value = -2 }; }
-        }
+        ByLayer = -1,
 
         /// <summary>
-        /// Gets the Default line weight.
+        /// Lineweight value 0.00 mm (hairline).
         /// </summary>
-        public static Lineweight Default
-        {
-            get { return new Lineweight { value = -3 }; }
-        }
-
-        #endregion
-
-        #region constructors
+        W0 = 0,
 
         /// <summary>
-        /// Initializes a new instance of the <c>Lineweight</c> class.
+        /// Lineweight value 0.05 mm.
         /// </summary>
-        public Lineweight()
-        {
-            this.value = -1;
-        }
+        W5 = 5,
 
         /// <summary>
-        /// Initializes a new instance of the <c>Lineweight</c> class.
+        /// Lineweight value 0.09 mm.
         /// </summary>
-        /// <param name="weight">Line weight value range from 0 to 200.</param>
-        /// <remarks>
-        /// Accepted line weight values range from 0 to 200, the reserved values - 1, -2, and -3 represents ByLayer, ByBlock, and Default line weights.
-        /// </remarks>
-        public Lineweight(short weight)
-        {
-            if (weight < 0 || weight > 200)
-                throw new ArgumentOutOfRangeException(nameof(weight), weight, "Accepted line weight values range from 0 to 200.");
-            this.value = weight;
-        }
-
-        #endregion
-
-        #region public properties
+        W9 = 9,
 
         /// <summary>
-        /// Defines if the line weight is defined by layer.
+        /// Lineweight value 0.13 mm.
         /// </summary>
-        public bool IsByLayer
-        {
-            get { return this.value == -1; }
-        }
+        W13 = 13,
 
         /// <summary>
-        /// Defines if the line weight is defined by block.
+        /// Lineweight value 0.15 mm.
         /// </summary>
-        public bool IsByBlock
-        {
-            get { return this.value == -2; }
-        }
+        W15 = 15,
 
         /// <summary>
-        /// Defines if the line weight is default.
+        /// Lineweight value 0.18 mm.
         /// </summary>
-        public bool IsDefault
-        {
-            get { return this.value == -3; }
-        }
+        W18 = 18,
 
         /// <summary>
-        /// Gets or sets the line weight value range from 0 to 200, one unit is always 1/100 mm.
+        /// Lineweight value 0.20 mm.
         /// </summary>
-        /// <remarks>
-        /// Accepted line weight values range from 0 to 200, the reserved values - 1, -2, and -3 represents ByLayer, ByBlock, and Default line weights.
-        /// </remarks>
-        public short Value
-        {
-            get { return this.value; }
-            set
-            {
-                if (value < 0 || value > 200)
-                    throw new ArgumentOutOfRangeException(nameof(value), value, "Accepted line weight values range from 0 to 200.");
-                this.value = value;
-            }
-        }
-
-        #endregion
-
-        #region public methods
+        W20 = 20,
 
         /// <summary>
-        /// Gets a <see cref="Lineweight">line weight</see> from an index.
+        /// Lineweight value 0.25 mm.
         /// </summary>
-        /// <param name="index">A AciColor index.</param>
-        /// <returns>A <see cref="Lineweight">Line weight</see>.</returns>
-        public static Lineweight FromCadIndex(short index)
-        {
-            Lineweight lineweight;
-            switch (index)
-            {
-                case -3:
-                    lineweight = Default;
-                    break;
-                case -2:
-                    lineweight = ByBlock;
-                    break;
-                case -1:
-                    lineweight = ByLayer;
-                    break;
-                default:
-                    lineweight = new Lineweight(index);
-                    break;
-            }
-
-            return lineweight;
-        }
-
-        #endregion
-
-        #region implements ICloneable
+        W25 = 25,
 
         /// <summary>
-        /// Creates a new line weight that is a copy of the current instance.
+        /// Lineweight value 0.30 mm.
         /// </summary>
-        /// <returns>A new line weight that is a copy of this instance.</returns>
-        public object Clone()
-        {
-            return new Lineweight { value = this.value };
-        }
-
-        #endregion
-
-        #region implements IEquatable
+        W30 = 30,
 
         /// <summary>
-        /// Check if the components of two line weights are equal.
+        /// Lineweight value 0.35 mm.
         /// </summary>
-        /// <param name="obj">Another line weight to compare to.</param>
-        /// <returns>True if their weights are equal or false in any other case.</returns>
-        public bool Equals(Lineweight obj)
-        {
-            return obj.value == this.value;
-        }
-
-        #endregion
-
-        #region overrides
+        W35 = 35,
 
         /// <summary>
-        /// Converts the value of this instance to its equivalent string representation.
+        /// Lineweight value 0.40 mm.
         /// </summary>
-        /// <returns>The string representation.</returns>
-        public override string ToString()
-        {
-            if (this.value == -3)
-                return "Default";
-            if (this.value == -2)
-                return "ByBlock";
-            if (this.value == -1)
-                return "ByLayer";
+        W40 = 40,
 
-            return this.value.ToString(CultureInfo.CurrentCulture);
-        }
+        /// <summary>
+        /// Lineweight value 0.50 mm.
+        /// </summary>
+        W50 = 50,
 
-        #endregion
+        /// <summary>
+        /// Lineweight value 0.53 mm.
+        /// </summary>
+        W53 = 53,
+
+        /// <summary>
+        /// Lineweight value 0.60 mm.
+        /// </summary>
+        W60 = 60,
+
+        /// <summary>
+        /// Lineweight value 0.70 mm.
+        /// </summary>
+        W70 = 70,
+
+        /// <summary>
+        /// Lineweight value 0.80 mm.
+        /// </summary>
+        W80 = 80,
+
+        /// <summary>
+        /// Lineweight value 0.90 mm.
+        /// </summary>
+        W90 = 90,
+
+        /// <summary>
+        /// Lineweight value 1.00 mm.
+        /// </summary>
+        W100 = 100,
+
+        /// <summary>
+        /// Lineweight value 1.06 mm.
+        /// </summary>
+        W106 = 106,
+
+        /// <summary>
+        /// Lineweight value 1.20 mm.
+        /// </summary>
+        W120 = 120,
+
+        /// <summary>
+        /// Lineweight value 1.40 mm.
+        /// </summary>
+        W140 = 140,
+
+        /// <summary>
+        /// Lineweight value 1.58 mm.
+        /// </summary>
+        W158 = 158,
+
+        /// <summary>
+        /// Lineweight value 2.00 mm.
+        /// </summary>
+        W200 = 200,
+
+        /// <summary>
+        /// Lineweight value 2.11 mm.
+        /// </summary>
+        W211 = 211
     }
 }

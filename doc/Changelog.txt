@@ -1,3 +1,46 @@
+[2.0 - 2016/6/24]
++ Updated target framework to .NET Framework 4.5.
++ The library is CLS-compliant.
++ Added dimension style overrides for dimensions and leaders. See DimensionStyleOverrides() sample.
++ The constant MathHelper.Epsilon that is used across the netDxf library is now a static writable value. By default is set to 1e-12.
++ Revised the TextStyle class. Added to new readonly properties FontFamilyName and GliphTypeface, only applicable to true type fonts.
++ The XDataRecord struct is now a class.
++ The XDataRecord constructor will check the passed arguments to ensure that they are a valid combination.
++ The XDataRecord properties Code and Value are now readonly.
++ The XDataCode class is now an enum.
++ The Lineweight class is now an enum. The only accepted lineweight values are 0, 5, 9, 13, 15, 18, 20, 25, 30, 35, 40, 50, 53, 60, 70, 80, 90, 100, 106, 120, 140, 158, 200, and 211; plus the reserved ones Default, ByLayer, and ByBlock; that correspond to the enum numeric value.
++ Deleted the DimensionStyle properties DIMBLK and DIMSAH, they will be handle automatically when both of the dimension line arrows are the same.
++ The DimensionStyle property DIMPOST separated in two strings DimPrefix and DimSuffix.
++ Renamed the DimensionStyle properties to better describe their purposes. They now follow the naming that appear in AutoCad in the properties window when selecting a dimension entity.
++ Renamed LineType class to Linetype.
++ Renamed LineTypes class to Linetypes.
++ The Linetype Segments property is now readonly.
++ Added a constructor to Linetype class that also takes a list of segments as an argument.
++ The PolyfaceMeshFace property VertexIndexes is now readonly and will return a List instead of an array.
++ The AciColor property IndexRgb is now an IReadOnlyDictionary<byte, byte[]>.
++ The TableObject property InvalidCharacters is now an IReadOnlyList<string>.
++ The Matrix3 class now implements the interface IEquatable<Matrix3>.
++ The AttributeCollection class now implements the interface IReadOnlyList<Attribute>.
++ Many constructors and methods that used to take a List<T>, IList<T>, ICollection<T> as argument now takes an IEnumerable<T>.
++ Class properties that used to return a ReadOnlyCollection<T> now returns an IReadOnlyList<T>
++ Deleted the restriction that the attribute definition tags cannot contain spaces. While AutoCad maintains the spaces while loading and saving dxfs, it does not allow to create them through the UI.
++ Renamed DimensionArrowhead.RightAngle to DimensionArrohead.Open90.
++ Added the property Leader.Hook to allow easy access to the last leader vertex position, aka leader hook.
++ Added the argument "bool resetTextPosition" to the Leader.Update method, so you can decide if the position of the last leader vertex is modified according to annotation position, or vice versa. See ResetLeaderAnnotationPosition() sample.
++ The method TableObject.GetReferences will return an empty list instead of null, if there are no references associated with the specified name or object.
++ Table entities are imported as inserts. AutoCad uses anonymous blocks, with name "*T#", to represent tables made of rows and columns. See AcadTable() sample.
++ (fixed) The DxfDocument.Save method will fail if new vertexes are added to a Polyline that has been already added to a document. See Polyline3dAddVertex() sample.
++ Updated "netDxf Documentation.chm".
++ (fixed) The lineweight of the dimension arrowheads were not being applied according to the lineweight of the dimension line.
++ (fixed) DimensionArrohead.Dot and DimensionArrohead.DotSmall block drawing.
++ (fixed) Bug writing the dimension style DIMZIN parameter (suppression of leading and trailing zeros of length dimension values).
++ (fixed) Issue Id #13514 Full ellipse not considered as full ellipse.
++ (fixed) Issue Id #13513 Failed to load dxf with embedded images.
++ (fixed) Issues Id #13512 Id #13510 Id #13508 related with the TextStyle initialization and the "A generic error occurred in GDI+" exception. 
++ (fixed) Issue Id #13518 Issue with dxf file with weird edit time.
++ (fixed) Issue Id #13522 Clone insert with attdef.
++ (fixed) Issue Id #13521 Anonymous named block clone.
+
 [1.1.2 - 2016/4/11]
 + All dimension geometry uses local 2d coordinates. For the default normal vector (0,0,1) nothing has changed besides droping the Z component.
 + Added the method SetDimensionLinePosition to dimension entities to set the offset from a point along the dimension line.

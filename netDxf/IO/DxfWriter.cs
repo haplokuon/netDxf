@@ -1,23 +1,22 @@
-﻿#region netDxf, Copyright(C) 2016 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf library, Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
 
+//                        netDxf library
+// Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
 // 
-//                         netDxf library
-//  Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
-//  
-//  This library is free software; you can redistribute it and/or
-//  modify it under the terms of the GNU Lesser General Public
-//  License as published by the Free Software Foundation; either
-//  version 2.1 of the License, or (at your option) any later version.
-//  
-//  The above copyright notice and this permission notice shall be included in all
-//  copies or substantial portions of the Software.
-//  
-//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-//  FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-//  COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-//  IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-//  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2.1 of the License, or (at your option) any later version.
+// 
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+// FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+// COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+// IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+// CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 #endregion
 
@@ -26,6 +25,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
+using System.Windows;
 using netDxf.Blocks;
 using netDxf.Collections;
 using netDxf.Entities;
@@ -34,6 +34,7 @@ using netDxf.Objects;
 using netDxf.Tables;
 using netDxf.Units;
 using Attribute = netDxf.Entities.Attribute;
+using TextAlignment = netDxf.Entities.TextAlignment;
 using Trace = netDxf.Entities.Trace;
 
 namespace netDxf.IO
@@ -75,7 +76,7 @@ namespace netDxf.IO
             if (this.doc.Layouts.Count == 1)
                 this.doc.Layouts.Add(new Layout("Layout1"));
 
-            // create the application registry AcCmTransparency in case it doesn't exists, it is required by the layer and entity transparency
+            // create the application registry AcCmTransparency in case it doesn't exists, it is required by the layer transparency
             this.doc.ApplicationRegistries.Add(new ApplicationRegistry("AcCmTransparency"));
 
             // create the application registry GradientColor1ACI and GradientColor2ACI in case they don't exists , they are required by the hatch gradient pattern
@@ -196,8 +197,8 @@ namespace netDxf.IO
             }
             // writing a copy of the active dimension style variables in the header section will avoid to be displayed as <style overrides> in AutoCad
             DimensionStyle activeDimStyle;
-             if(this.doc.DimensionStyles.TryGetValue(this.doc.DrawingVariables.DimStyle, out activeDimStyle))
-                 this.WriteActiveDimensionStyleSystemVaribles(activeDimStyle);
+            if (this.doc.DimensionStyles.TryGetValue(this.doc.DrawingVariables.DimStyle, out activeDimStyle))
+                this.WriteActiveDimensionStyleSystemVaribles(activeDimStyle);
             this.EndSection();
 
             //CLASSES SECTION
@@ -233,10 +234,10 @@ namespace netDxf.IO
             //line type tables
             //The LTYPE table always precedes the LAYER table. I guess because the layers reference the line types,
             //why this same rule is not applied to DIMSTYLE tables is a mystery, since they also reference text styles and block records
-            this.BeginTable(this.doc.LineTypes.CodeName, (short) this.doc.LineTypes.Count, this.doc.LineTypes.Handle);
-            foreach (LineType lineType in this.doc.LineTypes.Items)
+            this.BeginTable(this.doc.Linetypes.CodeName, (short) this.doc.Linetypes.Count, this.doc.Linetypes.Handle);
+            foreach (Linetype linetype in this.doc.Linetypes.Items)
             {
-                this.WriteLineType(lineType);
+                this.WriteLinetype(linetype);
             }
             this.EndTable();
 
@@ -265,7 +266,7 @@ namespace netDxf.IO
             this.EndTable();
 
             //view
-            this.BeginTable(this.doc.Views.CodeName, (short)this.doc.Views.Count, this.doc.Views.Handle);
+            this.BeginTable(this.doc.Views.CodeName, (short) this.doc.Views.Count, this.doc.Views.Handle);
             this.EndTable();
 
             //UCS
@@ -308,7 +309,7 @@ namespace netDxf.IO
             this.BeginSection(DxfObjectCode.EntitiesSection);
             foreach (Layout layout in this.doc.Layouts)
             {
-                if (!layout.IsPaperSpace) 
+                if (!layout.IsPaperSpace)
                 {
                     // ModelSpace
                     List<DxfObject> entities = this.doc.Layouts.GetReferences(layout);
@@ -383,7 +384,7 @@ namespace netDxf.IO
                     this.WriteImageDef(imageDef, imageDefDictionary.Handle);
                 }
             }
-                
+
             this.EndSection(); //End section objects
 
             this.Close();
@@ -535,7 +536,7 @@ namespace netDxf.IO
                     break;
                 case HeaderVariableCode.CeLweight:
                     this.chunk.Write(9, name);
-                    this.chunk.Write(370, ((Lineweight) value).Value);
+                    this.chunk.Write(370, (short) (Lineweight) value);
                     break;
                 case HeaderVariableCode.CLayer:
                     this.chunk.Write(9, name);
@@ -566,7 +567,8 @@ namespace netDxf.IO
                     this.chunk.Write(7, this.EncodeNonAsciiCharacters((string) value));
                     break;
                 case HeaderVariableCode.LastSavedBy:
-                    if (this.doc.DrawingVariables.AcadVer <= DxfVersion.AutoCad2000) break;
+                    if (this.doc.DrawingVariables.AcadVer <= DxfVersion.AutoCad2000)
+                        break;
                     this.chunk.Write(9, name);
                     this.chunk.Write(1, this.EncodeNonAsciiCharacters((string) value));
                     break;
@@ -647,13 +649,13 @@ namespace netDxf.IO
         private void WriteActiveDimensionStyleSystemVaribles(DimensionStyle style)
         {
             this.chunk.Write(9, "$DIMADEC");
-            this.chunk.Write(70, style.DIMADEC);
+            this.chunk.Write(70, style.AngularPrecision);
 
             this.chunk.Write(9, "$DIMAUNIT");
-            this.chunk.Write(70, (short)style.DIMAUNIT);
+            this.chunk.Write(70, (short) style.DimAngularUnits);
 
             this.chunk.Write(9, "$DIMASZ");
-            this.chunk.Write(40, style.DIMASZ);
+            this.chunk.Write(40, style.ArrowSize);
 
             short angSupress = 3;
             if (style.SuppressAngularLeadingZeros && style.SuppressAngularTrailingZeros)
@@ -667,92 +669,127 @@ namespace netDxf.IO
             this.chunk.Write(9, "$DIMAZIN");
             this.chunk.Write(70, angSupress);
 
-            this.chunk.Write(9, "$DIMBLK");
-            this.chunk.Write(1, style.DIMBLK == null ? "" : this.EncodeNonAsciiCharacters(style.DIMBLK.Name));
+            if (style.DimArrow1 == null && style.DimArrow2 == null)
+            {
+                this.chunk.Write(9, "$DIMSAH");
+                this.chunk.Write(70, (short) 0);
 
-            this.chunk.Write(9, "$DIMBLK1");
-            this.chunk.Write(1, style.DIMBLK1 == null ? "" : this.EncodeNonAsciiCharacters(style.DIMBLK1.Name));
+                this.chunk.Write(9, "$DIMBLK");
+                this.chunk.Write(1, "");
+            }
+            else if (style.DimArrow1 == null)
+            {
+                this.chunk.Write(9, "$DIMSAH");
+                this.chunk.Write(70, (short) 1);
 
-            this.chunk.Write(9, "$DIMBLK2");
-            this.chunk.Write(1, style.DIMBLK2 == null ? "" : this.EncodeNonAsciiCharacters(style.DIMBLK2.Name));
+                this.chunk.Write(9, "$DIMBLK1");
+                this.chunk.Write(1, "");
+
+                this.chunk.Write(9, "$DIMBLK2");
+                this.chunk.Write(1, this.EncodeNonAsciiCharacters(style.DimArrow2.Name));
+            }
+            else if (style.DimArrow2 == null)
+            {
+                this.chunk.Write(9, "$DIMSAH");
+                this.chunk.Write(70, (short) 1);
+
+                this.chunk.Write(9, "$DIMBLK1");
+                this.chunk.Write(1, this.EncodeNonAsciiCharacters(style.DimArrow1.Name));
+
+                this.chunk.Write(9, "$DIMBLK2");
+                this.chunk.Write(1, "");
+            }
+            else if (string.Equals(style.DimArrow1.Name, style.DimArrow2.Name, StringComparison.OrdinalIgnoreCase))
+            {
+                this.chunk.Write(9, "$DIMSAH");
+                this.chunk.Write(70, (short) 0);
+
+                this.chunk.Write(9, "$DIMBLK");
+                this.chunk.Write(1, this.EncodeNonAsciiCharacters(style.DimArrow1.Name));
+            }
+            else
+            {
+                this.chunk.Write(9, "$DIMSAH");
+                this.chunk.Write(70, (short) 1);
+
+                this.chunk.Write(9, "$DIMBLK1");
+                this.chunk.Write(1, this.EncodeNonAsciiCharacters(style.DimArrow1.Name));
+
+                this.chunk.Write(9, "$DIMBLK2");
+                this.chunk.Write(1, this.EncodeNonAsciiCharacters(style.DimArrow2.Name));
+            }
 
             this.chunk.Write(9, "$DIMLDRBLK");
-            this.chunk.Write(1, style.DIMLDRBLK == null ? "" : this.EncodeNonAsciiCharacters(style.DIMLDRBLK.Name));
+            this.chunk.Write(1, style.LeaderArrow == null ? "" : this.EncodeNonAsciiCharacters(style.LeaderArrow.Name));
 
             this.chunk.Write(9, "$DIMCEN");
-            this.chunk.Write(40, style.DIMCEN);
+            this.chunk.Write(40, style.CenterMarkSize);
 
             this.chunk.Write(9, "$DIMCLRD");
-            this.chunk.Write(70, style.DIMCLRD.Index);
+            this.chunk.Write(70, style.DimLineColor.Index);
 
             this.chunk.Write(9, "$DIMCLRE");
-            this.chunk.Write(70, style.DIMCLRE.Index);
+            this.chunk.Write(70, style.ExtLineColor.Index);
 
             this.chunk.Write(9, "$DIMCLRT");
-            this.chunk.Write(70, style.DIMCLRT.Index);
+            this.chunk.Write(70, style.TextColor.Index);
 
             this.chunk.Write(9, "$DIMDEC");
-            this.chunk.Write(70, style.DIMDEC);
+            this.chunk.Write(70, style.LengthPrecision);
 
             this.chunk.Write(9, "$DIMDLE");
-            this.chunk.Write(40, style.DIMDLE);
+            this.chunk.Write(40, style.DimLineExtend);
 
             this.chunk.Write(9, "$DIMDLI");
-            this.chunk.Write(40, style.DIMDLI);
+            this.chunk.Write(40, style.DimBaselineSpacing);
 
             this.chunk.Write(9, "$DIMDSEP");
-            this.chunk.Write(70, (short)style.DIMDSEP);
+            this.chunk.Write(70, (short) style.DecimalSeparator);
 
             this.chunk.Write(9, "$DIMEXE");
-            this.chunk.Write(40, style.DIMEXE);
+            this.chunk.Write(40, style.ExtLineExtend);
 
             this.chunk.Write(9, "$DIMEXO");
-            this.chunk.Write(40, style.DIMEXO);
+            this.chunk.Write(40, style.ExtLineOffset);
 
             this.chunk.Write(9, "$DIMGAP");
-            this.chunk.Write(40, style.DIMGAP);
+            this.chunk.Write(40, style.TextOffset);
 
             this.chunk.Write(9, "$DIMJUST");
             this.chunk.Write(70, style.DIMJUST);
 
             this.chunk.Write(9, "$DIMLFAC");
-            this.chunk.Write(40, style.DIMLFAC);
+            this.chunk.Write(40, style.DimScaleLinear);
 
             this.chunk.Write(9, "$DIMLUNIT");
-            this.chunk.Write(70, (short)style.DIMLUNIT);
+            this.chunk.Write(70, (short) style.DimLengthUnits);
 
             this.chunk.Write(9, "$DIMLWD");
-            this.chunk.Write(70, style.DIMLWD.Value);
+            this.chunk.Write(70, (short) style.DimLineLineweight);
 
             this.chunk.Write(9, "$DIMLWE");
-            this.chunk.Write(70, style.DIMLWE.Value);
+            this.chunk.Write(70, (short) style.ExtLineLineweight);
 
             this.chunk.Write(9, "$DIMPOST");
-            this.chunk.Write(1, this.EncodeNonAsciiCharacters(style.DIMPOST));
+            this.chunk.Write(1, this.EncodeNonAsciiCharacters(string.Format("{0}<>{1}", style.DimPrefix, style.DimSuffix)));
 
             this.chunk.Write(9, "$DIMRND");
-            this.chunk.Write(40, style.DIMRND);
-
-            this.chunk.Write(9, "$DIMSAH");
-            if (style.DIMSAH)
-                this.chunk.Write(70, (short)1);
-            else
-                this.chunk.Write(70, (short)0);
+            this.chunk.Write(40, style.DimRoundoff);
 
             this.chunk.Write(9, "$DIMSCALE");
-            this.chunk.Write(40, style.DIMSCALE);
+            this.chunk.Write(40, style.DimScaleOverall);
 
             this.chunk.Write(9, "$DIMSE1");
-            if (style.DIMSE1)
-                this.chunk.Write(70, (short)1);
+            if (style.ExtLine1)
+                this.chunk.Write(70, (short) 1);
             else
-                this.chunk.Write(70, (short)0);
+                this.chunk.Write(70, (short) 0);
 
             this.chunk.Write(9, "$DIMSE2");
-            if (style.DIMSE2)
-                this.chunk.Write(70, (short)1);
+            if (style.ExtLine2)
+                this.chunk.Write(70, (short) 1);
             else
-                this.chunk.Write(70, (short)0);
+                this.chunk.Write(70, (short) 0);
 
             this.chunk.Write(9, "$DIMTAD");
             this.chunk.Write(70, style.DIMTAD);
@@ -764,10 +801,10 @@ namespace netDxf.IO
             this.chunk.Write(70, style.DIMTOH);
 
             this.chunk.Write(9, "$DIMTXT");
-            this.chunk.Write(40, style.DIMTXT);
+            this.chunk.Write(40, style.TextHeight);
 
             short linSupress = 0;
-            if (style.DIMLUNIT == LinearUnitType.Architectural || style.DIMLUNIT == LinearUnitType.Engineering)
+            if (style.DimLengthUnits == LinearUnitType.Architectural || style.DimLengthUnits == LinearUnitType.Engineering)
             {
                 if (style.SuppressZeroFeet && style.SuppressZeroFeet)
                     linSupress = 0;
@@ -793,16 +830,16 @@ namespace netDxf.IO
 
             // CAUTION: The next four codes are not documented in the official dxf docs
             this.chunk.Write(9, "$DIMFRAC");
-            this.chunk.Write(70, (short)style.DIMFRAC);
+            this.chunk.Write(70, (short) style.FractionalType);
 
             this.chunk.Write(9, "$DIMLTYPE");
-            this.chunk.Write(6, this.EncodeNonAsciiCharacters(style.DIMLTYPE.Name));
+            this.chunk.Write(6, this.EncodeNonAsciiCharacters(style.DimLineLinetype.Name));
 
             this.chunk.Write(9, "$DIMLTEX1");
-            this.chunk.Write(6, this.EncodeNonAsciiCharacters(style.DIMLTEX1.Name));
+            this.chunk.Write(6, this.EncodeNonAsciiCharacters(style.ExtLine1Linetype.Name));
 
             this.chunk.Write(9, "$DIMLTEX2");
-            this.chunk.Write(6, this.EncodeNonAsciiCharacters(style.DIMLTEX2.Name));            
+            this.chunk.Write(6, this.EncodeNonAsciiCharacters(style.ExtLine2Linetype.Name));
         }
 
         #endregion
@@ -818,7 +855,8 @@ namespace netDxf.IO
 
             // default codes as shown in the dxf documentation
             this.chunk.Write(90, 127);
-            if (this.doc.DrawingVariables.AcadVer > DxfVersion.AutoCad2000) this.chunk.Write(91, count);
+            if (this.doc.DrawingVariables.AcadVer > DxfVersion.AutoCad2000)
+                this.chunk.Write(91, count);
             this.chunk.Write(280, (short) 0);
             this.chunk.Write(281, (short) 1);
         }
@@ -832,7 +870,8 @@ namespace netDxf.IO
 
             // default codes as shown in the dxf documentation
             this.chunk.Write(90, 0);
-            if (this.doc.DrawingVariables.AcadVer > DxfVersion.AutoCad2000) this.chunk.Write(91, count);
+            if (this.doc.DrawingVariables.AcadVer > DxfVersion.AutoCad2000)
+                this.chunk.Write(91, count);
             this.chunk.Write(280, (short) 0);
             this.chunk.Write(281, (short) 0);
         }
@@ -846,7 +885,8 @@ namespace netDxf.IO
 
             // default codes as shown in the dxf documentation
             this.chunk.Write(90, 1);
-            if (this.doc.DrawingVariables.AcadVer > DxfVersion.AutoCad2000) this.chunk.Write(91, count);
+            if (this.doc.DrawingVariables.AcadVer > DxfVersion.AutoCad2000)
+                this.chunk.Write(91, count);
             this.chunk.Write(280, (short) 0);
             this.chunk.Write(281, (short) 0);
         }
@@ -860,7 +900,8 @@ namespace netDxf.IO
 
             // default codes as shown in the dxf documentation
             this.chunk.Write(90, 0);
-            if (this.doc.DrawingVariables.AcadVer > DxfVersion.AutoCad2000) this.chunk.Write(91, count);
+            if (this.doc.DrawingVariables.AcadVer > DxfVersion.AutoCad2000)
+                this.chunk.Write(91, count);
             this.chunk.Write(280, (short) 0);
             this.chunk.Write(281, (short) 0);
         }
@@ -875,9 +916,9 @@ namespace netDxf.IO
         /// <param name="appReg">Name of the application registry.</param>
         private void WriteApplicationRegistry(ApplicationRegistry appReg)
         {
-            Debug.Assert(this.activeTable == DxfObjectCode.ApplicationIDTable);
+            Debug.Assert(this.activeTable == DxfObjectCode.ApplicationIdTable);
 
-            this.chunk.Write(0, DxfObjectCode.ApplicationIDTable);
+            this.chunk.Write(0, DxfObjectCode.ApplicationIdTable);
             this.chunk.Write(5, appReg.Handle);
             this.chunk.Write(330, appReg.Owner.Handle);
 
@@ -907,7 +948,7 @@ namespace netDxf.IO
 
             this.chunk.Write(2, this.EncodeNonAsciiCharacters(vp.Name));
 
-            this.chunk.Write(70, (short)0);
+            this.chunk.Write(70, (short) 0);
 
             this.chunk.Write(10, 0.0);
             this.chunk.Write(20, 0.0);
@@ -938,8 +979,8 @@ namespace netDxf.IO
             this.chunk.Write(40, vp.ViewHeight);
             this.chunk.Write(41, vp.ViewAspectRatio);
 
-            this.chunk.Write(75, vp.SnapMode ? (short)1 : (short)0);
-            this.chunk.Write(76, vp.ShowGrid ? (short)1 : (short)0);
+            this.chunk.Write(75, vp.SnapMode ? (short) 1 : (short) 0);
+            this.chunk.Write(76, vp.ShowGrid ? (short) 1 : (short) 0);
         }
 
         /// <summary>
@@ -963,39 +1004,36 @@ namespace netDxf.IO
             // flags
             this.chunk.Write(70, (short) 0);
 
-            this.chunk.Write(3, this.EncodeNonAsciiCharacters(style.DIMPOST));
-            this.chunk.Write(40, style.DIMSCALE);
-            this.chunk.Write(41, style.DIMASZ);
-            this.chunk.Write(42, style.DIMEXO);
-            this.chunk.Write(43, style.DIMDLI);
-            this.chunk.Write(44, style.DIMEXE);
-            this.chunk.Write(45, style.DIMRND);
-            this.chunk.Write(46, style.DIMDLE);
+            this.chunk.Write(3, this.EncodeNonAsciiCharacters(string.Format("{0}<>{1}", style.DimPrefix, style.DimSuffix)));
+            this.chunk.Write(40, style.DimScaleOverall);
+            this.chunk.Write(41, style.ArrowSize);
+            this.chunk.Write(42, style.ExtLineOffset);
+            this.chunk.Write(43, style.DimBaselineSpacing);
+            this.chunk.Write(44, style.ExtLineExtend);
+            this.chunk.Write(45, style.DimRoundoff);
+            this.chunk.Write(46, style.DimLineExtend);
 
             this.chunk.Write(73, style.DIMTIH);
             this.chunk.Write(74, style.DIMTOH);
-            if (style.DIMSE1)
+            if (style.ExtLine1)
                 this.chunk.Write(75, (short) 1);
             else
                 this.chunk.Write(75, (short) 0);
-            if (style.DIMSE2)
+            if (style.ExtLine2)
                 this.chunk.Write(76, (short) 1);
             else
                 this.chunk.Write(76, (short) 0);
             this.chunk.Write(77, style.DIMTAD);
 
             short linSupress = 0;
-            if (style.DIMLUNIT == LinearUnitType.Architectural || style.DIMLUNIT == LinearUnitType.Engineering)
-            {
-                if (style.SuppressZeroFeet && style.SuppressZeroFeet)
-                    linSupress = 0;
-                else if (!style.SuppressZeroFeet && !style.SuppressZeroFeet)
-                    linSupress = 1;
-                else if (!style.SuppressZeroFeet && style.SuppressZeroFeet)
-                    linSupress = 2;
-                else if (style.SuppressZeroFeet && !style.SuppressZeroFeet)
-                    linSupress = 3;
-            }
+            if (style.SuppressZeroFeet && style.SuppressZeroInches)
+                linSupress = 0;
+            else if (!style.SuppressZeroFeet && !style.SuppressZeroInches)
+                linSupress += 1;
+            else if (!style.SuppressZeroFeet && style.SuppressZeroInches)
+                linSupress += 2;
+            else if (style.SuppressZeroFeet && !style.SuppressZeroInches)
+                linSupress += 3;
 
             if (!style.SuppressLinearLeadingZeros && !style.SuppressLinearTrailingZeros)
                 linSupress += 0;
@@ -1005,7 +1043,7 @@ namespace netDxf.IO
                 linSupress += 8;
             else if (style.SuppressLinearLeadingZeros && style.SuppressLinearTrailingZeros)
                 linSupress += 12;
-                  
+
             this.chunk.Write(78, linSupress);
 
             short angSupress = 3;
@@ -1020,45 +1058,63 @@ namespace netDxf.IO
 
             this.chunk.Write(79, angSupress);
 
-            this.chunk.Write(140, style.DIMTXT);
-            this.chunk.Write(141, style.DIMCEN);
-            this.chunk.Write(144, style.DIMLFAC);
-            this.chunk.Write(147, style.DIMGAP);
-            if (style.DIMSAH)
-                this.chunk.Write(173, (short) 1);
-            else
-                this.chunk.Write(173, (short) 0);
-            this.chunk.Write(176, style.DIMCLRD.Index);
-            this.chunk.Write(177, style.DIMCLRE.Index);
-            this.chunk.Write(178, style.DIMCLRT.Index);
-            this.chunk.Write(179, style.DIMADEC);
-            this.chunk.Write(271, style.DIMDEC);
-            this.chunk.Write(275, (short)style.DIMAUNIT);
-            this.chunk.Write(276, (short)style.DIMFRAC);
-            this.chunk.Write(277, (short)style.DIMLUNIT);
-            this.chunk.Write(278, (short)style.DIMDSEP);
+            this.chunk.Write(140, style.TextHeight);
+            this.chunk.Write(141, style.CenterMarkSize);
+            this.chunk.Write(144, style.DimScaleLinear);
+            this.chunk.Write(147, style.TextOffset);
+            this.chunk.Write(176, style.DimLineColor.Index);
+            this.chunk.Write(177, style.ExtLineColor.Index);
+            this.chunk.Write(178, style.TextColor.Index);
+            this.chunk.Write(179, style.AngularPrecision);
+            this.chunk.Write(271, style.LengthPrecision);
+            this.chunk.Write(275, (short) style.DimAngularUnits);
+            this.chunk.Write(276, (short) style.FractionalType);
+            this.chunk.Write(277, (short) style.DimLengthUnits);
+            this.chunk.Write(278, (short) style.DecimalSeparator);
             this.chunk.Write(280, style.DIMJUST);
 
-            this.chunk.Write(340, style.DIMTXSTY.Handle);
+            this.chunk.Write(340, style.TextStyle.Handle);
 
             // CAUTION: The documentation says that the next three values are the handles of referenced BLOCK,
             // but they are the handles of referenced BLOCK_RECORD
-            if (style.DIMLDRBLK != null)
-                this.chunk.Write(341, style.DIMLDRBLK.Record.Handle);
-            if (style.DIMBLK != null)
-                this.chunk.Write(342, style.DIMBLK.Record.Handle);
-            if (style.DIMBLK1 != null)
-                this.chunk.Write(343, style.DIMBLK1.Record.Handle);
-            if (style.DIMBLK2 != null)
-                this.chunk.Write(344, style.DIMBLK2.Record.Handle);
+            if (style.LeaderArrow != null)
+                this.chunk.Write(341, style.LeaderArrow.Record.Handle);
+
+            if (style.DimArrow1 == null && style.DimArrow2 == null)
+            {
+                this.chunk.Write(173, (short) 0);
+            }
+            else if (style.DimArrow1 == null)
+            {
+                this.chunk.Write(173, (short) 1);
+                if (style.DimArrow2 != null)
+                    this.chunk.Write(344, style.DimArrow2.Record.Handle);
+            }
+            else if (style.DimArrow2 == null)
+            {
+                this.chunk.Write(173, (short) 1);
+                if (style.DimArrow1 != null)
+                    this.chunk.Write(344, style.DimArrow1.Record.Handle);
+            }
+            else if (string.Equals(style.DimArrow1.Name, style.DimArrow2.Name, StringComparison.OrdinalIgnoreCase))
+            {
+                this.chunk.Write(173, (short) 0);
+                this.chunk.Write(342, style.DimArrow1.Record.Handle);
+            }
+            else
+            {
+                this.chunk.Write(173, (short) 1);
+                this.chunk.Write(343, style.DimArrow1.Record.Handle);
+                this.chunk.Write(344, style.DimArrow2.Record.Handle);
+            }
 
             // CAUTION: The next three codes are undocumented in the official dxf docs
-            this.chunk.Write(345, style.DIMLTYPE.Handle);
-            this.chunk.Write(346, style.DIMLTEX1.Handle);
-            this.chunk.Write(347, style.DIMLTEX2.Handle);
+            this.chunk.Write(345, style.DimLineLinetype.Handle);
+            this.chunk.Write(346, style.ExtLine1Linetype.Handle);
+            this.chunk.Write(347, style.ExtLine2Linetype.Handle);
 
-            this.chunk.Write(371, style.DIMLWD.Value);
-            this.chunk.Write(372, style.DIMLWE.Value);
+            this.chunk.Write(371, (short) style.DimLineLineweight);
+            this.chunk.Write(372, (short) style.ExtLineLineweight);
         }
 
         /// <summary>
@@ -1083,18 +1139,19 @@ namespace netDxf.IO
             this.chunk.Write(340, blockRecord.Layout == null ? "0" : blockRecord.Layout.Handle);
 
             // internal blocks do not need more information
-            if (blockRecord.IsForInternalUseOnly) return;
+            if (blockRecord.IsForInternalUseOnly)
+                return;
 
             // The next three values will only work for dxf version AutoCad2007 and upwards
             this.chunk.Write(70, (short) blockRecord.Units);
             this.chunk.Write(280, blockRecord.AllowExploding ? (short) 1 : (short) 0);
             this.chunk.Write(281, blockRecord.ScaleUniformly ? (short) 1 : (short) 0);
 
-            this.AddBlockRecordUnitsXData(blockRecord);
+            AddBlockRecordUnitsXData(blockRecord);
             this.WriteXData(blockRecord.XData);
         }
 
-        private void AddBlockRecordUnitsXData(BlockRecord record)
+        private static void AddBlockRecordUnitsXData(BlockRecord record)
         {
             // for dxf versions prior to AutoCad2007 the block record units is stored in an extended data block
             XData xdataEntry;
@@ -1111,8 +1168,8 @@ namespace netDxf.IO
 
             xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.String, "DesignCenter Data"));
             xdataEntry.XDataRecord.Add(XDataRecord.OpenControlString);
-            xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short)1));
-            xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short)record.Units));
+            xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 1));
+            xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) record.Units));
             xdataEntry.XDataRecord.Add(XDataRecord.CloseControlString);
         }
 
@@ -1120,9 +1177,9 @@ namespace netDxf.IO
         /// Writes a new line type to the table section.
         /// </summary>
         /// <param name="tl">Line type.</param>
-        private void WriteLineType(LineType tl)
+        private void WriteLinetype(Linetype tl)
         {
-            Debug.Assert(this.activeTable == DxfObjectCode.LineTypeTable);
+            Debug.Assert(this.activeTable == DxfObjectCode.LinetypeTable);
 
             this.chunk.Write(0, tl.CodeName);
             this.chunk.Write(5, tl.Handle);
@@ -1130,7 +1187,7 @@ namespace netDxf.IO
 
             this.chunk.Write(100, SubclassMarker.TableRecord);
 
-            this.chunk.Write(100, SubclassMarker.LineType);
+            this.chunk.Write(100, SubclassMarker.Linetype);
 
             this.chunk.Write(70, (short) 0);
 
@@ -1181,10 +1238,10 @@ namespace netDxf.IO
             if (layer.Color.UseTrueColor)
                 this.chunk.Write(420, AciColor.ToTrueColor(layer.Color));
 
-            this.chunk.Write(6, this.EncodeNonAsciiCharacters(layer.LineType.Name));
+            this.chunk.Write(6, this.EncodeNonAsciiCharacters(layer.Linetype.Name));
 
             this.chunk.Write(290, layer.Plot);
-            this.chunk.Write(370, layer.Lineweight.Value);
+            this.chunk.Write(370, (short) layer.Lineweight);
             // Hard pointer ID/handle of PlotStyleName object
             this.chunk.Write(390, "0");
 
@@ -1192,8 +1249,8 @@ namespace netDxf.IO
             if (layer.Transparency.Value > 0)
             {
                 int alpha = Transparency.ToAlphaValue(layer.Transparency);
-                this.chunk.Write(XDataCode.AppReg, "AcCmTransparency");
-                this.chunk.Write(XDataCode.Int32, alpha);
+                this.chunk.Write((short) XDataCode.AppReg, "AcCmTransparency");
+                this.chunk.Write((short) XDataCode.Int32, alpha);
             }
         }
 
@@ -1220,26 +1277,30 @@ namespace netDxf.IO
             this.chunk.Write(70, style.IsVertical ? (short) 4 : (short) 0);
 
             if (style.IsBackward && style.IsUpsideDown)
-            {
                 this.chunk.Write(71, (short) 6);
-            }
             else if (style.IsBackward)
-            {
                 this.chunk.Write(71, (short) 2);
-            }
             else if (style.IsUpsideDown)
-            {
                 this.chunk.Write(71, (short) 4);
-            }
             else
-            {
                 this.chunk.Write(71, (short) 0);
-            }
 
             this.chunk.Write(40, style.Height);
             this.chunk.Write(41, style.WidthFactor);
             this.chunk.Write(42, style.Height);
             this.chunk.Write(50, style.ObliqueAngle);
+
+            if (style.GlyphTypeface == null)
+                return;
+
+            this.chunk.Write((short) XDataCode.AppReg, "ACAD");
+            this.chunk.Write((short) XDataCode.String, this.EncodeNonAsciiCharacters(style.FontFamilyName));
+            byte[] st = new byte[4];
+            if (style.GlyphTypeface.Style == FontStyles.Italic || style.GlyphTypeface.Style == FontStyles.Oblique)
+                st[3] += 1;
+            if (style.GlyphTypeface.Weight == FontWeights.Bold)
+                st[3] += 2;
+            this.chunk.Write((short) XDataCode.Int32, BitConverter.ToInt32(st, 0));
         }
 
         /// <summary>
@@ -1302,9 +1363,10 @@ namespace netDxf.IO
             this.chunk.Write(8, blockLayer);
 
             this.chunk.Write(100, SubclassMarker.BlockBegin);
-            if (block.IsXRef) this.chunk.Write(1, this.EncodeNonAsciiCharacters(block.XrefFile));
+            if (block.IsXRef)
+                this.chunk.Write(1, this.EncodeNonAsciiCharacters(block.XrefFile));
             this.chunk.Write(2, name);
-            this.chunk.Write(70, (short)block.Flags);
+            this.chunk.Write(70, (short) block.Flags);
             this.chunk.Write(10, block.Origin.X);
             this.chunk.Write(20, block.Origin.Y);
             this.chunk.Write(30, block.Origin.Z);
@@ -1352,13 +1414,17 @@ namespace netDxf.IO
             Debug.Assert(entity != null);
 
             // hatches with zero boundaries are not allowed
-            if (entity.Type == EntityType.Hatch && ((Hatch)entity).BoundaryPaths.Count == 0) return;
+            if (entity.Type == EntityType.Hatch && ((Hatch) entity).BoundaryPaths.Count == 0)
+                return;
             // leader entities with less than two vertexes are not allowed
-            if (entity.Type == EntityType.Leader && ((Leader)entity).Vertexes.Count < 2) return;
+            if (entity.Type == EntityType.Leader && ((Leader) entity).Vertexes.Count < 2)
+                return;
             // polyline entities with less than two vertexes are not allowed
-            if (entity.Type == EntityType.Polyline && ((Polyline)entity).Vertexes.Count < 2) return;
+            if (entity.Type == EntityType.Polyline && ((Polyline) entity).Vertexes.Count < 2)
+                return;
             // lwPolyline entities with less than two vertexes are not allowed
-            if (entity.Type == EntityType.LightWeightPolyline && ((LwPolyline)entity).Vertexes.Count < 2) return;
+            if (entity.Type == EntityType.LightWeightPolyline && ((LwPolyline) entity).Vertexes.Count < 2)
+                return;
 
             this.WriteEntityCommonCodes(entity, layout);
 
@@ -1368,13 +1434,13 @@ namespace netDxf.IO
                     this.WriteArc((Arc) entity);
                     break;
                 case EntityType.AttributeDefinition:
-                    this.WriteAttributeDefinition((AttributeDefinition)entity);
+                    this.WriteAttributeDefinition((AttributeDefinition) entity);
                     break;
                 case EntityType.Circle:
                     this.WriteCircle((Circle) entity);
                     break;
                 case EntityType.Dimension:
-                    this.WriteDimension((Dimension)entity);
+                    this.WriteDimension((Dimension) entity);
                     break;
                 case EntityType.Ellipse:
                     this.WriteEllipse((Ellipse) entity);
@@ -1383,16 +1449,16 @@ namespace netDxf.IO
                     this.WriteFace3D((Face3d) entity);
                     break;
                 case EntityType.Hatch:
-                    this.WriteHatch((Hatch)entity);
+                    this.WriteHatch((Hatch) entity);
                     break;
                 case EntityType.Image:
-                    this.WriteImage((Image)entity);
+                    this.WriteImage((Image) entity);
                     break;
                 case EntityType.Insert:
                     this.WriteInsert((Insert) entity);
                     break;
                 case EntityType.Leader:
-                    this.WriteLeader((Leader)entity);
+                    this.WriteLeader((Leader) entity);
                     break;
                 case EntityType.LightWeightPolyline:
                     this.WriteLightWeightPolyline((LwPolyline) entity);
@@ -1401,13 +1467,13 @@ namespace netDxf.IO
                     this.WriteLine((Line) entity);
                     break;
                 case EntityType.Mesh:
-                    this.WriteMesh((Mesh)entity);
+                    this.WriteMesh((Mesh) entity);
                     break;
                 case EntityType.MLine:
-                    this.WriteMLine((MLine)entity);
+                    this.WriteMLine((MLine) entity);
                     break;
                 case EntityType.MText:
-                    this.WriteMText((MText)entity);
+                    this.WriteMText((MText) entity);
                     break;
                 case EntityType.Point:
                     this.WritePoint((Point) entity);
@@ -1434,7 +1500,7 @@ namespace netDxf.IO
                     this.WriteTolerance((Tolerance) entity);
                     break;
                 case EntityType.Trace:
-                    this.WriteTrace((Trace)entity);
+                    this.WriteTrace((Trace) entity);
                     break;
                 case EntityType.Underlay:
                     this.WriteUnderlay((Underlay) entity);
@@ -1464,7 +1530,7 @@ namespace netDxf.IO
                 foreach (DxfObject o in entity.Reactors)
                 {
                     this.chunk.Write(330, o.Handle);
-                }               
+                }
                 this.chunk.Write(102, "}");
             }
 
@@ -1484,10 +1550,10 @@ namespace netDxf.IO
             if (entity.Transparency.Value >= 0)
                 this.chunk.Write(440, Transparency.ToAlphaValue(entity.Transparency));
 
-            this.chunk.Write(6, this.EncodeNonAsciiCharacters(entity.LineType.Name));
+            this.chunk.Write(6, this.EncodeNonAsciiCharacters(entity.Linetype.Name));
 
-            this.chunk.Write(370, entity.Lineweight.Value);
-            this.chunk.Write(48, entity.LineTypeScale);
+            this.chunk.Write(370, (short) entity.Lineweight);
+            this.chunk.Write(48, entity.LinetypeScale);
             this.chunk.Write(60, entity.IsVisible ? (short) 0 : (short) 1);
         }
 
@@ -1496,7 +1562,7 @@ namespace netDxf.IO
             this.chunk.Write(100, SubclassMarker.Wipeout);
 
             BoundingRectangle br = new BoundingRectangle(wipeout.ClippingBoundary.Vertexes);
-            
+
             Vector3 ocsInsPoint = new Vector3(br.Min.X, br.Min.Y, wipeout.Elevation);
             double w = br.Width;
             double h = br.Height;
@@ -1504,7 +1570,7 @@ namespace netDxf.IO
             Vector3 ocsUx = new Vector3(max, 0.0, 0.0);
             Vector3 ocsUy = new Vector3(0.0, max, 0.0);
 
-            IList<Vector3> wcsPoints = MathHelper.Transform(new List<Vector3>{ocsInsPoint, ocsUx, ocsUy}, wipeout.Normal, CoordinateSystem.Object, CoordinateSystem.World);
+            IList<Vector3> wcsPoints = MathHelper.Transform(new List<Vector3> {ocsInsPoint, ocsUx, ocsUy}, wipeout.Normal, CoordinateSystem.Object, CoordinateSystem.World);
 
             // Insertion point in WCS
             this.chunk.Write(10, wcsPoints[0].X);
@@ -1525,12 +1591,12 @@ namespace netDxf.IO
             this.chunk.Write(23, 1.0);
 
             //this.chunk.Write(280, wipeout.ShowClippingFrame ? (short) 1 : (short) 0);
-            this.chunk.Write(280, (short)1);
-            this.chunk.Write(281, (short)50);
-            this.chunk.Write(282, (short)50);
-            this.chunk.Write(283, (short)0);
+            this.chunk.Write(280, (short) 1);
+            this.chunk.Write(281, (short) 50);
+            this.chunk.Write(282, (short) 50);
+            this.chunk.Write(283, (short) 0);
 
-            this.chunk.Write(71, (short)wipeout.ClippingBoundary.Type);
+            this.chunk.Write(71, (short) wipeout.ClippingBoundary.Type);
 
             if (wipeout.ClippingBoundary.Type == ClippingBoundaryType.Polygonal)
                 this.chunk.Write(91, wipeout.ClippingBoundary.Vertexes.Count + 1);
@@ -1540,7 +1606,7 @@ namespace netDxf.IO
             foreach (Vector2 vertex in wipeout.ClippingBoundary.Vertexes)
             {
                 double x = (vertex.X - ocsInsPoint.X)/max - 0.5;
-                double y = -((vertex.Y - ocsInsPoint.Y) / max - 0.5);
+                double y = -((vertex.Y - ocsInsPoint.Y)/max - 0.5);
                 this.chunk.Write(14, x);
                 this.chunk.Write(24, y);
             }
@@ -1548,8 +1614,8 @@ namespace netDxf.IO
             // for unknown reasons the wipeout with a polygonal clipping boundary requires to repeat the first vertex
             if (wipeout.ClippingBoundary.Type == ClippingBoundaryType.Polygonal)
             {
-                this.chunk.Write(14, (wipeout.ClippingBoundary.Vertexes[0].X - ocsInsPoint.X) / max - 0.5);
-                this.chunk.Write(24, -((wipeout.ClippingBoundary.Vertexes[0].Y - ocsInsPoint.Y) / max - 0.5));
+                this.chunk.Write(14, (wipeout.ClippingBoundary.Vertexes[0].X - ocsInsPoint.X)/max - 0.5);
+                this.chunk.Write(24, -((wipeout.ClippingBoundary.Vertexes[0].Y - ocsInsPoint.Y)/max - 0.5));
             }
 
             this.WriteXData(wipeout.XData);
@@ -1615,7 +1681,6 @@ namespace netDxf.IO
             this.chunk.Write(11, xAxis.X);
             this.chunk.Write(21, xAxis.Y);
             this.chunk.Write(31, xAxis.Z);
-
         }
 
         private void WriteLeader(Leader leader)
@@ -1624,12 +1689,12 @@ namespace netDxf.IO
 
             this.chunk.Write(3, leader.Style.Name);
 
-            if(leader.ShowArrowhead)
-                this.chunk.Write(71, (short)1);
+            if (leader.ShowArrowhead)
+                this.chunk.Write(71, (short) 1);
             else
-                this.chunk.Write(71, (short)0);
+                this.chunk.Write(71, (short) 0);
 
-            this.chunk.Write(72, (short)leader.PathType);
+            this.chunk.Write(72, (short) leader.PathType);
 
             if (leader.Annotation != null)
             {
@@ -1648,31 +1713,43 @@ namespace netDxf.IO
             }
             else
             {
-                this.chunk.Write(73, (short)3);                
+                this.chunk.Write(73, (short) 3);
             }
 
             Vector2 v = leader.Vertexes[leader.Vertexes.Count - 1] - leader.Vertexes[leader.Vertexes.Count - 2];
-            if (v.Equals(Vector2.Zero)) throw new Exception(string.Format("The last and previous vertex of the leader with handle {0} cannot be the same", leader.Handle));
+            if (v.Equals(Vector2.Zero))
+                throw new Exception(string.Format("The last and previous vertex of the leader with handle {0} cannot be the same", leader.Handle));
             int side = v.X < 0 ? -1 : 1;
 
             if (side < 0)
-                this.chunk.Write(74, (short)1);
+                this.chunk.Write(74, (short) 1);
             else
-                this.chunk.Write(74, (short)0);
+                this.chunk.Write(74, (short) 0);
 
             if (leader.HasHookline)
-                this.chunk.Write(75, (short)1);
+                this.chunk.Write(75, (short) 1);
             else
-                this.chunk.Write(75, (short)0);
+                this.chunk.Write(75, (short) 0);
 
             //this.chunk.Write(40, 0.0);
             //this.chunk.Write(41, 0.0);
 
             // in the dxf the leader vertexes list is in WCS
-            Vector2 dir = side * Vector2.UnitX;
+            Vector2 dir = side*Vector2.UnitX;
             List<Vector3> ocsVertexes = new List<Vector3>();
             if (leader.HasHookline)
             {
+                DimensionStyleOverride styleOverride;
+                double dimgap = leader.Style.TextOffset;
+                if (leader.StyleOverrides.TryGetValue(DimensionStyleOverrideType.TextOffset, out styleOverride))
+                    dimgap = (double) styleOverride.Value;
+                double dimscale = leader.Style.DimScaleOverall;
+                if (leader.StyleOverrides.TryGetValue(DimensionStyleOverrideType.DimScaleOverall, out styleOverride))
+                    dimscale = (double) styleOverride.Value;
+                double dimasz = leader.Style.ArrowSize;
+                if (leader.StyleOverrides.TryGetValue(DimensionStyleOverrideType.ArrowSize, out styleOverride))
+                    dimasz = (double) styleOverride.Value;
+
                 Vector2 hook = leader.Vertexes[leader.Vertexes.Count - 1];
                 MText text = leader.Annotation as MText;
                 if (text != null)
@@ -1681,13 +1758,13 @@ namespace netDxf.IO
                     double sin = Math.Sin(rotation);
                     double cos = Math.Cos(rotation);
                     dir = new Vector2(cos, sin);
-                    Vector2 position = hook + new Vector2(side * leader.Style.DIMGAP * leader.Style.DIMSCALE, leader.Style.DIMGAP * leader.Style.DIMSCALE);
+                    Vector2 position = hook + new Vector2(side*dimgap*dimscale, dimgap*dimscale);
                     Vector2 a = hook - position;
                     a = MathHelper.Transform(a, rotation, CoordinateSystem.Object, CoordinateSystem.World);
                     hook = a + position;
                 }
 
-                Vector2 vertex = hook + dir * leader.Style.DIMASZ * leader.Style.DIMSCALE;
+                Vector2 vertex = hook + dir*dimasz*dimscale;
                 for (int i = 0; i < leader.Vertexes.Count - 1; i++)
                     ocsVertexes.Add(new Vector3(leader.Vertexes[i].X, leader.Vertexes[i].Y, leader.Elevation));
 
@@ -1696,12 +1773,12 @@ namespace netDxf.IO
             }
             else
             {
-                for (int i = 0; i < leader.Vertexes.Count; i++)
-                    ocsVertexes.Add(new Vector3(leader.Vertexes[i].X, leader.Vertexes[i].Y, leader.Elevation));
+                foreach (Vector2 vector in leader.Vertexes)
+                    ocsVertexes.Add(new Vector3(vector.X, vector.Y, leader.Elevation));
             }
 
             IList<Vector3> wcsVertexes = MathHelper.Transform(ocsVertexes, leader.Normal, CoordinateSystem.Object, CoordinateSystem.World);
-            this.chunk.Write(76, (short)wcsVertexes.Count);
+            this.chunk.Write(76, (short) wcsVertexes.Count);
             foreach (Vector3 vertex in wcsVertexes)
             {
                 this.chunk.Write(10, vertex.X);
@@ -1711,7 +1788,8 @@ namespace netDxf.IO
 
             this.chunk.Write(77, leader.LineColor.Index);
 
-            if (leader.Annotation != null) this.chunk.Write(340, leader.Annotation.Handle);
+            if (leader.Annotation != null)
+                this.chunk.Write(340, leader.Annotation.Handle);
 
             this.chunk.Write(210, leader.Normal.X);
             this.chunk.Write(220, leader.Normal.Y);
@@ -1728,15 +1806,18 @@ namespace netDxf.IO
             this.chunk.Write(223, wcsOffset.Y);
             this.chunk.Write(233, wcsOffset.Z);
 
-            // leader text vertical position info
-            this.AddLeaderTextPositionXData(leader);
+            // dimension style overrides info
+            if (leader.StyleOverrides.Count > 0)
+                this.AddDimensionStyleOverridesXData(leader.XData, leader.StyleOverrides, leader);
+            else // leader text vertical position info
+                AddLeaderTextPositionXData(leader);
 
             this.WriteXData(leader.XData);
         }
 
-        private void AddLeaderTextPositionXData(Leader leader)
+        private static void AddLeaderTextPositionXData(Leader leader)
         {
-             MText mText = leader.Annotation as MText;
+            MText mText = leader.Annotation as MText;
             if (mText != null)
             {
                 XData xdataEntry;
@@ -1752,10 +1833,10 @@ namespace netDxf.IO
                 }
                 xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.String, "DSTYLE"));
                 xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.ControlString, "{"));
-                xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short)70));
-                xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short)mText.AttachmentPoint));
-                xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short)77));
-                xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short)leader.TextVerticalPosition));
+                xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 70));
+                xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) mText.AttachmentPoint));
+                xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 77));
+                xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) leader.TextVerticalPosition));
                 xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.ControlString, "}"));
             }
         }
@@ -1881,10 +1962,7 @@ namespace netDxf.IO
 
             double sine = 0.5*ellipse.MajorAxis*Math.Sin(ellipse.Rotation*MathHelper.DegToRad);
             double cosine = 0.5*ellipse.MajorAxis*Math.Cos(ellipse.Rotation*MathHelper.DegToRad);
-            Vector3 axisPoint = MathHelper.Transform(new Vector3(cosine, sine, 0),
-                ellipse.Normal,
-                CoordinateSystem.Object,
-                CoordinateSystem.World);
+            Vector3 axisPoint = MathHelper.Transform(new Vector3(cosine, sine, 0), ellipse.Normal, CoordinateSystem.Object, CoordinateSystem.World);
 
             this.chunk.Write(11, axisPoint.X);
             this.chunk.Write(21, axisPoint.Y);
@@ -1896,11 +1974,37 @@ namespace netDxf.IO
 
             this.chunk.Write(40, ellipse.MinorAxis/ellipse.MajorAxis);
 
-            double[] paramaters = this.GetEllipseParameters(ellipse);
+            double[] paramaters = GetEllipseParameters(ellipse);
             this.chunk.Write(41, paramaters[0]);
             this.chunk.Write(42, paramaters[1]);
 
             this.WriteXData(ellipse.XData);
+        }
+
+        private static double[] GetEllipseParameters(Ellipse ellipse)
+        {
+            double atan1;
+            double atan2;
+            if (ellipse.IsFullEllipse)
+            {
+                atan1 = 0.0;
+                atan2 = MathHelper.TwoPI;
+            }
+            else
+            {
+                Vector2 startPoint = new Vector2(ellipse.Center.X, ellipse.Center.Y) + ellipse.PolarCoordinateRelativeToCenter(ellipse.StartAngle);
+                Vector2 endPoint = new Vector2(ellipse.Center.X, ellipse.Center.Y) + ellipse.PolarCoordinateRelativeToCenter(ellipse.EndAngle);
+                double a = ellipse.MajorAxis*0.5;
+                double b = ellipse.MinorAxis*0.5;
+                double px1 = (startPoint.X - ellipse.Center.X)/a;
+                double py1 = (startPoint.Y - ellipse.Center.Y)/b;
+                double px2 = (endPoint.X - ellipse.Center.X)/a;
+                double py2 = (endPoint.Y - ellipse.Center.Y)/b;
+
+                atan1 = Math.Atan2(py1, px1);
+                atan2 = Math.Atan2(py2, px2);
+            }
+            return new[] {atan1, atan2};
         }
 
         private void WriteSolid(Solid solid)
@@ -1996,20 +2100,20 @@ namespace netDxf.IO
 
             if (spline.CreationMethod == SplineCreationMethod.FitPoints)
             {
-                flags += (short) SplineTypeFlags.FitPointCreationMethod;
+                flags += (short) SplinetypeFlags.FitPointCreationMethod;
                 flags += (short) spline.KnotParameterization;
             }
 
             if (spline.IsPeriodic)
-                flags += (short) SplineTypeFlags.ClosedPeriodicSpline;
+                flags += (short) SplinetypeFlags.ClosedPeriodicSpline;
 
             this.chunk.Write(70, flags);
             this.chunk.Write(71, spline.Degree);
 
             // the next two codes are purely cosmetic and writing them causes more bad than good.
             // internally AutoCad allows for an INT number of knots and control points,
-            // but for some dumb decision Autodesk decided to define them in the dxf with codes 72 and 73 (16-bit integer value), this is a SHORT in net.
-            // I guess this is the result of legacy code, AutoCad do not use those values when importing Spline entities
+            // but for some weird decision they decided to define them in the dxf with codes 72 and 73 (16-bit integer value), this is a SHORT in net.
+            // I guess this is the result of legacy code, nevertheless AutoCad do not use those values when importing Spline entities
             //this.chunk.Write(72, (short)spline.Knots.Length);
             //this.chunk.Write(73, (short)spline.ControlPoints.Count);
             //this.chunk.Write(74, (short)spline.FitPoints.Count);
@@ -2282,9 +2386,12 @@ namespace netDxf.IO
                 this.chunk.Write(30, 0.0);
 
                 this.chunk.Write(71, face.VertexIndexes[0]);
-                if (face.VertexIndexes.Length > 1) this.chunk.Write(72, face.VertexIndexes[1]);
-                if (face.VertexIndexes.Length > 2) this.chunk.Write(73, face.VertexIndexes[2]);
-                if (face.VertexIndexes.Length > 3) this.chunk.Write(74, face.VertexIndexes[3]);
+                if (face.VertexIndexes.Count > 1)
+                    this.chunk.Write(72, face.VertexIndexes[1]);
+                if (face.VertexIndexes.Count > 2)
+                    this.chunk.Write(73, face.VertexIndexes[2]);
+                if (face.VertexIndexes.Count > 3)
+                    this.chunk.Write(74, face.VertexIndexes[3]);
             }
 
             this.chunk.Write(0, mesh.EndSequence.CodeName);
@@ -2512,10 +2619,10 @@ namespace netDxf.IO
 
             this.chunk.Write(70, (short) hatch.Pattern.Fill);
 
-            if(hatch.Associative)
-                this.chunk.Write(71, (short)1);
+            if (hatch.Associative)
+                this.chunk.Write(71, (short) 1);
             else
-                this.chunk.Write(71, (short)0);
+                this.chunk.Write(71, (short) 0);
 
             // boundary paths info
             this.WriteHatchBoundaryPaths(hatch.BoundaryPaths);
@@ -2524,11 +2631,11 @@ namespace netDxf.IO
             this.WriteHatchPattern(hatch.Pattern);
 
             // add the required extended data entries to the hatch XData
-            this.AddHatchPatternXData(hatch);
+            AddHatchPatternXData(hatch);
             this.WriteXData(hatch.XData);
         }
 
-        private void AddHatchPatternXData(Hatch hatch)
+        private static void AddHatchPatternXData(Hatch hatch)
         {
             XData xdataEntry;
             if (hatch.XData.ContainsAppId(ApplicationRegistry.DefaultName))
@@ -2545,10 +2652,10 @@ namespace netDxf.IO
             xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.RealY, hatch.Pattern.Origin.Y));
             xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.RealZ, 0.0));
 
-
             HatchGradientPattern grad = hatch.Pattern as HatchGradientPattern;
-            if (grad == null) return;
-          
+            if (grad == null)
+                return;
+
             if (hatch.XData.ContainsAppId("GradientColor1ACI"))
             {
                 xdataEntry = hatch.XData["GradientColor1ACI"];
@@ -2582,9 +2689,9 @@ namespace netDxf.IO
             // each hatch boundary paths are made of multiple closed loops
             foreach (HatchBoundaryPath path in boundaryPaths)
             {
-                this.chunk.Write(92, (int) path.PathTypeFlag);
+                this.chunk.Write(92, (int) path.PathType);
 
-                if ((path.PathTypeFlag & HatchBoundaryPathTypeFlags.Polyline) != HatchBoundaryPathTypeFlags.Polyline)
+                if (!path.PathType.HasFlag(HatchBoundaryPathTypeFlags.Polyline))
                     this.chunk.Write(93, path.Edges.Count);
 
                 foreach (HatchBoundaryPath.Edge entity in path.Edges)
@@ -2676,31 +2783,16 @@ namespace netDxf.IO
                 {
                     this.chunk.Write(10, point.X);
                     this.chunk.Write(20, point.Y);
-                    if (spline.IsRational) this.chunk.Write(42, point.Z);
+                    if (spline.IsRational)
+                        this.chunk.Write(42, point.Z);
                 }
-
-                //this.chunk.Write(96, spline.FitPoints.Length);
-                //foreach (Vector2 point in spline.FitPoints)
-                //{
-                //    this.chunk.Write(11, point.X);
-                //    this.chunk.Write(21, point.Y);
-                //}
-                //if (spline.StartTangent != null)
-                //{
-                //    this.chunk.Write(12, spline.StartTangent.Value.X);
-                //    this.chunk.Write(22, spline.StartTangent.Value.Y);
-                //}
-                //if (spline.EndTangent != null)
-                //{
-                //    this.chunk.Write(12, spline.EndTangent.Value.X);
-                //    this.chunk.Write(22, spline.EndTangent.Value.Y);
-                //}
 
                 // this information is only required for AutoCAD version 2010
                 // stores information about spline fit points (the spline entity has no fit points and no tangent info)
                 // another dxf inconsistency!; while the number of fit points of Spline entity is written as a short (code 74)
                 // the number of fit points of a hatch boundary path spline is written as an int (code 97)
-                if (this.doc.DrawingVariables.AcadVer >= DxfVersion.AutoCad2010) this.chunk.Write(97, 0);
+                if (this.doc.DrawingVariables.AcadVer >= DxfVersion.AutoCad2010)
+                    this.chunk.Write(97, 0);
             }
         }
 
@@ -2725,8 +2817,12 @@ namespace netDxf.IO
             this.chunk.Write(20, 0.0);
 
             // dxf AutoCad2000 does not support hatch gradient patterns
-            if (pattern is HatchGradientPattern && this.doc.DrawingVariables.AcadVer > DxfVersion.AutoCad2000)
-                this.WriteGradientHatchPattern((HatchGradientPattern) pattern);
+            if (this.doc.DrawingVariables.AcadVer <= DxfVersion.AutoCad2000)
+                return;
+
+            HatchGradientPattern gradientPattern = pattern as HatchGradientPattern;
+            if (gradientPattern != null)
+                this.WriteGradientHatchPattern(gradientPattern);
         }
 
         private void WriteGradientHatchPattern(HatchGradientPattern pattern)
@@ -2793,12 +2889,14 @@ namespace netDxf.IO
             this.chunk.Write(21, dim.MidTextPoint.Y);
             this.chunk.Write(31, dim.MidTextPoint.Z);
 
-            short flags = (short) (dim.DimensionType + (short) DimensionTypeFlags.BlockReference);
-            if (dim.DimensionType == DimensionType.Ordinate)
+            short flags = (short) ((short) dim.DimensionType + (short) DimensionTypeFlags.BlockReference);
+
+            OrdinateDimension ordinateDim = dim as OrdinateDimension;
+            if (ordinateDim != null)
             {
-                // even if the documentation says that code 51 is optional, rotated ordinate dimensions will not work correctly is this value is not provided
-                this.chunk.Write(51, 360 - ((OrdinateDimension) dim).Rotation);
-                if (((OrdinateDimension) dim).Axis == OrdinateDimensionAxis.X)
+                // even if the documentation says that code 51 is optional, rotated ordinate dimensions will not work correctly if this value is not provided
+                this.chunk.Write(51, 360.0 - ordinateDim.Rotation);
+                if (ordinateDim.Axis == OrdinateDimensionAxis.X)
                     flags += (short) DimensionTypeFlags.OrdinteType;
             }
 
@@ -2806,12 +2904,17 @@ namespace netDxf.IO
             this.chunk.Write(71, (short) dim.AttachmentPoint);
             this.chunk.Write(72, (short) dim.LineSpacingStyle);
             this.chunk.Write(41, dim.LineSpacingFactor);
-            if (dim.UserText != null) this.chunk.Write(1, this.EncodeNonAsciiCharacters(dim.UserText));
+            if (dim.UserText != null)
+                this.chunk.Write(1, this.EncodeNonAsciiCharacters(dim.UserText));
             this.chunk.Write(210, dim.Normal.X);
             this.chunk.Write(220, dim.Normal.Y);
             this.chunk.Write(230, dim.Normal.Z);
 
             this.chunk.Write(3, this.EncodeNonAsciiCharacters(dim.Style.Name));
+
+            // add dimension style overrides info
+            if (dim.StyleOverrides.Count > 0)
+                this.AddDimensionStyleOverridesXData(dim.XData, dim.StyleOverrides, dim);
 
             switch (dim.DimensionType)
             {
@@ -2837,6 +2940,276 @@ namespace netDxf.IO
                     this.WriteOrdinateDimension((OrdinateDimension) dim);
                     break;
             }
+        }
+
+        private void AddDimensionStyleOverridesXData(XDataDictionary xdata, DimensionStyleOverrideDictionary overrides, EntityObject entity)
+        {
+            XData xdataEntry;
+            if (xdata.ContainsAppId(ApplicationRegistry.DefaultName))
+            {
+                xdataEntry = xdata[ApplicationRegistry.DefaultName];
+                xdataEntry.XDataRecord.Clear();
+            }
+            else
+            {
+                xdataEntry = new XData(new ApplicationRegistry(ApplicationRegistry.DefaultName));
+                xdata.Add(xdataEntry);
+            }
+            xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.String, "DSTYLE"));
+            xdataEntry.XDataRecord.Add(XDataRecord.OpenControlString);
+            bool writeDIMPOST = false;
+            string prefix = string.Empty;
+            string suffix = string.Empty;
+            bool writeDIMSAH = false;
+            bool writeDIMZIN = false;
+            bool writeDIMAZIN = false;
+            bool suppressLinearLeadingZeros = false;
+            bool suppressLinearTrailingZeros = false;
+            bool suppressAngularLeadingZeros = false;
+            bool suppressAngularTrailingZeros = false;
+            bool suppressZeroFeet = true;
+            bool suppressZeroInches = true;
+            foreach (DimensionStyleOverride styleOverride in overrides.Values)
+            {
+                switch (styleOverride.Type)
+                {
+                    case DimensionStyleOverrideType.DimLineColor:
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 176));
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, ((AciColor) styleOverride.Value).Index));
+                        break;
+                    case DimensionStyleOverrideType.DimLineLinetype:
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 345));
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.DatabaseHandle, ((Linetype) styleOverride.Value).Handle));
+                        break;
+                    case DimensionStyleOverrideType.DimLineLineweight:
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 371));
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) (Lineweight) styleOverride.Value));
+                        break;
+                    case DimensionStyleOverrideType.DimLineExtend:
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 46));
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Real, (double) styleOverride.Value));
+                        break;
+                    case DimensionStyleOverrideType.ExtLineColor:
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 177));
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, ((AciColor) styleOverride.Value).Index));
+                        break;
+                    case DimensionStyleOverrideType.ExtLine1Linetype:
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 346));
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.DatabaseHandle, ((Linetype) styleOverride.Value).Handle));
+                        break;
+                    case DimensionStyleOverrideType.ExtLine2Linetype:
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 347));
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.DatabaseHandle, ((Linetype) styleOverride.Value).Handle));
+                        break;
+                    case DimensionStyleOverrideType.ExtLineLineweight:
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 372));
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) (Lineweight) styleOverride.Value));
+                        break;
+                    case DimensionStyleOverrideType.ExtLine1:
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 75));
+                        if ((bool) styleOverride.Value)
+                            xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 1));
+                        else
+                            xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 0));
+                        break;
+                    case DimensionStyleOverrideType.ExtLine2:
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 76));
+                        if ((bool) styleOverride.Value)
+                            xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 1));
+                        else
+                            xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 0));
+                        break;
+                    case DimensionStyleOverrideType.ExtLineOffset:
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 42));
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Real, (double) styleOverride.Value));
+                        break;
+                    case DimensionStyleOverrideType.ExtLineExtend:
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 44));
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Real, (double) styleOverride.Value));
+                        break;
+                    case DimensionStyleOverrideType.ArrowSize:
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 41));
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Real, (double) styleOverride.Value));
+                        break;
+                    case DimensionStyleOverrideType.CenterMarkSize:
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 141));
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Real, (double) styleOverride.Value));
+                        break;
+                    case DimensionStyleOverrideType.LeaderArrow:
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 341));
+                        xdataEntry.XDataRecord.Add(styleOverride.Value != null
+                            ? new XDataRecord(XDataCode.DatabaseHandle, ((Block) styleOverride.Value).Record.Handle)
+                            : new XDataRecord(XDataCode.DatabaseHandle, "0"));
+                        break;
+                    case DimensionStyleOverrideType.DimArrow1:
+                        writeDIMSAH = true;
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 343));
+                        xdataEntry.XDataRecord.Add(styleOverride.Value != null
+                            ? new XDataRecord(XDataCode.DatabaseHandle, ((Block) styleOverride.Value).Record.Handle)
+                            : new XDataRecord(XDataCode.DatabaseHandle, "0"));
+                        break;
+                    case DimensionStyleOverrideType.DimArrow2:
+                        writeDIMSAH = true;
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 344));
+                        xdataEntry.XDataRecord.Add(styleOverride.Value != null
+                            ? new XDataRecord(XDataCode.DatabaseHandle, ((Block) styleOverride.Value).Record.Handle)
+                            : new XDataRecord(XDataCode.DatabaseHandle, "0"));
+                        break;
+                    case DimensionStyleOverrideType.TextStyle:
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 340));
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.DatabaseHandle, ((TextStyle) styleOverride.Value).Handle));
+                        break;
+                    case DimensionStyleOverrideType.TextColor:
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 178));
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, ((AciColor) styleOverride.Value).Index));
+                        break;
+                    case DimensionStyleOverrideType.TextHeight:
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 140));
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Real, (double) styleOverride.Value));
+                        break;
+                    case DimensionStyleOverrideType.TextOffset:
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 147));
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Real, (double) styleOverride.Value));
+                        break;
+                    case DimensionStyleOverrideType.DimScaleOverall:
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 40));
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Real, (double) styleOverride.Value));
+                        break;
+                    case DimensionStyleOverrideType.AngularPrecision:
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 179));
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) styleOverride.Value));
+                        break;
+                    case DimensionStyleOverrideType.LengthPrecision:
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 271));
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) styleOverride.Value));
+                        break;
+                    case DimensionStyleOverrideType.DimPrefix:
+                        writeDIMPOST = true;
+                        prefix = (string) styleOverride.Value;
+                        break;
+                    case DimensionStyleOverrideType.DimSuffix:
+                        writeDIMPOST = true;
+                        suffix = (string) styleOverride.Value;
+                        break;
+                    case DimensionStyleOverrideType.DecimalSeparator:
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 278));
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) (char) styleOverride.Value));
+                        break;
+                    case DimensionStyleOverrideType.DimScaleLinear:
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 144));
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Real, (double) styleOverride.Value));
+                        break;
+                    case DimensionStyleOverrideType.DimLengthUnits:
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 277));
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) (LinearUnitType) styleOverride.Value));
+                        break;
+                    case DimensionStyleOverrideType.DimAngularUnits:
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 275));
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) (AngleUnitType) styleOverride.Value));
+                        break;
+                    case DimensionStyleOverrideType.FractionalType:
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 276));
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) (FractionFormatType) styleOverride.Value));
+                        break;
+                    case DimensionStyleOverrideType.SuppressZeroFeet:
+                        writeDIMZIN = true;
+                        suppressZeroFeet = (bool) styleOverride.Value;
+                        break;
+                    case DimensionStyleOverrideType.SuppressZeroInches:
+                        writeDIMZIN = true;
+                        suppressZeroInches = (bool) styleOverride.Value;
+                        break;
+                    case DimensionStyleOverrideType.SuppressLinearLeadingZeros:
+                        writeDIMZIN = true;
+                        suppressLinearLeadingZeros = (bool) styleOverride.Value;
+                        break;
+                    case DimensionStyleOverrideType.SuppressLinearTrailingZeros:
+                        writeDIMZIN = true;
+                        suppressLinearTrailingZeros = (bool) styleOverride.Value;
+                        break;
+                    case DimensionStyleOverrideType.SuppressAngularLeadingZeros:
+                        writeDIMAZIN = true;
+                        suppressAngularLeadingZeros = (bool) styleOverride.Value;
+                        break;
+                    case DimensionStyleOverrideType.SuppressAngularTrailingZeros:
+                        writeDIMAZIN = true;
+                        suppressAngularTrailingZeros = (bool) styleOverride.Value;
+                        break;
+                    case DimensionStyleOverrideType.DimRoundoff:
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 45));
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) styleOverride.Value));
+                        break;
+                }
+            }
+
+            if (writeDIMSAH)
+            {
+                xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 173));
+                xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 1));
+            }
+
+            if (writeDIMPOST)
+            {
+                xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 3));
+                xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.String, this.EncodeNonAsciiCharacters(string.Format("{0}<>{1}", prefix, suffix))));
+            }
+
+            if (writeDIMZIN)
+            {
+                short linSupress = 0;
+                if (suppressZeroFeet && suppressZeroInches)
+                    linSupress = 0;
+                else if (!suppressZeroFeet && !suppressZeroInches)
+                    linSupress += 1;
+                else if (!suppressZeroFeet && suppressZeroInches)
+                    linSupress += 2;
+                else if (suppressZeroFeet && !suppressZeroInches)
+                    linSupress += 3;
+
+                if (!suppressLinearLeadingZeros && !suppressLinearTrailingZeros)
+                    linSupress += 0;
+                else if (suppressLinearLeadingZeros && !suppressLinearTrailingZeros)
+                    linSupress += 4;
+                else if (!suppressLinearLeadingZeros && suppressLinearTrailingZeros)
+                    linSupress += 8;
+                else if (suppressLinearLeadingZeros && suppressLinearTrailingZeros)
+                    linSupress += 12;
+
+                xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 78));
+                xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, linSupress));
+            }
+
+            if (writeDIMAZIN)
+            {
+                short angSupress = 3;
+                if (suppressAngularLeadingZeros && suppressAngularTrailingZeros)
+                    angSupress = 3;
+                else if (!suppressAngularLeadingZeros && !suppressAngularTrailingZeros)
+                    angSupress = 0;
+                else if (!suppressAngularLeadingZeros && suppressAngularTrailingZeros)
+                    angSupress = 2;
+                else if (suppressAngularLeadingZeros && !suppressAngularTrailingZeros)
+                    angSupress = 1;
+
+                xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 79));
+                xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, angSupress));
+            }
+
+            // this information is only required by the Leader entity
+            Leader leader = entity as Leader;
+            if (leader != null)
+            {
+                MText mText = leader.Annotation as MText;
+                if (mText != null)
+                {
+                    xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 70));
+                    xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) mText.AttachmentPoint));
+                    xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 77));
+                    xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) leader.TextVerticalPosition));
+                }
+            }
+
+            xdataEntry.XDataRecord.Add(XDataRecord.CloseControlString);
         }
 
         private void WriteAlignedDimension(AlignedDimension dim)
@@ -2932,7 +3305,7 @@ namespace netDxf.IO
                     new Vector3(dim.CenterPoint.X, dim.CenterPoint.Y, dim.Elevation)
                 },
                 dim.Normal, CoordinateSystem.Object, CoordinateSystem.World);
-            
+
             this.chunk.Write(13, wcsPoints[0].X);
             this.chunk.Write(23, wcsPoints[0].Y);
             this.chunk.Write(33, wcsPoints[0].Z);
@@ -3010,18 +3383,18 @@ namespace netDxf.IO
             double factor = UnitHelper.ConversionFactor(this.doc.RasterVariables.Units, this.doc.DrawingVariables.InsUnits);
             Vector2 u = new Vector2(image.Width/image.Definition.Width, 0.0);
             Vector2 v = new Vector2(0.0, image.Height/image.Definition.Height);
-            IList<Vector2> ocsUV = MathHelper.Transform(new List<Vector2>{u, v}, image.Rotation * MathHelper.DegToRad, CoordinateSystem.Object, CoordinateSystem.World);
+            IList<Vector2> ocsUV = MathHelper.Transform(new List<Vector2> {u, v}, image.Rotation*MathHelper.DegToRad, CoordinateSystem.Object, CoordinateSystem.World);
 
             Vector3 ocsU = new Vector3(ocsUV[0].X, ocsUV[0].Y, 0.0);
             Vector3 ocsV = new Vector3(ocsUV[1].X, ocsUV[1].Y, 0.0);
             IList<Vector3> wcsUV = MathHelper.Transform(new List<Vector3> {ocsU, ocsV}, image.Normal, CoordinateSystem.Object, CoordinateSystem.World);
 
-            Vector3 wcsU = wcsUV[0] * factor;
+            Vector3 wcsU = wcsUV[0]*factor;
             this.chunk.Write(11, wcsU.X);
             this.chunk.Write(21, wcsU.Y);
             this.chunk.Write(31, wcsU.Z);
 
-            Vector3 wcsV = wcsUV[1] * factor;
+            Vector3 wcsV = wcsUV[1]*factor;
             this.chunk.Write(12, wcsV.X);
             this.chunk.Write(22, wcsV.Y);
             this.chunk.Write(32, wcsV.Z);
@@ -3041,8 +3414,8 @@ namespace netDxf.IO
             this.chunk.Write(91, image.ClippingBoundary.Vertexes.Count);
             foreach (Vector2 vertex in image.ClippingBoundary.Vertexes)
             {
-                this.chunk.Write(14, vertex.X / u.X);
-                this.chunk.Write(24, vertex.Y / v.Y);
+                this.chunk.Write(14, vertex.X/u.X);
+                this.chunk.Write(24, vertex.Y/v.Y);
             }
 
             this.WriteXData(image.XData);
@@ -3284,11 +3657,11 @@ namespace netDxf.IO
             if (attrib.Transparency.Value >= 0)
                 this.chunk.Write(440, Transparency.ToAlphaValue(attrib.Transparency));
 
-            this.chunk.Write(6, this.EncodeNonAsciiCharacters(attrib.LineType.Name));
+            this.chunk.Write(6, this.EncodeNonAsciiCharacters(attrib.Linetype.Name));
 
-            this.chunk.Write(370, attrib.Lineweight.Value);
-            this.chunk.Write(48, attrib.LineTypeScale);
-            this.chunk.Write(60, attrib.IsVisible ? (short)0 : (short)1);
+            this.chunk.Write(370, (short) attrib.Lineweight);
+            this.chunk.Write(48, attrib.LinetypeScale);
+            this.chunk.Write(60, attrib.IsVisible ? (short) 0 : (short) 1);
 
             this.chunk.Write(100, SubclassMarker.Text);
 
@@ -3475,7 +3848,8 @@ namespace netDxf.IO
 
             this.chunk.Write(90, (int) vp.Status);
 
-            if (vp.ClippingBoundary != null) this.chunk.Write(340, vp.ClippingBoundary.Handle);
+            if (vp.ClippingBoundary != null)
+                this.chunk.Write(340, vp.ClippingBoundary.Handle);
 
             this.chunk.Write(110, vp.UcsOrigin.X);
             this.chunk.Write(120, vp.UcsOrigin.Y);
@@ -3506,7 +3880,8 @@ namespace netDxf.IO
             this.chunk.Write(280, dictionary.IsHardOwner ? (short) 1 : (short) 0);
             this.chunk.Write(281, (short) dictionary.Cloning);
 
-            if (dictionary.Entries == null) return;
+            if (dictionary.Entries == null)
+                return;
 
             foreach (KeyValuePair<string, string> entry in dictionary.Entries)
             {
@@ -3533,7 +3908,8 @@ namespace netDxf.IO
                     objects = this.doc.UnderlayPdfDefinitions.References[underlayDef.Name];
                     break;
             }
-            if (objects == null) throw new NullReferenceException("Underlay references list cannot be null");
+            if (objects == null)
+                throw new NullReferenceException("Underlay references list cannot be null");
             foreach (DxfObject o in objects)
             {
                 Underlay underlay = o as Underlay;
@@ -3548,15 +3924,15 @@ namespace netDxf.IO
             switch (underlayDef.Type)
             {
                 case UnderlayType.DGN:
-                    this.chunk.Write(2, this.EncodeNonAsciiCharacters(((UnderlayDgnDefinition)underlayDef).Layout));
+                    this.chunk.Write(2, this.EncodeNonAsciiCharacters(((UnderlayDgnDefinition) underlayDef).Layout));
                     break;
                 case UnderlayType.DWF:
                     this.chunk.Write(2, string.Empty);
                     break;
                 case UnderlayType.PDF:
-                    this.chunk.Write(2, this.EncodeNonAsciiCharacters(((UnderlayPdfDefinition)underlayDef).Page));
+                    this.chunk.Write(2, this.EncodeNonAsciiCharacters(((UnderlayPdfDefinition) underlayDef).Page));
                     break;
-            }   
+            }
         }
 
         private void WriteImageDefReactor(ImageDefinitionReactor reactor)
@@ -3641,7 +4017,7 @@ namespace netDxf.IO
                 if (element.Color.UseTrueColor) // && this.doc.DrawingVariables.AcadVer > DxfVersion.AutoCad2000)
                     this.chunk.Write(420, AciColor.ToTrueColor(element.Color));
 
-                this.chunk.Write(6, this.EncodeNonAsciiCharacters(element.LineType.Name));
+                this.chunk.Write(6, this.EncodeNonAsciiCharacters(element.Linetype.Name));
             }
         }
 
@@ -3753,12 +4129,15 @@ namespace netDxf.IO
         {
             // for dxf database version prior to AutoCad 2007 non ASCII characters must be encoded to the template \U+####,
             // where #### is the for digits hexadecimal number that represent that character.
-            if (this.doc.DrawingVariables.AcadVer >= DxfVersion.AutoCad2007) return text;
+            if (this.doc.DrawingVariables.AcadVer >= DxfVersion.AutoCad2007)
+                return text;
 
-            if (string.IsNullOrEmpty(text)) return string.Empty;
+            if (string.IsNullOrEmpty(text))
+                return string.Empty;
 
             string encoded;
-            if (this.encodedStrings.TryGetValue(text, out encoded)) return encoded;
+            if (this.encodedStrings.TryGetValue(text, out encoded))
+                return encoded;
 
             StringBuilder sb = new StringBuilder();
             foreach (char c in text)
@@ -3777,44 +4156,18 @@ namespace netDxf.IO
             //return Regex.Replace(
             //    text,
             //    @"(?<char>[^\u0000-\u00ff]{1})",
-            //    m => "\\U+" + String.Format("{0:X4}", Convert.ToInt32(m.Groups["char"].Value[0])));
-        }
-
-        private double[] GetEllipseParameters(Ellipse ellipse)
-        {
-            double atan1;
-            double atan2;
-            if (ellipse.IsFullEllipse)
-            {
-                atan1 = 0.0;
-                atan2 = MathHelper.TwoPI;
-            }
-            else
-            {
-                Vector2 startPoint = new Vector2(ellipse.Center.X, ellipse.Center.Y) + ellipse.PolarCoordinateRelativeToCenter(ellipse.StartAngle);
-                Vector2 endPoint = new Vector2(ellipse.Center.X, ellipse.Center.Y) + ellipse.PolarCoordinateRelativeToCenter(ellipse.EndAngle);
-                double a = ellipse.MajorAxis*0.5;
-                double b = ellipse.MinorAxis*0.5;
-                double px1 = (startPoint.X - ellipse.Center.X)/a;
-                double py1 = (startPoint.Y - ellipse.Center.Y)/b;
-                double px2 = (endPoint.X - ellipse.Center.X)/a;
-                double py2 = (endPoint.Y - ellipse.Center.Y)/b;
-
-                atan1 = Math.Atan2(py1, px1);
-                atan2 = Math.Atan2(py2, px2);
-            }
-            return new[] {atan1, atan2};
+            //    m => "\\U+" + string.Format("{0:X4}", Convert.ToInt32(m.Groups["char"].Value[0])));
         }
 
         private void WriteXData(XDataDictionary xData)
         {
             foreach (string appReg in xData.AppIds)
             {
-                this.chunk.Write(XDataCode.AppReg, this.EncodeNonAsciiCharacters(appReg));
+                this.chunk.Write((short) XDataCode.AppReg, this.EncodeNonAsciiCharacters(appReg));
 
                 foreach (XDataRecord x in xData[appReg].XDataRecord)
                 {
-                    short code = x.Code;
+                    short code = (short) x.Code;
                     object value = x.Value;
                     if (code == 1000 || code == 1003)
                     {

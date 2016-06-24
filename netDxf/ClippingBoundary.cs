@@ -1,27 +1,27 @@
-﻿#region netDxf, Copyright(C) 2015 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf library, Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+
+//                        netDxf library
+// Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
 // 
-//                         netDxf library
-//  Copyright (C) 2009-2015 Daniel Carvajal (haplokuon@gmail.com)
-//  
-//  This library is free software; you can redistribute it and/or
-//  modify it under the terms of the GNU Lesser General Public
-//  License as published by the Free Software Foundation; either
-//  version 2.1 of the License, or (at your option) any later version.
-//  
-//  The above copyright notice and this permission notice shall be included in all
-//  copies or substantial portions of the Software.
-//  
-//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-//  FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-//  COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-//  IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-//  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2.1 of the License, or (at your option) any later version.
+// 
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+// FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+// COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+// IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+// CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
 #endregion
 
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 
 namespace netDxf
 {
@@ -37,7 +37,7 @@ namespace netDxf
         #region private fields
 
         private readonly ClippingBoundaryType type;
-        private readonly List<Vector2> vertexes;
+        private readonly IReadOnlyList<Vector2> vertexes;
 
         #endregion
 
@@ -53,7 +53,7 @@ namespace netDxf
         public ClippingBoundary(double x, double y, double width, double height)
         {
             this.type = ClippingBoundaryType.Rectangular;
-            this.vertexes = new List<Vector2> { new Vector2(x, y), new Vector2(x + width, y + height) };
+            this.vertexes = new List<Vector2> {new Vector2(x, y), new Vector2(x + width, y + height)};
         }
 
         /// <summary>
@@ -64,20 +64,19 @@ namespace netDxf
         public ClippingBoundary(Vector2 firstCorner, Vector2 secondCorner)
         {
             this.type = ClippingBoundaryType.Rectangular;
-            this.vertexes = new List<Vector2> { firstCorner, secondCorner };
+            this.vertexes = new List<Vector2> {firstCorner, secondCorner};
         }
 
         /// <summary>
         /// Initializes a new instance of the <c>ClippingBoundary</c> class as a polygonal clipping boundary.
         /// </summary>
         /// <param name="vertexes">The list of vertexes of the polygonal boundary.</param>
-        public ClippingBoundary(IList<Vector2> vertexes)
+        public ClippingBoundary(IEnumerable<Vector2> vertexes)
         {
-            if (vertexes.Count < 3)
-                throw new ArgumentException("The number of vertexes for the polygonal clipping boundary must be equal or greater than three.", nameof(vertexes));
-
             this.type = ClippingBoundaryType.Polygonal;
             this.vertexes = new List<Vector2>(vertexes);
+            if (this.vertexes.Count < 3)
+                throw new ArgumentOutOfRangeException(nameof(vertexes), this.vertexes.Count, "The number of vertexes for the polygonal clipping boundary must be equal or greater than three.");
         }
 
         #endregion
@@ -95,9 +94,9 @@ namespace netDxf
         /// <summary>
         /// Gets the list of vertexes of the polygonal boundary, or the opposite vertexes if the boundary is rectangular.
         /// </summary>
-        public ReadOnlyCollection<Vector2> Vertexes
+        public IReadOnlyList<Vector2> Vertexes
         {
-            get { return this.vertexes.AsReadOnly(); }
+            get { return this.vertexes; }
         }
 
         #endregion

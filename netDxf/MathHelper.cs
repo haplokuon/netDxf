@@ -1,22 +1,23 @@
-﻿#region netDxf, Copyright(C) 2016 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf library, Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+
+//                        netDxf library
+// Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
 // 
-//                         netDxf library
-//  Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
-//  
-//  This library is free software; you can redistribute it and/or
-//  modify it under the terms of the GNU Lesser General Public
-//  License as published by the Free Software Foundation; either
-//  version 2.1 of the License, or (at your option) any later version.
-//  
-//  The above copyright notice and this permission notice shall be included in all
-//  copies or substantial portions of the Software.
-//  
-//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-//  FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-//  COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-//  IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-//  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2.1 of the License, or (at your option) any later version.
+// 
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+// FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+// COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+// IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+// CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
 #endregion
 
 using System;
@@ -27,14 +28,9 @@ namespace netDxf
     /// <summary>
     /// Utility math functions and constants.
     /// </summary>
-    public class MathHelper
+    public static class MathHelper
     {
         #region constants
-
-        /// <summary>
-        /// Represents the smallest number.
-        /// </summary>
-        public const double Epsilon = 1e-12;
 
         /// <summary>
         /// Constant to transform an angle between degrees and radians.
@@ -49,12 +45,12 @@ namespace netDxf
         /// <summary>
         /// Constant to transform an angle between degrees and gradians.
         /// </summary>
-        public const double DegToGrad = 10.0 / 9.0;
+        public const double DegToGrad = 10.0/9.0;
 
         /// <summary>
         /// Constant to transform an angle between degrees and gradians.
         /// </summary>
-        public const double GradToDeg = 9.0 / 10.0;
+        public const double GradToDeg = 9.0/10.0;
 
         /// <summary>
         /// PI/2 (90 degrees)
@@ -78,7 +74,32 @@ namespace netDxf
 
         #endregion
 
+        #region public properties
+
+        private static double epsilon = 1e-12;
+
+        /// <summary>
+        /// Represents the smallest number used for comparison purposes.
+        /// </summary>
+        public static double Epsilon
+        {
+            get { return epsilon; }
+            set { epsilon = value; }
+        }
+
+        #endregion
+
         #region static methods
+
+        /// <summary>
+        /// Checks if a number is close to one.
+        /// </summary>
+        /// <param name="number">Double precision number.</param>
+        /// <returns>True if its close to one or false in any other case.</returns>
+        public static bool IsOne(double number)
+        {
+            return IsOne(number, Epsilon);
+        }
 
         /// <summary>
         /// Checks if a number is close to one.
@@ -86,7 +107,7 @@ namespace netDxf
         /// <param name="number">Double precision number.</param>
         /// <param name="threshold">Tolerance.</param>
         /// <returns>True if its close to one or false in any other case.</returns>
-        public static bool IsOne(double number, double threshold = Epsilon)
+        public static bool IsOne(double number, double threshold)
         {
             return IsZero(number - 1, threshold);
         }
@@ -95,9 +116,19 @@ namespace netDxf
         /// Checks if a number is close to zero.
         /// </summary>
         /// <param name="number">Double precision number.</param>
+        /// <returns>True if its close to one or false in any other case.</returns>
+        public static bool IsZero(double number)
+        {
+            return IsZero(number, Epsilon);
+        }
+
+        /// <summary>
+        /// Checks if a number is close to zero.
+        /// </summary>
+        /// <param name="number">Double precision number.</param>
         /// <param name="threshold">Tolerance.</param>
         /// <returns>True if its close to one or false in any other case.</returns>
-        public static bool IsZero(double number, double threshold = Epsilon)
+        public static bool IsZero(double number, double threshold)
         {
             return number >= -threshold && number <= threshold;
         }
@@ -107,9 +138,20 @@ namespace netDxf
         /// </summary>
         /// <param name="a">Double precision number.</param>
         /// <param name="b">Double precision number.</param>
+        /// <returns>True if its close to one or false in any other case.</returns>
+        public static bool IsEqual(double a, double b)
+        {
+            return IsEqual(a, b, Epsilon);
+        }
+
+        /// <summary>
+        /// Checks if a number is equal to another.
+        /// </summary>
+        /// <param name="a">Double precision number.</param>
+        /// <param name="b">Double precision number.</param>
         /// <param name="threshold">Tolerance.</param>
         /// <returns>True if its close to one or false in any other case.</returns>
-        public static bool IsEqual(double a, double b, double threshold = Epsilon)
+        public static bool IsEqual(double a, double b, double threshold)
         {
             return IsZero(a - b, threshold);
         }
@@ -125,7 +167,8 @@ namespace netDxf
         public static Vector2 Transform(Vector2 point, double rotation, CoordinateSystem from, CoordinateSystem to)
         {
             // if the rotation is 0 no transformation is needed the transformation matrix is the identity
-            if (IsZero(rotation)) return point;
+            if (IsZero(rotation))
+                return point;
 
             double sin = Math.Sin(rotation);
             double cos = Math.Cos(rotation);
@@ -148,29 +191,33 @@ namespace netDxf
         /// <param name="from">Point coordinate system.</param>
         /// <param name="to">Coordinate system of the transformed point.</param>
         /// <returns>Transformed point list.</returns>
-        public static IList<Vector2> Transform(IList<Vector2> points, double rotation, CoordinateSystem from, CoordinateSystem to)
+        public static IList<Vector2> Transform(IEnumerable<Vector2> points, double rotation, CoordinateSystem from, CoordinateSystem to)
         {
+            if (points == null)
+                throw new ArgumentNullException(nameof(points));
+
             // if the rotation is 0 no transformation is needed the transformation matrix is the identity
-            if (IsZero(rotation)) return points;
+            if (IsZero(rotation))
+                return new List<Vector2>(points);
 
             double sin = Math.Sin(rotation);
             double cos = Math.Cos(rotation);
             List<Vector2> transPoints;
             if (from == CoordinateSystem.World && to == CoordinateSystem.Object)
             {
-                transPoints = new List<Vector2>(points.Count);
+                transPoints = new List<Vector2>();
                 foreach (Vector2 p in points)
-                    transPoints.Add(new Vector2(p.X * cos + p.Y * sin, -p.X * sin + p.Y * cos));
+                    transPoints.Add(new Vector2(p.X*cos + p.Y*sin, -p.X*sin + p.Y*cos));
                 return transPoints;
             }
             if (from == CoordinateSystem.Object && to == CoordinateSystem.World)
             {
-                transPoints = new List<Vector2>(points.Count);
+                transPoints = new List<Vector2>();
                 foreach (Vector2 p in points)
-                    transPoints.Add(new Vector2(p.X * cos - p.Y * sin, p.X * sin + p.Y * cos));
+                    transPoints.Add(new Vector2(p.X*cos - p.Y*sin, p.X*sin + p.Y*cos));
                 return transPoints;
             }
-            return points;
+            return new List<Vector2>(points);
         }
 
         /// <summary>
@@ -184,7 +231,8 @@ namespace netDxf
         public static Vector3 Transform(Vector3 point, Vector3 zAxis, CoordinateSystem from, CoordinateSystem to)
         {
             // if the normal is (0,0,1) no transformation is needed the transformation matrix is the identity
-            if (zAxis.Equals(Vector3.UnitZ)) return point;
+            if (zAxis.Equals(Vector3.UnitZ))
+                return point;
 
             Matrix3 trans = ArbitraryAxis(zAxis);
             if (from == CoordinateSystem.World && to == CoordinateSystem.Object)
@@ -207,15 +255,19 @@ namespace netDxf
         /// <param name="from">Points coordinate system.</param>
         /// <param name="to">Coordinate system of the transformed points.</param>
         /// <returns>Transformed point list.</returns>
-        public static IList<Vector3> Transform(IList<Vector3> points, Vector3 zAxis, CoordinateSystem from, CoordinateSystem to)
+        public static IList<Vector3> Transform(IEnumerable<Vector3> points, Vector3 zAxis, CoordinateSystem from, CoordinateSystem to)
         {
-            if (zAxis.Equals(Vector3.UnitZ)) return points;
+            if (points == null)
+                throw new ArgumentNullException(nameof(points));
+
+            if (zAxis.Equals(Vector3.UnitZ))
+                return new List<Vector3>(points);
 
             Matrix3 trans = ArbitraryAxis(zAxis);
             List<Vector3> transPoints;
             if (from == CoordinateSystem.World && to == CoordinateSystem.Object)
             {
-                transPoints = new List<Vector3>(points.Count);
+                transPoints = new List<Vector3>();
                 trans = trans.Traspose();
                 foreach (Vector3 p in points)
                 {
@@ -225,14 +277,14 @@ namespace netDxf
             }
             if (from == CoordinateSystem.Object && to == CoordinateSystem.World)
             {
-                transPoints = new List<Vector3>(points.Count);
+                transPoints = new List<Vector3>();
                 foreach (Vector3 p in points)
                 {
                     transPoints.Add(trans*p);
                 }
                 return transPoints;
             }
-            return points;
+            return new List<Vector3>(points);
         }
 
         /// <summary>
@@ -270,7 +322,7 @@ namespace netDxf
         public static double PointLineDistance(Vector3 p, Vector3 origin, Vector3 dir)
         {
             double t = Vector3.DotProduct(dir, p - origin);
-            Vector3 pPrime = origin + t * dir;
+            Vector3 pPrime = origin + t*dir;
             Vector3 vec = p - pPrime;
             double distanceSquared = Vector3.DotProduct(vec, vec);
             return Math.Sqrt(distanceSquared);
@@ -286,7 +338,7 @@ namespace netDxf
         public static double PointLineDistance(Vector2 p, Vector2 origin, Vector2 dir)
         {
             double t = Vector2.DotProduct(dir, p - origin);
-            Vector2 pPrime = origin + t * dir;
+            Vector2 pPrime = origin + t*dir;
             Vector2 vec = p - pPrime;
             double distanceSquared = Vector2.DotProduct(vec, vec);
             return Math.Sqrt(distanceSquared);
@@ -347,10 +399,24 @@ namespace netDxf
         /// <param name="dir0">First line direction.</param>
         /// <param name="point1">Second line origin point.</param>
         /// <param name="dir1">Second line direction.</param>
+        /// <returns>The intersection point between the two line.</returns>
+        /// <remarks>If the lines are parallel the method will return a <see cref="Vector2.NaN">Vector2.NaN</see>.</remarks>
+        public static Vector2 FindIntersection(Vector2 point0, Vector2 dir0, Vector2 point1, Vector2 dir1)
+        {
+            return FindIntersection(point0, dir0, point1, dir1, Epsilon);
+        }
+
+        /// <summary>
+        /// Calculates the intersection point of two lines.
+        /// </summary>
+        /// <param name="point0">First line origin point.</param>
+        /// <param name="dir0">First line direction.</param>
+        /// <param name="point1">Second line origin point.</param>
+        /// <param name="dir1">Second line direction.</param>
         /// <param name="threshold">Tolerance.</param>
         /// <returns>The intersection point between the two line.</returns>
         /// <remarks>If the lines are parallel the method will return a <see cref="Vector2.NaN">Vector2.NaN</see>.</remarks>
-        public static Vector2 FindIntersection(Vector2 point0, Vector2 dir0, Vector2 point1, Vector2 dir1, double threshold = Epsilon)
+        public static Vector2 FindIntersection(Vector2 point0, Vector2 dir0, Vector2 point1, Vector2 dir1, double threshold)
         {
             // test for parallelism.
             if (Vector2.AreParallel(dir0, dir1, threshold))
@@ -371,7 +437,7 @@ namespace netDxf
         /// <remarks>Negative angles will be converted to its positive equivalent.</remarks>
         public static double NormalizeAngle(double angle)
         {
-            double c = angle%360;
+            double c = angle%360.0;
             if (c < 0)
                 return 360.0 + c;
             return c;
@@ -385,38 +451,38 @@ namespace netDxf
         /// <returns>The number rounded to the nearest value.</returns>
         public static double RoundToNearest(double number, double roundTo)
         {
-            int mulitpler = Convert.ToInt32(number / roundTo);
-            return mulitpler * roundTo;
+            int mulitpler = Convert.ToInt32(number/roundTo);
+            return mulitpler*roundTo;
         }
 
         /// <summary>
         /// Rotate given vector of angle in radians about a specified axis.
- 	    /// </summary>
- 	    /// <param name="v">Vector to rotate.</param>
- 	    /// <param name="axis">Rotation axis. This vector should be normalized.</param>
- 	    /// <param name="angle">Rotation angle in radians.</param>        
- 	    /// <returns>A copy of the vector, rotated.</returns>
+        /// </summary>
+        /// <param name="v">Vector to rotate.</param>
+        /// <param name="axis">Rotation axis. This vector should be normalized.</param>
+        /// <param name="angle">Rotation angle in radians.</param>        
+        /// <returns>A copy of the vector, rotated.</returns>
         /// <remarks>Method provided by: Idelana. Original Author: Paul Bourke ( http://paulbourke.net/geometry/rotate/ )</remarks>
- 	    public static Vector3 RotateAboutAxis(Vector3 v, Vector3 axis, double angle)
- 	    {
+        public static Vector3 RotateAboutAxis(Vector3 v, Vector3 axis, double angle)
+        {
             Vector3 q = new Vector3();
             double cos = Math.Cos(angle);
             double sin = Math.Sin(angle);
 
-            q.X += (cos + (1 - cos) * axis.X * axis.X) * v.X;
-            q.X += ((1 - cos) * axis.X * axis.Y - axis.Z * sin) * v.Y;
-            q.X += ((1 - cos) * axis.X * axis.Z + axis.Y * sin) * v.Z;
+            q.X += (cos + (1 - cos)*axis.X*axis.X)*v.X;
+            q.X += ((1 - cos)*axis.X*axis.Y - axis.Z*sin)*v.Y;
+            q.X += ((1 - cos)*axis.X*axis.Z + axis.Y*sin)*v.Z;
 
-            q.Y += ((1 - cos) * axis.X * axis.Y + axis.Z * sin) * v.X;
-            q.Y += (cos + (1 - cos) * axis.Y * axis.Y) * v.Y;
-            q.Y += ((1 - cos) * axis.Y * axis.Z - axis.X * sin) * v.Z;
+            q.Y += ((1 - cos)*axis.X*axis.Y + axis.Z*sin)*v.X;
+            q.Y += (cos + (1 - cos)*axis.Y*axis.Y)*v.Y;
+            q.Y += ((1 - cos)*axis.Y*axis.Z - axis.X*sin)*v.Z;
 
-            q.Z += ((1 - cos) * axis.X * axis.Z - axis.Y * sin) * v.X;
-            q.Z += ((1 - cos) * axis.Y * axis.Z + axis.X * sin) * v.Y;
-            q.Z += (cos + (1 - cos) * axis.Z * axis.Z) * v.Z;
- 	 
- 	        return q;
- 	    }
+            q.Z += ((1 - cos)*axis.X*axis.Z - axis.Y*sin)*v.X;
+            q.Z += ((1 - cos)*axis.Y*axis.Z + axis.X*sin)*v.Y;
+            q.Z += (cos + (1 - cos)*axis.Z*axis.Z)*v.Z;
+
+            return q;
+        }
 
         #endregion
     }

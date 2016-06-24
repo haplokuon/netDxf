@@ -1,22 +1,23 @@
-﻿#region netDxf, Copyright(C) 2015 Daniel Carvajal, Licensed under LGPL.
+﻿#region netDxf library, Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+
+//                        netDxf library
+// Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
 // 
-//                         netDxf library
-//  Copyright (C) 2009-2015 Daniel Carvajal (haplokuon@gmail.com)
-//  
-//  This library is free software; you can redistribute it and/or
-//  modify it under the terms of the GNU Lesser General Public
-//  License as published by the Free Software Foundation; either
-//  version 2.1 of the License, or (at your option) any later version.
-//  
-//  The above copyright notice and this permission notice shall be included in all
-//  copies or substantial portions of the Software.
-//  
-//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-//  FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-//  COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-//  IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-//  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2.1 of the License, or (at your option) any later version.
+// 
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+// FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+// COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+// IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+// CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
 #endregion
 
 using System.Collections;
@@ -24,14 +25,17 @@ using System.Collections.Generic;
 
 namespace netDxf.Collections
 {
-    public class ObservableDictionary<TKey, TValue> :
+    public sealed class ObservableDictionary<TKey, TValue> :
         IDictionary<TKey, TValue>
     {
         #region delegates and events
 
         public delegate void AddItemEventHandler(ObservableDictionary<TKey, TValue> sender, ObservableDictionaryEventArgs<TKey, TValue> e);
+
         public delegate void BeforeAddItemEventHandler(ObservableDictionary<TKey, TValue> sender, ObservableDictionaryEventArgs<TKey, TValue> e);
+
         public delegate void RemoveItemEventHandler(ObservableDictionary<TKey, TValue> sender, ObservableDictionaryEventArgs<TKey, TValue> e);
+
         public delegate void BeforeRemoveItemEventHandler(ObservableDictionary<TKey, TValue> sender, ObservableDictionaryEventArgs<TKey, TValue> e);
 
         public event BeforeAddItemEventHandler BeforeAddItem;
@@ -39,7 +43,7 @@ namespace netDxf.Collections
         public event BeforeRemoveItemEventHandler BeforeRemoveItem;
         public event RemoveItemEventHandler RemoveItem;
 
-        protected virtual bool BeforeAddItemEvent(KeyValuePair<TKey, TValue> item)
+        private bool BeforeAddItemEvent(KeyValuePair<TKey, TValue> item)
         {
             BeforeAddItemEventHandler ae = this.BeforeAddItem;
             if (ae != null)
@@ -51,14 +55,14 @@ namespace netDxf.Collections
             return false;
         }
 
-        protected virtual void AddItemEvent(KeyValuePair<TKey, TValue> item)
+        private void AddItemEvent(KeyValuePair<TKey, TValue> item)
         {
             AddItemEventHandler ae = this.AddItem;
             if (ae != null)
                 ae(this, new ObservableDictionaryEventArgs<TKey, TValue>(item));
         }
 
-        protected virtual bool BeforeRemoveItemEvent(KeyValuePair<TKey, TValue> item)
+        private bool BeforeRemoveItemEvent(KeyValuePair<TKey, TValue> item)
         {
             BeforeRemoveItemEventHandler ae = this.BeforeRemoveItem;
             if (ae != null)
@@ -70,7 +74,7 @@ namespace netDxf.Collections
             return false;
         }
 
-        protected virtual void RemoveItemEvent(KeyValuePair<TKey, TValue> item)
+        private void RemoveItemEvent(KeyValuePair<TKey, TValue> item)
         {
             RemoveItemEventHandler ae = this.RemoveItem;
             if (ae != null)
@@ -119,8 +123,10 @@ namespace netDxf.Collections
                 KeyValuePair<TKey, TValue> remove = new KeyValuePair<TKey, TValue>(key, this.innerDictionary[key]);
                 KeyValuePair<TKey, TValue> add = new KeyValuePair<TKey, TValue>(key, value);
 
-                if (this.BeforeRemoveItemEvent(remove)) return;
-                if (this.BeforeAddItemEvent(add)) return;
+                if (this.BeforeRemoveItemEvent(remove))
+                    return;
+                if (this.BeforeAddItemEvent(add))
+                    return;
                 this.innerDictionary[key] = value;
                 this.AddItemEvent(add);
                 this.RemoveItemEvent(remove);
@@ -154,7 +160,8 @@ namespace netDxf.Collections
         public void Add(TKey key, TValue value)
         {
             KeyValuePair<TKey, TValue> add = new KeyValuePair<TKey, TValue>(key, value);
-            if (this.BeforeAddItemEvent(add)) return;
+            if (this.BeforeAddItemEvent(add))
+                return;
             this.innerDictionary.Add(key, value);
             this.AddItemEvent(add);
         }
@@ -166,10 +173,12 @@ namespace netDxf.Collections
 
         public bool Remove(TKey key)
         {
-            if (!this.innerDictionary.ContainsKey(key)) return false;
+            if (!this.innerDictionary.ContainsKey(key))
+                return false;
 
             KeyValuePair<TKey, TValue> remove = new KeyValuePair<TKey, TValue>(key, this.innerDictionary[key]);
-            if (this.BeforeRemoveItemEvent(remove)) return false;
+            if (this.BeforeRemoveItemEvent(remove))
+                return false;
             this.innerDictionary.Remove(key);
             this.RemoveItemEvent(remove);
 
@@ -178,7 +187,8 @@ namespace netDxf.Collections
 
         bool ICollection<KeyValuePair<TKey, TValue>>.Remove(KeyValuePair<TKey, TValue> item)
         {
-            if(!ReferenceEquals(item.Value, this.innerDictionary[item.Key])) return false;
+            if (!ReferenceEquals(item.Value, this.innerDictionary[item.Key]))
+                return false;
             return this.Remove(item.Key);
         }
 
@@ -194,7 +204,7 @@ namespace netDxf.Collections
 
         bool ICollection<KeyValuePair<TKey, TValue>>.Contains(KeyValuePair<TKey, TValue> item)
         {
-           return ((IDictionary<TKey, TValue>)this.innerDictionary).Contains(item);
+            return ((IDictionary<TKey, TValue>) this.innerDictionary).Contains(item);
         }
 
         public bool ContainsKey(TKey key)
@@ -214,7 +224,7 @@ namespace netDxf.Collections
 
         void ICollection<KeyValuePair<TKey, TValue>>.CopyTo(KeyValuePair<TKey, TValue>[] array, int arrayIndex)
         {
-            ((IDictionary<TKey, TValue>)this.innerDictionary).CopyTo(array, arrayIndex);
+            ((IDictionary<TKey, TValue>) this.innerDictionary).CopyTo(array, arrayIndex);
         }
 
         public IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator()
@@ -226,7 +236,6 @@ namespace netDxf.Collections
         {
             return this.GetEnumerator();
         }
-
 
         #endregion
     }
