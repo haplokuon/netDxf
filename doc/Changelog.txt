@@ -1,3 +1,9 @@
+[2.0.1 - 2016/8/9]
++ Implemented the code "\X" for dimension UserText. See sample DimensionUserTextWithTwoLines().
++ Rearrange the arguments in the OrdinateDimension constructor to maintain the same order in all of them.
++ (fixed) Issue Id #13525 HatchPattern now requires name.
++ (fixed) Issue Id #13524 Bug in DimensionStyleOverrideType.DIMDEC processing.
+
 [2.0 - 2016/6/24]
 + Updated target framework to .NET Framework 4.5.
 + The library is CLS-compliant.

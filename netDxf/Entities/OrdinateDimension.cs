@@ -50,7 +50,7 @@ namespace netDxf.Entities
         /// Initializes a new instance of the <c>OrdinateDimension</c> class.
         /// </summary>
         public OrdinateDimension()
-            : this(Vector2.Zero, Vector2.UnitX, 0.1, 0.0, OrdinateDimensionAxis.Y)
+            : this(Vector2.Zero, Vector2.UnitX, 0.1, OrdinateDimensionAxis.Y, 0.0)
         {
         }
 
@@ -61,9 +61,36 @@ namespace netDxf.Entities
         /// <param name="referencePoint">Base location <see cref="Vector3">point</see> in local coordinates of the ordinate dimension.</param>
         /// <param name="length">Length of the dimension line.</param>
         /// <param name="axis">Length of the dimension line.</param>
-        /// <param name="rotation">Angle of rotation in degrees of the dimension lines.</param>
         /// <remarks>The local coordinate system of the dimension is defined by the dimension normal and the rotation value.</remarks>
-        public OrdinateDimension(Vector2 origin, Vector2 referencePoint, double length, double rotation, OrdinateDimensionAxis axis)
+        public OrdinateDimension(Vector2 origin, Vector2 referencePoint, double length, OrdinateDimensionAxis axis)
+            : this(origin, referencePoint, length, axis, 0.0, DimensionStyle.Default)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <c>OrdinateDimension</c> class.
+        /// </summary>
+        /// <param name="origin">Origin <see cref="Vector2">point</see> of the ordinate dimension.</param>
+        /// <param name="referencePoint">Base location <see cref="Vector3">point</see> in local coordinates of the ordinate dimension.</param>
+        /// <param name="length">Length of the dimension line.</param>
+        /// <param name="axis">Length of the dimension line.</param>
+        /// <param name="style">The <see cref="DimensionStyle">style</see> to use with the dimension.</param>
+        /// <remarks>The local coordinate system of the dimension is defined by the dimension normal and the rotation value.</remarks>
+        public OrdinateDimension(Vector2 origin, Vector2 referencePoint, double length, OrdinateDimensionAxis axis, DimensionStyle style)
+            : this(origin, referencePoint, length, axis, 0.0, style)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <c>OrdinateDimension</c> class.
+        /// </summary>
+        /// <param name="origin">Origin <see cref="Vector2">point</see> of the ordinate dimension.</param>
+        /// <param name="referencePoint">Base location <see cref="Vector3">point</see> in local coordinates of the ordinate dimension.</param>
+        /// <param name="length">Length of the dimension line.</param>
+        /// <param name="rotation">Angle of rotation in degrees of the dimension lines.</param>
+        /// <param name="axis">Length of the dimension line.</param>
+        /// <remarks>The local coordinate system of the dimension is defined by the dimension normal and the rotation value.</remarks>
+        public OrdinateDimension(Vector2 origin, Vector2 referencePoint, double length, OrdinateDimensionAxis axis, double rotation)
             : this(origin, referencePoint, length, axis, rotation, DimensionStyle.Default)
         {
         }

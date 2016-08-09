@@ -22,7 +22,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
 
 namespace netDxf.Entities
@@ -86,11 +85,8 @@ namespace netDxf.Entities
         /// <param name="description">Description of the pattern (optional, this information is not saved in the dxf file). By default it will use the supplied name.</param>
         public HatchPattern(string name, IEnumerable<HatchPatternLineDefinition> lineDefinitions, string description)
         {
-            if (string.IsNullOrEmpty(name))
-                throw new ArgumentNullException(nameof(name));
-
-            this.name = name.ToUpper(CultureInfo.CurrentCulture);
-            this.description = string.IsNullOrEmpty(description) ? name : description;
+            this.name = string.IsNullOrEmpty(name) ? string.Empty : name;
+            this.description = string.IsNullOrEmpty(description) ? string.Empty : description;
             this.style = HatchStyle.Normal;
             this.fill = this.name == "SOLID" ? HatchFillType.SolidFill : HatchFillType.PatternFill;
             this.type = HatchType.UserDefined;

@@ -46,10 +46,18 @@ namespace TestDxfDocument
     /// </summary>
     public class Program
     {
-        
+
         public static void Main()
         {
-            DxfDocument doc = Test(@"sample.dxf");
+            CustomHatchPattern();
+
+            //DxfDocument doc = Test(@"sample.dxf");
+
+            #region Samples for new and modified features 2.0.1
+
+            //DimensionUserTextWithTwoLines();
+
+            #endregion
 
             #region Samples for new and modified features 2.0
 
@@ -220,6 +228,74 @@ namespace TestDxfDocument
 
             #endregion
         }
+
+        #region Samples for new and modified features 2.0.1
+
+        private static void DimensionUserTextWithTwoLines()
+        {
+            DxfDocument doc = new DxfDocument();
+
+            // You can add the code "\X" to the dimension UserText (the X must be uppercase).
+            // It will split the dimension text into two lines, one above the dimension line and other under.
+            // Bear in mind that only one "\X" is accepted, if there are more than one the first appearance will split the line,
+            // any subsequent appearance will be shown as "\X".
+            LinearDimension dim1 = new LinearDimension(new Vector2(-5, 5), new Vector2(5, -5), 6, 0);
+            dim1.UserText = "My Value: <>\\XSecondLine\\XThis is still the second line";
+            doc.AddEntity(dim1);
+           
+            AlignedDimension dim2 = new AlignedDimension(new Vector2(10, 6), new Vector2(1, 3), 1);
+            // to properly add the code use the scape sequence "\\" or use a verbatim string
+            dim2.UserText = @"My Value: <>\XSecondLine";
+            doc.AddEntity(dim2);
+
+
+            // For angular dimensions what AutoCad does when the code \X is present is to create a single MText with two lines and is attachment point the MiddleCenter,
+            // instead of creating two MTexts, one on each side of the dimension line, as is the case of the linear dimensions.
+            // In these cases the dimension style property TextOffset has no effect.
+            Line line1 = new Line(new Vector2(-2, 2), new Vector2(2, -2));
+            Line line2 = new Line(new Vector2(-1, -3), new Vector2(1, 3));
+            Angular2LineDimension dim3 = new Angular2LineDimension(line2, line1, 4);
+            dim3.UserText = "My Value: <>\\XSecondLine";
+            doc.AddEntity(dim3);
+
+            // When AutoCad reads a dimension entity from the drawing it uses its associated block to draw it, but once the dimension is modified its block will be rebuild.
+            // For unknown reasons the block of the Angular3PointDimensions is always rebuild when it is read from the file,
+            // making the associated block that is present in the file obsolete.
+            // If this would be the default behavior for all dimensions it would make the presence of its block unnecessary and a lot easier to draw dimensions.
+            // Something similar happen with the hatches in the old formats, it use to require to build a block to define all lines of the hatch,
+            // making them a lot more complex to define and the file a lot bigger than necessary.
+            // This limitation is no longer present, all hatch representations are build when the drawing is loaded.
+            Vector2 center1 = new Vector2(0, 0);
+            Vector2 start = new Vector2(7, 1);
+            Vector2 end = new Vector2(1, 7);
+            Angular3PointDimension dim4 = new Angular3PointDimension(center1, start, end, 4);
+            dim4.UserText = "My Value: <>\\XSecondLine";
+            doc.AddEntity(dim4);
+
+            // for diametric, radial, and ordinate dimensions instead of creating two MText entities,
+            // it will write the text in two lines within the same MText.
+            // The MText attachment point for these cases is always MiddleRight or MiddleLeft, instead of TopCenter or BottomCenter,
+            // this is a limitation since, at the moment, I have no way of properly measuring the length of a text.
+            Vector3 center2 = new Vector3(1, 2, 0);
+            double radius = 3;
+            Circle circle = new Circle(center2, radius);
+            DiametricDimension dim5 = new DiametricDimension(circle, 0, 2);
+            dim5.UserText = "My Value: <>\\XSecondLine";
+            doc.AddEntity(dim5);
+
+            RadialDimension dim6 = new RadialDimension(circle, 0, 3);
+            dim6.UserText = "My Value: <>\\XSecondLine";
+            doc.AddEntity(dim6);
+
+            OrdinateDimension dim7 = new OrdinateDimension(new Vector2(2, 1), new Vector2(1, 0), 3, OrdinateDimensionAxis.X);
+            dim7.UserText = "My Value: <>\\XSecondLine";
+            doc.AddEntity(dim7);
+
+            doc.Save("UserText.dxf");
+
+        }
+
+        #endregion
 
         #region Samples for new and modified features 2.0
 
@@ -447,6 +523,7 @@ namespace TestDxfDocument
             double offset = 6;
             LinearDimension dimX1 = new LinearDimension(line1, offset, 0);
             dimX1.SetDimensionLinePosition(new Vector2(6, 6));
+            dimX1.UserText = "My Value: <>\\XSecondLine";
             LinearDimension dimY1 = new LinearDimension(line1, offset, 90);
             LinearDimension dim5 = new LinearDimension(line1, offset, 180);
             LinearDimension dim6 = new LinearDimension(line1, offset, 270);
@@ -4908,51 +4985,51 @@ namespace TestDxfDocument
 
         private static void DiametricDimensionDrawing()
         {
-            //DxfDocument dxf = new DxfDocument();
+            DxfDocument dxf = new DxfDocument();
 
-            //Vector3 center = new Vector3(1, 2, 0);
-            //double radius = 2.42548;
-            //Circle circle = new Circle(center, radius);
-            ////circle.Normal = new Vector3(1, 1, 1);
-            //DimensionStyle myStyle = new DimensionStyle("MyStyle");
-            //myStyle.DIMPOST = "<>mm";
-            //myStyle.DIMDEC = 2;
-            //myStyle.DIMDSEP = ',';
+            Vector3 center = new Vector3(1, 2, 0);
+            double radius = 2.42548;
+            Circle circle = new Circle(center, radius);
+            //circle.Normal = new Vector3(1, 1, 1);
+            DimensionStyle myStyle = new DimensionStyle("MyStyle");
+            myStyle.DimSuffix = "mm";
+            myStyle.LengthPrecision = 2;
+            myStyle.DecimalSeparator = ',';
 
-            //DiametricDimension dim = new DiametricDimension(circle, 30, myStyle);
-            //dxf.AddEntity(circle);
-            //dxf.AddEntity(dim);
-            //dxf.Save("diametric dimension.dxf");
+            DiametricDimension dim = new DiametricDimension(circle, 30.0, 1.0, myStyle);
+            dxf.AddEntity(circle);
+            dxf.AddEntity(dim);
+            dxf.Save("diametric dimension.dxf");
 
-            //dxf.RemoveEntity(dim);
-            //dxf.Save("diametric dimension removed.dxf");
+            dxf.RemoveEntity(dim);
+            dxf.Save("diametric dimension removed.dxf");
 
-            //dxf = DxfDocument.Load("diametric dimension.dxf");
-            //// remove entitiy with a handle
-            //Dimension dimLoaded = (Dimension) dxf.GetObjectByHandle(dim.Handle);
-            //dxf.RemoveEntity(dimLoaded);
-            //dxf.Save("diametric dimension removed 2.dxf");
+            dxf = DxfDocument.Load("diametric dimension.dxf");
+            // remove entity with a handle
+            Dimension dimLoaded = (Dimension)dxf.GetObjectByHandle(dim.Handle);
+            dxf.RemoveEntity(dimLoaded);
+            dxf.Save("diametric dimension removed 2.dxf");
         }
 
         private static void RadialDimensionDrawing()
         {
-            //DxfDocument dxf = new DxfDocument();
+            DxfDocument dxf = new DxfDocument();
 
-            //Vector3 center = new Vector3(1, 2, 0);
-            //double radius = 2.42548;
-            //Circle circle = new Circle(center, radius);
-            //circle.Normal = new Vector3(1, 1, 1);
-            //DimensionStyle myStyle = new DimensionStyle("MyStyle");
-            //myStyle.DIMPOST = "<>mm";
-            //myStyle.DIMDEC = 2;
-            //myStyle.DIMDSEP = ',';
+            Vector3 center = new Vector3(1, 2, 0);
+            double radius = 2.42548;
+            Circle circle = new Circle(center, radius);
+            circle.Normal = new Vector3(1, 1, 1);
+            DimensionStyle myStyle = new DimensionStyle("MyStyle");
+            myStyle.DimSuffix = "mm";
+            myStyle.LengthPrecision = 2;
+            myStyle.DecimalSeparator = ',';
 
-            //RadialDimension dim = new RadialDimension(circle, 30, myStyle);
-            //dxf.AddEntity(circle);
-            //dxf.AddEntity(dim);
-            //dxf.Save("radial dimension.dxf");
+            RadialDimension dim = new RadialDimension(circle, 30.0, 1.0, myStyle);
+            dxf.AddEntity(circle);
+            dxf.AddEntity(dim);
+            dxf.Save("radial dimension.dxf");
 
-            //dxf = DxfDocument.Load("radial dimension.dxf");
+            dxf = DxfDocument.Load("radial dimension.dxf");
         }
 
         private static void LinearDimensionDrawing()
@@ -5272,6 +5349,7 @@ namespace TestDxfDocument
             };
 
             HatchPattern pattern = new HatchPattern("MyPattern", "A custom hatch pattern");
+            //HatchPattern pattern = new HatchPattern(null);
 
             HatchPatternLineDefinition line1 = new HatchPatternLineDefinition();
             line1.Angle = 45;

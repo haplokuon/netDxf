@@ -35,14 +35,16 @@ namespace netDxf.Entities
     /// </summary>
     internal static class DimensionBlock
     {
+        
         #region private methods
 
-        private static string FormatDimensionText(double measure, bool angular, string userText, DimensionStyle style, Layout layout)
+        private static List<string> FormatDimensionText(double measure, DimensionType dimType, string userText, DimensionStyle style, Layout layout)
         {
+            List<string> texts = new List<string>();
             if (userText == " ")
-                return null;
+                return texts;
 
-            string text = string.Empty;
+            string dimText = string.Empty;
 
             UnitStyleFormat unitFormat = new UnitStyleFormat
             {
@@ -58,24 +60,24 @@ namespace netDxf.Entities
                 SupressZeroInches = style.SuppressZeroInches
             };
 
-            if (angular)
+            if (dimType== DimensionType.Angular || dimType == DimensionType.Angular3Point)
             {
                 switch (style.DimAngularUnits)
                 {
                     case AngleUnitType.DecimalDegrees:
-                        text = AngleUnitFormat.ToDecimal(measure, unitFormat);
+                        dimText = AngleUnitFormat.ToDecimal(measure, unitFormat);
                         break;
                     case AngleUnitType.DegreesMinutesSeconds:
-                        text = AngleUnitFormat.ToDegreesMinutesSeconds(measure, unitFormat);
+                        dimText = AngleUnitFormat.ToDegreesMinutesSeconds(measure, unitFormat);
                         break;
                     case AngleUnitType.Gradians:
-                        text = AngleUnitFormat.ToGradians(measure, unitFormat);
+                        dimText = AngleUnitFormat.ToGradians(measure, unitFormat);
                         break;
                     case AngleUnitType.Radians:
-                        text = AngleUnitFormat.ToRadians(measure, unitFormat);
+                        dimText = AngleUnitFormat.ToRadians(measure, unitFormat);
                         break;
                     case AngleUnitType.SurveyorUnits:
-                        text = AngleUnitFormat.ToDecimal(measure, unitFormat);
+                        dimText = AngleUnitFormat.ToDecimal(measure, unitFormat);
                         break;
                 }
             }
@@ -97,33 +99,73 @@ namespace netDxf.Entities
                 switch (style.DimLengthUnits)
                 {
                     case LinearUnitType.Architectural:
-                        text = LinearUnitFormat.ToArchitectural(measure, unitFormat);
+                        dimText = LinearUnitFormat.ToArchitectural(measure, unitFormat);
                         break;
                     case LinearUnitType.Decimal:
-                        text = LinearUnitFormat.ToDecimal(measure, unitFormat);
+                        dimText = LinearUnitFormat.ToDecimal(measure, unitFormat);
                         break;
                     case LinearUnitType.Engineering:
-                        text = LinearUnitFormat.ToEngineering(measure, unitFormat);
+                        dimText = LinearUnitFormat.ToEngineering(measure, unitFormat);
                         break;
                     case LinearUnitType.Fractional:
-                        text = LinearUnitFormat.ToFractional(measure, unitFormat);
+                        dimText = LinearUnitFormat.ToFractional(measure, unitFormat);
                         break;
                     case LinearUnitType.Scientific:
-                        text = LinearUnitFormat.ToScientific(measure, unitFormat);
+                        dimText = LinearUnitFormat.ToScientific(measure, unitFormat);
                         break;
                     case LinearUnitType.WindowsDesktop:
                         unitFormat.LinearDecimalPlaces = (short) Thread.CurrentThread.CurrentCulture.NumberFormat.NumberDecimalDigits;
                         unitFormat.DecimalSeparator = Thread.CurrentThread.CurrentCulture.NumberFormat.NumberDecimalSeparator;
-                        text = LinearUnitFormat.ToDecimal(measure*style.DimScaleLinear, unitFormat);
+                        dimText = LinearUnitFormat.ToDecimal(measure*style.DimScaleLinear, unitFormat);
                         break;
                 }
             }
-            text = string.Format("{0}{1}{2}", style.DimPrefix, text, style.DimSuffix);
+
+            string prefix = string.Empty;
+            if (dimType == DimensionType.Diameter)
+                prefix = string.IsNullOrEmpty(style.DimPrefix) ? "Ø" : style.DimPrefix;
+            if (dimType == DimensionType.Radius)
+                prefix = string.IsNullOrEmpty(style.DimPrefix) ? "R" : style.DimPrefix;
+            dimText = string.Format("{0}{1}{2}", prefix, dimText, style.DimSuffix);
 
             if (!string.IsNullOrEmpty(userText))
-                text = userText.Replace("<>", text);
+            {
+                int splitPos = 0;
 
-            return text;
+                // check for the first appearance of \X
+                // it will break the dimension text into two one over the dimension line and the other under
+                for (int i = 0; i < userText.Length; i++)
+                {
+                    if (userText[i].Equals('\\'))
+                    {
+                        int j = i + 1;
+                        if (j >= userText.Length)
+                            break;
+
+                        if (userText[j].Equals('X'))
+                        {
+                            splitPos = i;
+                            break;
+                        }
+                    }
+                }
+
+                if (splitPos > 0)
+                {
+                    texts.Add(userText.Substring(0, splitPos).Replace("<>", dimText));
+                    texts.Add(userText.Substring(splitPos + 2, userText.Length - (splitPos + 2)).Replace("<>", dimText));
+                }
+                else
+                {
+                    texts.Add(userText.Replace("<>", dimText));
+                }
+            }
+            else
+            {
+                texts.Add(dimText);
+            }
+
+            return texts;
         }
 
         private static Line DimensionLine(Vector2 start, Vector2 end, double rotation, DimensionStyle style)
@@ -304,7 +346,7 @@ namespace netDxf.Entities
             }
         }
 
-        private static MText DimensionText(Vector2 position, double rotation, string text, DimensionStyle style)
+        private static MText DimensionText(Vector2 position, MTextAttachmentPoint attachmentPoint, double rotation, string text, DimensionStyle style)
         {
             if (string.IsNullOrEmpty(text))
                 return null;
@@ -312,14 +354,14 @@ namespace netDxf.Entities
             MText mText = new MText(text, position, style.TextHeight*style.DimScaleOverall, 0.0, style.TextStyle)
             {
                 Color = style.TextColor,
-                AttachmentPoint = MTextAttachmentPoint.BottomCenter,
+                AttachmentPoint = attachmentPoint,
                 Rotation = rotation*MathHelper.RadToDeg
             };
 
             return mText;
         }
 
-        private static IEnumerable<EntityObject> CenterCross(Vector2 center, double radius, DimensionStyle style)
+        private static List<EntityObject> CenterCross(Vector2 center, double radius, DimensionStyle style)
         {
             List<EntityObject> lines = new List<EntityObject>();
             if (MathHelper.IsZero(style.CenterMarkSize))
@@ -607,15 +649,25 @@ namespace netDxf.Entities
             }
 
             // dimension text
-            string text = FormatDimensionText(measure, false, dim.UserText, style, dim.Owner.Record.Layout);
-
             double textRot = dimRotation;
             if (textRot > MathHelper.HalfPI && textRot <= MathHelper.ThreeHalfPI)
                 textRot += MathHelper.PI;
 
-            MText mText = DimensionText(Vector2.Polar(midDim, style.TextOffset*style.DimScaleOverall, textRot + MathHelper.HalfPI), textRot, text, style);
+            List<string> texts = FormatDimensionText(measure, dim.DimensionType, dim.UserText, style, dim.Owner.Record.Layout);
+
+            MText mText = DimensionText(Vector2.Polar(midDim, style.TextOffset*style.DimScaleOverall, textRot + MathHelper.HalfPI), MTextAttachmentPoint.BottomCenter, textRot, texts[0], style);
             if (mText != null)
                 entities.Add(mText);
+
+            // there might be an additional text if the code \X has been used in the dimension UserText 
+            // this additional text appears under the dimension line
+            if (texts.Count > 1)
+            {
+                string text = texts[1];
+                MText mText2 = DimensionText(Vector2.Polar(midDim, -style.TextOffset * style.DimScaleOverall, textRot + MathHelper.HalfPI), MTextAttachmentPoint.TopCenter, textRot, text, style);
+                if (mText2 != null)
+                    entities.Add(mText2);
+            }
 
             Vector3 defPoint = reversed ? new Vector3(dimRef1.X, dimRef1.Y, dim.Elevation) : new Vector3(dimRef2.X, dimRef2.Y, dim.Elevation);
             dim.DefinitionPoint = MathHelper.Transform(defPoint, dim.Normal, CoordinateSystem.Object, CoordinateSystem.World);
@@ -689,11 +741,21 @@ namespace netDxf.Entities
             }
 
             // dimension text
-            string text = FormatDimensionText(measure, false, dim.UserText, style, dim.Owner.Record.Layout);
+            List<string> texts = FormatDimensionText(measure, dim.DimensionType, dim.UserText, style, dim.Owner.Record.Layout);
 
-            MText mText = DimensionText(Vector2.Polar(midDim, style.TextOffset*style.DimScaleOverall, refAngle + MathHelper.HalfPI), refAngle, text, style);
+            MText mText = DimensionText(Vector2.Polar(midDim, style.TextOffset*style.DimScaleOverall, refAngle + MathHelper.HalfPI), MTextAttachmentPoint.BottomCenter, refAngle, texts[0], style);
             if (mText != null)
                 entities.Add(mText);
+
+            // there might be an additional text if the code \X has been used in the dimension UserText 
+            // this additional text appears under the dimension line
+            if (texts.Count > 1)
+            {
+                string text = texts[1];
+                MText mText2 = DimensionText(Vector2.Polar(midDim, -style.TextOffset * style.DimScaleOverall, refAngle + MathHelper.HalfPI), MTextAttachmentPoint.TopCenter, refAngle, text, style);
+                if (mText2 != null)
+                    entities.Add(mText2);
+            }
 
             Vector3 defPoint = reversed ? new Vector3(dimRef1.X, dimRef1.Y, dim.Elevation) : new Vector3(dimRef2.X, dimRef2.Y, dim.Elevation);
             dim.DefinitionPoint = MathHelper.Transform(defPoint, dim.Normal, CoordinateSystem.Object, CoordinateSystem.World);
@@ -799,8 +861,43 @@ namespace netDxf.Entities
                 textRot += MathHelper.PI;
                 gap *= -1;
             }
-            string text = FormatDimensionText(measure, true, dim.UserText, style, dim.Owner.Record.Layout);
-            MText mText = DimensionText(Vector2.Polar(midDim, gap, midRot), textRot, text, style);
+
+            #region MText build as the Linear dimensions, two MTexts if the code "\X" is present
+
+            //List<string> texts = FormatDimensionText(measure, dim.DimensionType, dim.UserText, style, dim.Owner.Record.Layout);
+            //MText mText = DimensionText(Vector2.Polar(midDim, gap, midRot), MTextAttachmentPoint.BottomCenter, textRot, texts[0], style);
+            //if (mText != null)
+            //    entities.Add(mText);
+
+            //// there might be an additional text if the code \X has been used in the dimension UserText 
+            //// this additional text appears under the dimension line
+            //if (texts.Count > 1)
+            //{
+            //    string text = texts[1];
+            //    MText mText2 = DimensionText(Vector2.Polar(midDim, -gap, midRot), MTextAttachmentPoint.TopCenter, textRot, text, style);
+            //    if (mText2 != null)
+            //        entities.Add(mText2);
+            //}
+
+            #endregion
+
+            List<string> texts = FormatDimensionText(measure, dim.DimensionType, dim.UserText, style, dim.Owner.Record.Layout);
+            string dimText;
+            Vector2 position;
+            MTextAttachmentPoint attachmentPoint;
+            if (texts.Count > 1)
+            {
+                position = midDim;
+                dimText = texts[0] + "\\P" + texts[1];
+                attachmentPoint = MTextAttachmentPoint.MiddleCenter;
+            }
+            else
+            {
+                position = Vector2.Polar(midDim, gap, midRot);
+                dimText = texts[0];
+                attachmentPoint = MTextAttachmentPoint.TopCenter;
+            }
+            MText mText = DimensionText(position, attachmentPoint, textRot, dimText, style);
             if (mText != null)
                 entities.Add(mText);
 
@@ -875,8 +972,43 @@ namespace netDxf.Entities
                 textRot += MathHelper.PI;
                 gap *= -1;
             }
-            string text = FormatDimensionText(measure, true, dim.UserText, style, dim.Owner.Record.Layout);
-            MText mText = DimensionText(Vector2.Polar(midDim, gap, midRot), textRot, text, style);
+
+            #region MText build as the Linear dimensions, two MTexts if the code "\X" is present
+
+            //List<string> texts = FormatDimensionText(measure, dim.DimensionType, dim.UserText, style, dim.Owner.Record.Layout);
+            //MText mText = DimensionText(Vector2.Polar(midDim, gap, midRot), MTextAttachmentPoint.BottomCenter, textRot, texts[0], style);
+            //if (mText != null)
+            //    entities.Add(mText);
+
+            //// there might be an additional text if the code \X has been used in the dimension UserText 
+            //// this additional text appears under the dimension line
+            //if (texts.Count > 1)
+            //{
+            //    string text = texts[1];
+            //    MText mText2 = DimensionText(Vector2.Polar(midDim, -gap, midRot), MTextAttachmentPoint.TopCenter, textRot, text, style);
+            //    if (mText2 != null)
+            //        entities.Add(mText2);
+            //}
+
+            #endregion
+
+            List<string> texts = FormatDimensionText(measure, dim.DimensionType, dim.UserText, style, dim.Owner.Record.Layout);
+            string dimText;
+            Vector2 position;
+            MTextAttachmentPoint attachmentPoint;
+            if (texts.Count > 1)
+            {
+                position = midDim;
+                dimText = texts[0] + "\\P" + texts[1];
+                attachmentPoint = MTextAttachmentPoint.MiddleCenter;
+            }
+            else
+            {
+                position = Vector2.Polar(midDim, gap, midRot);
+                dimText = texts[0];
+                attachmentPoint = MTextAttachmentPoint.TopCenter;
+            }
+            MText mText = DimensionText(position, attachmentPoint, textRot, dimText, style);
             if (mText != null)
                 entities.Add(mText);
 
@@ -935,7 +1067,12 @@ namespace netDxf.Entities
             entities.Add(EndArrowHead(ref1, (1 - side)*MathHelper.HalfPI + angleRef, style));
 
             // dimension text
-            string text = "Ø" + FormatDimensionText(measure, false, dim.UserText, style, dim.Owner.Record.Layout);
+            List<string> texts = FormatDimensionText(measure, dim.DimensionType, dim.UserText, style, dim.Owner.Record.Layout);
+            string dimText ;
+            if (texts.Count > 1)
+                dimText = texts[0] + "\\P" + texts[1];
+            else
+                dimText = texts[0];
 
             double textRot = angleRef;
             short reverse = 1;
@@ -945,12 +1082,10 @@ namespace netDxf.Entities
                 reverse = -1;
             }
 
-            MText mText = DimensionText(Vector2.Polar(dimRef, -reverse*side*style.TextOffset*style.DimScaleOverall, textRot), textRot, text, style);
+            MTextAttachmentPoint attachmentPoint = reverse*side < 0 ? MTextAttachmentPoint.MiddleLeft : MTextAttachmentPoint.MiddleRight;
+            MText mText = DimensionText(Vector2.Polar(dimRef, -reverse*side*style.TextOffset*style.DimScaleOverall, textRot), attachmentPoint, textRot, dimText, style);
             if (mText != null)
-            {
-                mText.AttachmentPoint = reverse*side < 0 ? MTextAttachmentPoint.MiddleLeft : MTextAttachmentPoint.MiddleRight;
                 entities.Add(mText);
-            }
 
             dim.DefinitionPoint = MathHelper.Transform(new Vector3(ref2.X, ref2.Y, dim.Elevation), dim.Normal, CoordinateSystem.Object, CoordinateSystem.World);
             dim.MidTextPoint = new Vector3(dimRef.X, dimRef.Y, dim.Elevation); // this value is in OCS
@@ -1003,7 +1138,13 @@ namespace netDxf.Entities
             entities.Add(EndArrowHead(ref1, (1 - side)*MathHelper.HalfPI + angleRef, style));
 
             // dimension text
-            string text = "R" + FormatDimensionText(measure, false, dim.UserText, style, dim.Owner.Record.Layout);
+            List<string> texts = FormatDimensionText(measure, dim.DimensionType, dim.UserText, style, dim.Owner.Record.Layout);
+
+            string dimText;
+            if (texts.Count > 1)
+                dimText = texts[0] + "\\P" + texts[1];
+            else
+                dimText = texts[0];
 
             double textRot = angleRef;
             short reverse = 1;
@@ -1013,12 +1154,10 @@ namespace netDxf.Entities
                 reverse = -1;
             }
 
-            MText mText = DimensionText(Vector2.Polar(dimRef, -reverse*side*style.TextOffset*style.DimScaleOverall, textRot), textRot, text, style);
+            MTextAttachmentPoint attachmentPoint = reverse*side < 0 ? MTextAttachmentPoint.MiddleLeft : MTextAttachmentPoint.MiddleRight;
+            MText mText = DimensionText(Vector2.Polar(dimRef, -reverse*side*style.TextOffset*style.DimScaleOverall, textRot), attachmentPoint, textRot, dimText, style);
             if (mText != null)
-            {
-                mText.AttachmentPoint = reverse*side < 0 ? MTextAttachmentPoint.MiddleLeft : MTextAttachmentPoint.MiddleRight;
                 entities.Add(mText);
-            }
 
             dim.DefinitionPoint = MathHelper.Transform(new Vector3(centerRef.X, centerRef.Y, dim.Elevation), dim.Normal, CoordinateSystem.Object, CoordinateSystem.World);
             dim.MidTextPoint = new Vector3(dimRef.X, dimRef.Y, dim.Elevation); // this value is in OCS
@@ -1057,14 +1196,17 @@ namespace netDxf.Entities
             // dimension text
             Vector2 midText = Vector2.Polar(startPoint, dim.Length + side*style.TextOffset*style.DimScaleOverall, angle);
 
-            string text = FormatDimensionText(measure, false, dim.UserText, style, dim.Owner.Record.Layout);
+            List<string> texts = FormatDimensionText(measure, dim.DimensionType, dim.UserText, style, dim.Owner.Record.Layout);
+            string dimText;
+            if (texts.Count > 1)
+                dimText = texts[0] + "\\P" + texts[1];
+            else
+                dimText = texts[0];
 
-            MText mText = DimensionText(midText, angle, text, style);
+            MTextAttachmentPoint attachmentPoint = side < 0 ? MTextAttachmentPoint.MiddleRight : MTextAttachmentPoint.MiddleLeft;
+            MText mText = DimensionText(midText, attachmentPoint, angle, dimText, style);
             if (mText != null)
-            {
-                mText.AttachmentPoint = side < 0 ? MTextAttachmentPoint.MiddleRight : MTextAttachmentPoint.MiddleLeft;
                 entities.Add(mText);
-            }
 
             IList<Vector3> wcsPoints = MathHelper.Transform(
                 new[]

@@ -165,9 +165,9 @@ namespace netDxf.Tables
                         throw new ArgumentOutOfRangeException(nameof(value), value, string.Format("The {0} dimension style override must be greater than -1.", type));
                     break;
                 case DimensionStyleOverrideType.LengthPrecision:
-                    if (!(value is double))
-                        throw new ArgumentException(string.Format("The DimensionStyleOverrideType.{0} dimension style override must be a valid {1}", type, typeof (double)), nameof(value));
-                    if ((double) value < 0)
+                    if (!(value is short))
+                        throw new ArgumentException(string.Format("The DimensionStyleOverrideType.{0} dimension style override must be a valid {1}", type, typeof (short)), nameof(value));
+                    if ((short) value < 0)
                         throw new ArgumentOutOfRangeException(nameof(value), value, string.Format("The {0} dimension style override must be equals or greater than zero.", type));
                     break;
                 case DimensionStyleOverrideType.DimPrefix:

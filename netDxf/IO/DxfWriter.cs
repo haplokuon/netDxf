@@ -3733,9 +3733,9 @@ namespace netDxf.IO
                     break;
             }
 
-            this.chunk.Write(11, attrib.Position.X);
-            this.chunk.Write(21, attrib.Position.Y);
-            this.chunk.Write(31, attrib.Position.Z);
+            this.chunk.Write(11, ocsInsertion.X);
+            this.chunk.Write(21, ocsInsertion.Y);
+            this.chunk.Write(31, ocsInsertion.Z);
 
             this.chunk.Write(50, attrib.Rotation);
             this.chunk.Write(51, attrib.ObliqueAngle);
