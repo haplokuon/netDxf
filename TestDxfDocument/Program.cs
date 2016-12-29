@@ -49,9 +49,8 @@ namespace TestDxfDocument
 
         public static void Main()
         {
-            CustomHatchPattern();
 
-            //DxfDocument doc = Test(@"sample.dxf");
+            DxfDocument doc = Test(@"sample.dxf");
 
             #region Samples for new and modified features 2.0.1
 
@@ -396,13 +395,14 @@ namespace TestDxfDocument
             dim.StyleOverrides.Add(DimensionStyleOverrideType.DimLineColor, AciColor.Blue);
             // or creating the DimensionStyleOverride first and adding it
             dim.StyleOverrides.Add(new DimensionStyleOverride(DimensionStyleOverrideType.ArrowSize, style.ArrowSize*5.0));
-            dim.StyleOverrides.Add(new DimensionStyleOverride(DimensionStyleOverrideType.ExtLine1, true));
-            dim.StyleOverrides.Add(new DimensionStyleOverride(DimensionStyleOverrideType.ExtLine2, true));
+            dim.StyleOverrides.Add(new DimensionStyleOverride(DimensionStyleOverrideType.ExtLine1Off, true));
+            dim.StyleOverrides.Add(new DimensionStyleOverride(DimensionStyleOverrideType.ExtLine2Off, true));
             dim.StyleOverrides.Add(new DimensionStyleOverride(DimensionStyleOverrideType.DimPrefix, "My value "));
             dim.StyleOverrides.Add(new DimensionStyleOverride(DimensionStyleOverrideType.DimSuffix, "mm"));
             dim.StyleOverrides.Add(new DimensionStyleOverride(DimensionStyleOverrideType.DecimalSeparator, ':'));
             dim.StyleOverrides.Add(new DimensionStyleOverride(DimensionStyleOverrideType.SuppressLinearLeadingZeros, true));
             dim.StyleOverrides.Add(new DimensionStyleOverride(DimensionStyleOverrideType.SuppressLinearTrailingZeros, false));
+            dim.StyleOverrides.Add(new DimensionStyleOverride(DimensionStyleOverrideType.DimLineOff, true));
             dim.StyleOverrides.Add(new DimensionStyleOverride(DimensionStyleOverrideType.DimArrow1, null));
             dim.StyleOverrides.Add(new DimensionStyleOverride(DimensionStyleOverrideType.DimArrow2, DimensionArrowhead.ArchitecturalTick));
             dim.StyleOverrides.Add(new DimensionStyleOverride(DimensionStyleOverrideType.DimLineLinetype, Linetype.Dashed));
@@ -426,11 +426,11 @@ namespace TestDxfDocument
             dim1.StyleOverrides.Remove(DimensionStyleOverrideType.DecimalSeparator);
 
             // modify an existing style override, if you are sure that type already exists
-            dim1.StyleOverrides[DimensionStyleOverrideType.ExtLine1] = new DimensionStyleOverride(DimensionStyleOverrideType.ExtLine1, false);
+            dim1.StyleOverrides[DimensionStyleOverrideType.ExtLine1Off] = new DimensionStyleOverride(DimensionStyleOverrideType.ExtLine1Off, false);
 
             // to play safe we can check if the style override already exists
             DimensionStyleOverride styleOverride;
-            if (dim1.StyleOverrides.TryGetValue(DimensionStyleOverrideType.ExtLine2, out styleOverride))
+            if (dim1.StyleOverrides.TryGetValue(DimensionStyleOverrideType.ExtLine2Off, out styleOverride))
                 dim1.StyleOverrides[styleOverride.Type] = new DimensionStyleOverride(styleOverride.Type, false);
 
             // but we can always try to delete the existing one before adding our new style override
@@ -3452,9 +3452,11 @@ namespace TestDxfDocument
                             Debug.Assert(ReferenceEquals((Block) styleOverride.Value, dxf.Blocks[((Block) styleOverride.Value).Name]), "Object reference not equal.");
                             break;
                         case DimensionStyleOverrideType.DimArrow1:
+                            if(styleOverride.Value == null) break;
                             Debug.Assert(ReferenceEquals((Block) styleOverride.Value, dxf.Blocks[((Block) styleOverride.Value).Name]), "Object reference not equal.");
                             break;
                         case DimensionStyleOverrideType.DimArrow2:
+                            if (styleOverride.Value == null) break;
                             Debug.Assert(ReferenceEquals((Block) styleOverride.Value, dxf.Blocks[((Block) styleOverride.Value).Name]), "Object reference not equal.");
                             break;
                     }
@@ -5743,24 +5745,64 @@ namespace TestDxfDocument
             string layerName = "MyLayer";
             float totalTime = 0;
 
-            List<EntityObject> lines = new List<EntityObject>(numLines);
+            //List<EntityObject> lines = new List<EntityObject>(numLines);
+            List<EntityObject> pols = new List<EntityObject>(numLines);
             DxfDocument dxf = new DxfDocument();
 
             crono.Start();
             for (int i = 0; i < numLines; i++)
             {
-                //line
-                Line line = new Line(new Vector3(0, i, 0), new Vector3(5, i, 0));
-                line.Layer = new Layer(layerName);
-                line.Layer.Color.Index = 6;
-                lines.Add(line);
+                //List<Vector2> vertexes = new List<Vector2>()
+                //{
+                //    new Vector2(0,0),
+                //    new Vector2(10,0),
+                //    new Vector2(10,10),
+                //    new Vector2(0,10),
+                //    new Vector2(0,20),
+                //    new Vector2(10,20),
+                //    new Vector2(10,30),
+                //    new Vector2(10,40),
+                //    new Vector2(0,40),
+                //    new Vector2(0,50)
+                //};
+                //LwPolyline pol = new LwPolyline(vertexes);
+                //pol.Layer = new Layer(layerName);
+                //pol.Layer.Color.Index = 6;
+                //pols.Add(pol);
+
+                List<Vector3> vertexes = new List<Vector3>()
+                {
+                    new Vector3(0,0,0),
+                    new Vector3(10,0,10),
+                    new Vector3(10,10,20),
+                    new Vector3(0,10,30),
+                    new Vector3(0,20,40),
+                    new Vector3(10,20,50),
+                    new Vector3(10,30,60),
+                    new Vector3(10,40,70),
+                    new Vector3(0,40,80),
+                    new Vector3(0,50,90)
+                };
+                Polyline pol = new Polyline(vertexes);
+                pol.Layer = new Layer(layerName);
+                pol.Layer.Color.Index = 6;
+                pols.Add(pol);
+
+                //lines.Add(pol);
+                ////line
+                //Line line = new Line(new Vector3(0, i, 0), new Vector3(5, i, 0));
+                //line.Layer = new Layer(layerName);
+                //line.Layer.Color.Index = 6;
+                //lines.Add(line);
             }
+
             Console.WriteLine("Time creating entities : " + crono.ElapsedMilliseconds/1000.0f);
             totalTime += crono.ElapsedMilliseconds;
             crono.Reset();
 
             crono.Start();
-            dxf.AddEntity(lines);
+            //dxf.AddEntity(lines);
+            dxf.AddEntity(pols);
             Console.WriteLine("Time adding entities to document : " + crono.ElapsedMilliseconds/1000.0f);
             totalTime += crono.ElapsedMilliseconds;
             crono.Reset();
@@ -5772,19 +5814,19 @@ namespace TestDxfDocument
             totalTime += crono.ElapsedMilliseconds;
             crono.Reset();
 
-            crono.Start();
-            dxf.DrawingVariables.AcadVer = DxfVersion.AutoCad2000;
-            dxf.Save("speedtest (binary netDxf 2000).dxf", true);
-            Console.WriteLine("Time saving binary file 2000 : " + crono.ElapsedMilliseconds/1000.0f);
-            totalTime += crono.ElapsedMilliseconds;
-            crono.Reset();
+            //crono.Start();
+            //dxf.DrawingVariables.AcadVer = DxfVersion.AutoCad2000;
+            //dxf.Save("speedtest (binary netDxf 2000).dxf", true);
+            //Console.WriteLine("Time saving binary file 2000 : " + crono.ElapsedMilliseconds/1000.0f);
+            //totalTime += crono.ElapsedMilliseconds;
+            //crono.Reset();
 
-            crono.Start();
-            dxf.DrawingVariables.AcadVer = DxfVersion.AutoCad2010;
-            dxf.Save("speedtest (netDxf 2010).dxf");
-            Console.WriteLine("Time saving file 2010 : " + crono.ElapsedMilliseconds/1000.0f);
-            totalTime += crono.ElapsedMilliseconds;
-            crono.Reset();
+            //crono.Start();
+            //dxf.DrawingVariables.AcadVer = DxfVersion.AutoCad2010;
+            //dxf.Save("speedtest (netDxf 2010).dxf");
+            //Console.WriteLine("Time saving file 2010 : " + crono.ElapsedMilliseconds/1000.0f);
+            //totalTime += crono.ElapsedMilliseconds;
+            //crono.Reset();
 
 
             crono.Start();
@@ -5794,19 +5836,19 @@ namespace TestDxfDocument
             crono.Stop();
             crono.Reset();
 
-            crono.Start();
-            dxf = DxfDocument.Load("speedtest (binary netDxf 2000).dxf");
-            Console.WriteLine("Time loading binary file 2000: " + crono.ElapsedMilliseconds/1000.0f);
-            totalTime += crono.ElapsedMilliseconds;
-            crono.Stop();
-            crono.Reset();
+            //crono.Start();
+            //dxf = DxfDocument.Load("speedtest (binary netDxf 2000).dxf");
+            //Console.WriteLine("Time loading binary file 2000: " + crono.ElapsedMilliseconds/1000.0f);
+            //totalTime += crono.ElapsedMilliseconds;
+            //crono.Stop();
+            //crono.Reset();
 
-            crono.Start();
-            dxf = DxfDocument.Load("speedtest (netDxf 2010).dxf");
-            Console.WriteLine("Time loading file 2010: " + crono.ElapsedMilliseconds/1000.0f);
-            totalTime += crono.ElapsedMilliseconds;
-            crono.Stop();
-            crono.Reset();
+            //crono.Start();
+            //dxf = DxfDocument.Load("speedtest (netDxf 2010).dxf");
+            //Console.WriteLine("Time loading file 2010: " + crono.ElapsedMilliseconds/1000.0f);
+            //totalTime += crono.ElapsedMilliseconds;
+            //crono.Stop();
+            //crono.Reset();
 
             Console.WriteLine("Total time : " + totalTime/1000.0f);
             Console.ReadLine();

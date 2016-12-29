@@ -138,7 +138,7 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// viewport status field:<br />
+        /// Viewport status field:<br />
         /// -1 = On, but is fully off screen, or is one of the viewports that is not active because the $MAXACTVP count is currently being exceeded.<br />
         /// 0 = Off<br />
         /// 1 = Stacking value reserved for the layout view.

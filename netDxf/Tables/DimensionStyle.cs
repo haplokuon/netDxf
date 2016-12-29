@@ -91,6 +91,7 @@ namespace netDxf.Tables
         private AciColor dimclrd;
         private Linetype dimltype;
         private Lineweight dimlwd;
+        private bool dimsd;
         private double dimdle;
         private double dimdli;
 
@@ -184,6 +185,7 @@ namespace netDxf.Tables
             this.dimclrd = AciColor.ByBlock;
             this.dimltype = Linetype.ByBlock;
             this.dimlwd = Lineweight.ByBlock;
+            this.dimsd = false;
             this.dimdli = 0.38;
             this.dimdle = 0.0;
 
@@ -286,6 +288,21 @@ namespace netDxf.Tables
         }
 
         /// <summary>
+        /// Suppresses display of the dimension line.
+        /// </summary>
+        /// <remarks>
+        /// The are actually two variables in the dxf to control the suppression of the dimension line,
+        /// dimsd1 and dimsd2 that hide the left and right side of the dimension line.
+        /// This library does not supports both variables, you can only turn it on or off completely but not partially.
+        /// Default: false
+        /// </remarks>
+        public bool DimLineOff
+        {
+            get { return this.dimsd; }
+            set { this.dimsd = value; }
+        }
+
+        /// <summary>
         /// Sets the distance the dimension line extends beyond the extension line when oblique, architectural tick, integral, or no marks are drawn for arrowheads.
         /// </summary>
         /// <remarks>Default: 0.0</remarks>
@@ -385,7 +402,7 @@ namespace netDxf.Tables
         /// Suppresses display of the first extension line.
         /// </summary>
         /// <remarks>Default: false</remarks>
-        public bool ExtLine1
+        public bool ExtLine1Off
         {
             get { return this.dimse1; }
             set { this.dimse1 = value; }
@@ -395,7 +412,7 @@ namespace netDxf.Tables
         /// Suppresses display of the second extension line.
         /// </summary>
         /// <remarks>Default: false</remarks>
-        public bool ExtLine2
+        public bool ExtLine2Off
         {
             get { return this.dimse2; }
             set { this.dimse2 = value; }
@@ -890,6 +907,7 @@ namespace netDxf.Tables
                 DimLineColor = (AciColor) this.dimclrd.Clone(),
                 DimLineLinetype = (Linetype) this.dimltype.Clone(),
                 DimLineLineweight = this.dimlwd,
+                DimLineOff = this.dimsd,
                 DimBaselineSpacing = this.dimdli,
                 DimLineExtend = this.dimdle,
 
@@ -898,8 +916,8 @@ namespace netDxf.Tables
                 ExtLine1Linetype = (Linetype) this.dimltex1.Clone(),
                 ExtLine2Linetype = (Linetype) this.dimltex2.Clone(),
                 ExtLineLineweight = this.dimlwe,
-                ExtLine1 = this.dimse1,
-                ExtLine2 = this.dimse2,
+                ExtLine1Off = this.dimse1,
+                ExtLine2Off = this.dimse2,
                 ExtLineOffset = this.dimexo,
                 ExtLineExtend = this.dimexe,
 

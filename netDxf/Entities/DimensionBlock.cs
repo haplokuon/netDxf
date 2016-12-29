@@ -34,8 +34,7 @@ namespace netDxf.Entities
     /// Holds methods to build the dimension blocks.
     /// </summary>
     internal static class DimensionBlock
-    {
-        
+    {      
         #region private methods
 
         private static List<string> FormatDimensionText(double measure, DimensionType dimType, string userText, DimensionStyle style, Layout layout)
@@ -414,6 +413,7 @@ namespace netDxf.Entities
                 DimLineColor = dim.Style.DimLineColor,
                 DimLineLinetype = dim.Style.DimLineLinetype,
                 DimLineLineweight = dim.Style.DimLineLineweight,
+                DimLineOff = dim.Style.DimLineOff,
                 DimBaselineSpacing = dim.Style.DimBaselineSpacing,
                 DimLineExtend = dim.Style.DimLineExtend,
 
@@ -422,8 +422,8 @@ namespace netDxf.Entities
                 ExtLine1Linetype = dim.Style.ExtLine1Linetype,
                 ExtLine2Linetype = dim.Style.ExtLine2Linetype,
                 ExtLineLineweight = dim.Style.ExtLineLineweight,
-                ExtLine1 = dim.Style.ExtLine1,
-                ExtLine2 = dim.Style.ExtLine2,
+                ExtLine1Off = dim.Style.ExtLine1Off,
+                ExtLine2Off = dim.Style.ExtLine2Off,
                 ExtLineOffset = dim.Style.ExtLineOffset,
                 ExtLineExtend = dim.Style.ExtLineExtend,
 
@@ -466,6 +466,9 @@ namespace netDxf.Entities
                     case DimensionStyleOverrideType.DimLineLineweight:
                         copy.DimLineLineweight = (Lineweight) styleOverride.Value;
                         break;
+                    case DimensionStyleOverrideType.DimLineOff:
+                        copy.DimLineOff = (bool)styleOverride.Value;
+                        break;
                     case DimensionStyleOverrideType.DimLineExtend:
                         copy.DimLineExtend = (double) styleOverride.Value;
                         break;
@@ -481,11 +484,11 @@ namespace netDxf.Entities
                     case DimensionStyleOverrideType.ExtLineLineweight:
                         copy.ExtLineLineweight = (Lineweight) styleOverride.Value;
                         break;
-                    case DimensionStyleOverrideType.ExtLine1:
-                        copy.ExtLine1 = (bool) styleOverride.Value;
+                    case DimensionStyleOverrideType.ExtLine1Off:
+                        copy.ExtLine1Off = (bool) styleOverride.Value;
                         break;
-                    case DimensionStyleOverrideType.ExtLine2:
-                        copy.ExtLine2 = (bool) styleOverride.Value;
+                    case DimensionStyleOverrideType.ExtLine2Off:
+                        copy.ExtLine2Off = (bool) styleOverride.Value;
                         break;
                     case DimensionStyleOverrideType.ExtLineOffset:
                         copy.ExtLineOffset = (double) styleOverride.Value;
@@ -615,8 +618,23 @@ namespace netDxf.Entities
                 ? new Point(dimRef1) {Layer = defPointLayer}
                 : new Point(dimRef2) {Layer = defPointLayer});
 
-            // dimension line
-            entities.Add(DimensionLine(dimRef1, dimRef2, dimRotation, style));
+            if (!style.DimLineOff)
+            {
+                // dimension line
+                entities.Add(DimensionLine(dimRef1, dimRef2, dimRotation, style));
+
+                // dimension arrowheads
+                if (reversed)
+                {
+                    entities.Add(StartArrowHead(dimRef2, dimRotation, style));
+                    entities.Add(EndArrowHead(dimRef1, dimRotation + MathHelper.PI, style));
+                }
+                else
+                {
+                    entities.Add(StartArrowHead(dimRef1, dimRotation + MathHelper.PI, style));
+                    entities.Add(EndArrowHead(dimRef2, dimRotation, style));
+                }
+            }
 
             // extension lines
             Vector2 dirDimRef = Vector2.Normalize(dimRef2 - dimRef1);
@@ -631,22 +649,11 @@ namespace netDxf.Entities
 
             double dimexo = style.ExtLineOffset*style.DimScaleOverall;
             double dimexe = style.ExtLineExtend*style.DimScaleOverall;
-            if (!style.ExtLine1)
+            if (!style.ExtLine1Off)
                 entities.Add(ExtensionLine(ref1 + dimexo*dirRef1, dimRef1 + dimexe*dirRef1, style, style.ExtLine1Linetype));
-            if (!style.ExtLine2)
+            if (!style.ExtLine2Off)
                 entities.Add(ExtensionLine(ref2 + dimexo*dirRef2, dimRef2 + dimexe*dirRef2, style, style.ExtLine2Linetype));
 
-            // dimension arrowheads
-            if (reversed)
-            {
-                entities.Add(StartArrowHead(dimRef2, dimRotation, style));
-                entities.Add(EndArrowHead(dimRef1, dimRotation + MathHelper.PI, style));
-            }
-            else
-            {
-                entities.Add(StartArrowHead(dimRef1, dimRotation + MathHelper.PI, style));
-                entities.Add(EndArrowHead(dimRef2, dimRotation, style));
-            }
 
             // dimension text
             double textRot = dimRotation;
@@ -710,8 +717,22 @@ namespace netDxf.Entities
                 ? new Point(dimRef1) {Layer = defPointLayer}
                 : new Point(dimRef2) {Layer = defPointLayer});
 
-            // dimension lines
-            entities.Add(DimensionLine(dimRef1, dimRef2, refAngle, style));
+            if (!style.DimLineOff)
+            {
+                // dimension lines
+                entities.Add(DimensionLine(dimRef1, dimRef2, refAngle, style));
+                // dimension arrowheads
+                if (reversed)
+                {
+                    entities.Add(StartArrowHead(dimRef2, refAngle, style));
+                    entities.Add(EndArrowHead(dimRef1, refAngle + MathHelper.PI, style));
+                }
+                else
+                {
+                    entities.Add(StartArrowHead(dimRef1, refAngle + MathHelper.PI, style));
+                    entities.Add(EndArrowHead(dimRef2, refAngle, style));
+                }
+            }
 
             // extension lines
             double dimexo = style.ExtLineOffset*style.DimScaleOverall;
@@ -723,22 +744,10 @@ namespace netDxf.Entities
                 dimexe *= -1;
             }
 
-            if (!style.ExtLine1)
+            if (!style.ExtLine1Off)
                 entities.Add(ExtensionLine(Vector2.Polar(ref1, dimexo, refAngle + MathHelper.HalfPI), Vector2.Polar(dimRef1, dimexe, refAngle + MathHelper.HalfPI), style, style.ExtLine1Linetype));
-            if (!style.ExtLine2)
+            if (!style.ExtLine2Off)
                 entities.Add(ExtensionLine(Vector2.Polar(ref2, dimexo, refAngle + MathHelper.HalfPI), Vector2.Polar(dimRef2, dimexe, refAngle + MathHelper.HalfPI), style, style.ExtLine2Linetype));
-
-            // dimension arrowheads
-            if (reversed)
-            {
-                entities.Add(StartArrowHead(dimRef2, refAngle, style));
-                entities.Add(EndArrowHead(dimRef1, refAngle + MathHelper.PI, style));
-            }
-            else
-            {
-                entities.Add(StartArrowHead(dimRef1, refAngle + MathHelper.PI, style));
-                entities.Add(EndArrowHead(dimRef2, refAngle, style));
-            }
 
             // dimension text
             List<string> texts = FormatDimensionText(measure, dim.DimensionType, dim.UserText, style, dim.Owner.Record.Layout);
@@ -823,16 +832,19 @@ namespace netDxf.Entities
             entities.Add(new Point(ref2Start) {Layer = defPoints});
             entities.Add(new Point(ref2End) {Layer = defPoints});
 
-            // dimension lines
-            double ext1;
-            double ext2;
-            entities.Add(DimensionArc(center, dimRef1, dimRef2, startAngle, endAngle, offset, style, out ext1, out ext2));
+            if (!style.DimLineOff)
+            {
+                // dimension lines
+                double ext1;
+                double ext2;
+                entities.Add(DimensionArc(center, dimRef1, dimRef2, startAngle, endAngle, offset, style, out ext1, out ext2));
 
-            // dimension arrows
-            double angle1 = Math.Asin(ext1*0.5/offset);
-            double angle2 = Math.Asin(ext2*0.5/offset);
-            entities.Add(StartArrowHead(dimRef1, angle1 + startAngle - MathHelper.HalfPI, style));
-            entities.Add(EndArrowHead(dimRef2, angle2 + endAngle + MathHelper.HalfPI, style));
+                // dimension arrows
+                double angle1 = Math.Asin(ext1*0.5/offset);
+                double angle2 = Math.Asin(ext2*0.5/offset);
+                entities.Add(StartArrowHead(dimRef1, angle1 + startAngle - MathHelper.HalfPI, style));
+                entities.Add(EndArrowHead(dimRef2, angle2 + endAngle + MathHelper.HalfPI, style));
+            }
 
             // dimension lines         
             double dimexo = style.ExtLineOffset*style.DimScaleOverall;
@@ -841,14 +853,14 @@ namespace netDxf.Entities
             // the dimension line is only drawn if the end of the extension line is outside the line segment
             int t;
             t = MathHelper.PointInSegment(dimRef1, ref1Start, ref1End);
-            if (!style.ExtLine1 && t != 0)
+            if (!style.ExtLine1Off && t != 0)
             {
                 Vector2 s = Vector2.Polar(t < 0 ? ref1Start : ref1End, t*dimexo, startAngle);
                 entities.Add(ExtensionLine(s, Vector2.Polar(dimRef1, t*dimexe, startAngle), style, style.ExtLine1Linetype));
             }
 
             t = MathHelper.PointInSegment(dimRef2, ref2Start, ref2End);
-            if (!style.ExtLine2 && t != 0)
+            if (!style.ExtLine2Off && t != 0)
             {
                 Vector2 s = Vector2.Polar(t < 0 ? ref2Start : ref2End, t*dimexo, endAngle);
                 entities.Add(ExtensionLine(s, Vector2.Polar(dimRef2, t*dimexe, endAngle), style, style.ExtLine1Linetype));
@@ -945,23 +957,26 @@ namespace netDxf.Entities
             entities.Add(new Point(ref2) {Layer = defPoints});
             entities.Add(new Point(refCenter) {Layer = defPoints});
 
-            // dimension lines
-            double ext1;
-            double ext2;
-            entities.Add(DimensionArc(refCenter, dimRef1, dimRef2, startAngle, endAngle, offset, style, out ext1, out ext2));
+            if (!style.DimLineOff)
+            {
+                // dimension lines
+                double ext1;
+                double ext2;
+                entities.Add(DimensionArc(refCenter, dimRef1, dimRef2, startAngle, endAngle, offset, style, out ext1, out ext2));
 
-            // dimension arrows
-            double angle1 = Math.Asin(ext1*0.5/offset);
-            double angle2 = Math.Asin(ext2*0.5/offset);
-            entities.Add(StartArrowHead(dimRef1, angle1 + startAngle - MathHelper.HalfPI, style));
-            entities.Add(EndArrowHead(dimRef2, angle2 + endAngle + MathHelper.HalfPI, style));
-
-            // dimension lines
+                // dimension arrows
+                double angle1 = Math.Asin(ext1*0.5/offset);
+                double angle2 = Math.Asin(ext2*0.5/offset);
+                entities.Add(StartArrowHead(dimRef1, angle1 + startAngle - MathHelper.HalfPI, style));
+                entities.Add(EndArrowHead(dimRef2, angle2 + endAngle + MathHelper.HalfPI, style));
+            }
+                
+            // extension lines
             double dimexo = style.ExtLineOffset*style.DimScaleOverall;
             double dimexe = style.ExtLineExtend*style.DimScaleOverall;
-            if (!style.ExtLine1)
+            if (!style.ExtLine1Off)
                 entities.Add(ExtensionLine(Vector2.Polar(ref1, dimexo, startAngle), Vector2.Polar(dimRef1, dimexe, startAngle), style, style.ExtLine1Linetype));
-            if (!style.ExtLine2)
+            if (!style.ExtLine2Off)
                 entities.Add(ExtensionLine(Vector2.Polar(ref2, dimexo, endAngle), Vector2.Polar(dimRef2, dimexe, endAngle), style, style.ExtLine1Linetype));
 
             // dimension text
@@ -1057,14 +1072,16 @@ namespace netDxf.Entities
             Layer defPoints = new Layer("Defpoints") {Plot = false};
             entities.Add(new Point(ref1) {Layer = defPoints});
 
-            // dimension lines
-            entities.Add(DimensionRadialLine(dimRef, ref1, angleRef, side, style));
+            if (!style.DimLineOff)
+            {
+                // dimension lines
+                entities.Add(DimensionRadialLine(dimRef, ref1, angleRef, side, style));
+                // dimension arrows
+                entities.Add(EndArrowHead(ref1, (1 - side)*MathHelper.HalfPI + angleRef, style));
+            }
 
             // center cross
             entities.AddRange(CenterCross(centerRef, radius, style));
-
-            // dimension arrows
-            entities.Add(EndArrowHead(ref1, (1 - side)*MathHelper.HalfPI + angleRef, style));
 
             // dimension text
             List<string> texts = FormatDimensionText(measure, dim.DimensionType, dim.UserText, style, dim.Owner.Record.Layout);
@@ -1128,14 +1145,17 @@ namespace netDxf.Entities
             Layer defPoints = new Layer("Defpoints") {Plot = false};
             entities.Add(new Point(ref1) {Layer = defPoints});
 
-            // dimension lines
-            entities.Add(DimensionRadialLine(dimRef, ref1, angleRef, side, style));
+            if (!style.DimLineOff)
+            {
+                // dimension line
+                entities.Add(DimensionRadialLine(dimRef, ref1, angleRef, side, style));
+
+                // dimension arrows
+                entities.Add(EndArrowHead(ref1, (1 - side)*MathHelper.HalfPI + angleRef, style));
+            }
 
             // center cross
             entities.AddRange(CenterCross(centerRef, measure, style));
-
-            // dimension arrows
-            entities.Add(EndArrowHead(ref1, (1 - side)*MathHelper.HalfPI + angleRef, style));
 
             // dimension text
             List<string> texts = FormatDimensionText(measure, dim.DimensionType, dim.UserText, style, dim.Owner.Record.Layout);

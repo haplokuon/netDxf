@@ -779,14 +779,26 @@ namespace netDxf.IO
             this.chunk.Write(9, "$DIMSCALE");
             this.chunk.Write(40, style.DimScaleOverall);
 
+            this.chunk.Write(9, "$DIMSD1");
+            if (style.DimLineOff)
+                this.chunk.Write(70, (short)1);
+            else
+                this.chunk.Write(70, (short)0);
+
+            this.chunk.Write(9, "$DIMSD2");
+            if (style.DimLineOff)
+                this.chunk.Write(70, (short)1);
+            else
+                this.chunk.Write(70, (short)0);
+
             this.chunk.Write(9, "$DIMSE1");
-            if (style.ExtLine1)
+            if (style.ExtLine1Off)
                 this.chunk.Write(70, (short) 1);
             else
                 this.chunk.Write(70, (short) 0);
 
             this.chunk.Write(9, "$DIMSE2");
-            if (style.ExtLine2)
+            if (style.ExtLine2Off)
                 this.chunk.Write(70, (short) 1);
             else
                 this.chunk.Write(70, (short) 0);
@@ -1015,11 +1027,11 @@ namespace netDxf.IO
 
             this.chunk.Write(73, style.DIMTIH);
             this.chunk.Write(74, style.DIMTOH);
-            if (style.ExtLine1)
+            if (style.ExtLine1Off)
                 this.chunk.Write(75, (short) 1);
             else
                 this.chunk.Write(75, (short) 0);
-            if (style.ExtLine2)
+            if (style.ExtLine2Off)
                 this.chunk.Write(76, (short) 1);
             else
                 this.chunk.Write(76, (short) 0);
@@ -1072,10 +1084,19 @@ namespace netDxf.IO
             this.chunk.Write(277, (short) style.DimLengthUnits);
             this.chunk.Write(278, (short) style.DecimalSeparator);
             this.chunk.Write(280, style.DIMJUST);
-
+            if (style.DimLineOff)
+            {
+                this.chunk.Write(281, (short) 1);
+                this.chunk.Write(282, (short) 1);
+            }
+            else
+            {
+                this.chunk.Write(281, (short) 0);
+                this.chunk.Write(282, (short) 0);
+            }
             this.chunk.Write(340, style.TextStyle.Handle);
 
-            // CAUTION: The documentation says that the next three values are the handles of referenced BLOCK,
+            // CAUTION: The documentation says that the next values are the handles of referenced BLOCK,
             // but they are the handles of referenced BLOCK_RECORD
             if (style.LeaderArrow != null)
                 this.chunk.Write(341, style.LeaderArrow.Record.Handle);
@@ -1273,6 +1294,9 @@ namespace netDxf.IO
             this.chunk.Write(2, this.EncodeNonAsciiCharacters(style.Name));
 
             this.chunk.Write(3, this.EncodeNonAsciiCharacters(style.FontFile));
+
+            if(!string.IsNullOrEmpty(style.BigFont))
+                this.chunk.Write(4, this.EncodeNonAsciiCharacters(style.BigFont));
 
             this.chunk.Write(70, style.IsVertical ? (short) 4 : (short) 0);
 
@@ -2985,6 +3009,19 @@ namespace netDxf.IO
                         xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 371));
                         xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) (Lineweight) styleOverride.Value));
                         break;
+                    case DimensionStyleOverrideType.DimLineOff:
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short)281));
+                        if ((bool)styleOverride.Value)
+                            xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short)1));
+                        else
+                            xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short)0));
+
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short)282));
+                        if ((bool)styleOverride.Value)
+                            xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short)1));
+                        else
+                            xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short)0));
+                        break;
                     case DimensionStyleOverrideType.DimLineExtend:
                         xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 46));
                         xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Real, (double) styleOverride.Value));
@@ -3005,14 +3042,14 @@ namespace netDxf.IO
                         xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 372));
                         xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) (Lineweight) styleOverride.Value));
                         break;
-                    case DimensionStyleOverrideType.ExtLine1:
+                    case DimensionStyleOverrideType.ExtLine1Off:
                         xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 75));
                         if ((bool) styleOverride.Value)
                             xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 1));
                         else
                             xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 0));
                         break;
-                    case DimensionStyleOverrideType.ExtLine2:
+                    case DimensionStyleOverrideType.ExtLine2Off:
                         xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 76));
                         if ((bool) styleOverride.Value)
                             xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 1));

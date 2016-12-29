@@ -125,12 +125,13 @@ namespace netDxf.Entities
 
             List<Vector2> ocsVertexes = new List<Vector2>();
 
-            double angle = MathHelper.TwoPI/precision;
+            double delta = MathHelper.TwoPI/precision;
 
             for (int i = 0; i < precision; i++)
             {
-                double sine = this.radius*Math.Sin(MathHelper.HalfPI + angle*i);
-                double cosine = this.radius*Math.Cos(MathHelper.HalfPI + angle*i);
+                double angle = delta*i;
+                double sine = this.radius*Math.Sin(angle);
+                double cosine = this.radius*Math.Cos(angle);
                 ocsVertexes.Add(new Vector2(cosine, sine));
             }
             return ocsVertexes;

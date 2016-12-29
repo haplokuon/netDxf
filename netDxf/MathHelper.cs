@@ -237,7 +237,7 @@ namespace netDxf
             Matrix3 trans = ArbitraryAxis(zAxis);
             if (from == CoordinateSystem.World && to == CoordinateSystem.Object)
             {
-                trans = trans.Traspose();
+                trans = trans.Transpose();
                 return trans*point;
             }
             if (from == CoordinateSystem.Object && to == CoordinateSystem.World)
@@ -268,7 +268,7 @@ namespace netDxf
             if (from == CoordinateSystem.World && to == CoordinateSystem.Object)
             {
                 transPoints = new List<Vector3>();
-                trans = trans.Traspose();
+                trans = trans.Transpose();
                 foreach (Vector3 p in points)
                 {
                     transPoints.Add(trans*p);

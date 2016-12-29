@@ -266,6 +266,7 @@ namespace netDxf.Entities
                 AttachmentPoint = this.AttachmentPoint,
                 LineSpacingStyle = this.LineSpacingStyle,
                 LineSpacingFactor = this.LineSpacingFactor,
+                UserText = this.UserText,
                 //LinearDimension properties
                 FirstReferencePoint = this.firstRefPoint,
                 SecondReferencePoint = this.secondRefPoint,

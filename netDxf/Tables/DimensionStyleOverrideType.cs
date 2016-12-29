@@ -48,6 +48,11 @@ namespace netDxf.Tables
         DimLineLineweight,
 
         /// <summary>
+        /// Suppresses display of the dimension line.
+        /// </summary>
+        DimLineOff,
+
+        /// <summary>
         /// Distance the dimension line extends beyond the extension line when oblique, architectural tick, integral, or no marks are drawn for arrowheads.
         /// </summary>
         DimLineExtend,
@@ -75,12 +80,12 @@ namespace netDxf.Tables
         /// <summary>
         /// Suppresses display of the first extension line.
         /// </summary>
-        ExtLine1,
+        ExtLine1Off,
 
         /// <summary>
         /// Suppresses display of the second extension line.
         /// </summary>
-        ExtLine2,
+        ExtLine2Off,
 
         /// <summary>
         /// Specifies how far extension lines are offset from origin points.

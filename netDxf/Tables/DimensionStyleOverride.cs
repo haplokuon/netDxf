@@ -62,6 +62,10 @@ namespace netDxf.Tables
                     if (!(value is Lineweight))
                         throw new ArgumentException(string.Format("The DimensionStyleOverrideType.{0} dimension style override must be a valid {1}", type, typeof (Lineweight)), nameof(value));
                     break;
+                case DimensionStyleOverrideType.DimLineOff:
+                    if (!(value is bool))
+                        throw new ArgumentException(string.Format("The DimensionStyleOverrideType.{0} dimension style override must be a valid {1}", type, typeof(bool)), nameof(value));
+                    break;
                 case DimensionStyleOverrideType.DimLineExtend:
                     if (!(value is double))
                         throw new ArgumentException(string.Format("The DimensionStyleOverrideType.{0} dimension style override must be a valid {1}", type, typeof (double)), nameof(value));
@@ -84,11 +88,11 @@ namespace netDxf.Tables
                     if (!(value is Lineweight))
                         throw new ArgumentException(string.Format("The DimensionStyleOverrideType.{0} dimension style override must be a valid {1}", type, typeof (Lineweight)), nameof(value));
                     break;
-                case DimensionStyleOverrideType.ExtLine1:
+                case DimensionStyleOverrideType.ExtLine1Off:
                     if (!(value is bool))
                         throw new ArgumentException(string.Format("The DimensionStyleOverrideType.{0} dimension style override must be a valid {1}", type, typeof (bool)), nameof(value));
                     break;
-                case DimensionStyleOverrideType.ExtLine2:
+                case DimensionStyleOverrideType.ExtLine2Off:
                     if (!(value is bool))
                         throw new ArgumentException(string.Format("The DimensionStyleOverrideType.{0} dimension style override must be a valid {1}", type, typeof (bool)), nameof(value));
                     break;

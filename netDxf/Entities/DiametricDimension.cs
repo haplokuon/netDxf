@@ -263,6 +263,7 @@ namespace netDxf.Entities
                 AttachmentPoint = this.AttachmentPoint,
                 LineSpacingStyle = this.LineSpacingStyle,
                 LineSpacingFactor = this.LineSpacingFactor,
+                UserText = this.UserText,
                 //DiametricDimension properties
                 CenterPoint = this.center,
                 ReferencePoint = this.refPoint,

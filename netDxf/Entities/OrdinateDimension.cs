@@ -228,6 +228,7 @@ namespace netDxf.Entities
                 AttachmentPoint = this.AttachmentPoint,
                 LineSpacingStyle = this.LineSpacingStyle,
                 LineSpacingFactor = this.LineSpacingFactor,
+                UserText = this.UserText,
                 //OrdinateDimension properties
                 Origin = this.origin,
                 ReferencePoint = this.referencePoint,

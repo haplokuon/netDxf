@@ -393,7 +393,7 @@ namespace netDxf
         /// Obtains the transpose matrix.
         /// </summary>
         /// <returns>Transpose matrix.</returns>
-        public Matrix3 Traspose()
+        public Matrix3 Transpose()
         {
             return new Matrix3(this.m11, this.m21, this.m31, this.m12, this.m22, this.m32, this.m13, this.m23, this.m33);
         }

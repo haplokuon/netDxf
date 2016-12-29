@@ -1,3 +1,18 @@
+[2.0.2 - 2016/12/29]
++ Added the dimension style property DimLineOff, and its corresponding override, to suppress the drawing of the dimension line.
++ Rename the dimension style properties ExtLine1 and ExtLine2, and their corresponding overrides, to ExtLine1Off and ExtLine2Off, respectively, to better reflect its purpose.
++ The UserText property of a dimension will now also be copied when cloning.
++ Added the property BigFont to the TextStyle class. This is only applicable to Asian SHX fonts.
++ Updated "netDxf Documentation.chm".
++ (fixed) Workaround for possible incorrect values while reading the spline tolerances.
++ (fixed) Issue Id #13534 Another font for default text style. The FileFont property of the TextStyle is now writable to be able to change the font used by the default "Standard" style.
++ (fixed) Issue Id #13532 Ellipse.PolygonalVertexes(360<) cause OutOfMemory.
++ (fixed) Issue Id #13531 Issues with dxf version and. Fix reading the InsBase header variable of an external dxf.
++ (fixed) Issue Id #13530 open autocad 2000 files (R15). Fix for entities with possible 0 value in code 330.
++ (fixed) Issue Id #13529 Typing error in struct Matrix3.
++ (fixed) Issue Id #13526 Exception on 0 degree angular dimension. If while loading a dxf an Angular2LineDimension entity made of two parallel lines is found, it will be skipped.
+
+
 [2.0.1 - 2016/8/9]
 + Implemented the code "\X" for dimension UserText. See sample DimensionUserTextWithTwoLines().
 + Rearrange the arguments in the OrdinateDimension constructor to maintain the same order in all of them.

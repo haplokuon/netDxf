@@ -168,14 +168,10 @@ namespace netDxf.Entities
         /// <summary>
         /// Checks if the actual instance is a full ellipse.
         /// </summary>
+        /// <remarks>An ellipse is considered full when its start and end angles are equal.</remarks>
         public bool IsFullEllipse
         {
-            get
-            {
-                double a = MathHelper.IsEqual(this.startAngle, 360.0) ? 0.0 : this.startAngle;
-                double b = MathHelper.IsEqual(this.endAngle, 360.0) ? 0.0 : this.endAngle;
-                return MathHelper.IsEqual(a, b);
-            }
+            get { return MathHelper.IsEqual(this.startAngle, this.endAngle); }
         }
 
         #endregion
@@ -210,17 +206,18 @@ namespace netDxf.Entities
         public List<Vector2> PolygonalVertexes(int precision)
         {
             List<Vector2> points = new List<Vector2>();
-            double beta = this.rotation*MathHelper.DegToRad;
+            double beta = this.rotation * MathHelper.DegToRad;
             double sinbeta = Math.Sin(beta);
             double cosbeta = Math.Cos(beta);
 
             if (this.IsFullEllipse)
             {
-                for (int i = 0; i < 360; i += 360/precision)
+                double delta = MathHelper.TwoPI/precision;
+                for (int i = 0; i < precision; i++)
                 {
-                    double alpha = i*MathHelper.DegToRad;
-                    double sinalpha = Math.Sin(alpha);
-                    double cosalpha = Math.Cos(alpha);
+                    double angle = delta*i;
+                    double sinalpha = Math.Sin(angle);
+                    double cosalpha = Math.Cos(angle);
 
                     double pointX = 0.5*(this.majorAxis*cosalpha*cosbeta - this.minorAxis*sinalpha*sinbeta);
                     double pointY = 0.5*(this.majorAxis*cosalpha*sinbeta + this.minorAxis*sinalpha*cosbeta);
@@ -232,15 +229,14 @@ namespace netDxf.Entities
             {
                 double start = this.startAngle;
                 double end = this.endAngle;
-                if (end < start)
-                    end += 360.0;
-                double angle = (end - start)/precision;
+                if (end < start) end += 360.0;
+                double delta = (end - start) / precision;
                 for (int i = 0; i <= precision; i++)
                 {
-                    Vector2 point = this.PolarCoordinateRelativeToCenter(start + angle*i);
+                    Vector2 point = this.PolarCoordinateRelativeToCenter(start + delta*i);
                     // we need to apply the ellipse rotation to the local point
-                    double pointX = point.X*cosbeta - point.Y*sinbeta;
-                    double pointY = point.X*sinbeta + point.Y*cosbeta;
+                    double pointX = point.X * cosbeta - point.Y * sinbeta;
+                    double pointY = point.X * sinbeta + point.Y * cosbeta;
                     points.Add(new Vector2(pointX, pointY));
                 }
             }

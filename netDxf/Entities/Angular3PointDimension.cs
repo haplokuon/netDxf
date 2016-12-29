@@ -250,6 +250,7 @@ namespace netDxf.Entities
                 AttachmentPoint = this.AttachmentPoint,
                 LineSpacingStyle = this.LineSpacingStyle,
                 LineSpacingFactor = this.LineSpacingFactor,
+                UserText = this.UserText,
                 //Angular3PointDimension properties
                 CenterPoint = this.center,
                 StartPoint = this.start,

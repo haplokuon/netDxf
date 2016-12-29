@@ -177,7 +177,6 @@ namespace netDxf.Header
         /// </remarks>
         public const string LwDisplay = "$LWDISPLAY";
 
-
         /// <summary>
         /// Global line type scale.
         /// </summary>

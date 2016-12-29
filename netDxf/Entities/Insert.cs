@@ -305,7 +305,7 @@ namespace netDxf.Entities
                 att.Height = txtHeight;
 
                 double txtAng = Vector2.Angle(new Vector2(txtU.X*insScale.X, txtU.Y*insScale.Y))*MathHelper.RadToDeg;
-                if (Equals(attdef.Normal, Vector3.UnitZ))
+                if (Vector3.Equals(attdef.Normal, Vector3.UnitZ))
                 {
                     att.Rotation = this.rotation + txtAng;
 

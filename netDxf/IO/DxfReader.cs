@@ -467,12 +467,27 @@ namespace netDxf.IO
                         break;
                     case HeaderVariableCode.InsBase:
                         Vector3 pos = Vector3.Zero;
-                        pos.X = this.chunk.ReadDouble();
-                        this.chunk.Next();
-                        pos.Y = this.chunk.ReadDouble();
-                        this.chunk.Next();
-                        pos.Z = this.chunk.ReadDouble();
-                        this.chunk.Next();
+                        while (this.chunk.Code != 0 && this.chunk.Code != 9)
+                        {
+                            switch (this.chunk.Code)
+                            {
+                                case 10:
+                                    pos.X = this.chunk.ReadDouble();
+                                    this.chunk.Next();
+                                    break;
+                                case 20:
+                                    pos.Y = this.chunk.ReadDouble();
+                                    this.chunk.Next();
+                                    break;
+                                case 30:
+                                    pos.Z = this.chunk.ReadDouble();
+                                    this.chunk.Next();
+                                    break;
+                                default:
+                                    throw new Exception("Invalid code in InsBase header variable.");
+                            }
+                        }
+                        
                         this.doc.DrawingVariables.InsBase = pos;
                         break;
                     case HeaderVariableCode.InsUnits:
@@ -1223,6 +1238,8 @@ namespace netDxf.IO
             AciColor dimclrd = defaultDim.DimLineColor;
             string dimltype = string.Empty; // handle for post processing
             Lineweight dimlwd = defaultDim.DimLineLineweight;
+            bool dimsd1 = false;
+            bool dimsd2 = false;
             double dimdle = defaultDim.DimLineExtend;
             double dimdli = defaultDim.DimBaselineSpacing;
 
@@ -1425,6 +1442,14 @@ namespace netDxf.IO
                         dimjust = this.chunk.ReadShort();
                         this.chunk.Next();
                         break;
+                    case 281:
+                        dimsd1 = this.chunk.ReadShort() != 0;
+                        this.chunk.Next();
+                        break;
+                    case 282:
+                        dimsd2 = this.chunk.ReadShort() != 0;
+                        this.chunk.Next();
+                        break;
                     case 340:
                         dimtxsty = this.chunk.ReadHex();
                         this.chunk.Next();
@@ -1481,14 +1506,15 @@ namespace netDxf.IO
                 // dimension lines
                 DimLineColor = dimclrd,
                 DimLineLineweight = dimlwd,
+                DimLineOff = dimsd1 && dimsd2,
                 DimBaselineSpacing = dimdli,
                 DimLineExtend = dimdle,
 
                 // extension lines
                 ExtLineColor = dimclre,
                 ExtLineLineweight = dimlwe,
-                ExtLine1 = dimse1,
-                ExtLine2 = dimse2,
+                ExtLine1Off = dimse1,
+                ExtLine2Off = dimse2,
                 ExtLineOffset = dimexo,
                 ExtLineExtend = dimexe,
 
@@ -1843,6 +1869,7 @@ namespace netDxf.IO
 
             string name = null;
             string font = null;
+            string bigFont = null;
             bool isVertical = false;
             bool isBackward = false;
             bool isUpsideDown = false;
@@ -1862,6 +1889,10 @@ namespace netDxf.IO
                         break;
                     case 3:
                         font = this.DecodeEncodedNonAsciiCharacters(this.chunk.ReadString());
+                        this.chunk.Next();
+                        break;
+                    case 4:
+                        bigFont = this.DecodeEncodedNonAsciiCharacters(this.chunk.ReadString());
                         this.chunk.Next();
                         break;
                     case 70:
@@ -1918,7 +1949,7 @@ namespace netDxf.IO
             if (string.IsNullOrEmpty(font))
                 return null;
 
-            return new TextStyle(name, font, false)
+            TextStyle style = new TextStyle(name, font, false)
             {
                 Height = height,
                 IsBackward = isBackward,
@@ -1927,6 +1958,12 @@ namespace netDxf.IO
                 ObliqueAngle = obliqueAngle,
                 WidthFactor = widthFactor,
             };
+
+            if (string.IsNullOrEmpty(bigFont)) return style;
+
+            if (Path.GetExtension(font).Equals(".shx", StringComparison.OrdinalIgnoreCase) && Path.GetExtension(bigFont).Equals(".shx", StringComparison.OrdinalIgnoreCase))
+                style.BigFont = bigFont;
+            return style;
         }
 
         private UCS ReadUCS()
@@ -2706,6 +2743,7 @@ namespace netDxf.IO
                         break;
                     case 330:
                         owner = this.chunk.ReadHex();
+                        if (owner == "0") owner = null;
                         this.chunk.Next();
                         break;
                     default:
@@ -4318,6 +4356,8 @@ namespace netDxf.IO
             IEnumerator<XDataRecord> records = xDataOverrides.XDataRecord.GetEnumerator();
             short dimzin = -1;
             short dimazin = -1;
+            bool dimsd1 = false;
+            bool dimsd2 = false;
             while (records.MoveNext())
             {
                 XDataRecord data = records.Current;
@@ -4374,6 +4414,18 @@ namespace netDxf.IO
                                 overrides.Add(new DimensionStyleOverride(DimensionStyleOverrideType.DimLineLineweight, (Lineweight) (short) data.Value));
                                 break;
 
+                            case 281:// DimensionStyleOverrideType.DIMSD1:
+                                if (data.Code != XDataCode.Int16)
+                                    return overrides; // premature end
+                                dimsd1 = (short) data.Value != 0;
+                                break;
+
+                            case 282:// DimensionStyleOverrideType.DIMSD2:
+                                if (data.Code != XDataCode.Int16)
+                                    return overrides; // premature end
+                                dimsd2 = (short)data.Value != 0;
+                                break;
+
                             case 46: // DimensionStyleOverrideType.DIMDLE:
                                 if (data.Code != XDataCode.Real)
                                     return overrides; // premature end
@@ -4414,16 +4466,16 @@ namespace netDxf.IO
                                 if (data.Code != XDataCode.Int16)
                                     return overrides; // premature end
                                 overrides.Add((short) data.Value == 0
-                                    ? new DimensionStyleOverride(DimensionStyleOverrideType.ExtLine1, false)
-                                    : new DimensionStyleOverride(DimensionStyleOverrideType.ExtLine1, true));
+                                    ? new DimensionStyleOverride(DimensionStyleOverrideType.ExtLine1Off, false)
+                                    : new DimensionStyleOverride(DimensionStyleOverrideType.ExtLine1Off, true));
                                 break;
 
                             case 76: // DimensionStyleOverrideType.DIMSE2:
                                 if (data.Code != XDataCode.Int16)
                                     return overrides; // premature end
                                 overrides.Add((short) data.Value == 0
-                                    ? new DimensionStyleOverride(DimensionStyleOverrideType.ExtLine2, false)
-                                    : new DimensionStyleOverride(DimensionStyleOverrideType.ExtLine2, true));
+                                    ? new DimensionStyleOverride(DimensionStyleOverrideType.ExtLine2Off, false)
+                                    : new DimensionStyleOverride(DimensionStyleOverrideType.ExtLine2Off, true));
                                 break;
 
                             case 42: // DimensionStyleOverrideType.DIMEXO:
@@ -4596,6 +4648,8 @@ namespace netDxf.IO
                     }
                 }
             }
+
+            overrides.Add(new DimensionStyleOverride(DimensionStyleOverrideType.DimLineOff, dimsd1 && dimsd2));
 
             if (dimzin >= 0)
             {
@@ -5103,12 +5157,21 @@ namespace netDxf.IO
                 },
                 normal, CoordinateSystem.World, CoordinateSystem.Object);
 
+            Vector2 startL0 = new Vector2(ocsPoints[0].X, ocsPoints[0].Y);
+            Vector2 endL0 = new Vector2(ocsPoints[0].X, ocsPoints[0].Y);
+            Vector2 startL1 = new Vector2(ocsPoints[0].X, ocsPoints[0].Y);
+            Vector2 endL1 = new Vector2(ocsPoints[0].X, ocsPoints[0].Y);
+
+            Vector2 dir1 = endL0 - startL0;
+            Vector2 dir2 = endL1 - startL1;
+            if (Vector2.AreParallel(dir1, dir2)) return null;
+               
             Angular2LineDimension entity = new Angular2LineDimension
             {
-                StartFirstLine = new Vector2(ocsPoints[0].X, ocsPoints[0].Y),
-                EndFirstLine = new Vector2(ocsPoints[1].X, ocsPoints[1].Y),
-                StartSecondLine = new Vector2(ocsPoints[2].X, ocsPoints[2].Y),
-                EndSecondLine = new Vector2(ocsPoints[3].X, ocsPoints[3].Y),
+                StartFirstLine = startL0,
+                EndFirstLine = endL0,
+                StartSecondLine = startL1,
+                EndSecondLine = endL1,
                 Elevation = arcDefinitionPoint.Z
             };
 
@@ -5778,14 +5841,17 @@ namespace netDxf.IO
                         break;
                     case 42:
                         knotTolerance = this.chunk.ReadDouble();
+                        if (knotTolerance <= 0) knotTolerance = 0.0000001;
                         this.chunk.Next();
                         break;
                     case 43:
                         ctrlPointTolerance = this.chunk.ReadDouble();
+                        if (ctrlPointTolerance <= 0) ctrlPointTolerance = 0.0000001;
                         this.chunk.Next();
                         break;
                     case 44:
                         fitTolerance = this.chunk.ReadDouble();
+                        if (fitTolerance <= 0) fitTolerance = 0.0000000001;
                         this.chunk.Next();
                         break;
                     case 12:
@@ -6349,7 +6415,7 @@ namespace netDxf.IO
             elevation = 0.0;
 
             List<MLineVertex> segments = new List<MLineVertex>();
-            Matrix3 trans = MathHelper.ArbitraryAxis(normal).Traspose();
+            Matrix3 trans = MathHelper.ArbitraryAxis(normal).Transpose();
             for (int i = 0; i < numVertexes; i++)
             {
                 Vector3 vertex = new Vector3();
