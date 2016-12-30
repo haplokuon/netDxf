@@ -1,3 +1,6 @@
+[2.0.2 - 2016/12/30]
++ Fix in TextStyle.
+
 [2.0.2 - 2016/12/29]
 + Added the dimension style property DimLineOff, and its corresponding override, to suppress the drawing of the dimension line.
 + Rename the dimension style properties ExtLine1 and ExtLine2, and their corresponding overrides, to ExtLine1Off and ExtLine2Off, respectively, to better reflect its purpose.

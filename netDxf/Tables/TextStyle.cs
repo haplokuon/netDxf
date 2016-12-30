@@ -135,8 +135,11 @@ namespace netDxf.Tables
             {
                 if (string.IsNullOrEmpty(value))
                     throw new ArgumentNullException(nameof(value));
+                this.glyphTypeface = null;
+                this.fontFamilyName = Path.GetFileNameWithoutExtension(value);
                 this.TrueTypeFontCheck(value);
                 if (!Path.GetExtension(value).Equals(".shx", StringComparison.OrdinalIgnoreCase)) this.bigFont = null;
+                this.font = value;
             }
         }
 
