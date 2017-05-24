@@ -1,7 +1,7 @@
-﻿#region netDxf library, Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+﻿#region netDxf library, Copyright (C) 2009-2017 Daniel Carvajal (haplokuon@gmail.com)
 
 //                        netDxf library
-// Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2009-2017 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -231,6 +231,7 @@ namespace netDxf.Entities
                     p1 = new Vector2(vertex.Position.X, vertex.Position.Y);
                     p2 = new Vector2(this.vertexes[index + 1].Position.X, this.vertexes[index + 1].Position.Y);
                 }
+
                 if (MathHelper.IsZero(bulge))
                 {
                     // the polyline edge is a line
@@ -257,39 +258,64 @@ namespace netDxf.Entities
                     double theta = 4*Math.Atan(Math.Abs(bulge));
                     double c = Vector2.Distance(p1, p2);
                     double r = (c/2)/Math.Sin(theta/2);
-                    double gamma = (Math.PI - theta)/2;
-                    double phi = Vector2.Angle(p1, p2) + Math.Sign(bulge)*gamma;
-                    Vector2 center = new Vector2(p1.X + r*Math.Cos(phi), p1.Y + r*Math.Sin(phi));
-                    double startAngle;
-                    double endAngle;
-                    if (bulge > 0)
+
+                    // avoid arcs with very small radius, draw a line instead
+                    if (MathHelper.IsZero(r))
                     {
-                        startAngle = MathHelper.RadToDeg*Vector2.Angle(p1 - center);
-                        endAngle = startAngle + MathHelper.RadToDeg*theta;
+                        // the polyline edge is a line
+                        Vector3 start = MathHelper.Transform(new Vector3(p1.X, p1.Y, this.elevation), this.Normal, CoordinateSystem.Object, CoordinateSystem.World);
+                        Vector3 end = MathHelper.Transform(new Vector3(p2.X, p2.Y, this.elevation), this.Normal, CoordinateSystem.Object, CoordinateSystem.World);
+
+                        entities.Add(new Line
+                        {
+                            Layer = (Layer)this.Layer.Clone(),
+                            Linetype = (Linetype)this.Linetype.Clone(),
+                            Color = (AciColor)this.Color.Clone(),
+                            Lineweight = this.Lineweight,
+                            Transparency = (Transparency)this.Transparency.Clone(),
+                            LinetypeScale = this.LinetypeScale,
+                            Normal = this.Normal,
+                            StartPoint = start,
+                            EndPoint = end,
+                            Thickness = this.Thickness,
+                        });
                     }
                     else
                     {
-                        endAngle = MathHelper.RadToDeg*Vector2.Angle(p1 - center);
-                        startAngle = endAngle - MathHelper.RadToDeg*theta;
+                        double gamma = (Math.PI - theta)/2;
+                        double phi = Vector2.Angle(p1, p2) + Math.Sign(bulge)*gamma;
+                        Vector2 center = new Vector2(p1.X + r*Math.Cos(phi), p1.Y + r*Math.Sin(phi));
+                        double startAngle;
+                        double endAngle;
+                        if (bulge > 0)
+                        {
+                            startAngle = MathHelper.RadToDeg*Vector2.Angle(p1 - center);
+                            endAngle = startAngle + MathHelper.RadToDeg*theta;
+                        }
+                        else
+                        {
+                            endAngle = MathHelper.RadToDeg*Vector2.Angle(p1 - center);
+                            startAngle = endAngle - MathHelper.RadToDeg*theta;
+                        }
+                        Vector3 point = MathHelper.Transform(new Vector3(center.X, center.Y, this.elevation), this.Normal,
+                            CoordinateSystem.Object,
+                            CoordinateSystem.World);
+                        entities.Add(new Arc
+                        {
+                            Layer = (Layer) this.Layer.Clone(),
+                            Linetype = (Linetype) this.Linetype.Clone(),
+                            Color = (AciColor) this.Color.Clone(),
+                            Lineweight = this.Lineweight,
+                            Transparency = (Transparency) this.Transparency.Clone(),
+                            LinetypeScale = this.LinetypeScale,
+                            Normal = this.Normal,
+                            Center = point,
+                            Radius = r,
+                            StartAngle = startAngle,
+                            EndAngle = endAngle,
+                            Thickness = this.Thickness,
+                        });
                     }
-                    Vector3 point = MathHelper.Transform(new Vector3(center.X, center.Y, this.elevation), this.Normal,
-                        CoordinateSystem.Object,
-                        CoordinateSystem.World);
-                    entities.Add(new Arc
-                    {
-                        Layer = (Layer) this.Layer.Clone(),
-                        Linetype = (Linetype) this.Linetype.Clone(),
-                        Color = (AciColor) this.Color.Clone(),
-                        Lineweight = this.Lineweight,
-                        Transparency = (Transparency) this.Transparency.Clone(),
-                        LinetypeScale = this.LinetypeScale,
-                        Normal = this.Normal,
-                        Center = point,
-                        Radius = r,
-                        StartAngle = startAngle,
-                        EndAngle = endAngle,
-                        Thickness = this.Thickness,
-                    });
                 }
                 index++;
             }
@@ -304,7 +330,7 @@ namespace netDxf.Entities
         /// <param name="weldThreshold">Tolerance to consider if two new generated vertexes are equal.</param>
         /// <param name="bulgeThreshold">Minimum distance from which approximate curved segments of the polyline.</param>
         /// <returns>A list of vertexes expressed in object coordinate system.</returns>
-        public List<Vector2> PoligonalVertexes(int bulgePrecision, double weldThreshold, double bulgeThreshold)
+        public List<Vector2> PolygonalVertexes(int bulgePrecision, double weldThreshold, double bulgeThreshold)
         {
             List<Vector2> ocsVertexes = new List<Vector2>();
 
@@ -320,6 +346,8 @@ namespace netDxf.Entities
                 {
                     p1 = new Vector2(vertex.Position.X, vertex.Position.Y);
                     p2 = new Vector2(this.vertexes[0].Position.X, this.vertexes[0].Position.Y);
+                    // ignore bulge value of last vertex for open polylines
+                    if(!this.IsClosed) bulge = 0;
                 }
                 else
                 {
@@ -338,21 +366,21 @@ namespace netDxf.Entities
                         double c = Vector2.Distance(p1, p2);
                         if (c >= bulgeThreshold)
                         {
-                            double s = (c/2)*Math.Abs(bulge);
-                            double r = ((c/2)*(c/2) + s*s)/(2*s);
-                            double theta = 4*Math.Atan(Math.Abs(bulge));
-                            double gamma = (Math.PI - theta)/2;
-                            double phi = Vector2.Angle(p1, p2) + Math.Sign(bulge)*gamma;
-                            Vector2 center = new Vector2(p1.X + r*Math.Cos(phi), p1.Y + r*Math.Sin(phi));
+                            double s = (c / 2) * Math.Abs(bulge);
+                            double r = ((c / 2) * (c / 2) + s * s) / (2 * s);
+                            double theta = 4 * Math.Atan(Math.Abs(bulge));
+                            double gamma = (Math.PI - theta) / 2;
+                            double phi = Vector2.Angle(p1, p2) + Math.Sign(bulge) * gamma;
+                            Vector2 center = new Vector2(p1.X + r * Math.Cos(phi), p1.Y + r * Math.Sin(phi));
                             Vector2 a1 = p1 - center;
-                            double angle = Math.Sign(bulge)*theta/(bulgePrecision + 1);
+                            double angle = Math.Sign(bulge) * theta / (bulgePrecision + 1);
                             ocsVertexes.Add(p1);
                             for (int i = 1; i <= bulgePrecision; i++)
                             {
                                 Vector2 curvePoint = new Vector2();
                                 Vector2 prevCurvePoint = new Vector2(this.vertexes[this.vertexes.Count - 1].Position.X, this.vertexes[this.vertexes.Count - 1].Position.Y);
-                                curvePoint.X = center.X + Math.Cos(i*angle)*a1.X - Math.Sin(i*angle)*a1.Y;
-                                curvePoint.Y = center.Y + Math.Sin(i*angle)*a1.X + Math.Cos(i*angle)*a1.Y;
+                                curvePoint.X = center.X + Math.Cos(i * angle) * a1.X - Math.Sin(i * angle) * a1.Y;
+                                curvePoint.Y = center.Y + Math.Sin(i * angle) * a1.X + Math.Cos(i * angle) * a1.Y;
 
                                 if (!curvePoint.Equals(prevCurvePoint, weldThreshold) && !curvePoint.Equals(p2, weldThreshold))
                                 {

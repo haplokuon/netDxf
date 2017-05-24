@@ -1,7 +1,7 @@
-﻿#region netDxf library, Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+﻿#region netDxf library, Copyright (C) 2009-2017 Daniel Carvajal (haplokuon@gmail.com)
 
 //                        netDxf library
-// Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2009-2017 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -402,9 +402,9 @@ namespace netDxf.IO
         private void Open(Stream stream, Encoding encoding)
         {
             if (this.isBinary)
-                this.chunk = new BinaryCodeValueWriter(encoding == null ? new BinaryWriter(stream) : new BinaryWriter(stream, encoding));
+                this.chunk = new BinaryCodeValueWriter(encoding == null ? new BinaryWriter(stream, new UTF8Encoding(false)) : new BinaryWriter(stream, encoding));
             else
-                this.chunk = new TextCodeValueWriter(encoding == null ? new StreamWriter(stream) : new StreamWriter(stream, encoding));
+                this.chunk = new TextCodeValueWriter(encoding == null ? new StreamWriter(stream, new UTF8Encoding(false)) : new StreamWriter(stream, encoding));
         }
 
         /// <summary>

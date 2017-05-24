@@ -1,7 +1,7 @@
-﻿#region netDxf library, Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+﻿#region netDxf library, Copyright (C) 2009-2017 Daniel Carvajal (haplokuon@gmail.com)
 
 //                        netDxf library
-// Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2009-2017 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -37,7 +37,7 @@ namespace netDxf.Entities
     {      
         #region private methods
 
-        private static List<string> FormatDimensionText(double measure, DimensionType dimType, string userText, DimensionStyle style, Layout layout)
+        private static List<string> FormatDimensionText(double measure, DimensionType dimType, string userText, DimensionStyle style, Block owner)
         {
             List<string> texts = new List<string>();
             if (userText == " ")
@@ -83,13 +83,17 @@ namespace netDxf.Entities
             else
             {
                 double scale = Math.Abs(style.DimScaleLinear);
-                if (layout != null)
+                if (owner != null)
                 {
-                    // if DIMLFAC is negative the scale value is only applied to dimensions in PaperSpace
-                    if (style.DimScaleLinear < 0 && !layout.IsPaperSpace)
-                        scale = 1.0;
+                    Layout layout = owner.Record.Layout;
+                    if (layout != null)
+                    {
+                        // if DIMLFAC is negative the scale value is only applied to dimensions in PaperSpace
+                        if (style.DimScaleLinear < 0 && !layout.IsPaperSpace)
+                            scale = 1.0;
+                    }
                 }
-
+                
                 if (style.DimRoundoff > 0.0)
                     measure = MathHelper.RoundToNearest(measure*scale, style.DimRoundoff);
                 else
@@ -660,7 +664,7 @@ namespace netDxf.Entities
             if (textRot > MathHelper.HalfPI && textRot <= MathHelper.ThreeHalfPI)
                 textRot += MathHelper.PI;
 
-            List<string> texts = FormatDimensionText(measure, dim.DimensionType, dim.UserText, style, dim.Owner.Record.Layout);
+            List<string> texts = FormatDimensionText(measure, dim.DimensionType, dim.UserText, style, dim.Owner);
 
             MText mText = DimensionText(Vector2.Polar(midDim, style.TextOffset*style.DimScaleOverall, textRot + MathHelper.HalfPI), MTextAttachmentPoint.BottomCenter, textRot, texts[0], style);
             if (mText != null)
@@ -750,7 +754,7 @@ namespace netDxf.Entities
                 entities.Add(ExtensionLine(Vector2.Polar(ref2, dimexo, refAngle + MathHelper.HalfPI), Vector2.Polar(dimRef2, dimexe, refAngle + MathHelper.HalfPI), style, style.ExtLine2Linetype));
 
             // dimension text
-            List<string> texts = FormatDimensionText(measure, dim.DimensionType, dim.UserText, style, dim.Owner.Record.Layout);
+            List<string> texts = FormatDimensionText(measure, dim.DimensionType, dim.UserText, style, dim.Owner);
 
             MText mText = DimensionText(Vector2.Polar(midDim, style.TextOffset*style.DimScaleOverall, refAngle + MathHelper.HalfPI), MTextAttachmentPoint.BottomCenter, refAngle, texts[0], style);
             if (mText != null)
@@ -893,7 +897,7 @@ namespace netDxf.Entities
 
             #endregion
 
-            List<string> texts = FormatDimensionText(measure, dim.DimensionType, dim.UserText, style, dim.Owner.Record.Layout);
+            List<string> texts = FormatDimensionText(measure, dim.DimensionType, dim.UserText, style, dim.Owner);
             string dimText;
             Vector2 position;
             MTextAttachmentPoint attachmentPoint;
@@ -1007,7 +1011,7 @@ namespace netDxf.Entities
 
             #endregion
 
-            List<string> texts = FormatDimensionText(measure, dim.DimensionType, dim.UserText, style, dim.Owner.Record.Layout);
+            List<string> texts = FormatDimensionText(measure, dim.DimensionType, dim.UserText, style, dim.Owner);
             string dimText;
             Vector2 position;
             MTextAttachmentPoint attachmentPoint;
@@ -1084,7 +1088,7 @@ namespace netDxf.Entities
             entities.AddRange(CenterCross(centerRef, radius, style));
 
             // dimension text
-            List<string> texts = FormatDimensionText(measure, dim.DimensionType, dim.UserText, style, dim.Owner.Record.Layout);
+            List<string> texts = FormatDimensionText(measure, dim.DimensionType, dim.UserText, style, dim.Owner);
             string dimText ;
             if (texts.Count > 1)
                 dimText = texts[0] + "\\P" + texts[1];
@@ -1158,7 +1162,7 @@ namespace netDxf.Entities
             entities.AddRange(CenterCross(centerRef, measure, style));
 
             // dimension text
-            List<string> texts = FormatDimensionText(measure, dim.DimensionType, dim.UserText, style, dim.Owner.Record.Layout);
+            List<string> texts = FormatDimensionText(measure, dim.DimensionType, dim.UserText, style, dim.Owner);
 
             string dimText;
             if (texts.Count > 1)
@@ -1216,7 +1220,7 @@ namespace netDxf.Entities
             // dimension text
             Vector2 midText = Vector2.Polar(startPoint, dim.Length + side*style.TextOffset*style.DimScaleOverall, angle);
 
-            List<string> texts = FormatDimensionText(measure, dim.DimensionType, dim.UserText, style, dim.Owner.Record.Layout);
+            List<string> texts = FormatDimensionText(measure, dim.DimensionType, dim.UserText, style, dim.Owner);
             string dimText;
             if (texts.Count > 1)
                 dimText = texts[0] + "\\P" + texts[1];

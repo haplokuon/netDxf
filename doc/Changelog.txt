@@ -1,3 +1,18 @@
+[2.0.3 - 2017/5/24]
++ Added AutoCad drawing database version number AC1032 = AutoCAD 2018.
++ A block that represents the dimension will be generated if, while loading a dxf, a Dimension entity is found with no associated block.
++ (fixed) The properties of the document viewport (*Active VPort) will be properly loaded.
++ (fixed) Issue Id #13553 Arcs in exploded polylines with zero radius.
++ (fixed) Issue Id #13552 Exception with open viewport.
++ (fixed) Issue Id #13551 Exception for dimension with negative text offset. Now its absolute value will be used instead.
++ (fixed) Issue Id #13550 Problem with MLINESTYLE with no elements. A default element will be added to the style if no one is found.
++ (fixed) Issue Id #13548 Hatch issue. Workaround for associative hatches which contour edges point to erroneous entities.
++ (fixed) Issue Id #13543 Reading Angular2LineDimensions.
++ (fixed) Issue Id #13540 Error when loading Spline created with only Fit Points.
++ (fixed) Issue Id #13539 encoding on linux platform. Added workaround for possible bug in a nightly build of Mono.
++ (fixed) Typing error in LwPolyline class. The method PoligonalVertexes has been renamed to PolygonalVertexes.
++ (fixed) Issue Id #13538 LWPolyline.PoligonalVertexes.
+
 [2.0.2 - 2016/12/30]
 + Fix in TextStyle.
 

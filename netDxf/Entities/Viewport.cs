@@ -1,7 +1,7 @@
-﻿#region netDxf library, Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+﻿#region netDxf library, Copyright (C) 2009-2017 Daniel Carvajal (haplokuon@gmail.com)
 
 //                        netDxf library
-// Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2009-2017 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -338,7 +338,10 @@ namespace netDxf.Entities
         /// Entity that serves as the viewport clipping boundary (only present if viewport is non-rectangular).
         /// </summary>
         /// <remarks>
-        /// Only closed lightweight polylines, closed polylines, circles, full ellipses and closed splines are allowed.<br />
+        /// AutoCad does not allow the creation of viewports from open shapes such as LwPolylines, Polylines, or ellipse arcs;
+        /// but if they are edited afterward, making them open, it will not complain, and they will work without problems.
+        /// So, it is possible to use open shapes as clipping boundaries, even if it is not recommended.
+        /// It might not be supported by all programs that read dxf files and a redraw of the layout might be required to show them correctly inside AutoCad.<br />
         /// Only X and Y coordinates will be used the entity normal will be considered as UnitZ.<br />
         /// When the viewport is added to the document this entity will be added too.
         /// </remarks>
@@ -366,20 +369,14 @@ namespace netDxf.Entities
                         break;
                     case EntityType.Ellipse:
                         Ellipse ellipse = (Ellipse) value;
-                        if (!ellipse.IsFullEllipse)
-                            throw new ArgumentException("The ellipse must be closed.");
                         abbr = new BoundingRectangle(new Vector2(ellipse.Center.X, ellipse.Center.Y), ellipse.MajorAxis, ellipse.MinorAxis, ellipse.Rotation);
                         break;
                     case EntityType.LightWeightPolyline:
                         LwPolyline lwPol = (LwPolyline) value;
-                        if (!lwPol.IsClosed)
-                            throw new ArgumentException("The lightweight polyline must be closed.");
-                        abbr = new BoundingRectangle(lwPol.PoligonalVertexes(6, MathHelper.Epsilon, MathHelper.Epsilon));
+                        abbr = new BoundingRectangle(lwPol.PolygonalVertexes(6, MathHelper.Epsilon, MathHelper.Epsilon));
                         break;
                     case EntityType.Polyline:
                         Polyline pol = (Polyline) value;
-                        if (!pol.IsClosed)
-                            throw new ArgumentException("The polyline must be closed.");
                         List<Vector2> pPoints = new List<Vector2>();
                         foreach (PolylineVertex point in pol.Vertexes)
                         {
@@ -389,8 +386,6 @@ namespace netDxf.Entities
                         break;
                     case EntityType.Spline:
                         Spline spline = (Spline) value;
-                        if (!spline.IsClosed)
-                            throw new ArgumentException("The spline must be closed.");
                         List<Vector2> sPoints = new List<Vector2>();
                         foreach (SplineVertex point in spline.ControlPoints)
                         {
@@ -398,9 +393,8 @@ namespace netDxf.Entities
                         }
                         abbr = new BoundingRectangle(sPoints);
                         break;
-
                     default:
-                        throw new ArgumentException("Only closed lightweight polylines, closed polylines, circles, full ellipses and closed splines are allowed.");
+                        throw new ArgumentException("Only lightweight polylines, polylines, circles, ellipses and splines are allowed.");
                 }
                 this.width = abbr.Width;
                 this.height = abbr.Height;

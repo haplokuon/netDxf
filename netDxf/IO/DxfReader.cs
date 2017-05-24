@@ -1,7 +1,7 @@
-﻿#region netDxf library, Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+﻿#region netDxf library, Copyright (C) 2009-2017 Daniel Carvajal (haplokuon@gmail.com)
 
 //                        netDxf library
-// Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2009-2017 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -131,7 +131,7 @@ namespace netDxf.IO
                     Encoding encoding;
                     DxfVersion version = DxfDocument.CheckDxfFileVersion(stream, out this.isBinary);
                     if (version >= DxfVersion.AutoCad2007)
-                        encoding = Encoding.UTF8; // the strings in a dxf binary file seems to be stored as UTF8 even if the file looks like ANSI
+                        encoding = Encoding.UTF8;
                     else
                     {
                         if (string.IsNullOrEmpty(dwgcodepage))
@@ -659,7 +659,10 @@ namespace netDxf.IO
             foreach (KeyValuePair<Dimension, string> pair in this.nestedDimensions)
             {
                 Dimension dim = pair.Key;
-                dim.Block = blocks[pair.Value];
+                if (pair.Value == null) continue;
+                Block block;
+                if(blocks.TryGetValue(pair.Value, out block))
+                    dim.Block = block;
             }
 
             // add the blocks to the document
@@ -961,9 +964,10 @@ namespace netDxf.IO
         private void ReadTableEntry()
         {
             string dxfCode = this.chunk.ReadString();
+            string handle = null;
+
             // only the first *Active VPort is supported, this one describes the current document view.
             VPort active = null;
-            string handle = null;
 
             while (this.chunk.ReadString() != DxfObjectCode.EndTable)
             {
@@ -1061,22 +1065,25 @@ namespace netDxf.IO
                         break;
                     case DxfObjectCode.VportTable:
                         VPort vport = this.ReadVPort();
-                        // only the first *Active VPort will be read, no multiview support.
                         if (vport != null && active == null)
                         {
-                            active = this.doc.Viewport;
-                            active.Handle = handle;
-                            active.ViewCenter = vport.ViewCenter;
-                            active.SnapBasePoint = vport.SnapBasePoint;
-                            active.SnapSpacing = vport.SnapSpacing;
-                            active.GridSpacing = vport.GridSpacing;
-                            active.ViewDirection = vport.ViewDirection;
-                            active.ViewTarget = vport.ViewTarget;
-                            active.ViewHeight = vport.ViewHeight;
-                            active.ViewAspectRatio = vport.ViewAspectRatio;
-                            active.ShowGrid = vport.ShowGrid;
-                            active.SnapMode = vport.SnapMode;
-                        }
+                            // only the first *Active VPort is supported, this one describes the current document view.
+                            if (vport.Name.Equals(VPort.DefaultName, StringComparison.OrdinalIgnoreCase))
+                            {
+                                active = this.doc.Viewport;
+                                active.Handle = handle;
+                                active.ViewCenter = vport.ViewCenter;
+                                active.SnapBasePoint = vport.SnapBasePoint;
+                                active.SnapSpacing = vport.SnapSpacing;
+                                active.GridSpacing = vport.GridSpacing;
+                                active.ViewDirection = vport.ViewDirection;
+                                active.ViewTarget = vport.ViewTarget;
+                                active.ViewHeight = vport.ViewHeight;
+                                active.ViewAspectRatio = vport.ViewAspectRatio;
+                                active.ShowGrid = vport.ShowGrid;
+                                active.SnapMode = vport.SnapMode;
+                            }
+                        }                       
                         break;
                     default:
                         this.ReadUnkownTableEntry();
@@ -1389,9 +1396,7 @@ namespace netDxf.IO
                         this.chunk.Next();
                         break;
                     case 147:
-                        dimgap = this.chunk.ReadDouble();
-                        if (dimgap < 0.0)
-                            dimgap = defaultDim.TextOffset;
+                        dimgap = Math.Abs(this.chunk.ReadDouble());
                         this.chunk.Next();
                         break;
                     case 173:
@@ -2162,10 +2167,7 @@ namespace netDxf.IO
                 }
             }
 
-            if (string.IsNullOrEmpty(name) || !TableObject.IsValidName(name))
-                return null;
-
-            if (!name.Equals(VPort.DefaultName, StringComparison.OrdinalIgnoreCase))
+            if (string.IsNullOrEmpty(name) || !(TableObject.IsValidName(name) || name.Equals(VPort.DefaultName, StringComparison.OrdinalIgnoreCase)))
                 return null;
 
             return new VPort(name, false)
@@ -4075,9 +4077,9 @@ namespace netDxf.IO
                 }
             }
 
-            // this is just an example of the stupid autodesk dxf way of doing things, while an ellipse the center is given in world coordinates,
+            // this is just an example of the stupid dxf way of doing things, while an ellipse the center is given in world coordinates,
             // the center of an arc is given in object coordinates (different rules for the same concept).
-            // It is a lot more intuitive to give the center in world coordinates and then define the orientation with the normal..
+            // It is a lot more intuitive to give the center in world coordinates and then define the orientation with the normal.
             Vector3 wcsCenter = MathHelper.Transform(center, normal, CoordinateSystem.Object, CoordinateSystem.World);
             Arc entity = new Arc
             {
@@ -4154,7 +4156,7 @@ namespace netDxf.IO
                 }
             }
 
-            // this is just an example of the stupid autodesk dxf way of doing things, while an ellipse the center is given in world coordinates,
+            // this is just an example of the stupid dxf way of doing things, while an ellipse the center is given in world coordinates,
             // the center of a circle is given in object coordinates (different rules for the same concept).
             // It is a lot more intuitive to give the center in world coordinates and then define the orientation with the normal..
             Vector3 wcsCenter = MathHelper.Transform(center, normal, CoordinateSystem.Object, CoordinateSystem.World);
@@ -4330,8 +4332,6 @@ namespace netDxf.IO
             }
 
             if (dim == null)
-                return null;
-            if (drawingBlockName == null)
                 return null;
 
             dim.Style = style;
@@ -4553,7 +4553,7 @@ namespace netDxf.IO
                             case 147: // DimensionStyleOverrideType.DIMGAP:
                                 if (data.Code != XDataCode.Real)
                                     return overrides; // premature end
-                                overrides.Add(new DimensionStyleOverride(DimensionStyleOverrideType.TextOffset, (double) data.Value));
+                                overrides.Add(new DimensionStyleOverride(DimensionStyleOverrideType.TextOffset, Math.Abs((double) data.Value)));
                                 break;
 
                             case 40: // DimensionStyleOverrideType.DIMSCALE:
@@ -5158,12 +5158,12 @@ namespace netDxf.IO
                 normal, CoordinateSystem.World, CoordinateSystem.Object);
 
             Vector2 startL0 = new Vector2(ocsPoints[0].X, ocsPoints[0].Y);
-            Vector2 endL0 = new Vector2(ocsPoints[0].X, ocsPoints[0].Y);
-            Vector2 startL1 = new Vector2(ocsPoints[0].X, ocsPoints[0].Y);
-            Vector2 endL1 = new Vector2(ocsPoints[0].X, ocsPoints[0].Y);
+            Vector2 endL0 = new Vector2(ocsPoints[1].X, ocsPoints[1].Y);
+            Vector2 startL1 = new Vector2(ocsPoints[2].X, ocsPoints[2].Y);
+            Vector2 endL1 = new Vector2(ocsPoints[3].X, ocsPoints[3].Y);
 
-            Vector2 dir1 = endL0 - startL0;
-            Vector2 dir2 = endL1 - startL1;
+            Vector2 dir1 = Vector2.Normalize(endL0 - startL0);
+            Vector2 dir2 = Vector2.Normalize(endL1 - startL1);
             if (Vector2.AreParallel(dir1, dir2)) return null;
                
             Angular2LineDimension entity = new Angular2LineDimension
@@ -5951,17 +5951,32 @@ namespace netDxf.IO
                 }
             }
 
+            Spline entity;
             SplineCreationMethod method = flags.HasFlag(SplinetypeFlags.FitPointCreationMethod) ? SplineCreationMethod.FitPoints : SplineCreationMethod.ControlPoints;
-            bool isPeriodic = flags.HasFlag(SplinetypeFlags.ClosedPeriodicSpline) || flags.HasFlag(SplinetypeFlags.Periodic);
-            Spline entity = new Spline(ctrlPoints, knots, degree, fitPoints, method, isPeriodic)
-            {
-                KnotTolerance = knotTolerance,
-                CtrlPointTolerance = ctrlPointTolerance,
-                FitTolerance = fitTolerance,
-                StartTangent = startTangent,
-                EndTangent = endTangent
-            };
 
+            if (method == SplineCreationMethod.FitPoints && ctrlPoints.Count == 0)
+            {
+                entity = new Spline(fitPoints)
+                {
+                    KnotTolerance = knotTolerance,
+                    CtrlPointTolerance = ctrlPointTolerance,
+                    FitTolerance = fitTolerance,
+                    StartTangent = startTangent,
+                    EndTangent = endTangent
+                };
+            }
+            else
+            {
+                bool isPeriodic = flags.HasFlag(SplinetypeFlags.ClosedPeriodicSpline) || flags.HasFlag(SplinetypeFlags.Periodic);
+                entity = new Spline(ctrlPoints, knots, degree, fitPoints, method, isPeriodic)
+                {
+                    KnotTolerance = knotTolerance,
+                    CtrlPointTolerance = ctrlPointTolerance,
+                    FitTolerance = fitTolerance,
+                    StartTangent = startTangent,
+                    EndTangent = endTangent
+                };
+            }
 
             if (flags.HasFlag(SplinetypeFlags.FitChord))
                 entity.KnotParameterization = SplineKnotParameterization.FitChord;
@@ -8087,7 +8102,7 @@ namespace netDxf.IO
                         this.chunk.Next();
                         break;
                     case 71:
-                        short numElements = this.chunk.ReadShort();
+                        short numElements = this.chunk.ReadShort();                       
                         elements = this.ReadMLineStyleElements(numElements);
                         break;
                     default:
@@ -8112,9 +8127,12 @@ namespace netDxf.IO
 
         private List<MLineStyleElement> ReadMLineStyleElements(short numElements)
         {
-            List<MLineStyleElement> elements = new List<MLineStyleElement>();
-
             this.chunk.Next();
+
+            if (numElements <= 0)
+                return new List<MLineStyleElement> {new MLineStyleElement(0.0)};
+            
+            List<MLineStyleElement> elements = new List<MLineStyleElement>();
 
             for (short i = 0; i < numElements; i++)
             {
@@ -8754,7 +8772,8 @@ namespace netDxf.IO
                     {
                         EntityObject entity = this.doc.GetObjectByHandle(handle) as EntityObject;
                         if (entity != null)
-                            path.AddContour(entity);
+                            if (ReferenceEquals(hatch.Owner, entity.Owner))
+                                path.AddContour(entity);
                     }
                     hatch.BoundaryPaths.Add(path);
                 }
@@ -8940,8 +8959,8 @@ namespace netDxf.IO
             string token = name.Remove(0, 2);
             if (!int.TryParse(token, out num))
                 return;
-            if (num > this.doc.DimensionBlocksGenerated)
-                this.doc.DimensionBlocksGenerated = num;
+            if (num > this.doc.DimensionBlocksIndex)
+                this.doc.DimensionBlocksIndex = num;
         }
 
         private void CheckGroupName(string name)
@@ -8954,8 +8973,8 @@ namespace netDxf.IO
             string token = name.Remove(0, 2);
             if (!int.TryParse(token, out num))
                 return;
-            if (num > this.doc.GroupNamesGenerated)
-                this.doc.GroupNamesGenerated = num;
+            if (num > this.doc.GroupNamesIndex)
+                this.doc.GroupNamesIndex = num;
         }
 
         private static TextAlignment ObtainAlignment(short horizontal, short vertical)

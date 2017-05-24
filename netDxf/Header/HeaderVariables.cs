@@ -1,7 +1,7 @@
-﻿#region netDxf library, Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+﻿#region netDxf library, Copyright (C) 2009-2017 Daniel Carvajal (haplokuon@gmail.com)
 
 //                        netDxf library
-// Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2009-2017 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -106,7 +106,7 @@ namespace netDxf.Header
             set
             {
                 if (value < DxfVersion.AutoCad2000)
-                    throw new NotSupportedException("Only AutoCad2000 and newer dxf versions are supported.");
+                        throw new NotSupportedException("Only AutoCad2000 and newer dxf versions are supported.");
                 this.variables[HeaderVariableCode.AcadVer].Value = value;
             }
         }

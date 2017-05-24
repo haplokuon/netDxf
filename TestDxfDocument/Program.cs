@@ -1,26 +1,4 @@
-﻿#region netDxf library, Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
-
-//                        netDxf library
-// Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
-// 
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2.1 of the License, or (at your option) any later version.
-// 
-// The above copyright notice and this permission notice shall be included in all
-// copies or substantial portions of the Software.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-// FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-// COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-// IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-// CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-#endregion
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
@@ -46,7 +24,6 @@ namespace TestDxfDocument
     /// </summary>
     public class Program
     {
-
         public static void Main()
         {
 
@@ -154,7 +131,7 @@ namespace TestDxfDocument
             //TransparencySample();
             //DocumentUnits();
             //PaperSpace();
-            //BlockWithAttributes();
+            BlockWithAttributes();
 
             #endregion
 
@@ -1009,6 +986,9 @@ namespace TestDxfDocument
             doc.AddEntity(cloned2);
 
             doc.Save("SplineFitPoints.dxf");
+
+            DxfDocument dxf = DxfDocument.Load("SplineFitPoints.dxf");
+            dxf.Save("SplineFitPoints.dxf");
         }
 
         private static void ImageClippingBoundary()
@@ -2196,10 +2176,9 @@ namespace TestDxfDocument
             // when we add a group to the document all the entities contained in the group will be automatically added to the document
             dxf.Groups.Add(group);
 
-            // adding the group entities to the document is not necessary, but doing so should not cause any harm
-            // the AddEntity method will return false in those cases, since those entities are already in the document
-            dxf.AddEntity(line1);
-            dxf.AddEntity(line2);
+            // adding the group entities to the document will raise an exception since they are already added to the document
+            //dxf.AddEntity(line1);
+            //dxf.AddEntity(line2);
 
             dxf.Save("group.dxf");
 
@@ -3518,6 +3497,8 @@ namespace TestDxfDocument
 
             // the dxf version is controlled by the DrawingVariables property of the dxf document,
             // also a HeaderVariables instance or a DxfVersion can be passed to the constructor to initialize a new DxfDocument.
+            dxf.DrawingVariables.AcadVer = DxfVersion.AutoCad2018;
+            dxf.Save("sample 2018.dxf");
             dxf.DrawingVariables.AcadVer = DxfVersion.AutoCad2013;
             dxf.Save("sample 2013.dxf");
             dxf.DrawingVariables.AcadVer = DxfVersion.AutoCad2010;
@@ -3530,7 +3511,7 @@ namespace TestDxfDocument
             dxf.Save("sample 2000.dxf");
 
             // saving to binary dxf
-            dxf.DrawingVariables.AcadVer = DxfVersion.AutoCad2000;
+            dxf.DrawingVariables.AcadVer = DxfVersion.AutoCad2013;
             dxf.Save("binary test.dxf", true);
             DxfDocument test = DxfDocument.Load("binary test.dxf");
 

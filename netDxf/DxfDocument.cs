@@ -1,7 +1,7 @@
-﻿#region netDxf library, Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+﻿#region netDxf library, Copyright (C) 2009-2017 Daniel Carvajal (haplokuon@gmail.com)
 
 //                        netDxf library
-// Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2009-2017 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -48,9 +48,9 @@ namespace netDxf
         // keeps track of the number of handles generated
         internal long NumHandles;
         // keeps track of the dimension blocks generated
-        internal int DimensionBlocksGenerated;
-        // keeps track of the group names generated (this groups have the isUnnamed bool set to true)
-        internal int GroupNamesGenerated;
+        internal int DimensionBlocksIndex;
+        // keeps track of the group names generated (this groups have the isUnnamed set to true)
+        internal int GroupNamesIndex;
 
         #region header
 
@@ -163,8 +163,8 @@ namespace netDxf
             this.Owner = null;
             this.drawingVariables = drawingVariables;
             this.NumHandles = this.AsignHandle(0);
-            this.DimensionBlocksGenerated = 0;
-            this.GroupNamesGenerated = 0;
+            this.DimensionBlocksIndex = 0;
+            this.GroupNamesIndex = 0;
             this.AddedObjects = new Dictionary<string, DxfObject>
             {
                 {this.Handle, this}
@@ -1173,9 +1173,7 @@ namespace netDxf
                     this.AddDimensionStyleOverrides(dim, assignHandle);
 
                     // create the block that represent the dimension drawing
-                    Block dimBlock = dim.Block;
-                    if (dimBlock == null)
-                        dimBlock = dim.BuildBlock("*D" + ++this.DimensionBlocksGenerated);
+                    Block dimBlock = dim.Block ?? dim.BuildBlock("*D" + this.DimensionBlocksIndex++);
                     dim.Block = this.blocks.Add(dimBlock);
                     this.blocks.References[dimBlock.Name].Add(dim);
 
