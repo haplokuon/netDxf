@@ -1,7 +1,7 @@
-﻿#region netDxf library, Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+﻿#region netDxf library, Copyright (C) 2009-2017 Daniel Carvajal (haplokuon@gmail.com)
 
 //                        netDxf library
-// Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2009-2017 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -104,7 +104,11 @@ namespace netDxf.Entities
 
             this.imageDefinition = imageDefinition;
             this.position = position;
+            if (width <= 0)
+                throw new ArgumentOutOfRangeException(nameof(width), width, "The Image width must be greater than zero.");
             this.width = width;
+            if (height <= 0)
+                throw new ArgumentOutOfRangeException(nameof(height), height, "The Image height must be greater than zero.");
             this.height = height;
             this.rotation = 0;
             this.clipping = false;
@@ -112,7 +116,7 @@ namespace netDxf.Entities
             this.contrast = 50;
             this.fade = 0;
             this.displayOptions = ImageDisplayFlags.ShowImage | ImageDisplayFlags.ShowImageWhenNotAlignedWithScreen | ImageDisplayFlags.UseClippingBoundary;
-            this.clippingBoundary = new ClippingBoundary(-0.5, -0.5, imageDefinition.Width, imageDefinition.Height);
+            this.clippingBoundary = new ClippingBoundary(0, 0, imageDefinition.Width, imageDefinition.Height);
         }
 
         #endregion
@@ -134,7 +138,12 @@ namespace netDxf.Entities
         public double Height
         {
             get { return this.height; }
-            set { this.height = value; }
+            set
+            {
+                if (value <= 0)
+                    throw new ArgumentOutOfRangeException(nameof(value), value, "The Image height must be greater than zero.");
+                this.height = value;
+            }
         }
 
         /// <summary>
@@ -143,7 +152,12 @@ namespace netDxf.Entities
         public double Width
         {
             get { return this.width; }
-            set { this.width = value; }
+            set
+            {
+                if (value <= 0)
+                    throw new ArgumentOutOfRangeException(nameof(value), value, "The Image width must be greater than zero.");
+                this.width = value;
+            }
         }
 
         /// <summary>
@@ -228,12 +242,13 @@ namespace netDxf.Entities
         /// Gets or sets the image clipping boundary.
         /// </summary>
         /// <remarks>
-        /// Set as null to restore the default clipping boundary, show the full image without clipping.
+        /// The vertexes coordinates of the clipping boundary are expressed in local coordinates of the image in pixels.
+        /// Set as null to restore the default clipping boundary, full image.
         /// </remarks>
         public ClippingBoundary ClippingBoundary
         {
             get { return this.clippingBoundary; }
-            set { this.clippingBoundary = value ?? new ClippingBoundary(-0.5, -0.5, this.imageDefinition.Width, this.imageDefinition.Height); }
+            set { this.clippingBoundary = value ?? new ClippingBoundary(0, 0, this.Definition.Width, this.Definition.Height); }
         }
 
         #endregion

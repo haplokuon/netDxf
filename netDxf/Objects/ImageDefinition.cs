@@ -1,7 +1,7 @@
-#region netDxf library, Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+#region netDxf library, Copyright (C) 2009-2017 Daniel Carvajal (haplokuon@gmail.com)
 
 //                        netDxf library
-// Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2009-2017 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -110,12 +110,24 @@ namespace netDxf.Objects
         {
             if (string.IsNullOrEmpty(fileName))
                 throw new ArgumentNullException(nameof(fileName), "The image file name should be at least one character long.");
-
             this.fileName = fileName;
+
+            if (width <= 0)
+                throw new ArgumentOutOfRangeException(nameof(width), width, "The ImageDefinition width must be greater than zero.");
             this.width = width;
+
+            if (height <= 0)
+                throw new ArgumentOutOfRangeException(nameof(height), height, "The ImageDefinition height must be greater than zero.");
             this.height = height;
+
+            if (horizontalResolution <= 0)
+                throw new ArgumentOutOfRangeException(nameof(horizontalResolution), horizontalResolution, "The ImageDefinition horizontal resolution must be greater than zero.");
             this.horizontalResolution = horizontalResolution;
+
+            if (verticalResolution <= 0)
+                throw new ArgumentOutOfRangeException(nameof(verticalResolution), verticalResolution, "The ImageDefinition vertical resolution must be greater than zero.");
             this.verticalResolution = verticalResolution;
+
             this.resolutionUnits = units;
 
             this.reactors = new Dictionary<string, ImageDefinitionReactor>();

@@ -59,6 +59,8 @@ namespace netDxf.Entities
         public Underlay(UnderlayDefinition definition)
             : base(EntityType.Underlay, DxfObjectCode.Underlay)
         {
+            if (definition == null)
+                throw new ArgumentNullException(nameof(definition));
             this.definition = definition;
             this.position = Vector3.Zero;
             this.scale = new Vector3(1.0);

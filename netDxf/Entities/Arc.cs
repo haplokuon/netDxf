@@ -1,7 +1,7 @@
-﻿#region netDxf library, Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+﻿#region netDxf library, Copyright (C) 2009-2017 Daniel Carvajal (haplokuon@gmail.com)
 
 //                        netDxf library
-// Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2009-2017 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -75,6 +75,8 @@ namespace netDxf.Entities
             : base(EntityType.Arc, DxfObjectCode.Arc)
         {
             this.center = center;
+            if (radius <= 0)
+                throw new ArgumentOutOfRangeException(nameof(radius), radius, "The circle radius must be greater than zero.");
             this.radius = radius;
             this.startAngle = MathHelper.NormalizeAngle(startAngle);
             this.endAngle = MathHelper.NormalizeAngle(endAngle);

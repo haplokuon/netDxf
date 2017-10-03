@@ -1,7 +1,7 @@
-#region netDxf library, Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+#region netDxf library, Copyright (C) 2009-2017 Daniel Carvajal (haplokuon@gmail.com)
 
 //                        netDxf library
-// Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2009-2017 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -478,7 +478,7 @@ namespace netDxf
         }
 
         /// <summary>
-        /// Multiplies an scalar with a vector (same as u*a, commutative property).
+        /// Multiplies a scalar with a vector (same as u*a, commutative property).
         /// </summary>
         /// <param name="a">Scalar.</param>
         /// <param name="u">Vector3.</param>
@@ -489,7 +489,7 @@ namespace netDxf
         }
 
         /// <summary>
-        /// Multiplies an scalar with a vector (same as u*a, commutative property).
+        /// Multiplies a scalar with a vector (same as u*a, commutative property).
         /// </summary>
         /// <param name="a">Scalar.</param>
         /// <param name="u">Vector3.</param>
@@ -500,10 +500,54 @@ namespace netDxf
         }
 
         /// <summary>
+        /// Multiplies two vectors component by component.
+        /// </summary>
+        /// <param name="u">Vector3.</param>
+        /// <param name="v">Vector3.</param>
+        /// <returns>The multiplication of u times v.</returns>
+        public static Vector3 operator *(Vector3 u, Vector3 v)
+        {
+            return new Vector3(u.X * v.X, u.Y * v.Y, u.Z * v.Z);
+        }
+
+        /// <summary>
+        /// Multiplies two vectors component by component.
+        /// </summary>
+        /// <param name="u">Vector2.</param>
+        /// <param name="v">Vector2.</param>
+        /// <returns>The multiplication of u times v.</returns>
+        public static Vector3 Multiply(Vector3 u, Vector3 v)
+        {
+            return new Vector3(u.X * v.X, u.Y * v.Y, u.Z * v.Z);
+        }
+
+        /// <summary>
         /// Divides a vector with an scalar.
         /// </summary>
         /// <param name="u">Vector3.</param>
         /// <param name="a">Scalar.</param>
+        /// <returns>The division of u times a.</returns>
+        public static Vector3 operator /(double a, Vector3 u)
+        {
+            return new Vector3(a * u.X, a * u.Y, a * u.Z);
+        }
+
+        /// <summary>
+        /// Divides a scalar with a vector.
+        /// </summary>
+        /// <param name="a">Scalar.</param>
+        /// <param name="u">Vector3.</param>
+        /// <returns>The division of u times a.</returns>
+        public static Vector3 Divide(double a, Vector3 u)
+        {
+            return new Vector3(a * u.X, a * u.Y, a * u.Z);
+        }
+
+        /// <summary>
+        /// Divides an scalar with a vector.
+        /// </summary>
+        /// <param name="a">Scalar.</param>
+        /// <param name="u">Vector3.</param>
         /// <returns>The division of u times a.</returns>
         public static Vector3 operator /(Vector3 u, double a)
         {
@@ -521,6 +565,28 @@ namespace netDxf
         {
             double invEscalar = 1/a;
             return new Vector3(u.X*invEscalar, u.Y*invEscalar, u.Z*invEscalar);
+        }
+
+        /// <summary>
+        /// Divides two vectors component by component.
+        /// </summary>
+        /// <param name="u">Vector3.</param>
+        /// <param name="v">Vector3.</param>
+        /// <returns>The multiplication of u times v.</returns>
+        public static Vector3 operator /(Vector3 u, Vector3 v)
+        {
+            return new Vector3(u.X / v.X, u.Y / v.Y, u.Z / v.Z);
+        }
+
+        /// <summary>
+        /// Divides two vectors component by component.
+        /// </summary>
+        /// <param name="u">Vector2.</param>
+        /// <param name="v">Vector2.</param>
+        /// <returns>The multiplication of u times v.</returns>
+        public static Vector3 Divide(Vector3 u, Vector3 v)
+        {
+            return new Vector3(u.X / v.X, u.Y / v.Y, u.Z / v.Z);
         }
 
         #endregion

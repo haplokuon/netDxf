@@ -24,6 +24,7 @@ namespace TestDxfDocument
     /// </summary>
     public class Program
     {
+        
         public static void Main()
         {
 
@@ -131,7 +132,7 @@ namespace TestDxfDocument
             //TransparencySample();
             //DocumentUnits();
             //PaperSpace();
-            BlockWithAttributes();
+            //BlockWithAttributes();
 
             #endregion
 
@@ -3543,6 +3544,54 @@ namespace TestDxfDocument
 
         //    dxf.Save("ExplodeInsert.dxf");
         //}
+
+        public static void ImageAndClipBoundary()
+        {
+            // a square bitmap
+            ImageDefinition imageDefinition = new ImageDefinition("image.jpg", "MyImage");
+
+            // image with the same aspect ratio as the original bitmap
+            Image image1 = new Image(imageDefinition, Vector2.Zero, 360, 360 * (imageDefinition.Height / imageDefinition.Width));
+            // image stretched not the same aspect ratio as the original bitmap
+            Image image2 = new Image(imageDefinition, new Vector2(0, 500), 200, 100);
+            image2.ClippingBoundary = new ClippingBoundary(new Vector2(0, 0), new Vector2(image2.Definition.Width * 0.5, image2.Definition.Height * 0.5));
+            image2.Clipping = true;
+            // image copy of image1, later we will change its position and size
+            Image image3 = (Image)image1.Clone();
+            DxfDocument doc = new DxfDocument();
+            doc.AddEntity(image1);
+            doc.AddEntity(image2);
+            // change the position of image3
+            image3.Position = new Vector3(500, 0, 0);
+            // resize image3, double the size
+            image3.Width *= 2;
+            image3.Height *= 2;
+
+            // the image boundary vertexes are in local coordinates in pixels
+            Vector2[] wcsBoundary =
+            {
+                new Vector2(image3.Definition.Width*0.5,0),
+                new Vector2(image3.Definition.Width,image3.Definition.Height*0.5),
+                new Vector2(image3.Definition.Width*0.5,image3.Definition.Height),
+                new Vector2(0,image3.Definition.Height*0.5)
+            };
+
+            image3.ClippingBoundary = new ClippingBoundary(wcsBoundary);
+            image3.Clipping = true;
+            doc.AddEntity(image3);
+
+            //Vector2[] woVertexes =
+            //{
+            //    new Vector2(180,0),
+            //    new Vector2(360,180),
+            //    new Vector2(180,360),
+            //    new Vector2(0,180)
+            //};
+            //Wipeout wipeout = new Wipeout(woVertexes);
+            Wipeout wipeout = new Wipeout(0, 0, 180, 180);
+            doc.AddEntity(wipeout);
+            doc.Save("test.dxf");
+        }
 
         private static void LinearDimensionTests()
         {

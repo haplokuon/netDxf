@@ -1,7 +1,7 @@
-﻿#region netDxf library, Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+﻿#region netDxf library, Copyright (C) 2009-2017 Daniel Carvajal (haplokuon@gmail.com)
 
 //                        netDxf library
-// Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2009-2017 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -50,8 +50,8 @@ namespace netDxf.Entities
         /// </summary>
         /// <param name="x">Rectangle x-coordinate of the bottom-left corner in local coordinates.</param>
         /// <param name="y">Rectangle y-coordinate of the bottom-left corner in local coordinates.</param>
-        /// <param name="width">Rectangle width in image local coordinates.</param>
-        /// <param name="height">Rectangle height in image local coordinates.</param>
+        /// <param name="width">Rectangle width in local coordinates.</param>
+        /// <param name="height">Rectangle height in local coordinates.</param>
         public Wipeout(double x, double y, double width, double height)
             : this(new ClippingBoundary(x, y, width, height))
         {
@@ -83,6 +83,8 @@ namespace netDxf.Entities
         public Wipeout(ClippingBoundary clippingBoundary)
             : base(EntityType.Wipeout, DxfObjectCode.Wipeout)
         {
+            if (clippingBoundary == null)
+                throw new ArgumentNullException(nameof(clippingBoundary));
             this.clippingBoundary = clippingBoundary;
             this.elevation = 0.0;
         }

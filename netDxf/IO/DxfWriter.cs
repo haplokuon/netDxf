@@ -1622,26 +1622,31 @@ namespace netDxf.IO
 
             this.chunk.Write(71, (short) wipeout.ClippingBoundary.Type);
 
-            if (wipeout.ClippingBoundary.Type == ClippingBoundaryType.Polygonal)
-                this.chunk.Write(91, wipeout.ClippingBoundary.Vertexes.Count + 1);
-            else
-                this.chunk.Write(91, wipeout.ClippingBoundary.Vertexes.Count);
-
-            foreach (Vector2 vertex in wipeout.ClippingBoundary.Vertexes)
-            {
-                double x = (vertex.X - ocsInsPoint.X)/max - 0.5;
-                double y = -((vertex.Y - ocsInsPoint.Y)/max - 0.5);
-                this.chunk.Write(14, x);
-                this.chunk.Write(24, y);
-            }
-
             // for unknown reasons the wipeout with a polygonal clipping boundary requires to repeat the first vertex
             if (wipeout.ClippingBoundary.Type == ClippingBoundaryType.Polygonal)
             {
+                this.chunk.Write(91, wipeout.ClippingBoundary.Vertexes.Count + 1);
+                foreach (Vector2 vertex in wipeout.ClippingBoundary.Vertexes)
+                {
+                    double x = (vertex.X - ocsInsPoint.X)/max - 0.5;
+                    double y = -((vertex.Y - ocsInsPoint.Y)/max - 0.5);
+                    this.chunk.Write(14, x);
+                    this.chunk.Write(24, y);
+                }
                 this.chunk.Write(14, (wipeout.ClippingBoundary.Vertexes[0].X - ocsInsPoint.X)/max - 0.5);
                 this.chunk.Write(24, -((wipeout.ClippingBoundary.Vertexes[0].Y - ocsInsPoint.Y)/max - 0.5));
             }
-
+            else
+            {
+                this.chunk.Write(91, wipeout.ClippingBoundary.Vertexes.Count);
+                foreach (Vector2 vertex in wipeout.ClippingBoundary.Vertexes)
+                {
+                    double x = (vertex.X - ocsInsPoint.X)/max - 0.5;
+                    double y = -((vertex.Y - ocsInsPoint.Y)/max - 0.5);
+                    this.chunk.Write(14, x);
+                    this.chunk.Write(24, y);
+                }
+            }
             this.WriteXData(wipeout.XData);
         }
 
@@ -3447,12 +3452,28 @@ namespace netDxf.IO
             this.chunk.Write(282, image.Contrast);
             this.chunk.Write(283, image.Fade);
             this.chunk.Write(360, image.Definition.Reactors[image.Handle].Handle);
+
             this.chunk.Write(71, (short) image.ClippingBoundary.Type);
-            this.chunk.Write(91, image.ClippingBoundary.Vertexes.Count);
-            foreach (Vector2 vertex in image.ClippingBoundary.Vertexes)
+            if (image.ClippingBoundary.Type == ClippingBoundaryType.Rectangular)
             {
-                this.chunk.Write(14, vertex.X/u.X);
-                this.chunk.Write(24, vertex.Y/v.Y);
+                this.chunk.Write(91, image.ClippingBoundary.Vertexes.Count);
+                foreach (Vector2 vertex in image.ClippingBoundary.Vertexes)
+                {
+                    this.chunk.Write(14, vertex.X-0.5);
+                    this.chunk.Write(24, vertex.Y-0.5);
+                }
+            }
+            else
+            {
+                // for polygonal clipping boundaries the last vertex must be duplicated
+                this.chunk.Write(91, image.ClippingBoundary.Vertexes.Count+1);
+                foreach (Vector2 vertex in image.ClippingBoundary.Vertexes)
+                {
+                    this.chunk.Write(14, vertex.X - 0.5);
+                    this.chunk.Write(24, vertex.Y - 0.5);
+                }
+                this.chunk.Write(14, image.ClippingBoundary.Vertexes[0].X - 0.5);
+                this.chunk.Write(24, image.ClippingBoundary.Vertexes[0].Y - 0.5);
             }
 
             this.WriteXData(image.XData);

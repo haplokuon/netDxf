@@ -111,24 +111,23 @@ namespace netDxf.Entities
         {
             if (pattern == null)
                 throw new ArgumentNullException(nameof(pattern));
+            this.pattern = pattern;
+
             if (paths == null)
                 throw new ArgumentNullException(nameof(paths));
-
-            this.pattern = pattern;
             this.boundaryPaths = new ObservableCollection<HatchBoundaryPath>();
             this.boundaryPaths.BeforeAddItem += this.BoundaryPaths_BeforeAddItem;
             this.boundaryPaths.AddItem += this.BoundaryPaths_AddItem;
             this.boundaryPaths.BeforeRemoveItem += this.BoundaryPaths_BeforeRemoveItem;
             this.boundaryPaths.RemoveItem += this.BoundaryPaths_RemoveItem;
-
-            this.associative = associative;
-
             foreach (HatchBoundaryPath path in paths)
             {
-                if (!this.associative)
+                if (!associative)
                     path.ClearContour();
                 this.boundaryPaths.Add(path);
             }
+
+            this.associative = associative;
         }
 
         #endregion

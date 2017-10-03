@@ -3851,7 +3851,8 @@ namespace netDxf.IO
             Vector3 position = Vector3.Zero;
             Vector3 u = Vector3.Zero;
             Vector3 v = Vector3.Zero;
-            double width = 0.0, height = 0.0;
+            double width = 0.0;
+            double height = 0.0;
             string imageDefHandle = null;
             ImageDisplayFlags displayOptions = ImageDisplayFlags.ShowImage | ImageDisplayFlags.ShowImageWhenNotAlignedWithScreen | ImageDisplayFlags.UseClippingBoundary;
             bool clipping = false;
@@ -3966,16 +3967,21 @@ namespace netDxf.IO
                 }
             }
 
+            if (u == Vector3.Zero || v == Vector3.Zero) return null;
+
             Vector3 normal = Vector3.CrossProduct(u, v);
             Vector3 uOCS = MathHelper.Transform(u, normal, CoordinateSystem.World, CoordinateSystem.Object);
             double rotation = Vector2.Angle(new Vector2(uOCS.X, uOCS.Y))*MathHelper.RadToDeg;
             double uLength = u.Modulus();
             double vLength = v.Modulus();
 
+            // for polygonal boundaries the last vertex is equal to the first, we will remove it
+            if (boundaryType == ClippingBoundaryType.Polygonal) vertexes.RemoveAt(vertexes.Count - 1);
+
             for (int i = 0; i < vertexes.Count; i++)
             {
-                double vx = vertexes[i].X*uLength;
-                double vy = vertexes[i].Y*vLength;
+                double vx = vertexes[i].X + 0.5;
+                double vy = vertexes[i].Y + 0.5;
                 vertexes[i] = new Vector2(vx, vy);
             }
 

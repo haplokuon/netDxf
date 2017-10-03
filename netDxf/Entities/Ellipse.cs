@@ -1,7 +1,7 @@
-#region netDxf library, Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+#region netDxf library, Copyright (C) 2009-2017 Daniel Carvajal (haplokuon@gmail.com)
 
 //                        netDxf library
-// Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2009-2017 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -77,7 +77,11 @@ namespace netDxf.Entities
             : base(EntityType.Ellipse, DxfObjectCode.Ellipse)
         {
             this.center = center;
+            if (majorAxis <= 0)
+                throw new ArgumentOutOfRangeException(nameof(majorAxis), majorAxis, "The major axis value must be greater than zero.");
             this.majorAxis = majorAxis;
+            if (minorAxis <= 0)
+                throw new ArgumentOutOfRangeException(nameof(minorAxis), minorAxis, "The minor axis value must be greater than zero.");
             this.minorAxis = minorAxis;
             this.startAngle = 0.0;
             this.endAngle = 0.0;

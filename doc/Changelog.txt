@@ -1,3 +1,9 @@
+[2017/5/24]
++ Added Vector2 and Vector3 multiplication and division component by component.
++ Added parameter checks for invalid values in several constructors.
++ (fixed) Issues with the clipping boundary in images.
++ (fixed) Issue Id #13554 Issue with image in dxf. While reading a dxf, any Image entity with vector u or v equals to zero will be skipped. 
+
 [2.0.3 - 2017/5/24]
 + Added AutoCad drawing database version number AC1032 = AutoCAD 2018.
 + A block that represents the dimension will be generated if, while loading a dxf, a Dimension entity is found with no associated block.

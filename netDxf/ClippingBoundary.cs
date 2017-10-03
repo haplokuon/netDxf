@@ -46,10 +46,10 @@ namespace netDxf
         /// <summary>
         /// Initializes a new instance of the <c>ClippingBoundary</c> class as a rectangular clipping boundary.
         /// </summary>
-        /// <param name="x">Rectangle x-coordinate of the bottom-left corner in image local coordinates.</param>
-        /// <param name="y">Rectangle y-coordinate of the bottom-left corner in image local coordinates.</param>
-        /// <param name="width">Rectangle width in image local coordinates.</param>
-        /// <param name="height">Rectangle height in image local coordinates.</param>
+        /// <param name="x">Rectangle x-coordinate of the first corner.</param>
+        /// <param name="y">Rectangle y-coordinate of the first corner.</param>
+        /// <param name="width">Rectangle width.</param>
+        /// <param name="height">Rectangle height.</param>
         public ClippingBoundary(double x, double y, double width, double height)
         {
             this.type = ClippingBoundaryType.Rectangular;
@@ -59,8 +59,8 @@ namespace netDxf
         /// <summary>
         /// Initializes a new instance of the <c>ClippingBoundary</c> class as a rectangular clipping boundary from two opposite corners.
         /// </summary>
-        /// <param name="firstCorner">Rectangle top-left corner in image local coordinates.</param>
-        /// <param name="secondCorner">Rectangle secondCorner in local coordinates.</param>
+        /// <param name="firstCorner">Rectangle first corner.</param>
+        /// <param name="secondCorner">Rectangle second corner.</param>
         public ClippingBoundary(Vector2 firstCorner, Vector2 secondCorner)
         {
             this.type = ClippingBoundaryType.Rectangular;

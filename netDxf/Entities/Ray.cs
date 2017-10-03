@@ -1,7 +1,7 @@
-﻿#region netDxf library, Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+﻿#region netDxf library, Copyright (C) 2009-2017 Daniel Carvajal (haplokuon@gmail.com)
 
 //                        netDxf library
-// Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2009-2017 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -68,8 +68,10 @@ namespace netDxf.Entities
             : base(EntityType.Ray, DxfObjectCode.Ray)
         {
             this.origin = origin;
-            this.direction = direction;
-            this.direction.Normalize();
+            this.direction = Vector3.Normalize(direction);
+            if (Vector3.IsNaN(this.direction))
+                throw new ArgumentException("The direction can not be the zero vector.", nameof(direction));
+
         }
 
         #endregion

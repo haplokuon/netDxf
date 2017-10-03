@@ -101,7 +101,7 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="image.jpg">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
   <ItemGroup>

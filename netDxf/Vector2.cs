@@ -1,7 +1,7 @@
-#region netDxf library, Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+#region netDxf library, Copyright (C) 2009-2017 Daniel Carvajal (haplokuon@gmail.com)
 
 //                        netDxf library
-// Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2009-2017 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -492,7 +492,7 @@ namespace netDxf
         }
 
         /// <summary>
-        /// Multiplies an scalar with a vector.
+        /// Multiplies a scalar with a vector.
         /// </summary>
         /// <param name="a">Scalar.</param>
         /// <param name="u">Vector3.</param>
@@ -503,7 +503,7 @@ namespace netDxf
         }
 
         /// <summary>
-        /// Multiplies an scalar with a vector.
+        /// Multiplies a scalar with a vector.
         /// </summary>
         /// <param name="a">Scalar.</param>
         /// <param name="u">Vector3.</param>
@@ -514,9 +514,53 @@ namespace netDxf
         }
 
         /// <summary>
+        /// Multiplies two vectors component by component.
+        /// </summary>
+        /// <param name="u">Vector2.</param>
+        /// <param name="v">Vector2.</param>
+        /// <returns>The multiplication of u times v.</returns>
+        public static Vector2 operator *(Vector2 u, Vector2 v)
+        {
+            return new Vector2(u.X * v.X, u.Y * v.Y);
+        }
+
+        /// <summary>
+        /// Multiplies two vectors component by component.
+        /// </summary>
+        /// <param name="u">Vector2.</param>
+        /// <param name="v">Vector2.</param>
+        /// <returns>The multiplication of u times v.</returns>
+        public static Vector2 Multiply(Vector2 u, Vector2 v)
+        {
+            return new Vector2(u.X * v.X, u.Y * v.Y);
+        }
+
+        /// <summary>
+        /// Divides a scalar with a vector.
+        /// </summary>
+        /// <param name="a">Scalar.</param>
+        /// <param name="u">Vector2.</param>
+        /// <returns>The division of u times a.</returns>
+        public static Vector2 operator /(double a, Vector2 u)
+        {
+            return new Vector2(a* u.X, a* u.Y);
+        }
+
+        /// <summary>
+        /// Divides a scalar with a vector.
+        /// </summary>
+        /// <param name="a">Scalar.</param>
+        /// <param name="u">Vector2.</param>
+        /// <returns>The division of u times a.</returns>
+        public static Vector2 Divide(double a, Vector2 u)
+        {
+            return new Vector2(a * u.X, a * u.Y);
+        }
+
+        /// <summary>
         /// Divides a vector with an scalar.
         /// </summary>
-        /// <param name="u">Vector3.</param>
+        /// <param name="u">Vector2.</param>
         /// <param name="a">Scalar.</param>
         /// <returns>The division of u times a.</returns>
         public static Vector2 operator /(Vector2 u, double a)
@@ -528,13 +572,35 @@ namespace netDxf
         /// <summary>
         /// Divides a vector with an scalar.
         /// </summary>
-        /// <param name="u">Vector3.</param>
+        /// <param name="u">Vector2.</param>
         /// <param name="a">Scalar.</param>
         /// <returns>The division of u times a.</returns>
         public static Vector2 Divide(Vector2 u, double a)
         {
             double invEscalar = 1/a;
             return new Vector2(u.X*invEscalar, u.Y*invEscalar);
+        }
+
+        /// <summary>
+        /// Divides two vectors component by component.
+        /// </summary>
+        /// <param name="u">Vector2.</param>
+        /// <param name="v">Vector2.</param>
+        /// <returns>The multiplication of u times v.</returns>
+        public static Vector2 operator /(Vector2 u, Vector2 v)
+        {
+            return new Vector2(u.X / v.X, u.Y / v.Y);
+        }
+
+        /// <summary>
+        /// Divides two vectors component by component.
+        /// </summary>
+        /// <param name="u">Vector2.</param>
+        /// <param name="v">Vector2.</param>
+        /// <returns>The multiplication of u times v.</returns>
+        public static Vector2 Divide(Vector2 u, Vector2 v)
+        {
+            return new Vector2(u.X / v.X, u.Y / v.Y);
         }
 
         #endregion
