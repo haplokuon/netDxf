@@ -8,7 +8,8 @@ If you need more information, you can find the official dxf documentation in
 [http://help.autodesk.com/view/ACD/2016/ENU/](http://help.autodesk.com/view/ACD/2016/ENU/)
 
 Code example:
-{code:c#}
+
+```c#
 public static void Main()
    { 
       // by default it will create an AutoCad2000 dxf version
@@ -21,7 +22,8 @@ public static void Main()
       // load file
       DxfDocument dxfLoad = DxfDocument.Load(filename);
    } 
-{code:c#}
+```
+
 ### Samples and Demos 
 Are contained in the source code.
 Well, at the moment they are just tests for the work in progress.
