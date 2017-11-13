@@ -6782,6 +6782,7 @@ namespace netDxf.IO
                 List<PolylineVertex> polylineVertices = new List<PolylineVertex>();
                 foreach (Vertex v in vertexes)
                 {
+                    // Spline-fit control points may get lost here
                     if (v.Flags.HasFlag(VertexTypeFlags.SplineVertexFromSplineFitting))
                     {
                         PolylineVertex vertex = new PolylineVertex
