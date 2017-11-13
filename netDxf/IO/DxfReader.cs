@@ -6777,6 +6777,31 @@ namespace netDxf.IO
                 };
                 ((PolyfaceMesh) pol).EndSequence.Handle = endSequenceHandle;
             }
+            else if (flags.HasFlag(PolylinetypeFlags.SplineFit))
+            {
+                List<PolylineVertex> polylineVertices = new List<PolylineVertex>();
+                foreach (Vertex v in vertexes)
+                {
+                    if (v.Flags.HasFlag(VertexTypeFlags.SplineVertexFromSplineFitting))
+                    {
+                        PolylineVertex vertex = new PolylineVertex
+                        {
+                            Flags = v.Flags,
+                            Position = v.Position,
+                            Handle = v.Handle
+                        };
+                        polylineVertices.Add(vertex);
+                    }
+                }
+
+                pol = new Polyline(polylineVertices, isClosed)
+                {
+                    Flags = flags,
+                    SmoothType = smoothType,
+                    Normal = normal
+                };
+                ((Polyline)pol).EndSequence.Handle = endSequenceHandle;
+            }
             else
             {
                 List<LwPolylineVertex> polylineVertexes = new List<LwPolylineVertex>();
