@@ -94,7 +94,7 @@ namespace netDxf.Entities
                     }
                 }
                 
-                if (style.DimRoundoff > 0.0)
+                if (style.DimRoundoff > 0.01)
                     measure = MathHelper.RoundToNearest(measure*scale, style.DimRoundoff);
                 else
                     measure *= scale;
