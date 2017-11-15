@@ -2611,6 +2611,9 @@ namespace netDxf.IO
             // By style (the flow direction is inherited from the associated text style)
             this.chunk.Write(72, (short) 5);
 
+            // Add the line spacing style.
+            this.chunk.Write(73, (short)mText.LineSpacingStyle);
+
             this.chunk.Write(7, this.EncodeNonAsciiCharacters(mText.Style.Name));
 
             this.WriteXData(mText.XData);
