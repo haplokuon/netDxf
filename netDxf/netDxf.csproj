@@ -87,6 +87,7 @@
     </Compile>
     <Compile Include="Collections\ObservableDictionary.cs" />
     <Compile Include="Collections\ObservableDictionaryEventArgs.cs" />
+    <Compile Include="Entities\MTextDrawingDirection.cs" />
     <Compile Include="Tables\DimensionStyleOverride.cs" />
     <Compile Include="Tables\DimensionStyleOverrideChangeEventArgs.cs" />
     <Compile Include="Tables\DimensionStyleOverrideType.cs" />

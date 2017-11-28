@@ -1,7 +1,7 @@
-#region netDxf library, Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+#region netDxf library, Copyright (C) 2009-2017 Daniel Carvajal (haplokuon@gmail.com)
 
 //                        netDxf library
-// Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2009-2017 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -239,5 +239,20 @@ namespace netDxf.Header
         /// Cumulative editing time for this drawing.
         /// </summary>
         public const string TdinDwg = "$TDINDWG";
+
+        /// <summary>
+        /// Origin of current UCS (in WCS).
+        /// </summary>
+        public const string UcsOrg = "$UCSORG";
+
+        /// <summary>
+        /// Direction of the current UCS X axis (in WCS).
+        /// </summary>
+        public const string UcsXDir = "$UCSXDIR";
+
+        /// <summary>
+        /// Direction of the current UCS Y axis (in WCS).
+        /// </summary>
+        public const string UcsYDir = "$UCSYDIR";
     }
 }

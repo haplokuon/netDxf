@@ -119,10 +119,12 @@ namespace netDxf.IO
         /// <param name="stream">Stream.</param>
         public DxfDocument Read(Stream stream)
         {
+            long startPosition = stream.Position;
             if (stream == null)
                 throw new ArgumentNullException(nameof(stream));
 
             string dwgcodepage = CheckHeaderVariable(stream, HeaderVariableCode.DwgCodePage, out this.isBinary);
+            stream.Position = startPosition;
 
             try
             {
@@ -130,6 +132,8 @@ namespace netDxf.IO
                 {
                     Encoding encoding;
                     DxfVersion version = DxfDocument.CheckDxfFileVersion(stream, out this.isBinary);
+                    stream.Position = startPosition;
+
                     if (version >= DxfVersion.AutoCad2007)
                         encoding = Encoding.UTF8;
                     else
@@ -148,6 +152,8 @@ namespace netDxf.IO
                 {
                     Encoding encoding;
                     Encoding encodingType = EncodingType.GetType(stream);
+                    stream.Position = startPosition;
+
                     bool isUnicode = (encodingType.EncodingName == Encoding.UTF8.EncodingName) ||
                                      (encodingType.EncodingName == Encoding.BigEndianUnicode.EncodingName) ||
                                      (encodingType.EncodingName == Encoding.Unicode.EncodingName);
@@ -252,7 +258,6 @@ namespace netDxf.IO
                 }
                 this.chunk.Next();
             }
-            stream.Position = 0;
 
             // perform all necessary post processes
             this.PostProcesses();
@@ -292,14 +297,15 @@ namespace netDxf.IO
             for (int i = 0; i < 18; i++)
                 sb.Append((char) sentinel[i]);
 
-            reader.BaseStream.Position = 0;
             return sb.ToString() == "AutoCAD Binary DXF";
         }
 
         public static string CheckHeaderVariable(Stream stream, string headerVariable, out bool isBinary)
         {
+            long startPosition = stream.Position;
             ICodeValueReader chunk;
             isBinary = IsBinary(stream);
+            stream.Position = startPosition;
 
             if (isBinary)
                 chunk = new BinaryCodeValueReader(new BinaryReader(stream), Encoding.ASCII);
@@ -321,22 +327,16 @@ namespace netDxf.IO
                         if (varName == headerVariable)
                         {
                             // we found the variable we are looking for
-                            stream.Position = 0;
                             return chunk.ReadString();
                         }
-
                         // some header variables have more than one entry
                         while (chunk.Code != 0 && chunk.Code != 9)
                             chunk.Next();
                     }
-
                     // we only need to read the header section
-                    stream.Position = 0;
                     return null;
                 }
             }
-
-            stream.Position = 0;
             return null;
         }
 
@@ -466,29 +466,7 @@ namespace netDxf.IO
                         this.chunk.Next();
                         break;
                     case HeaderVariableCode.InsBase:
-                        Vector3 pos = Vector3.Zero;
-                        while (this.chunk.Code != 0 && this.chunk.Code != 9)
-                        {
-                            switch (this.chunk.Code)
-                            {
-                                case 10:
-                                    pos.X = this.chunk.ReadDouble();
-                                    this.chunk.Next();
-                                    break;
-                                case 20:
-                                    pos.Y = this.chunk.ReadDouble();
-                                    this.chunk.Next();
-                                    break;
-                                case 30:
-                                    pos.Z = this.chunk.ReadDouble();
-                                    this.chunk.Next();
-                                    break;
-                                default:
-                                    throw new Exception("Invalid code in InsBase header variable.");
-                            }
-                        }
-                        
-                        this.doc.DrawingVariables.InsBase = pos;
+                        this.doc.DrawingVariables.InsBase = this.ReadHeaderVector();
                         break;
                     case HeaderVariableCode.InsUnits:
                         this.doc.DrawingVariables.InsUnits = (DrawingUnits) this.chunk.ReadShort();
@@ -558,6 +536,15 @@ namespace netDxf.IO
                             this.doc.DrawingVariables.TdinDwg = DrawingTime.EditingTime(elapsed);
                         this.chunk.Next();
                         break;
+                    case HeaderVariableCode.UcsOrg:
+                        this.doc.DrawingVariables.UcsOrg = this.ReadHeaderVector();
+                        break;
+                    case HeaderVariableCode.UcsXDir:
+                        this.doc.DrawingVariables.UcsXDir = this.ReadHeaderVector();
+                        break;
+                    case HeaderVariableCode.UcsYDir:
+                        this.doc.DrawingVariables.UcsYDir = this.ReadHeaderVector();
+                        break;
                     default:
                         // some header variables have more than one entry
                         while (this.chunk.Code != 0 && this.chunk.Code != 9)
@@ -565,6 +552,40 @@ namespace netDxf.IO
                         break;
                 }
             }
+
+            if (!Vector3.ArePerpendicular(this.doc.DrawingVariables.UcsXDir, this.doc.DrawingVariables.UcsYDir))
+            {
+                this.doc.DrawingVariables.UcsXDir = Vector3.UnitX;
+                this.doc.DrawingVariables.UcsYDir = Vector3.UnitY;
+            }
+
+        }
+
+        private Vector3 ReadHeaderVector()
+        {
+            Vector3 pos = Vector3.Zero;
+
+            while (this.chunk.Code != 0 && this.chunk.Code != 9)
+            {
+                switch (this.chunk.Code)
+                {
+                    case 10:
+                        pos.X = this.chunk.ReadDouble();
+                        this.chunk.Next();
+                        break;
+                    case 20:
+                        pos.Y = this.chunk.ReadDouble();
+                        this.chunk.Next();
+                        break;
+                    case 30:
+                        pos.Z = this.chunk.ReadDouble();
+                        this.chunk.Next();
+                        break;
+                    default:
+                        throw new Exception("Invalid code in vector header variable.");
+                }
+            }
+            return pos;
         }
 
         private void ReadClasses()
@@ -6722,9 +6743,9 @@ namespace netDxf.IO
             EntityObject pol;
             bool isClosed = flags.HasFlag(PolylinetypeFlags.ClosedPolylineOrClosedPolygonMeshInM);
 
-            //to avoid possible error between the vertex type and the polyline type
+            //to avoid possible errors between the vertex type and the polyline type
             //the polyline type will decide which information to use from the read vertex
-            if (flags.HasFlag(PolylinetypeFlags.Polyline3D))
+            if (flags.HasFlag(PolylinetypeFlags.Polyline3D) || flags.HasFlag(PolylinetypeFlags.SplineFit))
             {
                 List<PolylineVertex> polyline3dVertexes = new List<PolylineVertex>();
                 foreach (Vertex v in vertexes)
@@ -7064,6 +7085,8 @@ namespace netDxf.IO
             double rotation = 0.0;
             bool isRotationDefined = false;
             MTextAttachmentPoint attachmentPoint = MTextAttachmentPoint.TopLeft;
+            MTextLineSpacingStyle spacingStyle = MTextLineSpacingStyle.AtLeast;
+            MTextDrawingDirection drawingDirection = MTextDrawingDirection.ByStyle;
             TextStyle style = TextStyle.Default;
             string textString = string.Empty;
             List<XData> xData = new List<XData>();
@@ -7140,6 +7163,14 @@ namespace netDxf.IO
                         attachmentPoint = (MTextAttachmentPoint) this.chunk.ReadShort();
                         this.chunk.Next();
                         break;
+                    case 72:
+                        drawingDirection = (MTextDrawingDirection)this.chunk.ReadShort();
+                        this.chunk.Next();
+                        break;
+                    case 73:
+                        spacingStyle = (MTextLineSpacingStyle) this.chunk.ReadShort();
+                        this.chunk.Next();
+                        break;
                     case 210:
                         normal.X = this.chunk.ReadDouble();
                         this.chunk.Next();
@@ -7180,6 +7211,8 @@ namespace netDxf.IO
                 Style = style,
                 LineSpacingFactor = lineSpacing,
                 AttachmentPoint = attachmentPoint,
+                LineSpacingStyle = spacingStyle,
+                DrawingDirection = drawingDirection,
                 Rotation = isRotationDefined ? rotation : Vector2.Angle(direction)*MathHelper.RadToDeg,
                 Normal = normal,
             };

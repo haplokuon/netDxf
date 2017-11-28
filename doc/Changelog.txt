@@ -1,4 +1,11 @@
-[2017/5/24]
+[2017/11/28]
++ IMPORTANT: When working directly with streams in read or write operations their positions will not be reseted automatically. See "ReadWriteFromStream()" and ""ReadWriteFromStream2()"" sample in TestDxfDocument project for more details.
++ Added the header DrawingVariables UcsOrg, UcsXDir, and UcsYDir.
++ Added MText property drawing direction.
++ The MathHelper.RoundToNearest method now internally uses a long instead of an int for increased precision. It will still raise an exception if very high numbers and/or very low roundTo values are used.
++ (fixed) Missing read and write code of MText property LineSpacingStyle.
+
+[2017/10/5]
 + Added Vector2 and Vector3 multiplication and division component by component.
 + Added parameter checks for invalid values in several constructors.
 + (fixed) Issues with the clipping boundary in images.

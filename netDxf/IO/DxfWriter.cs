@@ -70,6 +70,9 @@ namespace netDxf.IO
             if (this.doc.DrawingVariables.AcadVer < DxfVersion.AutoCad2000)
                 throw new NotSupportedException("Only AutoCad2000 and newer dxf versions are supported.");
 
+            if (!Vector3.ArePerpendicular(this.doc.DrawingVariables.UcsXDir, this.doc.DrawingVariables.UcsYDir))
+                throw new ArithmeticException("The drawing variables vectors UcsXDir and UcsYDir must be perpendicular.");
+
             this.encodedStrings = new Dictionary<string, string>();
 
             // create the default PaperSpace layout in case it does not exist. The ModelSpace layout always exists
@@ -389,7 +392,6 @@ namespace netDxf.IO
 
             this.Close();
 
-            stream.Position = 0;
         }
 
         #endregion
@@ -642,6 +644,27 @@ namespace netDxf.IO
                 case HeaderVariableCode.TdinDwg:
                     this.chunk.Write(9, name);
                     this.chunk.Write(40, ((TimeSpan) value).TotalDays);
+                    break;
+                case HeaderVariableCode.UcsOrg:
+                    this.chunk.Write(9, name);
+                    Vector3 org = (Vector3)value;
+                    this.chunk.Write(10, org.X);
+                    this.chunk.Write(20, org.Y);
+                    this.chunk.Write(30, org.Z);
+                    break;
+                case HeaderVariableCode.UcsXDir:
+                    this.chunk.Write(9, name);
+                    Vector3 xdir = (Vector3)value;
+                    this.chunk.Write(10, xdir.X);
+                    this.chunk.Write(20, xdir.Y);
+                    this.chunk.Write(30, xdir.Z);
+                    break;
+                case HeaderVariableCode.UcsYDir:
+                    this.chunk.Write(9, name);
+                    Vector3 ydir = (Vector3)value;
+                    this.chunk.Write(10, ydir.X);
+                    this.chunk.Write(20, ydir.Y);
+                    this.chunk.Write(30, ydir.Z);
                     break;
             }
         }
@@ -2609,7 +2632,9 @@ namespace netDxf.IO
             this.chunk.Write(71, (short) mText.AttachmentPoint);
 
             // By style (the flow direction is inherited from the associated text style)
-            this.chunk.Write(72, (short) 5);
+            this.chunk.Write(72, (short) mText.DrawingDirection);
+
+            this.chunk.Write(73, (short) mText.LineSpacingStyle);
 
             this.chunk.Write(7, this.EncodeNonAsciiCharacters(mText.Style.Name));
 

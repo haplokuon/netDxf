@@ -87,7 +87,10 @@ namespace netDxf.Header
                 {HeaderVariableCode.TduCreate, new HeaderVariable(HeaderVariableCode.TduCreate, DateTime.UtcNow)},
                 {HeaderVariableCode.TdUpdate, new HeaderVariable(HeaderVariableCode.TdUpdate, DateTime.Now)},
                 {HeaderVariableCode.TduUpdate, new HeaderVariable(HeaderVariableCode.TduUpdate, DateTime.UtcNow)},
-                {HeaderVariableCode.TdinDwg, new HeaderVariable(HeaderVariableCode.TdinDwg, new TimeSpan())}
+                {HeaderVariableCode.TdinDwg, new HeaderVariable(HeaderVariableCode.TdinDwg, new TimeSpan())},
+                {HeaderVariableCode.UcsOrg, new HeaderVariable(HeaderVariableCode.UcsOrg, Vector3.Zero)},
+                {HeaderVariableCode.UcsXDir, new HeaderVariable(HeaderVariableCode.UcsXDir, Vector3.UnitX)},
+                {HeaderVariableCode.UcsYDir, new HeaderVariable(HeaderVariableCode.UcsYDir, Vector3.UnitY)}
             };
         }
 
@@ -388,7 +391,7 @@ namespace netDxf.Header
         }
 
         /// <summary>
-        /// insertion base point for the current drawing.
+        /// Insertion base point for the current drawing.
         /// </summary>
         /// <remarks>
         /// When you insert or externally reference the current drawing into other drawings, this base point is used as the insertion base point.
@@ -562,6 +565,39 @@ namespace netDxf.Header
         {
             get { return (TimeSpan) this.variables[HeaderVariableCode.TdinDwg].Value; }
             set { this.variables[HeaderVariableCode.TdinDwg].Value = value; }
+        }
+
+        /// <summary>
+        /// Origin of current UCS (in WCS).
+        /// </summary>
+        public Vector3 UcsOrg
+        {
+            get { return (Vector3)this.variables[HeaderVariableCode.UcsOrg].Value; }
+            set { this.variables[HeaderVariableCode.UcsOrg].Value = value; }
+        }
+
+        /// <summary>
+        /// Direction of the current UCS X axis (in WCS).
+        /// </summary>
+        /// <remarks>
+        /// The vectors UcsXDir and UcsYDir must be perpendicular.
+        /// </remarks>
+        public Vector3 UcsXDir
+        {
+            get { return (Vector3)this.variables[HeaderVariableCode.UcsXDir].Value; }
+            set { this.variables[HeaderVariableCode.UcsXDir].Value = value; }
+        }
+
+        /// <summary>
+        /// Direction of the current UCS Y axis (in WCS).
+        /// </summary>
+        /// <remarks>
+        /// The vectors UcsXDir and UcsYDir must be perpendicular.
+        /// </remarks>
+        public Vector3 UcsYDir
+        {
+            get { return (Vector3)this.variables[HeaderVariableCode.UcsYDir].Value; }
+            set { this.variables[HeaderVariableCode.UcsYDir].Value = value; }
         }
 
         #endregion

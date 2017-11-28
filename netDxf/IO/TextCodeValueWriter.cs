@@ -1,7 +1,7 @@
-﻿#region netDxf library, Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+﻿#region netDxf library, Copyright (C) 2009-2017 Daniel Carvajal (haplokuon@gmail.com)
 
 //                        netDxf library
-// Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2009-2017 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -32,9 +32,9 @@ namespace netDxf.IO
         ICodeValueWriter
     {
         private readonly TextWriter writer;
+        private long currentPosition;
         private short dxfCode;
         private object dxfValue;
-        private long currentPosition;
 
         public TextCodeValueWriter(TextWriter writer)
         {
@@ -291,9 +291,9 @@ namespace netDxf.IO
         public void WriteBytes(byte[] value)
         {
             StringBuilder sb = new StringBuilder();
-            for (int i = 0; i < value.Length; i++)
+            foreach (byte v in value)
             {
-                sb.Append(string.Format("{0:X2}", value[i]));
+                sb.Append(string.Format("{0:X2}", v));
             }
             this.writer.WriteLine(sb.ToString());
         }

@@ -1,7 +1,7 @@
-﻿#region netDxf library, Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+﻿#region netDxf library, Copyright (C) 2009-2017 Daniel Carvajal (haplokuon@gmail.com)
 
 //                        netDxf library
-// Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2009-2017 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -451,7 +451,7 @@ namespace netDxf
         /// <returns>The number rounded to the nearest value.</returns>
         public static double RoundToNearest(double number, double roundTo)
         {
-            int mulitpler = Convert.ToInt32(number/roundTo);
+            long mulitpler = Convert.ToInt64(number/roundTo);
             return mulitpler*roundTo;
         }
 

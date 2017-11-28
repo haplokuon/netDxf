@@ -1,7 +1,7 @@
-﻿#region netDxf library, Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+﻿#region netDxf library, Copyright (C) 2009-2017 Daniel Carvajal (haplokuon@gmail.com)
 
 //                        netDxf library
-// Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2009-2017 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -31,9 +31,9 @@ namespace netDxf.IO
     {
         public static Encoding GetType(Stream fs)
         {
-            byte[] Unicode = {0xFF, 0xFE, 0x41};
-            byte[] UnicodeBIG = {0xFE, 0xFF, 0x00};
-            byte[] UTF8 = {0xEF, 0xBB, 0xBF}; //with BOM
+            byte[] unicode = {0xFF, 0xFE, 0x41};
+            byte[] unicodeBig = {0xFE, 0xFF, 0x00};
+            byte[] utf8 = {0xEF, 0xBB, 0xBF}; //with BOM
             Encoding reVal = Encoding.ASCII; //.Default;
 
             BinaryReader r = new BinaryReader(fs, Encoding.Default);
@@ -42,13 +42,12 @@ namespace netDxf.IO
                 return null;
 
             byte[] ss = r.ReadBytes(i);
-            if (IsUTF8Bytes(ss) || (ss[0] == UTF8[0] && ss[1] == UTF8[1] && ss[2] == UTF8[2]))
+            if (IsUTF8Bytes(ss) || (ss[0] == utf8[0] && ss[1] == utf8[1] && ss[2] == utf8[2]))
                 reVal = Encoding.UTF8;
-            else if (ss[0] == UnicodeBIG[0] && ss[1] == UnicodeBIG[1] && ss[2] == UnicodeBIG[2])
+            else if (ss[0] == unicodeBig[0] && ss[1] == unicodeBig[1] && ss[2] == unicodeBig[2])
                 reVal = Encoding.BigEndianUnicode;
-            else if (ss[0] == Unicode[0] && ss[1] == Unicode[1] && ss[2] == Unicode[2])
+            else if (ss[0] == unicode[0] && ss[1] == unicode[1] && ss[2] == unicode[2])
                 reVal = Encoding.Unicode;
-            fs.Position = 0;
             return reVal;
         }
 

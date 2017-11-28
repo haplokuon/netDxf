@@ -24,9 +24,100 @@ namespace TestDxfDocument
     /// </summary>
     public class Program
     {
-        
+        private static void ReadWriteFromStream()
+        {
+            // They will return true or false if the operation has been carried out successfully or not.
+            // The Save(string file, DxfVersion dxfVersion) and Load(string file) methods will still raise an exception if they are unable to create the FileStream.
+            // On Debug mode they will raise any exception that might occur during the whole process.
+            Line line = new Line(new Vector3(0, 0, 0), new Vector3(100, 100, 0));
+
+            DxfDocument dxf = new DxfDocument();
+            dxf.AddEntity(line);
+            dxf.Save("test.dxf");
+
+            // saving to memory stream always use the default constructor, a fixed size stream will not work.
+            MemoryStream memoryStream = new MemoryStream();
+            if (!dxf.Save(memoryStream))
+                throw new Exception("Error saving to memory stream.");
+            // after the save method we need to rewind the stream to its start position
+            memoryStream.Position = 0;
+
+            bool isBinary;
+            DxfVersion version1 = DxfDocument.CheckDxfFileVersion(memoryStream, out isBinary);
+            // DxfDocument.CheckDxfFileVersion is a read operation therefore we will need to rewind the stream to its start position
+            memoryStream.Position = 0;
+
+            // loading from memory stream
+            DxfDocument dxf2 = DxfDocument.Load(memoryStream);
+            // DxfDocument.CheckDxfFileVersion is a read operation therefore we will need to rewind the stream to its start position
+            memoryStream.Position = 0;
+
+            DxfVersion version2 = DxfDocument.CheckDxfFileVersion(memoryStream, out isBinary);
+
+            memoryStream.Close(); // once the stream is not need anymore we need to close the stream
+
+            // saving to file stream
+            FileStream fileStream = new FileStream("test fileStream.dxf", FileMode.Create);
+            if (!dxf2.Save(fileStream, true))
+                throw new Exception("Error saving to file stream.");
+
+            fileStream.Close(); // you will need to close the stream manually to avoid file already open conflicts
+
+            FileStream fileStreamLoad = new FileStream("test fileStream.dxf", FileMode.Open, FileAccess.Read);
+            DxfDocument dxf3 = DxfDocument.Load(fileStreamLoad);
+            fileStreamLoad.Close();
+
+            DxfDocument dxf4 = DxfDocument.Load("test fileStream.dxf");
+        }
+
+        private static void ReadWriteFromStream2()
+        {
+            // Now it should be possible to hold multiple documents in the same stream.
+            // The only thing we need to keep track its the start position of the documents in the stream
+            long dxf1StartPosition;
+            long dxf2StartPosition;
+
+            // first document
+            DxfDocument dxf1 = new DxfDocument();
+            dxf1.AddEntity(new Line(new Vector3(0, 0, 0), new Vector3(100, 100, 0)));
+
+            // second document
+            DxfDocument dxf2 = new DxfDocument();
+            dxf2.AddEntity(new Line(new Vector3(0, 100, 0), new Vector3(100, 0, 0)));
+
+            // both documents will be stored in the same memory stream
+            // saving to memory stream always use the default constructor, a fixed size stream will not work.
+            MemoryStream memoryStream = new MemoryStream();
+
+            // save first document and its start position
+            dxf1StartPosition = memoryStream.Position;
+            if (!dxf1.Save(memoryStream))
+                throw new Exception("Error saving to memory stream.");
+
+            // save second document and its start position
+            dxf2StartPosition = memoryStream.Position;
+            if (!dxf2.Save(memoryStream))
+                throw new Exception("Error saving to memory stream.");
+
+            // testing reading each document from the memory stream and saving them in external dxf files
+            // we must correctly set the stream position to the beginning of each document
+
+            // set the start position of the first document and read
+            memoryStream.Position = dxf1StartPosition;
+            DxfDocument doc1 = DxfDocument.Load(memoryStream);
+            doc1.Save("doc1.dxf");
+
+            // set the start position of the second document and read
+            memoryStream.Position = dxf2StartPosition;
+            DxfDocument doc2 = DxfDocument.Load(memoryStream);
+            doc2.Save("doc2.dxf");
+
+        }
+
         public static void Main()
         {
+            ReadWriteFromStream();
+            ReadWriteFromStream2();
 
             DxfDocument doc = Test(@"sample.dxf");
 
@@ -160,7 +251,6 @@ namespace TestDxfDocument
             //ObjectVisibility();
             //EntityTrueColor();
             //EntityLineWeight();
-            //ReadWriteFromStream();
             //Text();
             //WriteNoAsciiText();
             //WriteSplineBoundaryHatch();
@@ -4603,41 +4693,6 @@ namespace TestDxfDocument
             dxf.AddEntity(text);
             dxf.Save("line weight.dxf");
             dxf = DxfDocument.Load("line weight.dxf");
-        }
-
-        private static void ReadWriteFromStream()
-        {
-            // Load and Save methods are now able to work directly with a stream.
-            // They will return true or false if the operation has been carried out successfully or not.
-            // The Save(string file, DxfVersion dxfVersion) and Load(string file) methods will still raise an exception if they are unable to create the FileStream.
-            // On Debug mode they will raise any exception that migh occurr during the whole process.
-            Line line = new Line(new Vector3(0, 0, 0), new Vector3(100, 100, 0));
-
-            DxfDocument dxf = new DxfDocument();
-            dxf.AddEntity(line);
-            dxf.Save("test.dxf");
-
-            // saving to memory stream always use the default constructor, a fixed size stream will not work.
-            MemoryStream memoryStream = new MemoryStream();
-            if (!dxf.Save(memoryStream))
-                throw new Exception("Error saving to memory stream.");
-
-            // loading from memory stream
-            DxfDocument dxf2 = DxfDocument.Load(memoryStream);
-            memoryStream.Close(); // once the stream is not need anymore we need to close the stream
-
-            // saving to file stream
-            FileStream fileStream = new FileStream("test fileStream.dxf", FileMode.Create);
-            if (!dxf2.Save(fileStream, true))
-                throw new Exception("Error saving to file stream.");
-
-            fileStream.Close(); // you will need to close the stream manually to avoid file already open conflicts
-
-            FileStream fileStreamLoad = new FileStream("test fileStream.dxf", FileMode.Open, FileAccess.Read);
-            DxfDocument dxf3 = DxfDocument.Load(fileStreamLoad);
-            fileStreamLoad.Close();
-
-            DxfDocument dxf4 = DxfDocument.Load("test fileStream.dxf");
         }
 
         private static void Text()
