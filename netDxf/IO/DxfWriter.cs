@@ -2636,6 +2636,9 @@ namespace netDxf.IO
 
             this.chunk.Write(73, (short) mText.LineSpacingStyle);
 
+            // Add the line spacing style.
+            this.chunk.Write(73, (short)mText.LineSpacingStyle);
+
             this.chunk.Write(7, this.EncodeNonAsciiCharacters(mText.Style.Name));
 
             this.WriteXData(mText.XData);
