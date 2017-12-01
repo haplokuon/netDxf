@@ -1,3 +1,11 @@
+[2017/12/1]
++ DimensionStyle property DimRoundoff minimum value is 0.000001 or just zero to indicate no rounding off.
++ Cleanup duplicate code 73 when writing MText entities.
++ The MathHelper.RoundToNearest method will round off correctly the last decimal.
++ (fixed) When reading a dxf if the DimRoundoff value was out of range, it was not set to the correct default value.
++ (fixed) The MText rotation was not calculated correctly when it was not defined in the world XY plane.
++ (fixed) AutoCad 2018 introduced some undocumented changes to the MText entity that broke up the existing code.
+
 [2017/11/28]
 + IMPORTANT: When working directly with streams in read or write operations their positions will not be reseted automatically. See "ReadWriteFromStream()" and ""ReadWriteFromStream2()"" sample in TestDxfDocument project for more details.
 + Added the header DrawingVariables UcsOrg, UcsXDir, and UcsYDir.

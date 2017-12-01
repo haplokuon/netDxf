@@ -451,8 +451,8 @@ namespace netDxf
         /// <returns>The number rounded to the nearest value.</returns>
         public static double RoundToNearest(double number, double roundTo)
         {
-            long mulitpler = Convert.ToInt64(number/roundTo);
-            return mulitpler*roundTo;
+            double multiplier = Math.Round(number/roundTo, 0);
+            return multiplier * roundTo;
         }
 
         /// <summary>

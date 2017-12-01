@@ -1,7 +1,7 @@
-﻿#region netDxf library, Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+﻿#region netDxf library, Copyright (C) 2009-2017 Daniel Carvajal (haplokuon@gmail.com)
 
 //                        netDxf library
-// Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2009-2017 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -31,13 +31,6 @@ namespace netDxf.Tables
     /// </summary>
     public class DimensionStyleOverride
     {
-        #region private fields
-
-        private readonly DimensionStyleOverrideType type;
-        private readonly object value;
-
-        #endregion
-
         #region constructor
 
         /// <summary>
@@ -231,13 +224,33 @@ namespace netDxf.Tables
                 case DimensionStyleOverrideType.DimRoundoff:
                     if (!(value is double))
                         throw new ArgumentException(string.Format("The DimensionStyleOverrideType.{0} dimension style override must be a valid {1}", type, typeof (double)), nameof(value));
-                    if ((double) value < 0)
-                        throw new ArgumentOutOfRangeException(nameof(value), value, string.Format("The {0} dimension style override must be equals or greater than zero.", type));
+                    if ((double) value < 0.000001 && !MathHelper.IsZero((double)value, double.Epsilon))
+                        throw new ArgumentOutOfRangeException(nameof(value), value, string.Format("The {0} dimension style override must be equals or greater than 0.000001 or zero (no rounding off).", type));
                     break;
             }
             this.type = type;
             this.value = value;
         }
+
+        #endregion
+
+        #region overrides
+
+        /// <summary>
+        /// Obtains a string that represents the actual dimension style override.
+        /// </summary>
+        /// <returns>A string text.</returns>
+        public override string ToString()
+        {
+            return string.Format("{0} : {1}", this.type, this.value);
+        }
+
+        #endregion
+
+        #region private fields
+
+        private readonly DimensionStyleOverrideType type;
+        private readonly object value;
 
         #endregion
 
@@ -257,19 +270,6 @@ namespace netDxf.Tables
         public object Value
         {
             get { return this.value; }
-        }
-
-        #endregion
-
-        #region overrides
-
-        /// <summary>
-        /// Obtains a string that represents the actual dimension style override.
-        /// </summary>
-        /// <returns>A string text.</returns>
-        public override string ToString()
-        {
-            return string.Format("{0} : {1}", this.type, this.value);
         }
 
         #endregion

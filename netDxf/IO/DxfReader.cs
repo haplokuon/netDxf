@@ -1312,7 +1312,7 @@ namespace netDxf.IO
             AngleUnitType dimaunit = defaultDim.DimAngularUnits;
             LinearUnitType dimlunit = defaultDim.DimLengthUnits;
             FractionFormatType dimfrac = defaultDim.FractionalType;
-            double dimrnd = 0.0;
+            double dimrnd = defaultDim.DimRoundoff;
             short dimzin = 0;
             short dimazin = 3;
 
@@ -1362,8 +1362,8 @@ namespace netDxf.IO
                         break;
                     case 45:
                         dimrnd = this.chunk.ReadDouble();
-                        if (dimrnd < 0.0)
-                            dimrnd = defaultDim.ExtLineExtend;
+                        if (dimrnd < 0.000001 && !MathHelper.IsZero(dimrnd, double.Epsilon))
+                            dimrnd = defaultDim.DimRoundoff;
                         this.chunk.Next();
                         break;
                     case 46:
@@ -7074,10 +7074,158 @@ namespace netDxf.IO
             return text;
         }
 
+        //private MText ReadMText()
+        //{
+        //    Vector3 insertionPoint = Vector3.Zero;
+        //    Vector2 direction = Vector2.UnitX;
+        //    Vector3 normal = Vector3.UnitZ;
+        //    double height = 0.0;
+        //    double rectangleWidth = 0.0;
+        //    double lineSpacing = 1.0;
+        //    double rotation = 0.0;
+        //    bool isRotationDefined = false;
+        //    MTextAttachmentPoint attachmentPoint = MTextAttachmentPoint.TopLeft;
+        //    MTextLineSpacingStyle spacingStyle = MTextLineSpacingStyle.AtLeast;
+        //    MTextDrawingDirection drawingDirection = MTextDrawingDirection.ByStyle;
+        //    TextStyle style = TextStyle.Default;
+        //    string textString = string.Empty;
+        //    List<XData> xData = new List<XData>();
+
+        //    this.chunk.Next();
+        //    while (this.chunk.Code != 0)
+        //    {
+        //        switch (this.chunk.Code)
+        //        {
+        //            case 1:
+        //                textString = string.Concat(textString, this.chunk.ReadString());
+        //                this.chunk.Next();
+        //                break;
+        //            case 3:
+        //                textString = string.Concat(textString, this.chunk.ReadString());
+        //                this.chunk.Next();
+        //                break;
+        //            case 10:
+        //                insertionPoint.X = this.chunk.ReadDouble();
+        //                this.chunk.Next();
+        //                break;
+        //            case 20:
+        //                insertionPoint.Y = this.chunk.ReadDouble();
+        //                this.chunk.Next();
+        //                break;
+        //            case 30:
+        //                insertionPoint.Z = this.chunk.ReadDouble();
+        //                this.chunk.Next();
+        //                break;
+        //            case 11:
+        //                direction.X = this.chunk.ReadDouble();
+        //                this.chunk.Next();
+        //                break;
+        //            case 21:
+        //                direction.Y = this.chunk.ReadDouble();
+        //                this.chunk.Next();
+        //                break;
+        //            case 31:
+        //                // Z direction value (direction.Z = double.Parse(dxfPairInfo.Value);)
+        //                // the angle of the text is defined on the plane where it belongs so Z value will be zero.
+        //                this.chunk.Next();
+        //                break;
+        //            case 40:
+        //                height = this.chunk.ReadDouble();
+        //                if (height <= 0.0)
+        //                    height = this.doc.DrawingVariables.TextSize;
+        //                this.chunk.Next();
+        //                break;
+        //            case 41:
+        //                rectangleWidth = this.chunk.ReadDouble();
+        //                if (rectangleWidth < 0.0)
+        //                    rectangleWidth = 0.0;
+        //                this.chunk.Next();
+        //                break;
+        //            case 44:
+        //                lineSpacing = this.chunk.ReadDouble();
+        //                if (lineSpacing < 0.25 || lineSpacing > 4.0)
+        //                    lineSpacing = 1.0;
+        //                this.chunk.Next();
+        //                break;
+        //            case 50: // even if the AutoCAD dxf documentation says that the rotation is in radians, this is wrong this value is in degrees
+        //                isRotationDefined = true;
+        //                rotation = this.chunk.ReadDouble();
+        //                this.chunk.Next();
+        //                break;
+        //            case 7:
+        //                string styleName = this.DecodeEncodedNonAsciiCharacters(this.chunk.ReadString());
+        //                if (string.IsNullOrEmpty(styleName))
+        //                    styleName = this.doc.DrawingVariables.TextStyle;
+        //                style = this.GetTextStyle(styleName);
+        //                this.chunk.Next();
+        //                break;
+        //            case 71:
+        //                attachmentPoint = (MTextAttachmentPoint)this.chunk.ReadShort();
+        //                this.chunk.Next();
+        //                break;
+        //            case 72:
+        //                drawingDirection = (MTextDrawingDirection)this.chunk.ReadShort();
+        //                this.chunk.Next();
+        //                break;
+        //            case 73:
+        //                spacingStyle = (MTextLineSpacingStyle)this.chunk.ReadShort();
+        //                this.chunk.Next();
+        //                break;
+        //            case 210:
+        //                normal.X = this.chunk.ReadDouble();
+        //                this.chunk.Next();
+        //                break;
+        //            case 220:
+        //                normal.Y = this.chunk.ReadDouble();
+        //                this.chunk.Next();
+        //                break;
+        //            case 230:
+        //                normal.Z = this.chunk.ReadDouble();
+        //                this.chunk.Next();
+        //                break;
+        //            case 1001:
+        //                string appId = this.DecodeEncodedNonAsciiCharacters(this.chunk.ReadString());
+        //                XData data = this.ReadXDataRecord(this.GetApplicationRegistry(appId));
+        //                xData.Add(data);
+        //                break;
+        //            default:
+        //                if (this.chunk.Code >= 1000 && this.chunk.Code <= 1071)
+        //                    throw new Exception("The extended data of an entity must start with the application registry code.");
+
+        //                this.chunk.Next();
+        //                break;
+        //        }
+        //    }
+
+        //    textString = this.DecodeEncodedNonAsciiCharacters(textString);
+        //    // text dxf files stores the tabs as ^I in the MText texts, they will be replaced by the standard tab character
+        //    if (!this.isBinary)
+        //        textString = textString.Replace("^I", "\t");
+
+        //    MText entity = new MText
+        //    {
+        //        Value = textString,
+        //        Position = insertionPoint,
+        //        Height = height,
+        //        RectangleWidth = rectangleWidth,
+        //        Style = style,
+        //        LineSpacingFactor = lineSpacing,
+        //        AttachmentPoint = attachmentPoint,
+        //        LineSpacingStyle = spacingStyle,
+        //        DrawingDirection = drawingDirection,
+        //        Rotation = isRotationDefined ? rotation : Vector2.Angle(direction) * MathHelper.RadToDeg,
+        //        Normal = normal,
+        //    };
+
+        //    entity.XData.AddRange(xData);
+
+        //    return entity;
+        //}
+
         private MText ReadMText()
         {
             Vector3 insertionPoint = Vector3.Zero;
-            Vector2 direction = Vector2.UnitX;
+            Vector3 direction = Vector3.UnitX;
             Vector3 normal = Vector3.UnitZ;
             double height = 0.0;
             double rectangleWidth = 0.0;
@@ -7125,8 +7273,7 @@ namespace netDxf.IO
                         this.chunk.Next();
                         break;
                     case 31:
-                        // Z direction value (direction.Z = double.Parse(dxfPairInfo.Value);)
-                        // the angle of the text is defined on the plane where it belongs so Z value will be zero.
+                        direction.Z = this.chunk.ReadDouble();
                         this.chunk.Next();
                         break;
                     case 40:
@@ -7188,6 +7335,15 @@ namespace netDxf.IO
                         XData data = this.ReadXDataRecord(this.GetApplicationRegistry(appId));
                         xData.Add(data);
                         break;
+                    case 101:
+                        // once again Autodesk not documenting its own stuff.
+                        // the code 101 was introduced in AutoCad 2018, as far as I know, it is not documented anywhere in the official dxf help.
+                        // after this value, it seems that appears the definition of who knows what, therefore everything after this 101 code will be skipped
+                        // until the end of the entity definition or the XData information
+                        string unkown = this.chunk.ReadString();
+                        while (!(this.chunk.Code == 0 || this.chunk.Code == 1001))
+                            this.chunk.Next();                                         
+                        break;
                     default:
                         if (this.chunk.Code >= 1000 && this.chunk.Code <= 1071)
                             throw new Exception("The extended data of an entity must start with the application registry code.");
@@ -7202,6 +7358,8 @@ namespace netDxf.IO
             if (!this.isBinary)
                 textString = textString.Replace("^I", "\t");
 
+            Vector3 ocsDirection = MathHelper.Transform(direction, normal, CoordinateSystem.World, CoordinateSystem.Object);
+
             MText entity = new MText
             {
                 Value = textString,
@@ -7213,7 +7371,7 @@ namespace netDxf.IO
                 AttachmentPoint = attachmentPoint,
                 LineSpacingStyle = spacingStyle,
                 DrawingDirection = drawingDirection,
-                Rotation = isRotationDefined ? rotation : Vector2.Angle(direction)*MathHelper.RadToDeg,
+                Rotation = isRotationDefined ? rotation : Vector2.Angle(new Vector2(ocsDirection.X, ocsDirection.Y))*MathHelper.RadToDeg,
                 Normal = normal,
             };
 
