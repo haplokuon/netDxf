@@ -1,3 +1,6 @@
+[2017/12/7]
++ (fixed) The MLineStyle was not cloned while cloning a MLine entity.
+
 [2017/12/1]
 + DimensionStyle property DimRoundoff minimum value is 0.000001 or just zero to indicate no rounding off.
 + Cleanup duplicate code 73 when writing MText entities.

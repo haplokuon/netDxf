@@ -1,7 +1,7 @@
-﻿#region netDxf library, Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+﻿#region netDxf library, Copyright (C) 2009-2017 Daniel Carvajal (haplokuon@gmail.com)
 
 //                        netDxf library
-// Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2009-2017 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -33,6 +33,176 @@ namespace netDxf.Entities
     public class MLine :
         EntityObject
     {
+        #region internal properties
+
+        /// <summary>
+        /// MLine flags.
+        /// </summary>
+        internal MLineFlags Flags
+        {
+            get { return this.flags; }
+            set { this.flags = value; }
+        }
+
+        #endregion
+
+        #region public methods
+
+        /// <summary>
+        /// Calculates the internal information of the multiline vertexes.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// This function needs to be called manually when any modifications are done to the multiline.
+        /// </para>
+        /// <para>
+        /// If the vertex distance list needs to be edited to represent trimmed multilines this function needs to be called prior to any modification.
+        /// It will calculate the minimum information needed to build a correct multiline.
+        /// </para>
+        /// </remarks>
+        public void Update()
+        {
+            if (this.vertexes.Count == 0)
+                return;
+
+            double reference = 0.0;
+            switch (this.justification)
+            {
+                case MLineJustification.Top:
+                    reference = this.style.Elements[this.style.Elements.Count - 1].Offset;
+                    break;
+                case MLineJustification.Zero:
+                    reference = 0.0;
+                    break;
+                case MLineJustification.Bottom:
+                    reference = this.style.Elements[0].Offset;
+                    break;
+            }
+
+            Vector2 prevDir;
+            if (this.vertexes[0].Location.Equals(this.vertexes[this.vertexes.Count - 1].Location))
+                prevDir = Vector2.UnitY;
+            else
+            {
+                prevDir = this.vertexes[0].Location - this.vertexes[this.vertexes.Count - 1].Location;
+                prevDir.Normalize();
+            }
+
+            for (int i = 0; i < this.vertexes.Count; i++)
+            {
+                Vector2 position = this.vertexes[i].Location;
+                Vector2 mitter;
+                Vector2 dir;
+                if (i == 0)
+                {
+                    if (this.vertexes[i + 1].Location.Equals(position))
+                        dir = Vector2.UnitY;
+                    else
+                    {
+                        dir = this.vertexes[i + 1].Location - position;
+                        dir.Normalize();
+                    }
+                    if (this.IsClosed)
+                    {
+                        mitter = prevDir - dir;
+                        mitter.Normalize();
+                    }
+                    else
+                        mitter = MathHelper.Transform(dir, this.style.StartAngle*MathHelper.DegToRad, CoordinateSystem.Object, CoordinateSystem.World);
+                }
+                else if (i + 1 == this.vertexes.Count)
+                {
+                    if (this.IsClosed)
+                    {
+                        if (this.vertexes[0].Location.Equals(position))
+                            dir = Vector2.UnitY;
+                        else
+                        {
+                            dir = this.vertexes[0].Location - position;
+                            dir.Normalize();
+                        }
+                        mitter = prevDir - dir;
+                        mitter.Normalize();
+                    }
+                    else
+                    {
+                        dir = prevDir;
+                        mitter = MathHelper.Transform(dir, this.style.EndAngle*MathHelper.DegToRad, CoordinateSystem.Object, CoordinateSystem.World);
+                    }
+                }
+                else
+                {
+                    if (this.vertexes[i + 1].Location.Equals(position))
+                        dir = Vector2.UnitY;
+                    else
+                    {
+                        dir = this.vertexes[i + 1].Location - position;
+                        dir.Normalize();
+                    }
+
+                    mitter = prevDir - dir;
+                    mitter.Normalize();
+                }
+                prevDir = dir;
+
+                List<double>[] distances = new List<double>[this.style.Elements.Count];
+                double angleMitter = Vector2.Angle(mitter);
+                double angleDir = Vector2.Angle(dir);
+                double cos = Math.Cos(angleMitter + (MathHelper.HalfPI - angleDir));
+                for (int j = 0; j < this.style.Elements.Count; j++)
+                {
+                    double distance = (this.style.Elements[j].Offset + reference)/cos;
+                    distances[j] = new List<double>
+                    {
+                        distance*this.scale,
+                        0.0
+                    };
+                }
+
+                this.vertexes[i] = new MLineVertex(position, dir, mitter, distances);
+            }
+        }
+
+        #endregion
+
+        #region overrides
+
+        /// <summary>
+        /// Creates a new MLine that is a copy of the current instance.
+        /// </summary>
+        /// <returns>A new MLine that is a copy of this instance.</returns>
+        public override object Clone()
+        {
+            MLine entity = new MLine
+            {
+                //EntityObject properties
+                Layer = (Layer) this.Layer.Clone(),
+                Linetype = (Linetype) this.Linetype.Clone(),
+                Color = (AciColor) this.Color.Clone(),
+                Lineweight = this.Lineweight,
+                Transparency = (Transparency) this.Transparency.Clone(),
+                LinetypeScale = this.LinetypeScale,
+                Normal = this.Normal,
+                IsVisible = this.IsVisible,
+                //MLine properties
+                Elevation = this.elevation,
+                Scale = this.scale,
+                Justification = this.justification,
+                Style = (MLineStyle) this.style.Clone(),
+                Flags = this.flags
+            };
+
+            foreach (MLineVertex vertex in this.vertexes)
+                entity.vertexes.Add((MLineVertex) vertex.Clone());
+
+            foreach (XData data in this.XData.Values)
+                entity.XData.Add((XData) data.Clone());
+
+            return entity;
+        }
+
+        #endregion
+
         #region delegates and events
 
         public delegate void MLineStyleChangedEventHandler(MLine sender, TableObjectChangedEventArgs<MLineStyle> e);
@@ -251,176 +421,6 @@ namespace netDxf.Entities
                     throw new ArgumentNullException(nameof(value));
                 this.style = this.OnMLineStyleChangedEvent(this.style, value);
             }
-        }
-
-        #endregion
-
-        #region internal properties
-
-        /// <summary>
-        /// MLine flags.
-        /// </summary>
-        internal MLineFlags Flags
-        {
-            get { return this.flags; }
-            set { this.flags = value; }
-        }
-
-        #endregion
-
-        #region public methods
-
-        /// <summary>
-        /// Calculates the internal information of the multiline vertexes.
-        /// </summary>
-        /// <remarks>
-        /// <para>
-        /// This function needs to be called manually when any modifications are done to the multiline.
-        /// </para>
-        /// <para>
-        /// If the vertex distance list needs to be edited to represent trimmed multilines this function needs to be called prior to any modification.
-        /// It will calculate the minimum information needed to build a correct multiline.
-        /// </para>
-        /// </remarks>
-        public void Update()
-        {
-            if (this.vertexes.Count == 0)
-                return;
-
-            double reference = 0.0;
-            switch (this.justification)
-            {
-                case MLineJustification.Top:
-                    reference = this.style.Elements[this.style.Elements.Count - 1].Offset;
-                    break;
-                case MLineJustification.Zero:
-                    reference = 0.0;
-                    break;
-                case MLineJustification.Bottom:
-                    reference = this.style.Elements[0].Offset;
-                    break;
-            }
-
-            Vector2 prevDir;
-            if (this.vertexes[0].Location.Equals(this.vertexes[this.vertexes.Count - 1].Location))
-                prevDir = Vector2.UnitY;
-            else
-            {
-                prevDir = this.vertexes[0].Location - this.vertexes[this.vertexes.Count - 1].Location;
-                prevDir.Normalize();
-            }
-
-            for (int i = 0; i < this.vertexes.Count; i++)
-            {
-                Vector2 position = this.vertexes[i].Location;
-                Vector2 mitter;
-                Vector2 dir;
-                if (i == 0)
-                {
-                    if (this.vertexes[i + 1].Location.Equals(position))
-                        dir = Vector2.UnitY;
-                    else
-                    {
-                        dir = this.vertexes[i + 1].Location - position;
-                        dir.Normalize();
-                    }
-                    if (this.IsClosed)
-                    {
-                        mitter = prevDir - dir;
-                        mitter.Normalize();
-                    }
-                    else
-                        mitter = MathHelper.Transform(dir, this.style.StartAngle*MathHelper.DegToRad, CoordinateSystem.Object, CoordinateSystem.World);
-                }
-                else if (i + 1 == this.vertexes.Count)
-                {
-                    if (this.IsClosed)
-                    {
-                        if (this.vertexes[0].Location.Equals(position))
-                            dir = Vector2.UnitY;
-                        else
-                        {
-                            dir = this.vertexes[0].Location - position;
-                            dir.Normalize();
-                        }
-                        mitter = prevDir - dir;
-                        mitter.Normalize();
-                    }
-                    else
-                    {
-                        dir = prevDir;
-                        mitter = MathHelper.Transform(dir, this.style.EndAngle*MathHelper.DegToRad, CoordinateSystem.Object, CoordinateSystem.World);
-                    }
-                }
-                else
-                {
-                    if (this.vertexes[i + 1].Location.Equals(position))
-                        dir = Vector2.UnitY;
-                    else
-                    {
-                        dir = this.vertexes[i + 1].Location - position;
-                        dir.Normalize();
-                    }
-
-                    mitter = prevDir - dir;
-                    mitter.Normalize();
-                }
-                prevDir = dir;
-
-                List<double>[] distances = new List<double>[this.style.Elements.Count];
-                double angleMitter = Vector2.Angle(mitter);
-                double angleDir = Vector2.Angle(dir);
-                double cos = Math.Cos(angleMitter + (MathHelper.HalfPI - angleDir));
-                for (int j = 0; j < this.style.Elements.Count; j++)
-                {
-                    double distance = (this.style.Elements[j].Offset + reference)/cos;
-                    distances[j] = new List<double>
-                    {
-                        distance*this.scale,
-                        0.0
-                    };
-                }
-
-                this.vertexes[i] = new MLineVertex(position, dir, mitter, distances);
-            }
-        }
-
-        #endregion
-
-        #region overrides
-
-        /// <summary>
-        /// Creates a new MLine that is a copy of the current instance.
-        /// </summary>
-        /// <returns>A new MLine that is a copy of this instance.</returns>
-        public override object Clone()
-        {
-            MLine entity = new MLine
-            {
-                //EntityObject properties
-                Layer = (Layer) this.Layer.Clone(),
-                Linetype = (Linetype) this.Linetype.Clone(),
-                Color = (AciColor) this.Color.Clone(),
-                Lineweight = this.Lineweight,
-                Transparency = (Transparency) this.Transparency.Clone(),
-                LinetypeScale = this.LinetypeScale,
-                Normal = this.Normal,
-                IsVisible = this.IsVisible,
-                //MLine properties
-                Elevation = this.elevation,
-                Scale = this.scale,
-                Justification = this.justification,
-                Style = this.style,
-                Flags = this.Flags
-            };
-
-            foreach (MLineVertex vertex in this.vertexes)
-                entity.vertexes.Add((MLineVertex) vertex.Clone());
-
-            foreach (XData data in this.XData.Values)
-                entity.XData.Add((XData) data.Clone());
-
-            return entity;
         }
 
         #endregion
