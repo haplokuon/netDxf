@@ -562,12 +562,12 @@ namespace netDxf
                 if (value <= 0 || value >= 256)
                     throw new ArgumentOutOfRangeException(nameof(value), value, "Accepted color index values range from 1 to 255.");
 
+                this.index = value;
                 byte[] rgb = IndexRgb[(byte) this.index];
                 this.r = rgb[0];
                 this.g = rgb[1];
                 this.b = rgb[2];
                 this.useTrueColor = false;
-                this.index = value;
             }
         }
 
