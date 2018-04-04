@@ -41,7 +41,10 @@ namespace netDxf.Entities
         {
             List<string> texts = new List<string>();
             if (userText == " ")
+            {
+                texts.Add(string.Empty);
                 return texts;
+            }
 
             string dimText = string.Empty;
 
