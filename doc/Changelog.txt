@@ -1,3 +1,9 @@
+[2018/16/4]
++ Added readonly header variaables ExtMin and ExtMax.
+
+[2018/5/4]
++ (fixed) Bug when passing a single blank to the dimension UserText property.
+
 [2017/12/7]
 + (fixed) The MLineStyle was not cloned while cloning a MLine entity.
 

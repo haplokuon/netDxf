@@ -1,7 +1,7 @@
-#region netDxf library, Copyright (C) 2009-2017 Daniel Carvajal (haplokuon@gmail.com)
+#region netDxf library, Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
 
 //                        netDxf library
-// Copyright (C) 2009-2017 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -106,6 +106,16 @@ namespace netDxf.Header
         /// Current dimension style name.
         /// </summary>
         public const string DimStyle = "$DIMSTYLE";
+
+        /// <summary>
+        /// X, Y, and Z drawing extents upper-right corner (in WCS).
+        /// </summary>
+        public const string ExtMax = "$EXTMAX";
+
+        /// <summary>
+        /// X, Y, and Z drawing extents lower-left corner (in WCS).
+        /// </summary>
+        public const string ExtMin = "$EXTMIN";
 
         /// <summary>
         /// Default text height.

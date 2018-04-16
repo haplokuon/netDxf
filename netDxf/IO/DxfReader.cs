@@ -1,7 +1,7 @@
-﻿#region netDxf library, Copyright (C) 2009-2017 Daniel Carvajal (haplokuon@gmail.com)
+﻿#region netDxf library, Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
 
 //                        netDxf library
-// Copyright (C) 2009-2017 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -460,6 +460,12 @@ namespace netDxf.IO
                     case HeaderVariableCode.DwgCodePage:
                         this.doc.DrawingVariables.DwgCodePage = this.chunk.ReadString();
                         this.chunk.Next();
+                        break;
+                    case HeaderVariableCode.ExtMax:
+                        this.doc.DrawingVariables.ExtMax = this.ReadHeaderVector();
+                        break;
+                    case HeaderVariableCode.ExtMin:
+                        this.doc.DrawingVariables.ExtMin = this.ReadHeaderVector();
                         break;
                     case HeaderVariableCode.Extnames:
                         this.doc.DrawingVariables.Extnames = this.chunk.ReadBool();

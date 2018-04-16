@@ -27,9 +27,7 @@ namespace TestDxfDocument
 
         public static void Main()
         {     
-
             DxfDocument doc = Test(@"sample.dxf");
-
             //ReadWriteFromStream();
             //ReadWriteFromStream2();
 
