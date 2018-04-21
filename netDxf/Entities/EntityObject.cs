@@ -251,6 +251,70 @@ namespace netDxf.Entities
         }
 
         /// <summary>
+        /// Gets or sets the hyperlink for the current object.  Returns null if no hyperlink is set on the entity.
+        /// </summary>
+        /// <remarks>
+        /// Reads and sets xData directly.
+        /// Full xData including hyperlink descriptor:
+        /// {
+        ///   new XDataRecord(XDataCode.String, @"URL"),
+        ///   XDataRecord.OpenControlString,
+        ///   new XDataRecord(XDataCode.String, @"DESCRIPTOR TEXT"),
+        ///   XDataRecord.OpenControlString,
+        ///   new XDataRecord(XDataCode.Int32, 1)
+        ///   XDataRecord.CloseControlString
+        ///   XDataRecord.CloseControlString
+        /// }
+        /// </remarks>
+        public string Hyperlink
+        {
+            get
+            {
+                // Check the xData for the existance.
+                if (xData.ContainsAppId("PE_URL"))
+                {
+                    var record = xData["PE_URL"].XDataRecord;
+                    return record.Count > 0 ? record[0].Value as string : null;
+                }
+
+                // Nothing was previously set for the hyperlink.
+                return null;
+            }
+            set
+            {
+                // Ensure the hyperlink is not over the limit.
+                if (value.Length > 255)
+                    throw new ArgumentException("Hyperlink can not be longer than 255 characters.");
+
+                var hyperlinkRecord = new XDataRecord(XDataCode.String, value);
+
+                // Check if the xdata already exists.
+                if (xData.ContainsAppId("PE_URL"))
+                {
+                    var record = xData["PE_URL"].XDataRecord;
+
+                    // If there are no records for this xData, create the required record.
+                    // Otherwise update the existing record.
+                    if (record.Count < 1)
+                        record.Add(hyperlinkRecord);
+                    else
+                        record[0] = hyperlinkRecord;
+                }
+                else
+                {
+                    // Create a new xData record.
+                    xData.Add(new XData(new ApplicationRegistry("PE_URL"))
+                    {
+                        XDataRecord =
+                        {
+                            hyperlinkRecord
+                        }
+                    });
+                }
+            }
+        }
+
+        /// <summary>
         /// Gets the owner of the actual dxf object.
         /// </summary>
         public new Block Owner
