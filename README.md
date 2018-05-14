@@ -3,7 +3,7 @@ netDxf 2.0.3 Copyright(C) 2009-2017 Daniel Carvajal, Licensed under LGPL
 ## Description
 netDxf is a .net library programmed in C# to read and write AutoCAD dxf files. It supports AutoCad2000, AutoCad2004, AutoCad2007, AutoCad2010,  AutoCad2013, and AutoCad2018 dxf database versions, in both text and binary format.
 
-I tried to keep the use as simple as posible, for example you will not need to fill up the table section with layers, styles or line type definitions. The DxfDocument will take care of that everytime a new item is added and the load and save its done with just one line of code.
+I tried to keep the use as simple as possible, for example you will not need to fill up the table section with layers, styles or line type definitions. The DxfDocument will take care of that every time a new item is added and the load and save its done with just one line of code.
 If you need more information, you can find the official dxf documentation in
 [http://help.autodesk.com/view/ACD/2016/ENU/](http://help.autodesk.com/view/ACD/2016/ENU/)
 
