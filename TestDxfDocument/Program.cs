@@ -13,6 +13,7 @@ using netDxf.Objects;
 using netDxf.Tables;
 using netDxf.Units;
 using Attribute = netDxf.Entities.Attribute;
+using FontStyle = netDxf.Tables.FontStyle;
 using Image = netDxf.Entities.Image;
 using Point = netDxf.Entities.Point;
 using Trace = netDxf.Entities.Trace;
@@ -24,12 +25,19 @@ namespace TestDxfDocument
     /// </summary>
     public class Program
     {
-
         public static void Main()
-        {     
+        {
             DxfDocument doc = Test(@"sample.dxf");
+
+            #region Samples for new and modified features 2.1.0
+
+            //Shape();
+            //ComplexLineType();
+            //TextStyle();
             //ReadWriteFromStream();
             //ReadWriteFromStream2();
+
+            #endregion
 
             #region Samples for new and modified features 2.0.1
 
@@ -206,6 +214,100 @@ namespace TestDxfDocument
             #endregion
         }
 
+        #region Samples for new and modified features 2.1.0
+
+        private static void Shape()
+        {
+            // create the shape style from the file where the shape definitions are stored
+            ShapeStyle style = new ShapeStyle("shape.shx");
+            // create the shape entity from the style where the same named "MyShape" is stored (name case is ignored)
+            Shape shape = new Shape("MyShape", style);
+
+            DxfDocument doc = new DxfDocument();
+            // when a shape is added to a DxfDocument it will be checked that the style associated with the shape,
+            // actually contains a shape definition with the name specified in the shape constructor, in this case "MyShape"
+            // this is done reading the SHP file associated with the SHX (compiled SHP) file.
+            // this SHP must be present in the same folder as the SHX or in one of the support folder defined in the DxfDocument.
+            // in this case a sub-folder of the executable
+            doc.SupportFolders.Add(@".\Support");
+            doc.AddEntity(shape);
+            doc.Save("sample shape.dxf");
+
+            // when loading a dxf file that contains shape entities, we need to deal with the same problem when adding a shape entity to the document.
+            // we need to specified the folder or folder where to look for the SHP file
+            DxfDocument loaded = DxfDocument.Load("sample shape.dxf", new[] { @".\Support" });
+
+        }
+
+        private static void ComplexLineType()
+        {
+            // complex line types might contain segments with shapes and/or text
+            // when shape segments are used we need to deal with the same problem as the Shape entity,
+            // we need a way to find the SHP file equivalent to the SHX file (see Shape() method)
+            // in this case, for simplicity, the LIN file and the SHP file that contains the definitions for the shapes referenced by the line types 
+
+            // create two linetypes from their definitions in the LIN file
+            // this line type contains a text segment
+            Linetype lt1 = Linetype.Load(@".\Support\acadiso.lin", "GAS_LINE");
+            // this line type contains two shape segments
+            Linetype lt2 = Linetype.Load(@".\Support\acad.lin", "BATTING");
+
+            Line line1 = new Line(Vector2.Zero, new Vector2(10, 10));
+            line1.Linetype = lt1;
+            line1.LinetypeScale = 0.1;
+
+            Line line2 = new Line(new Vector2(5,0), new Vector2(15,10));
+            line2.Linetype = lt2;
+            line2.LinetypeScale = 1.5;
+
+            // create a DxfDocument specifying the support folders where we the SHP file is present.
+            // the line type definitions in the LIN file that contains shape segments stores the name in it,
+            // but the dxf requires to save the number associated with that shape, and it needs to be found in the SHP file 
+            DxfDocument doc = new DxfDocument(new[] { @".\Support" });
+            doc.AddEntity(line1);
+            doc.AddEntity(line2);
+            doc.Save("sample complex linetypes.dxf");
+
+            // more functionality has been added for the linetypes
+            // similar methods are also present in the Linetype class, the big difference is that, since the linetype list belongs to a document,
+            // the DxfDocument support folders will be used to find the specified LIN file 
+            // add an individual linetype from a file, it gives you the option to redefine the actual definition in case another with the same name already exists
+            doc.Linetypes.AddFromFile("acad.lin", "DIVIDE", true);
+            // add the all linetypes contained in the specified LIN file to the document list, 
+            // it gives you the option to redefine the actual definition in case another with the same name already exists
+            doc.Linetypes.AddFromFile("acad.lin", false);
+            // save all linetypes defined in the DxfDocument to a file
+            doc.Linetypes.Save(@"MyLinetypes.lin", true);          
+            // gets the list of linetype names contained in a LIN file
+            List<string> names = doc.Linetypes.NamesFromFile("acadiso.lin");
+
+            // again same problem when loading the SHP files need to be found in one of the support folders
+            DxfDocument loaded = DxfDocument.Load("sample complex linetypes.dxf", new[] { @".\Support" });
+
+        }
+
+        private static void TextStyle()
+        {
+            // now we can work with text style without specifying the associated file.
+            // this is applicable only for true type fonts that are installed in the system font folder
+            // when text styles are created this way the font information, in the dxf, is stored in the extended data of the style
+            TextStyle style = new TextStyle("MyStyle", "Helvetica", FontStyle.Italic | FontStyle.Bold);
+
+            // create a new text with the new style
+            MText text = new MText("This is a sample text")
+            {
+                Position = new Vector3(5.0, 5.0, 0.0),
+                Height = 5.0,
+                Style = style
+            };
+
+            DxfDocument doc = new DxfDocument();
+            doc.AddEntity(text);
+            doc.Save("TextStyle.dxf");
+
+            DxfDocument loaded = DxfDocument.Load("TextStyle.dxf");
+        }
+
         private static void ReadWriteFromStream()
         {
             // They will return true or false if the operation has been carried out successfully or not.
@@ -295,7 +397,9 @@ namespace TestDxfDocument
             doc2.Save("doc2.dxf");
 
         }
-
+        
+        #endregion
+       
         #region Samples for new and modified features 2.0.1
 
         private static void DimensionUserTextWithTwoLines()
@@ -1084,7 +1188,7 @@ namespace TestDxfDocument
 
         private static void ImageClippingBoundary()
         {
-            ImageDefinition imageDef = new ImageDefinition(@".\img\image02.jpg", "MyImage");
+            ImageDefinition imageDef = new ImageDefinition("MyImage", @".\img\image02.jpg");
             imageDef.ResolutionUnits = ImageResolutionUnits.Centimeters;
             double width = imageDef.Width/imageDef.HorizontalResolution;
             double height = imageDef.Height/imageDef.VerticalResolution;
@@ -2365,7 +2469,7 @@ namespace TestDxfDocument
             StringBuilder sb = new StringBuilder();
             for (int i = 0; i < dataText.Length; i++)
             {
-                sb.Append(String.Format("{0:X2}", data[i]));
+                sb.Append(string.Format("{0:X2}", data[i]));
             }
             Console.WriteLine(sb.ToString());
 
@@ -2948,6 +3052,13 @@ namespace TestDxfDocument
             }
             Console.WriteLine();
 
+            Console.WriteLine("SHAPE STYLES: {0}", dxf.ShapeStyles.Count);
+            foreach (var o in dxf.ShapeStyles)
+            {
+                Console.WriteLine("\t{0}; References count: {1}", o.Name, dxf.ShapeStyles.GetReferences(o.Name).Count);
+            }
+            Console.WriteLine();
+
             Console.WriteLine("DIMENSION STYLES: {0}", dxf.DimensionStyles.Count);
             foreach (var o in dxf.DimensionStyles)
             {
@@ -3097,28 +3208,28 @@ namespace TestDxfDocument
             Console.WriteLine("IMAGE DEFINITIONS: {0}", dxf.ImageDefinitions.Count);
             foreach (var o in dxf.ImageDefinitions)
             {
-                Console.WriteLine("\t{0}; File name: {1}; References count: {2}", o.Name, o.FileName, dxf.ImageDefinitions.GetReferences(o.Name).Count);
+                Console.WriteLine("\t{0}; File name: {1}; References count: {2}", o.Name, o.File, dxf.ImageDefinitions.GetReferences(o.Name).Count);
             }
             Console.WriteLine();
 
             Console.WriteLine("DGN UNDERLAY DEFINITIONS: {0}", dxf.UnderlayDgnDefinitions.Count);
             foreach (var o in dxf.UnderlayDgnDefinitions)
             {
-                Console.WriteLine("\t{0}; File name: {1}; References count: {2}", o.Name, o.FileName, dxf.UnderlayDgnDefinitions.GetReferences(o.Name).Count);
+                Console.WriteLine("\t{0}; File name: {1}; References count: {2}", o.Name, o.File, dxf.UnderlayDgnDefinitions.GetReferences(o.Name).Count);
             }
             Console.WriteLine();
 
             Console.WriteLine("DWF UNDERLAY DEFINITIONS: {0}", dxf.UnderlayDwfDefinitions.Count);
             foreach (var o in dxf.UnderlayDwfDefinitions)
             {
-                Console.WriteLine("\t{0}; File name: {1}; References count: {2}", o.Name, o.FileName, dxf.UnderlayDwfDefinitions.GetReferences(o.Name).Count);
+                Console.WriteLine("\t{0}; File name: {1}; References count: {2}", o.Name, o.File, dxf.UnderlayDwfDefinitions.GetReferences(o.Name).Count);
             }
             Console.WriteLine();
 
             Console.WriteLine("PDF UNDERLAY DEFINITIONS: {0}", dxf.UnderlayPdfDefinitions.Count);
             foreach (var o in dxf.UnderlayPdfDefinitions)
             {
-                Console.WriteLine("\t{0}; File name: {1}; References count: {2}", o.Name, o.FileName, dxf.UnderlayPdfDefinitions.GetReferences(o.Name).Count);
+                Console.WriteLine("\t{0}; File name: {1}; References count: {2}", o.Name, o.File, dxf.UnderlayPdfDefinitions.GetReferences(o.Name).Count);
             }
             Console.WriteLine();
 
@@ -3151,6 +3262,7 @@ namespace TestDxfDocument
             Console.WriteLine("\t{0}; count: {1}", EntityType.Point, dxf.Points.Count);
             Console.WriteLine("\t{0}; count: {1}", EntityType.PolyfaceMesh, dxf.PolyfaceMeshes.Count);
             Console.WriteLine("\t{0}; count: {1}", EntityType.Polyline, dxf.Polylines.Count);
+            Console.WriteLine("\t{0}; count: {1}", EntityType.Shape, dxf.Shapes.Count);
             Console.WriteLine("\t{0}; count: {1}", EntityType.Solid, dxf.Solids.Count);
             Console.WriteLine("\t{0}; count: {1}", EntityType.Spline, dxf.Splines.Count);
             Console.WriteLine("\t{0}; count: {1}", EntityType.Text, dxf.Texts.Count);
@@ -3240,7 +3352,7 @@ namespace TestDxfDocument
                 return null;
             }
 
-            DxfDocument dxf = DxfDocument.Load(file);
+            DxfDocument dxf = DxfDocument.Load(file, new List<string> {@".\Support"});
 
             // check if there has been any problems loading the file,
             // this might be the case of a corrupt file or a problem in the library
@@ -3308,6 +3420,13 @@ namespace TestDxfDocument
             foreach (var o in dxf.TextStyles)
             {
                 Console.WriteLine("\t{0}; References count: {1}", o.Name, dxf.TextStyles.GetReferences(o.Name).Count);
+            }
+            Console.WriteLine();
+
+            Console.WriteLine("SHAPE STYLES: {0}", dxf.ShapeStyles.Count);
+            foreach (var o in dxf.ShapeStyles)
+            {
+                Console.WriteLine("\t{0}; References count: {1}", o.Name, dxf.ShapeStyles.GetReferences(o.Name).Count);
             }
             Console.WriteLine();
 
@@ -3460,28 +3579,28 @@ namespace TestDxfDocument
             Console.WriteLine("IMAGE DEFINITIONS: {0}", dxf.ImageDefinitions.Count);
             foreach (var o in dxf.ImageDefinitions)
             {
-                Console.WriteLine("\t{0}; File name: {1}; References count: {2}", o.Name, o.FileName, dxf.ImageDefinitions.GetReferences(o.Name).Count);
+                Console.WriteLine("\t{0}; File name: {1}; References count: {2}", o.Name, o.File, dxf.ImageDefinitions.GetReferences(o.Name).Count);
             }
             Console.WriteLine();
 
             Console.WriteLine("DGN UNDERLAY DEFINITIONS: {0}", dxf.UnderlayDgnDefinitions.Count);
             foreach (var o in dxf.UnderlayDgnDefinitions)
             {
-                Console.WriteLine("\t{0}; File name: {1}; References count: {2}", o.Name, o.FileName, dxf.UnderlayDgnDefinitions.GetReferences(o.Name).Count);
+                Console.WriteLine("\t{0}; File name: {1}; References count: {2}", o.Name, o.File, dxf.UnderlayDgnDefinitions.GetReferences(o.Name).Count);
             }
             Console.WriteLine();
 
             Console.WriteLine("DWF UNDERLAY DEFINITIONS: {0}", dxf.UnderlayDwfDefinitions.Count);
             foreach (var o in dxf.UnderlayDwfDefinitions)
             {
-                Console.WriteLine("\t{0}; File name: {1}; References count: {2}", o.Name, o.FileName, dxf.UnderlayDwfDefinitions.GetReferences(o.Name).Count);
+                Console.WriteLine("\t{0}; File name: {1}; References count: {2}", o.Name, o.File, dxf.UnderlayDwfDefinitions.GetReferences(o.Name).Count);
             }
             Console.WriteLine();
 
             Console.WriteLine("PDF UNDERLAY DEFINITIONS: {0}", dxf.UnderlayPdfDefinitions.Count);
             foreach (var o in dxf.UnderlayPdfDefinitions)
             {
-                Console.WriteLine("\t{0}; File name: {1}; References count: {2}", o.Name, o.FileName, dxf.UnderlayPdfDefinitions.GetReferences(o.Name).Count);
+                Console.WriteLine("\t{0}; File name: {1}; References count: {2}", o.Name, o.File, dxf.UnderlayPdfDefinitions.GetReferences(o.Name).Count);
             }
             Console.WriteLine();
 
@@ -3576,6 +3695,7 @@ namespace TestDxfDocument
             Console.WriteLine("\t{0}; count: {1}", EntityType.Point, dxf.Points.Count);
             Console.WriteLine("\t{0}; count: {1}", EntityType.PolyfaceMesh, dxf.PolyfaceMeshes.Count);
             Console.WriteLine("\t{0}; count: {1}", EntityType.Polyline, dxf.Polylines.Count);
+            Console.WriteLine("\t{0}; count: {1}", EntityType.Shape, dxf.Shapes.Count);
             Console.WriteLine("\t{0}; count: {1}", EntityType.Solid, dxf.Solids.Count);
             Console.WriteLine("\t{0}; count: {1}", EntityType.Spline, dxf.Splines.Count);
             Console.WriteLine("\t{0}; count: {1}", EntityType.Text, dxf.Texts.Count);
@@ -3604,7 +3724,7 @@ namespace TestDxfDocument
             // saving to binary dxf
             dxf.DrawingVariables.AcadVer = DxfVersion.AutoCad2013;
             dxf.Save("binary test.dxf", true);
-            DxfDocument test = DxfDocument.Load("binary test.dxf");
+            DxfDocument test = DxfDocument.Load("binary test.dxf", new List<string> { @".\Support" });
 
             if (outputLog)
             {
@@ -3638,7 +3758,7 @@ namespace TestDxfDocument
         public static void ImageAndClipBoundary()
         {
             // a square bitmap
-            ImageDefinition imageDefinition = new ImageDefinition("image.jpg", "MyImage");
+            ImageDefinition imageDefinition = new ImageDefinition("MyImage", "image.jpg");
 
             // image with the same aspect ratio as the original bitmap
             Image image1 = new Image(imageDefinition, Vector2.Zero, 360, 360 * (imageDefinition.Height / imageDefinition.Width));
@@ -4853,7 +4973,7 @@ namespace TestDxfDocument
             //image.Rotation = 30;
 
             // you can pass a name that must be unique for the image definiton, by default it will use the file name without the extension
-            ImageDefinition imageDef2 = new ImageDefinition("img\\image02.jpg", "MyImage");
+            ImageDefinition imageDef2 = new ImageDefinition("MyImage", "img\\image02.jpg");
             Image image2 = new Image(imageDef2, new Vector3(0, 150, 0), 10, 10);
             Image image3 = new Image(imageDef2, new Vector3(150, 150, 0), 10, 10);
 
@@ -5472,7 +5592,7 @@ namespace TestDxfDocument
 
         private static void FilesTest()
         {
-            Linetype linetype = Linetype.FromFile("acad.lin", "ACAD_ISO15W100");
+            Linetype linetype = Linetype.Load("acad.lin", "ACAD_ISO15W100");
             HatchPattern hatch = HatchPattern.FromFile("acad.pat", "zigzag");
         }
 

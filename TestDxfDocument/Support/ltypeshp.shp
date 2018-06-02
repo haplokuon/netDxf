@@ -1,0 +1,28 @@
+;;;
+;;;
+;;;  Copyright 2017 Autodesk, Inc.  All rights reserved.
+;;;
+;;;  Use of this software is subject to the terms of the Autodesk license 
+;;;  agreement provided at the time of installation or download, or which 
+;;;  otherwise accompanies this software in either electronic or hard copy form.
+;;;
+;;;  ltypeshp.SHP - shapes for complex linetypes
+;;;
+
+*130,6,TRACK1
+014,002,01C,001,01C,0
+
+*131,3,ZIG
+012,01E,0
+
+*132,6,BOX
+014,020,02C,028,014,0
+
+*133,4,CIRC1
+10,1,-040,0
+
+*134,6,BAT
+025,10,2,-044,02B,0
+
+*135,14,AMZIGZAG
+9,(108,0),(15,56),(30,-112),(15,56),(107,0),(0,0),0

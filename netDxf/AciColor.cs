@@ -437,9 +437,9 @@ namespace netDxf
         /// <summary>
         /// Initializes a new instance of the <c>AciColor</c> class.
         /// </summary>
-        ///<param name="r">Red component.</param>
-        ///<param name="g">Green component.</param>
-        ///<param name="b">Blue component.</param>
+        /// <param name="r">Red component.</param>
+        /// <param name="g">Green component.</param>
+        /// <param name="b">Blue component.</param>
         /// <remarks>By default the UseTrueColor will be set to true.</remarks>
         public AciColor(float r, float g, float b)
             : this((byte) (r*255), (byte) (g*255), (byte) (b*255))
@@ -449,9 +449,9 @@ namespace netDxf
         /// <summary>
         /// Initializes a new instance of the <c>AciColor</c> class.
         /// </summary>
-        ///<param name="r">Red component.</param>
-        ///<param name="g">Green component.</param>
-        ///<param name="b">Blue component.</param>
+        /// <param name="r">Red component.</param>
+        /// <param name="g">Green component.</param>
+        /// <param name="b">Blue component.</param>
         /// <remarks>By default the UseTrueColor will be set to true.</remarks>
         public AciColor(double r, double g, double b)
             : this((byte) (r*255), (byte) (g*255), (byte) (b*255))
@@ -461,7 +461,7 @@ namespace netDxf
         /// <summary>
         /// Initializes a new instance of the <c>AciColor</c> class.
         /// </summary>
-        ///<param name="color">A <see cref="Color">color</see>.</param>
+        /// <param name="color">A <see cref="Color">color</see>.</param>
         /// <remarks>By default the UseTrueColor will be set to true.</remarks>
         public AciColor(Color color)
             : this(color.R, color.G, color.B)

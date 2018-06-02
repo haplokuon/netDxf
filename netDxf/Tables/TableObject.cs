@@ -75,7 +75,7 @@ namespace netDxf.Tables
             if (checkName)
             {
                 if (!IsValidName(name))
-                    throw new ArgumentException("The following characters \\<>/?\":;*|,=` are not supported for table object names.", nameof(name));
+                    throw new ArgumentException("The name should be at least one character long and the following characters \\<>/?\":;*|,=` are not supported.", nameof(name));
             }
 
             this.name = name;

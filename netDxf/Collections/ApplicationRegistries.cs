@@ -1,7 +1,7 @@
-#region netDxf library, Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+#region netDxf library, Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
 
 //                        netDxf library
-// Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -34,17 +34,13 @@ namespace netDxf.Collections
     {
         #region constructor
 
-        internal ApplicationRegistries(DxfDocument document, string handle = null)
-            : this(document, 0, handle)
+        internal ApplicationRegistries(DxfDocument document)
+            : this(document, null)
         {
         }
 
-        internal ApplicationRegistries(DxfDocument document, int capacity, string handle = null)
-            : base(document,
-                new Dictionary<string, ApplicationRegistry>(capacity, StringComparer.OrdinalIgnoreCase),
-                new Dictionary<string, List<DxfObject>>(capacity, StringComparer.OrdinalIgnoreCase),
-                DxfObjectCode.ApplicationIdTable,
-                handle)
+        internal ApplicationRegistries(DxfDocument document, string handle)
+            : base(document, DxfObjectCode.ApplicationIdTable, handle)
         {
             this.MaxCapacity = short.MaxValue;
         }

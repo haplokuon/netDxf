@@ -1,7 +1,7 @@
-﻿#region netDxf library, Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+﻿#region netDxf library, Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
 
 //                        netDxf library
-// Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -28,24 +28,20 @@ using netDxf.Tables;
 namespace netDxf.Collections
 {
     /// <summary>
-    /// Represents a collection of pdf underlay definitions.
+    /// Represents a collection of DWF underlay definitions.
     /// </summary>
     public sealed class UnderlayDwfDefinitions :
         TableObjects<UnderlayDwfDefinition>
     {
         #region constructor
 
-        internal UnderlayDwfDefinitions(DxfDocument document, string handle = null)
-            : this(document, 0, handle)
+        internal UnderlayDwfDefinitions(DxfDocument document)
+            : this(document, null)
         {
         }
 
-        internal UnderlayDwfDefinitions(DxfDocument document, int capacity, string handle = null)
-            : base(document,
-                new Dictionary<string, UnderlayDwfDefinition>(capacity, StringComparer.OrdinalIgnoreCase),
-                new Dictionary<string, List<DxfObject>>(capacity, StringComparer.OrdinalIgnoreCase),
-                DxfObjectCode.UnderlayDwfDefinitionDictionary,
-                handle)
+        internal UnderlayDwfDefinitions(DxfDocument document, string handle)
+            : base(document, DxfObjectCode.UnderlayDwfDefinitionDictionary, handle)
         {
             this.MaxCapacity = int.MaxValue;
         }
@@ -55,7 +51,7 @@ namespace netDxf.Collections
         #region override methods
 
         /// <summary>
-        /// Adds a dwf underlay definition to the list.
+        /// Adds a DWF underlay definition to the list.
         /// </summary>
         /// <param name="underlayDwfDefinition"><see cref="UnderlayDwfDefinition">UnderlayDwfDefinition</see> to add to the list.</param>
         /// <param name="assignHandle">Specifies if a handle needs to be generated for the underlay definition parameter.</param>
@@ -89,7 +85,7 @@ namespace netDxf.Collections
         }
 
         /// <summary>
-        /// Removes a dwf underlay definition.
+        /// Removes a DWF underlay definition.
         /// </summary>
         /// <param name="name"><see cref="UnderlayDwfDefinition">UnderlayDwfDefinition</see> name to remove from the document.</param>
         /// <returns>True if the underlay definition has been successfully removed, or false otherwise.</returns>
@@ -100,7 +96,7 @@ namespace netDxf.Collections
         }
 
         /// <summary>
-        /// Removes a dwf underlay definition.
+        /// Removes a DWF underlay definition.
         /// </summary>
         /// <param name="item"><see cref="UnderlayDwfDefinition">UnderlayDwfDefinition</see> to remove from the document.</param>
         /// <returns>True if the underlay definition has been successfully removed, or false otherwise.</returns>
@@ -138,7 +134,7 @@ namespace netDxf.Collections
         private void Item_NameChanged(TableObject sender, TableObjectChangedEventArgs<string> e)
         {
             if (this.Contains(e.NewValue))
-                throw new ArgumentException("There is already another dwf underlay definition with the same name.");
+                throw new ArgumentException("There is already another DWF underlay definition with the same name.");
 
             this.list.Remove(sender.Name);
             this.list.Add(e.NewValue, (UnderlayDwfDefinition) sender);

@@ -1,7 +1,7 @@
-#region netDxf library, Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+#region netDxf library, Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
 
 //                        netDxf library
-// Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -51,7 +51,7 @@ namespace netDxf.Blocks
         /// Initializes a new instance of the <c>BlockRecord</c> class.
         /// </summary>
         /// <param name="name">Block definition name.</param>
-        public BlockRecord(string name)
+        internal BlockRecord(string name)
             : base(DxfObjectCode.BlockRecord)
         {
             if (string.IsNullOrEmpty(name))
@@ -145,7 +145,9 @@ namespace netDxf.Blocks
         /// <summary>
         /// Gets if the block record is for internal use only.
         /// </summary>
-        /// <remarks>All blocks which name starts with "*" are for internal use and should not be modified.</remarks>
+        /// <remarks>
+        /// All blocks which name starts with "*" are for internal use and should not be modified.
+        /// </remarks>
         public bool IsForInternalUseOnly
         {
             get { return this.name.StartsWith("*"); }

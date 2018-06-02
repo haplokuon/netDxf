@@ -23,7 +23,7 @@
 namespace netDxf
 {
     /// <summary>
-    /// Represents the base class for all dxf objects.
+    /// Represents the base class for all DXF objects.
     /// </summary>
     public abstract class DxfObject
     {
@@ -40,7 +40,7 @@ namespace netDxf
         /// <summary>
         /// Initializes a new instance of the <c>DxfObject</c> class.
         /// </summary>
-        /// <param name="codename">Object name.</param>
+        /// <param name="codename"><see cref="DxfObjectCode">DXF object name</see>.</param>
         protected DxfObject(string codename)
         {
             this.codename = codename;
@@ -53,7 +53,7 @@ namespace netDxf
         #region public properties
 
         /// <summary>
-        /// Gets the dxf entity type string.
+        /// Gets the <see cref="DxfObjectCode">DXF object name</see>.
         /// </summary>
         public string CodeName
         {
@@ -62,9 +62,12 @@ namespace netDxf
         }
 
         /// <summary>
-        /// Gets the handle assigned to the dxf object.
+        /// Gets the handle assigned to the DXF object.
         /// </summary>
-        /// <remarks>The handle is a unique hexadecimal number assigned automatically to every dxf object.</remarks>
+        /// <remarks>
+        /// The handle is a unique hexadecimal number assigned automatically to every dxf object,
+        /// that has been added to a <see cref="DxfDocument">DxfDocument</see>.
+        /// </remarks>
         public string Handle
         {
             get { return this.handle; }
@@ -72,7 +75,7 @@ namespace netDxf
         }
 
         /// <summary>
-        /// Gets the owner of the actual dxf object.
+        /// Gets the owner of the actual <see cref="DxfObject">DxfObject</see>.
         /// </summary>
         public DxfObject Owner
         {
@@ -82,12 +85,12 @@ namespace netDxf
 
         #endregion
 
-        #region public methods
+        #region internal methods
 
         /// <summary>
         /// Assigns a handle to the object based in a integer counter.
         /// </summary>
-        /// <param name="entityNumber">Number to assign.</param>
+        /// <param name="entityNumber">Number to assign to the actual object.</param>
         /// <returns>Next available entity number.</returns>
         /// <remarks>
         /// Some objects might consume more than one, is, for example, the case of polylines that will assign
@@ -104,7 +107,7 @@ namespace netDxf
         #region overrides
 
         /// <summary>
-        /// Obtains a string that represents the dxf object.
+        /// Obtains a string that represents the DXF object.
         /// </summary>
         /// <returns>A string text.</returns>
         public override string ToString()

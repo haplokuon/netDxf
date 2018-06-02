@@ -1,7 +1,7 @@
-#region netDxf library, Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+#region netDxf library, Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
 
 //                        netDxf library
-// Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -131,7 +131,7 @@ namespace netDxf.Blocks
         /// </summary>
         public static Block ModelSpace
         {
-            get { return new Block(DefaultModelSpaceName, false, null, null); }
+            get { return new Block(DefaultModelSpaceName, null, null, false); }
         }
 
         /// <summary>
@@ -139,7 +139,7 @@ namespace netDxf.Blocks
         /// </summary>
         public static Block PaperSpace
         {
-            get { return new Block(DefaultPaperSpaceName, false, null, null); }
+            get { return new Block(DefaultPaperSpaceName, null, null, false); }
         }
 
         #endregion
@@ -165,7 +165,7 @@ namespace netDxf.Blocks
         /// <param name="overlay">Specifies if the external reference is an overlay, by default it is set to false.</param>
         /// <remarks>Only DWG files can be used as externally referenced blocks.</remarks>
         public Block(string name, string xrefFile, bool overlay)
-            : this(name, true, null, null)
+            : this(name, null, null, true)
         {
             if (string.IsNullOrEmpty(xrefFile))
                 throw new ArgumentNullException(nameof(xrefFile));
@@ -182,7 +182,7 @@ namespace netDxf.Blocks
         /// </summary>
         /// <param name="name">Block name.</param>
         public Block(string name)
-            : this(name, true, null, null)
+            : this(name, null, null, true)
         {
         }
 
@@ -192,7 +192,7 @@ namespace netDxf.Blocks
         /// <param name="name">Block name.</param>
         /// <param name="entities">The list of entities that make the block.</param>
         public Block(string name, IEnumerable<EntityObject> entities)
-            : this(name, true, entities, null)
+            : this(name, entities, null, true)
         {
         }
 
@@ -203,11 +203,11 @@ namespace netDxf.Blocks
         /// <param name="entities">The list of entities that make the block.</param>
         /// <param name="attributes">The list of attribute definitions that make the block.</param>
         public Block(string name, IEnumerable<EntityObject> entities, IEnumerable<AttributeDefinition> attributes)
-            : this(name, true, entities, attributes)
+            : this(name, entities, attributes, true)
         {
         }
 
-        internal Block(string name, bool checkName, IEnumerable<EntityObject> entities, IEnumerable<AttributeDefinition> attributes)
+        internal Block(string name, IEnumerable<EntityObject> entities, IEnumerable<AttributeDefinition> attributes, bool checkName)
             : base(name, DxfObjectCode.Block, checkName)
         {
             if (string.IsNullOrEmpty(name))
@@ -220,27 +220,23 @@ namespace netDxf.Blocks
             this.origin = Vector3.Zero;
             this.layer = Layer.Default;
             this.xrefFile = string.Empty;
+            this.Owner = new BlockRecord(name);
+            this.flags = BlockTypeFlags.None;
+            this.end = new EndBlock(this);
 
             this.entities = new EntityCollection();
             this.entities.BeforeAddItem += this.Entities_BeforeAddItem;
             this.entities.AddItem += this.Entities_AddItem;
             this.entities.BeforeRemoveItem += this.Entities_BeforeRemoveItem;
             this.entities.RemoveItem += this.Entities_RemoveItem;
+            if (entities != null) this.entities.AddRange(entities);
 
             this.attributes = new AttributeDefinitionDictionary();
             this.attributes.BeforeAddItem += this.AttributeDefinitions_BeforeAddItem;
             this.attributes.AddItem += this.AttributeDefinitions_ItemAdd;
             this.attributes.BeforeRemoveItem += this.AttributeDefinitions_BeforeRemoveItem;
             this.attributes.RemoveItem += this.AttributeDefinitions_RemoveItem;
-
-            this.Owner = new BlockRecord(name);
-            this.flags = BlockTypeFlags.None;
-            this.end = new EndBlock(this);
-
-            if (entities != null)
-                this.entities.AddRange(entities);
-            if (attributes != null)
-                this.attributes.AddRange(attributes);
+            if (attributes != null) this.attributes.AddRange(attributes);
         }
 
         #endregion
@@ -505,7 +501,7 @@ namespace netDxf.Blocks
             if(block.ReadOnly)
                 throw new ArgumentException("Read only blocks cannot be cloned.", nameof(block));
 
-            Block copy = new Block(newName, checkName, null, null)
+            Block copy = new Block(newName, null, null, checkName)
             {
                 Description = block.description,
                 Flags = block.flags,

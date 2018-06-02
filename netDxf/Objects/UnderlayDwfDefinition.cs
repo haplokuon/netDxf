@@ -1,7 +1,7 @@
-﻿#region netDxf library, Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+﻿#region netDxf library, Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
 
 //                        netDxf library
-// Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -21,12 +21,13 @@
 #endregion
 
 using System.IO;
+using netDxf.Collections;
 using netDxf.Tables;
 
 namespace netDxf.Objects
 {
     /// <summary>
-    /// Represents a dwf underlay definition.
+    /// Represents a DWF underlay definition.
     /// </summary>
     public class UnderlayDwfDefinition :
         UnderlayDefinition
@@ -36,25 +37,34 @@ namespace netDxf.Objects
         /// <summary>
         /// Initializes a new instance of the <c>UnderlayDwfDefinition</c> class.
         /// </summary>
-        /// <param name="fileName">Underlay file name with full or relative path.</param>
-        public UnderlayDwfDefinition(string fileName)
-            : this(fileName, Path.GetFileNameWithoutExtension(fileName))
+        /// <param name="file">Underlay file name with full or relative path.</param>
+        public UnderlayDwfDefinition(string file)
+            : this(Path.GetFileNameWithoutExtension(file), file)
         {
         }
 
         /// <summary>
         /// Initializes a new instance of the <c>UnderlayDwfDefinition</c> class.
         /// </summary>
-        /// <param name="fileName">Underlay file name with full or relative path.</param>
         /// <param name="name">Underlay definition name.</param>
-        public UnderlayDwfDefinition(string fileName, string name)
-            : base(fileName, name, UnderlayType.DWF)
+        /// <param name="file">Underlay file name with full or relative path.</param>
+        public UnderlayDwfDefinition(string name, string file)
+            : base(name, file, UnderlayType.DWF)
         {
         }
 
         #endregion
 
         #region public properties
+
+        /// <summary>
+        /// Gets the owner of the actual underlay DWF definition.
+        /// </summary>
+        public new UnderlayDwfDefinitions Owner
+        {
+            get { return (UnderlayDwfDefinitions)base.Owner; }
+            internal set { base.Owner = value; }
+        }
 
         #endregion
 
@@ -67,7 +77,7 @@ namespace netDxf.Objects
         /// <returns>A new UnderlayDwfDefinition that is a copy of this instance.</returns>
         public override TableObject Clone(string newName)
         {
-            return new UnderlayDwfDefinition(this.FileName, newName);
+            return new UnderlayDwfDefinition(newName, this.File);
         }
 
         /// <summary>

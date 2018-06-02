@@ -1,7 +1,7 @@
-#region netDxf library, Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+#region netDxf library, Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
 
 //                        netDxf library
-// Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -42,17 +42,13 @@ namespace netDxf.Collections
     {
         #region constructor
 
-        internal Layouts(DxfDocument document, string handle = null)
-            : this(document, 0, handle)
+        internal Layouts(DxfDocument document)
+            : this(document, null)
         {
         }
 
-        internal Layouts(DxfDocument document, int capacity, string handle = null)
-            : base(document,
-                new Dictionary<string, Layout>(capacity, StringComparer.OrdinalIgnoreCase),
-                new Dictionary<string, List<DxfObject>>(capacity, StringComparer.OrdinalIgnoreCase),
-                DxfObjectCode.LayoutDictionary,
-                handle)
+        internal Layouts(DxfDocument document, string handle)
+            : base(document, DxfObjectCode.LayoutDictionary, handle)
         {
             this.MaxCapacity = short.MaxValue;
         }
@@ -90,7 +86,7 @@ namespace netDxf.Collections
             {
                 // the PaperSpace block names follow the naming Paper_Space, Paper_Space0, Paper_Space1, ...
                 string spaceName = this.list.Count == 1 ? Block.DefaultPaperSpaceName : string.Concat(Block.DefaultPaperSpaceName, this.list.Count - 2);
-                associatadBlock = new Block(spaceName, false, null, null);
+                associatadBlock = new Block(spaceName, null, null, false);
                 if (layout.TabOrder == 0)
                     layout.TabOrder = (short) this.list.Count;
             }
@@ -190,7 +186,7 @@ namespace netDxf.Collections
                 if (l.IsPaperSpace)
                 {
                     string spaceName = index == 0 ? Block.PaperSpace.Name : string.Concat(Block.PaperSpace.Name, index - 1);
-                    Block associatadBlock = this.Owner.Blocks.Add(new Block(spaceName, false, null, null));
+                    Block associatadBlock = this.Owner.Blocks.Add(new Block(spaceName, null, null, false));
                     this.Owner.Blocks.References[associatadBlock.Name].Add(l);
                     l.AssociatedBlock = associatadBlock;
                     associatadBlock.Record.Layout = l;

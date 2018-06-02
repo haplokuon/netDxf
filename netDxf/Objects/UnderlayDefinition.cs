@@ -1,7 +1,7 @@
-﻿#region netDxf library, Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+﻿#region netDxf library, Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
 
 //                        netDxf library
-// Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -33,7 +33,7 @@ namespace netDxf.Objects
         #region private fields
 
         private readonly UnderlayType type;
-        private readonly string fileName;
+        private readonly string file;
 
         #endregion
 
@@ -42,13 +42,13 @@ namespace netDxf.Objects
         /// <summary>
         /// Initializes a new instance of the <c>UnderlayDefinition</c> class.
         /// </summary>
-        /// <param name="fileName">Underlay file name with full or relative path.</param>
         /// <param name="name">Underlay name.</param>
+        /// <param name="file">Underlay file name with full or relative path.</param>
         /// <param name="type">Underlay type.</param>
-        protected UnderlayDefinition(string fileName, string name, UnderlayType type)
+        protected UnderlayDefinition(string name, string file, UnderlayType type)
             : base(name, DxfObjectCode.UnderlayDefinition, false)
         {
-            this.fileName = fileName;
+            this.file = file;
             this.type = type;
             switch (type)
             {
@@ -77,11 +77,11 @@ namespace netDxf.Objects
         }
 
         /// <summary>
-        /// Gets the underlay file path.
+        /// Gets the underlay file.
         /// </summary>
-        public string FileName
+        public string File
         {
-            get { return this.fileName; }
+            get { return this.file; }
         }
 
         #endregion

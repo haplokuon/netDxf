@@ -1,7 +1,7 @@
-﻿#region netDxf library, Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+﻿#region netDxf library, Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
 
 //                        netDxf library
-// Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -21,12 +21,13 @@
 #endregion
 
 using System.IO;
+using netDxf.Collections;
 using netDxf.Tables;
 
 namespace netDxf.Objects
 {
     /// <summary>
-    /// Represents a pdf underlay definition.
+    /// Represents a PDF underlay definition.
     /// </summary>
     public class UnderlayPdfDefinition :
         UnderlayDefinition
@@ -42,19 +43,19 @@ namespace netDxf.Objects
         /// <summary>
         /// Initializes a new instance of the <c>UnderlayPdfDefinition</c> class.
         /// </summary>
-        /// <param name="fileName">Underlay file name with full or relative path.</param>
-        public UnderlayPdfDefinition(string fileName)
-            : this(fileName, Path.GetFileNameWithoutExtension(fileName))
+        /// <param name="file">Underlay file name with full or relative path.</param>
+        public UnderlayPdfDefinition(string file)
+            : this(Path.GetFileNameWithoutExtension(file), file)
         {
         }
 
         /// <summary>
         /// Initializes a new instance of the <c>UnderlayPdfDefinition</c> class.
         /// </summary>
-        /// <param name="fileName">Underlay file name with full or relative path.</param>
         /// <param name="name">Underlay definition name.</param>
-        public UnderlayPdfDefinition(string fileName, string name)
-            : base(fileName, name, UnderlayType.PDF)
+        /// <param name="file">Underlay file name with full or relative path.</param>
+        public UnderlayPdfDefinition(string name, string file)
+            : base(name, file, UnderlayType.PDF)
         {
             this.page = "1";
         }
@@ -64,12 +65,21 @@ namespace netDxf.Objects
         #region public properties
 
         /// <summary>
-        /// Gets or sets the pdf page to show.
+        /// Gets or sets the PDF page to show.
         /// </summary>
         public string Page
         {
             get { return this.page; }
             set { this.page = value; }
+        }
+
+        /// <summary>
+        /// Gets the owner of the actual underlay PDF definition.
+        /// </summary>
+        public new UnderlayPdfDefinitions Owner
+        {
+            get { return (UnderlayPdfDefinitions)base.Owner; }
+            internal set { base.Owner = value; }
         }
 
         #endregion
@@ -83,7 +93,7 @@ namespace netDxf.Objects
         /// <returns>A new UnderlayPdfDefinition that is a copy of this instance.</returns>
         public override TableObject Clone(string newName)
         {
-            return new UnderlayPdfDefinition(this.FileName, newName) {Page = this.page};
+            return new UnderlayPdfDefinition(newName, this.File) {Page = this.page};
         }
 
         /// <summary>

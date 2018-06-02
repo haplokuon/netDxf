@@ -1,7 +1,7 @@
-﻿#region netDxf library, Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+﻿#region netDxf library, Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
 
 //                        netDxf library
-// Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -28,12 +28,12 @@ namespace netDxf.Objects
     public enum UnderlayType
     {
         /// <summary>
-        /// DGN.
+        /// DGN
         /// </summary>
         DGN,
 
         /// <summary>
-        /// DWF.
+        /// DWF
         /// </summary>
         DWF,
 

@@ -1,7 +1,7 @@
-﻿#region netDxf library, Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+﻿#region netDxf library, Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
 
 //                        netDxf library
-// Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -70,22 +70,12 @@ namespace netDxf.Objects
 
         #region constructor
 
-        internal Group(string name, bool checkName)
-            : base(name, DxfObjectCode.Group, checkName)
-        {
-            this.isUnnamed = string.IsNullOrEmpty(name) || name.StartsWith("*");
-            this.description = string.Empty;
-            this.isSelectable = true;
-            this.entities = new EntityCollection();
-            this.entities.BeforeAddItem += this.Entities_BeforeAddItem;
-            this.entities.AddItem += this.Entities_AddItem;
-            this.entities.BeforeRemoveItem += this.Entities_BeforeRemoveItem;
-            this.entities.RemoveItem += this.Entities_RemoveItem;
-        }
-
         /// <summary>
         /// Initialized a new unnamed empty group.
         /// </summary>
+        /// <remarks>
+        /// A unique name will be generated when the group is added to the document.
+        /// </remarks>
         public Group()
             : this(string.Empty)
         {
@@ -94,12 +84,12 @@ namespace netDxf.Objects
         /// <summary>
         /// Initialized a new empty group.
         /// </summary>
-        /// <param name="name">Group name (optional).</param>
+        /// <param name="name">Group name.</param>
         /// <remarks>
-        /// If the name is set to null or empty, a unique name will be generated when it is added to the document.
+        /// If the name is set to null or empty, a unique name will be generated when the group is added to the document.
         /// </remarks>
         public Group(string name)
-            : this(name, new EntityCollection())
+            : this(name, null)
         {
         }
 
@@ -108,7 +98,7 @@ namespace netDxf.Objects
         /// </summary>
         /// <param name="entities">The list of entities contained in the group.</param>
         /// <remarks>
-        /// If the name is set to null or empty, a unique name will be generated when it is added to the document.
+        /// A unique name will be generated when the group is added to the document.
         /// </remarks>
         public Group(IEnumerable<EntityObject> entities)
             : this(string.Empty, entities)
@@ -121,7 +111,7 @@ namespace netDxf.Objects
         /// <param name="name">Group name (optional).</param>
         /// <param name="entities">The list of entities contained in the group.</param>
         /// <remarks>
-        /// If the name is set to null or empty, a unique name will be generated when it is added to the document.
+        /// If the name is set to null or empty, a unique name will be generated when the group is added to the document.
         /// </remarks>
         public Group(string name, IEnumerable<EntityObject> entities)
             : base(name, DxfObjectCode.Group, !string.IsNullOrEmpty(name))
@@ -134,7 +124,21 @@ namespace netDxf.Objects
             this.entities.AddItem += this.Entities_AddItem;
             this.entities.BeforeRemoveItem += this.Entities_BeforeRemoveItem;
             this.entities.RemoveItem += this.Entities_RemoveItem;
-            this.entities.AddRange(entities);
+            if(entities != null)
+                this.entities.AddRange(entities);
+        }
+
+        internal Group(string name, bool checkName)
+            : base(name, DxfObjectCode.Group, checkName)
+        {
+            this.isUnnamed = string.IsNullOrEmpty(name) || name.StartsWith("*");
+            this.description = string.Empty;
+            this.isSelectable = true;
+            this.entities = new EntityCollection();
+            this.entities.BeforeAddItem += this.Entities_BeforeAddItem;
+            this.entities.AddItem += this.Entities_AddItem;
+            this.entities.BeforeRemoveItem += this.Entities_BeforeRemoveItem;
+            this.entities.RemoveItem += this.Entities_RemoveItem;
         }
 
         #endregion
@@ -187,8 +191,7 @@ namespace netDxf.Objects
         /// </summary>
         /// <remarks>
         /// When the group is added to the document the entities in it will be automatically added too.<br/>
-        /// An entity may be contained in different groups.<br/>
-        /// If the entities list is modified after it has been added to the document the entities will have to be added manually.
+        /// An entity may be contained in different groups.
         /// </remarks>
         public EntityCollection Entities
         {

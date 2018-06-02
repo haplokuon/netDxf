@@ -1,7 +1,7 @@
-﻿#region netDxf library, Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+﻿#region netDxf library, Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
 
 //                        netDxf library
-// Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -21,11 +21,9 @@
 #endregion
 
 using System;
-using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
-using System.Windows.Media;
 using netDxf.Collections;
+using System.Drawing.Text;
 
 namespace netDxf.Tables
 {
@@ -37,7 +35,7 @@ namespace netDxf.Tables
     {
         #region private fields
 
-        private string font;
+        private string file;
         private string bigFont;
         private double height;
         private bool isBackward;
@@ -45,7 +43,7 @@ namespace netDxf.Tables
         private bool isVertical;
         private double obliqueAngle;
         private double widthFactor;
-        private GlyphTypeface glyphTypeface;
+        private FontStyle fontStyle;
         private string fontFamilyName;
 
         #endregion
@@ -102,23 +100,76 @@ namespace netDxf.Tables
         {
             if (string.IsNullOrEmpty(name))
                 throw new ArgumentNullException(nameof(name), "The text style name should be at least one character long.");
+            this.IsReserved = name.Equals(DefaultName, StringComparison.OrdinalIgnoreCase);
 
             if (string.IsNullOrEmpty(font))
                 throw new ArgumentNullException(nameof(font));
 
-            this.IsReserved = name.Equals(DefaultName, StringComparison.OrdinalIgnoreCase);
-            this.font = font;
-            this.bigFont = null;
+            if (!Path.GetExtension(font).Equals(".TTF", StringComparison.InvariantCultureIgnoreCase) &&
+                !Path.GetExtension(font).Equals(".SHX", StringComparison.InvariantCultureIgnoreCase))
+                throw new ArgumentException("Only true type TTF fonts and acad compiled shape SHX fonts are allowed.");
+
+            this.file = font;
+            this.bigFont = string.Empty;
             this.widthFactor = 1.0;
             this.obliqueAngle = 0.0;
             this.height = 0.0;
             this.isVertical = false;
             this.isBackward = false;
             this.isUpsideDown = false;
-            this.glyphTypeface = null;
-            this.fontFamilyName = Path.GetFileNameWithoutExtension(font);
+            this.fontFamilyName = TrueTypeFontFamilyName(font);
+            this.fontStyle = FontStyle.Regular;
+        }
 
-            this.TrueTypeFontCheck(font);
+        /// <summary>
+        /// Initializes a new instance of the <c>TextStyle</c> class exclusively to be used with true type fonts.
+        /// </summary>
+        /// <param name="fontFamily">True type font family name.</param>
+        /// <param name="fontStyle">True type font style</param>
+        /// <remarks>
+        /// This constructor is to be use only with true type fonts.
+        /// The fontFamily value will also be used as the name of the text style.
+        /// </remarks>
+        public TextStyle(string fontFamily, FontStyle fontStyle)
+            : this(fontFamily, fontFamily, fontStyle, true)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <c>TextStyle</c> class exclusively to be used with true type fonts.
+        /// </summary>
+        /// <param name="name">Text style name.</param>
+        /// <param name="fontFamily">True type font family name.</param>
+        /// <param name="fontStyle">True type font style</param>
+        /// <remarks>This constructor is to be use only with true type fonts.</remarks>
+        public TextStyle(string name, string fontFamily, FontStyle fontStyle)
+            : this(name, fontFamily, fontStyle, true)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <c>TextStyle</c> class exclusively to be used with true type fonts.
+        /// </summary>
+        /// <param name="name">Text style name.</param>
+        /// <param name="fontFamily">True type font family name.</param>
+        /// <param name="fontStyle">True type font style</param>
+        /// <param name="checkName">Specifies if the style name has to be checked.</param>
+        /// <remarks>This constructor is to be use only with true type fonts.</remarks>
+        internal TextStyle(string name, string fontFamily, FontStyle fontStyle, bool checkName)
+            : base(name, DxfObjectCode.TextStyle, checkName)
+        {
+            this.file = string.Empty;
+            this.bigFont = string.Empty;
+            this.widthFactor = 1.0;
+            this.obliqueAngle = 0.0;
+            this.height = 0.0;
+            this.isVertical = false;
+            this.isBackward = false;
+            this.isUpsideDown = false;
+            if(string.IsNullOrEmpty(fontFamily))
+                throw new ArgumentNullException(nameof(fontFamily));
+            this.fontFamilyName = fontFamily;
+            this.fontStyle = fontStyle;
         }
 
         #endregion
@@ -128,59 +179,94 @@ namespace netDxf.Tables
         /// <summary>
         /// Gets or sets the text style font file name.
         /// </summary>
+        /// <remarks>
+        /// When this value is used for true type fonts should be present in the Font system folder.<br />
+        /// When the style does not contain any information for the file the font information will be saved in the extended data when saved to a DXF,
+        /// this is only applicable for true type fonts.
+        /// </remarks>
         public string FontFile
         {
-            get { return this.font; }
+            get { return this.file; }
             set
             {
                 if (string.IsNullOrEmpty(value))
                     throw new ArgumentNullException(nameof(value));
-                this.glyphTypeface = null;
-                this.fontFamilyName = Path.GetFileNameWithoutExtension(value);
-                this.TrueTypeFontCheck(value);
-                if (!Path.GetExtension(value).Equals(".shx", StringComparison.OrdinalIgnoreCase)) this.bigFont = null;
-                this.font = value;
+
+                if (!Path.GetExtension(value).Equals(".TTF", StringComparison.InvariantCultureIgnoreCase) &&
+                    !Path.GetExtension(value).Equals(".SHX", StringComparison.InvariantCultureIgnoreCase))
+                    throw new ArgumentException("Only true type TTF fonts and acad compiled shape SHX fonts are allowed.");
+
+                this.fontFamilyName = TrueTypeFontFamilyName(value);
+                this.bigFont = string.Empty;
+                this.file = value;
             }
         }
 
         /// <summary>
         /// Gets or sets an Asian-language Big Font file.
         /// </summary>
-        /// <remarks>Only SHX files are valid file types for creating Big Fonts.</remarks>
+        /// <remarks>Only acad compiled shape SHX fonts are valid for creating Big Fonts.</remarks>
         public string BigFont
         {
             get { return this.bigFont; }
             set
             {
                 if (string.IsNullOrEmpty(value))
-                    this.bigFont = null;
+                    this.bigFont = string.Empty;
                 else
                 {
-                    if (string.IsNullOrEmpty(this.font))
-                        throw new ArgumentNullException(nameof(this.font));
-                    if (!Path.GetExtension(this.font).Equals(".shx", StringComparison.OrdinalIgnoreCase))
-                        throw new ArgumentException("The Big Font is only applicable for SHX Asian fonts.", nameof(this.font));
-                    if(!Path.GetExtension(value).Equals(".shx", StringComparison.OrdinalIgnoreCase))
-                        throw new ArgumentException("Only SHX files are valid file types.", nameof(value));
+                    if (string.IsNullOrEmpty(this.file))
+                        throw new ArgumentNullException(nameof(this.file), "The Big Font is only applicable for SHX Asian fonts.");
+                    if (!Path.GetExtension(this.file).Equals(".SHX", StringComparison.InvariantCultureIgnoreCase))
+                        throw new ArgumentException("The Big Font is only applicable for SHX Asian fonts.", nameof(this.file));
+                    if(!Path.GetExtension(value).Equals(".SHX", StringComparison.InvariantCultureIgnoreCase))
+                        throw new ArgumentException("The Big Font is only applicable for SHX Asian fonts.", nameof(value));
                     this.bigFont = value;
                 }               
             }
         }
 
         /// <summary>
-        /// Gets the style font family name.
+        /// Gets or sets the true type font family name.
         /// </summary>
+        /// <remarks>
+        /// When the font family name is manually specified the file font will not be used and it will be set to empty.
+        /// In this case the font information will be stored in the style extended data when saved to a DXF.
+        /// This value is only applicable for true type fonts.
+        /// </remarks>
         public string FontFamilyName
         {
             get { return this.fontFamilyName; }
+            set
+            {
+                if (string.IsNullOrEmpty(value))
+                    throw new ArgumentNullException(nameof(value));
+                this.file = string.Empty;
+                this.bigFont = string.Empty;
+                this.fontFamilyName = value;
+            }
         }
 
         /// <summary>
-        /// Gets the GliphTypface associated with the font file, this is only applicable to true type fonts.
+        /// Gets or sets the true type font style.
         /// </summary>
-        public GlyphTypeface GlyphTypeface
+        /// <remarks>
+        /// The font style value is ignored when a font file has been specified.<br />
+        /// All styles might or might not be available for the current font family.
+        /// </remarks>
+        public FontStyle FontStyle
         {
-            get { return this.glyphTypeface; }
+            get { return this.fontStyle; }
+            set { this.fontStyle = value; }
+        }
+
+        /// <summary>
+        /// Gets if the font used is a true type.
+        /// </summary>
+        /// <remarks>It will not only return false for SHX fonts but also if the font file has not been found.</remarks>
+        public bool IsTrueType
+        {
+            get { return !string.IsNullOrEmpty(this.FontFamilyName); }
         }
 
         /// <summary>
@@ -199,7 +285,7 @@ namespace netDxf.Tables
         }
 
         /// <summary>
-        /// Gets or sets the width factor.
+        /// Gets or sets the text width factor.
         /// </summary>
         /// <remarks>Valid values range from 0.01 to 100. Default: 1.0.</remarks>
         public double WidthFactor
@@ -256,7 +342,7 @@ namespace netDxf.Tables
         }
 
         /// <summary>
-        /// Gets the owner of the actual dxf object.
+        /// Gets the owner of the actual text style.
         /// </summary>
         public new TextStyles Owner
         {
@@ -268,13 +354,13 @@ namespace netDxf.Tables
 
         #region private methods
 
-        private void TrueTypeFontCheck(string ttfFont)
+        private static string TrueTypeFontFamilyName(string ttfFont)
         {
             if (string.IsNullOrEmpty(ttfFont)) throw new ArgumentNullException(nameof(ttfFont));
 
-            // the following information is only applied to ttf not shx fonts
-            if (!Path.GetExtension(ttfFont).Equals(".ttf", StringComparison.OrdinalIgnoreCase))
-                return;
+            // the following information is only applied to TTF not SHX fonts
+            if (!Path.GetExtension(ttfFont).Equals(".TTF", StringComparison.InvariantCultureIgnoreCase))
+                return string.Empty;
 
             // try to find the file in the specified directory, if not try it in the fonts system folder
             string fontFile;
@@ -282,23 +368,14 @@ namespace netDxf.Tables
                 fontFile = Path.GetFullPath(ttfFont);
             else
             {
-                string file = Path.GetFileName(ttfFont);
-                fontFile = string.Format("{0}{1}{2}", Environment.GetFolderPath(Environment.SpecialFolder.Fonts),
-                    Path.DirectorySeparatorChar, file);
+                fontFile = string.Format("{0}{1}{2}", Environment.GetFolderPath(Environment.SpecialFolder.Fonts), Path.DirectorySeparatorChar, Path.GetFileName(ttfFont));
                 // if the ttf does not even exist in the font system folder 
-                if (!File.Exists(fontFile))
-                    return;
-                this.font = file;
+                if (!File.Exists(fontFile)) return string.Empty;
             }
-            this.glyphTypeface = new GlyphTypeface(new Uri(fontFile));
-            this.fontFamilyName = this.glyphTypeface.FamilyNames[CultureInfo.GetCultureInfo(1033)];
-            if (string.IsNullOrEmpty(this.fontFamilyName))
-            {
-                ICollection<string> names = this.glyphTypeface.FamilyNames.Values;
-                IEnumerator<string> enumerator = names.GetEnumerator();
-                enumerator.MoveNext();
-                this.fontFamilyName = enumerator.Current;
-            }
+
+            PrivateFontCollection fontCollection = new PrivateFontCollection();
+            fontCollection.AddFontFile(fontFile);
+            return fontCollection.Families[0].Name;
         }
 
         #endregion
@@ -312,7 +389,20 @@ namespace netDxf.Tables
         /// <returns>A new TextStyle that is a copy of this instance.</returns>
         public override TableObject Clone(string newName)
         {
-            return new TextStyle(newName, this.font)
+            if (string.IsNullOrEmpty(this.file))
+            {
+                return new TextStyle(newName, this.fontFamilyName, this.fontStyle)
+                {
+                    Height = this.height,
+                    IsBackward = this.isBackward,
+                    IsUpsideDown = this.isUpsideDown,
+                    IsVertical = this.isVertical,
+                    ObliqueAngle = this.obliqueAngle,
+                    WidthFactor = this.widthFactor
+                };
+            }
+
+            return new TextStyle(newName, this.file)
             {
                 Height = this.height,
                 IsBackward = this.isBackward,

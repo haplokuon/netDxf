@@ -22,14 +22,15 @@
 
 using System;
 using System.Collections.Generic;
+using netDxf.Entities;
 
 namespace netDxf
 {
     /// <summary>
     /// Represent a clipping boundary to display specific portions of
-    /// an <see cref="netDxf.Entities.Image">Image</see>,
-    /// an <see cref="netDxf.Entities.Underlay">Underlay</see>,
-    /// or a <see cref="netDxf.Entities.Wipeout">Wipeout</see>.
+    /// an <see cref="Image">Image</see>,
+    /// an <see cref="Underlay">Underlay</see>,
+    /// or a <see cref="Wipeout">Wipeout</see>.
     /// </summary>
     public class ClippingBoundary :
         ICloneable

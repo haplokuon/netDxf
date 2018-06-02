@@ -1,7 +1,7 @@
-#region netDxf library, Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+#region netDxf library, Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
 
 //                        netDxf library
-// Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -45,11 +45,11 @@ namespace netDxf.Collections
 
         #region constructor
 
-        protected TableObjects(DxfDocument document, Dictionary<string, T> list, Dictionary<string, List<DxfObject>> references, string codeName, string handle)
+        protected TableObjects(DxfDocument document, string codeName, string handle)
             : base(codeName)
         {
-            this.list = list;
-            this.references = references;
+            this.list = new Dictionary<string, T>(StringComparer.OrdinalIgnoreCase);
+            this.references = new Dictionary<string, List<DxfObject>>(StringComparer.OrdinalIgnoreCase);
             this.Owner = document;
 
             if (string.IsNullOrEmpty(handle))

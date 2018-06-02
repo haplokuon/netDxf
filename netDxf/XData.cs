@@ -1,7 +1,7 @@
-#region netDxf library, Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+#region netDxf library, Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
 
 //                        netDxf library
-// Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -51,6 +51,8 @@ namespace netDxf
         /// <param name="appReg">Name of the application associated with the list of extended data records.</param>
         public XData(ApplicationRegistry appReg)
         {
+            if(appReg == null)
+                throw new ArgumentNullException(nameof(appReg));
             this.appReg = appReg;
             this.xData = new List<XDataRecord>();
         }
@@ -90,7 +92,7 @@ namespace netDxf
         /// <returns>The string representation.</returns>
         public override string ToString()
         {
-            return this.ApplicationRegistry.Name;
+            return this.appReg.Name;
         }
 
         #endregion

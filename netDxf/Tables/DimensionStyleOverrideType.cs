@@ -26,7 +26,7 @@ namespace netDxf.Tables
     /// Dimension style override types.
     /// </summary>
     /// <remarks>
-    /// There is one dimension style override type for each property of the <see cref="netDxf.Tables.DimensionStyle">DimensionStyle</see> class.
+    /// There is one dimension style override type for each property of the <see cref="DimensionStyle">DimensionStyle</see> class.
     /// The dimension style properties DIMBLK and DIMSAH are not available.
     /// The overrides always make use of the DIMBLK1 and DIMBLK2 setting the DIMSAH to true even when both arrow ends are the same.
     /// </remarks>

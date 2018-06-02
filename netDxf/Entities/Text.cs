@@ -1,7 +1,7 @@
-﻿#region netDxf library, Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+﻿#region netDxf library, Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
 
 //                        netDxf library
-// Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -28,7 +28,6 @@ namespace netDxf.Entities
     /// <summary>
     /// Represents a Text <see cref="EntityObject">entity</see>.
     /// </summary>
-    /// <remarks>It</remarks>
     public class Text :
         EntityObject
     {
@@ -90,7 +89,7 @@ namespace netDxf.Entities
         /// Initializes a new instance of the <c>Text</c> class.
         /// </summary>
         /// <param name="text">Text string.</param>
-        /// <param name="position">Text <see cref="Vector2">position</see> in world coordinates.</param>
+        /// <param name="position">Text <see cref="Vector3">position</see> in world coordinates.</param>
         /// <param name="height">Text height.</param>
         public Text(string text, Vector3 position, double height)
             : this(text, position, height, TextStyle.Default)
@@ -114,7 +113,7 @@ namespace netDxf.Entities
         /// Initializes a new instance of the <c>Text</c> class.
         /// </summary>
         /// <param name="text">Text string.</param>
-        /// <param name="position">Text <see cref="Vector2">position</see> in world coordinates.</param>
+        /// <param name="position">Text <see cref="Vector3">position</see> in world coordinates.</param>
         /// <param name="height">Text height.</param>
         /// <param name="style">Text <see cref="TextStyle">style</see>.</param>
         public Text(string text, Vector3 position, double height, TextStyle style)
@@ -140,7 +139,7 @@ namespace netDxf.Entities
         #region public properties
 
         /// <summary>
-        /// Gets or sets Text <see cref="Vector2">position</see> in world coordinates.
+        /// Gets or sets Text <see cref="Vector3">position</see> in world coordinates.
         /// </summary>
         public Vector3 Position
         {
@@ -160,6 +159,7 @@ namespace netDxf.Entities
         /// <summary>
         /// Gets or sets the text height.
         /// </summary>
+        /// <remarks>Valid values must be greater than zero. Default: 1.0.</remarks>
         public double Height
         {
             get { return this.height; }

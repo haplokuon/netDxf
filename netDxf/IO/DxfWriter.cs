@@ -1,7 +1,7 @@
-﻿#region netDxf library, Copyright (C) 2009-2017 Daniel Carvajal (haplokuon@gmail.com)
+﻿#region netDxf library, Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
 
 //                        netDxf library
-// Copyright (C) 2009-2017 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -25,7 +25,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
-using System.Windows;
 using netDxf.Blocks;
 using netDxf.Collections;
 using netDxf.Entities;
@@ -34,6 +33,8 @@ using netDxf.Objects;
 using netDxf.Tables;
 using netDxf.Units;
 using Attribute = netDxf.Entities.Attribute;
+using Image = netDxf.Entities.Image;
+using Point = netDxf.Entities.Point;
 using TextAlignment = netDxf.Entities.TextAlignment;
 using Trace = netDxf.Entities.Trace;
 
@@ -252,11 +253,15 @@ namespace netDxf.IO
             }
             this.EndTable();
 
-            //text style tables
+            //style tables text and shapes
             this.BeginTable(this.doc.TextStyles.CodeName, (short) this.doc.TextStyles.Count, this.doc.TextStyles.Handle);
             foreach (TextStyle style in this.doc.TextStyles.Items)
             {
                 this.WriteTextStyle(style);
+            }
+            foreach (ShapeStyle style in this.doc.ShapeStyles)
+            {
+                this.WriteShapeStyle(style);
             }
             this.EndTable();
 
@@ -1233,19 +1238,57 @@ namespace netDxf.IO
 
             this.chunk.Write(100, SubclassMarker.Linetype);
 
-            this.chunk.Write(70, (short) 0);
-
             this.chunk.Write(2, this.EncodeNonAsciiCharacters(tl.Name));
+
+            this.chunk.Write(70, (short) 0);
 
             this.chunk.Write(3, this.EncodeNonAsciiCharacters(tl.Description));
 
             this.chunk.Write(72, (short) 65);
             this.chunk.Write(73, (short) tl.Segments.Count);
             this.chunk.Write(40, tl.Length());
-            foreach (double s in tl.Segments)
+
+            foreach (LinetypeSegment s in tl.Segments)
             {
-                this.chunk.Write(49, s);
-                this.chunk.Write(74, (short) 0);
+                this.chunk.Write(49, s.Length);
+                switch (s.Type)
+                {
+                    case LinetypeSegmentType.Simple:
+                        this.chunk.Write(74, (short)0);
+                        break;
+
+                    case LinetypeSegmentType.Text:
+                        LinetypeTextSegment textSegment = (LinetypeTextSegment)s;
+                        if (textSegment.RotationType == LinetypeSegmentRotationType.Absolute)
+                            this.chunk.Write(74, (short)3);
+                        else
+                            this.chunk.Write(74, (short)2);
+
+                        this.chunk.Write(75, (short)0);
+                        this.chunk.Write(340, textSegment.Style.Handle);
+                        this.chunk.Write(46, textSegment.Scale);
+                        this.chunk.Write(50, textSegment.Rotation); // the dxf documentation is wrong the rotation value is stored in degrees not radians
+                        this.chunk.Write(44, textSegment.Offset.X);
+                        this.chunk.Write(45, textSegment.Offset.Y);
+                        this.chunk.Write(9, this.EncodeNonAsciiCharacters(textSegment.Text));
+
+                        break;
+                    case LinetypeSegmentType.Shape:
+                        LinetypeShapeSegment shapeSegment = (LinetypeShapeSegment) s;
+                        if(shapeSegment.RotationType == LinetypeSegmentRotationType.Absolute)
+                            this.chunk.Write(74, (short)5);
+                        else
+                            this.chunk.Write(74, (short)4);
+
+                        this.chunk.Write(75, shapeSegment.Style.ShapeNumber(shapeSegment.Name)); // this.ShapeNumberFromSHPfile(shapeSegment.Name, shapeSegment.Style.File));
+                        this.chunk.Write(340, shapeSegment.Style.Handle);
+                        this.chunk.Write(46, shapeSegment.Scale);
+                        this.chunk.Write(50, shapeSegment.Rotation); // the dxf documentation is wrong the rotation value is stored in degrees not radians
+                        this.chunk.Write(44, shapeSegment.Offset.X);
+                        this.chunk.Write(45, shapeSegment.Offset.Y);
+
+                        break;
+                }
             }
         }
 
@@ -1337,17 +1380,42 @@ namespace netDxf.IO
             this.chunk.Write(42, style.Height);
             this.chunk.Write(50, style.ObliqueAngle);
 
-            if (style.GlyphTypeface == null)
-                return;
+            // when a true type font file is present the font information is defined by the file and this information is not needed
+            if (style.IsTrueType && string.IsNullOrEmpty(style.FontFile))
+            {
+                this.chunk.Write((short)XDataCode.AppReg, ApplicationRegistry.DefaultName);
+                this.chunk.Write((short)XDataCode.String, this.EncodeNonAsciiCharacters(style.FontFamilyName));
+                byte[] st = new byte[4];
+                st[3] = (byte) style.FontStyle;
+                this.chunk.Write((short)XDataCode.Int32, BitConverter.ToInt32(st, 0));
+            }         
+        }
 
-            this.chunk.Write((short) XDataCode.AppReg, "ACAD");
-            this.chunk.Write((short) XDataCode.String, this.EncodeNonAsciiCharacters(style.FontFamilyName));
-            byte[] st = new byte[4];
-            if (style.GlyphTypeface.Style == FontStyles.Italic || style.GlyphTypeface.Style == FontStyles.Oblique)
-                st[3] += 1;
-            if (style.GlyphTypeface.Weight == FontWeights.Bold)
-                st[3] += 2;
-            this.chunk.Write((short) XDataCode.Int32, BitConverter.ToInt32(st, 0));
+        /// <summary>
+        /// Writes a new shape style to the table section.
+        /// </summary>
+        /// <param name="style">ShapeStyle.</param>
+        private void WriteShapeStyle(ShapeStyle style)
+        {
+            Debug.Assert(this.activeTable == DxfObjectCode.TextStyleTable);
+
+            this.chunk.Write(0, "STYLE");
+            this.chunk.Write(5, style.Handle);
+            this.chunk.Write(330, style.Owner.Handle);
+
+            this.chunk.Write(100, SubclassMarker.TableRecord);
+
+            this.chunk.Write(100, SubclassMarker.TextStyle);
+
+            this.chunk.Write(2, string.Empty);
+
+            this.chunk.Write(3, this.EncodeNonAsciiCharacters(style.File));
+            this.chunk.Write(70, (short)1);
+            this.chunk.Write(40, style.Size);
+            this.chunk.Write(41, style.WidthFactor);
+            this.chunk.Write(42, style.Size);
+            this.chunk.Write(50, style.ObliqueAngle);
+
         }
 
         /// <summary>
@@ -1534,6 +1602,9 @@ namespace netDxf.IO
                 case EntityType.Ray:
                     this.WriteRay((Ray) entity);
                     break;
+                case EntityType.Shape:
+                    this.WriteShape((Shape) entity);
+                    break;
                 case EntityType.Solid:
                     this.WriteSolid((Solid) entity);
                     break;
@@ -1576,7 +1647,7 @@ namespace netDxf.IO
                 this.chunk.Write(102, "{ACAD_REACTORS");
                 foreach (DxfObject o in entity.Reactors)
                 {
-                    this.chunk.Write(330, o.Handle);
+                    if(!string.IsNullOrEmpty(o.Handle)) this.chunk.Write(330, o.Handle);
                 }
                 this.chunk.Write(102, "}");
             }
@@ -1949,6 +2020,27 @@ namespace netDxf.IO
             this.chunk.Write(90, 0);
 
             this.WriteXData(mesh.XData);
+        }
+
+        private void WriteShape(Shape shape)
+        {
+            this.chunk.Write(100, SubclassMarker.Shape);
+
+            this.chunk.Write(39, shape.Thickness);
+            this.chunk.Write(10, shape.Position.X);
+            this.chunk.Write(20, shape.Position.Y);
+            this.chunk.Write(30, shape.Position.Z);
+            this.chunk.Write(40, shape.Size);
+            this.chunk.Write(2, shape.Name);
+            this.chunk.Write(50, shape.Rotation);
+            this.chunk.Write(41, shape.WidthFactor);
+            this.chunk.Write(51, shape.ObliqueAngle);
+
+            this.chunk.Write(210, shape.Normal.X);
+            this.chunk.Write(220, shape.Normal.Y);
+            this.chunk.Write(230, shape.Normal.Z);
+
+            this.WriteXData(shape.XData);
         }
 
         private void WriteArc(Arc arc)
@@ -4002,7 +4094,7 @@ namespace netDxf.IO
             this.chunk.Write(330, ownerHandle);
 
             this.chunk.Write(100, SubclassMarker.UnderlayDefinition);
-            this.chunk.Write(1, this.EncodeNonAsciiCharacters(underlayDef.FileName));
+            this.chunk.Write(1, this.EncodeNonAsciiCharacters(underlayDef.File));
             switch (underlayDef.Type)
             {
                 case UnderlayType.DGN:
@@ -4044,7 +4136,7 @@ namespace netDxf.IO
             this.chunk.Write(330, ownerHandle);
 
             this.chunk.Write(100, SubclassMarker.RasterImageDef);
-            this.chunk.Write(1, imageDefinition.FileName);
+            this.chunk.Write(1, imageDefinition.File);
 
             this.chunk.Write(10, (double) imageDefinition.Width);
             this.chunk.Write(20, (double) imageDefinition.Height);

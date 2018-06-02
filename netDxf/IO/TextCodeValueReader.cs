@@ -1,7 +1,7 @@
-﻿#region netDxf library, Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+﻿#region netDxf library, Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
 
 //                        netDxf library
-// Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -30,10 +30,16 @@ namespace netDxf.IO
     internal class TextCodeValueReader :
         ICodeValueReader
     {
+        #region private fields
+
         private readonly TextReader reader;
         private short code;
         private string value;
         private long currentPosition;
+
+        #endregion
+
+        #region constructors
 
         public TextCodeValueReader(TextReader reader)
         {
@@ -42,6 +48,10 @@ namespace netDxf.IO
             this.value = null;
             this.currentPosition = 0;
         }
+
+        #endregion
+
+        #region public properties
 
         public short Code
         {
@@ -57,6 +67,9 @@ namespace netDxf.IO
         {
             get { return this.currentPosition; }
         }
+        #endregion
+
+        #region public methods
 
         public void Next()
         {
@@ -152,5 +165,6 @@ namespace netDxf.IO
         {
             return string.Format("{0}:{1}", this.code, this.value);
         }
+        #endregion      
     }
 }

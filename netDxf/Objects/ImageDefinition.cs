@@ -1,7 +1,7 @@
-#region netDxf library, Copyright (C) 2009-2017 Daniel Carvajal (haplokuon@gmail.com)
+#region netDxf library, Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
 
 //                        netDxf library
-// Copyright (C) 2009-2017 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -38,7 +38,7 @@ namespace netDxf.Objects
     {
         #region private fields
 
-        private readonly string fileName;
+        private readonly string file;
         private readonly int width;
         private readonly int height;
         private ImageResolutionUnits resolutionUnits;
@@ -56,7 +56,7 @@ namespace netDxf.Objects
         /// <summary>
         /// Initializes a new instance of the <c>ImageDefinition</c> class.
         /// </summary>
-        /// <param name="fileName">Image file name with full or relative path.</param>
+        /// <param name="file">Image file name with full or relative path.</param>
         /// <param name="width">Image width in pixels.</param>
         /// <param name="horizontalResolution">Image horizontal resolution in pixels.</param>
         /// <param name="height">Image height in pixels.</param>
@@ -76,16 +76,16 @@ namespace netDxf.Objects
         /// you must save the TIFF files with LZW compression disabled.
         /// </para>
         /// </remarks>
-        public ImageDefinition(string fileName, int width, double horizontalResolution, int height, double verticalResolution, ImageResolutionUnits units)
-            : this(fileName, Path.GetFileNameWithoutExtension(fileName), width, horizontalResolution, height, verticalResolution, units)
+        public ImageDefinition(string file, int width, double horizontalResolution, int height, double verticalResolution, ImageResolutionUnits units)
+            : this(Path.GetFileNameWithoutExtension(file), file, width, horizontalResolution, height, verticalResolution, units)
         {
         }
 
         /// <summary>
         /// Initializes a new instance of the <c>ImageDefinition</c> class.
         /// </summary>
-        /// <param name="fileName">Image file name with full or relative path.</param>
         /// <param name="name">Image definition name.</param>
+        /// <param name="file">Image file name with full or relative path.</param>
         /// <param name="width">Image width in pixels.</param>
         /// <param name="horizontalResolution">Image horizontal resolution in pixels.</param>
         /// <param name="height">Image height in pixels.</param>
@@ -105,12 +105,12 @@ namespace netDxf.Objects
         /// you must save the TIFF files with LZW compression disabled.
         /// </para>
         /// </remarks>
-        public ImageDefinition(string fileName, string name, int width, double horizontalResolution, int height, double verticalResolution, ImageResolutionUnits units)
+        public ImageDefinition(string name, string file, int width, double horizontalResolution, int height, double verticalResolution, ImageResolutionUnits units)
             : base(name, DxfObjectCode.ImageDef, false)
         {
-            if (string.IsNullOrEmpty(fileName))
-                throw new ArgumentNullException(nameof(fileName), "The image file name should be at least one character long.");
-            this.fileName = fileName;
+            if (string.IsNullOrEmpty(file))
+                throw new ArgumentNullException(nameof(file));
+            this.file = file;
 
             if (width <= 0)
                 throw new ArgumentOutOfRangeException(nameof(width), width, "The ImageDefinition width must be greater than zero.");
@@ -136,7 +136,7 @@ namespace netDxf.Objects
         ///  <summary>
         ///  Initializes a new instance of the <c>ImageDefinition</c> class.
         ///  </summary>
-        ///  <param name="fileName">Image file name with full or relative path.</param>
+        ///  <param name="file">Image file name with full or relative path.</param>
         /// <remarks>
         ///  <para>
         ///  The name of the file without extension will be used as the name of the image definition.
@@ -153,16 +153,16 @@ namespace netDxf.Objects
         ///  you must save the TIFF files with LZW compression disabled.
         ///  </para>
         /// </remarks>
-        public ImageDefinition(string fileName)
-            : this(fileName, Path.GetFileNameWithoutExtension(fileName))
+        public ImageDefinition(string file)
+            : this(Path.GetFileNameWithoutExtension(file), file)
         {
         }
 
         ///  <summary>
         ///  Initializes a new instance of the <c>ImageDefinition</c> class.
         ///  </summary>
-        ///  <param name="fileName">Image file name with full or relative path.</param>
-        ///  <param name="name">Image definition name.</param>
+        /// <param name="name">Image definition name.</param>
+        /// <param name="file">Image file name with full or relative path.</param>
         /// <remarks>
         ///  <para>
         ///  The name assigned to the image definition must be unique.
@@ -179,21 +179,21 @@ namespace netDxf.Objects
         ///  you must save the TIFF files with LZW compression disabled.
         ///  </para>
         /// </remarks>
-        public ImageDefinition(string fileName, string name)
+        public ImageDefinition(string name, string file)
             : base(name, DxfObjectCode.ImageDef, false)
         {
-            if (string.IsNullOrEmpty(fileName))
-                throw new ArgumentNullException(nameof(fileName), "The image file name should be at least one character long.");
+            if (string.IsNullOrEmpty(file))
+                throw new ArgumentNullException(nameof(file), "The image file name should be at least one character long.");
 
-            FileInfo info = new FileInfo(fileName);
+            FileInfo info = new FileInfo(file);
             if (!info.Exists)
-                throw new FileNotFoundException("Image file not found", fileName);
+                throw new FileNotFoundException("Image file not found", file);
 
-            this.fileName = fileName;
+            this.file = file;
 
             try
             {
-                using (Image bitmap = Image.FromFile(fileName))
+                using (Image bitmap = Image.FromFile(file))
                 {
                     this.width = bitmap.Width;
                     this.height = bitmap.Height;
@@ -205,7 +205,7 @@ namespace netDxf.Objects
             }
             catch (Exception)
             {
-                throw new ArgumentException("Image file not supported.", fileName);
+                throw new ArgumentException("Image file not supported.", file);
             }
 
             this.reactors = new Dictionary<string, ImageDefinitionReactor>();
@@ -216,11 +216,11 @@ namespace netDxf.Objects
         #region public properties
 
         /// <summary>
-        /// Gets the image path.
+        /// Gets the image file.
         /// </summary>
-        public string FileName
+        public string File
         {
-            get { return this.fileName; }
+            get { return this.file; }
         }
 
         /// <summary>
@@ -284,7 +284,7 @@ namespace netDxf.Objects
         }
 
         /// <summary>
-        /// Gets the owner of the actual dxf object.
+        /// Gets the owner of the actual image definition.
         /// </summary>
         public new ImageDefinitions Owner
         {
@@ -312,7 +312,7 @@ namespace netDxf.Objects
         /// <returns>A new ImageDefinition that is a copy of this instance.</returns>
         public override TableObject Clone(string newName)
         {
-            return new ImageDefinition(this.fileName, newName, this.width, this.horizontalResolution, this.height, this.verticalResolution, this.resolutionUnits);
+            return new ImageDefinition(newName, this.file, this.width, this.horizontalResolution, this.height, this.verticalResolution, this.resolutionUnits);
         }
 
         /// <summary>

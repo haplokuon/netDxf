@@ -26,7 +26,6 @@ using System.Reflection;
 
 namespace netDxf
 {
-
     #region Class StringEnum
 
     /// <summary>
@@ -49,7 +48,7 @@ namespace netDxf
                 throw new ArgumentNullException(nameof(enumType));
 
             if (!enumType.IsEnum)
-                throw new ArgumentException(string.Format("Supplied type must be an Enum.  Type was {0}", enumType));
+                throw new ArgumentException(string.Format("The supplied type \"{0}\" must be an Enum.", enumType));
 
             this.enumType = enumType;
         }
@@ -62,15 +61,16 @@ namespace netDxf
         public string GetStringValue(string valueName)
         {
             string stringValue;
+
             try
             {
-                Enum type = (Enum) Enum.Parse(this.enumType, valueName);
+                Enum type = (Enum)Enum.Parse(this.enumType, valueName);
                 stringValue = GetStringValue(type);
             }
             catch
             {
                 return null;
-            } //Swallow!
+            }
 
             return stringValue;
         }
@@ -213,7 +213,7 @@ namespace netDxf
             string enumStringValue = null;
 
             if (!type.IsEnum)
-                throw new ArgumentException(string.Format("Supplied type must be an Enum.  Type was {0}", type));
+                throw new ArgumentException(string.Format("The supplied type \"{0}\" must be an Enum.", type));
 
             //Look for our string value associated with fields in this enum
             foreach (FieldInfo fi in type.GetFields())

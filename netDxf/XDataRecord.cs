@@ -1,7 +1,7 @@
-#region netDxf library, Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+#region netDxf library, Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
 
 //                        netDxf library
-// Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -70,6 +70,9 @@ namespace netDxf
         /// <param name="value">XData value.</param>
         public XDataRecord(XDataCode code, object value)
         {
+            if(value == null)
+                throw new ArgumentNullException(nameof(value));
+
             switch (code)
             {
                 case XDataCode.AppReg:

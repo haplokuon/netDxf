@@ -1,7 +1,7 @@
-﻿#region netDxf library, Copyright (C) 2009-2017 Daniel Carvajal (haplokuon@gmail.com)
+﻿#region netDxf library, Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
 
 //                        netDxf library
-// Copyright (C) 2009-2017 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -84,46 +84,6 @@ namespace netDxf.Entities
     public class MText :
         EntityObject
     {
-        #region overrides
-
-        /// <summary>
-        /// Creates a new MText that is a copy of the current instance.
-        /// </summary>
-        /// <returns>A new MText that is a copy of this instance.</returns>
-        public override object Clone()
-        {
-            MText entity = new MText
-            {
-                //EntityObject properties
-                Layer = (Layer) this.Layer.Clone(),
-                Linetype = (Linetype) this.Linetype.Clone(),
-                Color = (AciColor) this.Color.Clone(),
-                Lineweight = this.Lineweight,
-                Transparency = (Transparency) this.Transparency.Clone(),
-                LinetypeScale = this.LinetypeScale,
-                Normal = this.Normal,
-                IsVisible = this.IsVisible,
-                //MText properties
-                Position = this.position,
-                Rotation = this.rotation,
-                Height = this.height,
-                LineSpacingFactor = this.lineSpacing,
-                ParagraphHeightFactor = this.paragraphHeightFactor,
-                LineSpacingStyle = this.lineSpacingStyle,
-                RectangleWidth = this.rectangleWidth,
-                AttachmentPoint = this.attachmentPoint,
-                Style = (TextStyle) this.style.Clone(),
-                Value = this.value
-            };
-
-            foreach (XData data in this.XData.Values)
-                entity.XData.Add((XData) data.Clone());
-
-            return entity;
-        }
-
-        #endregion
-
         #region delegates and events
 
         public delegate void TextStyleChangedEventHandler(MText sender, TableObjectChangedEventArgs<TextStyle> e);
@@ -167,6 +127,15 @@ namespace netDxf.Entities
         /// </summary>
         public MText()
             : this(string.Empty, Vector3.Zero, 1.0, 0.0, TextStyle.Default)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <c>MText</c> class.
+        /// </summary>
+        /// <param name="text">Text string.</param>
+        public MText(string text)
+            : this(text, Vector3.Zero, 1.0, 0.0, TextStyle.Default)
         {
         }
 
@@ -403,7 +372,7 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets or sets the Text <see cref="Vector3">position</see> in world coordinates..
+        /// Gets or sets the Text <see cref="Vector3">position</see> in world coordinates.
         /// </summary>
         public Vector3 Position
         {
@@ -517,6 +486,46 @@ namespace netDxf.Entities
                     rawText.Append(token);
             }
             return rawText.ToString();
+        }
+
+        #endregion
+
+        #region overrides
+
+        /// <summary>
+        /// Creates a new MText that is a copy of the current instance.
+        /// </summary>
+        /// <returns>A new MText that is a copy of this instance.</returns>
+        public override object Clone()
+        {
+            MText entity = new MText
+            {
+                //EntityObject properties
+                Layer = (Layer) this.Layer.Clone(),
+                Linetype = (Linetype) this.Linetype.Clone(),
+                Color = (AciColor) this.Color.Clone(),
+                Lineweight = this.Lineweight,
+                Transparency = (Transparency) this.Transparency.Clone(),
+                LinetypeScale = this.LinetypeScale,
+                Normal = this.Normal,
+                IsVisible = this.IsVisible,
+                //MText properties
+                Position = this.position,
+                Rotation = this.rotation,
+                Height = this.height,
+                LineSpacingFactor = this.lineSpacing,
+                ParagraphHeightFactor = this.paragraphHeightFactor,
+                LineSpacingStyle = this.lineSpacingStyle,
+                RectangleWidth = this.rectangleWidth,
+                AttachmentPoint = this.attachmentPoint,
+                Style = (TextStyle) this.style.Clone(),
+                Value = this.value
+            };
+
+            foreach (XData data in this.XData.Values)
+                entity.XData.Add((XData) data.Clone());
+
+            return entity;
         }
 
         #endregion

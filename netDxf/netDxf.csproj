@@ -72,7 +72,6 @@
     <StartupObject />
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="PresentationCore" />
     <Reference Include="System" />
     <Reference Include="System.Drawing" />
   </ItemGroup>
@@ -87,10 +86,23 @@
     </Compile>
     <Compile Include="Collections\ObservableDictionary.cs" />
     <Compile Include="Collections\ObservableDictionaryEventArgs.cs" />
+    <Compile Include="Collections\ShapeStyles.cs" />
+    <Compile Include="Collections\SupportFolders.cs" />
     <Compile Include="Entities\MTextDrawingDirection.cs" />
+    <Compile Include="Entities\Shape.cs" />
+    <Compile Include="Tables\FontStyle.cs" />
+    <Compile Include="Tables\LinetypeSegment.cs" />
     <Compile Include="Tables\DimensionStyleOverride.cs" />
     <Compile Include="Tables\DimensionStyleOverrideChangeEventArgs.cs" />
     <Compile Include="Tables\DimensionStyleOverrideType.cs" />
+    <Compile Include="Tables\Linetype.cs" />
+    <Compile Include="Tables\LinetypeSegmentChangeEventArgs.cs" />
+    <Compile Include="Tables\LinetypeSegmentRotationType.cs" />
+    <Compile Include="Tables\LinetypeSegmentType.cs" />
+    <Compile Include="Tables\LinetypeShapeSegment.cs" />
+    <Compile Include="Tables\LinetypeSimpleSegment.cs" />
+    <Compile Include="Tables\LinetypeTextSegment.cs" />
+    <Compile Include="Tables\ShapeStyle.cs" />
     <Compile Include="Units\AngleDirection.cs" />
     <Compile Include="Collections\AttributeCollection.cs" />
     <Compile Include="Collections\UnderlayDgnDefinitions.cs" />
@@ -289,7 +301,6 @@
     <Compile Include="Tables\TableObject.cs" />
     <Compile Include="Tables\Layer.cs" />
     <Compile Include="MathHelper.cs" />
-    <Compile Include="Tables\Linetype.cs" />
     <Compile Include="Tables\TextStyle.cs" />
     <Compile Include="XData.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

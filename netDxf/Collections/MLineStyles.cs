@@ -1,7 +1,7 @@
-#region netDxf library, Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+#region netDxf library, Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
 
 //                        netDxf library
-// Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -35,17 +35,13 @@ namespace netDxf.Collections
     {
         #region constructor
 
-        internal MLineStyles(DxfDocument document, string handle = null)
-            : this(document, 0, handle)
+        internal MLineStyles(DxfDocument document)
+            : this(document, null)
         {
         }
 
-        internal MLineStyles(DxfDocument document, int capacity, string handle = null)
-            : base(document,
-                new Dictionary<string, MLineStyle>(capacity, StringComparer.OrdinalIgnoreCase),
-                new Dictionary<string, List<DxfObject>>(capacity, StringComparer.OrdinalIgnoreCase),
-                DxfObjectCode.MLineStyleDictionary,
-                handle)
+        internal MLineStyles(DxfDocument document, string handle)
+            : base(document, DxfObjectCode.MLineStyleDictionary, handle)
         {
             this.MaxCapacity = short.MaxValue;
         }
@@ -175,7 +171,8 @@ namespace netDxf.Collections
 
         private void MLineStyle_ElementAdded(MLineStyle sender, MLineStyleElementChangeEventArgs e)
         {
-            this.Owner.Linetypes.References[e.Item.Linetype.Name].Add(sender);
+            e.Item.Linetype = this.Owner.Linetypes.Add(e.Item.Linetype);
+            //this.Owner.Linetypes.References[e.Item.Linetype.Name].Add(sender);
         }
 
         private void MLineStyle_ElementRemoved(MLineStyle sender, MLineStyleElementChangeEventArgs e)

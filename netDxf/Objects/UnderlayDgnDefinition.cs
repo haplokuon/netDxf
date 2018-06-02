@@ -1,7 +1,7 @@
-﻿#region netDxf library, Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+﻿#region netDxf library, Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
 
 //                        netDxf library
-// Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -21,12 +21,13 @@
 #endregion
 
 using System.IO;
+using netDxf.Collections;
 using netDxf.Tables;
 
 namespace netDxf.Objects
 {
     /// <summary>
-    /// Represents a dgn underlay definition.
+    /// Represents a DGN underlay definition.
     /// </summary>
     public class UnderlayDgnDefinition :
         UnderlayDefinition
@@ -42,19 +43,19 @@ namespace netDxf.Objects
         /// <summary>
         /// Initializes a new instance of the <c>UnderlayDgnDefinition</c> class.
         /// </summary>
-        /// <param name="fileName">Underlay file name with full or relative path.</param>
-        public UnderlayDgnDefinition(string fileName)
-            : this(fileName, Path.GetFileNameWithoutExtension(fileName))
+        /// <param name="file">Underlay file name with full or relative path.</param>
+        public UnderlayDgnDefinition(string file)
+            : this(Path.GetFileNameWithoutExtension(file), file)
         {
         }
 
         /// <summary>
         /// Initializes a new instance of the <c>UnderlayDgnDefinition</c> class.
         /// </summary>
-        /// <param name="fileName">Underlay file name with full or relative path.</param>
         /// <param name="name">Underlay definition name.</param>
-        public UnderlayDgnDefinition(string fileName, string name)
-            : base(fileName, name, UnderlayType.DGN)
+        /// <param name="file">Underlay file name with full or relative path.</param>
+        public UnderlayDgnDefinition(string name, string file)
+            : base(name, file, UnderlayType.DGN)
         {
             this.layout = "Model";
         }
@@ -72,6 +73,15 @@ namespace netDxf.Objects
             set { this.layout = value; }
         }
 
+        /// <summary>
+        /// Gets the owner of the actual underlay DGN definition.
+        /// </summary>
+        public new UnderlayDgnDefinitions Owner
+        {
+            get { return (UnderlayDgnDefinitions)base.Owner; }
+            internal set { base.Owner = value; }
+        }
+
         #endregion
 
         #region overrides
@@ -83,7 +93,7 @@ namespace netDxf.Objects
         /// <returns>A new UnderlayDgnDefinition that is a copy of this instance.</returns>
         public override TableObject Clone(string newName)
         {
-            return new UnderlayDgnDefinition(this.FileName, newName) {Layout = this.layout};
+            return new UnderlayDgnDefinition(newName, this.File) {Layout = this.layout};
         }
 
         /// <summary>

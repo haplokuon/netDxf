@@ -1,32 +1,42 @@
-[2018/16/4]
-+ Added readonly header variaables ExtMin and ExtMax.
-
-[2018/5/4]
-+ (fixed) Bug when passing a single blank to the dimension UserText property.
-
-[2017/12/7]
-+ (fixed) The MLineStyle was not cloned while cloning a MLine entity.
-
-[2017/12/1]
+[2.1.0 - 2018/6/2]
++ Added Shape entity, see Shape() sample.
++ Added ShapeStyle table object, see Shape() sample.
++ Added property SupportFolders to the DxfDocument, see Shape() and ComplexLinetype() sample.
++ Added support for complex line types, see ComplexLinetype() sample.
++ Added AddFromFile methods to the Linetypes class, see ComplexLinetype() sample.
++ Added Save method to the Linetypes and Linetype classes, see ComplexLinetype() sample.
++ Added NamesFromFile method to the Linetypes and Linetype classes, see ComplexLinetype() sample.
++ Rename Linetype method FromFile to Load.
++ Added some checks for not null arguments.
++ The BlockRecord constructor is now internal, it should not be used outside the library.
++ Reorder the arguments of the the underlay definitions DWG, DGN and, PDF constructors, now they take a name and a file, instead of a file and a name to follow the same order as other table objects.
++ Rename UnderlayDefiniton property FileName to File.
++ Reorder the ImageDefinition constructors to take first the name and then the file, and not vice versa.
++ Rename ImageDefinition property FileName to File.
++ Improved the TextStyle class now it is possible to work true type fonts, defining the font family and style without the need of using the ttf file, see TextStyle() sample.
++ Modified the TextStyle class to avoid the use of the PresentationCore.dll assembly.
++ Added readonly header variables ExtMin and ExtMax.
 + DimensionStyle property DimRoundoff minimum value is 0.000001 or just zero to indicate no rounding off.
-+ Cleanup duplicate code 73 when writing MText entities.
 + The MathHelper.RoundToNearest method will round off correctly the last decimal.
-+ (fixed) When reading a dxf if the DimRoundoff value was out of range, it was not set to the correct default value.
-+ (fixed) The MText rotation was not calculated correctly when it was not defined in the world XY plane.
-+ (fixed) AutoCad 2018 introduced some undocumented changes to the MText entity that broke up the existing code.
-
-[2017/11/28]
 + IMPORTANT: When working directly with streams in read or write operations their positions will not be reseted automatically. See "ReadWriteFromStream()" and ""ReadWriteFromStream2()"" sample in TestDxfDocument project for more details.
 + Added the header DrawingVariables UcsOrg, UcsXDir, and UcsYDir.
 + Added MText property drawing direction.
-+ The MathHelper.RoundToNearest method now internally uses a long instead of an int for increased precision. It will still raise an exception if very high numbers and/or very low roundTo values are used.
-+ (fixed) Missing read and write code of MText property LineSpacingStyle.
-
-[2017/10/5]
 + Added Vector2 and Vector3 multiplication and division component by component.
 + Added parameter checks for invalid values in several constructors.
++ (fixed) Error when writing reactors for entities that belongs to a group that was not added to a document, while at the same time the entity belongs to it.
++ (fixed) Error reading the Solid entity thickness value.
++ (fixed) Error reading the Trace entity thickness value.
++ (fixed) Corrected the default value for the dimension style parameter LengthPrecision when reading dxf files (the netDxf standard is still 2).
++ (fixed) Corrected the default values for the dimension style parameters DIMDEC and DIMTAD when reading dxf files.
++ (fixed) When adding a segment to the list of a MLineStyle, the Linetype of the segment needs to be added too.
++ (fixed) Missing read and write code of MText property LineSpacingStyle.
++ (fixed) Bug when passing a single blank to the dimension UserText property.
++ (fixed) The MLineStyle was not cloned while cloning a MLine entity.
++ (fixed) When reading a dxf if the DimRoundoff value was out of range, it was not set to the correct default value.
++ (fixed) The MText rotation was not calculated correctly when it was not defined in the world XY plane.
++ (fixed) AutoCad 2018 introduced some undocumented changes to the MText entity that broke up the existing code.
 + (fixed) Issues with the clipping boundary in images.
-+ (fixed) Issue Id #13554 Issue with image in dxf. While reading a dxf, any Image entity with vector u or v equals to zero will be skipped. 
++ (fixed) Issue with image in dxf. While reading a dxf, any Image entity with vector u or v equals to zero will be skipped.
 
 [2.0.3 - 2017/5/24]
 + Added AutoCad drawing database version number AC1032 = AutoCAD 2018.
@@ -59,7 +69,6 @@
 + (fixed) Issue Id #13530 open autocad 2000 files (R15). Fix for entities with possible 0 value in code 330.
 + (fixed) Issue Id #13529 Typing error in struct Matrix3.
 + (fixed) Issue Id #13526 Exception on 0 degree angular dimension. If while loading a dxf an Angular2LineDimension entity made of two parallel lines is found, it will be skipped.
-
 
 [2.0.1 - 2016/8/9]
 + Implemented the code "\X" for dimension UserText. See sample DimensionUserTextWithTwoLines().

@@ -1,7 +1,7 @@
-#region netDxf library, Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+#region netDxf library, Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
 
 //                        netDxf library
-// Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -22,6 +22,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using netDxf.Tables;
 
 namespace netDxf.Collections
@@ -34,22 +35,117 @@ namespace netDxf.Collections
     {
         #region constructor
 
-        internal Linetypes(DxfDocument document, string handle = null)
-            : this(document, 0, handle)
+        internal Linetypes(DxfDocument document)
+            : this(document, null)
         {
         }
 
-        internal Linetypes(DxfDocument document, int capacity, string handle = null)
-            : base(document,
-                new Dictionary<string, Linetype>(capacity, StringComparer.OrdinalIgnoreCase),
-                new Dictionary<string, List<DxfObject>>(capacity, StringComparer.OrdinalIgnoreCase),
-                DxfObjectCode.LinetypeTable,
-                handle)
+        internal Linetypes(DxfDocument document, string handle)
+            : base(document, DxfObjectCode.LinetypeTable, handle)
         {
             this.MaxCapacity = short.MaxValue;
         }
 
         #endregion
+
+        #region public methods
+
+        /// <summary>
+        /// Gets the list of linetype names defined in a LIN file.
+        /// </summary>
+        /// <param name="file">Linetype definitions file.</param>
+        /// <returns>List of linetype names contained in the specified LIN file.</returns>
+        /// <remarks>
+        /// If the file is not found in the specified folder, it will try to find them in the list of supported folders defined in the DxfDocument.<br />
+        /// </remarks>
+        public List<string> NamesFromFile(string file)
+        {
+            string f = this.Owner.SupportFolders.FindFile(file);
+            if (string.IsNullOrEmpty(f))
+                throw new FileNotFoundException("The file has not been found.", file);
+
+            return Linetype.NamesFromFile(f);
+        }
+
+        /// <summary>
+        /// Adds all linetypes to the list from the definition in a LIN file.
+        /// </summary>
+        /// <param name="file">File where the definition is located.</param>
+        /// <param name="reload">Specifies if the linetype definitions of the file will overwrite the existing ones, in case another with the same name exists in the file.</param>
+        /// <remarks>
+        /// If the file is not found in the specified folder, it will try to find them in the list of supported folders defined in the DxfDocument.<br />
+        /// Any text style or shape present in the linetype definition must be previously defined in the DxfDocument, if not an exception will be generated.
+        /// </remarks>
+        public void AddFromFile(string file, bool reload)
+        {
+            string f = this.Owner.SupportFolders.FindFile(file);
+            if(string.IsNullOrEmpty(f))
+                throw new FileNotFoundException("The LIN file has not been found.", file);
+
+            List<string> names = Linetype.NamesFromFile(f);
+            foreach (string name in names)
+            {
+                this.AddFromFile(f, name, reload);
+            }
+        }
+
+        /// <summary>
+        /// Adds a linetype to the list from the definition in a LIN file.
+        /// </summary>
+        /// <param name="file">File where the definition is located.</param>
+        /// <param name="linetypeName">Name of the line type definition to read (ignore case).</param>
+        /// <param name="reload">Specifies if the linetype definition of the file will overwrite the existing one, in case another with the same name exists in the file.</param>
+        /// <returns>
+        /// True if the linetype has been added from the linetype definitions LIN file; false otherwise.
+        /// It will return false if the linetype is present in the file and the reload argument is false.
+        /// </returns>
+        /// <remarks>
+        /// If the file is not found in the specified folder, it will try to find them in the list of supported folders defined in the DxfDocument.<br />
+        /// Any text style or shape present in the linetype definition must be previously defined in the DxfDocument, if not an exception will be generated.
+        /// </remarks>
+        public bool AddFromFile(string file, string linetypeName, bool reload)
+        {
+            Linetype linetype;
+            string f = this.Owner.SupportFolders.FindFile(file);
+            if (string.IsNullOrEmpty(f))
+                throw new FileNotFoundException("The LIN file has not been found.", file);
+
+            linetype = Linetype.Load(f, linetypeName);
+
+            if (linetype == null) return false;
+
+            Linetype existing;
+            if (this.TryGetValue(linetype.Name, out existing))
+            {
+                if (!reload) return false;
+
+                existing.Description = linetype.Description;
+                existing.Segments.Clear();
+                existing.Segments.AddRange(linetype.Segments);         
+                return true;
+            }
+
+            this.Add(linetype);
+            return true;
+        }
+
+        /// <summary>
+        /// Saves all linetype definitions to a LIN file.
+        /// </summary>
+        /// <param name="file">File where the linetype definitions will be saved.</param>
+        /// <param name="overwrite">Defines if the file will be overwritten in case exits another one.</param>
+        /// <remarks>Only non reserved linetypes will be saved, therefore Continuous, ByLayer, and ByBlock will be excluded.</remarks>
+        public void Save(string file, bool overwrite)
+        {
+            if(overwrite) File.Delete(file);
+            foreach (Linetype lt in this.list.Values)
+            {
+                if(!lt.IsReserved)
+                    lt.Save(file);
+            }
+        }
+
+        # endregion
 
         #region override methods
 
@@ -77,6 +173,24 @@ namespace netDxf.Collections
             if (assignHandle || string.IsNullOrEmpty(linetype.Handle))
                 this.Owner.NumHandles = linetype.AsignHandle(this.Owner.NumHandles);
 
+            foreach (LinetypeSegment segment in linetype.Segments)
+            {
+                if(segment.Type == LinetypeSegmentType.Text)               
+                {
+                    LinetypeTextSegment textSegment = (LinetypeTextSegment) segment;
+                    textSegment.Style = this.Owner.TextStyles.Add(textSegment.Style);
+                    this.Owner.TextStyles.References[textSegment.Style.Name].Add(linetype);
+                }
+                if (segment.Type == LinetypeSegmentType.Shape)
+                {
+                    LinetypeShapeSegment shapeSegment = (LinetypeShapeSegment)segment;
+                    shapeSegment.Style = this.Owner.ShapeStyles.Add(shapeSegment.Style);
+                    this.Owner.ShapeStyles.References[shapeSegment.Style.Name].Add(linetype);
+                    if(!shapeSegment.Style.ContainsShapeName(shapeSegment.Name))
+                        throw new ArgumentException("The linetype contains a shape segment which style does not contain a shape with the stored name.", nameof(linetype));
+                }
+            }
+
             this.list.Add(linetype.Name, linetype);
             this.Owner.AddedObjects.Add(linetype.Handle, linetype);
             this.references.Add(linetype.Name, new List<DxfObject>());
@@ -84,6 +198,9 @@ namespace netDxf.Collections
             linetype.Owner = this;
 
             linetype.NameChanged += this.Item_NameChanged;
+            linetype.LinetypeSegmentAdded += this.Linetype_SegmentAdded;
+            linetype.LinetypeSegmentRemoved += this.Linetype_SegmentRemoved;
+            linetype.LinetypeTextSegmentStyleChanged += this.Linetype_TextSegmentStyleChanged;
 
             return linetype;
         }
@@ -146,6 +263,42 @@ namespace netDxf.Collections
             List<DxfObject> refs = this.references[sender.Name];
             this.references.Remove(sender.Name);
             this.references.Add(e.NewValue, refs);
+        }
+
+        private void Linetype_SegmentAdded(Linetype sender, LinetypeSegmentChangeEventArgs e)
+        {
+            if (e.Item.Type == LinetypeSegmentType.Text)
+            {
+                LinetypeTextSegment textSegment = (LinetypeTextSegment)e.Item;
+                textSegment.Style = this.Owner.TextStyles.Add(textSegment.Style);
+                //this.Owner.TextStyles.References[textSegment.Style.Name].Add(sender);
+            }
+            if (e.Item.Type == LinetypeSegmentType.Shape)
+            {
+                LinetypeShapeSegment shapeSegment = (LinetypeShapeSegment)e.Item;
+                shapeSegment.Style = this.Owner.ShapeStyles.Add(shapeSegment.Style);
+                //this.Owner.ShapeStyles.References[shapeSegment.Name].Add(sender);
+            }
+        }
+
+        private void Linetype_SegmentRemoved(Linetype sender, LinetypeSegmentChangeEventArgs e)
+        {
+            if (e.Item.Type == LinetypeSegmentType.Text)
+            {
+                this.Owner.TextStyles.References[((LinetypeTextSegment)e.Item).Style.Name].Remove(sender);
+            }
+            if (e.Item.Type == LinetypeSegmentType.Shape)
+            {
+                this.Owner.ShapeStyles.References[((LinetypeShapeSegment)e.Item).Name].Remove(sender);
+            }
+        }
+
+        private void Linetype_TextSegmentStyleChanged(Linetype sender, TableObjectChangedEventArgs<TextStyle> e)
+        {
+            this.Owner.TextStyles.References[e.OldValue.Name].Remove(sender);
+
+            e.NewValue = this.Owner.TextStyles.Add(e.NewValue);
+            this.Owner.TextStyles.References[e.NewValue.Name].Add(sender);
         }
 
         #endregion

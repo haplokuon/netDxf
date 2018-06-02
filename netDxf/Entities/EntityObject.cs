@@ -71,10 +71,7 @@ namespace netDxf.Entities
 
         public delegate void XDataAddAppRegEventHandler(EntityObject sender, ObservableCollectionEventArgs<ApplicationRegistry> e);
 
-        public delegate void XDataRemoveAppRegEventHandler(EntityObject sender, ObservableCollectionEventArgs<ApplicationRegistry> e);
-
         public event XDataAddAppRegEventHandler XDataAddAppReg;
-        public event XDataRemoveAppRegEventHandler XDataRemoveAppReg;
 
         protected virtual void OnXDataAddAppRegEvent(ApplicationRegistry item)
         {
@@ -82,6 +79,10 @@ namespace netDxf.Entities
             if (ae != null)
                 ae(this, new ObservableCollectionEventArgs<ApplicationRegistry>(item));
         }
+
+        public delegate void XDataRemoveAppRegEventHandler(EntityObject sender, ObservableCollectionEventArgs<ApplicationRegistry> e);
+
+        public event XDataRemoveAppRegEventHandler XDataRemoveAppReg;
 
         protected virtual void OnXDataRemoveAppRegEvent(ApplicationRegistry item)
         {

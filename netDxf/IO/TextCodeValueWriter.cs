@@ -1,7 +1,7 @@
-﻿#region netDxf library, Copyright (C) 2009-2017 Daniel Carvajal (haplokuon@gmail.com)
+﻿#region netDxf library, Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
 
 //                        netDxf library
-// Copyright (C) 2009-2017 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -31,10 +31,16 @@ namespace netDxf.IO
     internal class TextCodeValueWriter :
         ICodeValueWriter
     {
+        #region private fields
+
         private readonly TextWriter writer;
         private long currentPosition;
         private short dxfCode;
         private object dxfValue;
+
+        #endregion
+
+        #region constructors
 
         public TextCodeValueWriter(TextWriter writer)
         {
@@ -43,6 +49,10 @@ namespace netDxf.IO
             this.dxfCode = 0;
             this.dxfValue = null;
         }
+
+        #endregion
+
+        #region public properties
 
         public short Code
         {
@@ -59,11 +69,16 @@ namespace netDxf.IO
             get { return this.currentPosition; }
         }
 
+        #endregion
+
+        #region public methods
+
         public void Write(short code, object value)
         {
             this.dxfCode = code;
             this.writer.WriteLine(code);
             this.currentPosition += 1;
+
             if (code >= 0 && code <= 9) // string
             {
                 Debug.Assert(value is string, "Incorrect value type.");
@@ -338,5 +353,6 @@ namespace netDxf.IO
         {
             return string.Format("{0}:{1}", this.dxfCode, this.dxfValue);
         }
+        #endregion       
     }
 }
