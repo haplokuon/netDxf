@@ -400,7 +400,7 @@ namespace netDxf.Blocks
 
             Block block = new Block(name) {Origin = doc.DrawingVariables.InsBase};
             block.Record.Units = doc.DrawingVariables.InsUnits;
-            List<DxfObject> entities = doc.Layouts.GetReferences(Layout.ModelSpaceName);
+            IReadOnlyList<DxfObject> entities = doc.Layouts.GetReferences(Layout.ModelSpaceName);
             foreach (DxfObject dxfObject in entities)
             {
                 EntityObject entity = dxfObject as EntityObject;
@@ -514,13 +514,16 @@ namespace netDxf.Blocks
                 copy.Flags &= ~BlockTypeFlags.AnonymousBlock;
 
             foreach (EntityObject e in block.entities)
-            {
                 copy.entities.Add((EntityObject)e.Clone());
-            }
+
             foreach (AttributeDefinition a in block.attributes.Values)
-            {
                 copy.attributes.Add((AttributeDefinition)a.Clone());
-            }
+
+            foreach (XData data in block.XData.Values)
+                copy.XData.Add((XData)data.Clone());
+
+            foreach (XData data in block.Record.XData.Values)
+                copy.Record.XData.Add((XData)data.Clone());
 
             return copy;
         }

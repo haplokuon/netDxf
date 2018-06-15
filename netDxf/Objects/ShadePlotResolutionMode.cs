@@ -1,7 +1,7 @@
-﻿#region netDxf library, Copyright (C) 2009-2017 Daniel Carvajal (haplokuon@gmail.com)
+﻿#region netDxf library, Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
 
 //                        netDxf library
-// Copyright (C) 2009-2017 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -20,26 +20,41 @@
 
 #endregion
 
-namespace netDxf.Entities
+namespace netDxf.Objects
 {
     /// <summary>
-    /// Drawing direction.
+    /// Defines the shade plot resolution mode.
     /// </summary>
-    public enum MTextDrawingDirection
+    public enum ShadePlotResolutionMode
     {
         /// <summary>
-        /// Left to right.
+        /// Draft.
         /// </summary>
-        LeftToRight = 1,
+        Draft = 0,
 
         /// <summary>
-        /// Top to bottom.
+        /// Preview.
         /// </summary>
-        TopToBottom = 3,
+        Preview = 1,
 
         /// <summary>
-        /// By style (the flow direction is inherited from the associated text style).
+        /// Normal.
         /// </summary>
-        ByStyle = 5
+        Normal = 2,
+
+        /// <summary>
+        /// Presentation.
+        /// </summary>
+        Presentation = 3,
+
+        /// <summary>
+        /// Maximum
+        /// </summary>
+        Maximum = 4,
+
+        /// <summary>
+        /// Custom as specified by the shade plot DPI.
+        /// </summary>
+        Custom = 5
     }
 }

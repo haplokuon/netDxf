@@ -1,7 +1,7 @@
-﻿#region netDxf library, Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+﻿#region netDxf library, Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
 
 //                        netDxf library
-// Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -22,6 +22,7 @@
 
 using System;
 using System.Collections.Generic;
+using netDxf.Collections;
 
 namespace netDxf.Tables
 {
@@ -30,6 +31,7 @@ namespace netDxf.Tables
     /// </summary>
     public abstract class TableObject :
         DxfObject,
+        IHasXData,
         ICloneable,
         IComparable,
         IComparable<TableObject>,
@@ -38,9 +40,7 @@ namespace netDxf.Tables
         #region delegates and events
 
         public delegate void NameChangedEventHandler(TableObject sender, TableObjectChangedEventArgs<string> e);
-
         public event NameChangedEventHandler NameChanged;
-
         protected virtual void OnNameChangedEvent(string oldName, string newName)
         {
             NameChangedEventHandler ae = this.NameChanged;
@@ -51,6 +51,22 @@ namespace netDxf.Tables
             }
         }
 
+        public event XDataAddAppRegEventHandler XDataAddAppReg;
+        protected virtual void OnXDataAddAppRegEvent(ApplicationRegistry item)
+        {
+            XDataAddAppRegEventHandler ae = this.XDataAddAppReg;
+            if (ae != null)
+                ae(this, new ObservableCollectionEventArgs<ApplicationRegistry>(item));
+        }
+
+        public event XDataRemoveAppRegEventHandler XDataRemoveAppReg;
+        protected virtual void OnXDataRemoveAppRegEvent(ApplicationRegistry item)
+        {
+            XDataRemoveAppRegEventHandler ae = this.XDataRemoveAppReg;
+            if (ae != null)
+                ae(this, new ObservableCollectionEventArgs<ApplicationRegistry>(item));
+        }
+
         #endregion
 
         #region private fields
@@ -58,6 +74,7 @@ namespace netDxf.Tables
         private static readonly IReadOnlyList<string> invalidCharacters = new[] {"\\", "/", ":", "*", "?", "\"", "<", ">", "|", ";", ",", "=", "`"};
         private bool reserved;
         private string name;
+        private readonly XDataDictionary xData;
 
         #endregion
 
@@ -80,6 +97,9 @@ namespace netDxf.Tables
 
             this.name = name;
             this.reserved = false;
+            this.xData=new XDataDictionary();
+            this.xData.AddAppReg += this.XData_AddAppReg;
+            this.xData.RemoveAppReg += this.XData_RemoveAppReg;
         }
 
         #endregion
@@ -111,6 +131,14 @@ namespace netDxf.Tables
         public static IReadOnlyList<string> InvalidCharacters
         {
             get { return invalidCharacters; }
+        }
+
+        /// <summary>
+        /// Gets the table <see cref="XDataDictionary">extended data</see>.
+        /// </summary>
+        public XDataDictionary XData
+        {
+            get { return this.xData; }
         }
 
         #endregion
@@ -204,7 +232,7 @@ namespace netDxf.Tables
         /// The return value has the following meanings: Value Meaning Less than zero This object is less than the other parameter.
         /// Zero This object is equal to other. Greater than zero This object is greater than other.
         /// </returns>
-        /// <remarks>If both table objects are no of the same type it will return zero. The comparison is made by their names.</remarks>
+        /// <remarks>If both table objects are not of the same type it will return zero. The comparison is made by their names.</remarks>
         public int CompareTo(TableObject other)
         {
             if (other == null)
@@ -212,6 +240,77 @@ namespace netDxf.Tables
 
             return this.GetType() == other.GetType() ? string.Compare(this.Name, other.Name, StringComparison.OrdinalIgnoreCase) : 0;
         }
+
+        /// <summary>
+        /// Returns the hash code for this instance.
+        /// </summary>
+        /// <returns>A 32-bit signed integer that is the hash code for this instance.</returns>
+        public override int GetHashCode()
+        {
+            return this.Name.GetHashCode();
+        }
+
+        ///// <summary>
+        ///// Check if the tables are equal.
+        ///// </summary>
+        ///// <param name="u">TableObject.</param>
+        ///// <param name="v">TableObject.</param>
+        ///// <returns>True if the two table names are equal, false in any other case.</returns>
+        //public static bool operator ==(TableObject u, TableObject v)
+        //{
+        //    if (ReferenceEquals(u, null) && ReferenceEquals(v, null))
+        //        return true;
+
+        //    if (ReferenceEquals(u, null) || ReferenceEquals(v, null))
+        //        return false;
+
+        //    return string.Equals(u.Name, v.Name, StringComparison.OrdinalIgnoreCase);
+        //}
+
+        ///// <summary>
+        ///// Check if the tables are different.
+        ///// </summary>
+        ///// <param name="u">TableObject.</param>
+        ///// <param name="v">TableObject.</param>
+        ///// <returns>True if the two table names are different, false in any other case.</returns>
+        //public static bool operator !=(TableObject u, TableObject v)
+        //{
+        //    if (ReferenceEquals(u, null) && ReferenceEquals(v, null))
+        //        return false;
+
+        //    if (ReferenceEquals(u, null) || ReferenceEquals(v, null))
+        //        return true;
+
+        //    return !string.Equals(u.Name, v.Name, StringComparison.OrdinalIgnoreCase);
+        //}
+
+        ///// <summary>
+        ///// Check if the first table is lesser than the second.
+        ///// </summary>
+        ///// <param name="u">TableObject.</param>
+        ///// <param name="v">TableObject.</param>
+        ///// <returns>True if the first table name is lesser than the second, false in any other case.</returns>
+        //public static bool operator <(TableObject u, TableObject v)
+        //{
+        //    if (ReferenceEquals(u, null) || ReferenceEquals(v, null))
+        //        return false;
+
+        //    return string.Compare(u.Name, v.Name, StringComparison.OrdinalIgnoreCase) < 0;
+        //}
+
+        ///// <summary>
+        ///// Check if first table is greater than the second.
+        ///// </summary>
+        ///// <param name="u">TableObject.</param>
+        ///// <param name="v">TableObject.</param>
+        ///// <returns>True if the first table name is greater than the second, false in any other case.</returns>
+        //public static bool operator >(TableObject u, TableObject v)
+        //{
+        //    if (ReferenceEquals(u, null) || ReferenceEquals(v, null))
+        //        return false;
+
+        //    return string.Compare(u.Name, v.Name, StringComparison.OrdinalIgnoreCase) > 0;
+        //}
 
         #endregion
 
@@ -254,15 +353,6 @@ namespace netDxf.Tables
             return string.Equals(this.Name, other.Name, StringComparison.OrdinalIgnoreCase);
         }
 
-        /// <summary>
-        /// Returns the hash code for this instance.
-        /// </summary>
-        /// <returns>A 32-bit signed integer that is the hash code for this instance.</returns>
-        public override int GetHashCode()
-        {
-            return this.Name.GetHashCode();
-        }
-
         #endregion
 
         #region ICloneable
@@ -279,6 +369,20 @@ namespace netDxf.Tables
         /// </summary>
         /// <returns>A new table object that is a copy of this instance.</returns>
         public abstract object Clone();
+
+        #endregion
+
+        #region XData events
+
+        private void XData_AddAppReg(XDataDictionary sender, ObservableCollectionEventArgs<ApplicationRegistry> e)
+        {
+            this.OnXDataAddAppRegEvent(e.Item);
+        }
+
+        private void XData_RemoveAppReg(XDataDictionary sender, ObservableCollectionEventArgs<ApplicationRegistry> e)
+        {
+            this.OnXDataRemoveAppRegEvent(e.Item);
+        }
 
         #endregion
     }

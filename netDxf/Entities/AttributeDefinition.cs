@@ -1,7 +1,7 @@
-#region netDxf library, Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+#region netDxf library, Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
 
 //                        netDxf library
-// Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -59,7 +59,7 @@ namespace netDxf.Entities
 
         private readonly string tag;
         private string prompt;
-        private object value;
+        private object attValue;
         private TextStyle style;
         private Vector3 position;
         private AttributeFlags flags;
@@ -96,7 +96,7 @@ namespace netDxf.Entities
             this.tag = tag;
             this.flags = AttributeFlags.Visible;
             this.prompt = string.Empty;
-            this.value = null;
+            this.attValue = null;
             this.position = Vector3.Zero;
             if (style == null)
                 throw new ArgumentNullException(nameof(style));
@@ -125,13 +125,13 @@ namespace netDxf.Entities
             this.tag = tag;
             this.flags = AttributeFlags.Visible;
             this.prompt = string.Empty;
-            this.value = null;
+            this.attValue = null;
             this.position = Vector3.Zero;
             if (style == null)
                 throw new ArgumentNullException(nameof(style));
             this.style = style;
             if (textHeight <= 0.0)
-                throw new ArgumentOutOfRangeException(nameof(textHeight), this.value, "The attribute definition text height must be greater than zero.");
+                throw new ArgumentOutOfRangeException(nameof(textHeight), this.attValue, "The attribute definition text height must be greater than zero.");
             this.height = textHeight;
             this.widthFactor = style.WidthFactor;
             this.obliqueAngle = style.ObliqueAngle;
@@ -209,8 +209,8 @@ namespace netDxf.Entities
         /// </summary>
         public object Value
         {
-            get { return this.value; }
-            set { this.value = value; }
+            get { return this.attValue; }
+            set { this.attValue = value; }
         }
 
         /// <summary>
@@ -289,7 +289,7 @@ namespace netDxf.Entities
                 IsVisible = this.IsVisible,
                 //Attribute definition properties
                 Prompt = this.prompt,
-                Value = this.value,
+                Value = this.attValue,
                 Height = this.height,
                 WidthFactor = this.widthFactor,
                 ObliqueAngle = this.obliqueAngle,

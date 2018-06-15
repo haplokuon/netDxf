@@ -38,7 +38,7 @@ namespace netDxf.Objects
         Milimeters = 1,
 
         /// <summary>
-        /// Pixels.
+        /// Pixels, only applicable for raster outputs.
         /// </summary>
         Pixels = 2
     }

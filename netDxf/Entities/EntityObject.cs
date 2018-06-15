@@ -1,7 +1,7 @@
-﻿#region netDxf library, Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+﻿#region netDxf library, Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
 
 //                        netDxf library
-// Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -33,14 +33,13 @@ namespace netDxf.Entities
     /// </summary>
     public abstract class EntityObject :
         DxfObject,
+        IHasXData,
         ICloneable
     {
         #region delegates and events
 
         public delegate void LayerChangedEventHandler(EntityObject sender, TableObjectChangedEventArgs<Layer> e);
-
         public event LayerChangedEventHandler LayerChanged;
-
         protected virtual Layer OnLayerChangedEvent(Layer oldLayer, Layer newLayer)
         {
             LayerChangedEventHandler ae = this.LayerChanged;
@@ -54,9 +53,7 @@ namespace netDxf.Entities
         }
 
         public delegate void LinetypeChangedEventHandler(EntityObject sender, TableObjectChangedEventArgs<Linetype> e);
-
         public event LinetypeChangedEventHandler LinetypeChanged;
-
         protected virtual Linetype OnLinetypeChangedEvent(Linetype oldLinetype, Linetype newLinetype)
         {
             LinetypeChangedEventHandler ae = this.LinetypeChanged;
@@ -69,10 +66,7 @@ namespace netDxf.Entities
             return newLinetype;
         }
 
-        public delegate void XDataAddAppRegEventHandler(EntityObject sender, ObservableCollectionEventArgs<ApplicationRegistry> e);
-
         public event XDataAddAppRegEventHandler XDataAddAppReg;
-
         protected virtual void OnXDataAddAppRegEvent(ApplicationRegistry item)
         {
             XDataAddAppRegEventHandler ae = this.XDataAddAppReg;
@@ -80,10 +74,7 @@ namespace netDxf.Entities
                 ae(this, new ObservableCollectionEventArgs<ApplicationRegistry>(item));
         }
 
-        public delegate void XDataRemoveAppRegEventHandler(EntityObject sender, ObservableCollectionEventArgs<ApplicationRegistry> e);
-
         public event XDataRemoveAppRegEventHandler XDataRemoveAppReg;
-
         protected virtual void OnXDataRemoveAppRegEvent(ApplicationRegistry item)
         {
             XDataRemoveAppRegEventHandler ae = this.XDataRemoveAppReg;

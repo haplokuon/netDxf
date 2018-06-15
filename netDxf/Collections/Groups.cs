@@ -31,7 +31,6 @@ namespace netDxf.Collections
     /// <summary>
     /// Represents a collection of groups.
     /// </summary>
-    /// <remarks>The Groups collection method GetReferences will always return an empty list since there are no DxfObjects that references them.</remarks>
     public sealed class Groups :
         TableObjects<Group>
     {
@@ -80,7 +79,6 @@ namespace netDxf.Collections
             if (assignHandle || string.IsNullOrEmpty(group.Handle))
                 this.Owner.NumHandles = group.AsignHandle(this.Owner.NumHandles);
 
-            this.Owner.AddedObjects.Add(group.Handle, group);
             this.list.Add(group.Name, group);
             this.references.Add(group.Name, new List<DxfObject>());
             foreach (EntityObject entity in group.Entities)
@@ -104,6 +102,8 @@ namespace netDxf.Collections
             group.NameChanged += this.Item_NameChanged;
             group.EntityAdded += this.Group_EntityAdded;
             group.EntityRemoved += this.Group_EntityRemoved;
+
+            this.Owner.AddedObjects.Add(group.Handle, group);
 
             return group;
         }

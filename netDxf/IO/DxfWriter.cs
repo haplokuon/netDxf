@@ -67,9 +67,9 @@ namespace netDxf.IO
         {
             this.doc = document;
             this.isBinary = binary;
-
-            if (this.doc.DrawingVariables.AcadVer < DxfVersion.AutoCad2000)
-                throw new NotSupportedException("Only AutoCad2000 and newer dxf versions are supported.");
+            DxfVersion version = this.doc.DrawingVariables.AcadVer;
+            if (version < DxfVersion.AutoCad2000)
+                throw new DxfVersionNotSupportedException(string.Format("DXF file version not supported : {0}.", version), version);
 
             if (!Vector3.ArePerpendicular(this.doc.DrawingVariables.UcsXDir, this.doc.DrawingVariables.UcsYDir))
                 throw new ArithmeticException("The drawing variables vectors UcsXDir and UcsYDir must be perpendicular.");
@@ -254,7 +254,7 @@ namespace netDxf.IO
             this.EndTable();
 
             //style tables text and shapes
-            this.BeginTable(this.doc.TextStyles.CodeName, (short) this.doc.TextStyles.Count, this.doc.TextStyles.Handle);
+            this.BeginTable(this.doc.TextStyles.CodeName, (short) (this.doc.TextStyles.Count + this.doc.ShapeStyles.Count), this.doc.TextStyles.Handle);
             foreach (TextStyle style in this.doc.TextStyles.Items)
             {
                 this.WriteTextStyle(style);
@@ -968,6 +968,8 @@ namespace netDxf.IO
             this.chunk.Write(2, this.EncodeNonAsciiCharacters(appReg.Name));
 
             this.chunk.Write(70, (short) 0);
+
+            this.WriteXData(appReg.XData);
         }
 
         /// <summary>
@@ -1021,6 +1023,8 @@ namespace netDxf.IO
 
             this.chunk.Write(75, vp.SnapMode ? (short) 1 : (short) 0);
             this.chunk.Write(76, vp.ShowGrid ? (short) 1 : (short) 0);
+
+            this.WriteXData(vp.XData);
         }
 
         /// <summary>
@@ -1164,6 +1168,8 @@ namespace netDxf.IO
 
             this.chunk.Write(371, (short) style.DimLineLineweight);
             this.chunk.Write(372, (short) style.ExtLineLineweight);
+
+            this.WriteXData(style.XData);
         }
 
         /// <summary>
@@ -1197,6 +1203,7 @@ namespace netDxf.IO
             this.chunk.Write(281, blockRecord.ScaleUniformly ? (short) 1 : (short) 0);
 
             AddBlockRecordUnitsXData(blockRecord);
+
             this.WriteXData(blockRecord.XData);
         }
 
@@ -1225,30 +1232,30 @@ namespace netDxf.IO
         /// <summary>
         /// Writes a new line type to the table section.
         /// </summary>
-        /// <param name="tl">Line type.</param>
-        private void WriteLinetype(Linetype tl)
+        /// <param name="linetype">Line type.</param>
+        private void WriteLinetype(Linetype linetype)
         {
             Debug.Assert(this.activeTable == DxfObjectCode.LinetypeTable);
 
-            this.chunk.Write(0, tl.CodeName);
-            this.chunk.Write(5, tl.Handle);
-            this.chunk.Write(330, tl.Owner.Handle);
+            this.chunk.Write(0, linetype.CodeName);
+            this.chunk.Write(5, linetype.Handle);
+            this.chunk.Write(330, linetype.Owner.Handle);
 
             this.chunk.Write(100, SubclassMarker.TableRecord);
 
             this.chunk.Write(100, SubclassMarker.Linetype);
 
-            this.chunk.Write(2, this.EncodeNonAsciiCharacters(tl.Name));
+            this.chunk.Write(2, this.EncodeNonAsciiCharacters(linetype.Name));
 
             this.chunk.Write(70, (short) 0);
 
-            this.chunk.Write(3, this.EncodeNonAsciiCharacters(tl.Description));
+            this.chunk.Write(3, this.EncodeNonAsciiCharacters(linetype.Description));
 
             this.chunk.Write(72, (short) 65);
-            this.chunk.Write(73, (short) tl.Segments.Count);
-            this.chunk.Write(40, tl.Length());
+            this.chunk.Write(73, (short) linetype.Segments.Count);
+            this.chunk.Write(40, linetype.Length());
 
-            foreach (LinetypeSegment s in tl.Segments)
+            foreach (LinetypeSegment s in linetype.Segments)
             {
                 this.chunk.Write(49, s.Length);
                 switch (s.Type)
@@ -1290,6 +1297,8 @@ namespace netDxf.IO
                         break;
                 }
             }
+
+            this.WriteXData(linetype.XData);
         }
 
         /// <summary>
@@ -1335,10 +1344,30 @@ namespace netDxf.IO
             // transparency is stored in XData
             if (layer.Transparency.Value > 0)
             {
-                int alpha = Transparency.ToAlphaValue(layer.Transparency);
-                this.chunk.Write((short) XDataCode.AppReg, "AcCmTransparency");
-                this.chunk.Write((short) XDataCode.Int32, alpha);
+                AddLayerTransparencyXData(layer);
             }
+
+            this.WriteXData(layer.XData);
+        }
+
+        private static void AddLayerTransparencyXData(Layer layer)
+        {
+            // for dxf versions prior to AutoCad2007 the block record units is stored in an extended data block
+            XData xdataEntry;
+            if (layer.XData.ContainsAppId("AcCmTransparency"))
+            {
+                xdataEntry = layer.XData["AcCmTransparency"];
+                xdataEntry.XDataRecord.Clear();
+            }
+            else
+            {
+                xdataEntry = new XData(new ApplicationRegistry(ApplicationRegistry.DefaultName));
+                layer.XData.Add(xdataEntry);
+            }
+
+            int alpha = Transparency.ToAlphaValue(layer.Transparency);
+            xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.String, "DesignCenter Data"));
+            xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int32, alpha));
         }
 
         /// <summary>
@@ -1383,12 +1412,29 @@ namespace netDxf.IO
             // when a true type font file is present the font information is defined by the file and this information is not needed
             if (style.IsTrueType && string.IsNullOrEmpty(style.FontFile))
             {
-                this.chunk.Write((short)XDataCode.AppReg, ApplicationRegistry.DefaultName);
-                this.chunk.Write((short)XDataCode.String, this.EncodeNonAsciiCharacters(style.FontFamilyName));
-                byte[] st = new byte[4];
-                st[3] = (byte) style.FontStyle;
-                this.chunk.Write((short)XDataCode.Int32, BitConverter.ToInt32(st, 0));
-            }         
+               this.AddTextStyleFontXData(style);
+            }
+            this.WriteXData(style.XData);
+        }
+
+        private void AddTextStyleFontXData(TextStyle style)
+        {
+            // for dxf versions prior to AutoCad2007 the block record units is stored in an extended data block
+            XData xdataEntry;
+            if (style.XData.ContainsAppId(ApplicationRegistry.DefaultName))
+            {
+                xdataEntry = style.XData[ApplicationRegistry.DefaultName];
+                xdataEntry.XDataRecord.Clear();
+            }
+            else
+            {
+                xdataEntry = new XData(new ApplicationRegistry(ApplicationRegistry.DefaultName));
+                style.XData.Add(xdataEntry);
+            }
+            byte[] st = new byte[4];
+            st[3] = (byte)style.FontStyle;
+            xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.String, this.EncodeNonAsciiCharacters(style.FontFamilyName)));
+            xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int32, BitConverter.ToInt32(st, 0)));
         }
 
         /// <summary>
@@ -1399,7 +1445,7 @@ namespace netDxf.IO
         {
             Debug.Assert(this.activeTable == DxfObjectCode.TextStyleTable);
 
-            this.chunk.Write(0, "STYLE");
+            this.chunk.Write(0, style.CodeName);
             this.chunk.Write(5, style.Handle);
             this.chunk.Write(330, style.Owner.Handle);
 
@@ -1416,6 +1462,7 @@ namespace netDxf.IO
             this.chunk.Write(42, style.Size);
             this.chunk.Write(50, style.ObliqueAngle);
 
+            this.WriteXData(style.XData);
         }
 
         /// <summary>
@@ -1453,6 +1500,8 @@ namespace netDxf.IO
             this.chunk.Write(79, (short) 0);
 
             this.chunk.Write(146, ucs.Elevation);
+
+            this.WriteXData(ucs.XData);
         }
 
         #endregion
@@ -1517,6 +1566,8 @@ namespace netDxf.IO
             this.chunk.Write(100, SubclassMarker.Entity);
             this.chunk.Write(8, blockLayer);
             this.chunk.Write(100, SubclassMarker.BlockEnd);
+
+            this.WriteXData(block.XData);
         }
 
         #endregion
@@ -2777,6 +2828,7 @@ namespace netDxf.IO
 
             // add the required extended data entries to the hatch XData
             AddHatchPatternXData(hatch);
+
             this.WriteXData(hatch.XData);
         }
 
@@ -2798,8 +2850,8 @@ namespace netDxf.IO
             xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.RealZ, 0.0));
 
             HatchGradientPattern grad = hatch.Pattern as HatchGradientPattern;
-            if (grad == null)
-                return;
+
+            if (grad == null) return;
 
             if (hatch.XData.ContainsAppId("GradientColor1ACI"))
             {
@@ -3025,7 +3077,8 @@ namespace netDxf.IO
         {
             this.chunk.Write(100, SubclassMarker.Dimension);
 
-            this.chunk.Write(2, this.EncodeNonAsciiCharacters(dim.Block.Name));
+            if(dim.Block != null)
+                this.chunk.Write(2, this.EncodeNonAsciiCharacters(dim.Block.Name));
 
             this.chunk.Write(10, dim.DefinitionPoint.X);
             this.chunk.Write(20, dim.DefinitionPoint.Y);
@@ -3102,6 +3155,7 @@ namespace netDxf.IO
             }
             xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.String, "DSTYLE"));
             xdataEntry.XDataRecord.Add(XDataRecord.OpenControlString);
+
             bool writeDIMPOST = false;
             string prefix = string.Empty;
             string suffix = string.Empty;
@@ -3811,6 +3865,8 @@ namespace netDxf.IO
                     this.chunk.Write(74, (short) 0);
                     break;
             }
+
+            this.WriteXData(def.XData);
         }
 
         private void WriteAttribute(Attribute attrib)
@@ -4149,6 +4205,8 @@ namespace netDxf.IO
 
             this.chunk.Write(280, (short) 1);
             this.chunk.Write(281, (short) imageDefinition.ResolutionUnits);
+
+            this.WriteXData(imageDefinition.XData);
         }
 
         private void WriteRasterVariables(RasterVariables variables, string ownerHandle)
@@ -4193,6 +4251,8 @@ namespace netDxf.IO
 
                 this.chunk.Write(6, this.EncodeNonAsciiCharacters(element.Linetype.Name));
             }
+
+            this.WriteXData(style.XData);
         }
 
         private void WriteGroup(Group group, string ownerHandle)
@@ -4211,6 +4271,8 @@ namespace netDxf.IO
             {
                 this.chunk.Write(340, entity.Handle);
             }
+
+            this.WriteXData(group.XData);
         }
 
         private void WriteLayout(Layout layout, string ownerHandle)
@@ -4219,44 +4281,12 @@ namespace netDxf.IO
             this.chunk.Write(5, layout.Handle);
             this.chunk.Write(330, ownerHandle);
 
-            PlotSettings plot = layout.PlotSettings;
-            this.chunk.Write(100, SubclassMarker.PlotSettings);
-            this.chunk.Write(1, this.EncodeNonAsciiCharacters(plot.PageSetupName));
-            this.chunk.Write(2, this.EncodeNonAsciiCharacters(plot.PlotterName));
-            this.chunk.Write(4, this.EncodeNonAsciiCharacters(plot.PaperSizeName));
-            this.chunk.Write(6, this.EncodeNonAsciiCharacters(plot.ViewName));
-
-            this.chunk.Write(40, plot.LeftMargin);
-            this.chunk.Write(41, plot.BottomMargin);
-            this.chunk.Write(42, plot.RightMargin);
-            this.chunk.Write(43, plot.TopMargin);
-            this.chunk.Write(44, plot.PaperSize.X);
-            this.chunk.Write(45, plot.PaperSize.Y);
-            this.chunk.Write(46, plot.Origin.X);
-            this.chunk.Write(47, plot.Origin.Y);
-            this.chunk.Write(48, plot.WindowBottomLeft.X);
-            this.chunk.Write(49, plot.WindowUpRight.X);
-            this.chunk.Write(140, plot.WindowBottomLeft.Y);
-            this.chunk.Write(141, plot.WindowUpRight.Y);
-
-            this.chunk.Write(142, plot.PrintScaleNumerator);
-            this.chunk.Write(143, plot.PrintScaleDenominator);
-            this.chunk.Write(70, (short) plot.Flags);
-            this.chunk.Write(72, (short) plot.PaperUnits);
-            this.chunk.Write(73, (short) plot.PaperRotation);
-            this.chunk.Write(74, (short) 5);
-            this.chunk.Write(7, this.EncodeNonAsciiCharacters(plot.CurrentStyleSheet));
-            this.chunk.Write(75, (short) 16);
-
-            this.chunk.Write(147, plot.PrintScale);
-            this.chunk.Write(148, plot.PaperImageOrigin.X);
-            this.chunk.Write(149, plot.PaperImageOrigin.Y);
+            this.WritePlotSettings(layout.PlotSettings);
 
             this.chunk.Write(100, SubclassMarker.Layout);
             this.chunk.Write(1, this.EncodeNonAsciiCharacters(layout.Name));
             this.chunk.Write(70, (short) 1);
             this.chunk.Write(71, layout.TabOrder);
-
 
             this.chunk.Write(10, layout.MinLimit.X);
             this.chunk.Write(20, layout.MinLimit.Y);
@@ -4293,6 +4323,48 @@ namespace netDxf.IO
             this.chunk.Write(76, (short) 0);
 
             this.chunk.Write(330, layout.AssociatedBlock.Owner.Handle);
+
+            this.WriteXData(layout.XData);
+        }
+
+        private void WritePlotSettings( PlotSettings plot)
+        {
+            this.chunk.Write(100, SubclassMarker.PlotSettings);
+            this.chunk.Write(1, this.EncodeNonAsciiCharacters(plot.PageSetupName));
+            this.chunk.Write(2, this.EncodeNonAsciiCharacters(plot.PlotterName));
+            this.chunk.Write(4, this.EncodeNonAsciiCharacters(plot.PaperSizeName));
+            this.chunk.Write(6, this.EncodeNonAsciiCharacters(plot.ViewName));
+
+            this.chunk.Write(40, plot.PaperMargin.Left);
+            this.chunk.Write(41, plot.PaperMargin.Bottom);
+            this.chunk.Write(42, plot.PaperMargin.Right);
+            this.chunk.Write(43, plot.PaperMargin.Top);
+            this.chunk.Write(44, plot.PaperSize.X);
+            this.chunk.Write(45, plot.PaperSize.Y);
+            this.chunk.Write(46, plot.Origin.X);
+            this.chunk.Write(47, plot.Origin.Y);
+            this.chunk.Write(48, plot.WindowBottomLeft.X);
+            this.chunk.Write(49, plot.WindowUpRight.X);
+            this.chunk.Write(140, plot.WindowBottomLeft.Y);
+            this.chunk.Write(141, plot.WindowUpRight.Y);
+            this.chunk.Write(142, plot.PrintScaleNumerator);
+            this.chunk.Write(143, plot.PrintScaleDenominator);
+
+            this.chunk.Write(70, (short) plot.Flags);
+            this.chunk.Write(72, (short) plot.PaperUnits);
+            this.chunk.Write(73, (short) plot.PaperRotation);
+            this.chunk.Write(74, (short) plot.PlotType);
+
+            this.chunk.Write(7, this.EncodeNonAsciiCharacters(plot.CurrentStyleSheet));
+            this.chunk.Write(75, plot.ScaleToFit ? (short) 0 : (short) 16);
+
+            this.chunk.Write(76, (short) plot.ShadePlotMode);
+            this.chunk.Write(77, (short) plot.ShadePlotResolutionMode);
+            this.chunk.Write(78, plot.ShadePlotDPI);
+            this.chunk.Write(147, plot.PrintScale);
+
+            this.chunk.Write(148, plot.PaperImageOrigin.X);
+            this.chunk.Write(149, plot.PaperImageOrigin.Y);
         }
 
         #endregion

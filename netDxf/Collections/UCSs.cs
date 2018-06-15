@@ -73,13 +73,14 @@ namespace netDxf.Collections
             if (assignHandle || string.IsNullOrEmpty(ucs.Handle))
                 this.Owner.NumHandles = ucs.AsignHandle(this.Owner.NumHandles);
 
-            this.Owner.AddedObjects.Add(ucs.Handle, ucs);
             this.list.Add(ucs.Name, ucs);
             this.references.Add(ucs.Name, new List<DxfObject>());
 
             ucs.Owner = this;
 
             ucs.NameChanged += this.Item_NameChanged;
+
+            this.Owner.AddedObjects.Add(ucs.Handle, ucs);
 
             return ucs;
         }

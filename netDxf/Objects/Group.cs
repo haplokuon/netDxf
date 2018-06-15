@@ -219,17 +219,22 @@ namespace netDxf.Objects
         /// <remarks>The entities that belong to the group will also be cloned.</remarks>
         public override TableObject Clone(string newName)
         {
-            EntityObject[] copy = new EntityObject[this.entities.Count];
+            EntityObject[] refs = new EntityObject[this.entities.Count];
             for (int i = 0; i < this.entities.Count; i++)
             {
-                copy[i] = (EntityObject) this.entities[i].Clone();
+                refs[i] = (EntityObject) this.entities[i].Clone();
             }
 
-            return new Group(newName, copy)
+            Group copy = new Group(newName, refs)
             {
                 Description = this.description,
                 IsSelectable = this.isSelectable
             };
+
+            foreach (XData data in this.XData.Values)
+                copy.XData.Add((XData)data.Clone());
+
+            return copy;
         }
 
         /// <summary>

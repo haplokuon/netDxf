@@ -267,10 +267,9 @@ namespace netDxf.Objects
         {
             List<MLineStyleElement> copyElements = new List<MLineStyleElement>();
             foreach (MLineStyleElement e in this.elements)
-            {
                 copyElements.Add((MLineStyleElement) e.Clone());
-            }
-            return new MLineStyle(newName, copyElements)
+
+            MLineStyle copy = new MLineStyle(newName, copyElements)
             {
                 Flags = this.flags,
                 Description = this.description,
@@ -278,6 +277,11 @@ namespace netDxf.Objects
                 StartAngle = this.startAngle,
                 EndAngle = this.endAngle,
             };
+
+            foreach (XData data in this.XData.Values)
+                copy.XData.Add((XData)data.Clone());
+
+            return copy;
         }
 
         /// <summary>

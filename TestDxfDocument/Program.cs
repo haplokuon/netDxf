@@ -21,7 +21,7 @@ using Trace = netDxf.Entities.Trace;
 namespace TestDxfDocument
 {
     /// <summary>
-    /// This is just a simple test of work in progress for the netDxf Library.
+    /// This is just a simple test of work in progress for the netDxf library.
     /// </summary>
     public class Program
     {
@@ -935,6 +935,7 @@ namespace TestDxfDocument
             OrdinateDimension dimY2 = new OrdinateDimension(origin, refY, length, OrdinateDimensionAxis.Y, angle, myStyle);
 
             dxf.AddEntity(dimX1);
+
             dxf.AddEntity(dimY1);
             dxf.AddEntity(dimX2);
             dxf.AddEntity(dimY2);
@@ -961,9 +962,9 @@ namespace TestDxfDocument
                 d.Update();
             }
             dxf.AddEntity((EntityObject) dimX1.Clone());
-            dxf.AddEntity((EntityObject) dimX2.Clone());
-            dxf.AddEntity((EntityObject) dimY1.Clone());
-            dxf.AddEntity((EntityObject) dimY2.Clone());
+            dxf.AddEntity((EntityObject)dimX2.Clone());
+            dxf.AddEntity((EntityObject)dimY1.Clone());
+            dxf.AddEntity((EntityObject)dimY2.Clone());
 
             dxf.Save("test2.dxf");
         }
@@ -1926,9 +1927,9 @@ namespace TestDxfDocument
             dxf.AddEntity(line1);
             dxf.AddEntity(line2);
             dxf.AddEntity(dim1);
-            dxf.AddEntity(dim2);
-            dxf.AddEntity(dim3);
-            dxf.AddEntity(dim4);
+            //dxf.AddEntity(dim2);
+            //dxf.AddEntity(dim3);
+            //dxf.AddEntity(dim4);
             dxf.Save("dimension drawing.dxf");
             dxf = DxfDocument.Load("dimension drawing.dxf");
             dxf.DrawingVariables.AcadVer = DxfVersion.AutoCad2010;
@@ -2081,9 +2082,9 @@ namespace TestDxfDocument
             OrdinateDimension dimY2 = new OrdinateDimension(origin, refY, length, OrdinateDimensionAxis.Y, angle, myStyle);
 
             dxf.AddEntity(dimX1);
-            dxf.AddEntity(dimY1);
-            dxf.AddEntity(dimX2);
-            dxf.AddEntity(dimY2);
+            //dxf.AddEntity(dimY1);
+            //dxf.AddEntity(dimX2);
+            //dxf.AddEntity(dimY2);
 
             Line lineX = new Line(origin, origin + 5*Vector2.UnitX);
             Line lineY = new Line(origin, origin + 5*Vector2.UnitY);
@@ -2094,25 +2095,26 @@ namespace TestDxfDocument
             point = Vector2.Polar(new Vector2(origin.X, origin.Y), 5, angle*MathHelper.DegToRad + MathHelper.HalfPI);
             Line lineYRotate = new Line(origin, new Vector2(point.X, point.Y));
 
-            dxf.AddEntity(lineX);
-            dxf.AddEntity(lineY);
-            dxf.AddEntity(lineXRotate);
-            dxf.AddEntity(lineYRotate);
+            //dxf.AddEntity(lineX);
+            //dxf.AddEntity(lineY);
+            //dxf.AddEntity(lineXRotate);
+            //dxf.AddEntity(lineYRotate);
 
             dxf.Save("dimension drawing.dxf");
 
             dxf = DxfDocument.Load("dimension drawing.dxf");
+            dxf.Save("dimension drawing saved.dxf");
 
-            DxfDocument doc = new DxfDocument();
-            foreach (var c in dxf.Circles)
-            {
-                doc.AddEntity((EntityObject) c.Clone());
-            }
-            foreach (var d in dxf.Dimensions)
-            {
-                doc.AddEntity((EntityObject) d.Clone());
-            }
-            doc.Save("dimension drawing saved.dxf");
+            //DxfDocument doc = new DxfDocument();
+            //foreach (var c in dxf.Circles)
+            //{
+            //    doc.AddEntity((EntityObject) c.Clone());
+            //}
+            //foreach (var d in dxf.Dimensions)
+            //{
+            //    doc.AddEntity((EntityObject) d.Clone());
+            //}
+            //doc.Save("dimension drawing saved.dxf");
         }
 
         #endregion

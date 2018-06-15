@@ -73,7 +73,6 @@ namespace netDxf.Collections
             if (assignHandle || string.IsNullOrEmpty(style.Handle))
                 this.Owner.NumHandles = style.AsignHandle(this.Owner.NumHandles);
 
-            this.Owner.AddedObjects.Add(style.Handle, style);
             this.list.Add(style.Name, style);
             this.references.Add(style.Name, new List<DxfObject>());
 
@@ -115,6 +114,8 @@ namespace netDxf.Collections
             style.LinetypeChanged += this.DimensionStyleLinetypeChanged;
             style.TextStyleChanged += this.DimensionStyleTextStyleChanged;
             style.BlockChanged += this.DimensionStyleBlockChanged;
+
+            this.Owner.AddedObjects.Add(style.Handle, style);
 
             return style;
         }

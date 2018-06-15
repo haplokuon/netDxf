@@ -23,6 +23,7 @@
 using System;
 using netDxf.Collections;
 using netDxf.Objects;
+using netDxf.Tables;
 using netDxf.Units;
 
 namespace netDxf.Blocks
@@ -31,8 +32,35 @@ namespace netDxf.Blocks
     /// Represent the record of a block in the tables section.
     /// </summary>
     public class BlockRecord :
-        DxfObject
+        DxfObject,
+        IHasXData
     {
+        #region delegates and events
+
+        //public delegate void XDataAddAppRegEventHandler(EntityObject sender, ObservableCollectionEventArgs<ApplicationRegistry> e);
+
+        public event XDataAddAppRegEventHandler XDataAddAppReg;
+
+        protected virtual void OnXDataAddAppRegEvent(ApplicationRegistry item)
+        {
+            XDataAddAppRegEventHandler ae = this.XDataAddAppReg;
+            if (ae != null)
+                ae(this, new ObservableCollectionEventArgs<ApplicationRegistry>(item));
+        }
+
+        //public delegate void XDataRemoveAppRegEventHandler(EntityObject sender, ObservableCollectionEventArgs<ApplicationRegistry> e);
+
+        public event XDataRemoveAppRegEventHandler XDataRemoveAppReg;
+
+        protected virtual void OnXDataRemoveAppRegEvent(ApplicationRegistry item)
+        {
+            XDataRemoveAppRegEventHandler ae = this.XDataRemoveAppReg;
+            if (ae != null)
+                ae(this, new ObservableCollectionEventArgs<ApplicationRegistry>(item));
+        }
+
+        #endregion
+
         #region private fields
 
         private string name;

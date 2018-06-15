@@ -73,8 +73,6 @@ namespace netDxf.Collections
             if (assignHandle || string.IsNullOrEmpty(style.Handle))
                 this.Owner.NumHandles = style.AsignHandle(this.Owner.NumHandles);
 
-            this.Owner.AddedObjects.Add(style.Handle, style);
-
             this.list.Add(style.Name, style);
             this.references.Add(style.Name, new List<DxfObject>());
             foreach (MLineStyleElement element in style.Elements)
@@ -89,6 +87,8 @@ namespace netDxf.Collections
             style.MLineStyleElementAdded += this.MLineStyle_ElementAdded;
             style.MLineStyleElementRemoved += this.MLineStyle_ElementRemoved;
             style.MLineStyleElementLinetypeChanged += this.MLineStyle_ElementLinetypeChanged;
+
+            this.Owner.AddedObjects.Add(style.Handle, style);
 
             return style;
         }

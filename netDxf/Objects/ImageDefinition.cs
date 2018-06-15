@@ -312,7 +312,12 @@ namespace netDxf.Objects
         /// <returns>A new ImageDefinition that is a copy of this instance.</returns>
         public override TableObject Clone(string newName)
         {
-            return new ImageDefinition(newName, this.file, this.width, this.horizontalResolution, this.height, this.verticalResolution, this.resolutionUnits);
+            ImageDefinition copy = new ImageDefinition(newName, this.file, this.width, this.horizontalResolution, this.height, this.verticalResolution, this.resolutionUnits);
+
+            foreach (XData data in this.XData.Values)
+                copy.XData.Add((XData)data.Clone());
+
+            return copy;
         }
 
         /// <summary>

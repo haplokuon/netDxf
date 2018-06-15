@@ -64,6 +64,7 @@ namespace netDxf.Collections
         {
             if (this.list.Count >= this.MaxCapacity)
                 throw new OverflowException(string.Format("Table overflow. The maximum number of elements the table {0} can have is {1}", this.CodeName, this.MaxCapacity));
+
             if (block == null)
                 throw new ArgumentNullException(nameof(block));
 
@@ -74,9 +75,6 @@ namespace netDxf.Collections
             if (assignHandle || string.IsNullOrEmpty(block.Handle))
                 this.Owner.NumHandles = block.AsignHandle(this.Owner.NumHandles);
 
-            this.Owner.AddedObjects.Add(block.Handle, block);
-            this.Owner.AddedObjects.Add(block.Owner.Handle, block.Owner);
-
             this.list.Add(block.Name, block);
             this.references.Add(block.Name, new List<DxfObject>());
 
@@ -85,15 +83,11 @@ namespace netDxf.Collections
 
             //for new block definitions configure its entities
             foreach (EntityObject entity in block.Entities)
-            {
                 this.Owner.AddEntity(entity, true, assignHandle);
-            }
 
             //for new block definitions configure its attributes
             foreach (AttributeDefinition attDef in block.AttributeDefinitions.Values)
-            {
                 this.Owner.AddEntity(attDef, true, assignHandle);
-            }
 
             block.Record.Owner = this;
 
@@ -103,6 +97,9 @@ namespace netDxf.Collections
             block.EntityRemoved += this.Block_EntityRemoved;
             block.AttributeDefinitionAdded += this.Block_EntityAdded;
             block.AttributeDefinitionRemoved += this.Block_EntityRemoved;
+
+            this.Owner.AddedObjects.Add(block.Handle, block);
+            this.Owner.AddedObjects.Add(block.Owner.Handle, block.Owner);
 
             return block;
         }
@@ -143,15 +140,11 @@ namespace netDxf.Collections
 
             // we will remove all entities from the block definition
             foreach (EntityObject entity in item.Entities)
-            {
                 this.Owner.RemoveEntity(entity, true);
-            }
 
             // remove all attribute definitions from the associated layers
             foreach (AttributeDefinition attDef in item.AttributeDefinitions.Values)
-            {
                 this.Owner.RemoveEntity(attDef, true);
-            }
 
             this.Owner.AddedObjects.Remove(item.Handle);
             this.references.Remove(item.Name);

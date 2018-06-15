@@ -1,7 +1,7 @@
-﻿#region netDxf library, Copyright (C) 2009-2017 Daniel Carvajal (haplokuon@gmail.com)
+﻿#region netDxf library, Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
 
 //                        netDxf library
-// Copyright (C) 2009-2017 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -17,29 +17,43 @@
 // COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
 // IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
 #endregion
 
-namespace netDxf.Entities
+namespace netDxf.Objects
 {
     /// <summary>
-    /// Drawing direction.
+    /// Defines the portion of paper space to output to the media.
     /// </summary>
-    public enum MTextDrawingDirection
+    public enum PlotType
     {
         /// <summary>
-        /// Left to right.
+        /// Last screen display
         /// </summary>
-        LeftToRight = 1,
+        LastScreenDisplay = 0,
 
         /// <summary>
-        /// Top to bottom.
+        /// Drawing extents.
         /// </summary>
-        TopToBottom = 3,
+        DrawingExtents = 1,
 
         /// <summary>
-        /// By style (the flow direction is inherited from the associated text style).
+        /// Drawing limits.
         /// </summary>
-        ByStyle = 5
+        DrawingLimits = 2,
+
+        /// <summary>
+        /// View specified by the plot view name.
+        /// </summary>
+        View = 3,
+
+        /// <summary>
+        /// Window specified by the upper-right and bottom-left window corners.
+        /// </summary>
+        Window = 4,
+
+        /// <summary>
+        /// Layout information.
+        /// </summary>
+        LayoutInformation = 5
     }
 }

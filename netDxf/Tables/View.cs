@@ -152,7 +152,7 @@ namespace netDxf.Tables
         /// <returns>A new View that is a copy of this instance.</returns>
         public override TableObject Clone(string newName)
         {
-            return new View(newName)
+            View copy = new View(newName)
             {
                 Target = this.target,
                 Camera = this.camera,
@@ -164,6 +164,11 @@ namespace netDxf.Tables
                 FrontClippingPlane = this.frontClippingPlane,
                 BackClippingPlane = this.backClippingPlane
             };
+
+            foreach (XData data in this.XData.Values)
+                copy.XData.Add((XData)data.Clone());
+
+            return copy;
         }
 
         /// <summary>

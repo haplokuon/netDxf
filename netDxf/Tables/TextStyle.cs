@@ -216,9 +216,9 @@ namespace netDxf.Tables
                 else
                 {
                     if (string.IsNullOrEmpty(this.file))
-                        throw new ArgumentNullException(nameof(this.file), "The Big Font is only applicable for SHX Asian fonts.");
+                        throw new NullReferenceException("The Big Font is only applicable for SHX Asian fonts.");
                     if (!Path.GetExtension(this.file).Equals(".SHX", StringComparison.InvariantCultureIgnoreCase))
-                        throw new ArgumentException("The Big Font is only applicable for SHX Asian fonts.", nameof(this.file));
+                        throw new NullReferenceException("The Big Font is only applicable for SHX Asian fonts.");
                     if(!Path.GetExtension(value).Equals(".SHX", StringComparison.InvariantCultureIgnoreCase))
                         throw new ArgumentException("The Big Font is only applicable for SHX Asian fonts.", nameof(value));
                     this.bigFont = value;
@@ -263,7 +263,10 @@ namespace netDxf.Tables
         /// <summary>
         /// Gets if the font used is a true type.
         /// </summary>
-        /// <remarks>It will not only return false for SHX fonts but also if the font file has not been found.</remarks>
+        /// <remarks>
+        /// It will not only return false for SHX fonts but also if the font file has not been found,
+        /// this is applicable to true type fonts not registered in the system.
+        /// </remarks>
         public bool IsTrueType
         {
             get { return !string.IsNullOrEmpty(this.FontFamilyName); }
@@ -389,9 +392,11 @@ namespace netDxf.Tables
         /// <returns>A new TextStyle that is a copy of this instance.</returns>
         public override TableObject Clone(string newName)
         {
+            TextStyle copy;
+
             if (string.IsNullOrEmpty(this.file))
             {
-                return new TextStyle(newName, this.fontFamilyName, this.fontStyle)
+                copy = new TextStyle(newName, this.fontFamilyName, this.fontStyle)
                 {
                     Height = this.height,
                     IsBackward = this.isBackward,
@@ -401,16 +406,23 @@ namespace netDxf.Tables
                     WidthFactor = this.widthFactor
                 };
             }
-
-            return new TextStyle(newName, this.file)
+            else
             {
-                Height = this.height,
-                IsBackward = this.isBackward,
-                IsUpsideDown = this.isUpsideDown,
-                IsVertical = this.isVertical,
-                ObliqueAngle = this.obliqueAngle,
-                WidthFactor = this.widthFactor
-            };
+                copy = new TextStyle(newName, this.file)
+                {
+                    Height = this.height,
+                    IsBackward = this.isBackward,
+                    IsUpsideDown = this.isUpsideDown,
+                    IsVertical = this.isVertical,
+                    ObliqueAngle = this.obliqueAngle,
+                    WidthFactor = this.widthFactor
+                };
+            }
+            
+            foreach (XData data in this.XData.Values)
+                copy.XData.Add((XData)data.Clone());
+
+            return copy;
         }
 
         /// <summary>

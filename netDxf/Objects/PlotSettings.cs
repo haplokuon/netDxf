@@ -1,7 +1,7 @@
-﻿#region netDxf library, Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+﻿#region netDxf library, Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
 
 //                        netDxf library
-// Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -38,21 +38,24 @@ namespace netDxf.Objects
         private string viewName;
         private string currentStyleSheet;
 
-        private double left;
-        private double bottom;
-        private double right;
-        private double top;
-
+        private PaperMargin paperMargin;
         private Vector2 paperSize;
         private Vector2 origin;
         private Vector2 windowUpRight;
         private Vector2 windowBottomLeft;
 
+        private bool scaleToFit ;
         private double numeratorScale;
         private double denominatorScale;
         private PlotFlags flags;
+        private PlotType plotType;
+
         private PlotPaperUnits paperUnits;
         private PlotRotation rotation;
+
+        private ShadePlotMode shadePlotMode;
+        private ShadePlotResolutionMode shadePlotResolutionMode;
+        private short shadePlotDPI;
         private Vector2 paperImageOrigin;
 
         #endregion
@@ -60,7 +63,7 @@ namespace netDxf.Objects
         #region constructors
 
         /// <summary>
-        /// Initializes a new plot settings.
+        /// Initializes a new instance of <c>PlotSettings</c>.
         /// </summary>
         public PlotSettings()
         {
@@ -70,22 +73,26 @@ namespace netDxf.Objects
             this.viewName = string.Empty;
             this.currentStyleSheet = string.Empty;
 
-            this.left = 7.5;
-            this.bottom = 20.0;
-            this.right = 7.5;
-            this.top = 20.0;
+            this.paperMargin = new PaperMargin(7.5, 20.0, 7.5, 20.0);
 
             this.paperSize = new Vector2(210.0, 297.0);
             this.origin = Vector2.Zero;
             this.windowUpRight = Vector2.Zero;
             this.windowBottomLeft = Vector2.Zero;
 
+            this.scaleToFit = true;
             this.numeratorScale = 1.0;
             this.denominatorScale = 1.0;
             this.flags = PlotFlags.DrawViewportsFirst | PlotFlags.PrintLineweights | PlotFlags.PlotPlotStyles | PlotFlags.UseStandardScale;
+            this.plotType = PlotType.DrawingExtents;
 
             this.paperUnits = PlotPaperUnits.Milimeters;
             this.rotation = PlotRotation.Degrees90;
+
+            this.shadePlotMode = ShadePlotMode.AsDisplayed;
+            this.shadePlotResolutionMode = ShadePlotResolutionMode.Normal;
+            this.shadePlotDPI = 300;
+            this.paperImageOrigin = Vector2.Zero;
         }
 
         #endregion
@@ -138,39 +145,12 @@ namespace netDxf.Objects
         }
 
         /// <summary>
-        /// Gets or set the size, in millimeters, of unprintable margin on left side of paper.
+        /// Gets or set the size, in millimeters, of unprintable margins of paper.
         /// </summary>
-        public double LeftMargin
+        public PaperMargin PaperMargin
         {
-            get { return this.left; }
-            set { this.left = value; }
-        }
-
-        /// <summary>
-        /// Gets or set the size, in millimeters, of unprintable margin on bottom side of paper.
-        /// </summary>
-        public double BottomMargin
-        {
-            get { return this.bottom; }
-            set { this.bottom = value; }
-        }
-
-        /// <summary>
-        /// Gets or set the size, in millimeters, of unprintable margin on right side of paper.
-        /// </summary>
-        public double RightMargin
-        {
-            get { return this.right; }
-            set { this.right = value; }
-        }
-
-        /// <summary>
-        /// Gets or set the size, in millimeters, of unprintable margin on top side of paper.
-        /// </summary>
-        public double TopMargin
-        {
-            get { return this.top; }
-            set { this.top = value; }
+            get { return this.paperMargin; }
+            set { this.paperMargin = value; }
         }
 
         /// <summary>
@@ -210,21 +190,54 @@ namespace netDxf.Objects
         }
 
         /// <summary>
-        /// Gets or sets the numerator of custom print scale: real world (paper) units
+        /// Gets or sets if the plot scale will be automatically computed show the drawing fits the media.
         /// </summary>
-        public double PrintScaleNumerator
+        /// <remarks>
+        /// If <c>ScaleToFit</c> is set to false the values specified by <c>PrintScaleNumerator</c> and <c>PrintScaleDenomiator</c> will be used.
+        /// </remarks>
+        public bool ScaleToFit
         {
-            get { return this.numeratorScale; }
-            set { this.numeratorScale = value; }
+            get { return this.scaleToFit; }
+            set { this.scaleToFit = value; }
         }
 
         /// <summary>
-        /// Gets or sets the denominator of custom print scale: real world (paper) units
+        /// Gets or sets the numerator of custom print scale: real world paper units.
+        /// </summary>
+        /// <remarks>
+        /// The paper units used are specified by the <c>PaperUnits</c> value.
+        /// </remarks>
+        public double PrintScaleNumerator
+        {
+            get { return this.numeratorScale; }
+            set
+            {
+                if(value <= 0.0)
+                    throw new ArgumentOutOfRangeException(nameof(value), value, "The print scale numerator must be a number greater than zero.");
+                this.numeratorScale = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the denominator of custom print scale: drawing units.
         /// </summary>
         public double PrintScaleDenominator
         {
             get { return this.denominatorScale; }
-            set { this.denominatorScale = value; }
+            set
+            {
+                if (value <= 0.0)
+                    throw new ArgumentOutOfRangeException(nameof(value), value, "The print scale denominator must be a number greater than zero.");
+                this.denominatorScale = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets the scale factor.
+        /// </summary>
+        public double PrintScale
+        {
+            get { return this.numeratorScale / this.denominatorScale; }
         }
 
         /// <summary>
@@ -237,8 +250,18 @@ namespace netDxf.Objects
         }
 
         /// <summary>
+        /// Gets or sets the portion of paper space to output to the media.
+        /// </summary>
+        public PlotType PlotType
+        {
+            get { return this.plotType; }
+            set { this.plotType = value; }
+        }
+
+        /// <summary>
         /// Gets or sets the paper units.
         /// </summary>
+        /// <remarks>This value is only applicable to the scale parameter <c>PrintScaleNumerator</c>.</remarks>
         public PlotPaperUnits PaperUnits
         {
             get { return this.paperUnits; }
@@ -255,11 +278,38 @@ namespace netDxf.Objects
         }
 
         /// <summary>
-        /// Gets the scale factor.
+        /// Gets or sets the shade plot mode.
         /// </summary>
-        public double PrintScale
+        public ShadePlotMode ShadePlotMode
         {
-            get { return this.numeratorScale/this.denominatorScale; }
+            get { return this.shadePlotMode; }
+            set { this.shadePlotMode = value; }
+        }
+
+        /// <summary>
+        /// Gets or sets the plot resolution mode.
+        /// </summary>
+        /// <remarks>
+        /// if the <c>ShadePlotResolutionMode</c> is set to Custom the value specified by the <c>ShadPloDPI</c> will be used.
+        /// </remarks>
+        public ShadePlotResolutionMode ShadePlotResolutionMode
+        {
+            get { return this.shadePlotResolutionMode; }
+            set { this.shadePlotResolutionMode = value; }
+        }
+
+        /// <summary>
+        /// Gets or sets the shade plot custom DPI.
+        /// </summary>
+        public short ShadePlotDPI
+        {
+            get { return this.shadePlotDPI; }
+            set
+            {
+                if(value <100 || value > 32767)
+                    throw new ArgumentOutOfRangeException(nameof(value), value, "The valid shade plot DPI values range from 100 to 23767.");
+                this.shadePlotDPI = value;
+            }
         }
 
         /// <summary>
@@ -288,19 +338,22 @@ namespace netDxf.Objects
                 PaperSizeName = this.paperSizeName,
                 ViewName = this.viewName,
                 CurrentStyleSheet = this.currentStyleSheet,
-                LeftMargin = this.left,
-                BottomMargin = this.bottom,
-                RightMargin = this.right,
-                TopMargin = this.top,
+                PaperMargin = this.PaperMargin,
                 PaperSize = this.paperSize,
                 Origin = this.origin,
                 WindowUpRight = this.windowUpRight,
                 WindowBottomLeft = this.windowBottomLeft,
+                ScaleToFit = this.scaleToFit,
                 PrintScaleNumerator = this.numeratorScale,
                 PrintScaleDenominator = this.denominatorScale,
                 Flags = this.flags,
+                PlotType = this.plotType,
                 PaperUnits = this.paperUnits,
-                PaperRotation = this.rotation
+                PaperRotation = this.rotation,
+                ShadePlotMode = this.shadePlotMode,
+                ShadePlotResolutionMode = this.shadePlotResolutionMode,
+                ShadePlotDPI = this.shadePlotDPI,
+                PaperImageOrigin = this.paperImageOrigin
             };
         }
 

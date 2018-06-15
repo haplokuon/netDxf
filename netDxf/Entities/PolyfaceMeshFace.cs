@@ -37,7 +37,8 @@ namespace netDxf.Entities
     /// The maximum number of vertexes per face is 4.
     /// </remarks>
     public class PolyfaceMeshFace :
-        DxfObject, ICloneable
+        DxfObject,
+        ICloneable
     {
         #region private fields
 
@@ -85,6 +86,10 @@ namespace netDxf.Entities
         {
             get { return this.vertexIndexes; }
         }
+
+        #endregion
+
+        #region internal properties
 
         /// <summary>
         /// Gets the vertex type.

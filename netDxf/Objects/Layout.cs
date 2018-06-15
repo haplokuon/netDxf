@@ -283,7 +283,7 @@ namespace netDxf.Objects
             if (this.Name == ModelSpaceName || newName == ModelSpaceName)
                 throw new NotSupportedException("The Model layout cannot be cloned.");
 
-            return new Layout(newName, null, (PlotSettings) this.plot.Clone())
+            Layout copy = new Layout(newName, null, (PlotSettings) this.plot.Clone())
             {
                 TabOrder = this.tabOrder,
                 MinLimit = this.minLimit,
@@ -297,6 +297,11 @@ namespace netDxf.Objects
                 UcsYAxis = this.yAxis,
                 Viewport = (Viewport) this.viewport.Clone()
             };
+
+            foreach (XData data in this.XData.Values)
+                copy.XData.Add((XData)data.Clone());
+
+            return copy;
         }
 
         /// <summary>

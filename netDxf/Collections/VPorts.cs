@@ -84,10 +84,10 @@ namespace netDxf.Collections
             //if (assignHandle || string.IsNullOrEmpty(vport.Handle))
             //    this.document.NumHandles = vport.AsignHandle(this.document.NumHandles);
 
-            //this.document.AddedObjects.Add(vport.Handle, vport);
             //this.list.Add(vport.Name, vport);
             //this.references.Add(vport.Name, new List<DxfObject>());
             //vport.Owner = this;
+            //this.document.AddedObjects.Add(vport.Handle, vport);
             //return vport;
         }
 

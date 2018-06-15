@@ -226,7 +226,7 @@ namespace netDxf.Tables
         /// <returns>A new Layer that is a copy of this instance.</returns>
         public override TableObject Clone(string newName)
         {
-            return new Layer(newName)
+            Layer copy = new Layer(newName)
             {
                 Color = (AciColor) this.Color.Clone(),
                 IsVisible = this.isVisible,
@@ -237,6 +237,11 @@ namespace netDxf.Tables
                 Lineweight = this.Lineweight,
                 Transparency = (Transparency) this.Transparency.Clone()
             };
+
+            foreach (XData data in this.XData.Values)
+                copy.XData.Add((XData)data.Clone());
+
+            return copy;
         }
 
         /// <summary>

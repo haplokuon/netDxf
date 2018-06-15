@@ -27,7 +27,7 @@ using netDxf.Tables;
 namespace netDxf
 {
     /// <summary>
-    /// Represents the extended data information of an entity.
+    /// Represents the extended data information.
     /// </summary>
     /// <remarks>
     /// Do not store your own data under the ACAD application registry it is used by some entities to store special data,

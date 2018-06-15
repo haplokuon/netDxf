@@ -5,7 +5,7 @@ netDxf is a .net library programmed in C# to read and write AutoCAD dxf files. I
 
 The library is easy to use and I tried to keep the procedures as straightforward as possible, for example you will not need to fill up the table section with layers, styles or line type definitions. The DxfDocument will take care of that every time a new item is added.
 
-If you need more information, you can find the official dxf documentation [here](https://help.autodesk.com/view/OARX/2019/ENU/?guid=GUID-235B22E0-A567-4CF6-92D3-38A2306D73F3)
+If you need more information, you can find the official dxf documentation [here](https://help.autodesk.com/view/OARX/2019/ENU/?guid=GUID-235B22E0-A567-4CF6-92D3-38A2306D73F3).
 
 Code example:
 
@@ -72,7 +72,8 @@ Stable. See [changelog.txt](https://github.com/haplokuon/netDxf/blob/master/doc/
 * Wipeout
 * XLine (aka construction line)
 
-All entities can be grouped and may contain extended data information.
+All entities can be grouped.
+All entities and table objects may contain extended data information.
 AutoCad Table entities will be imported as Inserts (block references).
 Both simple and complex line types are supported.
-The libray will never be able to read some entities like Regions and 3dSolids, since they depend on undocumented proprietary data.
+The library will never be able to read some entities like Regions and 3dSolids, since they depend on undocumented proprietary data.

@@ -591,6 +591,40 @@ namespace netDxf.Entities
 
         #region public methods
 
+        public static Block Build(Dimension dim, string name)
+        {
+            Block block;
+            switch (dim.DimensionType)
+            {
+                case DimensionType.Linear:
+                    block = Build((LinearDimension)dim, name);
+                    break;
+                case DimensionType.Aligned:
+                    block = Build((AlignedDimension)dim, name);
+                    break;
+                case DimensionType.Angular:
+                    block = Build((Angular2LineDimension)dim, name);
+                    break;
+                case DimensionType.Angular3Point:
+                    block = Build((Angular3PointDimension)dim, name);
+                    break;
+                case DimensionType.Diameter:
+                    block = Build((DiametricDimension)dim, name);
+                    break;
+                case DimensionType.Radius:
+                    block = Build((RadialDimension)dim, name);
+                    break;
+                case DimensionType.Ordinate:
+                    block = Build((OrdinateDimension)dim, name);
+                    break;
+                default:
+                    block = null;
+                    break;
+            }
+
+            return block;
+        }
+
         public static Block Build(LinearDimension dim, string name)
         {
             double measure = dim.Measurement;
@@ -881,25 +915,6 @@ namespace netDxf.Entities
                 gap *= -1;
             }
 
-            #region MText build as the Linear dimensions, two MTexts if the code "\X" is present
-
-            //List<string> texts = FormatDimensionText(measure, dim.DimensionType, dim.UserText, style, dim.Owner.Record.Layout);
-            //MText mText = DimensionText(Vector2.Polar(midDim, gap, midRot), MTextAttachmentPoint.BottomCenter, textRot, texts[0], style);
-            //if (mText != null)
-            //    entities.Add(mText);
-
-            //// there might be an additional text if the code \X has been used in the dimension UserText 
-            //// this additional text appears under the dimension line
-            //if (texts.Count > 1)
-            //{
-            //    string text = texts[1];
-            //    MText mText2 = DimensionText(Vector2.Polar(midDim, -gap, midRot), MTextAttachmentPoint.TopCenter, textRot, text, style);
-            //    if (mText2 != null)
-            //        entities.Add(mText2);
-            //}
-
-            #endregion
-
             List<string> texts = FormatDimensionText(measure, dim.DimensionType, dim.UserText, style, dim.Owner);
             string dimText;
             Vector2 position;
@@ -914,7 +929,7 @@ namespace netDxf.Entities
             {
                 position = Vector2.Polar(midDim, gap, midRot);
                 dimText = texts[0];
-                attachmentPoint = MTextAttachmentPoint.TopCenter;
+                attachmentPoint = MTextAttachmentPoint.BottomCenter;
             }
             MText mText = DimensionText(position, attachmentPoint, textRot, dimText, style);
             if (mText != null)
@@ -995,25 +1010,6 @@ namespace netDxf.Entities
                 gap *= -1;
             }
 
-            #region MText build as the Linear dimensions, two MTexts if the code "\X" is present
-
-            //List<string> texts = FormatDimensionText(measure, dim.DimensionType, dim.UserText, style, dim.Owner.Record.Layout);
-            //MText mText = DimensionText(Vector2.Polar(midDim, gap, midRot), MTextAttachmentPoint.BottomCenter, textRot, texts[0], style);
-            //if (mText != null)
-            //    entities.Add(mText);
-
-            //// there might be an additional text if the code \X has been used in the dimension UserText 
-            //// this additional text appears under the dimension line
-            //if (texts.Count > 1)
-            //{
-            //    string text = texts[1];
-            //    MText mText2 = DimensionText(Vector2.Polar(midDim, -gap, midRot), MTextAttachmentPoint.TopCenter, textRot, text, style);
-            //    if (mText2 != null)
-            //        entities.Add(mText2);
-            //}
-
-            #endregion
-
             List<string> texts = FormatDimensionText(measure, dim.DimensionType, dim.UserText, style, dim.Owner);
             string dimText;
             Vector2 position;
@@ -1028,7 +1024,7 @@ namespace netDxf.Entities
             {
                 position = Vector2.Polar(midDim, gap, midRot);
                 dimText = texts[0];
-                attachmentPoint = MTextAttachmentPoint.TopCenter;
+                attachmentPoint = MTextAttachmentPoint.BottomCenter;
             }
             MText mText = DimensionText(position, attachmentPoint, textRot, dimText, style);
             if (mText != null)

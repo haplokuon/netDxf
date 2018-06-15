@@ -956,6 +956,9 @@ namespace netDxf.Tables
             if (this.dimblk2 != null)
                 copy.DimArrow2 = (Block) this.dimblk2.Clone();
 
+            foreach (XData data in this.XData.Values)
+                copy.XData.Add((XData)data.Clone());
+
             return copy;
         }
 

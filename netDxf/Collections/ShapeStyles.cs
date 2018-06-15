@@ -91,13 +91,14 @@ namespace netDxf.Collections
             if (assignHandle || string.IsNullOrEmpty(style.Handle))
                 this.Owner.NumHandles = style.AsignHandle(this.Owner.NumHandles);
 
-            this.Owner.AddedObjects.Add(style.Handle, style);
             this.list.Add(style.Name, style);
             this.references.Add(style.Name, new List<DxfObject>());
 
             style.Owner = this;
 
             style.NameChanged += this.Item_NameChanged;
+
+            this.Owner.AddedObjects.Add(style.Handle, style);
 
             return style;
         }

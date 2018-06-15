@@ -103,12 +103,12 @@ namespace netDxf.Collections
             if (assignHandle || string.IsNullOrEmpty(layout.Handle))
                 this.Owner.NumHandles = layout.AsignHandle(this.Owner.NumHandles);
 
-            this.Owner.AddedObjects.Add(layout.Handle, layout);
-
             this.list.Add(layout.Name, layout);
             this.references.Add(layout.Name, new List<DxfObject>());
 
             layout.NameChanged += this.Item_NameChanged;
+
+            this.Owner.AddedObjects.Add(layout.Handle, layout);
 
             return layout;
         }

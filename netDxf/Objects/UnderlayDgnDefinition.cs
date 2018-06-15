@@ -93,7 +93,15 @@ namespace netDxf.Objects
         /// <returns>A new UnderlayDgnDefinition that is a copy of this instance.</returns>
         public override TableObject Clone(string newName)
         {
-            return new UnderlayDgnDefinition(newName, this.File) {Layout = this.layout};
+            UnderlayDgnDefinition copy = new UnderlayDgnDefinition(newName, this.File)
+            {
+                Layout = this.layout
+            };
+
+            foreach (XData data in this.XData.Values)
+                copy.XData.Add((XData)data.Clone());
+
+            return copy;
         }
 
         /// <summary>

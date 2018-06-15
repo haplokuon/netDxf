@@ -608,10 +608,14 @@ namespace netDxf.Tables
         {
             List<LinetypeSegment> items = new List<LinetypeSegment>(this.segments.Count);
             foreach (LinetypeSegment segment in this.segments)
-            {
                 items.Add((LinetypeSegment)segment.Clone());
-            }
-            return new Linetype(newName, items, this.description);
+
+            Linetype copy = new Linetype(newName, items, this.description);
+
+            foreach (XData data in this.XData.Values)
+                copy.XData.Add((XData)data.Clone());
+
+            return copy;
         }
 
         /// <summary>

@@ -38,7 +38,7 @@ namespace netDxf
     {
         #region private fields
 
-        private short value;
+        private short transparency;
 
         #endregion
 
@@ -49,7 +49,7 @@ namespace netDxf
         /// </summary>
         public static Transparency ByLayer
         {
-            get { return new Transparency {value = -1}; }
+            get { return new Transparency {transparency = -1}; }
         }
 
         /// <summary>
@@ -57,7 +57,7 @@ namespace netDxf
         /// </summary>
         public static Transparency ByBlock
         {
-            get { return new Transparency {value = 100}; }
+            get { return new Transparency {transparency = 100}; }
         }
 
         #endregion
@@ -69,7 +69,7 @@ namespace netDxf
         /// </summary>
         public Transparency()
         {
-            this.value = -1;
+            this.transparency = -1;
         }
 
         /// <summary>
@@ -83,7 +83,7 @@ namespace netDxf
         {
             if (value < 0 || value > 90)
                 throw new ArgumentOutOfRangeException(nameof(value), value, "Accepted transparency values range from 0 to 90.");
-            this.value = value;
+            this.transparency = value;
         }
 
         #endregion
@@ -95,7 +95,7 @@ namespace netDxf
         /// </summary>
         public bool IsByLayer
         {
-            get { return this.value == -1; }
+            get { return this.transparency == -1; }
         }
 
         /// <summary>
@@ -103,7 +103,7 @@ namespace netDxf
         /// </summary>
         public bool IsByBlock
         {
-            get { return this.value == 100; }
+            get { return this.transparency == 100; }
         }
 
         /// <summary>
@@ -114,12 +114,12 @@ namespace netDxf
         /// </remarks>
         public short Value
         {
-            get { return this.value; }
+            get { return this.transparency; }
             set
             {
                 if (value < 0 || value > 90)
                     throw new ArgumentOutOfRangeException(nameof(value), value, "Accepted transparency values range from 0 to 90.");
-                this.value = value;
+                this.transparency = value;
             }
         }
 
@@ -180,7 +180,7 @@ namespace netDxf
         /// <returns>A new transparency that is a copy of this instance.</returns>
         public object Clone()
         {
-            return FromCadIndex(this.value);
+            return FromCadIndex(this.transparency);
         }
 
         #endregion
@@ -197,7 +197,7 @@ namespace netDxf
             if (other == null)
                 return false;
 
-            return other.value == this.value;
+            return other.transparency == this.transparency;
         }
 
         #endregion
@@ -210,12 +210,12 @@ namespace netDxf
         /// <returns>The string representation.</returns>
         public override string ToString()
         {
-            if (this.value == -1)
+            if (this.transparency == -1)
                 return "ByLayer";
-            if (this.value == 100)
+            if (this.transparency == 100)
                 return "ByBlock";
 
-            return this.value.ToString(CultureInfo.CurrentCulture);
+            return this.transparency.ToString(CultureInfo.CurrentCulture);
         }
 
         #endregion

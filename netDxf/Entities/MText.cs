@@ -116,7 +116,7 @@ namespace netDxf.Entities
         private MTextDrawingDirection drawingDirection;
         private MTextAttachmentPoint attachmentPoint;
         private TextStyle style;
-        private string value;
+        private string text;
 
         #endregion
 
@@ -233,7 +233,7 @@ namespace netDxf.Entities
         public MText(string text, Vector3 position, double height, double rectangleWidth, TextStyle style)
             : base(EntityType.MText, DxfObjectCode.MText)
         {
-            this.value = text;
+            this.text = text;
             this.position = position;
             this.attachmentPoint = MTextAttachmentPoint.TopLeft;
             if (style == null)
@@ -241,7 +241,7 @@ namespace netDxf.Entities
             this.style = style;
             this.rectangleWidth = rectangleWidth;
             if (height <= 0.0)
-                throw new ArgumentOutOfRangeException(nameof(height), this.value, "The MText height must be greater than zero.");
+                throw new ArgumentOutOfRangeException(nameof(height), this.text, "The MText height must be greater than zero.");
             this.height = height;
             this.lineSpacing = 1.0;
             this.paragraphHeightFactor = 1.0;
@@ -385,8 +385,8 @@ namespace netDxf.Entities
         /// </summary>
         public string Value
         {
-            get { return this.value; }
-            set { this.value = value; }
+            get { return this.text; }
+            set { this.text = value; }
         }
 
         #endregion
@@ -396,23 +396,23 @@ namespace netDxf.Entities
         /// <summary>
         /// Adds the text to the existing paragraph. 
         /// </summary>
-        /// <param name="text">Text string.</param>
-        public void Write(string text)
+        /// <param name="txt">Text string.</param>
+        public void Write(string txt)
         {
-            this.Write(text, null);
+            this.Write(txt, null);
         }
 
         /// <summary>
         /// Adds the text to the existing paragraph. 
         /// </summary>
-        /// <param name="text">Text string.</param>
+        /// <param name="txt">Text string.</param>
         /// <param name="options">Text formatting options.</param>
-        public void Write(string text, MTextFormattingOptions options)
+        public void Write(string txt, MTextFormattingOptions options)
         {
             if (options == null)
-                this.value += text;
+                this.text += txt;
             else
-                this.value += options.FormatText(text);
+                this.text += options.FormatText(txt);
         }
 
         /// <summary>
@@ -421,9 +421,9 @@ namespace netDxf.Entities
         public void EndParagraph()
         {
             if (!MathHelper.IsOne(this.paragraphHeightFactor))
-                this.value += "{\\H" + this.paragraphHeightFactor + "x;}\\P";
+                this.text += "{\\H" + this.paragraphHeightFactor + "x;}\\P";
             else
-                this.value += "\\P";
+                this.text += "\\P";
         }
 
         /// <summary>
@@ -433,17 +433,17 @@ namespace netDxf.Entities
         /// <returns>MText text value without the formatting codes.</returns>
         public string PlainText()
         {
-            if (string.IsNullOrEmpty(this.value))
+            if (string.IsNullOrEmpty(this.text))
                 return string.Empty;
 
-            string text = this.value;
+            string txt = this.text;
 
             //text = text.Replace("%%c", "Ø");
             //text = text.Replace("%%d", "°");
             //text = text.Replace("%%p", "±");
 
             StringBuilder rawText = new StringBuilder();
-            CharEnumerator chars = text.GetEnumerator();
+            CharEnumerator chars = txt.GetEnumerator();
 
             while (chars.MoveNext())
             {
@@ -519,7 +519,7 @@ namespace netDxf.Entities
                 RectangleWidth = this.rectangleWidth,
                 AttachmentPoint = this.attachmentPoint,
                 Style = (TextStyle) this.style.Clone(),
-                Value = this.value
+                Value = this.text
             };
 
             foreach (XData data in this.XData.Values)

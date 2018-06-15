@@ -72,7 +72,6 @@ namespace netDxf.Collections
             if (assignHandle || string.IsNullOrEmpty(layer.Handle))
                 this.Owner.NumHandles = layer.AsignHandle(this.Owner.NumHandles);
 
-            this.Owner.AddedObjects.Add(layer.Handle, layer);
             this.list.Add(layer.Name, layer);
             this.references.Add(layer.Name, new List<DxfObject>());
             layer.Linetype = this.Owner.Linetypes.Add(layer.Linetype);
@@ -82,6 +81,8 @@ namespace netDxf.Collections
 
             layer.NameChanged += this.Item_NameChanged;
             layer.LinetypeChanged += this.LayerLinetypeChanged;
+
+            this.Owner.AddedObjects.Add(layer.Handle, layer);
 
             return layer;
         }

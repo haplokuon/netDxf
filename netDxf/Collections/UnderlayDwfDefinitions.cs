@@ -73,13 +73,14 @@ namespace netDxf.Collections
             if (assignHandle || string.IsNullOrEmpty(underlayDwfDefinition.Handle))
                 this.Owner.NumHandles = underlayDwfDefinition.AsignHandle(this.Owner.NumHandles);
 
-            this.Owner.AddedObjects.Add(underlayDwfDefinition.Handle, underlayDwfDefinition);
             this.list.Add(underlayDwfDefinition.Name, underlayDwfDefinition);
             this.references.Add(underlayDwfDefinition.Name, new List<DxfObject>());
 
             underlayDwfDefinition.Owner = this;
 
             underlayDwfDefinition.NameChanged += this.Item_NameChanged;
+
+            this.Owner.AddedObjects.Add(underlayDwfDefinition.Handle, underlayDwfDefinition);
 
             return underlayDwfDefinition;
         }

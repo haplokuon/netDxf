@@ -72,12 +72,14 @@ namespace netDxf.Collections
             if (assignHandle || string.IsNullOrEmpty(appReg.Handle))
                 this.Owner.NumHandles = appReg.AsignHandle(this.Owner.NumHandles);
 
-            this.Owner.AddedObjects.Add(appReg.Handle, appReg);
             this.list.Add(appReg.Name, appReg);
             this.references.Add(appReg.Name, new List<DxfObject>());
+
             appReg.Owner = this;
 
             appReg.NameChanged += this.Item_NameChanged;
+
+            this.Owner.AddedObjects.Add(appReg.Handle, appReg);
 
             return appReg;
         }

@@ -222,7 +222,7 @@ namespace netDxf.Tables
         /// <returns>A new UCS that is a copy of this instance.</returns>
         public override TableObject Clone(string newName)
         {
-            return new UCS(newName)
+            UCS copy = new UCS(newName)
             {
                 Origin = this.origin,
                 xAxis = this.xAxis,
@@ -230,6 +230,11 @@ namespace netDxf.Tables
                 zAxis = this.zAxis,
                 Elevation = this.elevation
             };
+
+            foreach (XData data in this.XData.Values)
+                copy.XData.Add((XData)data.Clone());
+
+            return copy;
         }
 
         /// <summary>

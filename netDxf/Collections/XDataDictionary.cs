@@ -36,12 +36,7 @@ namespace netDxf.Collections
         #region delegates and events
 
         public delegate void AddAppRegEventHandler(XDataDictionary sender, ObservableCollectionEventArgs<ApplicationRegistry> e);
-
-        public delegate void RemoveAppRegEventHandler(XDataDictionary sender, ObservableCollectionEventArgs<ApplicationRegistry> e);
-
         public event AddAppRegEventHandler AddAppReg;
-        public event RemoveAppRegEventHandler RemoveAppReg;
-
         private void OnAddAppRegEvent(ApplicationRegistry item)
         {
             AddAppRegEventHandler ae = this.AddAppReg;
@@ -49,6 +44,8 @@ namespace netDxf.Collections
                 ae(this, new ObservableCollectionEventArgs<ApplicationRegistry>(item));
         }
 
+        public delegate void RemoveAppRegEventHandler(XDataDictionary sender, ObservableCollectionEventArgs<ApplicationRegistry> e);
+        public event RemoveAppRegEventHandler RemoveAppReg;
         private void OnRemoveAppRegEvent(ApplicationRegistry item)
         {
             RemoveAppRegEventHandler ae = this.RemoveAppReg;

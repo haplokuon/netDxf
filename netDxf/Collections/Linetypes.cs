@@ -192,7 +192,6 @@ namespace netDxf.Collections
             }
 
             this.list.Add(linetype.Name, linetype);
-            this.Owner.AddedObjects.Add(linetype.Handle, linetype);
             this.references.Add(linetype.Name, new List<DxfObject>());
 
             linetype.Owner = this;
@@ -201,6 +200,8 @@ namespace netDxf.Collections
             linetype.LinetypeSegmentAdded += this.Linetype_SegmentAdded;
             linetype.LinetypeSegmentRemoved += this.Linetype_SegmentRemoved;
             linetype.LinetypeTextSegmentStyleChanged += this.Linetype_TextSegmentStyleChanged;
+
+            this.Owner.AddedObjects.Add(linetype.Handle, linetype);
 
             return linetype;
         }

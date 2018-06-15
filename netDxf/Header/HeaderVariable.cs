@@ -1,7 +1,7 @@
-﻿#region netDxf library, Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+﻿#region netDxf library, Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
 
 //                        netDxf library
-// Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -30,7 +30,7 @@ namespace netDxf.Header
         #region private fields
 
         private readonly string name;
-        private object value;
+        private object variable;
 
         #endregion
 
@@ -39,7 +39,7 @@ namespace netDxf.Header
         public HeaderVariable(string name, object value)
         {
             this.name = name;
-            this.value = value;
+            this.variable = value;
         }
 
         #endregion
@@ -59,8 +59,8 @@ namespace netDxf.Header
         /// </summary>
         public object Value
         {
-            get { return this.value; }
-            set { this.value = value; }
+            get { return this.variable; }
+            set { this.variable = value; }
         }
 
         #endregion
@@ -69,7 +69,7 @@ namespace netDxf.Header
 
         public override string ToString()
         {
-            return string.Format("{0}:{1}", this.name, this.value);
+            return string.Format("{0}:{1}", this.name, this.variable);
         }
 
         #endregion

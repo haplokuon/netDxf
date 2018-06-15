@@ -217,7 +217,7 @@ namespace netDxf.Tables
         /// <returns>A new VPort that is a copy of this instance.</returns>
         public override TableObject Clone(string newName)
         {
-            return new VPort(newName)
+            VPort copy = new VPort(newName)
             {
                 ViewCenter = this.center,
                 SnapBasePoint = this.snapBasePoint,
@@ -229,6 +229,11 @@ namespace netDxf.Tables
                 ViewAspectRatio = this.aspectRatio,
                 ShowGrid = this.showGrid
             };
+
+            foreach (XData data in this.XData.Values)
+                copy.XData.Add((XData)data.Clone());
+
+            return copy;
         }
 
         /// <summary>

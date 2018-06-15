@@ -1,7 +1,7 @@
-﻿#region netDxf library, Copyright (C) 2009-2017 Daniel Carvajal (haplokuon@gmail.com)
+﻿#region netDxf library, Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
 
 //                        netDxf library
-// Copyright (C) 2009-2017 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -20,26 +20,31 @@
 
 #endregion
 
-namespace netDxf.Entities
+namespace netDxf.Objects
 {
     /// <summary>
-    /// Drawing direction.
+    /// Defines the shade plot mode
     /// </summary>
-    public enum MTextDrawingDirection
+    public enum ShadePlotMode
     {
         /// <summary>
-        /// Left to right.
+        /// As displayed.
         /// </summary>
-        LeftToRight = 1,
+        AsDisplayed = 0,
 
         /// <summary>
-        /// Top to bottom.
+        /// Wireframe.
         /// </summary>
-        TopToBottom = 3,
+        Wireframe = 1,
 
         /// <summary>
-        /// By style (the flow direction is inherited from the associated text style).
+        /// Hidden.
         /// </summary>
-        ByStyle = 5
+        Hidden = 2,
+
+        /// <summary>
+        /// Rendered.
+        /// </summary>
+        Rendered = 3
     }
 }

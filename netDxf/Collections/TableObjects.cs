@@ -145,7 +145,10 @@ namespace netDxf.Collections
         /// </summary>
         /// <param name="name">Table object name.</param>
         /// <returns>The list of DxfObjects that reference the specified table object.</returns>
-        /// <remarks>If there is no table object with the specified name in the list the method an empty list.</remarks>
+        /// <remarks>
+        /// If there is no table object with the specified name in the list the method an empty list.<br />
+        /// The Groups collection method GetReferences will always return an empty list since there are no DxfObjects that references them.
+        /// </remarks>
         public List<DxfObject> GetReferences(string name)
         {
             if (!this.Contains(name))
@@ -158,7 +161,10 @@ namespace netDxf.Collections
         /// </summary>
         /// <param name="item">Table object.</param>
         /// <returns>The list of DxfObjects that reference the specified table object.</returns>
-        /// <remarks>If there is no specified table object in the list the method will return an empty list.</remarks>
+        /// <remarks>
+        /// If there is no table object with the specified name in the list the method an empty list.<br />
+        /// The Groups collection method GetReferences will always return an empty list since there are no DxfObjects that references them.
+        /// </remarks>
         public List<DxfObject> GetReferences(T item)
         {
             if (item == null)

@@ -129,7 +129,7 @@ namespace netDxf.Entities
             set { this.firstPoint = value; }
         }
 
-        internal Vector3 SecondPoint
+        public Vector3 SecondPoint
         {
             get { return this.secondPoint; }
             set { this.secondPoint = value; }

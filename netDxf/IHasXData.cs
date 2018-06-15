@@ -1,7 +1,7 @@
-﻿#region netDxf library, Copyright (C) 2009-2017 Daniel Carvajal (haplokuon@gmail.com)
+﻿#region netDxf library, Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
 
 //                        netDxf library
-// Copyright (C) 2009-2017 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -20,26 +20,25 @@
 
 #endregion
 
-namespace netDxf.Entities
+using netDxf.Collections;
+using netDxf.Tables;
+
+namespace netDxf
 {
+    public delegate void XDataAddAppRegEventHandler(IHasXData sender, ObservableCollectionEventArgs<ApplicationRegistry> e);
+    public delegate void XDataRemoveAppRegEventHandler(IHasXData sender, ObservableCollectionEventArgs<ApplicationRegistry> e);
+
     /// <summary>
-    /// Drawing direction.
+    /// Supports <see cref="DxfObject">DxfObjects</see> that contain extended data information.
     /// </summary>
-    public enum MTextDrawingDirection
+    public interface IHasXData
     {
-        /// <summary>
-        /// Left to right.
-        /// </summary>
-        LeftToRight = 1,
+        event XDataAddAppRegEventHandler XDataAddAppReg;
+        event XDataRemoveAppRegEventHandler XDataRemoveAppReg;
 
         /// <summary>
-        /// Top to bottom.
+        /// Gets the object <see cref="XDataDictionary">extended data</see>.
         /// </summary>
-        TopToBottom = 3,
-
-        /// <summary>
-        /// By style (the flow direction is inherited from the associated text style).
-        /// </summary>
-        ByStyle = 5
+        XDataDictionary XData { get; }
     }
 }

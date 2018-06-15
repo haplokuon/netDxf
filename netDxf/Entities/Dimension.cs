@@ -295,11 +295,37 @@ namespace netDxf.Entities
         /// </remarks>
         public void Update()
         {
+            //DxfDocument doc = this.Owner.Owner.Owner.Owner as DxfDocument;
+            //if (doc == null)
+            //    throw new NullReferenceException("The dimension entity must belong to a document to be able to update or create the block that represent the actual object.");
+
+            //string name;
+            //if (this.block == null)
+            //    name = "*D" + ++doc.DimensionBlocksIndex;
+            //else
+            //    name = this.block.Name;
+
+            //Block newBlock = this.BuildBlock(name);
+            //this.block = this.OnDimensionBlockChangedEvent(this.block, newBlock);
+
             if (this.block == null)
                 return;
             Block newBlock = this.BuildBlock(this.block.Name);
             this.block = this.OnDimensionBlockChangedEvent(this.block, newBlock);
+
         }
+
+        /// <summary>
+        /// Clears the reference to the block associated with the dimension.
+        /// </summary>
+        /// <remarks>
+        /// This method only deletes the reference not the actual block from the document.
+        /// </remarks>
+        //public void ClearBlockReference()
+        //{
+        //    this.block = this.OnDimensionBlockChangedEvent(this.block, null);
+        //    //this.block = null;
+        //}
 
         #endregion
 

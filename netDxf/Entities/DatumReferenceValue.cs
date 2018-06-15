@@ -1,7 +1,7 @@
-﻿#region netDxf library, Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+﻿#region netDxf library, Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
 
 //                        netDxf library
-// Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -32,7 +32,7 @@ namespace netDxf.Entities
     {
         #region private fields
 
-        private string value;
+        private string datum;
         private ToleranceMaterialCondition materialCondition;
 
         #endregion
@@ -44,7 +44,7 @@ namespace netDxf.Entities
         /// </summary>
         public DatumReferenceValue()
         {
-            this.value = string.Empty;
+            this.datum = string.Empty;
             this.materialCondition = ToleranceMaterialCondition.None;
         }
 
@@ -55,7 +55,7 @@ namespace netDxf.Entities
         /// <param name="materialCondition">Datum material condition.</param>
         public DatumReferenceValue(string value, ToleranceMaterialCondition materialCondition)
         {
-            this.value = value;
+            this.datum = value;
             this.materialCondition = materialCondition;
         }
 
@@ -68,8 +68,8 @@ namespace netDxf.Entities
         /// </summary>
         public string Value
         {
-            get { return this.value; }
-            set { this.value = value; }
+            get { return this.datum; }
+            set { this.datum = value; }
         }
 
         /// <summary>
@@ -93,7 +93,7 @@ namespace netDxf.Entities
         {
             return new DatumReferenceValue
             {
-                Value = this.value,
+                Value = this.datum,
                 MaterialCondition = this.materialCondition
             };
         }

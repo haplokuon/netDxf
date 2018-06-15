@@ -90,6 +90,12 @@
     <Compile Include="Collections\SupportFolders.cs" />
     <Compile Include="Entities\MTextDrawingDirection.cs" />
     <Compile Include="Entities\Shape.cs" />
+    <Compile Include="IHasXData.cs" />
+    <Compile Include="IO\DxfVersionNotSupportedException.cs" />
+    <Compile Include="Objects\PaperMargin.cs" />
+    <Compile Include="Objects\PlotType.cs" />
+    <Compile Include="Objects\ShadePlotMode.cs" />
+    <Compile Include="Objects\ShadePlotResolutionMode.cs" />
     <Compile Include="Tables\FontStyle.cs" />
     <Compile Include="Tables\LinetypeSegment.cs" />
     <Compile Include="Tables\DimensionStyleOverride.cs" />

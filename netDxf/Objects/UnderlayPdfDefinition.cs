@@ -93,7 +93,15 @@ namespace netDxf.Objects
         /// <returns>A new UnderlayPdfDefinition that is a copy of this instance.</returns>
         public override TableObject Clone(string newName)
         {
-            return new UnderlayPdfDefinition(newName, this.File) {Page = this.page};
+            UnderlayPdfDefinition copy = new UnderlayPdfDefinition(newName, this.File)
+            {
+                Page = this.page
+            };
+
+            foreach (XData data in this.XData.Values)
+                copy.XData.Add((XData)data.Clone());
+
+            return copy;
         }
 
         /// <summary>

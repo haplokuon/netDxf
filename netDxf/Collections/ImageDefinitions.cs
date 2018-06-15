@@ -73,13 +73,14 @@ namespace netDxf.Collections
             if (assignHandle || string.IsNullOrEmpty(imageDefinition.Handle))
                 this.Owner.NumHandles = imageDefinition.AsignHandle(this.Owner.NumHandles);
 
-            this.Owner.AddedObjects.Add(imageDefinition.Handle, imageDefinition);
             this.list.Add(imageDefinition.Name, imageDefinition);
             this.references.Add(imageDefinition.Name, new List<DxfObject>());
 
             imageDefinition.Owner = this;
 
             imageDefinition.NameChanged += this.Item_NameChanged;
+
+            this.Owner.AddedObjects.Add(imageDefinition.Handle, imageDefinition);
 
             return imageDefinition;
         }

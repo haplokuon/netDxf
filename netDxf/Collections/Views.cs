@@ -72,13 +72,14 @@ namespace netDxf.Collections
             if (assignHandle || string.IsNullOrEmpty(view.Handle))
                 this.Owner.NumHandles = view.AsignHandle(this.Owner.NumHandles);
 
-            this.Owner.AddedObjects.Add(view.Handle, view);
             this.list.Add(view.Name, view);
             this.references.Add(view.Name, new List<DxfObject>());
 
             view.Owner = this;
 
             view.NameChanged += this.Item_NameChanged;
+
+            this.Owner.AddedObjects.Add(view.Handle, view);
 
             return view;
         }

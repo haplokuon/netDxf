@@ -57,7 +57,7 @@ namespace netDxf.Entities
         private Vector3 position;
         private double obliqueAngle;
         private TextStyle style;
-        private string value;
+        private string text;
         private double height;
         private double widthFactor;
         private double rotation;
@@ -119,7 +119,7 @@ namespace netDxf.Entities
         public Text(string text, Vector3 position, double height, TextStyle style)
             : base(EntityType.Text, DxfObjectCode.Text)
         {
-            this.value = text;
+            this.text = text;
             this.position = position;
             this.alignment = TextAlignment.BaselineLeft;
             this.Normal = Vector3.UnitZ;
@@ -127,7 +127,7 @@ namespace netDxf.Entities
                 throw new ArgumentNullException(nameof(style));
             this.style = style;
             if (height <= 0)
-                throw new ArgumentOutOfRangeException(nameof(height), this.value, "The Text height must be greater than zero.");
+                throw new ArgumentOutOfRangeException(nameof(height), this.text, "The Text height must be greater than zero.");
             this.height = height;
             this.widthFactor = style.WidthFactor;
             this.obliqueAngle = style.ObliqueAngle;
@@ -229,8 +229,8 @@ namespace netDxf.Entities
         /// </summary>
         public string Value
         {
-            get { return this.value; }
-            set { this.value = value; }
+            get { return this.text; }
+            set { this.text = value; }
         }
 
         #endregion
@@ -262,7 +262,7 @@ namespace netDxf.Entities
                 ObliqueAngle = this.obliqueAngle,
                 Alignment = this.alignment,
                 Style = (TextStyle) this.style.Clone(),
-                Value = this.value
+                Value = this.text
             };
 
             foreach (XData data in this.XData.Values)

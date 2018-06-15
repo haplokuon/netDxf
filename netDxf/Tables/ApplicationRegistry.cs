@@ -1,7 +1,7 @@
-﻿#region netDxf library, Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+﻿#region netDxf library, Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
 
 //                        netDxf library
-// Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -96,7 +96,12 @@ namespace netDxf.Tables
         /// <returns>A new ApplicationRegistry that is a copy of this instance.</returns>
         public override TableObject Clone(string newName)
         {
-            return new ApplicationRegistry(newName);
+            ApplicationRegistry copy = new ApplicationRegistry(newName);
+
+            foreach (XData data in this.XData.Values)
+                copy.XData.Add((XData)data.Clone());
+
+            return copy ;
         }
 
         /// <summary>

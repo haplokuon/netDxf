@@ -1,7 +1,7 @@
-#region netDxf library, Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+#region netDxf library, Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
 
 //                        netDxf library
-// Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -104,7 +104,7 @@ namespace netDxf.Entities
 
         private AttributeDefinition definition;
         private string tag;
-        private object value;
+        private object attValue;
         private TextStyle style;
         private Vector3 position;
         private AttributeFlags flags;
@@ -149,7 +149,7 @@ namespace netDxf.Entities
             //Attribute definition properties
             this.definition = definition;
             this.tag = definition.Tag;
-            this.value = definition.Value;
+            this.attValue = definition.Value;
             this.style = definition.Style;
             this.position = definition.Position;
             this.flags = definition.Flags;
@@ -342,8 +342,8 @@ namespace netDxf.Entities
         /// </summary>
         public object Value
         {
-            get { return this.value; }
-            set { this.value = value; }
+            get { return this.attValue; }
+            set { this.attValue = value; }
         }
 
         /// <summary>
@@ -426,7 +426,7 @@ namespace netDxf.Entities
                 Height = this.height,
                 WidthFactor = this.widthFactor,
                 ObliqueAngle = this.obliqueAngle,
-                Value = this.value,
+                Value = this.attValue,
                 Style = this.style,
                 Position = this.position,
                 Flags = this.flags,
