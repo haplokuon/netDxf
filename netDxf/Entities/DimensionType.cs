@@ -60,6 +60,6 @@ namespace netDxf.Entities
         /// <summary>
         /// Ordinate.
         /// </summary>
-        Ordinate = 6,
+        Ordinate = 6
     }
 }

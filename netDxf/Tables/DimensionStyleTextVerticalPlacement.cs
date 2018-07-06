@@ -20,64 +20,36 @@
 
 #endregion
 
-using System;
-
-namespace netDxf.Entities
+namespace netDxf.Tables
 {
     /// <summary>
-    /// Dimension type.
+    /// Controls the placement of dimension text.
     /// </summary>
-    [Flags]
-    internal enum DimensionTypeFlags
+    public enum DimensionStyleTextVerticalPlacement
     {
         /// <summary>
-        /// Rotated, horizontal, or vertical.
+        /// Centers the dimension text between the two parts of the dimension line.
         /// </summary>
-        Linear = 0,
+        Centered = 0,
 
         /// <summary>
-        /// Aligned.
+        /// Places the dimension text above the dimension line.
         /// </summary>
-        Aligned = 1,
+        Above = 1,
 
         /// <summary>
-        /// Angular 2 lines.
+        /// Places the dimension text on the side of the dimension line farthest away from the first defining point.
         /// </summary>
-        Angular = 2,
+        Outside = 2,
 
         /// <summary>
-        /// Diameter.
+        /// Places the dimension text to conform to a Japanese Industrial Standards (JIS) representation.
         /// </summary>
-        Diameter = 3,
+        JIS = 3,
 
         /// <summary>
-        /// Radius.
+        /// Places the dimension text under the dimension line.
         /// </summary>
-        Radius = 4,
-
-        /// <summary>
-        /// Angular 3 points.
-        /// </summary>
-        Angular3Point = 5,
-
-        /// <summary>
-        /// Ordinate.
-        /// </summary>
-        Ordinate = 6,
-
-        /// <summary>
-        /// Indicates that the block reference (group code 2) is referenced by this dimension only.
-        /// </summary>
-        BlockReference = 32,
-
-        /// <summary>
-        /// Ordinate type. This is a bit value (bit 7) used only with integer value 6. If set, ordinate is X-type; if not set, ordinate is Y-type.
-        /// </summary>
-        OrdinateType = 64,
-
-        /// <summary>
-        /// This is a bit value (bit 8) added to the other group 70 values if the dimension text has been positioned at a user-defined location rather than at the default location.
-        /// </summary>
-        UserTextPosition = 128
+        Below = 4
     }
 }

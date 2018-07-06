@@ -1,7 +1,7 @@
-#region netDxf library, Copyright (C) 2009-2017 Daniel Carvajal (haplokuon@gmail.com)
+#region netDxf library, Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
 
 //                        netDxf library
-// Copyright (C) 2009-2017 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -36,6 +36,7 @@ namespace netDxf
         private double x;
         private double y;
         private double z;
+        private bool isNormalized;
 
         #endregion
 
@@ -50,6 +51,7 @@ namespace netDxf
             this.x = value;
             this.y = value;
             this.z = value;
+            this.isNormalized = false;
         }
 
         /// <summary>
@@ -63,6 +65,7 @@ namespace netDxf
             this.x = x;
             this.y = y;
             this.z = z;
+            this.isNormalized = false;
         }
 
         /// <summary>
@@ -79,6 +82,7 @@ namespace netDxf
             this.x = array[0];
             this.y = array[1];
             this.z = array[2];
+            this.isNormalized = false;
         }
 
         #endregion
@@ -98,7 +102,7 @@ namespace netDxf
         /// </summary>
         public static Vector3 UnitX
         {
-            get { return new Vector3(1, 0, 0); }
+            get { return new Vector3(1, 0, 0) {isNormalized = true}; }
         }
 
         /// <summary>
@@ -106,7 +110,7 @@ namespace netDxf
         /// </summary>
         public static Vector3 UnitY
         {
-            get { return new Vector3(0, 1, 0); }
+            get { return new Vector3(0, 1, 0) {isNormalized = true}; }
         }
 
         /// <summary>
@@ -114,7 +118,7 @@ namespace netDxf
         /// </summary>
         public static Vector3 UnitZ
         {
-            get { return new Vector3(0, 0, 1); }
+            get { return new Vector3(0, 0, 1) {isNormalized = true}; }
         }
 
         /// <summary>
@@ -135,7 +139,11 @@ namespace netDxf
         public double X
         {
             get { return this.x; }
-            set { this.x = value; }
+            set
+            {
+                this.isNormalized = false;
+                this.x = value;
+            }
         }
 
         /// <summary>
@@ -144,7 +152,11 @@ namespace netDxf
         public double Y
         {
             get { return this.y; }
-            set { this.y = value; }
+            set
+            {
+                this.isNormalized = false;
+                this.y = value;
+            }
         }
 
         /// <summary>
@@ -153,7 +165,11 @@ namespace netDxf
         public double Z
         {
             get { return this.z; }
-            set { this.z = value; }
+            set
+            {
+                this.isNormalized = false;
+                this.z = value;
+            }
         }
 
         /// <summary>
@@ -178,6 +194,7 @@ namespace netDxf
             }
             set
             {
+                this.isNormalized = false;
                 switch (index)
                 {
                     case 0:
@@ -356,13 +373,15 @@ namespace netDxf
         /// <returns>A normalized vector.</returns>
         public static Vector3 Normalize(Vector3 u)
         {
+            if (u.isNormalized) return u;
+
             double mod = u.Modulus();
-            if (MathHelper.IsOne(mod))
-                return u; // the vector is already normalized
             if (MathHelper.IsZero(mod))
                 return NaN;
             double modInv = 1/mod;
-            return new Vector3(u.x*modInv, u.y*modInv, u.z*modInv);
+            Vector3 vec = new Vector3(u.x*modInv, u.y*modInv, u.z*modInv);
+            vec.isNormalized = true;
+            return vec;
         }
 
         #endregion
@@ -598,9 +617,9 @@ namespace netDxf
         /// </summary>
         public void Normalize()
         {
+            if (this.isNormalized) return;
+
             double mod = this.Modulus();
-            if (MathHelper.IsOne(mod))
-                return; // the vector is already normalized
             if (MathHelper.IsZero(mod))
                 this = NaN;
             else
@@ -610,6 +629,7 @@ namespace netDxf
                 this.y *= modInv;
                 this.z *= modInv;
             }
+            this.isNormalized = true;
         }
 
         /// <summary>

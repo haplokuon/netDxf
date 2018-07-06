@@ -679,13 +679,68 @@ namespace netDxf.IO
             this.chunk.Write(9, "$DIMADEC");
             this.chunk.Write(70, style.AngularPrecision);
 
+            this.chunk.Write(9, "$DIMALT");
+            this.chunk.Write(70, style.AlternateUnits.Enabled ? (short) 1 : (short) 0);
+
+            this.chunk.Write(9, "$DIMALTD");
+            this.chunk.Write(70, style.AlternateUnits.LengthPrecision);
+
+            this.chunk.Write(9, "$DIMALTF");
+            this.chunk.Write(40, style.AlternateUnits.Multiplier);
+
+            this.chunk.Write(9, "$DIMALTRND");
+            this.chunk.Write(40, style.AlternateUnits.Roundoff);
+
+            this.chunk.Write(9, "$DIMALTTD");
+            this.chunk.Write(70, style.Tolerances.AlternatePrecision);
+
+            this.chunk.Write(9, "$DIMALTTZ");
+            this.chunk.Write(70, GetSupressZeroesValue(
+                    style.Tolerances.AlternateSuppressLinearLeadingZeros,
+                    style.Tolerances.AlternateSuppressLinearTrailingZeros,
+                    style.Tolerances.AlternateSuppressZeroFeet,
+                    style.Tolerances.AlternateSuppressZeroInches));
+
+            this.chunk.Write(9, "$DIMALTU");
+            switch (style.AlternateUnits.LengthUnits)
+            {
+                case LinearUnitType.Scientific:
+                    this.chunk.Write(70, (short) 1);
+                    break;
+                case LinearUnitType.Decimal:
+                    this.chunk.Write(70, (short) 2);
+                    break;
+                case LinearUnitType.Engineering:
+                    this.chunk.Write(70, (short) 3);
+                    break;
+                case LinearUnitType.Architectural:
+                    this.chunk.Write(70, style.AlternateUnits.StackUnits ? (short) 4 : (short) 6);
+                    break;
+                case LinearUnitType.Fractional:
+                    this.chunk.Write(70, style.AlternateUnits.StackUnits ? (short) 5 : (short) 7);
+                    break;
+            }
+
+            this.chunk.Write(9, "$DIMALTZ");
+            this.chunk.Write(70, GetSupressZeroesValue(
+                    style.AlternateUnits.SuppressLinearLeadingZeros,
+                    style.AlternateUnits.SuppressLinearTrailingZeros,
+                    style.AlternateUnits.SuppressZeroFeet,
+                    style.AlternateUnits.SuppressZeroInches));
+
+            this.chunk.Write(9, "$DIMAPOST");
+            this.chunk.Write(1, this.EncodeNonAsciiCharacters(string.Format("{0}[]{1}", style.AlternateUnits.Prefix, style.AlternateUnits.Suffix)));
+
+            this.chunk.Write(9, "$DIMATFIT");
+            this.chunk.Write(70, (short) style.FitOptions);
+
             this.chunk.Write(9, "$DIMAUNIT");
             this.chunk.Write(70, (short) style.DimAngularUnits);
 
             this.chunk.Write(9, "$DIMASZ");
             this.chunk.Write(40, style.ArrowSize);
 
-            short angSupress = 3;
+            short angSupress;
             if (style.SuppressAngularLeadingZeros && style.SuppressAngularTrailingZeros)
                 angSupress = 3;
             else if (!style.SuppressAngularLeadingZeros && !style.SuppressAngularTrailingZeros)
@@ -694,6 +749,9 @@ namespace netDxf.IO
                 angSupress = 2;
             else if (style.SuppressAngularLeadingZeros && !style.SuppressAngularTrailingZeros)
                 angSupress = 1;
+            else
+                angSupress = 3;
+
             this.chunk.Write(9, "$DIMAZIN");
             this.chunk.Write(70, angSupress);
 
@@ -780,11 +838,17 @@ namespace netDxf.IO
             this.chunk.Write(9, "$DIMEXO");
             this.chunk.Write(40, style.ExtLineOffset);
 
+            this.chunk.Write(9, "$DIMFXLON");
+            this.chunk.Write(70, style.ExtLineFixed ? (short) 1 : (short) 0);
+
+            this.chunk.Write(9, "$DIMFXL");
+            this.chunk.Write(40, style.ExtLineFixedLength);
+
             this.chunk.Write(9, "$DIMGAP");
             this.chunk.Write(40, style.TextOffset);
 
             this.chunk.Write(9, "$DIMJUST");
-            this.chunk.Write(70, style.DIMJUST);
+            this.chunk.Write(70, (short) style.TextHorizontalPlacement);
 
             this.chunk.Write(9, "$DIMLFAC");
             this.chunk.Write(40, style.DimScaleLinear);
@@ -808,65 +872,114 @@ namespace netDxf.IO
             this.chunk.Write(40, style.DimScaleOverall);
 
             this.chunk.Write(9, "$DIMSD1");
-            if (style.DimLineOff)
-                this.chunk.Write(70, (short)1);
-            else
-                this.chunk.Write(70, (short)0);
+            this.chunk.Write(70, style.DimLine1Off ? (short) 1 : (short) 0);
 
             this.chunk.Write(9, "$DIMSD2");
-            if (style.DimLineOff)
-                this.chunk.Write(70, (short)1);
-            else
-                this.chunk.Write(70, (short)0);
+            this.chunk.Write(70, style.DimLine2Off ? (short) 1 : (short) 0);
 
             this.chunk.Write(9, "$DIMSE1");
-            if (style.ExtLine1Off)
-                this.chunk.Write(70, (short) 1);
-            else
-                this.chunk.Write(70, (short) 0);
+            this.chunk.Write(70, style.ExtLine1Off ? (short) 1 : (short) 0);
 
             this.chunk.Write(9, "$DIMSE2");
-            if (style.ExtLine2Off)
-                this.chunk.Write(70, (short) 1);
-            else
-                this.chunk.Write(70, (short) 0);
+            this.chunk.Write(70, style.ExtLine2Off ? (short) 1 : (short) 0);
+
+            this.chunk.Write(9, "$DIMSOXD");
+            this.chunk.Write(70, style.FitDimLineInside ? (short) 1 : (short) 0);
 
             this.chunk.Write(9, "$DIMTAD");
-            this.chunk.Write(70, style.DIMTAD);
+            this.chunk.Write(70, (short) style.TextVerticalPlacement);
+
+            this.chunk.Write(9, "$DIMTDEC");
+            this.chunk.Write(70, style.Tolerances.Precision);
+
+            this.chunk.Write(9, "$DIMTFAC");
+            this.chunk.Write(40, style.Tolerances.TextHeightFactor);
+
+            if (style.TextFillColor != null)
+            {
+                this.chunk.Write(9, "$DIMTFILL");
+                this.chunk.Write(70, (short) 2);
+
+                this.chunk.Write(9, "$DIMTFILLCLR");
+                this.chunk.Write(70, style.TextFillColor.Index);
+            }
 
             this.chunk.Write(9, "$DIMTIH");
-            this.chunk.Write(70, style.DIMTIH);
+            this.chunk.Write(70, style.TextInsideAlign ? (short) 1 : (short) 0);
+
+            this.chunk.Write(9, "$DIMTIX");
+            this.chunk.Write(70, style.FitTextInside ? (short)1 : (short)0);
+
+            if (style.Tolerances.DisplayMethod == DimensionStyle.TolerancesDisplayMethod.Deviation)
+            {
+                this.chunk.Write(9, "$DIMTM");
+                this.chunk.Write(40, MathHelper.IsZero(style.Tolerances.LowerLimit) ? MathHelper.Epsilon : style.Tolerances.LowerLimit);
+            }
+            else
+            {
+                this.chunk.Write(9, "$DIMTM");
+                this.chunk.Write(40, style.Tolerances.LowerLimit);
+            }
+
+            this.chunk.Write(9, "$DIMTMOVE");
+            this.chunk.Write(70, (short) style.FitTextMove);
+
+            this.chunk.Write(9, "$DIMTOFL");
+            this.chunk.Write(70, style.FitDimLineForce ? (short)1 : (short)0);
 
             this.chunk.Write(9, "$DIMTOH");
-            this.chunk.Write(70, style.DIMTOH);
+            this.chunk.Write(70, style.TextOutsideAlign ? (short) 1 : (short) 0);
+
+            switch (style.Tolerances.DisplayMethod)
+            {
+                case DimensionStyle.TolerancesDisplayMethod.None:
+                    this.chunk.Write(9, "$DIMTOL");
+                    this.chunk.Write(70, (short) 0);
+                    this.chunk.Write(9, "$DIMLIM");
+                    this.chunk.Write(70, (short) 0);
+                    break;
+                case DimensionStyle.TolerancesDisplayMethod.Symmetrical:
+                    this.chunk.Write(9, "$DIMTOL");
+                    this.chunk.Write(70, (short) 1);
+                    this.chunk.Write(9, "$DIMLIM");
+                    this.chunk.Write(70, (short) 0);
+                    break;
+                case DimensionStyle.TolerancesDisplayMethod.Deviation:
+                    this.chunk.Write(9, "$DIMTOL");
+                    this.chunk.Write(70, (short) 1);
+                    this.chunk.Write(9, "$DIMLIM");
+                    this.chunk.Write(70, (short) 0);
+                    break;
+                case DimensionStyle.TolerancesDisplayMethod.Limits:
+                    this.chunk.Write(9, "$DIMTOL");
+                    this.chunk.Write(70, (short) 0);
+                    this.chunk.Write(9, "$DIMLIM");
+                    this.chunk.Write(70, (short) 1);
+                    break;
+            }
+
+            this.chunk.Write(9, "$DIMTOLJ");
+            this.chunk.Write(70, (short) style.Tolerances.VerticalPlacement);
+
+            this.chunk.Write(9, "$DIMTP");
+            this.chunk.Write(40, style.Tolerances.UpperLimit);
 
             this.chunk.Write(9, "$DIMTXT");
             this.chunk.Write(40, style.TextHeight);
 
-            short linSupress = 0;
-            if (style.DimLengthUnits == LinearUnitType.Architectural || style.DimLengthUnits == LinearUnitType.Engineering)
-            {
-                if (style.SuppressZeroFeet && style.SuppressZeroFeet)
-                    linSupress = 0;
-                else if (!style.SuppressZeroFeet && !style.SuppressZeroFeet)
-                    linSupress = 1;
-                else if (!style.SuppressZeroFeet && style.SuppressZeroFeet)
-                    linSupress = 2;
-                else if (style.SuppressZeroFeet && !style.SuppressZeroFeet)
-                    linSupress = 3;
-            }
-
-            if (!style.SuppressLinearLeadingZeros && !style.SuppressLinearTrailingZeros)
-                linSupress += 0;
-            else if (style.SuppressLinearLeadingZeros && !style.SuppressLinearTrailingZeros)
-                linSupress += 4;
-            else if (!style.SuppressLinearLeadingZeros && style.SuppressLinearTrailingZeros)
-                linSupress += 8;
-            else if (style.SuppressLinearLeadingZeros && style.SuppressLinearTrailingZeros)
-                linSupress += 12;
+            this.chunk.Write(9, "$DIMTZIN");
+            this.chunk.Write(70, GetSupressZeroesValue(
+                    style.Tolerances.SuppressLinearLeadingZeros,
+                    style.Tolerances.SuppressLinearTrailingZeros,
+                    style.Tolerances.SuppressZeroFeet,
+                    style.Tolerances.SuppressZeroInches));
 
             this.chunk.Write(9, "$DIMZIN");
-            this.chunk.Write(70, linSupress);
+            this.chunk.Write(70, GetSupressZeroesValue(
+                    style.SuppressLinearLeadingZeros,
+                    style.SuppressLinearTrailingZeros,
+                    style.SuppressZeroFeet,
+                    style.SuppressZeroInches));
 
             // CAUTION: The next four codes are not documented in the official dxf docs
             this.chunk.Write(9, "$DIMFRAC");
@@ -880,7 +993,7 @@ namespace netDxf.IO
 
             this.chunk.Write(9, "$DIMLTEX2");
             this.chunk.Write(6, this.EncodeNonAsciiCharacters(style.ExtLine2Linetype.Name));
-        }
+    }
 
         #endregion
 
@@ -1044,11 +1157,9 @@ namespace netDxf.IO
             this.chunk.Write(100, SubclassMarker.DimensionStyle);
 
             this.chunk.Write(2, this.EncodeNonAsciiCharacters(style.Name));
-
-            // flags
-            this.chunk.Write(70, (short) 0);
-
+           
             this.chunk.Write(3, this.EncodeNonAsciiCharacters(string.Format("{0}<>{1}", style.DimPrefix, style.DimSuffix)));
+            this.chunk.Write(4, this.EncodeNonAsciiCharacters(string.Format("{0}[]{1}", style.AlternateUnits.Prefix, style.AlternateUnits.Suffix)));
             this.chunk.Write(40, style.DimScaleOverall);
             this.chunk.Write(41, style.ArrowSize);
             this.chunk.Write(42, style.ExtLineOffset);
@@ -1056,39 +1167,53 @@ namespace netDxf.IO
             this.chunk.Write(44, style.ExtLineExtend);
             this.chunk.Write(45, style.DimRoundoff);
             this.chunk.Write(46, style.DimLineExtend);
+            this.chunk.Write(47, style.Tolerances.UpperLimit);
 
-            this.chunk.Write(73, style.DIMTIH);
-            this.chunk.Write(74, style.DIMTOH);
-            if (style.ExtLine1Off)
-                this.chunk.Write(75, (short) 1);
+            this.chunk.Write(49, style.ExtLineFixedLength);
+
+            if (style.TextFillColor != null)
+            {
+                this.chunk.Write(69, (short) 2);
+                this.chunk.Write(70, style.TextFillColor.Index);
+            }
             else
-                this.chunk.Write(75, (short) 0);
-            if (style.ExtLine2Off)
-                this.chunk.Write(76, (short) 1);
-            else
-                this.chunk.Write(76, (short) 0);
-            this.chunk.Write(77, style.DIMTAD);
+            {
+                this.chunk.Write(70, (short) 0);
+            }
 
-            short linSupress = 0;
-            if (style.SuppressZeroFeet && style.SuppressZeroInches)
-                linSupress = 0;
-            else if (!style.SuppressZeroFeet && !style.SuppressZeroInches)
-                linSupress += 1;
-            else if (!style.SuppressZeroFeet && style.SuppressZeroInches)
-                linSupress += 2;
-            else if (style.SuppressZeroFeet && !style.SuppressZeroInches)
-                linSupress += 3;
+            switch (style.Tolerances.DisplayMethod)
+            {
+                case DimensionStyle.TolerancesDisplayMethod.None:
+                    this.chunk.Write(71, (short) 0);
+                    this.chunk.Write(72, (short) 0);
+                    break;
+                case DimensionStyle.TolerancesDisplayMethod.Symmetrical:
+                    this.chunk.Write(71, (short) 1);
+                    this.chunk.Write(72, (short) 0);
+                    break;
+                case DimensionStyle.TolerancesDisplayMethod.Deviation:
+                    this.chunk.Write(48, MathHelper.IsZero(style.Tolerances.LowerLimit) ? MathHelper.Epsilon : style.Tolerances.LowerLimit);
+                    this.chunk.Write(71, (short) 1);
+                    this.chunk.Write(72, (short) 0);
+                    break;
+                case DimensionStyle.TolerancesDisplayMethod.Limits:
+                    this.chunk.Write(48, style.Tolerances.LowerLimit);
+                    this.chunk.Write(71, (short) 0);
+                    this.chunk.Write(72, (short) 1);
+                    break;
+            }
 
-            if (!style.SuppressLinearLeadingZeros && !style.SuppressLinearTrailingZeros)
-                linSupress += 0;
-            else if (style.SuppressLinearLeadingZeros && !style.SuppressLinearTrailingZeros)
-                linSupress += 4;
-            else if (!style.SuppressLinearLeadingZeros && style.SuppressLinearTrailingZeros)
-                linSupress += 8;
-            else if (style.SuppressLinearLeadingZeros && style.SuppressLinearTrailingZeros)
-                linSupress += 12;
+            this.chunk.Write(73, style.TextInsideAlign ? (short) 1 : (short) 0);
+            this.chunk.Write(74, style.TextOutsideAlign ? (short) 1 : (short) 0);
+            this.chunk.Write(75, style.ExtLine1Off ? (short) 1 : (short) 0);
+            this.chunk.Write(76, style.ExtLine2Off ? (short) 1 : (short) 0);
 
-            this.chunk.Write(78, linSupress);
+            this.chunk.Write(77, (short) style.TextVerticalPlacement);
+            this.chunk.Write(78, GetSupressZeroesValue(
+                    style.SuppressLinearLeadingZeros,
+                    style.SuppressLinearTrailingZeros,
+                    style.SuppressZeroFeet,
+                    style.SuppressZeroInches));
 
             short angSupress = 3;
             if (style.SuppressAngularLeadingZeros && style.SuppressAngularTrailingZeros)
@@ -1104,28 +1229,67 @@ namespace netDxf.IO
 
             this.chunk.Write(140, style.TextHeight);
             this.chunk.Write(141, style.CenterMarkSize);
+            this.chunk.Write(143, style.AlternateUnits.Multiplier);
             this.chunk.Write(144, style.DimScaleLinear);
+            this.chunk.Write(146, style.Tolerances.TextHeightFactor);
             this.chunk.Write(147, style.TextOffset);
+            this.chunk.Write(148, style.AlternateUnits.Roundoff);
+            this.chunk.Write(170, style.AlternateUnits.Enabled ? (short) 1 : (short) 0);
+            this.chunk.Write(171, style.AlternateUnits.LengthPrecision);
+            this.chunk.Write(172, style.FitDimLineForce ? (short) 1 : (short) 0);
+            this.chunk.Write(174, style.FitTextInside ? (short) 1 : (short) 0);
+            this.chunk.Write(175, style.FitDimLineInside ? (short) 1 : (short) 0);
             this.chunk.Write(176, style.DimLineColor.Index);
             this.chunk.Write(177, style.ExtLineColor.Index);
             this.chunk.Write(178, style.TextColor.Index);
             this.chunk.Write(179, style.AngularPrecision);
             this.chunk.Write(271, style.LengthPrecision);
+            this.chunk.Write(272, style.Tolerances.Precision);
+            switch (style.AlternateUnits.LengthUnits)
+            {
+                case LinearUnitType.Scientific:
+                    this.chunk.Write(273, (short) 1);
+                    break;
+                case LinearUnitType.Decimal:
+                    this.chunk.Write(273, (short) 2);
+                    break;
+                case LinearUnitType.Engineering:
+                    this.chunk.Write(273, (short) 3);
+                    break;
+                case LinearUnitType.Architectural:
+                    this.chunk.Write(273, style.AlternateUnits.StackUnits ? (short) 4 : (short) 6);
+                    break;
+                case LinearUnitType.Fractional:
+                    this.chunk.Write(273, style.AlternateUnits.StackUnits ? (short) 5 : (short) 7);
+                    break;
+            }       
+            this.chunk.Write(274, style.Tolerances.AlternatePrecision);              
             this.chunk.Write(275, (short) style.DimAngularUnits);
             this.chunk.Write(276, (short) style.FractionalType);
             this.chunk.Write(277, (short) style.DimLengthUnits);
             this.chunk.Write(278, (short) style.DecimalSeparator);
-            this.chunk.Write(280, style.DIMJUST);
-            if (style.DimLineOff)
-            {
-                this.chunk.Write(281, (short) 1);
-                this.chunk.Write(282, (short) 1);
-            }
-            else
-            {
-                this.chunk.Write(281, (short) 0);
-                this.chunk.Write(282, (short) 0);
-            }
+            this.chunk.Write(279, (short) style.FitTextMove);
+            this.chunk.Write(280, (short) style.TextHorizontalPlacement);
+            this.chunk.Write(281, style.DimLine1Off ? (short) 1 : (short) 0);
+            this.chunk.Write(282, style.DimLine2Off ? (short) 1 : (short) 0);
+            this.chunk.Write(283, (short) style.Tolerances.VerticalPlacement);
+            this.chunk.Write(284, GetSupressZeroesValue(
+                    style.Tolerances.SuppressLinearLeadingZeros,
+                    style.Tolerances.SuppressLinearTrailingZeros,
+                    style.Tolerances.SuppressZeroFeet,
+                    style.Tolerances.SuppressZeroInches));
+            this.chunk.Write(285, GetSupressZeroesValue(
+                    style.AlternateUnits.SuppressLinearLeadingZeros,
+                    style.AlternateUnits.SuppressLinearTrailingZeros,
+                    style.AlternateUnits.SuppressZeroFeet,
+                    style.AlternateUnits.SuppressZeroInches));
+            this.chunk.Write(286, GetSupressZeroesValue(
+                    style.Tolerances.AlternateSuppressLinearLeadingZeros,
+                    style.Tolerances.AlternateSuppressLinearTrailingZeros,
+                    style.Tolerances.AlternateSuppressZeroFeet,
+                    style.Tolerances.AlternateSuppressZeroInches));
+            this.chunk.Write(289, (short) style.FitOptions);
+            this.chunk.Write(290, style.ExtLineFixed);
             this.chunk.Write(340, style.TextStyle.Handle);
 
             // CAUTION: The documentation says that the next values are the handles of referenced BLOCK,
@@ -1170,7 +1334,7 @@ namespace netDxf.IO
             this.chunk.Write(372, (short) style.ExtLineLineweight);
 
             this.WriteXData(style.XData);
-        }
+        }      
 
         /// <summary>
         /// Writes a new block record to the table section.
@@ -3080,25 +3244,28 @@ namespace netDxf.IO
             if(dim.Block != null)
                 this.chunk.Write(2, this.EncodeNonAsciiCharacters(dim.Block.Name));
 
-            this.chunk.Write(10, dim.DefinitionPoint.X);
-            this.chunk.Write(20, dim.DefinitionPoint.Y);
-            this.chunk.Write(30, dim.DefinitionPoint.Z);
-            this.chunk.Write(11, dim.MidTextPoint.X);
-            this.chunk.Write(21, dim.MidTextPoint.Y);
-            this.chunk.Write(31, dim.MidTextPoint.Z);
+            Vector3 ocsDef = new Vector3(dim.DefinitionPoint.X, dim.DefinitionPoint.Y, dim.Elevation);
+            Vector3 wcsDef = MathHelper.Transform(ocsDef, dim.Normal, CoordinateSystem.Object, CoordinateSystem.World);
+            this.chunk.Write(10, wcsDef.X);
+            this.chunk.Write(20, wcsDef.Y);
+            this.chunk.Write(30, wcsDef.Z);
+            this.chunk.Write(11, dim.TextReferencePoint.X);
+            this.chunk.Write(21, dim.TextReferencePoint.Y);
+            this.chunk.Write(31, dim.Elevation);
 
-            short flags = (short) ((short) dim.DimensionType + (short) DimensionTypeFlags.BlockReference);
+            DimensionTypeFlags flags = (DimensionTypeFlags) dim.DimensionType;
+            flags |= DimensionTypeFlags.BlockReference;
+            if (dim.TextPositionManuallySet) flags |= DimensionTypeFlags.UserTextPosition;
 
             OrdinateDimension ordinateDim = dim as OrdinateDimension;
             if (ordinateDim != null)
             {
                 // even if the documentation says that code 51 is optional, rotated ordinate dimensions will not work correctly if this value is not provided
                 this.chunk.Write(51, 360.0 - ordinateDim.Rotation);
-                if (ordinateDim.Axis == OrdinateDimensionAxis.X)
-                    flags += (short) DimensionTypeFlags.OrdinteType;
+                if (ordinateDim.Axis == OrdinateDimensionAxis.X) flags |= DimensionTypeFlags.OrdinateType;
             }
-
-            this.chunk.Write(70, flags);
+            this.chunk.Write(53, dim.TextRotation);
+            this.chunk.Write(70, (short) flags);
             this.chunk.Write(71, (short) dim.AttachmentPoint);
             this.chunk.Write(72, (short) dim.LineSpacingStyle);
             this.chunk.Write(41, dim.LineSpacingFactor);
@@ -3168,6 +3335,35 @@ namespace netDxf.IO
             bool suppressAngularTrailingZeros = false;
             bool suppressZeroFeet = true;
             bool suppressZeroInches = true;
+
+            bool writeDIMALTU = false;
+            LinearUnitType altLinearUnitType = LinearUnitType.Decimal;
+            bool altStackedUnits = false;
+            bool writeDIMAPOST = false;
+            string altPrefix = string.Empty;
+            string altSuffix = string.Empty;
+            bool writeDIMALTZ = false;
+            bool altSuppressLinearLeadingZeros = false;
+            bool altSuppressLinearTrailingZeros = false;
+            bool altSuppressZeroFeet = true;
+            bool altSuppressZeroInches = true;
+
+            bool writeDIMTOL = false;
+            double dimtm = 0;
+            DimensionStyle.TolerancesDisplayMethod dimtol = DimensionStyle.TolerancesDisplayMethod.None;
+
+            bool writeDIMTZIN = false;
+            bool tolSuppressLinearLeadingZeros = false;
+            bool tolSuppressLinearTrailingZeros = false;
+            bool tolSuppressZeroFeet = true;
+            bool tolSuppressZeroInches = true;
+
+            bool writeDIMALTTZ = false;
+            bool tolAltSuppressLinearLeadingZeros = false;
+            bool tolAltSuppressLinearTrailingZeros = false;
+            bool tolAltSuppressZeroFeet = true;
+            bool tolAltSuppressZeroInches = true;
+
             foreach (DimensionStyleOverride styleOverride in overrides.Values)
             {
                 switch (styleOverride.Type)
@@ -3184,18 +3380,13 @@ namespace netDxf.IO
                         xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 371));
                         xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) (Lineweight) styleOverride.Value));
                         break;
-                    case DimensionStyleOverrideType.DimLineOff:
-                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short)281));
-                        if ((bool)styleOverride.Value)
-                            xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short)1));
-                        else
-                            xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short)0));
-
-                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short)282));
-                        if ((bool)styleOverride.Value)
-                            xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short)1));
-                        else
-                            xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short)0));
+                    case DimensionStyleOverrideType.DimLine1Off:
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 281));
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (bool) styleOverride.Value ? (short) 1 : (short) 0));
+                        break;
+                    case DimensionStyleOverrideType.DimLine2Off:
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 282));
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (bool) styleOverride.Value ? (short) 1 : (short) 0));
                         break;
                     case DimensionStyleOverrideType.DimLineExtend:
                         xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 46));
@@ -3219,17 +3410,11 @@ namespace netDxf.IO
                         break;
                     case DimensionStyleOverrideType.ExtLine1Off:
                         xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 75));
-                        if ((bool) styleOverride.Value)
-                            xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 1));
-                        else
-                            xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 0));
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (bool) styleOverride.Value ? (short) 1 : (short) 0));
                         break;
                     case DimensionStyleOverrideType.ExtLine2Off:
                         xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 76));
-                        if ((bool) styleOverride.Value)
-                            xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 1));
-                        else
-                            xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 0));
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16,(bool) styleOverride.Value ? (short) 1 : (short) 0));
                         break;
                     case DimensionStyleOverrideType.ExtLineOffset:
                         xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 42));
@@ -3237,6 +3422,14 @@ namespace netDxf.IO
                         break;
                     case DimensionStyleOverrideType.ExtLineExtend:
                         xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 44));
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Real, (double) styleOverride.Value));
+                        break;
+                    case DimensionStyleOverrideType.ExtLineFixed:
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 290));
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (bool) styleOverride.Value ? (short) 1 : (short) 0));
+                        break;
+                    case DimensionStyleOverrideType.ExtLineFixedLength:
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 49));
                         xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Real, (double) styleOverride.Value));
                         break;
                     case DimensionStyleOverrideType.ArrowSize:
@@ -3275,6 +3468,21 @@ namespace netDxf.IO
                         xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 178));
                         xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, ((AciColor) styleOverride.Value).Index));
                         break;
+                    case DimensionStyleOverrideType.TextFillColor:
+                        if (styleOverride.Value != null)
+                        {
+                            xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 70));
+                            xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, ((AciColor) styleOverride.Value).Index));
+
+                            xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 69));
+                            xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 2));
+                        }
+                        else
+                        {
+                            xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 69));
+                            xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 0));
+                        }
+                        break;
                     case DimensionStyleOverrideType.TextHeight:
                         xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 140));
                         xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Real, (double) styleOverride.Value));
@@ -3283,9 +3491,46 @@ namespace netDxf.IO
                         xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 147));
                         xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Real, (double) styleOverride.Value));
                         break;
+                    case DimensionStyleOverrideType.TextVerticalPlacement:
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 77));
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short)(DimensionStyleTextVerticalPlacement) styleOverride.Value));
+                        break;
+                    case DimensionStyleOverrideType.TextHorizontalPlacement:
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 280));
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) (DimensionStyleTextHorizontalPlacement) styleOverride.Value));
+                        break;
+                    case DimensionStyleOverrideType.TextInsideAlign:
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 73));
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (bool) styleOverride.Value ? (short) 1 : (short) 0));
+                        break;
+                    case DimensionStyleOverrideType.TextOutsideAlign:
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 74));
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (bool) styleOverride.Value ? (short) 1 : (short) 0));
+                        break;
+                    case DimensionStyleOverrideType.FitDimLineForce:
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 172));
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (bool) styleOverride.Value ? (short) 1 : (short) 0));
+                        break;
+                    case DimensionStyleOverrideType.FitDimLineInside:
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 175));
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (bool) styleOverride.Value ? (short) 1 : (short) 0));
+                        break;
                     case DimensionStyleOverrideType.DimScaleOverall:
                         xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 40));
                         xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Real, (double) styleOverride.Value));
+                        break;
+                    case DimensionStyleOverrideType.FitOptions:
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 289));
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) styleOverride.Value));
+                        break;
+                    case DimensionStyleOverrideType.FitTextInside:
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 174));
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16,
+                            (bool) styleOverride.Value ? (short) 1 : (short) 0));
+                        break;
+                    case DimensionStyleOverrideType.FitTextMove:
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 279));
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) (DimensionStyleFitOptions) styleOverride.Value));
                         break;
                     case DimensionStyleOverrideType.AngularPrecision:
                         xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 179));
@@ -3349,7 +3594,112 @@ namespace netDxf.IO
                         break;
                     case DimensionStyleOverrideType.DimRoundoff:
                         xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 45));
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Real, (double) styleOverride.Value));
+                        break;
+                    case DimensionStyleOverrideType.AltUnitsEnabled:
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 170));
                         xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) styleOverride.Value));
+                        break;
+                    case DimensionStyleOverrideType.AltUnitsLengthUnits:
+                        writeDIMALTU = true;
+                        altLinearUnitType = (LinearUnitType) styleOverride.Value;
+                        break;
+                    case DimensionStyleOverrideType.AltUnitsStackedUnits:
+                        altStackedUnits = (bool) styleOverride.Value;
+                        break;
+                    case DimensionStyleOverrideType.AltUnitsLengthPrecision:
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 171));
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) styleOverride.Value));
+                        break;
+                    case DimensionStyleOverrideType.AltUnitsMultiplier:
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 143));
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Real, (double) styleOverride.Value));
+                        break;
+                    case DimensionStyleOverrideType.AltUnitsRoundoff:
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 148));
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Real, (double) styleOverride.Value));
+                        break;
+                    case DimensionStyleOverrideType.AltUnitsPrefix:
+                        writeDIMAPOST = true;
+                        altPrefix = (string) styleOverride.Value;
+                        break;
+                    case DimensionStyleOverrideType.AltUnitsSuffix:
+                        writeDIMPOST = true;
+                        altSuffix = (string) styleOverride.Value;
+                        break;
+                    case DimensionStyleOverrideType.AltUnitsSuppressLinearLeadingZeros:
+                        writeDIMALTZ = true;
+                        altSuppressLinearLeadingZeros = (bool) styleOverride.Value;
+                        break;
+                    case DimensionStyleOverrideType.AltUnitsSuppressLinearTrailingZeros:
+                        writeDIMALTZ = true;
+                        altSuppressLinearTrailingZeros = (bool) styleOverride.Value;
+                        break;
+                    case DimensionStyleOverrideType.AltUnitsSuppressZeroFeet:
+                        writeDIMALTZ = true;
+                        altSuppressZeroFeet = (bool) styleOverride.Value;
+                        break;
+                    case DimensionStyleOverrideType.AltUnitsSuppressZeroInches:
+                        writeDIMALTZ = true;
+                        altSuppressZeroInches = (bool) styleOverride.Value;
+                        break;
+                    case DimensionStyleOverrideType.TolerancesDisplayMethod:
+                        dimtol = (DimensionStyle.TolerancesDisplayMethod) styleOverride.Value;
+                        break;
+                    case DimensionStyleOverrideType.TolerancesUpperLimit:
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 47));
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Real, (double) styleOverride.Value));
+                        break;
+                    case DimensionStyleOverrideType.TolerancesLowerLimit:
+                        dimtm = (double) styleOverride.Value;
+                        break;
+                    case DimensionStyleOverrideType.TolerancesVerticalPlacement:
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 283));
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) (DimensionStyle.TolerancesVerticalPlacement) styleOverride.Value));
+                        break;
+                    case DimensionStyleOverrideType.TolerancesPrecision:
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 272));
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) styleOverride.Value));
+                        break;
+                    case DimensionStyleOverrideType.TolerancesSuppressLinearLeadingZeros:
+                        writeDIMTZIN = true;
+                        tolSuppressLinearLeadingZeros = (bool) styleOverride.Value;
+                        break;
+                    case DimensionStyleOverrideType.TolerancesSuppressLinearTrailingZeros:
+                        writeDIMTZIN = true;
+                        tolSuppressLinearTrailingZeros = (bool) styleOverride.Value;
+                        break;
+                    case DimensionStyleOverrideType.TolerancesSuppressZeroFeet:
+                        writeDIMTZIN = true;
+                        tolSuppressZeroFeet = (bool) styleOverride.Value;
+                        break;
+                    case DimensionStyleOverrideType.TolerancesSuppressZeroInches:
+                        writeDIMTZIN = true;
+                        tolSuppressZeroInches = (bool) styleOverride.Value;
+                        break;
+                    case DimensionStyleOverrideType.TolerancesTextHeightFactor:
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 146));
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Real, (double) styleOverride.Value));
+                        break;
+                    case DimensionStyleOverrideType.TolerancesAlternatePrecision:
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 274));
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) styleOverride.Value));
+                        break;
+                    case DimensionStyleOverrideType.TolerancesAltSuppressLinearLeadingZeros:
+                        writeDIMALTTZ = true;
+                        tolAltSuppressLinearLeadingZeros = (bool) styleOverride.Value;
+                        break;
+                    case DimensionStyleOverrideType.TolerancesAltSuppressLinearTrailingZeros:
+                        writeDIMALTTZ = true;
+                        tolAltSuppressLinearTrailingZeros = (bool) styleOverride.Value;
+                        break;
+                    case DimensionStyleOverrideType.TolerancesAltSuppressZeroFeet:
+                        writeDIMALTTZ = true;
+                        tolAltSuppressZeroFeet = (bool) styleOverride.Value;
+                        break;
+                    case DimensionStyleOverrideType.TolerancesAltSuppressZeroInches:
+                        writeDIMALTTZ = true;
+                        tolAltSuppressZeroInches = (bool) styleOverride.Value;
                         break;
                 }
             }
@@ -3363,32 +3713,16 @@ namespace netDxf.IO
             if (writeDIMPOST)
             {
                 xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 3));
-                xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.String, this.EncodeNonAsciiCharacters(string.Format("{0}<>{1}", prefix, suffix))));
+                xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.String,
+                    this.EncodeNonAsciiCharacters(string.Format("{0}<>{1}", prefix, suffix))));
             }
 
             if (writeDIMZIN)
             {
-                short linSupress = 0;
-                if (suppressZeroFeet && suppressZeroInches)
-                    linSupress = 0;
-                else if (!suppressZeroFeet && !suppressZeroInches)
-                    linSupress += 1;
-                else if (!suppressZeroFeet && suppressZeroInches)
-                    linSupress += 2;
-                else if (suppressZeroFeet && !suppressZeroInches)
-                    linSupress += 3;
-
-                if (!suppressLinearLeadingZeros && !suppressLinearTrailingZeros)
-                    linSupress += 0;
-                else if (suppressLinearLeadingZeros && !suppressLinearTrailingZeros)
-                    linSupress += 4;
-                else if (!suppressLinearLeadingZeros && suppressLinearTrailingZeros)
-                    linSupress += 8;
-                else if (suppressLinearLeadingZeros && suppressLinearTrailingZeros)
-                    linSupress += 12;
-
                 xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 78));
-                xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, linSupress));
+                xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16,
+                    GetSupressZeroesValue(suppressLinearLeadingZeros, suppressLinearTrailingZeros, suppressZeroFeet,
+                        suppressZeroInches)));
             }
 
             if (writeDIMAZIN)
@@ -3405,6 +3739,97 @@ namespace netDxf.IO
 
                 xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 79));
                 xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, angSupress));
+            }
+
+            // alternate units
+            if (writeDIMAPOST)
+            {
+                xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 4));
+                xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.String,
+                    this.EncodeNonAsciiCharacters(string.Format("{0}[]{1}", altPrefix, altSuffix))));
+            }
+
+            if (writeDIMALTU)
+            {
+                xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 273));
+                switch (altLinearUnitType)
+                {
+                    case LinearUnitType.Scientific:
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 1));
+                        break;
+                    case LinearUnitType.Decimal:
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 2));
+                        break;
+                    case LinearUnitType.Engineering:
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 3));
+                        break;
+                    case LinearUnitType.Architectural:
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16,
+                            altStackedUnits ? (short) 4 : (short) 6));
+                        break;
+                    case LinearUnitType.Fractional:
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16,
+                            altStackedUnits ? (short) 5 : (short) 7));
+                        break;
+                }
+            }
+
+            if (writeDIMALTZ)
+            {
+                xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 285));
+                xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16,
+                    GetSupressZeroesValue(altSuppressLinearLeadingZeros, altSuppressLinearTrailingZeros,
+                        altSuppressZeroFeet, altSuppressZeroInches)));
+            }
+
+            // tolerances
+            if (writeDIMTOL)
+            { 
+                switch (dimtol)
+                {
+                    case DimensionStyle.TolerancesDisplayMethod.None:
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 71));
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (double) 0));
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 72));
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (double) 0));
+                        break;
+                    case DimensionStyle.TolerancesDisplayMethod.Symmetrical:
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 71));
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (double) 1));
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 72));
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (double) 0));
+                        break;
+                    case DimensionStyle.TolerancesDisplayMethod.Deviation:
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 48));
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Real, MathHelper.IsZero(dimtm) ? MathHelper.Epsilon : dimtm));
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 71));
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (double) 1));
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 72));
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (double) 0));
+                        break;
+                    case DimensionStyle.TolerancesDisplayMethod.Limits:
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 48));
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Real, dimtm));
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 71));
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (double) 0));
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 72));
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (double) 1));
+                        break;
+                }
+            }
+
+            if (writeDIMTZIN)
+            {
+                xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 284));
+                xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16,
+                    GetSupressZeroesValue(tolSuppressLinearLeadingZeros, tolSuppressLinearTrailingZeros, tolSuppressZeroFeet, tolSuppressZeroInches)));
+            }
+
+            if (writeDIMALTTZ)
+            {
+                xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 286));
+                xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16,
+                    GetSupressZeroesValue(tolAltSuppressLinearLeadingZeros, tolAltSuppressLinearTrailingZeros, tolAltSuppressZeroFeet, tolAltSuppressZeroInches)));
             }
 
             // this information is only required by the Leader entity
@@ -3562,7 +3987,7 @@ namespace netDxf.IO
 
             this.chunk.Write(16, dim.ArcDefinitionPoint.X);
             this.chunk.Write(26, dim.ArcDefinitionPoint.Y);
-            this.chunk.Write(36, dim.ArcDefinitionPoint.Z);
+            this.chunk.Write(36, dim.Elevation);
 
             this.chunk.Write(40, 0.0);
 
@@ -3573,13 +3998,21 @@ namespace netDxf.IO
         {
             this.chunk.Write(100, SubclassMarker.OrdinateDimension);
 
-            this.chunk.Write(13, dim.FirstPoint.X);
-            this.chunk.Write(23, dim.FirstPoint.Y);
-            this.chunk.Write(33, dim.FirstPoint.Z);
+            IList<Vector3> wcsPoints = MathHelper.Transform(
+                new[]
+                {
+                    new Vector3(dim.FeaturePoint.X, dim.FeaturePoint.Y, dim.Elevation),
+                    new Vector3(dim.LeaderEndPoint.X, dim.LeaderEndPoint.Y, dim.Elevation)
+                },
+                dim.Normal, CoordinateSystem.Object, CoordinateSystem.World);
 
-            this.chunk.Write(14, dim.SecondPoint.X);
-            this.chunk.Write(24, dim.SecondPoint.Y);
-            this.chunk.Write(34, dim.SecondPoint.Z);
+            this.chunk.Write(13, wcsPoints[0].X);
+            this.chunk.Write(23, wcsPoints[0].Y);
+            this.chunk.Write(33, wcsPoints[0].Z);
+
+            this.chunk.Write(14, wcsPoints[1].X);
+            this.chunk.Write(24, wcsPoints[1].Y);
+            this.chunk.Write(34, wcsPoints[1].Z);
 
             this.WriteXData(dim.XData);
         }
@@ -4370,6 +4803,30 @@ namespace netDxf.IO
         #endregion
 
         #region private methods
+
+        private static short GetSupressZeroesValue(bool leading, bool trailing, bool feet, bool inches)
+        {
+            short rtn = 0;
+            if (feet && inches)
+                rtn = 0;
+            if (!feet && !inches)
+                rtn += 1;
+            if (!feet && inches)
+                rtn += 2;
+            if (feet && !inches)
+                rtn += 3;
+
+            if (!leading && !trailing)
+                rtn += 0;
+            if (leading && !trailing)
+                rtn += 4;
+            if (!leading && trailing)
+                rtn += 8;
+            if (leading && trailing)
+                rtn += 12;
+
+            return rtn;
+        }
 
         private string EncodeNonAsciiCharacters(string text)
         {

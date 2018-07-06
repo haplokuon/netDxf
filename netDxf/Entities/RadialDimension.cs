@@ -1,7 +1,7 @@
-﻿#region netDxf library, Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+﻿#region netDxf library, Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
 
 //                        netDxf library
-// Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -36,7 +36,6 @@ namespace netDxf.Entities
 
         private Vector2 center;
         private Vector2 refPoint;
-        private double offset;
 
         #endregion
 
@@ -46,7 +45,7 @@ namespace netDxf.Entities
         /// Initializes a new instance of the <c>RadialDimension</c> class.
         /// </summary>
         public RadialDimension()
-            : this(Vector2.Zero, Vector2.UnitX, 0.0, DimensionStyle.Default)
+            : this(Vector2.Zero, Vector2.UnitX, DimensionStyle.Default)
         {
         }
 
@@ -55,10 +54,9 @@ namespace netDxf.Entities
         /// </summary>
         /// <param name="arc"><see cref="Arc">Arc</see> to measure.</param>
         /// <param name="rotation">Rotation in degrees of the dimension line.</param>
-        /// <param name="offset">Distance between the reference point and the dimension text</param>
         /// <remarks>The center point and the definition point define the distance to be measure.</remarks>
-        public RadialDimension(Arc arc, double rotation, double offset)
-            : this(arc, rotation, offset, DimensionStyle.Default)
+        public RadialDimension(Arc arc, double rotation)
+            : this(arc, rotation, DimensionStyle.Default)
         {
         }
 
@@ -67,10 +65,9 @@ namespace netDxf.Entities
         /// </summary>
         /// <param name="arc"><see cref="Arc">Arc</see> to measure.</param>
         /// <param name="rotation">Rotation in degrees of the dimension line.</param>
-        /// <param name="offset">Distance between the reference point and the dimension text</param>
         /// <param name="style">The <see cref="DimensionStyle">style</see> to use with the dimension.</param>
         /// <remarks>The center point and the definition point define the distance to be measure.</remarks>
-        public RadialDimension(Arc arc, double rotation, double offset, DimensionStyle style)
+        public RadialDimension(Arc arc, double rotation, DimensionStyle style)
             : base(DimensionType.Radius)
         {
             if (arc == null)
@@ -79,13 +76,13 @@ namespace netDxf.Entities
             Vector3 ocsCenter = MathHelper.Transform(arc.Center, arc.Normal, CoordinateSystem.World, CoordinateSystem.Object);
             this.center = new Vector2(ocsCenter.X, ocsCenter.Y);
             this.refPoint = Vector2.Polar(this.center, arc.Radius, rotation*MathHelper.DegToRad);
-            this.offset = offset;
 
             if (style == null)
                 throw new ArgumentNullException(nameof(style));
             this.Style = style;
             this.Normal = arc.Normal;
             this.Elevation = ocsCenter.Z;
+            this.Update();
         }
 
         /// <summary>
@@ -93,10 +90,9 @@ namespace netDxf.Entities
         /// </summary>
         /// <param name="circle"><see cref="Circle">Circle</see> to measure.</param>
         /// <param name="rotation">Rotation in degrees of the dimension line.</param>
-        /// <param name="offset">Distance between the reference point and the dimension text</param>
         /// <remarks>The center point and the definition point define the distance to be measure.</remarks>
-        public RadialDimension(Circle circle, double rotation, double offset)
-            : this(circle, rotation, offset, DimensionStyle.Default)
+        public RadialDimension(Circle circle, double rotation)
+            : this(circle, rotation, DimensionStyle.Default)
         {
         }
 
@@ -105,10 +101,9 @@ namespace netDxf.Entities
         /// </summary>
         /// <param name="circle"><see cref="Circle">Circle</see> to measure.</param>
         /// <param name="rotation">Rotation in degrees of the dimension line.</param>
-        /// <param name="offset">Distance between the reference point and the dimension text</param>
         /// <param name="style">The <see cref="DimensionStyle">style</see> to use with the dimension.</param>
         /// <remarks>The center point and the definition point define the distance to be measure.</remarks>
-        public RadialDimension(Circle circle, double rotation, double offset, DimensionStyle style)
+        public RadialDimension(Circle circle, double rotation, DimensionStyle style)
             : base(DimensionType.Radius)
         {
             if (circle == null)
@@ -117,15 +112,13 @@ namespace netDxf.Entities
             Vector3 ocsCenter = MathHelper.Transform(circle.Center, circle.Normal, CoordinateSystem.World, CoordinateSystem.Object);
             this.center = new Vector2(ocsCenter.X, ocsCenter.Y);
             this.refPoint = Vector2.Polar(this.center, circle.Radius, rotation*MathHelper.DegToRad);
-            if (offset < 0.0)
-                throw new ArgumentOutOfRangeException(nameof(offset), "The offset value cannot be negative.");
-            this.offset = offset;
 
             if (style == null)
                 throw new ArgumentNullException(nameof(style));
             this.Style = style;
             this.Normal = circle.Normal;
             this.Elevation = ocsCenter.Z;
+            this.Update();
         }
 
         /// <summary>
@@ -133,10 +126,9 @@ namespace netDxf.Entities
         /// </summary>
         /// <param name="centerPoint">Center <see cref="Vector2">point</see> of the circumference.</param>
         /// <param name="referencePoint"><see cref="Vector2">Point</see> on circle or arc.</param>
-        /// <param name="offset">Distance between the reference point and the dimension text</param>
         /// <remarks>The center point and the definition point define the distance to be measure.</remarks>
-        public RadialDimension(Vector2 centerPoint, Vector2 referencePoint, double offset)
-            : this(centerPoint, referencePoint, offset, DimensionStyle.Default)
+        public RadialDimension(Vector2 centerPoint, Vector2 referencePoint)
+            : this(centerPoint, referencePoint, DimensionStyle.Default)
         {
         }
 
@@ -145,22 +137,18 @@ namespace netDxf.Entities
         /// </summary>
         /// <param name="centerPoint">Center <see cref="Vector2">point</see> of the circumference.</param>
         /// <param name="referencePoint"><see cref="Vector2">Point</see> on circle or arc.</param>
-        /// <param name="offset">Distance between the reference point and the dimension text</param>
         /// <param name="style">The <see cref="DimensionStyle">style</see> to use with the dimension.</param>
         /// <remarks>The center point and the definition point define the distance to be measure.</remarks>
-        public RadialDimension(Vector2 centerPoint, Vector2 referencePoint, double offset, DimensionStyle style)
+        public RadialDimension(Vector2 centerPoint, Vector2 referencePoint, DimensionStyle style)
             : base(DimensionType.Radius)
         {
             this.center = centerPoint;
             this.refPoint = referencePoint;
 
-            if (offset < 0.0)
-                throw new ArgumentOutOfRangeException(nameof(offset), "The offset value cannot be negative.");
-            this.offset = offset;
-
             if (style == null)
                 throw new ArgumentNullException(nameof(style));
             this.Style = style;
+            this.Update();
         }
 
         #endregion
@@ -186,24 +174,6 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets or sets the distance between the center point and the dimension text.
-        /// </summary>
-        /// <remarks>
-        /// If the value is close to the radius, the offset will be 2*DIMASZ+DIMGAP*DIMSCALE.
-        /// If the value is set to zero the dimension will be shown at the center, both arrowheads will be shown and no center mark will be drawn.
-        /// </remarks>
-        public double Offset
-        {
-            get { return this.offset; }
-            set
-            {
-                if (value < 0.0)
-                    throw new ArgumentOutOfRangeException(nameof(value), "The offset value cannot be negative.");
-                this.offset = value;
-            }
-        }
-
-        /// <summary>
         /// Actual measurement.
         /// </summary>
         public override double Measurement
@@ -223,20 +193,57 @@ namespace netDxf.Entities
         {
             double radius = Vector2.Distance(this.center, this.refPoint);
             double rotation = Vector2.Angle(this.center, point);
+            this.defPoint = this.center;
             this.refPoint = Vector2.Polar(this.center, radius, rotation);
-            this.offset = Vector2.Distance(this.center, point);
+            DimensionStyleFitTextMove moveText = this.Style.FitTextMove;
+            DimensionStyleOverride styleOverride;
+            if (this.StyleOverrides.TryGetValue(DimensionStyleOverrideType.FitTextMove, out styleOverride))
+            {
+                moveText = (DimensionStyleFitTextMove)styleOverride.Value;
+            }
+            if (moveText == DimensionStyleFitTextMove.BesideDimLine)
+            {
+                if (!this.TextPositionManuallySet) this.textRefPoint = point;
+            }
         }
 
         #endregion
 
         #region overrides
 
+        protected override void CalculteReferencePoints()
+        {
+            Vector2 centerRef = this.center;
+            Vector2 ref1 = this.refPoint;
+
+            this.defPoint = centerRef;
+
+            if (this.TextPositionManuallySet)
+            {
+                DimensionStyleFitTextMove moveText = this.Style.FitTextMove;
+                DimensionStyleOverride styleOverride;
+                if (this.StyleOverrides.TryGetValue(DimensionStyleOverrideType.FitTextMove, out styleOverride))
+                {
+                    moveText = (DimensionStyleFitTextMove)styleOverride.Value;
+                }
+
+                if (moveText == DimensionStyleFitTextMove.BesideDimLine)
+                {
+                    this.SetDimensionLinePosition(this.textRefPoint);
+                }
+            }
+            else
+            {
+                this.textRefPoint = ref1;
+            }
+        }
+
         /// <summary>
         /// Gets the block that contains the entities that make up the dimension picture.
         /// </summary>
         /// <param name="name">Name to be assigned to the generated block.</param>
         /// <returns>The block that represents the actual dimension.</returns>
-        internal override Block BuildBlock(string name)
+        protected override Block BuildBlock(string name)
         {
             return DimensionBlock.Build(this, name);
         }
@@ -260,15 +267,18 @@ namespace netDxf.Entities
                 IsVisible = this.IsVisible,
                 //Dimension properties
                 Style = (DimensionStyle) this.Style.Clone(),
+                DefinitionPoint = this.DefinitionPoint,
+                TextReferencePoint = this.TextReferencePoint,
+                TextPositionManuallySet = this.TextPositionManuallySet,
+                TextRotation = this.TextRotation,
                 AttachmentPoint = this.AttachmentPoint,
                 LineSpacingStyle = this.LineSpacingStyle,
                 LineSpacingFactor = this.LineSpacingFactor,
                 UserText = this.UserText,
+                Elevation = this.Elevation,
                 //RadialDimension properties
                 CenterPoint = this.center,
-                ReferencePoint = this.refPoint,
-                Offset = this.offset,
-                Elevation = this.Elevation
+                ReferencePoint = this.refPoint
             };
 
             foreach (XData data in this.XData.Values)

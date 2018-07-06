@@ -1,7 +1,7 @@
-﻿#region netDxf library, Copyright (C) 2009-2017 Daniel Carvajal (haplokuon@gmail.com)
+﻿#region netDxf library, Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
 
 //                        netDxf library
-// Copyright (C) 2009-2017 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -55,7 +55,11 @@ namespace netDxf.Tables
                     if (!(value is Lineweight))
                         throw new ArgumentException(string.Format("The DimensionStyleOverrideType.{0} dimension style override must be a valid {1}", type, typeof (Lineweight)), nameof(value));
                     break;
-                case DimensionStyleOverrideType.DimLineOff:
+                case DimensionStyleOverrideType.DimLine1Off:
+                    if (!(value is bool))
+                        throw new ArgumentException(string.Format("The DimensionStyleOverrideType.{0} dimension style override must be a valid {1}", type, typeof(bool)), nameof(value));
+                    break;
+                case DimensionStyleOverrideType.DimLine2Off:
                     if (!(value is bool))
                         throw new ArgumentException(string.Format("The DimensionStyleOverrideType.{0} dimension style override must be a valid {1}", type, typeof(bool)), nameof(value));
                     break;
@@ -101,6 +105,16 @@ namespace netDxf.Tables
                     if ((double) value < 0)
                         throw new ArgumentOutOfRangeException(nameof(value), value, string.Format("The DimensionStyleOverrideType.{0} dimension style override must be equals or greater than zero.", type));
                     break;
+                case DimensionStyleOverrideType.ExtLineFixed:
+                    if (!(value is bool))
+                        throw new ArgumentException(string.Format("The DimensionStyleOverrideType.{0} dimension style override must be a valid {1}", type, typeof(bool)), nameof(value));
+                    break;
+                case DimensionStyleOverrideType.ExtLineFixedLength:
+                    if (!(value is double))
+                        throw new ArgumentException(string.Format("The DimensionStyleOverrideType.{0} dimension style override must be a valid {1}", type, typeof(double)), nameof(value));
+                    if ((double)value < 0)
+                        throw new ArgumentOutOfRangeException(nameof(value), value, string.Format("The DimensionStyleOverrideType.{0} dimension style override must be equals or greater than zero.", type));
+                    break;
                 case DimensionStyleOverrideType.ArrowSize:
                     if (!(value is double))
                         throw new ArgumentException(string.Format("The DimensionStyleOverrideType.{0} dimension style override must be a valid {1}", type, typeof (double)), nameof(value));
@@ -137,6 +151,12 @@ namespace netDxf.Tables
                     if (!(value is AciColor))
                         throw new ArgumentException(string.Format("The DimensionStyleOverrideType.{0} dimension style override must be a valid {1}", type, typeof (AciColor)), nameof(value));
                     break;
+                case DimensionStyleOverrideType.TextFillColor:
+                    if (value == null)
+                        break;
+                    if (!(value is AciColor))
+                        throw new ArgumentException(string.Format("The DimensionStyleOverrideType.{0} dimension style override must be a valid {1}", type, typeof(AciColor)), nameof(value));
+                    break;
                 case DimensionStyleOverrideType.TextHeight:
                     if (!(value is double))
                         throw new ArgumentException(string.Format("The DimensionStyleOverrideType.{0} dimension style override must be a valid {1}", type, typeof (double)), nameof(value));
@@ -146,14 +166,48 @@ namespace netDxf.Tables
                 case DimensionStyleOverrideType.TextOffset:
                     if (!(value is double))
                         throw new ArgumentException(string.Format("The DimensionStyleOverrideType.{0} dimension style override must be a valid {1}", type, typeof (double)), nameof(value));
-                    if ((double) value < 0)
-                        throw new ArgumentOutOfRangeException(nameof(value), value, string.Format("The {0} dimension style override must be equals or greater than zero.", type));
+                    break;
+                case DimensionStyleOverrideType.TextVerticalPlacement:
+                    if (!(value is DimensionStyleTextVerticalPlacement))
+                        throw new ArgumentException(string.Format("The DimensionStyleOverrideType.{0} dimension style override must be a valid {1}", type, typeof(DimensionStyleTextVerticalPlacement)), nameof(value));
+                    break;
+                case DimensionStyleOverrideType.TextHorizontalPlacement:
+                    if (!(value is DimensionStyleTextHorizontalPlacement))
+                        throw new ArgumentException(string.Format("The DimensionStyleOverrideType.{0} dimension style override must be a valid {1}", type, typeof(DimensionStyleTextHorizontalPlacement)), nameof(value));
+                    break;
+                case DimensionStyleOverrideType.TextInsideAlign:
+                    if (!(value is bool))
+                        throw new ArgumentException(string.Format("The DimensionStyleOverrideType.{0} dimension style override must be a valid {1}", type, typeof(bool)), nameof(value));
+                    break;
+                case DimensionStyleOverrideType.TextOutsideAlign:
+                    if (!(value is bool))
+                        throw new ArgumentException(string.Format("The DimensionStyleOverrideType.{0} dimension style override must be a valid {1}", type, typeof(bool)), nameof(value));
+                    break;
+                case DimensionStyleOverrideType.FitDimLineForce:
+                    if (!(value is bool))
+                        throw new ArgumentException(string.Format("The DimensionStyleOverrideType.{0} dimension style override must be a valid {1}", type, typeof(bool)), nameof(value));
+                    break;
+                case DimensionStyleOverrideType.FitDimLineInside:
+                    if (!(value is bool))
+                        throw new ArgumentException(string.Format("The DimensionStyleOverrideType.{0} dimension style override must be a valid {1}", type, typeof(bool)), nameof(value));
                     break;
                 case DimensionStyleOverrideType.DimScaleOverall:
                     if (!(value is double))
                         throw new ArgumentException(string.Format("The DimensionStyleOverrideType.{0} dimension style override must be a valid {1}", type, typeof (double)), nameof(value));
                     if ((double) value < 0)
                         throw new ArgumentOutOfRangeException(nameof(value), value, string.Format("The DimensionStyleOverrideType.{0} dimension style override must be equals or greater than zero.", type));
+                    break;
+                case DimensionStyleOverrideType.FitOptions:
+                    if (!(value is DimensionStyleFitOptions))
+                        throw new ArgumentException(string.Format("The DimensionStyleOverrideType.{0} dimension style override must be a valid {1}", type, typeof(DimensionStyleFitOptions)), nameof(value));
+                    break;
+                case DimensionStyleOverrideType.FitTextInside:
+                    if (!(value is bool))
+                        throw new ArgumentException(string.Format("The DimensionStyleOverrideType.{0} dimension style override must be a valid {1}", type, typeof(bool)), nameof(value));
+                    break;
+                case DimensionStyleOverrideType.FitTextMove:
+                    if (!(value is DimensionStyleFitTextMove))
+                        throw new ArgumentException(string.Format("The DimensionStyleOverrideType.{0} dimension style override must be a valid {1}", type, typeof(DimensionStyleFitTextMove)), nameof(value));
                     break;
                 case DimensionStyleOverrideType.AngularPrecision:
                     if (!(value is short))
@@ -226,6 +280,126 @@ namespace netDxf.Tables
                         throw new ArgumentException(string.Format("The DimensionStyleOverrideType.{0} dimension style override must be a valid {1}", type, typeof (double)), nameof(value));
                     if ((double) value < 0.000001 && !MathHelper.IsZero((double)value, double.Epsilon))
                         throw new ArgumentOutOfRangeException(nameof(value), value, string.Format("The {0} dimension style override must be equals or greater than 0.000001 or zero (no rounding off).", type));
+                    break;
+                case DimensionStyleOverrideType.AltUnitsEnabled:
+                    if (!(value is bool))
+                        throw new ArgumentException(string.Format("The DimensionStyleOverrideType.{0} dimension style override must be a valid {1}", type, typeof(bool)), nameof(value));
+                    break;
+                case DimensionStyleOverrideType.AltUnitsLengthUnits:
+                    if (!(value is LinearUnitType))
+                        throw new ArgumentException(string.Format("The DimensionStyleOverrideType.{0} dimension style override must be a valid {1}", type, typeof(LinearUnitType)), nameof(value));
+                    break;
+                case DimensionStyleOverrideType.AltUnitsStackedUnits:
+                    if (!(value is bool))
+                        throw new ArgumentException(string.Format("The DimensionStyleOverrideType.{0} dimension style override must be a valid {1}", type, typeof(bool)), nameof(value));
+                    break;
+                case DimensionStyleOverrideType.AltUnitsLengthPrecision:
+                    if (!(value is short))
+                        throw new ArgumentException(string.Format("The DimensionStyleOverrideType.{0} dimension style override must be a valid {1}", type, typeof(short)), nameof(value));
+                    if ((short)value < 0)
+                        throw new ArgumentOutOfRangeException(nameof(value), value, string.Format("The {0} dimension style override must be equals or greater than zero.", type));
+                    break;
+                case DimensionStyleOverrideType.AltUnitsMultiplier:
+                    if (!(value is double))
+                        throw new ArgumentException(string.Format("The DimensionStyleOverrideType.{0} dimension style override must be a valid {1}", type, typeof(double)), nameof(value));
+                    if ((double)value <= 0)
+                        throw new ArgumentOutOfRangeException(nameof(value), value, string.Format("The {0} dimension style override must be greater than zero.", type));
+                    break;
+                case DimensionStyleOverrideType.AltUnitsRoundoff:
+                    if (!(value is double))
+                        throw new ArgumentException(string.Format("The DimensionStyleOverrideType.{0} dimension style override must be a valid {1}", type, typeof(double)), nameof(value));
+                    if ((double)value < 0.000001 && !MathHelper.IsZero((double)value, double.Epsilon))
+                        throw new ArgumentOutOfRangeException(nameof(value), value, string.Format("The {0} dimension style override must be equals or greater than 0.000001 or zero (no rounding off).", type));
+                    break;
+                case DimensionStyleOverrideType.AltUnitsPrefix:
+                    if (!(value is string))
+                        throw new ArgumentException(string.Format("The DimensionStyleOverrideType.{0} dimension style override must be a valid {1}", type, typeof(string)), nameof(value));
+                    break;
+                case DimensionStyleOverrideType.AltUnitsSuffix:
+                    if (!(value is string))
+                        throw new ArgumentException(string.Format("The DimensionStyleOverrideType.{0} dimension style override must be a valid {1}", type, typeof(string)), nameof(value));
+                    break;
+                case DimensionStyleOverrideType.AltUnitsSuppressLinearLeadingZeros:
+                    if (!(value is bool))
+                        throw new ArgumentException(string.Format("The DimensionStyleOverrideType.{0} dimension style override must be a valid {1}", type, typeof(bool)), nameof(value));
+                    break;
+                case DimensionStyleOverrideType.AltUnitsSuppressLinearTrailingZeros:
+                    if (!(value is bool))
+                        throw new ArgumentException(string.Format("The DimensionStyleOverrideType.{0} dimension style override must be a valid {1}", type, typeof(bool)), nameof(value));
+                    break;
+                case DimensionStyleOverrideType.AltUnitsSuppressZeroFeet:
+                    if (!(value is bool))
+                        throw new ArgumentException(string.Format("The DimensionStyleOverrideType.{0} dimension style override must be a valid {1}", type, typeof(bool)), nameof(value));
+                    break;
+                case DimensionStyleOverrideType.AltUnitsSuppressZeroInches:
+                    if (!(value is bool))
+                        throw new ArgumentException(string.Format("The DimensionStyleOverrideType.{0} dimension style override must be a valid {1}", type, typeof(bool)), nameof(value));
+                    break;
+                case DimensionStyleOverrideType.TolerancesDisplayMethod:
+                    if (!(value is DimensionStyle.TolerancesDisplayMethod))
+                        throw new ArgumentException(string.Format("The DimensionStyleOverrideType.{0} dimension style override must be a valid {1}", type, typeof(LinearUnitType)), nameof(value));
+                    break;
+                case DimensionStyleOverrideType.TolerancesUpperLimit:
+                    if (!(value is double))
+                        throw new ArgumentException(string.Format("The DimensionStyleOverrideType.{0} dimension style override must be a valid {1}", type, typeof(double)), nameof(value));
+                    break;
+                case DimensionStyleOverrideType.TolerancesLowerLimit:
+                    if (!(value is double))
+                        throw new ArgumentException(string.Format("The DimensionStyleOverrideType.{0} dimension style override must be a valid {1}", type, typeof(double)), nameof(value));
+                    break;
+                case DimensionStyleOverrideType.TolerancesVerticalPlacement:
+                    if (!(value is DimensionStyle.TolerancesVerticalPlacement))
+                        throw new ArgumentException(string.Format("The DimensionStyleOverrideType.{0} dimension style override must be a valid {1}", type, typeof(LinearUnitType)), nameof(value));
+                    break;
+                case DimensionStyleOverrideType.TolerancesPrecision:
+                    if (!(value is short))
+                        throw new ArgumentException(string.Format("The DimensionStyleOverrideType.{0} dimension style override must be a valid {1}", type, typeof(short)), nameof(value));
+                    if ((short)value < 0)
+                        throw new ArgumentOutOfRangeException(nameof(value), value, string.Format("The {0} dimension style override must be equals or greater than zero.", type));
+                    break;
+                case DimensionStyleOverrideType.TolerancesSuppressLinearLeadingZeros:
+                    if (!(value is bool))
+                        throw new ArgumentException(string.Format("The DimensionStyleOverrideType.{0} dimension style override must be a valid {1}", type, typeof(bool)), nameof(value));
+                    break;
+                case DimensionStyleOverrideType.TolerancesSuppressLinearTrailingZeros:
+                    if (!(value is bool))
+                        throw new ArgumentException(string.Format("The DimensionStyleOverrideType.{0} dimension style override must be a valid {1}", type, typeof(bool)), nameof(value));
+                    break;
+                case DimensionStyleOverrideType.TolerancesSuppressZeroFeet:
+                    if (!(value is bool))
+                        throw new ArgumentException(string.Format("The DimensionStyleOverrideType.{0} dimension style override must be a valid {1}", type, typeof(bool)), nameof(value));
+                    break;
+                case DimensionStyleOverrideType.TolerancesSuppressZeroInches:
+                    if (!(value is bool))
+                        throw new ArgumentException(string.Format("The DimensionStyleOverrideType.{0} dimension style override must be a valid {1}", type, typeof(bool)), nameof(value));
+                    break;
+                case DimensionStyleOverrideType.TolerancesTextHeightFactor:
+                    if (!(value is double))
+                        throw new ArgumentException(string.Format("The DimensionStyleOverrideType.{0} dimension style override must be a valid {1}", type, typeof(double)), nameof(value));
+                    if ((double)value <= 0)
+                        throw new ArgumentOutOfRangeException(nameof(value), value, string.Format("The {0} dimension style override must be greater than zero.", type));
+                    break;
+                case DimensionStyleOverrideType.TolerancesAlternatePrecision:
+                    if (!(value is short))
+                        throw new ArgumentException(string.Format("The DimensionStyleOverrideType.{0} dimension style override must be a valid {1}", type, typeof(short)), nameof(value));
+                    if ((short)value < 0)
+                        throw new ArgumentOutOfRangeException(nameof(value), value, string.Format("The {0} dimension style override must be equals or greater than zero.", type));
+                    break;
+                case DimensionStyleOverrideType.TolerancesAltSuppressLinearLeadingZeros:
+                    if (!(value is bool))
+                        throw new ArgumentException(string.Format("The DimensionStyleOverrideType.{0} dimension style override must be a valid {1}", type, typeof(bool)), nameof(value));
+                    break;
+                case DimensionStyleOverrideType.TolerancesAltSuppressLinearTrailingZeros:
+                    if (!(value is bool))
+                        throw new ArgumentException(string.Format("The DimensionStyleOverrideType.{0} dimension style override must be a valid {1}", type, typeof(bool)), nameof(value));
+                    break;
+                case DimensionStyleOverrideType.TolerancesAltSuppressZeroFeet:
+                    if (!(value is bool))
+                        throw new ArgumentException(string.Format("The DimensionStyleOverrideType.{0} dimension style override must be a valid {1}", type, typeof(bool)), nameof(value));
+                    break;
+                case DimensionStyleOverrideType.TolerancesAltSuppressZeroInches:
+                    if (!(value is bool))
+                        throw new ArgumentException(string.Format("The DimensionStyleOverrideType.{0} dimension style override must be a valid {1}", type, typeof(bool)), nameof(value));
                     break;
             }
             this.type = type;

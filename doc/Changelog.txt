@@ -1,5 +1,19 @@
 ## Change history
 
+### [2018/7/6]
+* Added setter to the Block property of the dimension. Set the dimension Block property to null to delete the reference to the block associated with the dimension, this also deletes the block from the document.
+* Dimension offset values cannot be negative, if needed switch its references.
+* Deleted the DiametricDimension and RadialDiamension property Offset, to place the dimension text manually use the TextReferencePoint property.
+* Added TextRotation to Dimension entities.
+* Added TextReferencePoint to Dimension entities.
+* Added a private field isNormalized to Vector2 and Vector3 structures to avoid normalizing vectors that are already normalized.
+* Added constant Iso25 DimensionSytle with the default properties as defined in AutoCad.
+* Added property BuildDimensionBlocks to the DxfDocument. It controls if the block that represent dimension entities will be automatically created when added to the document. IMPORTANT: by default it is set to false, no dimension blocks will be generated.
+* Revised the DimensionStyle class adding lots of new properties.
+* Revised the DimensionStyleOverride class adding lots of new properties, matching the changes to the dimension style.
+* Revised the Dimension entity classes to accommodate the added properties.
+* (fixed) Wrong code when reading style override TextVerticalPosition for leaders.
+* (fixed) Wrong value when writing style override DimRoundOff for dimensions.
 
 ### [2018/6/2]
 * Added missing PlotSetting properties (ScaleToFit, PlotType, ShadePlotMode, ShadePlotResolutionMode, ShadePlotDPI).

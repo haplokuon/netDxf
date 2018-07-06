@@ -1,7 +1,7 @@
-﻿#region netDxf library, Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+﻿#region netDxf library, Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
 
 //                        netDxf library
-// Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -40,7 +40,7 @@ namespace netDxf.Entities
         private Vector2 endFirstLine;
         private Vector2 startSecondLine;
         private Vector2 endSecondLine;
-        private Vector3 arcDefinitionPoint;
+        private Vector2 arcDefinitionPoint;
 
         #endregion
 
@@ -122,8 +122,8 @@ namespace netDxf.Entities
             this.endFirstLine = new Vector2(ocsPoints[1].X, ocsPoints[1].Y);
             this.startSecondLine = new Vector2(ocsPoints[2].X, ocsPoints[2].Y);
             this.endSecondLine = new Vector2(ocsPoints[3].X, ocsPoints[3].Y);
-            if (MathHelper.IsZero(offset))
-                throw new ArgumentOutOfRangeException(nameof(offset), "The offset value cannot be zero.");
+            if (offset < 0)
+                throw new ArgumentOutOfRangeException(nameof(offset), "The offset value must be equal or greater than zero.");
             this.offset = offset;
 
             if (style == null)
@@ -131,6 +131,7 @@ namespace netDxf.Entities
             this.Style = style;
             this.Normal = normal;
             this.Elevation = ocsPoints[0].Z;
+            this.Update();
         }
 
         /// <summary>
@@ -168,23 +169,14 @@ namespace netDxf.Entities
             this.startSecondLine = startSecondLine;
             this.endSecondLine = endSecondLine;
 
-            if (MathHelper.IsZero(offset))
-                throw new ArgumentOutOfRangeException(nameof(offset), "The offset value cannot be zero.");
+            if (offset < 0)
+                throw new ArgumentOutOfRangeException(nameof(offset), "The offset value must be equal or greater than zero.");
             this.offset = offset;
 
             if (style == null)
                 throw new ArgumentNullException(nameof(style));
             this.Style = style;
-        }
-
-        #endregion
-
-        #region internal properties
-
-        internal Vector3 ArcDefinitionPoint
-        {
-            get { return this.arcDefinitionPoint; }
-            set { this.arcDefinitionPoint = value; }
+            this.Update();
         }
 
         #endregion
@@ -192,7 +184,21 @@ namespace netDxf.Entities
         #region public properties
 
         /// <summary>
-        /// Start <see cref="Vector2">point</see> of the first line that defines the angle to measure in OCS (object coordinate system).
+        /// Gets the center <see cref="Vector2">point</see> of the measured arc in local coordinates.
+        /// </summary>
+        public Vector2 CenterPoint
+        {
+            get
+            {
+                return MathHelper.FindIntersection(
+                    this.startFirstLine, this.endFirstLine - this.startFirstLine,
+                    this.startSecondLine, this.endSecondLine - this.startSecondLine);
+            }
+        }
+
+
+        /// <summary>
+        /// Start <see cref="Vector2">point</see> of the first line that defines the angle to measure in local coordinates.
         /// </summary>
         public Vector2 StartFirstLine
         {
@@ -201,7 +207,7 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// End <see cref="Vector2">point</see> of the first line that defines the angle to measure in OCS (object coordinate system).
+        /// End <see cref="Vector2">point</see> of the first line that defines the angle to measure in local coordinates.
         /// </summary>
         public Vector2 EndFirstLine
         {
@@ -228,16 +234,27 @@ namespace netDxf.Entities
         }
 
         /// <summary>
+        /// Gets the location of the dimension line arc.
+        /// </summary>
+        public Vector2 ArcDefinitionPoint
+        {
+            get { return this.arcDefinitionPoint; }
+            internal set { this.arcDefinitionPoint = value; }
+        }
+
+        /// <summary>
         /// Gets or sets the distance between the center point and the dimension line.
         /// </summary>
-        /// <remarks>Zero values are not allowed, and even if negative values are permitted they are not recommended.</remarks>
+        /// <remarks>
+        /// Offset values cannot be negative and, even thought, zero values are allowed, they are not recommended.
+        /// </remarks>
         public double Offset
         {
             get { return this.offset; }
             set
             {
-                if (MathHelper.IsZero(value))
-                    throw new ArgumentOutOfRangeException(nameof(value), "The offset value cannot be zero.");
+                if (value < 0)
+                    throw new ArgumentOutOfRangeException(nameof(value), "The offset value must be equal or greater than zero.");
                 this.offset = value;
             }
         }
@@ -264,55 +281,89 @@ namespace netDxf.Entities
         /// Calculates the dimension offset from a point along the dimension line.
         /// </summary>
         /// <param name="point">Point along the dimension line.</param>
+        /// <remarks>
+        /// The start and end points of the reference lines will be modified,
+        /// the angle measurement is always made from the direction of the first line to the direction of the second line.
+        /// </remarks>
         public void SetDimensionLinePosition(Vector2 point)
         {
-            Vector2 dirRef1 = this.endFirstLine - this.startFirstLine;
-            Vector2 dirRef2 = this.endSecondLine - this.startSecondLine;
-            Vector2 center = MathHelper.FindIntersection(this.startFirstLine, dirRef1, this.startSecondLine, dirRef2);
+            this.SetDimensionLinePosition(point, true);
+        }
+
+        #endregion
+
+        #region private methods
+
+        private void SetDimensionLinePosition(Vector2 point, bool updateRefs)
+        {
+            Vector2 center = this.CenterPoint;
 
             if (Vector2.IsNaN(center))
                 throw new ArgumentException("The two lines that define the dimension are parallel.");
-            Vector2 dirOffset = point - center;
+
+            if (updateRefs)
+            {
+                Vector2 ref1Start = this.StartFirstLine;
+                Vector2 ref1End = this.EndFirstLine;
+                Vector2 ref2Start = this.StartSecondLine;
+                Vector2 ref2End = this.EndSecondLine;
+                Vector2 dirRef1 = ref1End - ref1Start;
+                Vector2 dirRef2 = ref2End - ref2Start;
+
+                Vector2 dirOffset = point - center;
+                double crossStart = Vector2.CrossProduct(dirRef1, dirOffset);
+                double crossEnd = Vector2.CrossProduct(dirRef2, dirOffset);
+
+                if (crossStart >= 0 && crossEnd >= 0)
+                {
+                    this.StartFirstLine = ref2Start;
+                    this.EndFirstLine = ref2End;
+                    this.StartSecondLine = ref1End;
+                    this.EndSecondLine = ref1Start;
+                }
+                else if (crossStart < 0 && crossEnd >= 0)
+                {
+                    this.StartFirstLine = ref1End;
+                    this.EndFirstLine = ref1Start;
+                    this.StartSecondLine = ref2End;
+                    this.EndSecondLine = ref2Start;
+                }
+                else if (crossStart < 0 && crossEnd < 0)
+                {
+                    this.StartFirstLine = ref2End;
+                    this.EndFirstLine = ref2Start;
+                    this.StartSecondLine = ref1Start;
+                    this.EndSecondLine = ref1End;
+                }
+            }
 
             this.offset = Vector2.Distance(center, point);
-            double cross = Vector2.CrossProduct(dirRef1, dirRef2);
-            if (cross < 0)
-            {
-                Vector2 tmp = this.startFirstLine;
-                this.startFirstLine = this.endFirstLine;
-                this.endFirstLine = tmp;
+            this.defPoint = this.endSecondLine;
 
-                tmp = this.startSecondLine;
-                this.startSecondLine = this.endSecondLine;
-                this.endSecondLine = tmp;
-            }
+            double measure = this.Measurement * MathHelper.DegToRad;
+            double startAngle = Vector2.Angle(center, this.endFirstLine);
+            double midRot = startAngle + measure * 0.5;
+            Vector2 midDim = Vector2.Polar(center, this.offset, midRot);
+            this.arcDefinitionPoint = midDim;
 
-            double crossStart = Vector2.CrossProduct(dirRef1, dirOffset);
-            double crossEnd = Vector2.CrossProduct(dirRef2, dirOffset);
-            if (crossStart >= 0 && crossEnd < 0)
+            DimensionStyleFitTextMove moveText = this.Style.FitTextMove;
+            DimensionStyleOverride styleOverride;
+            if (this.StyleOverrides.TryGetValue(DimensionStyleOverrideType.FitTextMove, out styleOverride))
             {
+                moveText = (DimensionStyleFitTextMove)styleOverride.Value;
             }
-            if (crossStart >= 0 && crossEnd >= 0)
+            if (moveText == DimensionStyleFitTextMove.BesideDimLine)
             {
-                Vector2 tmp = this.startFirstLine;
-                this.startFirstLine = this.endFirstLine;
-                this.endFirstLine = tmp;
-            }
-            if (crossStart < 0 && crossEnd >= 0)
-            {
-                Vector2 tmp = this.startFirstLine;
-                this.startFirstLine = this.endFirstLine;
-                this.endFirstLine = tmp;
-
-                tmp = this.startSecondLine;
-                this.startSecondLine = this.endSecondLine;
-                this.endSecondLine = tmp;
-            }
-            if (crossStart < 0 && crossEnd < 0)
-            {
-                Vector2 tmp = this.startSecondLine;
-                this.startSecondLine = this.endSecondLine;
-                this.endSecondLine = tmp;
+                if (!this.TextPositionManuallySet)
+                {
+                    Vector2 textDir = this.textRefPoint - center;
+                    Vector2 vecText = center + this.offset * Vector2.Normalize(textDir);
+                    this.textRefPoint += vecText;
+                }
+                else
+                {
+                    if (updateRefs) this.textRefPoint = midDim;
+                }
             }
         }
 
@@ -321,11 +372,49 @@ namespace netDxf.Entities
         #region overrides
 
         /// <summary>
+        /// Calculate the dimension reference points.
+        /// </summary>
+        protected override void CalculteReferencePoints()
+        {
+            double measure = this.Measurement * MathHelper.DegToRad ;
+            Vector2 center = this.CenterPoint;
+
+            if (Vector2.IsNaN(center))
+                throw new ArgumentException("The two lines that define the dimension are parallel.");
+
+            double startAngle = Vector2.Angle(center, this.endFirstLine);
+            double midRot = startAngle + measure * 0.5;
+            Vector2 midDim = Vector2.Polar(center, this.offset, midRot);
+
+            this.defPoint = this.endSecondLine;
+            
+            if (this.TextPositionManuallySet)
+            {
+                DimensionStyleFitTextMove moveText = this.Style.FitTextMove;
+                DimensionStyleOverride styleOverride;
+                if (this.StyleOverrides.TryGetValue(DimensionStyleOverrideType.FitTextMove, out styleOverride))
+                {
+                    moveText = (DimensionStyleFitTextMove)styleOverride.Value;
+                }
+
+                if (moveText == DimensionStyleFitTextMove.BesideDimLine)
+                {
+                    this.SetDimensionLinePosition(this.textRefPoint, false);
+                }
+            }
+            else
+            {
+                this.textRefPoint = midDim;
+                this.arcDefinitionPoint = this.TextReferencePoint;
+            }
+        }
+
+        /// <summary>
         /// Gets the block that contains the entities that make up the dimension picture.
         /// </summary>
         /// <param name="name">Name to be assigned to the generated block.</param>
         /// <returns>The block that represents the actual dimension.</returns>
-        internal override Block BuildBlock(string name)
+        protected override Block BuildBlock(string name)
         {
             return DimensionBlock.Build(this, name);
         }
@@ -349,17 +438,22 @@ namespace netDxf.Entities
                 IsVisible = this.IsVisible,
                 //Dimension properties
                 Style = (DimensionStyle) this.Style.Clone(),
+                DefinitionPoint = this.DefinitionPoint,
+                TextReferencePoint = this.TextReferencePoint,
+                TextPositionManuallySet = this.TextPositionManuallySet,
+                TextRotation = this.TextRotation,
                 AttachmentPoint = this.AttachmentPoint,
                 LineSpacingStyle = this.LineSpacingStyle,
                 LineSpacingFactor = this.LineSpacingFactor,
                 UserText = this.UserText,
+                Elevation = this.Elevation,
                 //Angular2LineDimension properties
                 StartFirstLine = this.startFirstLine,
                 EndFirstLine = this.endFirstLine,
                 StartSecondLine = this.startSecondLine,
                 EndSecondLine = this.endSecondLine,
                 Offset = this.offset,
-                Elevation = this.Elevation
+                arcDefinitionPoint = this.arcDefinitionPoint
             };
 
             foreach (XData data in this.XData.Values)

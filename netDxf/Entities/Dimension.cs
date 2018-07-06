@@ -1,7 +1,7 @@
-﻿#region netDxf library, Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+﻿#region netDxf library, Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
 
 //                        netDxf library
-// Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -100,17 +100,19 @@ namespace netDxf.Entities
 
         #region protected fields
 
-        private Vector3 definitionPoint;
-        private Vector3 midTextPoint;
+        protected Vector2 defPoint;
+        protected Vector2 textRefPoint;
         private DimensionStyle style;
         private readonly DimensionType dimensionType;
         private MTextAttachmentPoint attachmentPoint;
         private MTextLineSpacingStyle lineSpacingStyle;
         private Block block;
+        private double textRotation;
         private string userText;
         private double lineSpacing;
         private double elevation;
         private readonly DimensionStyleOverrideDictionary styleOverrides;
+        private bool userTextPosition;
 
         #endregion
 
@@ -122,14 +124,15 @@ namespace netDxf.Entities
         protected Dimension(DimensionType type)
             : base(EntityType.Dimension, DxfObjectCode.Dimension)
         {
-            this.definitionPoint = Vector3.Zero;
-            this.midTextPoint = Vector3.Zero;
+            this.defPoint = Vector2.Zero;
+            this.textRefPoint = Vector2.Zero;
             this.dimensionType = type;
             this.attachmentPoint = MTextAttachmentPoint.MiddleCenter;
             this.lineSpacingStyle = MTextLineSpacingStyle.AtLeast;
             this.lineSpacing = 1.0;
             this.block = null;
             this.style = DimensionStyle.Default;
+            this.textRotation = 0.0;
             this.userText = null;
             this.elevation = 0.0;
             this.styleOverrides = new DimensionStyleOverrideDictionary();
@@ -144,26 +147,45 @@ namespace netDxf.Entities
         #region internal properties
 
         /// <summary>
-        /// Definition point (in WCS).
+        /// Gets the reference <see cref="Vector2">position</see> for the dimension line in local coordinates.
         /// </summary>
-        internal Vector3 DefinitionPoint
+        internal Vector2 DefinitionPoint
         {
-            get { return this.definitionPoint; }
-            set { this.definitionPoint = value; }
-        }
-
-        /// <summary>
-        /// Middle point of dimension text (in OCS).
-        /// </summary>
-        internal Vector3 MidTextPoint
-        {
-            get { return this.midTextPoint; }
-            set { this.midTextPoint = value; }
+            get { return this.defPoint; }
+            set { this.defPoint = value; }
         }
 
         #endregion
 
         #region public properties
+
+        /// <summary>
+        /// Gets or sets if the text reference point has been set by the user. Set to false to reset the text to its original position.
+        /// </summary>
+        /// <remarks>
+        /// This value is related to the style property <c>FitTextMove</c>.
+        /// If the style FitTextMove is set to BesidesDimLine the text reference point will take precedence over the offset value to place the dimension line.
+        /// In case of Ordinate dimensions if the text has been manually set the text position will take precedence over the EndLeaderPoint only if FitTextMove
+        /// has been set to OverDimLineWithoutLeader.
+        /// </remarks>
+        public bool TextPositionManuallySet
+        {
+            get { return this.userTextPosition; }
+            set { this.userTextPosition = value; }
+        }
+
+        /// <summary>
+        /// Gets or sets the text reference <see cref="Vector2">position</see>, the middle point of dimension text in local coordinates.
+        /// </summary>
+        public Vector2 TextReferencePoint
+        {
+            get { return this.textRefPoint; }
+            set
+            {
+                this.userTextPosition = true;
+                this.textRefPoint = value;
+            }
+        }
 
         /// <summary>
         /// Gets or sets the style associated with the dimension.
@@ -240,12 +262,25 @@ namespace netDxf.Entities
         /// Gets the block that contains the entities that make up the dimension picture.
         /// </summary>
         /// <remarks>
-        /// This value will be null until the dimension entity is added to the document.
+        /// Set this value to null to force the program that reads the resulting DXF file to generate the dimension drawing block,
+        /// some programs do not even care about this block and will always generate their own dimension drawings.<br />
+        /// You can even use your own dimension drawing setting this value with the resulting block.
+        /// The assigned block name is irrelevant, it will be automatically modified to accommodate the naming conventions of the blocks for dimension (*D#).<br />
+        /// The block will be overwritten when adding the dimension to a <see cref="DxfDocument">DxfDocument</see> if <c>BuildDimensionBlocks</c> is set to true.
         /// </remarks>
         public Block Block
         {
             get { return this.block; }
-            internal set { this.block = value; }
+            set { this.block = this.OnDimensionBlockChangedEvent(this.block, value); }
+        }
+
+        /// <summary>
+        /// Gets or sets the rotation angle in degrees of the dimension text away from its default orientation(the direction of the dimension line).
+        /// </summary>
+        public double TextRotation
+        {
+            get { return this.textRotation; }
+            set { this.textRotation = MathHelper.NormalizeAngle(value); }
         }
 
         /// <summary>
@@ -273,59 +308,41 @@ namespace netDxf.Entities
 
         #endregion
 
-        #region internal methods
+        #region abstract methods
+
+        /// <summary>
+        /// Calculate the dimension reference points.
+        /// </summary>
+        protected abstract void CalculteReferencePoints();
 
         /// <summary>
         /// Gets the block that contains the entities that make up the dimension picture.
         /// </summary>
         /// <param name="name">Name to be assigned to the generated block.</param>
         /// <returns> The block that represents the actual dimension.</returns>
-        internal abstract Block BuildBlock(string name);
+        protected abstract Block BuildBlock(string name);
 
         #endregion
 
         #region public methods
 
         /// <summary>
-        /// Rebuilds the block definition of the actual dimension.
+        /// Updates the internal data of the dimension and if needed it rebuilds the block definition of the actual dimension.
         /// </summary>
         /// <remarks>
-        /// This method needs to be manually called to reflect any change made to the dimension style.<br />
-        /// The dimension must belong to a document.
+        /// This method needs to be manually called to reflect any change made to the dimension properties (geometry and/or style).
         /// </remarks>
         public void Update()
         {
-            //DxfDocument doc = this.Owner.Owner.Owner.Owner as DxfDocument;
-            //if (doc == null)
-            //    throw new NullReferenceException("The dimension entity must belong to a document to be able to update or create the block that represent the actual object.");
+            this.CalculteReferencePoints();
 
-            //string name;
-            //if (this.block == null)
-            //    name = "*D" + ++doc.DimensionBlocksIndex;
-            //else
-            //    name = this.block.Name;
+            if (this.block != null)
 
-            //Block newBlock = this.BuildBlock(name);
-            //this.block = this.OnDimensionBlockChangedEvent(this.block, newBlock);
-
-            if (this.block == null)
-                return;
-            Block newBlock = this.BuildBlock(this.block.Name);
-            this.block = this.OnDimensionBlockChangedEvent(this.block, newBlock);
-
+            {
+                Block newBlock = this.BuildBlock(this.block.Name);
+                this.block = this.OnDimensionBlockChangedEvent(this.block, newBlock);
+            }
         }
-
-        /// <summary>
-        /// Clears the reference to the block associated with the dimension.
-        /// </summary>
-        /// <remarks>
-        /// This method only deletes the reference not the actual block from the document.
-        /// </remarks>
-        //public void ClearBlockReference()
-        //{
-        //    this.block = this.OnDimensionBlockChangedEvent(this.block, null);
-        //    //this.block = null;
-        //}
 
         #endregion
 

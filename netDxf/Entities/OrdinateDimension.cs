@@ -1,7 +1,7 @@
-﻿#region netDxf library, Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+﻿#region netDxf library, Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
 
 //                        netDxf library
-// Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -29,18 +29,15 @@ namespace netDxf.Entities
     /// <summary>
     /// Represents an ordinate dimension <see cref="EntityObject">entity</see>.
     /// </summary>
-    public class OrdinateDimension
-        : Dimension
+    public class OrdinateDimension :
+        Dimension
     {
         #region private fields
 
-        private Vector2 origin;
-        private Vector2 referencePoint;
-        private double length;
         private double rotation;
         private OrdinateDimensionAxis axis;
-        private Vector3 firstPoint;
-        private Vector3 secondPoint;
+        private Vector2 firstPoint;
+        private Vector2 secondPoint;
 
         #endregion
 
@@ -50,20 +47,83 @@ namespace netDxf.Entities
         /// Initializes a new instance of the <c>OrdinateDimension</c> class.
         /// </summary>
         public OrdinateDimension()
-            : this(Vector2.Zero, Vector2.UnitX, 0.1, OrdinateDimensionAxis.Y, 0.0)
+            : this(Vector2.Zero, new Vector2(0.5, 0), new Vector2(1.0, 0), OrdinateDimensionAxis.Y, DimensionStyle.Default)
         {
         }
 
         /// <summary>
         /// Initializes a new instance of the <c>OrdinateDimension</c> class.
         /// </summary>
+        /// <param name="origin">Origin <see cref="Vector2">point</see> in local coordinates of the ordinate dimension.</param>
+        /// <param name="featurePoint">Base location <see cref="Vector2">point</see> in local coordinates of the ordinate dimension.</param>
+        /// <param name="leaderEndPoint">Leader end <see cref="Vector2">point</see> in local coordinates of the ordinate dimension</param>
+        /// <remarks>
+        /// Uses the difference between the feature location and the leader endpoint to determine whether it is an X or a Y ordinate dimension.
+        /// If the difference in the Y ordinate is greater, the dimension measures the X ordinate. Otherwise, it measures the Y ordinate.
+        /// </remarks>
+        public OrdinateDimension(Vector2 origin, Vector2 featurePoint, Vector2 leaderEndPoint)
+            : this(origin, featurePoint, leaderEndPoint, DimensionStyle.Default)
+        {           
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <c>OrdinateDimension</c> class.
+        /// </summary>
+        /// <param name="origin">Origin <see cref="Vector2">point</see> in local coordinates of the ordinate dimension.</param>
+        /// <param name="featurePoint">Base location <see cref="Vector2">point</see> in local coordinates of the ordinate dimension.</param>
+        /// <param name="leaderEndPoint">Leader end <see cref="Vector2">point</see> in local coordinates of the ordinate dimension</param>
+        /// <param name="style">The <see cref="DimensionStyle">style</see> to use with the dimension.</param>
+        /// <remarks>
+        /// Uses the difference between the feature location and the leader endpoint to determine whether it is an X or a Y ordinate dimension.
+        /// If the difference in the Y ordinate is greater, the dimension measures the X ordinate. Otherwise, it measures the Y ordinate.
+        /// </remarks>
+        public OrdinateDimension(Vector2 origin, Vector2 featurePoint, Vector2 leaderEndPoint, DimensionStyle style)
+            : base(DimensionType.Ordinate)
+        {
+            this.defPoint = origin;
+            this.firstPoint = featurePoint;
+            this.secondPoint = leaderEndPoint;
+            this.textRefPoint = leaderEndPoint;
+            Vector2 vec = leaderEndPoint - featurePoint;
+            this.axis = vec.Y > vec.X ? OrdinateDimensionAxis.X : OrdinateDimensionAxis.Y;
+            this.rotation = 0.0;
+            if (style == null)
+                throw new ArgumentNullException(nameof(style));
+            this.Style = style;
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <c>OrdinateDimension</c> class.
+        /// </summary>
+        /// <param name="origin">Origin <see cref="Vector2">point</see> in local coordinates of the ordinate dimension.</param>
+        /// <param name="featurePoint">Base location <see cref="Vector2">point</see> in local coordinates of the ordinate dimension.</param>
+        /// <param name="leaderEndPoint">Leader end <see cref="Vector2">point</see> in local coordinates of the ordinate dimension</param>
+        /// <param name="axis">Length of the dimension line.</param>
+        /// <param name="style">The <see cref="DimensionStyle">style</see> to use with the dimension.</param>
+        public OrdinateDimension(Vector2 origin, Vector2 featurePoint, Vector2 leaderEndPoint, OrdinateDimensionAxis axis, DimensionStyle style)
+            : base(DimensionType.Ordinate)
+        {
+            this.defPoint = origin;
+            this.firstPoint = featurePoint;
+            this.secondPoint = leaderEndPoint;
+            this.textRefPoint = leaderEndPoint;
+            this.axis = axis;
+            this.rotation = 0.0;
+            if (style == null)
+                throw new ArgumentNullException(nameof(style));
+            this.Style = style;
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <c>OrdinateDimension</c> class.
+        /// </summary>
         /// <param name="origin">Origin <see cref="Vector2">point</see> of the ordinate dimension.</param>
-        /// <param name="referencePoint">Base location <see cref="Vector3">point</see> in local coordinates of the ordinate dimension.</param>
+        /// <param name="featurePoint">Base location <see cref="Vector2">point</see> in local coordinates of the ordinate dimension.</param>
         /// <param name="length">Length of the dimension line.</param>
         /// <param name="axis">Length of the dimension line.</param>
         /// <remarks>The local coordinate system of the dimension is defined by the dimension normal and the rotation value.</remarks>
-        public OrdinateDimension(Vector2 origin, Vector2 referencePoint, double length, OrdinateDimensionAxis axis)
-            : this(origin, referencePoint, length, axis, 0.0, DimensionStyle.Default)
+        public OrdinateDimension(Vector2 origin, Vector2 featurePoint, double length, OrdinateDimensionAxis axis)
+            : this(origin, featurePoint, length, axis, 0.0, DimensionStyle.Default)
         {
         }
 
@@ -71,13 +131,13 @@ namespace netDxf.Entities
         /// Initializes a new instance of the <c>OrdinateDimension</c> class.
         /// </summary>
         /// <param name="origin">Origin <see cref="Vector2">point</see> of the ordinate dimension.</param>
-        /// <param name="referencePoint">Base location <see cref="Vector3">point</see> in local coordinates of the ordinate dimension.</param>
+        /// <param name="featurePoint">Base location <see cref="Vector2">point</see> in local coordinates of the ordinate dimension.</param>
         /// <param name="length">Length of the dimension line.</param>
         /// <param name="axis">Length of the dimension line.</param>
         /// <param name="style">The <see cref="DimensionStyle">style</see> to use with the dimension.</param>
         /// <remarks>The local coordinate system of the dimension is defined by the dimension normal and the rotation value.</remarks>
-        public OrdinateDimension(Vector2 origin, Vector2 referencePoint, double length, OrdinateDimensionAxis axis, DimensionStyle style)
-            : this(origin, referencePoint, length, axis, 0.0, style)
+        public OrdinateDimension(Vector2 origin, Vector2 featurePoint, double length, OrdinateDimensionAxis axis, DimensionStyle style)
+            : this(origin, featurePoint, length, axis, 0.0, style)
         {
         }
 
@@ -85,13 +145,13 @@ namespace netDxf.Entities
         /// Initializes a new instance of the <c>OrdinateDimension</c> class.
         /// </summary>
         /// <param name="origin">Origin <see cref="Vector2">point</see> of the ordinate dimension.</param>
-        /// <param name="referencePoint">Base location <see cref="Vector3">point</see> in local coordinates of the ordinate dimension.</param>
+        /// <param name="featurePoint">Base location <see cref="Vector2">point</see> in local coordinates of the ordinate dimension.</param>
         /// <param name="length">Length of the dimension line.</param>
-        /// <param name="rotation">Angle of rotation in degrees of the dimension lines.</param>
         /// <param name="axis">Length of the dimension line.</param>
+        /// <param name="rotation">Angle of rotation in degrees of the dimension lines.</param>
         /// <remarks>The local coordinate system of the dimension is defined by the dimension normal and the rotation value.</remarks>
-        public OrdinateDimension(Vector2 origin, Vector2 referencePoint, double length, OrdinateDimensionAxis axis, double rotation)
-            : this(origin, referencePoint, length, axis, rotation, DimensionStyle.Default)
+        public OrdinateDimension(Vector2 origin, Vector2 featurePoint, double length, OrdinateDimensionAxis axis, double rotation)
+            : this(origin, featurePoint, length, axis, rotation, DimensionStyle.Default)
         {
         }
 
@@ -99,40 +159,31 @@ namespace netDxf.Entities
         /// Initializes a new instance of the <c>OrdinateDimension</c> class.
         /// </summary>
         /// <param name="origin">Origin <see cref="Vector3">point</see> in world coordinates of the ordinate dimension.</param>
-        /// <param name="referencePoint">Base location <see cref="Vector3">point</see> in local coordinates of the ordinate dimension.</param>
+        /// <param name="featurePoint">Base location <see cref="Vector2">point</see> in local coordinates of the ordinate dimension.</param>
         /// <param name="length">Length of the dimension line.</param>
         /// <param name="axis">Local axis that measures the ordinate dimension.</param>
         /// <param name="rotation">Angle of rotation in degrees of the dimension lines.</param>
         /// <param name="style">The <see cref="DimensionStyle">style</see> to use with the dimension.</param>
         /// <remarks>The local coordinate system of the dimension is defined by the dimension normal and the rotation value.</remarks>
-        public OrdinateDimension(Vector2 origin, Vector2 referencePoint, double length, OrdinateDimensionAxis axis, double rotation, DimensionStyle style)
+        public OrdinateDimension(Vector2 origin, Vector2 featurePoint, double length, OrdinateDimensionAxis axis, double rotation, DimensionStyle style)
             : base(DimensionType.Ordinate)
         {
-            this.origin = origin;
+            this.defPoint = origin;
             this.rotation = MathHelper.NormalizeAngle(rotation);
-            this.length = length;
-            this.referencePoint = referencePoint;
+            this.firstPoint = featurePoint;
             this.axis = axis;
 
             if (style == null)
                 throw new ArgumentNullException(nameof(style));
             this.Style = style;
-        }
 
-        #endregion
+            double angle = rotation * MathHelper.DegToRad;
+            Vector2 refCenter = origin;
+            Vector2 startPoint = refCenter + Vector2.Rotate(featurePoint, angle);
 
-        #region internal properties
-
-        internal Vector3 FirstPoint
-        {
-            get { return this.firstPoint; }
-            set { this.firstPoint = value; }
-        }
-
-        public Vector3 SecondPoint
-        {
-            get { return this.secondPoint; }
-            set { this.secondPoint = value; }
+            if (this.Axis == OrdinateDimensionAxis.X) angle += MathHelper.HalfPI;
+            this.secondPoint = Vector2.Polar(startPoint, length, angle);
+            this.textRefPoint = this.secondPoint;
         }
 
         #endregion
@@ -140,21 +191,30 @@ namespace netDxf.Entities
         #region public properties
 
         /// <summary>
-        /// Gets or sets the origin <see cref="Vector2">point</see> in OCS (object coordinate system).
+        /// Gets or sets the origin <see cref="Vector2">point</see> in local coordinates.
         /// </summary>
         public Vector2 Origin
         {
-            get { return this.origin; }
-            set { this.origin = value; }
+            get { return this.defPoint; }
+            set { this.defPoint = value; }
         }
 
         /// <summary>
-        /// Gets or sets the base location <see cref="Vector2">point</see> in OCS (object coordinate system).
+        /// Gets or set the base <see cref="Vector2">point</see> in local coordinates, a point on a feature such as an endpoint, intersection, or center of an object.
         /// </summary>
-        public Vector2 ReferencePoint
+        public Vector2 FeaturePoint
         {
-            get { return this.referencePoint; }
-            set { this.referencePoint = value; }
+            get { return this.firstPoint; }
+            set { this.firstPoint = value; }
+        }
+
+        /// <summary>
+        /// Gets or sets the leader end <see cref="Vector2">point</see> in local coordinates
+        /// </summary>
+        public Vector2 LeaderEndPoint
+        {
+            get { return this.secondPoint; }
+            set { this.secondPoint = value; }
         }
 
         /// <summary>
@@ -164,15 +224,6 @@ namespace netDxf.Entities
         {
             get { return this.rotation; }
             set { MathHelper.NormalizeAngle(this.rotation = value); }
-        }
-
-        /// <summary>
-        /// Gets or sets the length of the dimension line.
-        /// </summary>
-        public double Length
-        {
-            get { return this.length; }
-            set { this.length = value; }
         }
 
         /// <summary>
@@ -189,7 +240,7 @@ namespace netDxf.Entities
         /// </summary>
         public override double Measurement
         {
-            get { return this.axis == OrdinateDimensionAxis.X ? this.referencePoint.X : this.referencePoint.Y; }
+            get { return this.axis == OrdinateDimensionAxis.X ? this.firstPoint.X : this.firstPoint.Y; }
         }
 
         #endregion
@@ -197,11 +248,32 @@ namespace netDxf.Entities
         #region overrides
 
         /// <summary>
+        /// Calculate the dimension reference points.
+        /// </summary>
+        protected override void CalculteReferencePoints()
+        {
+            if (this.TextPositionManuallySet)
+            {
+                DimensionStyleFitTextMove moveText = this.Style.FitTextMove;
+                DimensionStyleOverride styleOverride;
+                if (this.StyleOverrides.TryGetValue(DimensionStyleOverrideType.FitTextMove, out styleOverride))
+                {
+                    moveText = (DimensionStyleFitTextMove)styleOverride.Value;
+                }
+
+                if (moveText != DimensionStyleFitTextMove.OverDimLineWithoutLeader)
+                {
+                    this.secondPoint = this.textRefPoint;
+                }
+            }
+        }
+
+        /// <summary>
         /// Gets the block that contains the entities that make up the dimension picture.
         /// </summary>
         /// <param name="name">Name to be assigned to the generated block.</param>
         /// <returns>The block that represents the actual dimension.</returns>
-        internal override Block BuildBlock(string name)
+        protected override Block BuildBlock(string name)
         {
             return DimensionBlock.Build(this, name);
         }
@@ -225,17 +297,20 @@ namespace netDxf.Entities
                 IsVisible = this.IsVisible,
                 //Dimension properties
                 Style = (DimensionStyle) this.Style.Clone(),
+                DefinitionPoint = this.defPoint,
+                TextReferencePoint = this.TextReferencePoint,
+                TextPositionManuallySet = this.TextPositionManuallySet,
+                TextRotation = this.TextRotation,
                 AttachmentPoint = this.AttachmentPoint,
                 LineSpacingStyle = this.LineSpacingStyle,
                 LineSpacingFactor = this.LineSpacingFactor,
                 UserText = this.UserText,
+                Elevation = this.Elevation,
                 //OrdinateDimension properties
-                Origin = this.origin,
-                ReferencePoint = this.referencePoint,
+                FeaturePoint = this.firstPoint,
+                LeaderEndPoint = this.secondPoint,
                 Rotation = this.rotation,
-                Length = this.length,
-                Axis = this.axis,
-                Elevation = this.Elevation
+                Axis = this.axis
             };
 
             foreach (XData data in this.XData.Values)

@@ -96,6 +96,10 @@
     <Compile Include="Objects\PlotType.cs" />
     <Compile Include="Objects\ShadePlotMode.cs" />
     <Compile Include="Objects\ShadePlotResolutionMode.cs" />
+    <Compile Include="Tables\DimensionStyleTextVerticalPlacement.cs" />
+    <Compile Include="Tables\DimensionStyleTextHorizontalPlacement.cs" />
+    <Compile Include="Tables\DimensionStyleFitOptions.cs" />
+    <Compile Include="Tables\DimensionStyleFitTextMove.cs" />
     <Compile Include="Tables\FontStyle.cs" />
     <Compile Include="Tables\LinetypeSegment.cs" />
     <Compile Include="Tables\DimensionStyleOverride.cs" />

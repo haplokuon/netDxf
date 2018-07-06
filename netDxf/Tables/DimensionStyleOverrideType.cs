@@ -1,7 +1,7 @@
-﻿#region netDxf library, Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+﻿#region netDxf library, Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
 
 //                        netDxf library
-// Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -48,9 +48,14 @@ namespace netDxf.Tables
         DimLineLineweight,
 
         /// <summary>
-        /// Suppresses display of the dimension line.
+        /// Suppresses display of the first dimension line.
         /// </summary>
-        DimLineOff,
+        DimLine1Off,
+
+        /// <summary>
+        /// Suppresses display of the second dimension line.
+        /// </summary>
+        DimLine2Off,
 
         /// <summary>
         /// Distance the dimension line extends beyond the extension line when oblique, architectural tick, integral, or no marks are drawn for arrowheads.
@@ -98,19 +103,14 @@ namespace netDxf.Tables
         ExtLineExtend,
 
         /// <summary>
-        /// Size of dimension line and leader line arrowheads. Also controls the size of hook lines.
+        /// Enables fixed length extension lines.
         /// </summary>
-        ArrowSize,
+        ExtLineFixed,
 
         /// <summary>
-        /// Drawing of circle or arc center marks and centerlines.
+        /// Total length of the extension lines starting from the dimension line toward the dimension origin.
         /// </summary>
-        CenterMarkSize,
-
-        /// <summary>
-        /// Arrowhead block for leaders.
-        /// </summary>
-        LeaderArrow,
+        ExtLineFixedLength,
 
         /// <summary>
         /// Arrowhead block for the first end of the dimension line.
@@ -123,6 +123,21 @@ namespace netDxf.Tables
         DimArrow2,
 
         /// <summary>
+        /// Arrowhead block for leaders.
+        /// </summary>
+        LeaderArrow,
+
+        /// <summary>
+        /// Size of dimension line and leader line arrowheads. Also controls the size of hook lines.
+        /// </summary>
+        ArrowSize,
+
+        /// <summary>
+        /// Drawing of circle or arc center marks and centerlines.
+        /// </summary>
+        CenterMarkSize,
+
+        /// <summary>
         /// Text style of the dimension.
         /// </summary>
         TextStyle,
@@ -133,19 +148,34 @@ namespace netDxf.Tables
         TextColor,
 
         /// <summary>
+        /// Color of background dimension text.
+        /// </summary>
+        TextFillColor,
+
+        /// <summary>
         /// Height of dimension text, unless the current text style has a fixed height.
         /// </summary>
         TextHeight,
 
-        ///// <summary>
-        ///// Horizontal positioning of dimension text.
-        ///// </summary>
-        //DIMJUST,
+        /// <summary>
+        /// Vertical position of text in relation to the dimension line.
+        /// </summary>
+        TextVerticalPlacement,
 
-        ///// <summary>
-        ///// Vertical position of text in relation to the dimension line.
-        ///// </summary>
-        //DIMTAD,
+        /// <summary>
+        /// Horizontal positioning of dimension text.
+        /// </summary>
+        TextHorizontalPlacement,
+
+        /// <summary>
+        /// Positioning of the dimension text inside extension lines.
+        /// </summary>
+        TextInsideAlign,
+
+        /// <summary>
+        /// Positioning of the dimension text outside extension lines.
+        /// </summary>
+        TextOutsideAlign,
 
         /// <summary>
         /// Distance around the dimension text when the dimension line breaks to accommodate dimension text.
@@ -153,19 +183,34 @@ namespace netDxf.Tables
         TextOffset,
 
         /// <summary>
+        /// Controls the drawing of the dimension lines even when the text are placed outside the extension lines.
+        /// </summary>
+        FitDimLineForce,
+
+        /// <summary>
+        /// Controls the drawing of dimension lines outside extension lines.
+        /// </summary>
+        FitDimLineInside,
+
+        /// <summary>
         /// Overall scale factor applied to dimensioning variables that specify sizes, distances, or offsets.
         /// </summary>
         DimScaleOverall,
 
-        ///// <summary>
-        ///// Position of dimension text inside the extension lines for all dimension types except Ordinate.
-        ///// </summary>
-        //DIMTIH,
+        /// <summary>
+        /// Controls the placement of text and arrowheads based on the space available between the extension lines.
+        /// </summary>
+        FitOptions,
 
-        ///// <summary>
-        ///// Position of dimension text outside the extension lines.
-        ///// </summary>
-        //DIMTOH,
+        /// <summary>
+        /// Controls the drawing of text between the extension lines.
+        /// </summary>
+        FitTextInside,
+
+        /// <summary>
+        /// Controls the position of the text when it's moved either manually or automatically.
+        /// </summary>
+        FitTextMove,
 
         /// <summary>
         /// Number of precision places displayed in angular dimensions.
@@ -176,11 +221,6 @@ namespace netDxf.Tables
         /// Number of decimal places displayed for the primary units of a dimension.
         /// </summary>
         LengthPrecision,
-
-        ///// <summary>
-        ///// Text prefix or suffix (or both) to the dimension measurement.
-        ///// </summary>
-        //DIMPOST,
 
         /// <summary>
         /// Specifies the text prefix for the dimension.
@@ -250,6 +290,141 @@ namespace netDxf.Tables
         /// <summary>
         /// Value to round all dimensioning distances.
         /// </summary>
-        DimRoundoff
+        DimRoundoff,
+
+        /// <summary>
+        /// Controls the display of the alternate units.
+        /// </summary>
+        AltUnitsEnabled ,
+
+        /// <summary>
+        /// Alternate units for all dimension types except angular.
+        /// </summary>
+        AltUnitsLengthUnits,
+
+        /// <summary>
+        /// Controls if the Architectural or Fractional linear units will be shown stacked or not.
+        /// </summary>
+        AltUnitsStackedUnits,
+
+        /// <summary>
+        /// Number of decimal places displayed for the alternate units of a dimension.
+        /// </summary>
+        AltUnitsLengthPrecision,
+
+        /// <summary>
+        /// Multiplier used as the conversion factor between primary and alternate units.
+        /// </summary>
+        AltUnitsMultiplier,
+
+        /// <summary>
+        /// Value to round all alternate units of a dimension  except angular.
+        /// </summary>
+        AltUnitsRoundoff,
+
+        /// <summary>
+        /// Specifies the alternate units text prefix for the dimension.
+        /// </summary>
+        AltUnitsPrefix,
+
+        /// <summary>
+        /// Specifies the alternate units text suffix for the dimension.
+        /// </summary>
+        AltUnitsSuffix,
+
+        /// <summary>
+        /// Suppresses alternate units leading zeros in linear decimal dimensions (for example, 0.5000 becomes .5000).
+        /// </summary>
+        AltUnitsSuppressLinearLeadingZeros,
+
+        /// <summary>
+        /// Suppresses alternate units trailing zeros in linear decimal dimensions (for example, 0.5000 becomes .5000).
+        /// </summary>
+        AltUnitsSuppressLinearTrailingZeros,
+
+        /// <summary>
+        /// Suppresses alternate units zero feet in architectural dimensions.
+        /// </summary>
+        AltUnitsSuppressZeroFeet,
+
+        /// <summary>
+        /// Suppresses alternate units zero inches in architectural dimensions.
+        /// </summary>
+        AltUnitsSuppressZeroInches,
+
+        /// <summary>
+        /// Method for calculating the tolerance.
+        /// </summary>
+        TolerancesDisplayMethod,
+
+        /// <summary>
+        /// Maximum or upper tolerance value. When you select Symmetrical in DisplayMethod, this value is used for the tolerance.
+        /// </summary>
+        TolerancesUpperLimit,
+
+        /// <summary>
+        /// Minimum or lower tolerance value.
+        /// </summary>
+        TolerancesLowerLimit,
+
+        /// <summary>
+        /// Text vertical placement for symmetrical and deviation tolerances.
+        /// </summary>
+        TolerancesVerticalPlacement,
+
+        /// <summary>
+        /// Gets or sets the number of decimal places.
+        /// </summary>
+        TolerancesPrecision,
+
+        /// <summary>
+        /// Suppresses leading zeros in linear decimal tolerance units (for example, 0.5000 becomes .5000).
+        /// </summary>
+        TolerancesSuppressLinearLeadingZeros,
+
+        /// <summary>
+        /// Suppresses trailing zeros in linear decimal tolerance units (for example, 12.5000 becomes 12.5).
+        /// </summary>
+        TolerancesSuppressLinearTrailingZeros,
+
+        /// <summary>
+        /// Suppresses zero feet in architectural tolerance units.
+        /// </summary>
+        TolerancesSuppressZeroFeet,
+
+        /// <summary>
+        /// Suppresses zero inches in architectural tolerance units.
+        /// </summary>
+        TolerancesSuppressZeroInches,
+
+        /// <summary>
+        /// Height factor applied to the tolerance text in relation with the dimension text height.
+        /// </summary>
+        TolerancesTextHeightFactor,
+    
+        /// <summary>
+        /// Number of decimal places of the tolerance alternate units.
+        /// </summary>
+        TolerancesAlternatePrecision,
+
+        /// <summary>
+        /// Suppresses leading zeros in linear decimal alternate tolerance units (for example, 0.5000 becomes .5000).
+        /// </summary>
+        TolerancesAltSuppressLinearLeadingZeros,
+
+        /// <summary>
+        /// Suppresses trailing zeros in linear decimal alternate tolerance units (for example, 12.5000 becomes 12.5).
+        /// </summary>
+        TolerancesAltSuppressLinearTrailingZeros,
+
+        /// <summary>
+        /// Suppresses zero feet in architectural alternate tolerance units.
+        /// </summary>
+        TolerancesAltSuppressZeroFeet,
+
+        /// <summary>
+        /// Suppresses zero inches in architectural alternate tolerance units.
+        /// </summary>
+        TolerancesAltSuppressZeroInches
     }
 }

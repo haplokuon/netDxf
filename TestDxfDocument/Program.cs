@@ -25,9 +25,272 @@ namespace TestDxfDocument
     /// </summary>
     public class Program
     {
+        public static void TestDimAligned()
+        {
+            DimensionStyle style = DimensionStyle.Iso25;
+            Vector2 ref1 = Vector2.Zero;
+            Vector2 ref2 = new Vector2(50, 10);
+            Vector2 ref3 = new Vector2(-10, 50);
+            double offset = 10;
+
+            AlignedDimension dim = new AlignedDimension(ref1, ref3, offset, style);
+            dim.SetDimensionLinePosition(new Vector2(40, 10));
+
+            //dim.TextReferencePoint = new Vector2(60, 20);
+            //dim.Offset = 10;
+            //dim.Style.FitTextMove = DimensionStyleFitTextMove.OverDimLineWithLeader;
+            //dim.TextPositionManuallySet = false;
+            //dim.Update();
+
+            //dim.SetDimensionLinePosition(new Vector2(40, 10));
+
+            DxfDocument doc = new DxfDocument();
+            doc.AddEntity(dim);
+            doc.Save("test.dxf");
+
+            DxfDocument dxf = DxfDocument.Load("test.dxf");
+            dxf.Dimensions[0].Block = null;
+            dxf.Save("test compare.dxf");
+        }
+
+        public static void TestDimLinear()
+        {
+            DimensionStyle style = DimensionStyle.Iso25;
+            //style.TextInsideAlign = false;
+            Vector2 ref1 = Vector2.Zero;
+            Vector2 ref2 = new Vector2(50, 10);
+            double offset = 10;
+
+            LinearDimension dim = new LinearDimension(ref2, ref1, offset, 210, style);
+            //dim.TextReferencePoint = new Vector2(60, 20);
+            //dim.TextRotation = 30;
+            //dim.Offset = 20;
+            //dim.Style.FitTextMove = DimensionStyleFitTextMove.OverDimLineWithLeader;
+            //dim.TextPositionManuallySet = false;
+            //dim.Update();
+
+            dim.SetDimensionLinePosition(new Vector2(0, 20));
+            //dim.Block = DimensionBlock.Build(dim, "DimBlock");
+
+            DxfDocument doc = new DxfDocument();
+            doc.DrawingVariables.DimStyle = style.Name;
+            doc.AddEntity(dim);
+            //dim.Rotation = 0;
+            //dim.Update();
+            doc.AddEntity(new Line(ref1, ref2));
+            doc.Save("test.dxf");
+
+            DxfDocument dxf = DxfDocument.Load("test.dxf");
+            dxf.Dimensions[0].Block = null;
+            dxf.Save("test compare.dxf");
+        }
+
+        public static void TestDim2LineAngular()
+        {
+            DimensionStyle style = DimensionStyle.Iso25;
+            style.TextInsideAlign = false;
+
+            Layer layer = new Layer("Layer1") { Color = AciColor.Blue };
+            Vector2 start1 = new Vector2(-20, 20);
+            Vector2 end1 = new Vector2(20, -20);
+            Vector2 start2 = new Vector2(-10, -30);
+            Vector2 end2 = new Vector2(10, 30);
+
+            Line line1 = new Line(start1, end1) { Layer = layer };
+            Line line2 = new Line(start2, end2) { Layer = layer };
+
+            Angular2LineDimension dim = new Angular2LineDimension(line1, line2, 10, style);
+            //dim.SetDimensionLinePosition(new Vector2(20, 10));
+            //dim.SetDimensionLinePosition(new Vector2(4, 16));
+            //dim.SetDimensionLinePosition(new Vector2(-30, 20));
+            //dim.SetDimensionLinePosition(new Vector2(0, -20));
+            //dim.TextReferencePoint = new Vector2(-30, 20);
+            //dim.Style.FitTextMove = DimensionStyleFitTextMove.OverDimLineWithLeader;
+            //dim.Update();
+
+            //dim.TextPositionManuallySet = false;
+            //dim.Style.FitTextMove = DimensionStyleFitTextMove.BesideDimLine;
+            //dim.Update();
+
+            DxfDocument doc = new DxfDocument();
+            doc.DrawingVariables.DimStyle = style.Name;
+            doc.AddEntity(dim);
+            //dim.SetDimensionLinePosition(MathHelper.FindIntersection(start1, end1-start1, start2, end2-start2));
+            doc.AddEntity(line1);
+            doc.AddEntity(line2);
+            doc.Save("test.dxf");
+
+            DxfDocument dxf = DxfDocument.Load("test.dxf");
+            dxf.Dimensions[0].Block = null;
+            dxf.Save("test compare.dxf");
+        }
+
+        public static void TestDim3PointAngular()
+        {
+            DimensionStyle style = DimensionStyle.Iso25;
+            style.TextInsideAlign = false;
+
+            Layer layer = new Layer("Layer1") { Color = AciColor.Blue };
+            Vector2 start1 = new Vector2(-20, 20);
+            Vector2 end1 = new Vector2(20, -20);
+            Vector2 start2 = new Vector2(-10, -30);
+            Vector2 end2 = new Vector2(10, 30);
+      
+            Line line1 = new Line(start1, end1) { Layer = layer };
+            Line line2 = new Line(start2, end2) { Layer = layer };
+            Vector2 center = MathHelper.FindIntersection(start1, end1 - start1, start2, end2 - start2);
+            Angular3PointDimension dim = new Angular3PointDimension(center, end1, end2, 0, style);
+            //dim.SetDimensionLinePosition(new Vector2(20, 10));
+            //dim.SetDimensionLinePosition(new Vector2(4, 16));
+            //dim.SetDimensionLinePosition(new Vector2(-30, 20));
+            //dim.SetDimensionLinePosition(new Vector2(0, -20));
+            //dim.TextReferencePoint = new Vector2(20, 10);
+            //dim.StyleOverrides.Add(new DimensionStyleOverride(DimensionStyleOverrideType.FitTextMove, DimensionStyleFitTextMove.OverDimLineWithLeader));
+            //dim.Style.FitTextMove = DimensionStyleFitTextMove.OverDimLineWithLeader;
+            //dim.Update();
+
+            //dim.TextPositionManuallySet = false;
+            //dim.Style.FitTextMove = DimensionStyleFitTextMove.BesideDimLine;
+            //dim.Offset = -20;
+            //dim.Update();
+
+            DxfDocument doc = new DxfDocument();
+            doc.DrawingVariables.DimStyle = style.Name;
+            doc.AddEntity(dim);
+            //dim.SetDimensionLinePosition(center);
+            doc.AddEntity(line1);
+            doc.AddEntity(line2);
+            doc.Save("test.dxf");
+
+            DxfDocument dxf = DxfDocument.Load("test.dxf");
+            dxf.Dimensions[0].Block = null;
+            dxf.Save("test compare.dxf");
+
+        }
+
+        public static void TestDimDiametric()
+        {
+            DimensionStyle style = DimensionStyle.Iso25;
+            //style.TextInsideAlign = false;
+
+            Layer layer = new Layer("Layer1") {Color = AciColor.Blue};
+
+            Vector2 center = new Vector2(1, 2);
+            double radius = 30;
+            Circle circle = new Circle(center, radius) {Layer = layer};
+
+            DiametricDimension dim = new DiametricDimension(circle, 15, style);
+            //dim.SetDimensionLinePosition(new Vector2(radius + 30, 50));
+            dim.TextReferencePoint = new Vector2(radius + 30, 50);
+            dim.TextReferencePoint = center;
+            dim.Style.FitTextMove = DimensionStyleFitTextMove.OverDimLineWithoutLeader;
+            dim.Update();
+
+            DxfDocument doc = new DxfDocument();
+            doc.DrawingVariables.DimStyle = style.Name;
+            doc.AddEntity(dim);
+            doc.AddEntity(circle);
+            doc.Save("test.dxf");
+
+            DxfDocument dxf = DxfDocument.Load("test.dxf");
+            dxf.Dimensions[0].Block = null;
+            dxf.Save("test compare.dxf");
+
+        }
+
+        public static void TestDimRadial()
+        {
+            DimensionStyle style = DimensionStyle.Iso25;
+            //style.TextInsideAlign = false;
+
+            Layer layer = new Layer("Layer1") { Color = AciColor.Blue };
+
+            Vector2 center = new Vector2(1, 2);
+            double radius = 30;
+            Circle circle = new Circle(center, radius) { Layer = layer };
+
+            RadialDimension dim = new RadialDimension(circle, 15, style);
+            //dim.SetDimensionLinePosition(new Vector2(radius + 30, 50));
+            dim.TextReferencePoint = new Vector2(radius + 30, 50);
+            //dim.TextReferencePoint = center;
+            dim.Style.FitTextMove = DimensionStyleFitTextMove.OverDimLineWithoutLeader;
+            dim.Update();
+
+            DxfDocument doc = new DxfDocument();
+            doc.DrawingVariables.DimStyle = style.Name;
+            doc.AddEntity(dim);
+            doc.AddEntity(circle);
+            doc.Save("test.dxf");
+
+            DxfDocument dxf = DxfDocument.Load("test.dxf");
+            dxf.Dimensions[0].Block = null;
+            dxf.Save("test compare.dxf");
+
+        }
+
+        public static void TestDimOrdinate()
+        {
+            DimensionStyle style = DimensionStyle.Iso25;
+
+            Vector2 origin = new Vector2(10, 5);
+            Vector2 refX = new Vector2(20, 10);
+            Vector2 refY = new Vector2(0, 20);
+            double length = 30;
+            double angle = 30;
+
+            //OrdinateDimension dimX = new OrdinateDimension(origin, refX, length, OrdinateDimensionAxis.X, 0, style);
+            //OrdinateDimension dimY = new OrdinateDimension(origin, refY, length, OrdinateDimensionAxis.Y, 0, style);
+
+            //Vector2 leaderEnd = new Vector2(5,20);
+            //OrdinateDimension dimX = new OrdinateDimension(origin, refX, leaderEnd, style);
+            //OrdinateDimension dimY = new OrdinateDimension(origin, refY, length, OrdinateDimensionAxis.Y, 0, style);
+
+            //OrdinateDimension dim = new OrdinateDimension(Vector2.Zero, new Vector2(10, 20), new Vector2(30, 10), style)
+            //{
+            //    //Rotation = 30
+            //};
+            OrdinateDimension dim = new OrdinateDimension(Vector2.Zero, new Vector2(10, 10), new Vector2(30, 30), style);
+
+            dim.TextReferencePoint = new Vector2(40, 30);
+            //dim.LeaderEndPoint = new Vector2(40,30);
+            dim.Style.FitTextMove = DimensionStyleFitTextMove.BesideDimLine;
+            dim.AttachmentPoint = MTextAttachmentPoint.MiddleCenter;
+            dim.Update();
+
+            DxfDocument doc = new DxfDocument();
+            doc.AddEntity(dim);
+            //doc.AddEntity(dimX);
+            //doc.AddEntity(dimY);
+            doc.Save("test.dxf");
+
+            DxfDocument dxf = DxfDocument.Load("test.dxf");
+            dxf.Dimensions[0].Block = null;
+            dxf.Save("test compare.dxf");
+
+        }
+
         public static void Main()
         {
+            //TestDimAligned();
+            //TestDimLinear();
+            //TestDim2LineAngular();
+            //TestDim3PointAngular();
+            //TestDimDiametric();
+            //TestDimRadial();
+            //TestDimOrdinate();
+
+            //Angular2LineDimension dim = new Angular2LineDimension();
+
             DxfDocument doc = Test(@"sample.dxf");
+            doc.DrawingVariables.AcadVer = DxfVersion.AutoCad2004;
+            doc.Save("test1.dxf");
+            doc.DrawingVariables.DimStyle = DimensionStyle.DefaultName;
+            foreach (Dimension dimension in doc.Dimensions)
+            {
+                dimension.Block = null;
+            }
+
+            doc.Save("test.dxf");
 
             #region Samples for new and modified features 2.1.0
 
@@ -450,11 +713,11 @@ namespace TestDxfDocument
             Vector3 center2 = new Vector3(1, 2, 0);
             double radius = 3;
             Circle circle = new Circle(center2, radius);
-            DiametricDimension dim5 = new DiametricDimension(circle, 0, 2);
+            DiametricDimension dim5 = new DiametricDimension(circle, 0);
             dim5.UserText = "My Value: <>\\XSecondLine";
             doc.AddEntity(dim5);
 
-            RadialDimension dim6 = new RadialDimension(circle, 0, 3);
+            RadialDimension dim6 = new RadialDimension(circle, 0);
             dim6.UserText = "My Value: <>\\XSecondLine";
             doc.AddEntity(dim6);
 
@@ -574,7 +837,8 @@ namespace TestDxfDocument
             dim.StyleOverrides.Add(new DimensionStyleOverride(DimensionStyleOverrideType.DecimalSeparator, ':'));
             dim.StyleOverrides.Add(new DimensionStyleOverride(DimensionStyleOverrideType.SuppressLinearLeadingZeros, true));
             dim.StyleOverrides.Add(new DimensionStyleOverride(DimensionStyleOverrideType.SuppressLinearTrailingZeros, false));
-            dim.StyleOverrides.Add(new DimensionStyleOverride(DimensionStyleOverrideType.DimLineOff, true));
+            dim.StyleOverrides.Add(new DimensionStyleOverride(DimensionStyleOverrideType.DimLine1Off, true));
+            dim.StyleOverrides.Add(new DimensionStyleOverride(DimensionStyleOverrideType.DimLine2Off, true));
             dim.StyleOverrides.Add(new DimensionStyleOverride(DimensionStyleOverrideType.DimArrow1, null));
             dim.StyleOverrides.Add(new DimensionStyleOverride(DimensionStyleOverrideType.DimArrow2, DimensionArrowhead.ArchitecturalTick));
             dim.StyleOverrides.Add(new DimensionStyleOverride(DimensionStyleOverrideType.DimLineLinetype, Linetype.Dashed));
@@ -834,15 +1098,15 @@ namespace TestDxfDocument
             double radius = 3;
             Circle circle = new Circle(center, radius);
             double offset = 2;
-            DiametricDimension dim1 = new DiametricDimension(circle, 0, offset);
+            DiametricDimension dim1 = new DiametricDimension(circle, 0);
             dim1.SetDimensionLinePosition(new Vector2(radius + offset, 2));
-            DiametricDimension dim2 = new DiametricDimension(circle, 45, offset);
-            DiametricDimension dim3 = new DiametricDimension(circle, 90, offset);
-            DiametricDimension dim4 = new DiametricDimension(circle, 120, offset);
-            DiametricDimension dim5 = new DiametricDimension(circle, 180, offset);
-            DiametricDimension dim6 = new DiametricDimension(circle, 220, offset);
-            DiametricDimension dim7 = new DiametricDimension(circle, 270, offset);
-            DiametricDimension dim8 = new DiametricDimension(circle, 330, offset);
+            DiametricDimension dim2 = new DiametricDimension(circle, 45);
+            DiametricDimension dim3 = new DiametricDimension(circle, 90);
+            DiametricDimension dim4 = new DiametricDimension(circle, 120);
+            DiametricDimension dim5 = new DiametricDimension(circle, 180);
+            DiametricDimension dim6 = new DiametricDimension(circle, 220);
+            DiametricDimension dim7 = new DiametricDimension(circle, 270);
+            DiametricDimension dim8 = new DiametricDimension(circle, 330);
 
             dxf.AddEntity(circle);
             dxf.AddEntity(dim1);
@@ -879,16 +1143,15 @@ namespace TestDxfDocument
             double radius = 3;
             Circle circle = new Circle(center, radius);
 
-            double offset = 3;
-            RadialDimension dim1 = new RadialDimension(circle, 0, offset);
+            RadialDimension dim1 = new RadialDimension(circle, 0);
             dim1.SetDimensionLinePosition(new Vector2(3, 2));
-            RadialDimension dim2 = new RadialDimension(circle, 45, offset);
-            RadialDimension dim3 = new RadialDimension(circle, 90, offset);
-            RadialDimension dim4 = new RadialDimension(circle, 120, offset);
-            RadialDimension dim5 = new RadialDimension(circle, 180, offset);
-            RadialDimension dim6 = new RadialDimension(circle, 220, offset);
-            RadialDimension dim7 = new RadialDimension(circle, 270, offset);
-            RadialDimension dim8 = new RadialDimension(circle, 330, offset);
+            RadialDimension dim2 = new RadialDimension(circle, 45);
+            RadialDimension dim3 = new RadialDimension(circle, 90);
+            RadialDimension dim4 = new RadialDimension(circle, 120);
+            RadialDimension dim5 = new RadialDimension(circle, 180);
+            RadialDimension dim6 = new RadialDimension(circle, 220);
+            RadialDimension dim7 = new RadialDimension(circle, 270);
+            RadialDimension dim8 = new RadialDimension(circle, 330);
 
             dxf.AddEntity(circle);
             dxf.AddEntity(dim1);
@@ -1979,15 +2242,14 @@ namespace TestDxfDocument
             Vector3 refPoint = center + new Vector3(radius*Math.Cos(angle), radius*Math.Cos(angle), 0);
 
             //DiametricDimension dim = new DiametricDimension(center, refPoint, -1.0, myStyle);
-            double offset = 0;
-            DiametricDimension dim1 = new DiametricDimension(circle, 0, offset, myStyle);
-            DiametricDimension dim2 = new DiametricDimension(circle, 45, offset, myStyle);
-            DiametricDimension dim3 = new DiametricDimension(circle, 90, offset, myStyle);
-            DiametricDimension dim4 = new DiametricDimension(circle, 120, offset, myStyle);
-            DiametricDimension dim5 = new DiametricDimension(circle, 180, offset, myStyle);
-            DiametricDimension dim6 = new DiametricDimension(circle, 220, offset, myStyle);
-            DiametricDimension dim7 = new DiametricDimension(circle, 270, offset, myStyle);
-            DiametricDimension dim8 = new DiametricDimension(circle, 330, offset, myStyle);
+            DiametricDimension dim1 = new DiametricDimension(circle, 0, myStyle);
+            DiametricDimension dim2 = new DiametricDimension(circle, 45, myStyle);
+            DiametricDimension dim3 = new DiametricDimension(circle, 90, myStyle);
+            DiametricDimension dim4 = new DiametricDimension(circle, 120, myStyle);
+            DiametricDimension dim5 = new DiametricDimension(circle, 180, myStyle);
+            DiametricDimension dim6 = new DiametricDimension(circle, 220, myStyle);
+            DiametricDimension dim7 = new DiametricDimension(circle, 270, myStyle);
+            DiametricDimension dim8 = new DiametricDimension(circle, 330, myStyle);
 
             // if the dimension normal is not equal to the circle normal strange things might happen at the moment
             //dim1.Normal = circle.Normal;
@@ -2029,15 +2291,14 @@ namespace TestDxfDocument
             Vector3 refPoint = center + new Vector3(radius*Math.Cos(angle), radius*Math.Cos(angle), 0);
 
             //DiametricDimension dim = new DiametricDimension(center, refPoint, -1.0, myStyle);
-            double offset = 3;
-            RadialDimension dim1 = new RadialDimension(circle, 0, offset, myStyle);
-            RadialDimension dim2 = new RadialDimension(circle, 45, offset, myStyle);
-            RadialDimension dim3 = new RadialDimension(circle, 90, offset, myStyle);
-            RadialDimension dim4 = new RadialDimension(circle, 120, offset, myStyle);
-            RadialDimension dim5 = new RadialDimension(circle, 180, offset, myStyle);
-            RadialDimension dim6 = new RadialDimension(circle, 220, offset, myStyle);
-            RadialDimension dim7 = new RadialDimension(circle, 270, offset, myStyle);
-            RadialDimension dim8 = new RadialDimension(circle, 330, offset, myStyle);
+            RadialDimension dim1 = new RadialDimension(circle, 0, myStyle);
+            RadialDimension dim2 = new RadialDimension(circle, 45, myStyle);
+            RadialDimension dim3 = new RadialDimension(circle, 90, myStyle);
+            RadialDimension dim4 = new RadialDimension(circle, 120, myStyle);
+            RadialDimension dim5 = new RadialDimension(circle, 180, myStyle);
+            RadialDimension dim6 = new RadialDimension(circle, 220, myStyle);
+            RadialDimension dim7 = new RadialDimension(circle, 270, myStyle);
+            RadialDimension dim8 = new RadialDimension(circle, 330, myStyle);
             // if the dimension normal is not equal to the circle normal strange things might happen at the moment
             //dim1.Normal = circle.Normal;
             dxf.AddEntity(circle);
@@ -5205,7 +5466,7 @@ namespace TestDxfDocument
             myStyle.LengthPrecision = 2;
             myStyle.DecimalSeparator = ',';
 
-            DiametricDimension dim = new DiametricDimension(circle, 30.0, 1.0, myStyle);
+            DiametricDimension dim = new DiametricDimension(circle, 30.0, myStyle);
             dxf.AddEntity(circle);
             dxf.AddEntity(dim);
             dxf.Save("diametric dimension.dxf");
@@ -5233,7 +5494,7 @@ namespace TestDxfDocument
             myStyle.LengthPrecision = 2;
             myStyle.DecimalSeparator = ',';
 
-            RadialDimension dim = new RadialDimension(circle, 30.0, 1.0, myStyle);
+            RadialDimension dim = new RadialDimension(circle, 30.0, myStyle);
             dxf.AddEntity(circle);
             dxf.AddEntity(dim);
             dxf.Save("radial dimension.dxf");

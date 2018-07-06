@@ -20,64 +20,36 @@
 
 #endregion
 
-using System;
-
-namespace netDxf.Entities
+namespace netDxf.Tables
 {
     /// <summary>
-    /// Dimension type.
+    /// Controls the vertical placement of dimension text in relation to the dimension line.
     /// </summary>
-    [Flags]
-    internal enum DimensionTypeFlags
+    public enum DimensionStyleTextHorizontalPlacement
     {
         /// <summary>
-        /// Rotated, horizontal, or vertical.
+        /// Centers the dimension text along the dimension line between the extension lines.
         /// </summary>
-        Linear = 0,
+        Centered = 0,
 
         /// <summary>
-        /// Aligned.
+        /// Left-justifies the text with the first extension line along the dimension line.
         /// </summary>
-        Aligned = 1,
+        AtExtLines1 = 1,
 
         /// <summary>
-        /// Angular 2 lines.
+        /// Right-justifies the text with the second extension line along the dimension line.
         /// </summary>
-        Angular = 2,
+        AtExtLine2 = 2,
 
         /// <summary>
-        /// Diameter.
+        /// Positions the text over or along the first extension line.
         /// </summary>
-        Diameter = 3,
+        OverExtLine1 = 3,
 
         /// <summary>
-        /// Radius.
+        /// Positions the text over or along the second extension line.
         /// </summary>
-        Radius = 4,
-
-        /// <summary>
-        /// Angular 3 points.
-        /// </summary>
-        Angular3Point = 5,
-
-        /// <summary>
-        /// Ordinate.
-        /// </summary>
-        Ordinate = 6,
-
-        /// <summary>
-        /// Indicates that the block reference (group code 2) is referenced by this dimension only.
-        /// </summary>
-        BlockReference = 32,
-
-        /// <summary>
-        /// Ordinate type. This is a bit value (bit 7) used only with integer value 6. If set, ordinate is X-type; if not set, ordinate is Y-type.
-        /// </summary>
-        OrdinateType = 64,
-
-        /// <summary>
-        /// This is a bit value (bit 8) added to the other group 70 values if the dimension text has been positioned at a user-defined location rather than at the default location.
-        /// </summary>
-        UserTextPosition = 128
+        OverExtLine2 = 4
     }
 }

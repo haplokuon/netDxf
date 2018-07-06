@@ -494,6 +494,20 @@ namespace netDxf.Blocks
 
         #endregion
 
+        #region internal methods
+
+        /// <summary>
+        /// Hack to change the table name without having to check its name. Some invalid characters are used for internal purposes only.
+        /// </summary>
+        /// <param name="newName">Table object new name.</param>
+        internal new void SetName(string newName, bool checkName)
+        {
+            base.SetName(newName, checkName);
+            this.Record.Name = newName;
+        }
+
+        #endregion
+
         #region overrides
 
         private static TableObject Clone(Block block, string newName, bool checkName)

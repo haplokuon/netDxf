@@ -33,7 +33,7 @@ namespace netDxf.Entities
     /// <summary>
     /// Holds methods to build the dimension blocks.
     /// </summary>
-    internal static class DimensionBlock
+    public static class DimensionBlock
     {      
         #region private methods
 
@@ -420,7 +420,8 @@ namespace netDxf.Entities
                 DimLineColor = dim.Style.DimLineColor,
                 DimLineLinetype = dim.Style.DimLineLinetype,
                 DimLineLineweight = dim.Style.DimLineLineweight,
-                DimLineOff = dim.Style.DimLineOff,
+                DimLine1Off = dim.Style.DimLine1Off,
+                DimLine2Off = dim.Style.DimLine2Off,
                 DimBaselineSpacing = dim.Style.DimBaselineSpacing,
                 DimLineExtend = dim.Style.DimLineExtend,
 
@@ -438,23 +439,30 @@ namespace netDxf.Entities
                 ArrowSize = dim.Style.ArrowSize,
                 CenterMarkSize = dim.Style.CenterMarkSize,
 
-                // fit
-                DIMTIH = dim.Style.DIMTIH,
-                DIMTOH = dim.Style.DIMTOH,
-
                 // text appearance
                 TextStyle = dim.Style.TextStyle,
                 TextColor = dim.Style.TextColor,
                 TextHeight = dim.Style.TextHeight,
-                DIMJUST = dim.Style.DIMJUST,
-                DIMTAD = dim.Style.DIMTAD,
                 TextOffset = dim.Style.TextOffset,
 
                 // primary units
                 AngularPrecision = dim.Style.AngularPrecision,
                 LengthPrecision = dim.Style.LengthPrecision,
+                DimPrefix = dim.Style.DimPrefix,
+                DimSuffix = dim.Style.DimSuffix,
                 DecimalSeparator = dim.Style.DecimalSeparator,
+                DimScaleLinear = dim.Style.DimScaleLinear,
+                DimLengthUnits = dim.Style.DimLengthUnits,
                 DimAngularUnits = dim.Style.DimAngularUnits,
+                FractionalType = dim.Style.FractionalType,
+                SuppressLinearLeadingZeros = dim.Style.SuppressLinearLeadingZeros,
+                SuppressLinearTrailingZeros = dim.Style.SuppressLinearTrailingZeros,
+                SuppressAngularLeadingZeros = dim.Style.SuppressAngularLeadingZeros,
+                SuppressAngularTrailingZeros = dim.Style.SuppressAngularTrailingZeros,
+                SuppressZeroFeet = dim.Style.SuppressZeroFeet,
+                SuppressZeroInches = dim.Style.SuppressZeroInches,
+                DimRoundoff = dim.Style.DimRoundoff,
+
                 LeaderArrow = dim.Style.LeaderArrow,
                 DimArrow1 = dim.Style.DimArrow1,
                 DimArrow2 = dim.Style.DimArrow2
@@ -473,8 +481,11 @@ namespace netDxf.Entities
                     case DimensionStyleOverrideType.DimLineLineweight:
                         copy.DimLineLineweight = (Lineweight) styleOverride.Value;
                         break;
-                    case DimensionStyleOverrideType.DimLineOff:
-                        copy.DimLineOff = (bool)styleOverride.Value;
+                    case DimensionStyleOverrideType.DimLine1Off:
+                        copy.DimLine1Off = (bool)styleOverride.Value;
+                        break;
+                    case DimensionStyleOverrideType.DimLine2Off:
+                        copy.DimLine2Off = (bool)styleOverride.Value;
                         break;
                     case DimensionStyleOverrideType.DimLineExtend:
                         copy.DimLineExtend = (double) styleOverride.Value;
@@ -659,7 +670,7 @@ namespace netDxf.Entities
                 ? new Point(dimRef1) {Layer = defPointLayer}
                 : new Point(dimRef2) {Layer = defPointLayer});
 
-            if (!style.DimLineOff)
+            if (!style.DimLine1Off && !style.DimLine2Off)
             {
                 // dimension line
                 entities.Add(DimensionLine(dimRef1, dimRef2, dimRotation, style));
@@ -717,9 +728,8 @@ namespace netDxf.Entities
                     entities.Add(mText2);
             }
 
-            Vector3 defPoint = reversed ? new Vector3(dimRef1.X, dimRef1.Y, dim.Elevation) : new Vector3(dimRef2.X, dimRef2.Y, dim.Elevation);
-            dim.DefinitionPoint = MathHelper.Transform(defPoint, dim.Normal, CoordinateSystem.Object, CoordinateSystem.World);
-            dim.MidTextPoint = new Vector3(midDim.X, midDim.Y, dim.Elevation); // this value is in OCS
+            dim.DefinitionPoint = reversed ? dimRef1 : dimRef2;
+            dim.TextReferencePoint = new Vector2(midDim.X, midDim.Y); // this value is in OCS
 
             // drawing block
             return new Block(name, entities, null, false) {Flags = BlockTypeFlags.AnonymousBlock};
@@ -758,7 +768,7 @@ namespace netDxf.Entities
                 ? new Point(dimRef1) {Layer = defPointLayer}
                 : new Point(dimRef2) {Layer = defPointLayer});
 
-            if (!style.DimLineOff)
+            if (!style.DimLine1Off && !style.DimLine2Off)
             {
                 // dimension lines
                 entities.Add(DimensionLine(dimRef1, dimRef2, refAngle, style));
@@ -807,9 +817,8 @@ namespace netDxf.Entities
                     entities.Add(mText2);
             }
 
-            Vector3 defPoint = reversed ? new Vector3(dimRef1.X, dimRef1.Y, dim.Elevation) : new Vector3(dimRef2.X, dimRef2.Y, dim.Elevation);
-            dim.DefinitionPoint = MathHelper.Transform(defPoint, dim.Normal, CoordinateSystem.Object, CoordinateSystem.World);
-            dim.MidTextPoint = new Vector3(midDim.X, midDim.Y, dim.Elevation); // this value is in OCS
+            dim.DefinitionPoint = reversed ? dimRef1 : dimRef2;
+            dim.TextReferencePoint = new Vector2(midDim.X, midDim.Y); // this value is in OCS
 
             // drawing block
             return new Block(name, entities, null, false) {Flags = BlockTypeFlags.AnonymousBlock};
@@ -873,7 +882,7 @@ namespace netDxf.Entities
             entities.Add(new Point(ref2Start) {Layer = defPoints});
             entities.Add(new Point(ref2End) {Layer = defPoints});
 
-            if (!style.DimLineOff)
+            if (!style.DimLine1Off && !style.DimLine2Off)
             {
                 // dimension lines
                 double ext1;
@@ -935,12 +944,9 @@ namespace netDxf.Entities
             if (mText != null)
                 entities.Add(mText);
 
-            dim.DefinitionPoint =
-                MathHelper.Transform(
-                    new Vector3(dim.EndSecondLine.X, dim.EndSecondLine.Y, dim.Elevation),
-                    dim.Normal, CoordinateSystem.Object, CoordinateSystem.World);
-            dim.MidTextPoint = new Vector3(midDim.X, midDim.Y, dim.Elevation); // this value is in OCS
-            dim.ArcDefinitionPoint = dim.MidTextPoint; // this value is in OCS
+            dim.DefinitionPoint = dim.EndSecondLine;
+            dim.TextReferencePoint = new Vector2(midDim.X, midDim.Y); // this value is in OCS
+            dim.ArcDefinitionPoint = dim.TextReferencePoint; // this value is in OCS
 
             // drawing block
             return new Block(name, entities, null, false) {Flags = BlockTypeFlags.AnonymousBlock};
@@ -979,7 +985,7 @@ namespace netDxf.Entities
             entities.Add(new Point(ref2) {Layer = defPoints});
             entities.Add(new Point(refCenter) {Layer = defPoints});
 
-            if (!style.DimLineOff)
+            if (!style.DimLine1Off && !style.DimLine2Off)
             {
                 // dimension lines
                 double ext1;
@@ -1030,8 +1036,8 @@ namespace netDxf.Entities
             if (mText != null)
                 entities.Add(mText);
 
-            dim.DefinitionPoint = MathHelper.Transform(new Vector3(midDim.X, midDim.Y, dim.Elevation), dim.Normal, CoordinateSystem.Object, CoordinateSystem.World);
-            dim.MidTextPoint = new Vector3(midDim.X, midDim.Y, dim.Elevation); // this value is in OCS
+            dim.DefinitionPoint = midDim;
+            dim.TextReferencePoint = new Vector2(midDim.X, midDim.Y); // this value is in OCS
 
             // drawing block
             return new Block(name, entities, null, false);
@@ -1039,8 +1045,8 @@ namespace netDxf.Entities
 
         public static Block Build(DiametricDimension dim, string name)
         {
-            double offset = dim.Offset;
             double measure = dim.Measurement;
+            double offset = measure;
             double radius = measure*0.5;
             DimensionStyle style = BuildDimensionStyleOverride(dim);
             List<EntityObject> entities = new List<EntityObject>();
@@ -1075,7 +1081,7 @@ namespace netDxf.Entities
             Layer defPoints = new Layer("Defpoints") {Plot = false};
             entities.Add(new Point(ref1) {Layer = defPoints});
 
-            if (!style.DimLineOff)
+            if (!style.DimLine1Off && !style.DimLine2Off)
             {
                 // dimension lines
                 entities.Add(DimensionRadialLine(dimRef, ref1, angleRef, side, style));
@@ -1107,16 +1113,16 @@ namespace netDxf.Entities
             if (mText != null)
                 entities.Add(mText);
 
-            dim.DefinitionPoint = MathHelper.Transform(new Vector3(ref2.X, ref2.Y, dim.Elevation), dim.Normal, CoordinateSystem.Object, CoordinateSystem.World);
-            dim.MidTextPoint = new Vector3(dimRef.X, dimRef.Y, dim.Elevation); // this value is in OCS
+            dim.DefinitionPoint = ref2;
+            dim.TextReferencePoint = new Vector2(dimRef.X, dimRef.Y); // this value is in OCS
 
             return new Block(name, entities, null, false);
         }
 
         public static Block Build(RadialDimension dim, string name)
-        {
-            double offset = dim.Offset;
+        {          
             double measure = dim.Measurement;
+            double offset = measure;
             DimensionStyle style = BuildDimensionStyleOverride(dim);
             List<EntityObject> entities = new List<EntityObject>();
 
@@ -1148,7 +1154,7 @@ namespace netDxf.Entities
             Layer defPoints = new Layer("Defpoints") {Plot = false};
             entities.Add(new Point(ref1) {Layer = defPoints});
 
-            if (!style.DimLineOff)
+            if (!style.DimLine1Off && !style.DimLine2Off)
             {
                 // dimension line
                 entities.Add(DimensionRadialLine(dimRef, ref1, angleRef, side, style));
@@ -1182,8 +1188,8 @@ namespace netDxf.Entities
             if (mText != null)
                 entities.Add(mText);
 
-            dim.DefinitionPoint = MathHelper.Transform(new Vector3(centerRef.X, centerRef.Y, dim.Elevation), dim.Normal, CoordinateSystem.Object, CoordinateSystem.World);
-            dim.MidTextPoint = new Vector3(dimRef.X, dimRef.Y, dim.Elevation); // this value is in OCS
+            dim.DefinitionPoint = centerRef;
+            dim.TextReferencePoint = new Vector2(dimRef.X, dimRef.Y); // this value is in OCS
 
             return new Block(name, entities, null, false);
         }
@@ -1198,11 +1204,11 @@ namespace netDxf.Entities
             double angle = dim.Rotation*MathHelper.DegToRad;
             Vector2 refCenter = dim.Origin;
 
-            Vector2 startPoint = refCenter + MathHelper.Transform(dim.ReferencePoint, angle, CoordinateSystem.Object, CoordinateSystem.World);
+            Vector2 startPoint = refCenter + MathHelper.Transform(dim.FeaturePoint, angle, CoordinateSystem.Object, CoordinateSystem.World);
 
             if (dim.Axis == OrdinateDimensionAxis.X)
                 angle += MathHelper.HalfPI;
-            Vector2 endPoint = Vector2.Polar(startPoint, dim.Length, angle);
+            Vector2 endPoint = dim.LeaderEndPoint;
 
             // reference points
             Layer defPoints = new Layer("Defpoints") {Plot = false};
@@ -1210,14 +1216,12 @@ namespace netDxf.Entities
             entities.Add(new Point(startPoint) {Layer = defPoints});
 
             short side = 1;
-            if (dim.Length < 0)
-                side = -1;
 
             // dimension lines
             entities.Add(new Line(Vector2.Polar(startPoint, side*style.ExtLineOffset*style.DimScaleOverall, angle), endPoint));
 
             // dimension text
-            Vector2 midText = Vector2.Polar(startPoint, dim.Length + side*style.TextOffset*style.DimScaleOverall, angle);
+            Vector2 midText = Vector2.Polar(endPoint, side*style.TextOffset*style.DimScaleOverall, angle);
 
             List<string> texts = FormatDimensionText(measure, dim.DimensionType, dim.UserText, style, dim.Owner);
             string dimText;
@@ -1231,18 +1235,10 @@ namespace netDxf.Entities
             if (mText != null)
                 entities.Add(mText);
 
-            IList<Vector3> wcsPoints = MathHelper.Transform(
-                new[]
-                {
-                    new Vector3(startPoint.X, startPoint.Y, dim.Elevation),
-                    new Vector3(endPoint.X, endPoint.Y, dim.Elevation),
-                    new Vector3(dim.Origin.X, dim.Origin.Y, dim.Elevation)
-                },
-                dim.Normal, CoordinateSystem.Object, CoordinateSystem.World);
-            dim.FirstPoint = wcsPoints[0];
-            dim.SecondPoint = wcsPoints[1];
-            dim.DefinitionPoint = wcsPoints[2];
-            dim.MidTextPoint = new Vector3(midText.X, midText.Y, dim.Elevation); // this value is in OCS
+            dim.FeaturePoint = startPoint;
+            dim.LeaderEndPoint = endPoint;
+            dim.DefinitionPoint = dim.Origin;
+            dim.TextReferencePoint = new Vector2(midText.X, midText.Y); // this value is in OCS
 
             // drawing block
             return new Block(name, entities, null, false);

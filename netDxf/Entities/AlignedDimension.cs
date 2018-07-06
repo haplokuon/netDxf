@@ -1,7 +1,7 @@
-﻿#region netDxf library, Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+﻿#region netDxf library, Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
 
 //                        netDxf library
-// Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -104,12 +104,15 @@ namespace netDxf.Entities
             this.firstRefPoint = new Vector2(ocsPoint.X, ocsPoint.Y);
             ocsPoint = MathHelper.Transform(referenceLine.EndPoint, normal, CoordinateSystem.World, CoordinateSystem.Object);
             this.secondRefPoint = new Vector2(ocsPoint.X, ocsPoint.Y);
+            if (offset < 0)
+                throw new ArgumentOutOfRangeException(nameof(offset), "The offset value must be equal or greater than zero.");
             this.offset = offset;
             if (style == null)
                 throw new ArgumentNullException(nameof(style));
             this.Style = style;
             this.Normal = normal;
             this.Elevation = ocsPoint.Z;
+            this.Update();
         }
 
         /// <summary>
@@ -137,10 +140,13 @@ namespace netDxf.Entities
         {
             this.firstRefPoint = firstPoint;
             this.secondRefPoint = secondPoint;
+            if (offset < 0)
+                throw new ArgumentOutOfRangeException(nameof(offset), "The offset value must be equal or greater than zero.");
             this.offset = offset;
             if (style == null)
                 throw new ArgumentNullException(nameof(style));
             this.Style = style;
+            this.Update();
         }
 
         #endregion
@@ -166,12 +172,28 @@ namespace netDxf.Entities
         }
 
         /// <summary>
+        /// Gets the location of the dimension line.
+        /// </summary>
+        public Vector2 DimLinePosition
+        {
+            get { return this.defPoint; }
+        }
+
+        /// <summary>
         /// Gets or sets the distance between the reference line and the dimension line.
         /// </summary>
+        /// <remarks>
+        /// The offset value must be equal or greater than zero.
+        /// </remarks>
         public double Offset
         {
             get { return this.offset; }
-            set { this.offset = value; }
+            set
+            {
+                if (value < 0)
+                    throw new ArgumentOutOfRangeException(nameof(value), "The offset value must be equal or greater than zero.");
+                this.offset = value;
+            }
         }
 
         /// <summary>
@@ -194,12 +216,34 @@ namespace netDxf.Entities
         public void SetDimensionLinePosition(Vector2 point)
         {
             Vector2 refDir = Vector2.Normalize(this.secondRefPoint - this.firstRefPoint);
-            double refAngle = Vector2.Angle(refDir);
             Vector2 offsetDir = point - this.firstRefPoint;
+
+            double t = Vector2.DotProduct(refDir, point - this.defPoint);
+            Vector2 pPrime = this.defPoint + t * refDir;
+            Vector2 vec = point - pPrime;
+            double distanceSquared = Vector2.DotProduct(vec, vec);
+            double dist = Math.Sqrt(distanceSquared);
+            this.offset += dist;
+            this.defPoint += vec;
+
             double cross = Vector2.CrossProduct(offsetDir, refDir);
-            this.offset = Math.Sign(cross)*MathHelper.PointLineDistance(point, this.firstRefPoint, refDir);
-            if (!(refAngle > MathHelper.HalfPI && refAngle <= MathHelper.ThreeHalfPI))
-                this.offset *= -1;
+            if (cross < 0)
+            {
+                Vector2 tmp = this.firstRefPoint;
+                this.firstRefPoint = this.secondRefPoint;
+                this.secondRefPoint = tmp;
+            }
+
+            DimensionStyleFitTextMove moveText = this.Style.FitTextMove;
+            DimensionStyleOverride styleOverride;
+            if (this.StyleOverrides.TryGetValue(DimensionStyleOverrideType.FitTextMove, out styleOverride))
+            {
+                moveText = (DimensionStyleFitTextMove)styleOverride.Value;
+            }
+            if (moveText == DimensionStyleFitTextMove.BesideDimLine)
+            {
+                if(!this.TextPositionManuallySet) this.textRefPoint += vec;
+            }
         }
 
         #endregion
@@ -207,11 +251,45 @@ namespace netDxf.Entities
         #region overrides
 
         /// <summary>
+        /// Calculate the dimension reference points.
+        /// </summary>
+        protected override void CalculteReferencePoints()
+        {
+            Vector2 ref1 = this.FirstReferencePoint;
+            Vector2 ref2 = this.SecondReferencePoint;
+            Vector2 dirRef = ref2 - ref1;
+            Vector2 vec = this.offset*Vector2.Normalize(Vector2.Perpendicular(dirRef));
+            Vector2 dimRef1 = ref1 + vec;
+            Vector2 dimRef2 = ref2 + vec;
+
+            this.defPoint = dimRef2;
+
+            if (this.TextPositionManuallySet)
+            {
+                DimensionStyleFitTextMove moveText = this.Style.FitTextMove;
+                DimensionStyleOverride styleOverride;
+                if (this.StyleOverrides.TryGetValue(DimensionStyleOverrideType.FitTextMove, out styleOverride))
+                {
+                    moveText = (DimensionStyleFitTextMove) styleOverride.Value;
+                }
+
+                if (moveText == DimensionStyleFitTextMove.BesideDimLine)
+                {
+                    this.SetDimensionLinePosition(this.textRefPoint);
+                }
+            }
+            else
+            {
+                this.textRefPoint = Vector2.MidPoint(dimRef1, dimRef2);
+            }
+        }
+
+        /// <summary>
         /// Gets the block that contains the entities that make up the dimension picture.
         /// </summary>
         /// <param name="name">Name to be assigned to the generated block.</param>
         /// <returns>The block that represents the actual dimension.</returns>
-        internal override Block BuildBlock(string name)
+        protected override Block BuildBlock(string name)
         {
             return DimensionBlock.Build(this, name);
         }
@@ -235,15 +313,19 @@ namespace netDxf.Entities
                 IsVisible = this.IsVisible,
                 //Dimension properties
                 Style = (DimensionStyle) this.Style.Clone(),
+                DefinitionPoint = this.DefinitionPoint,
+                TextReferencePoint = this.TextReferencePoint,
+                TextPositionManuallySet = this.TextPositionManuallySet,
+                TextRotation = this.TextRotation,
                 AttachmentPoint = this.AttachmentPoint,
                 LineSpacingStyle = this.LineSpacingStyle,
                 LineSpacingFactor = this.LineSpacingFactor,
                 UserText = this.UserText,
+                Elevation = this.Elevation,
                 //AlignedDimension properties
                 FirstReferencePoint = this.firstRefPoint,
                 SecondReferencePoint = this.secondRefPoint,
-                Offset = this.offset,
-                Elevation = this.Elevation
+                Offset = this.offset
             };
 
             foreach (XData data in this.XData.Values)

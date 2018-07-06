@@ -20,64 +20,31 @@
 
 #endregion
 
-using System;
-
-namespace netDxf.Entities
+namespace netDxf.Tables
 {
     /// <summary>
-    /// Dimension type.
+    /// Controls dimension text and arrow placement when space is not sufficient to place both within the extension lines.
     /// </summary>
-    [Flags]
-    internal enum DimensionTypeFlags
+    public enum DimensionStyleFitOptions
     {
         /// <summary>
-        /// Rotated, horizontal, or vertical.
+        /// Places both text and arrows outside extension lines.
         /// </summary>
-        Linear = 0,
+        TextAndArrows = 0,
 
         /// <summary>
-        /// Aligned.
+        /// Moves arrows first, then text.
         /// </summary>
-        Aligned = 1,
+        Arrows = 1,
 
         /// <summary>
-        /// Angular 2 lines.
+        /// Moves text first, then arrows.
         /// </summary>
-        Angular = 2,
+        Text = 2,
 
         /// <summary>
-        /// Diameter.
+        /// Moves either text or arrows, whichever fits best.
         /// </summary>
-        Diameter = 3,
-
-        /// <summary>
-        /// Radius.
-        /// </summary>
-        Radius = 4,
-
-        /// <summary>
-        /// Angular 3 points.
-        /// </summary>
-        Angular3Point = 5,
-
-        /// <summary>
-        /// Ordinate.
-        /// </summary>
-        Ordinate = 6,
-
-        /// <summary>
-        /// Indicates that the block reference (group code 2) is referenced by this dimension only.
-        /// </summary>
-        BlockReference = 32,
-
-        /// <summary>
-        /// Ordinate type. This is a bit value (bit 7) used only with integer value 6. If set, ordinate is X-type; if not set, ordinate is Y-type.
-        /// </summary>
-        OrdinateType = 64,
-
-        /// <summary>
-        /// This is a bit value (bit 8) added to the other group 70 values if the dimension text has been positioned at a user-defined location rather than at the default location.
-        /// </summary>
-        UserTextPosition = 128
+        BestFit = 3
     }
 }
