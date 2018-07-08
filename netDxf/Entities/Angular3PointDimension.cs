@@ -189,17 +189,7 @@ namespace netDxf.Entities
         {
             get
             {
-                Vector2 ref1 = this.start;
-                Vector2 ref2 = this.end;
-
-                if (this.offset < 0)
-                {
-                    Vector2 tmp = ref1;
-                    ref1 = ref2;
-                    ref2 = tmp;
-                }
-
-                double angle = (Vector2.Angle(this.center, ref2) - Vector2.Angle(this.center, ref1))*MathHelper.RadToDeg;
+                double angle = (Vector2.Angle(this.center, this.end) - Vector2.Angle(this.center, this.start))*MathHelper.RadToDeg;
                 return MathHelper.NormalizeAngle(angle);
             }
         }
@@ -234,9 +224,18 @@ namespace netDxf.Entities
                 Vector2 dirStart = refStart - this.center;
                 Vector2 dirEnd = refEnd - this.center;
                 Vector2 dirPoint = point - this.center;
+                double cross = Vector2.CrossProduct(dirStart, dirEnd);
                 double cross1 = Vector2.CrossProduct(dirStart, dirPoint);
                 double cross2 = Vector2.CrossProduct(dirEnd, dirPoint);
-                if (!(cross1 >= 0 && cross2 <0))
+                if (cross >= 0)
+                {
+                    if (!(cross1 >= 0 && cross2 < 0))
+                    {
+                        this.start = refEnd;
+                        this.end = refStart;
+                    }
+                }              
+                else if (cross1 < 0 && cross2 >= 0)
                 {
                     this.start = refEnd;
                     this.end = refStart;

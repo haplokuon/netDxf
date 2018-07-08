@@ -178,11 +178,11 @@ namespace netDxf.Entities
             this.Style = style;
 
             double angle = rotation * MathHelper.DegToRad;
-            Vector2 refCenter = origin;
-            Vector2 startPoint = refCenter + Vector2.Rotate(featurePoint, angle);
+            //Vector2 refCenter = origin;
+            //Vector2 startPoint = refCenter + Vector2.Rotate(featurePoint, angle);
 
             if (this.Axis == OrdinateDimensionAxis.X) angle += MathHelper.HalfPI;
-            this.secondPoint = Vector2.Polar(startPoint, length, angle);
+            this.secondPoint = Vector2.Polar(featurePoint, length, angle);
             this.textRefPoint = this.secondPoint;
         }
 
@@ -240,7 +240,11 @@ namespace netDxf.Entities
         /// </summary>
         public override double Measurement
         {
-            get { return this.axis == OrdinateDimensionAxis.X ? this.firstPoint.X : this.firstPoint.Y; }
+            get
+            {
+                Vector2 dirRef = Vector2.Rotate(this.axis == OrdinateDimensionAxis.X ? Vector2.UnitY : Vector2.UnitX, this.rotation*MathHelper.DegToRad);
+                return MathHelper.PointLineDistance(this.firstPoint, this.defPoint, dirRef);
+            }
         }
 
         #endregion

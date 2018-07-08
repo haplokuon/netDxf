@@ -21,6 +21,7 @@
 #endregion
 
 using System;
+using System.Collections.Generic;
 using netDxf.Blocks;
 using netDxf.Tables;
 
@@ -36,7 +37,7 @@ namespace netDxf.Entities
 
         private Vector2 firstRefPoint;
         private Vector2 secondRefPoint;
-        private Vector2 midDimLine;
+        //private Vector2 midDimLine;
         private double offset;
         private double rotation;
 
@@ -105,11 +106,11 @@ namespace netDxf.Entities
             if (referenceLine == null)
                 throw new ArgumentNullException(nameof(referenceLine));
 
-            Vector3 ocsPoint;
-            ocsPoint = MathHelper.Transform(referenceLine.StartPoint, normal, CoordinateSystem.World, CoordinateSystem.Object);
-            this.firstRefPoint = new Vector2(ocsPoint.X, ocsPoint.Y);
-            ocsPoint = MathHelper.Transform(referenceLine.EndPoint, normal, CoordinateSystem.World, CoordinateSystem.Object);
-            this.secondRefPoint = new Vector2(ocsPoint.X, ocsPoint.Y);
+            IList<Vector3> ocsPoints = MathHelper.Transform(
+                new List<Vector3> {referenceLine.StartPoint, referenceLine.EndPoint}, normal, CoordinateSystem.World, CoordinateSystem.Object);
+            this.firstRefPoint = new Vector2(ocsPoints[0].X, ocsPoints[0].Y);
+            this.secondRefPoint = new Vector2(ocsPoints[1].X, ocsPoints[1].Y);
+
             if (offset < 0)
                 throw new ArgumentOutOfRangeException(nameof(offset), "The offset value must be equal or greater than zero.");
             this.offset = offset;
@@ -119,7 +120,7 @@ namespace netDxf.Entities
                 throw new ArgumentNullException(nameof(style));
             this.Style = style;
             this.Normal = normal;
-            this.Elevation = ocsPoint.Z;
+            this.Elevation = ocsPoints[0].Z;
             this.Update();
         }
 
@@ -239,28 +240,35 @@ namespace netDxf.Entities
         /// <param name="point">Point along the dimension line.</param>
         public void SetDimensionLinePosition(Vector2 point)
         {
-            double dimRotation = this.rotation*MathHelper.DegToRad;
-            Vector2 dimDir = new Vector2(Math.Cos(dimRotation), Math.Sin(dimRotation));
+            Vector2 ref1 = this.firstRefPoint;
+            Vector2 ref2 = this.secondRefPoint;
+            Vector2 midRef = Vector2.MidPoint(ref1, ref2);
+            Vector2 dimRef = this.DefinitionPoint;
+
             Vector2 refDir = Vector2.Normalize(this.secondRefPoint - this.firstRefPoint);
-            Vector2 offsetDir = point - this.firstRefPoint;
-
-            double t = Vector2.DotProduct(dimDir, point - this.midDimLine);
-            Vector2 pPrime = this.midDimLine + t * dimDir;
+            double dimRotation = this.rotation * MathHelper.DegToRad;
+            Vector2 dimDir = new Vector2(Math.Cos(dimRotation), Math.Sin(dimRotation));
+            
+            double t = Vector2.DotProduct(dimDir, point - dimRef);
+            Vector2 pPrime = dimRef + t * dimDir;
             Vector2 vec = point - pPrime;
-            double distanceSquared = Vector2.DotProduct(vec, vec);
-            double dist = Math.Sqrt(distanceSquared);
 
-            this.offset += dist;
-            this.defPoint += vec;
-            this.midDimLine += vec;
-
-            double cross = Vector2.CrossProduct(offsetDir, refDir);
+            double cross = Vector2.CrossProduct(refDir, point - this.firstRefPoint);
             if (cross < 0)
             {
                 Vector2 tmp = this.firstRefPoint;
                 this.firstRefPoint = this.secondRefPoint;
                 this.secondRefPoint = tmp;
+                this.Rotation += 180;
+                dimRotation = this.rotation*MathHelper.DegToRad;
             }
+
+            this.offset = MathHelper.PointLineDistance(midRef, point, dimDir);
+
+            Vector2 offsetDir = Vector2.Rotate(Vector2.UnitY, dimRotation);
+            Vector2 midDimLine = midRef + this.offset* offsetDir;
+
+            this.defPoint = midDimLine - this.Measurement * 0.5 * Vector2.Perpendicular(Vector2.Normalize(offsetDir));
 
             DimensionStyleFitTextMove moveText = this.Style.FitTextMove;
             DimensionStyleOverride styleOverride;
@@ -273,6 +281,72 @@ namespace netDxf.Entities
                 if (!this.TextPositionManuallySet) this.textRefPoint += vec;
             }
         }
+
+        //public void SetDimensionLinePosition(Vector2 point)
+        //{
+        //    Vector2 ref1 = this.firstRefPoint;
+        //    Vector2 ref2 = this.secondRefPoint;
+        //    Vector2 midRef = Vector2.MidPoint(ref1, ref2);
+
+        //    Vector2 offsetDir = Vector2.Normalize(Vector2.Rotate(Vector2.UnitY, this.Rotation * MathHelper.DegToRad));
+        //    Vector2 prevMidDimLine = midRef + this.offset * offsetDir;
+        //    Vector2 refDir = Vector2.Normalize(this.secondRefPoint - this.firstRefPoint);
+
+        //    //Vector2 midRef = Vector2.MidPoint(this.firstRefPoint, this.secondRefPoint);
+        //    Vector2 dimDir1 = new Vector2(Math.Cos(this.rotation * MathHelper.DegToRad), Math.Sin(this.rotation * MathHelper.DegToRad));
+        //    // Vector2 midDimLine2 = midRef + this.offset * Vector2.Normalize(Vector2.Rotate(Vector2.UnitY, this.rotation));
+
+        //    double t = Vector2.DotProduct(dimDir1, point - prevMidDimLine);
+        //    Vector2 pPrime = prevMidDimLine + t * dimDir1;
+        //    Vector2 vec = point - pPrime;
+
+        //    double crossY = Vector2.CrossProduct(refDir, Vector2.UnitY);
+        //    double cross = Vector2.CrossProduct(refDir, point - this.firstRefPoint);
+        //    if (cross < 0)
+        //    {
+        //        Vector2 tmp = this.firstRefPoint;
+        //        this.firstRefPoint = this.secondRefPoint;
+        //        this.secondRefPoint = tmp;
+        //        this.Rotation += 180;
+        //        //if (crossY <= 0)
+        //        //    this.Rotation = this.rotation > 180.0 ? this.rotation - 180.0 : this.rotation;
+        //        //else
+        //        //    this.Rotation = this.rotation <= 180.0 ? this.rotation + 180.0 : this.rotation;
+        //    }
+        //    else
+        //    {
+        //        //if (crossY <= 0)
+        //        //    this.Rotation = this.rotation <= 180.0 ? this.rotation + 180.0 : this.rotation;
+        //        //else
+        //        //    this.Rotation = this.rotation > 180.0 ? this.rotation - 180.0 : this.rotation;
+        //    }
+
+        //    this.offset = MathHelper.PointLineDistance(midRef, point, dimDir1);
+
+        //    double dimRotation = this.rotation * MathHelper.DegToRad;
+
+
+        //    Vector2 midDimLine = midRef + this.offset * Vector2.Normalize(Vector2.Rotate(Vector2.UnitY, dimRotation));
+
+
+
+        //    //Vector2 midDimLine = Vector2.MidPoint(this.firstRefPoint, this.secondRefPoint) + this.offset * Vector2.Normalize(Vector2.Rotate(Vector2.UnitX, this.rotation));
+
+
+
+        //    this.defPoint = midDimLine - this.Measurement * 0.5 * Vector2.Perpendicular(Vector2.Normalize(vec));
+
+        //    DimensionStyleFitTextMove moveText = this.Style.FitTextMove;
+        //    DimensionStyleOverride styleOverride;
+        //    if (this.StyleOverrides.TryGetValue(DimensionStyleOverrideType.FitTextMove, out styleOverride))
+        //    {
+        //        moveText = (DimensionStyleFitTextMove)styleOverride.Value;
+        //    }
+        //    if (moveText == DimensionStyleFitTextMove.BesideDimLine)
+        //    {
+        //        if (!this.TextPositionManuallySet) this.textRefPoint += vec;
+        //    }
+        //}
 
         #endregion
 
@@ -290,8 +364,14 @@ namespace netDxf.Entities
             double dimRotation = this.Rotation * MathHelper.DegToRad;
 
             Vector2 vec = Vector2.Normalize(Vector2.Rotate(Vector2.UnitY, dimRotation));
-            this.midDimLine = midRef + this.offset * vec;
-            this.defPoint = this.midDimLine - measure * 0.5 * Vector2.Perpendicular(vec);
+            Vector2 midDimLine = midRef + this.offset * vec;
+            double cross = Vector2.CrossProduct(ref2 - ref1, vec);
+            if (cross < 0)
+            {
+                this.firstRefPoint = ref2;
+                this.secondRefPoint = ref1;
+            }
+            this.defPoint = midDimLine - measure * 0.5 * Vector2.Perpendicular(vec);
 
             if (this.TextPositionManuallySet)
             {
@@ -309,7 +389,7 @@ namespace netDxf.Entities
             }
             else
             {
-                this.textRefPoint = this.midDimLine;
+                this.textRefPoint = midDimLine;
             }
         }
 
@@ -350,7 +430,6 @@ namespace netDxf.Entities
                 LineSpacingStyle = this.LineSpacingStyle,
                 LineSpacingFactor = this.LineSpacingFactor,
                 UserText = this.UserText,
-                midDimLine = this.midDimLine, // private field
                 //LinearDimension properties
                 FirstReferencePoint = this.firstRefPoint,
                 SecondReferencePoint = this.secondRefPoint,

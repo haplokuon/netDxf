@@ -127,7 +127,7 @@ namespace netDxf.Entities
         /// <param name="centerPoint">Center <see cref="Vector2">point</see> of the circumference.</param>
         /// <param name="referencePoint"><see cref="Vector2">Point</see> on circle or arc.</param>
         /// <remarks>The center point and the definition point define the distance to be measure.</remarks>
-        public DiametricDimension(Vector2 centerPoint, Vector2 referencePoint, double offset)
+        public DiametricDimension(Vector2 centerPoint, Vector2 referencePoint)
             : this(centerPoint, referencePoint, DimensionStyle.Default)
         {
         }
@@ -240,7 +240,9 @@ namespace netDxf.Entities
             }
             else
             {
-                this.textRefPoint = ref1;
+                Vector2 vec = Vector2.Normalize(ref1 - this.center);
+                double minOffset = (2 * this.Style.ArrowSize + this.Style.TextOffset) * this.Style.DimScaleOverall;
+                this.textRefPoint = ref1 + minOffset * vec;
             }
         }
 

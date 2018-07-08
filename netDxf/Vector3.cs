@@ -212,6 +212,14 @@ namespace netDxf
             }
         }
 
+        /// <summary>
+        /// Gets if the vector has been normalized.
+        /// </summary>
+        public bool IsNormalized
+        {
+            get { return this.isNormalized; }
+        }
+
         #endregion
 
         #region static methods

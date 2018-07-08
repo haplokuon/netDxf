@@ -213,10 +213,9 @@ namespace netDxf.Entities
 
         protected override void CalculteReferencePoints()
         {
-            Vector2 centerRef = this.center;
             Vector2 ref1 = this.refPoint;
-
-            this.defPoint = centerRef;
+            
+            this.defPoint = this.center;
 
             if (this.TextPositionManuallySet)
             {
@@ -234,7 +233,9 @@ namespace netDxf.Entities
             }
             else
             {
-                this.textRefPoint = ref1;
+                Vector2 vec = Vector2.Normalize(ref1 - this.center);
+                double minOffset = (2 * this.Style.ArrowSize + this.Style.TextOffset) * this.Style.DimScaleOverall;
+                this.textRefPoint = ref1 + minOffset * vec;
             }
         }
 

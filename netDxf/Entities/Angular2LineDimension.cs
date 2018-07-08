@@ -386,6 +386,13 @@ namespace netDxf.Entities
             double midRot = startAngle + measure * 0.5;
             Vector2 midDim = Vector2.Polar(center, this.offset, midRot);
 
+            double cross = Vector2.CrossProduct(this.endSecondLine - this.startSecondLine, midDim);
+            if (cross >= 0)
+            {
+                Vector2 tmp = this.startSecondLine;
+                this.startSecondLine = this.endSecondLine;
+                this.endSecondLine = tmp;
+            }
             this.defPoint = this.endSecondLine;
             
             if (this.TextPositionManuallySet)

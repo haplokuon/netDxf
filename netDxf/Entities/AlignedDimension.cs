@@ -21,6 +21,7 @@
 #endregion
 
 using System;
+using System.Collections.Generic;
 using netDxf.Blocks;
 using netDxf.Tables;
 
@@ -99,11 +100,11 @@ namespace netDxf.Entities
             if (referenceLine == null)
                 throw new ArgumentNullException(nameof(referenceLine));
 
-            Vector3 ocsPoint;
-            ocsPoint = MathHelper.Transform(referenceLine.StartPoint, normal, CoordinateSystem.World, CoordinateSystem.Object);
-            this.firstRefPoint = new Vector2(ocsPoint.X, ocsPoint.Y);
-            ocsPoint = MathHelper.Transform(referenceLine.EndPoint, normal, CoordinateSystem.World, CoordinateSystem.Object);
-            this.secondRefPoint = new Vector2(ocsPoint.X, ocsPoint.Y);
+            IList<Vector3> ocsPoints = MathHelper.Transform(
+                new List<Vector3> { referenceLine.StartPoint, referenceLine.EndPoint }, normal, CoordinateSystem.World, CoordinateSystem.Object);
+            this.firstRefPoint = new Vector2(ocsPoints[0].X, ocsPoints[0].Y);
+            this.secondRefPoint = new Vector2(ocsPoints[1].X, ocsPoints[1].Y);
+
             if (offset < 0)
                 throw new ArgumentOutOfRangeException(nameof(offset), "The offset value must be equal or greater than zero.");
             this.offset = offset;
@@ -111,7 +112,7 @@ namespace netDxf.Entities
                 throw new ArgumentNullException(nameof(style));
             this.Style = style;
             this.Normal = normal;
-            this.Elevation = ocsPoint.Z;
+            this.Elevation = ocsPoints[0].Z;
             this.Update();
         }
 
@@ -221,18 +222,18 @@ namespace netDxf.Entities
             double t = Vector2.DotProduct(refDir, point - this.defPoint);
             Vector2 pPrime = this.defPoint + t * refDir;
             Vector2 vec = point - pPrime;
-            double distanceSquared = Vector2.DotProduct(vec, vec);
-            double dist = Math.Sqrt(distanceSquared);
-            this.offset += dist;
-            this.defPoint += vec;
 
-            double cross = Vector2.CrossProduct(offsetDir, refDir);
+            double cross = Vector2.CrossProduct(refDir, offsetDir);
             if (cross < 0)
             {
                 Vector2 tmp = this.firstRefPoint;
                 this.firstRefPoint = this.secondRefPoint;
                 this.secondRefPoint = tmp;
+                refDir *= -1;
             }
+
+            this.offset = MathHelper.PointLineDistance(point, this.firstRefPoint, refDir);
+            this.defPoint = this.secondRefPoint + this.offset * Vector2.Perpendicular(refDir);
 
             DimensionStyleFitTextMove moveText = this.Style.FitTextMove;
             DimensionStyleOverride styleOverride;
@@ -242,7 +243,7 @@ namespace netDxf.Entities
             }
             if (moveText == DimensionStyleFitTextMove.BesideDimLine)
             {
-                if(!this.TextPositionManuallySet) this.textRefPoint += vec;
+                if (!this.TextPositionManuallySet) this.textRefPoint += vec;
             }
         }
 

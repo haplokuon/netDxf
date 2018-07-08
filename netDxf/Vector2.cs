@@ -181,6 +181,14 @@ namespace netDxf
             }
         }
 
+        /// <summary>
+        /// Gets if the vector has been normalized.
+        /// </summary>
+        public bool IsNormalized
+        {
+            get { return this.isNormalized; }
+        }
+
         #endregion
 
         #region static methods
@@ -224,7 +232,7 @@ namespace netDxf
         /// <returns>Vector2.</returns>
         public static Vector2 Perpendicular(Vector2 u)
         {
-            return new Vector2(-u.Y, u.X);
+            return new Vector2(-u.Y, u.X) {isNormalized = u.IsNormalized};
         }
 
         /// <summary>
@@ -239,7 +247,7 @@ namespace netDxf
                 return u;
             double sin = Math.Sin(angle);
             double cos = Math.Cos(angle);
-            return new Vector2(u.X * cos - u.Y * sin, u.X * sin + u.Y * cos);
+            return new Vector2(u.X*cos - u.Y*sin, u.X*sin + u.Y*cos) {isNormalized = u.IsNormalized};
         }
 
         /// <summary>

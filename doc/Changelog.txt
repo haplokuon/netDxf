@@ -1,5 +1,12 @@
 ## Change history
 
+### [2018/7/8]
+* Revised the DimensionBlock class. The automatic generation of dimension blocks is limited and it does not support the full set of properties defined by the dimension style.
+* More adjustments for the Dimension entities.
+* Added public property IsNormaized to Vector2 and Vector3.
+* (fixed) Error in the Leader entity Clone method, the leader annotation may be null.
+* (fixed) The ordinate dimension measurement.
+
 ### [2018/7/6]
 * Added setter to the Block property of the dimension. Set the dimension Block property to null to delete the reference to the block associated with the dimension, this also deletes the block from the document.
 * Dimension offset values cannot be negative, if needed switch its references.
