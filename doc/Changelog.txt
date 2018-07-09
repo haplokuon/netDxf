@@ -1,11 +1,17 @@
 ## Change history
 
+### [2018/7/9]
+* (fixed) Formatting architectural units in the LinearUnitFormat class.
+* (fixed) Error in the Attribute Clone method, the attribute definition may be null. It is only possible when loading external DXF files, the attribute constructor will raise an exception in case of a null reference.
+
+
 ### [2018/7/8]
 * Revised the DimensionBlock class. The automatic generation of dimension blocks is limited and it does not support the full set of properties defined by the dimension style.
 * More adjustments for the Dimension entities.
 * Added public property IsNormaized to Vector2 and Vector3.
 * (fixed) Error in the Leader entity Clone method, the leader annotation may be null.
 * (fixed) The ordinate dimension measurement.
+
 
 ### [2018/7/6]
 * Added setter to the Block property of the dimension. Set the dimension Block property to null to delete the reference to the block associated with the dimension, this also deletes the block from the document.
@@ -21,6 +27,7 @@
 * Revised the Dimension entity classes to accommodate the added properties.
 * (fixed) Wrong code when reading style override TextVerticalPosition for leaders.
 * (fixed) Wrong value when writing style override DimRoundOff for dimensions.
+
 
 ### [2018/6/2]
 * Added missing PlotSetting properties (ScaleToFit, PlotType, ShadePlotMode, ShadePlotResolutionMode, ShadePlotDPI).

@@ -127,9 +127,6 @@ namespace netDxf.Entities
         /// Initializes a new instance of the <c>Attribute</c> class.
         /// </summary>
         /// <param name="definition"><see cref="AttributeDefinition">Attribute definition</see>.</param>
-        /// <remarks>
-        /// Although the attribute entity could override values defined in its definition for simplicity the implementation has restricted this possibility.
-        /// </remarks>
         public Attribute(AttributeDefinition definition)
             : base(DxfObjectCode.Attribute)
         {
@@ -421,7 +418,7 @@ namespace netDxf.Entities
                 Normal = this.Normal,
                 IsVisible = this.isVisible,
                 //Attribute properties
-                Definition = (AttributeDefinition) this.definition.Clone(),
+                Definition = (AttributeDefinition) this.definition?.Clone(),
                 Tag = this.tag,
                 Height = this.height,
                 WidthFactor = this.widthFactor,

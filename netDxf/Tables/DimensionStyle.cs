@@ -1695,6 +1695,9 @@ namespace netDxf.Tables
                 // symbols and arrows
                 ArrowSize = this.dimasz,
                 CenterMarkSize = this.dimcen,
+                LeaderArrow  = (Block) this.dimldrblk?.Clone(),
+                DimArrow1 = (Block) this.dimblk1?.Clone(),
+                DimArrow2 = (Block) this.dimblk2?.Clone(),
 
                 // text appearance
                 TextStyle = (TextStyle) this.dimtxsty.Clone(),
@@ -1737,11 +1740,6 @@ namespace netDxf.Tables
                 // tolerances
                 Tolerances = (TolerancesFormat) this.tolerances.Clone()
             };
-
-
-            if (this.dimldrblk != null) copy.LeaderArrow = (Block) this.dimldrblk.Clone();
-            if (this.dimblk1 != null) copy.DimArrow1 = (Block) this.dimblk1.Clone();
-            if (this.dimblk2 != null) copy.DimArrow2 = (Block) this.dimblk2.Clone();
 
             foreach (XData data in this.XData.Values)
                 copy.XData.Add((XData)data.Clone());

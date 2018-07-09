@@ -299,7 +299,7 @@ namespace TestDxfDocument
         public static void Main()
         {
             //TestDimAligned();
-           // TestDimLinear();
+            // TestDimLinear();
             //TestDim2LineAngular();
             //TestDim3PointAngular();
             //TestDimDiametric();
@@ -310,8 +310,8 @@ namespace TestDxfDocument
             //Angular3PointDimensionTest();
             //DiametricDimensionTest();
             //RadialDimensionTest();
-            OrdinateDimensionTest();
-            
+            //OrdinateDimensionTest();
+
             //Angular2LineDimension dim = new Angular2LineDimension();
 
             //DxfDocument doc = Test(@"sample.dxf");
