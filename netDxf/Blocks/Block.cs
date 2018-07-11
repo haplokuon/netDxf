@@ -111,6 +111,7 @@ namespace netDxf.Blocks
         private Vector3 origin;
         private readonly bool readOnly;
         private readonly string xrefFile;
+        private readonly bool space;
 
         #endregion
 
@@ -214,7 +215,7 @@ namespace netDxf.Blocks
                 throw new ArgumentNullException(nameof(name));
 
             this.IsReserved = string.Equals(name, DefaultModelSpaceName, StringComparison.OrdinalIgnoreCase);
-            this.readOnly = this.IsReserved || name.StartsWith(DefaultPaperSpaceName, StringComparison.OrdinalIgnoreCase);
+            this.space = this.IsReserved || name.StartsWith(DefaultPaperSpaceName, StringComparison.OrdinalIgnoreCase);
 
             this.description = string.Empty;
             this.origin = Vector3.Zero;
@@ -344,11 +345,16 @@ namespace netDxf.Blocks
         /// </summary>
         /// <remarks>
         /// Any change made to a read only block will not be applied.
-        /// This is the case of ModelSpace, PaperSpace, and externally referenced blocks.
+        /// This is the case of externally referenced blocks.
         /// </remarks>
         public bool ReadOnly
         {
             get { return this.readOnly; }
+        }
+
+        public bool Space
+        {
+            get { return this.space; }
         }
 
         /// <summary>
@@ -612,64 +618,26 @@ namespace netDxf.Blocks
         {
             if (this.readOnly)
                 return;
-            // if the entity is a hatch we will also add the boundary entities to the block
-            if (e.Item.Type == EntityType.Hatch)
-            {
-                Hatch hatch = (Hatch) e.Item;
-                foreach (HatchBoundaryPath path in hatch.BoundaryPaths)
-                {
-                    this.Hatch_BoundaryPathAdded(hatch, new ObservableCollectionEventArgs<HatchBoundaryPath>(path));
-                }
-                hatch.HatchBoundaryPathAdded += this.Hatch_BoundaryPathAdded;
-                hatch.HatchBoundaryPathRemoved += this.Hatch_BoundaryPathRemoved;
-            }
             this.OnEntityAddedEvent(e.Item);
             e.Item.Owner = this;
+
         }
 
         private void Entities_BeforeRemoveItem(EntityCollection sender, EntityCollectionEventArgs e)
         {
-            // only items owned by the actual block can be removed
-            e.Cancel = !ReferenceEquals(e.Item.Owner, this) || this.readOnly;
+            if (e.Item.Reactors.Count > 0)
+                e.Cancel = true;
+            else
+                // only items owned by the actual block can be removed
+                e.Cancel = !ReferenceEquals(e.Item.Owner, this) || this.readOnly;
         }
 
         private void Entities_RemoveItem(EntityCollection sender, EntityCollectionEventArgs e)
         {
             if (this.readOnly)
                 return;
-            if (e.Item.Type == EntityType.Hatch)
-            {
-                Hatch hatch = (Hatch) e.Item;
-                foreach (HatchBoundaryPath path in hatch.BoundaryPaths)
-                {
-                    this.Hatch_BoundaryPathRemoved(hatch, new ObservableCollectionEventArgs<HatchBoundaryPath>(path));
-                }
-                hatch.HatchBoundaryPathAdded -= this.Hatch_BoundaryPathAdded;
-                hatch.HatchBoundaryPathRemoved -= this.Hatch_BoundaryPathRemoved;
-            }
             this.OnEntityRemovedEvent(e.Item);
             e.Item.Owner = null;
-        }
-
-        private void Hatch_BoundaryPathAdded(Hatch sender, ObservableCollectionEventArgs<HatchBoundaryPath> e)
-        {
-            foreach (EntityObject entity in e.Item.Entities)
-            {
-                if (entity.Owner != null)
-                {
-                    if (!ReferenceEquals(entity.Owner, this))
-                        throw new ArgumentException("The HatchBoundaryPath entity and the hatch must belong to the same block. Clone it instead.");
-                }
-                else
-                {
-                    this.Entities.Add(entity);
-                }
-            }
-        }
-
-        private void Hatch_BoundaryPathRemoved(Hatch sender, ObservableCollectionEventArgs<HatchBoundaryPath> e)
-        {
-            this.Entities.Remove(e.Item.Entities);
         }
 
         #endregion
@@ -681,6 +649,8 @@ namespace netDxf.Blocks
             // attributes with the same tag, and attribute definitions already owned by another Block are not allowed in the attributes list.
             if (this.readOnly)
                 e.Cancel = true;
+            //else if (this.space)
+            //    e.Cancel = true;
             else if (e.Item.Owner != null)
             {
                 // if the block does not belong to a document, all attribute definitions which owner is not null will be rejected
@@ -697,6 +667,9 @@ namespace netDxf.Blocks
         {
             if (this.readOnly)
                 return;
+            if(this.space)
+                return;
+
             this.OnAttributeDefinitionAddedEvent(e.Item);
             e.Item.Owner = this;
             // the block has attributes
@@ -713,6 +686,9 @@ namespace netDxf.Blocks
         {
             if (this.readOnly)
                 return;
+            if(this.space)
+                return;
+
             this.OnAttributeDefinitionRemovedEvent(e.Item);
             e.Item.Owner = null;
             if (this.attributes.Count == 0)

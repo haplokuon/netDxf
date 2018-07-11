@@ -184,7 +184,9 @@ namespace netDxf.IO
 
             this.doc.DrawingVariables.HandleSeed = this.doc.NumHandles.ToString("X");
 
-            this.Open(stream, this.doc.DrawingVariables.AcadVer < DxfVersion.AutoCad2007 ? Encoding.Default : null);
+            this.Open(stream, this.doc.DrawingVariables.AcadVer < DxfVersion.AutoCad2007 ? Encoding.ASCII : null);
+
+            //this.Open(stream, this.doc.DrawingVariables.AcadVer < DxfVersion.AutoCad2007 ? Encoding.Default : null);
 
             // The comment group, 999, is not used in binary DXF files.
             if (!this.isBinary)
@@ -299,17 +301,7 @@ namespace netDxf.IO
             this.BeginSection(DxfObjectCode.BlocksSection);
             foreach (Block block in this.doc.Blocks.Items)
             {
-                Layout layout = null;
-                if (block.Name.StartsWith(Block.DefaultPaperSpaceName))
-                {
-                    // the entities of the layouts associated with the blocks "*Paper_Space0", "*Paper_Space1",... are included in the Blocks Section
-                    string index = block.Name.Remove(0, 12);
-                    if (!string.IsNullOrEmpty(index))
-                    {
-                        layout = block.Record.Layout;
-                    }
-                }
-                this.WriteBlock(block, layout);
+                this.WriteBlock(block);
             }
             this.EndSection(); //End section blocks
 
@@ -317,16 +309,7 @@ namespace netDxf.IO
             this.BeginSection(DxfObjectCode.EntitiesSection);
             foreach (Layout layout in this.doc.Layouts)
             {
-                if (!layout.IsPaperSpace)
-                {
-                    // ModelSpace
-                    List<DxfObject> entities = this.doc.Layouts.GetReferences(layout);
-                    foreach (DxfObject o in entities)
-                    {
-                        this.WriteEntity(o as EntityObject, layout);
-                    }
-                }
-                else if (layout.AssociatedBlock.Name.StartsWith(Block.DefaultPaperSpaceName))
+                if (layout.IsPaperSpace)
                 {
                     // only the entities of the layout associated with the block "*Paper_Space" are included in the Entities Section
                     string index = layout.AssociatedBlock.Name.Remove(0, 12);
@@ -338,6 +321,15 @@ namespace netDxf.IO
                         {
                             this.WriteEntity(o as EntityObject, layout);
                         }
+                    }                  
+                }
+                else 
+                {
+                     // ModelSpace
+                    List<DxfObject> entities = this.doc.Layouts.GetReferences(layout);
+                    foreach (DxfObject o in entities)
+                    {
+                        this.WriteEntity(o as EntityObject, layout);
                     }
                 }
             }
@@ -1672,12 +1664,13 @@ namespace netDxf.IO
 
         #region methods for Block section
 
-        private void WriteBlock(Block block, Layout layout)
+        private void WriteBlock(Block block)
         {
             Debug.Assert(this.activeSection == DxfObjectCode.BlocksSection);
 
             string name = this.EncodeNonAsciiCharacters(block.Name);
             string blockLayer = this.EncodeNonAsciiCharacters(block.Layer.Name);
+            Layout layout = block.Record.Layout;
 
             this.chunk.Write(0, block.CodeName);
             this.chunk.Write(5, block.Handle);
@@ -1715,12 +1708,17 @@ namespace netDxf.IO
             }
             else
             {
-                this.WriteEntity(layout.Viewport, layout);
-                List<DxfObject> entities = this.doc.Layouts.GetReferences(layout);
-                foreach (DxfObject entity in entities)
+                // the entities of the model space and the first paper space are written in the entities section
+                if (!(string.Equals(layout.AssociatedBlock.Name, Block.DefaultModelSpaceName, StringComparison.OrdinalIgnoreCase) ||
+                      string.Equals(layout.AssociatedBlock.Name, Block.DefaultPaperSpaceName, StringComparison.OrdinalIgnoreCase)))
                 {
-                    this.WriteEntity(entity as EntityObject, layout);
-                }
+                    this.WriteEntity(layout.Viewport, layout);
+                    List<DxfObject> entities = this.doc.Layouts.GetReferences(layout);
+                    foreach (DxfObject entity in entities)
+                    {
+                        this.WriteEntity(entity as EntityObject, layout);
+                    }
+                }               
             }
 
             // EndBlock entity
@@ -2055,59 +2053,26 @@ namespace netDxf.IO
             }
 
             Vector2 v = leader.Vertexes[leader.Vertexes.Count - 1] - leader.Vertexes[leader.Vertexes.Count - 2];
-            if (v.Equals(Vector2.Zero))
-                throw new Exception(string.Format("The last and previous vertex of the leader with handle {0} cannot be the same", leader.Handle));
             int side = v.X < 0 ? -1 : 1;
-
-            if (side < 0)
-                this.chunk.Write(74, (short) 1);
-            else
-                this.chunk.Write(74, (short) 0);
-
-            if (leader.HasHookline)
-                this.chunk.Write(75, (short) 1);
-            else
-                this.chunk.Write(75, (short) 0);
+            this.chunk.Write(74, side < 0 ? (short) 0 : (short) 1);
+            this.chunk.Write(75, leader.HasHookline ? (short) 1 : (short) 0);
 
             //this.chunk.Write(40, 0.0);
             //this.chunk.Write(41, 0.0);
 
             // in the dxf the leader vertexes list is in WCS
-            Vector2 dir = side*Vector2.UnitX;
+            //Vector2 dir = side*Vector2.UnitX;
             List<Vector3> ocsVertexes = new List<Vector3>();
+
             if (leader.HasHookline)
             {
-                DimensionStyleOverride styleOverride;
-                double dimgap = leader.Style.TextOffset;
-                if (leader.StyleOverrides.TryGetValue(DimensionStyleOverrideType.TextOffset, out styleOverride))
-                    dimgap = (double) styleOverride.Value;
-                double dimscale = leader.Style.DimScaleOverall;
-                if (leader.StyleOverrides.TryGetValue(DimensionStyleOverrideType.DimScaleOverall, out styleOverride))
-                    dimscale = (double) styleOverride.Value;
-                double dimasz = leader.Style.ArrowSize;
-                if (leader.StyleOverrides.TryGetValue(DimensionStyleOverrideType.ArrowSize, out styleOverride))
-                    dimasz = (double) styleOverride.Value;
-
-                Vector2 hook = leader.Vertexes[leader.Vertexes.Count - 1];
-                MText text = leader.Annotation as MText;
-                if (text != null)
-                {
-                    double rotation = text.Rotation*MathHelper.DegToRad;
-                    double sin = Math.Sin(rotation);
-                    double cos = Math.Cos(rotation);
-                    dir = new Vector2(cos, sin);
-                    Vector2 position = hook + new Vector2(side*dimgap*dimscale, dimgap*dimscale);
-                    Vector2 a = hook - position;
-                    a = MathHelper.Transform(a, rotation, CoordinateSystem.Object, CoordinateSystem.World);
-                    hook = a + position;
-                }
-
-                Vector2 vertex = hook + dir*dimasz*dimscale;
                 for (int i = 0; i < leader.Vertexes.Count - 1; i++)
                     ocsVertexes.Add(new Vector3(leader.Vertexes[i].X, leader.Vertexes[i].Y, leader.Elevation));
-
-                ocsVertexes.Add(new Vector3(vertex.X, vertex.Y, leader.Elevation));
-                ocsVertexes.Add(new Vector3(hook.X, hook.Y, leader.Elevation));
+                // add the start hook line
+                Vector2 start = leader.StartHookLine;
+                Vector2 end = leader.Hook;
+                ocsVertexes.Add(new Vector3(start.X, start.Y, leader.Elevation));
+                ocsVertexes.Add(new Vector3(end.X, end.Y, leader.Elevation));
             }
             else
             {
@@ -2133,16 +2098,22 @@ namespace netDxf.IO
             this.chunk.Write(220, leader.Normal.Y);
             this.chunk.Write(230, leader.Normal.Z);
 
+            Vector3 dir = ocsVertexes[ocsVertexes.Count-1] - ocsVertexes[ocsVertexes.Count - 2];
+
             Vector3 xDir = MathHelper.Transform(new Vector3(dir.X, dir.Y, 0.0), leader.Normal, CoordinateSystem.Object, CoordinateSystem.World);
             xDir.Normalize();
             this.chunk.Write(211, xDir.X);
             this.chunk.Write(221, xDir.Y);
             this.chunk.Write(231, xDir.Z);
 
-            Vector3 wcsOffset = MathHelper.Transform(new Vector3(leader.Offset.X, leader.Offset.Y, leader.Elevation), leader.Normal, CoordinateSystem.Object, CoordinateSystem.World);
-            this.chunk.Write(213, wcsOffset.X);
-            this.chunk.Write(223, wcsOffset.Y);
-            this.chunk.Write(233, wcsOffset.Z);
+            //Vector3 wcsOffset = MathHelper.Transform(new Vector3(leader.Offset.X, leader.Offset.Y, leader.Elevation), leader.Normal, CoordinateSystem.Object, CoordinateSystem.World);
+            //this.chunk.Write(212, wcsOffset.X);
+            //this.chunk.Write(222, wcsOffset.Y);
+            //this.chunk.Write(232, wcsOffset.Z);
+
+            //this.chunk.Write(213, wcsOffset.X);
+            //this.chunk.Write(223, wcsOffset.Y);
+            //this.chunk.Write(233, wcsOffset.Z);
 
             // dimension style overrides info
             if (leader.StyleOverrides.Count > 0)
@@ -2934,7 +2905,15 @@ namespace netDxf.IO
             this.chunk.Write(44, mText.LineSpacingFactor);
 
             // even if the AutoCAD dxf documentation says that the rotation is in radians, this is wrong this value must be saved in degrees
-            this.chunk.Write(50, mText.Rotation);
+            //this.chunk.Write(50, mText.Rotation);
+
+            Vector2 direction = Vector2.Rotate(Vector2.UnitX, mText.Rotation * MathHelper.DegToRad);
+            direction.Normalize();
+            Vector3 ocsDirection = MathHelper.Transform(new Vector3(direction.X, direction.Y, 0.0), mText.Normal, CoordinateSystem.Object, CoordinateSystem.World);
+
+            this.chunk.Write(11, ocsDirection.X);
+            this.chunk.Write(21, ocsDirection.Y);
+            this.chunk.Write(31, ocsDirection.Z);
 
             this.chunk.Write(71, (short) mText.AttachmentPoint);
 
@@ -4845,7 +4824,7 @@ namespace netDxf.IO
             StringBuilder sb = new StringBuilder();
             foreach (char c in text)
             {
-                if (c > 255)
+                if (c > 127)
                     sb.Append(string.Concat("\\U+", string.Format("{0:X4}", Convert.ToInt32(c))));
                 else
                     sb.Append(c);

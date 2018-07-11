@@ -83,11 +83,11 @@ namespace netDxf.Collections
 
             //for new block definitions configure its entities
             foreach (EntityObject entity in block.Entities)
-                this.Owner.AddEntity(entity, true, assignHandle);
+                this.Owner.AddEntity(entity, assignHandle);
 
             //for new block definitions configure its attributes
             foreach (AttributeDefinition attDef in block.AttributeDefinitions.Values)
-                this.Owner.AddEntity(attDef, true, assignHandle);
+                this.Owner.AddEntity(attDef, assignHandle);
 
             block.Record.Owner = this;
 
@@ -206,7 +206,7 @@ namespace netDxf.Collections
                 // we will exchange the owner of the entity
                 this.Owner.RemoveEntity(e.Item);
             }
-            this.Owner.AddEntity(e.Item, true, string.IsNullOrEmpty(e.Item.Handle));
+            this.Owner.AddEntity(e.Item, string.IsNullOrEmpty(e.Item.Handle));
         }
 
         private void Block_EntityRemoved(TableObject sender, BlockEntityChangeEventArgs e)

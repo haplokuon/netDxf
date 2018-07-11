@@ -23,6 +23,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using netDxf.Blocks;
 using netDxf.Collections;
 using netDxf.Entities;
@@ -45,11 +46,10 @@ namespace netDxf
         private string name;
         private readonly SupportFolders supportFolders;
         private bool buildDimensionBlocks;
+        private long numHandles;
 
         //dxf objects added to the document (key: handle, value: dxf object).
         internal ObservableDictionary<string, DxfObject> AddedObjects;
-        // keeps track of the number of handles generated
-        internal long NumHandles;
         // keeps track of the dimension blocks generated
         internal int DimensionBlocksIndex;
         // keeps track of the group names generated (this groups have the isUnnamed set to true)
@@ -74,40 +74,6 @@ namespace netDxf
         private UCSs ucss;
         private Views views;
         private VPorts vports;
-
-        #endregion
-
-        #region entities
-
-        private readonly List<Arc> arcs;
-        private readonly List<Circle> circles;
-        private readonly List<Dimension> dimensions;
-        private readonly List<Ellipse> ellipses;
-        private readonly List<Solid> solids;
-        private readonly List<Trace> traces;
-        private readonly List<Face3d> faces3d;
-        private readonly List<Insert> inserts;
-        private readonly List<Line> lines;
-        private readonly List<Shape> shapes;
-        private readonly List<Point> points;
-        private readonly List<PolyfaceMesh> polyfaceMeshes;
-        private readonly List<LwPolyline> lwPolylines;
-        private readonly List<Polyline> polylines;
-        private readonly List<Text> texts;
-        private readonly List<MText> mTexts;
-        private readonly List<Hatch> hatches;
-        private readonly List<Spline> splines;
-        private readonly List<Image> images;
-        private readonly List<MLine> mLines;
-        private readonly List<Ray> rays;
-        private readonly List<XLine> xlines;
-        private readonly List<Viewport> viewports;
-        private readonly List<Mesh> meshes;
-        private readonly List<Leader> leaders;
-        private readonly List<Tolerance> tolerances;
-        private readonly List<Underlay> underlays;
-        private readonly List<Wipeout> wipeouts;
-        private readonly List<AttributeDefinition> attributeDefinitions;
 
         #endregion
 
@@ -214,39 +180,25 @@ namespace netDxf
 
             this.activeLayout = Layout.ModelSpaceName;
 
-            // entities lists
-            this.arcs = new List<Arc>();
-            this.ellipses = new List<Ellipse>();
-            this.dimensions = new List<Dimension>();
-            this.faces3d = new List<Face3d>();
-            this.solids = new List<Solid>();
-            this.traces = new List<Trace>();
-            this.inserts = new List<Insert>();
-            this.lwPolylines = new List<LwPolyline>();
-            this.polylines = new List<Polyline>();
-            this.polyfaceMeshes = new List<PolyfaceMesh>();
-            this.lines = new List<Line>();
-            this.shapes = new List<Shape>();
-            this.circles = new List<Circle>();
-            this.points = new List<Point>();
-            this.texts = new List<Text>();
-            this.mTexts = new List<MText>();
-            this.hatches = new List<Hatch>();
-            this.splines = new List<Spline>();
-            this.images = new List<Image>();
-            this.mLines = new List<MLine>();
-            this.rays = new List<Ray>();
-            this.xlines = new List<XLine>();
-            this.viewports = new List<Viewport>();
-            this.meshes = new List<Mesh>();
-            this.leaders = new List<Leader>();
-            this.tolerances = new List<Tolerance>();
-            this.underlays = new List<Underlay>();
-            this.wipeouts = new List<Wipeout>();
-            this.attributeDefinitions = new List<AttributeDefinition>();
-
             if (createDefaultObjects)
                 this.AddDefaultObjects();
+        }
+
+        #endregion
+
+        #region internal properties
+
+        /// <summary>
+        /// Gets or sets the number of handles generated, this value is saved as an hexadecimal in the drawing variables HandleSeed property.
+        /// </summary>
+        internal long NumHandles
+        {
+            get { return this.numHandles; }
+            set
+            {
+                this.DrawingVariables.HandleSeed = value.ToString("X");
+                this.numHandles = value;
+            }
         }
 
         #endregion
@@ -522,235 +474,322 @@ namespace netDxf
         #region public entities properties
 
         /// <summary>
-        /// Gets the <see cref="Arc">arcs</see> list.
+        /// Gets the <see cref="Arc">arcs</see> list contained in the active layout.
         /// </summary>
         public IReadOnlyList<Arc> Arcs
         {
-            get { return this.arcs; }
+            get
+            {
+                return new List<Arc>(this.Layouts[this.activeLayout].AssociatedBlock.Entities.OfType<Arc>());
+            }
         }
 
         /// <summary>
-        /// Gets the <see cref="AttributeDefinition">attribute definitions</see> list.
+        /// Gets the <see cref="AttributeDefinition">attribute definitions</see> list in the active layout.
         /// </summary>
         public IReadOnlyList<AttributeDefinition> AttributeDefinitions
         {
-            get { return this.attributeDefinitions; }
+            get
+            {
+                return new List<AttributeDefinition>(this.Layouts[this.activeLayout].AssociatedBlock.Entities.OfType<AttributeDefinition>());
+            }
         }
 
         /// <summary>
-        /// Gets the <see cref="Ellipse">ellipses</see> list.
+        /// Gets the <see cref="Ellipse">ellipses</see> list in the active layout.
         /// </summary>
         public IReadOnlyList<Ellipse> Ellipses
         {
-            get { return this.ellipses; }
+            get
+            {
+                return new List<Ellipse>(this.Layouts[this.activeLayout].AssociatedBlock.Entities.OfType<Ellipse>());
+            }
         }
 
         /// <summary>
-        /// Gets the <see cref="Circle">circles</see> list.
+        /// Gets the <see cref="Circle">circles</see> list in the active layout.
         /// </summary>
         public IReadOnlyList<Circle> Circles
         {
-            get { return this.circles; }
+            get
+            {
+                return new List<Circle>(this.Layouts[this.activeLayout].AssociatedBlock.Entities.OfType<Circle>());
+            }
         }
 
         /// <summary>
-        /// Gets the <see cref="Face3d">3d faces</see> list.
+        /// Gets the <see cref="Face3d">3d faces</see> list in the active layout.
         /// </summary>
         public IReadOnlyList<Face3d> Faces3d
         {
-            get { return this.faces3d; }
+            get
+            {
+                return new List<Face3d>(this.Layouts[this.activeLayout].AssociatedBlock.Entities.OfType<Face3d>());
+            }
         }
 
         /// <summary>
-        /// Gets the <see cref="Solid">solids</see> list.
+        /// Gets the <see cref="Solid">solids</see> list in the active layout.
         /// </summary>
         public IReadOnlyList<Solid> Solids
         {
-            get { return this.solids; }
+            get
+            {
+                return new List<Solid>(this.Layouts[this.activeLayout].AssociatedBlock.Entities.OfType<Solid>());
+            }
         }
 
         /// <summary>
-        /// Gets the <see cref="Trace">traces</see> list.
+        /// Gets the <see cref="Trace">traces</see> list in the active layout.
         /// </summary>
         public IReadOnlyList<Trace> Traces
         {
-            get { return this.traces; }
+            get
+            {
+                return new List<Trace>(this.Layouts[this.activeLayout].AssociatedBlock.Entities.OfType<Trace>());
+            }
         }
 
         /// <summary>
-        /// Gets the <see cref="Insert">inserts</see> list.
+        /// Gets the <see cref="Insert">inserts</see> list in the active layout.
         /// </summary>
         public IReadOnlyList<Insert> Inserts
         {
-            get { return this.inserts; }
+            get
+            {
+                return new List<Insert>(this.Layouts[this.activeLayout].AssociatedBlock.Entities.OfType<Insert>());
+            }
         }
 
         /// <summary>
-        /// Gets the <see cref="Line">lines</see> list.
+        /// Gets the <see cref="Line">lines</see> list in the active layout.
         /// </summary>
         public IReadOnlyList<Line> Lines
         {
-            get { return this.lines; }
+            get
+            {
+                return new List<Line>(this.Layouts[this.activeLayout].AssociatedBlock.Entities.OfType<Line>());
+            }
         }
 
         /// <summary>
-        /// Gets the <see cref="Shape">shapes</see> list.
+        /// Gets the <see cref="Shape">shapes</see> list in the active layout.
         /// </summary>
         public IReadOnlyList<Shape> Shapes
         {
-            get { return this.shapes; }
+            get
+            {
+                return new List<Shape>(this.Layouts[this.activeLayout].AssociatedBlock.Entities.OfType<Shape>());
+            }
         }
 
         /// <summary>
-        /// Gets the <see cref="Polyline">polylines</see> list.
+        /// Gets the <see cref="Polyline">polylines</see> list in the active layout.
         /// </summary>
         public IReadOnlyList<Polyline> Polylines
         {
-            get { return this.polylines; }
+            get
+            {
+                return new List<Polyline>(this.Layouts[this.activeLayout].AssociatedBlock.Entities.OfType<Polyline>());
+            }
         }
 
         /// <summary>
-        /// Gets the <see cref="LwPolyline">light weight polylines</see> list.
+        /// Gets the <see cref="LwPolyline">light weight polylines</see> list in the active layout.
         /// </summary>
         public IReadOnlyList<LwPolyline> LwPolylines
         {
-            get { return this.lwPolylines; }
+            get
+            {
+                return new List<LwPolyline>(this.Layouts[this.activeLayout].AssociatedBlock.Entities.OfType<LwPolyline>());
+            }
         }
 
         /// <summary>
-        /// Gets the <see cref="PolyfaceMeshes">polyface meshes</see> list.
+        /// Gets the <see cref="PolyfaceMeshes">polyface meshes</see> list in the active layout.
         /// </summary>
         public IReadOnlyList<PolyfaceMesh> PolyfaceMeshes
         {
-            get { return this.polyfaceMeshes; }
+            get
+            {
+                return new List<PolyfaceMesh>(this.Layouts[this.activeLayout].AssociatedBlock.Entities.OfType<PolyfaceMesh>());
+            }
         }
 
         /// <summary>
-        /// Gets the <see cref="Point">points</see> list.
+        /// Gets the <see cref="Point">points</see> list in the active layout.
         /// </summary>
         public IReadOnlyList<Point> Points
         {
-            get { return this.points; }
+            get
+            {
+                return new List<Point>(this.Layouts[this.activeLayout].AssociatedBlock.Entities.OfType<Point>());
+            }
         }
 
         /// <summary>
-        /// Gets the <see cref="Text">texts</see> list.
+        /// Gets the <see cref="Text">texts</see> list in the active layout.
         /// </summary>
         public IReadOnlyList<Text> Texts
         {
-            get { return this.texts; }
+            get
+            {
+                return new List<Text>(this.Layouts[this.activeLayout].AssociatedBlock.Entities.OfType<Text>());
+            }
         }
 
         /// <summary>
-        /// Gets the <see cref="MText">multiline texts</see> list.
+        /// Gets the <see cref="MText">multiline texts</see> list in the active layout.
         /// </summary>
         public IReadOnlyList<MText> MTexts
         {
-            get { return this.mTexts; }
+            get
+            {
+                return new List<MText>(this.Layouts[this.activeLayout].AssociatedBlock.Entities.OfType<MText>());
+            }
         }
 
         /// <summary>
-        /// Gets the <see cref="Hatch">hatches</see> list.
+        /// Gets the <see cref="Hatch">hatches</see> list in the active layout.
         /// </summary>
         public IReadOnlyList<Hatch> Hatches
         {
-            get { return this.hatches; }
+            get
+            {
+                return new List<Hatch>(this.Layouts[this.activeLayout].AssociatedBlock.Entities.OfType<Hatch>());
+            }
         }
 
         /// <summary>
-        /// Gets the <see cref="Image">images</see> list.
+        /// Gets the <see cref="Image">images</see> list in the active layout.
         /// </summary>
         public IReadOnlyList<Image> Images
         {
-            get { return this.images; }
+            get
+            {
+                return new List<Image>(this.Layouts[this.activeLayout].AssociatedBlock.Entities.OfType<Image>());
+            }
         }
 
         /// <summary>
-        /// Gets the <see cref="Mesh">mesh</see> list.
+        /// Gets the <see cref="Mesh">mesh</see> list in the active layout.
         /// </summary>
         public IReadOnlyList<Mesh> Meshes
         {
-            get { return this.meshes; }
+            get
+            {
+                return new List<Mesh>(this.Layouts[this.activeLayout].AssociatedBlock.Entities.OfType<Mesh>());
+            }
         }
 
         /// <summary>
-        /// Gets the <see cref="Leader">leader</see> list.
+        /// Gets the <see cref="Leader">leader</see> list in the active layout.
         /// </summary>
         public IReadOnlyList<Leader> Leaders
         {
-            get { return this.leaders; }
+            get
+            {
+                return new List<Leader>(this.Layouts[this.activeLayout].AssociatedBlock.Entities.OfType<Leader>());
+            }
         }
 
         /// <summary>
-        /// Gets the <see cref="Tolerance">tolerance</see> list.
+        /// Gets the <see cref="Tolerance">tolerance</see> list in the active layout.
         /// </summary>
         public IReadOnlyList<Tolerance> Tolerances
         {
-            get { return this.tolerances; }
+            get
+            {
+                return new List<Tolerance>(this.Layouts[this.activeLayout].AssociatedBlock.Entities.OfType<Tolerance>());
+            }
         }
 
         /// <summary>
-        /// Gets the <see cref="Underlay">underlay</see> list.
+        /// Gets the <see cref="Underlay">underlay</see> list in the active layout.
         /// </summary>
         public IReadOnlyList<Underlay> Underlays
         {
-            get { return this.underlays; }
+            get
+            {
+                return new List<Underlay>(this.Layouts[this.activeLayout].AssociatedBlock.Entities.OfType<Underlay>());
+            }
         }
 
         /// <summary>
-        /// Gets the <see cref="MLine">multilines</see> list.
+        /// Gets the <see cref="MLine">multilines</see> list in the active layout.
         /// </summary>
         public IReadOnlyList<MLine> MLines
         {
-            get { return this.mLines; }
+            get
+            {
+                return new List<MLine>(this.Layouts[this.activeLayout].AssociatedBlock.Entities.OfType<MLine>());
+            }
         }
 
         /// <summary>
-        /// Gets the <see cref="Dimension">dimensions</see> list.
+        /// Gets the <see cref="Dimension">dimensions</see> list in the active layout.
         /// </summary>
         public IReadOnlyList<Dimension> Dimensions
         {
-            get { return this.dimensions; }
+            get
+            {
+                return new List<Dimension>(this.Layouts[this.activeLayout].AssociatedBlock.Entities.OfType<Dimension>());
+            }
         }
 
         /// <summary>
-        /// Gets the <see cref="Spline">splines</see> list.
+        /// Gets the <see cref="Spline">splines</see> list in the active layout.
         /// </summary>
         public IReadOnlyList<Spline> Splines
         {
-            get { return this.splines; }
+            get
+            {
+                return new List<Spline>(this.Layouts[this.activeLayout].AssociatedBlock.Entities.OfType<Spline>());
+            }
         }
 
         /// <summary>
-        /// Gets the <see cref="Ray">rays</see> list.
+        /// Gets the <see cref="Ray">rays</see> list in the active layout.
         /// </summary>
         public IReadOnlyList<Ray> Rays
         {
-            get { return this.rays; }
+            get
+            {
+                return new List<Ray>(this.Layouts[this.activeLayout].AssociatedBlock.Entities.OfType<Ray>());
+            }
         }
 
         /// <summary>
-        /// Gets the <see cref="Viewport">viewports</see> list.
+        /// Gets the <see cref="Viewport">viewports</see> list in the active layout.
         /// </summary>
         public IReadOnlyList<Viewport> Viewports
         {
-            get { return this.viewports; }
+            get
+            {
+                return new List<Viewport>(this.Layouts[this.activeLayout].AssociatedBlock.Entities.OfType<Viewport>());
+            }
         }
 
         /// <summary>
-        /// Gets the <see cref="XLine">extension lines</see> list.
+        /// Gets the <see cref="XLine">extension lines</see> list in the active layout.
         /// </summary>
         public IReadOnlyList<XLine> XLines
         {
-            get { return this.xlines; }
+            get
+            {
+                return new List<XLine>(this.Layouts[this.activeLayout].AssociatedBlock.Entities.OfType<XLine>());
+            }
         }
 
         /// <summary>
-        /// Gets the <see cref="Wipeout">wipeouts</see> list.
+        /// Gets the <see cref="Wipeout">wipeouts</see> list in the active layout.
         /// </summary>
         public IReadOnlyList<Wipeout> Wipeouts
         {
-            get { return this.wipeouts; }
+            get
+            {
+                return new List<Wipeout>(this.Layouts[this.activeLayout].AssociatedBlock.Entities.OfType<Wipeout>());
+            }
         }
 
         #endregion
@@ -795,7 +834,11 @@ namespace netDxf
         /// <param name="entity">An <see cref="EntityObject">entity</see> to add to the document.</param>
         public void AddEntity(EntityObject entity)
         {
-            this.AddEntity(entity, false, true);
+            // entities already owned by another document are not allowed
+            if (entity.Owner != null)
+                throw new ArgumentException("The entity already belongs to a document. Clone it instead.", nameof(entity));
+
+            this.Blocks[this.layouts[this.activeLayout].AssociatedBlock.Name].Entities.Add(entity);
         }
 
         /// <summary>
@@ -814,7 +857,7 @@ namespace netDxf
 
             foreach (EntityObject entity in entities)
             {
-                this.RemoveEntity(entity, false);
+                this.RemoveEntity(entity);
             }
         }
 
@@ -830,7 +873,26 @@ namespace netDxf
         /// </remarks>
         public bool RemoveEntity(EntityObject entity)
         {
-            return this.RemoveEntity(entity, false);
+            if (entity == null)
+                return false;
+
+            if (entity.Handle == null)
+                return false;
+
+            if (entity.Owner == null)
+                return false;
+
+            if (entity.Reactors.Count > 0)
+                return false;
+
+            if (entity.Owner.Record.Layout == null)
+                return false;
+
+            if (!this.AddedObjects.ContainsKey(entity.Handle))
+                return false;
+
+            return this.blocks[entity.Owner.Name].Entities.Remove(entity);
+
         }
 
         #endregion
@@ -1111,6 +1173,349 @@ namespace netDxf
 
         #endregion
 
+        #region internal methods
+
+        internal void AddEntity(EntityObject entity, bool assignHandle)
+        {
+            // null entities are not allowed
+            if (entity == null)
+                throw new ArgumentNullException(nameof(entity));
+
+            // assign a handle
+            if (assignHandle || string.IsNullOrEmpty(entity.Handle))
+                this.NumHandles = entity.AsignHandle(this.NumHandles);
+
+            // the entities that are part of a block do not belong to any of the entities lists but to the block definition.
+            switch (entity.Type)
+            {
+                case EntityType.Arc:
+                    break;
+                case EntityType.Circle:
+                    break;
+                case EntityType.Dimension:
+                    Dimension dim = (Dimension) entity;
+                    dim.Style = this.dimStyles.Add(dim.Style, assignHandle);
+                    this.dimStyles.References[dim.Style.Name].Add(dim);
+                    this.AddDimensionStyleOverrides(dim, assignHandle);
+                    if (this.buildDimensionBlocks)
+                    {
+                        Block dimBlock = DimensionBlock.Build(dim, "DimBlock");
+                        dimBlock.SetName("*D" + ++this.DimensionBlocksIndex, false);
+                        dim.Block = this.blocks.Add(dimBlock);
+                        this.blocks.References[dimBlock.Name].Add(dim);
+                    }
+                    else if(dim.Block != null)
+                    {
+                        // if a block is present give it a proper name
+                        dim.Block.SetName("*D" + ++this.DimensionBlocksIndex, false);
+                        dim.Block = this.blocks.Add(dim.Block);
+                        this.blocks.References[dim.Block.Name].Add(dim);
+                    }
+                    dim.DimensionStyleChanged += this.Dimension_DimStyleChanged;
+                    dim.DimensionBlockChanged += this.Dimension_DimBlockChanged;
+                    dim.DimensionStyleOverrideAdded += this.Dimension_DimStyleOverrideAdded;
+                    dim.DimensionStyleOverrideRemoved += this.Dimension_DimStyleOverrideRemoved;
+                    break;
+                case EntityType.Leader:
+                    Leader leader = (Leader) entity;
+                    leader.Style = this.dimStyles.Add(leader.Style, assignHandle);
+                    this.dimStyles.References[leader.Style.Name].Add(leader);
+                    leader.LeaderStyleChanged += this.Leader_DimStyleChanged;
+                    // add the annotation entity
+                    if (leader.Annotation != null)
+                        this.AddEntity(leader.Annotation);
+                    this.AddStyleOverrides(leader, assignHandle);
+                    leader.DimensionStyleOverrideAdded += this.Leader_DimStyleOverrideAdded;
+                    leader.DimensionStyleOverrideRemoved += this.Leader_DimStyleOverrideRemoved;
+                    break;
+                case EntityType.Tolerance:
+                    Tolerance tol = (Tolerance) entity;
+                    tol.Style = this.dimStyles.Add(tol.Style, assignHandle);
+                    this.dimStyles.References[tol.Style.Name].Add(tol);
+                    tol.ToleranceStyleChanged += this.Tolerance_DimStyleChanged;
+                    break;
+                case EntityType.Ellipse:
+                    break;
+                case EntityType.Face3D:
+                    break;
+                case EntityType.Spline:
+                    break;
+                case EntityType.Hatch:
+                    Hatch hatch = (Hatch) entity;
+                    foreach (HatchBoundaryPath path in hatch.BoundaryPaths)
+                    {
+                        foreach (EntityObject e in path.Entities)
+                            this.AddEntity(e);
+                    }
+
+                    hatch.HatchBoundaryPathAdded += this.Hatch_BoundaryPathAdded;
+                    hatch.HatchBoundaryPathRemoved += this.Hatch_BoundaryPathRemoved;
+                    break;
+                case EntityType.Insert:
+                    Insert insert = (Insert) entity;
+                    insert.Block = this.blocks.Add(insert.Block, assignHandle);
+                    this.blocks.References[insert.Block.Name].Add(insert);
+                    foreach (Attribute attribute in insert.Attributes)
+                    {
+                        attribute.Layer = this.layers.Add(attribute.Layer, assignHandle);
+                        this.layers.References[attribute.Layer.Name].Add(attribute);
+                        attribute.LayerChanged += this.Entity_LayerChanged;
+
+                        attribute.Linetype = this.linetypes.Add(attribute.Linetype, assignHandle);
+                        this.linetypes.References[attribute.Linetype.Name].Add(attribute);
+                        attribute.LinetypeChanged += this.Entity_LinetypeChanged;
+
+                        attribute.Style = this.textStyles.Add(attribute.Style, assignHandle);
+                        this.textStyles.References[attribute.Style.Name].Add(attribute);
+                        attribute.TextStyleChanged += this.Entity_TextStyleChanged;
+                    }
+                    insert.AttributeAdded += this.Insert_AttributeAdded;
+                    insert.AttributeRemoved += this.Insert_AttributeRemoved;
+                    break;
+                case EntityType.LightWeightPolyline:
+                    break;
+                case EntityType.Line:
+                    break;
+                case EntityType.Shape:
+                    Shape shape = (Shape)entity;
+                    shape.Style = this.shapeStyles.Add(shape.Style, assignHandle);
+                    this.shapeStyles.References[shape.Style.Name].Add(shape);
+                    //check if the shape style contains a shape with the stored name
+                    if(!shape.Style.ContainsShapeName(shape.Name))
+                        throw new ArgumentException("The shape style does not contain a shape with the stored name.", nameof(entity));
+                    break;
+                case EntityType.Point:
+                    break;
+                case EntityType.PolyfaceMesh:
+                    break;
+                case EntityType.Polyline:
+                    break;
+                case EntityType.Solid:
+                    break;
+                case EntityType.Trace:
+                    break;
+                case EntityType.Mesh:
+                    break;
+                case EntityType.Text:
+                    Text text = (Text) entity;
+                    text.Style = this.textStyles.Add(text.Style, assignHandle);
+                    this.textStyles.References[text.Style.Name].Add(text);
+                    text.TextStyleChanged += this.Entity_TextStyleChanged;
+                    break;
+                case EntityType.MText:
+                    MText mText = (MText) entity;
+                    mText.Style = this.textStyles.Add(mText.Style, assignHandle);
+                    this.textStyles.References[mText.Style.Name].Add(mText);
+                    mText.TextStyleChanged += this.Entity_TextStyleChanged;
+                    break;
+                case EntityType.Image:
+                    Image image = (Image) entity;
+                    image.Definition = this.imageDefs.Add(image.Definition, assignHandle);
+                    this.imageDefs.References[image.Definition.Name].Add(image);
+                    if (!image.Definition.Reactors.ContainsKey(image.Handle))
+                    {
+                        ImageDefinitionReactor reactor = new ImageDefinitionReactor(image.Handle);
+                        this.NumHandles = reactor.AsignHandle(this.NumHandles);
+                        image.Definition.Reactors.Add(image.Handle, reactor);
+                    }
+                    break;
+                case EntityType.MLine:
+                    MLine mline = (MLine) entity;
+                    mline.Style = this.mlineStyles.Add(mline.Style, assignHandle);
+                    this.mlineStyles.References[mline.Style.Name].Add(mline);
+                    mline.MLineStyleChanged += this.MLine_MLineStyleChanged;
+
+                    break;
+                case EntityType.Ray:
+                    break;
+                case EntityType.XLine:
+                    break;
+                case EntityType.Underlay:
+                    Underlay underlay = (Underlay) entity;
+                    switch (underlay.Definition.Type)
+                    {
+                        case UnderlayType.DGN:
+                            underlay.Definition = this.underlayDgnDefs.Add((UnderlayDgnDefinition) underlay.Definition, assignHandle);
+                            this.underlayDgnDefs.References[underlay.Definition.Name].Add(underlay);
+                            break;
+                        case UnderlayType.DWF:
+                            underlay.Definition = this.underlayDwfDefs.Add((UnderlayDwfDefinition) underlay.Definition, assignHandle);
+                            this.underlayDwfDefs.References[underlay.Definition.Name].Add(underlay);
+                            break;
+                        case UnderlayType.PDF:
+                            underlay.Definition = this.underlayPdfDefs.Add((UnderlayPdfDefinition) underlay.Definition, assignHandle);
+                            this.underlayPdfDefs.References[underlay.Definition.Name].Add(underlay);
+                            break;
+                    }
+                    break;
+                case EntityType.Wipeout:
+                    break;
+                case EntityType.Viewport:
+                    Viewport viewport = (Viewport) entity;
+                    if (viewport.ClippingBoundary != null)
+                        this.AddEntity(viewport.ClippingBoundary);
+                    break;
+                case EntityType.AttributeDefinition:
+                    AttributeDefinition attDef = (AttributeDefinition) entity;
+                    attDef.Style = this.textStyles.Add(attDef.Style, assignHandle);
+                    this.textStyles.References[attDef.Style.Name].Add(attDef);
+                    attDef.TextStyleChange += this.Entity_TextStyleChanged;
+                    break;
+                default:
+                    throw new ArgumentException("The entity " + entity.Type + " is not implemented or unknown.");
+            }
+
+            entity.Layer = this.layers.Add(entity.Layer, assignHandle);
+            this.layers.References[entity.Layer.Name].Add(entity);
+
+            entity.Linetype = this.linetypes.Add(entity.Linetype, assignHandle);
+            this.linetypes.References[entity.Linetype.Name].Add(entity);
+
+            this.AddedObjects.Add(entity.Handle, entity);
+
+            entity.LayerChanged += this.Entity_LayerChanged;
+            entity.LinetypeChanged += this.Entity_LinetypeChanged;
+        }
+
+        internal bool RemoveEntity(EntityObject entity, bool isBlockEntity)
+        {
+            // the entities that are part of a block do not belong to any of the entities lists but to the block definition
+            // and they will not be removed from the drawing database
+            switch (entity.Type)
+            {
+                case EntityType.Arc:
+                    break;
+                case EntityType.Circle:
+                    break;
+                case EntityType.Dimension:
+                    Dimension dim = (Dimension) entity;
+                    this.blocks.References[dim.Block.Name].Remove(entity);
+                    dim.DimensionBlockChanged -= this.Dimension_DimBlockChanged;
+                    this.dimStyles.References[dim.Style.Name].Remove(entity);
+                    dim.DimensionStyleChanged -= this.Dimension_DimStyleChanged;
+                    dim.Block = null;
+                    this.RemoveDimensionStyleOverrides(dim.StyleOverrides, dim);
+                    dim.DimensionStyleOverrideAdded -= this.Dimension_DimStyleOverrideAdded;
+                    dim.DimensionStyleOverrideRemoved -= this.Dimension_DimStyleOverrideRemoved;
+                    break;
+                case EntityType.Leader:
+                    Leader leader = (Leader) entity;
+                    this.dimStyles.References[leader.Style.Name].Remove(entity);
+                    leader.LeaderStyleChanged -= this.Leader_DimStyleChanged;
+                    if (leader.Annotation != null)
+                        leader.Annotation.RemoveReactor(leader);
+                    this.RemoveDimensionStyleOverrides(leader.StyleOverrides, leader);
+                    leader.DimensionStyleOverrideAdded -= this.Leader_DimStyleOverrideAdded;
+                    leader.DimensionStyleOverrideRemoved -= this.Leader_DimStyleOverrideRemoved;
+                    break;
+                case EntityType.Tolerance:
+                    Tolerance tolerance = (Tolerance) entity;
+                    this.dimStyles.References[tolerance.Style.Name].Remove(entity);
+                    tolerance.ToleranceStyleChanged -= this.Tolerance_DimStyleChanged;
+                    break;
+                case EntityType.Ellipse:
+                    break;
+                case EntityType.Face3D:
+                    break;
+                case EntityType.Spline:
+                    break;
+                case EntityType.Hatch:
+                    Hatch hatch = (Hatch) entity;
+                    hatch.UnLinkBoundary(); // remove reactors, the entities that made the hatch boundary will not be automatically deleted                   
+                    hatch.HatchBoundaryPathAdded -= this.Hatch_BoundaryPathAdded;
+                    hatch.HatchBoundaryPathRemoved -= this.Hatch_BoundaryPathRemoved;
+                    break;
+                case EntityType.Insert:
+                    Insert insert = (Insert) entity;
+                    this.blocks.References[insert.Block.Name].Remove(entity);
+                    foreach (Attribute att in insert.Attributes)
+                    {
+                        this.layers.References[att.Layer.Name].Remove(att);
+                        att.LayerChanged -= this.Entity_LayerChanged;
+                        this.linetypes.References[att.Linetype.Name].Remove(att);
+                        att.LinetypeChanged -= this.Entity_LinetypeChanged;
+                        this.textStyles.References[att.Style.Name].Remove(att);
+                        att.TextStyleChanged -= this.Entity_TextStyleChanged;
+                    }
+                    insert.AttributeAdded -= this.Insert_AttributeAdded;
+                    insert.AttributeRemoved -= this.Insert_AttributeRemoved;
+                    break;
+                case EntityType.LightWeightPolyline:
+                    break;
+                case EntityType.Line:
+                    break;
+                case EntityType.Shape:
+                    Shape shape = (Shape)entity;
+                    this.shapeStyles.References[shape.Style.Name].Remove(entity);
+                    break;
+                case EntityType.Point:
+                    break;
+                case EntityType.PolyfaceMesh:
+                    break;
+                case EntityType.Polyline:
+                    break;
+                case EntityType.Solid:
+                    break;
+                case EntityType.Trace:
+                    break;
+                case EntityType.Mesh:
+                    break;
+                case EntityType.Text:
+                    Text text = (Text) entity;
+                    this.textStyles.References[text.Style.Name].Remove(entity);
+                    text.TextStyleChanged -= this.Entity_TextStyleChanged;
+                    break;
+                case EntityType.MText:
+                    MText mText = (MText) entity;
+                    this.textStyles.References[mText.Style.Name].Remove(entity);
+                    mText.TextStyleChanged -= this.Entity_TextStyleChanged;
+                    break;
+                case EntityType.Image:
+                    Image image = (Image) entity;
+                    this.imageDefs.References[image.Definition.Name].Remove(image);
+                    image.Definition.Reactors.Remove(image.Handle);
+                    break;
+                case EntityType.MLine:
+                    MLine mline = (MLine) entity;
+                    this.mlineStyles.References[mline.Style.Name].Remove(entity);
+                    mline.MLineStyleChanged -= this.MLine_MLineStyleChanged;
+                    break;
+                case EntityType.Ray:
+                    break;
+                case EntityType.XLine:
+                    break;
+                case EntityType.Viewport:
+                    Viewport viewport = (Viewport) entity;
+                    // delete the viewport boundary entity in case there is one
+                    if (viewport.ClippingBoundary != null)
+                    {
+                        viewport.ClippingBoundary.RemoveReactor(viewport);
+                        this.RemoveEntity(viewport.ClippingBoundary);
+                    }
+                    break;
+                case EntityType.AttributeDefinition:
+                    AttributeDefinition attDef = (AttributeDefinition) entity;
+                    this.textStyles.References[attDef.Style.Name].Remove(entity);
+                    break;
+                default:
+                    throw new ArgumentException("The entity " + entity.Type + " is not implemented or unknown");
+            }
+
+            this.layers.References[entity.Layer.Name].Remove(entity);
+            this.linetypes.References[entity.Linetype.Name].Remove(entity);
+            this.AddedObjects.Remove(entity.Handle);
+
+            entity.LayerChanged -= this.Entity_LayerChanged;
+            entity.LinetypeChanged -= this.Entity_LinetypeChanged;
+
+            entity.Handle = null;
+            entity.Owner = null;
+
+            return true;
+        }
+
+        #endregion
+
         #region private methods
 
         private void AddDimensionStyleOverrides(Dimension dim, bool assignHandle)
@@ -1267,283 +1672,6 @@ namespace netDxf
             }
         }
 
-        internal void AddEntity(EntityObject entity, bool isBlockEntity, bool assignHandle)
-        {
-            // null entities are not allowed
-            if (entity == null)
-                throw new ArgumentNullException(nameof(entity));
-
-            // entities already owned by another document are not allowed
-            if (entity.Owner != null && !isBlockEntity)
-                throw new ArgumentException("The entity already belongs to a document. Clone it instead.", nameof(entity));
-
-            // assign a handle
-            if (assignHandle || string.IsNullOrEmpty(entity.Handle))
-                this.NumHandles = entity.AsignHandle(this.NumHandles);
-
-            // assign the owner
-            if (!isBlockEntity)
-            {
-                entity.Owner = this.layouts[this.activeLayout].AssociatedBlock;
-                this.layouts.References[this.activeLayout].Add(entity);
-            }
-
-            // the entities that are part of a block do not belong to any of the entities lists but to the block definition.
-            switch (entity.Type)
-            {
-                case EntityType.Arc:
-                    if (!isBlockEntity)
-                        this.arcs.Add((Arc) entity);
-                    break;
-                case EntityType.Circle:
-                    if (!isBlockEntity)
-                        this.circles.Add((Circle) entity);
-                    break;
-                case EntityType.Dimension:
-                    Dimension dim = (Dimension) entity;
-                    dim.Style = this.dimStyles.Add(dim.Style, assignHandle);
-                    this.dimStyles.References[dim.Style.Name].Add(dim);
-
-                    this.AddDimensionStyleOverrides(dim, assignHandle);
-
-                    if (this.buildDimensionBlocks)
-                    {
-                        Block dimBlock = DimensionBlock.Build(dim, "DimBlock");
-                        dimBlock.SetName("*D" + ++this.DimensionBlocksIndex, false);
-                        dim.Block = this.blocks.Add(dimBlock);
-                        this.blocks.References[dimBlock.Name].Add(dim);
-                    }
-                    else if(dim.Block != null)
-                    {
-                        // if a block is present give it a proper name
-                        dim.Block.SetName("*D" + ++this.DimensionBlocksIndex, false);
-                        dim.Block = this.blocks.Add(dim.Block);
-                        this.blocks.References[dim.Block.Name].Add(dim);
-                    }
-
-                    dim.DimensionStyleChanged += this.Dimension_DimStyleChanged;
-                    dim.DimensionBlockChanged += this.Dimension_DimBlockChanged;
-                    dim.DimensionStyleOverrideAdded += this.Dimension_DimStyleOverrideAdded;
-                    dim.DimensionStyleOverrideRemoved += this.Dimension_DimStyleOverrideRemoved;
-
-                    if (!isBlockEntity)
-                        this.dimensions.Add(dim);
-                    break;
-                case EntityType.Leader:
-                    Leader leader = (Leader) entity;
-                    leader.Style = this.dimStyles.Add(leader.Style, assignHandle);
-                    this.dimStyles.References[leader.Style.Name].Add(leader);
-                    leader.LeaderStyleChanged += this.Leader_DimStyleChanged;
-                    // add the annotation entity
-                    if (leader.Annotation != null)
-                        this.AddEntity(leader.Annotation, isBlockEntity, assignHandle);
-
-                    this.AddStyleOverrides(leader, assignHandle);
-                    leader.DimensionStyleOverrideAdded += this.Leader_DimStyleOverrideAdded;
-                    leader.DimensionStyleOverrideRemoved += this.Leader_DimStyleOverrideRemoved;
-
-                    if (!isBlockEntity)
-                        this.leaders.Add(leader);
-                    break;
-                case EntityType.Tolerance:
-                    Tolerance tol = (Tolerance) entity;
-                    tol.Style = this.dimStyles.Add(tol.Style, assignHandle);
-                    this.dimStyles.References[tol.Style.Name].Add(tol);
-                    tol.ToleranceStyleChanged += this.Tolerance_DimStyleChanged;
-                    if (!isBlockEntity)
-                        this.tolerances.Add(tol);
-                    break;
-                case EntityType.Ellipse:
-                    if (!isBlockEntity)
-                        this.ellipses.Add((Ellipse) entity);
-                    break;
-                case EntityType.Face3D:
-                    if (!isBlockEntity)
-                        this.faces3d.Add((Face3d) entity);
-                    break;
-                case EntityType.Spline:
-                    if (!isBlockEntity)
-                        this.splines.Add((Spline) entity);
-                    break;
-                case EntityType.Hatch:
-                    Hatch hatch = (Hatch) entity;
-
-                    // the boundary entities of an associative hatch that belong to a block will be handle by that block
-                    if (!isBlockEntity)
-                    {
-                        foreach (HatchBoundaryPath path in hatch.BoundaryPaths)
-                            this.Hatch_BoundaryPathAdded(hatch, new ObservableCollectionEventArgs<HatchBoundaryPath>(path));
-
-                        hatch.HatchBoundaryPathAdded += this.Hatch_BoundaryPathAdded;
-                        hatch.HatchBoundaryPathRemoved += this.Hatch_BoundaryPathRemoved;
-                        this.hatches.Add(hatch);
-                    }
-                    break;
-                case EntityType.Insert:
-                    Insert insert = (Insert) entity;
-                    insert.Block = this.blocks.Add(insert.Block, assignHandle);
-                    this.blocks.References[insert.Block.Name].Add(insert);
-                    foreach (Attribute attribute in insert.Attributes)
-                    {
-                        attribute.Layer = this.layers.Add(attribute.Layer, assignHandle);
-                        this.layers.References[attribute.Layer.Name].Add(attribute);
-                        attribute.LayerChanged += this.Entity_LayerChanged;
-
-                        attribute.Linetype = this.linetypes.Add(attribute.Linetype, assignHandle);
-                        this.linetypes.References[attribute.Linetype.Name].Add(attribute);
-                        attribute.LinetypeChanged += this.Entity_LinetypeChanged;
-
-                        attribute.Style = this.textStyles.Add(attribute.Style, assignHandle);
-                        this.textStyles.References[attribute.Style.Name].Add(attribute);
-                        attribute.TextStyleChanged += this.Entity_TextStyleChanged;
-                    }
-                    insert.AttributeAdded += this.Insert_AttributeAdded;
-                    insert.AttributeRemoved += this.Insert_AttributeRemoved;
-                    if (!isBlockEntity)
-                        this.inserts.Add(insert);
-                    break;
-                case EntityType.LightWeightPolyline:
-                    if (!isBlockEntity)
-                        this.lwPolylines.Add((LwPolyline) entity);
-                    break;
-                case EntityType.Line:
-                    if (!isBlockEntity)
-                        this.lines.Add((Line) entity);
-                    break;
-                case EntityType.Shape:
-                    Shape shape = (Shape)entity;
-                    shape.Style = this.shapeStyles.Add(shape.Style, assignHandle);
-                    this.shapeStyles.References[shape.Style.Name].Add(shape);
-                    //check if the shape style contains a shape with the stored name
-                    if(!shape.Style.ContainsShapeName(shape.Name))
-                        throw new ArgumentException("The shape style does not contain a shape with the stored name.", nameof(entity));
-                    if (!isBlockEntity)
-                        this.shapes.Add(shape);
-                    break;
-                case EntityType.Point:
-                    if (!isBlockEntity)
-                        this.points.Add((Point) entity);
-                    break;
-                case EntityType.PolyfaceMesh:
-                    if (!isBlockEntity)
-                        this.polyfaceMeshes.Add((PolyfaceMesh) entity);
-                    break;
-                case EntityType.Polyline:
-                    if (!isBlockEntity)
-                        this.polylines.Add((Polyline) entity);
-                    break;
-                case EntityType.Solid:
-                    if (!isBlockEntity)
-                        this.solids.Add((Solid) entity);
-                    break;
-                case EntityType.Trace:
-                    if (!isBlockEntity)
-                        this.traces.Add((Trace) entity);
-                    break;
-                case EntityType.Mesh:
-                    if (!isBlockEntity)
-                        this.meshes.Add((Mesh) entity);
-                    break;
-                case EntityType.Text:
-                    Text text = (Text) entity;
-                    text.Style = this.textStyles.Add(text.Style, assignHandle);
-                    this.textStyles.References[text.Style.Name].Add(text);
-                    text.TextStyleChanged += this.Entity_TextStyleChanged;
-                    if (!isBlockEntity)
-                        this.texts.Add(text);
-                    break;
-                case EntityType.MText:
-                    MText mText = (MText) entity;
-                    mText.Style = this.textStyles.Add(mText.Style, assignHandle);
-                    this.textStyles.References[mText.Style.Name].Add(mText);
-                    mText.TextStyleChanged += this.Entity_TextStyleChanged;
-                    if (!isBlockEntity)
-                        this.mTexts.Add(mText);
-                    break;
-                case EntityType.Image:
-                    Image image = (Image) entity;
-                    image.Definition = this.imageDefs.Add(image.Definition, assignHandle);
-                    this.imageDefs.References[image.Definition.Name].Add(image);
-                    if (!image.Definition.Reactors.ContainsKey(image.Handle))
-                    {
-                        ImageDefinitionReactor reactor = new ImageDefinitionReactor(image.Handle);
-                        this.NumHandles = reactor.AsignHandle(this.NumHandles);
-                        image.Definition.Reactors.Add(image.Handle, reactor);
-                    }
-                    if (!isBlockEntity)
-                        this.images.Add(image);
-                    break;
-                case EntityType.MLine:
-                    MLine mline = (MLine) entity;
-                    mline.Style = this.mlineStyles.Add(mline.Style, assignHandle);
-                    this.mlineStyles.References[mline.Style.Name].Add(mline);
-                    mline.MLineStyleChanged += this.MLine_MLineStyleChanged;
-                    if (!isBlockEntity)
-                        this.mLines.Add(mline);
-                    break;
-                case EntityType.Ray:
-                    if (!isBlockEntity)
-                        this.rays.Add((Ray) entity);
-                    break;
-                case EntityType.XLine:
-                    if (!isBlockEntity)
-                        this.xlines.Add((XLine) entity);
-                    break;
-                case EntityType.Underlay:
-                    Underlay underlay = (Underlay) entity;
-                    switch (underlay.Definition.Type)
-                    {
-                        case UnderlayType.DGN:
-                            underlay.Definition = this.underlayDgnDefs.Add((UnderlayDgnDefinition) underlay.Definition, assignHandle);
-                            this.underlayDgnDefs.References[underlay.Definition.Name].Add(underlay);
-                            break;
-                        case UnderlayType.DWF:
-                            underlay.Definition = this.underlayDwfDefs.Add((UnderlayDwfDefinition) underlay.Definition, assignHandle);
-                            this.underlayDwfDefs.References[underlay.Definition.Name].Add(underlay);
-                            break;
-                        case UnderlayType.PDF:
-                            underlay.Definition = this.underlayPdfDefs.Add((UnderlayPdfDefinition) underlay.Definition, assignHandle);
-                            this.underlayPdfDefs.References[underlay.Definition.Name].Add(underlay);
-                            break;
-                    }
-                    if (!isBlockEntity)
-                        this.underlays.Add(underlay);
-                    break;
-                case EntityType.Wipeout:
-                    if (!isBlockEntity)
-                        this.wipeouts.Add((Wipeout) entity);
-                    break;
-                case EntityType.Viewport:
-                    Viewport viewport = (Viewport) entity;
-                    if (viewport.ClippingBoundary != null)
-                        this.AddEntity(viewport.ClippingBoundary, isBlockEntity, assignHandle);
-                    if (!isBlockEntity)
-                        this.viewports.Add(viewport);
-                    break;
-                case EntityType.AttributeDefinition:
-                    AttributeDefinition attDef = (AttributeDefinition) entity;
-                    attDef.Style = this.textStyles.Add(attDef.Style, assignHandle);
-                    this.textStyles.References[attDef.Style.Name].Add(attDef);
-                    attDef.TextStyleChange += this.Entity_TextStyleChanged;
-                    if (!isBlockEntity)
-                        this.attributeDefinitions.Add(attDef);
-                    break;
-                default:
-                    throw new ArgumentException("The entity " + entity.Type + " is not implemented or unknown.");
-            }
-
-            entity.Layer = this.layers.Add(entity.Layer, assignHandle);
-            this.layers.References[entity.Layer.Name].Add(entity);
-
-            entity.Linetype = this.linetypes.Add(entity.Linetype, assignHandle);
-            this.linetypes.References[entity.Linetype.Name].Add(entity);
-
-            this.AddedObjects.Add(entity.Handle, entity);
-
-            entity.LayerChanged += this.Entity_LayerChanged;
-            entity.LinetypeChanged += this.Entity_LinetypeChanged;
-        }
-
         private void RemoveDimensionStyleOverrides(DimensionStyleOverrideDictionary overrides, DxfObject entity)
         {
             // remove the style override referenced DxfObjects
@@ -1609,224 +1737,6 @@ namespace netDxf
                 Linetype linetype = (Linetype) styleOverride.Value;
                 this.linetypes.References[linetype.Name].Remove(entity);
             }
-        }
-
-        internal bool RemoveEntity(EntityObject entity, bool isBlockEntity)
-        {
-            if (entity == null)
-                return false;
-
-            if (entity.Handle == null)
-                return false;
-
-            if (entity.Owner == null)
-                return false;
-
-            if (entity.Reactors.Count > 0)
-                return false;
-
-            if (entity.Owner.Record.Layout == null)
-                return false;
-
-            if (!this.AddedObjects.ContainsKey(entity.Handle))
-                return false;
-
-            // the entities that are part of a block do not belong to any of the entities lists but to the block definition
-            // and they will not be removed from the drawing database
-            switch (entity.Type)
-            {
-                case EntityType.Arc:
-                    if (!isBlockEntity)
-                        this.arcs.Remove((Arc) entity);
-                    break;
-                case EntityType.Circle:
-                    if (!isBlockEntity)
-                        this.circles.Remove((Circle) entity);
-                    break;
-                case EntityType.Dimension:
-                    Dimension dim = (Dimension) entity;
-                    if (!isBlockEntity)
-                        this.dimensions.Remove(dim);
-                    this.blocks.References[dim.Block.Name].Remove(entity);
-                    dim.DimensionBlockChanged -= this.Dimension_DimBlockChanged;
-                    this.dimStyles.References[dim.Style.Name].Remove(entity);
-                    dim.DimensionStyleChanged -= this.Dimension_DimStyleChanged;
-                    dim.Block = null;
-
-                    this.RemoveDimensionStyleOverrides(dim.StyleOverrides, dim);
-                    dim.DimensionStyleOverrideAdded -= this.Dimension_DimStyleOverrideAdded;
-                    dim.DimensionStyleOverrideRemoved -= this.Dimension_DimStyleOverrideRemoved;
-
-                    break;
-                case EntityType.Leader:
-                    Leader leader = (Leader) entity;
-                    if (!isBlockEntity)
-                        this.leaders.Remove(leader);
-                    this.dimStyles.References[leader.Style.Name].Remove(entity);
-                    leader.LeaderStyleChanged -= this.Leader_DimStyleChanged;
-
-                    if (leader.Annotation != null)
-                        leader.Annotation.RemoveReactor(leader);
-
-                    this.RemoveDimensionStyleOverrides(leader.StyleOverrides, leader);
-                    leader.DimensionStyleOverrideAdded -= this.Leader_DimStyleOverrideAdded;
-                    leader.DimensionStyleOverrideRemoved -= this.Leader_DimStyleOverrideRemoved;
-                    break;
-                case EntityType.Tolerance:
-                    Tolerance tolerance = (Tolerance) entity;
-                    if (!isBlockEntity)
-                        this.tolerances.Remove(tolerance);
-                    this.dimStyles.References[tolerance.Style.Name].Remove(entity);
-                    tolerance.ToleranceStyleChanged -= this.Tolerance_DimStyleChanged;
-                    break;
-                case EntityType.Ellipse:
-                    if (!isBlockEntity)
-                        this.ellipses.Remove((Ellipse) entity);
-                    break;
-                case EntityType.Face3D:
-                    if (!isBlockEntity)
-                        this.faces3d.Remove((Face3d) entity);
-                    break;
-                case EntityType.Spline:
-                    if (!isBlockEntity)
-                        this.splines.Remove((Spline) entity);
-                    break;
-                case EntityType.Hatch:
-                    Hatch hatch = (Hatch) entity;
-                    hatch.UnLinkBoundary();
-                    if (!isBlockEntity)
-                    {
-                        hatch.HatchBoundaryPathAdded -= this.Hatch_BoundaryPathAdded;
-                        hatch.HatchBoundaryPathRemoved -= this.Hatch_BoundaryPathRemoved;
-                        this.hatches.Remove(hatch);
-                    }
-                    break;
-                case EntityType.Insert:
-                    Insert insert = (Insert) entity;
-                    if (!isBlockEntity)
-                        this.inserts.Remove(insert);
-                    this.blocks.References[insert.Block.Name].Remove(entity);
-                    foreach (Attribute att in insert.Attributes)
-                    {
-                        this.layers.References[att.Layer.Name].Remove(att);
-                        att.LayerChanged -= this.Entity_LayerChanged;
-                        this.linetypes.References[att.Linetype.Name].Remove(att);
-                        att.LinetypeChanged -= this.Entity_LinetypeChanged;
-                        this.textStyles.References[att.Style.Name].Remove(att);
-                        att.TextStyleChanged -= this.Entity_TextStyleChanged;
-                    }
-                    insert.AttributeAdded -= this.Insert_AttributeAdded;
-                    insert.AttributeRemoved -= this.Insert_AttributeRemoved;
-                    break;
-                case EntityType.LightWeightPolyline:
-                    if (!isBlockEntity)
-                        this.lwPolylines.Remove((LwPolyline) entity);
-                    break;
-                case EntityType.Line:
-                    if (!isBlockEntity)
-                        this.lines.Remove((Line) entity);
-                    break;
-                case EntityType.Shape:
-                    Shape shape = (Shape)entity;
-                    if (!isBlockEntity)
-                        this.shapes.Remove(shape);
-                    this.shapeStyles.References[shape.Style.Name].Remove(entity);
-                    break;
-                case EntityType.Point:
-                    if (!isBlockEntity)
-                        this.points.Remove((Point) entity);
-                    break;
-                case EntityType.PolyfaceMesh:
-                    if (!isBlockEntity)
-                        this.polyfaceMeshes.Remove((PolyfaceMesh) entity);
-                    break;
-                case EntityType.Polyline:
-                    if (!isBlockEntity)
-                        this.polylines.Remove((Polyline) entity);
-                    break;
-                case EntityType.Solid:
-                    if (!isBlockEntity)
-                        this.solids.Remove((Solid) entity);
-                    break;
-                case EntityType.Trace:
-                    if (!isBlockEntity)
-                        this.traces.Remove((Trace) entity);
-                    break;
-                case EntityType.Mesh:
-                    if (!isBlockEntity)
-                        this.meshes.Remove((Mesh) entity);
-                    break;
-                case EntityType.Text:
-                    Text text = (Text) entity;
-                    if (!isBlockEntity)
-                        this.texts.Remove(text);
-                    this.textStyles.References[text.Style.Name].Remove(entity);
-                    text.TextStyleChanged -= this.Entity_TextStyleChanged;
-                    break;
-                case EntityType.MText:
-                    MText mText = (MText) entity;
-                    if (!isBlockEntity)
-                        this.mTexts.Remove(mText);
-                    this.textStyles.References[mText.Style.Name].Remove(entity);
-                    mText.TextStyleChanged -= this.Entity_TextStyleChanged;
-                    break;
-                case EntityType.Image:
-                    Image image = (Image) entity;
-                    if (!isBlockEntity)
-                        this.images.Remove(image);
-                    this.imageDefs.References[image.Definition.Name].Remove(image);
-                    image.Definition.Reactors.Remove(image.Handle);
-                    break;
-                case EntityType.MLine:
-                    MLine mline = (MLine) entity;
-                    if (!isBlockEntity)
-                        this.mLines.Remove(mline);
-                    this.mlineStyles.References[mline.Style.Name].Remove(entity);
-                    mline.MLineStyleChanged -= this.MLine_MLineStyleChanged;
-                    break;
-                case EntityType.Ray:
-                    if (!isBlockEntity)
-                        this.rays.Remove((Ray) entity);
-                    break;
-                case EntityType.XLine:
-                    if (!isBlockEntity)
-                        this.xlines.Remove((XLine) entity);
-                    break;
-                case EntityType.Viewport:
-                    Viewport viewport = (Viewport) entity;
-                    if (!isBlockEntity)
-                        this.viewports.Remove(viewport);
-                    // delete the viewport boundary entity in case there is one
-                    if (viewport.ClippingBoundary != null)
-                    {
-                        viewport.ClippingBoundary.RemoveReactor(viewport);
-                        this.RemoveEntity(viewport.ClippingBoundary);
-                    }
-                    break;
-                case EntityType.AttributeDefinition:
-                    AttributeDefinition attDef = (AttributeDefinition) entity;
-                    if (!isBlockEntity)
-                        this.attributeDefinitions.Remove(attDef);
-                    this.textStyles.References[attDef.Style.Name].Remove(entity);
-                    break;
-                default:
-                    throw new ArgumentException("The entity " + entity.Type + " is not implemented or unknown");
-            }
-
-            if (!isBlockEntity)
-                this.layouts.References[entity.Owner.Record.Layout.Name].Remove(entity);
-
-            this.layers.References[entity.Layer.Name].Remove(entity);
-            this.linetypes.References[entity.Linetype.Name].Remove(entity);
-            this.AddedObjects.Remove(entity.Handle);
-
-            entity.Handle = null;
-            entity.Owner = null;
-
-            entity.LayerChanged -= this.Entity_LayerChanged;
-            entity.LinetypeChanged -= this.Entity_LinetypeChanged;
-
-            return true;
         }
 
         private void AddDefaultObjects()
@@ -2107,11 +2017,12 @@ namespace netDxf
                 else
                 {
                     // we will add the new entity to the same document and layout of the hatch
-                    string active = this.ActiveLayout;
-                    this.ActiveLayout = layout.Name;
-                    // the entity does not belong to anyone
-                    this.AddEntity(entity, false, true);
-                    this.ActiveLayout = active;
+                    this.blocks[layout.AssociatedBlock.Name].Entities.Add(entity);
+                    //string active = this.ActiveLayout;
+                    //this.ActiveLayout = layout.Name;
+                    //// the entity does not belong to anyone
+                    //this.AddEntity(entity, false, true);
+                    //this.ActiveLayout = active;
                 }
             }
         }

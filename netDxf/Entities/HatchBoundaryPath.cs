@@ -540,7 +540,7 @@ namespace netDxf.Entities
                         throw new ArgumentException("Closed polylines cannot be combined with other entities to make a hatch boundary path.");
 
                 // it seems that AutoCad does not have problems on creating loops that theoretically does not make sense, like, for example an internal loop that is made of a single arc.
-                // so if AutoCAD is ok with that I am too, the program that make use of this information will take care of this inconsistencies
+                // so if AutoCAD is OK with that I am too, the program that make use of this information will take care of this inconsistencies
                 switch (entity.Type)
                 {
                     case EntityType.Arc:

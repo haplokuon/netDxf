@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
+using System.Linq;
 using System.Text;
 using netDxf;
 using netDxf.Blocks;
@@ -296,10 +297,132 @@ namespace TestDxfDocument
 
         }
 
+        public static void AccessModelBlock()
+        {
+            Layer layer = new Layer("Layer1") {Color = AciColor.Green};
+            Line line1 = new Line(new Vector2(0,0), new Vector2(50,50)) {Layer = layer};
+            Line line2 = new Line(new Vector2(0, 0), new Vector2(50, -50)) { Layer = layer };
+            DxfDocument doc = new DxfDocument();
+            doc.Blocks["*Model_Space"].Entities.Add(line1);
+            doc.AddEntity(line2);
+            doc.Save("test.dxf");
+
+
+            DxfDocument loaded = DxfDocument.Load("test.dxf");
+            EntityCollection entities1 = loaded.Layouts[Layout.ModelSpaceName].AssociatedBlock.Entities;
+            EntityCollection entities2 = loaded.Blocks[Block.DefaultModelSpaceName].Entities;
+            IList<DxfObject> entities3 = loaded.Layouts.GetReferences(Layout.ModelSpaceName);
+
+            IEnumerable<Line> lines = entities1.OfType<Line>();
+
+            foreach (Line line in entities1.OfType<Line>())
+            {
+                line.Color = AciColor.Blue;
+            }
+
+            
+
+            int num = lines.Count();
+            Line l = lines.ElementAtOrDefault(0);
+
+            Line del = (Line) loaded.Blocks[Block.DefaultModelSpaceName].Entities[0];
+            //loaded.Blocks[Block.DefaultModelSpaceName].Entities.Remove(del);
+            loaded.RemoveEntity(del);
+
+            loaded.Save("test compare.dxf");
+        }
+
+        private static void TestHatch()
+        {
+            DxfDocument dxf = new DxfDocument(DxfVersion.AutoCad2010);
+
+            LwPolyline poly = new LwPolyline();
+            poly.Vertexes.Add(new LwPolylineVertex(-10, -10));
+            poly.Vertexes.Add(new LwPolylineVertex(10, -10));
+            poly.Vertexes.Add(new LwPolylineVertex(10, 10));
+            poly.Vertexes.Add(new LwPolylineVertex(-10, 10));
+            poly.IsClosed = true;
+            HatchBoundaryPath boundary1 = new HatchBoundaryPath(new List<EntityObject> { poly });
+
+            Circle circle = new Circle(Vector2.Zero, 5);
+            HatchBoundaryPath boundary2 = new HatchBoundaryPath(new List<EntityObject> {circle});
+
+            HatchPattern pattern = HatchPattern.Line;
+            pattern.Scale = 10;
+            pattern.Angle = 45;
+
+            Hatch hatch = new Hatch(pattern, true);
+
+            hatch.BoundaryPaths.Add(boundary1);
+
+            dxf.AddEntity(hatch);
+            hatch.BoundaryPaths.Add(boundary2);
+
+            dxf.RemoveEntity(hatch);
+
+            //hatch.BoundaryPaths.Add(boundary2);
+            //hatch.UnLinkBoundary();
+
+            //dxf.Blocks[Block.DefaultModelSpaceName].Entities.Remove(poly);
+            //dxf.Blocks[Block.DefaultModelSpaceName].Entities.Remove(circle);
+            //dxf.Blocks[Block.DefaultModelSpaceName].AttributeDefinitions.Add(new AttributeDefinition("MyTag"));
+            //hatch.CreateBoundary(true);
+
+            //dxf.AddEntity(poly);
+            //dxf.AddEntity(circle);
+
+            //Block myBlock = new Block("MyBlock");
+            //dxf.Blocks.Add(myBlock);
+            //myBlock.Entities.Add(circle);
+            //myBlock.AttributeDefinitions.Add(new AttributeDefinition("MyTag"));
+
+            dxf.Save("Hatch.dxf");
+           
+        }
+
+        private static void TestLeader()
+        {
+            // a basic text annotation
+            List<Vector2> vertexes1 = new List<Vector2>();
+            vertexes1.Add(new Vector2(0, 0));
+            vertexes1.Add(new Vector2(-5, 5));
+            //vertexes1.Add(new Vector2(-5.5,4.5));
+            Leader leader1 = new Leader("Sample annotation", vertexes1);
+            leader1.Offset = new Vector2(-0.5, -0.5);
+
+            //((MText) leader1.Annotation).Position = new Vector3(5, 5, 0);
+            //((MText) leader1.Annotation).Rotation = 10;
+            leader1.Update(true);
+
+            //leader1.Normal = Vector3.UnitX;
+
+            //leader1.Offset = new Vector2(-0.5, -0.5);
+
+            //leader1.HasHookline = false;
+
+            //leader1.TextVerticalPosition = LeaderTextVerticalPosition.Centered;
+            //leader1.Update(false);
+
+            //leader1.TextVerticalPosition = LeaderTextVerticalPosition.Centered;
+            // We need to call manually the method Update if the annotation position is modified,
+            // or the Leader properties like Style, Normal, Elevation, Annotation, TextVerticalPosition, and/or Offset.
+
+            DxfDocument doc = new DxfDocument();
+            doc.AddEntity(leader1);
+            doc.Save("test.dxf");
+        }
         public static void Main()
         {
+            //TestLeader();
+
+            LeaderEntity();
+
+            //TestHatch();
+
+            //Text();
+            //AccessModelBlock();
             //TestDimAligned();
-            // TestDimLinear();
+            //TestDimLinear();
             //TestDim2LineAngular();
             //TestDim3PointAngular();
             //TestDimDiametric();
@@ -313,7 +436,7 @@ namespace TestDxfDocument
             //OrdinateDimensionTest();
 
             //Angular2LineDimension dim = new Angular2LineDimension();
-
+            //DxfDocument doc = Test(@".\dxfs\sample.dxf");
             //DxfDocument doc = Test(@"sample.dxf");
             //doc.DrawingVariables.AcadVer = DxfVersion.AutoCad2004;
             //doc.Save("test1.dxf");
@@ -1345,10 +1468,19 @@ namespace TestDxfDocument
             vertexes1.Add(new Vector2(0, 0));
             vertexes1.Add(new Vector2(-5, 5));
             Leader leader1 = new Leader("Sample annotation", vertexes1);
-            leader1.Offset = new Vector2(0, -0.5);
+            //leader1.TextVerticalPosition = LeaderTextVerticalPosition.Above;
+            //((MText) leader1.Annotation).Position = new Vector3(5, 5, 0);
+            leader1.Update(false);
+
+            //leader1.TextVerticalPosition = LeaderTextVerticalPosition.Centered;
+            //leader1.Offset = new Vector2(0, -0.5);
             // We need to call manually the method Update if the annotation position is modified,
             // or the Leader properties like Style, Normal, Elevation, Annotation, TextVerticalPosition, and/or Offset.
-            leader1.Update(false);
+            //leader1.Update(true);
+
+
+            DxfDocument compare = DxfDocument.Load("Leader compare.dxf");
+            Leader l = compare.Leaders[0];
 
             // leader not in the XY plane
             Leader cloned = (Leader) leader1.Clone();
@@ -1400,15 +1532,15 @@ namespace TestDxfDocument
             Leader leader4 = new Leader(block, vertexes4);
             // change the leader offset to move  the leader hook (the last vertex of the leader vertexes list) in relation to the annotation position.
             leader4.Offset = new Vector2(1, 1);
-            leader4.Update(false);
+            leader4.Update(true);
 
             // add entities to the document
             DxfDocument doc = new DxfDocument();
             //doc.AddEntity(cloned);
             //doc.AddEntity(leader1);
-            doc.AddEntity(leader2);
+            //doc.AddEntity(leader2);
             //doc.AddEntity(leader3);
-            //doc.AddEntity(leader4);
+            doc.AddEntity(leader4);
             doc.Save("Leader.dxf");
 
             DxfDocument test = DxfDocument.Load("Leader.dxf");
@@ -3924,7 +4056,7 @@ namespace TestDxfDocument
             // the entities lists contain the geometry that has a graphical representation in the drawing across all layouts,
             // to get the entities that belongs to a specific layout you can get the references through the Layouts.GetReferences(name)
             // or check the EntityObject.Owner.Record.Layout property
-            Console.WriteLine("ENTITIES:");
+            Console.WriteLine("ENTITIES for the Active Layout = {0}:", dxf.ActiveLayout);
             Console.WriteLine("\t{0}; count: {1}", EntityType.Arc, dxf.Arcs.Count);
             Console.WriteLine("\t{0}; count: {1}", EntityType.AttributeDefinition, dxf.AttributeDefinitions.Count);
             Console.WriteLine("\t{0}; count: {1}", EntityType.Circle, dxf.Circles.Count);
@@ -5134,9 +5266,13 @@ namespace TestDxfDocument
             DxfDocument dxf1 = new DxfDocument(DxfVersion.AutoCad2010);
             Text text1 = new Text("这是中国文字", Vector2.Zero, 10, textStyle);
             MText mtext1 = new MText("这是中国文字", new Vector2(0, 30), 10, 0, textStyle);
+            Text text2 = new Text("àèìòùáéíóúü", new Vector2(0, 60), 10);
             dxf1.AddEntity(text1);
             dxf1.AddEntity(mtext1);
+            dxf1.AddEntity(text2);
             dxf1.Save("textCad2010.dxf");
+            dxf1.DrawingVariables.AcadVer = DxfVersion.AutoCad2000;
+            dxf1.Save("textCad2000.dxf");
 
             foreach (Text text in dxf1.Texts)
             {
@@ -5155,11 +5291,11 @@ namespace TestDxfDocument
             // for previous version (this method will also work for later ones) you will need to supply the unicode value (U+value),
             // you can get this value with the Windows Character Map application
             DxfDocument dxf2 = new DxfDocument(DxfVersion.AutoCad2010);
-            Text text2 = new Text("\\U+8FD9\\U+662F\\U+4E2D\\U+56FD\\U+6587\\U+5B57", Vector2.Zero, 10, textStyle);
-            MText mtext2 = new MText("\\U+8FD9\\U+662F\\U+4E2D\\U+56FD\\U+6587\\U+5B57", new Vector2(0, 30), 10, 0, textStyle);
-            dxf2.AddEntity(text2);
-            dxf2.AddEntity(mtext2);
-            dxf2.Save("textCad2000.dxf");
+            Text text3 = new Text("\\U+8FD9\\U+662F\\U+4E2D\\U+56FD\\U+6587\\U+5B57", Vector2.Zero, 10, textStyle);
+            MText mtext3 = new MText("\\U+8FD9\\U+662F\\U+4E2D\\U+56FD\\U+6587\\U+5B57", new Vector2(0, 30), 10, 0, textStyle);
+            dxf2.AddEntity(text3);
+            dxf2.AddEntity(mtext3);
+            //dxf2.Save("textCad2000.dxf");
         }
 
         private static void WriteNoAsciiText()

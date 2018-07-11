@@ -237,14 +237,7 @@ namespace netDxf.Collections
                 throw new ArgumentNullException(nameof(items));
 
             foreach (EntityObject item in items)
-            {
-                if (!this.innerArray.Contains(item))
-                    return;
-                if (this.OnBeforeRemoveItemEvent(item))
-                    return;
-                this.innerArray.Remove(item);
-                this.OnRemoveItemEvent(item);
-            }
+                this.Remove(item);
         }
 
         /// <summary>

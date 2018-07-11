@@ -3993,7 +3993,7 @@ namespace netDxf.IO
                 LineColor = lineColor,
                 Elevation = elevation,
                 Normal = normal,
-                Offset = new Vector2(ocsOffset.X, ocsOffset.Y),
+                Hook = new Vector2(ocsOffset.X, ocsOffset.Y),
                 TextVerticalPosition = LeaderTextVerticalPosition.Above
             };
 
@@ -9676,8 +9676,10 @@ namespace netDxf.IO
                     }
                     else
                     {
-                        this.doc.ActiveLayout = layout.Name;
-                        this.doc.AddEntity(pair.Key, false, false);
+                        //this.doc.ActiveLayout = layout.Name;
+                        //this.doc.AddEntity(pair.Key, false, false);
+
+                        this.doc.Blocks[layout.AssociatedBlock.Name].Entities.Add(pair.Key);
                     }
                 }
                 else
@@ -9689,8 +9691,9 @@ namespace netDxf.IO
                         double scale = UnitHelper.ConversionFactor(this.doc.DrawingVariables.InsUnits, insert.Block.Record.Units);
                         insert.Scale *= scale;
                     }
-                    this.doc.ActiveLayout = layout.Name;
-                    this.doc.AddEntity(pair.Key, false, false);
+                    this.doc.Blocks[layout.AssociatedBlock.Name].Entities.Add(pair.Key);
+                    //this.doc.ActiveLayout = layout.Name;
+                    //this.doc.AddEntity(pair.Key, false, false);
                 }
             }
 

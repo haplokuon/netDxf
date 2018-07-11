@@ -39,7 +39,7 @@ namespace netDxf.Collections
 
         private int maxCapacity = int.MaxValue;
         protected readonly Dictionary<string, T> list;
-        protected readonly Dictionary<string, List<DxfObject>> references;
+        protected Dictionary<string, List<DxfObject>> references;
 
         #endregion
 

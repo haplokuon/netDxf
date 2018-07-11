@@ -1,5 +1,18 @@
 ## Change history
 
+
+### [2018/7/9]
+* Now is allowed to access directly the entities in the *Model_Space and *Paper_Space# blocks, see AccessModelBlock() sample.
+* The *Model_Space and *Paper_Space# blocks are not marked as ReadOnly anymore.
+* The DxfDocument entities lists Arcs, Lines, Circles,... now return only the entities for the active layout.
+* Added checks for possible null argument in the style parameter of the Leader constructors.
+* Added a public setter for the HasHookLine property of the Leader entity.
+* Changed the default Leader property LeaderTextVerticalPosition to Centered.
+* (fixed) The Leader Update method will take the style overrides into account.
+* (fixed) Force the writer to use always ASCII encoding for file previous to AutoCad2007. Some encoding code pages defined in the dxf file may cause problems. When using non ASCII characters I recommend to always use AutoCad2007 version or higher they are always saved as UTF-8.
+* (fixed) The drawing variable HandleSeed is now automatically updated when a new DxfObject is added to the document.
+
+
 ### [2018/7/9]
 * (fixed) Formatting architectural units in the LinearUnitFormat class.
 * (fixed) Error in the Attribute Clone method, the attribute definition may be null. It is only possible when loading external DXF files, the attribute constructor will raise an exception in case of a null reference.
