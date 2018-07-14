@@ -27,7 +27,7 @@ namespace netDxf
     /// </summary>
     public abstract class DxfObject
     {
-        #region protected fields
+        #region private fields
 
         private string codename;
         private string handle;
@@ -58,7 +58,7 @@ namespace netDxf
         public string CodeName
         {
             get { return this.codename; }
-            internal set { this.codename = value; }
+            protected set { this.codename = value; }
         }
 
         /// <summary>

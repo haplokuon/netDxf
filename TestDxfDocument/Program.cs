@@ -26,7 +26,7 @@ namespace TestDxfDocument
     /// </summary>
     public class Program
     {
-        public static void TestDimAligned()
+        private static void TestDimAligned()
         {
             DimensionStyle style = DimensionStyle.Iso25;
             Vector2 ref1 = Vector2.Zero;
@@ -56,7 +56,7 @@ namespace TestDxfDocument
             //dxf.Save("test compare.dxf");
         }
 
-        public static void TestDimLinear()
+        private static void TestDimLinear()
         {
             DimensionStyle style = DimensionStyle.Iso25;
             //style.TextInsideAlign = false;
@@ -99,7 +99,7 @@ namespace TestDxfDocument
             //dxf.Save("test compare.dxf");
         }
 
-        public static void TestDim2LineAngular()
+        private static void TestDim2LineAngular()
         {
             DimensionStyle style = DimensionStyle.Iso25;
             style.TextInsideAlign = false;
@@ -135,11 +135,11 @@ namespace TestDxfDocument
             doc.Save("test.dxf");
 
             DxfDocument dxf = DxfDocument.Load("test.dxf");
-            dxf.Dimensions[0].Block = null;
+            dxf.Dimensions.ElementAt(0).Block = null;
             dxf.Save("test compare.dxf");
         }
 
-        public static void TestDim3PointAngular()
+        private static void TestDim3PointAngular()
         {
             DimensionStyle style = DimensionStyle.Iso25;
             style.TextInsideAlign = false;
@@ -177,12 +177,12 @@ namespace TestDxfDocument
             doc.Save("test.dxf");
 
             DxfDocument dxf = DxfDocument.Load("test.dxf");
-            dxf.Dimensions[0].Block = null;
+            dxf.Dimensions.ElementAt(0).Block = null;
             dxf.Save("test compare.dxf");
 
         }
 
-        public static void TestDimDiametric()
+        private static void TestDimDiametric()
         {
             DimensionStyle style = DimensionStyle.Iso25;
             style.CenterMarkSize = 0;
@@ -209,12 +209,12 @@ namespace TestDxfDocument
             doc.Save("test.dxf");
 
             DxfDocument dxf = DxfDocument.Load("test.dxf");
-            dxf.Dimensions[0].Block = null;
+            dxf.Dimensions.ElementAt(0).Block = null;
             dxf.Save("test compare.dxf");
 
         }
 
-        public static void TestDimRadial()
+        private static void TestDimRadial()
         {
             DimensionStyle style = DimensionStyle.Iso25;
             //style.TextInsideAlign = false;
@@ -240,12 +240,12 @@ namespace TestDxfDocument
             doc.Save("test.dxf");
 
             DxfDocument dxf = DxfDocument.Load("test.dxf");
-            dxf.Dimensions[0].Block = null;
+            dxf.Dimensions.ElementAt(0).Block = null;
             dxf.Save("test compare.dxf");
 
         }
 
-        public static void TestDimOrdinate()
+        private static void TestDimOrdinate()
         {
             DimensionStyle style = DimensionStyle.Iso25;
 
@@ -292,12 +292,12 @@ namespace TestDxfDocument
             doc.Save("test.dxf");
 
             DxfDocument dxf = DxfDocument.Load("test.dxf");
-            dxf.Dimensions[0].Block = null;
+            dxf.Dimensions.ElementAt(0).Block = null;
             dxf.Save("test compare.dxf");
 
         }
 
-        public static void AccessModelBlock()
+        private static void AccessModelBlock()
         {
             Layer layer = new Layer("Layer1") {Color = AciColor.Green};
             Line line1 = new Line(new Vector2(0,0), new Vector2(50,50)) {Layer = layer};
@@ -388,11 +388,13 @@ namespace TestDxfDocument
             vertexes1.Add(new Vector2(-5, 5));
             //vertexes1.Add(new Vector2(-5.5,4.5));
             Leader leader1 = new Leader("Sample annotation", vertexes1);
-            leader1.Offset = new Vector2(-0.5, -0.5);
+            //leader1.HasHookline = true;
+            //leader1.StyleOverrides.Add(new DimensionStyleOverride(DimensionStyleOverrideType.TextVerticalPlacement, DimensionStyleTextVerticalPlacement.Above));
 
-            //((MText) leader1.Annotation).Position = new Vector3(5, 5, 0);
+            //leader1.Offset = new Vector2(0.5, 0.5);
+            //((MText) leader1.Annotation).Position = new Vector3(-5, 5, 0);
             //((MText) leader1.Annotation).Rotation = 10;
-            leader1.Update(true);
+            //leader1.Update(false);
 
             //leader1.Normal = Vector3.UnitX;
 
@@ -407,15 +409,53 @@ namespace TestDxfDocument
             // We need to call manually the method Update if the annotation position is modified,
             // or the Leader properties like Style, Normal, Elevation, Annotation, TextVerticalPosition, and/or Offset.
 
+
+            // a block annotation
+            Block block = new Block("BlockAnnotation");
+            block.Entities.Add(new Line(new Vector2(-1, -1), new Vector2(1, 1)));
+            block.Entities.Add(new Line(new Vector2(-1, 1), new Vector2(1, -1)));
+            block.Entities.Add(new Circle(Vector2.Zero, 0.5));
+
+            List<Vector2> vertexes4 = new List<Vector2>();
+            vertexes4.Add(new Vector2(0));
+            vertexes4.Add(new Vector2(-5, -5));
+            vertexes4.Add(new Vector2(-7.5, -5));
+            Leader leader4 = new Leader(block, vertexes4);
+            // change the leader offset to move  the leader hook (the last vertex of the leader vertexes list) in relation to the annotation position.
+            leader4.Offset = new Vector2(-0.5, 0);
+            leader4.Update(true);
+
             DxfDocument doc = new DxfDocument();
             doc.AddEntity(leader1);
+            doc.AddEntity(leader4);
             doc.Save("test.dxf");
+
+            //DxfDocument loaded = DxfDocument.Load("test.dxf");
+            //loaded.Save("test compare.dxf");
+
+
+            //loaded = DxfDocument.Load("Drawing3.dxf");
+            //loaded.Save("test compare.dxf");
+
+            //DxfDocument clonned = new DxfDocument();
+            //foreach (Leader leader in loaded.Leaders)
+            //{
+            //    Leader clone = (Leader) leader.Clone();
+            //    //clone.HasHookline = false;
+            //    ((MText) clone.Annotation).Rotation = 10;
+            //    clone.Update(true);
+            //    clonned.AddEntity(clone);
+            //}
+            
+            //clonned.Save("test compare.dxf");
+
         }
+
         public static void Main()
         {
             //TestLeader();
 
-            LeaderEntity();
+            //LeaderEntity();
 
             //TestHatch();
 
@@ -437,7 +477,7 @@ namespace TestDxfDocument
 
             //Angular2LineDimension dim = new Angular2LineDimension();
             //DxfDocument doc = Test(@".\dxfs\sample.dxf");
-            //DxfDocument doc = Test(@"sample.dxf");
+            DxfDocument doc = Test(@"sample.dxf");
             //doc.DrawingVariables.AcadVer = DxfVersion.AutoCad2004;
             //doc.Save("test1.dxf");
             //doc.DrawingVariables.DimStyle = DimensionStyle.DefaultName;
@@ -1012,7 +1052,7 @@ namespace TestDxfDocument
 
             // modifying existing style overrides
             DxfDocument dxf = DxfDocument.Load("test.dxf");
-            Dimension dim1 = dxf.Dimensions[0];
+            Dimension dim1 = dxf.Dimensions.ElementAt(0);
             // remove existing style overrides
             dim1.StyleOverrides.Remove(DimensionStyleOverrideType.DimPrefix);
             dim1.StyleOverrides.Remove(DimensionStyleOverrideType.DecimalSeparator);
@@ -1033,7 +1073,7 @@ namespace TestDxfDocument
             // if we modify the style overrides of an existing dimension we need to update it, so the block that represents is also updated with the new changes 
             dim1.Update();
 
-            Leader leader1 = dxf.Leaders[0];
+            Leader leader1 = dxf.Leaders.ElementAt(0);
             // we can always remove all exiting style overrides to add new ones
             leader1.StyleOverrides.Clear();
             leader1.StyleOverrides.Add(new DimensionStyleOverride(DimensionStyleOverrideType.DimLineColor, AciColor.Yellow));
@@ -1480,7 +1520,7 @@ namespace TestDxfDocument
 
 
             DxfDocument compare = DxfDocument.Load("Leader compare.dxf");
-            Leader l = compare.Leaders[0];
+            Leader l = compare.Leaders.ElementAt(0);
 
             // leader not in the XY plane
             Leader cloned = (Leader) leader1.Clone();
@@ -1500,7 +1540,7 @@ namespace TestDxfDocument
             vertexes2.Add(new Vector2(-5, -5));
             Leader leader2 = new Leader("Sample annotation", vertexes2, style);
             ((MText) leader2.Annotation).AttachmentPoint = MTextAttachmentPoint.MiddleLeft;
-            leader2.TextVerticalPosition = LeaderTextVerticalPosition.Centered;
+            leader2.StyleOverrides.Add(new DimensionStyleOverride(DimensionStyleOverrideType.TextVerticalPlacement, DimensionStyleTextVerticalPlacement.Centered));
             leader2.Normal = new Vector3(1);
             leader2.Elevation = 5;
             leader2.Update(true);
@@ -1700,7 +1740,7 @@ namespace TestDxfDocument
 
             DxfDocument dxf2 = DxfDocument.Load("Hatch.dxf");
             // you can remove boundaries from a hatch
-            dxf2.Hatches[0].BoundaryPaths.Remove(dxf2.Hatches[0].BoundaryPaths[1]);
+            dxf2.Hatches.ElementAt(0).BoundaryPaths.Remove(dxf2.Hatches.ElementAt(0).BoundaryPaths[1]);
             // and add new ones
             LwPolyline p = new LwPolyline();
             p.Vertexes.Add(new LwPolylineVertex(-20, -20));
@@ -1708,29 +1748,29 @@ namespace TestDxfDocument
             p.Vertexes.Add(new LwPolylineVertex(20, 20));
             p.Vertexes.Add(new LwPolylineVertex(-20, 20));
             p.IsClosed = true;
-            dxf2.Hatches[0].BoundaryPaths.Add(new HatchBoundaryPath(new List<EntityObject> {p}));
+            dxf2.Hatches.ElementAt(0).BoundaryPaths.Add(new HatchBoundaryPath(new List<EntityObject> {p}));
             dxf2.Save("Hatch add and remove boundaries.dxf");
 
 
             DxfDocument dxf3 = DxfDocument.Load("Hatch.dxf");
             // unlinking the boundary entities from a hatch will not automatically remove them from the document, you can use the returned list to delete them
             // unlinking the boundary will make the hatch non-associative 
-            List<EntityObject> oldBoundary = dxf3.Hatches[0].UnLinkBoundary();
+            List<EntityObject> oldBoundary = dxf3.Hatches.ElementAt(0).UnLinkBoundary();
             dxf3.RemoveEntity(oldBoundary);
 
             // we can recreate the hatch boundary and optionally linking it, thus making it associative,
             // if the hatch is associative and belongs to a document the new entities will also be automatically added to the same document
-            List<EntityObject> newBoundary = dxf3.Hatches[0].CreateBoundary(true);
+            List<EntityObject> newBoundary = dxf3.Hatches.ElementAt(0).CreateBoundary(true);
 
             dxf3.Save("Hatch new contour.dxf");
 
             DxfDocument dxf4 = DxfDocument.Load("Hatch.dxf");
             // if the hatch is associative, it is possible to modify the entities that make the boundary
             // for non-associative the list of entities will contain zero items
-            if (dxf4.Hatches[0].Associative)
+            if (dxf4.Hatches.ElementAt(0).Associative)
             {
                 // this will only work for associative hatches
-                HatchBoundaryPath path = dxf4.Hatches[0].BoundaryPaths[0];
+                HatchBoundaryPath path = dxf4.Hatches.ElementAt(0).BoundaryPaths[0];
                 LwPolyline entity = (LwPolyline) path.Entities[0];
                 entity.Vertexes[2].Position = new Vector2(15, 15);
                 // after modifying the boundary entities, it is necessary to rebuild the edges
@@ -2673,7 +2713,7 @@ namespace TestDxfDocument
 
             // let's take a look at the block associated with the inserts
             // the dynamic parameter of this insert was modified so the block name will be called *U#
-            insert = drawing.Inserts[0];
+            insert = drawing.Inserts.ElementAt(0);
             block = insert.Block;
             // this is the block name
             name = block.Name;
@@ -2698,7 +2738,7 @@ namespace TestDxfDocument
             Block originalBlockRecord = drawing.Blocks[dynamicBlockName];
 
             // the dynamic parameter of this insert was NOT modified so the block will be the original
-            insert = drawing.Inserts[1];
+            insert = drawing.Inserts.ElementAt(1);
             block = insert.Block;
             // this is the block name
             name = block.Name;
@@ -2858,7 +2898,7 @@ namespace TestDxfDocument
             }
 
             // Another safe way is removing the entity from the original drawing before adding it to the destination drawing
-            Line line = source02.Lines[0];
+            Line line = source02.Lines.ElementAt(0);
             source02.RemoveEntity(line);
             combined.AddEntity(line);
 
@@ -2894,7 +2934,7 @@ namespace TestDxfDocument
 
             // some testing
             DxfDocument test = DxfDocument.Load("BinaryChunkXData binary.dxf");
-            Line lineTest = test.Lines[0];
+            Line lineTest = test.Lines.ElementAt(0);
             XDataRecord recordTest = lineTest.XData[appId.Name].XDataRecord[0];
             Debug.Assert(recordTest.Code == XDataCode.BinaryData);
             byte[] dataText = (byte[]) recordTest.Value;
@@ -3292,7 +3332,7 @@ namespace TestDxfDocument
             // The block record stores information about the block and one of them is the layout, this mimics the way the dxf stores this information.
             // Remember only the internal blocks *Model_Space, *Paper_Space, *Paper_Space0, *Paper_Space1, ... have an associated layout,
             // all other blocks will return null is asked for block.Record.Layout
-            Layout associatedLayout = dxfLoad.Lines[0].Owner.Record.Layout;
+            Layout associatedLayout = dxfLoad.Lines.ElementAt(0).Owner.Record.Layout;
 
             // or you can get the complete list of entities of a layout
             foreach (Layout layout in dxfLoad.Layouts)
@@ -3686,33 +3726,33 @@ namespace TestDxfDocument
             // to get the entities that belongs to a specific layout you can get the references through the Layouts.GetReferences(name)
             // or check the EntityObject.Owner.Record.Layout property
             Console.WriteLine("ENTITIES:");
-            Console.WriteLine("\t{0}; count: {1}", EntityType.Arc, dxf.Arcs.Count);
-            Console.WriteLine("\t{0}; count: {1}", EntityType.AttributeDefinition, dxf.AttributeDefinitions.Count);
-            Console.WriteLine("\t{0}; count: {1}", EntityType.Circle, dxf.Circles.Count);
-            Console.WriteLine("\t{0}; count: {1}", EntityType.Dimension, dxf.Dimensions.Count);
-            Console.WriteLine("\t{0}; count: {1}", EntityType.Ellipse, dxf.Ellipses.Count);
-            Console.WriteLine("\t{0}; count: {1}", EntityType.Face3D, dxf.Faces3d.Count);
-            Console.WriteLine("\t{0}; count: {1}", EntityType.Hatch, dxf.Hatches.Count);
-            Console.WriteLine("\t{0}; count: {1}", EntityType.Image, dxf.Images.Count);
-            Console.WriteLine("\t{0}; count: {1}", EntityType.Insert, dxf.Inserts.Count);
-            Console.WriteLine("\t{0}; count: {1}", EntityType.Leader, dxf.Leaders.Count);
-            Console.WriteLine("\t{0}; count: {1}", EntityType.LightWeightPolyline, dxf.LwPolylines.Count);
-            Console.WriteLine("\t{0}; count: {1}", EntityType.Line, dxf.Lines.Count);
-            Console.WriteLine("\t{0}; count: {1}", EntityType.Mesh, dxf.Meshes.Count);
-            Console.WriteLine("\t{0}; count: {1}", EntityType.MLine, dxf.MLines.Count);
-            Console.WriteLine("\t{0}; count: {1}", EntityType.MText, dxf.MTexts.Count);
-            Console.WriteLine("\t{0}; count: {1}", EntityType.Point, dxf.Points.Count);
-            Console.WriteLine("\t{0}; count: {1}", EntityType.PolyfaceMesh, dxf.PolyfaceMeshes.Count);
-            Console.WriteLine("\t{0}; count: {1}", EntityType.Polyline, dxf.Polylines.Count);
-            Console.WriteLine("\t{0}; count: {1}", EntityType.Shape, dxf.Shapes.Count);
-            Console.WriteLine("\t{0}; count: {1}", EntityType.Solid, dxf.Solids.Count);
-            Console.WriteLine("\t{0}; count: {1}", EntityType.Spline, dxf.Splines.Count);
-            Console.WriteLine("\t{0}; count: {1}", EntityType.Text, dxf.Texts.Count);
-            Console.WriteLine("\t{0}; count: {1}", EntityType.Ray, dxf.Rays.Count);
-            Console.WriteLine("\t{0}; count: {1}", EntityType.Underlay, dxf.Underlays.Count);
-            Console.WriteLine("\t{0}; count: {1}", EntityType.Viewport, dxf.Viewports.Count);
-            Console.WriteLine("\t{0}; count: {1}", EntityType.Wipeout, dxf.Wipeouts.Count);
-            Console.WriteLine("\t{0}; count: {1}", EntityType.XLine, dxf.XLines.Count);
+            Console.WriteLine("\t{0}; count: {1}", EntityType.Arc, dxf.Arcs.Count());
+            Console.WriteLine("\t{0}; count: {1}", EntityType.AttributeDefinition, dxf.AttributeDefinitions.Count());
+            Console.WriteLine("\t{0}; count: {1}", EntityType.Circle, dxf.Circles.Count());
+            Console.WriteLine("\t{0}; count: {1}", EntityType.Dimension, dxf.Dimensions.Count());
+            Console.WriteLine("\t{0}; count: {1}", EntityType.Ellipse, dxf.Ellipses.Count());
+            Console.WriteLine("\t{0}; count: {1}", EntityType.Face3D, dxf.Faces3d.Count());
+            Console.WriteLine("\t{0}; count: {1}", EntityType.Hatch, dxf.Hatches.Count());
+            Console.WriteLine("\t{0}; count: {1}", EntityType.Image, dxf.Images.Count());
+            Console.WriteLine("\t{0}; count: {1}", EntityType.Insert, dxf.Inserts.Count());
+            Console.WriteLine("\t{0}; count: {1}", EntityType.Leader, dxf.Leaders.Count());
+            Console.WriteLine("\t{0}; count: {1}", EntityType.LightWeightPolyline, dxf.LwPolylines.Count());
+            Console.WriteLine("\t{0}; count: {1}", EntityType.Line, dxf.Lines.Count());
+            Console.WriteLine("\t{0}; count: {1}", EntityType.Mesh, dxf.Meshes.Count());
+            Console.WriteLine("\t{0}; count: {1}", EntityType.MLine, dxf.MLines.Count());
+            Console.WriteLine("\t{0}; count: {1}", EntityType.MText, dxf.MTexts.Count());
+            Console.WriteLine("\t{0}; count: {1}", EntityType.Point, dxf.Points.Count());
+            Console.WriteLine("\t{0}; count: {1}", EntityType.PolyfaceMesh, dxf.PolyfaceMeshes.Count());
+            Console.WriteLine("\t{0}; count: {1}", EntityType.Polyline, dxf.Polylines.Count());
+            Console.WriteLine("\t{0}; count: {1}", EntityType.Shape, dxf.Shapes.Count());
+            Console.WriteLine("\t{0}; count: {1}", EntityType.Solid, dxf.Solids.Count());
+            Console.WriteLine("\t{0}; count: {1}", EntityType.Spline, dxf.Splines.Count());
+            Console.WriteLine("\t{0}; count: {1}", EntityType.Text, dxf.Texts.Count());
+            Console.WriteLine("\t{0}; count: {1}", EntityType.Ray, dxf.Rays.Count());
+            Console.WriteLine("\t{0}; count: {1}", EntityType.Underlay, dxf.Underlays.Count());
+            Console.WriteLine("\t{0}; count: {1}", EntityType.Viewport, dxf.Viewports.Count());
+            Console.WriteLine("\t{0}; count: {1}", EntityType.Wipeout, dxf.Wipeouts.Count());
+            Console.WriteLine("\t{0}; count: {1}", EntityType.XLine, dxf.XLines.Count());
             Console.WriteLine();
 
             Console.WriteLine("Press a key to continue...");
@@ -4057,10 +4097,10 @@ namespace TestDxfDocument
             // to get the entities that belongs to a specific layout you can get the references through the Layouts.GetReferences(name)
             // or check the EntityObject.Owner.Record.Layout property
             Console.WriteLine("ENTITIES for the Active Layout = {0}:", dxf.ActiveLayout);
-            Console.WriteLine("\t{0}; count: {1}", EntityType.Arc, dxf.Arcs.Count);
-            Console.WriteLine("\t{0}; count: {1}", EntityType.AttributeDefinition, dxf.AttributeDefinitions.Count);
-            Console.WriteLine("\t{0}; count: {1}", EntityType.Circle, dxf.Circles.Count);
-            Console.WriteLine("\t{0}; count: {1}", EntityType.Dimension, dxf.Dimensions.Count);
+            Console.WriteLine("\t{0}; count: {1}", EntityType.Arc, dxf.Arcs.Count());
+            Console.WriteLine("\t{0}; count: {1}", EntityType.AttributeDefinition, dxf.AttributeDefinitions.Count());
+            Console.WriteLine("\t{0}; count: {1}", EntityType.Circle, dxf.Circles.Count());
+            Console.WriteLine("\t{0}; count: {1}", EntityType.Dimension, dxf.Dimensions.Count());
             foreach (var a in dxf.Dimensions)
             {
                 foreach (var styleOverride in a.StyleOverrides.Values)
@@ -4093,12 +4133,12 @@ namespace TestDxfDocument
                     }
                 }
             }
-            Console.WriteLine("\t{0}; count: {1}", EntityType.Ellipse, dxf.Ellipses.Count);
-            Console.WriteLine("\t{0}; count: {1}", EntityType.Face3D, dxf.Faces3d.Count);
-            Console.WriteLine("\t{0}; count: {1}", EntityType.Hatch, dxf.Hatches.Count);
-            Console.WriteLine("\t{0}; count: {1}", EntityType.Image, dxf.Images.Count);
-            Console.WriteLine("\t{0}; count: {1}", EntityType.Insert, dxf.Inserts.Count);
-            Console.WriteLine("\t{0}; count: {1}", EntityType.Leader, dxf.Leaders.Count);
+            Console.WriteLine("\t{0}; count: {1}", EntityType.Ellipse, dxf.Ellipses.Count());
+            Console.WriteLine("\t{0}; count: {1}", EntityType.Face3D, dxf.Faces3d.Count());
+            Console.WriteLine("\t{0}; count: {1}", EntityType.Hatch, dxf.Hatches.Count());
+            Console.WriteLine("\t{0}; count: {1}", EntityType.Image, dxf.Images.Count());
+            Console.WriteLine("\t{0}; count: {1}", EntityType.Insert, dxf.Inserts.Count());
+            Console.WriteLine("\t{0}; count: {1}", EntityType.Leader, dxf.Leaders.Count());
             foreach (var a in dxf.Leaders)
             {
                 foreach (var styleOverride in a.StyleOverrides.Values)
@@ -4129,23 +4169,23 @@ namespace TestDxfDocument
                     }
                 }
             }
-            Console.WriteLine("\t{0}; count: {1}", EntityType.LightWeightPolyline, dxf.LwPolylines.Count);
-            Console.WriteLine("\t{0}; count: {1}", EntityType.Line, dxf.Lines.Count);
-            Console.WriteLine("\t{0}; count: {1}", EntityType.Mesh, dxf.Meshes.Count);
-            Console.WriteLine("\t{0}; count: {1}", EntityType.MLine, dxf.MLines.Count);
-            Console.WriteLine("\t{0}; count: {1}", EntityType.MText, dxf.MTexts.Count);
-            Console.WriteLine("\t{0}; count: {1}", EntityType.Point, dxf.Points.Count);
-            Console.WriteLine("\t{0}; count: {1}", EntityType.PolyfaceMesh, dxf.PolyfaceMeshes.Count);
-            Console.WriteLine("\t{0}; count: {1}", EntityType.Polyline, dxf.Polylines.Count);
-            Console.WriteLine("\t{0}; count: {1}", EntityType.Shape, dxf.Shapes.Count);
-            Console.WriteLine("\t{0}; count: {1}", EntityType.Solid, dxf.Solids.Count);
-            Console.WriteLine("\t{0}; count: {1}", EntityType.Spline, dxf.Splines.Count);
-            Console.WriteLine("\t{0}; count: {1}", EntityType.Text, dxf.Texts.Count);
-            Console.WriteLine("\t{0}; count: {1}", EntityType.Ray, dxf.Rays.Count);
-            Console.WriteLine("\t{0}; count: {1}", EntityType.Underlay, dxf.Underlays.Count);
-            Console.WriteLine("\t{0}; count: {1}", EntityType.Viewport, dxf.Viewports.Count);
-            Console.WriteLine("\t{0}; count: {1}", EntityType.Wipeout, dxf.Wipeouts.Count);
-            Console.WriteLine("\t{0}; count: {1}", EntityType.XLine, dxf.XLines.Count);
+            Console.WriteLine("\t{0}; count: {1}", EntityType.LightWeightPolyline, dxf.LwPolylines.Count());
+            Console.WriteLine("\t{0}; count: {1}", EntityType.Line, dxf.Lines.Count());
+            Console.WriteLine("\t{0}; count: {1}", EntityType.Mesh, dxf.Meshes.Count());
+            Console.WriteLine("\t{0}; count: {1}", EntityType.MLine, dxf.MLines.Count());
+            Console.WriteLine("\t{0}; count: {1}", EntityType.MText, dxf.MTexts.Count());
+            Console.WriteLine("\t{0}; count: {1}", EntityType.Point, dxf.Points.Count());
+            Console.WriteLine("\t{0}; count: {1}", EntityType.PolyfaceMesh, dxf.PolyfaceMeshes.Count());
+            Console.WriteLine("\t{0}; count: {1}", EntityType.Polyline, dxf.Polylines.Count());
+            Console.WriteLine("\t{0}; count: {1}", EntityType.Shape, dxf.Shapes.Count());
+            Console.WriteLine("\t{0}; count: {1}", EntityType.Solid, dxf.Solids.Count());
+            Console.WriteLine("\t{0}; count: {1}", EntityType.Spline, dxf.Splines.Count());
+            Console.WriteLine("\t{0}; count: {1}", EntityType.Text, dxf.Texts.Count());
+            Console.WriteLine("\t{0}; count: {1}", EntityType.Ray, dxf.Rays.Count());
+            Console.WriteLine("\t{0}; count: {1}", EntityType.Underlay, dxf.Underlays.Count());
+            Console.WriteLine("\t{0}; count: {1}", EntityType.Viewport, dxf.Viewports.Count());
+            Console.WriteLine("\t{0}; count: {1}", EntityType.Wipeout, dxf.Wipeouts.Count());
+            Console.WriteLine("\t{0}; count: {1}", EntityType.XLine, dxf.XLines.Count());
             Console.WriteLine();
 
             // the dxf version is controlled by the DrawingVariables property of the dxf document,
@@ -4327,7 +4367,7 @@ namespace TestDxfDocument
             dxf2.Save("test1.dxf");
 
             DxfDocument load = DxfDocument.Load("test1.dxf");
-            load.Dimensions[0].Update();
+            load.Dimensions.ElementAt(0).Update();
             //load.Dimensions[1].Update();
             load.AddEntity((EntityObject) ld3.Clone());
             //load.AddEntity((EntityObject)ld6.Clone());
@@ -5514,7 +5554,7 @@ namespace TestDxfDocument
             dxf.Save("block sample1.dxf");
 
             DxfDocument dxf2 = new DxfDocument();
-            dxf2.AddEntity(dxf.Inserts[0]);
+            dxf2.AddEntity(dxf.Inserts.ElementAt(0));
             dxf2.Save("block sample2.dxf");
 
             dxf.Save("clean2.dxf");
@@ -5525,7 +5565,7 @@ namespace TestDxfDocument
             dxf = DxfDocument.Load("sample.dxf");
             dxf.Save("sample4.dxf");
 
-            Line cadLine = dxf.Lines[0];
+            Line cadLine = dxf.Lines.ElementAt(0);
             Layer layer = new Layer("netLayer");
             layer.Color = AciColor.Yellow;
 
@@ -6858,7 +6898,7 @@ namespace TestDxfDocument
         private static void BlockAttributeTransformation()
         {
             DxfDocument doc = DxfDocument.Load("Drawing1.dxf");
-            Insert ins = doc.Inserts[0];
+            Insert ins = doc.Inserts.ElementAt(0);
             Console.WriteLine(ins.Attributes[0].Position);
             Console.WriteLine(ins.Attributes[0].Rotation);
             Console.WriteLine(ins.Attributes[0].Normal);
@@ -6878,7 +6918,7 @@ namespace TestDxfDocument
             Console.WriteLine("...");
             Console.WriteLine("...");
             DxfDocument doc2 = DxfDocument.Load("Drawing2.dxf");
-            Insert ins2 = doc2.Inserts[0];
+            Insert ins2 = doc2.Inserts.ElementAt(0);
             Console.WriteLine(ins2.Attributes[0].Position);
             Console.WriteLine(ins2.Attributes[0].Rotation);
             Console.WriteLine(ins2.Attributes[0].Normal);
@@ -6898,7 +6938,7 @@ namespace TestDxfDocument
             Console.WriteLine("...");
             Console.WriteLine("...");
             DxfDocument doc3 = DxfDocument.Load("Drawing3.dxf");
-            Insert ins3 = doc3.Inserts[0];
+            Insert ins3 = doc3.Inserts.ElementAt(0);
             Console.WriteLine(ins3.Attributes[0].Position);
             Console.WriteLine(ins3.Attributes[0].Rotation);
             Console.WriteLine(ins3.Attributes[0].Normal);

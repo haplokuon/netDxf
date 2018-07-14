@@ -336,7 +336,7 @@ namespace netDxf.IO
         public void WriteDouble(double value)
         {
             // float values always use the dot as the decimal separator
-            this.writer.WriteLine(value.ToString("0.0#############", CultureInfo.InvariantCulture));
+            this.writer.WriteLine(value.ToString("0.0###############", CultureInfo.InvariantCulture));
         }
 
         public void Flush()

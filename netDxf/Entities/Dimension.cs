@@ -337,7 +337,6 @@ namespace netDxf.Entities
             this.CalculteReferencePoints();
 
             if (this.block != null)
-
             {
                 Block newBlock = this.BuildBlock(this.block.Name);
                 this.block = this.OnDimensionBlockChangedEvent(this.block, newBlock);

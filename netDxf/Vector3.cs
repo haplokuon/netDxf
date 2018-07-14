@@ -469,7 +469,7 @@ namespace netDxf
         /// <returns>The negative vector of u.</returns>
         public static Vector3 operator -(Vector3 u)
         {
-            return new Vector3(-u.X, -u.Y, -u.Z);
+            return new Vector3(-u.X, -u.Y, -u.Z) { isNormalized = u.IsNormalized };
         }
 
         /// <summary>
@@ -479,7 +479,7 @@ namespace netDxf
         /// <returns>The negative vector of u.</returns>
         public static Vector3 Negate(Vector3 u)
         {
-            return new Vector3(-u.X, -u.Y, -u.Z);
+            return new Vector3(-u.X, -u.Y, -u.Z) { isNormalized = u.IsNormalized };
         }
 
         /// <summary>

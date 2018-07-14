@@ -1,7 +1,15 @@
 ## Change history
 
 
-### [2018/7/9]
+### [2018/7/14]
+* Revised the Leader read and write process to accommodate the latest changes made to them.
+* Deleted the Leader property TextVerticalPosition, this value is controlled by the property TextVerticalPlacement of the dimension style associated with the leader.
+* Deleted the enum LeaderTextVerticalPosition.
+* The document entities lists now return an IEnumerable instead of an IReadOnlyList. Internally it uses Linq to return the specific entity list from the associated block of the active layout.
+* (fixed) When reading complex linetypes from a DXF, the original handles were being overwritten.
+
+
+### [2018/7/11]
 * Now is allowed to access directly the entities in the *Model_Space and *Paper_Space# blocks, see AccessModelBlock() sample.
 * The *Model_Space and *Paper_Space# blocks are not marked as ReadOnly anymore.
 * The DxfDocument entities lists Arcs, Lines, Circles,... now return only the entities for the active layout.

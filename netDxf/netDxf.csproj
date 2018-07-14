@@ -127,7 +127,6 @@
     </Compile>
     <Compile Include="Entities\Leader.cs" />
     <Compile Include="Entities\LeaderPathType.cs" />
-    <Compile Include="Entities\LeaderTextVerticalPosition.cs" />
     <Compile Include="Entities\SplineCreationMethod.cs" />
     <Compile Include="Entities\SplineKnotParameterization.cs" />
     <Compile Include="Entities\Tolerance.cs" />

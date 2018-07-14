@@ -488,7 +488,7 @@ namespace netDxf
         /// <returns>The negative vector of u.</returns>
         public static Vector2 operator -(Vector2 u)
         {
-            return new Vector2(-u.X, -u.Y);
+            return new Vector2(-u.X, -u.Y) { isNormalized = u.IsNormalized };
         }
 
         /// <summary>
@@ -498,7 +498,7 @@ namespace netDxf
         /// <returns>The negative vector of u.</returns>
         public static Vector2 Negate(Vector2 u)
         {
-            return new Vector2(-u.X, -u.Y);
+            return new Vector2(-u.X, -u.Y) {isNormalized = u.IsNormalized};
         }
 
         /// <summary>

@@ -256,7 +256,7 @@ namespace netDxf
             set
             {
                 if (!this.layouts.Contains(value))
-                    throw new ArgumentException("The layout " + value + " does not exist.", nameof(value));
+                    throw new ArgumentException(string.Format("The layout {0} does not exist.", value), nameof(value));
                 this.activeLayout = value;
             }
         }
@@ -300,7 +300,7 @@ namespace netDxf
         /// Gets or sets the name of the document.
         /// </summary>
         /// <remarks>
-        /// When a file is loaded this field is equals the file name without extension.<br />
+        /// When a file is loaded this field is equals the file name without extension.
         /// </remarks>
         public string Name
         {
@@ -476,320 +476,233 @@ namespace netDxf
         /// <summary>
         /// Gets the <see cref="Arc">arcs</see> list contained in the active layout.
         /// </summary>
-        public IReadOnlyList<Arc> Arcs
+        public IEnumerable<Arc> Arcs
         {
-            get
-            {
-                return new List<Arc>(this.Layouts[this.activeLayout].AssociatedBlock.Entities.OfType<Arc>());
-            }
+            get { return this.Layouts[this.activeLayout].AssociatedBlock.Entities.OfType<Arc>(); }
         }
 
         /// <summary>
         /// Gets the <see cref="AttributeDefinition">attribute definitions</see> list in the active layout.
         /// </summary>
-        public IReadOnlyList<AttributeDefinition> AttributeDefinitions
+        public IEnumerable<AttributeDefinition> AttributeDefinitions
         {
-            get
-            {
-                return new List<AttributeDefinition>(this.Layouts[this.activeLayout].AssociatedBlock.Entities.OfType<AttributeDefinition>());
-            }
+            get { return this.Layouts[this.activeLayout].AssociatedBlock.Entities.OfType<AttributeDefinition>(); }
         }
 
         /// <summary>
         /// Gets the <see cref="Ellipse">ellipses</see> list in the active layout.
         /// </summary>
-        public IReadOnlyList<Ellipse> Ellipses
+        public IEnumerable<Ellipse> Ellipses
         {
-            get
-            {
-                return new List<Ellipse>(this.Layouts[this.activeLayout].AssociatedBlock.Entities.OfType<Ellipse>());
-            }
+            get { return this.Layouts[this.activeLayout].AssociatedBlock.Entities.OfType<Ellipse>(); }
         }
 
         /// <summary>
         /// Gets the <see cref="Circle">circles</see> list in the active layout.
         /// </summary>
-        public IReadOnlyList<Circle> Circles
+        public IEnumerable<Circle> Circles
         {
-            get
-            {
-                return new List<Circle>(this.Layouts[this.activeLayout].AssociatedBlock.Entities.OfType<Circle>());
-            }
+            get { return this.Layouts[this.activeLayout].AssociatedBlock.Entities.OfType<Circle>(); }
         }
 
         /// <summary>
         /// Gets the <see cref="Face3d">3d faces</see> list in the active layout.
         /// </summary>
-        public IReadOnlyList<Face3d> Faces3d
+        public IEnumerable<Face3d> Faces3d
         {
-            get
-            {
-                return new List<Face3d>(this.Layouts[this.activeLayout].AssociatedBlock.Entities.OfType<Face3d>());
-            }
+            get { return this.Layouts[this.activeLayout].AssociatedBlock.Entities.OfType<Face3d>(); }
         }
 
         /// <summary>
         /// Gets the <see cref="Solid">solids</see> list in the active layout.
         /// </summary>
-        public IReadOnlyList<Solid> Solids
+        public IEnumerable<Solid> Solids
         {
-            get
-            {
-                return new List<Solid>(this.Layouts[this.activeLayout].AssociatedBlock.Entities.OfType<Solid>());
-            }
+            get { return this.Layouts[this.activeLayout].AssociatedBlock.Entities.OfType<Solid>(); }
         }
 
         /// <summary>
         /// Gets the <see cref="Trace">traces</see> list in the active layout.
         /// </summary>
-        public IReadOnlyList<Trace> Traces
+        public IEnumerable<Trace> Traces
         {
-            get
-            {
-                return new List<Trace>(this.Layouts[this.activeLayout].AssociatedBlock.Entities.OfType<Trace>());
-            }
+            get { return this.Layouts[this.activeLayout].AssociatedBlock.Entities.OfType<Trace>(); }
         }
 
         /// <summary>
         /// Gets the <see cref="Insert">inserts</see> list in the active layout.
         /// </summary>
-        public IReadOnlyList<Insert> Inserts
+        public IEnumerable<Insert> Inserts
         {
-            get
-            {
-                return new List<Insert>(this.Layouts[this.activeLayout].AssociatedBlock.Entities.OfType<Insert>());
-            }
+            get { return this.Layouts[this.activeLayout].AssociatedBlock.Entities.OfType<Insert>(); }
         }
 
         /// <summary>
         /// Gets the <see cref="Line">lines</see> list in the active layout.
         /// </summary>
-        public IReadOnlyList<Line> Lines
+        public IEnumerable<Line> Lines
         {
-            get
-            {
-                return new List<Line>(this.Layouts[this.activeLayout].AssociatedBlock.Entities.OfType<Line>());
-            }
+            get { return this.Layouts[this.activeLayout].AssociatedBlock.Entities.OfType<Line>(); }
         }
 
         /// <summary>
         /// Gets the <see cref="Shape">shapes</see> list in the active layout.
         /// </summary>
-        public IReadOnlyList<Shape> Shapes
+        public IEnumerable<Shape> Shapes
         {
-            get
-            {
-                return new List<Shape>(this.Layouts[this.activeLayout].AssociatedBlock.Entities.OfType<Shape>());
-            }
+            get { return this.Layouts[this.activeLayout].AssociatedBlock.Entities.OfType<Shape>(); }
         }
 
         /// <summary>
         /// Gets the <see cref="Polyline">polylines</see> list in the active layout.
         /// </summary>
-        public IReadOnlyList<Polyline> Polylines
+        public IEnumerable<Polyline> Polylines
         {
-            get
-            {
-                return new List<Polyline>(this.Layouts[this.activeLayout].AssociatedBlock.Entities.OfType<Polyline>());
-            }
+            get { return this.Layouts[this.activeLayout].AssociatedBlock.Entities.OfType<Polyline>(); }
         }
 
         /// <summary>
         /// Gets the <see cref="LwPolyline">light weight polylines</see> list in the active layout.
         /// </summary>
-        public IReadOnlyList<LwPolyline> LwPolylines
+        public IEnumerable<LwPolyline> LwPolylines
         {
-            get
-            {
-                return new List<LwPolyline>(this.Layouts[this.activeLayout].AssociatedBlock.Entities.OfType<LwPolyline>());
-            }
+            get { return this.Layouts[this.activeLayout].AssociatedBlock.Entities.OfType<LwPolyline>(); }
         }
 
         /// <summary>
         /// Gets the <see cref="PolyfaceMeshes">polyface meshes</see> list in the active layout.
         /// </summary>
-        public IReadOnlyList<PolyfaceMesh> PolyfaceMeshes
+        public IEnumerable<PolyfaceMesh> PolyfaceMeshes
         {
-            get
-            {
-                return new List<PolyfaceMesh>(this.Layouts[this.activeLayout].AssociatedBlock.Entities.OfType<PolyfaceMesh>());
-            }
+            get { return this.Layouts[this.activeLayout].AssociatedBlock.Entities.OfType<PolyfaceMesh>(); }
         }
 
         /// <summary>
         /// Gets the <see cref="Point">points</see> list in the active layout.
         /// </summary>
-        public IReadOnlyList<Point> Points
+        public IEnumerable<Point> Points
         {
-            get
-            {
-                return new List<Point>(this.Layouts[this.activeLayout].AssociatedBlock.Entities.OfType<Point>());
-            }
+            get { return this.Layouts[this.activeLayout].AssociatedBlock.Entities.OfType<Point>(); }
         }
 
         /// <summary>
         /// Gets the <see cref="Text">texts</see> list in the active layout.
         /// </summary>
-        public IReadOnlyList<Text> Texts
+        public IEnumerable<Text> Texts
         {
-            get
-            {
-                return new List<Text>(this.Layouts[this.activeLayout].AssociatedBlock.Entities.OfType<Text>());
-            }
+            get { return this.Layouts[this.activeLayout].AssociatedBlock.Entities.OfType<Text>(); }
         }
 
         /// <summary>
         /// Gets the <see cref="MText">multiline texts</see> list in the active layout.
         /// </summary>
-        public IReadOnlyList<MText> MTexts
+        public IEnumerable<MText> MTexts
         {
-            get
-            {
-                return new List<MText>(this.Layouts[this.activeLayout].AssociatedBlock.Entities.OfType<MText>());
-            }
+            get { return this.Layouts[this.activeLayout].AssociatedBlock.Entities.OfType<MText>(); }
         }
 
         /// <summary>
         /// Gets the <see cref="Hatch">hatches</see> list in the active layout.
         /// </summary>
-        public IReadOnlyList<Hatch> Hatches
+        public IEnumerable<Hatch> Hatches
         {
-            get
-            {
-                return new List<Hatch>(this.Layouts[this.activeLayout].AssociatedBlock.Entities.OfType<Hatch>());
-            }
+            get { return this.Layouts[this.activeLayout].AssociatedBlock.Entities.OfType<Hatch>(); }
         }
 
         /// <summary>
         /// Gets the <see cref="Image">images</see> list in the active layout.
         /// </summary>
-        public IReadOnlyList<Image> Images
+        public IEnumerable<Image> Images
         {
-            get
-            {
-                return new List<Image>(this.Layouts[this.activeLayout].AssociatedBlock.Entities.OfType<Image>());
-            }
+            get { return this.Layouts[this.activeLayout].AssociatedBlock.Entities.OfType<Image>(); }
         }
 
         /// <summary>
         /// Gets the <see cref="Mesh">mesh</see> list in the active layout.
         /// </summary>
-        public IReadOnlyList<Mesh> Meshes
+        public IEnumerable<Mesh> Meshes
         {
-            get
-            {
-                return new List<Mesh>(this.Layouts[this.activeLayout].AssociatedBlock.Entities.OfType<Mesh>());
-            }
+            get { return this.Layouts[this.activeLayout].AssociatedBlock.Entities.OfType<Mesh>(); }
         }
 
         /// <summary>
         /// Gets the <see cref="Leader">leader</see> list in the active layout.
         /// </summary>
-        public IReadOnlyList<Leader> Leaders
+        public IEnumerable<Leader> Leaders
         {
-            get
-            {
-                return new List<Leader>(this.Layouts[this.activeLayout].AssociatedBlock.Entities.OfType<Leader>());
-            }
+            get { return this.Layouts[this.activeLayout].AssociatedBlock.Entities.OfType<Leader>(); }
         }
 
         /// <summary>
         /// Gets the <see cref="Tolerance">tolerance</see> list in the active layout.
         /// </summary>
-        public IReadOnlyList<Tolerance> Tolerances
+        public IEnumerable<Tolerance> Tolerances
         {
-            get
-            {
-                return new List<Tolerance>(this.Layouts[this.activeLayout].AssociatedBlock.Entities.OfType<Tolerance>());
-            }
+            get { return this.Layouts[this.activeLayout].AssociatedBlock.Entities.OfType<Tolerance>(); }
         }
 
         /// <summary>
         /// Gets the <see cref="Underlay">underlay</see> list in the active layout.
         /// </summary>
-        public IReadOnlyList<Underlay> Underlays
+        public IEnumerable<Underlay> Underlays
         {
-            get
-            {
-                return new List<Underlay>(this.Layouts[this.activeLayout].AssociatedBlock.Entities.OfType<Underlay>());
-            }
+            get { return this.Layouts[this.activeLayout].AssociatedBlock.Entities.OfType<Underlay>(); }
         }
 
         /// <summary>
         /// Gets the <see cref="MLine">multilines</see> list in the active layout.
         /// </summary>
-        public IReadOnlyList<MLine> MLines
+        public IEnumerable<MLine> MLines
         {
-            get
-            {
-                return new List<MLine>(this.Layouts[this.activeLayout].AssociatedBlock.Entities.OfType<MLine>());
-            }
+            get { return this.Layouts[this.activeLayout].AssociatedBlock.Entities.OfType<MLine>(); }
         }
 
         /// <summary>
         /// Gets the <see cref="Dimension">dimensions</see> list in the active layout.
         /// </summary>
-        public IReadOnlyList<Dimension> Dimensions
+        public IEnumerable<Dimension> Dimensions
         {
-            get
-            {
-                return new List<Dimension>(this.Layouts[this.activeLayout].AssociatedBlock.Entities.OfType<Dimension>());
-            }
+            get { return this.Layouts[this.activeLayout].AssociatedBlock.Entities.OfType<Dimension>(); }
         }
 
         /// <summary>
         /// Gets the <see cref="Spline">splines</see> list in the active layout.
         /// </summary>
-        public IReadOnlyList<Spline> Splines
+        public IEnumerable<Spline> Splines
         {
-            get
-            {
-                return new List<Spline>(this.Layouts[this.activeLayout].AssociatedBlock.Entities.OfType<Spline>());
-            }
+            get { return this.Layouts[this.activeLayout].AssociatedBlock.Entities.OfType<Spline>(); }
         }
 
         /// <summary>
         /// Gets the <see cref="Ray">rays</see> list in the active layout.
         /// </summary>
-        public IReadOnlyList<Ray> Rays
+        public IEnumerable<Ray> Rays
         {
-            get
-            {
-                return new List<Ray>(this.Layouts[this.activeLayout].AssociatedBlock.Entities.OfType<Ray>());
-            }
+            get { return this.Layouts[this.activeLayout].AssociatedBlock.Entities.OfType<Ray>(); }
         }
 
         /// <summary>
         /// Gets the <see cref="Viewport">viewports</see> list in the active layout.
         /// </summary>
-        public IReadOnlyList<Viewport> Viewports
+        public IEnumerable<Viewport> Viewports
         {
-            get
-            {
-                return new List<Viewport>(this.Layouts[this.activeLayout].AssociatedBlock.Entities.OfType<Viewport>());
-            }
+            get { return this.Layouts[this.activeLayout].AssociatedBlock.Entities.OfType<Viewport>(); }
         }
 
         /// <summary>
         /// Gets the <see cref="XLine">extension lines</see> list in the active layout.
         /// </summary>
-        public IReadOnlyList<XLine> XLines
+        public IEnumerable<XLine> XLines
         {
-            get
-            {
-                return new List<XLine>(this.Layouts[this.activeLayout].AssociatedBlock.Entities.OfType<XLine>());
-            }
+            get { return this.Layouts[this.activeLayout].AssociatedBlock.Entities.OfType<XLine>(); }
         }
 
         /// <summary>
         /// Gets the <see cref="Wipeout">wipeouts</see> list in the active layout.
         /// </summary>
-        public IReadOnlyList<Wipeout> Wipeouts
+        public IEnumerable<Wipeout> Wipeouts
         {
-            get
-            {
-                return new List<Wipeout>(this.Layouts[this.activeLayout].AssociatedBlock.Entities.OfType<Wipeout>());
-            }
+            get { return this.Layouts[this.activeLayout].AssociatedBlock.Entities.OfType<Wipeout>(); }
         }
 
         #endregion

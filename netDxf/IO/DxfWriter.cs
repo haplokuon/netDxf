@@ -24,6 +24,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Text;
 using netDxf.Blocks;
 using netDxf.Collections;
@@ -213,8 +214,8 @@ namespace netDxf.IO
             if (this.doc.ImageDefinitions.Items.Count > 0)
             {
                 this.WriteImageDefClass(this.doc.ImageDefinitions.Count);
-                this.WriteImageDefRectorClass(this.doc.Images.Count);
-                this.WriteImageClass(this.doc.Images.Count);
+                this.WriteImageDefRectorClass(this.doc.Images.Count());
+                this.WriteImageClass(this.doc.Images.Count());
             }
             this.EndSection();
 
@@ -1160,7 +1161,7 @@ namespace netDxf.IO
             this.chunk.Write(45, style.DimRoundoff);
             this.chunk.Write(46, style.DimLineExtend);
             this.chunk.Write(47, style.Tolerances.UpperLimit);
-
+            // code 48 is written later
             this.chunk.Write(49, style.ExtLineFixedLength);
 
             if (style.TextFillColor != null)
@@ -1229,6 +1230,7 @@ namespace netDxf.IO
             this.chunk.Write(170, style.AlternateUnits.Enabled ? (short) 1 : (short) 0);
             this.chunk.Write(171, style.AlternateUnits.LengthPrecision);
             this.chunk.Write(172, style.FitDimLineForce ? (short) 1 : (short) 0);
+            // code 173 is written later
             this.chunk.Write(174, style.FitTextInside ? (short) 1 : (short) 0);
             this.chunk.Write(175, style.FitDimLineInside ? (short) 1 : (short) 0);
             this.chunk.Write(176, style.DimLineColor.Index);
@@ -2052,33 +2054,15 @@ namespace netDxf.IO
                 this.chunk.Write(73, (short) 3);
             }
 
-            Vector2 v = leader.Vertexes[leader.Vertexes.Count - 1] - leader.Vertexes[leader.Vertexes.Count - 2];
-            int side = v.X < 0 ? -1 : 1;
-            this.chunk.Write(74, side < 0 ? (short) 0 : (short) 1);
+            this.chunk.Write(74, (short) 0);
             this.chunk.Write(75, leader.HasHookline ? (short) 1 : (short) 0);
 
             //this.chunk.Write(40, 0.0);
             //this.chunk.Write(41, 0.0);
 
-            // in the dxf the leader vertexes list is in WCS
-            //Vector2 dir = side*Vector2.UnitX;
             List<Vector3> ocsVertexes = new List<Vector3>();
-
-            if (leader.HasHookline)
-            {
-                for (int i = 0; i < leader.Vertexes.Count - 1; i++)
-                    ocsVertexes.Add(new Vector3(leader.Vertexes[i].X, leader.Vertexes[i].Y, leader.Elevation));
-                // add the start hook line
-                Vector2 start = leader.StartHookLine;
-                Vector2 end = leader.Hook;
-                ocsVertexes.Add(new Vector3(start.X, start.Y, leader.Elevation));
-                ocsVertexes.Add(new Vector3(end.X, end.Y, leader.Elevation));
-            }
-            else
-            {
-                foreach (Vector2 vector in leader.Vertexes)
-                    ocsVertexes.Add(new Vector3(vector.X, vector.Y, leader.Elevation));
-            }
+            foreach (Vector2 vector in leader.Vertexes)
+                ocsVertexes.Add(new Vector3(vector.X, vector.Y, leader.Elevation));
 
             IList<Vector3> wcsVertexes = MathHelper.Transform(ocsVertexes, leader.Normal, CoordinateSystem.Object, CoordinateSystem.World);
             this.chunk.Write(76, (short) wcsVertexes.Count);
@@ -2106,48 +2090,20 @@ namespace netDxf.IO
             this.chunk.Write(221, xDir.Y);
             this.chunk.Write(231, xDir.Z);
 
-            //Vector3 wcsOffset = MathHelper.Transform(new Vector3(leader.Offset.X, leader.Offset.Y, leader.Elevation), leader.Normal, CoordinateSystem.Object, CoordinateSystem.World);
-            //this.chunk.Write(212, wcsOffset.X);
-            //this.chunk.Write(222, wcsOffset.Y);
-            //this.chunk.Write(232, wcsOffset.Z);
+            Vector3 wcsOffset = MathHelper.Transform(new Vector3(leader.Offset.X, leader.Offset.Y, leader.Elevation), leader.Normal, CoordinateSystem.Object, CoordinateSystem.World);
+            this.chunk.Write(212, wcsOffset.X);
+            this.chunk.Write(222, wcsOffset.Y);
+            this.chunk.Write(232, wcsOffset.Z);
 
-            //this.chunk.Write(213, wcsOffset.X);
-            //this.chunk.Write(223, wcsOffset.Y);
-            //this.chunk.Write(233, wcsOffset.Z);
+            this.chunk.Write(213, wcsOffset.X);
+            this.chunk.Write(223, wcsOffset.Y);
+            this.chunk.Write(233, wcsOffset.Z);
 
             // dimension style overrides info
             if (leader.StyleOverrides.Count > 0)
-                this.AddDimensionStyleOverridesXData(leader.XData, leader.StyleOverrides, leader);
-            else // leader text vertical position info
-                AddLeaderTextPositionXData(leader);
+                this.AddDimensionStyleOverridesXData(leader.XData, leader.StyleOverrides);
 
             this.WriteXData(leader.XData);
-        }
-
-        private static void AddLeaderTextPositionXData(Leader leader)
-        {
-            MText mText = leader.Annotation as MText;
-            if (mText != null)
-            {
-                XData xdataEntry;
-                if (leader.XData.ContainsAppId(ApplicationRegistry.DefaultName))
-                {
-                    xdataEntry = leader.XData[ApplicationRegistry.DefaultName];
-                    xdataEntry.XDataRecord.Clear();
-                }
-                else
-                {
-                    xdataEntry = new XData(new ApplicationRegistry(ApplicationRegistry.DefaultName));
-                    leader.XData.Add(xdataEntry);
-                }
-                xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.String, "DSTYLE"));
-                xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.ControlString, "{"));
-                xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 70));
-                xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) mText.AttachmentPoint));
-                xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 77));
-                xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) leader.TextVerticalPosition));
-                xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.ControlString, "}"));
-            }
         }
 
         private void WriteMesh(Mesh mesh)
@@ -3258,7 +3214,7 @@ namespace netDxf.IO
 
             // add dimension style overrides info
             if (dim.StyleOverrides.Count > 0)
-                this.AddDimensionStyleOverridesXData(dim.XData, dim.StyleOverrides, dim);
+                this.AddDimensionStyleOverridesXData(dim.XData, dim.StyleOverrides);
 
             switch (dim.DimensionType)
             {
@@ -3286,22 +3242,8 @@ namespace netDxf.IO
             }
         }
 
-        private void AddDimensionStyleOverridesXData(XDataDictionary xdata, DimensionStyleOverrideDictionary overrides, EntityObject entity)
+        private void AddDimensionStyleOverridesXData(XDataDictionary xdata, DimensionStyleOverrideDictionary overrides)
         {
-            XData xdataEntry;
-            if (xdata.ContainsAppId(ApplicationRegistry.DefaultName))
-            {
-                xdataEntry = xdata[ApplicationRegistry.DefaultName];
-                xdataEntry.XDataRecord.Clear();
-            }
-            else
-            {
-                xdataEntry = new XData(new ApplicationRegistry(ApplicationRegistry.DefaultName));
-                xdata.Add(xdataEntry);
-            }
-            xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.String, "DSTYLE"));
-            xdataEntry.XDataRecord.Add(XDataRecord.OpenControlString);
-
             bool writeDIMPOST = false;
             string prefix = string.Empty;
             string suffix = string.Empty;
@@ -3342,6 +3284,21 @@ namespace netDxf.IO
             bool tolAltSuppressLinearTrailingZeros = false;
             bool tolAltSuppressZeroFeet = true;
             bool tolAltSuppressZeroInches = true;
+
+            XData xdataEntry;
+            if (xdata.ContainsAppId(ApplicationRegistry.DefaultName))
+            {
+                xdataEntry = xdata[ApplicationRegistry.DefaultName];
+                xdataEntry.XDataRecord.Clear();
+            }
+            else
+            {
+                xdataEntry = new XData(new ApplicationRegistry(ApplicationRegistry.DefaultName));
+                xdata.Add(xdataEntry);
+            }
+
+            xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.String, "DSTYLE"));
+            xdataEntry.XDataRecord.Add(XDataRecord.OpenControlString);
 
             foreach (DimensionStyleOverride styleOverride in overrides.Values)
             {
@@ -3809,20 +3766,6 @@ namespace netDxf.IO
                 xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 286));
                 xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16,
                     GetSupressZeroesValue(tolAltSuppressLinearLeadingZeros, tolAltSuppressLinearTrailingZeros, tolAltSuppressZeroFeet, tolAltSuppressZeroInches)));
-            }
-
-            // this information is only required by the Leader entity
-            Leader leader = entity as Leader;
-            if (leader != null)
-            {
-                MText mText = leader.Annotation as MText;
-                if (mText != null)
-                {
-                    xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 70));
-                    xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) mText.AttachmentPoint));
-                    xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 77));
-                    xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) leader.TextVerticalPosition));
-                }
             }
 
             xdataEntry.XDataRecord.Add(XDataRecord.CloseControlString);
