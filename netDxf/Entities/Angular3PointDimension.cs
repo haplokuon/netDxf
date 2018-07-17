@@ -257,7 +257,7 @@ namespace netDxf.Entities
             }
             if (moveText == DimensionStyleFitTextMove.BesideDimLine)
             {
-                if (!this.TextPositionManuallySet)
+                if (this.TextPositionManuallySet)
                 {
                     Vector2 textDir = this.textRefPoint - this.center;
                     Vector2 vecText = this.center + this.offset * Vector2.Normalize(textDir);
@@ -350,6 +350,15 @@ namespace netDxf.Entities
                 EndPoint = this.end,
                 Offset = this.offset
             };
+
+            foreach (DimensionStyleOverride styleOverride in this.StyleOverrides.Values)
+            {
+                object copy;
+                ICloneable value = styleOverride.Value as ICloneable;
+                copy = value != null ? value.Clone() : styleOverride.Value;
+
+                entity.StyleOverrides.Add(new DimensionStyleOverride(styleOverride.Type, copy));
+            }
 
             foreach (XData data in this.XData.Values)
                 entity.XData.Add((XData) data.Clone());

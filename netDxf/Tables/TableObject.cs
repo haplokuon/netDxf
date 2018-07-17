@@ -97,7 +97,7 @@ namespace netDxf.Tables
 
             this.name = name;
             this.reserved = false;
-            this.xData=new XDataDictionary();
+            this.xData = new XDataDictionary();
             this.xData.AddAppReg += this.XData_AddAppReg;
             this.xData.RemoveAppReg += this.XData_RemoveAppReg;
         }

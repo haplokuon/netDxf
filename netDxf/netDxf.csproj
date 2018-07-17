@@ -76,6 +76,7 @@
     <Reference Include="System.Drawing" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Blocks\BlockAttributeDefinitionChangeEventArgs.cs" />
     <Compile Include="Collections\DimensionStyleOverrideDictionaryEventArgs.cs" />
     <Compile Include="Collections\DimensionStyleOverrideDictionary.cs" />
     <Compile Include="Collections\ObservableCollection.cs">
@@ -96,10 +97,14 @@
     <Compile Include="Objects\PlotType.cs" />
     <Compile Include="Objects\ShadePlotMode.cs" />
     <Compile Include="Objects\ShadePlotResolutionMode.cs" />
+    <Compile Include="Tables\DimensionStyleAlternateUnits.cs" />
     <Compile Include="Tables\DimensionStyleTextVerticalPlacement.cs" />
     <Compile Include="Tables\DimensionStyleTextHorizontalPlacement.cs" />
     <Compile Include="Tables\DimensionStyleFitOptions.cs" />
     <Compile Include="Tables\DimensionStyleFitTextMove.cs" />
+    <Compile Include="Tables\DimensionStyleTolerances.cs" />
+    <Compile Include="Tables\DimensionStyleTolerancesDisplayMethod.cs" />
+    <Compile Include="Tables\DimensionStyleTolerancesVerticalPlacement.cs" />
     <Compile Include="Tables\FontStyle.cs" />
     <Compile Include="Tables\LinetypeSegment.cs" />
     <Compile Include="Tables\DimensionStyleOverride.cs" />

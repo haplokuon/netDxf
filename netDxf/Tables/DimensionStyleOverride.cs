@@ -336,7 +336,7 @@ namespace netDxf.Tables
                         throw new ArgumentException(string.Format("The DimensionStyleOverrideType.{0} dimension style override must be a valid {1}", type, typeof(bool)), nameof(value));
                     break;
                 case DimensionStyleOverrideType.TolerancesDisplayMethod:
-                    if (!(value is DimensionStyle.TolerancesDisplayMethod))
+                    if (!(value is DimensionStyleTolerancesDisplayMethod))
                         throw new ArgumentException(string.Format("The DimensionStyleOverrideType.{0} dimension style override must be a valid {1}", type, typeof(LinearUnitType)), nameof(value));
                     break;
                 case DimensionStyleOverrideType.TolerancesUpperLimit:
@@ -348,7 +348,7 @@ namespace netDxf.Tables
                         throw new ArgumentException(string.Format("The DimensionStyleOverrideType.{0} dimension style override must be a valid {1}", type, typeof(double)), nameof(value));
                     break;
                 case DimensionStyleOverrideType.TolerancesVerticalPlacement:
-                    if (!(value is DimensionStyle.TolerancesVerticalPlacement))
+                    if (!(value is DimensionStyleTolerancesVerticalPlacement))
                         throw new ArgumentException(string.Format("The DimensionStyleOverrideType.{0} dimension style override must be a valid {1}", type, typeof(LinearUnitType)), nameof(value));
                     break;
                 case DimensionStyleOverrideType.TolerancesPrecision:

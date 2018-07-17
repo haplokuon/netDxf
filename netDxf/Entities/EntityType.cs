@@ -33,11 +33,6 @@ namespace netDxf.Entities
         Arc,
 
         /// <summary>
-        /// Attribute definition entity.
-        /// </summary>
-        AttributeDefinition,
-
-        /// <summary>
         /// Circle entity.
         /// </summary>
         Circle,

@@ -486,7 +486,7 @@ namespace netDxf
         /// </summary>
         public IEnumerable<AttributeDefinition> AttributeDefinitions
         {
-            get { return this.Layouts[this.activeLayout].AssociatedBlock.Entities.OfType<AttributeDefinition>(); }
+            get { return this.Layouts[this.activeLayout].AssociatedBlock.AttributeDefinitions.Values; }
         }
 
         /// <summary>
@@ -1088,7 +1088,7 @@ namespace netDxf
 
         #region internal methods
 
-        internal void AddEntity(EntityObject entity, bool assignHandle)
+        internal void AddEntityToDocument(EntityObject entity, Block block, bool assignHandle)
         {
             // null entities are not allowed
             if (entity == null)
@@ -1134,9 +1134,6 @@ namespace netDxf
                     leader.Style = this.dimStyles.Add(leader.Style, assignHandle);
                     this.dimStyles.References[leader.Style.Name].Add(leader);
                     leader.LeaderStyleChanged += this.Leader_DimStyleChanged;
-                    // add the annotation entity
-                    if (leader.Annotation != null)
-                        this.AddEntity(leader.Annotation);
                     this.AddStyleOverrides(leader, assignHandle);
                     leader.DimensionStyleOverrideAdded += this.Leader_DimStyleOverrideAdded;
                     leader.DimensionStyleOverrideRemoved += this.Leader_DimStyleOverrideRemoved;
@@ -1155,12 +1152,6 @@ namespace netDxf
                     break;
                 case EntityType.Hatch:
                     Hatch hatch = (Hatch) entity;
-                    foreach (HatchBoundaryPath path in hatch.BoundaryPaths)
-                    {
-                        foreach (EntityObject e in path.Entities)
-                            this.AddEntity(e);
-                    }
-
                     hatch.HatchBoundaryPathAdded += this.Hatch_BoundaryPathAdded;
                     hatch.HatchBoundaryPathRemoved += this.Hatch_BoundaryPathRemoved;
                     break;
@@ -1268,12 +1259,6 @@ namespace netDxf
                     if (viewport.ClippingBoundary != null)
                         this.AddEntity(viewport.ClippingBoundary);
                     break;
-                case EntityType.AttributeDefinition:
-                    AttributeDefinition attDef = (AttributeDefinition) entity;
-                    attDef.Style = this.textStyles.Add(attDef.Style, assignHandle);
-                    this.textStyles.References[attDef.Style.Name].Add(attDef);
-                    attDef.TextStyleChange += this.Entity_TextStyleChanged;
-                    break;
                 default:
                     throw new ArgumentException("The entity " + entity.Type + " is not implemented or unknown.");
             }
@@ -1290,7 +1275,34 @@ namespace netDxf
             entity.LinetypeChanged += this.Entity_LinetypeChanged;
         }
 
-        internal bool RemoveEntity(EntityObject entity, bool isBlockEntity)
+        internal void AddAttributeDefinitionToDocument(AttributeDefinition attDef, bool assignHandle)
+        {
+            // null entities are not allowed
+            if (attDef == null)
+                throw new ArgumentNullException(nameof(attDef));
+
+            // assign a handle
+            if (assignHandle || string.IsNullOrEmpty(attDef.Handle))
+                this.NumHandles = attDef.AsignHandle(this.NumHandles);
+
+            attDef.Style = this.textStyles.Add(attDef.Style, assignHandle);
+            this.textStyles.References[attDef.Style.Name].Add(attDef);
+            attDef.TextStyleChange += this.Entity_TextStyleChanged;
+
+            attDef.Layer = this.layers.Add(attDef.Layer, assignHandle);
+            this.layers.References[attDef.Layer.Name].Add(attDef);
+
+            attDef.Linetype = this.linetypes.Add(attDef.Linetype, assignHandle);
+            this.linetypes.References[attDef.Linetype.Name].Add(attDef);
+
+            this.AddedObjects.Add(attDef.Handle, attDef);
+
+            attDef.LayerChanged += this.Entity_LayerChanged;
+            attDef.LinetypeChanged += this.Entity_LinetypeChanged;
+
+        }
+
+        internal bool RemoveEntityFromDocument(EntityObject entity)
         {
             // the entities that are part of a block do not belong to any of the entities lists but to the block definition
             // and they will not be removed from the drawing database
@@ -1406,10 +1418,6 @@ namespace netDxf
                         this.RemoveEntity(viewport.ClippingBoundary);
                     }
                     break;
-                case EntityType.AttributeDefinition:
-                    AttributeDefinition attDef = (AttributeDefinition) entity;
-                    this.textStyles.References[attDef.Style.Name].Remove(entity);
-                    break;
                 default:
                     throw new ArgumentException("The entity " + entity.Type + " is not implemented or unknown");
             }
@@ -1425,6 +1433,25 @@ namespace netDxf
             entity.Owner = null;
 
             return true;
+        }
+
+        internal bool RemoveAttributeDefinitionFromDocument(AttributeDefinition attDef)
+        {
+            this.textStyles.References[attDef.Style.Name].Remove(attDef);
+            attDef.TextStyleChange -= this.Entity_TextStyleChanged;
+
+            this.layers.References[attDef.Layer.Name].Remove(attDef);
+            this.linetypes.References[attDef.Linetype.Name].Remove(attDef);
+            this.AddedObjects.Remove(attDef.Handle);
+
+            attDef.LayerChanged -= this.Entity_LayerChanged;
+            attDef.LinetypeChanged -= this.Entity_LinetypeChanged;
+
+            attDef.Handle = null;
+            attDef.Owner = null;
+
+            return true;
+
         }
 
         #endregion

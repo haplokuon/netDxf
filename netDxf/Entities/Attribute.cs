@@ -133,7 +133,6 @@ namespace netDxf.Entities
             if (definition == null)
                 throw new ArgumentNullException(nameof(definition));
 
-            //EntityObject properties
             this.color = definition.Color;
             this.layer = definition.Layer;
             this.linetype = definition.Linetype;
@@ -143,7 +142,6 @@ namespace netDxf.Entities
             this.isVisible = definition.IsVisible;
             this.normal = definition.Normal;
 
-            //Attribute definition properties
             this.definition = definition;
             this.tag = definition.Tag;
             this.attValue = definition.Value;

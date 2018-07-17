@@ -35,560 +35,6 @@ namespace netDxf.Tables
     {
         #region nested classes
 
-        /// <summary>
-        /// Represents the way alternate units are formatted in dimension entities.
-        /// </summary>
-        /// <remarks>Alternative units are not applicable for angular dimensions.</remarks>
-        public class AlternateUnitsFormat :
-            ICloneable
-        {
-            #region private fields
-
-            private bool dimalt;
-            private LinearUnitType dimaltu;
-            private bool stackedUnits;
-            private short dimaltd;
-            private double dimaltf;
-            private double dimaltrnd;
-            private string dimPrefix;
-            private string dimSuffix;
-            private bool suppressLinearLeadingZeros;
-            private bool suppressLinearTrailingZeros;
-            private bool suppressZeroFeet;
-            private bool suppressZeroInches;
-
-            #endregion
-
-            #region constructors
-
-            /// <summary>
-            /// Initializes a new instance of the <c>DimensionStyleUnitsFormat</c> class.
-            /// </summary>
-            public AlternateUnitsFormat()
-            {
-                this.dimalt = false;
-                this.dimaltd = 2;
-                this.dimPrefix = string.Empty;
-                this.dimSuffix = string.Empty;
-                this.dimaltf = 25.4;
-                this.dimaltu = LinearUnitType.Decimal;
-                this.stackedUnits = false;
-                this.suppressLinearLeadingZeros = false;
-                this.suppressLinearTrailingZeros = false;
-                this.suppressZeroFeet = true;
-                this.suppressZeroInches = true;
-                this.dimaltrnd = 0.0;
-            }
-
-            #endregion
-
-            #region public properties
-
-            /// <summary>
-            /// Gets or sets if the alternate measurement units are added to the dimension text.
-            /// </summary>
-            public bool Enabled
-            {
-                get { return this.dimalt; }
-                set { this.dimalt = value; }
-            }
-
-            /// <summary>
-            /// Sets the number of decimal places displayed for the alternate units of a dimension.
-            /// </summary>
-            /// <remarks>
-            /// Default: 4<br/>
-            /// It is recommended to use values in the range 0 to 8.<br/>
-            /// For architectural and fractional the precision used for the minimum fraction is 1/2^LinearDecimalPlaces.
-            /// </remarks>
-            public short LengthPrecision
-            {
-                get { return this.dimaltd; }
-                set
-                {
-                    if (value < 0)
-                        throw new ArgumentOutOfRangeException(nameof(value), value, "The length precision must be equals or greater than zero.");
-                    this.dimaltd = value;
-                }
-            }
-
-            /// <summary>
-            /// Specifies the text prefix for the dimension.
-            /// </summary>
-            public string Prefix
-            {
-                get { return this.dimPrefix; }
-                set { this.dimPrefix = value ?? string.Empty; }
-            }
-
-            /// <summary>
-            /// Specifies the text suffix for the dimension.
-            /// </summary>
-            public string Suffix
-            {
-                get { return this.dimSuffix; }
-                set { this.dimSuffix = value ?? string.Empty; }
-            }
-
-            /// <summary>
-            /// Gets or sets the multiplier used as the conversion factor between primary and alternate units.
-            /// </summary>
-            /// <remarks>
-            /// to convert inches to millimeters, enter 25.4.
-            /// The value has no effect on angular dimensions, and it is not applied to the rounding value or the plus or minus tolerance values. 
-            /// </remarks>
-            public double Multiplier
-            {
-                get { return this.dimaltf; }
-                set
-                {
-                    if (value <= 0.0)
-                        throw new ArgumentOutOfRangeException(nameof(value), value, "The multiplier for alternate units must be greater than zero0.");
-                    this.dimaltf = value;
-                }
-            }
-
-            /// <summary>
-            /// Gets or sets the alternate units for all dimension types except angular.
-            /// </summary>
-            /// <remarks>
-            /// Scientific<br/>
-            /// Decimal<br/>
-            /// Engineering<br/>
-            /// Architectural<br/>
-            /// Fractional
-            /// </remarks>
-            public LinearUnitType LengthUnits
-            {
-                get { return this.dimaltu; }
-                set { this.dimaltu = value; }
-            }
-
-            /// <summary>
-            /// Gets or set if the Architectural or Fractional linear units will be shown stacked or not.
-            /// </summary>
-            /// <remarks>
-            /// This value only is applicable if the <c>DimLengthUnits</c> property has been set to Architectural or Fractional,
-            /// for any other value this parameter is not applicable.
-            /// </remarks>
-            public bool StackUnits
-            {
-                get { return this.stackedUnits; }
-                set { this.stackedUnits = value; }
-            }
-
-            /// <summary>
-            /// Suppresses leading zeros in linear decimal alternate units (for example, 0.5000 becomes .5000).
-            /// </summary>
-            /// <remarks>This value is part of the DIMALTZ variable.</remarks>
-            public bool SuppressLinearLeadingZeros
-            {
-                get { return this.suppressLinearLeadingZeros; }
-                set { this.suppressLinearLeadingZeros = value; }
-            }
-
-            /// <summary>
-            /// Suppresses trailing zeros in linear decimal alternate units (for example, 12.5000 becomes 12.5).
-            /// </summary>
-            /// <remarks>This value is part of the DIMALTZ variable.</remarks>
-            public bool SuppressLinearTrailingZeros
-            {
-                get { return this.suppressLinearTrailingZeros; }
-                set { this.suppressLinearTrailingZeros = value; }
-            }
-
-            /// <summary>
-            /// Suppresses zero feet in architectural alternate units.
-            /// </summary>
-            /// <remarks>This value is part of the DIMALTZ variable.</remarks>
-            public bool SuppressZeroFeet
-            {
-                get { return this.suppressZeroFeet; }
-                set { this.suppressZeroFeet = value; }
-            }
-
-            /// <summary>
-            /// Suppresses zero inches in architectural alternate units.
-            /// </summary>
-            /// <remarks>This value is part of the DIMALTZ variable.</remarks>
-            public bool SuppressZeroInches
-            {
-                get { return this.suppressZeroInches; }
-                set { this.suppressZeroInches = value; }
-            }
-
-            /// <summary>
-            /// Gets or sets the value to round all dimensioning distances.
-            /// </summary>
-            /// <remarks>
-            /// Default: 0 (no rounding off).<br/>
-            /// If DIMRND is set to 0.25, all distances round to the nearest 0.25 unit.
-            /// If you set DIMRND to 1.0, all distances round to the nearest integer.
-            /// Note that the number of digits edited after the decimal point depends on the precision set by DIMDEC.
-            /// DIMRND does not apply to angular dimensions.
-            /// </remarks>
-            public double Roundoff
-            {
-                get { return this.dimaltrnd; }
-                set
-                {
-                    if (value < 0.000001 && !MathHelper.IsZero(value, double.Epsilon))
-                        throw new ArgumentOutOfRangeException(nameof(value), value, "The nearest value to round all distances must be equal or greater than 0.000001 or zero (no rounding off).");
-                    this.dimaltrnd = value;
-                }
-            }
-
-            #endregion
-
-            #region implements ICloneable
-
-            /// <summary>
-            /// Creates a new <c>DimensionStyle.AlternateUnitsFormat</c> that is a copy of the current instance.
-            /// </summary>
-            /// <returns>A new <c>DimensionStyle.AlternateUnitsFormat</c> that is a copy of this instance.</returns>
-            public object Clone()
-            {
-                AlternateUnitsFormat copy = new AlternateUnitsFormat()
-                {
-                    Enabled = this.dimalt,
-                    LengthUnits = this.dimaltu,
-                    StackUnits = this.stackedUnits,
-                    LengthPrecision = this.dimaltd,
-                    Multiplier = this.dimaltf,
-                    Roundoff = this.dimaltrnd,
-                    Prefix = this.dimPrefix,
-                    Suffix = this.dimSuffix,
-                    SuppressLinearLeadingZeros = this.suppressLinearLeadingZeros,
-                    SuppressLinearTrailingZeros = this.suppressLinearTrailingZeros,
-                    SuppressZeroFeet = this.suppressZeroFeet,
-                    SuppressZeroInches = this.suppressZeroInches
-                };
-
-                return copy;
-            }
-
-            #endregion
-        }
-
-        /// <summary>
-        /// Defines the method for calculating the tolerance.
-        /// </summary>
-        /// <remarks>
-        /// The Basic method for displaying tolerances in dimensions is not available,
-        /// use a negative number for the <c>TextOffet</c> of the dimension style. The result is exactly the same.
-        /// </remarks>
-        public enum TolerancesDisplayMethod
-        {
-            /// <summary>
-            /// Does not add a tolerance.
-            /// </summary>
-            None,
-
-            /// <summary>
-            /// Adds a plus/minus expression of tolerance in which a single value of variation is applied to the dimension measurement.
-            /// </summary>
-            Symmetrical,
-
-            /// <summary>
-            /// Adds a plus/minus tolerance expression. Different plus and minus values of variation are applied to the dimension measurement.
-            /// </summary>
-            Deviation,
-
-            /// <summary>
-            /// Creates a limit dimension. A maximum and a minimum value are displayed, one over the other.
-            /// </summary>
-            Limits,
-        }
-
-        /// <summary>
-        /// Controls text justification for symmetrical and deviation tolerances.
-        /// </summary>
-        public enum TolerancesVerticalPlacement
-        {
-            /// <summary>
-            /// Aligns the tolerance text with the bottom of the main dimension text.
-            /// </summary>
-            Bottom = 0,
-
-            /// <summary>
-            /// Aligns the tolerance text with the middle of the main dimension text.
-            /// </summary>
-            Middle = 1,
-
-            /// <summary>
-            /// Aligns the tolerance text with the top of the main dimension text.
-            /// </summary>
-            Top = 2
-        }
-
-        /// <summary>
-        /// Represents the way tolerances are formated in dimension entities
-        /// </summary>
-        public class TolerancesFormat :
-            ICloneable
-        {
-            #region private fields
-
-            private TolerancesDisplayMethod dimtol;
-            private double dimtp;
-            private double dimtm;
-            private TolerancesVerticalPlacement dimtolj;
-            private short dimtdec;
-            private bool suppressLinearLeadingZeros;
-            private bool suppressLinearTrailingZeros;
-            private bool suppressZeroFeet;
-            private bool suppressZeroInches;
-            private double dimtfac;
-            private short dimalttd;
-            private bool altSuppressLinearLeadingZeros;
-            private bool altSuppressLinearTrailingZeros;
-            private bool altSuppressZeroFeet;
-            private bool altSuppressZeroInches;
-
-            #endregion
-
-            #region constructors
-
-            /// <summary>
-            /// Initializes a new instance of the <c>TolerancesFormat</c> class.
-            /// </summary>
-            public TolerancesFormat()
-            {
-                this.dimtol = TolerancesDisplayMethod.None;
-                this.dimtm = 0.0;
-                this.dimtp = 0.0;
-                this.dimtolj = TolerancesVerticalPlacement.Middle;
-                this.dimtdec = 4;
-                this.suppressLinearLeadingZeros = false;
-                this.suppressLinearTrailingZeros = false;
-                this.suppressZeroFeet = true;
-                this.suppressZeroInches = true;
-                this.dimtfac = 1.0;
-                this.dimalttd = 2;
-                this.altSuppressLinearLeadingZeros = false;
-                this.altSuppressLinearTrailingZeros = false;
-                this.altSuppressZeroFeet = true;
-                this.altSuppressZeroInches = true;
-            }
-
-            #endregion
-
-            #region public properties
-
-            /// <summary>
-            /// Gets or sets the method for calculating the tolerance.
-            /// </summary>
-            /// <remarks>
-            /// Default: None
-            /// </remarks>
-            public TolerancesDisplayMethod DisplayMethod
-            {
-                get { return this.dimtol; }
-                set { this.dimtol = value; }
-            }
-
-            /// <summary>
-            /// Gets or sets the maximum or upper tolerance value. When you select Symmetrical in DisplayMethod, this value is used for the tolerance.
-            /// </summary>
-            /// <remarks>
-            /// Default: 0.0
-            /// </remarks>
-            public double UpperLimit
-            {
-                get { return this.dimtp; }
-                set { this.dimtp = value; }
-            }
-
-            /// <summary>
-            /// Gets or sets the minimum or lower tolerance value.
-            /// </summary>
-            /// <remarks>
-            /// Default: 0.0
-            /// </remarks>
-            public double LowerLimit
-            {
-                get { return this.dimtm; }
-                set { this.dimtm = value; }
-            }
-
-            /// <summary>
-            /// Gets or sets the text vertical placement for symmetrical and deviation tolerances.
-            /// </summary>
-            /// <remarks>
-            /// Default: Middle
-            /// </remarks>
-            public TolerancesVerticalPlacement VerticalPlacement
-            {
-                get { return this.dimtolj; }
-                set { this.dimtolj = value; }
-            }
-
-            /// <summary>
-            /// Gets or sets the number of decimal places.
-            /// </summary>
-            /// <remarks>
-            /// Default: 4<br/>
-            /// It is recommended to use values in the range 0 to 8.
-            /// </remarks>
-            public short Precision
-            {
-                get { return this.dimtdec; }
-                set
-                {
-                    if (value < 0)
-                        throw new ArgumentOutOfRangeException(nameof(value), value, "The tolerance precision must be equals or greater than zero.");
-                    this.dimtdec = value;
-                }
-            }
-
-            /// <summary>
-            /// Suppresses leading zeros in linear decimal tolerance units (for example, 0.5000 becomes .5000).
-            /// </summary>
-            /// <remarks>This value is part of the DIMTZIN variable.</remarks>
-            public bool SuppressLinearLeadingZeros
-            {
-                get { return this.suppressLinearLeadingZeros; }
-                set { this.suppressLinearLeadingZeros = value; }
-            }
-
-            /// <summary>
-            /// Suppresses trailing zeros in linear decimal tolerance units (for example, 12.5000 becomes 12.5).
-            /// </summary>
-            /// <remarks>This value is part of the DIMTZIN variable.</remarks>
-            public bool SuppressLinearTrailingZeros
-            {
-                get { return this.suppressLinearTrailingZeros; }
-                set { this.suppressLinearTrailingZeros = value; }
-            }
-
-            /// <summary>
-            /// Suppresses zero feet in architectural tolerance units.
-            /// </summary>
-            /// <remarks>This value is part of the DIMTZIN variable.</remarks>
-            public bool SuppressZeroFeet
-            {
-                get { return this.suppressZeroFeet; }
-                set { this.suppressZeroFeet = value; }
-            }
-
-            /// <summary>
-            /// Suppresses zero inches in architectural tolerance units.
-            /// </summary>
-            /// <remarks>This value is part of the DIMTZIN variable.</remarks>
-            public bool SuppressZeroInches
-            {
-                get { return this.suppressZeroInches; }
-                set { this.suppressZeroInches = value; }
-            }
-
-            /// <summary>
-            /// Gets or sets the height factor applied to the tolerance text in relation with the dimension text height.
-            /// </summary>
-            /// <remarks>
-            /// Default: 1.0
-            /// </remarks>
-            public double TextHeightFactor
-            {
-                get { return this.dimtfac; }
-                set
-                {
-                    if (value <= 0)
-                        throw new ArgumentOutOfRangeException(nameof(value), value, "The tolerance text height factor must be greater than zero.");
-                    this.dimtfac = value;
-                }
-            }
-
-            /// <summary>
-            /// Gets or sets the number of decimal places of the tolerance alternate units.
-            /// </summary>
-            /// <remarks>
-            /// Default: 2<br/>
-            /// It is recommended to use values in the range 0 to 8.
-            /// </remarks>
-            public short AlternatePrecision
-            {
-                get { return this.dimalttd; }
-                set
-                {
-                    if (value < 0)
-                        throw new ArgumentOutOfRangeException(nameof(value), value, "The alternate precision must be equals or greater than zero.");
-                    this.dimalttd = value;
-                }
-            }
-
-            /// <summary>
-            /// Suppresses leading zeros in linear decimal alternate tolerance units (for example, 0.5000 becomes .5000).
-            /// </summary>
-            /// <remarks>This value is part of the DIMALTTZ variable.</remarks>
-            public bool AlternateSuppressLinearLeadingZeros
-            {
-                get { return this.altSuppressLinearLeadingZeros; }
-                set { this.altSuppressLinearLeadingZeros = value; }
-            }
-
-            /// <summary>
-            /// Suppresses trailing zeros in linear decimal alternate tolerance units (for example, 12.5000 becomes 12.5).
-            /// </summary>
-            /// <remarks>This value is part of the DIMALTTZ variable.</remarks>
-            public bool AlternateSuppressLinearTrailingZeros
-            {
-                get { return this.altSuppressLinearTrailingZeros; }
-                set { this.altSuppressLinearTrailingZeros = value; }
-            }
-
-            /// <summary>
-            /// Suppresses zero feet in architectural alternate tolerance units.
-            /// </summary>
-            /// <remarks>This value is part of the DIMALTTZ variable.</remarks>
-            public bool AlternateSuppressZeroFeet
-            {
-                get { return this.altSuppressZeroFeet; }
-                set { this.altSuppressZeroFeet = value; }
-            }
-
-            /// <summary>
-            /// Suppresses zero inches in architectural alternate tolerance units.
-            /// </summary>
-            /// <remarks>This value is part of the DIMALTTZ variable.</remarks>
-            public bool AlternateSuppressZeroInches
-            {
-                get { return this.altSuppressZeroInches; }
-                set { this.altSuppressZeroInches = value; }
-            }
-
-            #endregion
-
-            #region implements ICloneable
-
-            /// <summary>
-            /// Creates a new <c>DimensionStyle.TolernacesFormat</c> that is a copy of the current instance.
-            /// </summary>
-            /// <returns>A new <c>DimensionStyle.TolernacesFormat</c> that is a copy of this instance.</returns>
-            public object Clone()
-            {
-                return new TolerancesFormat
-                {
-                    DisplayMethod = this.dimtol,
-                    UpperLimit = this.dimtp,
-                    LowerLimit = this.dimtm,
-                    VerticalPlacement = this.dimtolj,
-                    Precision = this.dimtdec,
-                    SuppressLinearLeadingZeros = this.suppressLinearLeadingZeros,
-                    SuppressLinearTrailingZeros = this.suppressLinearTrailingZeros,
-                    SuppressZeroFeet = this.suppressZeroFeet,
-                    SuppressZeroInches = this.suppressZeroInches,
-                    TextHeightFactor = this.dimtfac,
-                    AlternatePrecision = this.dimalttd,
-                    AlternateSuppressLinearLeadingZeros = this.altSuppressLinearLeadingZeros,
-                    AlternateSuppressLinearTrailingZeros = this.altSuppressLinearTrailingZeros,
-                    AlternateSuppressZeroFeet = this.altSuppressZeroFeet,
-                    AlternateSuppressZeroInches = this.altSuppressZeroInches,
-                };
-            }
-
-            #endregion
-        }
-
         #endregion
 
         #region delegates and events
@@ -712,10 +158,10 @@ namespace netDxf.Tables
         private double dimrnd;
 
         // alternate units
-        private AlternateUnitsFormat alternateUnits;
+        private DimensionStyleAlternateUnits dimensionStyleAlternateUnits;
 
         // tolerances
-        private TolerancesFormat tolerances;
+        private DimensionStyleTolerances tolerances;
 
         #endregion
 
@@ -757,14 +203,14 @@ namespace netDxf.Tables
                     DecimalSeparator = ',',
                     LengthPrecision = 2,
                     SuppressLinearTrailingZeros = true,
-                    AlternateUnits =
+                    DimensionStyleAlternateUnits =
                     {
                         LengthPrecision = 3,
                         Multiplier = 0.0394
                     },
                     Tolerances =
                     {
-                        VerticalPlacement = TolerancesVerticalPlacement.Bottom,
+                        VerticalPlacement = DimensionStyleTolerancesVerticalPlacement.Bottom,
                         Precision = 2,
                         SuppressLinearTrailingZeros = true,
                         AlternatePrecision = 3
@@ -860,10 +306,10 @@ namespace netDxf.Tables
             this.dimrnd = 0.0;
 
             // alternate units
-            this.alternateUnits = new AlternateUnitsFormat();
+            this.dimensionStyleAlternateUnits = new DimensionStyleAlternateUnits();
 
             // tolerances
-            this.tolerances = new TolerancesFormat();
+            this.tolerances = new DimensionStyleTolerances();
         }
 
         #endregion
@@ -1620,14 +1066,14 @@ namespace netDxf.Tables
         /// Gets the alternate units format for dimensions.
         /// </summary>
         /// <remarks>Alternative units are not applicable for angular dimensions.</remarks>
-        public AlternateUnitsFormat AlternateUnits
+        public DimensionStyleAlternateUnits DimensionStyleAlternateUnits
         {
-            get { return this.alternateUnits; }
+            get { return this.dimensionStyleAlternateUnits; }
             set
             {
                 if (value == null)
                     throw new ArgumentNullException(nameof(value));
-                this.alternateUnits = value;
+                this.dimensionStyleAlternateUnits = value;
             }
         }
 
@@ -1638,7 +1084,7 @@ namespace netDxf.Tables
         /// <summary>
         /// Gets the tolerances format for dimensions.
         /// </summary>
-        public TolerancesFormat Tolerances
+        public DimensionStyleTolerances Tolerances
         {
             get { return this.tolerances; }
             set
@@ -1735,10 +1181,10 @@ namespace netDxf.Tables
                 DimRoundoff = this.dimrnd,
 
                 // alternate units
-                AlternateUnits = (AlternateUnitsFormat) this.alternateUnits.Clone(),
+                DimensionStyleAlternateUnits = (DimensionStyleAlternateUnits) this.dimensionStyleAlternateUnits.Clone(),
 
                 // tolerances
-                Tolerances = (TolerancesFormat) this.tolerances.Clone()
+                Tolerances = (DimensionStyleTolerances) this.tolerances.Clone()
             };
 
             foreach (XData data in this.XData.Values)

@@ -270,12 +270,7 @@ namespace netDxf.Tables
         /// <returns>A new TextStyle that is a copy of this instance.</returns>
         public override TableObject Clone(string newName)
         {
-            TextStyle copy = new TextStyle(newName, this.file)
-            {
-                Height = this.size,
-                ObliqueAngle = this.obliqueAngle,
-                WidthFactor = this.widthFactor
-            };
+            ShapeStyle copy = new ShapeStyle(newName, this.file, this.size, this.widthFactor, this.obliqueAngle);
 
             foreach (XData data in this.XData.Values)
                 copy.XData.Add((XData)data.Clone());

@@ -26,6 +26,37 @@ namespace TestDxfDocument
     /// </summary>
     public class Program
     {
+        private static void TestDoc()
+        {
+            DxfDocument doc = DxfDocument.Load("sample.dxf");
+
+            Angular2LineDimension d = null;
+            foreach (Dimension dim in doc.Dimensions)
+            {
+                dim.Block = DimensionBlock.Build(dim);
+                if (dim.DimensionType == DimensionType.Angular)
+                    d = (Angular2LineDimension) dim;
+            }
+            doc.Save("test compare.dxf");
+
+            Angular2LineDimension angDim = (Angular2LineDimension) d.Clone();
+
+            Angular2LineDimension angDim2 = new Angular2LineDimension(angDim.StartFirstLine, angDim.EndFirstLine, angDim.StartSecondLine, angDim.EndSecondLine, 20);
+
+
+
+            angDim.SetDimensionLinePosition(new Vector2(360, -126));
+            angDim2.SetDimensionLinePosition(new Vector2(360, -126));
+
+
+
+            DxfDocument dxf = new DxfDocument();
+            //dxf.BuildDimensionBlocks = true;
+            dxf.AddEntity(angDim);
+            dxf.AddEntity(angDim2);
+            dxf.Save("test.dxf");
+        }
+
         private static void TestDimAligned()
         {
             DimensionStyle style = DimensionStyle.Iso25;
@@ -34,7 +65,7 @@ namespace TestDxfDocument
             Vector2 ref3 = new Vector2(-10, 50);
             double offset = 10;
 
-            AlignedDimension dim = new AlignedDimension(ref3,ref2,  offset, style);
+            AlignedDimension dim = new AlignedDimension(ref3, ref2, offset, style);
             //dim.SetDimensionLinePosition(new Vector2(40, 30));
             //dim.SetDimensionLinePosition(new Vector2(9, -20));
             //dim.SetDimensionLinePosition(new Vector2(-9, -20));
@@ -114,11 +145,12 @@ namespace TestDxfDocument
             Line line2 = new Line(start2, end2) { Layer = layer };
 
             Angular2LineDimension dim = new Angular2LineDimension(line1, line2, 10, style);
-            //dim.SetDimensionLinePosition(new Vector2(20, 10));
-            //dim.SetDimensionLinePosition(new Vector2(4, 16));
-            //dim.SetDimensionLinePosition(new Vector2(-30, 20));
+
+            //dim.SetDimensionLinePosition(new Vector2(20, 0));
+            //dim.SetDimensionLinePosition(new Vector2(0, 20));
             //dim.SetDimensionLinePosition(new Vector2(0, -20));
-            //dim.TextReferencePoint = new Vector2(-30, 20);
+            //dim.SetDimensionLinePosition(new Vector2(-20, 0));
+
             //dim.Style.FitTextMove = DimensionStyleFitTextMove.OverDimLineWithLeader;
             //dim.Update();
 
@@ -127,6 +159,7 @@ namespace TestDxfDocument
             //dim.Update();
 
             DxfDocument doc = new DxfDocument();
+            doc.BuildDimensionBlocks = true;
             doc.DrawingVariables.DimStyle = style.Name;
             doc.AddEntity(dim);
             //dim.SetDimensionLinePosition(MathHelper.FindIntersection(start1, end1-start1, start2, end2-start2));
@@ -134,9 +167,9 @@ namespace TestDxfDocument
             doc.AddEntity(line2);
             doc.Save("test.dxf");
 
-            DxfDocument dxf = DxfDocument.Load("test.dxf");
-            dxf.Dimensions.ElementAt(0).Block = null;
-            dxf.Save("test compare.dxf");
+            //DxfDocument dxf = DxfDocument.Load("test.dxf");
+            //dxf.Dimensions.ElementAt(0).Block = null;
+            //dxf.Save("test compare.dxf");
         }
 
         private static void TestDim3PointAngular()
@@ -297,41 +330,6 @@ namespace TestDxfDocument
 
         }
 
-        private static void AccessModelBlock()
-        {
-            Layer layer = new Layer("Layer1") {Color = AciColor.Green};
-            Line line1 = new Line(new Vector2(0,0), new Vector2(50,50)) {Layer = layer};
-            Line line2 = new Line(new Vector2(0, 0), new Vector2(50, -50)) { Layer = layer };
-            DxfDocument doc = new DxfDocument();
-            doc.Blocks["*Model_Space"].Entities.Add(line1);
-            doc.AddEntity(line2);
-            doc.Save("test.dxf");
-
-
-            DxfDocument loaded = DxfDocument.Load("test.dxf");
-            EntityCollection entities1 = loaded.Layouts[Layout.ModelSpaceName].AssociatedBlock.Entities;
-            EntityCollection entities2 = loaded.Blocks[Block.DefaultModelSpaceName].Entities;
-            IList<DxfObject> entities3 = loaded.Layouts.GetReferences(Layout.ModelSpaceName);
-
-            IEnumerable<Line> lines = entities1.OfType<Line>();
-
-            foreach (Line line in entities1.OfType<Line>())
-            {
-                line.Color = AciColor.Blue;
-            }
-
-            
-
-            int num = lines.Count();
-            Line l = lines.ElementAtOrDefault(0);
-
-            Line del = (Line) loaded.Blocks[Block.DefaultModelSpaceName].Entities[0];
-            //loaded.Blocks[Block.DefaultModelSpaceName].Entities.Remove(del);
-            loaded.RemoveEntity(del);
-
-            loaded.Save("test compare.dxf");
-        }
-
         private static void TestHatch()
         {
             DxfDocument dxf = new DxfDocument(DxfVersion.AutoCad2010);
@@ -358,7 +356,7 @@ namespace TestDxfDocument
             dxf.AddEntity(hatch);
             hatch.BoundaryPaths.Add(boundary2);
 
-            dxf.RemoveEntity(hatch);
+            //dxf.RemoveEntity(hatch);
 
             //hatch.BoundaryPaths.Add(boundary2);
             //hatch.UnLinkBoundary();
@@ -377,7 +375,14 @@ namespace TestDxfDocument
             //myBlock.AttributeDefinitions.Add(new AttributeDefinition("MyTag"));
 
             dxf.Save("Hatch.dxf");
-           
+
+            //DxfDocument doc = DxfDocument.Load("Hatch.dxf");
+            DxfDocument doc = new DxfDocument();
+            Block block = Block.Create(dxf, "FullDrawing");
+            doc.AddEntity(new Insert(block, new Vector2(10,10)));
+            doc.Save("hatch compare.dxf");
+
+            Block test = (Block) doc.Blocks[Block.DefaultModelSpaceName].Clone("CopyModelSpace");
         }
 
         private static void TestLeader()
@@ -451,8 +456,113 @@ namespace TestDxfDocument
 
         }
 
+        public static void TestModelSpaceBlock()
+        {
+            // Create a block to be used as sample
+            Block baseBlk = new Block("BaseBlock");
+            baseBlk.Record.Units = DrawingUnits.Millimeters;
+            baseBlk.Entities.Add(new Line(new Vector3(-5, -5, 0), new Vector3(5, 5, 0)));
+            baseBlk.Entities.Add(new Line(new Vector3(5, -5, 0), new Vector3(-5, 5, 0)));
+            AttributeDefinition attdef = new AttributeDefinition("MyAttribute")
+            {
+                Prompt = "Enter a value:",
+                Value = 0,
+                Position = Vector3.Zero,
+                Layer = new Layer("MyLayer")
+                {
+                    Color = AciColor.Red
+                }
+            };
+            baseBlk.AttributeDefinitions.Add(attdef);
+
+            // Blocks are saved in a similar way as other dxf, just pass the dxf file name, the DxfVersion, and optionally if the dxf needs to be saved in binary format
+            // Only AutoCad2000 and newer versions are supported.
+            // The block entities and attribute definitions will be added to the Model layout.
+            // The drawing header units will be the ones defined in the block record.
+            baseBlk.Save(baseBlk.Name + ".dxf", DxfVersion.AutoCad2000);
+
+            DxfDocument dxf = new DxfDocument();
+
+            // Blocks are loaded as any other dxf, just pass the dxf file name,
+            // optionally you can also give it a name, by default the file name without extension will be used.
+            // Only AutoCad2000 and newer versions are supported,
+            // Only the entities contained in the Model layout will be used.
+            // The block units will be the ones defined in the dxf header.
+            Block block = Block.Load(baseBlk.Name + ".dxf", "MyBlock");
+
+            // in case the loading process has failed check for null
+            // In DEBUG mode the loading process will raise exceptions while in RELEASE it will just return null, the same as loading a DxfDocument
+            if (block == null)
+            {
+                Console.WriteLine("Error loading the block dxf file.");
+                Console.WriteLine("Press a key to continue...");
+                Console.ReadKey();
+                return;
+            }
+
+            // once the block is loaded we can use it in insert entities
+            Insert insert = new Insert(block, new Vector2(10));
+
+            // the block might also contain attribute definitions
+            int attdefCount = block.AttributeDefinitions.Count;
+
+            // this is the list of attribute definition tags
+            // remember netDxf does not allow the use of duplicate tag names, although AutoCad allows it, it is not recommended
+            ICollection<string> tags = block.AttributeDefinitions.Tags;
+
+            // we can assign values to the insert attributes
+            foreach (Attribute att in insert.Attributes)
+            {
+                att.Value = string.Format("{0} value", att.Tag);
+            }
+
+            // optionally we can manually add the block definition to the document
+            dxf.Blocks.Add(block);
+
+            // we add the insert entity to the document, if the block associated with the block has not been added this method will do it automatically
+            dxf.AddEntity(insert);
+
+            // also it is possible to manually add attribute definitions to a document
+            AttributeDefinition def = new AttributeDefinition("AttDefOutsideBlock")
+            {
+                Prompt = "Enter value:",
+                Value = 0,
+                Color = AciColor.Blue,
+                Position = new Vector3(0, 30, 0)
+            };
+
+            // we will add the attribute definition to the document just like any other entity
+            dxf.Layouts[Layout.ModelSpaceName].AssociatedBlock.AttributeDefinitions.Add(def);
+
+            // now we can save our new document
+            dxf.Save("CreateBlockFromDxf.dxf");
+
+            DxfDocument load = Test("CreateBlockFromDxf.dxf");
+        }
+
         public static void Main()
         {
+
+            DxfDocument doc = DxfDocument.Load("angular2line.dxf");
+            doc.DrawingVariables.AcadVer = DxfVersion.AutoCad2000;
+            doc.Save("angular2line original.dxf");
+            foreach (Dimension dimension in doc.Dimensions)
+            {
+                dimension.Block = null;
+            }
+            doc.Save("angular2line no blocks.dxf");
+            foreach (Dimension dimension in doc.Dimensions)
+            {
+                dimension.Block = DimensionBlock.Build(dimension);
+                dimension.Update();
+            }
+            doc.Save("angular2line blocks.dxf");
+
+            //TestDoc();
+
+
+            //TestModelSpaceBlock();
+
             //TestLeader();
 
             //LeaderEntity();
@@ -460,7 +570,6 @@ namespace TestDxfDocument
             //TestHatch();
 
             //Text();
-            //AccessModelBlock();
             //TestDimAligned();
             //TestDimLinear();
             //TestDim2LineAngular();
@@ -477,16 +586,40 @@ namespace TestDxfDocument
 
             //Angular2LineDimension dim = new Angular2LineDimension();
             //DxfDocument doc = Test(@".\dxfs\sample.dxf");
-            DxfDocument doc = Test(@"sample.dxf");
-            //doc.DrawingVariables.AcadVer = DxfVersion.AutoCad2004;
-            //doc.Save("test1.dxf");
-            //doc.DrawingVariables.DimStyle = DimensionStyle.DefaultName;
+            //DxfDocument doc = Test(@"sample.dxf");
+
+            //DxfDocument doc = DxfDocument.Load(@"sample.dxf", new List<string> { @".\Support" });
             //foreach (Dimension dimension in doc.Dimensions)
             //{
-            //    dimension.Block = null;
+            //    dimension.Block = DimensionBlock.Build(dimension);
             //}
 
             //doc.Save("test.dxf");
+
+            //DxfDocument dxf1 = new DxfDocument(DxfVersion.AutoCad2010, new List<string> { @".\Support" });
+            //foreach (EntityObject entity in doc.Layouts[Layout.ModelSpaceName].AssociatedBlock.Entities)
+            //{
+            //    if (entity.Reactors.Count>0) continue;
+
+            //    dxf1.AddEntity((EntityObject) entity.Clone());
+            //}
+            //dxf1.Save("test compare 1.dxf");
+
+            //Block block = Block.Create(doc, "FullDrawingBlock");
+            //DxfDocument dxf2 = new DxfDocument(DxfVersion.AutoCad2010, new List<string> { @".\Support" });
+            ////dxf2.BuildDimensionBlocks = true;
+            //dxf2.AddEntity(new Insert(block, new Vector2(100, 100)));
+            //dxf2.Save("test compare 2.dxf");
+
+            //DxfDocument dxf3 = DxfDocument.Load("Drawing2.dxf");
+            //dxf3.Save("test compare 3.dxf");
+
+            #region Samples for new and modified features 2.2.0
+
+            //AccessModelBlock();
+            //DimensionBlockGeneration();
+
+            #endregion
 
             #region Samples for new and modified features 2.1.0
 
@@ -672,6 +805,135 @@ namespace TestDxfDocument
 
             #endregion
         }
+
+        #region Samples for new and modified features 2.2.0
+
+        private static void AccessModelBlock()
+        {
+            Layer layer = new Layer("Layer1") { Color = AciColor.Green };
+            Line line1 = new Line(new Vector2(0, 0), new Vector2(50, 50)) { Layer = layer };
+            Line line2 = new Line(new Vector2(0, 0), new Vector2(50, -50)) { Layer = layer };
+            Line line3 = new Line(new Vector2(0, 0), new Vector2(-50, -50)) { Layer = layer };
+
+            DxfDocument doc = new DxfDocument();
+
+            // this specifies the layout where the entities will be added when using the AddEntity() method of the DxfDocument (by default is the "Model" layout)
+            doc.ActiveLayout = Layout.ModelSpaceName;
+            // this was the only way to add entities to the document
+            doc.AddEntity(line1);
+
+            // internally in the DXF all entities belongs to a block one way or the other,
+            // an entity might be part of a block created by the user,
+            // or one of the internal block created to represent the Model Space or the multiple Paper Spaces that may appear
+            
+            // now you can add entities directly through the model space block
+            doc.Blocks[Block.DefaultModelSpaceName].Entities.Add(line2);
+
+            // this is also valid, accessing the model space block through the layout
+            doc.Layouts[Layout.ModelSpaceName].AssociatedBlock.Entities.Add(line3);
+
+            // either way will end up with the same result
+            doc.Save("test.dxf");
+
+
+            // making a copy of the model space block, you must manually give a valid name, otherwise an ArgumentException will be risen
+            Block cloned = (Block)doc.Blocks[Block.DefaultModelSpaceName].Clone("FullCopy");
+            DxfDocument copy = new DxfDocument();
+            Insert ins = new Insert(cloned);
+            copy.AddEntity(ins);
+            copy.Save("clone.dxf");
+
+            // something similar can be done when reading entities from a document
+            DxfDocument loaded = DxfDocument.Load("test.dxf");
+
+            // this three list will return the same entities, this is how to access the full list of entities that belongs to a layout
+            EntityCollection entities1 = loaded.Layouts[Layout.ModelSpaceName].AssociatedBlock.Entities;
+            EntityCollection entities2 = loaded.Blocks[Block.DefaultModelSpaceName].Entities;
+            IList<DxfObject> entities3 = loaded.Layouts.GetReferences(Layout.ModelSpaceName);
+
+            // this will iterate through the lines we previously added to the doc DxfDocument (using Linq)
+            foreach (Line line in entities1.OfType<Line>())
+            {
+                line.Color = AciColor.Blue;
+            }
+
+            // this specifies the active layout from where we will pick up the entities
+            // when using the properties Lines, Circles, Arcs,... of the DxfDocument (by default is the "Model" layout)
+            doc.ActiveLayout = Layout.ModelSpaceName;
+            // accessing the list of entities through the properties Lines, Circles, Arcs,... of the DxfDocument
+            // will return the list of entities of that specific type contained in the active layout
+            foreach (Line line in loaded.Lines)
+            {
+                line.Color = AciColor.Blue;
+            }
+
+            // both ways will end up with the same result
+            loaded.Save("test compare 1.dxf");
+
+
+            // Something similar can be done when removing entities from a document
+            // pick up the first entity of the list, we now in advance it will be a line (in reality it might contain any kind of entity)
+            Line delete = (Line) loaded.Blocks[Block.DefaultModelSpaceName].Entities[0];
+
+            bool isDeleted;
+            // this was the way of removing entities from the document ( isDeleted = true)
+            isDeleted = loaded.RemoveEntity(delete);
+
+            // but now we can do the same directly through the block,
+            // this way we need to specify the layout, we might know it in advance, like now we are always working in the model layout
+            isDeleted = loaded.Layouts[Layout.ModelSpaceName].AssociatedBlock.Entities.Remove(delete); // (isDeleted = false)
+            isDeleted = loaded.Blocks[Block.DefaultModelSpaceName].Entities.Remove(delete); // (isDeleted = false)
+
+            // or we can access the owner of the line 
+            // pick up another line from the document, the old one has now owner anymore
+            delete = (Line)loaded.Blocks[Block.DefaultModelSpaceName].Entities[0];
+            isDeleted = loaded.Blocks[delete.Owner.Name].Entities.Remove(delete); // (isDeleted = true)
+
+            // only one more line remains in the document
+            loaded.Save("test compare 2.dxf");
+        }
+
+        private static void DimensionBlockGeneration()
+        {
+            DimensionStyle style = DimensionStyle.Iso25;
+            Vector2 ref1 = Vector2.Zero;
+            Vector2 ref2 = new Vector2(50, 10);
+            double offset = 10;
+
+            // create a dimension
+            AlignedDimension dim = new AlignedDimension(ref1, ref2, offset, style);
+
+            DxfDocument doc = new DxfDocument();
+            // this will specify that we want to generate the associated blocks that represent the dimension drawing.
+            // by default it is set to false, it will be the responsibility of the program reading the DXF to generate them
+            // keep in mind that the generation of the dimension drawing blocks is limited an do not support the full range of options defined by the dimension style
+            // it uses the DimenionBlock class for that purpose
+            doc.BuildDimensionBlocks = true;
+            doc.AddEntity(dim);
+            doc.Save("test.dxf");
+
+
+            DxfDocument loaded = DxfDocument.Load("test.dxf");
+            // if the imported DXF has dimension with blocks drawing blocks, we can erase them setting the dimension Block property to null
+            foreach (Dimension dimension in loaded.Dimensions)
+            {
+                dimension.Block = null;
+            }
+
+            // now that the dimensions have no drawing blocks it will be responsibility of the program that loads the DXF to generate them, if it needs it
+            doc.Save("test compare 1.dxf");
+
+
+            // we can also associate the dimension with our own blocks
+            // the initial name of the block is irrelevant it will be renamed to accommodate the nomenclature used by the DXF ("*D#" where # is a number)
+            foreach (Dimension dimension in loaded.Dimensions)
+            {
+                dimension.Block = DimensionBlock.Build(dimension);
+            }
+            doc.Save("test compare 2.dxf");
+        }
+
+        #endregion
 
         #region Samples for new and modified features 2.1.0
 
@@ -2828,8 +3090,8 @@ namespace TestDxfDocument
                 Position = new Vector3(0, 30, 0)
             };
 
-            // we will add the attribute definition to the document just like anyother entity
-            dxf.AddEntity(def);
+            // we will add the attribute definition to the document just like any other entity
+            dxf.Layouts[Layout.ModelSpaceName].AssociatedBlock.AttributeDefinitions.Add(def);
 
             // now we can save our new document
             dxf.Save("CreateBlockFromDxf.dxf");
@@ -3727,7 +3989,7 @@ namespace TestDxfDocument
             // or check the EntityObject.Owner.Record.Layout property
             Console.WriteLine("ENTITIES:");
             Console.WriteLine("\t{0}; count: {1}", EntityType.Arc, dxf.Arcs.Count());
-            Console.WriteLine("\t{0}; count: {1}", EntityType.AttributeDefinition, dxf.AttributeDefinitions.Count());
+            //Console.WriteLine("\t{0}; count: {1}", EntityType.AttributeDefinition, dxf.AttributeDefinitions.Count());
             Console.WriteLine("\t{0}; count: {1}", EntityType.Circle, dxf.Circles.Count());
             Console.WriteLine("\t{0}; count: {1}", EntityType.Dimension, dxf.Dimensions.Count());
             Console.WriteLine("\t{0}; count: {1}", EntityType.Ellipse, dxf.Ellipses.Count());
@@ -4093,12 +4355,18 @@ namespace TestDxfDocument
             }
             Console.WriteLine();
 
+            Console.WriteLine("ATTRIBUTE DEFINITIONS for the \"Model\" Layout: {0}", dxf.Layouts[Layout.ModelSpaceName].AssociatedBlock.AttributeDefinitions.Count);
+            foreach (var o in dxf.Layouts[Layout.ModelSpaceName].AssociatedBlock.AttributeDefinitions)
+            {
+                Console.WriteLine("\tTag: {0}", o.Value.Tag);
+            }
+            Console.WriteLine();
+
             // the entities lists contain the geometry that has a graphical representation in the drawing across all layouts,
             // to get the entities that belongs to a specific layout you can get the references through the Layouts.GetReferences(name)
             // or check the EntityObject.Owner.Record.Layout property
             Console.WriteLine("ENTITIES for the Active Layout = {0}:", dxf.ActiveLayout);
             Console.WriteLine("\t{0}; count: {1}", EntityType.Arc, dxf.Arcs.Count());
-            Console.WriteLine("\t{0}; count: {1}", EntityType.AttributeDefinition, dxf.AttributeDefinitions.Count());
             Console.WriteLine("\t{0}; count: {1}", EntityType.Circle, dxf.Circles.Count());
             Console.WriteLine("\t{0}; count: {1}", EntityType.Dimension, dxf.Dimensions.Count());
             foreach (var a in dxf.Dimensions)

@@ -20,46 +20,26 @@
 
 #endregion
 
-using System;
-using netDxf.Entities;
-
-namespace netDxf.Blocks
+namespace netDxf.Tables
 {
     /// <summary>
-    /// Represents the arguments thrown when an entity is added ore removed from a <see cref="Block">Block</see>.
+    /// Controls text justification for symmetrical and deviation tolerances.
     /// </summary>
-    public class BlockEntityChangeEventArgs :
-        EventArgs
+    public enum DimensionStyleTolerancesVerticalPlacement
     {
-        #region private fields
-
-        private readonly EntityObject item;
-
-        #endregion
-
-        #region constructor
+        /// <summary>
+        /// Aligns the tolerance text with the bottom of the main dimension text.
+        /// </summary>
+        Bottom = 0,
 
         /// <summary>
-        /// Initializes a new instance of <c>BlockEntityChangeEventArgs</c>.
+        /// Aligns the tolerance text with the middle of the main dimension text.
         /// </summary>
-        /// <param name="item">The entity that is being added or removed from the block.</param>
-        public BlockEntityChangeEventArgs(EntityObject item)
-        {
-            this.item = item;
-        }
-
-        #endregion
-
-        #region public properties
+        Middle = 1,
 
         /// <summary>
-        /// Gets the entity that is being added or removed.
+        /// Aligns the tolerance text with the top of the main dimension text.
         /// </summary>
-        public EntityObject Item
-        {
-            get { return this.item; }
-        }
-
-        #endregion
+        Top = 2
     }
 }

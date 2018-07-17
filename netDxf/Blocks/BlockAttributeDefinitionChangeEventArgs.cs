@@ -26,24 +26,24 @@ using netDxf.Entities;
 namespace netDxf.Blocks
 {
     /// <summary>
-    /// Represents the arguments thrown when an entity is added ore removed from a <see cref="Block">Block</see>.
+    /// Represents the arguments thrown when an attribute definition is added ore removed from a <see cref="Block">Block</see>.
     /// </summary>
-    public class BlockEntityChangeEventArgs :
+    public class BlockAttributeDefinitionChangeEventArgs :
         EventArgs
     {
         #region private fields
 
-        private readonly EntityObject item;
+        private readonly AttributeDefinition item;
 
         #endregion
 
         #region constructor
 
         /// <summary>
-        /// Initializes a new instance of <c>BlockEntityChangeEventArgs</c>.
+        /// Initializes a new instance of <c>BlockAttributeDefinitionChangeEventArgs</c>.
         /// </summary>
-        /// <param name="item">The entity that is being added or removed from the block.</param>
-        public BlockEntityChangeEventArgs(EntityObject item)
+        /// <param name="item">The attribute definition that is being added or removed from the block.</param>
+        public BlockAttributeDefinitionChangeEventArgs(AttributeDefinition item)
         {
             this.item = item;
         }
@@ -53,9 +53,9 @@ namespace netDxf.Blocks
         #region public properties
 
         /// <summary>
-        /// Gets the entity that is being added or removed.
+        /// Gets the attribute definition that is being added or removed.
         /// </summary>
-        public EntityObject Item
+        public AttributeDefinition Item
         {
             get { return this.item; }
         }

@@ -33,6 +33,10 @@ namespace netDxf.Blocks
     /// <summary>
     /// Represents a block definition.
     /// </summary>
+    /// <remarks>
+    /// Avoid to add any kind of dimensions to the block's entities list, programs loading DXF files with them seems to behave in a weird fashion.
+    /// This is not applicable when working in the Model and Paper space blocks.
+    /// </remarks>
     public class Block :
         TableObject
     {
@@ -76,26 +80,26 @@ namespace netDxf.Blocks
                 ae(this, new BlockEntityChangeEventArgs(item));
         }
 
-        public delegate void AttributeDefinitionAddedEventHandler(Block sender, BlockEntityChangeEventArgs e);
+        public delegate void AttributeDefinitionAddedEventHandler(Block sender, BlockAttributeDefinitionChangeEventArgs e);
 
         public event AttributeDefinitionAddedEventHandler AttributeDefinitionAdded;
 
-        protected virtual void OnAttributeDefinitionAddedEvent(EntityObject item)
+        protected virtual void OnAttributeDefinitionAddedEvent(AttributeDefinition item)
         {
             AttributeDefinitionAddedEventHandler ae = this.AttributeDefinitionAdded;
             if (ae != null)
-                ae(this, new BlockEntityChangeEventArgs(item));
+                ae(this, new BlockAttributeDefinitionChangeEventArgs(item));
         }
 
-        public delegate void AttributeDefinitionRemovedEventHandler(Block sender, BlockEntityChangeEventArgs e);
+        public delegate void AttributeDefinitionRemovedEventHandler(Block sender, BlockAttributeDefinitionChangeEventArgs e);
 
         public event AttributeDefinitionRemovedEventHandler AttributeDefinitionRemoved;
 
-        protected virtual void OnAttributeDefinitionRemovedEvent(EntityObject item)
+        protected virtual void OnAttributeDefinitionRemovedEvent(AttributeDefinition item)
         {
             AttributeDefinitionRemovedEventHandler ae = this.AttributeDefinitionRemoved;
             if (ae != null)
-                ae(this, new BlockEntityChangeEventArgs(item));
+                ae(this, new BlockAttributeDefinitionChangeEventArgs(item));
         }
 
         #endregion
@@ -109,9 +113,8 @@ namespace netDxf.Blocks
         private BlockTypeFlags flags;
         private Layer layer;
         private Vector3 origin;
-        private readonly bool readOnly;
         private readonly string xrefFile;
-        private readonly bool space;
+        private bool forInternalUse;
 
         #endregion
 
@@ -171,7 +174,6 @@ namespace netDxf.Blocks
             if (string.IsNullOrEmpty(xrefFile))
                 throw new ArgumentNullException(nameof(xrefFile));
 
-            this.readOnly = true;
             this.xrefFile = xrefFile;
             this.flags = BlockTypeFlags.XRef | BlockTypeFlags.ResolvedExternalReference;
             if (overlay)
@@ -215,8 +217,7 @@ namespace netDxf.Blocks
                 throw new ArgumentNullException(nameof(name));
 
             this.IsReserved = string.Equals(name, DefaultModelSpaceName, StringComparison.OrdinalIgnoreCase);
-            this.space = this.IsReserved || name.StartsWith(DefaultPaperSpaceName, StringComparison.OrdinalIgnoreCase);
-
+            this.forInternalUse = name.StartsWith("*");
             this.description = string.Empty;
             this.origin = Vector3.Zero;
             this.layer = Layer.Default;
@@ -253,7 +254,7 @@ namespace netDxf.Blocks
             get { return base.Name; }
             set
             {
-                if (base.Name.StartsWith("*"))
+                if (this.forInternalUse)
                     throw new ArgumentException("Blocks for internal use cannot be renamed.", nameof(value));
                 base.Name = value;
                 this.Record.Name = value;
@@ -266,27 +267,16 @@ namespace netDxf.Blocks
         public string Description
         {
             get { return this.description; }
-            set
-            {
-                if (this.readOnly)
-                    return;
-                this.description = string.IsNullOrEmpty(value) ? string.Empty : value;
-            }
+            set { this.description = string.IsNullOrEmpty(value) ? string.Empty : value; }
         }
 
         /// <summary>
-        /// Gets or sets the block origin in world coordinates.
+        /// Gets or sets the block origin in world coordinates, it is recommended to always keep this value to the default Vector3.Zero.
         /// </summary>
-        /// <remarks>Always keep this value to the default Vector3.Zero.</remarks>
         public Vector3 Origin
         {
             get { return this.origin; }
-            set
-            {
-                if (this.readOnly)
-                    return;
-                this.origin = value;
-            }
+            set { this.origin = value; }
         }
 
         /// <summary>
@@ -316,7 +306,10 @@ namespace netDxf.Blocks
         /// <summary>
         /// Gets the <see cref="AttributeDefinition">entity</see> list of the block.
         /// </summary>
-        /// <remarks>Null or attribute definitions already owned by another block or document cannot be added to the list.</remarks>
+        /// <remarks>
+        /// Null or attribute definitions already owned by another block or document cannot be added to the list.
+        /// Additionally Paper Space blocks do not contain attribute definitions.
+        /// </remarks>
         public AttributeDefinitionDictionary AttributeDefinitions
         {
             get { return this.attributes; }
@@ -341,23 +334,6 @@ namespace netDxf.Blocks
         }
 
         /// <summary>
-        /// Checks if the block should not be edited.
-        /// </summary>
-        /// <remarks>
-        /// Any change made to a read only block will not be applied.
-        /// This is the case of externally referenced blocks.
-        /// </remarks>
-        public bool ReadOnly
-        {
-            get { return this.readOnly; }
-        }
-
-        public bool Space
-        {
-            get { return this.space; }
-        }
-
-        /// <summary>
         /// Gets the external reference path name.
         /// </summary>
         /// <remarks>
@@ -375,6 +351,14 @@ namespace netDxf.Blocks
         {
             get { return this.flags.HasFlag(BlockTypeFlags.XRef); }
         }
+
+        ///// <summary>
+        ///// All blocks that starts with "*" are for internal use only.
+        ///// </summary>
+        //public bool IsForInternalUseOnly
+        //{
+        //    get { return this.forInternalUse; }
+        //}
 
         #endregion
 
@@ -406,21 +390,42 @@ namespace netDxf.Blocks
 
             Block block = new Block(name) {Origin = doc.DrawingVariables.InsBase};
             block.Record.Units = doc.DrawingVariables.InsUnits;
-            IReadOnlyList<DxfObject> entities = doc.Layouts.GetReferences(Layout.ModelSpaceName);
-            foreach (DxfObject dxfObject in entities)
+
+            foreach (EntityObject entity in doc.Layouts[Layout.ModelSpaceName].AssociatedBlock.Entities)
             {
-                EntityObject entity = dxfObject as EntityObject;
-                if (entity == null)
-                    continue;
-                EntityObject clone = (EntityObject) entity.Clone();
-                AttributeDefinition attdef = clone as AttributeDefinition;
-                if (attdef != null)
+                // entities with reactors will be handle by the entity that controls it
+                // and will not be added to the block automatically
+                if (entity.Reactors.Count > 0)
                 {
-                    block.AttributeDefinitions.Add(attdef);
-                    continue;
+                    // only entities that belong only to groups will be added
+                    // blocks cannot contain groups
+                    bool add = false;
+                    foreach (DxfObject reactor in entity.Reactors)
+                    {
+                        Group group = reactor as Group;
+                        if (group != null)
+                        {
+                            add = true;
+                        }
+                        else
+                        {
+                            add = false; // at least one reactor is not a group, skip the entity
+                            break;
+                        }
+                    }
+                    if(!add) continue;
                 }
+
+                EntityObject clone = (EntityObject) entity.Clone();
                 block.Entities.Add(clone);
             }
+
+            foreach (AttributeDefinition attdef in doc.Layouts[Layout.ModelSpaceName].AssociatedBlock.AttributeDefinitions.Values)
+            {
+                AttributeDefinition clone = (AttributeDefinition) attdef.Clone();
+                block.AttributeDefinitions.Add(clone);
+            }
+
             return block;
         }
 
@@ -489,11 +494,15 @@ namespace netDxf.Blocks
             dwg.DrawingVariables.InsBase = this.origin;
             dwg.DrawingVariables.InsUnits = this.Record.Units;
 
-            foreach (EntityObject entity in this.entities)
-                dwg.AddEntity((EntityObject) entity.Clone());
-
             foreach (AttributeDefinition attdef in this.attributes.Values)
-                dwg.AddEntity((EntityObject) attdef.Clone());
+            {
+                if(!dwg.Layouts[Layout.ModelSpaceName].AssociatedBlock.AttributeDefinitions.ContainsTag(attdef.Tag))
+                    dwg.Layouts[Layout.ModelSpaceName].AssociatedBlock.AttributeDefinitions.Add((AttributeDefinition) attdef.Clone());
+            }
+
+            foreach (EntityObject entity in this.entities)
+                dwg.Layouts[Layout.ModelSpaceName].AssociatedBlock.Entities.Add((EntityObject) entity.Clone());
+
 
             return dwg.Save(file, isBinary);
         }
@@ -510,6 +519,7 @@ namespace netDxf.Blocks
         {
             base.SetName(newName, checkName);
             this.Record.Name = newName;
+            this.forInternalUse = newName.StartsWith("*");
         }
 
         #endregion
@@ -518,8 +528,8 @@ namespace netDxf.Blocks
 
         private static TableObject Clone(Block block, string newName, bool checkName)
         {
-            if(block.ReadOnly)
-                throw new ArgumentException("Read only blocks cannot be cloned.", nameof(block));
+            if (block.Record.Layout != null && !IsValidName(newName))
+                throw new ArgumentException("*Model_Space and *Paper_Space# blocks can only be cloned with a new valid name.");
 
             Block copy = new Block(newName, null, null, checkName)
             {
@@ -598,9 +608,7 @@ namespace netDxf.Blocks
                 e.Cancel = true;
             else if (this.entities.Contains(e.Item))
                 e.Cancel = true;
-            else if (this.readOnly)
-                e.Cancel = true;
-            else if (e.Item is AttributeDefinition)
+            else if (this.Flags.HasFlag(BlockTypeFlags.ExternallyDependent))
                 e.Cancel = true;
             else if (e.Item.Owner != null)
             {
@@ -616,8 +624,23 @@ namespace netDxf.Blocks
 
         private void Entities_AddItem(EntityCollection sender, EntityCollectionEventArgs e)
         {
-            if (this.readOnly)
-                return;
+            if (e.Item.Type == EntityType.Leader)
+            {
+                Leader leader = (Leader) e.Item;
+                if (leader.Annotation != null)
+                {
+                    this.entities.Add(leader.Annotation);
+                }
+            }
+            if (e.Item.Type == EntityType.Hatch)
+            {
+                Hatch hatch = (Hatch) e.Item;
+                foreach (HatchBoundaryPath path in hatch.BoundaryPaths)
+                {
+                    foreach (EntityObject entity in path.Entities)
+                        this.entities.Add(entity);
+                }
+            }
             this.OnEntityAddedEvent(e.Item);
             e.Item.Owner = this;
 
@@ -629,13 +652,11 @@ namespace netDxf.Blocks
                 e.Cancel = true;
             else
                 // only items owned by the actual block can be removed
-                e.Cancel = !ReferenceEquals(e.Item.Owner, this) || this.readOnly;
+                e.Cancel = !ReferenceEquals(e.Item.Owner, this);
         }
 
         private void Entities_RemoveItem(EntityCollection sender, EntityCollectionEventArgs e)
         {
-            if (this.readOnly)
-                return;
             this.OnEntityRemovedEvent(e.Item);
             e.Item.Owner = null;
         }
@@ -647,10 +668,14 @@ namespace netDxf.Blocks
         private void AttributeDefinitions_BeforeAddItem(AttributeDefinitionDictionary sender, AttributeDefinitionDictionaryEventArgs e)
         {
             // attributes with the same tag, and attribute definitions already owned by another Block are not allowed in the attributes list.
-            if (this.readOnly)
+            if (e.Item == null)
                 e.Cancel = true;
-            //else if (this.space)
-            //    e.Cancel = true;
+            else if (this.Flags.HasFlag(BlockTypeFlags.ExternallyDependent))
+                e.Cancel = true;
+            else if(this.Name.StartsWith(DefaultPaperSpaceName)) // paper space blocks do not contain attribute definitions
+                e.Cancel = true;
+            else if (this.attributes.ContainsTag(e.Item.Tag))
+                e.Cancel = true;
             else if (e.Item.Owner != null)
             {
                 // if the block does not belong to a document, all attribute definitions which owner is not null will be rejected
@@ -665,11 +690,6 @@ namespace netDxf.Blocks
 
         private void AttributeDefinitions_ItemAdd(AttributeDefinitionDictionary sender, AttributeDefinitionDictionaryEventArgs e)
         {
-            if (this.readOnly)
-                return;
-            if(this.space)
-                return;
-
             this.OnAttributeDefinitionAddedEvent(e.Item);
             e.Item.Owner = this;
             // the block has attributes
@@ -679,16 +699,11 @@ namespace netDxf.Blocks
         private void AttributeDefinitions_BeforeRemoveItem(AttributeDefinitionDictionary sender, AttributeDefinitionDictionaryEventArgs e)
         {
             // only attribute definitions owned by the actual block can be removed
-            e.Cancel = !ReferenceEquals(e.Item.Owner, this) || this.readOnly;
+            e.Cancel = !ReferenceEquals(e.Item.Owner, this) ;
         }
 
         private void AttributeDefinitions_RemoveItem(AttributeDefinitionDictionary sender, AttributeDefinitionDictionaryEventArgs e)
         {
-            if (this.readOnly)
-                return;
-            if(this.space)
-                return;
-
             this.OnAttributeDefinitionRemovedEvent(e.Item);
             e.Item.Owner = null;
             if (this.attributes.Count == 0)

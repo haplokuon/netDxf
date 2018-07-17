@@ -329,6 +329,15 @@ namespace netDxf.Entities
                 Offset = this.offset
             };
 
+            foreach (DimensionStyleOverride styleOverride in this.StyleOverrides.Values)
+            {
+                object copy;
+                ICloneable value = styleOverride.Value as ICloneable;
+                copy = value != null ? value.Clone() : styleOverride.Value;
+
+                entity.StyleOverrides.Add(new DimensionStyleOverride(styleOverride.Type, copy));
+            }
+
             foreach (XData data in this.XData.Values)
                 entity.XData.Add((XData) data.Clone());
 

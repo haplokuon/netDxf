@@ -1,6 +1,15 @@
 ## Change history
 
 
+### [2018/7/17]
+* Cloning a dimension and leader entities will also clone the style overrides, if there are any.
+* Cloning an associative hatch will also result in another associative hatch. It will clone the entities that makes up the boundaries.
+* AttributeDefinitions no longer derive from EntityObject they are handled directly through the AttributeDefinitions dictionary of the block.
+* Deleted the property AttributeDefinitions of the DxfDocument, attribute definitions are handled directly through the block, also attribute definitions in the "Model" layout.
+* (fixed) Error when cloning ShapeStyle objects.
+* (fixed) The Leader Update method will take the style overrides into account.
+
+
 ### [2018/7/14]
 * Revised the Leader read and write process to accommodate the latest changes made to them.
 * Deleted the Leader property TextVerticalPosition, this value is controlled by the property TextVerticalPlacement of the dimension style associated with the leader.

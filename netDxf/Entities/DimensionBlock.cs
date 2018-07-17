@@ -601,6 +601,11 @@ namespace netDxf.Entities
 
         #region public methods
 
+        public static Block Build(Dimension dim)
+        {
+            return Build(dim, "DimBlock");
+        }
+
         public static Block Build(Dimension dim, string name)
         {
             Block block;
@@ -645,12 +650,8 @@ namespace netDxf.Entities
 
             Vector2 ref1 = dim.FirstReferencePoint;
             Vector2 ref2 = dim.SecondReferencePoint;
-            Vector2 textRef = dim.TextReferencePoint;
 
-            //Vector2 vec = Vector2.Normalize(dim.DimLinePosition - ref2);
-            //Vector2 midRef = Vector2.MidPoint(ref1, ref2);
             Vector2 vec = Vector2.Normalize(Vector2.Rotate(Vector2.UnitY, dimRotation));
-           // Vector2 midDimLine = midRef + dim.Offset * vec;
             Vector2 dimRef1 = dim.DimLinePosition + measure * Vector2.Perpendicular(vec);
             Vector2 dimRef2 = dim.DimLinePosition;
 
@@ -679,13 +680,13 @@ namespace netDxf.Entities
                 entities.Add(ExtensionLine(ref2 + dimexo*dirRef2, dimRef2 + dimexe*dirRef2, style, style.ExtLine2Linetype));
 
             // dimension text
+            Vector2 textRef = Vector2.MidPoint(dimRef1, dimRef2);
             double textRot = dimRotation;
             if (textRot > MathHelper.HalfPI && textRot <= MathHelper.ThreeHalfPI)
                 textRot += MathHelper.PI;
 
             List<string> texts = FormatDimensionText(measure, dim.DimensionType, dim.UserText, style, dim.Owner);
-
-            MText mText = DimensionText(Vector2.Polar(textRef, style.TextOffset*style.DimScaleOverall, textRot + MathHelper.HalfPI), MTextAttachmentPoint.BottomCenter, textRot, texts[0], style);
+            MText mText = DimensionText(Vector2.Polar(textRef, style.TextOffset * style.DimScaleOverall, textRot + MathHelper.HalfPI), MTextAttachmentPoint.BottomCenter, textRot, texts[0], style);
             if (mText != null)
                 entities.Add(mText);
 
@@ -712,7 +713,6 @@ namespace netDxf.Entities
 
             Vector2 ref1 = dim.FirstReferencePoint;
             Vector2 ref2 = dim.SecondReferencePoint;
-            Vector2 textRef = dim.TextReferencePoint;
             Vector2 vec = Vector2.Normalize(dim.DimLinePosition - ref2);
             Vector2 dimRef1 = ref1 + dim.Offset*vec;
             Vector2 dimRef2 = dim.DimLinePosition;
@@ -741,6 +741,7 @@ namespace netDxf.Entities
                 entities.Add(ExtensionLine(ref2 + dimexo * vec, dimRef2 + dimexe * vec, style, style.ExtLine2Linetype));
 
             // dimension text
+            Vector2 textRef = Vector2.MidPoint(dimRef1, dimRef2);
             double textRot = refAngle;
             if (textRot > MathHelper.HalfPI && textRot <= MathHelper.ThreeHalfPI)
                 textRot += MathHelper.PI;
@@ -778,8 +779,8 @@ namespace netDxf.Entities
             Vector2 ref2End = dim.EndSecondLine;
             Vector2 center = dim.CenterPoint;
 
-            double startAngle = Vector2.Angle(center, ref1End);
-            double endAngle = Vector2.Angle(center, ref2End);
+            double startAngle = Vector2.Angle(ref1Start, ref1End);
+            double endAngle = Vector2.Angle(ref2Start, ref2End);
 
             double midRot = startAngle + measure*MathHelper.DegToRad*0.5;
 

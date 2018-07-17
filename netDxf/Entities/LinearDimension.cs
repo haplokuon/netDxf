@@ -37,7 +37,6 @@ namespace netDxf.Entities
 
         private Vector2 firstRefPoint;
         private Vector2 secondRefPoint;
-        //private Vector2 midDimLine;
         private double offset;
         private double rotation;
 
@@ -282,72 +281,6 @@ namespace netDxf.Entities
             }
         }
 
-        //public void SetDimensionLinePosition(Vector2 point)
-        //{
-        //    Vector2 ref1 = this.firstRefPoint;
-        //    Vector2 ref2 = this.secondRefPoint;
-        //    Vector2 midRef = Vector2.MidPoint(ref1, ref2);
-
-        //    Vector2 offsetDir = Vector2.Normalize(Vector2.Rotate(Vector2.UnitY, this.Rotation * MathHelper.DegToRad));
-        //    Vector2 prevMidDimLine = midRef + this.offset * offsetDir;
-        //    Vector2 refDir = Vector2.Normalize(this.secondRefPoint - this.firstRefPoint);
-
-        //    //Vector2 midRef = Vector2.MidPoint(this.firstRefPoint, this.secondRefPoint);
-        //    Vector2 dimDir1 = new Vector2(Math.Cos(this.rotation * MathHelper.DegToRad), Math.Sin(this.rotation * MathHelper.DegToRad));
-        //    // Vector2 midDimLine2 = midRef + this.offset * Vector2.Normalize(Vector2.Rotate(Vector2.UnitY, this.rotation));
-
-        //    double t = Vector2.DotProduct(dimDir1, point - prevMidDimLine);
-        //    Vector2 pPrime = prevMidDimLine + t * dimDir1;
-        //    Vector2 vec = point - pPrime;
-
-        //    double crossY = Vector2.CrossProduct(refDir, Vector2.UnitY);
-        //    double cross = Vector2.CrossProduct(refDir, point - this.firstRefPoint);
-        //    if (cross < 0)
-        //    {
-        //        Vector2 tmp = this.firstRefPoint;
-        //        this.firstRefPoint = this.secondRefPoint;
-        //        this.secondRefPoint = tmp;
-        //        this.Rotation += 180;
-        //        //if (crossY <= 0)
-        //        //    this.Rotation = this.rotation > 180.0 ? this.rotation - 180.0 : this.rotation;
-        //        //else
-        //        //    this.Rotation = this.rotation <= 180.0 ? this.rotation + 180.0 : this.rotation;
-        //    }
-        //    else
-        //    {
-        //        //if (crossY <= 0)
-        //        //    this.Rotation = this.rotation <= 180.0 ? this.rotation + 180.0 : this.rotation;
-        //        //else
-        //        //    this.Rotation = this.rotation > 180.0 ? this.rotation - 180.0 : this.rotation;
-        //    }
-
-        //    this.offset = MathHelper.PointLineDistance(midRef, point, dimDir1);
-
-        //    double dimRotation = this.rotation * MathHelper.DegToRad;
-
-
-        //    Vector2 midDimLine = midRef + this.offset * Vector2.Normalize(Vector2.Rotate(Vector2.UnitY, dimRotation));
-
-
-
-        //    //Vector2 midDimLine = Vector2.MidPoint(this.firstRefPoint, this.secondRefPoint) + this.offset * Vector2.Normalize(Vector2.Rotate(Vector2.UnitX, this.rotation));
-
-
-
-        //    this.defPoint = midDimLine - this.Measurement * 0.5 * Vector2.Perpendicular(Vector2.Normalize(vec));
-
-        //    DimensionStyleFitTextMove moveText = this.Style.FitTextMove;
-        //    DimensionStyleOverride styleOverride;
-        //    if (this.StyleOverrides.TryGetValue(DimensionStyleOverrideType.FitTextMove, out styleOverride))
-        //    {
-        //        moveText = (DimensionStyleFitTextMove)styleOverride.Value;
-        //    }
-        //    if (moveText == DimensionStyleFitTextMove.BesideDimLine)
-        //    {
-        //        if (!this.TextPositionManuallySet) this.textRefPoint += vec;
-        //    }
-        //}
-
         #endregion
 
         #region overrides
@@ -366,7 +299,7 @@ namespace netDxf.Entities
             Vector2 vec = Vector2.Normalize(Vector2.Rotate(Vector2.UnitY, dimRotation));
             Vector2 midDimLine = midRef + this.offset * vec;
             double cross = Vector2.CrossProduct(ref2 - ref1, vec);
-            if (cross < 0)
+            if (cross < 0) // Todo: should it go to the SetDimensionLinePosition?
             {
                 this.firstRefPoint = ref2;
                 this.secondRefPoint = ref1;
@@ -437,6 +370,15 @@ namespace netDxf.Entities
                 Offset = this.offset,
                 Elevation = this.Elevation
             };
+
+            foreach (DimensionStyleOverride styleOverride in this.StyleOverrides.Values)
+            {
+                object copy;
+                ICloneable value = styleOverride.Value as ICloneable;
+                copy = value != null ? value.Clone() : styleOverride.Value;
+
+                entity.StyleOverrides.Add(new DimensionStyleOverride(styleOverride.Type, copy));
+            }
 
             foreach (XData data in this.XData.Values)
                 entity.XData.Add((XData) data.Clone());

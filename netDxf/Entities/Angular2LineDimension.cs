@@ -196,7 +196,6 @@ namespace netDxf.Entities
             }
         }
 
-
         /// <summary>
         /// Start <see cref="Vector2">point</see> of the first line that defines the angle to measure in local coordinates.
         /// </summary>
@@ -303,6 +302,19 @@ namespace netDxf.Entities
 
             if (updateRefs)
             {
+                double cross = Vector2.CrossProduct(this.EndFirstLine - this.StartFirstLine, this.EndSecondLine - this.StartSecondLine);
+                if (cross < 0)
+                {
+                    Vector2 temp1 = this.startFirstLine;
+                    Vector2 temp2 = this.endFirstLine;
+
+                    this.startFirstLine = this.startSecondLine;
+                    this.endFirstLine = this.endSecondLine;
+
+                    this.startSecondLine = temp1;
+                    this.endSecondLine = temp2;
+                }
+
                 Vector2 ref1Start = this.StartFirstLine;
                 Vector2 ref1End = this.EndFirstLine;
                 Vector2 ref2Start = this.StartSecondLine;
@@ -344,7 +356,7 @@ namespace netDxf.Entities
             double startAngle = Vector2.Angle(center, this.endFirstLine);
             double midRot = startAngle + measure * 0.5;
             Vector2 midDim = Vector2.Polar(center, this.offset, midRot);
-            this.arcDefinitionPoint = midDim;
+            this.arcDefinitionPoint = point;
 
             DimensionStyleFitTextMove moveText = this.Style.FitTextMove;
             DimensionStyleOverride styleOverride;
@@ -354,7 +366,7 @@ namespace netDxf.Entities
             }
             if (moveText == DimensionStyleFitTextMove.BesideDimLine)
             {
-                if (!this.TextPositionManuallySet)
+                if (this.TextPositionManuallySet)
                 {
                     Vector2 textDir = this.textRefPoint - center;
                     Vector2 vecText = center + this.offset * Vector2.Normalize(textDir);
@@ -386,13 +398,6 @@ namespace netDxf.Entities
             double midRot = startAngle + measure * 0.5;
             Vector2 midDim = Vector2.Polar(center, this.offset, midRot);
 
-            double cross = Vector2.CrossProduct(this.endSecondLine - this.startSecondLine, midDim);
-            if (cross >= 0)
-            {
-                Vector2 tmp = this.startSecondLine;
-                this.startSecondLine = this.endSecondLine;
-                this.endSecondLine = tmp;
-            }
             this.defPoint = this.endSecondLine;
             
             if (this.TextPositionManuallySet)
@@ -462,6 +467,15 @@ namespace netDxf.Entities
                 Offset = this.offset,
                 arcDefinitionPoint = this.arcDefinitionPoint
             };
+
+            foreach (DimensionStyleOverride styleOverride in this.StyleOverrides.Values)
+            {
+                object copy;
+                ICloneable value = styleOverride.Value as ICloneable;
+                copy = value != null ? value.Clone() : styleOverride.Value;
+
+                entity.StyleOverrides.Add(new DimensionStyleOverride(styleOverride.Type, copy));
+            }
 
             foreach (XData data in this.XData.Values)
                 entity.XData.Add((XData) data.Clone());

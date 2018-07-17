@@ -20,46 +20,35 @@
 
 #endregion
 
-using System;
-using netDxf.Entities;
-
-namespace netDxf.Blocks
+namespace netDxf.Tables
 {
     /// <summary>
-    /// Represents the arguments thrown when an entity is added ore removed from a <see cref="Block">Block</see>.
+    /// Defines the method for calculating the tolerance.
     /// </summary>
-    public class BlockEntityChangeEventArgs :
-        EventArgs
+    /// <remarks>
+    /// The Basic method for displaying tolerances in dimensions is not available,
+    /// use a negative number for the <c>TextOffet</c> of the dimension style. The result is exactly the same.
+    /// </remarks>
+    public enum DimensionStyleTolerancesDisplayMethod
     {
-        #region private fields
-
-        private readonly EntityObject item;
-
-        #endregion
-
-        #region constructor
+        /// <summary>
+        /// Does not add a tolerance.
+        /// </summary>
+        None,
 
         /// <summary>
-        /// Initializes a new instance of <c>BlockEntityChangeEventArgs</c>.
+        /// Adds a plus/minus expression of tolerance in which a single value of variation is applied to the dimension measurement.
         /// </summary>
-        /// <param name="item">The entity that is being added or removed from the block.</param>
-        public BlockEntityChangeEventArgs(EntityObject item)
-        {
-            this.item = item;
-        }
-
-        #endregion
-
-        #region public properties
+        Symmetrical,
 
         /// <summary>
-        /// Gets the entity that is being added or removed.
+        /// Adds a plus/minus tolerance expression. Different plus and minus values of variation are applied to the dimension measurement.
         /// </summary>
-        public EntityObject Item
-        {
-            get { return this.item; }
-        }
+        Deviation,
 
-        #endregion
+        /// <summary>
+        /// Creates a limit dimension. A maximum and a minimum value are displayed, one over the other.
+        /// </summary>
+        Limits,
     }
 }

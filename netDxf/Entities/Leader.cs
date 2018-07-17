@@ -844,10 +844,18 @@ namespace netDxf.Entities
                 hasHookline = this.hasHookline // do not call directly the property, the vertexes list already includes it if it has a hook line
             };
 
+            foreach (DimensionStyleOverride styleOverride in this.StyleOverrides.Values)
+            {
+                object copy;
+                ICloneable value = styleOverride.Value as ICloneable;
+                copy = value != null ? value.Clone() : styleOverride.Value;
+
+                entity.StyleOverrides.Add(new DimensionStyleOverride(styleOverride.Type, copy));
+            }
+
             foreach (XData data in this.XData.Values)
                 entity.XData.Add((XData) data.Clone());
 
-            //entity.Update();
             return entity;
         }
 
