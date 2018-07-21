@@ -356,26 +356,24 @@ namespace netDxf.Entities
             double startAngle = Vector2.Angle(center, this.endFirstLine);
             double midRot = startAngle + measure * 0.5;
             Vector2 midDim = Vector2.Polar(center, this.offset, midRot);
-            this.arcDefinitionPoint = point;
+            this.arcDefinitionPoint = midDim;
 
-            DimensionStyleFitTextMove moveText = this.Style.FitTextMove;
-            DimensionStyleOverride styleOverride;
-            if (this.StyleOverrides.TryGetValue(DimensionStyleOverrideType.FitTextMove, out styleOverride))
+            if (!this.TextPositionManuallySet)
             {
-                moveText = (DimensionStyleFitTextMove)styleOverride.Value;
-            }
-            if (moveText == DimensionStyleFitTextMove.BesideDimLine)
-            {
-                if (this.TextPositionManuallySet)
+                DimensionStyleOverride styleOverride;
+                double textGap = this.Style.TextOffset;
+                if (this.StyleOverrides.TryGetValue(DimensionStyleOverrideType.TextOffset, out styleOverride))
                 {
-                    Vector2 textDir = this.textRefPoint - center;
-                    Vector2 vecText = center + this.offset * Vector2.Normalize(textDir);
-                    this.textRefPoint += vecText;
+                    textGap = (double)styleOverride.Value;
                 }
-                else
+                double scale = this.Style.DimScaleOverall;
+                if (this.StyleOverrides.TryGetValue(DimensionStyleOverrideType.DimScaleOverall, out styleOverride))
                 {
-                    if (updateRefs) this.textRefPoint = midDim;
+                    scale = (double)styleOverride.Value;
                 }
+
+                double gap = textGap * scale;
+                this.textRefPoint = midDim + gap * Vector2.Normalize(midDim - center);
             }
         }
 
@@ -388,6 +386,8 @@ namespace netDxf.Entities
         /// </summary>
         protected override void CalculteReferencePoints()
         {
+            DimensionStyleOverride styleOverride;
+
             double measure = this.Measurement * MathHelper.DegToRad ;
             Vector2 center = this.CenterPoint;
 
@@ -399,11 +399,12 @@ namespace netDxf.Entities
             Vector2 midDim = Vector2.Polar(center, this.offset, midRot);
 
             this.defPoint = this.endSecondLine;
-            
+            this.arcDefinitionPoint = midDim;
+
+
             if (this.TextPositionManuallySet)
             {
                 DimensionStyleFitTextMove moveText = this.Style.FitTextMove;
-                DimensionStyleOverride styleOverride;
                 if (this.StyleOverrides.TryGetValue(DimensionStyleOverrideType.FitTextMove, out styleOverride))
                 {
                     moveText = (DimensionStyleFitTextMove)styleOverride.Value;
@@ -416,8 +417,19 @@ namespace netDxf.Entities
             }
             else
             {
-                this.textRefPoint = midDim;
-                this.arcDefinitionPoint = this.TextReferencePoint;
+                double textGap = this.Style.TextOffset;
+                if (this.StyleOverrides.TryGetValue(DimensionStyleOverrideType.TextOffset, out styleOverride))
+                {
+                    textGap = (double)styleOverride.Value;
+                }
+                double scale = this.Style.DimScaleOverall;
+                if (this.StyleOverrides.TryGetValue(DimensionStyleOverrideType.DimScaleOverall, out styleOverride))
+                {
+                    scale = (double)styleOverride.Value;
+                }
+
+                double gap = textGap * scale;
+                this.textRefPoint = midDim + gap * Vector2.Normalize(midDim-center);
             }
         }
 

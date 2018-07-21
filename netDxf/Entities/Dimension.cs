@@ -160,14 +160,8 @@ namespace netDxf.Entities
         #region public properties
 
         /// <summary>
-        /// Gets or sets if the text reference point has been set by the user. Set to false to reset the text to its original position.
+        /// Gets or sets if the text reference point has been set by the user. Set to false to reset the dimension text to its original position.
         /// </summary>
-        /// <remarks>
-        /// This value is related to the style property <c>FitTextMove</c>.
-        /// If the style FitTextMove is set to BesidesDimLine the text reference point will take precedence over the offset value to place the dimension line.
-        /// In case of Ordinate dimensions if the text has been manually set the text position will take precedence over the EndLeaderPoint only if FitTextMove
-        /// has been set to OverDimLineWithoutLeader.
-        /// </remarks>
         public bool TextPositionManuallySet
         {
             get { return this.userTextPosition; }
@@ -177,6 +171,12 @@ namespace netDxf.Entities
         /// <summary>
         /// Gets or sets the text reference <see cref="Vector2">position</see>, the middle point of dimension text in local coordinates.
         /// </summary>
+        /// <remarks>
+        /// This value is related to the style property <c>FitTextMove</c>.
+        /// If the style FitTextMove is set to BesidesDimLine the text reference point will take precedence over the offset value to place the dimension line.
+        /// In case of Ordinate dimensions if the text has been manually set the text position will take precedence over the EndLeaderPoint only if FitTextMove
+        /// has been set to OverDimLineWithoutLeader.
+        /// </remarks>
         public Vector2 TextReferencePoint
         {
             get { return this.textRefPoint; }

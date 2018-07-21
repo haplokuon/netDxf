@@ -178,8 +178,6 @@ namespace netDxf.Entities
             this.Style = style;
 
             double angle = rotation * MathHelper.DegToRad;
-            //Vector2 refCenter = origin;
-            //Vector2 startPoint = refCenter + Vector2.Rotate(featurePoint, angle);
 
             if (this.Axis == OrdinateDimensionAxis.X) angle += MathHelper.HalfPI;
             this.secondPoint = Vector2.Polar(featurePoint, length, angle);
@@ -269,6 +267,10 @@ namespace netDxf.Entities
                 {
                     this.secondPoint = this.textRefPoint;
                 }
+            }
+            else
+            {
+                this.textRefPoint = this.secondPoint;
             }
         }
 

@@ -1,7 +1,7 @@
-﻿#region netDxf library, Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+﻿#region netDxf library, Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
 
 //                        netDxf library
-// Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -42,6 +42,7 @@ namespace netDxf.Units
         private string gradiansSymbol;
         private string feetSymbol;
         private string inchesSymbol;
+        private double fractionHeigthScale;
         private FractionFormatType fractionType;
         private bool supressLinearLeadingZeros;
         private bool supressLinearTrailingZeros;
@@ -70,6 +71,7 @@ namespace netDxf.Units
             this.gradiansSymbol = "g";
             this.feetSymbol = "\'";
             this.inchesSymbol = "\"";
+            this.fractionHeigthScale = 1.0;
             this.fractionType = FractionFormatType.Horizontal;
             this.supressLinearLeadingZeros = false;
             this.supressLinearTrailingZeros = false;
@@ -193,6 +195,20 @@ namespace netDxf.Units
         {
             get { return this.inchesSymbol; }
             set { this.inchesSymbol = value; }
+        }
+
+        /// <summary>
+        /// Gets or sets the scale of fractions relative to dimension text height.
+        /// </summary>
+        public double FractionHeightScale
+        {
+            get { return this.fractionHeigthScale; }
+            set
+            {
+                if (value <= 0)
+                    throw new ArgumentOutOfRangeException(nameof(value), value, "The fraction height scale must be greater than zero.");
+                this.fractionHeigthScale = value;
+            }
         }
 
         /// <summary>

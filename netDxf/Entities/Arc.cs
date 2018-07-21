@@ -1,7 +1,7 @@
-﻿#region netDxf library, Copyright (C) 2009-2017 Daniel Carvajal (haplokuon@gmail.com)
+﻿#region netDxf library, Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
 
 //                        netDxf library
-// Copyright (C) 2009-2017 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -146,7 +146,7 @@ namespace netDxf.Entities
         /// </summary>
         /// <param name="precision">Number of divisions.</param>
         /// <returns>A list vertexes that represents the arc expressed in object coordinate system.</returns>
-        public IEnumerable<Vector2> PolygonalVertexes(int precision)
+        public List<Vector2> PolygonalVertexes(int precision)
         {
             if (precision < 2)
                 throw new ArgumentOutOfRangeException(nameof(precision), precision, "The arc precision must be greater or equal to three");

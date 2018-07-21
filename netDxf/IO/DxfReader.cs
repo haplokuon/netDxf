@@ -1393,6 +1393,8 @@ namespace netDxf.IO
             double dimgap = defaultDim.TextOffset;
             bool dimtih = defaultDim.TextInsideAlign;
             bool dimtoh = defaultDim.TextOutsideAlign;
+            DimensionStyleTextDirection dimtxtdirection = defaultDim.TextDirection;
+            double dimtfac = defaultDim.TextFractionHeightScale;
 
             // fit
             bool dimtofl = defaultDim.FitDimLineForce;
@@ -1409,7 +1411,7 @@ namespace netDxf.IO
             double dimlfac = defaultDim.DimScaleLinear;
             LinearUnitType dimlunit = defaultDim.DimLengthUnits;
             AngleUnitType dimaunit = defaultDim.DimAngularUnits;
-            FractionFormatType dimfrac = defaultDim.FractionalType;
+            FractionFormatType dimfrac = defaultDim.FractionType;
             double dimrnd = defaultDim.DimRoundoff;
 
             string dimpost = string.Empty;
@@ -1557,7 +1559,7 @@ namespace netDxf.IO
                     case 143:
                         double dimaltf = this.chunk.ReadDouble();
                         if (dimaltf <= 0.0)
-                            dimaltf = defaultDim.DimensionStyleAlternateUnits.Multiplier;
+                            dimaltf = defaultDim.AlternateUnits.Multiplier;
                         dimensionStyleAlternateUnits.Multiplier = dimaltf;
                         this.chunk.Next();
                         break;
@@ -1568,10 +1570,9 @@ namespace netDxf.IO
                         this.chunk.Next();
                         break;
                     case 146:
-                        double dimtfac = this.chunk.ReadDouble();
+                        dimtfac = this.chunk.ReadDouble();
                         if (dimtfac <= 0)
-                            dimtfac = defaultDim.Tolerances.TextHeightFactor;
-                        tolerances.TextHeightFactor = dimtfac;
+                            dimtfac = defaultDim.TextFractionHeightScale;
                         this.chunk.Next();
                         break;
                     case 147:
@@ -1581,7 +1582,7 @@ namespace netDxf.IO
                     case 148:
                         double dimaltrnd = this.chunk.ReadDouble();
                         if (dimaltrnd < 0.000001 && !MathHelper.IsZero(dimaltrnd, double.Epsilon))
-                            dimaltrnd = defaultDim.DimensionStyleAlternateUnits.Roundoff;
+                            dimaltrnd = defaultDim.AlternateUnits.Roundoff;
                         dimensionStyleAlternateUnits.Roundoff = dimaltrnd;
                         this.chunk.Next();
                         break;
@@ -1592,7 +1593,7 @@ namespace netDxf.IO
                     case 171:
                         short dimaltd = this.chunk.ReadShort();
                         if (dimaltd < 0)
-                            dimaltd = defaultDim.DimensionStyleAlternateUnits.LengthPrecision;
+                            dimaltd = defaultDim.AlternateUnits.LengthPrecision;
                         dimensionStyleAlternateUnits.LengthPrecision = dimaltd;
                         this.chunk.Next();
                         break;
@@ -1745,6 +1746,10 @@ namespace netDxf.IO
                         dimfxlon = this.chunk.ReadBool();
                         this.chunk.Next();
                         break;
+                    case 294:
+                        dimtxtdirection = this.chunk.ReadBool() ? DimensionStyleTextDirection.LeftToRight : DimensionStyleTextDirection.RightToLeft;
+                        this.chunk.Next();
+                        break;
                     case 340:
                         dimtxsty = this.chunk.ReadHex();
                         this.chunk.Next();
@@ -1834,6 +1839,8 @@ namespace netDxf.IO
                 TextOffset = dimgap,
                 TextInsideAlign = dimtih,
                 TextOutsideAlign = dimtoh,
+                TextDirection = dimtxtdirection,
+                TextFractionHeightScale = dimtfac,
 
                 // fit
                 FitDimLineForce = dimtofl,
@@ -1850,11 +1857,11 @@ namespace netDxf.IO
                 DimScaleLinear = dimlfac,
                 DimLengthUnits = dimlunit,
                 DimAngularUnits = dimaunit,
-                FractionalType = dimfrac,
+                FractionType = dimfrac,
                 DimRoundoff = dimrnd,
 
                 // alternate units
-                DimensionStyleAlternateUnits = dimensionStyleAlternateUnits,
+                AlternateUnits = dimensionStyleAlternateUnits,
 
                 // tolerances
                 Tolerances = tolerances
@@ -1889,10 +1896,10 @@ namespace netDxf.IO
             style.SuppressZeroInches = supress[3];
 
             supress = GetLinearZeroesSuppression(dimaltz);
-            style.DimensionStyleAlternateUnits.SuppressLinearLeadingZeros = supress[0];
-            style.DimensionStyleAlternateUnits.SuppressLinearTrailingZeros = supress[1];
-            style.DimensionStyleAlternateUnits.SuppressZeroFeet = supress[2];
-            style.DimensionStyleAlternateUnits.SuppressZeroInches = supress[3];
+            style.AlternateUnits.SuppressLinearLeadingZeros = supress[0];
+            style.AlternateUnits.SuppressLinearTrailingZeros = supress[1];
+            style.AlternateUnits.SuppressZeroFeet = supress[2];
+            style.AlternateUnits.SuppressZeroInches = supress[3];
 
             supress = GetLinearZeroesSuppression(dimtzin);
             style.Tolerances.SuppressLinearLeadingZeros = supress[0];
@@ -1918,8 +1925,8 @@ namespace netDxf.IO
             style.DimSuffix = textPrefixSuffix[1];
 
             textPrefixSuffix = GetDimStylePrefixAndSuffix(dimapost, '[', ']');
-            style.DimensionStyleAlternateUnits.Prefix = textPrefixSuffix[0];
-            style.DimensionStyleAlternateUnits.Suffix = textPrefixSuffix[1];
+            style.AlternateUnits.Prefix = textPrefixSuffix[0];
+            style.AlternateUnits.Suffix = textPrefixSuffix[1];
 
             if (xData.Count > 0) this.hasXData.Add(style, xData);
 
@@ -5123,7 +5130,7 @@ namespace netDxf.IO
                             case 146: // DIMTFAC
                                 if (data.Code != XDataCode.Real)
                                     return overrides; // premature end
-                                overrides.Add(new DimensionStyleOverride(DimensionStyleOverrideType.TolerancesTextHeightFactor, (double) data.Value));
+                                overrides.Add(new DimensionStyleOverride(DimensionStyleOverrideType.TextFractionHeightScale, (double) data.Value));
                                 break;
                             case 147: // DIMGAP
                                 if (data.Code != XDataCode.Real)
@@ -5277,6 +5284,11 @@ namespace netDxf.IO
                                 if (data.Code != XDataCode.Int16)
                                     return overrides; // premature end
                                 overrides.Add(new DimensionStyleOverride(DimensionStyleOverrideType.ExtLineFixed, (short) data.Value != 0));
+                                break;
+                            case 294: // DIMTXTDIRECTION
+                                if (data.Code != XDataCode.Int16)
+                                    return overrides; // premature end
+                                overrides.Add(new DimensionStyleOverride(DimensionStyleOverrideType.TextDirection, (DimensionStyleTextDirection) (short) data.Value));
                                 break;
                             case 340: // DIMTXSTY
                                 if (data.Code != XDataCode.DatabaseHandle)

@@ -83,9 +83,7 @@ namespace netDxf.Collections
 
             //for new block definitions configure its entities
             foreach (EntityObject entity in block.Entities)
-            {
                 this.Owner.AddEntityToDocument(entity, block, assignHandle);
-            }
 
             //for new block definitions configure its attributes
             foreach (AttributeDefinition attDef in block.AttributeDefinitions.Values)

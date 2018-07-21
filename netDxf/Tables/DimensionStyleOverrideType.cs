@@ -183,6 +183,20 @@ namespace netDxf.Tables
         TextOffset,
 
         /// <summary>
+        /// Specifies the direction of the dimension text.
+        /// </summary>
+        TextDirection,
+
+        /// <summary>
+        /// Controls the scale of fractions relative to dimension text height.
+        /// </summary>
+        /// <remarks>
+        /// This value is only applicable to Architectural and Fractional units, and also
+        /// controls the height factor applied to the tolerance text in relation with the dimension text height.
+        /// </remarks>
+        TextFractionHeightScale,
+
+        /// <summary>
         /// Controls the drawing of the dimension lines even when the text are placed outside the extension lines.
         /// </summary>
         FitDimLineForce,
@@ -396,11 +410,6 @@ namespace netDxf.Tables
         /// Suppresses zero inches in architectural tolerance units.
         /// </summary>
         TolerancesSuppressZeroInches,
-
-        /// <summary>
-        /// Height factor applied to the tolerance text in relation with the dimension text height.
-        /// </summary>
-        TolerancesTextHeightFactor,
     
         /// <summary>
         /// Number of decimal places of the tolerance alternate units.

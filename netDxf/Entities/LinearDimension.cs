@@ -203,7 +203,8 @@ namespace netDxf.Entities
         /// Gets or sets the distance between the mid point of the reference line and the dimension line.
         /// </summary>
         /// <remarks>
-        /// The offset value must be equal or greater than zero.
+        /// The offset value must be equal or greater than zero.<br />
+        /// The side at which the dimension line is drawn depends of its rotation.
         /// </remarks>
         public double Offset
         {
@@ -242,16 +243,12 @@ namespace netDxf.Entities
             Vector2 ref1 = this.firstRefPoint;
             Vector2 ref2 = this.secondRefPoint;
             Vector2 midRef = Vector2.MidPoint(ref1, ref2);
-            Vector2 dimRef = this.DefinitionPoint;
+            //Vector2 dimRef = this.DefinitionPoint;
 
             Vector2 refDir = Vector2.Normalize(this.secondRefPoint - this.firstRefPoint);
             double dimRotation = this.rotation * MathHelper.DegToRad;
             Vector2 dimDir = new Vector2(Math.Cos(dimRotation), Math.Sin(dimRotation));
             
-            double t = Vector2.DotProduct(dimDir, point - dimRef);
-            Vector2 pPrime = dimRef + t * dimDir;
-            Vector2 vec = point - pPrime;
-
             double cross = Vector2.CrossProduct(refDir, point - this.firstRefPoint);
             if (cross < 0)
             {
@@ -269,15 +266,26 @@ namespace netDxf.Entities
 
             this.defPoint = midDimLine - this.Measurement * 0.5 * Vector2.Perpendicular(Vector2.Normalize(offsetDir));
 
-            DimensionStyleFitTextMove moveText = this.Style.FitTextMove;
-            DimensionStyleOverride styleOverride;
-            if (this.StyleOverrides.TryGetValue(DimensionStyleOverrideType.FitTextMove, out styleOverride))
+            if (!this.TextPositionManuallySet)
             {
-                moveText = (DimensionStyleFitTextMove)styleOverride.Value;
-            }
-            if (moveText == DimensionStyleFitTextMove.BesideDimLine)
-            {
-                if (!this.TextPositionManuallySet) this.textRefPoint += vec;
+                DimensionStyleOverride styleOverride;
+                double textGap = this.Style.TextOffset;
+                if (this.StyleOverrides.TryGetValue(DimensionStyleOverrideType.TextOffset, out styleOverride))
+                {
+                    textGap = (double)styleOverride.Value;
+                }
+                double scale = this.Style.DimScaleOverall;
+                if (this.StyleOverrides.TryGetValue(DimensionStyleOverrideType.DimScaleOverall, out styleOverride))
+                {
+                    scale = (double)styleOverride.Value;
+                }
+
+                double gap = textGap * scale;
+                if (dimRotation > MathHelper.HalfPI && dimRotation <= MathHelper.ThreeHalfPI)
+                {
+                    gap = -gap;
+                }
+                this.textRefPoint = midDimLine + gap * offsetDir;
             }
         }
 
@@ -290,6 +298,8 @@ namespace netDxf.Entities
         /// </summary>
         protected override void CalculteReferencePoints()
         {
+            DimensionStyleOverride styleOverride;
+
             double measure = this.Measurement;
             Vector2 ref1 = this.firstRefPoint;
             Vector2 ref2 = this.secondRefPoint;
@@ -299,7 +309,7 @@ namespace netDxf.Entities
             Vector2 vec = Vector2.Normalize(Vector2.Rotate(Vector2.UnitY, dimRotation));
             Vector2 midDimLine = midRef + this.offset * vec;
             double cross = Vector2.CrossProduct(ref2 - ref1, vec);
-            if (cross < 0) // Todo: should it go to the SetDimensionLinePosition?
+            if (cross < 0)
             {
                 this.firstRefPoint = ref2;
                 this.secondRefPoint = ref1;
@@ -309,20 +319,34 @@ namespace netDxf.Entities
             if (this.TextPositionManuallySet)
             {
                 DimensionStyleFitTextMove moveText = this.Style.FitTextMove;
-                DimensionStyleOverride styleOverride;
                 if (this.StyleOverrides.TryGetValue(DimensionStyleOverrideType.FitTextMove, out styleOverride))
                 {
                     moveText = (DimensionStyleFitTextMove)styleOverride.Value;
                 }
 
-                if (moveText.HasFlag(DimensionStyleFitTextMove.BesideDimLine))
+                if (moveText == DimensionStyleFitTextMove.BesideDimLine)
                 {
                     this.SetDimensionLinePosition(this.textRefPoint);
                 }
             }
             else
             {
-                this.textRefPoint = midDimLine;
+                double textGap = this.Style.TextOffset;
+                if (this.StyleOverrides.TryGetValue(DimensionStyleOverrideType.TextOffset, out styleOverride))
+                {
+                    textGap = (double)styleOverride.Value;
+                }
+                double scale = this.Style.DimScaleOverall;
+                if (this.StyleOverrides.TryGetValue(DimensionStyleOverrideType.DimScaleOverall, out styleOverride))
+                {
+                    scale = (double)styleOverride.Value;
+                }
+
+                double gap = textGap * scale;
+                if (dimRotation > MathHelper.HalfPI && dimRotation <= MathHelper.ThreeHalfPI)
+                    gap = -gap;
+
+                this.textRefPoint = midDimLine + gap * vec;
             }
         }
 

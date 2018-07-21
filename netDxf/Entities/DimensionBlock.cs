@@ -53,7 +53,8 @@ namespace netDxf.Entities
                 LinearDecimalPlaces = style.LengthPrecision,
                 AngularDecimalPlaces = style.AngularPrecision == -1 ? style.LengthPrecision : style.AngularPrecision,
                 DecimalSeparator = style.DecimalSeparator.ToString(),
-                FractionType = style.FractionalType,
+                FractionHeightScale = style.TextFractionHeightScale,
+                FractionType = style.FractionType,
                 SupressLinearLeadingZeros = style.SuppressLinearLeadingZeros,
                 SupressLinearTrailingZeros = style.SuppressLinearTrailingZeros,
                 SupressAngularLeadingZeros = style.SuppressAngularLeadingZeros,
@@ -443,6 +444,7 @@ namespace netDxf.Entities
                 TextColor = dim.Style.TextColor,
                 TextHeight = dim.Style.TextHeight,
                 TextOffset = dim.Style.TextOffset,
+                TextFractionHeightScale = dim.Style.TextFractionHeightScale,
 
                 // primary units
                 AngularPrecision = dim.Style.AngularPrecision,
@@ -453,7 +455,7 @@ namespace netDxf.Entities
                 DimScaleLinear = dim.Style.DimScaleLinear,
                 DimLengthUnits = dim.Style.DimLengthUnits,
                 DimAngularUnits = dim.Style.DimAngularUnits,
-                FractionalType = dim.Style.FractionalType,
+                FractionType = dim.Style.FractionType,
                 SuppressLinearLeadingZeros = dim.Style.SuppressLinearLeadingZeros,
                 SuppressLinearTrailingZeros = dim.Style.SuppressLinearTrailingZeros,
                 SuppressAngularLeadingZeros = dim.Style.SuppressAngularLeadingZeros,
@@ -540,6 +542,9 @@ namespace netDxf.Entities
                     case DimensionStyleOverrideType.TextOffset:
                         copy.TextOffset = (double) styleOverride.Value;
                         break;
+                    case DimensionStyleOverrideType.TextFractionHeightScale:
+                        copy.TextFractionHeightScale = (double) styleOverride.Value;
+                        break;
                     case DimensionStyleOverrideType.DimScaleOverall:
                         copy.DimScaleOverall = (double) styleOverride.Value;
                         break;
@@ -568,7 +573,7 @@ namespace netDxf.Entities
                         copy.DimAngularUnits = (AngleUnitType) styleOverride.Value;
                         break;
                     case DimensionStyleOverrideType.FractionalType:
-                        copy.FractionalType = (FractionFormatType) styleOverride.Value;
+                        copy.FractionType = (FractionFormatType) styleOverride.Value;
                         break;
                     case DimensionStyleOverrideType.SuppressLinearLeadingZeros:
                         copy.SuppressLinearLeadingZeros = (bool) styleOverride.Value;
@@ -601,11 +606,34 @@ namespace netDxf.Entities
 
         #region public methods
 
+        /// <summary>
+        /// Creates a block that represents the drawing of the specified dimension.
+        /// </summary>
+        /// <param name="dim"><see cref="Dimension">Dimension</see> from which the block will be created.</param>
+        /// <returns>A block that represents the specified dimension.</returns>
+        /// <remarks>
+        /// By the fault the block will have the name "DimBlock". The block's name is irrelevant when the dimension belongs to a document,
+        /// it will be automatically renamed to accommodate to the nomenclature of the DXF.<br />
+        /// The dimension block creation only supports a limited number of <see cref="DimensionStyle">dimension style</see> properties.
+        /// Also the list of <see cref="DimensionStyleOverride">dimension style overrides</see> associated with the specified dimension will be applied where necessary.
+        /// </remarks>
         public static Block Build(Dimension dim)
         {
             return Build(dim, "DimBlock");
         }
 
+        /// <summary>
+        /// Creates a block that represents the drawing of the specified dimension.
+        /// </summary>
+        /// <param name="dim"><see cref="Dimension">Dimension</see> from which the block will be created.</param>
+        /// <param name="name">The blocks name.</param>
+        /// <returns>A block that represents the specified dimension.</returns>
+        /// <remarks>
+        /// The block's name is irrelevant when the dimension belongs to a document,
+        /// it will be automatically renamed to accommodate to the nomenclature of the DXF.<br />
+        /// The dimension block creation only supports a limited number of <see cref="DimensionStyle">dimension style</see> properties.
+        /// Also the list of <see cref="DimensionStyleOverride">dimension style overrides</see> associated with the specified dimension will be applied where necessary.
+        /// </remarks>
         public static Block Build(Dimension dim, string name)
         {
             Block block;
@@ -640,6 +668,98 @@ namespace netDxf.Entities
             return block;
         }
 
+        /// <summary>
+        /// Creates a block that represents the drawing of the specified dimension.
+        /// </summary>
+        /// <param name="dim"><see cref="AlignedDimension">AlignedDimension</see> from which the block will be created.</param>
+        /// <param name="name">The blocks name.</param>
+        /// <returns>A block that represents the specified dimension.</returns>
+        /// <remarks>
+        /// The block's name is irrelevant when the dimension belongs to a document,
+        /// it will be automatically renamed to accommodate to the nomenclature of the DXF.<br />
+        /// The dimension block creation only supports a limited number of <see cref="DimensionStyle">dimension style</see> properties.
+        /// Also the list of <see cref="DimensionStyleOverride">dimension style overrides</see> associated with the specified dimension will be applied where necessary.
+        /// </remarks>
+        public static Block Build(AlignedDimension dim, string name)
+        {
+            DimensionStyle style = BuildDimensionStyleOverride(dim);
+            List<EntityObject> entities = new List<EntityObject>();
+
+            double measure = dim.Measurement;
+
+            Vector2 ref1 = dim.FirstReferencePoint;
+            Vector2 ref2 = dim.SecondReferencePoint;
+            Vector2 vec = Vector2.Normalize(dim.DimLinePosition - ref2);
+            Vector2 dimRef1 = ref1 + dim.Offset*vec;
+            Vector2 dimRef2 = dim.DimLinePosition;
+
+            double refAngle = Vector2.Angle(ref1, ref2);
+
+            // reference points
+            Layer defPointLayer = new Layer("Defpoints") {Plot = false};
+            entities.Add(new Point(ref1) {Layer = defPointLayer});
+            entities.Add(new Point(ref2) {Layer = defPointLayer});
+            entities.Add(new Point(dimRef2) {Layer = defPointLayer});
+
+            if (!style.DimLine1Off && !style.DimLine2Off)
+            {
+                entities.Add(DimensionLine(dimRef1, dimRef2, refAngle, style));
+                entities.Add(StartArrowHead(dimRef1, refAngle + MathHelper.PI, style));
+                entities.Add(EndArrowHead(dimRef2, refAngle, style));
+            }
+
+            // extension lines
+            double dimexo = style.ExtLineOffset * style.DimScaleOverall;
+            double dimexe = style.ExtLineExtend * style.DimScaleOverall;
+            if (!style.ExtLine1Off)
+                entities.Add(ExtensionLine(ref1 + dimexo * vec, dimRef1 + dimexe * vec, style, style.ExtLine1Linetype));
+            if (!style.ExtLine2Off)
+                entities.Add(ExtensionLine(ref2 + dimexo * vec, dimRef2 + dimexe * vec, style, style.ExtLine2Linetype));
+
+            // dimension text
+            Vector2 textRef = Vector2.MidPoint(dimRef1, dimRef2);
+            double gap = style.TextOffset*style.DimScaleOverall;
+            double textRot = refAngle;
+            if (textRot > MathHelper.HalfPI && textRot <= MathHelper.ThreeHalfPI)
+            {
+                gap = -gap;
+                textRot += MathHelper.PI;
+            }
+
+            List<string> texts = FormatDimensionText(measure, dim.DimensionType, dim.UserText, style, dim.Owner);
+
+            MText mText = DimensionText(textRef + gap*vec, MTextAttachmentPoint.BottomCenter, textRot, texts[0], style);
+            if (mText != null)
+                entities.Add(mText);
+
+            // there might be an additional text if the code \X has been used in the dimension UserText 
+            // this additional text appears under the dimension line
+            if (texts.Count > 1)
+            {
+                MText mText2 = DimensionText(textRef - gap * vec, MTextAttachmentPoint.TopCenter, textRot, texts[1], style);
+                if (mText2 != null)
+                    entities.Add(mText2);
+            }
+
+            dim.TextReferencePoint = textRef + gap*vec;
+            dim.TextPositionManuallySet = false;
+
+            // drawing block
+            return new Block(name, entities, null, false) {Flags = BlockTypeFlags.AnonymousBlock};
+        }
+
+        /// <summary>
+        /// Creates a block that represents the drawing of the specified dimension.
+        /// </summary>
+        /// <param name="dim"><see cref="LinearDimension">LinearDimension</see> from which the block will be created.</param>
+        /// <param name="name">The blocks name.</param>
+        /// <returns>A block that represents the specified dimension.</returns>
+        /// <remarks>
+        /// The block's name is irrelevant when the dimension belongs to a document,
+        /// it will be automatically renamed to accommodate to the nomenclature of the DXF.<br />
+        /// The dimension block creation only supports a limited number of <see cref="DimensionStyle">dimension style</see> properties.
+        /// Also the list of <see cref="DimensionStyleOverride">dimension style overrides</see> associated with the specified dimension will be applied where necessary.
+        /// </remarks>
         public static Block Build(LinearDimension dim, string name)
         {
             DimensionStyle style = BuildDimensionStyleOverride(dim);
@@ -681,12 +801,18 @@ namespace netDxf.Entities
 
             // dimension text
             Vector2 textRef = Vector2.MidPoint(dimRef1, dimRef2);
+            double gap = style.TextOffset * style.DimScaleOverall;
             double textRot = dimRotation;
             if (textRot > MathHelper.HalfPI && textRot <= MathHelper.ThreeHalfPI)
+            {
+                gap = -gap;
                 textRot += MathHelper.PI;
+            }
 
             List<string> texts = FormatDimensionText(measure, dim.DimensionType, dim.UserText, style, dim.Owner);
-            MText mText = DimensionText(Vector2.Polar(textRef, style.TextOffset * style.DimScaleOverall, textRot + MathHelper.HalfPI), MTextAttachmentPoint.BottomCenter, textRot, texts[0], style);
+            MText mText = DimensionText(textRef + gap * vec, MTextAttachmentPoint.BottomCenter, textRot, texts[0], style);
+            //MText mText = DimensionText(Vector2.Polar(textRef, (style.TextOffset + style.TextHeight*0.5) * style.DimScaleOverall, textRot + MathHelper.HalfPI), MTextAttachmentPoint.MiddleCenter, textRot, texts[0], style);
+
             if (mText != null)
                 entities.Add(mText);
 
@@ -694,78 +820,30 @@ namespace netDxf.Entities
             // this additional text appears under the dimension line
             if (texts.Count > 1)
             {
-                string text = texts[1];
-                MText mText2 = DimensionText(Vector2.Polar(textRef, -style.TextOffset * style.DimScaleOverall, textRot + MathHelper.HalfPI), MTextAttachmentPoint.TopCenter, textRot, text, style);
+                MText mText2 = DimensionText(textRef - gap * vec, MTextAttachmentPoint.TopCenter, textRot, texts[1], style);
                 if (mText2 != null)
                     entities.Add(mText2);
             }
+
+            dim.TextReferencePoint = textRef + gap * vec;
+            dim.TextPositionManuallySet = false;
 
             // drawing block
             return new Block(name, entities, null, false) {Flags = BlockTypeFlags.AnonymousBlock};
         }
 
-        public static Block Build(AlignedDimension dim, string name)
-        {
-            DimensionStyle style = BuildDimensionStyleOverride(dim);
-            List<EntityObject> entities = new List<EntityObject>();
-
-            double measure = dim.Measurement;
-
-            Vector2 ref1 = dim.FirstReferencePoint;
-            Vector2 ref2 = dim.SecondReferencePoint;
-            Vector2 vec = Vector2.Normalize(dim.DimLinePosition - ref2);
-            Vector2 dimRef1 = ref1 + dim.Offset*vec;
-            Vector2 dimRef2 = dim.DimLinePosition;
-
-            double refAngle = Vector2.Angle(ref1, ref2);
-
-            // reference points
-            Layer defPointLayer = new Layer("Defpoints") {Plot = false};
-            entities.Add(new Point(ref1) {Layer = defPointLayer});
-            entities.Add(new Point(ref2) {Layer = defPointLayer});
-            entities.Add(new Point(dimRef2) {Layer = defPointLayer});
-
-            if (!style.DimLine1Off && !style.DimLine2Off)
-            {
-                entities.Add(DimensionLine(dimRef1, dimRef2, refAngle, style));
-                entities.Add(StartArrowHead(dimRef1, refAngle + MathHelper.PI, style));
-                entities.Add(EndArrowHead(dimRef2, refAngle, style));
-            }
-
-            // extension lines
-            double dimexo = style.ExtLineOffset * style.DimScaleOverall;
-            double dimexe = style.ExtLineExtend * style.DimScaleOverall;
-            if (!style.ExtLine1Off)
-                entities.Add(ExtensionLine(ref1 + dimexo * vec, dimRef1 + dimexe * vec, style, style.ExtLine1Linetype));
-            if (!style.ExtLine2Off)
-                entities.Add(ExtensionLine(ref2 + dimexo * vec, dimRef2 + dimexe * vec, style, style.ExtLine2Linetype));
-
-            // dimension text
-            Vector2 textRef = Vector2.MidPoint(dimRef1, dimRef2);
-            double textRot = refAngle;
-            if (textRot > MathHelper.HalfPI && textRot <= MathHelper.ThreeHalfPI)
-                textRot += MathHelper.PI;
-
-            List<string> texts = FormatDimensionText(measure, dim.DimensionType, dim.UserText, style, dim.Owner);
-
-            MText mText = DimensionText(Vector2.Polar(textRef, style.TextOffset * style.DimScaleOverall, textRot + MathHelper.HalfPI), MTextAttachmentPoint.BottomCenter, textRot, texts[0], style);
-            if (mText != null)
-                entities.Add(mText);
-
-            // there might be an additional text if the code \X has been used in the dimension UserText 
-            // this additional text appears under the dimension line
-            if (texts.Count > 1)
-            {
-                string text = texts[1];
-                MText mText2 = DimensionText(Vector2.Polar(textRef, -style.TextOffset * style.DimScaleOverall, textRot + MathHelper.HalfPI), MTextAttachmentPoint.TopCenter, textRot, text, style);
-                if (mText2 != null)
-                    entities.Add(mText2);
-            }
-
-            // drawing block
-            return new Block(name, entities, null, false) {Flags = BlockTypeFlags.AnonymousBlock};
-        }
-
+        /// <summary>
+        /// Creates a block that represents the drawing of the specified dimension.
+        /// </summary>
+        /// <param name="dim"><see cref="Angular2LineDimension">Angular2LineDimension</see> from which the block will be created.</param>
+        /// <param name="name">The blocks name.</param>
+        /// <returns>A block that represents the specified dimension.</returns>
+        /// <remarks>
+        /// The block's name is irrelevant when the dimension belongs to a document,
+        /// it will be automatically renamed to accommodate to the nomenclature of the DXF.<br />
+        /// The dimension block creation only supports a limited number of <see cref="DimensionStyle">dimension style</see> properties.
+        /// Also the list of <see cref="DimensionStyleOverride">dimension style overrides</see> associated with the specified dimension will be applied where necessary.
+        /// </remarks>
         public static Block Build(Angular2LineDimension dim, string name)
         {
             double offset = dim.Offset;
@@ -856,10 +934,25 @@ namespace netDxf.Entities
             if (mText != null)
                 entities.Add(mText);
 
+            dim.TextReferencePoint = position;
+            dim.TextPositionManuallySet = false;
+
             // drawing block
             return new Block(name, entities, null, false) {Flags = BlockTypeFlags.AnonymousBlock};
         }
 
+        /// <summary>
+        /// Creates a block that represents the drawing of the specified dimension.
+        /// </summary>
+        /// <param name="dim"><see cref="Angular3PointDimension">Angular3PointDimension</see> from which the block will be created.</param>
+        /// <param name="name">The blocks name.</param>
+        /// <returns>A block that represents the specified dimension.</returns>
+        /// <remarks>
+        /// The block's name is irrelevant when the dimension belongs to a document,
+        /// it will be automatically renamed to accommodate to the nomenclature of the DXF.<br />
+        /// The dimension block creation only supports a limited number of <see cref="DimensionStyle">dimension style</see> properties.
+        /// Also the list of <see cref="DimensionStyleOverride">dimension style overrides</see> associated with the specified dimension will be applied where necessary.
+        /// </remarks>
         public static Block Build(Angular3PointDimension dim, string name)
         {
             double offset = dim.Offset;
@@ -937,10 +1030,25 @@ namespace netDxf.Entities
             if (mText != null)
                 entities.Add(mText);
 
+            dim.TextReferencePoint = position;
+            dim.TextPositionManuallySet = false;
+
             // drawing block
             return new Block(name, entities, null, false);
         }
 
+        /// <summary>
+        /// Creates a block that represents the drawing of the specified dimension.
+        /// </summary>
+        /// <param name="dim"><see cref="DiametricDimension">DiametricDimension</see> from which the block will be created.</param>
+        /// <param name="name">The blocks name.</param>
+        /// <returns>A block that represents the specified dimension.</returns>
+        /// <remarks>
+        /// The block's name is irrelevant when the dimension belongs to a document,
+        /// it will be automatically renamed to accommodate to the nomenclature of the DXF.<br />
+        /// The dimension block creation only supports a limited number of <see cref="DimensionStyle">dimension style</see> properties.
+        /// Also the list of <see cref="DimensionStyleOverride">dimension style overrides</see> associated with the specified dimension will be applied where necessary.
+        /// </remarks>
         public static Block Build(DiametricDimension dim, string name)
         {
             double measure = dim.Measurement;
@@ -1027,14 +1135,30 @@ namespace netDxf.Entities
                 reverse = -1;
             }
 
+            Vector2 textPos = Vector2.Polar(dimRef, -reverse*inside*style.TextOffset*style.DimScaleOverall, textRot);
             MTextAttachmentPoint attachmentPoint = reverse*inside < 0 ? MTextAttachmentPoint.MiddleLeft : MTextAttachmentPoint.MiddleRight;
-            MText mText = DimensionText(Vector2.Polar(dimRef, -reverse*inside*style.TextOffset*style.DimScaleOverall, textRot), attachmentPoint, textRot, dimText, style);
+            MText mText = DimensionText(textPos, attachmentPoint, textRot, dimText, style);
             if (mText != null)
                 entities.Add(mText);
+
+            dim.TextReferencePoint = textPos;
+            dim.TextPositionManuallySet = false;
 
             return new Block(name, entities, null, false);
         }
 
+        /// <summary>
+        /// Creates a block that represents the drawing of the specified dimension.
+        /// </summary>
+        /// <param name="dim"><see cref="RadialDimension">RadialDimension</see> from which the block will be created.</param>
+        /// <param name="name">The blocks name.</param>
+        /// <returns>A block that represents the specified dimension.</returns>
+        /// <remarks>
+        /// The block's name is irrelevant when the dimension belongs to a document,
+        /// it will be automatically renamed to accommodate to the nomenclature of the DXF.<br />
+        /// The dimension block creation only supports a limited number of <see cref="DimensionStyle">dimension style</see> properties.
+        /// Also the list of <see cref="DimensionStyleOverride">dimension style overrides</see> associated with the specified dimension will be applied where necessary.
+        /// </remarks>
         public static Block Build(RadialDimension dim, string name)
         {
             double offset = Vector2.Distance(dim.CenterPoint, dim.TextReferencePoint);
@@ -1116,15 +1240,31 @@ namespace netDxf.Entities
                 reverse = -1;
             }
 
+            Vector2 textPos = Vector2.Polar(dimRef, -reverse*side*style.TextOffset*style.DimScaleOverall, textRot);
             MTextAttachmentPoint attachmentPoint = reverse * side < 0 ? MTextAttachmentPoint.MiddleLeft : MTextAttachmentPoint.MiddleRight;
-            MText mText = DimensionText(Vector2.Polar(dimRef, -reverse * side * style.TextOffset * style.DimScaleOverall, textRot), attachmentPoint, textRot, dimText, style);
+            MText mText = DimensionText(textPos, attachmentPoint, textRot, dimText, style);
             if (mText != null)
                 entities.Add(mText);
+
+            dim.TextReferencePoint = textPos;
+            dim.TextPositionManuallySet = false;
 
             return new Block(name, entities, null, false);
 
         }
 
+        /// <summary>
+        /// Creates a block that represents the drawing of the specified dimension.
+        /// </summary>
+        /// <param name="dim"><see cref="OrdinateDimension">OrdinateDimension</see> from which the block will be created.</param>
+        /// <param name="name">The blocks name.</param>
+        /// <returns>A block that represents the specified dimension.</returns>
+        /// <remarks>
+        /// The block's name is irrelevant when the dimension belongs to a document,
+        /// it will be automatically renamed to accommodate to the nomenclature of the DXF.<br />
+        /// The dimension block creation only supports a limited number of <see cref="DimensionStyle">dimension style</see> properties.
+        /// Also the list of <see cref="DimensionStyleOverride">dimension style overrides</see> associated with the specified dimension will be applied where necessary.
+        /// </remarks>
         public static Block Build(OrdinateDimension dim, string name)
         {
             DimensionStyle style = BuildDimensionStyleOverride(dim);
@@ -1201,6 +1341,9 @@ namespace netDxf.Entities
             MText mText = DimensionText(midText, attachmentPoint, rotation, dimText, style);
             if (mText != null)
                 entities.Add(mText);
+
+            dim.TextReferencePoint = midText;
+            dim.TextPositionManuallySet = false;
 
             // drawing block
             return new Block(name, entities, null, false);

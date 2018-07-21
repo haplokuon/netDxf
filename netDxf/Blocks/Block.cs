@@ -632,7 +632,7 @@ namespace netDxf.Blocks
                     this.entities.Add(leader.Annotation);
                 }
             }
-            if (e.Item.Type == EntityType.Hatch)
+            else if (e.Item.Type == EntityType.Hatch)
             {
                 Hatch hatch = (Hatch) e.Item;
                 foreach (HatchBoundaryPath path in hatch.BoundaryPaths)
@@ -641,9 +641,9 @@ namespace netDxf.Blocks
                         this.entities.Add(entity);
                 }
             }
+
             this.OnEntityAddedEvent(e.Item);
             e.Item.Owner = this;
-
         }
 
         private void Entities_BeforeRemoveItem(EntityCollection sender, EntityCollectionEventArgs e)

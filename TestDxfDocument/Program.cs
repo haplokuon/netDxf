@@ -26,593 +26,10 @@ namespace TestDxfDocument
     /// </summary>
     public class Program
     {
-        private static void TestDoc()
-        {
-            DxfDocument doc = DxfDocument.Load("sample.dxf");
-
-            Angular2LineDimension d = null;
-            foreach (Dimension dim in doc.Dimensions)
-            {
-                dim.Block = DimensionBlock.Build(dim);
-                if (dim.DimensionType == DimensionType.Angular)
-                    d = (Angular2LineDimension) dim;
-            }
-            doc.Save("test compare.dxf");
-
-            Angular2LineDimension angDim = (Angular2LineDimension) d.Clone();
-
-            Angular2LineDimension angDim2 = new Angular2LineDimension(angDim.StartFirstLine, angDim.EndFirstLine, angDim.StartSecondLine, angDim.EndSecondLine, 20);
-
-
-
-            angDim.SetDimensionLinePosition(new Vector2(360, -126));
-            angDim2.SetDimensionLinePosition(new Vector2(360, -126));
-
-
-
-            DxfDocument dxf = new DxfDocument();
-            //dxf.BuildDimensionBlocks = true;
-            dxf.AddEntity(angDim);
-            dxf.AddEntity(angDim2);
-            dxf.Save("test.dxf");
-        }
-
-        private static void TestDimAligned()
-        {
-            DimensionStyle style = DimensionStyle.Iso25;
-            Vector2 ref1 = Vector2.Zero;
-            Vector2 ref2 = new Vector2(50, 10);
-            Vector2 ref3 = new Vector2(-10, 50);
-            double offset = 10;
-
-            AlignedDimension dim = new AlignedDimension(ref3, ref2, offset, style);
-            //dim.SetDimensionLinePosition(new Vector2(40, 30));
-            //dim.SetDimensionLinePosition(new Vector2(9, -20));
-            //dim.SetDimensionLinePosition(new Vector2(-9, -20));
-
-            //dim.TextReferencePoint = new Vector2(60, 20);
-            //dim.Offset = 10;
-            //dim.Style.FitTextMove = DimensionStyleFitTextMove.OverDimLineWithLeader;
-            //dim.TextPositionManuallySet = false;
-            //dim.Update();
-
-
-            DxfDocument doc = new DxfDocument();
-            doc.BuildDimensionBlocks = true;
-            doc.AddEntity(dim);
-            doc.Save("test.dxf");
-
-            //DxfDocument dxf = DxfDocument.Load("test.dxf");
-            ////dxf.Dimensions[0].Block = null;
-            //dxf.Save("test compare.dxf");
-        }
-
-        private static void TestDimLinear()
-        {
-            DimensionStyle style = DimensionStyle.Iso25;
-            //style.TextInsideAlign = false;
-            Vector2 ref1 = Vector2.Zero;
-            Vector2 ref2 = new Vector2(50, 10);
-            Vector2 ref3 = new Vector2(0, 50);
-            double offset = 20;
-
-            LinearDimension dim = new LinearDimension(ref1, ref2, offset, 20, style);
-            LinearDimension dim2 = new LinearDimension(ref2, ref1, offset, 180+20, style);
-
-            //LinearDimension dim = new LinearDimension(ref1, ref2, offset, 0, style);
-            //dim.TextReferencePoint = new Vector2(60, 20);
-            //dim.TextRotation = 30;
-            //dim.Offset = 20;
-            //dim.Style.FitTextMove = DimensionStyleFitTextMove.OverDimLineWithLeader;
-            //dim.TextPositionManuallySet = false;
-            //dim.Update();
-            //dim.SetDimensionLinePosition(new Vector2(-30, -20));
-
-            //dim.SetDimensionLinePosition(new Vector2(20, 0));
-            //LinearDimension dim1p = (LinearDimension) dim.Clone();
-            //dim.SetDimensionLinePosition(new Vector2(30, -20));
-            //dim.SetDimensionLinePosition(new Vector2(-30, -20));
-            //dim.Block = DimensionBlock.Build(dim, "DimBlock");
-
-            DxfDocument doc = new DxfDocument();
-            doc.BuildDimensionBlocks = true;
-            doc.DrawingVariables.DimStyle = style.Name;
-            doc.AddEntity(dim);
-            doc.AddEntity(dim2);
-            //doc.AddEntity(dim1p);
-            //dim.Rotation = 0;
-            //dim.Update();
-            //doc.AddEntity(new Line(ref1, ref2));
-            doc.Save("test.dxf");
-
-            //DxfDocument dxf = DxfDocument.Load("test.dxf");
-            ////dxf.Dimensions[0].Block = null;
-            //dxf.Save("test compare.dxf");
-        }
-
-        private static void TestDim2LineAngular()
-        {
-            DimensionStyle style = DimensionStyle.Iso25;
-            style.TextInsideAlign = false;
-
-            Layer layer = new Layer("Layer1") { Color = AciColor.Blue };
-            Vector2 start1 = new Vector2(-20, 20);
-            Vector2 end1 = new Vector2(20, -20);
-            Vector2 start2 = new Vector2(-10, -30);
-            Vector2 end2 = new Vector2(10, 30);
-
-            Line line1 = new Line(start1, end1) { Layer = layer };
-            Line line2 = new Line(start2, end2) { Layer = layer };
-
-            Angular2LineDimension dim = new Angular2LineDimension(line1, line2, 10, style);
-
-            //dim.SetDimensionLinePosition(new Vector2(20, 0));
-            //dim.SetDimensionLinePosition(new Vector2(0, 20));
-            //dim.SetDimensionLinePosition(new Vector2(0, -20));
-            //dim.SetDimensionLinePosition(new Vector2(-20, 0));
-
-            //dim.Style.FitTextMove = DimensionStyleFitTextMove.OverDimLineWithLeader;
-            //dim.Update();
-
-            //dim.TextPositionManuallySet = false;
-            //dim.Style.FitTextMove = DimensionStyleFitTextMove.BesideDimLine;
-            //dim.Update();
-
-            DxfDocument doc = new DxfDocument();
-            doc.BuildDimensionBlocks = true;
-            doc.DrawingVariables.DimStyle = style.Name;
-            doc.AddEntity(dim);
-            //dim.SetDimensionLinePosition(MathHelper.FindIntersection(start1, end1-start1, start2, end2-start2));
-            doc.AddEntity(line1);
-            doc.AddEntity(line2);
-            doc.Save("test.dxf");
-
-            //DxfDocument dxf = DxfDocument.Load("test.dxf");
-            //dxf.Dimensions.ElementAt(0).Block = null;
-            //dxf.Save("test compare.dxf");
-        }
-
-        private static void TestDim3PointAngular()
-        {
-            DimensionStyle style = DimensionStyle.Iso25;
-            style.TextInsideAlign = false;
-
-            Layer layer = new Layer("Layer1") { Color = AciColor.Blue };
-            Vector2 start1 = new Vector2(-20, 20);
-            Vector2 end1 = new Vector2(20, -20);
-            Vector2 start2 = new Vector2(-10, -30);
-            Vector2 end2 = new Vector2(10, 30);
-      
-            Line line1 = new Line(start1, end1) { Layer = layer };
-            Line line2 = new Line(start2, end2) { Layer = layer };
-            Vector2 center = MathHelper.FindIntersection(start1, end1 - start1, start2, end2 - start2);
-            Angular3PointDimension dim = new Angular3PointDimension(center, end1, end2, 0, style);
-            //dim.SetDimensionLinePosition(new Vector2(20, 10));
-            //dim.SetDimensionLinePosition(new Vector2(4, 16));
-            //dim.SetDimensionLinePosition(new Vector2(-30, 20));
-            //dim.SetDimensionLinePosition(new Vector2(0, -20));
-            //dim.TextReferencePoint = new Vector2(20, 10);
-            //dim.StyleOverrides.Add(new DimensionStyleOverride(DimensionStyleOverrideType.FitTextMove, DimensionStyleFitTextMove.OverDimLineWithLeader));
-            //dim.Style.FitTextMove = DimensionStyleFitTextMove.OverDimLineWithLeader;
-            //dim.Update();
-
-            //dim.TextPositionManuallySet = false;
-            //dim.Style.FitTextMove = DimensionStyleFitTextMove.BesideDimLine;
-            //dim.Offset = -20;
-            //dim.Update();
-
-            DxfDocument doc = new DxfDocument();
-            doc.DrawingVariables.DimStyle = style.Name;
-            doc.AddEntity(dim);
-            //dim.SetDimensionLinePosition(center);
-            doc.AddEntity(line1);
-            doc.AddEntity(line2);
-            doc.Save("test.dxf");
-
-            DxfDocument dxf = DxfDocument.Load("test.dxf");
-            dxf.Dimensions.ElementAt(0).Block = null;
-            dxf.Save("test compare.dxf");
-
-        }
-
-        private static void TestDimDiametric()
-        {
-            DimensionStyle style = DimensionStyle.Iso25;
-            style.CenterMarkSize = 0;
-            //style.TextInsideAlign = false;
-
-            Layer layer = new Layer("Layer1") {Color = AciColor.Blue};
-
-            Vector2 center = new Vector2(1, 2);
-            double radius = 30;
-            Circle circle = new Circle(center, radius) {Layer = layer};
-
-            DiametricDimension dim = new DiametricDimension(circle, 15, style);
-            //dim.SetDimensionLinePosition(new Vector2(radius + 30, 50));
-            //dim.TextReferencePoint = new Vector2(radius + 30, 50);
-            //dim.TextReferencePoint = center;
-            //dim.Style.FitTextMove = DimensionStyleFitTextMove.OverDimLineWithoutLeader;
-            //dim.Update();
-
-            DxfDocument doc = new DxfDocument();
-            doc.BuildDimensionBlocks = true;
-            doc.DrawingVariables.DimStyle = style.Name;
-            doc.AddEntity(dim);
-            doc.AddEntity(circle);
-            doc.Save("test.dxf");
-
-            DxfDocument dxf = DxfDocument.Load("test.dxf");
-            dxf.Dimensions.ElementAt(0).Block = null;
-            dxf.Save("test compare.dxf");
-
-        }
-
-        private static void TestDimRadial()
-        {
-            DimensionStyle style = DimensionStyle.Iso25;
-            //style.TextInsideAlign = false;
-
-            Layer layer = new Layer("Layer1") { Color = AciColor.Blue };
-
-            Vector2 center = new Vector2(1, 2);
-            double radius = 30;
-            Circle circle = new Circle(center, radius) { Layer = layer };
-
-            RadialDimension dim = new RadialDimension(circle, 15, style);
-            //dim.SetDimensionLinePosition(new Vector2(radius + 30, 50));
-            //dim.TextReferencePoint = new Vector2(radius + 30, 50);
-            //dim.TextReferencePoint = center;
-            //dim.Style.FitTextMove = DimensionStyleFitTextMove.OverDimLineWithoutLeader;
-            //dim.Update();
-
-            DxfDocument doc = new DxfDocument();
-            doc.BuildDimensionBlocks = true;
-            doc.DrawingVariables.DimStyle = style.Name;
-            doc.AddEntity(dim);
-            doc.AddEntity(circle);
-            doc.Save("test.dxf");
-
-            DxfDocument dxf = DxfDocument.Load("test.dxf");
-            dxf.Dimensions.ElementAt(0).Block = null;
-            dxf.Save("test compare.dxf");
-
-        }
-
-        private static void TestDimOrdinate()
-        {
-            DimensionStyle style = DimensionStyle.Iso25;
-
-            Vector2 origin = new Vector2(10, 5);
-            Vector2 refX = new Vector2(20, 10);
-            Vector2 refY = new Vector2(0, 20);
-            double length = 30;
-            double angle = 30;
-
-            //OrdinateDimension dimX = new OrdinateDimension(origin, refX, length, OrdinateDimensionAxis.X, 0, style);
-            //OrdinateDimension dimY = new OrdinateDimension(origin, refY, length, OrdinateDimensionAxis.Y, 0, style);
-
-            //Vector2 leaderEnd = new Vector2(5,20);
-            //OrdinateDimension dimX = new OrdinateDimension(origin, refX, leaderEnd, style);
-            //OrdinateDimension dimY = new OrdinateDimension(origin, refY, length, OrdinateDimensionAxis.Y, 0, style);
-
-            //OrdinateDimension dim = new OrdinateDimension(Vector2.Zero, new Vector2(10, 20), new Vector2(30, 10), style)
-            //{
-            //    //Rotation = 30
-            //};
-            OrdinateDimension dim1 = new OrdinateDimension(Vector2.Zero, new Vector2(10, 10), new Vector2(30, 30), OrdinateDimensionAxis.Y, style);
-            OrdinateDimension dim2 = new OrdinateDimension(Vector2.Zero, new Vector2(10, 10), new Vector2(-5, 30), OrdinateDimensionAxis.Y, style);
-            dim1.Rotation = 30;
-            dim2.Rotation = 30;
-
-            OrdinateDimension dim3 = new OrdinateDimension(Vector2.Zero, new Vector2(10, 10), new Vector2(30, 30), OrdinateDimensionAxis.Y, style);
-            OrdinateDimension dim4 = new OrdinateDimension(Vector2.Zero, new Vector2(10, 10), new Vector2(-30, -5), OrdinateDimensionAxis.Y, style);
-
-            OrdinateDimension dim5 = new OrdinateDimension(Vector2.Zero, new Vector2(-10, -10), -20, OrdinateDimensionAxis.Y, style);
-
-            //dim.TextReferencePoint = new Vector2(40, 30);
-            ////dim.LeaderEndPoint = new Vector2(40,30);
-            //dim.Style.FitTextMove = DimensionStyleFitTextMove.BesideDimLine;
-            //dim.AttachmentPoint = MTextAttachmentPoint.MiddleCenter;
-            //dim.Update();
-
-            DxfDocument doc = new DxfDocument();
-            doc.BuildDimensionBlocks = true;
-            //doc.AddEntity(dim1);
-            //doc.AddEntity(dim2);
-            //doc.AddEntity(dim3);
-            //doc.AddEntity(dim4);
-            doc.AddEntity(dim5);
-            doc.Save("test.dxf");
-
-            DxfDocument dxf = DxfDocument.Load("test.dxf");
-            dxf.Dimensions.ElementAt(0).Block = null;
-            dxf.Save("test compare.dxf");
-
-        }
-
-        private static void TestHatch()
-        {
-            DxfDocument dxf = new DxfDocument(DxfVersion.AutoCad2010);
-
-            LwPolyline poly = new LwPolyline();
-            poly.Vertexes.Add(new LwPolylineVertex(-10, -10));
-            poly.Vertexes.Add(new LwPolylineVertex(10, -10));
-            poly.Vertexes.Add(new LwPolylineVertex(10, 10));
-            poly.Vertexes.Add(new LwPolylineVertex(-10, 10));
-            poly.IsClosed = true;
-            HatchBoundaryPath boundary1 = new HatchBoundaryPath(new List<EntityObject> { poly });
-
-            Circle circle = new Circle(Vector2.Zero, 5);
-            HatchBoundaryPath boundary2 = new HatchBoundaryPath(new List<EntityObject> {circle});
-
-            HatchPattern pattern = HatchPattern.Line;
-            pattern.Scale = 10;
-            pattern.Angle = 45;
-
-            Hatch hatch = new Hatch(pattern, true);
-
-            hatch.BoundaryPaths.Add(boundary1);
-
-            dxf.AddEntity(hatch);
-            hatch.BoundaryPaths.Add(boundary2);
-
-            //dxf.RemoveEntity(hatch);
-
-            //hatch.BoundaryPaths.Add(boundary2);
-            //hatch.UnLinkBoundary();
-
-            //dxf.Blocks[Block.DefaultModelSpaceName].Entities.Remove(poly);
-            //dxf.Blocks[Block.DefaultModelSpaceName].Entities.Remove(circle);
-            //dxf.Blocks[Block.DefaultModelSpaceName].AttributeDefinitions.Add(new AttributeDefinition("MyTag"));
-            //hatch.CreateBoundary(true);
-
-            //dxf.AddEntity(poly);
-            //dxf.AddEntity(circle);
-
-            //Block myBlock = new Block("MyBlock");
-            //dxf.Blocks.Add(myBlock);
-            //myBlock.Entities.Add(circle);
-            //myBlock.AttributeDefinitions.Add(new AttributeDefinition("MyTag"));
-
-            dxf.Save("Hatch.dxf");
-
-            //DxfDocument doc = DxfDocument.Load("Hatch.dxf");
-            DxfDocument doc = new DxfDocument();
-            Block block = Block.Create(dxf, "FullDrawing");
-            doc.AddEntity(new Insert(block, new Vector2(10,10)));
-            doc.Save("hatch compare.dxf");
-
-            Block test = (Block) doc.Blocks[Block.DefaultModelSpaceName].Clone("CopyModelSpace");
-        }
-
-        private static void TestLeader()
-        {
-            // a basic text annotation
-            List<Vector2> vertexes1 = new List<Vector2>();
-            vertexes1.Add(new Vector2(0, 0));
-            vertexes1.Add(new Vector2(-5, 5));
-            //vertexes1.Add(new Vector2(-5.5,4.5));
-            Leader leader1 = new Leader("Sample annotation", vertexes1);
-            //leader1.HasHookline = true;
-            //leader1.StyleOverrides.Add(new DimensionStyleOverride(DimensionStyleOverrideType.TextVerticalPlacement, DimensionStyleTextVerticalPlacement.Above));
-
-            //leader1.Offset = new Vector2(0.5, 0.5);
-            //((MText) leader1.Annotation).Position = new Vector3(-5, 5, 0);
-            //((MText) leader1.Annotation).Rotation = 10;
-            //leader1.Update(false);
-
-            //leader1.Normal = Vector3.UnitX;
-
-            //leader1.Offset = new Vector2(-0.5, -0.5);
-
-            //leader1.HasHookline = false;
-
-            //leader1.TextVerticalPosition = LeaderTextVerticalPosition.Centered;
-            //leader1.Update(false);
-
-            //leader1.TextVerticalPosition = LeaderTextVerticalPosition.Centered;
-            // We need to call manually the method Update if the annotation position is modified,
-            // or the Leader properties like Style, Normal, Elevation, Annotation, TextVerticalPosition, and/or Offset.
-
-
-            // a block annotation
-            Block block = new Block("BlockAnnotation");
-            block.Entities.Add(new Line(new Vector2(-1, -1), new Vector2(1, 1)));
-            block.Entities.Add(new Line(new Vector2(-1, 1), new Vector2(1, -1)));
-            block.Entities.Add(new Circle(Vector2.Zero, 0.5));
-
-            List<Vector2> vertexes4 = new List<Vector2>();
-            vertexes4.Add(new Vector2(0));
-            vertexes4.Add(new Vector2(-5, -5));
-            vertexes4.Add(new Vector2(-7.5, -5));
-            Leader leader4 = new Leader(block, vertexes4);
-            // change the leader offset to move  the leader hook (the last vertex of the leader vertexes list) in relation to the annotation position.
-            leader4.Offset = new Vector2(-0.5, 0);
-            leader4.Update(true);
-
-            DxfDocument doc = new DxfDocument();
-            doc.AddEntity(leader1);
-            doc.AddEntity(leader4);
-            doc.Save("test.dxf");
-
-            //DxfDocument loaded = DxfDocument.Load("test.dxf");
-            //loaded.Save("test compare.dxf");
-
-
-            //loaded = DxfDocument.Load("Drawing3.dxf");
-            //loaded.Save("test compare.dxf");
-
-            //DxfDocument clonned = new DxfDocument();
-            //foreach (Leader leader in loaded.Leaders)
-            //{
-            //    Leader clone = (Leader) leader.Clone();
-            //    //clone.HasHookline = false;
-            //    ((MText) clone.Annotation).Rotation = 10;
-            //    clone.Update(true);
-            //    clonned.AddEntity(clone);
-            //}
-            
-            //clonned.Save("test compare.dxf");
-
-        }
-
-        public static void TestModelSpaceBlock()
-        {
-            // Create a block to be used as sample
-            Block baseBlk = new Block("BaseBlock");
-            baseBlk.Record.Units = DrawingUnits.Millimeters;
-            baseBlk.Entities.Add(new Line(new Vector3(-5, -5, 0), new Vector3(5, 5, 0)));
-            baseBlk.Entities.Add(new Line(new Vector3(5, -5, 0), new Vector3(-5, 5, 0)));
-            AttributeDefinition attdef = new AttributeDefinition("MyAttribute")
-            {
-                Prompt = "Enter a value:",
-                Value = 0,
-                Position = Vector3.Zero,
-                Layer = new Layer("MyLayer")
-                {
-                    Color = AciColor.Red
-                }
-            };
-            baseBlk.AttributeDefinitions.Add(attdef);
-
-            // Blocks are saved in a similar way as other dxf, just pass the dxf file name, the DxfVersion, and optionally if the dxf needs to be saved in binary format
-            // Only AutoCad2000 and newer versions are supported.
-            // The block entities and attribute definitions will be added to the Model layout.
-            // The drawing header units will be the ones defined in the block record.
-            baseBlk.Save(baseBlk.Name + ".dxf", DxfVersion.AutoCad2000);
-
-            DxfDocument dxf = new DxfDocument();
-
-            // Blocks are loaded as any other dxf, just pass the dxf file name,
-            // optionally you can also give it a name, by default the file name without extension will be used.
-            // Only AutoCad2000 and newer versions are supported,
-            // Only the entities contained in the Model layout will be used.
-            // The block units will be the ones defined in the dxf header.
-            Block block = Block.Load(baseBlk.Name + ".dxf", "MyBlock");
-
-            // in case the loading process has failed check for null
-            // In DEBUG mode the loading process will raise exceptions while in RELEASE it will just return null, the same as loading a DxfDocument
-            if (block == null)
-            {
-                Console.WriteLine("Error loading the block dxf file.");
-                Console.WriteLine("Press a key to continue...");
-                Console.ReadKey();
-                return;
-            }
-
-            // once the block is loaded we can use it in insert entities
-            Insert insert = new Insert(block, new Vector2(10));
-
-            // the block might also contain attribute definitions
-            int attdefCount = block.AttributeDefinitions.Count;
-
-            // this is the list of attribute definition tags
-            // remember netDxf does not allow the use of duplicate tag names, although AutoCad allows it, it is not recommended
-            ICollection<string> tags = block.AttributeDefinitions.Tags;
-
-            // we can assign values to the insert attributes
-            foreach (Attribute att in insert.Attributes)
-            {
-                att.Value = string.Format("{0} value", att.Tag);
-            }
-
-            // optionally we can manually add the block definition to the document
-            dxf.Blocks.Add(block);
-
-            // we add the insert entity to the document, if the block associated with the block has not been added this method will do it automatically
-            dxf.AddEntity(insert);
-
-            // also it is possible to manually add attribute definitions to a document
-            AttributeDefinition def = new AttributeDefinition("AttDefOutsideBlock")
-            {
-                Prompt = "Enter value:",
-                Value = 0,
-                Color = AciColor.Blue,
-                Position = new Vector3(0, 30, 0)
-            };
-
-            // we will add the attribute definition to the document just like any other entity
-            dxf.Layouts[Layout.ModelSpaceName].AssociatedBlock.AttributeDefinitions.Add(def);
-
-            // now we can save our new document
-            dxf.Save("CreateBlockFromDxf.dxf");
-
-            DxfDocument load = Test("CreateBlockFromDxf.dxf");
-        }
 
         public static void Main()
         {
-
-            DxfDocument doc = DxfDocument.Load("angular2line.dxf");
-            doc.DrawingVariables.AcadVer = DxfVersion.AutoCad2000;
-            doc.Save("angular2line original.dxf");
-            foreach (Dimension dimension in doc.Dimensions)
-            {
-                dimension.Block = null;
-            }
-            doc.Save("angular2line no blocks.dxf");
-            foreach (Dimension dimension in doc.Dimensions)
-            {
-                dimension.Block = DimensionBlock.Build(dimension);
-                dimension.Update();
-            }
-            doc.Save("angular2line blocks.dxf");
-
-            //TestDoc();
-
-
-            //TestModelSpaceBlock();
-
-            //TestLeader();
-
-            //LeaderEntity();
-
-            //TestHatch();
-
-            //Text();
-            //TestDimAligned();
-            //TestDimLinear();
-            //TestDim2LineAngular();
-            //TestDim3PointAngular();
-            //TestDimDiametric();
-            //TestDimRadial();
-            //TestDimOrdinate();
-
-            //Angular2LineDimensionTest();
-            //Angular3PointDimensionTest();
-            //DiametricDimensionTest();
-            //RadialDimensionTest();
-            //OrdinateDimensionTest();
-
-            //Angular2LineDimension dim = new Angular2LineDimension();
-            //DxfDocument doc = Test(@".\dxfs\sample.dxf");
-            //DxfDocument doc = Test(@"sample.dxf");
-
-            //DxfDocument doc = DxfDocument.Load(@"sample.dxf", new List<string> { @".\Support" });
-            //foreach (Dimension dimension in doc.Dimensions)
-            //{
-            //    dimension.Block = DimensionBlock.Build(dimension);
-            //}
-
-            //doc.Save("test.dxf");
-
-            //DxfDocument dxf1 = new DxfDocument(DxfVersion.AutoCad2010, new List<string> { @".\Support" });
-            //foreach (EntityObject entity in doc.Layouts[Layout.ModelSpaceName].AssociatedBlock.Entities)
-            //{
-            //    if (entity.Reactors.Count>0) continue;
-
-            //    dxf1.AddEntity((EntityObject) entity.Clone());
-            //}
-            //dxf1.Save("test compare 1.dxf");
-
-            //Block block = Block.Create(doc, "FullDrawingBlock");
-            //DxfDocument dxf2 = new DxfDocument(DxfVersion.AutoCad2010, new List<string> { @".\Support" });
-            ////dxf2.BuildDimensionBlocks = true;
-            //dxf2.AddEntity(new Insert(block, new Vector2(100, 100)));
-            //dxf2.Save("test compare 2.dxf");
-
-            //DxfDocument dxf3 = DxfDocument.Load("Drawing2.dxf");
-            //dxf3.Save("test compare 3.dxf");
+            DxfDocument doc = Test(@"sample.dxf");
 
             #region Samples for new and modified features 2.2.0
 
@@ -846,9 +263,11 @@ namespace TestDxfDocument
             // something similar can be done when reading entities from a document
             DxfDocument loaded = DxfDocument.Load("test.dxf");
 
-            // this three list will return the same entities, this is how to access the full list of entities that belongs to a layout
+            // this two list will return the same entities, this is how to access the full list of entities that belongs to a layout
             EntityCollection entities1 = loaded.Layouts[Layout.ModelSpaceName].AssociatedBlock.Entities;
             EntityCollection entities2 = loaded.Blocks[Block.DefaultModelSpaceName].Entities;
+
+            // getting the layout references not only include the entities of the associated block but also its attribute definitions
             IList<DxfObject> entities3 = loaded.Layouts.GetReferences(Layout.ModelSpaceName);
 
             // this will iterate through the lines we previously added to the doc DxfDocument (using Linq)
@@ -932,6 +351,567 @@ namespace TestDxfDocument
             }
             doc.Save("test compare 2.dxf");
         }
+
+        #region tests
+
+        private static void TestDoc()
+        {
+            DxfDocument doc = DxfDocument.Load("sample.dxf");
+
+            Angular2LineDimension d = null;
+            foreach (Dimension dim in doc.Dimensions)
+            {
+                dim.Block = DimensionBlock.Build(dim);
+                if (dim.DimensionType == DimensionType.Angular)
+                    d = (Angular2LineDimension)dim;
+            }
+            doc.Save("test compare.dxf");
+
+            Angular2LineDimension angDim = (Angular2LineDimension)d.Clone();
+
+            Angular2LineDimension angDim2 = new Angular2LineDimension(angDim.StartFirstLine, angDim.EndFirstLine, angDim.StartSecondLine, angDim.EndSecondLine, 20);
+
+
+
+            angDim.SetDimensionLinePosition(new Vector2(360, -126));
+            angDim2.SetDimensionLinePosition(new Vector2(360, -126));
+
+
+
+            DxfDocument dxf = new DxfDocument();
+            //dxf.BuildDimensionBlocks = true;
+            dxf.AddEntity(angDim);
+            dxf.AddEntity(angDim2);
+            dxf.Save("test.dxf");
+        }
+
+        private static void TestDimAligned()
+        {
+            //DxfDocument doc = DxfDocument.Load("DimAligned check.dxf");
+
+            DimensionStyle style = DimensionStyle.Iso25;
+            style.DimLengthUnits = LinearUnitType.Architectural;
+            style.LengthPrecision = 8;
+            style.TextFractionHeightScale = 0.5;
+            style.FractionType = FractionFormatType.Horizontal;
+            style.AngularPrecision = 0;
+            style.AngularPrecision = 4;
+            style.AngularPrecision = -1;
+            style.AngularPrecision = -2;
+
+            Vector2 ref1 = Vector2.Zero;
+            Vector2 ref2 = new Vector2(50, 10);
+            Vector2 ref3 = new Vector2(-10, 50);
+            double offset = 10;
+
+            AlignedDimension dim = new AlignedDimension(ref2, ref1, offset, style);
+            dim.StyleOverrides.Add(new DimensionStyleOverride(DimensionStyleOverrideType.TextFractionHeightScale, 0.9));
+            //dim.StyleOverrides.Add(new DimensionStyleOverride(DimensionStyleOverrideType.TextDirection, DimensionStyleTextDirection.RightToLeft));
+            //style.TextDirection = DimensionStyleTextDirection.RightToLeft;
+
+            //dim.SetDimensionLinePosition(new Vector2(40, 30));
+            //dim.SetDimensionLinePosition(new Vector2(9, -20));
+            //dim.SetDimensionLinePosition(new Vector2(-9, -20));
+
+            //dim.StyleOverrides.Add(new DimensionStyleOverride(DimensionStyleOverrideType.FitTextMove, DimensionStyleFitTextMove.OverDimLineWithLeader));
+            //dim.TextReferencePoint = new Vector2(50, 30);
+
+            //dim.Offset = 10;
+            //dim.Style.FitTextMove = DimensionStyleFitTextMove.OverDimLineWithLeader;
+            //dim.TextPositionManuallySet = false;
+
+            //dim.Update();
+
+            //dim.TextPositionManuallySet = false;
+            //dim.Update();
+
+            DxfDocument doc = new DxfDocument();
+            doc.BuildDimensionBlocks = true;
+            doc.AddEntity(dim);
+            doc.Save("test.dxf", true);
+
+            DxfDocument dxf = DxfDocument.Load("test.dxf");
+            //dxf.Dimensions[0].Block = null;
+            dxf.Save("test compare.dxf");
+        }
+
+        private static void TestDimLinear()
+        {
+            DxfDocument doc = DxfDocument.Load("DimLinear check.dxf");
+
+            DimensionStyle style = DimensionStyle.Iso25;
+            //style.TextInsideAlign = false;
+            Vector2 ref1 = Vector2.Zero;
+            Vector2 ref2 = new Vector2(50, 10);
+            Vector2 ref3 = new Vector2(0, 50);
+            double offset = 20;
+
+            LinearDimension dim = new LinearDimension(ref1, ref2, offset, 20, style);
+            LinearDimension dim2 = new LinearDimension(ref2, ref1, offset, 180 + 20, style);
+
+            //LinearDimension dim = new LinearDimension(ref1, ref2, offset, 0, style);
+            //dim.TextReferencePoint = new Vector2(0, 30);
+            //dim.TextRotation = 30;
+            //dim.Offset = 20;
+            //dim.Style.FitTextMove = DimensionStyleFitTextMove.OverDimLineWithLeader;
+            //dim.TextPositionManuallySet = false;
+            //dim.Update();
+            //dim.SetDimensionLinePosition(new Vector2(-30, -20));
+
+            //dim.SetDimensionLinePosition(new Vector2(20, 0));
+            //LinearDimension dim1p = (LinearDimension) dim.Clone();
+            //dim.SetDimensionLinePosition(new Vector2(30, -20));
+            //dim.SetDimensionLinePosition(new Vector2(-30, -20));
+            //dim.Block = DimensionBlock.Build(dim, "DimBlock");
+
+            //DxfDocument doc = new DxfDocument();
+            doc.BuildDimensionBlocks = true;
+            //doc.DrawingVariables.DimStyle = style.Name;
+            doc.AddEntity(dim);
+            doc.AddEntity(dim2);
+            //doc.AddEntity(dim1p);
+            //dim.Rotation = 0;
+            //dim.Update();
+            //doc.AddEntity(new Line(ref1, ref2));
+            doc.Save("test.dxf");
+
+            //DxfDocument dxf = DxfDocument.Load("test.dxf");
+            ////dxf.Dimensions[0].Block = null;
+            //dxf.Save("test compare.dxf");
+        }
+
+        private static void TestDim2LineAngular()
+        {
+
+            DxfDocument doc = DxfDocument.Load("DimAng2L check.dxf");
+
+            DimensionStyle style = DimensionStyle.Iso25;
+            style.TextInsideAlign = false;
+
+            Layer layer = new Layer("Layer1") { Color = AciColor.Blue };
+            Vector2 start1 = new Vector2(-20, 20);
+            Vector2 end1 = new Vector2(20, -20);
+            Vector2 start2 = new Vector2(-10, -30);
+            Vector2 end2 = new Vector2(10, 30);
+
+            Line line1 = new Line(start1, end1) { Layer = layer };
+            Line line2 = new Line(start2, end2) { Layer = layer };
+
+            Angular2LineDimension dim = new Angular2LineDimension(line1, line2, 10, style);
+
+            //dim.SetDimensionLinePosition(new Vector2(20, 0));
+            dim.SetDimensionLinePosition(new Vector2(0, 20));
+            //dim.SetDimensionLinePosition(new Vector2(0, -20));
+            //dim.SetDimensionLinePosition(new Vector2(-20, 0));
+
+            //dim.StyleOverrides.Add(new DimensionStyleOverride(DimensionStyleOverrideType.FitTextMove, DimensionStyleFitTextMove.OverDimLineWithLeader));
+            //dim.Update();
+
+            dim.TextReferencePoint = new Vector2(10, 30);
+            //dim.TextPositionManuallySet = false;
+            //dim.Style.FitTextMove = DimensionStyleFitTextMove.BesideDimLine;
+            dim.Update();
+
+            //DxfDocument doc = new DxfDocument();
+            doc.BuildDimensionBlocks = true;
+            //doc.DrawingVariables.DimStyle = style.Name;
+            doc.AddEntity(dim);
+            //dim.SetDimensionLinePosition(MathHelper.FindIntersection(start1, end1-start1, start2, end2-start2));
+            //doc.AddEntity(line1);
+            //doc.AddEntity(line2);
+            doc.Save("test.dxf");
+
+            //DxfDocument dxf = DxfDocument.Load("test.dxf");
+            //dxf.Dimensions.ElementAt(0).Block = null;
+            //dxf.Save("test compare.dxf");
+        }
+
+        private static void TestDim3PointAngular()
+        {
+            DxfDocument doc = DxfDocument.Load("DimAng3P check.dxf");
+            DimensionStyle style = DimensionStyle.Iso25;
+            style.TextInsideAlign = false;
+
+            Layer layer = new Layer("Layer1") { Color = AciColor.Blue };
+            Vector2 start1 = new Vector2(-20, 20);
+            Vector2 end1 = new Vector2(20, -20);
+            Vector2 start2 = new Vector2(-10, -30);
+            Vector2 end2 = new Vector2(10, 30);
+
+            Line line1 = new Line(start1, end1) { Layer = layer };
+            Line line2 = new Line(start2, end2) { Layer = layer };
+            Vector2 center = MathHelper.FindIntersection(start1, end1 - start1, start2, end2 - start2);
+            Angular3PointDimension dim = new Angular3PointDimension(center, end1, end2, 10, style);
+
+            dim.SetDimensionLinePosition(new Vector2(-20, 10));
+            //dim.SetDimensionLinePosition(new Vector2(4, 16));
+            //dim.SetDimensionLinePosition(new Vector2(-30, 20));
+            //dim.SetDimensionLinePosition(new Vector2(0, -20));
+            dim.TextReferencePoint = new Vector2(30, 20);
+            //dim.StyleOverrides.Add(new DimensionStyleOverride(DimensionStyleOverrideType.FitTextMove, DimensionStyleFitTextMove.OverDimLineWithLeader));
+            //dim.Style.FitTextMove = DimensionStyleFitTextMove.OverDimLineWithLeader;
+            //dim.Update();
+
+            //dim.TextPositionManuallySet = false;
+            //dim.Style.FitTextMove = DimensionStyleFitTextMove.BesideDimLine;
+            //dim.Offset = -20;
+            dim.Update();
+
+            //DxfDocument doc = new DxfDocument();
+            //doc.DrawingVariables.DimStyle = style.Name;
+            doc.AddEntity(dim);
+            //dim.SetDimensionLinePosition(center);
+            //doc.AddEntity(line1);
+            //doc.AddEntity(line2);
+            doc.Save("test.dxf");
+
+            //DxfDocument dxf = DxfDocument.Load("test.dxf");
+            //dxf.Dimensions.ElementAt(0).Block = null;
+            //dxf.Save("test compare.dxf");
+
+        }
+
+        private static void TestDimDiametric()
+        {
+            DxfDocument doc = DxfDocument.Load("DimDia check.dxf");
+            DimensionStyle style = DimensionStyle.Iso25;
+            style.CenterMarkSize = 0;
+            //style.TextInsideAlign = false;
+
+            Layer layer = new Layer("Layer1") { Color = AciColor.Blue };
+
+            Vector2 center = new Vector2(1, 2);
+            double radius = 30;
+            Circle circle = new Circle(center, radius) { Layer = layer };
+
+            DiametricDimension dim = new DiametricDimension(circle, 15, style);
+            //dim.SetDimensionLinePosition(new Vector2(radius + 30, 50));
+            dim.StyleOverrides.Add(new DimensionStyleOverride(DimensionStyleOverrideType.FitTextMove, DimensionStyleFitTextMove.OverDimLineWithoutLeader));
+            dim.TextReferencePoint = new Vector2(-40, 30);
+            //dim.TextReferencePoint = center;
+            //dim.Style.FitTextMove = DimensionStyleFitTextMove.OverDimLineWithoutLeader;
+            dim.Update();
+
+            dim.TextPositionManuallySet = false;
+            dim.Update();
+
+            //DxfDocument doc = new DxfDocument();
+            doc.BuildDimensionBlocks = true;
+            //doc.DrawingVariables.DimStyle = style.Name;
+
+            doc.AddEntity(dim);
+            //doc.AddEntity(circle);
+            doc.Save("test.dxf");
+
+            //DxfDocument dxf = DxfDocument.Load("test.dxf");
+            //dxf.Dimensions.ElementAt(0).Block = null;
+            //dxf.Save("test compare.dxf");
+
+        }
+
+        private static void TestDimRadial()
+        {
+            DxfDocument doc = DxfDocument.Load("DimRad check.dxf");
+
+            DimensionStyle style = DimensionStyle.Iso25;
+            //style.TextInsideAlign = false;
+
+            Layer layer = new Layer("Layer1") { Color = AciColor.Blue };
+
+            Vector2 center = new Vector2(1, 2);
+            double radius = 30;
+            Circle circle = new Circle(center, radius) { Layer = layer };
+
+            RadialDimension dim = new RadialDimension(circle, 15, style);
+            dim.StyleOverrides.Add(new DimensionStyleOverride(DimensionStyleOverrideType.FitTextMove, DimensionStyleFitTextMove.OverDimLineWithoutLeader));
+            dim.TextReferencePoint = new Vector2(-40, 30);
+
+            //dim.SetDimensionLinePosition(new Vector2(radius + 30, 50));
+            //dim.TextReferencePoint = new Vector2(radius + 30, 50);
+            //dim.TextReferencePoint = center;
+            //dim.Style.FitTextMove = DimensionStyleFitTextMove.OverDimLineWithoutLeader;
+            dim.Update();
+
+            //DxfDocument doc = new DxfDocument();
+            //doc.BuildDimensionBlocks = true;
+            //doc.DrawingVariables.DimStyle = style.Name;
+            doc.AddEntity(dim);
+            //doc.AddEntity(circle);
+            doc.Save("test.dxf");
+
+            //DxfDocument dxf = DxfDocument.Load("test.dxf");
+            //dxf.Dimensions.ElementAt(0).Block = null;
+            //dxf.Save("test compare.dxf");
+
+        }
+
+        private static void TestDimOrdinate()
+        {
+            DimensionStyle style = DimensionStyle.Iso25;
+
+            Vector2 origin = new Vector2(10, 5);
+            Vector2 refX = new Vector2(20, 10);
+            Vector2 refY = new Vector2(0, 20);
+            double length = 30;
+            double angle = 30;
+
+            //OrdinateDimension dimX = new OrdinateDimension(origin, refX, length, OrdinateDimensionAxis.X, 0, style);
+            //OrdinateDimension dimY = new OrdinateDimension(origin, refY, length, OrdinateDimensionAxis.Y, 0, style);
+
+            //Vector2 leaderEnd = new Vector2(5,20);
+            //OrdinateDimension dimX = new OrdinateDimension(origin, refX, leaderEnd, style);
+            //OrdinateDimension dimY = new OrdinateDimension(origin, refY, length, OrdinateDimensionAxis.Y, 0, style);
+
+            //OrdinateDimension dim = new OrdinateDimension(Vector2.Zero, new Vector2(10, 20), new Vector2(30, 10), style)
+            //{
+            //    //Rotation = 30
+            //};
+            OrdinateDimension dim1 = new OrdinateDimension(Vector2.Zero, new Vector2(10, 10), new Vector2(30, 30), OrdinateDimensionAxis.Y, style);
+            dim1.StyleOverrides.Add(new DimensionStyleOverride(DimensionStyleOverrideType.FitTextMove, DimensionStyleFitTextMove.OverDimLineWithoutLeader));
+            dim1.TextReferencePoint = new Vector2(-20, -20);
+            dim1.Update();
+
+            OrdinateDimension dim2 = new OrdinateDimension(Vector2.Zero, new Vector2(10, 10), new Vector2(-5, 30), OrdinateDimensionAxis.Y, style);
+            //dim1.Rotation = 30;
+            //dim2.Rotation = 30;
+
+            OrdinateDimension dim3 = new OrdinateDimension(Vector2.Zero, new Vector2(10, 10), new Vector2(30, 30), OrdinateDimensionAxis.Y, style);
+            OrdinateDimension dim4 = new OrdinateDimension(Vector2.Zero, new Vector2(10, 10), new Vector2(-30, -5), OrdinateDimensionAxis.Y, style);
+
+            OrdinateDimension dim5 = new OrdinateDimension(Vector2.Zero, new Vector2(-10, -10), -20, OrdinateDimensionAxis.Y, style);
+
+            //dim.TextReferencePoint = new Vector2(40, 30);
+            ////dim.LeaderEndPoint = new Vector2(40,30);
+            //dim.Style.FitTextMove = DimensionStyleFitTextMove.BesideDimLine;
+            //dim.AttachmentPoint = MTextAttachmentPoint.MiddleCenter;
+            //dim.Update();
+
+            DxfDocument doc = new DxfDocument();
+            doc.BuildDimensionBlocks = true;
+            doc.AddEntity(dim1);
+            //doc.AddEntity(dim2);
+            //doc.AddEntity(dim3);
+            //doc.AddEntity(dim4);
+            //doc.AddEntity(dim5);
+            doc.Save("test.dxf");
+
+            //DxfDocument dxf = DxfDocument.Load("test.dxf");
+            //dxf.Dimensions.ElementAt(0).Block = null;
+            //dxf.Save("test compare.dxf");
+
+        }
+
+        private static void TestHatch()
+        {
+            DxfDocument dxf = new DxfDocument(DxfVersion.AutoCad2010);
+
+            LwPolyline poly = new LwPolyline();
+            poly.Vertexes.Add(new LwPolylineVertex(-10, -10));
+            poly.Vertexes.Add(new LwPolylineVertex(10, -10));
+            poly.Vertexes.Add(new LwPolylineVertex(10, 10));
+            poly.Vertexes.Add(new LwPolylineVertex(-10, 10));
+            poly.IsClosed = true;
+            HatchBoundaryPath boundary1 = new HatchBoundaryPath(new List<EntityObject> { poly });
+
+            Circle circle = new Circle(Vector2.Zero, 5);
+            HatchBoundaryPath boundary2 = new HatchBoundaryPath(new List<EntityObject> { circle });
+
+            HatchPattern pattern = HatchPattern.Line;
+            pattern.Scale = 10;
+            pattern.Angle = 45;
+
+            Hatch hatch = new Hatch(pattern, true);
+
+            hatch.BoundaryPaths.Add(boundary1);
+
+            dxf.AddEntity(hatch);
+            hatch.BoundaryPaths.Add(boundary2);
+
+            //dxf.RemoveEntity(hatch);
+
+            //hatch.BoundaryPaths.Add(boundary2);
+            //hatch.UnLinkBoundary();
+
+            //dxf.Blocks[Block.DefaultModelSpaceName].Entities.Remove(poly);
+            //dxf.Blocks[Block.DefaultModelSpaceName].Entities.Remove(circle);
+            //dxf.Blocks[Block.DefaultModelSpaceName].AttributeDefinitions.Add(new AttributeDefinition("MyTag"));
+            //hatch.CreateBoundary(true);
+
+            //dxf.AddEntity(poly);
+            //dxf.AddEntity(circle);
+
+            //Block myBlock = new Block("MyBlock");
+            //dxf.Blocks.Add(myBlock);
+            //myBlock.Entities.Add(circle);
+            //myBlock.AttributeDefinitions.Add(new AttributeDefinition("MyTag"));
+
+            dxf.Save("Hatch.dxf");
+
+            //DxfDocument doc = DxfDocument.Load("Hatch.dxf");
+            DxfDocument doc = new DxfDocument();
+            Block block = Block.Create(dxf, "FullDrawing");
+            doc.AddEntity(new Insert(block, new Vector2(10, 10)));
+            doc.Save("hatch compare.dxf");
+
+            Block test = (Block)doc.Blocks[Block.DefaultModelSpaceName].Clone("CopyModelSpace");
+        }
+
+        private static void TestLeader()
+        {
+            // a basic text annotation
+            List<Vector2> vertexes1 = new List<Vector2>();
+            vertexes1.Add(new Vector2(0, 0));
+            vertexes1.Add(new Vector2(-5, 5));
+            //vertexes1.Add(new Vector2(-5.5,4.5));
+            Leader leader1 = new Leader("Sample annotation", vertexes1);
+            //leader1.HasHookline = true;
+            //leader1.StyleOverrides.Add(new DimensionStyleOverride(DimensionStyleOverrideType.TextVerticalPlacement, DimensionStyleTextVerticalPlacement.Above));
+
+            //leader1.Offset = new Vector2(0.5, 0.5);
+            //((MText) leader1.Annotation).Position = new Vector3(-5, 5, 0);
+            //((MText) leader1.Annotation).Rotation = 10;
+            //leader1.Update(false);
+
+            //leader1.Normal = Vector3.UnitX;
+
+            //leader1.Offset = new Vector2(-0.5, -0.5);
+
+            //leader1.HasHookline = false;
+
+            //leader1.TextVerticalPosition = LeaderTextVerticalPosition.Centered;
+            //leader1.Update(false);
+
+            //leader1.TextVerticalPosition = LeaderTextVerticalPosition.Centered;
+            // We need to call manually the method Update if the annotation position is modified,
+            // or the Leader properties like Style, Normal, Elevation, Annotation, TextVerticalPosition, and/or Offset.
+
+
+            // a block annotation
+            Block block = new Block("BlockAnnotation");
+            block.Entities.Add(new Line(new Vector2(-1, -1), new Vector2(1, 1)));
+            block.Entities.Add(new Line(new Vector2(-1, 1), new Vector2(1, -1)));
+            block.Entities.Add(new Circle(Vector2.Zero, 0.5));
+
+            List<Vector2> vertexes4 = new List<Vector2>();
+            vertexes4.Add(new Vector2(0));
+            vertexes4.Add(new Vector2(-5, -5));
+            vertexes4.Add(new Vector2(-7.5, -5));
+            Leader leader4 = new Leader(block, vertexes4);
+            // change the leader offset to move  the leader hook (the last vertex of the leader vertexes list) in relation to the annotation position.
+            leader4.Offset = new Vector2(-0.5, 0);
+            leader4.Update(true);
+
+            DxfDocument doc = new DxfDocument();
+            doc.AddEntity(leader1);
+            doc.AddEntity(leader4);
+            doc.Save("test.dxf");
+
+            //DxfDocument loaded = DxfDocument.Load("test.dxf");
+            //loaded.Save("test compare.dxf");
+
+
+            //loaded = DxfDocument.Load("Drawing3.dxf");
+            //loaded.Save("test compare.dxf");
+
+            //DxfDocument clonned = new DxfDocument();
+            //foreach (Leader leader in loaded.Leaders)
+            //{
+            //    Leader clone = (Leader) leader.Clone();
+            //    //clone.HasHookline = false;
+            //    ((MText) clone.Annotation).Rotation = 10;
+            //    clone.Update(true);
+            //    clonned.AddEntity(clone);
+            //}
+
+            //clonned.Save("test compare.dxf");
+
+        }
+
+        private static void TestModelSpaceBlock()
+        {
+            // Create a block to be used as sample
+            Block baseBlk = new Block("BaseBlock");
+            baseBlk.Record.Units = DrawingUnits.Millimeters;
+            baseBlk.Entities.Add(new Line(new Vector3(-5, -5, 0), new Vector3(5, 5, 0)));
+            baseBlk.Entities.Add(new Line(new Vector3(5, -5, 0), new Vector3(-5, 5, 0)));
+            AttributeDefinition attdef = new AttributeDefinition("MyAttribute")
+            {
+                Prompt = "Enter a value:",
+                Value = 0,
+                Position = Vector3.Zero,
+                Layer = new Layer("MyLayer")
+                {
+                    Color = AciColor.Red
+                }
+            };
+            baseBlk.AttributeDefinitions.Add(attdef);
+
+            // Blocks are saved in a similar way as other dxf, just pass the dxf file name, the DxfVersion, and optionally if the dxf needs to be saved in binary format
+            // Only AutoCad2000 and newer versions are supported.
+            // The block entities and attribute definitions will be added to the Model layout.
+            // The drawing header units will be the ones defined in the block record.
+            baseBlk.Save(baseBlk.Name + ".dxf", DxfVersion.AutoCad2000);
+
+            DxfDocument dxf = new DxfDocument();
+
+            // Blocks are loaded as any other dxf, just pass the dxf file name,
+            // optionally you can also give it a name, by default the file name without extension will be used.
+            // Only AutoCad2000 and newer versions are supported,
+            // Only the entities contained in the Model layout will be used.
+            // The block units will be the ones defined in the dxf header.
+            Block block = Block.Load(baseBlk.Name + ".dxf", "MyBlock");
+
+            // in case the loading process has failed check for null
+            // In DEBUG mode the loading process will raise exceptions while in RELEASE it will just return null, the same as loading a DxfDocument
+            if (block == null)
+            {
+                Console.WriteLine("Error loading the block dxf file.");
+                Console.WriteLine("Press a key to continue...");
+                Console.ReadKey();
+                return;
+            }
+
+            // once the block is loaded we can use it in insert entities
+            Insert insert = new Insert(block, new Vector2(10));
+
+            // the block might also contain attribute definitions
+            int attdefCount = block.AttributeDefinitions.Count;
+
+            // this is the list of attribute definition tags
+            // remember netDxf does not allow the use of duplicate tag names, although AutoCad allows it, it is not recommended
+            ICollection<string> tags = block.AttributeDefinitions.Tags;
+
+            // we can assign values to the insert attributes
+            foreach (Attribute att in insert.Attributes)
+            {
+                att.Value = string.Format("{0} value", att.Tag);
+            }
+
+            // optionally we can manually add the block definition to the document
+            dxf.Blocks.Add(block);
+
+            // we add the insert entity to the document, if the block associated with the block has not been added this method will do it automatically
+            dxf.AddEntity(insert);
+
+            // also it is possible to manually add attribute definitions to a document
+            AttributeDefinition def = new AttributeDefinition("AttDefOutsideBlock")
+            {
+                Prompt = "Enter value:",
+                Value = 0,
+                Color = AciColor.Blue,
+                Position = new Vector3(0, 30, 0)
+            };
+
+            // we will add the attribute definition to the document just like any other entity
+            dxf.Layouts[Layout.ModelSpaceName].AssociatedBlock.AttributeDefinitions.Add(def);
+
+            // now we can save our new document
+            dxf.Save("CreateBlockFromDxf.dxf");
+
+            DxfDocument load = Test("CreateBlockFromDxf.dxf");
+        }
+
+        #endregion
 
         #endregion
 
@@ -2406,7 +2386,7 @@ namespace TestDxfDocument
                 // DIMDEC defines the number of decimal places.
                 // For Architectural and Fractional units the minimum fraction is defined by 1/2^DIMDEC.
                 LengthPrecision = 4,
-                FractionalType = FractionFormatType.Horizontal,
+                FractionType = FractionFormatType.Horizontal,
                 DimLengthUnits = LinearUnitType.Engineering,
                 SuppressLinearTrailingZeros = true,
                 SuppressZeroFeet = false,

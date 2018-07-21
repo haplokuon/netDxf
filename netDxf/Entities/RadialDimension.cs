@@ -195,15 +195,29 @@ namespace netDxf.Entities
             double rotation = Vector2.Angle(this.center, point);
             this.defPoint = this.center;
             this.refPoint = Vector2.Polar(this.center, radius, rotation);
-            DimensionStyleFitTextMove moveText = this.Style.FitTextMove;
-            DimensionStyleOverride styleOverride;
-            if (this.StyleOverrides.TryGetValue(DimensionStyleOverrideType.FitTextMove, out styleOverride))
+
+            if (!this.TextPositionManuallySet)
             {
-                moveText = (DimensionStyleFitTextMove)styleOverride.Value;
-            }
-            if (moveText == DimensionStyleFitTextMove.BesideDimLine)
-            {
-                if (!this.TextPositionManuallySet) this.textRefPoint = point;
+                DimensionStyleOverride styleOverride;
+                double textGap = this.Style.TextOffset;
+                if (this.StyleOverrides.TryGetValue(DimensionStyleOverrideType.TextOffset, out styleOverride))
+                {
+                    textGap = (double)styleOverride.Value;
+                }
+                double scale = this.Style.DimScaleOverall;
+                if (this.StyleOverrides.TryGetValue(DimensionStyleOverrideType.DimScaleOverall, out styleOverride))
+                {
+                    scale = (double)styleOverride.Value;
+                }
+                double arrowSize = this.Style.ArrowSize;
+                if (this.StyleOverrides.TryGetValue(DimensionStyleOverrideType.ArrowSize, out styleOverride))
+                {
+                    arrowSize = (double)styleOverride.Value;
+                }
+
+                Vector2 vec = Vector2.Normalize(this.refPoint - this.center);
+                double minOffset = (2 * arrowSize + textGap) * scale;
+                this.textRefPoint = this.refPoint + minOffset * vec;
             }
         }
 
@@ -212,30 +226,36 @@ namespace netDxf.Entities
         #region overrides
 
         protected override void CalculteReferencePoints()
-        {
-            Vector2 ref1 = this.refPoint;
-            
+        {            
             this.defPoint = this.center;
 
             if (this.TextPositionManuallySet)
             {
-                DimensionStyleFitTextMove moveText = this.Style.FitTextMove;
-                DimensionStyleOverride styleOverride;
-                if (this.StyleOverrides.TryGetValue(DimensionStyleOverrideType.FitTextMove, out styleOverride))
-                {
-                    moveText = (DimensionStyleFitTextMove)styleOverride.Value;
-                }
-
-                if (moveText == DimensionStyleFitTextMove.BesideDimLine)
-                {
-                    this.SetDimensionLinePosition(this.textRefPoint);
-                }
+                this.SetDimensionLinePosition(this.textRefPoint);
             }
             else
             {
-                Vector2 vec = Vector2.Normalize(ref1 - this.center);
-                double minOffset = (2 * this.Style.ArrowSize + this.Style.TextOffset) * this.Style.DimScaleOverall;
-                this.textRefPoint = ref1 + minOffset * vec;
+                DimensionStyleOverride styleOverride;
+
+                double textGap = this.Style.TextOffset;
+                if (this.StyleOverrides.TryGetValue(DimensionStyleOverrideType.TextOffset, out styleOverride))
+                {
+                    textGap = (double)styleOverride.Value;
+                }
+                double scale = this.Style.DimScaleOverall;
+                if (this.StyleOverrides.TryGetValue(DimensionStyleOverrideType.DimScaleOverall, out styleOverride))
+                {
+                    scale = (double)styleOverride.Value;
+                }
+                double arrowSize = this.Style.ArrowSize;
+                if (this.StyleOverrides.TryGetValue(DimensionStyleOverrideType.ArrowSize, out styleOverride))
+                {
+                    arrowSize = (double)styleOverride.Value;
+                }
+
+                Vector2 vec = Vector2.Normalize(this.refPoint - this.center);
+                double minOffset = (2 * arrowSize + textGap) * scale;
+                this.textRefPoint = this.refPoint + minOffset * vec;
             }
         }
 

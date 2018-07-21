@@ -1,70 +1,52 @@
 ## Change history
 
-
-### [2018/7/17]
-* Cloning a dimension and leader entities will also clone the style overrides, if there are any.
+ 
+### [2.2.0 - 2018/7/17]
+* Updated "netDxf Documentation.chm".
+* Cloning dimension and leader entities will also clone the style overrides, if there are any.
 * Cloning an associative hatch will also result in another associative hatch. It will clone the entities that makes up the boundaries.
 * AttributeDefinitions no longer derive from EntityObject they are handled directly through the AttributeDefinitions dictionary of the block.
 * Deleted the property AttributeDefinitions of the DxfDocument, attribute definitions are handled directly through the block, also attribute definitions in the "Model" layout.
-* (fixed) Error when cloning ShapeStyle objects.
-* (fixed) The Leader Update method will take the style overrides into account.
-
-
-### [2018/7/14]
+* Now is allowed to access directly the entities in the *Model_Space and *Paper_Space# blocks, see AccessModelBlock() sample.
+* The document entities lists now return an IEnumerable instead of an IReadOnlyList. Internally it uses Linq to return the specific entity list from the associated block of the active layout.
+* The *Model_Space and *Paper_Space# blocks are not marked as ReadOnly anymore.
+* The DxfDocument entities lists Arcs, Lines, Circles,... now return only the entities for the active layout.
 * Revised the Leader read and write process to accommodate the latest changes made to them.
 * Deleted the Leader property TextVerticalPosition, this value is controlled by the property TextVerticalPlacement of the dimension style associated with the leader.
 * Deleted the enum LeaderTextVerticalPosition.
-* The document entities lists now return an IEnumerable instead of an IReadOnlyList. Internally it uses Linq to return the specific entity list from the associated block of the active layout.
-* (fixed) When reading complex linetypes from a DXF, the original handles were being overwritten.
-
-
-### [2018/7/11]
-* Now is allowed to access directly the entities in the *Model_Space and *Paper_Space# blocks, see AccessModelBlock() sample.
-* The *Model_Space and *Paper_Space# blocks are not marked as ReadOnly anymore.
-* The DxfDocument entities lists Arcs, Lines, Circles,... now return only the entities for the active layout.
 * Added checks for possible null argument in the style parameter of the Leader constructors.
 * Added a public setter for the HasHookLine property of the Leader entity.
 * Changed the default Leader property LeaderTextVerticalPosition to Centered.
-* (fixed) The Leader Update method will take the style overrides into account.
-* (fixed) Force the writer to use always ASCII encoding for file previous to AutoCad2007. Some encoding code pages defined in the dxf file may cause problems. When using non ASCII characters I recommend to always use AutoCad2007 version or higher they are always saved as UTF-8.
-* (fixed) The drawing variable HandleSeed is now automatically updated when a new DxfObject is added to the document.
-
-
-### [2018/7/9]
-* (fixed) Formatting architectural units in the LinearUnitFormat class.
-* (fixed) Error in the Attribute Clone method, the attribute definition may be null. It is only possible when loading external DXF files, the attribute constructor will raise an exception in case of a null reference.
-
-
-### [2018/7/8]
-* Revised the DimensionBlock class. The automatic generation of dimension blocks is limited and it does not support the full set of properties defined by the dimension style.
-* More adjustments for the Dimension entities.
-* Added public property IsNormaized to Vector2 and Vector3.
-* (fixed) Error in the Leader entity Clone method, the leader annotation may be null.
-* (fixed) The ordinate dimension measurement.
-
-
-### [2018/7/6]
+* Added public property IsNormaized to Vector2 and Vector3 structures to avoid normalizing vectors that are already normalized..
 * Added setter to the Block property of the dimension. Set the dimension Block property to null to delete the reference to the block associated with the dimension, this also deletes the block from the document.
+* Revised the DimensionBlock class. The automatic generation of dimension blocks is limited and it does not support the full set of properties defined by the dimension style.
 * Dimension offset values cannot be negative, if needed switch its references.
 * Deleted the DiametricDimension and RadialDiamension property Offset, to place the dimension text manually use the TextReferencePoint property.
 * Added TextRotation to Dimension entities.
 * Added TextReferencePoint to Dimension entities.
-* Added a private field isNormalized to Vector2 and Vector3 structures to avoid normalizing vectors that are already normalized.
 * Added constant Iso25 DimensionSytle with the default properties as defined in AutoCad.
-* Added property BuildDimensionBlocks to the DxfDocument. It controls if the block that represent dimension entities will be automatically created when added to the document. IMPORTANT: by default it is set to false, no dimension blocks will be generated.
+* Added property BuildDimensionBlocks to the DxfDocument. It controls if the block that represent dimension entities will be automatically created when added to the document. IMPORTANT: by default it is set to false, no dimension blocks will be generated. See DimensionBlockGeneration() sample.
+* Renamed the DimensionStyle property FractionalType to FractionType.
 * Revised the DimensionStyle class adding lots of new properties.
 * Revised the DimensionStyleOverride class adding lots of new properties, matching the changes to the dimension style.
 * Revised the Dimension entity classes to accommodate the added properties.
-* (fixed) Wrong code when reading style override TextVerticalPosition for leaders.
-* (fixed) Wrong value when writing style override DimRoundOff for dimensions.
-
-
-### [2018/6/2]
 * Added missing PlotSetting properties (ScaleToFit, PlotType, ShadePlotMode, ShadePlotResolutionMode, ShadePlotDPI).
 * PlotSetting paper margins properties (left, bottom, right, and top) encapsulated in a structure called PapertMargin.
 * Added XData property to table objects. All objects that may contain extended data implement the interface IHasXData.
 * When loading or writing a DXF that is not one of the supported versions a DxfVersionNotSupportedException will be thrown.
 * While loading DXF files, if a TextStyle is found that references a font file that does not have the extension TTF or SHX, it will be substitute by the default "simplex.shx".
+* (fixed) The Arc method PolygonalVertexes now return a List<Vector2> instead of a IEnumerable<Vector2> same as the equivalent method in the Circle, Ellipse, LwPolyline, and Spline classes.
+* (fixed) Error when cloning ShapeStyle objects.
+* (fixed) When reading complex linetypes from a DXF, the original handles were being overwritten.
+* (fixed) Force the writer to use always ASCII encoding for file previous to AutoCad2007. Some encoding code pages defined in the dxf file may cause problems. When using non ASCII characters I recommend to always use AutoCad2007 version or higher they are always saved as UTF-8.
+* (fixed) The drawing variable HandleSeed is now automatically updated when a new DxfObject is added to the document.
+* (fixed) Formatting architectural units in the LinearUnitFormat class.
+* (fixed) Error in the Attribute Clone method, the attribute definition may be null. It is only possible when loading external DXF files, the attribute constructor will raise an exception in case of a null reference.
+* (fixed) The Leader Update method will take the style overrides into account.
+* (fixed) Error in the Leader entity Clone method, the leader annotation may be null.
+* (fixed) The ordinate dimension measurement.
+* (fixed) Wrong code when reading style override TextVerticalPosition for leaders.
+* (fixed) Wrong value when writing style override DimRoundOff for dimensions.
 * (fixed) Deleted some duplicate code that was messing with the reading of the DimensionStyle DIMZIN value (leading and trailing zeros suppression).
 * (fixed) While reading Angular2LineDimension entities the ArcDefinitionPoint (16,26,36) vector was not saved.
 * (fixed) While reading OrdinateDimension entities the FirstPoint (13,23,33) and SecondPoint (14,24,34) vectors were not saved.

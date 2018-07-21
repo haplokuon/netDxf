@@ -98,6 +98,7 @@
     <Compile Include="Objects\ShadePlotMode.cs" />
     <Compile Include="Objects\ShadePlotResolutionMode.cs" />
     <Compile Include="Tables\DimensionStyleAlternateUnits.cs" />
+    <Compile Include="Tables\DimensionStyleTextDirection.cs" />
     <Compile Include="Tables\DimensionStyleTextVerticalPlacement.cs" />
     <Compile Include="Tables\DimensionStyleTextHorizontalPlacement.cs" />
     <Compile Include="Tables\DimensionStyleFitOptions.cs" />

@@ -184,7 +184,8 @@ namespace netDxf.Entities
         /// Gets or sets the distance between the reference line and the dimension line.
         /// </summary>
         /// <remarks>
-        /// The offset value must be equal or greater than zero.
+        /// The offset value must be equal or greater than zero.<br />
+        /// The side at which the dimension line is drawn depends of the direction of its reference line.
         /// </remarks>
         public double Offset
         {
@@ -219,10 +220,6 @@ namespace netDxf.Entities
             Vector2 refDir = Vector2.Normalize(this.secondRefPoint - this.firstRefPoint);
             Vector2 offsetDir = point - this.firstRefPoint;
 
-            double t = Vector2.DotProduct(refDir, point - this.defPoint);
-            Vector2 pPrime = this.defPoint + t * refDir;
-            Vector2 vec = point - pPrime;
-
             double cross = Vector2.CrossProduct(refDir, offsetDir);
             if (cross < 0)
             {
@@ -232,18 +229,26 @@ namespace netDxf.Entities
                 refDir *= -1;
             }
 
+            Vector2 vec = Vector2.Perpendicular(refDir);
             this.offset = MathHelper.PointLineDistance(point, this.firstRefPoint, refDir);
-            this.defPoint = this.secondRefPoint + this.offset * Vector2.Perpendicular(refDir);
+            this.defPoint = this.secondRefPoint + this.offset * vec;
 
-            DimensionStyleFitTextMove moveText = this.Style.FitTextMove;
-            DimensionStyleOverride styleOverride;
-            if (this.StyleOverrides.TryGetValue(DimensionStyleOverrideType.FitTextMove, out styleOverride))
+            if (!this.TextPositionManuallySet)
             {
-                moveText = (DimensionStyleFitTextMove)styleOverride.Value;
-            }
-            if (moveText == DimensionStyleFitTextMove.BesideDimLine)
-            {
-                if (!this.TextPositionManuallySet) this.textRefPoint += vec;
+                DimensionStyleOverride styleOverride;
+                double textGap = this.Style.TextOffset;
+                if (this.StyleOverrides.TryGetValue(DimensionStyleOverrideType.TextOffset, out styleOverride))
+                {
+                    textGap = (double)styleOverride.Value;
+                }
+                double scale = this.Style.DimScaleOverall;
+                if (this.StyleOverrides.TryGetValue(DimensionStyleOverrideType.DimScaleOverall, out styleOverride))
+                {
+                    scale = (double)styleOverride.Value;
+                }
+
+                double gap = this.offset + textGap * scale;
+                this.textRefPoint = Vector2.MidPoint(this.firstRefPoint, this.secondRefPoint) + gap * vec;
             }
         }
 
@@ -256,10 +261,13 @@ namespace netDxf.Entities
         /// </summary>
         protected override void CalculteReferencePoints()
         {
+            DimensionStyleOverride styleOverride;
+
             Vector2 ref1 = this.FirstReferencePoint;
             Vector2 ref2 = this.SecondReferencePoint;
             Vector2 dirRef = ref2 - ref1;
-            Vector2 vec = this.offset*Vector2.Normalize(Vector2.Perpendicular(dirRef));
+            Vector2 dirDesp = Vector2.Normalize(Vector2.Perpendicular(dirRef));
+            Vector2 vec = this.offset* dirDesp;
             Vector2 dimRef1 = ref1 + vec;
             Vector2 dimRef2 = ref2 + vec;
 
@@ -268,7 +276,6 @@ namespace netDxf.Entities
             if (this.TextPositionManuallySet)
             {
                 DimensionStyleFitTextMove moveText = this.Style.FitTextMove;
-                DimensionStyleOverride styleOverride;
                 if (this.StyleOverrides.TryGetValue(DimensionStyleOverrideType.FitTextMove, out styleOverride))
                 {
                     moveText = (DimensionStyleFitTextMove) styleOverride.Value;
@@ -281,7 +288,19 @@ namespace netDxf.Entities
             }
             else
             {
-                this.textRefPoint = Vector2.MidPoint(dimRef1, dimRef2);
+                double textGap = this.Style.TextOffset;
+                if (this.StyleOverrides.TryGetValue(DimensionStyleOverrideType.TextOffset, out styleOverride))
+                {
+                    textGap = (double) styleOverride.Value;
+                }
+                double scale = this.Style.DimScaleOverall;
+                if (this.StyleOverrides.TryGetValue(DimensionStyleOverrideType.DimScaleOverall, out styleOverride))
+                {
+                    scale = (double) styleOverride.Value;
+                }
+
+                double gap = textGap*scale;
+                this.textRefPoint = Vector2.MidPoint(dimRef1, dimRef2) + gap*dirDesp;
             }
         }
 

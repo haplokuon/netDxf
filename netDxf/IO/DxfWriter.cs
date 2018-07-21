@@ -682,16 +682,16 @@ namespace netDxf.IO
             this.chunk.Write(70, style.AngularPrecision);
 
             this.chunk.Write(9, "$DIMALT");
-            this.chunk.Write(70, style.DimensionStyleAlternateUnits.Enabled ? (short) 1 : (short) 0);
+            this.chunk.Write(70, style.AlternateUnits.Enabled ? (short) 1 : (short) 0);
 
             this.chunk.Write(9, "$DIMALTD");
-            this.chunk.Write(70, style.DimensionStyleAlternateUnits.LengthPrecision);
+            this.chunk.Write(70, style.AlternateUnits.LengthPrecision);
 
             this.chunk.Write(9, "$DIMALTF");
-            this.chunk.Write(40, style.DimensionStyleAlternateUnits.Multiplier);
+            this.chunk.Write(40, style.AlternateUnits.Multiplier);
 
             this.chunk.Write(9, "$DIMALTRND");
-            this.chunk.Write(40, style.DimensionStyleAlternateUnits.Roundoff);
+            this.chunk.Write(40, style.AlternateUnits.Roundoff);
 
             this.chunk.Write(9, "$DIMALTTD");
             this.chunk.Write(70, style.Tolerances.AlternatePrecision);
@@ -704,7 +704,7 @@ namespace netDxf.IO
                     style.Tolerances.AlternateSuppressZeroInches));
 
             this.chunk.Write(9, "$DIMALTU");
-            switch (style.DimensionStyleAlternateUnits.LengthUnits)
+            switch (style.AlternateUnits.LengthUnits)
             {
                 case LinearUnitType.Scientific:
                     this.chunk.Write(70, (short) 1);
@@ -716,22 +716,22 @@ namespace netDxf.IO
                     this.chunk.Write(70, (short) 3);
                     break;
                 case LinearUnitType.Architectural:
-                    this.chunk.Write(70, style.DimensionStyleAlternateUnits.StackUnits ? (short) 4 : (short) 6);
+                    this.chunk.Write(70, style.AlternateUnits.StackUnits ? (short) 4 : (short) 6);
                     break;
                 case LinearUnitType.Fractional:
-                    this.chunk.Write(70, style.DimensionStyleAlternateUnits.StackUnits ? (short) 5 : (short) 7);
+                    this.chunk.Write(70, style.AlternateUnits.StackUnits ? (short) 5 : (short) 7);
                     break;
             }
 
             this.chunk.Write(9, "$DIMALTZ");
             this.chunk.Write(70, GetSupressZeroesValue(
-                    style.DimensionStyleAlternateUnits.SuppressLinearLeadingZeros,
-                    style.DimensionStyleAlternateUnits.SuppressLinearTrailingZeros,
-                    style.DimensionStyleAlternateUnits.SuppressZeroFeet,
-                    style.DimensionStyleAlternateUnits.SuppressZeroInches));
+                    style.AlternateUnits.SuppressLinearLeadingZeros,
+                    style.AlternateUnits.SuppressLinearTrailingZeros,
+                    style.AlternateUnits.SuppressZeroFeet,
+                    style.AlternateUnits.SuppressZeroInches));
 
             this.chunk.Write(9, "$DIMAPOST");
-            this.chunk.Write(1, this.EncodeNonAsciiCharacters(string.Format("{0}[]{1}", style.DimensionStyleAlternateUnits.Prefix, style.DimensionStyleAlternateUnits.Suffix)));
+            this.chunk.Write(1, this.EncodeNonAsciiCharacters(string.Format("{0}[]{1}", style.AlternateUnits.Prefix, style.AlternateUnits.Suffix)));
 
             this.chunk.Write(9, "$DIMATFIT");
             this.chunk.Write(70, (short) style.FitOptions);
@@ -895,7 +895,7 @@ namespace netDxf.IO
             this.chunk.Write(70, style.Tolerances.Precision);
 
             this.chunk.Write(9, "$DIMTFAC");
-            this.chunk.Write(40, style.Tolerances.TextHeightFactor);
+            this.chunk.Write(40, style.TextFractionHeightScale);
 
             if (style.TextFillColor != null)
             {
@@ -969,6 +969,9 @@ namespace netDxf.IO
             this.chunk.Write(9, "$DIMTXT");
             this.chunk.Write(40, style.TextHeight);
 
+            this.chunk.Write(9, "$DIMTXTDIRECTION");
+            this.chunk.Write(70, (short) style.TextDirection);
+
             this.chunk.Write(9, "$DIMTZIN");
             this.chunk.Write(70, GetSupressZeroesValue(
                     style.Tolerances.SuppressLinearLeadingZeros,
@@ -985,7 +988,7 @@ namespace netDxf.IO
 
             // CAUTION: The next four codes are not documented in the official dxf docs
             this.chunk.Write(9, "$DIMFRAC");
-            this.chunk.Write(70, (short) style.FractionalType);
+            this.chunk.Write(70, (short) style.FractionType);
 
             this.chunk.Write(9, "$DIMLTYPE");
             this.chunk.Write(6, this.EncodeNonAsciiCharacters(style.DimLineLinetype.Name));
@@ -1161,7 +1164,7 @@ namespace netDxf.IO
             this.chunk.Write(2, this.EncodeNonAsciiCharacters(style.Name));
            
             this.chunk.Write(3, this.EncodeNonAsciiCharacters(string.Format("{0}<>{1}", style.DimPrefix, style.DimSuffix)));
-            this.chunk.Write(4, this.EncodeNonAsciiCharacters(string.Format("{0}[]{1}", style.DimensionStyleAlternateUnits.Prefix, style.DimensionStyleAlternateUnits.Suffix)));
+            this.chunk.Write(4, this.EncodeNonAsciiCharacters(string.Format("{0}[]{1}", style.AlternateUnits.Prefix, style.AlternateUnits.Suffix)));
             this.chunk.Write(40, style.DimScaleOverall);
             this.chunk.Write(41, style.ArrowSize);
             this.chunk.Write(42, style.ExtLineOffset);
@@ -1231,13 +1234,13 @@ namespace netDxf.IO
 
             this.chunk.Write(140, style.TextHeight);
             this.chunk.Write(141, style.CenterMarkSize);
-            this.chunk.Write(143, style.DimensionStyleAlternateUnits.Multiplier);
+            this.chunk.Write(143, style.AlternateUnits.Multiplier);
             this.chunk.Write(144, style.DimScaleLinear);
-            this.chunk.Write(146, style.Tolerances.TextHeightFactor);
+            this.chunk.Write(146, style.TextFractionHeightScale);
             this.chunk.Write(147, style.TextOffset);
-            this.chunk.Write(148, style.DimensionStyleAlternateUnits.Roundoff);
-            this.chunk.Write(170, style.DimensionStyleAlternateUnits.Enabled ? (short) 1 : (short) 0);
-            this.chunk.Write(171, style.DimensionStyleAlternateUnits.LengthPrecision);
+            this.chunk.Write(148, style.AlternateUnits.Roundoff);
+            this.chunk.Write(170, style.AlternateUnits.Enabled ? (short) 1 : (short) 0);
+            this.chunk.Write(171, style.AlternateUnits.LengthPrecision);
             this.chunk.Write(172, style.FitDimLineForce ? (short) 1 : (short) 0);
             // code 173 is written later
             this.chunk.Write(174, style.FitTextInside ? (short) 1 : (short) 0);
@@ -1248,7 +1251,7 @@ namespace netDxf.IO
             this.chunk.Write(179, style.AngularPrecision);
             this.chunk.Write(271, style.LengthPrecision);
             this.chunk.Write(272, style.Tolerances.Precision);
-            switch (style.DimensionStyleAlternateUnits.LengthUnits)
+            switch (style.AlternateUnits.LengthUnits)
             {
                 case LinearUnitType.Scientific:
                     this.chunk.Write(273, (short) 1);
@@ -1260,15 +1263,15 @@ namespace netDxf.IO
                     this.chunk.Write(273, (short) 3);
                     break;
                 case LinearUnitType.Architectural:
-                    this.chunk.Write(273, style.DimensionStyleAlternateUnits.StackUnits ? (short) 4 : (short) 6);
+                    this.chunk.Write(273, style.AlternateUnits.StackUnits ? (short) 4 : (short) 6);
                     break;
                 case LinearUnitType.Fractional:
-                    this.chunk.Write(273, style.DimensionStyleAlternateUnits.StackUnits ? (short) 5 : (short) 7);
+                    this.chunk.Write(273, style.AlternateUnits.StackUnits ? (short) 5 : (short) 7);
                     break;
             }       
             this.chunk.Write(274, style.Tolerances.AlternatePrecision);              
             this.chunk.Write(275, (short) style.DimAngularUnits);
-            this.chunk.Write(276, (short) style.FractionalType);
+            this.chunk.Write(276, (short) style.FractionType);
             this.chunk.Write(277, (short) style.DimLengthUnits);
             this.chunk.Write(278, (short) style.DecimalSeparator);
             this.chunk.Write(279, (short) style.FitTextMove);
@@ -1282,10 +1285,10 @@ namespace netDxf.IO
                     style.Tolerances.SuppressZeroFeet,
                     style.Tolerances.SuppressZeroInches));
             this.chunk.Write(285, GetSupressZeroesValue(
-                    style.DimensionStyleAlternateUnits.SuppressLinearLeadingZeros,
-                    style.DimensionStyleAlternateUnits.SuppressLinearTrailingZeros,
-                    style.DimensionStyleAlternateUnits.SuppressZeroFeet,
-                    style.DimensionStyleAlternateUnits.SuppressZeroInches));
+                    style.AlternateUnits.SuppressLinearLeadingZeros,
+                    style.AlternateUnits.SuppressLinearTrailingZeros,
+                    style.AlternateUnits.SuppressZeroFeet,
+                    style.AlternateUnits.SuppressZeroInches));
             this.chunk.Write(286, GetSupressZeroesValue(
                     style.Tolerances.AlternateSuppressLinearLeadingZeros,
                     style.Tolerances.AlternateSuppressLinearTrailingZeros,
@@ -1293,6 +1296,7 @@ namespace netDxf.IO
                     style.Tolerances.AlternateSuppressZeroInches));
             this.chunk.Write(289, (short) style.FitOptions);
             this.chunk.Write(290, style.ExtLineFixed);
+            this.chunk.Write(294, style.TextDirection == DimensionStyleTextDirection.RightToLeft);
             this.chunk.Write(340, style.TextStyle.Handle);
 
             // CAUTION: The documentation says that the next values are the handles of referenced BLOCK,
@@ -3453,6 +3457,10 @@ namespace netDxf.IO
                         xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 74));
                         xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (bool) styleOverride.Value ? (short) 1 : (short) 0));
                         break;
+                    case DimensionStyleOverrideType.TextDirection:
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 294));
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) (DimensionStyleTextDirection) styleOverride.Value));
+                        break;
                     case DimensionStyleOverrideType.FitDimLineForce:
                         xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 172));
                         xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (bool) styleOverride.Value ? (short) 1 : (short) 0));
@@ -3623,7 +3631,7 @@ namespace netDxf.IO
                         writeDIMTZIN = true;
                         tolSuppressZeroInches = (bool) styleOverride.Value;
                         break;
-                    case DimensionStyleOverrideType.TolerancesTextHeightFactor:
+                    case DimensionStyleOverrideType.TextFractionHeightScale:
                         xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 146));
                         xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Real, (double) styleOverride.Value));
                         break;

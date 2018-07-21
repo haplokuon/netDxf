@@ -75,7 +75,7 @@ namespace netDxf.Tables
         #region public properties
 
         /// <summary>
-        /// Gets or sets if the alternate measurement units are added to the dimension text.
+        /// Gets or sets if the alternate measurement units are added to the dimension text.  (DIMALT)
         /// </summary>
         public bool Enabled
         {
@@ -84,7 +84,7 @@ namespace netDxf.Tables
         }
 
         /// <summary>
-        /// Sets the number of decimal places displayed for the alternate units of a dimension.
+        /// Sets the number of decimal places displayed for the alternate units of a dimension. (DIMALTD)
         /// </summary>
         /// <remarks>
         /// Default: 4<br/>
@@ -103,7 +103,7 @@ namespace netDxf.Tables
         }
 
         /// <summary>
-        /// Specifies the text prefix for the dimension.
+        /// Specifies the text prefix for the dimension. (DIMAPOST)
         /// </summary>
         public string Prefix
         {
@@ -112,7 +112,7 @@ namespace netDxf.Tables
         }
 
         /// <summary>
-        /// Specifies the text suffix for the dimension.
+        /// Specifies the text suffix for the dimension. (DIMAPOST)
         /// </summary>
         public string Suffix
         {
@@ -121,7 +121,7 @@ namespace netDxf.Tables
         }
 
         /// <summary>
-        /// Gets or sets the multiplier used as the conversion factor between primary and alternate units.
+        /// Gets or sets the multiplier used as the conversion factor between primary and alternate units. (DIMALTF)
         /// </summary>
         /// <remarks>
         /// to convert inches to millimeters, enter 25.4.
@@ -139,7 +139,7 @@ namespace netDxf.Tables
         }
 
         /// <summary>
-        /// Gets or sets the alternate units for all dimension types except angular.
+        /// Gets or sets the alternate units for all dimension types except angular. (DIMALTU)
         /// </summary>
         /// <remarks>
         /// Scientific<br/>
@@ -155,7 +155,7 @@ namespace netDxf.Tables
         }
 
         /// <summary>
-        /// Gets or set if the Architectural or Fractional linear units will be shown stacked or not.
+        /// Gets or set if the Architectural or Fractional linear units will be shown stacked or not. (DIMALTU)
         /// </summary>
         /// <remarks>
         /// This value only is applicable if the <c>DimLengthUnits</c> property has been set to Architectural or Fractional,
@@ -168,7 +168,7 @@ namespace netDxf.Tables
         }
 
         /// <summary>
-        /// Suppresses leading zeros in linear decimal alternate units (for example, 0.5000 becomes .5000).
+        /// Suppresses leading zeros in linear decimal alternate units. (DIMALTZ)
         /// </summary>
         /// <remarks>This value is part of the DIMALTZ variable.</remarks>
         public bool SuppressLinearLeadingZeros
@@ -178,7 +178,7 @@ namespace netDxf.Tables
         }
 
         /// <summary>
-        /// Suppresses trailing zeros in linear decimal alternate units (for example, 12.5000 becomes 12.5).
+        /// Suppresses trailing zeros in linear decimal alternate units. (DIMALTZ)
         /// </summary>
         /// <remarks>This value is part of the DIMALTZ variable.</remarks>
         public bool SuppressLinearTrailingZeros
@@ -188,7 +188,7 @@ namespace netDxf.Tables
         }
 
         /// <summary>
-        /// Suppresses zero feet in architectural alternate units.
+        /// Suppresses zero feet in architectural alternate units. (DIMALTZ)
         /// </summary>
         /// <remarks>This value is part of the DIMALTZ variable.</remarks>
         public bool SuppressZeroFeet
@@ -198,7 +198,7 @@ namespace netDxf.Tables
         }
 
         /// <summary>
-        /// Suppresses zero inches in architectural alternate units.
+        /// Suppresses zero inches in architectural alternate units. (DIMALTZ)
         /// </summary>
         /// <remarks>This value is part of the DIMALTZ variable.</remarks>
         public bool SuppressZeroInches
@@ -208,7 +208,7 @@ namespace netDxf.Tables
         }
 
         /// <summary>
-        /// Gets or sets the value to round all dimensioning distances.
+        /// Gets or sets the value to round all dimensioning distances. (DIMALTRND)
         /// </summary>
         /// <remarks>
         /// Default: 0 (no rounding off).<br/>

@@ -1109,7 +1109,7 @@ namespace netDxf
                     Dimension dim = (Dimension) entity;
                     dim.Style = this.dimStyles.Add(dim.Style, assignHandle);
                     this.dimStyles.References[dim.Style.Name].Add(dim);
-                    this.AddDimensionStyleOverrides(dim, assignHandle);
+                    this.AddDimensionStyleOverridesReferencedDxfObjects(dim, dim.StyleOverrides, assignHandle);
                     if (this.buildDimensionBlocks)
                     {
                         Block dimBlock = DimensionBlock.Build(dim, "DimBlock");
@@ -1134,7 +1134,7 @@ namespace netDxf
                     leader.Style = this.dimStyles.Add(leader.Style, assignHandle);
                     this.dimStyles.References[leader.Style.Name].Add(leader);
                     leader.LeaderStyleChanged += this.Leader_DimStyleChanged;
-                    this.AddStyleOverrides(leader, assignHandle);
+                    this.AddDimensionStyleOverridesReferencedDxfObjects(leader, leader.StyleOverrides, assignHandle);
                     leader.DimensionStyleOverrideAdded += this.Leader_DimStyleOverrideAdded;
                     leader.DimensionStyleOverrideRemoved += this.Leader_DimStyleOverrideRemoved;
                     break;
@@ -1319,7 +1319,7 @@ namespace netDxf
                     this.dimStyles.References[dim.Style.Name].Remove(entity);
                     dim.DimensionStyleChanged -= this.Dimension_DimStyleChanged;
                     dim.Block = null;
-                    this.RemoveDimensionStyleOverrides(dim.StyleOverrides, dim);
+                    this.RemoveDimensionStyleOverridesReferencedDxfObjects(dim, dim.StyleOverrides);
                     dim.DimensionStyleOverrideAdded -= this.Dimension_DimStyleOverrideAdded;
                     dim.DimensionStyleOverrideRemoved -= this.Dimension_DimStyleOverrideRemoved;
                     break;
@@ -1329,7 +1329,7 @@ namespace netDxf
                     leader.LeaderStyleChanged -= this.Leader_DimStyleChanged;
                     if (leader.Annotation != null)
                         leader.Annotation.RemoveReactor(leader);
-                    this.RemoveDimensionStyleOverrides(leader.StyleOverrides, leader);
+                    this.RemoveDimensionStyleOverridesReferencedDxfObjects(leader, leader.StyleOverrides);
                     leader.DimensionStyleOverrideAdded -= this.Leader_DimStyleOverrideAdded;
                     leader.DimensionStyleOverrideRemoved -= this.Leader_DimStyleOverrideRemoved;
                     break;
@@ -1451,101 +1451,19 @@ namespace netDxf
             attDef.Owner = null;
 
             return true;
-
         }
 
         #endregion
 
         #region private methods
 
-        private void AddDimensionStyleOverrides(Dimension dim, bool assignHandle)
+        private void AddDimensionStyleOverridesReferencedDxfObjects(EntityObject entity, DimensionStyleOverrideDictionary overrides, bool assignHandle)
         {
             // add the style override referenced DxfObjects
             DimensionStyleOverride styleOverride;
 
             // add referenced text style
-            if (dim.StyleOverrides.TryGetValue(DimensionStyleOverrideType.TextStyle, out styleOverride))
-            {
-                TextStyle dimtxtsty = (TextStyle) styleOverride.Value;
-                dim.StyleOverrides[styleOverride.Type] = new DimensionStyleOverride(styleOverride.Type, this.textStyles.Add(dimtxtsty, assignHandle));
-                this.textStyles.References[dimtxtsty.Name].Add(dim);
-            }
-
-            // add referenced blocks
-            if (dim.StyleOverrides.TryGetValue(DimensionStyleOverrideType.LeaderArrow, out styleOverride))
-            {
-                Block block = (Block) styleOverride.Value;
-                if (block != null)
-                {
-                    dim.StyleOverrides[styleOverride.Type] = new DimensionStyleOverride(styleOverride.Type, this.blocks.Add(block, assignHandle));
-                    this.blocks.References[block.Name].Add(dim);
-                }
-            }
-
-            if (dim.StyleOverrides.TryGetValue(DimensionStyleOverrideType.DimArrow1, out styleOverride))
-            {
-                Block block = (Block) styleOverride.Value;
-                if (block != null)
-                {
-                    dim.StyleOverrides[styleOverride.Type] = new DimensionStyleOverride(styleOverride.Type, this.blocks.Add(block, assignHandle));
-                    this.blocks.References[block.Name].Add(dim);
-                }
-            }
-
-            if (dim.StyleOverrides.TryGetValue(DimensionStyleOverrideType.DimArrow2, out styleOverride))
-            {
-                Block block = (Block) styleOverride.Value;
-                if (block != null)
-                {
-                    dim.StyleOverrides[styleOverride.Type] = new DimensionStyleOverride(styleOverride.Type, this.blocks.Add(block, assignHandle));
-                    this.blocks.References[block.Name].Add(dim);
-                }
-            }
-
-            // add referenced line types
-            if (dim.StyleOverrides.TryGetValue(DimensionStyleOverrideType.DimLineLinetype, out styleOverride))
-            {
-                Linetype linetype = (Linetype) styleOverride.Value;
-                dim.StyleOverrides[styleOverride.Type] = new DimensionStyleOverride(styleOverride.Type, this.linetypes.Add(linetype, assignHandle));
-                this.linetypes.References[linetype.Name].Add(dim);
-            }
-
-            if (dim.StyleOverrides.TryGetValue(DimensionStyleOverrideType.ExtLine1Linetype, out styleOverride))
-            {
-                Linetype linetype = (Linetype) styleOverride.Value;
-                dim.StyleOverrides[styleOverride.Type] = new DimensionStyleOverride(styleOverride.Type, this.linetypes.Add(linetype, assignHandle));
-                this.linetypes.References[linetype.Name].Add(dim);
-            }
-
-            if (dim.StyleOverrides.TryGetValue(DimensionStyleOverrideType.ExtLine2Linetype, out styleOverride))
-            {
-                Linetype linetype = (Linetype) styleOverride.Value;
-                dim.StyleOverrides[styleOverride.Type] = new DimensionStyleOverride(styleOverride.Type, this.linetypes.Add(linetype, assignHandle));
-                this.linetypes.References[linetype.Name].Add(dim);
-            }
-        }
-
-        private void AddStyleOverrides(EntityObject entity, bool assignHandle)
-        {
-            DimensionStyleOverrideDictionary overrides;
-            switch (entity.Type)
-            {
-                case EntityType.Dimension:
-                    overrides = ((Dimension) entity).StyleOverrides;
-                    break;
-                case EntityType.Leader:
-                    overrides = ((Leader) entity).StyleOverrides;
-                    break;
-                default:
-                    return;
-            }
-
-            // add the style override referenced DxfObjects
-            DimensionStyleOverride styleOverride;
-
-            // add referenced text style
-            overrides.TryGetValue(DimensionStyleOverrideType.TextStyle, out styleOverride);
-            if (styleOverride != null)
+            if (overrides.TryGetValue(DimensionStyleOverrideType.TextStyle, out styleOverride))
             {
                 TextStyle dimtxtsty = (TextStyle) styleOverride.Value;
                 overrides[styleOverride.Type] = new DimensionStyleOverride(styleOverride.Type, this.textStyles.Add(dimtxtsty, assignHandle));
@@ -1553,8 +1471,7 @@ namespace netDxf
             }
 
             // add referenced blocks
-            overrides.TryGetValue(DimensionStyleOverrideType.LeaderArrow, out styleOverride);
-            if (styleOverride != null)
+            if (overrides.TryGetValue(DimensionStyleOverrideType.LeaderArrow, out styleOverride))
             {
                 Block block = (Block) styleOverride.Value;
                 if (block != null)
@@ -1564,8 +1481,7 @@ namespace netDxf
                 }
             }
 
-            overrides.TryGetValue(DimensionStyleOverrideType.DimArrow1, out styleOverride);
-            if (styleOverride != null)
+            if (overrides.TryGetValue(DimensionStyleOverrideType.DimArrow1, out styleOverride))
             {
                 Block block = (Block) styleOverride.Value;
                 if (block != null)
@@ -1575,8 +1491,7 @@ namespace netDxf
                 }
             }
 
-            overrides.TryGetValue(DimensionStyleOverrideType.DimArrow2, out styleOverride);
-            if (styleOverride != null)
+            if (overrides.TryGetValue(DimensionStyleOverrideType.DimArrow2, out styleOverride))
             {
                 Block block = (Block) styleOverride.Value;
                 if (block != null)
@@ -1587,24 +1502,21 @@ namespace netDxf
             }
 
             // add referenced line types
-            overrides.TryGetValue(DimensionStyleOverrideType.DimLineLinetype, out styleOverride);
-            if (styleOverride != null)
+            if (overrides.TryGetValue(DimensionStyleOverrideType.DimLineLinetype, out styleOverride))
             {
                 Linetype linetype = (Linetype) styleOverride.Value;
                 overrides[styleOverride.Type] = new DimensionStyleOverride(styleOverride.Type, this.linetypes.Add(linetype, assignHandle));
                 this.linetypes.References[linetype.Name].Add(entity);
             }
 
-            overrides.TryGetValue(DimensionStyleOverrideType.ExtLine1Linetype, out styleOverride);
-            if (styleOverride != null)
+            if (overrides.TryGetValue(DimensionStyleOverrideType.ExtLine1Linetype, out styleOverride))
             {
                 Linetype linetype = (Linetype) styleOverride.Value;
                 overrides[styleOverride.Type] = new DimensionStyleOverride(styleOverride.Type, this.linetypes.Add(linetype, assignHandle));
                 this.linetypes.References[linetype.Name].Add(entity);
             }
 
-            overrides.TryGetValue(DimensionStyleOverrideType.ExtLine2Linetype, out styleOverride);
-            if (styleOverride != null)
+            if (overrides.TryGetValue(DimensionStyleOverrideType.ExtLine2Linetype, out styleOverride))
             {
                 Linetype linetype = (Linetype) styleOverride.Value;
                 overrides[styleOverride.Type] = new DimensionStyleOverride(styleOverride.Type, this.linetypes.Add(linetype, assignHandle));
@@ -1612,12 +1524,12 @@ namespace netDxf
             }
         }
 
-        private void RemoveDimensionStyleOverrides(DimensionStyleOverrideDictionary overrides, DxfObject entity)
+        private void RemoveDimensionStyleOverridesReferencedDxfObjects(EntityObject entity, DimensionStyleOverrideDictionary overrides)
         {
             // remove the style override referenced DxfObjects
             DimensionStyleOverride styleOverride;
 
-            // add referenced text style
+            // remove referenced text style
             overrides.TryGetValue(DimensionStyleOverrideType.TextStyle, out styleOverride);
             if (styleOverride != null)
             {
@@ -1625,7 +1537,7 @@ namespace netDxf
                 this.textStyles.References[dimtxtsty.Name].Remove(entity);
             }
 
-            // add referenced blocks
+            // remove referenced blocks
             overrides.TryGetValue(DimensionStyleOverrideType.LeaderArrow, out styleOverride);
             if (styleOverride != null)
             {
@@ -1656,7 +1568,7 @@ namespace netDxf
                 }
             }
 
-            // add referenced line types
+            // remove referenced line types
             overrides.TryGetValue(DimensionStyleOverrideType.DimLineLinetype, out styleOverride);
             if (styleOverride != null)
             {

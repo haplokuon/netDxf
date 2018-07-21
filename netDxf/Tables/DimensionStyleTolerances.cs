@@ -41,7 +41,6 @@ namespace netDxf.Tables
         private bool suppressLinearTrailingZeros;
         private bool suppressZeroFeet;
         private bool suppressZeroInches;
-        private double dimtfac;
         private short dimalttd;
         private bool altSuppressLinearLeadingZeros;
         private bool altSuppressLinearTrailingZeros;
@@ -66,7 +65,6 @@ namespace netDxf.Tables
             this.suppressLinearTrailingZeros = false;
             this.suppressZeroFeet = true;
             this.suppressZeroInches = true;
-            this.dimtfac = 1.0;
             this.dimalttd = 2;
             this.altSuppressLinearLeadingZeros = false;
             this.altSuppressLinearTrailingZeros = false;
@@ -79,7 +77,7 @@ namespace netDxf.Tables
         #region public properties
 
         /// <summary>
-        /// Gets or sets the method for calculating the tolerance.
+        /// Gets or sets the method for calculating the tolerance. (DIMTOL)
         /// </summary>
         /// <remarks>
         /// Default: None
@@ -91,7 +89,7 @@ namespace netDxf.Tables
         }
 
         /// <summary>
-        /// Gets or sets the maximum or upper tolerance value. When you select Symmetrical in DisplayMethod, this value is used for the tolerance.
+        /// Gets or sets the maximum or upper tolerance value. When you select Symmetrical in DisplayMethod, this value is used for the tolerance. (DIMTP)
         /// </summary>
         /// <remarks>
         /// Default: 0.0
@@ -103,7 +101,7 @@ namespace netDxf.Tables
         }
 
         /// <summary>
-        /// Gets or sets the minimum or lower tolerance value.
+        /// Gets or sets the minimum or lower tolerance value. (DIMTM)
         /// </summary>
         /// <remarks>
         /// Default: 0.0
@@ -115,7 +113,7 @@ namespace netDxf.Tables
         }
 
         /// <summary>
-        /// Gets or sets the text vertical placement for symmetrical and deviation tolerances.
+        /// Gets or sets the text vertical placement for symmetrical and deviation tolerances. (DIMTOLJ)
         /// </summary>
         /// <remarks>
         /// Default: Middle
@@ -127,7 +125,7 @@ namespace netDxf.Tables
         }
 
         /// <summary>
-        /// Gets or sets the number of decimal places.
+        /// Gets or sets the number of decimal places. (DIMTDEC)
         /// </summary>
         /// <remarks>
         /// Default: 4<br/>
@@ -145,9 +143,11 @@ namespace netDxf.Tables
         }
 
         /// <summary>
-        /// Suppresses leading zeros in linear decimal tolerance units (for example, 0.5000 becomes .5000).
+        /// Suppresses leading zeros in linear decimal tolerance units. (DIMTZIN)
         /// </summary>
-        /// <remarks>This value is part of the DIMTZIN variable.</remarks>
+        /// <remarks>
+        /// This value is part of the DIMTZIN variable.
+        /// </remarks>
         public bool SuppressLinearLeadingZeros
         {
             get { return this.suppressLinearLeadingZeros; }
@@ -155,9 +155,11 @@ namespace netDxf.Tables
         }
 
         /// <summary>
-        /// Suppresses trailing zeros in linear decimal tolerance units (for example, 12.5000 becomes 12.5).
+        /// Suppresses trailing zeros in linear decimal tolerance units. (DIMTZIN)
         /// </summary>
-        /// <remarks>This value is part of the DIMTZIN variable.</remarks>
+        /// <remarks>
+        /// This value is part of the DIMTZIN variable.
+        /// </remarks>
         public bool SuppressLinearTrailingZeros
         {
             get { return this.suppressLinearTrailingZeros; }
@@ -165,9 +167,11 @@ namespace netDxf.Tables
         }
 
         /// <summary>
-        /// Suppresses zero feet in architectural tolerance units.
+        /// Suppresses zero feet in architectural tolerance units. (DIMTZIN)
         /// </summary>
-        /// <remarks>This value is part of the DIMTZIN variable.</remarks>
+        /// <remarks>
+        /// This value is part of the DIMTZIN variable.
+        /// </remarks>
         public bool SuppressZeroFeet
         {
             get { return this.suppressZeroFeet; }
@@ -175,9 +179,11 @@ namespace netDxf.Tables
         }
 
         /// <summary>
-        /// Suppresses zero inches in architectural tolerance units.
+        /// Suppresses zero inches in architectural tolerance units. (DIMTZIN)
         /// </summary>
-        /// <remarks>This value is part of the DIMTZIN variable.</remarks>
+        /// <remarks>
+        /// This value is part of the DIMTZIN variable.
+        /// </remarks>
         public bool SuppressZeroInches
         {
             get { return this.suppressZeroInches; }
@@ -185,24 +191,7 @@ namespace netDxf.Tables
         }
 
         /// <summary>
-        /// Gets or sets the height factor applied to the tolerance text in relation with the dimension text height.
-        /// </summary>
-        /// <remarks>
-        /// Default: 1.0
-        /// </remarks>
-        public double TextHeightFactor
-        {
-            get { return this.dimtfac; }
-            set
-            {
-                if (value <= 0)
-                    throw new ArgumentOutOfRangeException(nameof(value), value, "The tolerance text height factor must be greater than zero.");
-                this.dimtfac = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the number of decimal places of the tolerance alternate units.
+        /// Gets or sets the number of decimal places of the tolerance alternate units. (DIMALTTD)
         /// </summary>
         /// <remarks>
         /// Default: 2<br/>
@@ -220,7 +209,7 @@ namespace netDxf.Tables
         }
 
         /// <summary>
-        /// Suppresses leading zeros in linear decimal alternate tolerance units (for example, 0.5000 becomes .5000).
+        /// Suppresses leading zeros in linear decimal alternate tolerance units. (DIMALTTZ)
         /// </summary>
         /// <remarks>This value is part of the DIMALTTZ variable.</remarks>
         public bool AlternateSuppressLinearLeadingZeros
@@ -230,7 +219,7 @@ namespace netDxf.Tables
         }
 
         /// <summary>
-        /// Suppresses trailing zeros in linear decimal alternate tolerance units (for example, 12.5000 becomes 12.5).
+        /// Suppresses trailing zeros in linear decimal alternate tolerance units. (DIMALTTZ)
         /// </summary>
         /// <remarks>This value is part of the DIMALTTZ variable.</remarks>
         public bool AlternateSuppressLinearTrailingZeros
@@ -240,7 +229,7 @@ namespace netDxf.Tables
         }
 
         /// <summary>
-        /// Suppresses zero feet in architectural alternate tolerance units.
+        /// Suppresses zero feet in architectural alternate tolerance units. (DIMALTTZ)
         /// </summary>
         /// <remarks>This value is part of the DIMALTTZ variable.</remarks>
         public bool AlternateSuppressZeroFeet
@@ -250,7 +239,7 @@ namespace netDxf.Tables
         }
 
         /// <summary>
-        /// Suppresses zero inches in architectural alternate tolerance units.
+        /// Suppresses zero inches in architectural alternate tolerance units. (DIMALTTZ)
         /// </summary>
         /// <remarks>This value is part of the DIMALTTZ variable.</remarks>
         public bool AlternateSuppressZeroInches
@@ -280,7 +269,6 @@ namespace netDxf.Tables
                 SuppressLinearTrailingZeros = this.suppressLinearTrailingZeros,
                 SuppressZeroFeet = this.suppressZeroFeet,
                 SuppressZeroInches = this.suppressZeroInches,
-                TextHeightFactor = this.dimtfac,
                 AlternatePrecision = this.dimalttd,
                 AlternateSuppressLinearLeadingZeros = this.altSuppressLinearLeadingZeros,
                 AlternateSuppressLinearTrailingZeros = this.altSuppressLinearTrailingZeros,

@@ -249,24 +249,22 @@ namespace netDxf.Entities
             Vector2 midDim = Vector2.Polar(this.center, this.offset, midRot);
             this.defPoint = midDim;
 
-            DimensionStyleFitTextMove moveText = this.Style.FitTextMove;
-            DimensionStyleOverride styleOverride;
-            if (this.StyleOverrides.TryGetValue(DimensionStyleOverrideType.FitTextMove, out styleOverride))
+            if (!this.TextPositionManuallySet)
             {
-                moveText = (DimensionStyleFitTextMove)styleOverride.Value;
-            }
-            if (moveText == DimensionStyleFitTextMove.BesideDimLine)
-            {
-                if (this.TextPositionManuallySet)
+                DimensionStyleOverride styleOverride;
+                double textGap = this.Style.TextOffset;
+                if (this.StyleOverrides.TryGetValue(DimensionStyleOverrideType.TextOffset, out styleOverride))
                 {
-                    Vector2 textDir = this.textRefPoint - this.center;
-                    Vector2 vecText = this.center + this.offset * Vector2.Normalize(textDir);
-                    this.textRefPoint += vecText;
+                    textGap = (double)styleOverride.Value;
                 }
-                else
+                double scale = this.Style.DimScaleOverall;
+                if (this.StyleOverrides.TryGetValue(DimensionStyleOverrideType.DimScaleOverall, out styleOverride))
                 {
-                    if (updateRefs) this.textRefPoint = midDim;
+                    scale = (double)styleOverride.Value;
                 }
+
+                double gap = textGap * scale;
+                this.textRefPoint = midDim + gap * Vector2.Normalize(midDim - this.center);
             }
         }
 
@@ -279,6 +277,8 @@ namespace netDxf.Entities
         /// </summary>
         protected override void CalculteReferencePoints()
         {
+            DimensionStyleOverride styleOverride;
+
             double measure = this.Measurement;
             double startAngle = Vector2.Angle(this.center, this.start);
             double midRot = startAngle + measure * MathHelper.DegToRad * 0.5;
@@ -289,20 +289,31 @@ namespace netDxf.Entities
             if (this.TextPositionManuallySet)
             {
                 DimensionStyleFitTextMove moveText = this.Style.FitTextMove;
-                DimensionStyleOverride styleOverride;
                 if (this.StyleOverrides.TryGetValue(DimensionStyleOverrideType.FitTextMove, out styleOverride))
                 {
-                    moveText = (DimensionStyleFitTextMove) styleOverride.Value;
+                    moveText = (DimensionStyleFitTextMove)styleOverride.Value;
                 }
 
                 if (moveText == DimensionStyleFitTextMove.BesideDimLine)
                 {
-                    this.SetDimensionLinePosition(this.TextReferencePoint, false);
+                    this.SetDimensionLinePosition(this.textRefPoint, false);
                 }
             }
             else
             {
-                this.textRefPoint = midDim;
+                double textGap = this.Style.TextOffset;
+                if (this.StyleOverrides.TryGetValue(DimensionStyleOverrideType.TextOffset, out styleOverride))
+                {
+                    textGap = (double)styleOverride.Value;
+                }
+                double scale = this.Style.DimScaleOverall;
+                if (this.StyleOverrides.TryGetValue(DimensionStyleOverrideType.DimScaleOverall, out styleOverride))
+                {
+                    scale = (double)styleOverride.Value;
+                }
+
+                double gap = textGap * scale;
+                this.textRefPoint = midDim + gap * Vector2.Normalize(midDim - this.center);
             }
         }
 

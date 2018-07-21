@@ -71,7 +71,7 @@ namespace netDxf.Collections
         {
             if (!this.Contains(name))
                 return new List<DxfObject>();
-            return new List<DxfObject>(this.Owner.Blocks[this[name].AssociatedBlock.Name].Entities);
+            return this.GetReferences(this[name]);
         }
 
         /// <summary>
@@ -87,7 +87,10 @@ namespace netDxf.Collections
         {
             if (item == null)
                 throw new ArgumentNullException(nameof(item));
-            return new List<DxfObject>(this.Owner.Blocks[item.AssociatedBlock.Name].Entities);
+            List<DxfObject> refs = new List<DxfObject>();
+            refs.AddRange(item.AssociatedBlock.Entities);
+            refs.AddRange(item.AssociatedBlock.AttributeDefinitions.Values);
+            return refs;
         }
 
         /// <summary>
@@ -137,7 +140,6 @@ namespace netDxf.Collections
                 this.Owner.NumHandles = layout.AsignHandle(this.Owner.NumHandles);
 
             this.list.Add(layout.Name, layout);
-            //this.references.Add(layout.Name, new List<DxfObject>());
 
             layout.NameChanged += this.Item_NameChanged;
 
