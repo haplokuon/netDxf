@@ -38,9 +38,17 @@ public static void Main()
 Are contained in the source code.
 Well, at the moment they are just tests for the work in progress.
 ## Dependencies and distribution 
-* .NET Framework 4.5. netDxf only references the NET libraries System.dll and System.Drawing.dll
+* .NET Standard 2.0
 ## Compiling
-To compile the source code you will need Visual Studio 2015.
+To compile the source code you will need Visual Studio 2015 or Visual Studio Code ( dotnet core ).
+
+DotNet Core compiling example assuming netDxf already cloned:
+```
+dotnet new console --name=dxftest
+cd dxftest
+dotnet add reference ../netDxf/netDxf/netDxf.csproj
+dotnet run
+```
 ## Development Status 
 Stable. See [changelog.txt](https://github.com/haplokuon/netDxf/blob/master/doc/Changelog.txt) or the [wiki page](https://github.com/haplokuon/netDxf/wiki) for information on the latest changes.
 ## Supported entities
