@@ -167,19 +167,10 @@ namespace netDxf.Tables
         /// <summary>
         /// Gets or sets the scale of the text relative to the scale of the linetype.
         /// </summary>
-        /// <remarks>
-        /// The height of the text style is multiplied by the scale factor.
-        /// If the height of the text style is 0, the scale value alone is used as the height.
-        /// </remarks>
         public double Scale
         {
             get { return this.scale; }
-            set
-            {
-                if (value <= 0)
-                    throw new ArgumentOutOfRangeException(nameof(value), value, "The linetype text segment scale must be greater than zero.");
-                this.scale = value;
-            }
+            set { this.scale = value; }
         }
 
         #endregion

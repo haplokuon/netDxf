@@ -1,7 +1,7 @@
-﻿#region netDxf library, Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+﻿#region netDxf library, Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
 
 //                        netDxf library
-// Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -21,6 +21,7 @@
 #endregion
 
 using System;
+using System.Globalization;
 using netDxf.Tables;
 
 namespace netDxf.Entities
@@ -30,48 +31,25 @@ namespace netDxf.Entities
     /// </summary>
     public class MTextFormattingOptions
     {
-        /// <summary>
-        /// Text alignment options.
-        /// </summary>
-        public enum TextAligment
-        {
-            /// <summary>
-            /// Bottom.
-            /// </summary>
-            Bottom = 0,
-
-            /// <summary>
-            /// Center.
-            /// </summary>
-            Center = 1,
-
-            /// <summary>
-            /// Top.
-            /// </summary>
-            Top = 2,
-
-            /// <summary>
-            /// Current value (no changes).
-            /// </summary>
-            Default = 3
-        }
 
         #region private fields
 
+        private const double SuperSubScriptHeightFactor = 0.7;
         private bool bold;
         private bool italic;
         private bool overline;
         private bool underline;
         private bool strikeThrough;
+        private bool superscript;
+        private bool subscript;
         private AciColor color;
         private string fontName;
-        private TextAligment aligment;
         private double heightFactor;
         private double obliqueAngle;
         private double characterSpaceFactor;
         private double widthFactor;
         private readonly TextStyle style;
-
+        
         #endregion
 
         #region constructors
@@ -88,7 +66,6 @@ namespace netDxf.Entities
             this.underline = false;
             this.color = null;
             this.fontName = null;
-            this.aligment = TextAligment.Default;
             this.heightFactor = 1.0;
             this.obliqueAngle = 0.0;
             this.characterSpaceFactor = 1.0;
@@ -103,7 +80,7 @@ namespace netDxf.Entities
         /// <summary>
         /// Gets or sets if the text is bold.
         /// </summary>
-        /// <remarks>The style font must support bold characters.</remarks>
+        /// <remarks>The font style must support bold characters.</remarks>
         public bool Bold
         {
             get { return this.bold; }
@@ -113,7 +90,7 @@ namespace netDxf.Entities
         /// <summary>
         /// Gets or sets if the text is italic.
         /// </summary>
-        /// <remarks>The style font must support italic characters.</remarks>
+        /// <remarks>The font style must support italic characters.</remarks>
         public bool Italic
         {
             get { return this.italic; }
@@ -121,7 +98,7 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets or sets the overline.
+        /// Gets or sets the over line.
         /// </summary>
         public bool Overline
         {
@@ -148,11 +125,42 @@ namespace netDxf.Entities
         }
 
         /// <summary>
+        /// Get or set if the text is superscript.
+        /// </summary>
+        /// <remarks>
+        /// The Superscript and subscript properties are mutually exclusive, if it is set to true the Subscript property will be set to false automatically.
+        /// </remarks>
+        public bool Superscript
+        {
+            get { return this.superscript; }
+            set
+            {
+                if (value) this.subscript = false;
+                this.superscript = value;
+            }
+        }
+
+        /// <summary>
+        /// Get or set if the text is subscript.
+        /// </summary>
+        /// <remarks>
+        /// The Superscript and Subscript properties are mutually exclusive, if it is set to true the Superscript property will be set to false automatically.
+        /// </remarks>
+        public bool Subscript
+        {
+            get { return this.subscript; }
+            set
+            {
+                if (value) this.superscript = false;
+                this.subscript = value;
+            }
+        }
+
+        /// <summary>
         /// Gets or sets the text color.
         /// </summary>
         /// <remarks>
-        /// Set as null to apply the default color.<br />
-        /// True color is only compatible with dxf database version greater than AutoCad2000.
+        /// Set as null to apply the default color.
         /// </remarks>
         public AciColor Color
         {
@@ -161,22 +169,17 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets or sets the font file name (.ttf fonts without the extension).
+        /// Gets or sets the font that will override the default defined in the TextStyle. 
         /// </summary>
-        /// <remarks>Set as null to apply the default font.</remarks>
+        /// <remarks>
+        /// Set as null or empty to apply the default font.<br />
+        /// When using SHX fonts use the font file with the SHX extension,
+        /// when using TTF fonts use the font family name.
+        /// </remarks>
         public string FontName
         {
             get { return this.fontName; }
             set { this.fontName = value; }
-        }
-
-        /// <summary>
-        /// Gets or sets the text alignment.
-        /// </summary>
-        public TextAligment Aligment
-        {
-            get { return this.aligment; }
-            set { this.aligment = value; }
         }
 
         /// <summary>
@@ -254,6 +257,34 @@ namespace netDxf.Entities
         public string FormatText(string text)
         {
             string formattedText = text;
+            double baseHeightFactor = this.heightFactor;
+
+            if (this.superscript)
+            {
+                formattedText = string.Format("\\S{0}^ ;", formattedText);
+                baseHeightFactor *= SuperSubScriptHeightFactor;
+            }
+            if (this.subscript)
+            {
+                formattedText = string.Format("\\S^ {0};", formattedText);
+                baseHeightFactor *= SuperSubScriptHeightFactor;
+            }
+
+            string f;
+            if (string.IsNullOrEmpty(this.fontName))
+                f = this.style.IsTrueType ? this.style.FontFamilyName : this.style.FontFile;
+            else
+                f = this.fontName;
+
+            if (this.bold && this.italic)
+                formattedText = string.Format("\\F{0}|b1|i1;{1}", f, formattedText);
+            else if (this.bold && !this.italic)
+                formattedText = string.Format("\\F{0}|b1|i0;{1}", f, formattedText);
+            else if (!this.bold && this.italic)
+                formattedText = string.Format("\\F{0}|i1|b0;{1}", f, formattedText);
+            else
+                formattedText = string.Format("\\F{0}|b0|i0;{1}", f, formattedText);
+
             if (this.overline)
                 formattedText = string.Format("\\O{0}\\o", formattedText);
             if (this.underline)
@@ -262,40 +293,23 @@ namespace netDxf.Entities
                 formattedText = string.Format("\\K{0}\\k", formattedText);
             if (this.color != null)
             {
-                formattedText = this.color.UseTrueColor ?
-                    string.Format("\\C{0};\\c{1};{2}", this.color.Index, AciColor.ToTrueColor(this.color), formattedText) :
-                    string.Format("\\C{0};{1}", this.color.Index, formattedText);
+                // The DXF is not consistent in the way it converts a true color to its 24-bit representation,
+                // while stuff like layer colors it follows BGR order, when formatting text it uses RGB order.
+                formattedText = this.color.UseTrueColor
+                    ? string.Format("\\C{0};\\c{1};{2}", this.color.Index, BitConverter.ToInt32(new byte[] {this.color.R, this.color.G, this.color.B, 0}, 0), formattedText)
+                    : string.Format("\\C{0};{1}", this.color.Index, formattedText);
             }
-            if (this.fontName != null)
-            {
-                if (this.bold && this.italic)
-                    formattedText = string.Format("\\f{0}|b1|i1;{1}", this.fontName, formattedText);
-                else if (this.bold && !this.italic)
-                    formattedText = string.Format("\\f{0}|b1|i0;{1}", this.fontName, formattedText);
-                else if (!this.bold && this.italic)
-                    formattedText = string.Format("\\f{0}|i1|b0;{1}", this.fontName, formattedText);
-                else
-                    formattedText = string.Format("\\F{0};{1}", this.fontName, formattedText);
-            }
-            else
-            {
-                if (this.bold && this.italic)
-                    formattedText = string.Format("\\f{0}|b1|i1;{1}", this.style.FontFamilyName, formattedText);
-                if (this.bold && !this.italic)
-                    formattedText = string.Format("\\f{0}|b1|i0;{1}", this.style.FontFamilyName, formattedText);
-                if (!this.bold && this.italic)
-                    formattedText = string.Format("\\f{0}|i1|b0;{1}", this.style.FontFamilyName, formattedText);
-            }
-            if (this.aligment != TextAligment.Default)
-                formattedText = string.Format("\\A{0};{1}", (int) this.aligment, formattedText);
-            if (!MathHelper.IsOne(this.heightFactor))
-                formattedText = string.Format("\\H{0}x;{1}", this.heightFactor, formattedText);
+
+
+            if (!MathHelper.IsOne(baseHeightFactor))
+                formattedText = string.Format("\\H{0}x;{1}", baseHeightFactor.ToString(CultureInfo.InvariantCulture), formattedText);
             if (!MathHelper.IsZero(this.obliqueAngle))
-                formattedText = string.Format("\\Q{0};{1}", this.obliqueAngle, formattedText);
+                formattedText = string.Format("\\Q{0};{1}", this.obliqueAngle.ToString(CultureInfo.InvariantCulture), formattedText);
             if (!MathHelper.IsOne(this.characterSpaceFactor))
-                formattedText = string.Format("\\T{0};{1}", this.characterSpaceFactor, formattedText);
+                formattedText = string.Format("\\T{0};{1}", this.characterSpaceFactor.ToString(CultureInfo.InvariantCulture), formattedText);
             if (!MathHelper.IsOne(this.widthFactor))
-                formattedText = string.Format("\\W{0};{1}", this.widthFactor, formattedText);
+                formattedText = string.Format("\\W{0};{1}", this.widthFactor.ToString(CultureInfo.InvariantCulture), formattedText);
+
             return "{" + formattedText + "}";
         }
 

@@ -41,7 +41,7 @@ using Trace = netDxf.Entities.Trace;
 namespace netDxf.IO
 {
     /// <summary>
-    /// Low level dxf reader
+    /// Low level DXF reader
     /// </summary>
     internal sealed class DxfReader
     {
@@ -6801,7 +6801,7 @@ namespace netDxf.IO
                         }
                         else
                         {
-                            ctrlPoints[ctrlPointIndex].Weigth = weigth;
+                            ctrlPoints[ctrlPointIndex].Weight = weigth;
                             ctrlWeigth = -1;
                         }
                         this.chunk.Next();

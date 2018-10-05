@@ -29,7 +29,13 @@ namespace TestDxfDocument
 
         public static void Main()
         {
-            DxfDocument doc = Test(@"sample.dxf");
+            //DxfDocument doc = Test(@"sample.dxf");
+
+            #region Samples for new and modified features 2.2.1
+
+            MTextFormattingSample();
+
+            #endregion
 
             #region Samples for new and modified features 2.2.0
 
@@ -222,6 +228,54 @@ namespace TestDxfDocument
 
             #endregion
         }
+
+        #region Samples for new and modified features 2.2.1
+
+        private static void MTextFormattingSample()
+        {
+            DxfDocument dxf = new DxfDocument();
+            dxf.Layers.Add(new Layer("Layer1") {Color = new AciColor(Color.SkyBlue)});
+            MText text = new MText();
+            text.RectangleWidth = 35;
+            MTextFormattingOptions op = new MTextFormattingOptions(text.Style);
+            text.Write("Text line with the default formatting options", op);
+            text.EndParagraph();
+            op.FontName = "Tahoma";
+            text.Write("Sample text", op);
+            text.EndParagraph();
+            op.FontName = "Times New Roman";
+            op.Color = AciColor.Red;
+            text.Write("New", op);
+            op.HeightFactor = 1.5;
+            text.Write(" line ", op);
+            op.HeightFactor = 1.0;
+            text.Write("of text x", op);
+            op.Superscript = true;
+            text.Write("12", op);
+            op.Superscript = false;
+            text.Write(" y", op);
+            op.Subscript = true;
+            text.Write("34", op);
+            op.Subscript = false;
+            text.EndParagraph(MTextParagraphJustification.Right);
+            op.Color = new AciColor(Color.SkyBlue);
+            op.Italic = true;
+            op.Underline = true;
+            text.Write("Another line of text", op);
+            text.EndParagraph(MTextParagraphJustification.Center, 2.5);
+            op = new MTextFormattingOptions(text.Style);
+            op.FontName = "Times New Roman";
+            op.Bold = true;
+            text.Write("Text line with the default formatting options", op);
+            text.EndParagraph();
+            dxf.AddEntity(text);
+
+            string token = text.PlainText();
+
+            dxf.Save("test.dxf");
+        }
+
+        #endregion
 
         #region Samples for new and modified features 2.2.0
 
@@ -4853,7 +4907,7 @@ namespace TestDxfDocument
 
         private static void ComplexHatch()
         {
-            HatchPattern pattern = HatchPattern.FromFile("hatch\\acad.pat", "ESCHER");
+            HatchPattern pattern = HatchPattern.Load("hatch\\acad.pat", "ESCHER");
             pattern.Scale = 1.5;
             pattern.Angle = 30;
 
@@ -6327,7 +6381,7 @@ namespace TestDxfDocument
         private static void FilesTest()
         {
             Linetype linetype = Linetype.Load("acad.lin", "ACAD_ISO15W100");
-            HatchPattern hatch = HatchPattern.FromFile("acad.pat", "zigzag");
+            HatchPattern hatch = HatchPattern.Load("acad.pat", "zigzag");
         }
 
         private static void LoadSaveHatchTest()

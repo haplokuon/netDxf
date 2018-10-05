@@ -258,7 +258,7 @@ namespace netDxf.Entities
         /// if required this method will calculate the proper values according to the ones defined by the attribute definition.<br />
         /// All the attribute values can be changed manually independently to its definition,
         /// but, usually, you will want them to be transformed with the insert based on the local values defined by the attribute definition.<br />
-        /// This method only applies to attributes that have a definition, some dxf files might generate attributes that have no definition in the block.<br />
+        /// This method only applies to attributes that have a definition, some DXF files might generate attributes that have no definition in the block.<br />
         /// At the moment the attribute width factor and oblique angle are not calculated, this is applied to inserts with non uniform scaling.
         /// </remarks>
         public void TransformAttributes()
@@ -392,41 +392,41 @@ namespace netDxf.Entities
 
         #region Explode
 
-        //public List<EntityObject> Explode()
-        //{
-        //    List<EntityObject> entities = new List<EntityObject>();
-        //    Matrix3 trans = this.GetTransformation();
-        //    Vector3 pos = this.position - trans*this.block.Position;
+        public List<EntityObject> Explode()
+        {
+            List<EntityObject> entities = new List<EntityObject>();
+            Matrix3 trans = this.GetTransformation( DrawingUnits.Unitless);
+            Vector3 pos = this.position - trans * this.block.Origin;
 
-        //    foreach (EntityObject entity in this.block.Entities)
-        //    {
-        //        switch (entity.Type)
-        //        {
-        //            case (EntityType.Arc):
-        //                entities.Add(ProcessArc((Arc)entity, trans, pos, this.scale, this.rotation));
-        //                break;
-        //            case (EntityType.Circle):
-        //                entities.Add(ProcessCircle((Circle)entity, trans, pos, this.scale, this.rotation));
-        //                break;
-        //            case (EntityType.Ellipse):
-        //                entities.Add(ProcessEllipse((Ellipse)entity, trans, pos, this.scale, this.rotation));
-        //                break;
-        //            case (EntityType.Face3D):
-        //                entities.Add(ProcessFace3d((Face3d)entity, trans, pos));
-        //                break;
-        //            case(EntityType.Hatch):
-        //                entities.Add(ProcessHatch((Hatch)entity, trans, pos, this.position, this.Normal, this.scale, this.rotation));
-        //                break;
-        //            case (EntityType.Line):
-        //                entities.Add(ProcessLine((Line)entity, trans, pos));
-        //                break;
-        //        }
-        //    }
+            foreach (EntityObject entity in this.block.Entities)
+            {
+                switch (entity.Type)
+                {
+                    //case (EntityType.Arc):
+                    //    entities.Add(ProcessArc((Arc)entity, trans, pos, this.scale, this.rotation));
+                    //    break;
+                    //case (EntityType.Circle):
+                    //    entities.Add(ProcessCircle((Circle)entity, trans, pos, this.scale, this.rotation));
+                    //    break;
+                    //case (EntityType.Ellipse):
+                    //    entities.Add(ProcessEllipse((Ellipse)entity, trans, pos, this.scale, this.rotation));
+                    //    break;
+                    //case (EntityType.Face3D):
+                    //    entities.Add(ProcessFace3d((Face3d)entity, trans, pos));
+                    //    break;
+                    //case (EntityType.Hatch):
+                    //    entities.Add(ProcessHatch((Hatch)entity, trans, pos, this.position, this.Normal, this.scale, this.rotation));
+                    //    break;
+                    case (EntityType.Line):
+                        entities.Add(ProcessLine((Line)entity, trans, pos));
+                        break;
+                }
+            }
 
-        //    return entities;
-        //}
+            return entities;
+        }
 
-        //#region private methods
+        #region private methods
 
         //private static EntityObject ProcessArc(Arc arc, Matrix3 trans, Vector3 pos, Vector3 scale, double rotation)
         //{
@@ -552,17 +552,17 @@ namespace netDxf.Entities
         //    return copy;
         //}
 
-        //private static Line ProcessLine(Line line, Matrix3 trans, Vector3 pos)
-        //{
-        //    Line copy = (Line)line.Clone();
-        //    copy.StartPoint = trans * line.StartPoint + pos;
-        //    copy.EndPoint = trans * line.EndPoint + pos;
-        //    copy.Normal = trans * line.Normal;
+        private static Line ProcessLine(Line line, Matrix3 trans, Vector3 pos)
+        {
+            Line copy = (Line)line.Clone();
+            copy.StartPoint = trans * line.StartPoint + pos;
+            copy.EndPoint = trans * line.EndPoint + pos;
+            copy.Normal = trans * line.Normal;
 
-        //    return copy;
-        //}
+            return copy;
+        }
 
-        //#endregion
+        #endregion
 
         #endregion
     }

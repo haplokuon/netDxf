@@ -115,8 +115,8 @@ namespace netDxf.Tables
         /// </summary>
         /// <remarks>
         /// The shape must be defined in the .shx shape definitions file.<br />
-        /// The dxf instead of saving the shape name, as the Shape entity or the shape linetype segments definition in a .lin file,
-        /// it stores the shape number. Therefore when saving a dxf file the shape number will be obtained reading the .shp file.
+        /// The DXF instead of saving the shape name, as the Shape entity or the shape linetype segments definition in a .lin file,
+        /// it stores the shape number. Therefore when saving a DXF file the shape number will be obtained reading the .shp file.
         /// </remarks>
         public string Name
         {
@@ -176,18 +176,10 @@ namespace netDxf.Tables
         /// <summary>
         /// Gets or sets the scale of the shape relative to the scale of the line type.
         /// </summary>
-        /// <remarks>
-        /// If the size of the shape style is 0, the scale value alone is used as the size.
-        /// </remarks>
         public double Scale
         {
             get { return this.scale; }
-            set
-            {
-                if (value <= 0)
-                    throw new ArgumentOutOfRangeException(nameof(value), value, "The linetype shape segment scale must be greater than zero.");
-                this.scale = value;
-            }
+            set { this.scale = value; }
         }
 
         #endregion

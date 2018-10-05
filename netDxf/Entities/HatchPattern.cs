@@ -22,7 +22,9 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
+using System.Text;
 
 namespace netDxf.Entities
 {
@@ -207,7 +209,7 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets or sets the hatch description (optional, this information is not saved in the dxf file).
+        /// Gets or sets the hatch description (optional, this information is not saved in the DXF file).
         /// </summary>
         public string Description
         {
@@ -288,12 +290,41 @@ namespace netDxf.Entities
         #region public methods
 
         /// <summary>
-        /// Creates a new hatch pattern from the definition in a pat file.
+        /// Gets the list of hatch pattern names defined in a PAT file.
         /// </summary>
-        /// <param name="file">Pat file where the definition is located.</param>
+        /// <param name="file">Hatch pattern definitions file.</param>
+        /// <returns>List of hatch pattern names contained in the specified PAT file.</returns>
+        public static List<string> NamesFromFile(string file)
+        {
+            List<string> names = new List<string>();
+            using (StreamReader reader = new StreamReader(File.Open(file, FileMode.Open, FileAccess.Read, FileShare.ReadWrite), true))
+            {
+                while (!reader.EndOfStream)
+                {
+                    string line = reader.ReadLine();
+                    if (line == null)
+                        throw new FileLoadException("Unknown error reading PAT file.", file);
+
+                    // every line type definition starts with '*'
+                    if (!line.StartsWith("*"))
+                        continue;
+
+                    // reading line type name and description
+                    int endName = line.IndexOf(',');
+                    // the first semicolon divides the name from the description that might contain more semicolons
+                    names.Add(line.Substring(1, endName - 1));
+                }
+            }
+            return names;
+        }
+
+        /// <summary>
+        /// Creates a new hatch pattern from the definition in a PAT file.
+        /// </summary>
+        /// <param name="file">PAT file where the definition is located.</param>
         /// <param name="patternName">Name of the pattern definition that wants to be read (ignore case).</param>
-        /// <returns>A Hatch pattern defined by the pat file.</returns>
-        public static HatchPattern FromFile(string file, string patternName)
+        /// <returns>A Hatch pattern as defined in the PAT file.</returns>
+        public static HatchPattern Load(string file, string patternName)
         {
             HatchPattern pattern = null;
 
@@ -304,9 +335,8 @@ namespace netDxf.Entities
                     string line = reader.ReadLine();
                     if (line == null)
                         throw new FileLoadException("Unknown error reading pat file.", file);
-                    // lines starting with semicolons are comments
-                    if (line.StartsWith(";"))
-                        continue;
+                    line = line.Trim();
+
                     // every pattern definition starts with '*'
                     if (!line.StartsWith("*"))
                         continue;
@@ -324,15 +354,24 @@ namespace netDxf.Entities
                     // we have found the pattern name, the next lines of the file contains the pattern definition
                     line = reader.ReadLine();
                     if (line == null)
-                        throw new FileLoadException("Unknown error reading pat file.", file);
+                        throw new FileLoadException("Unknown error reading PAT file.", file);
+                    line = line.Trim();
+
                     pattern = new HatchPattern(name, description);
 
-                    while (!reader.EndOfStream && !line.StartsWith("*") && !string.IsNullOrEmpty(line))
+                    while (!string.IsNullOrEmpty(line) && !line.StartsWith("*") &&  !line.StartsWith(";"))
                     {
                         string[] tokens = line.Split(',');
-                        double angle = double.Parse(tokens[0]);
-                        Vector2 origin = new Vector2(double.Parse(tokens[1]), double.Parse(tokens[2]));
-                        Vector2 delta = new Vector2(double.Parse(tokens[3]), double.Parse(tokens[4]));
+                        if(tokens.Length < 5)
+                            throw new FileLoadException("The hatch pattern definition lines must contain at least 5 values.", file);
+
+                        double angle = double.Parse(tokens[0], NumberStyles.Float, CultureInfo.InvariantCulture);
+                        Vector2 origin = new Vector2(
+                            double.Parse(tokens[1], NumberStyles.Float, CultureInfo.InvariantCulture),
+                            double.Parse(tokens[2], NumberStyles.Float, CultureInfo.InvariantCulture));
+                        Vector2 delta = new Vector2(
+                            double.Parse(tokens[3], NumberStyles.Float, CultureInfo.InvariantCulture),
+                            double.Parse(tokens[4], NumberStyles.Float, CultureInfo.InvariantCulture));
 
                         HatchPatternLineDefinition lineDefinition = new HatchPatternLineDefinition
                         {
@@ -343,21 +382,53 @@ namespace netDxf.Entities
 
                         // the rest of the info is optional if it exists define the dash pattern definition
                         for (int i = 5; i < tokens.Length; i++)
-                            lineDefinition.DashPattern.Add(double.Parse(tokens[i]));
+                            lineDefinition.DashPattern.Add(double.Parse(tokens[i], NumberStyles.Float, CultureInfo.InvariantCulture));
 
                         pattern.LineDefinitions.Add(lineDefinition);
                         pattern.Type = HatchType.UserDefined;
+
+                        if(reader.EndOfStream) break;
+
                         line = reader.ReadLine();
                         if (line == null)
-                            throw new FileLoadException("Unknown error reading pat file.", file);
+                            throw new FileLoadException("Unknown error reading PAT file.", file);
                         line = line.Trim();
-                    }
+                    } 
+
                     // there is no need to continue parsing the file, the info has been read
                     break;
                 }
             }
 
             return pattern;
+        }
+
+        /// <summary>
+        /// Saves the current linetype to the specified file, if the file does not exist it creates a new one.
+        /// </summary>
+        /// <param name="file">File where the current linetype will be saved.</param>
+        public void Save(string file)
+        {
+            StringBuilder sb = new StringBuilder();
+
+            sb.AppendLine(string.Format("*{0},{1}", this.Name, this.description));
+            
+            foreach (HatchPatternLineDefinition def in this.lineDefinitions)
+            {
+                sb.Append(string.Format("{0},{1},{2},{3},{4}",
+                    def.Angle.ToString(CultureInfo.InvariantCulture),
+                    def.Origin.X.ToString(CultureInfo.InvariantCulture),
+                    def.Origin.Y.ToString(CultureInfo.InvariantCulture),
+                    def.Delta.X.ToString(CultureInfo.InvariantCulture),
+                    def.Delta.Y.ToString(CultureInfo.InvariantCulture)));
+                foreach (double d in def.DashPattern)
+                {
+                    sb.Append(string.Format(",{0}", d.ToString(CultureInfo.InvariantCulture)));
+                }
+                sb.Append(Environment.NewLine);
+            }
+
+            File.AppendAllText(file, sb.ToString());
         }
 
         #endregion

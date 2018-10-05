@@ -378,7 +378,7 @@ namespace netDxf.Entities
                 this.ControlPoints = new Vector3[spline.ControlPoints.Count];
                 for (int i = 0; i < spline.ControlPoints.Count; i++)
                 {
-                    this.ControlPoints[i] = new Vector3(spline.ControlPoints[i].Position.X, spline.ControlPoints[i].Position.Y, spline.ControlPoints[i].Weigth);
+                    this.ControlPoints[i] = new Vector3(spline.ControlPoints[i].Position.X, spline.ControlPoints[i].Position.Y, spline.ControlPoints[i].Weight);
                 }
                 this.Knots = new double[spline.Knots.Count];
                 for (int i = 0; i < spline.Knots.Count; i++)

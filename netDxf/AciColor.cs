@@ -1,7 +1,7 @@
-﻿#region netDxf library, Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+﻿#region netDxf library, Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
 
 //                        netDxf library
-// Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -538,8 +538,8 @@ namespace netDxf
         /// Get or set if the AciColor should use true color values.
         /// </summary>
         /// <remarks>
-        /// By default the constructors that use r, g, b values will set this boolean to true
-        /// while the constants and constructor that use a short will set it to false.
+        /// By default, the constructors that use RGB values will set this boolean to true
+        /// while the constants and the constructor that use a color index will set it to false.
         /// </remarks>
         public bool UseTrueColor
         {
@@ -731,10 +731,10 @@ namespace netDxf
         }
 
         /// <summary>
-        /// Gets the entity 24-bit color value from an AciColor.
+        /// Gets the 24-bit color value from an AciColor.
         /// </summary>
         /// <param name="color">A <see cref="AciColor">color</see>.</param>
-        /// <returns>A 24-bit color value.</returns>
+        /// <returns>A 24-bit color value (BGR order).</returns>
         public static int ToTrueColor(AciColor color)
         {
             if (color == null)
@@ -746,7 +746,7 @@ namespace netDxf
         /// <summary>
         /// Gets the <see cref="AciColor">color</see> from a 24-bit color value.
         /// </summary>
-        /// <param name="value">A 24-bit color value.</param>
+        /// <param name="value">A 24-bit color value (BGR order).</param>
         /// <returns>A <see cref="AciColor">color</see>.</returns>
         public static AciColor FromTrueColor(int value)
         {

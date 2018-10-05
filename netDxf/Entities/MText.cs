@@ -21,11 +21,13 @@
 #endregion
 
 using System;
+using System.Globalization;
 using System.Text;
 using netDxf.Tables;
 
 namespace netDxf.Entities
 {
+
     /// <summary>
     /// Represents a multiline text <see cref="EntityObject">entity</see>.
     /// </summary>
@@ -111,11 +113,13 @@ namespace netDxf.Entities
         private double height;
         private double rotation;
         private double lineSpacing;
-        private double paragraphHeightFactor;
         private MTextLineSpacingStyle lineSpacingStyle;
         private MTextDrawingDirection drawingDirection;
         private MTextAttachmentPoint attachmentPoint;
         private TextStyle style;
+        private double heightFactor;
+        private MTextParagraphJustification justification;
+        private int startParagraph;
         private string text;
 
         #endregion
@@ -244,10 +248,12 @@ namespace netDxf.Entities
                 throw new ArgumentOutOfRangeException(nameof(height), this.text, "The MText height must be greater than zero.");
             this.height = height;
             this.lineSpacing = 1.0;
-            this.paragraphHeightFactor = 1.0;
+            this.heightFactor = 1.0;
             this.lineSpacingStyle = MTextLineSpacingStyle.AtLeast;
             this.drawingDirection = MTextDrawingDirection.ByStyle;
             this.rotation = 0.0;
+            this.justification = MTextParagraphJustification.Left;
+            this.startParagraph = 0;
         }
 
         #endregion
@@ -302,12 +308,12 @@ namespace netDxf.Entities
         /// </remarks>
         public double ParagraphHeightFactor
         {
-            get { return this.paragraphHeightFactor; }
+            get { return this.heightFactor; }
             set
             {
                 if (value < 0.25 || value > 4.0)
                     throw new ArgumentOutOfRangeException(nameof(value), value, "The MText ParagraphHeightFactor valid values range from 0.25 to 4.00");
-                this.paragraphHeightFactor = value;
+                this.heightFactor = value;
             }
         }
 
@@ -346,6 +352,18 @@ namespace netDxf.Entities
                     throw new ArgumentOutOfRangeException(nameof(value), value, "The MText rectangle width must be equals or greater than zero.");
                 this.rectangleWidth = value;
             }
+        }
+
+        /// <summary>
+        /// Gets or sets the current paragraph justification (text horizontal alignment).
+        /// </summary>
+        /// <remarks>
+        /// The MText RectangleWidth property must be greater than zero to get correct results.  This parameters works together with the Write and EndParagraph methods. 
+        /// </remarks>
+        public MTextParagraphJustification Justification
+        {
+            get { return this.justification; }
+            set { this.justification = value; }
         }
 
         /// <summary>
@@ -418,12 +436,73 @@ namespace netDxf.Entities
         /// <summary>
         /// Ends the actual paragraph (adds the end paragraph code and the paragraph height factor). 
         /// </summary>
+        /// <remarks>
+        /// It applies the default paragraph justification and height factor defined in the actual MText entity.
+        /// </remarks>
         public void EndParagraph()
         {
-            if (!MathHelper.IsOne(this.paragraphHeightFactor))
-                this.text += "{\\H" + this.paragraphHeightFactor + "x;}\\P";
-            else
-                this.text += "\\P";
+            this.EndParagraph(this.justification, this.heightFactor);
+        }
+
+        /// <summary>
+        /// Ends the actual paragraph (adds the end paragraph code and the paragraph height factor). 
+        /// </summary>
+        /// <param name="paragraphJustification">Paragraph justification, it will override the default value defined by Justification property.</param>
+        /// <remarks>
+        /// It applies the default paragraph height factor defined in the actual MText entity.
+        /// </remarks>
+        public void EndParagraph(MTextParagraphJustification paragraphJustification)
+        {
+            this.EndParagraph(paragraphJustification, this.heightFactor);
+        }
+
+        /// <summary>
+        /// Ends the actual paragraph (adds the end paragraph code and the paragraph height factor). 
+        /// </summary>
+        /// <param name="paragraphHeightFactor">Paragraph height factor, this parameter will override the default value defined by the ParagraphHeightFactor property.</param>
+        /// <remarks>
+        /// It applies the default paragraph justification defined in the actual MText entity.
+        /// </remarks>
+        public void EndParagraph(double paragraphHeightFactor)
+        {
+            this.EndParagraph(this.justification, paragraphHeightFactor);
+        }
+
+        /// <summary>
+        /// Ends the actual paragraph (adds the end paragraph code and the paragraph height factor). 
+        /// </summary>
+        /// <param name="paragraphJustification">Paragraph justification, it will override the default value defined by Justification property.</param>
+        /// <param name="paragraphHeightFactor">Paragraph height factor, this parameter will override the default value defined by the ParagraphHeightFactor property.</param>
+        public void EndParagraph(MTextParagraphJustification paragraphJustification, double paragraphHeightFactor)
+        {
+            if (paragraphHeightFactor < 0.25 || paragraphHeightFactor > 4.0)
+                throw new ArgumentOutOfRangeException(nameof(paragraphHeightFactor), paragraphHeightFactor, "The paragraphHeightFactor valid values range from 0.25 to 4.00");
+
+            string paragraph = this.text.Substring(this.startParagraph);
+            switch (paragraphJustification)
+            {
+                case MTextParagraphJustification.Left:
+                    paragraph = string.Format("\\pql;{0}", paragraph);
+                    break;
+                case MTextParagraphJustification.Center:
+                    paragraph = string.Format("\\pqc;{0}", paragraph);
+                    break;
+                case MTextParagraphJustification.Right:
+                    paragraph = string.Format("\\pqr;{0}", paragraph);
+                    break;
+                case MTextParagraphJustification.Justify:
+                    paragraph = string.Format("\\pqj;{0}", paragraph);
+                    break;
+                case MTextParagraphJustification.Distribute:
+                    paragraph = string.Format("\\pqd;{0}", paragraph);
+                    break;
+            }
+
+            if (!MathHelper.IsOne(paragraphHeightFactor))
+                paragraph = "\\H" + paragraphHeightFactor.ToString(CultureInfo.InvariantCulture) + "x;" + paragraph;
+
+            this.text = this.text.Substring(0, this.startParagraph) + "{\\A1" + paragraph + "}\\P";
+            this.startParagraph = this.text.Length;
         }
 
         /// <summary>
@@ -514,7 +593,7 @@ namespace netDxf.Entities
                 Rotation = this.rotation,
                 Height = this.height,
                 LineSpacingFactor = this.lineSpacing,
-                ParagraphHeightFactor = this.paragraphHeightFactor,
+                ParagraphHeightFactor = this.heightFactor,
                 LineSpacingStyle = this.lineSpacingStyle,
                 RectangleWidth = this.rectangleWidth,
                 AttachmentPoint = this.attachmentPoint,

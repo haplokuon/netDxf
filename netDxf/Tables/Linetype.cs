@@ -22,6 +22,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Text;
 using netDxf.Collections;
@@ -323,9 +324,7 @@ namespace netDxf.Tables
                     string line = reader.ReadLine();
                     if (line == null)
                         throw new FileLoadException("Unknown error reading LIN file.", file);
-                    // lines starting with semicolons are comments
-                    if (line.StartsWith(";"))
-                        continue;
+
                     // every line type definition starts with '*'
                     if (!line.StartsWith("*"))
                         continue;
@@ -356,9 +355,7 @@ namespace netDxf.Tables
                     string line = reader.ReadLine();
                     if (line == null)
                         throw new FileLoadException("Unknown error reading LIN file.", file);
-                    // lines starting with semicolons are comments
-                    if (line.StartsWith(";"))
-                        continue;
+
                     // every line type definition starts with '*'
                     if (!line.StartsWith("*"))
                         continue;
@@ -384,12 +381,12 @@ namespace netDxf.Tables
                         for (int i = 1; i < tokens.Length; i++)
                         {
                             double length;
-                            if (double.TryParse(tokens[i], out length))
+                            if (double.TryParse(tokens[i], NumberStyles.Float, CultureInfo.InvariantCulture, out length))
                             {
                                 // is the length followed by a shape o text segment
                                 if (i + 1 < tokens.Length)
                                 {
-                                    if (tokens[i + 1].StartsWith("[", StringComparison.CurrentCultureIgnoreCase))
+                                    if (tokens[i + 1].StartsWith("["))
                                     {
                                         StringBuilder data = new StringBuilder();
                                         // there are two kinds of complex linetype Text and Shape,
@@ -447,7 +444,7 @@ namespace netDxf.Tables
                 switch (s.Type)
                 {
                     case LinetypeSegmentType.Simple:
-                        sb.Append(string.Format("A,{0}", s.Length));
+                        sb.Append(string.Format("A,{0}", s.Length.ToString(CultureInfo.InvariantCulture)));
                         break;
                     case LinetypeSegmentType.Text:
                         LinetypeTextSegment ts = (LinetypeTextSegment) s;
@@ -465,10 +462,18 @@ namespace netDxf.Tables
                                 break;
                         }
 
-                        sb.Append(string.Format("A,{0},[\"{1}\",{2},S={3},{4}{5},X={6},Y={7}]", ts.Length, ts.Text, ts.Style.Name,ts.Scale, trt, ts.Rotation,ts.Offset.X, ts.Offset.Y));
+                        sb.Append(string.Format("A,{0},[\"{1}\",{2},S={3},{4}{5},X={6},Y={7}]",
+                            ts.Length.ToString(CultureInfo.InvariantCulture),
+                            ts.Text, 
+                            ts.Style.Name,
+                            ts.Scale.ToString(CultureInfo.InvariantCulture),
+                            trt,
+                            ts.Rotation.ToString(CultureInfo.InvariantCulture),
+                            ts.Offset.X.ToString(CultureInfo.InvariantCulture), 
+                            ts.Offset.Y.ToString(CultureInfo.InvariantCulture)));
                         break;
                     case LinetypeSegmentType.Shape:
-                        LinetypeShapeSegment ss = (LinetypeShapeSegment)s;
+                        LinetypeShapeSegment ss = (LinetypeShapeSegment) s;
                         string srt = "R=";
                         switch (ss.RotationType)
                         {
@@ -483,7 +488,15 @@ namespace netDxf.Tables
                                 break;
                         }
 
-                        sb.Append(string.Format("A,{0},[{1},{2},S={3},{4}{5},X={6},Y={7}]", ss.Length, ss.Name, ss.Style.File, ss.Scale, srt, ss.Rotation, ss.Offset.X, ss.Offset.Y));
+                        sb.Append(string.Format("A,{0},[{1},{2},S={3},{4}{5},X={6},Y={7}]",
+                            ss.Length.ToString(CultureInfo.InvariantCulture),
+                            ss.Name,
+                            ss.Style.File,
+                            ss.Scale.ToString(CultureInfo.InvariantCulture),
+                            srt,
+                            ss.Rotation.ToString(CultureInfo.InvariantCulture),
+                            ss.Offset.X.ToString(CultureInfo.InvariantCulture), 
+                            ss.Offset.Y.ToString(CultureInfo.InvariantCulture)));
                         break;
                 }
             }
@@ -507,8 +520,6 @@ namespace netDxf.Tables
 
             data = data.Substring(1, data.Length - 2);
 
-            string name;
-            string style;
             Vector2 position = Vector2.Zero;
             LinetypeSegmentRotationType rotationType = LinetypeSegmentRotationType.Relative;
             double rotation = 0.0;
@@ -518,28 +529,23 @@ namespace netDxf.Tables
 
             // at least two items must be present the shape name and file
             if (tokens.Length < 2) return null;
-            name = tokens[0].Trim('"');
-            style = tokens[1];
+
+            string name = tokens[0].Trim('"');
+            string style = tokens[1];
             for (int i = 2; i < tokens.Length; i++)
             {
                 string value = tokens[i].Remove(0, 2);
                 if (tokens[i].StartsWith("X=", StringComparison.InvariantCultureIgnoreCase))
                 {
-                    double x;
-                    if (double.TryParse(value, out x))
-                        position.X = x;
+                    position.X = double.Parse(value, NumberStyles.Float, CultureInfo.InvariantCulture);
                 }
                 else if (tokens[i].StartsWith("Y=", StringComparison.InvariantCultureIgnoreCase))
                 {
-                    double y;
-                    if (double.TryParse(value, out y))
-                        position.Y = y;
+                    position.Y = double.Parse(value, NumberStyles.Float, CultureInfo.InvariantCulture);
                 }
                 else if (tokens[i].StartsWith("S=", StringComparison.InvariantCultureIgnoreCase))
                 {
-                    double s;
-                    if (double.TryParse(value, out s))
-                        scale = s;
+                    scale = double.Parse(value, NumberStyles.Float, CultureInfo.InvariantCulture);
                     if (scale <= 0.0) scale = 0.1;
                 }
                 else if (tokens[i].StartsWith("R=", StringComparison.InvariantCultureIgnoreCase))
@@ -575,24 +581,20 @@ namespace netDxf.Tables
 
         private static double ReadRotation(string data)
         {
-            double rotation;
             if (data.EndsWith("D", StringComparison.InvariantCultureIgnoreCase))
             {
-                if (double.TryParse(data.Remove(data.Length - 1, 1), out rotation))
-                    return rotation;
+                return double.Parse(data.Remove(data.Length - 1, 1), NumberStyles.Float, CultureInfo.InvariantCulture);
             }
-            else if (data.EndsWith("F", StringComparison.InvariantCultureIgnoreCase))
+            if (data.EndsWith("F", StringComparison.InvariantCultureIgnoreCase))
             {
-                if (double.TryParse(data.Remove(data.Length - 1, 1), out rotation))
-                    return rotation*MathHelper.RadToDeg;
+                return double.Parse(data.Remove(data.Length - 1, 1), NumberStyles.Float, CultureInfo.InvariantCulture) * MathHelper.RadToDeg;
             }
-            else if (data.EndsWith("G", StringComparison.InvariantCultureIgnoreCase))
+            if (data.EndsWith("G", StringComparison.InvariantCultureIgnoreCase))
             {
-                if (double.TryParse(data.Remove(data.Length - 1, 1), out rotation))
-                    return rotation*MathHelper.GradToDeg;
+                return double.Parse(data.Remove(data.Length - 1, 1), NumberStyles.Float, CultureInfo.InvariantCulture) * MathHelper.GradToDeg;
             }
                     
-            return double.TryParse(data, out rotation) ? rotation : 0.0;
+            return double.Parse(data, NumberStyles.Float, CultureInfo.InvariantCulture);
         }
 
         #endregion

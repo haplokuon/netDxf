@@ -1,7 +1,7 @@
-﻿#region netDxf library, Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+﻿#region netDxf library, Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
 
 //                        netDxf library
-// Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -364,7 +364,7 @@ namespace netDxf.Entities
         {
             foreach (SplineVertex controlPoint in this.controlPoints)
             {
-                controlPoint.Weigth = weight;
+                controlPoint.Weight = weight;
             }
         }
 
@@ -381,13 +381,13 @@ namespace netDxf.Entities
 
             foreach (SplineVertex controlPoint in points)
             {
-                SplineVertex vertex = new SplineVertex(controlPoint.Position, controlPoint.Weigth);
+                SplineVertex vertex = new SplineVertex(controlPoint.Position, controlPoint.Weight);
                 this.controlPoints.Add(vertex);
             }
 
             for (int i = 0; i < replicate; i++)
             {
-                SplineVertex vertex = new SplineVertex(points[i].Position, points[i].Weigth);
+                SplineVertex vertex = new SplineVertex(points[i].Position, points[i].Weight);
                 this.controlPoints.Add(vertex);
             }
 
@@ -476,7 +476,7 @@ namespace netDxf.Entities
 
         #endregion
 
-        #region Nurbs evaluator provided by mikau16 based on Michael V. implementation, roughly follows the notation of http://cs.mtu.edu/~shene/PUBLICATIONS/2004/NURBS.pdf
+        #region NURBS evaluator provided by mikau16 based on Michael V. implementation, roughly follows the notation of http://cs.mtu.edu/~shene/PUBLICATIONS/2004/NURBS.pdf
 
         /// <summary>
         /// Converts the spline in a list of vertexes.
@@ -560,8 +560,8 @@ namespace netDxf.Entities
             for (int i = 0; i < this.controlPoints.Count; i++)
             {
                 double n = this.N(i, this.degree, u);
-                denominatorSum += n*this.controlPoints[i].Weigth;
-                vectorSum += this.controlPoints[i].Weigth*n*this.controlPoints[i].Position;
+                denominatorSum += n*this.controlPoints[i].Weight;
+                vectorSum += this.controlPoints[i].Weight*n*this.controlPoints[i].Position;
             }
 
             // avoid possible divided by zero error, this should never happen

@@ -1,16 +1,30 @@
 ## Change history
 
- 
+
+### [2018/10/5]
+* Added Superscript and Subscript properties to the MTextFormattingOptions class.
+* Deleted MTextFormattingOptions property Alignment.
+* Added MText property Justification that controls the paragraph horizontal alignment, this parameter works together with the MText.EndParagraph method.
+* Added Hatch pattern method NamesFromFile and Save, the functionality is similar as the methods in the Linetype class but instead of working with LIN files they work with PAT files.
+* Rename HatchPattern method FromFile to Load, to accommodate to the same nomenclature as its equivalent in the Linetype class.
+* (fixed) Remove ArgumentOutOfRangeException exception in the LinetypeShapeSegment and LinetypeTextSegment Scale property, negative values are allowed. Zero values are also allowed even thought they should not be used.
+* (fixed) Loading a pattern from a PAT file may fail under some circumstances.
+* (fixed) LIN and PAT files must use the dot as the decimal separator.
+* (fixed) Spelling error in SplineVertex class the weight property should have been Weight.
+* (fixed) Handling of the MTextFormattingOptions font name. When using TTF fonts use the font family name as the font name, when using SHX use the file name with the SHX extension.
+* (fixed) Floating point values must always use the dot as the decimal point when formatting texts for MText entities.
+* (fixed) True color value in the MTextFormattingOptions. The DXF is not consistent in the way it converts a true color to its 24-bit representation; stuff like layer colors follows BGR order, while the color when formatting text uses RGB order.
+
 ### [2.2.0 - 2018/7/17]
-* Updated "netDxf Documentation.chm".
+* Updated "netDXF Documentation.chm".
 * Cloning dimension and leader entities will also clone the style overrides, if there are any.
 * Cloning an associative hatch will also result in another associative hatch. It will clone the entities that makes up the boundaries.
 * AttributeDefinitions no longer derive from EntityObject they are handled directly through the AttributeDefinitions dictionary of the block.
-* Deleted the property AttributeDefinitions of the DxfDocument, attribute definitions are handled directly through the block, also attribute definitions in the "Model" layout.
+* Deleted the property AttributeDefinitions of the DXFDocument, attribute definitions are handled directly through the block, also attribute definitions in the "Model" layout.
 * Now is allowed to access directly the entities in the *Model_Space and *Paper_Space# blocks, see AccessModelBlock() sample.
 * The document entities lists now return an IEnumerable instead of an IReadOnlyList. Internally it uses Linq to return the specific entity list from the associated block of the active layout.
 * The *Model_Space and *Paper_Space# blocks are not marked as ReadOnly anymore.
-* The DxfDocument entities lists Arcs, Lines, Circles,... now return only the entities for the active layout.
+* The DXFDocument entities lists Arcs, Lines, Circles,... now return only the entities for the active layout.
 * Revised the Leader read and write process to accommodate the latest changes made to them.
 * Deleted the Leader property TextVerticalPosition, this value is controlled by the property TextVerticalPlacement of the dimension style associated with the leader.
 * Deleted the enum LeaderTextVerticalPosition.
@@ -25,7 +39,7 @@
 * Added TextRotation to Dimension entities.
 * Added TextReferencePoint to Dimension entities.
 * Added constant Iso25 DimensionSytle with the default properties as defined in AutoCad.
-* Added property BuildDimensionBlocks to the DxfDocument. It controls if the block that represent dimension entities will be automatically created when added to the document. IMPORTANT: by default it is set to false, no dimension blocks will be generated. See DimensionBlockGeneration() sample.
+* Added property BuildDimensionBlocks to the DXFDocument. It controls if the block that represent dimension entities will be automatically created when added to the document. IMPORTANT: by default it is set to false, no dimension blocks will be generated. See DimensionBlockGeneration() sample.
 * Renamed the DimensionStyle property FractionalType to FractionType.
 * Revised the DimensionStyle class adding lots of new properties.
 * Revised the DimensionStyleOverride class adding lots of new properties, matching the changes to the dimension style.
@@ -33,13 +47,13 @@
 * Added missing PlotSetting properties (ScaleToFit, PlotType, ShadePlotMode, ShadePlotResolutionMode, ShadePlotDPI).
 * PlotSetting paper margins properties (left, bottom, right, and top) encapsulated in a structure called PapertMargin.
 * Added XData property to table objects. All objects that may contain extended data implement the interface IHasXData.
-* When loading or writing a DXF that is not one of the supported versions a DxfVersionNotSupportedException will be thrown.
+* When loading or writing a DXF that is not one of the supported versions a DXFVersionNotSupportedException will be thrown.
 * While loading DXF files, if a TextStyle is found that references a font file that does not have the extension TTF or SHX, it will be substitute by the default "simplex.shx".
 * (fixed) The Arc method PolygonalVertexes now return a List<Vector2> instead of a IEnumerable<Vector2> same as the equivalent method in the Circle, Ellipse, LwPolyline, and Spline classes.
 * (fixed) Error when cloning ShapeStyle objects.
 * (fixed) When reading complex linetypes from a DXF, the original handles were being overwritten.
-* (fixed) Force the writer to use always ASCII encoding for file previous to AutoCad2007. Some encoding code pages defined in the dxf file may cause problems. When using non ASCII characters I recommend to always use AutoCad2007 version or higher they are always saved as UTF-8.
-* (fixed) The drawing variable HandleSeed is now automatically updated when a new DxfObject is added to the document.
+* (fixed) Force the writer to use always ASCII encoding for file previous to AutoCad2007. Some encoding code pages defined in the DXF file may cause problems. When using non ASCII characters I recommend to always use AutoCad2007 version or higher they are always saved as UTF-8.
+* (fixed) The drawing variable HandleSeed is now automatically updated when a new DXFObject is added to the document.
 * (fixed) Formatting architectural units in the LinearUnitFormat class.
 * (fixed) Error in the Attribute Clone method, the attribute definition may be null. It is only possible when loading external DXF files, the attribute constructor will raise an exception in case of a null reference.
 * (fixed) The Leader Update method will take the style overrides into account.
@@ -55,7 +69,7 @@
 #### [2.1.0 - 2018/6/2]
 * Added Shape entity, see Shape() sample.
 * Added ShapeStyle table object, see Shape() sample.
-* Added property SupportFolders to the DxfDocument, see Shape() and ComplexLinetype() sample.
+* Added property SupportFolders to the DXFDocument, see Shape() and ComplexLinetype() sample.
 * Added support for complex line types, see ComplexLinetype() sample.
 * Added AddFromFile methods to the Linetypes class, see ComplexLinetype() sample.
 * Added Save method to the Linetypes and Linetype classes, see ComplexLinetype() sample.
@@ -67,12 +81,12 @@
 * Rename UnderlayDefinition property FileName to File.
 * Reorder the ImageDefinition constructors to take first the name and then the file, and not vice versa.
 * Rename ImageDefinition property FileName to File.
-* Improved the TextStyle class now it is possible to work true type fonts, defining the font family and style without the need of using the ttf file, see TextStyle() sample.
+* Improved the TextStyle class now it is possible to work true type fonts, defining the font family and style without the need of using the TTF file, see TextStyle() sample.
 * Modified the TextStyle class to avoid the use of the PresentationCore.dll assembly.
 * Added read only header variables ExtMin and ExtMax.
 * DimensionStyle property DimRoundoff minimum value is 0.000001 or just zero to indicate no rounding off.
 * The MathHelper.RoundToNearest method will round off correctly the last decimal.
-* IMPORTANT: When working directly with streams in read or write operations their positions will not be reseted automatically. See ReadWriteFromStream() and ReadWriteFromStream2() samples in TestDxfDocument project for more details.
+* IMPORTANT: When working directly with streams in read or write operations their positions will not be reseted automatically. See ReadWriteFromStream() and ReadWriteFromStream2() samples in TestDXFDocument project for more details.
 * Added the header DrawingVariables UcsOrg, UcsXDir, and UcsYDir.
 * Added MText property drawing direction.
 * Added Vector2 and Vector3 multiplication and division component by component.
@@ -80,22 +94,22 @@
 * (fixed) Error when writing reactors for entities that belongs to a group that was not added to a document, while at the same time the entity belongs to it.
 * (fixed) Error reading the Solid entity thickness value.
 * (fixed) Error reading the Trace entity thickness value.
-* (fixed) Corrected the default value for the dimension style parameter LengthPrecision when reading dxf files (the netDxf standard is still 2).
-* (fixed) Corrected the default values for the dimension style parameters DIMDEC and DIMTAD when reading dxf files.
+* (fixed) Corrected the default value for the dimension style parameter LengthPrecision when reading DXF files (the netDXF standard is still 2).
+* (fixed) Corrected the default values for the dimension style parameters DIMDEC and DIMTAD when reading DXF files.
 * (fixed) When adding a segment to the list of a MLineStyle, the Linetype of the segment needs to be added too.
 * (fixed) Missing read and write code of MText property LineSpacingStyle.
 * (fixed) Bug when passing a single blank to the dimension UserText property.
 * (fixed) The MLineStyle was not cloned while cloning a MLine entity.
-* (fixed) When reading a dxf if the DimRoundoff value was out of range, it was not set to the correct default value.
+* (fixed) When reading a DXF if the DimRoundoff value was out of range, it was not set to the correct default value.
 * (fixed) The MText rotation was not calculated correctly when it was not defined in the world XY plane.
 * (fixed) AutoCad 2018 introduced some undocumented changes to the MText entity that broke up the existing code.
 * (fixed) Issues with the clipping boundary in images.
-* (fixed) Issue with image in dxf. While reading a dxf, any Image entity with vector u or v equals to zero will be skipped.
+* (fixed) Issue with image in DXF. While reading a DXF, any Image entity with vector u or v equals to zero will be skipped.
 
 
 #### [2.0.3 - 2017/5/24]
 * Added AutoCad drawing database version number AC1032 = AutoCAD 2018.
-* A block that represents the dimension will be generated if, while loading a dxf, a Dimension entity is found with no associated block.
+* A block that represents the dimension will be generated if, while loading a DXF, a Dimension entity is found with no associated block.
 * (fixed) The properties of the document viewport (*Active VPort) will be properly loaded.
 * (fixed) Issue Id #13553 Arcs in exploded polylines with zero radius.
 * (fixed) Issue Id #13552 Exception with open viewport.
@@ -114,14 +128,14 @@
 * Rename the dimension style properties ExtLine1 and ExtLine2, and their corresponding overrides, to ExtLine1Off and ExtLine2Off, respectively, to better reflect its purpose.
 * The UserText property of a dimension will now also be copied when cloning.
 * Added the property BigFont to the TextStyle class. This is only applicable to Asian SHX fonts.
-* Updated "netDxf Documentation.chm".
+* Updated "netDXF Documentation.chm".
 * (fixed) Workaround for possible incorrect values while reading the spline tolerances.
 * (fixed) Issue Id #13534 Another font for default text style. The FileFont property of the TextStyle is now writable to be able to change the font used by the default "Standard" style.
 * (fixed) Issue Id #13532 Ellipse.PolygonalVertexes(360<) cause OutOfMemory.
-* (fixed) Issue Id #13531 Issues with dxf version and. Fix reading the InsBase header variable of an external dxf.
+* (fixed) Issue Id #13531 Issues with DXF version and. Fix reading the InsBase header variable of an external DXF.
 * (fixed) Issue Id #13530 open Autocad 2000 files (R15). Fix for entities with possible 0 value in code 330.
 * (fixed) Issue Id #13529 Typing error in struct Matrix3.
-* (fixed) Issue Id #13526 Exception on 0 degree angular dimension. If while loading a dxf an Angular2LineDimension entity made of two parallel lines is found, it will be skipped.
+* (fixed) Issue Id #13526 Exception on 0 degree angular dimension. If while loading a DXF an Angular2LineDimension entity made of two parallel lines is found, it will be skipped.
 
 
 #### [2.0.1 - 2016/8/9]
@@ -135,7 +149,7 @@
 * Updated target framework to .NET Framework 4.5.
 * The library is CLS-compliant.
 * Added dimension style overrides for dimensions and leaders. See DimensionStyleOverrides() sample.
-* The constant MathHelper.Epsilon that is used across the netDxf library is now a static writable value. By default is set to 1e-12.
+* The constant MathHelper.Epsilon that is used across the netDXF library is now a static writable value. By default is set to 1e-12.
 * Revised the TextStyle class. Added two new read only properties FontFamilyName and GliphTypeface, only applicable to true type fonts.
 * The XDataRecord struct is now a class.
 * The XDataRecord constructor will check the passed arguments to ensure that they are a valid combination.
@@ -162,16 +176,16 @@
 * Added the argument "bool resetTextPosition" to the Leader.Update method, so you can decide if the position of the last leader vertex is modified according to annotation position, or vice versa. See ResetLeaderAnnotationPosition() sample.
 * The method TableObject.GetReferences will return an empty list instead of null, if there are no references associated with the specified name or object.
 * Table entities are imported as inserts. AutoCad uses anonymous blocks, with name "*T#", to represent tables made of rows and columns. See AcadTable() sample.
-* (fixed) The DxfDocument.Save method will fail if new vertexes are added to a Polyline that has been already added to a document. See Polyline3dAddVertex() sample.
-* Updated "netDxf Documentation.chm".
+* (fixed) The DXFDocument.Save method will fail if new vertexes are added to a Polyline that has been already added to a document. See Polyline3dAddVertex() sample.
+* Updated "netDXF Documentation.chm".
 * (fixed) The lineweight of the dimension arrowheads were not being applied according to the lineweight of the dimension line.
 * (fixed) DimensionArrowhead.Dot and DimensionArrowhead.DotSmall block drawing.
 * (fixed) Bug writing the dimension style DIMZIN parameter (suppression of leading and trailing zeros of length dimension values).
 * (fixed) Issue Id #13514 Full ellipse not considered as full ellipse.
-* (fixed) Issue Id #13513 Failed to load dxf with embedded images.
+* (fixed) Issue Id #13513 Failed to load DXF with embedded images.
 * (fixed) Issues Id #13512 Id #13510 Id #13508 related with the TextStyle initialization and the "A generic error occurred in GDI+" exception. 
-* (fixed) Issue Id #13518 Issue with dxf file with weird edit time.
-* (fixed) Issue Id #13522 Clone insert with attdef.
+* (fixed) Issue Id #13518 Issue with DXF file with weird edit time.
+* (fixed) Issue Id #13522 Clone insert with attribute definitions.
 * (fixed) Issue Id #13521 Anonymous named block clone.
 
 
@@ -183,11 +197,11 @@
 * (fixed) If an entity belongs to a group it cannot be removed without removing it first from the group to which it belongs. The group will appear in the reactors list of that entity.
 * (fixed) Bugs with reading and writing dimension entities.
 * (fixed) Bug when adding unnamed groups to a document.
-* (fixed) Issue Id #13509 Failed to open dxf.
+* (fixed) Issue Id #13509 Failed to open DXF.
 
 
 #### [1.1.1 - 2015/12/15]
-* Updated solution to Visual Studio 2015, the previous 2013 solution is saved as netDxf2013.sln.
+* Updated solution to Visual Studio 2015, the previous 2013 solution is saved as netDXF2013.sln.
 * (fixed) Issue Id #13507 Vertical Linear Dimensions Drawn Crossed.
 
 
@@ -201,26 +215,26 @@
 * Added a constructor to the Spline class to create a curve from a set of fit points. See SplineFitPoints() sample.
 * The Spline knot vector is now stored as a List\<double\> instead of a double[]().
 * The AciColor.IndexRgb() method is now a public static readonly field instead of a public static method.
-* The CoordinateSystem and AngleDirection enums are now directly under the netDxf and netDxf.Units namespaces, respectively, and not inside the MathHelper class.
+* The CoordinateSystem and AngleDirection enums are now directly under the netDXF and netDXF.Units namespaces, respectively, and not inside the MathHelper class.
 * The default RasterVariables units is now Unitless, to avoid any unwanted scaling when inserting external images into the drawing.
 * The ClippingBoundary Vertexes property will return now a ReadOnlyCollection.
 * Renamed PolylineVertex.Location property to PolylineVertex.Position.
 * Renamed LwPolylineVertex.Location property to LwPolylineVertex.Position.
 * Renamed SplineVertex.Location property to SplineVertex.Position.
 * Renamed Point.Location property to Point.Position.
-* Renamed the ImageClippingBoundary class to ClippingBoundary and moved to the netDxf namespace. 
-* Renamed the ImageClippingBoundaryType enum to ClippingBoundaryType and moved to the netDxf namespace.
+* Renamed the ImageClippingBoundary class to ClippingBoundary and moved to the netDXF namespace. 
+* Renamed the ImageClippingBoundaryType enum to ClippingBoundaryType and moved to the netDXF namespace.
 * Renamed Block.Position property to Block.Origin.
 * Renamed ImageDef class to ImageDefinition.
 * Renamed ImageDefReactor class to ImageDefinitionReactor.
 * Renamed MLine.CalculateVertexesInfo method to MLine.Update.
 * Renamed Dimension.RebuildBlock method to Dimension.Update.
-* Renamde HatchBoundaryPath.UpdateEdges method to HatchBoundaryPath.Update.
+* Renamed HatchBoundaryPath.UpdateEdges method to HatchBoundaryPath.Update.
 * Renamed ImageResolutionUnits.NoUnits to ImageResolutionUnits.Unitless.
 * Renamed ImageUnits.None to ImageUnits.Unitless.
-* Updated "netDxf Documentation.chm".
-* (fixed) Issue Id #13496 Failed to load file. Now it is possible to load dxf files with externally referenced blocks.
-* (fixed) Issue Id #13497 .net dxf fails to load dxf with missing references.
+* Updated "netDXF Documentation.chm".
+* (fixed) Issue Id #13496 Failed to load file. Now it is possible to load DXF files with externally referenced blocks.
+* (fixed) Issue Id #13497 .net DXF fails to load DXF with missing references.
 * (fixed) When an associative hatch is deleted the boundary entities were not being unlinked.
 * (fixed) The Block.Create and Block.Save methods were not working properly.
 * (fixed) Bug in the DimensionStyle OnBlockChangeEvent.
@@ -231,7 +245,7 @@
 * (fixed) The vertexes of the image clipping boundary are expressed in local coordinates of the actual image entity with its true dimensions, and not relative to the width and height of its definition.
 * (fixed) Bug reading the dimension style arrowheads, and the dimension and extension lines linetypes.
 * (fixed) Issue Id #13506 A problem about dimension measurement scale. And a few other glitches related with the dimension drawings.
-* (fixed) Issue #13501 Fix netDxf.csproj to enable compilation on Linux.
+* (fixed) Issue #13501 Fix netDXF.csproj to enable compilation on Linux.
 
 
 #### [1.0.3 - 2015/05/20]
@@ -243,11 +257,11 @@
 * Now you can safely add and remove boundary paths from a hatch. Hatches without boundaries will be discarded when saving.
 * The SOLID entity vertexes are now Vector2 and are stored in OCS (object coordinate system). See SolidEntity() sample.
 * Added the Trace entity, its functionality is exactly the same as the Solid. See TraceEntity() sample.
-* Regression change. The Insert TransformAttributes() method will not be called automatically while adding it to the document, if needed do it manually. This is to avoid overriding the insert attributes position and orientation that were read from the dxf during the loading process.
+* Regression change. The Insert TransformAttributes() method will not be called automatically while adding it to the document, if needed do it manually. This is to avoid overriding the insert attributes position and orientation that were read from the DXF during the loading process.
 * Regression change. The insert attributes is again a list and not a dictionary. This will avoid losing the attributes with the same tag even if the block attribute definitions do not support it or attributes without its corresponding definition.
-* (fixed) Issue Id #13492 MText inside block with tab character dxf binary.
+* (fixed) Issue Id #13492 MText inside block with tab character DXF binary.
 * (fixed) Issue Id #13493 Block insertion unit and attributes.
-* (fixed) Bug reading dxf files that contain blocks with attribute definitions with the same tag. The duplicate tags will be removed during the loading process. In any case, having duplicate tags is not recommended in anyway.
+* (fixed) Bug reading DXF files that contain blocks with attribute definitions with the same tag. The duplicate tags will be removed during the loading process. In any case, having duplicate tags is not recommended in anyway.
 * (fixed) Bug drawing LinearDimensions when both the reference points and the dimension line were in a straight line parallel to the Y axis.
 
 
@@ -269,13 +283,13 @@
 * Renamed LwPolylineVertex.BeginWidth to LwPolylineVertex.StartWidth, this is how it's called in AutoCAD.
 * Renamed Dimension property Value to Measurement.
 * The lightweight polyline vertex start and end width values can only be zero or greater. An exception will be thrown in case of an out of range value.
-* Added Block.Create(DxfDocument doc, string name) method to generate a block from the content of a DxfDocument (only entities in the "Model" layout will be used). This is the same as the Load method but without the need of loading an external dxf first.
+* Added Block.Create(DXFDocument doc, string name) method to generate a block from the content of a DXFDocument (only entities in the "Model" layout will be used). This is the same as the Load method but without the need of loading an external DXF first.
 * Added Block.ReadOnly property. Any attempt to modify a ReadOnly block will be discarded. This is the case of the Model_Space and all Paper_Space blocks.
 * Deleted the Ungroup method from the Groups class. Now, the Remove method does that function. It deletes the group but not the grouped entities, allowing that derived in undesirable results, since the entities in a group can belong to different layouts and even to blocks.
 * Attributes and attribute definitions positions are now stored in WCS as other entities like inserts, texts, mtexts,...
 * Added ObliqueAngle property to attributes and attribute definitions.
 * Revised insert TransformAttributes() method, it should be more reliable now.
-* The Attribute class inherits now directly from a DxfObject. It can only appear as part of an Insert entity and it cannot be individually added to a document.
+* The Attribute class inherits now directly from a DXFObject. It can only appear as part of an Insert entity and it cannot be individually added to a document.
 * The Attribute owner is now the insert entity to which it belongs.
 * The dimension drawing now supports all linear (DIMLUNIT) and angular (DIMAUNIT) unit types. See DimensionsLinearAndAngularUnits() sample.
 * Added DIMLFAC variable to the dimension styles.
@@ -284,33 +298,33 @@
 * Added CurrentStyleSheet property to PlotSettings class.
 * Now the active dimension style defined in the drawing variables will not show as \<style overrides\> in AutoCAD.
 * Now it is possible to read and write the VPort but only the active one, called *Active, no multiview support.
-* Added the Viewport property to the DxfDocument for easy access to the *Active VPort. It describes the current view of the document.
+* Added the Viewport property to the DXFDocument for easy access to the *Active VPort. It describes the current view of the document.
 * Moved all enums and classes related with units and its formatting to the new "Units" namespace.
 * Moved unit conversion methods from the MathHelper class to the UntiHelper class in the "Units" namespace.
-* Moved all interfaces and classes related with the reading and writing of dxf files to the new "IO" namespace.
+* Moved all interfaces and classes related with the reading and writing of DXF files to the new "IO" namespace.
 * Workarounds for Layouts not properly linked to their associated Model/PaperSpace block while reading bad formatted DXFs.
-* Updated "netDxf Documentation.chm".
-* (fixed) Added missing read dimension style DIMCLRT code in the DxfReader.
+* Updated "netDXF Documentation.chm".
+* (fixed) Added missing read dimension style DIMCLRT code in the DXFReader.
 * (fixed) Reworked the way the file encoding is obtained. It seemed that the strings were not being properly decoded in binary files prior to AutoCad2007.
 * (fixed) Bug reading the axis of the Ordinate dimensions.
 * (fixed) When deleting a layout the entities owner were not being updated.
 
 
 #### [0.9.5 - 2015/03/14]
-* Improved the Nurbs evaluator (thanks ThVoss).
+* Improved the NURBS evaluator (thanks ThVoss).
 * (fixed) Bug with layouts not being registered as user of its associated block. This is related with proposed patch 17308 "Avoid removal of "*Paper_Space" block when using doc.Blocks.Clear()".
-* (fixed) Bug in DxfDocument.CheckDxfVersion with dxf files that do not include the dxf version in the header section. This is related with issue #13491.
+* (fixed) Bug in DXFDocument.CheckDXFVersion with DXF files that do not include the DXF version in the header section. This is related with issue #13491.
 * (fixed) Workaround for layers not defining a linetype style.
-* (fixed) Bug introduced in previous update. The entity blocks were not properly registered in the document. This is only applicable to blocks imported from a dxf.
+* (fixed) Bug introduced in previous update. The entity blocks were not properly registered in the document. This is only applicable to blocks imported from a DXF.
 
 
 #### [0.9.4 - 2015/01/22]
-* Updated "netDxf Documentation.chm".
+* Updated "netDXF Documentation.chm".
 * (fixed) Issue Id #13399 FromJulianCalendar throw exception.
 * (fixed) Issue Id #13384 Possible mistake in MText.PlainText()?
 * (fixed) Bug while parsing blocks containing MLine and/or Image entities.
 * (fixed) Possible error while reading an insert entity. Its referenced block name was not being properly decoded.
-* (fixed) Encode non ASCII characters that seemed to affect only binary dxf files.
+* (fixed) Encode non ASCII characters that seemed to affect only binary DXF files.
 
 
 #### [0.9.3 - 2014/12/23]
@@ -321,10 +335,10 @@
 * Added the DimensionStyle variable DIMSCALE that controls the overall scale of the dimension.
 * Added the DimensionStyle variable DIMCLRT that controls the color of the dimension text.
 * Rename DimensionStyle.TextStyle to DimensionStyle.DIMTXSTY.
-* Updated solution to Visual Studio 2013. The old 2010 solution is saved as netDxf2010.sln.
-* (fixed) Issue Id #13306 netDxf fails to read dxf file with xData.
+* Updated solution to Visual Studio 2013. The old 2010 solution is saved as netDXF2010.sln.
+* (fixed) Issue Id #13306 netDXF fails to read DXF file with xData.
 * (fixed) Issue Id #13325 Vector3.AngleBetween() may return a value of "NaN" (Not a Number)
-* (fixed) Bug when trying to remove a block definition from a dxf document.
+* (fixed) Bug when trying to remove a block definition from a DXF document.
 
 
 #### [0.9.2 - 2014/10/17]
@@ -332,60 +346,60 @@
 * The entity's extended data information is now stored in a custom Dictionary (see "XDataInformation() sample for more info).
 * Added extended data for block records (see "DynamicBlocks() sample for more info).
 * The block Flags property getter is now public.
-* (fixed) Issue Id #13242 Read buggy dxf files that contain dimension styles that point to non existent text styles.
+* (fixed) Issue Id #13242 Read buggy DXF files that contain dimension styles that point to non existent text styles.
 * (fixed) Read and write the Mesh extended data.
 
 
 #### [0.9.1 - 2014/09/01]
 * Added constructor to Solid entity that takes three vertexes.
-* Added Load method to the Block class to create block from external dxf files (see LoadAndSaveBlocks() sample for more info).
-* Added Save method to the Block class to save a block to a dxf file (see LoadAndSaveBlocks() sample for more info).
+* Added Load method to the Block class to create block from external DXF files (see LoadAndSaveBlocks() sample for more info).
+* Added Save method to the Block class to save a block to a DXF file (see LoadAndSaveBlocks() sample for more info).
 * Added the drawing variable $INSBASE that control the insertion base point for the current drawing.
-* Added AttributeDefinitions property to DxfDocument to support these cases. Now it is possible to add attribute definitions to a dxf document this will allow to create dxf to be use as blocks with attributes in other drawings.
-* The HeaderVariable class is now internal. All needed information can be accessed through the DxfDocument.DrawingVariables property.
+* Added AttributeDefinitions property to DXFDocument to support these cases. Now it is possible to add attribute definitions to a DXF document this will allow to create DXF to be use as blocks with attributes in other drawings.
+* The HeaderVariable class is now internal. All needed information can be accessed through the DXFDocument.DrawingVariables property.
 * Rename AttributeDefinitionDictionary.Keys to AttributeDefinitionDictionary.Tags.
 * Rename AttributeDefinitionDictionary.ConatinsKey to AttributeDefinitionDictionary.ContainsTag.
 * Rename AttributeDictionary.Keys to AttributeDictionary.Tags.
 * Rename AttributeDictionary.ConatinsKey to AttributeDictionary.ContainsTag.
 * Rename AttributeDefiniton.Text to AttributeDefinition.Prompt.
-* Updated "netDxf Documentation.chm".
+* Updated "netDXF Documentation.chm".
 * (fixed) The Attribute class constructor was not copying the attribute definition properties inherited from the EntityObject base class.
-* (fixed) Issue Id #13211 Loading dxf file that contain attribute definitions (ATTDEF). This is the case of blocks that has been exploded or has been saved to a file.
+* (fixed) Issue Id #13211 Loading DXF file that contain attribute definitions (ATTDEF). This is the case of blocks that has been exploded or has been saved to a file.
 
 
 #### [0.9.0 - 2014/07/28]
-* netDxf now supports both text and binary dxf files (see BinaryDxfFiles() sample for more info).
+* netDXF now supports both text and binary DXF files (see BinaryDXFFiles() sample for more info).
 * Added Mesh entity (see MeshEntity() sample for more info).
-* Added argument "out bool isBinary" to the CheckDxfFileVersion method of the DxfDocument class, that will return true is the dxf is a binary file.
-* Added argument "bool isBinary = false" to the Save method of the DxfDocument class. It defines if the file should be saved as binary, by the default it is saved as text.
+* Added argument "out bool isBinary" to the CheckDXFFileVersion method of the DXFDocument class, that will return true is the DXF is a binary file.
+* Added argument "bool isBinary = false" to the Save method of the DXFDocument class. It defines if the file should be saved as binary, by the default it is saved as text.
 * Added limits to the maximum number of elements a TableObject collection can have, reaching and even getting close to this value causes problems in AutoCad. These limits, defined by the MaxCapacity property, are still too high for any practical purpose. The number of table object entries, for example, is defined by a code 70 (16 bit integer).
 * Issue Id #13116 Added constructors to Face3d entity that takes three vertexes.
 * Rename EdgeFlags to Face3dEdgeFlags.
 * Rename XDataCode.Integer and XDataCode.Long to XDataCode.Int16 and XDataCode.Int32, respectively, to better reflect the kind of variable stored. In net a 16 bit integer is a short and a 32 bit integer is an int.
-* Workaround for possible erroneous number of knots and/or number of control points values in Spline entities while importing dxf files.
-* Changed several variable types to accommodate to the type defined by the dxf codes, this is now a lot more important in binary dxf.
+* Workaround for possible erroneous number of knots and/or number of control points values in Spline entities while importing DXF files.
+* Changed several variable types to accommodate to the type defined by the DXF codes, this is now a lot more important in binary DXF.
 :: HeaderVariable property CodeGroup is now short (it was int).
 :: XDataRecord property Code is now short (it was int).
 :: Image brightness, contrast, and fade are now shorts (they were floats).
 :: ImageDef horizontal resolution, and vertical resolution are now doubles (they were floats).
 :: DimensionStyle DIMDSEP is now a char variable (it was string).
-:: DimensionStyle DIMTIH, DIMTOH, DIMTAD, DIMADEC, DIMDEC, DIMAUNIT, and DIMJUST are now shorts (they were ints).
+:: DimensionStyle DIMTIH, DIMTOH, DIMTAD, DIMADEC, DIMDEC, DIMAUNIT, and DIMJUST are now shorts (they were integers).
 :: Viewport property CircleZoomPercent is now short (it was double).
-:: XDataCode class members are now shorts (they were ints).
-:: PolyfaceMeshFace property VertexIndexes is now an array of shorts (it was an array of ints).
+:: XDataCode class members are now shorts (they were integers).
+:: PolyfaceMeshFace property VertexIndexes is now an array of shorts (it was an array of integers).
 :: XData binary data (code 1004) is stored as a byte array (see BinaryChunkXData() sample for more info)
 :: Layout property TabOrder is now short (it was int).
 * (fixed) Read DimensionStyle DIMADEC variable. 
-* (fixed) In the previous version the DxfWriter was working very slowly.
+* (fixed) In the previous version the DXFWriter was working very slowly.
 * (fixed) FromJulianCalendar conversion when, rounding up the seconds fraction the result was exactly 60. Now the related methods also use the milliseconds in the conversions.
 * (fixed) MText rectangle width cannot be negative and is, now, 0.0 by default, the word wrap is turned off and the width of the multiline text object is as wide as the longest line of text.
-* (fixed) Issue Id #13143 Rename dxfWriter.Save to dxfWriter.Write.
-* (fixed) Adding duplicate entities to the document, this is related to the issue Id #13149. When you add a group to the DxfDocument the entities in the group will be automatically added to it, so it is not necessary to add them manually with AddEntity.
+* (fixed) Issue Id #13143 Rename DXFWriter.Save to DXFWriter.Write.
+* (fixed) Adding duplicate entities to the document, this is related to the issue Id #13149. When you add a group to the DXFDocument the entities in the group will be automatically added to it, so it is not necessary to add them manually with AddEntity.
 
 
 #### [0.8.0 - 2014/06/19]
 * Lots of changes, some of them might break your current code, ask in the project discussion board in case of doubt.
-* Added ModelSpace and PaperSpace, now it is possible to work in model space and paper space through layouts. See the PaperSpace() sample in the TestDxfDocument project.
+* Added ModelSpace and PaperSpace, now it is possible to work in model space and paper space through layouts. See the PaperSpace() sample in the TestDXFDocument project.
 * Added Layouts.
 * Added PlotSettings.
 * Added Viewports.
@@ -393,40 +407,40 @@
 * Added method PlainText() to MText class that will return the text without the formatting codes.
 * Added the drawing variables $TDCREATE, $TDUCREATE, $TDUPDATE, and $TDUUPDATE; that control the drawing creation and last update in local and universal time(UTC).
 * Added the drawing variable $TDINDWG that control the drawing editing time.
-* Now you can set the document, block drawing units, and image units. See the DocumentUnits() sample in the TestDxfDocument project.
+* Now you can set the document, block drawing units, and image units. See the DocumentUnits() sample in the TestDXFDocument project.
 * Reworked the hatch boundary path information, this will also fix a problem with arc boundary paths that were defined CW instead of the common CCW. It still possible to retrieve entities that make the hatch boundary path with the method Hatch.CreateWCSBoundary().
-* Reworked how the entities and attribute definitions are stored in a block. See the BlockWidthAttributes() sample in the TestDxfDocument project.
+* Reworked how the entities and attribute definitions are stored in a block. See the BlockWidthAttributes() sample in the TestDXFDocument project.
 * Rename FillType to HatchFillType, BoundaryPathTypeFlag to HatchBoundaryPathTypeFlag, and TableObjects.Values to TableObjects.Items.
 * Some modifications in the Image entity, now the width and height of the image represent the size in world coordinate units.
 * (fixed) MText color formatting option when it was using true color.
 
 
 #### [0.7.0 - 2014/04/25]
-* Encoding and decoding of non extended ASCII characters will be done automatically by the DxfWriter and the DxfReader. Dxf versions prior to 2007 need to encode the characters outside the extended ASCII chart (char>255) as \U+#### where #### is a four digits hexadecimal number that represents the character. 
+* Encoding and decoding of non extended ASCII characters will be done automatically by the DXFWriter and the DXFReader. DXF versions prior to 2007 need to encode the characters outside the extended ASCII chart (char>255) as \U+#### where #### is a four digits hexadecimal number that represents the character. 
 * Added IsFrozen and IsLocked properties to layers.
-* Workarounds for possible out of range values while importing dxf files.
+* Workarounds for possible out of range values while importing DXF files.
 * Erased FileNotFound exception in ImageDef constructor, AutoCAD will only show a file not found in case the image is not present.
 * Allow to load files while they are being opened by another process. AutoCAD likes to keep their drawing files opened while working on them.
-* (fixed) Read ACDSDATA section. Undocumented dxf section that seems to affect only the dxf database version 2013 and later.
+* (fixed) Read ACDSDATA section. Undocumented DXF section that seems to affect only the DXF database version 2013 and later.
 * (fixed) The Text and MText height can not be zero or less.
 * (fixed) Read SEQEND object in Insert entities. Drawings with proxy graphics might be affected by this.
-* (fixed) Some TableObject properties of DxfObjects not pointing to the same reference in its corresponding global list.
+* (fixed) Some TableObject properties of DXFObjects not pointing to the same reference in its corresponding global list.
 
 
 #### [0.6.2 - 2014/03/20]
 * All angle values now will be normalized to the range {"["}0, 360{"["}. In the case of the ellipse if the start and end angles are equal it will be considered a full ellipse.
-* (fixed) Load dxf files not encoded as utf8 will use the supplied dxf codepage header variable to get the proper encoding.
+* (fixed) Load DXF files not encoded as utf8 will use the supplied DXF code page header variable to get the proper encoding.
 * (fixed) Arc.ToPolyline method.
 * (fixed) Ellipse.ToPolyline method.
 * (fixed) Read entity linetype scale value.
 
 
 #### [0.6.1 - 2013/11/03]
-* Updated "netDxf Documentation.chm".
-* Rename Attribute definition and Attribute Id to Tag as it is the name given by the dxf documentation.
-* (fixed) Loading dxf files with duplicate attribute definition tags in block attributes. Although AutoCad allows this behavior this library does not. Having duplicate tags is not recommended in any way, since there will be no way to know which is the definition associated to the insert attribute.
-* (fixed) Load dxf files containing a ThumbnailImage section.
-* (fixed) Load dxf file encoding.
+* Updated "netDXF Documentation.chm".
+* Rename Attribute definition and Attribute Id to Tag as it is the name given by the DXF documentation.
+* (fixed) Loading DXF files with duplicate attribute definition tags in block attributes. Although AutoCad allows this behavior this library does not. Having duplicate tags is not recommended in any way, since there will be no way to know which is the definition associated to the insert attribute.
+* (fixed) Load DXF files containing a ThumbnailImage section.
+* (fixed) Load DXF file encoding.
 * (fixed) Big HandleSeed hex numbers. The NumHandles has been changed to long, hopefully this will solve the problem, but I don't know which is the largest handle hex number AutoCad can generate. The BigInteger class of the Net Framework 4.0 will solve this problem but at the moment this library maintains its compatibility with Net 2.0.
 
 
@@ -437,12 +451,12 @@
 * Added method Remove(T tableObject) to TableObjects.
 * Added check for not supported characters in table object names. The following characters are not allowed \<>/?":;*|,=`
 * Group now derives from TableObject.
-* Added Groups class derived from TableObjects to control the dxf document groups.
+* Added Groups class derived from TableObjects to control the DXF document groups.
 * Added two methods to the Groups class, Remove deletes the group and the grouped entities and Ungroup deletes the group while keeping the entities in the document.
 * Added IsByLayer and IsByBlock bool properties to AciColor.
 * (fixed) Read Dimension when it was part of a block.
 * (fixed) Read line weight applied to layers.
-* (fixed) Issue Id #12000 Empty font name throw exception. Added workaround dxf files that have empty or null font names on TextStyle definitions.
+* (fixed) Issue Id #12000 Empty font name throw exception. Added workaround DXF files that have empty or null font names on TextStyle definitions.
 * (fixed) Issue Id #12126 Scaled and rotated hatch patterns. Pattern line definition origin needed to be transformed.
 
 
@@ -450,19 +464,19 @@
 * Lots of changes on how the document handles the tables, check the samples or ask in the forum in case of doubt.
 * Added TableObjects class and derivatives for application registries, blocks, dimension styles, layers, line types, multiline styles, text styles, and image definitions collections to uniform its behavior.
 * Added Remove and Purge methods for table objects. Now it is possible to clean the document from empty layers, blocks without references,...
-* Added GetReferences method for table objects. Now it is possible to get the list of dxf objects that make use of a particular layer, block,...
+* Added GetReferences method for table objects. Now it is possible to get the list of DXF objects that make use of a particular layer, block,...
 * Added CreateWCSBoundary method for hatches, it will generate a list of entities that makes the hatch boundaries expressed in world coordinates.
 * Entities implement IClonable interface.
 * Block now derives from TableObject.
 * ImageDef now derives from TableObject.
-* Updated "netDxf Documentation.chm".
+* Updated "netDXF Documentation.chm".
 * (fixed) Image entity not writing code 360 (Hard reference to imagedef_reactor object).
 * (fixed) Read MLine when it was part of a block.
 
 
 #### [0.4.7 - 2013/05/28]
-* Added missing Splines property to access the splines list of the DxfDocument.
-* Added missing Dimensions property to access the dimensions list of the DxfDocument.
+* Added missing Splines property to access the splines list of the DXFDocument.
+* Added missing Dimensions property to access the dimensions list of the DXFDocument.
 
 
 #### [0.4.6 - 2013/05/16]
@@ -471,15 +485,15 @@
 * Added Scale and Rotation methods to Matrix3.
 * Added polyline Explode method.
 * Added polyface mesh Explode method.
-* Rename DefaultDrawingUnits to DrawingUnits and moved to netDxf namespace.
-* Rename DxfDocument.PolyfaceMesh property to DxfDocument.PolyfaceMeshes.
+* Rename DefaultDrawingUnits to DrawingUnits and moved to netDXF namespace.
+* Rename DXFDocument.PolyfaceMesh property to DXFDocument.PolyfaceMeshes.
 * The entity Normal property is now part of the EntityObject base class.
 * (fixed) Polyline IsClosed property.
 * (fixed) Write polyface meshes with a number of vertexes less than three.
 
 
 #### [0.4.5 - 2013/05/10]
-* Workaround buggy dxf files with entities that references table objects not defined in the tables section. This only applies to application registries, layers, line types, text styles, dimension styles and mline styles, if necessary a new one with default values will be created.
+* Workaround buggy DXF files with entities that references table objects not defined in the tables section. This only applies to application registries, layers, line types, text styles, dimension styles and mline styles, if necessary a new one with default values will be created.
 
 
 #### [0.4.4 - 2013/05/08]
@@ -494,12 +508,12 @@
 * Added AutoCad drawing database version number AC1027 = AutoCAD 2013.
 * Attribute definition position is in object coordinates.
 * (fixed) Error reading block position.
-* (fixed) Issue Id #11698 DxfReader->ReadEntities -> ReadEntity.
+* (fixed) Issue Id #11698 DXFReader->ReadEntities -> ReadEntity.
 * (fixed) Issue Id #11702 Issue with position of insert attributes.
 
 
 #### [0.4.2 - 2013/04/07]
-* Read and write comments only at the head of the dxf file.
+* Read and write comments only at the head of the DXF file.
 * Workaround/fixes due to inconsistencies on DXF files generated by Sketchup and EASE. Now during the attribute initialization all attribute definition properties will be copied, so any changes made to the attribute definition will only be applied to new attribute instances and not to existing ones. This is due to some DXF files might generate INSERT entities that contains attributes that are not defined in the BLOCK, even thought it might be incorrect, strictly speaking, AutoCad allows this behavior.
 * (fixed) AutoCad was giving an error with the LastSavedBy Header variable, this variable is not recognized by AutoCad2000.
 * (fixed) Issue Id #11690 Insert Entity Scale.
@@ -513,46 +527,46 @@
 #### [0.4.0 - 2013/03/03]
 * Added MLine entity.
 * Added Groups.
-* Added hatch gradient pattern (only supported by AutoCad2004 and higher dxf versions).
-* Now all header variables (version, codepage, handleseed,...) are handled by the HeaderVariables class.
-* The AciColor rgb to index conversion might be a little more accurate now.
+* Added hatch gradient pattern (only supported by AutoCad2004 and higher DXF versions).
+* Now all header variables (version, code page, handle seed,...) are handled by the HeaderVariables class.
+* The AciColor RGB to index conversion might be a little more accurate now.
 * Added AciColor conversions from and to HSL (hue, saturation, lightness).
-* Deleted parameter DxfVersion from the Save() method of the DxfDocument. Now it is handled by the AcadVer property of the DrawingVariables property of the DxfDocument.
-* DxfDocument.Load() methods are now static, they will return null if errors are found during the loading process.
-* Deleted FileInfo property from the DxfDocument.
-* Updated "netDxf Documentation.chm".
+* Deleted parameter DXFVersion from the Save() method of the DXFDocument. Now it is handled by the AcadVer property of the DrawingVariables property of the DXFDocument.
+* DXFDocument.Load() methods are now static, they will return null if errors are found during the loading process.
+* Deleted FileInfo property from the DXFDocument.
+* Updated "netDXF Documentation.chm".
 * (fixed) The true color values were not being read.
 
 
 #### [0.3.0 - 2013/02/10]
-* Feature request Id #11534 Add DxfDocument.Save() that takes an output System.IO.StreamDxfDocument, added also DxfDocument.Load() from a stream.
+* Feature request Id #11534 Add DXFDocument.Save() that takes an output System.IO.StreamDXFDocument, added also DXFDocument.Load() from a stream.
 * Feature request Id #11536 Write lineweight values (group code 370) to DXF. Layers and entities now support lineweight property.
 * Feature request Id #11537 Add support for RGB colors (group code 420). Layers and entities now support true colors.
 * Now you can access the full list of indexed colors.
 * Added linetype scale property (group code 48) to all entities.
 * Added object visibility property (group code 60) to all entities.
 * Added rotation property (group code 50) to Point entity.
-* IEntityObject is now EntityObject an abstract class derived from DxfObject.
-* ITableObject is now an TableObject abstract class derived from DxfObject.
+* IEntityObject is now EntityObject an abstract class derived from DXFObject.
+* ITableObject is now an TableObject abstract class derived from DXFObject.
 * (fixed) Error writing indexes of PolyfaceMesh faces.
  
 
 #### [0.2.8.1 - 2013/01/30]
-* (fixed) Issue Id #11534 Infinite loop loading dxf file.
+* (fixed) Issue Id #11534 Infinite loop loading DXF file.
 
 
 #### [0.2.8 - 2013/01/29]
 * The Reader and the Writer now should be able to handle other ANSI code pages than the common 1252 Latin 1; Western European (Windows).
-* Added static function to the DxfDocument to get the string that represents the dxf database version number.
+* Added static function to the DXFDocument to get the string that represents the DXF database version number.
 * Clean up related hatch reader methods a little more.
 
 
 #### [0.2.7 - 2013/01/29]
 * Hatches now supports spline as boundary paths.
 * Added SplineVertex constructor with Vector2.
-* Dropped the restriction to use only ASCII characters, now the StreamReader will always use Encoding.Default the equivalent to ANSI_1252 defined in the $DWGCODEPAGE header variable of the dxf file.
+* Dropped the restriction to use only ASCII characters, now the StreamReader will always use Encoding.Default the equivalent to ANSI_1252 defined in the $DWGCODEPAGE header variable of the DXF file.
 * Deleted ClassDiagram.cd from project.
-* Deleted lots of if(dxfPairInfo.Code == #) statements from Reader.ReadEdgeBoundaryPath(int numEdges) since they are no really need it. The way hatch boundary paths are defined is very strict, you must follow exactly the order and number of elements that appear in the documentation.
+* Deleted lots of if(DXFPairInfo.Code == #) statements from Reader.ReadEdgeBoundaryPath(int numEdges) since they are no really need it. The way hatch boundary paths are defined is very strict, you must follow exactly the order and number of elements that appear in the documentation.
 * (fixed) Saving files that has been loaded from a file without defined RasterVariables object.
 
 
@@ -566,15 +580,15 @@
 * Added public methods to add and get table objects (Layers, LineTypes, TextStyles, DimensionStyles, and Blocks).
 * Rename Text.BasePoint, MText.InsertionPoint and AttributeDefinition.BasePoint, Block.BasePoint, and Insert.InsertionPoint to .Position.
 * The attribute normal will use the ones applied to the Insert entity to which it belongs, this is subject to change if I find a way to get predictable results.
-* Updated "netDxf Documentation.chm".
+* Updated "netDXF Documentation.chm".
 * (fixed) Insertions, Attributes and Text entities follows the same rules as the Circle, Arc, Ellipse and MText entities. The insertion point (position), defines the placement in world coordinates and the normal defines the orientation of the insertion at that point (this will only affect to entities which normal is not the default ZAxis).
 * (fixed) Text alignment in block attributes.
 
 
 #### [0.2.4 - 2012/12/19]
-* Now the entity handles are assigned when the entity is added to the document. This should allow to open an existing dxf and add more entities to the same document, while maintaining the old entity handles once the document is saved again.
+* Now the entity handles are assigned when the entity is added to the document. This should allow to open an existing DXF and add more entities to the same document, while maintaining the old entity handles once the document is saved again.
 * Added Plot property to layers, If set to false, do not plot this layer.
-* Added RemoveEntity method to the DxfDocument.
+* Added RemoveEntity method to the DXFDocument.
 * Deleted Layer, Color, and LineType properties from PolyfaceMeshFace, PolyfaceMeshVertex, and PolylineVertex.
 
 
@@ -586,7 +600,7 @@
 * Added read and write 2 Line Angular Dimensions.
 * Added read and write Ordinate Dimensions.
 The dimension style definition is very limited and the drawing might be buggy under some circumstances (it is sensitive in the order the reference points are given and/or offset negative values).
-* Updated "netDxf Documentation.chm".
+* Updated "netDXF Documentation.chm".
 * (fixed) Read code 70 in LwPolylines.
 * (fixed) Read hatch with solid pattern fill.
 * (fixed) Read AttributeDefinition width factor.
@@ -594,7 +608,7 @@ The dimension style definition is very limited and the drawing might be buggy un
 
 
 #### [0.2.2 - 2012/11/21]
-* Delete property alignment from block attributes, it did not seem to change anything and it was not recognized by AutoCAD 2005 generating an error. AutoCAD 2005 was not able to load a 2004 dxf generated by AutoCAD 2012. It did not recognized the alignment codes.
+* Delete property alignment from block attributes, it did not seem to change anything and it was not recognized by AutoCAD 2005 generating an error. AutoCAD 2005 was not able to load a 2004 DXF generated by AutoCAD 2012. It did not recognized the alignment codes.
 * Cleaned up entity constructors.
 * Added entity constructors with Vector2.
 * Added read and write Aligned Dimensions.
@@ -603,33 +617,33 @@ The dimension style definition is very limited and the drawing might be buggy un
 
 #### [0.2.1 - 2012/11/16]
 * Added MTEXT entity, with basic text formatting.
-* Move TextAlligment to the netDxf.enties namespace.
+* Move TextAlligment to the netDXF.enties namespace.
 * (fixed) The default text style (Standard) must be the first on the table list.
 
 
 #### [0.2.0 - 2012/10/12]
-* Dropped support for AutoCAD12 dxf files this will break your program if you are using polylines.
-* Important: following the way the dxf calls the polyline entities:
+* Dropped support for AutoCAD12 DXF files this will break your program if you are using polylines.
+* Important: following the way the DXF calls the polyline entities:
     * LightWeightPolyline has been renamed LwPolyline for short.
     * All Polylines are now LwPolylines.
     * All Polylines3d are now Polylines.
-* The entities LwPolyline, Polyline and PolyfaceMesh have their own list in the DxfDocument, before they all were included in the same list "Polylines".
-* Updated "netDxf Documentation.chm".
+* The entities LwPolyline, Polyline and PolyfaceMesh have their own list in the DXFDocument, before they all were included in the same list "Polylines".
+* Updated "netDXF Documentation.chm".
 
 
 #### [0.1.6.0 - 2012/09/28]
-* Read and write hatches to dxf, there are a few predefined patterns based on AutoCAD pat file. You can create your own providing the information needed for the HatchPatternLineDefinition class or load from a file (same rules as AutoCAD pat files are applied).
+* Read and write hatches to DXF, there are a few predefined patterns based on AutoCAD pat file. You can create your own providing the information needed for the HatchPatternLineDefinition class or load from a file (same rules as AutoCAD pat files are applied).
 * Line types can be loaded form a file but only simple line patterns are supported (same rules as AutoCAD LIN files are applied).
 * Text files reorganization: changelog.txt and license.txt move to doc folder together with the compiled HTML help file.
-* Updated "netDxf Documentation.chm".
+* Updated "netDXF Documentation.chm".
 * Added AutoCad2010 database version number.
 * (fixed) Renamed the PolylineVertex and LightweightPolylineVertex StartThickness and EndThickness as StartWidth and EndWidth, it should always be this way. Do not confuse Elevation, Width and Thickness of an entity. I try to follow the AutoCAD documentation as close as possible, please check it in case of doubt or as in this case I might be wrong. 
 * (fixed) Read and write ellipse entity.
-* (fixed) To make it easier and to unify concepts, the center of a circle, an arc and an ellipse are always given in world coordinates, even though the dxf gives the center of the circle and the arc in object coordinates, and the center of the ellipse in world coordinates. The local (to the center) orientation of the entity will be given by the normal.
+* (fixed) To make it easier and to unify concepts, the center of a circle, an arc and an ellipse are always given in world coordinates, even though the DXF gives the center of the circle and the arc in object coordinates, and the center of the ellipse in world coordinates. The local (to the center) orientation of the entity will be given by the normal.
 
 
 #### [0.1.5.0 - 2012/09/21]
-* With limitations now you can write hatches in dxf files.
+* With limitations now you can write hatches in DXF files.
 * Removed the limitations of the bulge in polyline vertexes, it can actually be greater than 1 and lower than -1 (1 represents the semicircle and the negative sign if the arc goes in or out).
 
 
@@ -646,18 +660,18 @@ The dimension style definition is very limited and the drawing might be buggy un
 
 
 #### [0.1.2.0 - 2009/03/07]
-* Added support for AutoCad12, AutoCad2000, AutoCad2004 and AutoCad2007 dxf files
-* The Ellipse entity will be exported as a true ellipse for dxf file version AutoCad2000 and higher
+* Added support for AutoCad12, AutoCad2000, AutoCad2004 and AutoCad2007 DXF files
+* The Ellipse entity will be exported as a true ellipse for DXF file version AutoCad2000 and higher
 * Due to the need of keeping unique handles for entities, duplicate objects will not be allowed
 * Added this change log information
 * Added Lightweight entity
 * Lots of internal changes and new classes
-* NurbsCurves will not be allowed temporally, it needs more work to be able to export them as true splines in AutoCad200 and higher dxf files
+* NurbsCurves will not be allowed temporally, it needs more work to be able to export them as true splines in AutoCad200 and higher DXF files
 
 
 #### [0.1.1.0 - 2009/03/01]
-* Added Ellipse entity that will be exported as a polyline in AutoCad12 dxf files
-* Added NubsCurve entity that will be exported as a polyline in AutoCad12 dxf files
+* Added Ellipse entity that will be exported as a polyline in AutoCad12 DXF files
+* Added NubsCurve entity that will be exported as a polyline in AutoCad12 DXF files
 * Added many new comments
 * Added a chm library help file
 

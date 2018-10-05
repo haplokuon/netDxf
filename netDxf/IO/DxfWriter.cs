@@ -2441,7 +2441,7 @@ namespace netDxf.IO
 
             foreach (SplineVertex point in spline.ControlPoints)
             {
-                this.chunk.Write(41, point.Weigth);
+                this.chunk.Write(41, point.Weight);
                 this.chunk.Write(10, point.Position.X);
                 this.chunk.Write(20, point.Position.Y);
                 this.chunk.Write(30, point.Position.Z);
