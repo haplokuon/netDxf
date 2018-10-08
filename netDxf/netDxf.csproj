@@ -90,7 +90,8 @@
     <Compile Include="Collections\ShapeStyles.cs" />
     <Compile Include="Collections\SupportFolders.cs" />
     <Compile Include="Entities\MTextDrawingDirection.cs" />
-    <Compile Include="Entities\MTextParagraphJustification.cs" />
+    <Compile Include="Entities\MTextParagraphAlignment.cs" />
+    <Compile Include="Entities\MTextParagraphOptions.cs" />
     <Compile Include="Entities\Shape.cs" />
     <Compile Include="IHasXData.cs" />
     <Compile Include="IO\DxfVersionNotSupportedException.cs" />

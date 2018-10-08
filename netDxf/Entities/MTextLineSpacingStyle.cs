@@ -1,7 +1,7 @@
-﻿#region netDxf library, Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+﻿#region netDxf library, Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
 
 //                        netDxf library
-// Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -28,13 +28,35 @@ namespace netDxf.Entities
     public enum MTextLineSpacingStyle
     {
         /// <summary>
+        /// Default (only applicable in MTextParagraphOptions).
+        /// </summary>
+        /// <remarks>
+        /// The default value defined by the MText property will be applied.
+        /// </remarks>
+        Default = 0,
+
+        /// <summary>
         /// At least (taller characters will override)
         /// </summary>
+        /// <remarks>
+        /// Takes both the user specified arbitrary value and the text height to determine spacing.
+        /// </remarks>
         AtLeast = 1,
 
         /// <summary>
         /// Exact (taller characters will not override)
         /// </summary>
-        Exact = 2
+        /// <remarks>
+        /// Defines the space with an arbitrary unit value the user specifies. Changing text height will not affect line spacing.
+        /// </remarks>
+        Exact = 2,
+
+        /// <summary>
+        /// Multiple (only applicable in MTextParagraphOptions).
+        /// </summary>
+        /// <remarks>
+        /// Instead of assigning a value to line spacing, you specify spacing according to text height.
+        /// </remarks>
+        Multiple = 3
     }
 }

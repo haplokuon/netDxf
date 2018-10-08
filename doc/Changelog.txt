@@ -1,5 +1,8 @@
 ## Change history
 
+### [2018/10/8]
+* Now the MText paragraph formatting is done through the MTextParagraphOptions class, when an instance of that class is passed when calling the EndParagraph method. See MTextParagraphFormatting() and MTextCharacterFormatting() sample.
+* Deleted MText ParagraphHeightFactor and Justification properties they are substituted by the MTextParagraphOptions.
 
 ### [2018/10/5]
 * Added Superscript and Subscript properties to the MTextFormattingOptions class.

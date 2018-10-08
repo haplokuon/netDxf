@@ -2874,9 +2874,11 @@ namespace netDxf.IO
             this.chunk.Write(41, mText.RectangleWidth);
             this.chunk.Write(44, mText.LineSpacingFactor);
 
-            // even if the AutoCAD dxf documentation says that the rotation is in radians, this is wrong this value must be saved in degrees
+            //even if the AutoCAD dxf documentation says that the rotation is in radians, this is wrong this value must be saved in degrees
             //this.chunk.Write(50, mText.Rotation);
 
+            //the other option for the rotation is to store the horizontal vector of the text
+            //it will be used just in case other programs read the rotation as radians
             Vector2 direction = Vector2.Rotate(Vector2.UnitX, mText.Rotation * MathHelper.DegToRad);
             direction.Normalize();
             Vector3 ocsDirection = MathHelper.Transform(new Vector3(direction.X, direction.Y, 0.0), mText.Normal, CoordinateSystem.Object, CoordinateSystem.World);

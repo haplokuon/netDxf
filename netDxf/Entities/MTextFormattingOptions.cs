@@ -55,7 +55,7 @@ namespace netDxf.Entities
         #region constructors
 
         /// <summary>
-        /// Initializes a new instance of the <c>MTextFormattingOptions</c> class
+        /// Initializes a new instance of the <c>MTextFormattingOptions</c> class.
         /// </summary>
         /// <param name="style">Current style of the <see cref="MText">multiline text</see> entity.</param>
         public MTextFormattingOptions(TextStyle style)
@@ -299,7 +299,6 @@ namespace netDxf.Entities
                     ? string.Format("\\C{0};\\c{1};{2}", this.color.Index, BitConverter.ToInt32(new byte[] {this.color.R, this.color.G, this.color.B, 0}, 0), formattedText)
                     : string.Format("\\C{0};{1}", this.color.Index, formattedText);
             }
-
 
             if (!MathHelper.IsOne(baseHeightFactor))
                 formattedText = string.Format("\\H{0}x;{1}", baseHeightFactor.ToString(CultureInfo.InvariantCulture), formattedText);
