@@ -21,20 +21,18 @@
 #endregion
 
 using System;
-using System.Globalization;
-using netDxf.Tables;
 
 namespace netDxf.Entities
 {
     /// <summary>
     /// Options for the <see cref="MText">multiline text</see> entity text formatting.
     /// </summary>
+    /// <remarks>Old DXF versions might not support all available formatting codes.</remarks>
     public class MTextFormattingOptions
     {
-
         #region private fields
 
-        private const double SuperSubScriptHeightFactor = 0.7;
+        private double superSubScriptHeightFactor;
         private bool bold;
         private bool italic;
         private bool overline;
@@ -48,8 +46,7 @@ namespace netDxf.Entities
         private double obliqueAngle;
         private double characterSpaceFactor;
         private double widthFactor;
-        private readonly TextStyle style;
-        
+
         #endregion
 
         #region constructors
@@ -57,8 +54,7 @@ namespace netDxf.Entities
         /// <summary>
         /// Initializes a new instance of the <c>MTextFormattingOptions</c> class.
         /// </summary>
-        /// <param name="style">Current style of the <see cref="MText">multiline text</see> entity.</param>
-        public MTextFormattingOptions(TextStyle style)
+        public MTextFormattingOptions()
         {
             this.bold = false;
             this.italic = false;
@@ -70,7 +66,7 @@ namespace netDxf.Entities
             this.obliqueAngle = 0.0;
             this.characterSpaceFactor = 1.0;
             this.widthFactor = 1.0;
-            this.style = style;
+            this.superSubScriptHeightFactor = 0.7;
         }
 
         #endregion
@@ -128,7 +124,9 @@ namespace netDxf.Entities
         /// Get or set if the text is superscript.
         /// </summary>
         /// <remarks>
-        /// The Superscript and subscript properties are mutually exclusive, if it is set to true the Subscript property will be set to false automatically.
+        /// The Superscript and subscript properties are mutually exclusive, if it is set to true the Subscript property will be set to false automatically.<br />
+        /// Internally, superscripts and subscripts are written as stacking text (like fractions);
+        /// therefore the characters '/' and '#' are reserved if you need to write them you must write '\/' and '\#' respectively.
         /// </remarks>
         public bool Superscript
         {
@@ -144,7 +142,9 @@ namespace netDxf.Entities
         /// Get or set if the text is subscript.
         /// </summary>
         /// <remarks>
-        /// The Superscript and Subscript properties are mutually exclusive, if it is set to true the Superscript property will be set to false automatically.
+        /// The Superscript and Subscript properties are mutually exclusive, if it is set to true the Superscript property will be set to false automatically.<br />
+        /// Internally, superscripts and subscripts are written as stacking text (like fractions);
+        /// therefore the characters '/' and '#' are reserved if you need to write them you must write '\/' and '\#' respectively.
         /// </remarks>
         public bool Subscript
         {
@@ -157,10 +157,25 @@ namespace netDxf.Entities
         }
 
         /// <summary>
+        /// Gets or sets the superscript and subscript text height as a multiple of the current text height.
+        /// </summary>
+        /// <remarks>By default it is set as 0.7 the current text height.</remarks>
+        public double SuperSubScriptHeightFactor
+        {
+            get { return this.superSubScriptHeightFactor; }
+            set
+            {
+                if (value <= 0)
+                    throw new ArgumentOutOfRangeException(nameof(value), value, "The character percentage height must be greater than zero.");
+                this.superSubScriptHeightFactor = value;
+            }
+        }
+
+        /// <summary>
         /// Gets or sets the text color.
         /// </summary>
         /// <remarks>
-        /// Set as null to apply the default color.
+        /// Set as null to apply the default color defined by the MText entity.
         /// </remarks>
         public AciColor Color
         {
@@ -243,73 +258,6 @@ namespace netDxf.Entities
                     throw new ArgumentOutOfRangeException(nameof(value), value, "The width factor should be greater than zero.");
                 this.widthFactor = value;
             }
-        }
-
-        #endregion
-
-        #region public methods
-
-        /// <summary>
-        /// Obtains the string that represents the formatted text applying the current options.
-        /// </summary>
-        /// <param name="text">Text to be formatted.</param>
-        /// <returns>The formatted text string.</returns>
-        public string FormatText(string text)
-        {
-            string formattedText = text;
-            double baseHeightFactor = this.heightFactor;
-
-            if (this.superscript)
-            {
-                formattedText = string.Format("\\S{0}^ ;", formattedText);
-                baseHeightFactor *= SuperSubScriptHeightFactor;
-            }
-            if (this.subscript)
-            {
-                formattedText = string.Format("\\S^ {0};", formattedText);
-                baseHeightFactor *= SuperSubScriptHeightFactor;
-            }
-
-            string f;
-            if (string.IsNullOrEmpty(this.fontName))
-                f = this.style.IsTrueType ? this.style.FontFamilyName : this.style.FontFile;
-            else
-                f = this.fontName;
-
-            if (this.bold && this.italic)
-                formattedText = string.Format("\\F{0}|b1|i1;{1}", f, formattedText);
-            else if (this.bold && !this.italic)
-                formattedText = string.Format("\\F{0}|b1|i0;{1}", f, formattedText);
-            else if (!this.bold && this.italic)
-                formattedText = string.Format("\\F{0}|i1|b0;{1}", f, formattedText);
-            else
-                formattedText = string.Format("\\F{0}|b0|i0;{1}", f, formattedText);
-
-            if (this.overline)
-                formattedText = string.Format("\\O{0}\\o", formattedText);
-            if (this.underline)
-                formattedText = string.Format("\\L{0}\\l", formattedText);
-            if (this.strikeThrough)
-                formattedText = string.Format("\\K{0}\\k", formattedText);
-            if (this.color != null)
-            {
-                // The DXF is not consistent in the way it converts a true color to its 24-bit representation,
-                // while stuff like layer colors it follows BGR order, when formatting text it uses RGB order.
-                formattedText = this.color.UseTrueColor
-                    ? string.Format("\\C{0};\\c{1};{2}", this.color.Index, BitConverter.ToInt32(new byte[] {this.color.R, this.color.G, this.color.B, 0}, 0), formattedText)
-                    : string.Format("\\C{0};{1}", this.color.Index, formattedText);
-            }
-
-            if (!MathHelper.IsOne(baseHeightFactor))
-                formattedText = string.Format("\\H{0}x;{1}", baseHeightFactor.ToString(CultureInfo.InvariantCulture), formattedText);
-            if (!MathHelper.IsZero(this.obliqueAngle))
-                formattedText = string.Format("\\Q{0};{1}", this.obliqueAngle.ToString(CultureInfo.InvariantCulture), formattedText);
-            if (!MathHelper.IsOne(this.characterSpaceFactor))
-                formattedText = string.Format("\\T{0};{1}", this.characterSpaceFactor.ToString(CultureInfo.InvariantCulture), formattedText);
-            if (!MathHelper.IsOne(this.widthFactor))
-                formattedText = string.Format("\\W{0};{1}", this.widthFactor.ToString(CultureInfo.InvariantCulture), formattedText);
-
-            return "{" + formattedText + "}";
         }
 
         #endregion

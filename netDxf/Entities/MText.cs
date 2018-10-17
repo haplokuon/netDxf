@@ -21,12 +21,13 @@
 #endregion
 
 using System;
+using System.Globalization;
 using System.Text;
 using netDxf.Tables;
+using netDxf.Units;
 
 namespace netDxf.Entities
 {
-
     /// <summary>
     /// Represents a multiline text <see cref="EntityObject">entity</see>.
     /// </summary>
@@ -116,7 +117,6 @@ namespace netDxf.Entities
         private MTextDrawingDirection drawingDirection;
         private MTextAttachmentPoint attachmentPoint;
         private TextStyle style;
-        private int startParagraph;
         private string text;
 
         #endregion
@@ -248,7 +248,6 @@ namespace netDxf.Entities
             this.lineSpacingStyle = MTextLineSpacingStyle.AtLeast;
             this.drawingDirection = MTextDrawingDirection.ByStyle;
             this.rotation = 0.0;
-            this.startParagraph = 0;
         }
 
         #endregion
@@ -387,6 +386,52 @@ namespace netDxf.Entities
         #region public methods
 
         /// <summary>
+        /// Formats a text string to represent a fraction.
+        /// </summary>
+        /// <param name="numerator">Fraction numerator.</param>
+        /// <param name="denominator">Fraction denominator.</param>
+        /// <param name="fractionType">Style of the fraction.</param>
+        /// <returns>A text string that represents the fraction.</returns>
+        /// <remarks>
+        /// In fractions the characters '/' and '#' are reserved if you need to write them you must write "\/" and "\#", respectively.
+        /// </remarks>
+        public void WriteFraction(string numerator, string denominator, FractionFormatType fractionType)
+        {
+           this.WriteFraction(numerator, denominator, fractionType, null);
+        }
+
+        /// <summary>
+        /// Formats a text string to represent a fraction.
+        /// </summary>
+        /// <param name="numerator">Fraction numerator.</param>
+        /// <param name="denominator">Fraction denominator.</param>
+        /// <param name="fractionType">Style of the fraction.</param>
+        /// <param name="options">Text formatting options.</param>
+        /// <returns>A text string that represents the fraction.</returns>
+        /// <remarks>
+        /// In fractions the characters '/' and '#' are reserved if you need to write them you must write "\/" and "\#", respectively.<br />
+        /// Do not combine fractions with super or subscript options, it is not supported (stacking commands cannot be nested).
+        /// </remarks>
+        public void WriteFraction(string numerator, string denominator, FractionFormatType fractionType, MTextFormattingOptions options)
+        {
+            string txt = string.Empty;
+            switch (fractionType)
+            {
+                case FractionFormatType.Diagonal:
+                    txt = "\\S" + numerator + "#" + denominator + ";";
+                    break;
+                case FractionFormatType.Horizontal:
+                    txt = "\\S" + numerator + "/" + denominator + ";";
+                    break;
+                case FractionFormatType.NotStacked:
+                    txt = numerator + "/" + denominator;
+                    break;
+            }
+
+            this.Write(txt, options);
+        }
+
+        /// <summary>
         /// Adds the text to the current paragraph. 
         /// </summary>
         /// <param name="txt">Text string.</param>
@@ -403,46 +448,160 @@ namespace netDxf.Entities
         public void Write(string txt, MTextFormattingOptions options)
         {
             if (options == null)
+            {
                 this.text += txt;
+                return;
+            }
+
+            string formattedText = txt;
+            double baseHeightFactor = options.HeightFactor;
+
+            if (options.Superscript)
+            {
+                formattedText = string.Format("\\S{0}^ ;", formattedText);
+                baseHeightFactor *= options.SuperSubScriptHeightFactor;
+            }
+            if (options.Subscript)
+            {
+                formattedText = string.Format("\\S^ {0};", formattedText);
+                baseHeightFactor *= options.SuperSubScriptHeightFactor;
+            }
+
+            string f;
+            if (string.IsNullOrEmpty(options.FontName))
+                f = this.style.IsTrueType ? this.style.FontFamilyName : this.style.FontFile;
             else
-                this.text += options.FormatText(txt);
+                f = options.FontName;
+
+            if (options.Bold && options.Italic)
+                formattedText = string.Format("\\F{0}|b1|i1;{1}", f, formattedText);
+            else if (options.Bold && !options.Italic)
+                formattedText = string.Format("\\F{0}|b1|i0;{1}", f, formattedText);
+            else if (!options.Bold && options.Italic)
+                formattedText = string.Format("\\F{0}|i1|b0;{1}", f, formattedText);
+            else
+                formattedText = string.Format("\\F{0}|b0|i0;{1}", f, formattedText);
+
+            if (options.Overline)
+                formattedText = string.Format("\\O{0}\\o", formattedText);
+            if (options.Underline)
+                formattedText = string.Format("\\L{0}\\l", formattedText);
+            if (options.StrikeThrough)
+                formattedText = string.Format("\\K{0}\\k", formattedText);
+            if (options.Color != null)
+            {
+                // The DXF is not consistent in the way it converts a true color to its 24-bit representation,
+                // while stuff like layer colors it follows BGR order, when formatting text it uses RGB order.
+                formattedText = options.Color.UseTrueColor
+                    ? string.Format("\\C{0};\\c{1};{2}", options.Color.Index, BitConverter.ToInt32(new byte[] { options.Color.R, options.Color.G, options.Color.B, 0 }, 0), formattedText)
+                    : string.Format("\\C{0};{1}", options.Color.Index, formattedText);
+            }
+
+            if (!MathHelper.IsOne(baseHeightFactor))
+                formattedText = string.Format("\\H{0}x;{1}", baseHeightFactor.ToString(CultureInfo.InvariantCulture), formattedText);
+            if (!MathHelper.IsZero(options.ObliqueAngle))
+                formattedText = string.Format("\\Q{0};{1}", options.ObliqueAngle.ToString(CultureInfo.InvariantCulture), formattedText);
+            if (!MathHelper.IsOne(options.CharacterSpaceFactor))
+                formattedText = string.Format("\\T{0};{1}", options.CharacterSpaceFactor.ToString(CultureInfo.InvariantCulture), formattedText);
+            if (!MathHelper.IsOne(options.WidthFactor))
+                formattedText = string.Format("\\W{0};{1}", options.WidthFactor.ToString(CultureInfo.InvariantCulture), formattedText);
+
+            this.text += "{" + formattedText + "}";
         }
 
         /// <summary>
         /// Ends the current paragraph. 
         /// </summary>
+        public void EndParagraph()
+        {
+            this.text += "\\P";
+        }
+
+        /// <summary>
+        /// Starts a new paragraph. 
+        /// </summary>
         /// <remarks>
-        /// When no paragraph options are used, the previous paragraph options will be inherited.<br />
+        /// When no paragraph options are used, strictly speaking, there is no need to call this method, the previous paragraph options will be inherited.<br />
         /// When there is no need to change the paragraph options from the previous, it is no necessary to pass again the same instance,
         /// the paragraph characteristics are inherited from the previous one.
         /// This way no codes needs to be written and it will save some characters in the final string.
         /// </remarks>
-        public void EndParagraph()
+        public void StartParagraph()
         {
-            this.EndParagraph(null);
-        }
+            this.StartParagraph(null);
 
+        }
         /// <summary>
-        /// Ends the current paragraph. 
+        /// Starts a new paragraph. 
         /// </summary>
         /// <param name="options">Paragraph options.</param>
         /// <remarks>
-        /// When no paragraph options are used, the previous paragraph options will be inherited.<br />
+        /// When no paragraph options are used, strictly speaking, there is no need to call this method, the previous paragraph options will be inherited.<br />
         /// When there is no need to change the paragraph options from the previous, it is no necessary to pass again the same instance,
         /// the paragraph characteristics are inherited from the previous one.
         /// This way no codes needs to be written and it will save some characters in the final string.
         /// </remarks>
-        public void EndParagraph(MTextParagraphOptions options)
+        public void StartParagraph(MTextParagraphOptions options)
         {
-            string paragraph = this.text.Substring(this.startParagraph);
-
             if (options == null)
-                paragraph += "\\P";
-            else
-                paragraph = options.FormatParagraph(paragraph);
+            {
+                this.text += "\\A1;";
+                return;
+            }
 
-            this.text = this.text.Substring(0, this.startParagraph) + paragraph;
-            this.startParagraph = this.text.Length;
+            string codes = string.Empty;
+            
+            switch (options.Alignment)
+            {
+                case MTextParagraphAlignment.Left:
+                    codes = string.Format("\\pql;{0}", codes);
+                    break;
+                case MTextParagraphAlignment.Center:
+                    codes = string.Format("\\pqc;{0}", codes);
+                    break;
+                case MTextParagraphAlignment.Right:
+                    codes = string.Format("\\pqr;{0}", codes);
+                    break;
+                case MTextParagraphAlignment.Justified:
+                    codes = string.Format("\\pqj;{0}", codes);
+                    break;
+                case MTextParagraphAlignment.Distribute:
+                    codes = string.Format("\\pqd;{0}", codes);
+                    break;
+            }
+
+            // when the first line indent is negative, it cannot be lower than the available space left by the left indent
+            double fli = options.FirstLineIndent;
+            if (fli < 0.0 && Math.Abs(fli) > options.LeftIndent)
+                fli = -options.LeftIndent;
+
+            codes = string.Format("\\pi{0},l{1},r{2},b{3},a{4};{5}",
+                fli.ToString(CultureInfo.InvariantCulture),
+                options.LeftIndent.ToString(CultureInfo.InvariantCulture),
+                options.RightIndent.ToString(CultureInfo.InvariantCulture),
+                options.SpacingBefore.ToString(CultureInfo.InvariantCulture),
+                options.SpacingAfter.ToString(CultureInfo.InvariantCulture),
+                codes);
+
+            switch (options.LineSpacingStyle)
+            {
+                case MTextLineSpacingStyle.Default:
+                    codes = string.Format("\\ps*;{0}", codes);
+                    break;
+                case MTextLineSpacingStyle.AtLeast:
+                    codes = string.Format("\\psa{0};{1}", options.LineSpacingFactor.ToString(CultureInfo.InvariantCulture), codes);
+                    break;
+                case MTextLineSpacingStyle.Exact:
+                    codes = string.Format("\\pse{0};{1}", options.LineSpacingFactor.ToString(CultureInfo.InvariantCulture), codes);
+                    break;
+                case MTextLineSpacingStyle.Multiple:
+                    codes = string.Format("\\psm{0};{1}", options.LineSpacingFactor.ToString(CultureInfo.InvariantCulture), codes);
+                    break;
+            }
+
+            codes = string.Format("\\A{0};\\H{1}x;{2}", (int)options.VerticalAlignment, options.HeightFactor.ToString(CultureInfo.InvariantCulture), codes);
+
+            this.text += codes;
         }
 
         /// <summary>
@@ -476,31 +635,71 @@ namespace netDxf.Entities
 
                     if (token == '\\' | token == '{' | token == '}') // escape chars
                         rawText.Append(token);
-                    else if (token == 'L' | token == 'l' | token == 'O' | token == 'o' | token == 'K' | token == 'k' | token == 'P' | token == 'X') // one char commands
-                        if (token == 'P')
-                            rawText.Append(Environment.NewLine);
-                        else
-                        {
-                        } // discard other commands
-                    else // formatting commands of more than one character always terminate in ';'
+                    else if (token == 'L' | token == 'l' | token == 'O' | token == 'o' | token == 'K' | token == 'k')
+                    {/* discard one char commands */}
+                    else if (token == 'P' | token == 'X')
+                        rawText.Append(Environment.NewLine); // replace the end paragraph command with the standard new line, carriage return code "\r\n".
+                    else if (token == 'S')
                     {
-                        bool stacking = token == 'S'; // we want to preserve the text under the stacking command
+                        if (chars.MoveNext())
+                            token = chars.Current;
+                        else
+                            return rawText.ToString(); // premature end of text
+
+                        // we want to preserve the text under the stacking command
+                        StringBuilder data = new StringBuilder();
+
+                        while (token != ';') 
+                        {
+                            if (token == '\\')
+                            {
+                                if (chars.MoveNext())
+                                    token = chars.Current;
+                                else
+                                    return rawText.ToString(); // premature end of text
+
+                                data.Append(token);
+                            }
+                            else if (token == '^')
+                            {
+                                if (chars.MoveNext())
+                                    token = chars.Current;
+                                else
+                                    return rawText.ToString(); // premature end of text
+
+                                // discard the code "^ " that defines super and subscript texts
+                                if (token != ' ') data.Append("^" + token);
+                            }
+                            else
+                            {                              
+                                // replace the '#' stacking command by '/'
+                                // non command characters '#' are written as '\#'
+                                data.Append(token == '#' ? '/' : token);
+                            }
+
+                            if (chars.MoveNext())
+                                token = chars.Current;
+                            else
+                                return rawText.ToString(); // premature end of text
+                        }
+
+                        rawText.Append(data);
+                    }
+                    else 
+                    {
+                        // formatting commands of more than one character always terminate in ';'
+                        // discard all information
                         while (token != ';')
                         {
                             if (chars.MoveNext())
                                 token = chars.Current;
                             else
                                 return rawText.ToString(); // premature end of text
-
-                            if (stacking && token != ';')
-                                rawText.Append(token); // append user data of stacking command
                         }
                     }
                 }
                 else if (token == '{' | token == '}')
-                {
-                    // discard group markers
-                }
+                {/* discard group markers */}
                 else // char is what it is, a character
                     rawText.Append(token);
             }

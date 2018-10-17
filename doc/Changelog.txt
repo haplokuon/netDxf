@@ -1,22 +1,27 @@
 ## Change history
 
-### [2018/10/8]
-* Now the MText paragraph formatting is done through the MTextParagraphOptions class, when an instance of that class is passed when calling the EndParagraph method. See MTextParagraphFormatting() and MTextCharacterFormatting() sample.
-* Deleted MText ParagraphHeightFactor and Justification properties they are substituted by the MTextParagraphOptions.
 
-### [2018/10/5]
+### [2.2.1 - 2018/10/17]
+* Improved the MText.PlainText() method to reflect the latest formatting changes.
+* Added MTextParagraphVerticalAlignment enum that controls how fractions, superscripts, subscripts, and characters of different heights are placed in a paragraph line. 
+* Added method WriteFraction() to help adding fractions into the text of a MText entity.
+* Substitute, what seems and old code, "^J" with the new paragraph code "\\P" in the text of MText entities.
+* The MTextFormattingOptions constructor does not require an instance of a TextStyle.
+* Updated "netDXF Documentation.chm".
+* Reworked how the text of an MText entity is formatted. See MTextParagraphFormatting() and MTextCharacterFormatting() sample.
+* Added the class MTextParagraphOptions that holds the paragraph properties of the MText text.
+* Added MText StartParagraph method that optionally takes an instance of the MTextParagraphOptions class.
 * Added Superscript and Subscript properties to the MTextFormattingOptions class.
-* Deleted MTextFormattingOptions property Alignment.
-* Added MText property Justification that controls the paragraph horizontal alignment, this parameter works together with the MText.EndParagraph method.
 * Added Hatch pattern method NamesFromFile and Save, the functionality is similar as the methods in the Linetype class but instead of working with LIN files they work with PAT files.
 * Rename HatchPattern method FromFile to Load, to accommodate to the same nomenclature as its equivalent in the Linetype class.
 * (fixed) Remove ArgumentOutOfRangeException exception in the LinetypeShapeSegment and LinetypeTextSegment Scale property, negative values are allowed. Zero values are also allowed even thought they should not be used.
 * (fixed) Loading a pattern from a PAT file may fail under some circumstances.
 * (fixed) LIN and PAT files must use the dot as the decimal separator.
-* (fixed) Spelling error in SplineVertex class the weight property should have been Weight.
+* (fixed) Spelling error in SplineVertex class the weight value, it should have been Weight.
 * (fixed) Handling of the MTextFormattingOptions font name. When using TTF fonts use the font family name as the font name, when using SHX use the file name with the SHX extension.
 * (fixed) Floating point values must always use the dot as the decimal point when formatting texts for MText entities.
 * (fixed) True color value in the MTextFormattingOptions. The DXF is not consistent in the way it converts a true color to its 24-bit representation; stuff like layer colors follows BGR order, while the color when formatting text uses RGB order.
+
 
 ### [2.2.0 - 2018/7/17]
 * Updated "netDXF Documentation.chm".

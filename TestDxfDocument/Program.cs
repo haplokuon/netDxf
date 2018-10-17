@@ -26,15 +26,14 @@ namespace TestDxfDocument
     /// </summary>
     public class Program
     {
-
         public static void Main()
         {
-            //DxfDocument doc = Test(@"sample.dxf");
+            DxfDocument doc = Test(@"sample.dxf");
 
             #region Samples for new and modified features 2.2.1
 
-            MTextParagraphFormatting();
-            MTextCharacterFormatting();
+            //MTextParagraphFormatting();
+            //MTextCharacterFormatting();
 
             #endregion
 
@@ -235,32 +234,36 @@ namespace TestDxfDocument
         private static void MTextParagraphFormatting()
         {
             MText text = new MText();
-
             text.RectangleWidth = 50;
 
+            // The text formatting of an MText entity is done in two levels, at paragraph level and at character, word, line level.
+
             // this class holds the properties of the text at character, word, line level
-            MTextFormattingOptions opText = new MTextFormattingOptions(text.Style);
+            MTextFormattingOptions opText = new MTextFormattingOptions();
 
             // this class holds the properties of the text at paragraph level
             MTextParagraphOptions opPara = new MTextParagraphOptions();
-
-            opText.FontName = "Tahoma";
-            text.Write("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua." +
-                       " Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat." +
-                       " Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur." +
-                       " Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.", opText);
 
             opPara.Alignment = MTextParagraphAlignment.Center;
             opPara.HeightFactor = 1.5;
             opPara.FirstLineIndent = 1.5;
             opPara.SpacingAfter = 3.0;
-            text.EndParagraph(opPara);
 
-            opText.FontName = "Times New Roman";
+            // applies the paragraph options defined by the MTextParagraphOptions to the new paragraph
+            text.StartParagraph(opPara);
+            opText.FontName = "Tahoma";
             text.Write("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua." +
                        " Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat." +
                        " Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur." +
-                       " Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.", opText);
+                       " Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
+                       opText);
+
+            opPara.Alignment = MTextParagraphAlignment.Center;
+            opPara.HeightFactor = 1.5;
+            opPara.FirstLineIndent = 1.5;
+            opPara.SpacingAfter = 3.0;
+            // adds the end paragraph code \P, that marks the end of the current paragraph
+            text.EndParagraph();
 
             opPara.Alignment = MTextParagraphAlignment.Justified;
             opPara.HeightFactor = 1.0;
@@ -271,25 +274,39 @@ namespace TestDxfDocument
             opPara.SpacingAfter = 1.8;
             opPara.LineSpacingStyle = MTextLineSpacingStyle.Exact;
             opPara.LineSpacingFactor = 1.8;
-            text.EndParagraph(opPara);
 
+            text.StartParagraph(opPara);
+            opText.FontName = "Times New Roman";
             text.Write("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua." +
                        " Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat." +
                        " Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur." +
-                       " Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.");
-            // when no instance of MTextParagraphOptions, no codes will be written for the current paragraph and it will inherit the previous ones
+                       " Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
+                       opText);
             text.EndParagraph();
 
+            // when no instance of MTextParagraphOptions, the current paragraph and it will inherit the previous ones
+            text.StartParagraph();
+            // writes text with the default text options defined by the TextStyle of the MText entity
             text.Write("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua." +
                        " Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat." +
                        " Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur." +
                        " Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.");
-            text.EndParagraph(new MTextParagraphOptions());
+            text.EndParagraph();
 
+            text.StartParagraph(new MTextParagraphOptions());
+            text.Write("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua." +
+                       " Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat." +
+                       " Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur." +
+                       " Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.");
+            // the call to the EndParagraph method for the last paragraph, strictly speaking, is not needed
+            text.EndParagraph();
+
+            string data = text.PlainText();
+            Console.Write(data);
+            Console.ReadLine();
             DxfDocument doc = new DxfDocument();
             doc.AddEntity(text);
             doc.Save("test1.dxf");
-
         }
 
         private static void MTextCharacterFormatting()
@@ -297,14 +314,25 @@ namespace TestDxfDocument
             DxfDocument dxf = new DxfDocument();
             dxf.Layers.Add(new Layer("Layer1") {Color = new AciColor(Color.SkyBlue)});
             MText text = new MText();
-            text.RectangleWidth = 35;
-            MTextFormattingOptions opText = new MTextFormattingOptions(text.Style);
+            text.Color = AciColor.Yellow;
+            text.RectangleWidth = 45;
+            MTextFormattingOptions opText = new MTextFormattingOptions();
             MTextParagraphOptions opPara = new MTextParagraphOptions();
+
+            // when no instance of MTextParagraphOptions, the current paragraph and it will inherit the previous ones
+            text.StartParagraph();
             text.Write("Text line with the default formatting options", opText);
             text.EndParagraph();
+
+            text.StartParagraph();
             opText.FontName = "Tahoma";
-            text.Write("Sample text", opText);
+            text.Write("Sample text with a fraction ", opText);
+            text.WriteFraction("12.54", "abc", FractionFormatType.Diagonal, opText);
             text.EndParagraph();
+
+            opPara.Alignment = MTextParagraphAlignment.Right;
+            opPara.VerticalAlignment = MTextParagraphVerticalAlignment.Bottom;
+            text.StartParagraph(opPara);
             opText.FontName = "Times New Roman";
             opText.Color = AciColor.Red;
             text.Write("New", opText);
@@ -313,7 +341,15 @@ namespace TestDxfDocument
             text.Write(" line ", opText);
             opText.HeightFactor = 1.0;
             opText.WidthFactor = 1.0;
-            text.Write("of text x", opText);
+            text.Write("of text, with right paragraph alignment.", opText);
+            
+            text.EndParagraph();
+
+            opPara.Alignment = MTextParagraphAlignment.Center;
+            opPara.VerticalAlignment = MTextParagraphVerticalAlignment.Center;
+            text.StartParagraph(opPara);
+            opText.Color = AciColor.ByLayer;
+            text.Write("Another line of text, x", opText);
             opText.Superscript = true;
             text.Write("12", opText);
             opText.Superscript = false;
@@ -321,22 +357,25 @@ namespace TestDxfDocument
             opText.Subscript = true;
             text.Write("34", opText);
             opText.Subscript = false;
-            opPara.Alignment = MTextParagraphAlignment.Right;
-            text.EndParagraph(opPara);
+            text.Write(". Paragraph aligned to center.", opText);
+            text.EndParagraph();
+
+            text.StartParagraph(new MTextParagraphOptions());
+            opText = new MTextFormattingOptions();
+            opText.FontName = "Times New Roman";
+            opText.Bold = true;
             opText.Color = new AciColor(Color.SkyBlue);
             opText.Italic = true;
             opText.Underline = true;
-            opText.HeightFactor = 2.5;
-            text.Write("Another line of text", opText);
-            opPara.Alignment = MTextParagraphAlignment.Center;
-            text.EndParagraph(opPara);
-            opText = new MTextFormattingOptions(text.Style);
-            opText.FontName = "Times New Roman";
-            opText.Bold = true;
+            opText.HeightFactor = 1.6;
             text.Write("Text line with the default paragraph options", opText);
-            text.EndParagraph(new MTextParagraphOptions());
+            text.EndParagraph();
+
             dxf.AddEntity(text);
 
+            string data = text.PlainText();
+            Console.Write(data);
+            Console.ReadLine();
             dxf.Save("test2.dxf");
         }
 
@@ -3471,7 +3510,7 @@ namespace TestDxfDocument
 
             MText text2 = new MText(new Vector2(0, 30), 10, 0, style);
             // or use the Write() method
-            MTextFormattingOptions op = new MTextFormattingOptions(text2.Style);
+            MTextFormattingOptions op = new MTextFormattingOptions();
             op.Color = new AciColor(188, 232, 166); // using true color
             text2.Write("Text", op);
             op.Color = null; // set color to the default defined in text2.Style
@@ -6197,22 +6236,7 @@ namespace TestDxfDocument
             mText.Rotation = 0;
             mText.LineSpacingFactor = 1.0;
 
-            //mText.AttachmentPoint = MTextAttachmentPoint.TopCenter;
-            //mText.Write("Hello World!");
-            //mText.Write(" we keep writting on the same line.");
-            //mText.WriteLine("This text is in a new line");
-
-            //mText.Write("Hello World! ");
-            //for (int i = 0; i < 50; i++)
-            //{
-            //    mText.Write("1234567890");
-            //}
-            //mText.Write(" This text is over the limit of the 250 character chunk");
-            //mText.NewParagraph();
-            //mText.Write("This is a text in a new paragraph");
-            //mText.Write(" and we continue writing in the previous paragraph");
-            //mText.NewParagraph();
-            MTextFormattingOptions options = new MTextFormattingOptions(mText.Style);
+            MTextFormattingOptions options = new MTextFormattingOptions();
             options.Bold = true;
             mText.Write("Bold text in mText.Style", options);
             mText.EndParagraph();
@@ -6231,24 +6255,6 @@ namespace TestDxfDocument
             mText.Write("No formatted text uses mText.Style");
             mText.Write(" and the text continues in the same paragraph.");
             mText.EndParagraph();
-
-            //options.HeightPercentage = 2.5;
-            //options.Color = AciColor.Red;
-            //options.Overstrike = true;
-            //options.Underline = true;
-            //options.FontFile = "times.ttf";
-            //options.ObliqueAngle = 15;
-            //options.CharacterSpacePercentage = 2.35;
-            //options.WidthFactor = 1.8;
-
-            //for unknown reasons the aligment doesn't seem to change anything
-            //mText.Write("Formatted text", options);
-            //options.Aligment = MTextFormattingOptions.TextAligment.Center;
-            //mText.Write("Center", options);
-            //options.Aligment = MTextFormattingOptions.TextAligment.Top;
-            //mText.Write("Top", options);
-            //options.Aligment = MTextFormattingOptions.TextAligment.Bottom;
-            //mText.Write("Bottom", options);
 
             mText.XData.Add(xdata);
 

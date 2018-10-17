@@ -177,7 +177,7 @@ namespace netDxf.IO
                         encoding = Encoding.UTF8;
                     else
                     {
-                        // if the file is not UTF-8 use the code page provided by the dxf file
+                        // if the file is not UTF-8 use the code page provided by the DXF file
                         if (string.IsNullOrEmpty(dwgcodepage))
                             encoding = Encoding.GetEncoding(Encoding.Default.WindowsCodePage); // use the default windows code page, if unable to read the code page header variable.
                         else
@@ -233,7 +233,7 @@ namespace netDxf.IO
             this.chunk.Next();
 
             // read the comments at the head of the file, any other comments will be ignored
-            // they sometimes hold information about the program that has generated the dxf
+            // they sometimes hold information about the program that has generated the DXF
             // binary files do not contain any comments
             this.doc.Comments.Clear();
             while (this.chunk.Code == 999)
@@ -384,7 +384,7 @@ namespace netDxf.IO
                         if (StringEnum.IsStringDefined(typeof (DxfVersion), version))
                             acadVer = (DxfVersion) StringEnum.Parse(typeof (DxfVersion), version);
                         if (acadVer < DxfVersion.AutoCad2000)
-                            throw new NotSupportedException("Only AutoCad2000 and higher dxf versions are supported.");
+                            throw new NotSupportedException("Only AutoCad2000 and higher DXF versions are supported.");
                         this.doc.DrawingVariables.AcadVer = acadVer;
                         this.chunk.Next();
                         break;
@@ -848,7 +848,7 @@ namespace netDxf.IO
             }
 
             // this will try to fix problems with layouts and model/paper space blocks
-            // nothing of this is be necessary in a well formed dxf
+            // nothing of this is be necessary in a well formed DXF
             this.RelinkOrphanLayouts();
 
             // raster variables
@@ -1137,7 +1137,7 @@ namespace netDxf.IO
                         }
                         break;
                     case DxfObjectCode.TextStyleTable:
-                        // the dxf stores text and shape definitions in the same table
+                        // the DXF stores text and shape definitions in the same table
                         DxfObject style = this.ReadTextStyle();
                         if (style != null)
                         {
@@ -1292,7 +1292,7 @@ namespace netDxf.IO
 
             if (xData.Count > 0) this.hasXData.Add(record, xData);
 
-            // here is where dxf versions prior to AutoCad2007 stores the block units
+            // here is where DXF versions prior to AutoCad2007 stores the block units
             // read the layer transparency from the extended data
             XData designCenterData;
             if (record.XData.TryGetValue(ApplicationRegistry.DefaultName, out designCenterData))
@@ -2847,7 +2847,7 @@ namespace netDxf.IO
 
             if (name.StartsWith(Block.DefaultPaperSpaceName, StringComparison.OrdinalIgnoreCase))
             {
-                // the dxf is not consistent with the way they handle entities that belong to different paper spaces.
+                // the DXF is not consistent with the way they handle entities that belong to different paper spaces.
                 // While the entities of *Paper_Space block are stored in the ENTITIES section as the *Model_Space,
                 // the list of entities in *Paper_Space# are stored in the block definition itself.
                 // As all this entities do not need an insert entity to have a visual representation,
@@ -4634,7 +4634,7 @@ namespace netDxf.IO
                 }
             }
 
-            // this is just an example of the stupid dxf way of doing things, while an ellipse the center is given in world coordinates,
+            // this is just an example of the stupid DXF way of doing things, while an ellipse the center is given in world coordinates,
             // the center of an arc is given in object coordinates (different rules for the same concept).
             // It is a lot more intuitive to give the center in world coordinates and then define the orientation with the normal.
             Vector3 wcsCenter = MathHelper.Transform(center, normal, CoordinateSystem.Object, CoordinateSystem.World);
@@ -4713,7 +4713,7 @@ namespace netDxf.IO
                 }
             }
 
-            // this is just an example of the stupid dxf way of doing things, while an ellipse the center is given in world coordinates,
+            // this is just an example of the stupid DXF way of doing things, while an ellipse the center is given in world coordinates,
             // the center of a circle is given in object coordinates (different rules for the same concept).
             // It is a lot more intuitive to give the center in world coordinates and then define the orientation with the normal..
             Vector3 wcsCenter = MathHelper.Transform(center, normal, CoordinateSystem.Object, CoordinateSystem.World);
@@ -4852,7 +4852,7 @@ namespace netDxf.IO
                 }
             }
 
-            // this is the result of the way the dxf use the DimensionTypeFlag enumeration, it is a mixture of a regular enumeration with flags
+            // this is the result of the way the DXF use the DimensionTypeFlag enumeration, it is a mixture of a regular enumeration with flags
             DimensionTypeFlags type = dimType;
             OrdinateDimensionAxis axis = OrdinateDimensionAxis.Y;
             if (type.HasFlag(DimensionTypeFlags.BlockReference))
@@ -5614,7 +5614,7 @@ namespace netDxf.IO
                         this.chunk.Next();
                         break;
                     case 52:
-                        // AutoCAD is unable to recognized code 52 for oblique dimension line even though it appears as valid in the dxf documentation
+                        // AutoCAD is unable to recognized code 52 for oblique dimension line even though it appears as valid in the DXF documentation
                         this.chunk.Next();
                         break;
                     case 1001:
@@ -7495,11 +7495,11 @@ namespace netDxf.IO
 
         private EntityObject ReadPolyline()
         {
-            // the entity Polyline in dxf can actually hold three kinds of entities
+            // the entity Polyline in DXF can actually hold three kinds of entities
             // 3d polyline is the generic polyline
             // polyface mesh
             // polylines 2d is the old way of writing polylines the AutoCAD2000 and newer always use LwPolylines to define a 2d polyline
-            // this way of reading 2d polylines is here for compatibility reasons with older dxf versions.
+            // this way of reading 2d polylines is here for compatibility reasons with older DXF versions.
             PolylinetypeFlags flags = PolylinetypeFlags.OpenPolyline;
             PolylineSmoothType smoothType = PolylineSmoothType.NoSmooth;
             double elevation = 0.0;
@@ -8001,7 +8001,7 @@ namespace netDxf.IO
                             lineSpacing = 1.0;
                         this.chunk.Next();
                         break;
-                    case 50: // even if the AutoCAD dxf documentation says that the rotation is in radians, this is wrong this value is in degrees
+                    case 50: // even if the AutoCAD DXF documentation says that the rotation is in radians, this is wrong this value is in degrees
                         isRotationDefined = true;
                         rotation = this.chunk.ReadDouble();
                         this.chunk.Next();
@@ -8044,7 +8044,7 @@ namespace netDxf.IO
                         break;
                     case 101:
                         // once again Autodesk not documenting its own stuff.
-                        // the code 101 was introduced in AutoCad 2018, as far as I know, it is not documented anywhere in the official dxf help.
+                        // the code 101 was introduced in AutoCad 2018, as far as I know, it is not documented anywhere in the official DXF help.
                         // after this value, it seems that appears the definition of who knows what, therefore everything after this 101 code will be skipped
                         // until the end of the entity definition or the XData information
                         //string unknown = this.chunk.ReadString();
@@ -8061,9 +8061,13 @@ namespace netDxf.IO
             }
 
             textString = this.DecodeEncodedNonAsciiCharacters(textString);
-            // text dxf files stores the tabs as ^I in the MText texts, they will be replaced by the standard tab character
             if (!this.isBinary)
+            {
+                // text DXF files stores the tabs as ^I in the MText texts, they will be replaced by the standard tab character
                 textString = textString.Replace("^I", "\t");
+                // "^J" undocumented code in MText, they will be replaced by the standard end paragraph command "\P"
+                textString = textString.Replace("^J", "\\P");
+            }
 
             Vector3 ocsDirection = MathHelper.Transform(direction, normal, CoordinateSystem.World, CoordinateSystem.Object);
 
@@ -8173,7 +8177,7 @@ namespace netDxf.IO
 
             entity.XData.AddRange(xData);
 
-            // here is where dxf stores the pattern origin
+            // here is where DXF stores the pattern origin
             XData patternOrigin;
             Vector2 origin = Vector2.Zero;
             if (entity.XData.TryGetValue(ApplicationRegistry.DefaultName, out patternOrigin))
@@ -8633,7 +8637,7 @@ namespace netDxf.IO
                 short numSegments = this.chunk.ReadShort(); // code 79
                 this.chunk.Next();
 
-                // Pattern fill data. In theory this should hold the same information as the pat file but for unknown reason the dxf requires global data instead of local.
+                // Pattern fill data. In theory this should hold the same information as the pat file but for unknown reason the DXF requires global data instead of local.
                 // this means we have to convert the global data into local, since we are storing the pattern line definition as it appears in the acad.pat file.
                 double sinOrigin = Math.Sin(patternAngle*MathHelper.DegToRad);
                 double cosOrigin = Math.Cos(patternAngle*MathHelper.DegToRad);
@@ -9710,7 +9714,7 @@ namespace netDxf.IO
                 }
             }
 
-            // add the dxf entities to the document
+            // add the DXF entities to the document
             foreach (KeyValuePair<DxfObject, string> pair in this.entityList)
             {
                 Layout layout;

@@ -21,20 +21,20 @@
 #endregion
 
 using System;
-using System.Globalization;
 
 namespace netDxf.Entities
 {
     /// <summary>
     /// Options for the <see cref="MText">multiline text</see> entity paragraph formatting.
     /// </summary>
+    /// <remarks>Old DXF versions might not support all available formatting codes.</remarks>
     public class MTextParagraphOptions
     {
-
         #region private fields
 
         private double heightFactor;
         private MTextParagraphAlignment alignment;
+        private MTextParagraphVerticalAlignment verticalAlignment;
         private double spaceBefore ;
         private double spaceAfter;
         private double firstLineIndent;
@@ -54,6 +54,7 @@ namespace netDxf.Entities
         {
             this.heightFactor = 1.0;
             this.alignment = MTextParagraphAlignment.Left;
+            this.verticalAlignment = MTextParagraphVerticalAlignment.Center;
             this.spaceBefore = 0.0;
             this.spaceAfter = 0.0;
             this.firstLineIndent = 0.0;
@@ -61,7 +62,7 @@ namespace netDxf.Entities
             this.rightIndent = 0.0;
             this.lineSpacing = 1.0;
             this.lineSpacingStyle = MTextLineSpacingStyle.Default;
-    }
+        }
 
         #endregion
 
@@ -70,22 +71,20 @@ namespace netDxf.Entities
         /// <summary>
         /// Gets or sets the paragraph height factor.
         /// </summary>
-        /// <remarks>
-        /// Percentage of default paragraph height factor to be applied. Valid values range from 0.25 to 4.0, the default value 1.0.
-        /// </remarks>
+        /// <remarks>Set as 1.0 to apply the default height factor.</remarks>
         public double HeightFactor
         {
             get { return this.heightFactor; }
             set
             {
-                if (value < 0.25 || value > 4.0)
-                    throw new ArgumentOutOfRangeException(nameof(value), value, "The paragraph height factor valid values range from 0.25 to 4.0");
+                if (value <= 0)
+                    throw new ArgumentOutOfRangeException(nameof(value), value, "The character percentage height must be greater than zero.");
                 this.heightFactor = value;
             }
         }
 
         /// <summary>
-        /// Gets or sets the current paragraph justification (text horizontal alignment).
+        /// Gets or sets the paragraph justification (text horizontal alignment).
         /// </summary>
         public MTextParagraphAlignment Alignment
         {
@@ -94,7 +93,20 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Specifies the spacing before the current paragraphs.
+        /// Gets or sets the paragraph line vertical alignment.
+        /// </summary>
+        /// <remarks>
+        /// The vertical alignment affects how fractions, superscripts, subscripts, and characters of different heights are placed in a paragraph line.
+        /// By default the paragraph vertical alignment is Center.
+        /// </remarks>
+        public MTextParagraphVerticalAlignment VerticalAlignment
+        {
+            get { return this.verticalAlignment; }
+            set { this.verticalAlignment = value; }
+        }
+
+        /// <summary>
+        /// Specifies the spacing before the paragraphs.
         /// </summary>
         /// <remarks>
         /// If set to zero no value will be applied and the default will be inherited. When it is non zero, valid values range from 0.25 to 4.0.<br />
@@ -120,7 +132,7 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Specifies the spacing before or after the current paragraph.
+        /// Specifies the spacing before or after the paragraph.
         /// </summary>
         /// <remarks>
         /// If set to zero no value will be applied and the default will be inherited. When it is non zero, valid values range from 0.25 to 4.0.<br />
@@ -146,7 +158,7 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets or sets the indent value for the first line of the current paragraph.
+        /// Gets or sets the indent value for the first line of the paragraph.
         /// </summary>
         /// <remarks>
         /// Valid values range from -10000.0 to 10000.0, the default value 0.0.<br />
@@ -183,7 +195,7 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets or sets the right indent value of the current paragraphs.
+        /// Gets or sets the right indent value of the paragraphs.
         /// </summary>
         /// <remarks>
         /// Valid values range from 0.0 to 10000.0, the default value 0.0.
@@ -200,7 +212,7 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets or sets the line spacing factor.
+        /// Gets or sets the paragraph line spacing factor.
         /// </summary>
         /// <remarks>
         /// Percentage of default line spacing to be applied. Valid values range from 0.25 to 4.0, the default value 1.0.
@@ -216,75 +228,13 @@ namespace netDxf.Entities
             }
         }
 
-
         /// <summary>
-        /// Get or sets the <see cref="MTextLineSpacingStyle">line spacing style</see>.
+        /// Get or sets the paragraph <see cref="MTextLineSpacingStyle">line spacing style</see>.
         /// </summary>
         public MTextLineSpacingStyle LineSpacingStyle
         {
             get { return this.lineSpacingStyle; }
             set { this.lineSpacingStyle = value; }
-        }
-        #endregion
-
-        #region public methods
-
-        /// <summary>
-        /// Ends the actual paragraph (adds the end paragraph code and the paragraph height factor). 
-        /// </summary>
-        /// <param name="paragraph">Paragraph to be formatted.</param>
-        /// <returns>The formatted paragraph string.</returns>
-        public string FormatParagraph(string paragraph)
-        {
-            switch (this.alignment)
-            {
-                case MTextParagraphAlignment.Left:
-                    paragraph = string.Format("\\pql;{0}", paragraph);
-                    break;
-                case MTextParagraphAlignment.Center:
-                    paragraph = string.Format("\\pqc;{0}", paragraph);
-                    break;
-                case MTextParagraphAlignment.Right:
-                    paragraph = string.Format("\\pqr;{0}", paragraph);
-                    break;
-                case MTextParagraphAlignment.Justified:
-                    paragraph = string.Format("\\pqj;{0}", paragraph);
-                    break;
-                case MTextParagraphAlignment.Distribute:
-                    paragraph = string.Format("\\pqd;{0}", paragraph);
-                    break;
-            }
-
-            // when the first line indent is negative, it cannot be lower than the available space left by the left indent
-            double fli = this.firstLineIndent;
-            if (fli < 0.0 && Math.Abs(fli) > this.leftIndent)
-                fli = -this.leftIndent;
-
-            paragraph = string.Format("\\pi{0},l{1},r{2},b{3},a{4};{5}",
-                fli.ToString(CultureInfo.InvariantCulture),
-                this.leftIndent.ToString(CultureInfo.InvariantCulture),
-                this.rightIndent.ToString(CultureInfo.InvariantCulture),
-                this.spaceBefore.ToString(CultureInfo.InvariantCulture),
-                this.spaceAfter.ToString(CultureInfo.InvariantCulture), 
-                paragraph);
-
-            switch (this.lineSpacingStyle)
-            {
-                case MTextLineSpacingStyle.Default:
-                    paragraph = string.Format("\\ps*;{0}", paragraph);
-                    break;
-                case MTextLineSpacingStyle.AtLeast:
-                    paragraph = string.Format("\\psa{0};{1}", this.lineSpacing.ToString(CultureInfo.InvariantCulture), paragraph);
-                    break;
-                case MTextLineSpacingStyle.Exact:
-                    paragraph = string.Format("\\pse{0};{1}", this.lineSpacing.ToString(CultureInfo.InvariantCulture), paragraph);
-                    break;
-                case MTextLineSpacingStyle.Multiple:
-                    paragraph = string.Format("\\psm{0};{1}", this.lineSpacing.ToString(CultureInfo.InvariantCulture), paragraph);
-                    break;
-            }
-
-            return string.Format("\\A1\\H{0}x;{1}\\P", this.heightFactor.ToString(CultureInfo.InvariantCulture), paragraph);
         }
 
         #endregion

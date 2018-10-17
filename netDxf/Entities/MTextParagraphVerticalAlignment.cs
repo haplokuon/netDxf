@@ -1,4 +1,4 @@
-#region netDxf library, Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
+﻿#region netDxf library, Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
 
 //                        netDxf library
 // Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
@@ -23,38 +23,23 @@
 namespace netDxf.Entities
 {
     /// <summary>
-    /// Paragraph text horizontal alignment.
+    /// Paragraph text vertical alignment.
     /// </summary>
-    public enum MTextParagraphAlignment
-    { 
+    public enum MTextParagraphVerticalAlignment
+    {
         /// <summary>
-        /// Default
+        /// Bottom.
         /// </summary>
-        Default = 0,
-
-        /// <summary>
-        /// Left.
-        /// </summary>
-        Left = 1,
+        Bottom = 0,
 
         /// <summary>
         /// Center.
         /// </summary>
-        Center = 2,
+        Center = 1,
 
         /// <summary>
-        /// Right.
+        /// Top.
         /// </summary>
-        Right = 3,
-
-        /// <summary>
-        /// Justified.
-        /// </summary>
-        Justified = 4,
-
-        /// <summary>
-        /// Distribute.
-        /// </summary>
-        Distribute = 5
+        Top = 2
     }
 }

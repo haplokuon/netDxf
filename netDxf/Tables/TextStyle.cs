@@ -107,7 +107,7 @@ namespace netDxf.Tables
 
             if (!Path.GetExtension(font).Equals(".TTF", StringComparison.InvariantCultureIgnoreCase) &&
                 !Path.GetExtension(font).Equals(".SHX", StringComparison.InvariantCultureIgnoreCase))
-                throw new ArgumentException("Only true type TTF fonts and acad compiled shape SHX fonts are allowed.");
+                throw new ArgumentException("Only true type TTF fonts and ACAD compiled shape SHX fonts are allowed.");
 
             this.file = font;
             this.bigFont = string.Empty;
@@ -194,7 +194,7 @@ namespace netDxf.Tables
 
                 if (!Path.GetExtension(value).Equals(".TTF", StringComparison.InvariantCultureIgnoreCase) &&
                     !Path.GetExtension(value).Equals(".SHX", StringComparison.InvariantCultureIgnoreCase))
-                    throw new ArgumentException("Only true type TTF fonts and acad compiled shape SHX fonts are allowed.");
+                    throw new ArgumentException("Only true type TTF fonts and ACAD compiled shape SHX fonts are allowed.");
 
                 this.fontFamilyName = TrueTypeFontFamilyName(value);
                 this.bigFont = string.Empty;
@@ -205,7 +205,7 @@ namespace netDxf.Tables
         /// <summary>
         /// Gets or sets an Asian-language Big Font file.
         /// </summary>
-        /// <remarks>Only acad compiled shape SHX fonts are valid for creating Big Fonts.</remarks>
+        /// <remarks>Only ACAD compiled shape SHX fonts are valid for creating Big Fonts.</remarks>
         public string BigFont
         {
             get { return this.bigFont; }
@@ -372,7 +372,7 @@ namespace netDxf.Tables
             else
             {
                 fontFile = string.Format("{0}{1}{2}", Environment.GetFolderPath(Environment.SpecialFolder.Fonts), Path.DirectorySeparatorChar, Path.GetFileName(ttfFont));
-                // if the ttf does not even exist in the font system folder 
+                // if the TTF does not even exist in the font system folder 
                 if (!File.Exists(fontFile)) return string.Empty;
             }
 

@@ -22,6 +22,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Text;
@@ -389,20 +390,16 @@ namespace netDxf.Tables
                                     if (tokens[i + 1].StartsWith("["))
                                     {
                                         StringBuilder data = new StringBuilder();
-                                        // there are two kinds of complex linetype Text and Shape,
-                                        // the data is enclosed in brackets
-                                        bool end = false;
-                                        while (!end)
+                                        // there are two kinds of complex linetype Text and Shape, the data is enclosed in brackets
+                                        for ( ++i; i < tokens.Length; i++)
                                         {
-                                            data.Append(tokens[++i]);
+                                            data.Append(tokens[i]);
+                                            
+                                            // text and shape data must be enclosed by brackets
+                                            if (i >= tokens.Length) throw new FormatException("The linetype definition is not well formatted."); 
+                                            if (tokens[i].EndsWith("]")) break;
+                                            
                                             data.Append(",");
-                                            if (i >= tokens.Length)
-                                                return null; // text and shape data must be enclosed by brackets
-                                            if (tokens[i].EndsWith("]"))
-                                            {
-                                                data.Append(tokens[i]);
-                                                end = true;
-                                            }
                                         }
                                         LinetypeSegment segment = ReadLineTypeComplexSegment(data.ToString(), length);
                                         if (segment != null) segments.Add(segment);
@@ -439,12 +436,13 @@ namespace netDxf.Tables
             StringBuilder sb = new StringBuilder();
 
             sb.AppendLine(string.Format("*{0},{1}", this.Name, this.description));
+            sb.Append("A"); // A (alignment field)
             foreach (LinetypeSegment s in this.segments)
             {
                 switch (s.Type)
                 {
                     case LinetypeSegmentType.Simple:
-                        sb.Append(string.Format("A,{0}", s.Length.ToString(CultureInfo.InvariantCulture)));
+                        sb.Append(string.Format(",{0}", s.Length.ToString(CultureInfo.InvariantCulture)));
                         break;
                     case LinetypeSegmentType.Text:
                         LinetypeTextSegment ts = (LinetypeTextSegment) s;
@@ -462,7 +460,7 @@ namespace netDxf.Tables
                                 break;
                         }
 
-                        sb.Append(string.Format("A,{0},[\"{1}\",{2},S={3},{4}{5},X={6},Y={7}]",
+                        sb.Append(string.Format(",{0},[\"{1}\",{2},S={3},{4}{5},X={6},Y={7}]",
                             ts.Length.ToString(CultureInfo.InvariantCulture),
                             ts.Text, 
                             ts.Style.Name,
@@ -488,7 +486,7 @@ namespace netDxf.Tables
                                 break;
                         }
 
-                        sb.Append(string.Format("A,{0},[{1},{2},S={3},{4}{5},X={6},Y={7}]",
+                        sb.Append(string.Format(",{0},[{1},{2},S={3},{4}{5},X={6},Y={7}]",
                             ss.Length.ToString(CultureInfo.InvariantCulture),
                             ss.Name,
                             ss.Style.File,
@@ -512,7 +510,7 @@ namespace netDxf.Tables
         private static LinetypeSegment ReadLineTypeComplexSegment(string data, double length)
         {
             // the data is enclosed in brackets
-            if (data[0] != '[' || data[data.Length-1] != ']') return null;
+            Debug.Assert(data[0] == '[' || data[data.Length-1] == ']', "The data is enclosed in brackets.");
 
             // the first data item in a complex linetype definition segment
             // can be a shape name or a text string, the last always is enclosed in ""
@@ -567,7 +565,8 @@ namespace netDxf.Tables
 
             if (type == LinetypeSegmentType.Text)
             {
-                TextStyle textStyle = new TextStyle(style);
+                // complex text linetype segments only holds the name of the style
+                TextStyle textStyle = new TextStyle(style, "simplex.shx");
                 return new LinetypeTextSegment(name, textStyle, length, position, rotationType, rotation, scale);
             }
             if (type == LinetypeSegmentType.Shape)
