@@ -376,9 +376,16 @@ namespace netDxf.Tables
                 if (!File.Exists(fontFile)) return string.Empty;
             }
 
-            PrivateFontCollection fontCollection = new PrivateFontCollection();
-            fontCollection.AddFontFile(fontFile);
-            return fontCollection.Families[0].Name;
+            try
+            {
+                PrivateFontCollection fontCollection = new PrivateFontCollection();
+                fontCollection.AddFontFile(fontFile);
+                return fontCollection.Families[0].Name;
+            }
+            catch (FileNotFoundException)
+            {
+                return string.Empty;
+            }
         }
 
         #endregion
