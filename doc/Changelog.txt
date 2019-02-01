@@ -1,6 +1,7 @@
 ## Change history
 
 * (fixed) If while reading a DXF the Layer Lineweight value is invalid it will change it to the Default.
+* (fixed) In the TrueTypeFamily method in TextStyle class, the PrivateFontCollection.AddFontFile might also fail if the font is incompatible. Also delete unnecessary check if the file exists.
 
 ### [2.2.1 - 2018/10/17]
 * Improved the MText.PlainText() method to reflect the latest formatting changes.

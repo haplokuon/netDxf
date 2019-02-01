@@ -370,11 +370,7 @@ namespace netDxf.Tables
             if (File.Exists(ttfFont))
                 fontFile = Path.GetFullPath(ttfFont);
             else
-            {
                 fontFile = string.Format("{0}{1}{2}", Environment.GetFolderPath(Environment.SpecialFolder.Fonts), Path.DirectorySeparatorChar, Path.GetFileName(ttfFont));
-                // if the TTF does not even exist in the font system folder 
-                if (!File.Exists(fontFile)) return string.Empty;
-            }
 
             try
             {
