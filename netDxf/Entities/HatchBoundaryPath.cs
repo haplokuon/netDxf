@@ -1,7 +1,7 @@
-﻿#region netDxf library, Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
+﻿#region netDxf library, Copyright (C) 2009-2019 Daniel Carvajal (haplokuon@gmail.com)
 
 //                        netDxf library
-// Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2009-2019 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -535,40 +535,31 @@ namespace netDxf.Entities
 
             foreach (EntityObject entity in entities)
             {
-                if (this.pathType.HasFlag(HatchBoundaryPathTypeFlags.Polyline))
-                    if (this.edges.Count >= 1)
-                        throw new ArgumentException("Closed polylines cannot be combined with other entities to make a hatch boundary path.");
+                if (containsClosedPolyline)
+                    throw new ArgumentException("Closed polylines cannot be combined with other entities to make a hatch boundary path.");
 
                 // it seems that AutoCad does not have problems on creating loops that theoretically does not make sense, like, for example an internal loop that is made of a single arc.
                 // so if AutoCAD is OK with that I am too, the program that make use of this information will take care of this inconsistencies
                 switch (entity.Type)
                 {
                     case EntityType.Arc:
-                        if (containsClosedPolyline)
-                            throw new ArgumentException("Closed polylines cannot be combined with other entities to make a hatch boundary path.");
                         this.edges.Add(Arc.ConvertFrom(entity));
                         break;
                     case EntityType.Circle:
-                        if (containsClosedPolyline)
-                            throw new ArgumentException("Closed polylines cannot be combined with other entities to make a hatch boundary path.");
                         this.edges.Add(Arc.ConvertFrom(entity));
                         break;
                     case EntityType.Ellipse:
-                        if (containsClosedPolyline)
-                            throw new ArgumentException("Closed polylines cannot be combined with other entities to make a hatch boundary path.");
                         this.edges.Add(Ellipse.ConvertFrom(entity));
                         break;
                     case EntityType.Line:
-                        if (containsClosedPolyline)
-                            throw new ArgumentException("Closed polylines cannot be combined with other entities to make a hatch boundary path.");
                         this.edges.Add(Line.ConvertFrom(entity));
                         break;
                     case EntityType.LightWeightPolyline:
-                        if (containsClosedPolyline)
-                            throw new ArgumentException("Closed polylines cannot be combined with other entities to make a hatch boundary path.");
-                        LwPolyline poly = (LwPolyline) entity;
+                        LwPolyline poly = (LwPolyline)entity;
                         if (poly.IsClosed)
                         {
+                            if (this.edges.Count != 0)
+                                throw new ArgumentException("Closed polylines cannot be combined with other entities to make a hatch boundary path.");
                             this.edges.Add(Polyline.ConvertFrom(entity)); // A polyline HatchBoundaryPath must be closed
                             this.pathType |= HatchBoundaryPathTypeFlags.Polyline;
                             containsClosedPolyline = true;
@@ -577,8 +568,6 @@ namespace netDxf.Entities
                             this.SetInternalInfo(poly.Explode()); // open polylines will always be exploded, only one polyline can be present in a path
                         break;
                     case EntityType.Spline:
-                        if (containsClosedPolyline)
-                            throw new ArgumentException("Closed polylines cannot be combined with other entities to make a hatch boundary path.");
                         this.edges.Add(Spline.ConvertFrom(entity));
                         break;
                     default:
