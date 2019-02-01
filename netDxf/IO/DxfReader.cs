@@ -2068,7 +2068,8 @@ namespace netDxf.IO
                         }
                         if (!color.UseTrueColor)
                             color = AciColor.FromCadIndex(index);
-                        if (color == AciColor.ByLayer || color == AciColor.ByBlock)
+                        // layer color cannot be ByLayer or ByBlock
+                        if (color.IsByLayer || color.IsByBlock)
                             color = AciColor.Default;
                         this.chunk.Next();
                         break;
@@ -2079,6 +2080,9 @@ namespace netDxf.IO
                     case 6:
                         string linetypeName = this.DecodeEncodedNonAsciiCharacters(this.chunk.ReadString());
                         linetype = this.GetLinetype(linetypeName);
+                        // layer linetype cannot be ByLayer or ByBlock
+                        if (linetype.IsByLayer || linetype.IsByBlock)
+                            linetype = Linetype.Continuous;
                         this.chunk.Next();
                         break;
                     case 290:
@@ -2087,6 +2091,7 @@ namespace netDxf.IO
                         break;
                     case 370:
                         lineweight = (Lineweight) this.chunk.ReadShort();
+                        // layer lineweight cannot be ByLayer or ByBlock
                         if (lineweight == Lineweight.ByLayer || lineweight == Lineweight.ByBlock)
                             lineweight = Lineweight.Default;
                         this.chunk.Next();

@@ -1,7 +1,9 @@
 ## Change history
 
+* Added properties IsByLayer and IsByBlock to the Linetype class.
 * (fixed) If while reading a DXF the Layer Lineweight value is invalid it will change it to the Default.
 * (fixed) If while reading a DXF the Layer Color value is invalid it will change it to the Default.
+* (fixed) If while reading a DXF the Layer Linetype value is invalid it will change it to Continuous.
 * (fixed) In the TrueTypeFamily method in TextStyle class, the PrivateFontCollection.AddFontFile might also fail if the font is incompatible. Also delete unnecessary check if the file exists.
 
 ### [2.2.1 - 2018/10/17]
