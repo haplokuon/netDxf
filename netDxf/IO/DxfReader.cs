@@ -2086,6 +2086,8 @@ namespace netDxf.IO
                         break;
                     case 370:
                         lineweight = (Lineweight) this.chunk.ReadShort();
+                        if (lineweight == Lineweight.ByLayer || lineweight == Lineweight.ByBlock)
+                            lineweight = Lineweight.Default;
                         this.chunk.Next();
                         break;
                     case 1001:
