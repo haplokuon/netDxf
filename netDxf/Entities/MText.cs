@@ -1,7 +1,7 @@
-﻿#region netDxf library, Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
+﻿#region netDxf library, Copyright (C) 2009-2019 Daniel Carvajal (haplokuon@gmail.com)
 
 //                        netDxf library
-// Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2009-2019 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -621,94 +621,162 @@ namespace netDxf.Entities
             //text = text.Replace("%%p", "±");
 
             StringBuilder rawText = new StringBuilder();
-            CharEnumerator chars = txt.GetEnumerator();
 
-            while (chars.MoveNext())
+            using (CharEnumerator chars = txt.GetEnumerator())
             {
-                char token = chars.Current;
-                if (token == '\\') // is a formatting command
+                while (chars.MoveNext())
                 {
-                    if (chars.MoveNext())
-                        token = chars.Current;
-                    else
-                        return rawText.ToString(); // premature end of text
-
-                    if (token == '\\' | token == '{' | token == '}') // escape chars
-                        rawText.Append(token);
-                    else if (token == 'L' | token == 'l' | token == 'O' | token == 'o' | token == 'K' | token == 'k')
-                    {/* discard one char commands */}
-                    else if (token == 'P' | token == 'X')
-                        rawText.Append(Environment.NewLine); // replace the end paragraph command with the standard new line, carriage return code "\r\n".
-                    else if (token == 'S')
+                    char token = chars.Current;
+                    if (token == '\\') // is a formatting command
                     {
                         if (chars.MoveNext())
                             token = chars.Current;
                         else
                             return rawText.ToString(); // premature end of text
 
-                        // we want to preserve the text under the stacking command
-                        StringBuilder data = new StringBuilder();
-
-                        while (token != ';') 
+                        if (token == '\\' | token == '{' | token == '}') // escape chars
+                            rawText.Append(token);
+                        else if (token == 'L' | token == 'l' | token == 'O' | token == 'o' | token == 'K' | token == 'k')
                         {
-                            if (token == '\\')
-                            {
-                                if (chars.MoveNext())
-                                    token = chars.Current;
-                                else
-                                    return rawText.ToString(); // premature end of text
-
-                                data.Append(token);
-                            }
-                            else if (token == '^')
-                            {
-                                if (chars.MoveNext())
-                                    token = chars.Current;
-                                else
-                                    return rawText.ToString(); // premature end of text
-
-                                // discard the code "^ " that defines super and subscript texts
-                                if (token != ' ') data.Append("^" + token);
-                            }
-                            else
-                            {                              
-                                // replace the '#' stacking command by '/'
-                                // non command characters '#' are written as '\#'
-                                data.Append(token == '#' ? '/' : token);
-                            }
-
+                            /* discard one char commands */
+                        }
+                        else if (token == 'P' | token == 'X')
+                            rawText.Append(Environment.NewLine); // replace the end paragraph command with the standard new line, carriage return code "\r\n".
+                        else if (token == 'S')
+                        {
                             if (chars.MoveNext())
                                 token = chars.Current;
                             else
                                 return rawText.ToString(); // premature end of text
-                        }
 
-                        rawText.Append(data);
+                            // we want to preserve the text under the stacking command
+                            StringBuilder data = new StringBuilder();
+
+                            while (token != ';')
+                            {
+                                if (token == '\\')
+                                {
+                                    if (chars.MoveNext())
+                                        token = chars.Current;
+                                    else
+                                        return rawText.ToString(); // premature end of text
+
+                                    data.Append(token);
+                                }
+                                else if (token == '^')
+                                {
+                                    if (chars.MoveNext())
+                                        token = chars.Current;
+                                    else
+                                        return rawText.ToString(); // premature end of text
+
+                                    // discard the code "^ " that defines super and subscript texts
+                                    if (token != ' ') data.Append("^" + token);
+                                }
+                                else
+                                {
+                                    // replace the '#' stacking command by '/'
+                                    // non command characters '#' are written as '\#'
+                                    data.Append(token == '#' ? '/' : token);
+                                }
+
+                                if (chars.MoveNext())
+                                    token = chars.Current;
+                                else
+                                    return rawText.ToString(); // premature end of text
+                            }
+
+                            rawText.Append(data);
+                        }
+                        else
+                        {
+                            // formatting commands of more than one character always terminate in ';'
+                            // discard all information
+                            while (token != ';')
+                            {
+                                if (chars.MoveNext())
+                                    token = chars.Current;
+                                else
+                                    return rawText.ToString(); // premature end of text
+                            }
+                        }
                     }
-                    else 
+                    else if (token == '{' | token == '}')
                     {
-                        // formatting commands of more than one character always terminate in ';'
-                        // discard all information
-                        while (token != ';')
-                        {
-                            if (chars.MoveNext())
-                                token = chars.Current;
-                            else
-                                return rawText.ToString(); // premature end of text
-                        }
+                        /* discard group markers */
                     }
+                    else // char is what it is, a character
+                        rawText.Append(token);
                 }
-                else if (token == '{' | token == '}')
-                {/* discard group markers */}
-                else // char is what it is, a character
-                    rawText.Append(token);
             }
+
             return rawText.ToString();
         }
 
         #endregion
 
         #region overrides
+
+        /// <summary>
+        /// Moves, scales, and/or rotates the current entity given a 3x3 transformation matrix and a translation vector.
+        /// </summary>
+        /// <param name="transformation">Transformation matrix.</param>
+        /// <param name="translation">Translation vector.</param>
+        /// <remarks>
+        /// Non-uniform and/or negative scaling are not supported.
+        /// It would require to decompose each line into independent Text entities but I have no method to measure text strings for SHX and TTF fonts.
+        /// </remarks>
+        public override void TransformBy(Matrix3 transformation, Vector3 translation)
+        {
+            Vector3 newPosition;
+            Vector3 newNormal;
+            double newRotation;
+            double newRectangleWidth;
+            double newHeight;
+            double newScale;
+
+            newPosition = transformation * this.Position + translation;
+            newNormal = transformation * this.Normal;
+
+            Matrix3 transOW = MathHelper.ArbitraryAxis(this.Normal);
+            transOW *= Matrix3.RotationZ(this.Rotation * MathHelper.DegToRad);
+
+            Matrix3 transWO = MathHelper.ArbitraryAxis(newNormal);
+            transWO = transWO.Transpose();
+
+            //int sign = Math.Sign(transformation.M11 * transformation.M22 * transformation.M33) < 0 ? -1 : 1;
+
+            Vector3 v = transOW * Vector3.UnitX;
+            v = transformation * v;
+            v = transWO * v;
+            double angle = Vector2.Angle(new Vector2(v.X, v.Y));
+
+            newRotation = angle * MathHelper.RadToDeg;
+
+            newScale = newNormal.Modulus();
+
+            //newRectangleWidth = sign * this.RectangleWidth * newScale;
+            newRectangleWidth = this.RectangleWidth * newScale;
+            newRectangleWidth = MathHelper.IsZero(newRectangleWidth) ? 0.0 : newRectangleWidth;
+
+            newHeight = this.Height * newScale;
+            newHeight = MathHelper.IsZero(newHeight) ? MathHelper.Epsilon : newHeight;
+
+            //transWO = Matrix3.RotationZ(angle).Transpose() * transWO;
+
+            //Vector3 s = transOW * new Vector3(this.RectangleWidth, this.Height, 0.0);
+            //s = transformation * s;
+            //s = transWO * s;
+
+            //newRectangleWidth = s.X <= 0 ? 0.0 : s.X;
+            //newHeight = s.Y <= 0 ? MathHelper.Epsilon : s.Y;
+
+            this.Position = newPosition;
+            this.Normal = newNormal;
+            this.Rotation = newRotation;
+            this.Height = newHeight;
+            this.RectangleWidth = newRectangleWidth;           
+        }
 
         /// <summary>
         /// Creates a new MText that is a copy of the current instance.

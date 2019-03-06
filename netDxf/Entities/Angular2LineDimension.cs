@@ -1,7 +1,7 @@
-﻿#region netDxf library, Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
+﻿#region netDxf library, Copyright (C) 2009-2019 Daniel Carvajal (haplokuon@gmail.com)
 
 //                        netDxf library
-// Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2009-2019 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -382,6 +382,77 @@ namespace netDxf.Entities
         #region overrides
 
         /// <summary>
+        /// Moves, scales, and/or rotates the current entity given a 3x3 transformation matrix and a translation vector.
+        /// </summary>
+        /// <param name="transformation">Transformation matrix.</param>
+        /// <param name="translation">Translation vector.</param>
+        /// <remarks>
+        /// Non-uniform scaling is not supported.
+        /// </remarks>
+        public override void TransformBy(Matrix3 transformation, Vector3 translation)
+        {
+            Vector2 newStart1;
+            Vector2 newEnd1;
+            Vector2 newStart2;
+            Vector2 newEnd2;
+            Vector2 newArcDefPoint;
+            Vector3 newNormal;
+            double newElevation;
+            double newScale;
+
+            newNormal = transformation * this.Normal;
+            newScale = newNormal.Modulus();
+
+            Matrix3 transOW = MathHelper.ArbitraryAxis(this.Normal);
+            Matrix3 transWO = MathHelper.ArbitraryAxis(newNormal).Transpose();
+
+            Vector3 v = transOW * new Vector3(this.StartFirstLine.X, this.StartFirstLine.Y, this.Elevation);
+            v = transformation * v + translation;
+            v = transWO * v;
+            newStart1 = new Vector2(v.X, v.Y);
+            newElevation = v.Z;
+
+            v = transOW * new Vector3(this.EndFirstLine.X, this.EndFirstLine.Y, this.Elevation);
+            v = transformation * v + translation;
+            v = transWO * v;
+            newEnd1 = new Vector2(v.X, v.Y);
+
+            v = transOW * new Vector3(this.StartSecondLine.X, this.StartSecondLine.Y, this.Elevation);
+            v = transformation * v + translation;
+            v = transWO * v;
+            newStart2 = new Vector2(v.X, v.Y);
+
+            v = transOW * new Vector3(this.EndSecondLine.X, this.EndSecondLine.Y, this.Elevation);
+            v = transformation * v + translation;
+            v = transWO * v;
+            newEnd2 = new Vector2(v.X, v.Y);
+
+            v = transOW * new Vector3(this.ArcDefinitionPoint.X, this.ArcDefinitionPoint.Y, this.Elevation);
+            v = transformation * v + translation;
+            v = transWO * v;
+            newArcDefPoint = new Vector2(v.X, v.Y);
+
+            v = transOW * new Vector3(this.textRefPoint.X, this.textRefPoint.Y, this.Elevation);
+            v = transformation * v + translation;
+            v = transWO * v;
+            this.textRefPoint = new Vector2(v.X, v.Y);
+
+            v = transOW * new Vector3(this.defPoint.X, this.defPoint.Y, this.Elevation);
+            v = transformation * v + translation;
+            v = transWO * v;
+            this.defPoint = new Vector2(v.X, v.Y);
+
+            this.Offset *= newScale;
+            this.StartFirstLine = newStart1;
+            this.EndFirstLine = newEnd1;
+            this.StartSecondLine = newStart2;
+            this.EndSecondLine = newEnd2;
+            this.ArcDefinitionPoint = newArcDefPoint;
+            this.Elevation = newElevation;
+            this.Normal = newNormal;
+        }
+
+        /// <summary>
         /// Calculate the dimension reference points.
         /// </summary>
         protected override void CalculteReferencePoints()
@@ -400,7 +471,6 @@ namespace netDxf.Entities
 
             this.defPoint = this.endSecondLine;
             this.arcDefinitionPoint = midDim;
-
 
             if (this.TextPositionManuallySet)
             {

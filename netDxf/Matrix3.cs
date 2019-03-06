@@ -1,7 +1,7 @@
-#region netDxf library, Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+#region netDxf library, Copyright (C) 2009-2019 Daniel Carvajal (haplokuon@gmail.com)
 
 //                        netDxf library
-// Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2009-2019 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -44,6 +44,8 @@ namespace netDxf
         private double m32;
         private double m33;
 
+        private bool isIdentity;
+
         #endregion
 
         #region constructors
@@ -73,6 +75,8 @@ namespace netDxf
             this.m31 = m31;
             this.m32 = m32;
             this.m33 = m33;
+
+            this.isIdentity = false;
         }
 
         /// <summary>
@@ -97,6 +101,8 @@ namespace netDxf
             this.m31 = array[6];
             this.m32 = array[7];
             this.m33 = array[8];
+
+            this.isIdentity = false;
         }
 
         #endregion
@@ -116,7 +122,7 @@ namespace netDxf
         /// </summary>
         public static Matrix3 Identity
         {
-            get { return new Matrix3(1, 0, 0, 0, 1, 0, 0, 0, 1); }
+            get { return new Matrix3(1, 0, 0, 0, 1, 0, 0, 0, 1) {isIdentity = true}; }
         }
 
         #endregion
@@ -129,7 +135,11 @@ namespace netDxf
         public double M11
         {
             get { return this.m11; }
-            set { this.m11 = value; }
+            set
+            {
+                this.isIdentity = false;
+                this.m11 = value;
+            }
         }
 
         /// <summary>
@@ -138,7 +148,11 @@ namespace netDxf
         public double M12
         {
             get { return this.m12; }
-            set { this.m12 = value; }
+            set
+            {
+                this.isIdentity = false;
+                this.m12 = value;
+            }
         }
 
         /// <summary>
@@ -147,7 +161,11 @@ namespace netDxf
         public double M13
         {
             get { return this.m13; }
-            set { this.m13 = value; }
+            set
+            {
+                this.isIdentity = false;
+                this.m13 = value;
+            }
         }
 
         /// <summary>
@@ -156,7 +174,11 @@ namespace netDxf
         public double M21
         {
             get { return this.m21; }
-            set { this.m21 = value; }
+            set
+            {
+                this.isIdentity = false;
+                this.m21 = value;
+            }
         }
 
         /// <summary>
@@ -165,7 +187,11 @@ namespace netDxf
         public double M22
         {
             get { return this.m22; }
-            set { this.m22 = value; }
+            set
+            {
+                this.isIdentity = false;
+                this.m22 = value;
+            }
         }
 
         /// <summary>
@@ -174,7 +200,11 @@ namespace netDxf
         public double M23
         {
             get { return this.m23; }
-            set { this.m23 = value; }
+            set
+            {
+                this.isIdentity = false;
+                this.m23 = value;
+            }
         }
 
         /// <summary>
@@ -183,7 +213,11 @@ namespace netDxf
         public double M31
         {
             get { return this.m31; }
-            set { this.m31 = value; }
+            set
+            {
+                this.isIdentity = false;
+                this.m31 = value;
+            }
         }
 
         /// <summary>
@@ -201,7 +235,19 @@ namespace netDxf
         public double M33
         {
             get { return this.m33; }
-            set { this.m33 = value; }
+            set
+            {
+                this.isIdentity = false;
+                this.m33 = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets if the actual matrix has been initialized as the identity.
+        /// </summary>
+        public bool IsIdentity
+        {
+            get { return this.isIdentity; }
         }
 
         #endregion
@@ -260,6 +306,9 @@ namespace netDxf
         /// <returns>Matrix3.</returns>
         public static Matrix3 operator *(Matrix3 a, Matrix3 b)
         {
+            if (a.IsIdentity) return b;
+            if (b.IsIdentity) return a;
+
             return new Matrix3(a.M11*b.M11 + a.M12*b.M21 + a.M13*b.M31, a.M11*b.M12 + a.M12*b.M22 + a.M13*b.M32, a.M11*b.M13 + a.M12*b.M23 + a.M13*b.M33, a.M21*b.M11 + a.M22*b.M21 + a.M23*b.M31,
                 a.M21*b.M12 + a.M22*b.M22 + a.M23*b.M32, a.M21*b.M13 + a.M22*b.M23 + a.M23*b.M33, a.M31*b.M11 + a.M32*b.M21 + a.M33*b.M31, a.M31*b.M12 + a.M32*b.M22 + a.M33*b.M32,
                 a.M31*b.M13 + a.M32*b.M23 + a.M33*b.M33);
@@ -273,6 +322,9 @@ namespace netDxf
         /// <returns>Matrix3.</returns>
         public static Matrix3 Multiply(Matrix3 a, Matrix3 b)
         {
+            if (a.IsIdentity) return b;
+            if (b.IsIdentity) return a;
+
             return new Matrix3(a.M11*b.M11 + a.M12*b.M21 + a.M13*b.M31, a.M11*b.M12 + a.M12*b.M22 + a.M13*b.M32, a.M11*b.M13 + a.M12*b.M23 + a.M13*b.M33, a.M21*b.M11 + a.M22*b.M21 + a.M23*b.M31,
                 a.M21*b.M12 + a.M22*b.M22 + a.M23*b.M32, a.M21*b.M13 + a.M22*b.M23 + a.M23*b.M33, a.M31*b.M11 + a.M32*b.M21 + a.M33*b.M31, a.M31*b.M12 + a.M32*b.M22 + a.M33*b.M32,
                 a.M31*b.M13 + a.M32*b.M23 + a.M33*b.M33);
@@ -287,6 +339,8 @@ namespace netDxf
         /// <remarks>Matrix3 adopts the convention of using column vectors to represent three dimensional points.</remarks>
         public static Vector3 operator *(Matrix3 a, Vector3 u)
         {
+            if (a.IsIdentity) return u;
+
             return new Vector3(a.M11*u.X + a.M12*u.Y + a.M13*u.Z, a.M21*u.X + a.M22*u.Y + a.M23*u.Z, a.M31*u.X + a.M32*u.Y + a.M33*u.Z);
         }
 
@@ -299,6 +353,8 @@ namespace netDxf
         /// <remarks>Matrix3 adopts the convention of using column vectors to represent three dimensional points.</remarks>
         public static Vector3 Multiply(Matrix3 a, Vector3 u)
         {
+            if(a.IsIdentity) return u;
+
             return new Vector3(a.M11*u.X + a.M12*u.Y + a.M13*u.Z, a.M21*u.X + a.M22*u.Y + a.M23*u.Z, a.M31*u.X + a.M32*u.Y + a.M33*u.Z);
         }
 
@@ -356,6 +412,8 @@ namespace netDxf
         /// <returns>Determinant.</returns>
         public double Determinant()
         {
+            if (this.IsIdentity) return 1.0;
+
             return this.m11*this.m22*this.m33 +
                    this.m12*this.m23*this.m31 +
                    this.m13*this.m21*this.m32 -
@@ -370,6 +428,8 @@ namespace netDxf
         /// <returns>Inverse Matrix3.</returns>
         public Matrix3 Inverse()
         {
+            if (this.IsIdentity) return Identity;
+
             double det = this.Determinant();
             if (MathHelper.IsZero(det))
                 throw new ArithmeticException("The matrix is not invertible.");
@@ -395,6 +455,8 @@ namespace netDxf
         /// <returns>Transpose matrix.</returns>
         public Matrix3 Transpose()
         {
+            if (this.IsIdentity) return Identity;
+
             return new Matrix3(this.m11, this.m21, this.m31, this.m12, this.m22, this.m32, this.m13, this.m23, this.m33);
         }
 

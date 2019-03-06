@@ -1,7 +1,7 @@
-﻿#region netDxf library, Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+﻿#region netDxf library, Copyright (C) 2009-2019 Daniel Carvajal (haplokuon@gmail.com)
 
 //                        netDxf library
-// Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2009-2019 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -110,7 +110,9 @@ namespace netDxf
         /// <returns>A new ClippingBoundary that is a copy of this instance.</returns>
         public object Clone()
         {
-            return this.type == ClippingBoundaryType.Rectangular ? new ClippingBoundary(this.vertexes[0], this.vertexes[1]) : new ClippingBoundary(this.vertexes);
+            return this.type == ClippingBoundaryType.Rectangular
+                ? new ClippingBoundary(this.vertexes[0], this.vertexes[1])
+                : new ClippingBoundary(this.vertexes);
         }
 
         #endregion

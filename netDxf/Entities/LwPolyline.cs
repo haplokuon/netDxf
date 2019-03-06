@@ -1,7 +1,7 @@
-﻿#region netDxf library, Copyright (C) 2009-2017 Daniel Carvajal (haplokuon@gmail.com)
+﻿#region netDxf library, Copyright (C) 2009-2019 Daniel Carvajal (haplokuon@gmail.com)
 
 //                        netDxf library
-// Copyright (C) 2009-2017 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2009-2019 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -69,7 +69,7 @@ namespace netDxf.Entities
         /// <param name="vertexes">LwPolyline <see cref="Vector2">vertex</see> list in object coordinates.</param>
         /// <param name="isClosed">Sets if the polyline is closed, by default it will create an open polyline.</param>
         public LwPolyline(IEnumerable<Vector2> vertexes, bool isClosed)
-            : base(EntityType.LightWeightPolyline, DxfObjectCode.LightWeightPolyline)
+            : base(EntityType.LwPolyline, DxfObjectCode.LightWeightPolyline)
         {
             if (vertexes == null)
                 throw new ArgumentNullException(nameof(vertexes));
@@ -96,7 +96,7 @@ namespace netDxf.Entities
         /// <param name="vertexes">LwPolyline <see cref="LwPolylineVertex">vertex</see> list in object coordinates.</param>
         /// <param name="isClosed">Sets if the polyline is closed  (default: false).</param>
         public LwPolyline(IEnumerable<LwPolylineVertex> vertexes, bool isClosed)
-            : base(EntityType.LightWeightPolyline, DxfObjectCode.LightWeightPolyline)
+            : base(EntityType.LwPolyline, DxfObjectCode.LightWeightPolyline)
         {
             if (vertexes == null)
                 throw new ArgumentNullException(nameof(vertexes));
@@ -205,6 +205,7 @@ namespace netDxf.Entities
             }
         }
 
+        // TODO: return IList for Explode methods
         /// <summary>
         /// Decompose the actual polyline in its internal entities, <see cref="Line">lines</see> and <see cref="Arc">arcs</see>.
         /// </summary>
@@ -249,7 +250,7 @@ namespace netDxf.Entities
                         Normal = this.Normal,
                         StartPoint = start,
                         EndPoint = end,
-                        Thickness = this.Thickness,
+                        Thickness = this.Thickness
                     });
                 }
                 else
@@ -405,10 +406,41 @@ namespace netDxf.Entities
         #region overrides
 
         /// <summary>
+        /// Moves, scales, and/or rotates the current entity given a 3x3 transformation matrix and a translation vector.
+        /// </summary>
+        /// <param name="transformation">Transformation matrix.</param>
+        /// <param name="translation">Translation vector.</param>
+        /// <remarks>
+        /// Non-uniform scaling is not supported if a bulge different than zero is applied to any of the LwPolyline vertexes,
+        /// a non-uniform scaling cannot be applied to the arc segments. Explode the entity and convert the arcs into ellipse arcs and transform them instead.
+        /// </remarks>
+        public override void TransformBy(Matrix3 transformation, Vector3 translation)
+        {
+            Vector3 newNormal;
+            double newElevation;
+            newNormal = transformation * this.Normal;
+            newElevation = this.Elevation;
+
+            Matrix3 transOW = MathHelper.ArbitraryAxis(this.Normal);
+            Matrix3 transWO = MathHelper.ArbitraryAxis(newNormal).Transpose();
+
+            foreach (LwPolylineVertex vertex in this.Vertexes)
+            {
+                Vector3 v = transOW * new Vector3(vertex.Position.X, vertex.Position.Y, this.Elevation);
+                v = transformation * v + translation;
+                v = transWO * v;
+                vertex.Position = new Vector2(v.X, v.Y);
+                newElevation = v.Z;
+            }
+            this.Elevation = newElevation;
+            this.Normal = newNormal;
+        }
+
+        /// <summary>
         /// Creates a new LwPolyline that is a copy of the current instance.
         /// </summary>
         /// <returns>A new LwPolyline that is a copy of this instance.</returns>
-        public override object Clone()
+        public override Object Clone()
         {
             LwPolyline entity = new LwPolyline
             {

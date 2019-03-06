@@ -1,7 +1,7 @@
-﻿#region netDxf library, Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
+﻿#region netDxf library, Copyright (C) 2009-2019 Daniel Carvajal (haplokuon@gmail.com)
 
 //                        netDxf library
-// Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2009-2019 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -1770,7 +1770,7 @@ namespace netDxf.IO
             if (entity.Type == EntityType.Polyline && ((Polyline) entity).Vertexes.Count < 2)
                 return;
             // lwPolyline entities with less than two vertexes are not allowed
-            if (entity.Type == EntityType.LightWeightPolyline && ((LwPolyline) entity).Vertexes.Count < 2)
+            if (entity.Type == EntityType.LwPolyline && ((LwPolyline) entity).Vertexes.Count < 2)
                 return;
 
             this.WriteEntityCommonCodes(entity, layout);
@@ -1804,7 +1804,7 @@ namespace netDxf.IO
                 case EntityType.Leader:
                     this.WriteLeader((Leader) entity);
                     break;
-                case EntityType.LightWeightPolyline:
+                case EntityType.LwPolyline:
                     this.WriteLightWeightPolyline((LwPolyline) entity);
                     break;
                 case EntityType.Line:
@@ -1986,7 +1986,7 @@ namespace netDxf.IO
 
             this.chunk.Write(41, underlay.Scale.X);
             this.chunk.Write(42, underlay.Scale.Y);
-            this.chunk.Write(43, underlay.Scale.Z);
+            this.chunk.Write(43, 1.0);
 
             this.chunk.Write(50, underlay.Rotation);
 
@@ -2259,10 +2259,8 @@ namespace netDxf.IO
             this.chunk.Write(20, ellipse.Center.Y);
             this.chunk.Write(30, ellipse.Center.Z);
 
-
-            double sine = 0.5*ellipse.MajorAxis*Math.Sin(ellipse.Rotation*MathHelper.DegToRad);
-            double cosine = 0.5*ellipse.MajorAxis*Math.Cos(ellipse.Rotation*MathHelper.DegToRad);
-            Vector3 axisPoint = MathHelper.Transform(new Vector3(cosine, sine, 0), ellipse.Normal, CoordinateSystem.Object, CoordinateSystem.World);
+            Vector2 axis = Vector2.Rotate(new Vector2(0.5*ellipse.MajorAxis, 0.0), ellipse.Rotation * MathHelper.DegToRad);
+            Vector3 axisPoint = MathHelper.Transform(new Vector3(axis.X, axis.Y, 0.0), ellipse.Normal, CoordinateSystem.Object, CoordinateSystem.World);
 
             this.chunk.Write(11, axisPoint.X);
             this.chunk.Write(21, axisPoint.Y);
@@ -2664,9 +2662,9 @@ namespace netDxf.IO
                 this.chunk.Write(100, SubclassMarker.Vertex);
                 this.chunk.Write(100, SubclassMarker.PolyfaceMeshVertex);
                 this.chunk.Write(70, (short) v.Flags);
-                this.chunk.Write(10, v.Location.X);
-                this.chunk.Write(20, v.Location.Y);
-                this.chunk.Write(30, v.Location.Z);
+                this.chunk.Write(10, v.Position.X);
+                this.chunk.Write(20, v.Position.Y);
+                this.chunk.Write(30, v.Position.Z);
             }
 
             foreach (PolyfaceMeshFace face in mesh.Faces)
@@ -2878,7 +2876,7 @@ namespace netDxf.IO
             //this.chunk.Write(50, mText.Rotation);
 
             //the other option for the rotation is to store the horizontal vector of the text
-            //it will be used just in case other programs read the rotation as radians
+            //it will be used just in case other programs read the rotation as radians, QCAD seems to do that.
             Vector2 direction = Vector2.Rotate(Vector2.UnitX, mText.Rotation * MathHelper.DegToRad);
             direction.Normalize();
             Vector3 ocsDirection = MathHelper.Transform(new Vector3(direction.X, direction.Y, 0.0), mText.Normal, CoordinateSystem.Object, CoordinateSystem.World);
@@ -3967,14 +3965,29 @@ namespace netDxf.IO
             this.chunk.Write(20, image.Position.Y);
             this.chunk.Write(30, image.Position.Z);
 
-            double factor = UnitHelper.ConversionFactor(this.doc.RasterVariables.Units, this.doc.DrawingVariables.InsUnits);
-            Vector2 u = new Vector2(image.Width/image.Definition.Width, 0.0);
-            Vector2 v = new Vector2(0.0, image.Height/image.Definition.Height);
-            IList<Vector2> ocsUV = MathHelper.Transform(new List<Vector2> {u, v}, image.Rotation*MathHelper.DegToRad, CoordinateSystem.Object, CoordinateSystem.World);
+            //Vector2 u = new Vector2(image.Width/image.Definition.Width, 0.0);
+            //Vector2 v = new Vector2(0.0, image.Height/image.Definition.Height);
+            //IList<Vector2> ocsUV = MathHelper.Transform(new List<Vector2> {u, v}, image.Rotation*MathHelper.DegToRad, CoordinateSystem.Object, CoordinateSystem.World);
 
-            Vector3 ocsU = new Vector3(ocsUV[0].X, ocsUV[0].Y, 0.0);
-            Vector3 ocsV = new Vector3(ocsUV[1].X, ocsUV[1].Y, 0.0);
-            IList<Vector3> wcsUV = MathHelper.Transform(new List<Vector3> {ocsU, ocsV}, image.Normal, CoordinateSystem.Object, CoordinateSystem.World);
+            //Vector2 u = image.Uvector * (image.Width / image.Definition.Width);
+            //Vector2 v = image.Vvector * (image.Height / image.Definition.Height);
+            //IList<Vector2> ocsUV = MathHelper.Transform(new List<Vector2> { u, v }, image.Rotation * MathHelper.DegToRad, CoordinateSystem.Object, CoordinateSystem.World);
+
+            //Vector3 ocsU = new Vector3(ocsUV[0].X, ocsUV[0].Y, 0.0);
+            //Vector3 ocsV = new Vector3(ocsUV[1].X, ocsUV[1].Y, 0.0);
+            //IList<Vector3> wcsUV = MathHelper.Transform(new List<Vector3> {ocsU, ocsV}, image.Normal, CoordinateSystem.Object, CoordinateSystem.World);
+
+            Vector2 u = image.Uvector * (image.Width / image.Definition.Width);
+            Vector2 v = image.Vvector * (image.Height / image.Definition.Height);
+
+            Vector3 ocsU = new Vector3(u.X, u.Y, 0.0);
+            Vector3 ocsV = new Vector3(v.X, v.Y, 0.0);
+            IList<Vector3> wcsUV = MathHelper.Transform(new List<Vector3> { ocsU, ocsV },
+                image.Normal,
+                CoordinateSystem.Object,
+                CoordinateSystem.World);
+
+            double factor = UnitHelper.ConversionFactor(this.doc.RasterVariables.Units, this.doc.DrawingVariables.InsUnits);
 
             Vector3 wcsU = wcsUV[0]*factor;
             this.chunk.Write(11, wcsU.X);
@@ -4044,7 +4057,7 @@ namespace netDxf.IO
             List<Vector3> ocsVertexes = new List<Vector3>();
             foreach (MLineVertex segment in mLine.Vertexes)
             {
-                ocsVertexes.Add(new Vector3(segment.Location.X, segment.Location.Y, mLine.Elevation));
+                ocsVertexes.Add(new Vector3(segment.Position.X, segment.Position.Y, mLine.Elevation));
             }
             IList<Vector3> vertexes = MathHelper.Transform(ocsVertexes, mLine.Normal, CoordinateSystem.Object, CoordinateSystem.World);
 

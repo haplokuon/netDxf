@@ -1,7 +1,7 @@
-#region netDxf library, Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
+#region netDxf library, Copyright (C) 2009-2019 Daniel Carvajal (haplokuon@gmail.com)
 
 //                        netDxf library
-// Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2009-2019 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -208,6 +208,7 @@ namespace netDxf.Objects
         /// <summary>
         /// Gets or sets the MLine start angle in degrees.
         /// </summary>
+        /// <remarks>Valid values range from 10.0 to 170.0 degrees. Default: 90.0.</remarks>
         public double StartAngle
         {
             get { return this.startAngle; }
@@ -222,6 +223,7 @@ namespace netDxf.Objects
         /// <summary>
         /// Gets or sets the MLine end angle in degrees.
         /// </summary>
+        /// <remarks>Valid values range from 10.0 to 170.0 degrees. Default: 90.0.</remarks>
         public double EndAngle
         {
             get { return this.endAngle; }
@@ -237,8 +239,10 @@ namespace netDxf.Objects
         /// Gets the list of elements that make up the multiline.
         /// </summary>
         /// <remarks>
-        /// The elements list must be ordered, this will be done automatically,
-        /// but if new elements are added individually to the list it will have to be sorted manually calling the Sort() method.
+        /// The elements list must be ordered from larger to smaller <see cref="MLineStyleElement.Offset">offset</see> values.
+        /// During the initialization process the list will be sorted automatically,
+        /// but if new elements are added individually to the list or the offset values of individual elements are modified,
+        /// it will have to be sorted manually calling the Sort() method.
         /// </remarks>
         public ObservableCollection<MLineStyleElement> Elements
         {

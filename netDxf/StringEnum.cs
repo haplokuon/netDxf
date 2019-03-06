@@ -1,7 +1,7 @@
-#region netDxf library, Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+#region netDxf library, Copyright (C) 2009-2019 Daniel Carvajal (haplokuon@gmail.com)
 
 //                        netDxf library
-// Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2009-2019 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -184,6 +184,19 @@ namespace netDxf
                     }
             }
             return output;
+        }
+
+        /// <summary>
+        /// Parses the supplied enum and string value to find an associated enum value (case sensitive).
+        /// </summary>
+        /// <param name="type">Type.</param>
+        /// <param name="value">String value.</param>
+        /// <param name="result">Enum value associated with the string value, or null if not found.</param>
+        /// <returns>True if an associated enum value has been found, false otherwise.</returns>
+        public static bool TryParse(Type type, string value, out object result)
+        {
+            result = Parse(type, value, StringComparison.Ordinal);
+            return result != null;
         }
 
         /// <summary>

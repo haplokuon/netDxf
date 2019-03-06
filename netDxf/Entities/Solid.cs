@@ -1,7 +1,7 @@
-﻿#region netDxf library, Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+﻿#region netDxf library, Copyright (C) 2009-2019 Daniel Carvajal (haplokuon@gmail.com)
 
 //                        netDxf library
-// Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2009-2019 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -145,6 +145,44 @@ namespace netDxf.Entities
         #endregion
 
         #region overrides
+
+        /// <summary>
+        /// Moves, scales, and/or rotates the current entity given a 3x3 transformation matrix and a translation vector.
+        /// </summary>
+        /// <param name="transformation">Transformation matrix.</param>
+        /// <param name="translation">Translation vector.</param>
+        public override void TransformBy(Matrix3 transformation, Vector3 translation)
+        {
+            Vector3 newNormal = transformation * this.Normal;
+
+            Matrix3 transOW = MathHelper.ArbitraryAxis(this.Normal);
+            Matrix3 transWO = MathHelper.ArbitraryAxis(newNormal).Transpose();
+
+            Vector3 v;
+
+            v = transOW * new Vector3(this.FirstVertex.X, this.FirstVertex.Y, this.Elevation);
+            v = transformation * v + translation;
+            v = transWO * v;
+            this.FirstVertex = new Vector2(v.X, v.Y);
+
+            v = transOW * new Vector3(this.SecondVertex.X, this.SecondVertex.Y, this.Elevation);
+            v = transformation * v + translation;
+            v = transWO * v;
+            this.SecondVertex = new Vector2(v.X, v.Y);
+
+            v = transOW * new Vector3(this.ThirdVertex.X, this.ThirdVertex.Y, this.Elevation);
+            v = transformation * v + translation;
+            v = transWO * v;
+            this.ThirdVertex = new Vector2(v.X, v.Y);
+
+            v = transOW * new Vector3(this.FourthVertex.X, this.FourthVertex.Y, this.Elevation);
+            v = transformation * v + translation;
+            v = transWO * v;
+            this.FourthVertex = new Vector2(v.X, v.Y);
+
+            this.Normal = newNormal;
+            this.Elevation = v.Z;
+        }
 
         /// <summary>
         /// Creates a new Solid that is a copy of the current instance.

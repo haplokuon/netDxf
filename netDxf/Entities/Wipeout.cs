@@ -1,7 +1,7 @@
-﻿#region netDxf library, Copyright (C) 2009-2017 Daniel Carvajal (haplokuon@gmail.com)
+﻿#region netDxf library, Copyright (C) 2009-2019 Daniel Carvajal (haplokuon@gmail.com)
 
 //                        netDxf library
-// Copyright (C) 2009-2017 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2009-2019 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -120,6 +120,41 @@ namespace netDxf.Entities
         #endregion
 
         #region overrides
+
+        /// <summary>
+        /// Moves, scales, and/or rotates the current entity given a 3x3 transformation matrix and a translation vector.
+        /// </summary>
+        /// <param name="transformation">Transformation matrix.</param>
+        /// <param name="translation">Translation vector.</param>
+        public override void TransformBy(Matrix3 transformation, Vector3 translation)
+        {
+            Vector3 newNormal;
+            double newElevation = this.Elevation;
+
+            newNormal = transformation * this.Normal;
+
+            Matrix3 transOW = MathHelper.ArbitraryAxis(this.Normal);
+            Matrix3 transWO = MathHelper.ArbitraryAxis(newNormal).Transpose();
+
+            List<Vector2> vertexes = new List<Vector2>();
+
+            foreach (Vector2 vertex in this.ClippingBoundary.Vertexes)
+            {
+                Vector3 v = transOW * new Vector3(vertex.X, vertex.Y, this.Elevation);
+                v = transformation * v + translation;
+                v = transWO * v;
+                vertexes.Add(new Vector2(v.X, v.Y));
+                newElevation = v.Z;
+            }
+
+            ClippingBoundary newClipping = this.ClippingBoundary.Type == ClippingBoundaryType.Rectangular
+                ? new ClippingBoundary(vertexes[0], vertexes[1])
+                : new ClippingBoundary(vertexes);
+
+            this.Normal = newNormal;
+            this.Elevation = newElevation;
+            this.ClippingBoundary = newClipping;
+        }
 
         /// <summary>
         /// Creates a new Wipeout that is a copy of the current instance.

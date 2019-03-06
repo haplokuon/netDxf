@@ -1,7 +1,7 @@
-﻿#region netDxf library, Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
+﻿#region netDxf library, Copyright (C) 2009-2019 Daniel Carvajal (haplokuon@gmail.com)
 
 //                        netDxf library
-// Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2009-2019 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -200,6 +200,64 @@ namespace netDxf.Entities
         #endregion
 
         #region overrides
+
+        /// <summary>
+        /// Moves, scales, and/or rotates the current entity given a 3x3 transformation matrix and a translation vector.
+        /// </summary>
+        /// <param name="transformation">Transformation matrix.</param>
+        /// <param name="translation">Translation vector.</param>
+        /// <remarks>Non-uniform scaling is not supported, create an ellipse arc from the arc data and transform that instead.</remarks>
+        public override void TransformBy(Matrix3 transformation, Vector3 translation)
+        {
+            Vector3 newCenter;
+            Vector3 newNormal;
+            double newRadius;
+            double newStartAngle;
+            double newEndAngle;
+            double newScale;
+
+            newCenter = transformation * this.Center + translation;
+            newNormal = transformation * this.Normal;
+
+            Matrix3 transOW = MathHelper.ArbitraryAxis(this.Normal);
+            Matrix3 transWO = MathHelper.ArbitraryAxis(newNormal).Transpose();
+
+            //Vector2 axis = new Vector2(this.Radius, 0.0);
+            //Vector3 v = transOW * new Vector3(axis.X, axis.Y, 0.0);
+            //v = transformation * v;
+            //v = transWO * v;
+            //Vector2 axisPoint = new Vector2(v.X, v.Y);
+            //newRadius = axisPoint.Modulus();
+            //newRadius = newRadius <= 0 ? MathHelper.Epsilon : newRadius;
+
+            newScale = newNormal.Modulus();
+            newRadius = this.Radius * newScale;
+            newRadius = MathHelper.IsZero(newRadius) ? MathHelper.Epsilon : newRadius;
+
+            Vector2 start = Vector2.Rotate(new Vector2(this.Radius, 0.0), this.StartAngle * MathHelper.DegToRad);
+            Vector2 end = Vector2.Rotate(new Vector2(this.Radius, 0.0), this.EndAngle * MathHelper.DegToRad);
+
+            Vector3 vStart = transOW * new Vector3(start.X, start.Y, 0.0);
+            vStart = transformation * vStart;
+            vStart = transWO * vStart;
+
+            Vector3 vEnd = transOW * new Vector3(end.X, end.Y, 0.0);
+            vEnd = transformation * vEnd;
+            vEnd = transWO * vEnd;
+
+            Vector2 startPoint = new Vector2(vStart.X, vStart.Y);
+            Vector2 endPoint = new Vector2(vEnd.X, vEnd.Y);
+
+            double sign = Math.Sign(transformation.M11 * transformation.M22 * transformation.M33) < 0 ? 180 : 0;
+            newStartAngle = sign + Vector2.Angle(startPoint) * MathHelper.RadToDeg;
+            newEndAngle = sign + Vector2.Angle(endPoint) * MathHelper.RadToDeg;
+
+            this.Normal = newNormal;
+            this.Center = newCenter;
+            this.Radius = newRadius;
+            this.StartAngle = newStartAngle;
+            this.EndAngle = newEndAngle;
+        }
 
         /// <summary>
         /// Creates a new Arc that is a copy of the current instance.

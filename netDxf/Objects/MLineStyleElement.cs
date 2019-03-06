@@ -1,7 +1,7 @@
-#region netDxf library, Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
+#region netDxf library, Copyright (C) 2009-2019 Daniel Carvajal (haplokuon@gmail.com)
 
 //                        netDxf library
-// Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2009-2019 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -137,6 +137,7 @@ namespace netDxf.Objects
         /// </summary>
         /// <param name="other">An object to compare with this object.</param>
         /// <returns>
+        /// The MLineStyleElements are ordered from larger to smaller offset values.
         /// A 32-bit signed integer that indicates the relative order of the objects being compared.
         /// The return value has the following meanings: Value Meaning Less than zero This object is less than the other parameter.
         /// Zero This object is equal to other. Greater than zero This object is greater than other.
@@ -146,7 +147,7 @@ namespace netDxf.Objects
             if (other == null)
                 throw new ArgumentNullException(nameof(other));
 
-            return this.offset.CompareTo(other.offset);
+            return -this.offset.CompareTo(other.offset);
         }
 
         /// <summary>
@@ -192,68 +193,6 @@ namespace netDxf.Objects
         {
             return this.Offset.GetHashCode();
         }
-
-        ///// <summary>
-        ///// Check if the two elements are equal.
-        ///// </summary>
-        ///// <param name="u">MLineStyleElement.</param>
-        ///// <param name="v">MLineStyleElement.</param>
-        ///// <returns>True if the two element offsets are equal, false in any other case.</returns>
-        //public static bool operator ==(MLineStyleElement u, MLineStyleElement v)
-        //{
-        //    if (ReferenceEquals(u, null) && ReferenceEquals(v, null))
-        //        return true;
-
-        //    if (ReferenceEquals(u, null) || ReferenceEquals(v, null))
-        //        return false;
-
-        //    return MathHelper.IsEqual(u.Offset, v.Offset);
-        //}
-
-        ///// <summary>
-        ///// Check if the elements are different.
-        ///// </summary>
-        ///// <param name="u">MLineStyleElement.</param>
-        ///// <param name="v">MLineStyleElement.</param>
-        ///// <returns>True if the two element offsets are different, false in any other case.</returns>
-        //public static bool operator !=(MLineStyleElement u, MLineStyleElement v)
-        //{
-        //    if (ReferenceEquals(u, null) && ReferenceEquals(v, null))
-        //        return false;
-
-        //    if (ReferenceEquals(u, null) || ReferenceEquals(v, null))
-        //        return true;
-
-        //    return !MathHelper.IsEqual(u.offset, v.offset);
-        //}
-
-        ///// <summary>
-        ///// Check if the first element is lesser than the second.
-        ///// </summary>
-        ///// <param name="u">MLineStyleElement.</param>
-        ///// <param name="v">MLineStyleElement.</param>
-        ///// <returns>True if the first element offset is lesser than the second, false in any other case.</returns>
-        //public static bool operator <(MLineStyleElement u, MLineStyleElement v)
-        //{
-        //    if (ReferenceEquals(u, null) || ReferenceEquals(v, null))
-        //        return false;
-
-        //    return u.offset.CompareTo(v.offset) < 0;
-        //}
-
-        ///// <summary>
-        ///// Check if the first element is greater than the second.
-        ///// </summary>
-        ///// <param name="u">MLineStyleElement.</param>
-        ///// <param name="v">MLineStyleElement.</param>
-        ///// <returns>True if the first element offset is greater than the second, false in any other case.</returns>
-        //public static bool operator >(MLineStyleElement u, MLineStyleElement v)
-        //{
-        //    if (ReferenceEquals(u, null) || ReferenceEquals(v, null))
-        //        return false;
-
-        //    return u.offset.CompareTo(v.offset) > 0;
-        //}
 
         #endregion
 

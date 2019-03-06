@@ -1,7 +1,7 @@
-﻿#region netDxf library, Copyright (C) 2009-2017 Daniel Carvajal (haplokuon@gmail.com)
+﻿#region netDxf library, Copyright (C) 2009-2019 Daniel Carvajal (haplokuon@gmail.com)
 
 //                        netDxf library
-// Copyright (C) 2009-2017 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2009-2019 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -81,10 +81,18 @@ namespace netDxf
         /// <summary>
         /// Represents the smallest number used for comparison purposes.
         /// </summary>
+        /// <remarks>
+        /// The epsilon value must be a positive number greater than zero.
+        /// </remarks>
         public static double Epsilon
         {
             get { return epsilon; }
-            set { epsilon = value; }
+            set
+            {
+                if(value<=0.0)
+                    throw new ArgumentOutOfRangeException(nameof(value), value, "The epsilon value must be a positive number greater than zero.");
+                epsilon = value;
+            }
         }
 
         #endregion
@@ -295,6 +303,9 @@ namespace netDxf
         public static Matrix3 ArbitraryAxis(Vector3 zAxis)
         {
             zAxis.Normalize();
+
+            if (zAxis.Equals(Vector3.UnitZ)) return Matrix3.Identity;
+
             Vector3 wY = Vector3.UnitY;
             Vector3 wZ = Vector3.UnitZ;
             Vector3 aX;

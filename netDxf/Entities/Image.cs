@@ -1,7 +1,7 @@
-﻿#region netDxf library, Copyright (C) 2009-2017 Daniel Carvajal (haplokuon@gmail.com)
+﻿#region netDxf library, Copyright (C) 2009-2019 Daniel Carvajal (haplokuon@gmail.com)
 
 //                        netDxf library
-// Copyright (C) 2009-2017 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2009-2019 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -21,6 +21,7 @@
 #endregion
 
 using System;
+using System.Collections.Generic;
 using netDxf.Objects;
 using netDxf.Tables;
 
@@ -35,9 +36,11 @@ namespace netDxf.Entities
         #region private fields
 
         private Vector3 position;
+        private Vector2 uvector;
+        private Vector2 vvector;
         private double width;
         private double height;
-        private double rotation;
+        //private double rotation;
         private ImageDefinition imageDefinition;
         private bool clipping;
         private short brightness;
@@ -104,13 +107,15 @@ namespace netDxf.Entities
 
             this.imageDefinition = imageDefinition;
             this.position = position;
+            this.uvector = Vector2.UnitX;
+            this.vvector = Vector2.UnitY;
             if (width <= 0)
                 throw new ArgumentOutOfRangeException(nameof(width), width, "The Image width must be greater than zero.");
             this.width = width;
             if (height <= 0)
                 throw new ArgumentOutOfRangeException(nameof(height), height, "The Image height must be greater than zero.");
             this.height = height;
-            this.rotation = 0;
+            //this.rotation = 0;
             this.clipping = false;
             this.brightness = 50;
             this.contrast = 50;
@@ -130,6 +135,34 @@ namespace netDxf.Entities
         {
             get { return this.position; }
             set { this.position = value; }
+        }
+
+        /// <summary>
+        /// Gets or sets the image <see cref="Vector2">U-vector</see>.
+        /// </summary>
+        public Vector2 Uvector
+        {
+            get { return this.uvector; }
+            set
+            {
+                this.uvector = Vector2.Normalize(value);
+                if (Vector2.IsNaN(this.uvector))
+                    throw new ArgumentException("The U vector can not be the zero vector.", nameof(value));
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the image <see cref="Vector2">V-vector</see>.
+        /// </summary>
+        public Vector2 Vvector
+        {
+            get { return this.vvector; }
+            set
+            {
+                this.vvector = Vector2.Normalize(value);
+                if (Vector2.IsNaN(this.vvector))
+                    throw new ArgumentException("The V-vector can not be the zero vector.", nameof(value));
+            }
         }
 
         /// <summary>
@@ -163,10 +196,24 @@ namespace netDxf.Entities
         /// <summary>
         /// Gets or sets the image rotation in degrees.
         /// </summary>
+        /// <remarks>The image rotation is the angle of the U-vector.</remarks>
         public double Rotation
         {
-            get { return this.rotation; }
-            set { this.rotation = MathHelper.NormalizeAngle(value); }
+            get
+            {
+                return Vector2.Angle(this.uvector) * MathHelper.RadToDeg;
+                //return this.rotation;
+            }
+            set
+            {
+                //this.rotation = MathHelper.NormalizeAngle(value);
+
+                IList<Vector2> uv = MathHelper.Transform(new List<Vector2> { this.uvector, this.vvector },
+                    MathHelper.NormalizeAngle(value) * MathHelper.DegToRad,
+                    CoordinateSystem.Object, CoordinateSystem.World);
+                this.uvector = uv[0];
+                this.vvector = uv[1];
+            }
         }
 
         /// <summary>
@@ -256,6 +303,52 @@ namespace netDxf.Entities
         #region overrides
 
         /// <summary>
+        /// Moves, scales, and/or rotates the current entity given a 3x3 transformation matrix and a translation vector.
+        /// </summary>
+        /// <param name="transformation">Transformation matrix.</param>
+        /// <param name="translation">Translation vector.</param>
+        public override void TransformBy(Matrix3 transformation, Vector3 translation)
+        {
+            Vector3 newPosition;
+            Vector3 newNormal;
+            Vector2 newUvector;
+            Vector2 newVvector;
+            double newWidth;
+            double newHeight;
+
+            newPosition = transformation * this.Position + translation;
+            newNormal = transformation * this.Normal;
+
+            Matrix3 transOW = MathHelper.ArbitraryAxis(this.Normal);
+
+            Matrix3 transWO = MathHelper.ArbitraryAxis(newNormal);
+            transWO = transWO.Transpose();
+
+            Vector3 v;
+            v = transOW * new Vector3(this.Uvector.X * this.Width, this.Uvector.Y * this.Width, 0.0);
+            v = transformation * v;
+            v = transWO * v;
+            newUvector = new Vector2(v.X, v.Y);
+
+            v = transOW * new Vector3(this.Vvector.X * this.Height, this.Vvector.Y * this.Height, 0.0);
+            v = transformation * v;
+            v = transWO * v;
+            newVvector = new Vector2(v.X, v.Y);
+
+            newWidth = newUvector.Modulus();
+            newWidth = MathHelper.IsZero(newWidth) ? MathHelper.Epsilon : newWidth;
+            newHeight = newVvector.Modulus();
+            newHeight = MathHelper.IsZero(newHeight) ? MathHelper.Epsilon : newHeight;
+
+            this.Position = newPosition;
+            this.Normal = newNormal;
+            this.Uvector = newUvector;
+            this.Vvector = newVvector;
+            this.Width = newWidth;
+            this.Height = newHeight;
+        }
+
+        /// <summary>
         /// Creates a new Image that is a copy of the current instance.
         /// </summary>
         /// <returns>A new Image that is a copy of this instance.</returns>
@@ -276,7 +369,9 @@ namespace netDxf.Entities
                 Position = this.position,
                 Height = this.height,
                 Width = this.width,
-                Rotation = this.rotation,
+                Uvector = this.uvector,
+                Vvector = this.vvector,
+                //Rotation = this.rotation,
                 Definition = (ImageDefinition) this.imageDefinition.Clone(),
                 Clipping = this.clipping,
                 Brightness = this.brightness,

@@ -1,7 +1,7 @@
-﻿#region netDxf library, Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
+﻿#region netDxf library, Copyright (C) 2009-2019 Daniel Carvajal (haplokuon@gmail.com)
 
 //                        netDxf library
-// Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2009-2019 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -1049,7 +1049,12 @@ namespace netDxf
         public static DxfVersion CheckDxfFileVersion(Stream stream, out bool isBinary)
         {
             string value = DxfReader.CheckHeaderVariable(stream, HeaderVariableCode.AcadVer, out isBinary);
-            return (DxfVersion) StringEnum.Parse(typeof (DxfVersion), value);
+
+            object version;
+            if (!StringEnum.TryParse(typeof(DxfVersion), value, out version))
+                return DxfVersion.Unknown;
+
+            return (DxfVersion)version;
         }
 
         /// <summary>
@@ -1078,10 +1083,11 @@ namespace netDxf
                 stream.Close();
             }
 
-            if (string.IsNullOrEmpty(value))
+            object version;
+            if (!StringEnum.TryParse(typeof(DxfVersion), value, out version))
                 return DxfVersion.Unknown;
 
-            return (DxfVersion) StringEnum.Parse(typeof (DxfVersion), value);
+            return (DxfVersion) version;
         }
 
         #endregion
@@ -1176,7 +1182,7 @@ namespace netDxf
                     insert.AttributeAdded += this.Insert_AttributeAdded;
                     insert.AttributeRemoved += this.Insert_AttributeRemoved;
                     break;
-                case EntityType.LightWeightPolyline:
+                case EntityType.LwPolyline:
                     break;
                 case EntityType.Line:
                     break;
@@ -1365,7 +1371,7 @@ namespace netDxf
                     insert.AttributeAdded -= this.Insert_AttributeAdded;
                     insert.AttributeRemoved -= this.Insert_AttributeRemoved;
                     break;
-                case EntityType.LightWeightPolyline:
+                case EntityType.LwPolyline:
                     break;
                 case EntityType.Line:
                     break;

@@ -1,7 +1,7 @@
-﻿#region netDxf library, Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+﻿#region netDxf library, Copyright (C) 2009-2019 Daniel Carvajal (haplokuon@gmail.com)
 
 //                        netDxf library
-// Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2009-2019 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -33,7 +33,7 @@ namespace netDxf.Entities
         #region private fields
 
         private readonly VertexTypeFlags flags;
-        private Vector3 location;
+        private Vector3 position;
 
         #endregion
 
@@ -66,7 +66,7 @@ namespace netDxf.Entities
             : base(DxfObjectCode.Vertex)
         {
             this.flags = VertexTypeFlags.PolyfaceMeshVertex | VertexTypeFlags.Polygon3dMesh;
-            this.location = location;
+            this.position = location;
         }
 
         #endregion
@@ -74,12 +74,12 @@ namespace netDxf.Entities
         #region public properties
 
         /// <summary>
-        /// Gets or sets the polyface mesh vertex <see cref="netDxf.Vector3">location</see>.
+        /// Gets or sets the polyface mesh vertex <see cref="netDxf.Vector3">position</see>.
         /// </summary>
-        public Vector3 Location
+        public Vector3 Position
         {
-            get { return this.location; }
-            set { this.location = value; }
+            get { return this.position; }
+            set { this.position = value; }
         }
 
         /// <summary>
@@ -100,7 +100,7 @@ namespace netDxf.Entities
         /// <returns>The string representation.</returns>
         public override string ToString()
         {
-            return string.Format("{0}: {1}", "PolyfaceMeshVertex", this.location);
+            return string.Format("{0}: {1}", "PolyfaceMeshVertex", this.position);
         }
 
         /// <summary>
@@ -109,7 +109,7 @@ namespace netDxf.Entities
         /// <returns>A new PolyfaceMeshVertex that is a copy of this instance.</returns>
         public object Clone()
         {
-            return new PolyfaceMeshVertex(this.location);
+            return new PolyfaceMeshVertex(this.position);
         }
 
         #endregion

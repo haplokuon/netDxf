@@ -1,7 +1,7 @@
-﻿#region netDxf library, Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
+﻿#region netDxf library, Copyright (C) 2009-2019 Daniel Carvajal (haplokuon@gmail.com)
 
 //                        netDxf library
-// Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2009-2019 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -327,11 +327,8 @@ namespace netDxf.Entities
                 if (ReferenceEquals(this.annotation, value))
                     return;
 
-                if (this.annotation != null)
-                    this.annotation.RemoveReactor(this);
-
-                if (value != null)
-                    value.AddReactor(this);
+                this.annotation?.RemoveReactor(this);
+                value?.AddReactor(this);
 
                 this.annotation = value;
             }
@@ -395,7 +392,7 @@ namespace netDxf.Entities
             get { return base.Normal; }
             set
             {
-                this.ChangeAnnotationCoordinateSystem(value, this.elevation);
+                //this.ChangeAnnotationCoordinateSystem(value, this.elevation);
                 base.Normal = value;
             }
         }
@@ -409,7 +406,7 @@ namespace netDxf.Entities
             get { return this.elevation; }
             set
             {
-                this.ChangeAnnotationCoordinateSystem(this.Normal, value);
+                //this.ChangeAnnotationCoordinateSystem(this.Normal, value);
                 this.elevation = value;
             }
         }
@@ -815,6 +812,37 @@ namespace netDxf.Entities
         #endregion
 
         #region overrides
+
+        /// <summary>
+        /// Moves, scales, and/or rotates the current entity given a 3x3 transformation matrix and a translation vector.
+        /// </summary>
+        /// <param name="transformation">Transformation matrix.</param>
+        /// <param name="translation">Translation vector.</param>
+        public override void TransformBy(Matrix3 transformation, Vector3 translation)
+        {
+            Vector3 newNormal;
+            double newElevation;
+
+            newNormal = transformation * this.Normal;
+            newElevation = this.Elevation;
+
+            Matrix3 transOW = MathHelper.ArbitraryAxis(this.Normal);
+            Matrix3 transWO = MathHelper.ArbitraryAxis(newNormal).Transpose();
+
+            for (int i = 0; i < this.Vertexes.Count; i++)
+            {
+                Vector3 v = transOW * new Vector3(this.Vertexes[i].X, this.Vertexes[i].Y, this.Elevation);
+                v = transformation * v + translation;
+                v = transWO * v;
+                this.Vertexes[i] = new Vector2(v.X, v.Y);
+                newElevation = v.Z;
+            }
+
+            this.Elevation = newElevation;
+            this.Normal = newNormal;
+
+            this.Annotation?.TransformBy(transformation, translation);
+        }
 
         /// <summary>
         /// Creates a new Leader that is a copy of the current instance.

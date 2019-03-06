@@ -1,10 +1,33 @@
 ## Change history
 
+[2019/03/06] 
+* Added Explode method to Insert entity. A few entities might not appear as expected when a non-uniform and/or negative scaling is applied, read the TransformBy method documentation of each entity.
+* Added Explode method to MLine entity. It will convert the actual mline to its Line and Arcs components.
+* Added TransformBy method to EntityObjects, Attributes and AttributeDefinitions classes.
+* Added property IsIdentity to Matrix3. This value will only be true for matrices initialized as the identity. This will allow to avoid unnecessary multiplications during transformations.
+* Added two new constructors to the Underlay class that takes also the position and scale.
+* Polyline entities now can be used to create a HatchBoundaryPath.
+* The Underlay scale is now a Vector2 and its components must be greater than zero, the Z value has no use.
+* The Insert vector scale components cannot be zero.
+* Renamed EntityType.LightWeightPolyline to EntityType.LwPolyline for short and same name as the class.
+* Renamed PolyfaceMeshVertex.Location to PolyfaceMeshVertex.Position as it is in similar cases.
+* Renamed MLineVertex.Location to MLineVertex.Position as it is in similar cases.
+* Renamed MLineStyleFlags.StartSquareEndCap to MLineStyleFlags.StartSquareCap.
+* Renamed MLineStyleFlags.ShowMiters to MLineStyleFlags.DisplayJoints this is the name given in the AutoCad UI and it is a more accurate definitions. This options does not include the miters line at the start and end vertexes only the inner corners.
+* (fixed) The MLineStyleElements needs to be ordered from larger to smaller offset values.
+* (fixed) Bug when creating boundary paths for hatches when the normal was not the UnitZ (0,0,1).
+* (fixed) Only a single HatchBoundary.Edge of type Polyline can be used to initialize a hatch boundary, it also must always be closed.
+* (fixed) Error when cloning an associative Hatch with a polyline as boundary path.
+* (fixed) The method DxfDocument.CheckFileVersion will fail if an invalid $ACADVER value is found in the DXf header.
+
+
+[2019/02/01]
 * Added properties IsByLayer and IsByBlock to the Linetype class.
 * (fixed) If while reading a DXF the Layer Lineweight value is invalid it will change it to the Default.
 * (fixed) If while reading a DXF the Layer Color value is invalid it will change it to the Default.
 * (fixed) If while reading a DXF the Layer Linetype value is invalid it will change it to Continuous.
 * (fixed) In the TrueTypeFamily method in TextStyle class, the PrivateFontCollection.AddFontFile might also fail if the font is incompatible. Also delete unnecessary check if the file exists.
+
 
 ### [2.2.1 - 2018/10/17]
 * Improved the MText.PlainText() method to reflect the latest formatting changes.

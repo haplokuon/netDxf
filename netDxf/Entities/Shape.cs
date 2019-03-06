@@ -1,7 +1,7 @@
-﻿#region netDxf library, Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
+﻿#region netDxf library, Copyright (C) 2009-2019 Daniel Carvajal (haplokuon@gmail.com)
 
 //                        netDxf library
-// Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2009-2019 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -179,6 +179,41 @@ namespace netDxf.Entities
         #endregion
 
         #region overrides
+
+        /// <summary>
+        /// Moves, scales, and/or rotates the current entity given a 3x3 transformation matrix and a translation vector.
+        /// </summary>
+        /// <param name="transformation">Transformation matrix.</param>
+        /// <param name="translation">Translation vector.</param>
+        public override void TransformBy(Matrix3 transformation, Vector3 translation)
+        {
+            Vector3 newPosition;
+            Vector3 newNormal;
+            double newSize;
+            double newRotation;
+
+            newPosition = transformation * this.Position + translation;
+            newNormal = transformation * this.Normal;
+
+            Matrix3 transOW = MathHelper.ArbitraryAxis(this.Normal);
+            Matrix3 transWO = MathHelper.ArbitraryAxis(newNormal).Transpose();
+
+            Vector2 refAxis = Vector2.Rotate(new Vector2(this.Size, 0.0), this.Rotation * MathHelper.DegToRad);
+            Vector3 v = transOW * new Vector3(refAxis.X, refAxis.Y, 0.0);
+            v = transformation * v;
+            v = transWO * v;
+            Vector2 axis = new Vector2(v.X, v.Y);
+
+            newSize = Math.Sign(this.Size) * axis.Modulus();
+            if (MathHelper.IsZero(newSize)) newSize = MathHelper.Epsilon;
+
+            newRotation = Vector2.Angle(axis) * MathHelper.RadToDeg;
+
+            this.Position = newPosition;
+            this.Normal = newNormal;
+            this.Size = newSize;
+            this.Rotation = newRotation;
+        }
 
         public override object Clone()
         {

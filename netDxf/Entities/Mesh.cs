@@ -1,7 +1,7 @@
-﻿#region netDxf library, Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+﻿#region netDxf library, Copyright (C) 2009-2019 Daniel Carvajal (haplokuon@gmail.com)
 
 //                        netDxf library
-// Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2009-2019 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -39,9 +39,9 @@ namespace netDxf.Entities
         #region private fields
 
         private const int MaxFaces = 16000000;
-        private readonly IReadOnlyList<Vector3> vertexes;
-        private readonly IReadOnlyList<int[]> faces;
-        private readonly IReadOnlyList<MeshEdge> edges;
+        private readonly List<Vector3> vertexes;
+        private readonly List<int[]> faces;
+        private readonly List<MeshEdge> edges;
         private byte subdivisionLevel;
 
         #endregion
@@ -86,7 +86,7 @@ namespace netDxf.Entities
         /// <summary>
         /// Gets the mesh vertexes list.
         /// </summary>
-        public IReadOnlyList<Vector3> Vertexes
+        public List<Vector3> Vertexes
         {
             get { return this.vertexes; }
         }
@@ -94,7 +94,7 @@ namespace netDxf.Entities
         /// <summary>
         /// Gets the mesh faces list.
         /// </summary>
-        public IReadOnlyList<int[]> Faces
+        public List<int[]> Faces
         {
             get { return this.faces; }
         }
@@ -102,7 +102,7 @@ namespace netDxf.Entities
         /// <summary>
         /// Gets the mesh edges list.
         /// </summary>
-        public IReadOnlyList<MeshEdge> Edges
+        public List<MeshEdge> Edges
         {
             get { return this.edges; }
         }
@@ -122,6 +122,19 @@ namespace netDxf.Entities
         #endregion
 
         #region overrides
+
+        /// <summary>
+        /// Moves, scales, and/or rotates the current entity given a 3x3 transformation matrix and a translation vector.
+        /// </summary>
+        /// <param name="transformation">Transformation matrix.</param>
+        /// <param name="translation">Translation vector.</param>
+        public override void TransformBy(Matrix3 transformation, Vector3 translation)
+        {
+            for (int i = 0; i < this.Vertexes.Count; i++)
+            {
+                this.Vertexes[i] = transformation * this.Vertexes[i] + translation;
+            }
+        }
 
         /// <summary>
         /// Creates a new Mesh that is a copy of the current instance.

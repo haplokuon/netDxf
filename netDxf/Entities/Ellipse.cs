@@ -1,7 +1,7 @@
-#region netDxf library, Copyright (C) 2009-2017 Daniel Carvajal (haplokuon@gmail.com)
+#region netDxf library, Copyright (C) 2009-2019 Daniel Carvajal (haplokuon@gmail.com)
 
 //                        netDxf library
-// Copyright (C) 2009-2017 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2009-2019 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -280,6 +280,141 @@ namespace netDxf.Entities
         #endregion
 
         #region overrides
+
+        /// <summary>
+        /// Moves, scales, and/or rotates the current entity given a 3x3 transformation matrix and a translation vector.
+        /// </summary>
+        /// <param name="transformation">Transformation matrix.</param>
+        /// <param name="translation">Translation vector.</param>
+        /// <remarks>When a non-uniform scaling is applied to a rotated ellipses the result it is not correct.</remarks>
+        public override void TransformBy(Matrix3 transformation, Vector3 translation)
+        {
+            Vector3 newCenter;
+            Vector3 newNormal;
+            double newMajorAxis;
+            double newMinorAxis;
+            double newRotation;
+            double newScale;
+
+            newCenter = transformation * this.Center + translation;
+            newNormal = transformation * this.Normal;
+
+            Matrix3 transOW = MathHelper.ArbitraryAxis(this.Normal);
+            transOW *= Matrix3.RotationZ(this.Rotation * MathHelper.DegToRad);
+
+            Matrix3 transWO = MathHelper.ArbitraryAxis(newNormal);
+            transWO = transWO.Transpose();
+
+            Vector3 v = transOW * Vector3.UnitX;
+            v = transformation * v;
+            v = transWO * v;
+            double angle = Vector2.Angle(new Vector2(v.X, v.Y));
+
+            //Vector3 v1 = new Vector3(0.5 * this.MajorAxis, 0.5 * this.minorAxis, 0.0);
+            //Vector3 v2 = new Vector3(-0.5 * this.MajorAxis, 0.5 * this.minorAxis, 0.0);
+            //v1 = transOW * v1;
+            //v1 = transformation * v1;
+            //v1 = transWO * v1;
+
+            //v2 = transOW * v2;
+            //v2 = transformation * v2;
+            //v2 = transWO * v2;
+
+            //Vector3 v1 = new Vector3(0.5 * this.MajorAxis, 0.0, 0.0);
+            //Vector3 v2 = new Vector3(0.0, 0.5 * this.minorAxis, 0.0);
+            //v1 = transOW * v1;
+            //v1 = transformation * v1;
+            //v1 = transWO * v1;
+
+            //v2 = transOW * v2;
+            //v2 = transformation * v2;
+            //v2 = transWO * v2;
+
+            //double b = Vector2.Angle(new Vector2(v1.X, v1.Y)) * MathHelper.RadToDeg;
+
+            double sign = Math.Sign(transformation.M11 * transformation.M22 * transformation.M33) < 0 ? 180 : 0;
+            newRotation = sign + angle * MathHelper.RadToDeg;
+
+            //transWO = Matrix3.RotationZ(newRotation * MathHelper.DegToRad).Transpose() * transWO;
+
+            //Vector3 s = transOW * new Vector3(this.MajorAxis, this.MinorAxis, 0.0);
+            //s = transformation * s;
+            //s = transWO * s;
+
+            //newMajorAxis = s.X <= 0 ? MathHelper.Epsilon : s.X;
+            //newMinorAxis = s.Y <= 0 ? MathHelper.Epsilon : s.Y;
+
+            newScale = newNormal.Modulus();
+
+            newMajorAxis = this.MajorAxis * newScale;
+            newMajorAxis = MathHelper.IsZero(newMajorAxis) ? MathHelper.Epsilon : newMajorAxis;
+
+            newMinorAxis = this.MinorAxis * newScale;
+            newMinorAxis = MathHelper.IsZero(newMinorAxis) ? MathHelper.Epsilon : newMinorAxis;
+
+            this.Center = newCenter;
+            this.Normal = newNormal;
+            this.Rotation = newRotation;
+
+            if (newMinorAxis > newMajorAxis)
+            {
+                this.MajorAxis = newMinorAxis;
+                this.MinorAxis = newMajorAxis;
+            }
+            else
+            {
+                this.MajorAxis = newMajorAxis;
+                this.MinorAxis = newMinorAxis;
+            }
+        }
+
+        //public override void TransformBy2(Matrix3 transformation, Vector3 translation)
+        //{
+        //    Vector3 newCenter;
+        //    Vector3 newNormal;
+        //    double newMajorAxis;
+        //    double newMinorAxis;
+        //    double newRotation;
+
+        //    newCenter = transformation * this.Center + translation;
+        //    newNormal = transformation * this.Normal;
+
+        //    Matrix3 transOW = MathHelper.ArbitraryAxis(this.Normal);
+        //    transOW *= Matrix3.RotationZ(this.Rotation * MathHelper.DegToRad);
+
+        //    Matrix3 transWO = MathHelper.ArbitraryAxis(newNormal);
+        //    transWO = transWO.Transpose();
+
+        //    Vector3 v = transOW * Vector3.UnitX;
+        //    v = transformation * v;
+        //    v = transWO * v;
+        //    double angle = Vector2.Angle(new Vector2(v.X, v.Y));
+
+        //    newRotation = angle * MathHelper.RadToDeg;
+
+        //    transWO = Matrix3.RotationZ(newRotation * MathHelper.DegToRad).Transpose() * transWO;
+
+        //    Vector3 s = transOW * new Vector3(this.MajorAxis, this.MinorAxis, 0.0);
+        //    s = transformation * s;
+        //    s = transWO * s;
+
+        //    newMajorAxis = s.X <= 0 ? MathHelper.Epsilon : s.X;
+        //    newMinorAxis = s.Y <= 0 ? MathHelper.Epsilon : s.Y;
+
+        //    this.Center = newCenter;
+        //    this.Normal = newNormal;
+        //    this.Rotation = newRotation;
+        //    if (newMinorAxis > newMajorAxis)
+        //    {
+        //        this.MajorAxis = newMinorAxis;
+        //        this.MinorAxis = newMajorAxis;
+        //    }
+        //    else
+        //    {
+        //        this.MajorAxis = newMajorAxis;
+        //        this.MinorAxis = newMinorAxis;
+        //    }
+        //}
 
         /// <summary>
         /// Creates a new Ellipse that is a copy of the current instance.

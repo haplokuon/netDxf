@@ -1,7 +1,7 @@
-﻿#region netDxf library, Copyright (C) 2009-2017 Daniel Carvajal (haplokuon@gmail.com)
+﻿#region netDxf library, Copyright (C) 2009-2019 Daniel Carvajal (haplokuon@gmail.com)
 
 //                        netDxf library
-// Copyright (C) 2009-2017 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2009-2019 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -350,8 +350,7 @@ namespace netDxf.Entities
             get { return this.boundary; }
             set
             {
-                if (this.boundary != null)
-                    this.boundary.RemoveReactor(this);
+                this.boundary?.RemoveReactor(this);
 
                 if (value == null)
                 {
@@ -371,7 +370,7 @@ namespace netDxf.Entities
                         Ellipse ellipse = (Ellipse) value;
                         abbr = new BoundingRectangle(new Vector2(ellipse.Center.X, ellipse.Center.Y), ellipse.MajorAxis, ellipse.MinorAxis, ellipse.Rotation);
                         break;
-                    case EntityType.LightWeightPolyline:
+                    case EntityType.LwPolyline:
                         LwPolyline lwPol = (LwPolyline) value;
                         abbr = new BoundingRectangle(lwPol.PolygonalVertexes(6, MathHelper.Epsilon, MathHelper.Epsilon));
                         break;
@@ -396,6 +395,7 @@ namespace netDxf.Entities
                     default:
                         throw new ArgumentException("Only lightweight polylines, polylines, circles, ellipses and splines are allowed.");
                 }
+
                 this.width = abbr.Width;
                 this.height = abbr.Height;
                 this.center = new Vector3(abbr.Center.X, abbr.Center.Y, 0.0);
@@ -408,6 +408,17 @@ namespace netDxf.Entities
         #endregion
 
         #region overrides
+
+        /// <summary>
+        /// Moves, scales, and/or rotates the current entity given a 3x3 transformation matrix and a translation vector.
+        /// </summary>
+        /// <param name="transformation">Transformation matrix.</param>
+        /// <param name="translation">Translation vector.</param>
+        public override void TransformBy(Matrix3 transformation, Vector3 translation)
+        {
+            // TODO: implement TransformBy method
+            throw new NotImplementedException();
+        }
 
         /// <summary>
         /// Assigns a handle to the object based in a integer counter.

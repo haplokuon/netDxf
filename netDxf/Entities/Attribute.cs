@@ -1,7 +1,7 @@
-#region netDxf library, Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
+#region netDxf library, Copyright (C) 2009-2019 Daniel Carvajal (haplokuon@gmail.com)
 
 //                        netDxf library
-// Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2009-2019 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -21,6 +21,7 @@
 #endregion
 
 using System;
+using System.Collections.Generic;
 using netDxf.Tables;
 
 namespace netDxf.Entities
@@ -392,6 +393,80 @@ namespace netDxf.Entities
         {
             get { return this.alignment; }
             set { this.alignment = value; }
+        }
+
+        #endregion
+
+        #region public methods
+
+        /// <summary>
+        /// Moves, scales, and/or rotates the current attribute given a 3x3 transformation matrix and a translation vector.
+        /// </summary>
+        /// <param name="transformation">Transformation matrix.</param>
+        /// <param name="translation">Translation vector.</param>
+        public void TransformBy(Matrix3 transformation, Vector3 translation)
+        {
+            Vector3 newPosition;
+            Vector3 newNormal;
+            Vector2 newUvector;
+            Vector2 newVvector;
+            double newWidthFactor;
+            double newHeight;
+            double newRotation;
+            double newObliqueAngle;
+
+            newPosition = transformation * this.Position + translation;
+            newNormal = transformation * this.Normal;
+
+            Matrix3 transOW = MathHelper.ArbitraryAxis(this.Normal);
+
+            Matrix3 transWO = MathHelper.ArbitraryAxis(newNormal);
+            transWO = transWO.Transpose();
+
+            IList<Vector2> uv = MathHelper.Transform(new List<Vector2> { this.WidthFactor * this.Height * Vector2.UnitX, this.Height * Vector2.UnitY },
+                this.Rotation * MathHelper.DegToRad,
+                CoordinateSystem.Object, CoordinateSystem.World);
+
+            Vector3 v;
+            v = transOW * new Vector3(uv[0].X, uv[0].Y, 0.0);
+            v = transformation * v;
+            v = transWO * v;
+            newUvector = new Vector2(v.X, v.Y);
+
+            v = transOW * new Vector3(uv[1].X, uv[1].Y, 0.0);
+            v = transformation * v;
+            v = transWO * v;
+            newVvector = new Vector2(v.X, v.Y);
+
+            newRotation = Vector2.Angle(newUvector) * MathHelper.RadToDeg;
+
+            // the oblique angle is defined between -85 nad 85 degrees
+            newObliqueAngle = Vector2.Angle(newVvector) * MathHelper.RadToDeg;
+            newObliqueAngle = (newRotation + 90.0) - newObliqueAngle;
+            if (newObliqueAngle > 180)
+                newObliqueAngle = 180 - newObliqueAngle;
+            if (newObliqueAngle < -85)
+                newObliqueAngle = -85;
+            else if (newObliqueAngle > 85)
+                newObliqueAngle = 85;
+
+            // the height must be greater than zero, the cos is always positive between -85 and 85
+            newHeight = newVvector.Modulus() * Math.Cos(newObliqueAngle * MathHelper.DegToRad);
+            newHeight = MathHelper.IsZero(newHeight) ? MathHelper.Epsilon : newHeight;
+
+            // the width factor is defined between 0.01 nad 100
+            newWidthFactor = newUvector.Modulus() / newHeight;
+            if (newWidthFactor < 0.01)
+                newWidthFactor = 0.01;
+            else if (newWidthFactor > 100)
+                newWidthFactor = 100;
+
+            this.Position = newPosition;
+            this.Normal = newNormal;
+            this.Rotation = newRotation;
+            this.Height = newHeight;
+            this.WidthFactor = newWidthFactor;
+            this.ObliqueAngle = newObliqueAngle;
         }
 
         #endregion

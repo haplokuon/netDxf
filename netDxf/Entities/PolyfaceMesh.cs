@@ -1,7 +1,7 @@
-﻿#region netDxf library, Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+﻿#region netDxf library, Copyright (C) 2009-2019 Daniel Carvajal (haplokuon@gmail.com)
 
 //                        netDxf library
-// Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2009-2019 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -163,7 +163,7 @@ namespace netDxf.Entities
                         Transparency = (Transparency) this.Transparency.Clone(),
                         LinetypeScale = this.LinetypeScale,
                         Normal = this.Normal,
-                        Position = this.Vertexes[Math.Abs(face.VertexIndexes[0]) - 1].Location,
+                        Position = this.Vertexes[Math.Abs(face.VertexIndexes[0]) - 1].Position,
                     };
                     entities.Add(point);
                     continue;
@@ -179,8 +179,8 @@ namespace netDxf.Entities
                         Transparency = (Transparency) this.Transparency.Clone(),
                         LinetypeScale = this.LinetypeScale,
                         Normal = this.Normal,
-                        StartPoint = this.Vertexes[Math.Abs(face.VertexIndexes[0]) - 1].Location,
-                        EndPoint = this.Vertexes[Math.Abs(face.VertexIndexes[1]) - 1].Location,
+                        StartPoint = this.Vertexes[Math.Abs(face.VertexIndexes[0]) - 1].Position,
+                        EndPoint = this.Vertexes[Math.Abs(face.VertexIndexes[1]) - 1].Position,
                     };
                     entities.Add(line);
                     continue;
@@ -203,10 +203,10 @@ namespace netDxf.Entities
                 if (indexV4 < 0)
                     edgeVisibility = edgeVisibility | Face3dEdgeFlags.Fourth;
 
-                Vector3 v1 = this.Vertexes[Math.Abs(indexV1) - 1].Location;
-                Vector3 v2 = this.Vertexes[Math.Abs(indexV2) - 1].Location;
-                Vector3 v3 = this.Vertexes[Math.Abs(indexV3) - 1].Location;
-                Vector3 v4 = this.Vertexes[Math.Abs(indexV4) - 1].Location;
+                Vector3 v1 = this.Vertexes[Math.Abs(indexV1) - 1].Position;
+                Vector3 v2 = this.Vertexes[Math.Abs(indexV2) - 1].Position;
+                Vector3 v3 = this.Vertexes[Math.Abs(indexV3) - 1].Position;
+                Vector3 v4 = this.Vertexes[Math.Abs(indexV4) - 1].Position;
 
                 Face3d face3d = new Face3d
                 {
@@ -232,6 +232,21 @@ namespace netDxf.Entities
         #endregion
 
         #region overrides
+
+        /// <summary>
+        /// Moves, scales, and/or rotates the current entity given a 3x3 transformation matrix and a translation vector.
+        /// </summary>
+        /// <param name="transformation">Transformation matrix.</param>
+        /// <param name="translation">Translation vector.</param>
+        public override void TransformBy(Matrix3 transformation, Vector3 translation)
+        {
+            foreach (PolyfaceMeshVertex point in this.Vertexes)
+            {
+                point.Position = transformation * point.Position + translation;
+            }
+
+            this.Normal = transformation * this.Normal;
+        }
 
         /// <summary>
         /// Creates a new PolyfaceMesh that is a copy of the current instance.

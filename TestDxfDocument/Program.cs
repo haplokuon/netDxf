@@ -26,6 +26,7 @@ namespace TestDxfDocument
     /// </summary>
     public class Program
     {
+       
         public static void Main()
         {
             DxfDocument doc = Test(@"sample.dxf");
@@ -1993,12 +1994,12 @@ namespace TestDxfDocument
             Underlay underlay1 = new Underlay(underlayDef1);
             underlay1.Normal = new Vector3(1, 0, 0);
             underlay1.Position = new Vector3(0, 1, 0);
-            underlay1.Scale = new Vector3(0.001);
+            underlay1.Scale = new Vector2(0.001);
 
             UnderlayDwfDefinition underlayDef2 = new UnderlayDwfDefinition("DwfUnderlay.dwf");
             Underlay underlay2 = new Underlay(underlayDef2);
             underlay2.Rotation = 45;
-            underlay2.Scale = new Vector3(0.01);
+            underlay2.Scale = new Vector2(0.01);
 
             UnderlayPdfDefinition underlayDef3 = new UnderlayPdfDefinition("PdfUnderlay.pdf");
             underlayDef3.Page = "3";
@@ -4136,7 +4137,7 @@ namespace TestDxfDocument
             Console.WriteLine("\t{0}; count: {1}", EntityType.Image, dxf.Images.Count());
             Console.WriteLine("\t{0}; count: {1}", EntityType.Insert, dxf.Inserts.Count());
             Console.WriteLine("\t{0}; count: {1}", EntityType.Leader, dxf.Leaders.Count());
-            Console.WriteLine("\t{0}; count: {1}", EntityType.LightWeightPolyline, dxf.LwPolylines.Count());
+            Console.WriteLine("\t{0}; count: {1}", EntityType.LwPolyline, dxf.LwPolylines.Count());
             Console.WriteLine("\t{0}; count: {1}", EntityType.Line, dxf.Lines.Count());
             Console.WriteLine("\t{0}; count: {1}", EntityType.Mesh, dxf.Meshes.Count());
             Console.WriteLine("\t{0}; count: {1}", EntityType.MLine, dxf.MLines.Count());
@@ -4575,7 +4576,7 @@ namespace TestDxfDocument
                     }
                 }
             }
-            Console.WriteLine("\t{0}; count: {1}", EntityType.LightWeightPolyline, dxf.LwPolylines.Count());
+            Console.WriteLine("\t{0}; count: {1}", EntityType.LwPolyline, dxf.LwPolylines.Count());
             Console.WriteLine("\t{0}; count: {1}", EntityType.Line, dxf.Lines.Count());
             Console.WriteLine("\t{0}; count: {1}", EntityType.Mesh, dxf.Meshes.Count());
             Console.WriteLine("\t{0}; count: {1}", EntityType.MLine, dxf.MLines.Count());
