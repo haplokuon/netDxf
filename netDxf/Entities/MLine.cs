@@ -442,7 +442,7 @@ namespace netDxf.Entities
                 MLineVertex vertex = this.vertexes[i];
                 MLineVertex nextVertex;
 
-                if (this.IsClosed && i==this.vertexes.Count - 1)
+                if (this.IsClosed && i == this.vertexes.Count - 1)
                     nextVertex = this.vertexes[0];
                 else if (!this.IsClosed && i == this.vertexes.Count - 1)
                     continue;
@@ -456,7 +456,7 @@ namespace netDxf.Entities
 
                 for (int j = 0; j < this.style.Elements.Count; j++)
                 {
-                    if (this.style.Elements.Count % 2 != 0)
+                    if (vertex.Distances[j].Count % 2 != 0)
                         throw new InvalidOperationException("The number of distances for a given MLineStyleElement must be an even number.");
 
                     Vector2 refStart = vertex.Position + vertex.Miter * vertex.Distances[j][0];
@@ -532,9 +532,11 @@ namespace netDxf.Entities
 
                     bool trim = !color1.Equals(color2) || !linetype1.Equals(linetype2);
 
-                    Vector2 center = Vector2.MidPoint(cornerVextexes[0][0], cornerVextexes[0][cornerVextexes.Length - 1]);
                     Vector2 start = cornerVextexes[0][0];
-                    //Vector2 end = cornerVextexes[0][cornerVextexes[0].Length - 1];
+                    Vector2 end = cornerVextexes[0][cornerVextexes[0].Length - 1];
+                    Vector2 center = Vector2.MidPoint(start, end);
+
+                    //Vector2 center = Vector2.MidPoint(cornerVextexes[0][0], cornerVextexes[0][cornerVextexes[0].Length - 1]);
 
                     double startAngle = Vector2.Angle(start - center) * MathHelper.RadToDeg;
                     //double endAngle = Vector2.Angle(end - center) * MathHelper.RadToDeg;
@@ -561,9 +563,10 @@ namespace netDxf.Entities
 
                 if (this.style.Flags.HasFlag(MLineStyleFlags.StartInnerArcsCap))
                 {
-                    Vector2 center = Vector2.MidPoint(cornerVextexes[0][0], cornerVextexes[0][cornerVextexes.Length - 1]); ;
+                    Vector2 center = Vector2.MidPoint(cornerVextexes[0][0], cornerVextexes[0][cornerVextexes[0].Length - 1]); ;
 
-                    int j = (int) Math.Floor(this.style.Elements.Count / 2.0);
+                    //int j = (int) Math.Floor(this.style.Elements.Count / 2.0);
+                    int j = (int) (this.style.Elements.Count / 2.0);
 
                     for (int i = 1; i < j; i++)
                     {
@@ -642,9 +645,14 @@ namespace netDxf.Entities
                     Linetype linetype2 = this.style.Elements[this.style.Elements.Count - 1].Linetype;
 
                     bool trim = !color1.Equals(color2) || !linetype1.Equals(linetype2);
-
-                    Vector2 center = Vector2.MidPoint(cornerVextexes[this.vertexes.Count - 1][0], cornerVextexes[this.vertexes.Count - 1][cornerVextexes.Length - 1]);
+                   
                     Vector2 start = cornerVextexes[this.vertexes.Count - 1][cornerVextexes[0].Length - 1];
+                    Vector2 end = cornerVextexes[this.vertexes.Count - 1][0];
+
+                    Vector2 center = Vector2.MidPoint(start, end);
+
+                    //Vector2 center = Vector2.MidPoint(cornerVextexes[this.vertexes.Count - 1][0], cornerVextexes[this.vertexes.Count - 1][cornerVextexes[0].Length - 1]);
+                    //Vector2 start = cornerVextexes[this.vertexes.Count - 1][cornerVextexes[0].Length - 1];
                     //Vector2 end = cornerVextexes[this.vertexes.Count - 1][0];
 
                     double startAngle = Vector2.Angle(start - center) * MathHelper.RadToDeg;
@@ -674,7 +682,7 @@ namespace netDxf.Entities
 
                 if (this.style.Flags.HasFlag(MLineStyleFlags.EndInnerArcsCap))
                 {
-                    Vector2 center = Vector2.MidPoint(cornerVextexes[this.vertexes.Count - 1][0], cornerVextexes[this.vertexes.Count - 1][cornerVextexes.Length - 1]);
+                    Vector2 center = Vector2.MidPoint(cornerVextexes[this.vertexes.Count - 1][0], cornerVextexes[this.vertexes.Count - 1][cornerVextexes[0].Length - 1]);
 
                     int j = (int)Math.Floor(this.style.Elements.Count / 2.0);
                     for (int i = 1; i < j; i++)

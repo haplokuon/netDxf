@@ -26,10 +26,17 @@ namespace TestDxfDocument
     /// </summary>
     public class Program
     {
-       
+
         public static void Main()
         {
+
             DxfDocument doc = Test(@"sample.dxf");
+
+            #region Samples for new and modified features 2.3.0
+
+            //ExplodeMLine();
+
+            #endregion
 
             #region Samples for new and modified features 2.2.1
 
@@ -229,6 +236,67 @@ namespace TestDxfDocument
 
             #endregion
         }
+
+        #region Samples for new and modified features 2.3.0
+
+        public static void ExplodeMLine()
+        {
+            DxfDocument dxf = DxfDocument.Load("MLineExplode.dxf");
+            MLine ml = dxf.MLines.ElementAt(0);
+            //ml.IsClosed = true;
+            ml.Style.EndAngle = 90;
+            ml.Style.StartAngle = 90;
+            ml.Update();
+
+            List<EntityObject> es = ml.Explode();
+            dxf.AddEntity(es);
+            dxf.Save("test.dxf");
+
+            DxfDocument doc = new DxfDocument(DxfVersion.AutoCad2010);
+            doc.DrawingVariables.LtScale = 10;
+
+            MLineStyle style = new MLineStyle("MyStyle", "Personalized style.");
+            style.Elements[0].Color = AciColor.Cyan;
+            style.Elements[1].Color = AciColor.Yellow;
+            style.Elements.Add(new MLineStyleElement(0.25) { Color = AciColor.Blue });
+            style.Elements.Add(new MLineStyleElement(0.0) { Color = AciColor.Red });
+            style.Elements.Add(new MLineStyleElement(-0.25) { Color = AciColor.Green });
+
+            style.Elements.Sort();
+            style.Flags = MLineStyleFlags.EndInnerArcsCap |
+                          MLineStyleFlags.EndRoundCap |
+                          MLineStyleFlags.StartInnerArcsCap |
+                          MLineStyleFlags.StartRoundCap |
+                          MLineStyleFlags.StartSquareCap |
+                          MLineStyleFlags.EndSquareCap |
+                          MLineStyleFlags.DisplayJoints;
+
+            //style.StartAngle = 30;
+            //style.EndAngle = 120;
+            List<Vector2> vertexes = new List<Vector2>
+            {
+                new Vector2(-50, 200),
+                new Vector2(0, 150),
+                new Vector2(150, 150),
+                new Vector2(150, 0)
+            };
+
+            MLine mline = new MLine(vertexes, style, 20);
+            //mline.NoStartCaps = true;
+            //mline.Normal = new Vector3(1);
+            mline.Layer = new Layer("Layer1") { Color = AciColor.Blue };
+            mline.Justification = MLineJustification.Bottom;
+            mline.Update();
+
+            doc.AddEntity(mline);
+
+            List<EntityObject> entities = mline.Explode();
+            doc.AddEntity(entities);
+
+            doc.Save("test.dxf");
+        }
+
+        #endregion
 
         #region Samples for new and modified features 2.2.1
 

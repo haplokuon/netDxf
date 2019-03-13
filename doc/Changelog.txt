@@ -1,5 +1,9 @@
 ## Change history
 
+
+* (fixed) A few issues with the MLine.Explode method when an odd number of MLineStyleElements where used.
+
+
 [2019/03/06] 
 * Added Explode method to Insert entity. A few entities might not appear as expected when a non-uniform and/or negative scaling is applied, read the TransformBy method documentation of each entity.
 * Added Explode method to MLine entity. It will convert the actual mline to its Line and Arcs components.
