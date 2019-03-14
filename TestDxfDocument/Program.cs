@@ -29,12 +29,11 @@ namespace TestDxfDocument
 
         public static void Main()
         {
-
-            DxfDocument doc = Test(@"sample.dxf");
+            //DxfDocument doc = Test(@"sample.dxf");
 
             #region Samples for new and modified features 2.3.0
 
-            //ExplodeMLine();
+            ExplodeMLine();
 
             #endregion
 
@@ -241,17 +240,6 @@ namespace TestDxfDocument
 
         public static void ExplodeMLine()
         {
-            DxfDocument dxf = DxfDocument.Load("MLineExplode.dxf");
-            MLine ml = dxf.MLines.ElementAt(0);
-            //ml.IsClosed = true;
-            ml.Style.EndAngle = 90;
-            ml.Style.StartAngle = 90;
-            ml.Update();
-
-            List<EntityObject> es = ml.Explode();
-            dxf.AddEntity(es);
-            dxf.Save("test.dxf");
-
             DxfDocument doc = new DxfDocument(DxfVersion.AutoCad2010);
             doc.DrawingVariables.LtScale = 10;
 
@@ -259,7 +247,9 @@ namespace TestDxfDocument
             style.Elements[0].Color = AciColor.Cyan;
             style.Elements[1].Color = AciColor.Yellow;
             style.Elements.Add(new MLineStyleElement(0.25) { Color = AciColor.Blue });
+            style.Elements.Add(new MLineStyleElement(0.15) { Color = AciColor.Blue });
             style.Elements.Add(new MLineStyleElement(0.0) { Color = AciColor.Red });
+            style.Elements.Add(new MLineStyleElement(-0.15) { Color = AciColor.Green });
             style.Elements.Add(new MLineStyleElement(-0.25) { Color = AciColor.Green });
 
             style.Elements.Sort();
@@ -271,14 +261,14 @@ namespace TestDxfDocument
                           MLineStyleFlags.EndSquareCap |
                           MLineStyleFlags.DisplayJoints;
 
-            //style.StartAngle = 30;
-            //style.EndAngle = 120;
+            //style.StartAngle = 120;
+            //style.EndAngle = 30;
             List<Vector2> vertexes = new List<Vector2>
             {
-                new Vector2(-50, 200),
+                new Vector2(0, 0),
                 new Vector2(0, 150),
                 new Vector2(150, 150),
-                new Vector2(150, 0)
+                new Vector2(250, 250)
             };
 
             MLine mline = new MLine(vertexes, style, 20);
@@ -287,7 +277,8 @@ namespace TestDxfDocument
             mline.Layer = new Layer("Layer1") { Color = AciColor.Blue };
             mline.Justification = MLineJustification.Bottom;
             mline.Update();
-
+            mline.Vertexes[0].Distances[0].Clear();
+            //mline.Vertexes[0].Distances[0].Add(0);
             doc.AddEntity(mline);
 
             List<EntityObject> entities = mline.Explode();
