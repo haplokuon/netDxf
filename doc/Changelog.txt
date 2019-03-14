@@ -1,6 +1,7 @@
 ## Change history
 
 
+* Clean up the MLine.Explode method.
 * (fixed) Avoid the raise of exceptions for some degenerated cases in the MLine.Explode method.
 * (fixed) A few issues with the MLine.Explode method.
 

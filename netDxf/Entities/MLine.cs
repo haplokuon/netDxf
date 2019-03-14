@@ -270,6 +270,63 @@ namespace netDxf.Entities
 
         #region private methods
 
+        private List<EntityObject> CreateRoundCap(Vector2 start, Vector2 end, Matrix3 transformation, AciColor color1, Linetype linetype1, AciColor color2, Linetype linetype2)
+        {
+            List<EntityObject> entities = new List<EntityObject>();
+
+            Vector2 center = Vector2.MidPoint(start, end);
+            double startAngle = Vector2.Angle(start - center) * MathHelper.RadToDeg;
+            double endAngle = startAngle + 180.0;
+            double radius = (start - center).Modulus();
+
+            if (!MathHelper.IsZero(radius))
+            {
+                if (!color1.Equals(color2) || !linetype1.Equals(linetype2))
+                {
+                    double midAngle = startAngle + 90.0;
+                    Arc arc1 = this.CreateArc(center, radius, startAngle, midAngle, color1, linetype1);
+                    arc1.TransformBy(transformation, Vector3.Zero);
+                    entities.Add(arc1);
+                    Arc arc2 = this.CreateArc(center, radius, midAngle, endAngle, color2, linetype2);
+                    arc2.TransformBy(transformation, Vector3.Zero);
+                    entities.Add(arc2);
+                }
+                else
+                {
+                    Arc arc = this.CreateArc(center, radius, startAngle, endAngle, color1, linetype1);
+                    arc.TransformBy(transformation, Vector3.Zero);
+                    entities.Add(arc);
+                }
+            }
+
+            return entities;
+        }
+
+        private List<EntityObject> CreateSquareCap(Vector2 start, Vector2 end, Matrix3 transformation, AciColor color1, Linetype linetype1, AciColor color2, Linetype linetype2)
+        {
+            List<EntityObject> entities = new List<EntityObject>();
+
+            Vector2 midPoint = Vector2.MidPoint(start, end);
+
+            if (!color1.Equals(color2) || !linetype1.Equals(linetype2))
+            {
+                Line line1 = this.CreateLine(start, midPoint, color1, linetype1);
+                line1.TransformBy(transformation, Vector3.Zero);
+                entities.Add(line1);
+                Line line2 = this.CreateLine(midPoint, end, color2, linetype2);
+                line2.TransformBy(transformation, Vector3.Zero);
+                entities.Add(line2);
+            }
+            else
+            {
+                Line line = this.CreateLine(start, end, color1, linetype1);
+                line.TransformBy(transformation, Vector3.Zero);
+                entities.Add(line);
+            }
+
+            return entities;
+        }
+
         private Line CreateLine(Vector2 start, Vector2 end, AciColor color, Linetype linetype)
         {
             return new Line(start, end)
@@ -346,7 +403,7 @@ namespace netDxf.Entities
             for (int i = 0; i < this.vertexes.Count; i++)
             {
                 Vector2 position = this.vertexes[i].Position;
-                Vector2 mitter;
+                Vector2 miter;
                 Vector2 dir;
                 if (i == 0)
                 {
@@ -359,13 +416,13 @@ namespace netDxf.Entities
                     }
                     if (this.IsClosed)
                     {
-                        mitter = prevDir - dir;
-                        mitter.Normalize();
+                        miter = dir - prevDir;
+                        miter.Normalize();
                     }
                     else
                     {
-                        mitter = MathHelper.Transform(dir, this.style.StartAngle*MathHelper.DegToRad, CoordinateSystem.Object, CoordinateSystem.World);
-                        mitter.Normalize();
+                        miter = -MathHelper.Transform(dir, this.style.StartAngle*MathHelper.DegToRad, CoordinateSystem.Object, CoordinateSystem.World);
+                        miter.Normalize();
                     }
                 }
                 else if (i + 1 == this.vertexes.Count)
@@ -379,14 +436,14 @@ namespace netDxf.Entities
                             dir = this.vertexes[0].Position - position;
                             dir.Normalize();
                         }
-                        mitter = prevDir - dir;
-                        mitter.Normalize();
+                        miter = dir - prevDir;
+                        miter.Normalize();
                     }
                     else
                     {
                         dir = prevDir;
-                        mitter = MathHelper.Transform(dir, this.style.EndAngle*MathHelper.DegToRad, CoordinateSystem.Object, CoordinateSystem.World);
-                        mitter.Normalize();
+                        miter = -MathHelper.Transform(dir, this.style.EndAngle*MathHelper.DegToRad, CoordinateSystem.Object, CoordinateSystem.World);
+                        miter.Normalize();
                     }
                 }
                 else
@@ -399,15 +456,15 @@ namespace netDxf.Entities
                         dir.Normalize();
                     }
 
-                    mitter = prevDir - dir;
-                    mitter.Normalize();
+                    miter = dir - prevDir;
+                    miter.Normalize();
                 }
                 prevDir = dir;
 
                 List<double>[] distances = new List<double>[this.style.Elements.Count];
-                double angleMitter = Vector2.Angle(mitter);
+                double angleMitter = Vector2.Angle(miter);
                 double angleDir = Vector2.Angle(dir);
-                double cos = Math.Cos(angleMitter + (MathHelper.HalfPI - angleDir));
+                double cos = Math.Cos(angleMitter - (MathHelper.HalfPI + angleDir));
                 for (int j = 0; j < this.style.Elements.Count; j++)
                 {
                     double distance = (this.style.Elements[j].Offset + reference)/cos;
@@ -418,7 +475,7 @@ namespace netDxf.Entities
                     };
                 }
 
-                this.vertexes[i] = new MLineVertex(position, dir, -mitter, distances);
+                this.vertexes[i] = new MLineVertex(position, dir, miter, distances);
             }
         }
 
@@ -426,12 +483,11 @@ namespace netDxf.Entities
         /// Decompose the actual multiline in its internal entities, <see cref="Line">lines</see> and <see cref="Arc">arcs</see>.
         /// </summary>
         /// <returns>A list of <see cref="Line">lines</see> and <see cref="Arc">arcs</see> that made up the multiline.</returns>
-        /// <exception cref="InvalidOperationException">An exception will be thrown if the number of distances for a given MLineStyleElement is not an even number.</exception>
         public List<EntityObject> Explode()
         {
-            Matrix3 transformation = MathHelper.ArbitraryAxis(this.Normal);
-
             List<EntityObject> entities = new List<EntityObject>();
+
+            Matrix3 transformation = MathHelper.ArbitraryAxis(this.Normal);
 
             // precomputed points at mline vertexes for start and end caps calculations
             Vector2[][] cornerVextexes = new Vector2[this.vertexes.Count][];
@@ -488,31 +544,14 @@ namespace netDxf.Entities
                 Linetype linetype1 = this.style.Elements[0].Linetype;
                 Linetype linetype2 = this.style.Elements[this.style.Elements.Count - 1].Linetype;
 
-                bool trim = !color1.Equals(color2) || !linetype1.Equals(linetype2);
-
                 for (int i = 0; i < cornerVextexes.Length; i++)
                 {
                     if (!this.IsClosed && (i == 0 || i == cornerVextexes.Length - 1)) continue;
 
                     Vector2 start = cornerVextexes[i][0];
                     Vector2 end = cornerVextexes[i][cornerVextexes[0].Length - 1];
-                    Vector2 midPoint = Vector2.MidPoint(start, end);
-                    if (trim)
-                    {
-                        Line line1 = this.CreateLine(start, midPoint, color1, linetype1);
-                        line1.TransformBy(transformation, Vector3.Zero);
-                        entities.Add(line1);
 
-                        Line line2 = this.CreateLine(midPoint, end, color2, linetype2);
-                        line2.TransformBy(transformation, Vector3.Zero);
-                        entities.Add(line2);
-                    }
-                    else
-                    {
-                        Line line = this.CreateLine(start, end, color1, linetype1);
-                        line.TransformBy(transformation, Vector3.Zero);
-                        entities.Add(line);
-                    }
+                    entities.AddRange(this.CreateSquareCap(start, end, transformation, color1, linetype1, color2, linetype2));
                 }
             }
 
@@ -528,40 +567,15 @@ namespace netDxf.Entities
                     Linetype linetype1 = this.style.Elements[0].Linetype;
                     Linetype linetype2 = this.style.Elements[this.style.Elements.Count - 1].Linetype;
 
-                    bool trim = !color1.Equals(color2) || !linetype1.Equals(linetype2);
-
                     Vector2 start = cornerVextexes[0][0];
                     Vector2 end = cornerVextexes[0][cornerVextexes[0].Length - 1];
-                    Vector2 center = Vector2.MidPoint(start, end);
 
-                    double startAngle = Vector2.Angle(start - center) * MathHelper.RadToDeg;
-                    double endAngle = startAngle + 180.0;
-                    double radius = (start - center).Modulus();
-
-                    if (!MathHelper.IsZero(radius))
-                    {
-                        if (trim)
-                        {
-                            double midAngle = startAngle + 90.0;
-                            Arc arc1 = this.CreateArc(center, radius, startAngle, midAngle, color1, linetype1);
-                            arc1.TransformBy(transformation, Vector3.Zero);
-                            entities.Add(arc1);
-                            Arc arc2 = this.CreateArc(center, radius, midAngle, endAngle, color2, linetype2);
-                            arc2.TransformBy(transformation, Vector3.Zero);
-                            entities.Add(arc2);
-                        }
-                        else
-                        {
-                            Arc arc = this.CreateArc(center, radius, startAngle, endAngle, color1, linetype1);
-                            arc.TransformBy(transformation, Vector3.Zero);
-                            entities.Add(arc);
-                        }
-                    }
+                    entities.AddRange(this.CreateRoundCap(start, end, transformation, color1, linetype1, color2, linetype2));
                 }
 
                 if (this.style.Flags.HasFlag(MLineStyleFlags.StartInnerArcsCap))
                 {
-                    int j = (int) (this.style.Elements.Count / 2.0);
+                    int j = (int) (this.style.Elements.Count / 2.0); // Math.Floor
 
                     for (int i = 1; i < j; i++)
                     {
@@ -570,35 +584,10 @@ namespace netDxf.Entities
                         Linetype linetype1 = this.style.Elements[i].Linetype;
                         Linetype linetype2 = this.style.Elements[this.style.Elements.Count - 1 - i].Linetype;
 
-                        bool trim = !color1.Equals(color2) || !linetype1.Equals(linetype2);
-
                         Vector2 start = cornerVextexes[0][i];
                         Vector2 end = cornerVextexes[0][cornerVextexes[0].Length - 1 - i];
-                        Vector2 center = Vector2.MidPoint(start, end);
 
-                        double startAngle = Vector2.Angle(start - center) * MathHelper.RadToDeg;
-                        double endAngle = startAngle + 180.0;
-                        double radius = (start - center).Modulus();
-
-                        if (!MathHelper.IsZero(radius))
-                        {
-                            if (trim)
-                            {
-                                double midAngle = startAngle + 90.0;
-                                Arc arc1 = this.CreateArc(center, radius, startAngle, midAngle, color1, linetype1);
-                                arc1.TransformBy(transformation, Vector3.Zero);
-                                entities.Add(arc1);
-                                Arc arc2 = this.CreateArc(center, radius, midAngle, endAngle, color2, linetype2);
-                                arc2.TransformBy(transformation, Vector3.Zero);
-                                entities.Add(arc2);
-                            }
-                            else
-                            {
-                                Arc arc = this.CreateArc(center, radius, startAngle, endAngle, color1, linetype1);
-                                arc.TransformBy(transformation, Vector3.Zero);
-                                entities.Add(arc);
-                            }
-                        }                     
+                        entities.AddRange(this.CreateRoundCap(start, end, transformation, color1, linetype1, color2, linetype2));
                     }
                 }
 
@@ -609,27 +598,10 @@ namespace netDxf.Entities
                     Linetype linetype1 = this.style.Elements[0].Linetype;
                     Linetype linetype2 = this.style.Elements[this.style.Elements.Count - 1].Linetype;
 
-                    bool trim = !color1.Equals(color2) || !linetype1.Equals(linetype2);
-
                     Vector2 start = cornerVextexes[0][0];
                     Vector2 end = cornerVextexes[0][cornerVextexes[0].Length - 1];
-                    Vector2 midPoint = Vector2.MidPoint(start, end);
 
-                    if (trim)
-                    {
-                        Line line1 = this.CreateLine(start, midPoint, color1, linetype1);
-                        line1.TransformBy(transformation, Vector3.Zero);
-                        entities.Add(line1);
-                        Line line2 = this.CreateLine(midPoint, end, color2, linetype2);
-                        line2.TransformBy(transformation, Vector3.Zero);
-                        entities.Add(line2);
-                    }
-                    else
-                    {
-                        Line line = this.CreateLine(start, end, color1, linetype1);
-                        line.TransformBy(transformation, Vector3.Zero);
-                        entities.Add(line);
-                    }
+                    entities.AddRange(this.CreateSquareCap(start, end, transformation, color1, linetype1, color2, linetype2));
                 }
             }
 
@@ -637,118 +609,46 @@ namespace netDxf.Entities
             {
                 if (this.style.Flags.HasFlag(MLineStyleFlags.EndRoundCap))
                 {
-                    AciColor color1 = this.style.Elements[0].Color;
-                    AciColor color2 = this.style.Elements[this.style.Elements.Count - 1].Color;
-                    Linetype linetype1 = this.style.Elements[0].Linetype;
-                    Linetype linetype2 = this.style.Elements[this.style.Elements.Count - 1].Linetype;
-
-                    bool trim = !color1.Equals(color2) || !linetype1.Equals(linetype2);
+                    AciColor color1 = this.style.Elements[this.style.Elements.Count - 1].Color;
+                    AciColor color2 = this.style.Elements[0].Color;
+                    Linetype linetype1 = this.style.Elements[this.style.Elements.Count - 1].Linetype;
+                    Linetype linetype2 = this.style.Elements[0].Linetype;
                    
                     Vector2 start = cornerVextexes[this.vertexes.Count - 1][cornerVextexes[0].Length - 1];
                     Vector2 end = cornerVextexes[this.vertexes.Count - 1][0];
-                    Vector2 center = Vector2.MidPoint(start, end);
 
-                    double startAngle = Vector2.Angle(start - center) * MathHelper.RadToDeg;
-                    double endAngle = startAngle + 180.0;
-                    double radius = (start - center).Modulus();
-
-                    if (!MathHelper.IsZero(radius))
-                    {
-                        if (trim)
-                        {
-                            double midAngle = startAngle + 90.0;
-
-                            Arc arc1 = this.CreateArc(center, radius, midAngle, endAngle, color1, linetype1);
-                            arc1.TransformBy(transformation, Vector3.Zero);
-                            entities.Add(arc1);
-
-                            Arc arc2 = this.CreateArc(center, radius, startAngle, midAngle, color2, linetype2);
-                            arc2.TransformBy(transformation, Vector3.Zero);
-                            entities.Add(arc2);
-                        }
-                        else
-                        {
-                            Arc arc = this.CreateArc(center, radius, startAngle, endAngle, color1, linetype1);
-                            arc.TransformBy(transformation, Vector3.Zero);
-                            entities.Add(arc);
-                        }
-                    }                      
+                    entities.AddRange(this.CreateRoundCap(start, end, transformation, color1, linetype1, color2, linetype2));
                 }
 
                 if (this.style.Flags.HasFlag(MLineStyleFlags.EndInnerArcsCap))
                 {
-                    int j = (int) (this.style.Elements.Count / 2.0);
+                    int j = (int) (this.style.Elements.Count / 2.0); // Math.Floor
 
                     for (int i = 1; i < j; i++)
                     {
-                        AciColor color1 = this.style.Elements[i].Color;
-                        AciColor color2 = this.style.Elements[this.style.Elements.Count - 1 - i].Color;
-                        Linetype linetype1 = this.style.Elements[i].Linetype;
-                        Linetype linetype2 = this.style.Elements[this.style.Elements.Count - 1 - i].Linetype;
-
-                        bool trim = !color1.Equals(color2) || !linetype1.Equals(linetype2);
+                        AciColor color1 = this.style.Elements[this.style.Elements.Count - 1 - i].Color;
+                        AciColor color2 = this.style.Elements[i].Color;
+                        Linetype linetype1 = this.style.Elements[this.style.Elements.Count - 1 - i].Linetype;
+                        Linetype linetype2 = this.style.Elements[i].Linetype;
 
                         Vector2 start = cornerVextexes[this.vertexes.Count - 1][cornerVextexes[0].Length - 1 - i];
                         Vector2 end = cornerVextexes[this.vertexes.Count - 1][i];
-                        Vector2 center = Vector2.MidPoint(start, end);
 
-                        double startAngle = Vector2.Angle(start - center) * MathHelper.RadToDeg;
-                        double endAngle = startAngle + 180.0;
-                        double radius = (start - center).Modulus();
-
-                        if (!MathHelper.IsZero(radius))
-                        {
-                            if (trim)
-                            {
-                                double midAngle = startAngle + 90.0;
-
-                                Arc arc1 = this.CreateArc(center, radius, midAngle, endAngle, color1, linetype1);
-                                arc1.TransformBy(transformation, Vector3.Zero);
-                                entities.Add(arc1);
-
-                                Arc arc2 = this.CreateArc(center, radius, startAngle, midAngle, color2, linetype2);
-                                arc2.TransformBy(transformation, Vector3.Zero);
-                                entities.Add(arc2);
-                            }
-                            else
-                            {
-                                Arc arc = this.CreateArc(center, radius, startAngle, endAngle, color1, linetype1);
-                                arc.TransformBy(transformation, Vector3.Zero);
-                                entities.Add(arc);
-                            }
-                        }                           
+                        entities.AddRange(this.CreateRoundCap(start, end, transformation, color1, linetype1, color2, linetype2));
                     }
                 }
 
                 if (this.style.Flags.HasFlag(MLineStyleFlags.EndSquareCap))
                 {
-                    AciColor color1 = this.style.Elements[0].Color;
-                    AciColor color2 = this.style.Elements[this.style.Elements.Count - 1].Color;
-                    Linetype linetype1 = this.style.Elements[0].Linetype;
-                    Linetype linetype2 = this.style.Elements[this.style.Elements.Count - 1].Linetype;
-
-                    bool trim = !color1.Equals(color2) || !linetype1.Equals(linetype2);
+                    AciColor color1 = this.style.Elements[this.style.Elements.Count - 1].Color;
+                    AciColor color2 = this.style.Elements[0].Color;
+                    Linetype linetype1 = this.style.Elements[this.style.Elements.Count - 1].Linetype;
+                    Linetype linetype2 = this.style.Elements[0].Linetype;
 
                     Vector2 start = cornerVextexes[this.vertexes.Count - 1][cornerVextexes[0].Length - 1];
                     Vector2 end = cornerVextexes[this.vertexes.Count - 1][0];
-                    Vector2 midPoint = Vector2.MidPoint(start, end);
 
-                    if (trim)
-                    {
-                        Line line1 = this.CreateLine(midPoint, end, color1, linetype1);
-                        line1.TransformBy(transformation, Vector3.Zero);
-                        entities.Add(line1);
-
-                        Line line2 = this.CreateLine(start, midPoint, color2, linetype2);
-                        line2.TransformBy(transformation, Vector3.Zero);
-                        entities.Add(line2);
-                    }
-                    else
-                    {
-                        Line line = this.CreateLine(start, end, color1, linetype1);
-                        line.TransformBy(transformation, Vector3.Zero);
-                        entities.Add(line);
-                    }
+                    entities.AddRange(this.CreateSquareCap(start, end, transformation, color1, linetype1, color2, linetype2));
                 }
             }
 

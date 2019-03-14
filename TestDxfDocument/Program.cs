@@ -277,7 +277,7 @@ namespace TestDxfDocument
             mline.Layer = new Layer("Layer1") { Color = AciColor.Blue };
             mline.Justification = MLineJustification.Bottom;
             mline.Update();
-            mline.Vertexes[0].Distances[0].Clear();
+            //mline.Vertexes[0].Distances[0].Clear();
             //mline.Vertexes[0].Distances[0].Add(0);
             doc.AddEntity(mline);
 
