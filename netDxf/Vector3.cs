@@ -141,8 +141,8 @@ namespace netDxf
             get { return this.x; }
             set
             {
-                this.isNormalized = false;
                 this.x = value;
+                this.isNormalized = false;
             }
         }
 
@@ -154,8 +154,8 @@ namespace netDxf
             get { return this.y; }
             set
             {
-                this.isNormalized = false;
                 this.y = value;
+                this.isNormalized = false;
             }
         }
 
@@ -167,8 +167,8 @@ namespace netDxf
             get { return this.z; }
             set
             {
-                this.isNormalized = false;
                 this.z = value;
+                this.isNormalized = false;
             }
         }
 
@@ -194,7 +194,6 @@ namespace netDxf
             }
             set
             {
-                this.isNormalized = false;
                 switch (index)
                 {
                     case 0:
@@ -209,6 +208,7 @@ namespace netDxf
                     default:
                         throw new ArgumentOutOfRangeException(nameof(index));
                 }
+                this.isNormalized = false;
             }
         }
 

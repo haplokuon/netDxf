@@ -28,7 +28,7 @@ using netDxf.Tables;
 namespace netDxf.Entities
 {
     /// <summary>
-    /// Represents a multiline <see cref="T:netDxf.Entities.EntityObject">entity</see>.
+    /// Represents a multiline <see cref="EntityObject">entity</see>.
     /// </summary>
     public class MLine :
         EntityObject

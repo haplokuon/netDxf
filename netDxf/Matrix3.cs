@@ -137,8 +137,8 @@ namespace netDxf
             get { return this.m11; }
             set
             {
-                this.isIdentity = false;
                 this.m11 = value;
+                this.isIdentity = false;
             }
         }
 
@@ -150,8 +150,8 @@ namespace netDxf
             get { return this.m12; }
             set
             {
-                this.isIdentity = false;
                 this.m12 = value;
+                this.isIdentity = false;
             }
         }
 
@@ -163,8 +163,8 @@ namespace netDxf
             get { return this.m13; }
             set
             {
-                this.isIdentity = false;
                 this.m13 = value;
+                this.isIdentity = false;
             }
         }
 
@@ -189,8 +189,8 @@ namespace netDxf
             get { return this.m22; }
             set
             {
-                this.isIdentity = false;
                 this.m22 = value;
+                this.isIdentity = false;
             }
         }
 
@@ -202,8 +202,8 @@ namespace netDxf
             get { return this.m23; }
             set
             {
-                this.isIdentity = false;
                 this.m23 = value;
+                this.isIdentity = false;
             }
         }
 
@@ -215,8 +215,8 @@ namespace netDxf
             get { return this.m31; }
             set
             {
-                this.isIdentity = false;
                 this.m31 = value;
+                this.isIdentity = false;
             }
         }
 
@@ -226,7 +226,11 @@ namespace netDxf
         public double M32
         {
             get { return this.m32; }
-            set { this.m32 = value; }
+            set
+            {
+                this.m32 = value;
+                this.isIdentity = false;
+            }
         }
 
         /// <summary>
@@ -237,8 +241,120 @@ namespace netDxf
             get { return this.m33; }
             set
             {
-                this.isIdentity = false;
                 this.m33 = value;
+                this.isIdentity = false;
+            }
+        }
+
+        /// <summary>Gets or sets the component at the given row and column index in the matrix.</summary>
+        /// <param name="row">The row index of the matrix.</param>
+        /// <param name="column">The column index of the matrix.</param>
+        /// <returns>The component at the given row and column index in the matrix.</returns>
+        public double this[int row, int column]
+        {
+            get
+            {
+                switch (row)
+                {
+                    case 0:
+                        switch (column)
+                        {
+                            case 0:
+                                return this.m11;
+                            case 1:
+                                return this.m12;
+                            case 2:
+                                return this.m13;
+                            default:
+                                throw new ArgumentOutOfRangeException(nameof(column));
+                        }
+                    case 1:
+                        switch (column)
+                        {
+                            case 0:
+                                return this.m21;
+                            case 1:
+                                return this.m22;
+                            case 2:
+                                return this.m23;
+                            default:
+                                throw new ArgumentOutOfRangeException(nameof(column));
+                        }
+
+                    case 2:
+                        switch (column)
+                        {
+                            case 0:
+                                return this.m31;
+                            case 1:
+                                return this.m32;
+                            case 2:
+                                return this.m33;
+                            default:
+                                throw new ArgumentOutOfRangeException(nameof(column));
+                        }
+                    default:
+                        throw new ArgumentOutOfRangeException(nameof(row));
+                }
+            }
+            set
+            {
+                switch (row)
+                {
+                    case 0:
+                        switch (column)
+                        {
+                            case 0:
+                                this.m11 = value;
+                                break;
+                            case 1:
+                                this.m12 = value;
+                                break;
+                            case 2:
+                                this.m13 = value;
+                                break;
+                            default:
+                                throw new ArgumentOutOfRangeException(nameof(column));
+                        }
+                        break;
+
+                    case 1:
+                        switch (column)
+                        {
+                            case 0:
+                                this.m21 = value;
+                                break;
+                            case 1:
+                                this.m22 = value;
+                                break;
+                            case 2:
+                                this.m23 = value;
+                                break;
+                            default:
+                                throw new ArgumentOutOfRangeException(nameof(column));
+                        }
+                        break;
+
+                    case 2:
+                        switch (column)
+                        {
+                            case 0:
+                                this.m31 = value;
+                                break;
+                            case 1:
+                                this.m32 = value;
+                                break;
+                            case 2:
+                                this.m33 = value;
+                                break;
+                            default:
+                                throw new ArgumentOutOfRangeException(nameof(column));
+                        }
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException(nameof(row));
+                }
+                this.isIdentity = false;
             }
         }
 
