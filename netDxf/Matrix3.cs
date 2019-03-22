@@ -561,8 +561,7 @@ namespace netDxf
                 det*(this.m13*this.m21 - this.m11*this.m23),
                 det*(this.m21*this.m32 - this.m22*this.m31),
                 det*(this.m12*this.m31 - this.m11*this.m32),
-                det*(this.m11*this.m22 - this.m12*this.m21)
-                );
+                det*(this.m11*this.m22 - this.m12*this.m21));
         }
 
         /// <summary>

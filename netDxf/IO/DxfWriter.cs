@@ -2750,6 +2750,11 @@ namespace netDxf.IO
             this.chunk.Write(220, text.Normal.Y);
             this.chunk.Write(230, text.Normal.Z);
 
+            short textGeneration = 0;
+            if (text.IsBackward) textGeneration += 2;
+            if (text.IsUpsideDown) textGeneration += 4;
+            this.chunk.Write(71, textGeneration);
+
             switch (text.Alignment)
             {
                 case TextAlignment.TopLeft:

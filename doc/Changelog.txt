@@ -1,6 +1,9 @@
 ## Change history
 
-* Added prperty to Matrix3 to access its [row,colum] elements by index.
+
+* Added properties IsBackward and IsUpsideDown to Text entity.
+* Text entity TransformBy method now supports negative scaling.
+* Added property to Matrix3 to access its [row,column] elements by index.
 * (fixed) Avoid the raise of exceptions for some degenerated cases in the MLine.Explode method.
 * (fixed) A few issues with the MLine.Explode method.
 

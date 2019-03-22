@@ -62,6 +62,8 @@ namespace netDxf.Entities
         private double height;
         private double widthFactor;
         private double rotation;
+        private bool isBackward;
+        private bool isUpsideDown;
 
         #endregion
 
@@ -234,6 +236,24 @@ namespace netDxf.Entities
             set { this.text = value; }
         }
 
+        /// <summary>
+        /// Gets or sets if the text is backward (mirrored in X).
+        /// </summary>
+        public bool IsBackward
+        {
+            get { return this.isBackward; }
+            set { this.isBackward = value; }
+        }
+
+        /// <summary>
+        /// Gets or sets if the text is upside down (mirrored in Y).
+        /// </summary>
+        public bool IsUpsideDown
+        {
+            get { return this.isUpsideDown; }
+            set { this.isUpsideDown = value; }
+        }
+
         #endregion
 
         #region overrides
@@ -243,9 +263,6 @@ namespace netDxf.Entities
         /// </summary>
         /// <param name="transformation">Transformation matrix.</param>
         /// <param name="translation">Translation vector.</param>
-        /// <remarks>
-        /// Negative scaling is not supported.
-        /// </remarks>
         public override void TransformBy(Matrix3 transformation, Vector3 translation)
         {
             Vector3 newPosition;
@@ -256,6 +273,7 @@ namespace netDxf.Entities
             double newHeight;
             double newRotation;
             double newObliqueAngle;
+            bool reverseText;
 
             newPosition = transformation * this.Position + translation;
             newNormal = transformation * this.Normal;
@@ -265,10 +283,13 @@ namespace netDxf.Entities
             Matrix3 transWO = MathHelper.ArbitraryAxis(newNormal);
             transWO = transWO.Transpose();
 
-            IList<Vector2> uv = MathHelper.Transform(new List<Vector2> { this.WidthFactor * this.Height * Vector2.UnitX, this.Height * Vector2.UnitY },
+            IList<Vector2> uv = MathHelper.Transform(new List<Vector2>
+                {
+                    this.WidthFactor * this.Height * Vector2.UnitX,
+                    new Vector2(this.Height * Math.Tan(this.ObliqueAngle * MathHelper.DegToRad), this.Height)
+                },
                 this.Rotation * MathHelper.DegToRad,
                 CoordinateSystem.Object, CoordinateSystem.World);
-
 
             Vector3 v;
             v = transOW * new Vector3(uv[0].X, uv[0].Y, 0.0);
@@ -282,10 +303,22 @@ namespace netDxf.Entities
             newVvector = new Vector2(v.X, v.Y);
 
             newRotation = Vector2.Angle(newUvector) * MathHelper.RadToDeg;
+            newObliqueAngle = Vector2.Angle(newVvector) * MathHelper.RadToDeg;
+
+            if (Vector2.CrossProduct(newUvector, newVvector) < 0)
+            {
+                newRotation += 180;
+                newObliqueAngle = 270 - (newRotation - newObliqueAngle);
+                if (newObliqueAngle >= 360) newObliqueAngle -= 360;
+                reverseText = true;
+            }
+            else
+            {
+                newObliqueAngle = 90 + (newRotation - newObliqueAngle);
+                reverseText = false;
+            }
 
             // the oblique angle is defined between -85 nad 85 degrees
-            newObliqueAngle = Vector2.Angle(newVvector) * MathHelper.RadToDeg;
-            newObliqueAngle = (newRotation + 90.0) - newObliqueAngle;
             if (newObliqueAngle > 180)
                 newObliqueAngle = 180 - newObliqueAngle;
             if (newObliqueAngle < -85)
@@ -309,7 +342,8 @@ namespace netDxf.Entities
             this.Rotation = newRotation;
             this.Height = newHeight;
             this.WidthFactor = newWidthFactor;
-            this.ObliqueAngle = newObliqueAngle;         
+            this.ObliqueAngle = newObliqueAngle;
+            if (reverseText) this.IsBackward = !this.isBackward;
         }
 
         /// <summary>
@@ -336,6 +370,8 @@ namespace netDxf.Entities
                 WidthFactor = this.widthFactor,
                 ObliqueAngle = this.obliqueAngle,
                 Alignment = this.alignment,
+                IsBackward = this.isBackward,
+                isUpsideDown = this.isUpsideDown,
                 Style = (TextStyle) this.style.Clone(),
                 Value = this.text
             };

@@ -33,7 +33,9 @@ namespace TestDxfDocument
 
             #region Samples for new and modified features 2.3.0
 
-            ExplodeMLine();
+            //ShapeMirror();
+            //TextMirror();
+            //ExplodeMLine();
 
             #endregion
 
@@ -284,6 +286,23 @@ namespace TestDxfDocument
             List<EntityObject> entities = mline.Explode();
             doc.AddEntity(entities);
 
+            doc.Save("test.dxf");
+        }
+
+        public static void TextMirror()
+        {
+            Text text1 = new Text("Sample text", Vector2.Zero, 10);
+            //text1.IsBackward = true;
+            //text1.Rotation = 30;
+            //text1.ObliqueAngle = 10;
+            Matrix3 trans = Matrix3.Identity;
+            trans[0, 0] = -1;
+            Text text2 = (Text)text1.Clone();
+            text2.Color = AciColor.Yellow;
+            text2.TransformBy(trans, Vector3.Zero);
+            DxfDocument doc = new DxfDocument();
+            doc.AddEntity(text1);
+            doc.AddEntity(text2);
             doc.Save("test.dxf");
         }
 

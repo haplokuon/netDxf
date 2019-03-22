@@ -7830,6 +7830,9 @@ namespace netDxf.IO
             Vector3 normal = Vector3.UnitZ;
             short horizontalAlignment = 0;
             short verticalAlignment = 0;
+            bool isBackward = false;
+            bool isUpsideDown = false;
+
             List<XData> xData = new List<XData>();
 
             this.chunk.Next();
@@ -7894,6 +7897,19 @@ namespace netDxf.IO
                         style = this.GetTextStyle(styleName);
                         this.chunk.Next();
                         break;
+                    case 71:
+                        short textGeneration = this.chunk.ReadShort();
+                        if (textGeneration - 2 == 0)
+                            isBackward = true;
+                        if (textGeneration - 4 == 0)
+                            isUpsideDown = true;
+                        if (textGeneration - 6 == 0)
+                        {
+                            isBackward = true;
+                            isUpsideDown = true;
+                        }
+                        this.chunk.Next();
+                        break;
                     case 72:
                         horizontalAlignment = this.chunk.ReadShort();
                         this.chunk.Next();
@@ -7941,6 +7957,8 @@ namespace netDxf.IO
                 WidthFactor = widthFactor,
                 Rotation = rotation,
                 ObliqueAngle = obliqueAngle,
+                IsBackward = isBackward,
+                IsUpsideDown = isUpsideDown,
                 Style = style,
                 Position = MathHelper.Transform(ocsBasePoint, normal, CoordinateSystem.Object, CoordinateSystem.World),
                 Normal = normal,
