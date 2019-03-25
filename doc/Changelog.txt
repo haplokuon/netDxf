@@ -1,8 +1,10 @@
 ## Change history
 
-
+* Improved the TransformBy method of the Text, Shape, MLine, Attribute, AttributeDefinition.
+* Added properties IsBackward and IsUpsideDown to Attribute and AttributeDefinition objects.
+* The Shape entity Size property now does not allow negative values, rotate it 180 degrees to achieve the same result.
+* The Shape entity WidthFactor property now admits negative numbers.
 * Added properties IsBackward and IsUpsideDown to Text entity.
-* Text entity TransformBy method now supports negative scaling.
 * Added property to Matrix3 to access its [row,column] elements by index.
 * (fixed) Avoid the raise of exceptions for some degenerated cases in the MLine.Explode method.
 * (fixed) A few issues with the MLine.Explode method.

@@ -178,7 +178,6 @@ namespace netDxf.Entities
         /// <summary>
         /// Gets or sets the multiline scale.
         /// </summary>
-        /// <remarks>AutoCad accepts negative scales, but it is not recommended.</remarks>
         public double Scale
         {
             get { return this.scale; }
@@ -570,7 +569,9 @@ namespace netDxf.Entities
                     Vector2 start = cornerVextexes[0][0];
                     Vector2 end = cornerVextexes[0][cornerVextexes[0].Length - 1];
 
-                    entities.AddRange(this.CreateRoundCap(start, end, transformation, color1, linetype1, color2, linetype2));
+                    entities.AddRange(this.scale >= 0 ?
+                        this.CreateRoundCap(start, end, transformation, color1, linetype1, color2, linetype2) :
+                        this.CreateRoundCap(end, start, transformation, color2, linetype2, color1, linetype1));
                 }
 
                 if (this.style.Flags.HasFlag(MLineStyleFlags.StartInnerArcsCap))
@@ -587,7 +588,9 @@ namespace netDxf.Entities
                         Vector2 start = cornerVextexes[0][i];
                         Vector2 end = cornerVextexes[0][cornerVextexes[0].Length - 1 - i];
 
-                        entities.AddRange(this.CreateRoundCap(start, end, transformation, color1, linetype1, color2, linetype2));
+                        entities.AddRange(this.scale >= 0 ?
+                            this.CreateRoundCap(start, end, transformation, color1, linetype1, color2, linetype2) :
+                            this.CreateRoundCap(end, start, transformation, color2, linetype2, color1, linetype1));
                     }
                 }
 
@@ -617,7 +620,9 @@ namespace netDxf.Entities
                     Vector2 start = cornerVextexes[this.vertexes.Count - 1][cornerVextexes[0].Length - 1];
                     Vector2 end = cornerVextexes[this.vertexes.Count - 1][0];
 
-                    entities.AddRange(this.CreateRoundCap(start, end, transformation, color1, linetype1, color2, linetype2));
+                    entities.AddRange(this.scale >= 0 ?
+                        this.CreateRoundCap(start, end, transformation, color1, linetype1, color2, linetype2) :
+                        this.CreateRoundCap(end, start, transformation, color2, linetype2, color1, linetype1));
                 }
 
                 if (this.style.Flags.HasFlag(MLineStyleFlags.EndInnerArcsCap))
@@ -634,7 +639,9 @@ namespace netDxf.Entities
                         Vector2 start = cornerVextexes[this.vertexes.Count - 1][cornerVextexes[0].Length - 1 - i];
                         Vector2 end = cornerVextexes[this.vertexes.Count - 1][i];
 
-                        entities.AddRange(this.CreateRoundCap(start, end, transformation, color1, linetype1, color2, linetype2));
+                        entities.AddRange(this.scale >= 0 ?
+                            this.CreateRoundCap(start, end, transformation, color1, linetype1, color2, linetype2) :
+                            this.CreateRoundCap(end, start, transformation, color2, linetype2, color1, linetype1));
                     }
                 }
 
@@ -714,6 +721,8 @@ namespace netDxf.Entities
                 }
                 this.vertexes[i] = new MLineVertex(position, direction, mitter, newDistances);
             }
+
+            if (Vector2.CrossProduct(this.Vertexes[0].Miter, this.Vertexes[0].Direction) < 0) newScale = -newScale;
 
             this.Elevation = newElevation;
             this.Normal = newNormal;

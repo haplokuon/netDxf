@@ -33,9 +33,9 @@ namespace TestDxfDocument
 
             #region Samples for new and modified features 2.3.0
 
+            MLineMirrorAndExplode();
             //ShapeMirror();
             //TextMirror();
-            //ExplodeMLine();
 
             #endregion
 
@@ -240,11 +240,46 @@ namespace TestDxfDocument
 
         #region Samples for new and modified features 2.3.0
 
-        public static void ExplodeMLine()
+        public static void TextMirror()
         {
-            DxfDocument doc = new DxfDocument(DxfVersion.AutoCad2010);
-            doc.DrawingVariables.LtScale = 10;
+            Text text1 = new Text("Sample text", Vector2.Zero, 10);
+            //text1.IsBackward = true;
+            //text1.Rotation = 30;
+            //text1.ObliqueAngle = 10;
+            Matrix3 trans = Matrix3.Identity;
+            trans[0, 0] = -1;
+            Text text2 = (Text)text1.Clone();
+            text2.Color = AciColor.Yellow;
+            text2.TransformBy(trans, Vector3.Zero);
+            DxfDocument doc = new DxfDocument();
+            doc.AddEntity(text1);
+            doc.AddEntity(text2);
+            doc.Save("test.dxf");
+        }
 
+        private static void ShapeMirror()
+        {
+            ShapeStyle style = new ShapeStyle("shape.shx");
+            Shape shape1 = new Shape("MyShape", style);
+            shape1.ObliqueAngle = 20;
+
+            Matrix3 trans = Matrix3.Identity;
+            //trans[0, 0] = -1;
+            trans[1, 1] = -1;
+            Shape shape2 = (Shape)shape1.Clone();
+            shape2.Color = AciColor.Yellow;
+            shape2.TransformBy(trans, Vector3.Zero);
+
+            DxfDocument doc = new DxfDocument();
+            doc.SupportFolders.Add(@".\Support");
+            doc.AddEntity(shape1);
+            doc.AddEntity(shape2);
+            doc.Save("test.dxf");
+
+        }
+
+        public static void MLineMirrorAndExplode()
+        {
             MLineStyle style = new MLineStyle("MyStyle", "Personalized style.");
             style.Elements[0].Color = AciColor.Cyan;
             style.Elements[1].Color = AciColor.Yellow;
@@ -267,42 +302,36 @@ namespace TestDxfDocument
             //style.EndAngle = 30;
             List<Vector2> vertexes = new List<Vector2>
             {
-                new Vector2(0, 0),
-                new Vector2(0, 150),
-                new Vector2(150, 150),
-                new Vector2(250, 250)
+                new Vector2(50, 0),
+                new Vector2(50, 150),
+                new Vector2(200, 150),
+                new Vector2(300, 250)
             };
 
-            MLine mline = new MLine(vertexes, style, 20);
+            MLine mline1 = new MLine(vertexes, style, 20);
             //mline.NoStartCaps = true;
             //mline.Normal = new Vector3(1);
-            mline.Layer = new Layer("Layer1") { Color = AciColor.Blue };
-            mline.Justification = MLineJustification.Bottom;
-            mline.Update();
-            //mline.Vertexes[0].Distances[0].Clear();
-            //mline.Vertexes[0].Distances[0].Add(0);
-            doc.AddEntity(mline);
+            mline1.Layer = new Layer("Layer1") { Color = AciColor.Blue };
+            mline1.Justification = MLineJustification.Bottom;
+            mline1.Update();
 
-            List<EntityObject> entities = mline.Explode();
-            doc.AddEntity(entities);
+            MLine mline2 = (MLine)mline1.Clone();
+            //mline2.Color = AciColor.Yellow;
 
-            doc.Save("test.dxf");
-        }
-
-        public static void TextMirror()
-        {
-            Text text1 = new Text("Sample text", Vector2.Zero, 10);
-            //text1.IsBackward = true;
-            //text1.Rotation = 30;
-            //text1.ObliqueAngle = 10;
+            //Matrix3 trans = Matrix3.RotationZ(Math.PI);
             Matrix3 trans = Matrix3.Identity;
             trans[0, 0] = -1;
-            Text text2 = (Text)text1.Clone();
-            text2.Color = AciColor.Yellow;
-            text2.TransformBy(trans, Vector3.Zero);
-            DxfDocument doc = new DxfDocument();
-            doc.AddEntity(text1);
-            doc.AddEntity(text2);
+            //trans[1, 1] = -1;
+            mline2.TransformBy(trans, Vector3.Zero);
+
+            DxfDocument doc = new DxfDocument(DxfVersion.AutoCad2010);
+            doc.DrawingVariables.LtScale = 10;
+
+            doc.AddEntity(mline1);
+            //doc.AddEntity(mline2);
+            List<EntityObject> entities = mline2.Explode();
+            doc.AddEntity(entities);
+
             doc.Save("test.dxf");
         }
 

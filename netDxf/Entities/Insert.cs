@@ -315,6 +315,8 @@ namespace netDxf.Entities
                 att.ObliqueAngle = attdef.ObliqueAngle;
                 att.Rotation = attdef.Rotation;
                 att.Normal = attdef.Normal;
+                att.IsBackward = attdef.IsBackward;
+                att.IsUpsideDown = attdef.IsUpsideDown;
 
                 att.TransformBy(transformation, translation);
             }

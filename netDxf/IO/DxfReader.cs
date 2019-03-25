@@ -6348,6 +6348,7 @@ namespace netDxf.IO
             double obliqueAngle = 0.0;
             double widthFactor = 1.0;
             double thickness = 0.0;
+            double rotateNegativeSize = 0.0;
             Vector3 normal = Vector3.UnitZ;
             List<XData> xData = new List<XData>();
 
@@ -6375,6 +6376,11 @@ namespace netDxf.IO
                     case 40:
                         size = this.chunk.ReadDouble();
                         if (MathHelper.IsZero(size)) size = 1.0;
+                        if (size < 0.0)
+                        {
+                            size = Math.Abs(size);
+                            rotateNegativeSize = 180;
+                        }
                         this.chunk.Next();
                         break;
                     case 2:
@@ -6387,7 +6393,7 @@ namespace netDxf.IO
                         break;
                     case 41:
                         widthFactor = this.chunk.ReadDouble();
-                        if (widthFactor <= 0) widthFactor = 1.0;
+                        if (MathHelper.IsZero(widthFactor)) widthFactor = 1.0;
                         this.chunk.Next();
                         break;
                     case 51:
@@ -6434,7 +6440,7 @@ namespace netDxf.IO
             {
                 Position = position,
                 Size = size,
-                Rotation = rotation,
+                Rotation = rotation + rotateNegativeSize,
                 WidthFactor = widthFactor,
                 ObliqueAngle = obliqueAngle,
                 Thickness = thickness,

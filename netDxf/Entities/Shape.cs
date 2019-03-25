@@ -21,6 +21,7 @@
 #endregion
 
 using System;
+using System.Collections.Generic;
 using netDxf.Tables;
 
 namespace netDxf.Entities
@@ -119,17 +120,17 @@ namespace netDxf.Entities
         /// </summary>
         /// <remarks>
         /// The shape size is relative to the actual size of the shape definition.
-        /// The size value works as an scale value applied to the dimensions of the shape definition,
-        /// it cannot be zero and, negative values will invert the shape in the local X and Y axis.<br />
-        /// Values cannot be zero. Default: 1.0.
+        /// The size value works as an scale value applied to the dimensions of the shape definition.
+        /// The DXF allows for negative values but that is the same as rotating the shape 180 degrees.<br />
+        /// Size values must be greater than zero. Default: 1.0.
         /// </remarks>
         public double Size
         {
             get { return this.size; }
             set
             {
-                if (MathHelper.IsZero(value))
-                    throw new ArgumentOutOfRangeException(nameof(value), value, "The shape cannot be zero.");
+                if (value<=0)
+                    throw new ArgumentOutOfRangeException(nameof(value), value, "The shape size must be greater than zero.");
                 this.size = value;
             }
         }
@@ -155,14 +156,14 @@ namespace netDxf.Entities
         /// <summary>
         /// Gets or sets the shape width factor.
         /// </summary>
-        /// <remarks>Valid values must be greater than zero. Default: 1.0.</remarks>
+        /// <remarks>Width factor values cannot be zero. Default: 1.0.</remarks>
         public double WidthFactor
         {
             get { return this.widthFactor; }
             set
             {
-                if (value <= 0)
-                    throw new ArgumentOutOfRangeException(nameof(value), value, "The shape width factor must be greater than zero.");
+                if(MathHelper.IsZero(value))
+                    throw new ArgumentOutOfRangeException(nameof(value), value, "The shape width factor cannot be zero.");
                 this.widthFactor = value;
             }
         }
@@ -189,30 +190,83 @@ namespace netDxf.Entities
         {
             Vector3 newPosition;
             Vector3 newNormal;
-            double newSize;
+            Vector2 newUvector;
+            Vector2 newVvector;
+            double newWidthFactor;
+            double newHeight;
             double newRotation;
+            double newObliqueAngle;
+            bool mirrorShape;
 
             newPosition = transformation * this.Position + translation;
             newNormal = transformation * this.Normal;
 
             Matrix3 transOW = MathHelper.ArbitraryAxis(this.Normal);
-            Matrix3 transWO = MathHelper.ArbitraryAxis(newNormal).Transpose();
 
-            Vector2 refAxis = Vector2.Rotate(new Vector2(this.Size, 0.0), this.Rotation * MathHelper.DegToRad);
-            Vector3 v = transOW * new Vector3(refAxis.X, refAxis.Y, 0.0);
+            Matrix3 transWO = MathHelper.ArbitraryAxis(newNormal);
+            transWO = transWO.Transpose();
+
+            IList<Vector2> uv = MathHelper.Transform(new List<Vector2>
+                {
+                    this.WidthFactor * this.Size * Vector2.UnitX,
+                    new Vector2(this.Size * Math.Tan(this.ObliqueAngle * MathHelper.DegToRad), this.Size)
+                },
+                this.Rotation * MathHelper.DegToRad,
+                CoordinateSystem.Object, CoordinateSystem.World);
+
+            Vector3 v;
+            v = transOW * new Vector3(uv[0].X, uv[0].Y, 0.0);
             v = transformation * v;
             v = transWO * v;
-            Vector2 axis = new Vector2(v.X, v.Y);
+            newUvector = new Vector2(v.X, v.Y);
 
-            newSize = Math.Sign(this.Size) * axis.Modulus();
-            if (MathHelper.IsZero(newSize)) newSize = MathHelper.Epsilon;
+            v = transOW * new Vector3(uv[1].X, uv[1].Y, 0.0);
+            v = transformation * v;
+            v = transWO * v;
+            newVvector = new Vector2(v.X, v.Y);
 
-            newRotation = Vector2.Angle(axis) * MathHelper.RadToDeg;
+            newRotation = Vector2.Angle(newUvector) * MathHelper.RadToDeg;
+            newObliqueAngle = Vector2.Angle(newVvector) * MathHelper.RadToDeg;
+
+            if (Vector2.CrossProduct(newUvector, newVvector) < 0)
+            {
+                newRotation += 180;
+                newObliqueAngle = 270 - (newRotation - newObliqueAngle);
+                if (newObliqueAngle >= 360) newObliqueAngle -= 360;
+                mirrorShape = true;
+            }
+            else
+            {
+                newObliqueAngle = 90 + (newRotation - newObliqueAngle);
+                mirrorShape = false;
+            }
+
+            // the oblique angle is defined between -85 nad 85 degrees
+            if (newObliqueAngle > 180)
+                newObliqueAngle = 180 - newObliqueAngle;
+            if (newObliqueAngle < -85)
+                newObliqueAngle = -85;
+            else if (newObliqueAngle > 85)
+                newObliqueAngle = 85;
+
+            // the height must be greater than zero, the cos is always positive between -85 and 85
+            newHeight = newVvector.Modulus() * Math.Cos(newObliqueAngle * MathHelper.DegToRad);
+            newHeight = MathHelper.IsZero(newHeight) ? MathHelper.Epsilon : newHeight;
+
+            // the width factor is defined between 0.01 nad 100
+            newWidthFactor = newUvector.Modulus() / newHeight;
+            if (newWidthFactor < 0.01)
+                newWidthFactor = 0.01;
+            else if (newWidthFactor > 100)
+                newWidthFactor = 100;
 
             this.Position = newPosition;
             this.Normal = newNormal;
-            this.Size = newSize;
             this.Rotation = newRotation;
+            this.Size = newHeight;
+            this.WidthFactor = mirrorShape ? -newWidthFactor : newWidthFactor;
+            this.ObliqueAngle = mirrorShape ? -newObliqueAngle : newObliqueAngle;
+            
         }
 
         public override object Clone()

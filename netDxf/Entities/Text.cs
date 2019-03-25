@@ -135,6 +135,8 @@ namespace netDxf.Entities
             this.widthFactor = style.WidthFactor;
             this.obliqueAngle = style.ObliqueAngle;
             this.rotation = 0.0;
+            this.isBackward = false;
+            this.isUpsideDown = false;
         }
 
         #endregion
