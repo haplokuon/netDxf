@@ -267,15 +267,15 @@ namespace netDxf.Entities
             Vector2 newEnd;
             Vector3 newNormal;
             double newElevation;
-            double newScale;
 
             newNormal = transformation * this.Normal;
-            newScale = newNormal.Modulus();
 
             Matrix3 transOW = MathHelper.ArbitraryAxis(this.Normal);
             Matrix3 transWO = MathHelper.ArbitraryAxis(newNormal).Transpose();
 
-            Vector3 v = transOW * new Vector3(this.FirstReferencePoint.X, this.FirstReferencePoint.Y, this.Elevation);
+            Vector3 v;
+                
+            v = transOW * new Vector3(this.FirstReferencePoint.X, this.FirstReferencePoint.Y, this.Elevation);
             v = transformation * v + translation;
             v = transWO * v;
             newStart = new Vector2(v.X, v.Y);
@@ -286,21 +286,25 @@ namespace netDxf.Entities
             v = transWO * v;
             newEnd = new Vector2(v.X, v.Y);
 
-            v = transOW * new Vector3(this.textRefPoint.X, this.textRefPoint.Y, this.Elevation);
-            v = transformation * v + translation;
-            v = transWO * v;
-            this.textRefPoint = new Vector2(v.X, v.Y);
+            if (this.TextPositionManuallySet)
+            {
+                v = transOW * new Vector3(this.textRefPoint.X, this.textRefPoint.Y, this.Elevation);
+                v = transformation * v + translation;
+                v = transWO * v;
+                this.textRefPoint = new Vector2(v.X, v.Y);
+            }
 
             v = transOW * new Vector3(this.defPoint.X, this.defPoint.Y, this.Elevation);
             v = transformation * v + translation;
             v = transWO * v;
             this.defPoint = new Vector2(v.X, v.Y);
 
-            this.Offset *= newScale;
             this.FirstReferencePoint = newStart;
             this.SecondReferencePoint = newEnd;
             this.Elevation = newElevation;
             this.Normal = newNormal;
+
+            this.SetDimensionLinePosition(this.defPoint);
         }
 
         /// <summary>

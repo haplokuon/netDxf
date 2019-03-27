@@ -711,6 +711,7 @@ namespace netDxf.Entities
         /// </summary>
         /// <param name="transformation">Transformation matrix.</param>
         /// <param name="translation">Translation vector.</param>
+        /// <remarks>The tolerance transformation only supports rotations and translations, the final size is determined by its style.</remarks>
         public override void TransformBy(Matrix3 transformation, Vector3 translation)
         {
             Vector3 newPosition;
@@ -729,13 +730,12 @@ namespace netDxf.Entities
             Vector3 v = transOW * Vector3.UnitX;
             v = transformation * v;
             v = transWO * v;
-            double angle = Vector2.Angle(new Vector2(v.X, v.Y));
 
-            newRotation = angle * MathHelper.RadToDeg;
+            newRotation = Vector2.Angle(new Vector2(v.X, v.Y)) * MathHelper.RadToDeg;
 
-            this.Normal = newNormal;
             this.Position = newPosition;
             this.Rotation = newRotation;
+            this.Normal = newNormal;
         }
 
         public override object Clone()
@@ -752,8 +752,8 @@ namespace netDxf.Entities
                 Normal = this.Normal,
                 IsVisible = this.IsVisible,
                 //Tolerance properties
-                Entry1 = (ToleranceEntry) this.entry1.Clone(),
-                Entry2 = (ToleranceEntry) this.entry2.Clone(),
+                Entry1 = (ToleranceEntry) this.entry1?.Clone(),
+                Entry2 = (ToleranceEntry) this.entry2?.Clone(),
                 Height = this.height,
                 ShowProjectedToleranceZoneSymbol = this.showProjectedToleranceZoneSymbol,
                 DatumIdentifier = this.datumIdentifier,

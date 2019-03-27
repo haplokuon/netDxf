@@ -243,7 +243,6 @@ namespace netDxf.Entities
             Vector2 ref1 = this.firstRefPoint;
             Vector2 ref2 = this.secondRefPoint;
             Vector2 midRef = Vector2.MidPoint(ref1, ref2);
-            //Vector2 dimRef = this.DefinitionPoint;
 
             Vector2 refDir = Vector2.Normalize(this.secondRefPoint - this.firstRefPoint);
             double dimRotation = this.rotation * MathHelper.DegToRad;
@@ -304,30 +303,14 @@ namespace netDxf.Entities
             Vector2 newEnd;
             Vector3 newNormal;
             double newElevation;
-            double newScale;
             double newRotation;
 
             newNormal = transformation * this.Normal;
-            newScale = newNormal.Modulus();
 
             Matrix3 transOW = MathHelper.ArbitraryAxis(this.Normal);
             Matrix3 transWO = MathHelper.ArbitraryAxis(newNormal).Transpose();
 
-            Vector2 refAxis = Vector2.Rotate(Vector2.UnitX, this.Rotation * MathHelper.DegToRad);
-            Vector3 v = transOW * new Vector3(refAxis.X, refAxis.Y, this.Elevation);
-            v = transformation * v;
-            v = transWO * v;
-            Vector2 axis = new Vector2(v.X, v.Y);
-            newRotation = Vector2.Angle(axis) * MathHelper.RadToDeg;
-
-            //newScale = axis.Modulus();
-            //newScale = MathHelper.IsZero(newScale) ? MathHelper.Epsilon : newScale;
-
-            //Vector2 axis = Vector2.Rotate(Vector2.UnitX, this.Rotation * MathHelper.DegToRad);
-            //axis = transformation * axis;
-            //axis = transWO * axis;
-            //double angle = Vector2.Angle(new Vector2(axis.X, axis.Y));
-            //newRotation = angle * MathHelper.RadToDeg;
+            Vector3 v;
 
             v = transOW * new Vector3(this.FirstReferencePoint.X, this.FirstReferencePoint.Y, this.Elevation);
             v = transformation * v + translation;
@@ -340,22 +323,33 @@ namespace netDxf.Entities
             v = transWO * v;
             newEnd = new Vector2(v.X, v.Y);
 
-            v = transOW * new Vector3(this.textRefPoint.X, this.textRefPoint.Y, this.Elevation);
-            v = transformation * v + translation;
-            v = transWO * v;
-            this.textRefPoint = new Vector2(v.X, v.Y);
+            if (this.TextPositionManuallySet)
+            {
+                v = transOW * new Vector3(this.textRefPoint.X, this.textRefPoint.Y, this.Elevation);
+                v = transformation * v + translation;
+                v = transWO * v;
+                this.textRefPoint = new Vector2(v.X, v.Y);
+            }
 
             v = transOW * new Vector3(this.defPoint.X, this.defPoint.Y, this.Elevation);
             v = transformation * v + translation;
             v = transWO * v;
             this.defPoint = new Vector2(v.X, v.Y);
 
-            this.Offset *= newScale;
+            Vector2 refAxis = Vector2.Rotate(Vector2.UnitX, this.Rotation * MathHelper.DegToRad);
+            v = transOW * new Vector3(refAxis.X, refAxis.Y, this.Elevation);
+            v = transformation * v;
+            v = transWO * v;
+            Vector2 axis = new Vector2(v.X, v.Y);
+            newRotation = Vector2.Angle(axis) * MathHelper.RadToDeg;
+
             this.Rotation = newRotation;
             this.FirstReferencePoint = newStart;
             this.SecondReferencePoint = newEnd;
             this.Elevation = newElevation;
             this.Normal = newNormal;
+
+            this.SetDimensionLinePosition(this.defPoint);
         }
 
 

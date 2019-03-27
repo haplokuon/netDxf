@@ -197,7 +197,6 @@ namespace netDxf.Entities
             this.defPoint = Vector2.Polar(this.center, -radius, rotation);
             this.refPoint = Vector2.Polar(this.center, radius, rotation);
 
-
             if (!this.TextPositionManuallySet)
             {
                 DimensionStyleOverride styleOverride;
@@ -232,9 +231,6 @@ namespace netDxf.Entities
         /// </summary>
         /// <param name="transformation">Transformation matrix.</param>
         /// <param name="translation">Translation vector.</param>
-        /// <remarks>
-        /// Non-uniform scaling is not supported.
-        /// </remarks>
         public override void TransformBy(Matrix3 transformation, Vector3 translation)
         {
             Vector2 newCenter;
@@ -279,7 +275,6 @@ namespace netDxf.Entities
         /// </summary>
         protected override void CalculteReferencePoints()
         {
-
             double measure = this.Measurement;
             Vector2 centerRef = this.center;
             Vector2 ref1 = this.refPoint;

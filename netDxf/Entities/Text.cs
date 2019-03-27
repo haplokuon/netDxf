@@ -345,7 +345,7 @@ namespace netDxf.Entities
             this.Height = newHeight;
             this.WidthFactor = newWidthFactor;
             this.ObliqueAngle = newObliqueAngle;
-            if (reverseText) this.IsBackward = !this.isBackward;
+            if (reverseText) this.IsBackward = !this.IsBackward;
         }
 
         /// <summary>

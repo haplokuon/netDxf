@@ -390,11 +390,7 @@ namespace netDxf.Entities
         public new Vector3 Normal
         {
             get { return base.Normal; }
-            set
-            {
-                //this.ChangeAnnotationCoordinateSystem(value, this.elevation);
-                base.Normal = value;
-            }
+            set { base.Normal = value; }
         }
 
         /// <summary>
@@ -404,11 +400,7 @@ namespace netDxf.Entities
         public double Elevation
         {
             get { return this.elevation; }
-            set
-            {
-                //this.ChangeAnnotationCoordinateSystem(this.Normal, value);
-                this.elevation = value;
-            }
+            set { this.elevation = value; }
         }
 
         /// <summary>
@@ -841,7 +833,7 @@ namespace netDxf.Entities
             this.Elevation = newElevation;
             this.Normal = newNormal;
 
-            this.Annotation?.TransformBy(transformation, translation);
+            this.annotation?.TransformBy(transformation, translation);
         }
 
         /// <summary>

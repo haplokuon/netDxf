@@ -267,11 +267,10 @@ namespace netDxf.Entities
             Matrix3 transOW = MathHelper.ArbitraryAxis(this.Normal);
             Matrix3 transWO = MathHelper.ArbitraryAxis(newNormal).Transpose();
 
-            Vector3 axis = transOW * Vector3.UnitX;
-            axis = transformation * axis;
-            axis = transWO * axis;
-            double angle = Vector2.Angle(new Vector2(axis.X, axis.Y));
-            newRotation = angle * MathHelper.RadToDeg;
+            Vector3 refAxis = transOW * Vector3.UnitX;
+            refAxis = transformation * refAxis;
+            refAxis = transWO * refAxis;
+            newRotation = Vector2.Angle(new Vector2(refAxis.X, refAxis.Y)) * MathHelper.RadToDeg;
 
             Vector3 v = transOW * new Vector3(this.FeaturePoint.X, this.FeaturePoint.Y, this.Elevation);
             v = transformation * v + translation;

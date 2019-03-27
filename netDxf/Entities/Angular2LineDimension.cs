@@ -386,9 +386,6 @@ namespace netDxf.Entities
         /// </summary>
         /// <param name="transformation">Transformation matrix.</param>
         /// <param name="translation">Translation vector.</param>
-        /// <remarks>
-        /// Non-uniform scaling is not supported.
-        /// </remarks>
         public override void TransformBy(Matrix3 transformation, Vector3 translation)
         {
             Vector2 newStart1;
@@ -398,10 +395,8 @@ namespace netDxf.Entities
             Vector2 newArcDefPoint;
             Vector3 newNormal;
             double newElevation;
-            double newScale;
 
             newNormal = transformation * this.Normal;
-            newScale = newNormal.Modulus();
 
             Matrix3 transOW = MathHelper.ArbitraryAxis(this.Normal);
             Matrix3 transWO = MathHelper.ArbitraryAxis(newNormal).Transpose();
@@ -432,17 +427,19 @@ namespace netDxf.Entities
             v = transWO * v;
             newArcDefPoint = new Vector2(v.X, v.Y);
 
-            v = transOW * new Vector3(this.textRefPoint.X, this.textRefPoint.Y, this.Elevation);
-            v = transformation * v + translation;
-            v = transWO * v;
-            this.textRefPoint = new Vector2(v.X, v.Y);
+            if (this.TextPositionManuallySet)
+            {
+                v = transOW * new Vector3(this.textRefPoint.X, this.textRefPoint.Y, this.Elevation);
+                v = transformation * v + translation;
+                v = transWO * v;
+                this.textRefPoint = new Vector2(v.X, v.Y);
+            }
 
             v = transOW * new Vector3(this.defPoint.X, this.defPoint.Y, this.Elevation);
             v = transformation * v + translation;
             v = transWO * v;
             this.defPoint = new Vector2(v.X, v.Y);
 
-            this.Offset *= newScale;
             this.StartFirstLine = newStart1;
             this.EndFirstLine = newEnd1;
             this.StartSecondLine = newStart2;
@@ -450,6 +447,8 @@ namespace netDxf.Entities
             this.ArcDefinitionPoint = newArcDefPoint;
             this.Elevation = newElevation;
             this.Normal = newNormal;
+
+            this.SetDimensionLinePosition(newArcDefPoint);
         }
 
         /// <summary>

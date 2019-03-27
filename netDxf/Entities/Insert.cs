@@ -473,9 +473,7 @@ namespace netDxf.Entities
             Vector3 v = transOW * Vector3.UnitX;
             v = transformation * v;
             v = transWO * v;
-            double angle = Vector2.Angle(new Vector2(v.X, v.Y));
-
-            newRotation = angle * MathHelper.RadToDeg;
+            newRotation = Vector2.Angle(new Vector2(v.X, v.Y))* MathHelper.RadToDeg;
 
             transWO = Matrix3.RotationZ(newRotation * MathHelper.DegToRad).Transpose() * transWO;
 

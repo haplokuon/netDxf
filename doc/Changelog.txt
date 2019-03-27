@@ -1,6 +1,9 @@
 ## Change history
 
-* Improved the TransformBy method of the Text, Shape, MLine, Attribute, AttributeDefinition.
+
+* Improved and fixed some issues with the TransformBy methods.
+* (fixed) A few issues when clonning a Tolerance entity.
+
 * Added properties IsBackward and IsUpsideDown to Attribute and AttributeDefinition objects.
 * The Shape entity Size property now does not allow negative values, rotate it 180 degrees to achieve the same result.
 * The Shape entity WidthFactor property now admits negative numbers.

@@ -130,11 +130,11 @@ namespace netDxf.Entities
             return new ToleranceEntry
             {
                 GeometricSymbol = this.geometricSymbol,
-                Tolerance1 = (ToleranceValue) this.tolerance1.Clone(),
-                Tolerance2 = (ToleranceValue) this.tolerance1.Clone(),
-                Datum1 = (DatumReferenceValue) this.datum1.Clone(),
-                Datum2 = (DatumReferenceValue) this.datum1.Clone(),
-                Datum3 = (DatumReferenceValue) this.datum1.Clone(),
+                Tolerance1 = (ToleranceValue) this.tolerance1?.Clone(),
+                Tolerance2 = (ToleranceValue) this.tolerance2?.Clone(),
+                Datum1 = (DatumReferenceValue) this.datum1?.Clone(),
+                Datum2 = (DatumReferenceValue) this.datum2?.Clone(),
+                Datum3 = (DatumReferenceValue) this.datum3?.Clone(),
             };
         }
 

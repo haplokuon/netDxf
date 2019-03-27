@@ -26,14 +26,295 @@ namespace TestDxfDocument
     /// </summary>
     public class Program
     {
+        private static void Test1()
+        {
+            DxfDocument dxf = new DxfDocument();
+            //dxf.BuildDimensionBlocks = true;
+            Vector3 center = new Vector3(1, 2, 0);
+            double radius = 3;
+            Circle circle = new Circle(center, radius);
+
+            RadialDimension dim1 = new RadialDimension(circle, 0);
+            //dim1.UserText = "R<>";
+
+            dxf.AddEntity(circle);
+            dxf.AddEntity(dim1);
+            dxf.Save("test.dxf");
+
+
+        }
+
+        private static void Test2()
+        {
+            DxfDocument dxf = DxfDocument.Load("BlockDim.dxf");
+            Insert ins = dxf.Inserts.ElementAt(0);
+
+            //ins.Position = new Vector3(10,10,0);
+            foreach (EntityObject e in ins.Block.Entities)
+            {
+                if (e.Type == EntityType.Dimension)
+                {
+                    Dimension dim = (Dimension)e;
+                    //if (dim.Block != null)
+                    //{
+                    //    foreach (EntityObject entityObject in dim.Block.Entities)
+                    //    {
+                    //        entityObject.TransformBy(Matrix3.Identity, -ins.Position);
+                    //    }
+                    //}
+
+                    //dim.Block = null;
+                    //dim.Update();
+                }
+            }
+
+            dxf.Save("test.dxf");
+
+            //List<EntityObject> entities = ins.Explode();
+
+           //DxfDocument doc = DxfDocument.Load("test.dxf");
+
+            //DxfDocument doc = new DxfDocument();
+            //doc.BuildDimensionBlocks = true;
+            //doc.AddEntity(entities);
+            //doc.Save("test.dxf");
+        }
+
+        private static void LinearDimensionMirror()
+        {
+            Vector3 p1 = new Vector3(5, 5, 0);
+            Vector3 p2 = new Vector3(10, 10, 0);
+
+            Line line = new Line(p1, p2)
+            {
+                Layer = new Layer("Reference line")
+                {
+                    Color = AciColor.Green
+                }
+            };
+
+            LinearDimension dim1 = new LinearDimension(line, 6, 0);
+
+            LinearDimension dim2 = (LinearDimension) dim1.Clone();
+            //Matrix3 trans = Matrix3.Identity;
+            //trans[0, 0] = -1;
+            Matrix3 trans = Matrix3.RotationZ(30 * MathHelper.DegToRad);
+            dim2.TransformBy(trans, Vector3.Zero);
+            dim2.Block = DimensionBlock.Build(dim2);
+            DxfDocument doc = new DxfDocument();
+
+            doc.AddEntity(dim1);
+            doc.AddEntity(dim2);
+
+            doc.Save("test.dxf");
+
+        }
+
+        private static void AlignedDimensionMirror()
+        {
+
+            Line line = new Line(new Vector3(10, 6, 0), new Vector3(1, 3, 0));
+            line.Reverse();
+            AlignedDimension dim1 = new AlignedDimension(line, 1);
+
+            DxfDocument doc = new DxfDocument();
+
+            AlignedDimension dim2 = (AlignedDimension)dim1.Clone();
+            Matrix3 trans = Matrix3.Identity;
+            trans[0, 0] = -1;
+            trans[1, 1] = 2;
+            //Matrix3 trans = Matrix3.RotationZ(30 * MathHelper.DegToRad);
+            dim2.TransformBy(trans, Vector3.Zero);
+            //dim2.Block = DimensionBlock.Build(dim2);
+
+            Line line2 = (Line) line.Clone();
+            line2.TransformBy(trans, Vector3.Zero);
+
+            doc.AddEntity(new EntityObject[] { line, line2, dim1, dim2 });
+
+            doc.Save("test.dxf");
+
+        }
+
+        private static void Angular2LineDimensionMirror()
+        {
+            Layer layer = new Layer("Layer1") { Color = AciColor.Blue };
+            Vector2 start1 = new Vector2(-2, 2);
+            Vector2 end1 = new Vector2(2, -2);
+            Vector2 start2 = new Vector2(-1, -3);
+            Vector2 end2 = new Vector2(1, 3);
+
+            Vector2 p1 = new Vector2(2, 0);
+            Vector2 p2 = new Vector2(0, 2);
+            Vector2 p3 = new Vector2(-2, 0);
+            Vector2 p4 = new Vector2(0, -2);
+
+            Line line1 = new Line(start1, end1) { Layer = layer };
+            Line line2 = new Line(start2, end2) { Layer = layer };
+
+            Angular2LineDimension dim1 = new Angular2LineDimension(line2, line1, 4);
+            dim1.SetDimensionLinePosition(p1);
+
+            DxfDocument dxf = new DxfDocument();
+
+            dxf.AddEntity(line1);
+            dxf.AddEntity(line2);
+            dxf.AddEntity(dim1);
+
+            Angular2LineDimension dim2 = (Angular2LineDimension)dim1.Clone();
+            Matrix3 trans = Matrix3.Identity;
+            trans[0, 0] = -1;
+            //Matrix3 trans = Matrix3.RotationZ(30 * MathHelper.DegToRad);
+            dim2.TransformBy(trans, Vector3.Zero);
+            dim2.Block = DimensionBlock.Build(dim2);
+            dxf.AddEntity(dim2);
+            dxf.Save("test.dxf");
+
+        }
+
+        private static void Angular3PointDimensionMirror()
+        {
+            Vector2 center = new Vector2(0, 0);
+            Vector2 start = new Vector2(7, 1);
+            Vector2 end = new Vector2(1, 7);
+            Angular3PointDimension dim1 = new Angular3PointDimension(center, start, end, 8);
+
+            DxfDocument dxf = new DxfDocument();
+
+            Angular3PointDimension dim2 = (Angular3PointDimension)dim1.Clone();
+            //Matrix3 trans = Matrix3.Identity;
+            //trans[1, 1] = -1;
+            Matrix3 trans = Matrix3.RotationZ(-120 * MathHelper.DegToRad);
+            dim2.TransformBy(trans, Vector3.Zero);
+            dim2.Block = DimensionBlock.Build(dim2);
+
+            dxf.AddEntity(dim1);
+            dxf.AddEntity(dim2);
+            dxf.Save("test.dxf");
+
+        }
+
+        private static void DiametricDimensionMirror()
+        {
+            DxfDocument dxf = new DxfDocument();
+            Vector2 center = new Vector2(1, 2);
+            double radius = 3;
+            Circle circle = new Circle(center, radius);
+            DiametricDimension dim1 = new DiametricDimension(circle, 30);
+
+
+            dxf.AddEntity(circle);
+            dxf.AddEntity(dim1);
+
+            DiametricDimension dim2 = (DiametricDimension)dim1.Clone();
+            Matrix3 trans = Matrix3.Identity;
+            trans[0, 0] = -1;
+            //Matrix3 trans = Matrix3.RotationZ(30 * MathHelper.DegToRad);
+            dim2.TransformBy(trans, new Vector3(0,-10,0));
+            //dim2.Block = DimensionBlock.Build(dim2);
+            dxf.AddEntity(dim2);
+
+            Circle c2 = (Circle) circle.Clone();
+            c2.TransformBy(trans, new Vector3(0, -10, 0));
+            dxf.AddEntity(c2);
+
+            dxf.Save("test.dxf");
+        }
+
+        private static void RadialDimensionMirror()
+        {
+            DxfDocument dxf = new DxfDocument();
+            Vector3 center = new Vector3(1, 2, 0);
+            double radius = 3;
+            Circle circle = new Circle(center, radius);
+
+            RadialDimension dim1 = new RadialDimension(circle, 120);
+
+            dxf.AddEntity(circle);
+            dxf.AddEntity(dim1);
+
+            RadialDimension dim2 = (RadialDimension)dim1.Clone();
+            //Matrix3 trans = Matrix3.Scale(2);
+            //trans[0, 0] *= -1;
+            Matrix3 trans = Matrix3.RotationZ(30 * MathHelper.DegToRad);
+            dim2.TransformBy(trans, new Vector3(0, -10, 0));
+            //dim2.Block = DimensionBlock.Build(dim2);
+            dxf.AddEntity(dim2);
+
+            Circle c2 = (Circle)circle.Clone();
+            c2.TransformBy(trans, new Vector3(0, -10, 0));
+            dxf.AddEntity(c2);
+
+            dxf.Save("test.dxf");
+
+        }
+
+        private static void LeaderMirror()
+        {
+            // a text annotation with style
+            DimensionStyle style = new DimensionStyle("MyStyle");
+            style.DimLineColor = AciColor.Green;
+            style.TextColor = AciColor.Blue;
+            style.LeaderArrow = DimensionArrowhead.DotBlank;
+            style.DimScaleOverall = 2.0;
+
+            //// a basic text annotation
+            //List<Vector2> vertexes1 = new List<Vector2>();
+            //vertexes1.Add(new Vector2(2, 2));
+            //vertexes1.Add(new Vector2(7, 7));
+            //Leader leader1 = new Leader("Sample annotation", vertexes1, style);
+
+            // a tolerance annotation
+            List<Vector2> vertexes3 = new List<Vector2>();
+            vertexes3.Add(new Vector2(0));
+            vertexes3.Add(new Vector2(5, 5));
+            vertexes3.Add(new Vector2(7.5, 5));
+            ToleranceEntry entry = new ToleranceEntry
+            {
+                GeometricSymbol = ToleranceGeometricSymbol.Symmetry,
+                Tolerance1 = new ToleranceValue(true, "12.5", ToleranceMaterialCondition.Maximum)
+            };
+            Leader leader1 = new Leader(entry, vertexes3);
+
+            //// a block annotation
+            //Block block = new Block("BlockAnnotation");
+            //block.Entities.Add(new Line(new Vector2(-1, -1), new Vector2(1, 1)));
+            //block.Entities.Add(new Line(new Vector2(-1, 1), new Vector2(1, -1)));
+            //block.Entities.Add(new Circle(Vector2.Zero, 0.5));
+
+            //List<Vector2> vertexes4 = new List<Vector2>();
+            //vertexes4.Add(new Vector2(0));
+            //vertexes4.Add(new Vector2(-5, -5));
+            //vertexes4.Add(new Vector2(-7.5, -5));
+            //Leader leader1 = new Leader(block, vertexes4);
+
+            // add entities to the document
+            DxfDocument doc = new DxfDocument();
+            doc.AddEntity(leader1);
+
+
+            Leader leader2 = (Leader)leader1.Clone();
+            //Matrix3 trans = Matrix3.Scale(2);
+            Matrix3 trans = Matrix3.Identity;
+            trans[0, 0] *= -1;
+            //Matrix3 trans = Matrix3.RotationZ(210 * MathHelper.DegToRad);
+            leader2.TransformBy(trans, Vector3.Zero);
+            //leader2.TransformBy(trans, new Vector3(0, -10, 0));
+            doc.AddEntity(leader2);
+
+            doc.Save("test.dxf");
+
+        }
 
         public static void Main()
         {
+            LeaderMirror();
+
             //DxfDocument doc = Test(@"sample.dxf");
 
             #region Samples for new and modified features 2.3.0
 
-            MLineMirrorAndExplode();
+            //MLineMirrorAndExplode();
             //ShapeMirror();
             //TextMirror();
 
