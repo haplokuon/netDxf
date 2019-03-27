@@ -2022,8 +2022,8 @@ namespace netDxf.IO
             string suffix;
             if (index < 0)
             {
-                prefix = text;
-                suffix = string.Empty;
+                prefix = string.Empty;
+                suffix = text;
             }
             else
             {

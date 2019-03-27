@@ -28,43 +28,42 @@ namespace TestDxfDocument
     {
         private static void Test1()
         {
-            DxfDocument dxf = new DxfDocument();
+            DxfDocument dxf = new DxfDocument(DxfVersion.AutoCad2018);
             //dxf.BuildDimensionBlocks = true;
             Vector3 center = new Vector3(1, 2, 0);
             double radius = 3;
             Circle circle = new Circle(center, radius);
 
             RadialDimension dim1 = new RadialDimension(circle, 0);
-            //dim1.UserText = "R<>";
-
+            
             dxf.AddEntity(circle);
             dxf.AddEntity(dim1);
+            dim1.Style.DimPrefix = "prefix";
+            //dim1.Style.DimSuffix = "suffix";
             dxf.Save("test.dxf");
 
-
+            DxfDocument doc = DxfDocument.Load("test.dxf");
         }
 
         private static void Test2()
         {
             DxfDocument dxf = DxfDocument.Load("BlockDim.dxf");
+
             Insert ins = dxf.Inserts.ElementAt(0);
 
-            //ins.Position = new Vector3(10,10,0);
             foreach (EntityObject e in ins.Block.Entities)
             {
                 if (e.Type == EntityType.Dimension)
                 {
                     Dimension dim = (Dimension)e;
-                    //if (dim.Block != null)
-                    //{
-                    //    foreach (EntityObject entityObject in dim.Block.Entities)
-                    //    {
-                    //        entityObject.TransformBy(Matrix3.Identity, -ins.Position);
-                    //    }
-                    //}
 
-                    //dim.Block = null;
-                    //dim.Update();
+                    if (dim.Block != null)
+                    {
+                        foreach (EntityObject entityObject in dim.Block.Entities)
+                        {
+                            entityObject.TransformBy(Matrix3.Identity, -ins.Position);
+                        }
+                    }
                 }
             }
 
@@ -308,7 +307,7 @@ namespace TestDxfDocument
 
         public static void Main()
         {
-            LeaderMirror();
+            Test1();
 
             //DxfDocument doc = Test(@"sample.dxf");
 

@@ -731,7 +731,10 @@ namespace netDxf.IO
                     style.AlternateUnits.SuppressZeroInches));
 
             this.chunk.Write(9, "$DIMAPOST");
-            this.chunk.Write(1, this.EncodeNonAsciiCharacters(string.Format("{0}[]{1}", style.AlternateUnits.Prefix, style.AlternateUnits.Suffix)));
+
+            string dimapost = style.AlternateUnits.Suffix;
+            if (!string.IsNullOrEmpty(style.AlternateUnits.Prefix)) dimapost = style.AlternateUnits.Prefix + "<>" + dimapost;
+            this.chunk.Write(1, this.EncodeNonAsciiCharacters(dimapost));
 
             this.chunk.Write(9, "$DIMATFIT");
             this.chunk.Write(70, (short) style.FitOptions);
@@ -865,7 +868,9 @@ namespace netDxf.IO
             this.chunk.Write(70, (short) style.ExtLineLineweight);
 
             this.chunk.Write(9, "$DIMPOST");
-            this.chunk.Write(1, this.EncodeNonAsciiCharacters(string.Format("{0}<>{1}", style.DimPrefix, style.DimSuffix)));
+            string dimpost = style.DimSuffix;
+            if (!string.IsNullOrEmpty(style.DimPrefix)) dimpost = style.DimPrefix + "<>" + dimpost;
+            this.chunk.Write(1, this.EncodeNonAsciiCharacters(dimpost));
 
             this.chunk.Write(9, "$DIMRND");
             this.chunk.Write(40, style.DimRoundoff);
@@ -1162,9 +1167,15 @@ namespace netDxf.IO
             this.chunk.Write(100, SubclassMarker.DimensionStyle);
 
             this.chunk.Write(2, this.EncodeNonAsciiCharacters(style.Name));
-           
-            this.chunk.Write(3, this.EncodeNonAsciiCharacters(string.Format("{0}<>{1}", style.DimPrefix, style.DimSuffix)));
-            this.chunk.Write(4, this.EncodeNonAsciiCharacters(string.Format("{0}[]{1}", style.AlternateUnits.Prefix, style.AlternateUnits.Suffix)));
+
+            string dimpost = style.DimSuffix;
+            if (!string.IsNullOrEmpty(style.DimPrefix)) dimpost = style.DimPrefix + "<>" + dimpost;
+            this.chunk.Write(3, this.EncodeNonAsciiCharacters(dimpost));
+
+            string dimapost = style.AlternateUnits.Suffix;
+            if (!string.IsNullOrEmpty(style.AlternateUnits.Prefix)) dimapost = style.AlternateUnits.Prefix + "<>" + dimapost;
+            this.chunk.Write(4, this.EncodeNonAsciiCharacters(dimapost));
+
             this.chunk.Write(40, style.DimScaleOverall);
             this.chunk.Write(41, style.ArrowSize);
             this.chunk.Write(42, style.ExtLineOffset);

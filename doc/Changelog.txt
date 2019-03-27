@@ -1,5 +1,6 @@
 ## Change history
 
+* (fixed) Radial and Diametric dimensions not showing the "R" and "Ø" when no prefix is use in the dimension style.
 
 * Improved and fixed some issues with the TransformBy methods.
 * (fixed) A few issues when clonning a Tolerance entity.
