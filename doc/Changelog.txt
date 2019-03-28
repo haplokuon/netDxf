@@ -1,5 +1,13 @@
 ## Change history
 
+* The Tolerance TransformBy method now supports uniform scaling.
+* Added Tolerance TextHeigth property controls the height of the tolerance text overriden the default value defined in its style.
+* Renamed Tolerance Height property to ProjectedToleranceZoneValue.
+* Renamed Tolerance ParseRepresentation method to ParseStringRepresentation.
+* Renamed Tolerance TryParseStringRepresentation method to TryParseStringRepresentation.
+* (fixed) When writing a DXF the Tolerance code 73 is 0 for both Text and MText annotations.
+* (fixed) Issues when making a symmetry of an MText.
+
 * (fixed) Radial and Diametric dimensions not showing the "R" and "Ø" when no prefix is use in the dimension style.
 
 * Improved and fixed some issues with the TransformBy methods.

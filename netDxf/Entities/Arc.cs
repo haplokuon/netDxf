@@ -232,7 +232,7 @@ namespace netDxf.Entities
 
             newScale = newNormal.Modulus();
             newRadius = this.Radius * newScale;
-            newRadius = MathHelper.IsZero(newRadius) ? MathHelper.Epsilon : newRadius;
+            if (MathHelper.IsZero(newRadius)) newRadius = MathHelper.Epsilon;
 
             Vector2 start = Vector2.Rotate(new Vector2(this.Radius, 0.0), this.StartAngle * MathHelper.DegToRad);
             Vector2 end = Vector2.Rotate(new Vector2(this.Radius, 0.0), this.EndAngle * MathHelper.DegToRad);

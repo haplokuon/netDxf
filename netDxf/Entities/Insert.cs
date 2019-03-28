@@ -261,7 +261,7 @@ namespace netDxf.Entities
         /// Calculates the insertion rotation matrix.
         /// </summary>
         /// <param name="insertionUnits">The insertion units.</param>
-        /// <returns>The insert rotation matrix.</returns>
+        /// <returns>The insert transformation matrix.</returns>
         public Matrix3 GetTransformation(DrawingUnits insertionUnits)
         {
             double docScale = UnitHelper.ConversionFactor(this.Block.Record.Units, insertionUnits);

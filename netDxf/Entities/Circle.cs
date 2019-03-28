@@ -202,7 +202,7 @@ namespace netDxf.Entities
 
             newScale = newNormal.Modulus();
             newRadius = this.Radius * newScale;
-            newRadius = MathHelper.IsZero(newRadius) ? MathHelper.Epsilon : newRadius;
+            if (MathHelper.IsZero(newRadius)) newRadius = MathHelper.Epsilon;
 
             this.Normal = newNormal;
             this.Center = newCenter;

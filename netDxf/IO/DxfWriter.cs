@@ -2044,6 +2044,31 @@ namespace netDxf.IO
             this.chunk.Write(11, xAxis.X);
             this.chunk.Write(21, xAxis.Y);
             this.chunk.Write(31, xAxis.Z);
+
+            this.AddToleranceTextHeightXData(tolerance.XData, tolerance.TextHeight);
+
+            this.WriteXData(tolerance.XData);
+        }
+
+        private void AddToleranceTextHeightXData(XDataDictionary xdata, double textHeight)
+        {
+            XData xdataEntry;
+            if (xdata.ContainsAppId(ApplicationRegistry.DefaultName))
+            {
+                xdataEntry = xdata[ApplicationRegistry.DefaultName];
+                xdataEntry.XDataRecord.Clear();
+            }
+            else
+            {
+                xdataEntry = new XData(new ApplicationRegistry(ApplicationRegistry.DefaultName));
+                xdata.Add(xdataEntry);
+            }
+
+            xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.String, "DSTYLE"));
+            xdataEntry.XDataRecord.Add(XDataRecord.OpenControlString);
+            xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 140));
+            xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Real, textHeight));
+            xdataEntry.XDataRecord.Add(XDataRecord.CloseControlString);
         }
 
         private void WriteLeader(Leader leader)
@@ -2063,6 +2088,7 @@ namespace netDxf.IO
             {
                 switch (leader.Annotation.Type)
                 {
+                    case EntityType.Text:
                     case EntityType.MText:
                         this.chunk.Write(73, (short) 0);
                         break;
@@ -2419,9 +2445,9 @@ namespace netDxf.IO
             this.chunk.Write(70, flags);
             this.chunk.Write(71, spline.Degree);
 
-            // the next two codes are purely cosmetic and writing them causes more bad than good.
-            // internally AutoCad allows for an INT number of knots and control points,
-            // but for some weird decision they decided to define them in the dxf with codes 72 and 73 (16-bit integer value), this is a SHORT in net.
+            // the next three codes are purely cosmetic and writing them causes more bad than good.
+            // internally AutoCad allows for an INT number of knots, control points, and fit points;
+            // but for some weird decision they decided to define them in the dxf with codes 72, 73, and 74 (16-bit integer value), a short.
             // I guess this is the result of legacy code, nevertheless AutoCad do not use those values when importing Spline entities
             //this.chunk.Write(72, (short)spline.Knots.Length);
             //this.chunk.Write(73, (short)spline.ControlPoints.Count);
@@ -2462,7 +2488,6 @@ namespace netDxf.IO
                 this.chunk.Write(21, point.Y);
                 this.chunk.Write(31, point.Z);
             }
-
 
             this.WriteXData(spline.XData);
         }
@@ -2769,97 +2794,75 @@ namespace netDxf.IO
             switch (text.Alignment)
             {
                 case TextAlignment.TopLeft:
-
                     this.chunk.Write(72, (short) 0);
                     this.chunk.Write(100, SubclassMarker.Text);
                     this.chunk.Write(73, (short) 3);
                     break;
-
                 case TextAlignment.TopCenter:
-
                     this.chunk.Write(72, (short) 1);
                     this.chunk.Write(100, SubclassMarker.Text);
                     this.chunk.Write(73, (short) 3);
                     break;
-
                 case TextAlignment.TopRight:
-
                     this.chunk.Write(72, (short) 2);
                     this.chunk.Write(100, SubclassMarker.Text);
                     this.chunk.Write(73, (short) 3);
                     break;
-
                 case TextAlignment.MiddleLeft:
-
                     this.chunk.Write(72, (short) 0);
                     this.chunk.Write(100, SubclassMarker.Text);
                     this.chunk.Write(73, (short) 2);
                     break;
-
                 case TextAlignment.MiddleCenter:
-
                     this.chunk.Write(72, (short) 1);
                     this.chunk.Write(100, SubclassMarker.Text);
                     this.chunk.Write(73, (short) 2);
                     break;
-
                 case TextAlignment.MiddleRight:
-
                     this.chunk.Write(72, (short) 2);
                     this.chunk.Write(100, SubclassMarker.Text);
                     this.chunk.Write(73, (short) 2);
                     break;
-
                 case TextAlignment.BottomLeft:
-
                     this.chunk.Write(72, (short) 0);
                     this.chunk.Write(100, SubclassMarker.Text);
                     this.chunk.Write(73, (short) 1);
                     break;
                 case TextAlignment.BottomCenter:
-
                     this.chunk.Write(72, (short) 1);
                     this.chunk.Write(100, SubclassMarker.Text);
                     this.chunk.Write(73, (short) 1);
                     break;
-
                 case TextAlignment.BottomRight:
-
                     this.chunk.Write(72, (short) 2);
                     this.chunk.Write(100, SubclassMarker.Text);
                     this.chunk.Write(73, (short) 1);
                     break;
-
                 case TextAlignment.BaselineLeft:
                     this.chunk.Write(72, (short) 0);
                     this.chunk.Write(100, SubclassMarker.Text);
                     this.chunk.Write(73, (short) 0);
                     break;
-
                 case TextAlignment.BaselineCenter:
                     this.chunk.Write(72, (short) 1);
                     this.chunk.Write(100, SubclassMarker.Text);
                     this.chunk.Write(73, (short) 0);
                     break;
-
                 case TextAlignment.BaselineRight:
                     this.chunk.Write(72, (short) 2);
                     this.chunk.Write(100, SubclassMarker.Text);
                     this.chunk.Write(73, (short) 0);
                     break;
-
                 case TextAlignment.Aligned:
                     this.chunk.Write(72, (short) 3);
                     this.chunk.Write(100, SubclassMarker.Text);
                     this.chunk.Write(73, (short) 0);
                     break;
-
                 case TextAlignment.Middle:
                     this.chunk.Write(72, (short) 4);
                     this.chunk.Write(100, SubclassMarker.Text);
                     this.chunk.Write(73, (short) 0);
                     break;
-
                 case TextAlignment.Fit:
                     this.chunk.Write(72, (short) 5);
                     this.chunk.Write(100, SubclassMarker.Text);
@@ -3115,7 +3118,7 @@ namespace netDxf.IO
 
                 // this information is only required for AutoCAD version 2010
                 // stores information about spline fit points (the spline entity has no fit points and no tangent info)
-                // another dxf inconsistency!; while the number of fit points of Spline entity is written as a short (code 74)
+                // another DXF inconsistency!; while the number of fit points of Spline entity is written as a short (code 74)
                 // the number of fit points of a hatch boundary path spline is written as an int (code 97)
                 if (this.doc.DrawingVariables.AcadVer >= DxfVersion.AutoCad2010)
                     this.chunk.Write(97, 0);
@@ -3850,7 +3853,7 @@ namespace netDxf.IO
 
             this.chunk.Write(50, dim.Rotation);
 
-            // AutoCAD is unable to recognized code 52 for oblique dimension line even though it appears as valid in the dxf documentation
+            // AutoCAD is unable to recognized code 52 for oblique dimension line even though it appears as valid in the DXF documentation
             // this.chunk.Write(52, dim.ObliqueAngle);
 
             this.chunk.Write(100, SubclassMarker.LinearDimension);
@@ -3980,18 +3983,6 @@ namespace netDxf.IO
             this.chunk.Write(10, image.Position.X);
             this.chunk.Write(20, image.Position.Y);
             this.chunk.Write(30, image.Position.Z);
-
-            //Vector2 u = new Vector2(image.Width/image.Definition.Width, 0.0);
-            //Vector2 v = new Vector2(0.0, image.Height/image.Definition.Height);
-            //IList<Vector2> ocsUV = MathHelper.Transform(new List<Vector2> {u, v}, image.Rotation*MathHelper.DegToRad, CoordinateSystem.Object, CoordinateSystem.World);
-
-            //Vector2 u = image.Uvector * (image.Width / image.Definition.Width);
-            //Vector2 v = image.Vvector * (image.Height / image.Definition.Height);
-            //IList<Vector2> ocsUV = MathHelper.Transform(new List<Vector2> { u, v }, image.Rotation * MathHelper.DegToRad, CoordinateSystem.Object, CoordinateSystem.World);
-
-            //Vector3 ocsU = new Vector3(ocsUV[0].X, ocsUV[0].Y, 0.0);
-            //Vector3 ocsV = new Vector3(ocsUV[1].X, ocsUV[1].Y, 0.0);
-            //IList<Vector3> wcsUV = MathHelper.Transform(new List<Vector3> {ocsU, ocsV}, image.Normal, CoordinateSystem.Object, CoordinateSystem.World);
 
             Vector2 u = image.Uvector * (image.Width / image.Definition.Width);
             Vector2 v = image.Vvector * (image.Height / image.Definition.Height);

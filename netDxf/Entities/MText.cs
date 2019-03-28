@@ -724,17 +724,20 @@ namespace netDxf.Entities
         /// <param name="transformation">Transformation matrix.</param>
         /// <param name="translation">Translation vector.</param>
         /// <remarks>
-        /// Non-uniform is not supported, it would require to decompose each line into independent Text entities but I have no method to measure text strings for SHX and TTF fonts.
+        /// Non-uniform is not supported, it would require to decompose each line into independent Text entities.
+        /// When making a symmetry of a MText the text will not be inverted only its AttachmentPoint will change.
         /// </remarks>
         public override void TransformBy(Matrix3 transformation, Vector3 translation)
         {
             Vector3 newPosition;
             Vector3 newNormal;
             Vector2 newUvector;
+            Vector2 newVvector;
             double scale;
             double newHeight;
             double newRotation;
-            bool reverseText = false;
+            bool reverseTextX = false;
+            bool reverseTextY = false;
 
             newPosition = transformation * this.Position + translation;
             newNormal = transformation * this.Normal;
@@ -744,26 +747,43 @@ namespace netDxf.Entities
             Matrix3 transWO = MathHelper.ArbitraryAxis(newNormal);
             transWO = transWO.Transpose();
 
-            Vector2 axis = Vector2.Rotate(Vector2.UnitX, this.Rotation * MathHelper.DegToRad);
+            IList<Vector2> uv = MathHelper.Transform(new List<Vector2>
+                {
+                    Vector2.UnitX,
+                    Vector2.UnitY
+                },
+                this.Rotation * MathHelper.DegToRad,
+                CoordinateSystem.Object, CoordinateSystem.World);
 
             Vector3 v;
-            v = transOW * new Vector3(axis.X, axis.Y, 0.0);
+            v = transOW * new Vector3(uv[0].X, uv[0].Y, 0.0);
             v = transformation * v;
             v = transWO * v;
             newUvector = new Vector2(v.X, v.Y);
 
+            v = transOW * new Vector3(uv[1].X, uv[1].Y, 0.0);
+            v = transformation * v;
+            v = transWO * v;
+            newVvector = new Vector2(v.X, v.Y);
+
             newRotation = Vector2.Angle(newUvector) * MathHelper.RadToDeg;
 
-            if (Vector2.DotProduct(newUvector, axis) < 0)
+            if (Vector2.CrossProduct(newUvector, newVvector) < 0.0)
             {
-                newRotation += 180;
-                reverseText = true;
+                if (Vector2.DotProduct(newUvector, uv[0]) < 0.0)
+                {
+                    newRotation += 180;
+                    reverseTextX = true;
+                }
+                else
+                {
+                    reverseTextY = true;
+                }
             }
 
             // the MText entity does not support non-uniform scaling
             scale = newNormal.Modulus();
 
-            // the height must be greater than zero, the cos is always positive between -85 and 85
             newHeight = this.Height * scale;
             newHeight = MathHelper.IsZero(newHeight) ? MathHelper.Epsilon : newHeight;
 
@@ -773,7 +793,7 @@ namespace netDxf.Entities
             this.Height = newHeight;
             this.RectangleWidth *= scale;
 
-            if (reverseText)
+            if (reverseTextX)
             {
                 switch (this.AttachmentPoint)
                 {
@@ -794,6 +814,25 @@ namespace netDxf.Entities
                         break;
                     case MTextAttachmentPoint.BottomRight:
                         this.AttachmentPoint = MTextAttachmentPoint.BottomLeft;
+                        break;
+                }
+            }
+            if(reverseTextY)
+            {
+                // there is no need to change the attachment points middle right or middle left
+                switch (this.AttachmentPoint)
+                {
+                    case MTextAttachmentPoint.TopLeft:
+                        this.AttachmentPoint = MTextAttachmentPoint.BottomLeft;
+                        break;
+                    case MTextAttachmentPoint.TopRight:
+                        this.AttachmentPoint = MTextAttachmentPoint.BottomRight;
+                        break;
+                    case MTextAttachmentPoint.BottomLeft:
+                        this.AttachmentPoint = MTextAttachmentPoint.TopLeft;
+                        break;
+                    case MTextAttachmentPoint.BottomRight:
+                        this.AttachmentPoint = MTextAttachmentPoint.TopRight;
                         break;
                 }
             }

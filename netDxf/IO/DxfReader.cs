@@ -3901,15 +3901,82 @@ namespace netDxf.IO
             xAxis = MathHelper.Transform(xAxis, normal, CoordinateSystem.World, CoordinateSystem.Object);
             double rotation = Vector2.Angle(new Vector2(xAxis.X, xAxis.Y));
 
-            Tolerance entity = Tolerance.ParseRepresentation(value);
+            Tolerance entity = Tolerance.ParseStringRepresentation(value);
             entity.Style = style;
+            entity.TextHeight = style.TextHeight;
             entity.Position = position;
             entity.Rotation = rotation*MathHelper.RadToDeg;
             entity.Normal = normal;
-
             entity.XData.AddRange(xData);
 
+            // here is where DXF stores the tolerance text height
+            XData heightXData;
+            if (entity.XData.TryGetValue(ApplicationRegistry.DefaultName, out heightXData))
+            {
+                double textHeight = this.ReadToleranceTextHeightXData(heightXData);
+                if(textHeight > 0) entity.TextHeight = textHeight;
+            }
+
             return entity;
+        }
+
+        private double ReadToleranceTextHeightXData(XData xData)
+        {
+            double textHeight = -1;
+            using (IEnumerator<XDataRecord> records = xData.XDataRecord.GetEnumerator())
+            {
+                while (records.MoveNext())
+                {
+                    XDataRecord data = records.Current;
+
+                    // the tolerance text height are stored under the string "DSTYLE"
+                    if (data.Code == XDataCode.String && string.Equals((string) data.Value, "DSTYLE", StringComparison.OrdinalIgnoreCase))
+                    {
+                        if (records.MoveNext())
+                            data = records.Current;
+                        else
+                            return textHeight; // premature end
+
+                        // all style overrides are enclosed between XDataCode.ControlString "{" and "}"
+                        if (data.Code != XDataCode.ControlString && (string) data.Value != "{")
+                            return textHeight; // premature end
+
+                        if (records.MoveNext())
+                            data = records.Current;
+                        else
+                            return textHeight; // premature end
+
+                        while (!(data.Code == XDataCode.ControlString && (string) data.Value == "}"))
+                        {
+                            if (data.Code != XDataCode.Int16)
+                                return textHeight;
+                            short textHeightCode = (short) data.Value;
+                            if (records.MoveNext())
+                                data = records.Current;
+                            else
+                                return textHeight; // premature end
+
+                            //the xData overrides must be read in pairs.
+                            //the first is the dimension style property to override, the second is the new value
+                            switch (textHeightCode)
+                            {
+                                case 140:
+                                    if (data.Code != XDataCode.Real)
+                                        return textHeight; // premature end
+                                    textHeight = (double) data.Value;
+                                    break;
+                            }
+
+                            if (records.MoveNext())
+                                data = records.Current;
+                            else
+                                return textHeight; // premature end
+                        }
+                    }
+                }
+            }
+
+            return textHeight;
         }
 
         private Leader ReadLeader()
@@ -4982,18 +5049,18 @@ namespace netDxf.IO
                         else
                             return overrides; // premature end
 
-                        while (!(data.Code == XDataCode.ControlString && (string) data.Value == "}"))
+                        while (!(data.Code == XDataCode.ControlString && (string)data.Value == "}"))
                         {
                             if (data.Code != XDataCode.Int16)
                                 return overrides;
-                            short styleOverrideCode = (short) data.Value;
+                            short styleOverrideCode = (short)data.Value;
                             if (records.MoveNext())
                                 data = records.Current;
                             else
                                 return overrides; // premature end
 
-                            // the xData overrides must be read in pairs.
-                            // the first is the dimension style property to override, the second is the new value
+                            //the xData overrides must be read in pairs.
+                            //the first is the dimension style property to override, the second is the new value
                             switch (styleOverrideCode)
                             {
                                 case 3: // DIMPOST

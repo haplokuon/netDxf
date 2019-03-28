@@ -26,24 +26,6 @@ namespace TestDxfDocument
     /// </summary>
     public class Program
     {
-        private static void Test1()
-        {
-            DxfDocument dxf = new DxfDocument(DxfVersion.AutoCad2018);
-            //dxf.BuildDimensionBlocks = true;
-            Vector3 center = new Vector3(1, 2, 0);
-            double radius = 3;
-            Circle circle = new Circle(center, radius);
-
-            RadialDimension dim1 = new RadialDimension(circle, 0);
-            
-            dxf.AddEntity(circle);
-            dxf.AddEntity(dim1);
-            dim1.Style.DimPrefix = "prefix";
-            //dim1.Style.DimSuffix = "suffix";
-            dxf.Save("test.dxf");
-
-            DxfDocument doc = DxfDocument.Load("test.dxf");
-        }
 
         private static void Test2()
         {
@@ -254,26 +236,32 @@ namespace TestDxfDocument
             DimensionStyle style = new DimensionStyle("MyStyle");
             style.DimLineColor = AciColor.Green;
             style.TextColor = AciColor.Blue;
-            style.LeaderArrow = DimensionArrowhead.DotBlank;
+            //style.LeaderArrow = DimensionArrowhead.DotBlank;
             style.DimScaleOverall = 2.0;
 
-            //// a basic text annotation
-            //List<Vector2> vertexes1 = new List<Vector2>();
-            //vertexes1.Add(new Vector2(2, 2));
-            //vertexes1.Add(new Vector2(7, 7));
+            // a basic text annotation
+            List<Vector2> vertexes1 = new List<Vector2>();
+            vertexes1.Add(new Vector2(0, 0));
+            vertexes1.Add(new Vector2(7, 7));
             //Leader leader1 = new Leader("Sample annotation", vertexes1, style);
 
-            // a tolerance annotation
-            List<Vector2> vertexes3 = new List<Vector2>();
-            vertexes3.Add(new Vector2(0));
-            vertexes3.Add(new Vector2(5, 5));
-            vertexes3.Add(new Vector2(7.5, 5));
-            ToleranceEntry entry = new ToleranceEntry
-            {
-                GeometricSymbol = ToleranceGeometricSymbol.Symmetry,
-                Tolerance1 = new ToleranceValue(true, "12.5", ToleranceMaterialCondition.Maximum)
-            };
-            Leader leader1 = new Leader(entry, vertexes3);
+
+            Leader leader1 = new Leader(vertexes1, style);
+            leader1.Annotation = new MText("Sample annotation");
+            //leader1.Annotation = new Text("Sample annotation", style.TextHeight);
+
+            //// a tolerance annotation
+            //List<Vector2> vertexes3 = new List<Vector2>();
+            //vertexes3.Add(new Vector2(0));
+            //vertexes3.Add(new Vector2(5, 5));
+            //vertexes3.Add(new Vector2(7.5, 5));
+            //ToleranceEntry entry = new ToleranceEntry
+            //{
+            //    GeometricSymbol = ToleranceGeometricSymbol.Symmetry,
+            //    Tolerance1 = new ToleranceValue(true, "12.5", ToleranceMaterialCondition.Maximum)
+            //};
+            //Leader leader1 = new Leader(entry, vertexes3);
+            //((Tolerance) leader1.Annotation).TextHeight = 0.35;
 
             //// a block annotation
             //Block block = new Block("BlockAnnotation");
@@ -289,25 +277,28 @@ namespace TestDxfDocument
 
             // add entities to the document
             DxfDocument doc = new DxfDocument();
+            //doc.AddEntity((EntityObject) leader1.Clone());
             doc.AddEntity(leader1);
 
 
             Leader leader2 = (Leader)leader1.Clone();
             //Matrix3 trans = Matrix3.Scale(2);
-            Matrix3 trans = Matrix3.Identity;
-            trans[0, 0] *= -1;
-            //Matrix3 trans = Matrix3.RotationZ(210 * MathHelper.DegToRad);
+            //Matrix3 trans = Matrix3.Identity;
+            //trans[1, 1] *= -1;
+            Matrix3 trans = Matrix3.RotationZ(210 * MathHelper.DegToRad);
             leader2.TransformBy(trans, Vector3.Zero);
             //leader2.TransformBy(trans, new Vector3(0, -10, 0));
             doc.AddEntity(leader2);
 
             doc.Save("test.dxf");
 
+            //DxfDocument dxf = DxfDocument.Load("test.dxf");
+            //dxf.Save("test.dxf");
         }
 
         public static void Main()
         {
-            Test1();
+            //LeaderMirror();
 
             //DxfDocument doc = Test(@"sample.dxf");
 
@@ -316,6 +307,7 @@ namespace TestDxfDocument
             //MLineMirrorAndExplode();
             //ShapeMirror();
             //TextMirror();
+            MTextMirror();
 
             #endregion
 
@@ -520,17 +512,52 @@ namespace TestDxfDocument
 
         #region Samples for new and modified features 2.3.0
 
-        public static void TextMirror()
+        public static void MTextMirror()
         {
-            Text text1 = new Text("Sample text", Vector2.Zero, 10);
+            MText text1 = new MText("Sample text", new Vector2(5,2), 10, 0.0);
             //text1.IsBackward = true;
             //text1.Rotation = 30;
             //text1.ObliqueAngle = 10;
+
+            MText text2 = (MText)text1.Clone();
+            text2.Color = AciColor.Yellow;
+
+            //Matrix3 trans = Matrix3.Identity;
+            //trans[0, 0] = -1;
+            //text2.TransformBy(trans, Vector3.Zero);
+
+            //Matrix3 trans = Matrix3.RotationZ(210 * MathHelper.DegToRad);
+            //text2.TransformBy(trans, Vector3.Zero);
+
             Matrix3 trans = Matrix3.Identity;
             trans[0, 0] = -1;
-            Text text2 = (Text)text1.Clone();
-            text2.Color = AciColor.Yellow;
+            trans = Matrix3.RotationZ(30 * MathHelper.DegToRad) * trans;
+
             text2.TransformBy(trans, Vector3.Zero);
+
+            DxfDocument doc = new DxfDocument();
+            doc.AddEntity(text1);
+            doc.AddEntity(text2);
+            doc.Save("test.dxf");
+        }
+
+        public static void TextMirror()
+        {
+            Text text1 = new Text("Sample text", new Vector2(5,2), 10);
+            //text1.IsBackward = true;
+            //text1.Rotation = 30;
+            //text1.ObliqueAngle = 10;
+
+            //Matrix3 trans = Matrix3.Identity;
+            //trans[0, 0] = -1;
+            //Text text2 = (Text)text1.Clone();
+            //text2.Color = AciColor.Yellow;
+            //text2.TransformBy(trans, Vector3.Zero);
+
+            Matrix3 trans = Matrix3.RotationZ(210 * MathHelper.DegToRad);
+            Text text2 = (Text)text1.Clone();
+            text2.TransformBy(trans, Vector3.Zero);
+
             DxfDocument doc = new DxfDocument();
             doc.AddEntity(text1);
             doc.AddEntity(text2);

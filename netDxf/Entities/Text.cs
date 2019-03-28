@@ -81,6 +81,15 @@ namespace netDxf.Entities
         /// Initializes a new instance of the <c>Text</c> class.
         /// </summary>
         /// <param name="text">Text string.</param>
+        public Text(string text)
+            : this(text, Vector2.Zero, 1.0, TextStyle.Default)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <c>Text</c> class.
+        /// </summary>
+        /// <param name="text">Text string.</param>
         /// <param name="position">Text <see cref="Vector2">position</see> in world coordinates.</param>
         /// <param name="height">Text height.</param>
         public Text(string text, Vector2 position, double height)

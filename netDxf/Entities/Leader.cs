@@ -322,6 +322,9 @@ namespace netDxf.Entities
                           value.Type == EntityType.Insert ||
                           value.Type == EntityType.Tolerance))
                         throw new ArgumentException("Only MText, Text, Insert, and Tolerance entities are supported as a leader annotation.", nameof(value));
+
+                    if (value.Type == EntityType.Text || value.Type == EntityType.MText)
+                        this.HasHookline = true;
                 }
 
                 if (ReferenceEquals(this.annotation, value))
@@ -331,6 +334,8 @@ namespace netDxf.Entities
                 value?.AddReactor(this);
 
                 this.annotation = value;
+
+                this.Update(true);
             }
         }
 
@@ -588,9 +593,9 @@ namespace netDxf.Entities
             {
                 case EntityType.MText:
                     MText mText = (MText) this.annotation;
-                    Vector2 dir = this.vertexes[this.vertexes.Count - 1] - this.vertexes[this.vertexes.Count - 2];
+                    Vector2 mTextdir = this.vertexes[this.vertexes.Count - 1] - this.vertexes[this.vertexes.Count - 2];
                     double mTextXoffset = 0.0;
-                    int mTextSide = Math.Sign(dir.X);
+                    int mTextSide = Math.Sign(mTextdir.X);
                     if (textVerticalPlacement == DimensionStyleTextVerticalPlacement.Centered)
                     {
                         if (mTextSide >= 0)
@@ -615,20 +620,6 @@ namespace netDxf.Entities
                     mText.Position = MathHelper.Transform(new Vector3(position.X - mTextXoffset, position.Y, this.elevation), this.Normal, CoordinateSystem.Object, CoordinateSystem.World);
                     mText.Height = textHeight * dimScale;
                     mText.Color = textColor.IsByBlock ? AciColor.ByLayer : textColor;
-                    break;
-
-                case EntityType.Insert:
-                    Insert ins = (Insert) this.annotation;
-                    position = hook + this.offset;
-                    ins.Position = MathHelper.Transform(new Vector3(position.X, position.Y, this.elevation), this.Normal, CoordinateSystem.Object, CoordinateSystem.World);
-                    ins.Color = textColor.IsByBlock ? AciColor.ByLayer : textColor;
-                    break;
-
-                case EntityType.Tolerance:
-                    Tolerance tol = (Tolerance) this.annotation;
-                    position = hook + this.offset;
-                    tol.Position = MathHelper.Transform(new Vector3(position.X, position.Y, this.elevation), this.Normal, CoordinateSystem.Object, CoordinateSystem.World);
-                    tol.Color = textColor.IsByBlock ? AciColor.ByLayer : textColor;
                     break;
 
                 case EntityType.Text:
@@ -661,6 +652,20 @@ namespace netDxf.Entities
                     text.Position = MathHelper.Transform(new Vector3(position.X - textXoffset, position.Y, this.elevation), this.Normal, CoordinateSystem.Object, CoordinateSystem.World);
                     text.Height = textHeight * dimScale;
                     text.Color = textColor.IsByBlock ? AciColor.ByLayer : textColor;
+                    break;
+
+                case EntityType.Insert:
+                    Insert ins = (Insert) this.annotation;
+                    position = hook + this.offset;
+                    ins.Position = MathHelper.Transform(new Vector3(position.X, position.Y, this.elevation), this.Normal, CoordinateSystem.Object, CoordinateSystem.World);
+                    ins.Color = textColor.IsByBlock ? AciColor.ByLayer : textColor;
+                    break;
+
+                case EntityType.Tolerance:
+                    Tolerance tol = (Tolerance) this.annotation;
+                    position = hook + this.offset;
+                    tol.Position = MathHelper.Transform(new Vector3(position.X, position.Y, this.elevation), this.Normal, CoordinateSystem.Object, CoordinateSystem.World);
+                    tol.Color = textColor.IsByBlock ? AciColor.ByLayer : textColor;
                     break;
 
                 default:
@@ -861,7 +866,7 @@ namespace netDxf.Entities
                 Offset = this.offset,
                 LineColor = this.lineColor,
                 Annotation = (EntityObject) this.annotation?.Clone(),
-                hasHookline = this.hasHookline // do not call directly the property, the vertexes list already includes it if it has a hook line
+                HasHookline = this.hasHookline
             };
 
             foreach (DimensionStyleOverride styleOverride in this.StyleOverrides.Values)
