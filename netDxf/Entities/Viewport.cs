@@ -35,6 +35,32 @@ namespace netDxf.Entities
     public class Viewport :
         EntityObject
     {
+        #region delegates and events
+
+        public delegate void ClippingBoundaryAddedEventHandler(Viewport sender, EntityChangeEventArgs e);
+
+        public event ClippingBoundaryAddedEventHandler ClippingBoundaryAdded;
+
+        protected virtual void OnClippingBoundaryAddedEvent(EntityObject item)
+        {
+            ClippingBoundaryAddedEventHandler ae = this.ClippingBoundaryAdded;
+            if (ae != null)
+                ae(this, new EntityChangeEventArgs(item));
+        }
+
+        public delegate void ClippingBoundaryRemovedEventHandler(Viewport sender, EntityChangeEventArgs e);
+
+        public event ClippingBoundaryRemovedEventHandler ClippingBoundaryRemoved;
+
+        protected virtual void OnClippingBoundaryRemovedEvent(EntityObject item)
+        {
+            ClippingBoundaryRemovedEventHandler ae = this.ClippingBoundaryRemoved;
+            if (ae != null)
+                ae(this, new EntityChangeEventArgs(item));
+        }
+
+        #endregion
+
         #region private fields
 
         private Vector3 center;
@@ -76,6 +102,28 @@ namespace netDxf.Entities
             this.status |= ViewportStatusFlags.GridMode;
         }
 
+        public Viewport(Vector2 bottomLeftCorner, Vector2 topRightCorner)
+            :this(2)
+        {
+            this.center = new Vector3((topRightCorner.X + bottomLeftCorner.X) * 0.5, (topRightCorner.Y + bottomLeftCorner.Y) * 0.5, 0);
+            this.width = (topRightCorner.X - bottomLeftCorner.X) * 0.5;
+            this.height = (topRightCorner.Y - bottomLeftCorner.Y) * 0.5;
+        }
+
+        public Viewport(Vector2 center, double width, double height)
+            :this(2)
+        {
+            this.center = new Vector3(center.X, center.Y, 0.0);
+            this.width = width;
+            this.height = height;
+        }
+
+        public Viewport(EntityObject clippingBoundary)
+            :this(2)
+        {
+            this.ClippingBoundary = clippingBoundary;
+        }
+
         internal Viewport(short id)
             : base(EntityType.Viewport, DxfObjectCode.Viewport)
         {
@@ -97,7 +145,11 @@ namespace netDxf.Entities
             this.snapAngle = 0.0;
             this.twistAngle = 0.0;
             this.circleZoomPercent = 1000;
-            this.status = ViewportStatusFlags.AdaptiveGridDisplay | ViewportStatusFlags.DisplayGridBeyondDrawingLimits | ViewportStatusFlags.CurrentlyAlwaysEnabled | ViewportStatusFlags.UcsIconVisibility;
+            this.status = ViewportStatusFlags.AdaptiveGridDisplay |
+                          ViewportStatusFlags.DisplayGridBeyondDrawingLimits |
+                          ViewportStatusFlags.CurrentlyAlwaysEnabled |
+                          ViewportStatusFlags.UcsIconVisibility |
+                          ViewportStatusFlags.GridMode;
             this.frozenLayers = new List<Layer>();
             this.ucsOrigin = Vector3.Zero;
             this.ucsXAxis = Vector3.UnitX;
@@ -350,58 +402,74 @@ namespace netDxf.Entities
             get { return this.boundary; }
             set
             {
-                this.boundary?.RemoveReactor(this);
+                if (value != null)
+                {
+                    BoundingRectangle abbr;
+                    switch (value.Type)
+                    {
+                        case EntityType.Circle:
+                            Circle circle = (Circle) value;
+                            abbr = new BoundingRectangle(new Vector2(circle.Center.X, circle.Center.Y), circle.Radius);
+                            break;
+                        case EntityType.Ellipse:
+                            Ellipse ellipse = (Ellipse) value;
+                            abbr = new BoundingRectangle(new Vector2(ellipse.Center.X, ellipse.Center.Y), ellipse.MajorAxis, ellipse.MinorAxis, ellipse.Rotation);
+                            break;
+                        case EntityType.LwPolyline:
+                            LwPolyline lwPol = (LwPolyline) value;
+                            abbr = new BoundingRectangle(lwPol.PolygonalVertexes(6, MathHelper.Epsilon, MathHelper.Epsilon));
+                            break;
+                        case EntityType.Polyline:
+                            Polyline pol = (Polyline) value;
+                            List<Vector2> pPoints = new List<Vector2>();
+                            foreach (PolylineVertex point in pol.Vertexes)
+                            {
+                                pPoints.Add(new Vector2(point.Position.X, point.Position.Y));
+                            }
+                            abbr = new BoundingRectangle(pPoints);
+                            break;
+                        case EntityType.Spline:
+                            Spline spline = (Spline) value;
+                            List<Vector2> sPoints = new List<Vector2>();
+                            foreach (SplineVertex point in spline.ControlPoints)
+                            {
+                                sPoints.Add(new Vector2(point.Position.X, point.Position.Y));
+                            }
+                            abbr = new BoundingRectangle(sPoints);
+                            break;
+                        default:
+                            throw new ArgumentException("Only lightweight polylines, polylines, circles, ellipses and splines are allowed as a viewport clipping boundary.");
+                    }
 
-                if (value == null)
+                    this.width = abbr.Width;
+                    this.height = abbr.Height;
+                    this.center = new Vector3(abbr.Center.X, abbr.Center.Y, 0.0);
+                    this.status |= ViewportStatusFlags.NonRectangularClipping;
+                }
+                else
                 {
                     this.status &= ~ViewportStatusFlags.NonRectangularClipping;
-                    this.boundary = null;
+                }
+
+                // nothing else to do if it is the same
+                if (ReferenceEquals(this.boundary, value))
                     return;
-                }
 
-                BoundingRectangle abbr;
-                switch (value.Type)
+                // remove the previous clipping boundary
+                if (this.boundary != null)
                 {
-                    case EntityType.Circle:
-                        Circle circle = (Circle) value;
-                        abbr = new BoundingRectangle(new Vector2(circle.Center.X, circle.Center.Y), circle.Radius);
-                        break;
-                    case EntityType.Ellipse:
-                        Ellipse ellipse = (Ellipse) value;
-                        abbr = new BoundingRectangle(new Vector2(ellipse.Center.X, ellipse.Center.Y), ellipse.MajorAxis, ellipse.MinorAxis, ellipse.Rotation);
-                        break;
-                    case EntityType.LwPolyline:
-                        LwPolyline lwPol = (LwPolyline) value;
-                        abbr = new BoundingRectangle(lwPol.PolygonalVertexes(6, MathHelper.Epsilon, MathHelper.Epsilon));
-                        break;
-                    case EntityType.Polyline:
-                        Polyline pol = (Polyline) value;
-                        List<Vector2> pPoints = new List<Vector2>();
-                        foreach (PolylineVertex point in pol.Vertexes)
-                        {
-                            pPoints.Add(new Vector2(point.Position.X, point.Position.Y));
-                        }
-                        abbr = new BoundingRectangle(pPoints);
-                        break;
-                    case EntityType.Spline:
-                        Spline spline = (Spline) value;
-                        List<Vector2> sPoints = new List<Vector2>();
-                        foreach (SplineVertex point in spline.ControlPoints)
-                        {
-                            sPoints.Add(new Vector2(point.Position.X, point.Position.Y));
-                        }
-                        abbr = new BoundingRectangle(sPoints);
-                        break;
-                    default:
-                        throw new ArgumentException("Only lightweight polylines, polylines, circles, ellipses and splines are allowed.");
+                    this.boundary.RemoveReactor(this);
+                    this.OnClippingBoundaryRemovedEvent(this.boundary);
                 }
 
-                this.width = abbr.Width;
-                this.height = abbr.Height;
-                this.center = new Vector3(abbr.Center.X, abbr.Center.Y, 0.0);
+                // add the new clipping boundary
+                if (value != null)
+                {
+                    value.AddReactor(this);
+                    this.OnClippingBoundaryAddedEvent(value);
+                }
+
                 this.boundary = value;
-                this.boundary.AddReactor(this);
-                this.status |= ViewportStatusFlags.NonRectangularClipping;
             }
         }
 
@@ -416,26 +484,28 @@ namespace netDxf.Entities
         /// <param name="translation">Translation vector.</param>
         public override void TransformBy(Matrix3 transformation, Vector3 translation)
         {
-            // TODO: implement TransformBy method
-            throw new NotImplementedException();
-        }
+            EntityObject clippingEntity = this.ClippingBoundary;
+            if (clippingEntity == null)
+            {
+                if (transformation.IsIdentity)
+                {
+                    this.center += translation;
+                    return;
+                }
 
-        /// <summary>
-        /// Assigns a handle to the object based in a integer counter.
-        /// </summary>
-        /// <param name="entityNumber">Number to assign.</param>
-        /// <returns>Next available entity number.</returns>
-        /// <remarks>
-        /// Some objects might consume more than one, is, for example, the case of polylines that will assign
-        /// automatically a handle to its vertexes. The entity number will be converted to an hexadecimal number.
-        /// </remarks>
-        internal override long AsignHandle(long entityNumber)
-        {
-            if (this.boundary != null)
-                entityNumber = this.boundary.AsignHandle(entityNumber);
-            return base.AsignHandle(entityNumber);
+                // when a view port is transformed a LwPolyline will be generated
+                List<LwPolylineVertex> vertexes = new List<LwPolylineVertex>
+                {
+                    new LwPolylineVertex(this.center.X - this.width * 0.5, this.center.Y - this.height * 0.5),
+                    new LwPolylineVertex(this.center.X + this.width * 0.5, this.center.Y - this.height * 0.5),
+                    new LwPolylineVertex(this.center.X + this.width * 0.5, this.center.Y + this.height * 0.5),
+                    new LwPolylineVertex(this.center.X - this.width * 0.5, this.center.Y + this.height * 0.5)
+                };
+                clippingEntity = new LwPolyline(vertexes, true);
+            }
+            clippingEntity.TransformBy(transformation, translation);
+            this.ClippingBoundary = clippingEntity;
         }
-
 
         /// <summary>
         /// Creates a new viewport that is a copy of the current instance.
@@ -455,6 +525,7 @@ namespace netDxf.Entities
                 Normal = this.Normal,
                 IsVisible = this.IsVisible,
                 //viewport properties
+                ClippingBoundary = (EntityObject) this.boundary?.Clone(),
                 Center = this.center,
                 Width = this.width,
                 Height = this.height,
@@ -477,17 +548,15 @@ namespace netDxf.Entities
                 UcsOrigin = this.ucsOrigin,
                 UcsXAxis = this.ucsXAxis,
                 UcsYAxis = this.ucsYAxis,
-                Elevation = this.elevation,
+                Elevation = this.elevation
             };
+
+            foreach (Layer layer in this.frozenLayers)
+                viewport.frozenLayers.Add((Layer) layer.Clone());
 
             foreach (XData data in this.XData.Values)
                 viewport.XData.Add((XData) data.Clone());
 
-
-            if (this.boundary != null)
-                viewport.ClippingBoundary = (EntityObject) this.boundary.Clone();
-
-            viewport.FrozenLayers.AddRange(this.frozenLayers.ToArray());
             return viewport;
         }
 

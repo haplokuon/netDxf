@@ -52,6 +52,28 @@ namespace netDxf.Entities
             return newStyle;
         }
 
+        public delegate void AnnotationAddedEventHandler(Leader sender, EntityChangeEventArgs e);
+
+        public event AnnotationAddedEventHandler AnnotationAdded;
+
+        protected virtual void OnAnnotationAddedEvent(EntityObject item)
+        {
+            AnnotationAddedEventHandler ae = this.AnnotationAdded;
+            if (ae != null)
+                ae(this, new EntityChangeEventArgs(item));
+        }
+
+        public delegate void AnnotationRemovedEventHandler(Leader sender, EntityChangeEventArgs e);
+
+        public event AnnotationRemovedEventHandler AnnotationRemoved;
+
+        protected virtual void OnAnnotationRemovedEvent(EntityObject item)
+        {
+            AnnotationRemovedEventHandler ae = this.AnnotationRemoved;
+            if (ae != null)
+                ae(this, new EntityChangeEventArgs(item));
+        }
+        
         #endregion
 
         #region delegates and events for style overrides
@@ -327,14 +349,26 @@ namespace netDxf.Entities
                         this.HasHookline = true;
                 }
 
+                // nothing else to do if it is the same
                 if (ReferenceEquals(this.annotation, value))
                     return;
 
-                this.annotation?.RemoveReactor(this);
-                value?.AddReactor(this);
+
+                // remove the previous clipping boundary
+                if (this.annotation != null)
+                {
+                    this.annotation.RemoveReactor(this);
+                    this.OnAnnotationRemovedEvent(this.annotation);
+                }
+
+                // add the new clipping boundary
+                if (value != null)
+                {
+                    value.AddReactor(this);
+                    this.OnAnnotationAddedEvent(value);
+                }
 
                 this.annotation = value;
-
                 this.Update(true);
             }
         }

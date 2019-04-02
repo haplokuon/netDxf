@@ -1143,6 +1143,8 @@ namespace netDxf
                     this.AddDimensionStyleOverridesReferencedDxfObjects(leader, leader.StyleOverrides, assignHandle);
                     leader.DimensionStyleOverrideAdded += this.Leader_DimStyleOverrideAdded;
                     leader.DimensionStyleOverrideRemoved += this.Leader_DimStyleOverrideRemoved;
+                    leader.AnnotationAdded += this.Leader_AnnotationAdded;
+                    leader.AnnotationRemoved += this.Leader_AnnotationRemoved;
                     break;
                 case EntityType.Tolerance:
                     Tolerance tol = (Tolerance) entity;
@@ -1234,7 +1236,6 @@ namespace netDxf
                     mline.Style = this.mlineStyles.Add(mline.Style, assignHandle);
                     this.mlineStyles.References[mline.Style.Name].Add(mline);
                     mline.MLineStyleChanged += this.MLine_MLineStyleChanged;
-
                     break;
                 case EntityType.Ray:
                     break;
@@ -1262,8 +1263,8 @@ namespace netDxf
                     break;
                 case EntityType.Viewport:
                     Viewport viewport = (Viewport) entity;
-                    if (viewport.ClippingBoundary != null)
-                        this.AddEntity(viewport.ClippingBoundary);
+                    viewport.ClippingBoundaryAdded += this.Viewport_ClippingBoundaryAdded;
+                    viewport.ClippingBoundaryRemoved += this.Viewport_ClippingBoundaryRemoved;
                     break;
                 default:
                     throw new ArgumentException("The entity " + entity.Type + " is not implemented or unknown.");
@@ -1334,10 +1335,15 @@ namespace netDxf
                     this.dimStyles.References[leader.Style.Name].Remove(entity);
                     leader.LeaderStyleChanged -= this.Leader_DimStyleChanged;
                     if (leader.Annotation != null)
+                    {
                         leader.Annotation.RemoveReactor(leader);
+                        this.RemoveEntity(leader.Annotation);
+                    }
                     this.RemoveDimensionStyleOverridesReferencedDxfObjects(leader, leader.StyleOverrides);
                     leader.DimensionStyleOverrideAdded -= this.Leader_DimStyleOverrideAdded;
                     leader.DimensionStyleOverrideRemoved -= this.Leader_DimStyleOverrideRemoved;
+                    leader.AnnotationAdded -= this.Leader_AnnotationAdded;
+                    leader.AnnotationRemoved -= this.Leader_AnnotationRemoved;
                     break;
                 case EntityType.Tolerance:
                     Tolerance tolerance = (Tolerance) entity;
@@ -1423,6 +1429,9 @@ namespace netDxf
                         viewport.ClippingBoundary.RemoveReactor(viewport);
                         this.RemoveEntity(viewport.ClippingBoundary);
                     }
+                    viewport.ClippingBoundaryAdded -= this.Viewport_ClippingBoundaryAdded;
+                    viewport.ClippingBoundaryRemoved -= this.Viewport_ClippingBoundaryRemoved;
+
                     break;
                 default:
                     throw new ArgumentException("The entity " + entity.Type + " is not implemented or unknown");
@@ -1798,6 +1807,29 @@ namespace netDxf
             }
         }
 
+        private void Leader_AnnotationAdded(Leader sender, EntityChangeEventArgs e)
+        {
+            Layout layout = sender.Owner.Record.Layout;
+            // the viewport belongs to a layout
+            if (e.Item.Owner != null)
+            {
+                // the viewport clipping boundary and its entities must belong to the same document or block
+                if (!ReferenceEquals(e.Item.Owner.Record.Layout, layout))
+                    throw new ArgumentException("The leader annotation entity and the Leader entity must belong to the same layout and document. Clone it instead.");
+                // there is no need to do anything else we will not add the same entity twice
+            }
+            else
+            {
+                // we will add the new entity to the same document and layout of the hatch
+                this.blocks[layout.AssociatedBlock.Name].Entities.Add(e.Item);
+            }
+        }
+
+        private void Leader_AnnotationRemoved(Leader sender, EntityChangeEventArgs e)
+        {
+            this.RemoveEntity(e.Item);
+        }
+
         private void Tolerance_DimStyleChanged(Tolerance sender, TableObjectChangedEventArgs<DimensionStyle> e)
         {
             this.dimStyles.References[e.OldValue.Name].Remove(sender);
@@ -1869,18 +1901,13 @@ namespace netDxf
                 {
                     // the hatch and its entities must belong to the same document or block
                     if (!ReferenceEquals(entity.Owner.Record.Layout, layout))
-                        throw new ArgumentException("The HatchBoundaryPath entity and the hatch must belong to the same layout and document. Clone it instead.");
+                        throw new ArgumentException("The HatchBoundaryPath entity and the Hatch entity must belong to the same layout and document. Clone it instead.");
                     // there is no need to do anything else we will not add the same entity twice
                 }
                 else
                 {
                     // we will add the new entity to the same document and layout of the hatch
                     this.blocks[layout.AssociatedBlock.Name].Entities.Add(entity);
-                    //string active = this.ActiveLayout;
-                    //this.ActiveLayout = layout.Name;
-                    //// the entity does not belong to anyone
-                    //this.AddEntity(entity, false, true);
-                    //this.ActiveLayout = active;
                 }
             }
         }
@@ -1891,6 +1918,29 @@ namespace netDxf
             {
                 this.RemoveEntity(entity);
             }
+        }
+
+        private void Viewport_ClippingBoundaryAdded(Viewport sender, EntityChangeEventArgs e)
+        {
+            Layout layout = sender.Owner.Record.Layout;
+            // the viewport belongs to a layout
+            if (e.Item.Owner != null)
+            {
+                // the viewport clipping boundary and its entities must belong to the same document or block
+                if (!ReferenceEquals(e.Item.Owner.Record.Layout, layout))
+                    throw new ArgumentException("The viewport clipping boundary entity and the Viewport entity must belong to the same layout and document. Clone it instead.");
+                // there is no need to do anything else we will not add the same entity twice
+            }
+            else
+            {
+                // we will add the new entity to the same document and layout of the hatch
+                this.blocks[layout.AssociatedBlock.Name].Entities.Add(e.Item);
+            }
+        }
+
+        private void Viewport_ClippingBoundaryRemoved(Viewport sender, EntityChangeEventArgs e)
+        {
+            this.RemoveEntity(e.Item);
         }
 
         #endregion

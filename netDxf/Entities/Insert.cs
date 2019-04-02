@@ -327,7 +327,7 @@ namespace netDxf.Entities
         /// </summary>
         /// <returns>A list of entities.</returns>
         /// <remarks>
-        /// Non-uniform scaling is not supported by all entities. Read the documentation of the entities TranformBy method.
+        /// Non-uniform scaling is not supported by all entities. Read the documentation of the entities TransformBy method.
         /// </remarks>
         public List<EntityObject> Explode()
         {
@@ -340,9 +340,6 @@ namespace netDxf.Entities
 
             foreach (EntityObject entity in this.block.Entities)
             {
-                // TODO: entities with no implemented TransformBy method
-                if (entity.Type == EntityType.Viewport) continue;
-
                 // entities with reactors are associated with other entities they will handle the transformation
                 if (entity.Reactors.Count > 0)
                     continue;

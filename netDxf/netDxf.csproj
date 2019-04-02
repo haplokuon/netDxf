@@ -89,6 +89,7 @@
     <Compile Include="Collections\ObservableDictionaryEventArgs.cs" />
     <Compile Include="Collections\ShapeStyles.cs" />
     <Compile Include="Collections\SupportFolders.cs" />
+    <Compile Include="Entities\EntityChangeEventArgs.cs" />
     <Compile Include="Entities\MTextDrawingDirection.cs" />
     <Compile Include="Entities\MTextParagraphAlignment.cs" />
     <Compile Include="Entities\MTextParagraphOptions.cs" />

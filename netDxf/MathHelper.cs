@@ -410,7 +410,7 @@ namespace netDxf
         /// <param name="dir0">First line direction.</param>
         /// <param name="point1">Second line origin point.</param>
         /// <param name="dir1">Second line direction.</param>
-        /// <returns>The intersection point between the two line.</returns>
+        /// <returns>The intersection point between the two lines.</returns>
         /// <remarks>If the lines are parallel the method will return a <see cref="Vector2.NaN">Vector2.NaN</see>.</remarks>
         public static Vector2 FindIntersection(Vector2 point0, Vector2 dir0, Vector2 point1, Vector2 dir1)
         {
@@ -425,7 +425,7 @@ namespace netDxf
         /// <param name="point1">Second line origin point.</param>
         /// <param name="dir1">Second line direction.</param>
         /// <param name="threshold">Tolerance.</param>
-        /// <returns>The intersection point between the two line.</returns>
+        /// <returns>The intersection point between the two lines.</returns>
         /// <remarks>If the lines are parallel the method will return a <see cref="Vector2.NaN">Vector2.NaN</see>.</remarks>
         public static Vector2 FindIntersection(Vector2 point0, Vector2 dir0, Vector2 point1, Vector2 dir1, double threshold)
         {

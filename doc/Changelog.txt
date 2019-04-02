@@ -1,5 +1,13 @@
 ## Change history
 
+* Implemented TransformBy method for Viewport entities.
+* Added two new constructors to Viewport class to create rectangular viewports.
+* The Viewport will show the grid by default.
+* When a Leader is removed from a document, the annotation, if exists, will also be removed; although AutoCad does not.
+* (fixed) Adding and removing the clipping boundary of a viewport, when it already belongs to a document, will be automatically add and remove, respectively, the entity from the document.
+* (fixed) Adding and removing the annotation of a leader, when it already belongs to a document, will be automatically add and remove, respectively, the entity from the document.
+* (fixed) When cloning a Viewport the frozen layers were not being cloned.
+
 * The Tolerance TransformBy method now supports uniform scaling.
 * Added Tolerance TextHeigth property controls the height of the tolerance text overriden the default value defined in its style.
 * Renamed Tolerance Height property to ProjectedToleranceZoneValue.

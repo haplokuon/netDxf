@@ -29,25 +29,27 @@ namespace TestDxfDocument
 
         private static void Test2()
         {
+            //DxfDocument dxf = DxfDocument.Load("BlockDim.dxf");
             DxfDocument dxf = DxfDocument.Load("BlockDim.dxf");
 
-            Insert ins = dxf.Inserts.ElementAt(0);
-
-            foreach (EntityObject e in ins.Block.Entities)
+            foreach (Insert ins in dxf.Inserts)
             {
-                if (e.Type == EntityType.Dimension)
+                foreach (EntityObject e in ins.Block.Entities)
                 {
-                    Dimension dim = (Dimension)e;
-
-                    if (dim.Block != null)
+                    if (e.Type == EntityType.Dimension)
                     {
-                        foreach (EntityObject entityObject in dim.Block.Entities)
+                        Dimension dim = (Dimension) e;
+                        if (dim.Block != null)
                         {
-                            entityObject.TransformBy(Matrix3.Identity, -ins.Position);
+                            foreach (EntityObject entityObject in dim.Block.Entities)
+                            {
+                                entityObject.TransformBy(Matrix3.Identity, -ins.Position);
+                            }
                         }
                     }
                 }
             }
+            
 
             dxf.Save("test.dxf");
 
@@ -263,11 +265,13 @@ namespace TestDxfDocument
             //Leader leader1 = new Leader(entry, vertexes3);
             //((Tolerance) leader1.Annotation).TextHeight = 0.35;
 
-            //// a block annotation
-            //Block block = new Block("BlockAnnotation");
-            //block.Entities.Add(new Line(new Vector2(-1, -1), new Vector2(1, 1)));
-            //block.Entities.Add(new Line(new Vector2(-1, 1), new Vector2(1, -1)));
-            //block.Entities.Add(new Circle(Vector2.Zero, 0.5));
+            // a block annotation
+            Block block = new Block("BlockAnnotation");
+            block.Entities.Add(new Line(new Vector2(-1, -1), new Vector2(1, 1)));
+            block.Entities.Add(new Line(new Vector2(-1, 1), new Vector2(1, -1)));
+            block.Entities.Add(new Circle(Vector2.Zero, 0.5));
+
+            Insert ins = new Insert(block);
 
             //List<Vector2> vertexes4 = new List<Vector2>();
             //vertexes4.Add(new Vector2(0));
@@ -283,12 +287,19 @@ namespace TestDxfDocument
 
             Leader leader2 = (Leader)leader1.Clone();
             //Matrix3 trans = Matrix3.Scale(2);
-            //Matrix3 trans = Matrix3.Identity;
-            //trans[1, 1] *= -1;
-            Matrix3 trans = Matrix3.RotationZ(210 * MathHelper.DegToRad);
+            Matrix3 trans = Matrix3.Identity;
+            trans[1, 1] *= -1;
+            //Matrix3 trans = Matrix3.RotationZ(210 * MathHelper.DegToRad);
             leader2.TransformBy(trans, Vector3.Zero);
             //leader2.TransformBy(trans, new Vector3(0, -10, 0));
             doc.AddEntity(leader2);
+
+
+            //leader1.Annotation = ins;
+
+            //leader2.Annotation = null;
+
+            doc.RemoveEntity(leader1);
 
             doc.Save("test.dxf");
 
@@ -298,16 +309,17 @@ namespace TestDxfDocument
 
         public static void Main()
         {
-            //LeaderMirror();
+            LeaderMirror();
 
             //DxfDocument doc = Test(@"sample.dxf");
 
             #region Samples for new and modified features 2.3.0
 
+            //ViewportTransform();
             //MLineMirrorAndExplode();
             //ShapeMirror();
             //TextMirror();
-            MTextMirror();
+            //MTextMirror();
 
             #endregion
 
@@ -512,9 +524,46 @@ namespace TestDxfDocument
 
         #region Samples for new and modified features 2.3.0
 
+        public static void ViewportTransform()
+        {
+            DxfDocument doc = DxfDocument.Load("ViewportTransform.dxf");
+            doc.Save("ViewportTransform1.dxf");
+
+            doc.ActiveLayout = "Layout1";
+            Viewport view = doc.Viewports.ElementAt(0);
+            //viewport.TransformBy(Matrix3.Identity, new Vector3(50,50, 0));
+            //doc.AddEntity(viewport.ClippingBoundary);
+
+            Vector2 center = new Vector2(180, 120);
+            double width = 100;
+            double height = 80;
+            //Viewport viewport = new Viewport(center, width, height);
+
+            LwPolyline lwPolyline = new LwPolyline(
+                new List<LwPolylineVertex>()
+                {
+                    new LwPolylineVertex(center.X - width*0.5 -20, center.Y - height *0.5 -20),
+                    new LwPolylineVertex(center.X + width*0.5, center.Y - height *0.5),
+                    new LwPolylineVertex(center.X + width*0.5, center.Y + height *0.5),
+                    new LwPolylineVertex(center.X - width*0.5, center.Y + height *0.5)
+
+                }, true) {Color = AciColor.Blue};
+            Viewport viewport = new Viewport(lwPolyline);
+
+            doc.AddEntity(viewport);
+            doc.AddEntity((EntityObject) viewport.Clone());
+            viewport.TransformBy(Matrix3.Identity, new Vector3(-15,-15, 0));
+
+            viewport.ClippingBoundary = null;
+
+            viewport.ClippingBoundary = lwPolyline;
+
+            doc.Save("test.dxf");
+        }
+
         public static void MTextMirror()
         {
-            MText text1 = new MText("Sample text", new Vector2(5,2), 10, 0.0);
+            MText text1 = new MText("Sample text", new Vector2(50,20), 10, 0.0);
             //text1.IsBackward = true;
             //text1.Rotation = 30;
             //text1.ObliqueAngle = 10;
@@ -531,7 +580,7 @@ namespace TestDxfDocument
 
             Matrix3 trans = Matrix3.Identity;
             trans[0, 0] = -1;
-            trans = Matrix3.RotationZ(30 * MathHelper.DegToRad) * trans;
+            //trans = Matrix3.RotationZ(30 * MathHelper.DegToRad) * trans;
 
             text2.TransformBy(trans, Vector3.Zero);
 
@@ -548,15 +597,15 @@ namespace TestDxfDocument
             //text1.Rotation = 30;
             //text1.ObliqueAngle = 10;
 
-            //Matrix3 trans = Matrix3.Identity;
-            //trans[0, 0] = -1;
-            //Text text2 = (Text)text1.Clone();
-            //text2.Color = AciColor.Yellow;
-            //text2.TransformBy(trans, Vector3.Zero);
-
-            Matrix3 trans = Matrix3.RotationZ(210 * MathHelper.DegToRad);
+            Matrix3 trans = Matrix3.Identity;
+            trans[0, 0] = -1;
             Text text2 = (Text)text1.Clone();
+            text2.Color = AciColor.Yellow;
             text2.TransformBy(trans, Vector3.Zero);
+
+            //Matrix3 trans = Matrix3.RotationZ(210 * MathHelper.DegToRad);
+            //Text text2 = (Text)text1.Clone();
+            //text2.TransformBy(trans, Vector3.Zero);
 
             DxfDocument doc = new DxfDocument();
             doc.AddEntity(text1);
@@ -626,18 +675,22 @@ namespace TestDxfDocument
             //mline2.Color = AciColor.Yellow;
 
             //Matrix3 trans = Matrix3.RotationZ(Math.PI);
-            Matrix3 trans = Matrix3.Identity;
-            trans[0, 0] = -1;
-            //trans[1, 1] = -1;
+            //Matrix3 trans = Matrix3.Identity;
+            //trans[0, 0] = -1;
+            ////trans[1, 1] = -1;
+
+            Matrix3 trans = Matrix3.RotationX(MathHelper.HalfPI);
             mline2.TransformBy(trans, Vector3.Zero);
+
+
 
             DxfDocument doc = new DxfDocument(DxfVersion.AutoCad2010);
             doc.DrawingVariables.LtScale = 10;
 
             doc.AddEntity(mline1);
-            //doc.AddEntity(mline2);
-            List<EntityObject> entities = mline2.Explode();
-            doc.AddEntity(entities);
+            doc.AddEntity(mline2);
+            //List<EntityObject> entities = mline2.Explode();
+            //doc.AddEntity(entities);
 
             doc.Save("test.dxf");
         }

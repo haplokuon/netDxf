@@ -1,7 +1,7 @@
-#region netDxf library, Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
+#region netDxf library, Copyright (C) 2009-2019 Daniel Carvajal (haplokuon@gmail.com)
 
 //                        netDxf library
-// Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2009-2019 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -641,7 +641,12 @@ namespace netDxf.Blocks
                         this.entities.Add(entity);
                 }
             }
-
+            else if (e.Item.Type == EntityType.Viewport)
+            {
+                Viewport viewport = (Viewport) e.Item;
+                if (viewport.ClippingBoundary != null)
+                    this.entities.Add(viewport.ClippingBoundary);
+            }
             this.OnEntityAddedEvent(e.Item);
             e.Item.Owner = this;
         }
