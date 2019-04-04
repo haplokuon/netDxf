@@ -449,6 +449,7 @@ namespace netDxf
         public static double NormalizeAngle(double angle)
         {
             double c = angle%360.0;
+            if (IsZero(c)) c = 0.0;
             if (c < 0)
                 return 360.0 + c;
             return c;

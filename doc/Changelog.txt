@@ -1,5 +1,11 @@
 ## Change history
 
+* Added Width property to Text entity it is only applicable if the Alignment is Fit or Aligned.
+* Added MirrText DrawingVariable to the document, it controls whether the text will be mirrored or not when a symmetry is performed.
+* Added the static property DefaultMirrText to the Text and MText entity. It is the equivalent MirrText DrawingVariable used when the entity does not belong to a DxfDocument.
+* Added the static property DefaultInsUnits to the Insert entity. It is the equivalent InsUnits DrawingVariable used when the entity does not belong to a DxfDocument.
+* (fixed) The Text Alignment Fit and Aligned should work properly.
+
 * Implemented TransformBy method for Viewport entities.
 * Added two new constructors to Viewport class to create rectangular viewports.
 * The Viewport will show the grid by default.
@@ -19,7 +25,7 @@
 * (fixed) Radial and Diametric dimensions not showing the "R" and "Ø" when no prefix is use in the dimension style.
 
 * Improved and fixed some issues with the TransformBy methods.
-* (fixed) A few issues when clonning a Tolerance entity.
+* (fixed) A few issues when cloning a Tolerance entity.
 
 * Added properties IsBackward and IsUpsideDown to Attribute and AttributeDefinition objects.
 * The Shape entity Size property now does not allow negative values, rotate it 180 degrees to achieve the same result.

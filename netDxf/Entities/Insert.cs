@@ -162,6 +162,15 @@ namespace netDxf.Entities
         #region public properties
 
         /// <summary>
+        /// Gets or sets the default drawing units to obtain the Insert transformation matrix, when the current Insert entity does not belong to a DXF document.
+        /// </summary>
+        public static DrawingUnits DefaultInsUnits
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
         /// Gets the insert list of <see cref="Attribute">attributes</see>.
         /// </summary>
         public AttributeCollection Attributes
@@ -260,6 +269,31 @@ namespace netDxf.Entities
         /// <summary>
         /// Calculates the insertion rotation matrix.
         /// </summary>
+        /// <returns>The insert transformation matrix.</returns>
+        /// <remarks>
+        /// This method uses the DefaultInsUnits defined by the Insert class to obtain the scale between the drawing and the block units.
+        /// Additionally, if the insert belongs to a block the units to use are the ones defined in the BlockRecord,
+        /// and if the insert belongs to a layout the units to use are the ones defined in the document drawing variable InsUnits.
+        /// </remarks>
+        public Matrix3 GetTransformation()
+        {
+            DrawingUnits insUnits;
+            if (this.Owner == null)
+                insUnits = DefaultInsUnits;
+            else
+                insUnits = this.Owner.Record.Layout == null ? this.Owner.Record.Units : this.Owner.Record.Owner.Owner.DrawingVariables.InsUnits;
+
+            double docScale = UnitHelper.ConversionFactor(this.Block.Record.Units, insUnits);
+            Matrix3 trans = MathHelper.ArbitraryAxis(this.Normal);
+            trans *= Matrix3.RotationZ(this.rotation * MathHelper.DegToRad);
+            trans *= Matrix3.Scale(this.scale * docScale);
+
+            return trans;
+        }
+
+        /// <summary>
+        /// Calculates the insertion rotation matrix.
+        /// </summary>
         /// <param name="insertionUnits">The insertion units.</param>
         /// <returns>The insert transformation matrix.</returns>
         public Matrix3 GetTransformation(DrawingUnits insertionUnits)
@@ -290,16 +324,7 @@ namespace netDxf.Entities
             if (this.attributes.Count == 0)
                 return;
 
-            DrawingUnits insUnits;
-
-            if (this.Owner == null)
-                insUnits = DrawingUnits.Unitless;
-            else
-                // if the insert belongs to a block the units to use are the ones defined in the BlockRecord
-                // if the insert belongs to a layout the units to use are the ones defined in the Document
-                insUnits = this.Owner.Record.Layout == null ? this.Owner.Record.Units : this.Owner.Record.Owner.Owner.DrawingVariables.InsUnits;
-
-            Matrix3 transformation = this.GetTransformation(insUnits);
+            Matrix3 transformation = this.GetTransformation();
             Vector3 translation = this.Position - transformation * this.block.Origin;
 
             foreach (Attribute att in this.attributes)
@@ -311,6 +336,7 @@ namespace netDxf.Entities
                 // reset the attribute to its default values
                 att.Position = attdef.Position;
                 att.Height = attdef.Height;
+                att.Width = attdef.Width;
                 att.WidthFactor = attdef.WidthFactor;
                 att.ObliqueAngle = attdef.ObliqueAngle;
                 att.Rotation = attdef.Rotation;
@@ -335,7 +361,7 @@ namespace netDxf.Entities
                                   MathHelper.IsEqual(this.scale.Y, this.scale.Z);
 
             List<EntityObject> entities = new List<EntityObject>();
-            Matrix3 transformation = this.GetTransformation(this.Owner == null ? DrawingUnits.Unitless : this.Block.Record.Owner.Owner.DrawingVariables.InsUnits);
+            Matrix3 transformation = this.GetTransformation();
             Vector3 translation = this.Position - transformation * this.block.Origin;
 
             foreach (EntityObject entity in this.block.Entities)
@@ -437,6 +463,34 @@ namespace netDxf.Entities
                     newEntity.TransformBy(transformation, translation);
                     entities.Add(newEntity);
                 }
+            }
+
+            foreach (Attribute attribute in this.attributes)
+            {
+                // the attributes will be exploded as a Text entity
+                Text text = new Text
+                {
+                    //Attribute properties
+                    Layer = (Layer) attribute.Layer.Clone(),
+                    Linetype = (Linetype) attribute.Linetype.Clone(),
+                    Color = (AciColor) attribute.Color.Clone(),
+                    Lineweight = attribute.Lineweight,
+                    Transparency = (Transparency) attribute.Transparency.Clone(),
+                    LinetypeScale = attribute.LinetypeScale,
+                    Normal = attribute.Normal,
+                    IsVisible = attribute.IsVisible,
+                    Height = attribute.Height,
+                    WidthFactor = attribute.WidthFactor,
+                    ObliqueAngle = attribute.ObliqueAngle,
+                    Value = attribute.Value.ToString(),
+                    Style = (TextStyle) attribute.Style.Clone(),
+                    Position = attribute.Position,
+                    Rotation = attribute.Rotation,
+                    Alignment = attribute.Alignment,
+                    IsBackward = attribute.IsBackward,
+                    IsUpsideDown = attribute.IsUpsideDown
+                };
+                entities.Add(text);
             }
 
             return entities;

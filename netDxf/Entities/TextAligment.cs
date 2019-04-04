@@ -48,7 +48,7 @@ namespace netDxf.Entities
         MiddleLeft,
 
         /// <summary>
-        /// Middle center.
+        /// Middle center (uses the center of the text as uppercase characters).
         /// </summary>
         MiddleCenter,
 
@@ -88,18 +88,20 @@ namespace netDxf.Entities
         BaselineRight,
 
         /// <summary>
-        /// Aligned (if vertical alignment = 0).
+        /// Aligned.
         /// </summary>
+        /// <remarks>The text width factor will be automatically adjusted so the text will fit in the specified width.</remarks>
         Aligned,
 
         /// <summary>
-        /// Middle (if vertical alignment = 0)
+        /// Middle (uses the center of the text including descenders).
         /// </summary>
         Middle,
 
         /// <summary>
-        /// Fit (if vertical alignment = 0)
+        /// Fit.
         /// </summary>
+        /// <remarks>The text height will be automatically adjusted so the text will fit in the specified width.</remarks>
         Fit
     }
 }

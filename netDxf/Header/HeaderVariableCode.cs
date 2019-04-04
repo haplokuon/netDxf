@@ -1,7 +1,7 @@
-#region netDxf library, Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
+#region netDxf library, Copyright (C) 2009-2019 Daniel Carvajal (haplokuon@gmail.com)
 
 //                        netDxf library
-// Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2009-2019 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -191,6 +191,11 @@ namespace netDxf.Header
         /// Global line type scale.
         /// </summary>
         public const string LtScale = "$LTSCALE";
+
+        /// <summary>
+        /// Controls if the text will be mirrored during a symmetry.
+        /// </summary>
+        public const string MirrText  = "$MIRRTEXT";
 
         /// <summary>
         /// Controls the <see cref="PointShape">shape</see> to draw a point entity.

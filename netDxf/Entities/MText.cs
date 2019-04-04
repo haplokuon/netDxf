@@ -146,6 +146,26 @@ namespace netDxf.Entities
         /// </summary>
         /// <param name="position">Text <see cref="Vector2">position</see> in world coordinates.</param>
         /// <param name="height">Text height.</param>
+        public MText(Vector2 position, double height)
+            : this(string.Empty, position, height, 0.0, TextStyle.Default)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <c>MText</c> class.
+        /// </summary>
+        /// <param name="position">Text <see cref="Vector2">position</see> in world coordinates.</param>
+        /// <param name="height">Text height.</param>
+        public MText(Vector3 position, double height)
+            : this(string.Empty, position, height, 0.0, TextStyle.Default)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <c>MText</c> class.
+        /// </summary>
+        /// <param name="position">Text <see cref="Vector2">position</see> in world coordinates.</param>
+        /// <param name="height">Text height.</param>
         /// <param name="rectangleWidth">Reference rectangle width.</param>
         public MText(Vector3 position, double height, double rectangleWidth)
             : this(string.Empty, position, height, rectangleWidth, TextStyle.Default)
@@ -193,10 +213,19 @@ namespace netDxf.Entities
         /// <param name="text">Text string.</param>
         /// <param name="position">Text <see cref="Vector2">position</see> in world coordinates.</param>
         /// <param name="height">Text height.</param>
-        /// <param name="rectangleWidth">Reference rectangle width.</param>
-        /// <param name="style">Text <see cref="TextStyle">style</see>.</param>
-        public MText(string text, Vector2 position, double height, double rectangleWidth, TextStyle style)
-            : this(text, new Vector3(position.X, position.Y, 0.0), height, rectangleWidth, style)
+        public MText(string text, Vector2 position, double height)
+            : this(text, new Vector3(position.X, position.Y, 0.0), height, 0.0, TextStyle.Default)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <c>MText</c> class.
+        /// </summary>
+        /// <param name="text">Text string.</param>
+        /// <param name="position">Text <see cref="Vector2">position</see> in world coordinates.</param>
+        /// <param name="height">Text height.</param>
+        public MText(string text, Vector3 position, double height)
+            : this(text, position, height, 0.0, TextStyle.Default)
         {
         }
 
@@ -232,6 +261,19 @@ namespace netDxf.Entities
         /// <param name="height">Text height.</param>
         /// <param name="rectangleWidth">Reference rectangle width.</param>
         /// <param name="style">Text <see cref="TextStyle">style</see>.</param>
+        public MText(string text, Vector2 position, double height, double rectangleWidth, TextStyle style)
+            : this(text, new Vector3(position.X, position.Y, 0.0), height, rectangleWidth, style)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <c>MText</c> class.
+        /// </summary>
+        /// <param name="text">Text string.</param>
+        /// <param name="position">Text <see cref="Vector2">position</see> in world coordinates.</param>
+        /// <param name="height">Text height.</param>
+        /// <param name="rectangleWidth">Reference rectangle width.</param>
+        /// <param name="style">Text <see cref="TextStyle">style</see>.</param>
         public MText(string text, Vector3 position, double height, double rectangleWidth, TextStyle style)
             : base(EntityType.MText, DxfObjectCode.MText)
         {
@@ -254,6 +296,15 @@ namespace netDxf.Entities
         #endregion
 
         #region public properties
+
+        /// <summary>
+        /// Gets or sets if the text will be mirrored when a symmetry is performed, when the current MText entity does not belong to a DXF document.
+        /// </summary>
+        public static bool DefaultMirrText
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Gets or sets the text rotation in degrees.
@@ -724,11 +775,14 @@ namespace netDxf.Entities
         /// <param name="transformation">Transformation matrix.</param>
         /// <param name="translation">Translation vector.</param>
         /// <remarks>
-        /// Non-uniform is not supported, it would require to decompose each line into independent Text entities.
-        /// When making a symmetry of a MText the text will not be inverted only its AttachmentPoint will change.
+        /// Non-uniform scaling is not supported, it would require to decompose each line into independent Text entities.
+        /// When the current MText entity does not belong to a DXF document, the text will be mirrored by default when a symmetry is performed;
+        /// otherwise, the drawing variable MirrText will be used.
         /// </remarks>
         public override void TransformBy(Matrix3 transformation, Vector3 translation)
         {
+            bool mirrText = this.Owner == null ? DefaultMirrText : this.Owner.Record.Owner.Owner.DrawingVariables.MirrText;
+
             Vector3 newPosition;
             Vector3 newNormal;
             Vector2 newUvector;
@@ -736,8 +790,6 @@ namespace netDxf.Entities
             double scale;
             double newHeight;
             double newRotation;
-            bool reverseTextX = false;
-            bool reverseTextY = false;
 
             newPosition = transformation * this.Position + translation;
             newNormal = transformation * this.Normal;
@@ -768,16 +820,68 @@ namespace netDxf.Entities
 
             newRotation = Vector2.Angle(newUvector) * MathHelper.RadToDeg;
 
-            if (Vector2.CrossProduct(newUvector, newVvector) < 0.0)
+            if (mirrText)
             {
-                if (Vector2.DotProduct(newUvector, uv[0]) < 0.0)
+                if (Vector2.CrossProduct(newUvector, newVvector) < 0.0)
                 {
                     newRotation += 180;
-                    reverseTextX = true;
+                    newNormal = -newNormal; 
                 }
-                else
+            }
+            else
+            {
+                if (Vector2.CrossProduct(newUvector, newVvector) < 0.0)
                 {
-                    reverseTextY = true;
+                    if (Vector2.DotProduct(newUvector, uv[0]) < 0.0)
+                    {
+                        newRotation += 180;
+
+                        switch (this.AttachmentPoint)
+                        {
+                            case MTextAttachmentPoint.TopLeft:
+                                this.AttachmentPoint = MTextAttachmentPoint.TopRight;
+                                break;
+                            case MTextAttachmentPoint.TopRight:
+                                this.AttachmentPoint = MTextAttachmentPoint.TopLeft;
+                                break;
+                            case MTextAttachmentPoint.MiddleLeft:
+                                this.AttachmentPoint = MTextAttachmentPoint.MiddleRight;
+                                break;
+                            case MTextAttachmentPoint.MiddleRight:
+                                this.AttachmentPoint = MTextAttachmentPoint.MiddleLeft;
+                                break;
+                            case MTextAttachmentPoint.BottomLeft:
+                                this.AttachmentPoint = MTextAttachmentPoint.BottomRight;
+                                break;
+                            case MTextAttachmentPoint.BottomRight:
+                                this.AttachmentPoint = MTextAttachmentPoint.BottomLeft;
+                                break;
+                        }
+                    }
+                    else
+                    {
+                        switch (this.AttachmentPoint)
+                        {
+                            case MTextAttachmentPoint.TopLeft:
+                                this.AttachmentPoint = MTextAttachmentPoint.BottomLeft;
+                                break;
+                            case MTextAttachmentPoint.TopCenter:
+                                this.attachmentPoint = MTextAttachmentPoint.BottomCenter;
+                                break;
+                            case MTextAttachmentPoint.TopRight:
+                                this.AttachmentPoint = MTextAttachmentPoint.BottomRight;
+                                break;
+                            case MTextAttachmentPoint.BottomLeft:
+                                this.AttachmentPoint = MTextAttachmentPoint.TopLeft;
+                                break;
+                            case MTextAttachmentPoint.BottomCenter:
+                                this.attachmentPoint = MTextAttachmentPoint.TopCenter;
+                                break;
+                            case MTextAttachmentPoint.BottomRight:
+                                this.AttachmentPoint = MTextAttachmentPoint.TopRight;
+                                break;
+                        }
+                    }
                 }
             }
 
@@ -793,49 +897,6 @@ namespace netDxf.Entities
             this.Height = newHeight;
             this.RectangleWidth *= scale;
 
-            if (reverseTextX)
-            {
-                switch (this.AttachmentPoint)
-                {
-                    case MTextAttachmentPoint.TopLeft:
-                        this.AttachmentPoint = MTextAttachmentPoint.TopRight;
-                        break;
-                    case MTextAttachmentPoint.TopRight:
-                        this.AttachmentPoint = MTextAttachmentPoint.TopLeft;
-                        break;
-                    case MTextAttachmentPoint.MiddleLeft:
-                        this.AttachmentPoint = MTextAttachmentPoint.MiddleRight;
-                        break;
-                    case MTextAttachmentPoint.MiddleRight:
-                        this.AttachmentPoint = MTextAttachmentPoint.MiddleLeft;
-                        break;
-                    case MTextAttachmentPoint.BottomLeft:
-                        this.AttachmentPoint = MTextAttachmentPoint.BottomRight;
-                        break;
-                    case MTextAttachmentPoint.BottomRight:
-                        this.AttachmentPoint = MTextAttachmentPoint.BottomLeft;
-                        break;
-                }
-            }
-            if(reverseTextY)
-            {
-                // there is no need to change the attachment points middle right or middle left
-                switch (this.AttachmentPoint)
-                {
-                    case MTextAttachmentPoint.TopLeft:
-                        this.AttachmentPoint = MTextAttachmentPoint.BottomLeft;
-                        break;
-                    case MTextAttachmentPoint.TopRight:
-                        this.AttachmentPoint = MTextAttachmentPoint.BottomRight;
-                        break;
-                    case MTextAttachmentPoint.BottomLeft:
-                        this.AttachmentPoint = MTextAttachmentPoint.TopLeft;
-                        break;
-                    case MTextAttachmentPoint.BottomRight:
-                        this.AttachmentPoint = MTextAttachmentPoint.TopRight;
-                        break;
-                }
-            }
         }
 
         /// <summary>

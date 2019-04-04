@@ -616,6 +616,10 @@ namespace netDxf.IO
                     this.chunk.Write(9, name);
                     this.chunk.Write(290, value);
                     break;
+                case HeaderVariableCode.MirrText:
+                    this.chunk.Write(9, name);
+                    this.chunk.Write(70, (bool) value ? (short) 1 : (short) 0);
+                    break;
                 case HeaderVariableCode.PdMode:
                     this.chunk.Write(9, name);
                     this.chunk.Write(70, (short) (PointShape) value);
@@ -2778,9 +2782,20 @@ namespace netDxf.IO
 
             this.chunk.Write(7, this.EncodeNonAsciiCharacters(text.Style.Name));
 
-            this.chunk.Write(11, ocsBasePoint.X);
-            this.chunk.Write(21, ocsBasePoint.Y);
-            this.chunk.Write(31, ocsBasePoint.Z);
+            if (text.Alignment == TextAlignment.Fit || text.Alignment == TextAlignment.Aligned)
+            {
+                Vector2 endPoint = Vector2.Rotate(text.Width * Vector2.UnitX, text.Rotation * MathHelper.DegToRad);
+                Vector3 ocsEndPoint = ocsBasePoint + new Vector3(endPoint.X, endPoint.Y, 0.0);
+                this.chunk.Write(11, ocsEndPoint.X);
+                this.chunk.Write(21, ocsEndPoint.Y);
+                this.chunk.Write(31, ocsEndPoint.Z);
+            }
+            else
+            {
+                this.chunk.Write(11, ocsBasePoint.X);
+                this.chunk.Write(21, ocsBasePoint.Y);
+                this.chunk.Write(31, ocsBasePoint.Z);
+            }
 
             this.chunk.Write(210, text.Normal.X);
             this.chunk.Write(220, text.Normal.Y);

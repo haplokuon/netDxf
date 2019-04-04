@@ -309,7 +309,7 @@ namespace TestDxfDocument
 
         public static void Main()
         {
-            LeaderMirror();
+            //LeaderMirror();
 
             //DxfDocument doc = Test(@"sample.dxf");
 
@@ -320,6 +320,7 @@ namespace TestDxfDocument
             //ShapeMirror();
             //TextMirror();
             //MTextMirror();
+            InsertMirror();
 
             #endregion
 
@@ -563,7 +564,11 @@ namespace TestDxfDocument
 
         public static void MTextMirror()
         {
-            MText text1 = new MText("Sample text", new Vector2(50,20), 10, 0.0);
+            MText text1 = new MText(new Vector2(50,20), 10);
+            text1.Write("Sample text");
+            text1.EndParagraph();
+            text1.Write("Sample text");
+
             //text1.IsBackward = true;
             //text1.Rotation = 30;
             //text1.ObliqueAngle = 10;
@@ -578,29 +583,37 @@ namespace TestDxfDocument
             //Matrix3 trans = Matrix3.RotationZ(210 * MathHelper.DegToRad);
             //text2.TransformBy(trans, Vector3.Zero);
 
+
+            DxfDocument doc = new DxfDocument();
+            doc.DrawingVariables.MirrText = true;
+            doc.AddEntity(text1);
+            doc.AddEntity(text2);
+
             Matrix3 trans = Matrix3.Identity;
             trans[0, 0] = -1;
             //trans = Matrix3.RotationZ(30 * MathHelper.DegToRad) * trans;
 
             text2.TransformBy(trans, Vector3.Zero);
 
-            DxfDocument doc = new DxfDocument();
-            doc.AddEntity(text1);
-            doc.AddEntity(text2);
             doc.Save("test.dxf");
         }
 
         public static void TextMirror()
         {
-            Text text1 = new Text("Sample text", new Vector2(5,2), 10);
+            netDxf.Entities.Text.DefaultMirrText = true;
+
+            Text text1 = new Text("Sample text", new Vector2(30,10), 10);
+            text1.Alignment = TextAlignment.BaselineLeft;
+            text1.Width = 200;
+
             //text1.IsBackward = true;
             //text1.Rotation = 30;
-            //text1.ObliqueAngle = 10;
+            text1.ObliqueAngle = 10;
 
-            Matrix3 trans = Matrix3.Identity;
-            trans[0, 0] = -1;
             Text text2 = (Text)text1.Clone();
             text2.Color = AciColor.Yellow;
+            Matrix3 trans = Matrix3.Identity;
+            trans[1, 1] = -1;
             text2.TransformBy(trans, Vector3.Zero);
 
             //Matrix3 trans = Matrix3.RotationZ(210 * MathHelper.DegToRad);
@@ -608,9 +621,15 @@ namespace TestDxfDocument
             //text2.TransformBy(trans, Vector3.Zero);
 
             DxfDocument doc = new DxfDocument();
+            //doc.DrawingVariables.MirrText = true;
+
             doc.AddEntity(text1);
             doc.AddEntity(text2);
+
+
             doc.Save("test.dxf");
+
+            DxfDocument dxf = DxfDocument.Load("text.dxf");
         }
 
         private static void ShapeMirror()
@@ -693,6 +712,22 @@ namespace TestDxfDocument
             //doc.AddEntity(entities);
 
             doc.Save("test.dxf");
+        }
+
+        public static void InsertMirror()
+        {
+            DxfDocument doc = DxfDocument.Load("BlockSample.dxf");
+            doc.DrawingVariables.MirrText = true;
+            Insert insert = doc.Inserts.ElementAt(0);
+
+            Insert copy = (Insert) insert.Clone();
+            Matrix3 trans = Matrix3.Identity;
+            trans[1, 1] = -1;
+            copy.TransformBy(trans, Vector3.Zero);
+            //doc.AddEntity(copy);
+            doc.AddEntity(copy.Explode());
+            doc.Save("test.dxf");
+
         }
 
         #endregion

@@ -507,6 +507,11 @@ namespace netDxf.IO
                         this.doc.DrawingVariables.LwDisplay = this.chunk.ReadBool();
                         this.chunk.Next();
                         break;
+                    case HeaderVariableCode.MirrText:
+                        short mirrtext = this.chunk.ReadShort();
+                        this.doc.DrawingVariables.MirrText = mirrtext != 0;
+                        this.chunk.Next();
+                        break;
                     case HeaderVariableCode.PdMode:
                         this.doc.DrawingVariables.PdMode = (PointShape) this.chunk.ReadShort();
                         this.chunk.Next();
@@ -2894,6 +2899,7 @@ namespace netDxf.IO
             Vector3 secondAlignmentPoint = Vector3.Zero;
             TextStyle style = TextStyle.Default;
             double height = 0.0;
+            double width = 1.0;
             double widthFactor = 0.0;
             short horizontalAlignment = 0;
             short verticalAlignment = 0;
@@ -3006,12 +3012,26 @@ namespace netDxf.IO
             }
 
             TextAlignment alignment = ObtainAlignment(horizontalAlignment, verticalAlignment);
-            Vector3 ocsBasePoint = alignment == TextAlignment.BaselineLeft ? firstAlignmentPoint : secondAlignmentPoint;
-            Vector3 wcsBasePoint = MathHelper.Transform(ocsBasePoint, normal, CoordinateSystem.Object, CoordinateSystem.World);
+
+            Vector3 ocsBasePoint;
+
+            if (alignment == TextAlignment.BaselineLeft)
+            {
+                ocsBasePoint = firstAlignmentPoint;
+            }
+            else if (alignment == TextAlignment.Fit || alignment == TextAlignment.Aligned)
+            {
+                width = (secondAlignmentPoint - firstAlignmentPoint).Modulus();
+                ocsBasePoint = firstAlignmentPoint;
+            }
+            else
+            {
+                ocsBasePoint = secondAlignmentPoint;
+            }
 
             AttributeDefinition attDef = new AttributeDefinition(tag)
             {
-                Position = wcsBasePoint,
+                Position = MathHelper.Transform(ocsBasePoint, normal, CoordinateSystem.Object, CoordinateSystem.World),
                 Normal = normal,
                 Alignment = alignment,
                 Prompt = text,
@@ -3019,6 +3039,7 @@ namespace netDxf.IO
                 Flags = flags,
                 Style = style,
                 Height = height,
+                Width = width,
                 WidthFactor = MathHelper.IsZero(widthFactor) ? style.WidthFactor : widthFactor,
                 ObliqueAngle = obliqueAngle,
                 Rotation = rotation
@@ -3044,6 +3065,7 @@ namespace netDxf.IO
             Vector3 secondAlignmentPoint = Vector3.Zero;
             TextStyle style = TextStyle.Default;
             double height = 0.0;
+            double width = 1.0;
             double widthFactor = 0.0;
             double obliqueAngle = 0.0;
             short horizontalAlignment = 0;
@@ -3219,8 +3241,22 @@ namespace netDxf.IO
             }
 
             TextAlignment alignment = ObtainAlignment(horizontalAlignment, verticalAlignment);
-            Vector3 ocsBasePoint = alignment == TextAlignment.BaselineLeft ? firstAlignmentPoint : secondAlignmentPoint;
-            Vector3 wcsBasePoint = MathHelper.Transform(ocsBasePoint, normal, CoordinateSystem.Object, CoordinateSystem.World);
+
+            Vector3 ocsBasePoint;
+
+            if (alignment == TextAlignment.BaselineLeft)
+            {
+                ocsBasePoint = firstAlignmentPoint;
+            }
+            else if (alignment == TextAlignment.Fit || alignment == TextAlignment.Aligned)
+            {
+                width = (secondAlignmentPoint - firstAlignmentPoint).Modulus();
+                ocsBasePoint = firstAlignmentPoint;
+            }
+            else
+            {
+                ocsBasePoint = secondAlignmentPoint;
+            }
 
             Attribute attribute = new Attribute
             {
@@ -3234,13 +3270,14 @@ namespace netDxf.IO
                 IsVisible = isVisible,
                 Definition = attdef,
                 Tag = atttag,
-                Position = wcsBasePoint,
+                Position = MathHelper.Transform(ocsBasePoint, normal, CoordinateSystem.Object, CoordinateSystem.World),
                 Normal = normal,
                 Alignment = alignment,
                 Value = value,
                 Flags = flags,
                 Style = style,
                 Height = height,
+                Width = width,
                 WidthFactor = MathHelper.IsZero(widthFactor) ? style.WidthFactor : widthFactor,
                 ObliqueAngle = obliqueAngle,
                 Rotation = rotation
@@ -7894,6 +7931,7 @@ namespace netDxf.IO
         {
             string textString = string.Empty;
             double height = 0.0;
+            double width = 1.0;
             double widthFactor = 1.0;
             double rotation = 0.0;
             double obliqueAngle = 0.0;
@@ -8018,15 +8056,29 @@ namespace netDxf.IO
             }
 
             TextAlignment alignment = ObtainAlignment(horizontalAlignment, verticalAlignment);
-            Vector3 ocsBasePoint = alignment == TextAlignment.BaselineLeft ? firstAlignmentPoint : secondAlignmentPoint;
 
-            // another example of this OCS vs WCS non sense.
-            // while the MText position is written in WCS the position of the Text is written in OCS (different rules for the same concept).
+            Vector3 ocsBasePoint;
+
+            if (alignment == TextAlignment.BaselineLeft)
+            {
+                ocsBasePoint = firstAlignmentPoint;
+            }
+            else if (alignment == TextAlignment.Fit || alignment == TextAlignment.Aligned)
+            {
+                width = (secondAlignmentPoint - firstAlignmentPoint).Modulus();
+                ocsBasePoint = firstAlignmentPoint;
+            }
+            else
+            {
+                ocsBasePoint = secondAlignmentPoint;
+            }
+
             textString = this.DecodeEncodedNonAsciiCharacters(textString);
             Text text = new Text
             {
                 Value = textString,
                 Height = height,
+                Width = width,
                 WidthFactor = widthFactor,
                 Rotation = rotation,
                 ObliqueAngle = obliqueAngle,

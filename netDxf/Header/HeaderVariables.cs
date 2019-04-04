@@ -76,6 +76,7 @@ namespace netDxf.Header
                 {HeaderVariableCode.TextStyle, new HeaderVariable(HeaderVariableCode.TextStyle, "Standard")},
                 {HeaderVariableCode.LUnits, new HeaderVariable(HeaderVariableCode.LUnits, LinearUnitType.Decimal)},
                 {HeaderVariableCode.LUprec, new HeaderVariable(HeaderVariableCode.LUprec, (short) 4)},
+                {HeaderVariableCode.MirrText, new HeaderVariable(HeaderVariableCode.MirrText, false)},
                 {HeaderVariableCode.Extnames, new HeaderVariable(HeaderVariableCode.Extnames, true)},
                 {HeaderVariableCode.InsBase, new HeaderVariable(HeaderVariableCode.InsBase, Vector3.Zero)},
                 {HeaderVariableCode.InsUnits, new HeaderVariable(HeaderVariableCode.InsUnits, DrawingUnits.Unitless)},
@@ -483,6 +484,15 @@ namespace netDxf.Header
         {
             get { return (bool) this.variables[HeaderVariableCode.LwDisplay].Value; }
             set { this.variables[HeaderVariableCode.LwDisplay].Value = value; }
+        }
+
+        /// <summary>
+        /// Controls if the text will be mirrored during a symmetry.
+        /// </summary>
+        public bool MirrText
+        {
+            get { return (bool) this.variables[HeaderVariableCode.MirrText].Value; }
+            set { this.variables[HeaderVariableCode.MirrText].Value = value; }
         }
 
         /// <summary>
