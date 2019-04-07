@@ -1,5 +1,6 @@
 ## Change history
 
+[2019/04/07]
 * Added Width property to Text entity it is only applicable if the Alignment is Fit or Aligned.
 * Added MirrText DrawingVariable to the document, it controls whether the text will be mirrored or not when a symmetry is performed.
 * Added the static property DefaultMirrText to the Text and MText entity. It is the equivalent MirrText DrawingVariable used when the entity does not belong to a DxfDocument.
