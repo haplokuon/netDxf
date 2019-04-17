@@ -193,6 +193,11 @@ namespace netDxf.Header
         public const string LtScale = "$LTSCALE";
 
         /// <summary>
+        /// Sets drawing units: 0 = English; 1 = Metric.
+        /// </summary>
+        public const string Measurement = "$MEASUREMENT";
+
+        /// <summary>
         /// Controls if the text will be mirrored during a symmetry.
         /// </summary>
         public const string MirrText  = "$MIRRTEXT";

@@ -76,6 +76,7 @@ namespace netDxf.Header
                 {HeaderVariableCode.TextStyle, new HeaderVariable(HeaderVariableCode.TextStyle, "Standard")},
                 {HeaderVariableCode.LUnits, new HeaderVariable(HeaderVariableCode.LUnits, LinearUnitType.Decimal)},
                 {HeaderVariableCode.LUprec, new HeaderVariable(HeaderVariableCode.LUprec, (short) 4)},
+                {HeaderVariableCode.Measurement, new HeaderVariable(HeaderVariableCode.Measurement, 0)},
                 {HeaderVariableCode.MirrText, new HeaderVariable(HeaderVariableCode.MirrText, false)},
                 {HeaderVariableCode.Extnames, new HeaderVariable(HeaderVariableCode.Extnames, true)},
                 {HeaderVariableCode.InsBase, new HeaderVariable(HeaderVariableCode.InsBase, Vector3.Zero)},
@@ -484,6 +485,15 @@ namespace netDxf.Header
         {
             get { return (bool) this.variables[HeaderVariableCode.LwDisplay].Value; }
             set { this.variables[HeaderVariableCode.LwDisplay].Value = value; }
+        }
+
+        /// <summary>
+        /// Sets drawing units: 0 = English; 1 = Metric.
+        /// </summary>
+        public int Measurement
+        {
+            get { return (int)this.variables[HeaderVariableCode.Measurement].Value; }
+            set { this.variables[HeaderVariableCode.Measurement].Value = value; }
         }
 
         /// <summary>
