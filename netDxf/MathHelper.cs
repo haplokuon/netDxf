@@ -199,7 +199,7 @@ namespace netDxf
         /// <param name="from">Point coordinate system.</param>
         /// <param name="to">Coordinate system of the transformed point.</param>
         /// <returns>Transformed point list.</returns>
-        public static IList<Vector2> Transform(IEnumerable<Vector2> points, double rotation, CoordinateSystem from, CoordinateSystem to)
+        public static List<Vector2> Transform(IEnumerable<Vector2> points, double rotation, CoordinateSystem from, CoordinateSystem to)
         {
             if (points == null)
                 throw new ArgumentNullException(nameof(points));
@@ -263,7 +263,7 @@ namespace netDxf
         /// <param name="from">Points coordinate system.</param>
         /// <param name="to">Coordinate system of the transformed points.</param>
         /// <returns>Transformed point list.</returns>
-        public static IList<Vector3> Transform(IEnumerable<Vector3> points, Vector3 zAxis, CoordinateSystem from, CoordinateSystem to)
+        public static List<Vector3> Transform(IEnumerable<Vector3> points, Vector3 zAxis, CoordinateSystem from, CoordinateSystem to)
         {
             if (points == null)
                 throw new ArgumentNullException(nameof(points));

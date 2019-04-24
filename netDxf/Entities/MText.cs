@@ -799,7 +799,7 @@ namespace netDxf.Entities
             Matrix3 transWO = MathHelper.ArbitraryAxis(newNormal);
             transWO = transWO.Transpose();
 
-            IList<Vector2> uv = MathHelper.Transform(new List<Vector2>
+            List<Vector2> uv = MathHelper.Transform(new List<Vector2>
                 {
                     Vector2.UnitX,
                     Vector2.UnitY

@@ -25,7 +25,7 @@ namespace netDxf.Header
     /// <summary>
     /// Strings system variables
     /// </summary>
-    internal static class HeaderVariableCode
+    public static class HeaderVariableCode
     {
         /// <summary>
         /// The AutoCAD drawing database version number.
@@ -106,16 +106,6 @@ namespace netDxf.Header
         /// Current dimension style name.
         /// </summary>
         public const string DimStyle = "$DIMSTYLE";
-
-        /// <summary>
-        /// X, Y, and Z drawing extents upper-right corner (in WCS).
-        /// </summary>
-        public const string ExtMax = "$EXTMAX";
-
-        /// <summary>
-        /// X, Y, and Z drawing extents lower-left corner (in WCS).
-        /// </summary>
-        public const string ExtMin = "$EXTMIN";
 
         /// <summary>
         /// Default text height.

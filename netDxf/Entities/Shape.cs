@@ -206,7 +206,7 @@ namespace netDxf.Entities
             Matrix3 transWO = MathHelper.ArbitraryAxis(newNormal);
             transWO = transWO.Transpose();
 
-            IList<Vector2> uv = MathHelper.Transform(new List<Vector2>
+            List<Vector2> uv = MathHelper.Transform(new List<Vector2>
                 {
                     this.WidthFactor * this.Size * Vector2.UnitX,
                     new Vector2(this.Size * Math.Tan(this.ObliqueAngle * MathHelper.DegToRad), this.Size)

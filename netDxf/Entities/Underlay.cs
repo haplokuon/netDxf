@@ -253,7 +253,7 @@ namespace netDxf.Entities
             Matrix3 transWO = MathHelper.ArbitraryAxis(newNormal);
             transWO = transWO.Transpose();
 
-            IList<Vector2> uv = MathHelper.Transform(new List<Vector2> { this.Scale.X * Vector2.UnitX, this.Scale.Y * Vector2.UnitY },
+            List<Vector2> uv = MathHelper.Transform(new List<Vector2> { this.Scale.X * Vector2.UnitX, this.Scale.Y * Vector2.UnitY },
                 this.rotation * MathHelper.DegToRad,
                 CoordinateSystem.Object, CoordinateSystem.World);
 

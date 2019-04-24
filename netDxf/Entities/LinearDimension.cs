@@ -105,7 +105,7 @@ namespace netDxf.Entities
             if (referenceLine == null)
                 throw new ArgumentNullException(nameof(referenceLine));
 
-            IList<Vector3> ocsPoints = MathHelper.Transform(
+            List<Vector3> ocsPoints = MathHelper.Transform(
                 new List<Vector3> {referenceLine.StartPoint, referenceLine.EndPoint}, normal, CoordinateSystem.World, CoordinateSystem.Object);
             this.firstRefPoint = new Vector2(ocsPoints[0].X, ocsPoints[0].Y);
             this.secondRefPoint = new Vector2(ocsPoints[1].X, ocsPoints[1].Y);

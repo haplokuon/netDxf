@@ -107,7 +107,7 @@ namespace netDxf.Entities
             if (Vector3.AreParallel(firstLine.Direction, secondLine.Direction))
                 throw new ArgumentException("The two lines that define the dimension are parallel.");
 
-            IList<Vector3> ocsPoints =
+            List<Vector3> ocsPoints =
                 MathHelper.Transform(
                     new[]
                     {

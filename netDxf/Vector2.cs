@@ -251,7 +251,7 @@ namespace netDxf
         }
 
         /// <summary>
-        /// Obtains a the polar point of another point. 
+        /// Obtains the polar point of another point. 
         /// </summary>
         /// <param name="u">Reference point.</param>
         /// <param name="distance">Distance from point u.</param>

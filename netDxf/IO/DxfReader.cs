@@ -23,6 +23,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.Eventing.Reader;
 using System.Globalization;
 using System.IO;
 using System.Text;
@@ -482,12 +483,6 @@ namespace netDxf.IO
                         this.doc.DrawingVariables.DwgCodePage = this.chunk.ReadString();
                         this.chunk.Next();
                         break;
-                    case HeaderVariableCode.ExtMax:
-                        this.doc.DrawingVariables.ExtMax = this.ReadHeaderVector();
-                        break;
-                    case HeaderVariableCode.ExtMin:
-                        this.doc.DrawingVariables.ExtMin = this.ReadHeaderVector();
-                        break;
                     case HeaderVariableCode.Extnames:
                         this.doc.DrawingVariables.Extnames = this.chunk.ReadBool();
                         this.chunk.Next();
@@ -578,9 +573,45 @@ namespace netDxf.IO
                         this.doc.DrawingVariables.UcsYDir = this.ReadHeaderVector();
                         break;
                     default:
-                        // some header variables have more than one entry
-                        while (this.chunk.Code != 0 && this.chunk.Code != 9)
-                            this.chunk.Next();
+                        // not recognized header variables will be added to the custom list, except those that correspond to the dimension style
+                        if (!varName.StartsWith("$DIM"))
+                        {
+                            HeaderVariable variable;
+                            if (this.chunk.Code == 10)
+                            {
+                                double x = this.chunk.ReadDouble();
+                                this.chunk.Next();
+                                double y = this.chunk.ReadDouble();
+                                this.chunk.Next();
+                                // the code 30 is optional it might not exist
+                                if (this.chunk.Code == 30)
+                                {
+                                    double z = this.chunk.ReadDouble();
+                                    this.chunk.Next();
+                                    variable = new HeaderVariable(varName, 30, new Vector3(x, y, z));
+                                }
+                                else
+                                {
+                                    variable = new HeaderVariable(varName, 20, new Vector2(x, y));
+                                }
+                            }
+                            else
+                            {
+                                variable = new HeaderVariable(varName, this.chunk.Code, this.chunk.Value);
+                                this.chunk.Next();
+                            }
+
+                            //avoid duplicate custom header variables
+                            if (this.doc.DrawingVariables.ContainsCustomVariable(varName)) this.doc.DrawingVariables.RemoveCustomVariable(varName);
+
+                            this.doc.DrawingVariables.AddCustomVariable(variable);
+                        }
+                        else
+                        {
+                            // some header variables have more than one entry
+                            while (this.chunk.Code != 0 && this.chunk.Code != 9)
+                                this.chunk.Next();
+                        }
                         break;
                 }
             }
@@ -3701,7 +3732,7 @@ namespace netDxf.IO
                 vertexes.RemoveAt(vertexes.Count - 1);
 
             Vector3 normal = Vector3.Normalize(Vector3.CrossProduct(u, v));
-            IList<Vector3> ocsPoints = MathHelper.Transform(new List<Vector3> {position, u, v}, normal, CoordinateSystem.World, CoordinateSystem.Object);
+            List<Vector3> ocsPoints = MathHelper.Transform(new List<Vector3> {position, u, v}, normal, CoordinateSystem.World, CoordinateSystem.Object);
             double bx = ocsPoints[0].X;
             double by = ocsPoints[0].Y;
             double elevation = ocsPoints[0].Z;
@@ -4118,7 +4149,7 @@ namespace netDxf.IO
             {
                 wcsVertexes.RemoveAt(wcsVertexes.Count - 2);
             }
-            IList<Vector3> ocsVertexes = MathHelper.Transform(wcsVertexes, normal, CoordinateSystem.World, CoordinateSystem.Object);
+            List<Vector3> ocsVertexes = MathHelper.Transform(wcsVertexes, normal, CoordinateSystem.World, CoordinateSystem.Object);
             List<Vector2> vertexes = new List<Vector2>();
             foreach (Vector3 v in ocsVertexes)
             {
@@ -4639,7 +4670,7 @@ namespace netDxf.IO
             if (u == Vector3.Zero || v == Vector3.Zero) return null;
 
             Vector3 normal = Vector3.CrossProduct(u, v);
-            IList<Vector3> uvOCS = MathHelper.Transform(new [] {u, v}, normal, CoordinateSystem.World, CoordinateSystem.Object);
+            List<Vector3> uvOCS = MathHelper.Transform(new [] {u, v}, normal, CoordinateSystem.World, CoordinateSystem.Object);
             //double rotation = Vector2.Angle(new Vector2(uOCS.X, uOCS.Y))*MathHelper.RadToDeg;
             double uLength = u.Modulus();
             double vLength = v.Modulus();
@@ -5676,7 +5707,7 @@ namespace netDxf.IO
                 }
             }
 
-            IList<Vector3> ocsPoints = MathHelper.Transform(
+            List<Vector3> ocsPoints = MathHelper.Transform(
                 new List<Vector3>
                 {
                     firstRef, secondRef, defPoint
@@ -5754,7 +5785,7 @@ namespace netDxf.IO
                 }
             }
 
-            IList<Vector3> ocsPoints = MathHelper.Transform(
+            List<Vector3> ocsPoints = MathHelper.Transform(
                 new List<Vector3>
                 {
                     firstRef, secondRef, defPoint
@@ -5814,7 +5845,7 @@ namespace netDxf.IO
                 }
             }
 
-            IList<Vector3> ocsPoints = MathHelper.Transform(
+            List<Vector3> ocsPoints = MathHelper.Transform(
                 new List<Vector3>
                 {
                     circunferenceRef, defPoint
@@ -5872,7 +5903,7 @@ namespace netDxf.IO
                 }
             }
 
-            IList<Vector3> ocsPoints = MathHelper.Transform(
+            List<Vector3> ocsPoints = MathHelper.Transform(
                 new List<Vector3>
                 {
                     circunferenceRef, defPoint
@@ -5955,7 +5986,7 @@ namespace netDxf.IO
                 }
             }
 
-            IList<Vector3> ocsPoints = MathHelper.Transform(
+            List<Vector3> ocsPoints = MathHelper.Transform(
                 new[]
                 {
                     center, firstRef, secondRef, defPoint
@@ -6051,7 +6082,7 @@ namespace netDxf.IO
                 }
             }
 
-            IList<Vector3> ocsPoints = MathHelper.Transform(
+            List<Vector3> ocsPoints = MathHelper.Transform(
                 new[]
                 {
                     startFirstLine, endFirstLine, startSecondLine, defPoint
@@ -6131,7 +6162,7 @@ namespace netDxf.IO
                 }
             }
 
-            IList<Vector3> ocsPoints = MathHelper.Transform(
+            List<Vector3> ocsPoints = MathHelper.Transform(
                 new[]
                 {
                     firstPoint, secondPoint, defPoint

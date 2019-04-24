@@ -333,7 +333,7 @@ namespace netDxf.Entities
             Matrix3 transWO = MathHelper.ArbitraryAxis(newNormal);
             transWO = transWO.Transpose();
 
-            IList<Vector2> uv = MathHelper.Transform(new List<Vector2>
+            List<Vector2> uv = MathHelper.Transform(new List<Vector2>
                 {
                     this.WidthFactor * this.Height * Vector2.UnitX,
                     new Vector2(this.Height * Math.Tan(this.ObliqueAngle * MathHelper.DegToRad), this.Height)
@@ -486,7 +486,7 @@ namespace netDxf.Entities
             Matrix3 transWO = MathHelper.ArbitraryAxis(newNormal);
             transWO = transWO.Transpose();
 
-            IList<Vector2> uv = MathHelper.Transform(new List<Vector2>
+            List<Vector2> uv = MathHelper.Transform(new List<Vector2>
                 {
                     this.WidthFactor * this.Height * Vector2.UnitX,
                     new Vector2(this.Height * Math.Tan(this.ObliqueAngle * MathHelper.DegToRad), this.Height)

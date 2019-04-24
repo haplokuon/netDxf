@@ -205,7 +205,6 @@ namespace netDxf.Entities
             }
         }
 
-        // TODO: return IList for Explode methods
         /// <summary>
         /// Decompose the actual polyline in its internal entities, <see cref="Line">lines</see> and <see cref="Arc">arcs</see>.
         /// </summary>

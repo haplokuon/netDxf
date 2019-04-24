@@ -198,10 +198,33 @@ namespace netDxf.IO
 
             //HEADER SECTION
             this.BeginSection(DxfObjectCode.HeaderSection);
-            foreach (HeaderVariable variable in this.doc.DrawingVariables.Values)
+            foreach (HeaderVariable variable in this.doc.DrawingVariables.KnownValues())
             {
                 this.WriteSystemVariable(variable);
             }
+
+            foreach (HeaderVariable variable in this.doc.DrawingVariables.CustomValues())
+            {
+                this.chunk.Write(9, variable.Name);
+                if (variable.GroupCode == 30)
+                {
+                    Vector3 vector = (Vector3) variable.Value;
+                    this.chunk.Write(10, vector.X);
+                    this.chunk.Write(20, vector.Y);
+                    this.chunk.Write(30, vector.Z);
+                }
+                else if (variable.GroupCode == 20)
+                {
+                    Vector2 vector = (Vector2) variable.Value;
+                    this.chunk.Write(10, vector.X);
+                    this.chunk.Write(20, vector.Y);
+                }
+                else
+                {
+                    this.chunk.Write(variable.GroupCode, variable.Value);
+                }               
+            }
+
             // writing a copy of the active dimension style variables in the header section will avoid to be displayed as <style overrides> in AutoCad
             DimensionStyle activeDimStyle;
             if (this.doc.DimensionStyles.TryGetValue(this.doc.DrawingVariables.DimStyle, out activeDimStyle))
@@ -1932,7 +1955,7 @@ namespace netDxf.IO
             Vector3 ocsUx = new Vector3(max, 0.0, 0.0);
             Vector3 ocsUy = new Vector3(0.0, max, 0.0);
 
-            IList<Vector3> wcsPoints = MathHelper.Transform(new List<Vector3> {ocsInsPoint, ocsUx, ocsUy}, wipeout.Normal, CoordinateSystem.Object, CoordinateSystem.World);
+            List<Vector3> wcsPoints = MathHelper.Transform(new List<Vector3> {ocsInsPoint, ocsUx, ocsUy}, wipeout.Normal, CoordinateSystem.Object, CoordinateSystem.World);
 
             // Insertion point in WCS
             this.chunk.Write(10, wcsPoints[0].X);
@@ -2119,7 +2142,7 @@ namespace netDxf.IO
             foreach (Vector2 vector in leader.Vertexes)
                 ocsVertexes.Add(new Vector3(vector.X, vector.Y, leader.Elevation));
 
-            IList<Vector3> wcsVertexes = MathHelper.Transform(ocsVertexes, leader.Normal, CoordinateSystem.Object, CoordinateSystem.World);
+            List<Vector3> wcsVertexes = MathHelper.Transform(ocsVertexes, leader.Normal, CoordinateSystem.Object, CoordinateSystem.World);
             this.chunk.Write(76, (short) wcsVertexes.Count);
             foreach (Vector3 vertex in wcsVertexes)
             {
@@ -3827,7 +3850,7 @@ namespace netDxf.IO
         {
             this.chunk.Write(100, SubclassMarker.AlignedDimension);
 
-            IList<Vector3> wcsPoints = MathHelper.Transform(
+            List<Vector3> wcsPoints = MathHelper.Transform(
                 new[]
                 {
                     new Vector3(dim.FirstReferencePoint.X, dim.FirstReferencePoint.Y, dim.Elevation),
@@ -3850,7 +3873,7 @@ namespace netDxf.IO
         {
             this.chunk.Write(100, SubclassMarker.AlignedDimension);
 
-            IList<Vector3> wcsPoints = MathHelper.Transform(
+            List<Vector3> wcsPoints = MathHelper.Transform(
                 new[]
                 {
                     new Vector3(dim.FirstReferencePoint.X, dim.FirstReferencePoint.Y, dim.Elevation),
@@ -3908,7 +3931,7 @@ namespace netDxf.IO
         {
             this.chunk.Write(100, SubclassMarker.Angular3PointDimension);
 
-            IList<Vector3> wcsPoints = MathHelper.Transform(
+            List<Vector3> wcsPoints = MathHelper.Transform(
                 new[]
                 {
                     new Vector3(dim.StartPoint.X, dim.StartPoint.Y, dim.Elevation),
@@ -3938,7 +3961,7 @@ namespace netDxf.IO
         {
             this.chunk.Write(100, SubclassMarker.Angular2LineDimension);
 
-            IList<Vector3> wcsPoints = MathHelper.Transform(
+            List<Vector3> wcsPoints = MathHelper.Transform(
                 new[]
                 {
                     new Vector3(dim.StartFirstLine.X, dim.StartFirstLine.Y, dim.Elevation),
@@ -3972,7 +3995,7 @@ namespace netDxf.IO
         {
             this.chunk.Write(100, SubclassMarker.OrdinateDimension);
 
-            IList<Vector3> wcsPoints = MathHelper.Transform(
+            List<Vector3> wcsPoints = MathHelper.Transform(
                 new[]
                 {
                     new Vector3(dim.FeaturePoint.X, dim.FeaturePoint.Y, dim.Elevation),
@@ -4004,7 +4027,7 @@ namespace netDxf.IO
 
             Vector3 ocsU = new Vector3(u.X, u.Y, 0.0);
             Vector3 ocsV = new Vector3(v.X, v.Y, 0.0);
-            IList<Vector3> wcsUV = MathHelper.Transform(new List<Vector3> { ocsU, ocsV },
+            List<Vector3> wcsUV = MathHelper.Transform(new List<Vector3> { ocsU, ocsV },
                 image.Normal,
                 CoordinateSystem.Object,
                 CoordinateSystem.World);
@@ -4081,7 +4104,7 @@ namespace netDxf.IO
             {
                 ocsVertexes.Add(new Vector3(segment.Position.X, segment.Position.Y, mLine.Elevation));
             }
-            IList<Vector3> vertexes = MathHelper.Transform(ocsVertexes, mLine.Normal, CoordinateSystem.Object, CoordinateSystem.World);
+            List<Vector3> vertexes = MathHelper.Transform(ocsVertexes, mLine.Normal, CoordinateSystem.Object, CoordinateSystem.World);
 
             Vector3[] wcsVertexes = new Vector3[vertexes.Count];
             vertexes.CopyTo(wcsVertexes, 0);

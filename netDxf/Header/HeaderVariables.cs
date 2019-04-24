@@ -1,7 +1,7 @@
-﻿#region netDxf library, Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
+﻿#region netDxf library, Copyright (C) 2009-2019 Daniel Carvajal (haplokuon@gmail.com)
 
 //                        netDxf library
-// Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2009-2019 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -31,14 +31,12 @@ namespace netDxf.Header
     /// <summary>
     /// Represents the header variables of a dxf document.
     /// </summary>
-    /// <remarks>
-    /// The names of header variables are the same as they appear in the official dxf documentation but without the $.
-    /// </remarks>
     public class HeaderVariables
     {
         #region private fields
 
         private readonly Dictionary<string, HeaderVariable> variables;
+        private readonly Dictionary<string, HeaderVariable> customVariables;
 
         #endregion
 
@@ -50,56 +48,74 @@ namespace netDxf.Header
         /// <remarks>The default values are the same ones that are apply to a new AutoCad drawing.</remarks>
         public HeaderVariables()
         {
-            this.variables = new Dictionary<string, HeaderVariable>
+            this.variables = new Dictionary<string, HeaderVariable>(StringComparer.OrdinalIgnoreCase)
             {
-                {HeaderVariableCode.AcadVer, new HeaderVariable(HeaderVariableCode.AcadVer, DxfVersion.AutoCad2000)},
-                {HeaderVariableCode.DwgCodePage, new HeaderVariable(HeaderVariableCode.DwgCodePage, "ANSI_" + Encoding.Default.WindowsCodePage)},
-                {HeaderVariableCode.LastSavedBy, new HeaderVariable(HeaderVariableCode.LastSavedBy, Environment.UserName)},
-                {HeaderVariableCode.HandleSeed, new HeaderVariable(HeaderVariableCode.HandleSeed, "1")},
-                {HeaderVariableCode.Angbase, new HeaderVariable(HeaderVariableCode.Angbase, 0.0)},
-                {HeaderVariableCode.Angdir, new HeaderVariable(HeaderVariableCode.Angdir, AngleDirection.CCW)},
-                {HeaderVariableCode.AttMode, new HeaderVariable(HeaderVariableCode.AttMode, AttMode.Normal)},
-                {HeaderVariableCode.AUnits, new HeaderVariable(HeaderVariableCode.AUnits, AngleUnitType.DecimalDegrees)},
-                {HeaderVariableCode.AUprec, new HeaderVariable(HeaderVariableCode.AUprec, (short) 0)},
-                {HeaderVariableCode.CeColor, new HeaderVariable(HeaderVariableCode.CeColor, AciColor.ByLayer)},
-                {HeaderVariableCode.CeLtScale, new HeaderVariable(HeaderVariableCode.CeLtScale, 1.0)},
-                {HeaderVariableCode.CeLtype, new HeaderVariable(HeaderVariableCode.CeLtype, "ByLayer")},
-                {HeaderVariableCode.CeLweight, new HeaderVariable(HeaderVariableCode.CeLweight, Lineweight.ByLayer)},
-                {HeaderVariableCode.CLayer, new HeaderVariable(HeaderVariableCode.CLayer, "0")},
-                {HeaderVariableCode.CMLJust, new HeaderVariable(HeaderVariableCode.CMLJust, MLineJustification.Top)},
-                {HeaderVariableCode.CMLScale, new HeaderVariable(HeaderVariableCode.CMLScale, 20.0)},
-                {HeaderVariableCode.CMLStyle, new HeaderVariable(HeaderVariableCode.CMLStyle, "Standard")},
-                {HeaderVariableCode.DimStyle, new HeaderVariable(HeaderVariableCode.DimStyle, "Standard")},
-                {HeaderVariableCode.ExtMax, new HeaderVariable(HeaderVariableCode.ExtMax, Vector3.NaN)},
-                {HeaderVariableCode.ExtMin, new HeaderVariable(HeaderVariableCode.ExtMin, Vector3.NaN)},
-                {HeaderVariableCode.TextSize, new HeaderVariable(HeaderVariableCode.TextSize, 2.5)},
-                {HeaderVariableCode.TextStyle, new HeaderVariable(HeaderVariableCode.TextStyle, "Standard")},
-                {HeaderVariableCode.LUnits, new HeaderVariable(HeaderVariableCode.LUnits, LinearUnitType.Decimal)},
-                {HeaderVariableCode.LUprec, new HeaderVariable(HeaderVariableCode.LUprec, (short) 4)},
-                {HeaderVariableCode.MirrText, new HeaderVariable(HeaderVariableCode.MirrText, false)},
-                {HeaderVariableCode.Extnames, new HeaderVariable(HeaderVariableCode.Extnames, true)},
-                {HeaderVariableCode.InsBase, new HeaderVariable(HeaderVariableCode.InsBase, Vector3.Zero)},
-                {HeaderVariableCode.InsUnits, new HeaderVariable(HeaderVariableCode.InsUnits, DrawingUnits.Unitless)},
-                {HeaderVariableCode.LtScale, new HeaderVariable(HeaderVariableCode.LtScale, 1.0)},
-                {HeaderVariableCode.LwDisplay, new HeaderVariable(HeaderVariableCode.LwDisplay, false)},
-                {HeaderVariableCode.PdMode, new HeaderVariable(HeaderVariableCode.PdMode, PointShape.Dot)},
-                {HeaderVariableCode.PdSize, new HeaderVariable(HeaderVariableCode.PdSize, 0.0)},
-                {HeaderVariableCode.PLineGen, new HeaderVariable(HeaderVariableCode.PLineGen, (short) 0)},
-                {HeaderVariableCode.PsLtScale, new HeaderVariable(HeaderVariableCode.PsLtScale, (short) 1)},
-                {HeaderVariableCode.TdCreate, new HeaderVariable(HeaderVariableCode.TdCreate, DateTime.Now)},
-                {HeaderVariableCode.TduCreate, new HeaderVariable(HeaderVariableCode.TduCreate, DateTime.UtcNow)},
-                {HeaderVariableCode.TdUpdate, new HeaderVariable(HeaderVariableCode.TdUpdate, DateTime.Now)},
-                {HeaderVariableCode.TduUpdate, new HeaderVariable(HeaderVariableCode.TduUpdate, DateTime.UtcNow)},
-                {HeaderVariableCode.TdinDwg, new HeaderVariable(HeaderVariableCode.TdinDwg, new TimeSpan())},
-                {HeaderVariableCode.UcsOrg, new HeaderVariable(HeaderVariableCode.UcsOrg, Vector3.Zero)},
-                {HeaderVariableCode.UcsXDir, new HeaderVariable(HeaderVariableCode.UcsXDir, Vector3.UnitX)},
-                {HeaderVariableCode.UcsYDir, new HeaderVariable(HeaderVariableCode.UcsYDir, Vector3.UnitY)}
+                {HeaderVariableCode.AcadVer, new HeaderVariable(HeaderVariableCode.AcadVer, 1, DxfVersion.AutoCad2000)},
+                {HeaderVariableCode.DwgCodePage, new HeaderVariable(HeaderVariableCode.DwgCodePage, 3, "ANSI_" + Encoding.Default.WindowsCodePage)},
+                {HeaderVariableCode.LastSavedBy, new HeaderVariable(HeaderVariableCode.LastSavedBy, 1, Environment.UserName)},
+                {HeaderVariableCode.HandleSeed, new HeaderVariable(HeaderVariableCode.HandleSeed, 5, "1")},
+                {HeaderVariableCode.Angbase, new HeaderVariable(HeaderVariableCode.Angbase, 50, 0.0)},
+                {HeaderVariableCode.Angdir, new HeaderVariable(HeaderVariableCode.Angdir, 70, AngleDirection.CCW)},
+                {HeaderVariableCode.AttMode, new HeaderVariable(HeaderVariableCode.AttMode, 70, AttMode.Normal)},
+                {HeaderVariableCode.AUnits, new HeaderVariable(HeaderVariableCode.AUnits, 70, AngleUnitType.DecimalDegrees)},
+                {HeaderVariableCode.AUprec, new HeaderVariable(HeaderVariableCode.AUprec, 70, (short) 0)},
+                {HeaderVariableCode.CeColor, new HeaderVariable(HeaderVariableCode.CeColor, 62, AciColor.ByLayer)},
+                {HeaderVariableCode.CeLtScale, new HeaderVariable(HeaderVariableCode.CeLtScale, 40, 1.0)},
+                {HeaderVariableCode.CeLtype, new HeaderVariable(HeaderVariableCode.CeLtype, 6, "ByLayer")},
+                {HeaderVariableCode.CeLweight, new HeaderVariable(HeaderVariableCode.CeLweight, 370, Lineweight.ByLayer)},
+                {HeaderVariableCode.CLayer, new HeaderVariable(HeaderVariableCode.CLayer,  8, "0")},
+                {HeaderVariableCode.CMLJust, new HeaderVariable(HeaderVariableCode.CMLJust, 70, MLineJustification.Top)},
+                {HeaderVariableCode.CMLScale, new HeaderVariable(HeaderVariableCode.CMLScale, 40, 20.0)},
+                {HeaderVariableCode.CMLStyle, new HeaderVariable(HeaderVariableCode.CMLStyle, 2, "Standard")},
+                {HeaderVariableCode.DimStyle, new HeaderVariable(HeaderVariableCode.DimStyle, 2, "Standard")},
+                {HeaderVariableCode.TextSize, new HeaderVariable(HeaderVariableCode.TextSize, 40, 2.5)},
+                {HeaderVariableCode.TextStyle, new HeaderVariable(HeaderVariableCode.TextStyle, 7, "Standard")},
+                {HeaderVariableCode.LUnits, new HeaderVariable(HeaderVariableCode.LUnits, 70, LinearUnitType.Decimal)},
+                {HeaderVariableCode.LUprec, new HeaderVariable(HeaderVariableCode.LUprec, 70, (short) 4)},
+                {HeaderVariableCode.MirrText, new HeaderVariable(HeaderVariableCode.MirrText, 70, false)},
+                {HeaderVariableCode.Extnames, new HeaderVariable(HeaderVariableCode.Extnames, 290, true)},
+                {HeaderVariableCode.InsBase, new HeaderVariable(HeaderVariableCode.InsBase, 10, Vector3.Zero)},
+                {HeaderVariableCode.InsUnits, new HeaderVariable(HeaderVariableCode.InsUnits, 70, DrawingUnits.Unitless)},
+                {HeaderVariableCode.LtScale, new HeaderVariable(HeaderVariableCode.LtScale, 40, 1.0)},
+                {HeaderVariableCode.LwDisplay, new HeaderVariable(HeaderVariableCode.LwDisplay, 290, false)},
+                {HeaderVariableCode.PdMode, new HeaderVariable(HeaderVariableCode.PdMode, 70, PointShape.Dot)},
+                {HeaderVariableCode.PdSize, new HeaderVariable(HeaderVariableCode.PdSize, 40, 0.0)},
+                {HeaderVariableCode.PLineGen, new HeaderVariable(HeaderVariableCode.PLineGen, 70, (short) 0)},
+                {HeaderVariableCode.PsLtScale, new HeaderVariable(HeaderVariableCode.PsLtScale, 70, (short) 1)},
+                {HeaderVariableCode.TdCreate, new HeaderVariable(HeaderVariableCode.TdCreate, 40, DateTime.Now)},
+                {HeaderVariableCode.TduCreate, new HeaderVariable(HeaderVariableCode.TduCreate, 40, DateTime.UtcNow)},
+                {HeaderVariableCode.TdUpdate, new HeaderVariable(HeaderVariableCode.TdUpdate, 40, DateTime.Now)},
+                {HeaderVariableCode.TduUpdate, new HeaderVariable(HeaderVariableCode.TduUpdate, 40, DateTime.UtcNow)},
+                {HeaderVariableCode.TdinDwg, new HeaderVariable(HeaderVariableCode.TdinDwg, 40, new TimeSpan())},
+                {HeaderVariableCode.UcsOrg, new HeaderVariable(HeaderVariableCode.UcsOrg, 30, Vector3.Zero)},
+                {HeaderVariableCode.UcsXDir, new HeaderVariable(HeaderVariableCode.UcsXDir, 30, Vector3.UnitX)},
+                {HeaderVariableCode.UcsYDir, new HeaderVariable(HeaderVariableCode.UcsYDir, 30, Vector3.UnitY)}
             };
+
+            this.customVariables = new Dictionary<string, HeaderVariable>(StringComparer.OrdinalIgnoreCase);
         }
 
         #endregion
 
         #region public properties
+
+        /// <summary>
+        /// Gets the <see cref="HeaderVariable">HeaderVariable</see> by its name.
+        /// </summary>
+        /// <param name="name">Header variable name.</param>
+        /// <remarks>The header variable name is case insensitive.</remarks>
+        public HeaderVariable this[string name]
+        {
+            get
+            {
+                if(string.IsNullOrEmpty(name))
+                    throw new ArgumentNullException(nameof(name));
+                HeaderVariable variable;
+                if (this.customVariables.TryGetValue(name, out variable)) return variable;
+                if (this.variables.TryGetValue(name, out variable)) return variable;
+                return null;
+            }
+        }
 
         /// <summary>
         /// The AutoCAD drawing database version number.
@@ -374,32 +390,6 @@ namespace netDxf.Header
         }
 
         /// <summary>
-        /// X, Y, and Z drawing extents upper-right corner (in WCS).
-        /// </summary>
-        /// <remarks>
-        /// This header variable is only useful for external dxfs that actually contains a value for this variable, otherwise it will be set to Vector3.NaN, by default.
-        /// In any case it will not be saved in the dxf.
-        /// </remarks>
-        public Vector3 ExtMax
-        {
-            get { return (Vector3) this.variables[HeaderVariableCode.ExtMax].Value; }
-            internal set { this.variables[HeaderVariableCode.ExtMax].Value = value; }
-        }
-
-        /// <summary>
-        /// X, Y, and Z drawing extents lower-left corner (in WCS).
-        /// </summary>
-        /// <remarks>
-        /// This header variable is only useful for external dxfs that actually contains a value for this variable, otherwise it will be set to Vector3.NaN, by default.
-        /// In any case it will not be saved in the dxf.
-        /// </remarks>
-        public Vector3 ExtMin
-        {
-            get { return (Vector3)this.variables[HeaderVariableCode.ExtMin].Value; }
-            internal set { this.variables[HeaderVariableCode.ExtMin].Value = value; }
-        }
-
-        /// <summary>
         /// Controls symbol table naming.
         /// </summary>
         /// <remarks>
@@ -640,14 +630,93 @@ namespace netDxf.Header
 
         #endregion
 
-        #region internal properties
+        #region public methods
 
         /// <summary>
-        /// Gets the collection of header variables.
+        /// Gets the collection of the known header variables.
         /// </summary>
-        internal ICollection<HeaderVariable> Values
+        /// <returns>A list with the known header variables.</returns>
+        public List<HeaderVariable> KnownValues()
         {
-            get { return this.variables.Values; }
+            return new List<HeaderVariable>(this.variables.Values);
+        }
+
+        /// <summary>
+        /// Gets the collection of the known header variables names.
+        /// </summary>
+        /// <returns>A list with the known header variables names.</returns>
+        public List<string> KnownNames()
+        {
+            return new List<string>(this.variables.Keys);
+        }
+
+        /// <summary>
+        /// Gets the collection of the custom header variables.
+        /// </summary>
+        /// <returns>A list with the custom header variables.</returns>
+        public List<HeaderVariable> CustomValues()
+        {
+            return new List<HeaderVariable>(this.customVariables.Values);
+        }
+
+        /// <summary>
+        /// Gets the collection of the custom header variables names.
+        /// </summary>
+        /// <returns>A list with the custom header variables names.</returns>
+        public List<string> CustomNames()
+        {
+            return new List<string>(this.variables.Keys);
+        }
+
+        /// <summary>
+        /// Adds a custom <see cref="HeaderVariable">HeaderVariable</see> to the list.
+        /// </summary>
+        /// <param name="variable">Header variable to add to the list.</param>
+        public void AddCustomVariable(HeaderVariable variable)
+        {
+            if(variable == null)
+                throw new ArgumentNullException(nameof(variable), "The header variable cannot be null.");
+
+            this.customVariables.Add(variable.Name, variable);
+        }
+
+        /// <summary>
+        /// Checks if a custom <see cref="HeaderVariable">HeaderVariable</see> name exits in the list.
+        /// </summary>
+        /// <param name="name">Header variable name.</param>
+        /// <returns>True if a header variable name exits in the list; otherwise, false.</returns>
+        /// <remarks>The header variable name is case insensitive.</remarks>
+        public bool ContainsCustomVariable(string name)
+        {
+            return this.customVariables.ContainsKey(name);
+        }
+
+        /// <summary>Gets the header variable associated with the specified name.</summary>
+        /// <param name="name">The name of the header variable to get.</param>
+        /// <param name="variable">When this method returns, contains the header variable associated with the specified name, if the name is found; otherwise, it contains null.</param>
+        /// <returns>True if the list contains a header variable with the specified name; otherwise, false.</returns>
+        public bool TryGetCustomVariable(string name, out HeaderVariable variable)
+        {
+            return this.customVariables.TryGetValue(name, out variable);
+        }
+
+        /// <summary>
+        /// Removes a custom <see cref="HeaderVariable">HeaderVariable</see> from the list.
+        /// </summary>
+        /// <param name="name">Header variable to add to the list.</param>
+        /// <returns>True if the element is successfully found and removed; otherwise, false.</returns>
+        /// <remarks>The header variable name is case insensitive.</remarks>
+        public bool RemoveCustomVariable(string name)
+        {
+            return this.customVariables.Remove(name);
+        }
+
+        /// <summary>
+        /// Removes all custom <see cref="HeaderVariable">HeaderVariable</see> from the list.
+        /// </summary>
+        public void ClearCustomVariables()
+        {
+            this.customVariables.Clear();
         }
 
         #endregion

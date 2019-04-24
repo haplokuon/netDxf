@@ -208,7 +208,7 @@ namespace netDxf.Entities
             {
                 //this.rotation = MathHelper.NormalizeAngle(value);
 
-                IList<Vector2> uv = MathHelper.Transform(new List<Vector2> { this.uvector, this.vvector },
+                List<Vector2> uv = MathHelper.Transform(new List<Vector2> { this.uvector, this.vvector },
                     MathHelper.NormalizeAngle(value) * MathHelper.DegToRad,
                     CoordinateSystem.Object, CoordinateSystem.World);
                 this.uvector = uv[0];

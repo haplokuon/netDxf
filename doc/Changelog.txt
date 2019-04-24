@@ -1,5 +1,10 @@
 ## Change history
 
+[2019/04/14]
+* Now it is possible to manually add custom header variables to the drawing. When a DXF is loaded all unrecognized header variables will be automatically added as custom header variables to the drawing.
+* Added several methods to the DrawingVariables class to handle custom header variables.
+* Deleted the ExtMax and ExtMin properties from the DrawingVariables class, since those values are not calculated. It is still possible to access them as a custom header variable if the loaded DXF contains them. See sample AddHeaderVariable().
+
 [2019/04/07]
 * Added Width property to Text entity it is only applicable if the Alignment is Fit or Aligned.
 * Added MirrText DrawingVariable to the document, it controls whether the text will be mirrored or not when a symmetry is performed.
