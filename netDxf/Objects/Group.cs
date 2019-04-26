@@ -124,7 +124,7 @@ namespace netDxf.Objects
             this.entities.AddItem += this.Entities_AddItem;
             this.entities.BeforeRemoveItem += this.Entities_BeforeRemoveItem;
             this.entities.RemoveItem += this.Entities_RemoveItem;
-            if (entities != null)
+            if(entities != null)
                 this.entities.AddRange(entities);
         }
 
@@ -203,7 +203,7 @@ namespace netDxf.Objects
         /// </summary>
         public new Groups Owner
         {
-            get { return (Groups)base.Owner; }
+            get { return(Groups)base.Owner; }
             internal set { base.Owner = value; }
         }
 
