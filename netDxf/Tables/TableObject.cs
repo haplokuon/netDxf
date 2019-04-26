@@ -22,6 +22,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using netDxf.Collections;
 
 namespace netDxf.Tables
@@ -71,7 +72,7 @@ namespace netDxf.Tables
 
         #region private fields
 
-        private static readonly IReadOnlyList<string> invalidCharacters = new[] {"\\", "/", ":", "*", "?", "\"", "<", ">", "|", ";", ",", "=", "`"};
+        private static char[] invalidCharacters = new[] { '\\', '/', ':', '*', '?', '"', '<', '>', '|', ';', ',', '=', '`' };
         private bool reserved;
         private string name;
         private readonly XDataDictionary xData;
@@ -130,7 +131,7 @@ namespace netDxf.Tables
         /// </summary>
         public static IReadOnlyList<string> InvalidCharacters
         {
-            get { return invalidCharacters; }
+            get { return invalidCharacters.Select(c => c.ToString()).ToList(); }
         }
 
         /// <summary>
@@ -155,17 +156,7 @@ namespace netDxf.Tables
             if (string.IsNullOrEmpty(name))
                 return false;
 
-            foreach (string s in InvalidCharacters)
-            {
-                if (name.Contains(s))
-                    return false;
-            }
-
-            // using regular expressions is slower
-            //if (Regex.IsMatch(name, "[\\<>/?\":;*|,=`]"))
-            //    throw new ArgumentException("The following characters \\<>/?\":;*|,=` are not supported for table object names.", "name");
-
-            return true;
+            return name.IndexOfAny(invalidCharacters) == -1;
         }
 
         #endregion
