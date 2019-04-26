@@ -31,7 +31,7 @@ namespace netDxf.Collections
     /// Represent a collection of <see cref="EntityObject">entities</see> that fire events when it is modified. 
     /// </summary>
     public class EntityCollection :
-        IList<EntityObject>
+        IEnumerable<EntityObject>
     {
         #region delegates and events
 
@@ -93,7 +93,7 @@ namespace netDxf.Collections
 
         #region private fields
 
-        private readonly List<EntityObject> innerArray;
+        private readonly HashSet<EntityObject> innerArray;
 
         #endregion
 
@@ -104,7 +104,7 @@ namespace netDxf.Collections
         /// </summary>
         public EntityCollection()
         {
-            this.innerArray = new List<EntityObject>();
+            this.innerArray = new HashSet<EntityObject>();
         }
 
         /// <summary>
@@ -115,7 +115,7 @@ namespace netDxf.Collections
         {
             if (capacity < 0)
                 throw new ArgumentOutOfRangeException(nameof(capacity), "The collection capacity cannot be negative.");
-            this.innerArray = new List<EntityObject>(capacity);
+            this.innerArray = new HashSet<EntityObject>();
         }
 
         #endregion
@@ -127,7 +127,7 @@ namespace netDxf.Collections
         /// </summary>
         /// <param name="index"> The zero-based index of the element to get or set.</param>
         /// <returns>The <see cref="EntityObject">entity</see> at the specified index.</returns>
-        public EntityObject this[int index]
+        /*public EntityObject this[int index]
         {
             get { return this.innerArray[index]; }
             set
@@ -145,7 +145,7 @@ namespace netDxf.Collections
                 this.OnAddItemEvent(value);
                 this.OnRemoveItemEvent(remove);
             }
-        }
+        }*/
 
         /// <summary>
         /// Gets the number of <see cref="EntityObject">entities</see> contained in the collection.
@@ -197,7 +197,7 @@ namespace netDxf.Collections
         /// </summary>
         /// <param name="index">The zero-based index at which item should be inserted.</param>
         /// <param name="item">The <see cref="EntityObject">entity</see> to insert. The value can not be null.</param>
-        public void Insert(int index, EntityObject item)
+        /*public void Insert(int index, EntityObject item)
         {
             if (index < 0 || index >= this.innerArray.Count)
                 throw new ArgumentOutOfRangeException(string.Format("The parameter index {0} must be in between {1} and {2}.", index, 0, this.innerArray.Count));
@@ -208,7 +208,7 @@ namespace netDxf.Collections
             this.OnRemoveItemEvent(this.innerArray[index]);
             this.innerArray.Insert(index, item);
             this.OnAddItemEvent(item);
-        }
+        }*/
 
         /// <summary>
         /// Removes the first occurrence of a specific <see cref="EntityObject">entity</see> from the collection
@@ -244,7 +244,7 @@ namespace netDxf.Collections
         /// Removes the <see cref="EntityObject">entity</see> at the specified index of the collection.
         /// </summary>
         /// <param name="index">The zero-based index of the <see cref="EntityObject">entity</see> to remove.</param>
-        public void RemoveAt(int index)
+        /*public void RemoveAt(int index)
         {
             if (index < 0 || index >= this.innerArray.Count)
                 throw new ArgumentOutOfRangeException(string.Format("The parameter index {0} must be in between {1} and {2}.", index, 0, this.innerArray.Count));
@@ -253,7 +253,7 @@ namespace netDxf.Collections
                 return;
             this.innerArray.RemoveAt(index);
             this.OnRemoveItemEvent(remove);
-        }
+        }*/
 
         /// <summary>
         /// Removes all <see cref="EntityObject">entities</see> from the collection.
@@ -271,10 +271,10 @@ namespace netDxf.Collections
         /// </summary>
         /// <param name="item">The <see cref="EntityObject">entity</see> to locate in the collection.</param>
         /// <returns>The zero-based index of the first occurrence of item within the entire collection, if found; otherwise, –1.</returns>
-        public int IndexOf(EntityObject item)
+        /*public int IndexOf(EntityObject item)
         {
             return this.innerArray.IndexOf(item);
-        }
+        }*/
 
         /// <summary>
         /// Determines whether an <see cref="EntityObject">entity</see> is in the collection.
@@ -308,16 +308,6 @@ namespace netDxf.Collections
         #endregion
 
         #region private methods
-
-        void ICollection<EntityObject>.Add(EntityObject item)
-        {
-            this.Add(item);
-        }
-
-        void IList<EntityObject>.Insert(int index, EntityObject item)
-        {
-            this.Insert(index, item);
-        }
 
         IEnumerator IEnumerable.GetEnumerator()
         {

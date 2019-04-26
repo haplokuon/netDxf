@@ -313,214 +313,12 @@ namespace TestDxfDocument
 
             //DxfDocument doc = Test(@"sample.dxf");
 
-            #region Samples for new and modified features 2.3.0
+            DateTime start = DateTime.UtcNow;
 
-            //ViewportTransform();
-            //MLineMirrorAndExplode();
-            //ShapeMirror();
-            //TextMirror();
-            //MTextMirror();
-            InsertMirror();
+            DxfDocument doc = DxfDocument.Load(@"C:\Users\TRI0002\Documents\My Received Files\266_full.dxf");
 
-            #endregion
-
-            #region Samples for new and modified features 2.2.1
-
-            //MTextParagraphFormatting();
-            //MTextCharacterFormatting();
-
-            #endregion
-
-            #region Samples for new and modified features 2.2.0
-
-            //AccessModelBlock();
-            //DimensionBlockGeneration();
-
-            #endregion
-
-            #region Samples for new and modified features 2.1.0
-
-            //Shape();
-            //ComplexLineType();
-            //TextStyle();
-            //ReadWriteFromStream();
-            //ReadWriteFromStream2();
-
-            #endregion
-
-            #region Samples for new and modified features 2.0.1
-
-            //DimensionUserTextWithTwoLines();
-
-            #endregion
-
-            #region Samples for new and modified features 2.0
-
-            //Polyline3dAddVertex();
-            //AcadTable();
-            //DimensionStyleOverrides();
-            //ResetLeaderAnnotationPosition();
-
-            #endregion
-
-            #region Samples for new and modified features 1.1.2
-
-            //LinearDimensionTest();
-            //AlignedDimensionTest();
-            //Angular2LineDimensionTest();
-            //Angular3PointDimensionTest();
-            //DiametricDimensionTest();
-            //RadialDimensionTest();
-            //OrdinateDimensionTest();
-
-            #endregion
-
-            #region Samples for new and modified features 1.1.0
-
-            //WipeoutEntity();
-            //ToleranceEntity();
-            //LeaderEntity();
-            //UnderlayEntity();
-            //SplineFitPoints();
-            //ImageClippingBoundary();
-
-            #endregion
-
-            #region Samples for new and modified features 1.0.2
-
-            //AssociativeHatches();
-            //TraceEntity();
-            //SolidEntity();
-
-            #endregion
-
-            #region Samples for new and modified features 1.0.0
-
-            //ModifyingDocumentEntities();
-            //ModifyingBlockProperties();
-            //ModifyingMLineStyles();
-            //DimensionsLinearAndAngularUnits();
-            //ModifyingDimensionGeometryAndStyle();
-            //ModifyingGroups();
-            //ModifyingXData();
-            //DimensionUserText();
-
-            #endregion
-
-            #region Samples for fixes, new and modified features 0.9.3
-
-            //RemoveBlock();
-            //LinearDimension();
-            //AlignedDimension();
-            //Angular2LineDimension();
-            //Angular3PointDimension();
-            //DiametricDimension();
-            //RadialDimension();
-            //OrdinateDimension();
-
-            #endregion
-
-            #region Samples for fixes, new and modified features 0.9.2
-
-            //NurbsEvaluator();
-            //XDataInformation();
-            //DynamicBlocks();
-
-            #endregion
-
-            #region Samples for fixes, new and modified features 0.9.1
-
-            //LoadAndSaveBlocks();
-
-            #endregion
-
-            #region Samples for fixes, new and modified features 0.9.0
-
-            //MakingGroups();
-            //CombiningTwoDrawings();
-            //BinaryChunkXData();
-            //BinaryDxfFiles();
-            //MeshEntity();
-
-            #endregion
-
-            #region Samples for new and modified features 0.8.0
-
-            //MTextEntity();
-            //TransparencySample();
-            //DocumentUnits();
-            //PaperSpace();
-            //BlockWithAttributes();
-
-            #endregion
-
-            #region other
-
-            //NestedBlock();
-            //DimensionNestedBlock();
-            //EncodingTest();
-            //CheckReferences();
-            //ComplexHatch();
-            //RayAndXLine();
-            //UserCoordinateSystems();
-            //ExplodeInsert();
-            //ImageUsesAndRemove();
-            //LayerAndLinetypesUsesAndRemove();
-            //TextAndDimensionStyleUsesAndRemove();
-            //MLineStyleUsesAndRemove();
-            //AppRegUsesAndRemove();
-            //ExplodePolyfaceMesh(); 
-            //ApplicationRegistries();
-            //TestOCStoWCS();
-            //WriteGradientPattern();
-            //WriteGroup();
-            //WriteMLine();
-            //ObjectVisibility();
-            //EntityTrueColor();
-            //EntityLineWeight();
-            //Text();
-            //WriteNoAsciiText();
-            //WriteSplineBoundaryHatch();
-            //WriteNoInsertBlock();
-            //WriteImage();
-            //AddAndRemove();
-            //LoadAndSave();
-            //CleanDrawing();
-            //OrdinateDimensionDrawing();
-            //Angular2LineDimensionDrawing();
-            //Angular3PointDimensionDrawing();
-            //DiametricDimensionDrawing();
-            //RadialDimensionDrawing();
-            //LinearDimensionDrawing();
-            //AlignedDimensionDrawing();
-            //WriteMText();
-            //LineWidth();
-            //HatchCircleBoundary();
-            //ToPolyline();
-            //FilesTest();
-            //CustomHatchPattern();
-            //LoadSaveHatchTest();
-            //WriteDxfFile();
-            //ReadDxfFile();
-            //ExplodeTest();
-            //HatchTestLinesBoundary();
-            //HatchTest1();
-            //HatchTest2();
-            //HatchTest3();
-            //HatchTest4();
-            //WriteNestedInsert();
-            //WritePolyfaceMesh();
-            //Ellipse();
-            //Solid();
-            //Face3d();
-            //LwPolyline();
-            //Polyline();
-            //Dxf2000();
-            //SpeedTest();
-            //WritePolyline3d();
-            //WriteInsert();
-
-            #endregion
+            Console.WriteLine("Loading DXF took " + (DateTime.UtcNow - start).TotalMilliseconds.ToString() + "ms");
+            Console.ReadLine();
         }
 
         #region Samples for new and modified features 2.3.0
@@ -953,7 +751,7 @@ namespace TestDxfDocument
 
             // Something similar can be done when removing entities from a document
             // pick up the first entity of the list, we now in advance it will be a line (in reality it might contain any kind of entity)
-            Line delete = (Line) loaded.Blocks[Block.DefaultModelSpaceName].Entities[0];
+            Line delete = (Line) loaded.Blocks[Block.DefaultModelSpaceName].Entities.First();
 
             bool isDeleted;
             // this was the way of removing entities from the document ( isDeleted = true)
@@ -966,7 +764,7 @@ namespace TestDxfDocument
 
             // or we can access the owner of the line 
             // pick up another line from the document, the old one has now owner anymore
-            delete = (Line)loaded.Blocks[Block.DefaultModelSpaceName].Entities[0];
+            delete = (Line)loaded.Blocks[Block.DefaultModelSpaceName].Entities.First();
             isDeleted = loaded.Blocks[delete.Owner.Name].Entities.Remove(delete); // (isDeleted = true)
 
             // only one more line remains in the document

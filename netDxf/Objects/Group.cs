@@ -124,7 +124,7 @@ namespace netDxf.Objects
             this.entities.AddItem += this.Entities_AddItem;
             this.entities.BeforeRemoveItem += this.Entities_BeforeRemoveItem;
             this.entities.RemoveItem += this.Entities_RemoveItem;
-            if(entities != null)
+            if (entities != null)
                 this.entities.AddRange(entities);
         }
 
@@ -203,7 +203,7 @@ namespace netDxf.Objects
         /// </summary>
         public new Groups Owner
         {
-            get { return (Groups) base.Owner; }
+            get { return (Groups)base.Owner; }
             internal set { base.Owner = value; }
         }
 
@@ -220,9 +220,11 @@ namespace netDxf.Objects
         public override TableObject Clone(string newName)
         {
             EntityObject[] refs = new EntityObject[this.entities.Count];
-            for (int i = 0; i < this.entities.Count; i++)
+            int i = 0;
+            foreach (var entity in this.entities)
             {
-                refs[i] = (EntityObject) this.entities[i].Clone();
+                refs[i] = (EntityObject)entity.Clone();
+                i++;
             }
 
             Group copy = new Group(newName, refs)
