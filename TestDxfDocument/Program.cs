@@ -246,23 +246,39 @@ namespace TestDxfDocument
 
         public static void AddHeaderVariable()
         {
-            DxfDocument doc = DxfDocument.Load(@"sample.dxf");
+            //DxfDocument doc = DxfDocument.Load(@"sample.dxf");
+
+            DxfDocument doc = new DxfDocument();
+
+            HeaderVariable headerVariable;      
 
             // The ExtMin and ExtMax header variables cannot be directly accessed, now they will be added as custom header variables if the DXF has them
-            HeaderVariable headerVariable;      
+            // they have been deleted since netDxf does not calculate them
             Vector3 extMin;
-            Vector3 extMax;
             if (doc.DrawingVariables.TryGetCustomVariable("$EXTMIN", out headerVariable))
+            {
                 extMin = (Vector3) headerVariable.Value;
+            }
+            Vector3 extMax;
             if (doc.DrawingVariables.TryGetCustomVariable("$EXTMAX", out headerVariable))
+            {
                 extMax = (Vector3) headerVariable.Value;
+            }
 
-            // the header variable might or might no exits we should check it first, but if we are sure
-            //Vector3 extMin = (Vector3) doc.DrawingVariables["$EXTMIN"].Value;
-            //Vector3 extMax = (Vector3) doc.DrawingVariables["$EXTMAX"].Value;
+            // you can try to get a header variable and modify it or create a new one if it does not exists
+            if (doc.DrawingVariables.TryGetCustomVariable("$SPLINESEGS", out headerVariable))
+            {
+                headerVariable.Value = (short) 5; // make sure you pass the correct value type, the code group 70 corresponds to a short
+            }
+            else
+            {
+                doc.DrawingVariables.AddCustomVariable(new HeaderVariable("$SPLINESEGS", 70, (short) 5));
+            }            
 
-            bool removed = doc.DrawingVariables.RemoveCustomVariable("$splinesegs");
-            doc.DrawingVariables.AddCustomVariable(new HeaderVariable("$SPLINESEGS", 70, (short)5));
+            // or you can remove a header variable, even if it does not exist and add a new one
+            doc.DrawingVariables.RemoveCustomVariable("$MEASUREMENT");
+            doc.DrawingVariables.AddCustomVariable(new HeaderVariable("$MEASUREMENT", 70, (short) 0));
+
             doc.Save("test.dxf");
         }
 
@@ -2599,8 +2615,9 @@ namespace TestDxfDocument
             // this is incorrect we cannot add an entity that belongs to a document when the block does not belong to anyone.
             //block.Entities.Add(existingLine);
             doc.Blocks.Add(block);
-            // when the block and the entity that is being added belong to the same document, the entity will be removed from its current layout and added to the block
-            // you cannot add an entity that belongs to a different document or block. Clone it instead.
+            // you cannot add an entity that belongs to a different document or block. Clone it instead or removed first from its previous owner.
+
+            existingLine.Owner.Entities.Remove(existingLine);
             block.Entities.Add(existingLine);
 
             // now we can modify the block properties even if it has been already added to the document
@@ -6860,7 +6877,7 @@ namespace TestDxfDocument
             poly.Vertexes.Add(new LwPolylineVertex(10, 10));
             poly.Vertexes.Add(new LwPolylineVertex(-10, 10));
             poly.Vertexes[2].Bulge = 1;
-            poly.IsClosed = true;
+            //poly.IsClosed = true;
 
             LwPolyline poly2 = new LwPolyline();
             poly2.Vertexes.Add(new LwPolylineVertex(-5, -5));
@@ -6877,28 +6894,30 @@ namespace TestDxfDocument
             poly3.Vertexes.Add(new LwPolylineVertex(-8, -6));
             poly3.IsClosed = true;
 
-            Line line = new Line(new Vector2(-5, -5), new Vector2(5, -5));
+            Line line = new Line(new Vector2(-10, -10), new Vector2(-10, 10));
             List<HatchBoundaryPath> boundary = new List<HatchBoundaryPath>
             {
                 new HatchBoundaryPath(new List<EntityObject> {line, poly}),
-                new HatchBoundaryPath(new List<EntityObject> {poly2}),
-                new HatchBoundaryPath(new List<EntityObject> {poly3}),
+                //new HatchBoundaryPath(new List<EntityObject> {poly2}),
+                //new HatchBoundaryPath(new List<EntityObject> {poly3}),
             };
+
             Hatch hatch = new Hatch(HatchPattern.Net, boundary, true);
+            //Hatch hatch = new Hatch(HatchPattern.Line, boundary, true);
             hatch.Layer = new Layer("hatch")
             {
                 Color = AciColor.Red,
                 Linetype = Linetype.Continuous
             };
             hatch.Pattern.Angle = 30;
-            hatch.Elevation = 52;
-            hatch.Normal = new Vector3(1, 1, 0);
+            //hatch.Elevation = 52;
+            //hatch.Normal = new Vector3(1, 1, 0);
             hatch.Pattern.Scale = 1/hatch.Pattern.LineDefinitions[0].Delta.Y;
-            //dxf.AddEntity(poly);
-            //dxf.AddEntity(poly2);
-            //dxf.AddEntity(poly3);
             dxf.AddEntity(hatch);
-            dxf.AddEntity(hatch.CreateBoundary(true));
+            List<EntityObject> entities = hatch.CreateBoundary(true);
+
+            // if the hatch is associative DO NOT add the entities that make the contourn to the document it will be done automatically
+            //dxf.AddEntity(entities);
 
             dxf.Save("hatchTest1.dxf");
             dxf = DxfDocument.Load("hatchTest1.dxf");
@@ -7125,8 +7144,8 @@ namespace TestDxfDocument
             string layerName = "MyLayer";
             float totalTime = 0;
 
-            //List<EntityObject> lines = new List<EntityObject>(numLines);
-            List<EntityObject> pols = new List<EntityObject>(numLines);
+            List<EntityObject> lines = new List<EntityObject>(numLines);
+            //List<EntityObject> pols = new List<EntityObject>(numLines);
             DxfDocument dxf = new DxfDocument();
 
             crono.Start();
@@ -7150,30 +7169,29 @@ namespace TestDxfDocument
                 //pol.Layer.Color.Index = 6;
                 //pols.Add(pol);
 
-                List<Vector3> vertexes = new List<Vector3>()
-                {
-                    new Vector3(0,0,0),
-                    new Vector3(10,0,10),
-                    new Vector3(10,10,20),
-                    new Vector3(0,10,30),
-                    new Vector3(0,20,40),
-                    new Vector3(10,20,50),
-                    new Vector3(10,30,60),
-                    new Vector3(10,40,70),
-                    new Vector3(0,40,80),
-                    new Vector3(0,50,90)
-                };
-                Polyline pol = new Polyline(vertexes);
-                pol.Layer = new Layer(layerName);
-                pol.Layer.Color.Index = 6;
-                pols.Add(pol);
+                //List<Vector3> vertexes = new List<Vector3>()
+                //{
+                //    new Vector3(0,0,0),
+                //    new Vector3(10,0,10),
+                //    new Vector3(10,10,20),
+                //    new Vector3(0,10,30),
+                //    new Vector3(0,20,40),
+                //    new Vector3(10,20,50),
+                //    new Vector3(10,30,60),
+                //    new Vector3(10,40,70),
+                //    new Vector3(0,40,80),
+                //    new Vector3(0,50,90)
+                //};
+                //Polyline pol = new Polyline(vertexes);
+                //pol.Layer = new Layer(layerName);
+                //pol.Layer.Color.Index = 6;
+                //pols.Add(pol);
 
-                //lines.Add(pol);
-                ////line
-                //Line line = new Line(new Vector3(0, i, 0), new Vector3(5, i, 0));
-                //line.Layer = new Layer(layerName);
-                //line.Layer.Color.Index = 6;
-                //lines.Add(line);
+                //line
+                Line line = new Line(new Vector3(0, i, 0), new Vector3(5, i, 0));
+                line.Layer = new Layer(layerName);
+                line.Layer.Color.Index = 6;
+                lines.Add(line);
             }
 
             Console.WriteLine("Time creating entities : " + crono.ElapsedMilliseconds/1000.0f);
@@ -7181,18 +7199,18 @@ namespace TestDxfDocument
             crono.Reset();
 
             crono.Start();
-            //dxf.AddEntity(lines);
-            dxf.AddEntity(pols);
+            dxf.AddEntity(lines);
+            //dxf.AddEntity(pols);
             Console.WriteLine("Time adding entities to document : " + crono.ElapsedMilliseconds/1000.0f);
             totalTime += crono.ElapsedMilliseconds;
             crono.Reset();
 
-            crono.Start();
-            dxf.DrawingVariables.AcadVer = DxfVersion.AutoCad2000;
-            dxf.Save("speedtest (netDxf 2000).dxf");
-            Console.WriteLine("Time saving file 2000 : " + crono.ElapsedMilliseconds/1000.0f);
-            totalTime += crono.ElapsedMilliseconds;
-            crono.Reset();
+            //crono.Start();
+            //dxf.DrawingVariables.AcadVer = DxfVersion.AutoCad2000;
+            //dxf.Save("speedtest (netDxf 2000).dxf");
+            //Console.WriteLine("Time saving file 2000 : " + crono.ElapsedMilliseconds/1000.0f);
+            //totalTime += crono.ElapsedMilliseconds;
+            //crono.Reset();
 
             //crono.Start();
             //dxf.DrawingVariables.AcadVer = DxfVersion.AutoCad2000;
@@ -7201,20 +7219,20 @@ namespace TestDxfDocument
             //totalTime += crono.ElapsedMilliseconds;
             //crono.Reset();
 
-            //crono.Start();
-            //dxf.DrawingVariables.AcadVer = DxfVersion.AutoCad2010;
-            //dxf.Save("speedtest (netDxf 2010).dxf");
-            //Console.WriteLine("Time saving file 2010 : " + crono.ElapsedMilliseconds/1000.0f);
-            //totalTime += crono.ElapsedMilliseconds;
-            //crono.Reset();
-
-
             crono.Start();
-            dxf = DxfDocument.Load("speedtest (netDxf 2000).dxf");
-            Console.WriteLine("Time loading file 2000: " + crono.ElapsedMilliseconds/1000.0f);
+            dxf.DrawingVariables.AcadVer = DxfVersion.AutoCad2010;
+            dxf.Save("speedtest (netDxf 2010).dxf");
+            Console.WriteLine("Time saving file 2010 : " + crono.ElapsedMilliseconds / 1000.0f);
             totalTime += crono.ElapsedMilliseconds;
-            crono.Stop();
             crono.Reset();
+
+
+            //crono.Start();
+            //dxf = DxfDocument.Load("speedtest (netDxf 2000).dxf");
+            //Console.WriteLine("Time loading file 2000: " + crono.ElapsedMilliseconds/1000.0f);
+            //totalTime += crono.ElapsedMilliseconds;
+            //crono.Stop();
+            //crono.Reset();
 
             //crono.Start();
             //dxf = DxfDocument.Load("speedtest (binary netDxf 2000).dxf");
@@ -7223,12 +7241,12 @@ namespace TestDxfDocument
             //crono.Stop();
             //crono.Reset();
 
-            //crono.Start();
-            //dxf = DxfDocument.Load("speedtest (netDxf 2010).dxf");
-            //Console.WriteLine("Time loading file 2010: " + crono.ElapsedMilliseconds/1000.0f);
-            //totalTime += crono.ElapsedMilliseconds;
-            //crono.Stop();
-            //crono.Reset();
+            crono.Start();
+            dxf = DxfDocument.Load("speedtest (netDxf 2010).dxf");
+            Console.WriteLine("Time loading file 2010: " + crono.ElapsedMilliseconds / 1000.0f);
+            totalTime += crono.ElapsedMilliseconds;
+            crono.Stop();
+            crono.Reset();
 
             Console.WriteLine("Total time : " + totalTime/1000.0f);
             Console.ReadLine();

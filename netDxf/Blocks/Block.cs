@@ -606,18 +606,10 @@ namespace netDxf.Blocks
             // null items, entities already owned by another Block, attribute definitions and attributes are not allowed in the entities list.
             if (e.Item == null)
                 e.Cancel = true;
-            else if (this.entities.Contains(e.Item))
-                e.Cancel = true;
             else if (this.Flags.HasFlag(BlockTypeFlags.ExternallyDependent))
                 e.Cancel = true;
             else if (e.Item.Owner != null)
-            {
-                // if the block does not belong to a document, all entities which owner is not null will be rejected
-                if (this.Record.Owner == null)
-                    e.Cancel = true;
-                // if the block belongs to a document, the entity will be added to the block only if both, the block and the entity document, are the same
-                // this is handled by the BlocksRecordCollection
-            }
+                e.Cancel = true;
             else
                 e.Cancel = false;
         }
@@ -682,13 +674,7 @@ namespace netDxf.Blocks
             else if (this.attributes.ContainsTag(e.Item.Tag))
                 e.Cancel = true;
             else if (e.Item.Owner != null)
-            {
-                // if the block does not belong to a document, all attribute definitions which owner is not null will be rejected
-                if (this.Record.Owner == null)
-                    e.Cancel = true;
-                // if the block belongs to a document, the entity will be added to the block only if both, the block and the attribute definitions document, are the same
-                // this is handled by the BlocksRecordCollection
-            }
+                e.Cancel = true;
             else
                 e.Cancel = false;
         }

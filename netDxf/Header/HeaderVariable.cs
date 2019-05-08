@@ -20,6 +20,8 @@
 
 #endregion
 
+using System;
+
 namespace netDxf.Header
 {
     /// <summary>
@@ -52,6 +54,8 @@ namespace netDxf.Header
         /// </remarks>
         public HeaderVariable(string name, short groupCode, object value)
         {
+            if(!name.StartsWith("$", StringComparison.InvariantCultureIgnoreCase))
+                throw new ArgumentException("Header variable names always starts with '$'", nameof(name));
             this.name = name;
             this.groupCode = groupCode;
             this.variable = value;

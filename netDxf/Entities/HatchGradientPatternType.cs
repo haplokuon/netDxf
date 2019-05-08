@@ -1,7 +1,7 @@
-﻿#region netDxf library, Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+﻿#region netDxf library, Copyright (C) 2009-2019 Daniel Carvajal (haplokuon@gmail.com)
 
 //                        netDxf library
-// Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2009-2019 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -30,46 +30,55 @@ namespace netDxf.Entities
         /// <summary>
         /// Linear.
         /// </summary>
-        [StringValue("LINEAR")] Linear,
+        [StringValue("LINEAR")]
+        Linear = 0,
 
         /// <summary>
         /// Cylinder.
         /// </summary>
-        [StringValue("CYLINDER")] Cylinder,
+        [StringValue("CYLINDER")]
+        Cylinder = 1,
 
         /// <summary>
         /// Inverse cylinder.
         /// </summary>
-        [StringValue("INVCYLINDER")] InvCylinder,
+        [StringValue("INVCYLINDER")]
+        InvCylinder = 2,
 
         /// <summary>
         /// Spherical.
         /// </summary>
-        [StringValue("SPHERICAL")] Spherical,
+        [StringValue("SPHERICAL")]
+        Spherical = 3,
 
         /// <summary>
         /// Inverse spherical.
         /// </summary>
-        [StringValue("INVSPHERICAL")] InvSpherical,
+        [StringValue("INVSPHERICAL")]
+        InvSpherical = 4,
 
         /// <summary>
         /// Hemispherical.
         /// </summary>
-        [StringValue("HEMISPHERICAL")] Hemispherical,
+        [StringValue("HEMISPHERICAL")]
+        Hemispherical = 5,
 
         /// <summary>
         /// Inverse hemispherical.
         /// </summary>
-        [StringValue("INVHEMISPHERICAL")] InvHemispherical,
+        [StringValue("INVHEMISPHERICAL")]
+        InvHemispherical = 6,
 
         /// <summary>
         /// Curved.
         /// </summary>
-        [StringValue("CURVED")] Curved,
+        [StringValue("CURVED")]
+        Curved = 7,
 
         /// <summary>
         /// Inverse curved.
         /// </summary>
-        [StringValue("INVCURVED")] InvCurved
+        [StringValue("INVCURVED")]
+        InvCurved = 8
     }
 }

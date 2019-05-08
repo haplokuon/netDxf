@@ -153,7 +153,6 @@ namespace netDxf.Collections
 
             this.Owner.AddedObjects.Remove(item.Handle);
 
-
             // remove referenced text style
             this.Owner.TextStyles.References[item.TextStyle.Name].Remove(item);
 

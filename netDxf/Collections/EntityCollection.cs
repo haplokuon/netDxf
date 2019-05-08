@@ -217,13 +217,13 @@ namespace netDxf.Collections
         /// <returns>True if <see cref="EntityObject">entity</see> is successfully removed; otherwise, false.</returns>
         public bool Remove(EntityObject item)
         {
-            if (!this.innerArray.Contains(item))
-                return false;
+            //if (!this.innerArray.Contains(item))
+            //    return false;
             if (this.OnBeforeRemoveItemEvent(item))
                 return false;
-            this.innerArray.Remove(item);
-            this.OnRemoveItemEvent(item);
-            return true;
+            bool ok = this.innerArray.Remove(item);
+            if(ok) this.OnRemoveItemEvent(item);
+            return ok;
         }
 
         /// <summary>

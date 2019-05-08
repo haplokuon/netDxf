@@ -142,17 +142,14 @@ namespace netDxf.IO
             {
                 return this.ReadString(valueString);
             }
-
             if (this.code >= 10 && this.code <= 39) // double precision 3D point value
             {
                 return this.ReadDouble(valueString);
             }
-
             if (this.code >= 40 && this.code <= 59) // double precision floating point value
             {
                 return this.ReadDouble(valueString);
             }
-
             if (this.code >= 60 && this.code <= 79) // 16-bit integer value
             {
                 return this.ReadShort(valueString);
@@ -175,7 +172,7 @@ namespace netDxf.IO
             }
             if (this.code == 105) // string representing hexadecimal (hex) handle value
             {
-                return this.ReadString(valueString);
+                return this.ReadHex(valueString);
             }
             if (this.code >= 110 && this.code <= 119) // double precision floating point value
             {
@@ -227,11 +224,11 @@ namespace netDxf.IO
             }
             if (this.code >= 320 && this.code <= 329) // string representing hex handle value
             {
-                return this.ReadString(valueString);
+                return this.ReadHex(valueString);
             }
             if (this.code >= 330 && this.code <= 369) // string representing hex object IDs
             {
-                return this.ReadString(valueString);
+                return this.ReadHex(valueString);
             }
             if (this.code >= 370 && this.code <= 379) // 16-bit integer value
             {
@@ -243,7 +240,7 @@ namespace netDxf.IO
             }
             if (this.code >= 390 && this.code <= 399) // string representing hex handle value
             {
-                return this.ReadString(valueString);
+                return this.ReadHex(valueString);
             }
             if (this.code >= 400 && this.code <= 409) // 16-bit integer value
             {
@@ -279,7 +276,7 @@ namespace netDxf.IO
             }
             if (this.code >= 480 && this.code <= 481) // string representing hex handle value
             {
-                return this.ReadString(valueString);
+                return this.ReadHex(valueString);
             }
             if (this.code == 999) // comment (string)
             {
@@ -385,7 +382,7 @@ namespace netDxf.IO
             return valueString;
         }
 
-        public string ReadHex(string valueString)
+        private string ReadHex(string valueString)
         {
             long test;
             if (long.TryParse(valueString, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out test))

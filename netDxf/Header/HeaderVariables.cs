@@ -100,24 +100,6 @@ namespace netDxf.Header
         #region public properties
 
         /// <summary>
-        /// Gets the <see cref="HeaderVariable">HeaderVariable</see> by its name.
-        /// </summary>
-        /// <param name="name">Header variable name.</param>
-        /// <remarks>The header variable name is case insensitive.</remarks>
-        public HeaderVariable this[string name]
-        {
-            get
-            {
-                if(string.IsNullOrEmpty(name))
-                    throw new ArgumentNullException(nameof(name));
-                HeaderVariable variable;
-                if (this.customVariables.TryGetValue(name, out variable)) return variable;
-                if (this.variables.TryGetValue(name, out variable)) return variable;
-                return null;
-            }
-        }
-
-        /// <summary>
         /// The AutoCAD drawing database version number.
         /// </summary>
         /// <remarks>Only AutoCad2000 and higher dxf versions are supported.</remarks>

@@ -1042,19 +1042,12 @@ namespace netDxf
         /// <summary>
         /// Checks the AutoCAD DXF file database version.
         /// </summary>
-        /// <param name="stream">Stream</param>
-        /// <param name="isBinary">Returns true if the dxf is a binary file.</param>
+        /// <param name="file">File name.</param>
         /// <returns>String that represents the dxf file version.</returns>
-        /// <remarks>The caller will be responsible of closing the stream.</remarks>
-        public static DxfVersion CheckDxfFileVersion(Stream stream, out bool isBinary)
+        public static DxfVersion CheckDxfFileVersion(string file)
         {
-            string value = DxfReader.CheckHeaderVariable(stream, HeaderVariableCode.AcadVer, out isBinary);
-
-            object version;
-            if (!StringEnum.TryParse(typeof(DxfVersion), value, out version))
-                return DxfVersion.Unknown;
-
-            return (DxfVersion)version;
+            bool binary;
+            return CheckDxfFileVersion(file, out binary);
         }
 
         /// <summary>
@@ -1066,28 +1059,45 @@ namespace netDxf
         public static DxfVersion CheckDxfFileVersion(string file, out bool isBinary)
         {
             Stream stream = File.Open(file, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
-            string value;
+            DxfVersion version = CheckDxfFileVersion(stream, out isBinary);
+            stream.Close();
+            return version;
+        }
 
+        /// <summary>
+        /// Checks the AutoCAD DXF file database version.
+        /// </summary>
+        /// <param name="stream">Stream</param>
+        /// <returns>String that represents the dxf file version.</returns>
+        /// <remarks>The caller will be responsible of closing the stream.</remarks>
+        public static DxfVersion CheckDxfFileVersion(Stream stream)
+        {
+            bool isBinary;
+            return CheckDxfFileVersion(stream, out isBinary);
+        }
+
+        /// <summary>
+        /// Checks the AutoCAD DXF file database version.
+        /// </summary>
+        /// <param name="stream">Stream</param>
+        /// <param name="isBinary">Returns true if the dxf is a binary file.</param>
+        /// <returns>String that represents the dxf file version.</returns>
+        /// <remarks>The caller will be responsible of closing the stream.</remarks>
+        public static DxfVersion CheckDxfFileVersion(Stream stream, out bool isBinary)
+        {
+            string value;
             isBinary = false;
 
             try
             {
-                value = DxfReader.CheckHeaderVariable(stream, HeaderVariableCode.AcadVer, out isBinary);
+                value = DxfReader.CheckHeaderVariable(stream, HeaderVariableCode.AcadVer, out isBinary);  
             }
             catch
             {
                 return DxfVersion.Unknown;
             }
-            finally
-            {
-                stream.Close();
-            }
 
-            object version;
-            if (!StringEnum.TryParse(typeof(DxfVersion), value, out version))
-                return DxfVersion.Unknown;
-
-            return (DxfVersion) version;
+            return StringEnum<DxfVersion>.Parse(value, StringComparison.OrdinalIgnoreCase);
         }
 
         #endregion

@@ -193,19 +193,6 @@ namespace netDxf.Collections
 
         private void Block_EntityAdded(TableObject sender, BlockEntityChangeEventArgs e)
         {
-            if (e.Item.Owner != null)
-            {
-                // the block and its entities must belong to the same document
-                if (!ReferenceEquals(e.Item.Owner.Record.Owner.Owner, this.Owner))
-                    throw new ArgumentException("The block and the entity must belong to the same document. Clone it instead.");
-
-                // the entity cannot belong to another block
-                if (e.Item.Owner.Record.Layout == null)
-                    throw new ArgumentException("The entity cannot belong to another block. Clone it instead.");
-
-                // we will exchange the owner of the entity
-                this.Owner.RemoveEntity(e.Item);
-            }
             this.Owner.AddEntityToDocument(e.Item, (Block) sender, string.IsNullOrEmpty(e.Item.Handle));
         }
 
@@ -216,19 +203,6 @@ namespace netDxf.Collections
 
         private void Block_AttributeDefinitionAdded(Block sender, BlockAttributeDefinitionChangeEventArgs e)
         {
-            if (e.Item.Owner != null)
-            {
-                // the block and its entities must belong to the same document
-                if (!ReferenceEquals(e.Item.Owner.Record.Owner.Owner, this.Owner))
-                    throw new ArgumentException("The block and the entity must belong to the same document. Clone it instead.");
-
-                // the entity cannot belong to another block
-                if (e.Item.Owner.Record.Layout == null)
-                    throw new ArgumentException("The entity cannot belong to another block. Clone it instead.");
-
-                // we will exchange the owner of the entity
-                this.Owner.RemoveAttributeDefinitionFromDocument(e.Item);
-            }
             this.Owner.AddAttributeDefinitionToDocument(e.Item, string.IsNullOrEmpty(e.Item.Handle));
         }
 

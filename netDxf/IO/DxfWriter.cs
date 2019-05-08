@@ -528,7 +528,7 @@ namespace netDxf.IO
             {
                 case HeaderVariableCode.AcadVer:
                     this.chunk.Write(9, name);
-                    this.chunk.Write(1, StringEnum.GetStringValue((DxfVersion) value));
+                    this.chunk.Write(1, StringEnum<DxfVersion>.GetStringValue((DxfVersion) value));
                     break;
                 case HeaderVariableCode.HandleSeed:
                     this.chunk.Write(9, name);
@@ -3208,7 +3208,7 @@ namespace netDxf.IO
             this.chunk.Write(463, 1.0);
             this.chunk.Write(63, pattern.Color2.Index);
             this.chunk.Write(421, AciColor.ToTrueColor(pattern.Color2));
-            this.chunk.Write(470, StringEnum.GetStringValue(pattern.GradientType));
+            this.chunk.Write(470, StringEnum<HatchGradientPatternType>.GetStringValue(pattern.GradientType));
         }
 
         private void WriteHatchPatternDefinitonLines(HatchPattern pattern)

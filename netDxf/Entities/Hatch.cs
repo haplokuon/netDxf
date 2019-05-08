@@ -75,6 +75,7 @@ namespace netDxf.Entities
         /// </summary>
         /// <remarks>
         /// This constructor is initialized with an empty list of boundary paths, remember a hatch without boundaries will be discarded when saving the file.<br/>
+        /// When creating an associative hatch do not add the entities that make the boundary to the document, it will be done automatically. Doing so will throw an exception.<br/>
         /// The hatch boundary paths must be on the same plane as the hatch.
         /// The normal and the elevation of the boundary paths will be omitted (the hatch elevation and normal will be used instead).
         /// Only the x and y coordinates for the center of the line, ellipse, circle and arc will be used.
@@ -430,9 +431,6 @@ namespace netDxf.Entities
             // null items are not allowed in the list.
             if (e.Item == null)
                 e.Cancel = true;
-            else if (this.boundaryPaths.Contains(e.Item))
-                e.Cancel = true;
-
             e.Cancel = false;
         }
 

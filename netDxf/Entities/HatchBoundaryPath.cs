@@ -756,17 +756,17 @@ namespace netDxf.Entities
         /// </remarks>
         public void Update()
         {
-            this.SetInternalInfo(this.contour);
+            this.SetInternalInfo(this.contour, true);
         }
 
         #endregion
 
         #region private methods
 
-        private void SetInternalInfo(IEnumerable<EntityObject> entities)
+        private void SetInternalInfo(IEnumerable<EntityObject> entities, bool clearEdges)
         {
             bool containsPolyline = false;
-            this.edges.Clear();
+            if(clearEdges) this.edges.Clear();
 
             foreach (EntityObject entity in entities)
             {
@@ -801,7 +801,7 @@ namespace netDxf.Entities
                             containsPolyline = true;
                         }
                         else
-                            this.SetInternalInfo(lwpoly.Explode()); // open polylines will always be exploded, only one polyline can be present in a path
+                            this.SetInternalInfo(lwpoly.Explode(), false); // open polylines will always be exploded, only one polyline can be present in a path
                         break;
                     case EntityType.Polyline:
                         Entities.Polyline poly = (Entities.Polyline) entity;
@@ -814,7 +814,7 @@ namespace netDxf.Entities
                             containsPolyline = true;
                         }
                         else
-                            this.SetInternalInfo(poly.Explode()); // open polylines will always be exploded, only one polyline can be present in a path
+                            this.SetInternalInfo(poly.Explode(), false); // open polylines will always be exploded, only one polyline can be present in a path
                         break;
                     case EntityType.Spline:
                         this.edges.Add(Spline.ConvertFrom(entity));

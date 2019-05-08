@@ -88,7 +88,7 @@ namespace netDxf.Header
         AutoCad2013 = 9,
 
         /// <summary>
-        /// AutoCAD 2018 DXF file. AutoCAD 2018/2019.
+        /// AutoCAD 2018 DXF file. AutoCAD 2018/2019/2020.
         /// </summary>
         [StringValue("AC1032")]
         AutoCad2018 = 10

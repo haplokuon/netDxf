@@ -23,7 +23,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Diagnostics.Eventing.Reader;
 using System.Globalization;
 using System.IO;
 using System.Text;
@@ -380,10 +379,8 @@ namespace netDxf.IO
                 switch (varName)
                 {
                     case HeaderVariableCode.AcadVer:
-                        DxfVersion acadVer = DxfVersion.Unknown;
                         string version = this.chunk.ReadString();
-                        if (StringEnum.IsStringDefined(typeof (DxfVersion), version))
-                            acadVer = (DxfVersion) StringEnum.Parse(typeof (DxfVersion), version);
+                        DxfVersion acadVer = StringEnum<DxfVersion>.Parse(version, StringComparison.OrdinalIgnoreCase);
                         if (acadVer < DxfVersion.AutoCad2000)
                             throw new NotSupportedException("Only AutoCad2000 and higher DXF versions are supported.");
                         this.doc.DrawingVariables.AcadVer = acadVer;
@@ -8788,9 +8785,8 @@ namespace netDxf.IO
 
             this.chunk.Next(); // code 470
             string typeName = this.chunk.ReadString();
-            if (!StringEnum.IsStringDefined(typeof (HatchGradientPatternType), typeName))
-                throw new Exception(string.Format("Unknown hatch gradient type: {0}.", typeName));
-            HatchGradientPatternType type = (HatchGradientPatternType) StringEnum.Parse(typeof (HatchGradientPatternType), typeName);
+            
+            HatchGradientPatternType type = StringEnum<HatchGradientPatternType>.Parse(typeName, StringComparison.OrdinalIgnoreCase);
 
             if (singleColor)
                 return new HatchGradientPattern(color1, tint, type)

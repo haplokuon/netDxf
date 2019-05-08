@@ -1,5 +1,11 @@
 ## Change history
 
+[2019/05/08]
+* Deleted a few unnecessary checks when adding an entity to a block, this will improve the process of adding entities to a document and reading a DXF file.
+* Updated the StringEnum class to use generics.
+* Updated the HeaderVariable class to avoid direct access to the known header variables, they must be modified through its properties.
+* (fixed) Error when combining open LwPolylines or Polylines with other entities to create a HatchBoundaryPath.
+
 [2019/04/14]
 * Now it is possible to manually add custom header variables to the drawing. When a DXF is loaded all unrecognized header variables will be automatically added as custom header variables to the drawing.
 * Added several methods to the DrawingVariables class to handle custom header variables.
