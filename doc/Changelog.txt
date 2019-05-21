@@ -1,5 +1,11 @@
 ## Change history
 
+[2019/05/21]
+* Modify the TextStyle class to use a font file or a font family name plus its font style, but not both.
+* Deleted the property IsTrueType from the TextStyle class.
+* The TextStyle method TrueTypeFontFamilyName is now public static in case it is needed, the constructor does not use it anymore.
+* (fixed) When reading a TextStyle if both the font file and the font extended data information the font style was not applied.
+
 [2019/05/08]
 * Deleted a few unnecessary checks when adding an entity to a block, this will improve the process of adding entities to a document and reading a DXF file.
 * Updated the StringEnum class to use generics.

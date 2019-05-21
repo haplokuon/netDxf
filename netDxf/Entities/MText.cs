@@ -521,7 +521,7 @@ namespace netDxf.Entities
 
             string f;
             if (string.IsNullOrEmpty(options.FontName))
-                f = this.style.IsTrueType ? this.style.FontFamilyName : this.style.FontFile;
+                f = string.IsNullOrEmpty(this.style.FontFamilyName) ? this.style.FontFile : this.style.FontFamilyName;
             else
                 f = options.FontName;
 

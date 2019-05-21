@@ -2429,63 +2429,41 @@ namespace netDxf.IO
             // text styles
             if (!TableObject.IsValidName(name)) return null;
 
-            TextStyle style;
-
-            // if the text style does not contain information about the font file,
-            // we will try to read it from the extended data, this is only applicable for true type fonts
-            if (string.IsNullOrEmpty(file))
+            // if it exists read the information stored in the extended data about the font family and font style, only applicable to true type fonts
+            string fontFamily = string.Empty;
+            FontStyle fontStyle = FontStyle.Regular;
+            if (xDataFont != null)
             {
-                // read the font family from the extended data
-                string fontFamily = string.Empty;
-                FontStyle fontStyle = FontStyle.Regular;
-                if (xDataFont != null)
+                foreach (XDataRecord record in xDataFont.XDataRecord)
                 {
-                    foreach (XDataRecord record in xDataFont.XDataRecord)
+                    if (record.Code == XDataCode.String)
                     {
-                        if (record.Code == XDataCode.String)
-                        {
-                            fontFamily = (string)record.Value;
-                        }
-                        else if (record.Code == XDataCode.Int32)
-                        {
-                            byte[] data = BitConverter.GetBytes((int) record.Value);
-                            fontStyle = (FontStyle) data[3];
-                        }
+                        fontFamily = (string)record.Value;
+                    }
+                    else if (record.Code == XDataCode.Int32)
+                    {
+                        byte[] data = BitConverter.GetBytes((int) record.Value);
+                        fontStyle = (FontStyle) data[3];
                     }
                 }
+            }
 
-                // if cannot find the font family name use the default "simplex.shx" font
-                if (string.IsNullOrEmpty(fontFamily))
+            TextStyle style;
+
+            // the information stored in the extended data takes precedence before the font file (this is only applicable for true type fonts)
+            if (string.IsNullOrEmpty(fontFamily))
+            {
+                if (string.IsNullOrEmpty(file))
                 {
-                    style = new TextStyle(name, "simplex.shx", false)
-                    {
-                        Height = height,
-                        IsBackward = isBackward,
-                        IsUpsideDown = isUpsideDown,
-                        IsVertical = isVertical,
-                        ObliqueAngle = obliqueAngle,
-                        WidthFactor = widthFactor
-                    };
+                    file = "simplex.shx";
                 }
                 else
                 {
-                    style = new TextStyle(name, fontFamily, fontStyle, false)
-                    {
-                        Height = height,
-                        IsBackward = isBackward,
-                        IsUpsideDown = isUpsideDown,
-                        IsVertical = isVertical,
-                        ObliqueAngle = obliqueAngle,
-                        WidthFactor = widthFactor
-                    };
+                    // only true type TTF fonts or compiled shape SHX fonts are allowed, the default "simplex.shx" font will be used in this case
+                    if (!Path.GetExtension(file).Equals(".TTF", StringComparison.InvariantCultureIgnoreCase) &&
+                        !Path.GetExtension(file).Equals(".SHX", StringComparison.InvariantCultureIgnoreCase))
+                        file = "simplex.shx";
                 }
-            }
-            else
-            {
-                // only true type TTF fonts or compiled shape SHX fonts are allowed, the default "simplex.shx" font will be used in this case
-                if (!Path.GetExtension(file).Equals(".TTF", StringComparison.InvariantCultureIgnoreCase) &&
-                    !Path.GetExtension(file).Equals(".SHX", StringComparison.InvariantCultureIgnoreCase))
-                    file = "simplex.shx";
 
                 style = new TextStyle(name, file, false)
                 {
@@ -2494,12 +2472,24 @@ namespace netDxf.IO
                     IsUpsideDown = isUpsideDown,
                     IsVertical = isVertical,
                     ObliqueAngle = obliqueAngle,
-                    WidthFactor = widthFactor
+                    WidthFactor = widthFactor,
                 };
 
                 if (Path.GetExtension(file).Equals(".SHX", StringComparison.InvariantCultureIgnoreCase) &&
                     Path.GetExtension(bigFont).Equals(".SHX", StringComparison.InvariantCultureIgnoreCase))
                     style.BigFont = bigFont;
+            }
+            else
+            {
+                style = new TextStyle(name, fontFamily, fontStyle, false)
+                {
+                    Height = height,
+                    IsBackward = isBackward,
+                    IsUpsideDown = isUpsideDown,
+                    IsVertical = isVertical,
+                    ObliqueAngle = obliqueAngle,
+                    WidthFactor = widthFactor
+                };
             }
 
             if (xData.Count > 0) this.hasXData.Add(style, xData);

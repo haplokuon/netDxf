@@ -1619,7 +1619,7 @@ namespace netDxf.IO
             this.chunk.Write(50, style.ObliqueAngle);
 
             // when a true type font file is present the font information is defined by the file and this information is not needed
-            if (style.IsTrueType && string.IsNullOrEmpty(style.FontFile))
+            if (!string.IsNullOrEmpty(style.FontFamilyName))
             {
                this.AddTextStyleFontXData(style);
             }

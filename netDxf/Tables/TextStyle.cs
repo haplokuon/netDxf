@@ -68,10 +68,12 @@ namespace netDxf.Tables
         #region constructors
 
         /// <summary>
-        /// Initializes a new instance of the <c>TextStyle</c> class. The font file name, without the extension, will be used as the TextStyle name.
+        /// Initializes a new instance of the <c>TextStyle</c> class.
         /// </summary>
         /// <param name="font">Text style font file name with full or relative path.</param>
-        /// <remarks>If the font file is a true type and is not found in the specified path, the constructor will try to find it in the system font folder.</remarks>
+        /// <remarks>
+        /// The font file name, without the extension, will also be used as the name of the text style.
+        /// </remarks>
         public TextStyle(string font)
             : this(Path.GetFileNameWithoutExtension(font), font)
         {
@@ -82,7 +84,6 @@ namespace netDxf.Tables
         /// </summary>
         /// <param name="name">Text style name.</param>
         /// <param name="font">Text style font file name with full or relative path.</param>
-        /// <remarks>If the font file is a true type and is not found in the specified path, the constructor will try to find it in the system font folder.</remarks>
         public TextStyle(string name, string font)
             : this(name, font, true)
         {
@@ -94,7 +95,6 @@ namespace netDxf.Tables
         /// <param name="name">Text style name.</param>
         /// <param name="font">Text style font file name with full or relative path.</param>
         /// <param name="checkName">Specifies if the style name has to be checked.</param>
-        /// <remarks>If the font file is a true type and is not found in the specified path, the constructor will try to find it in the system font folder.</remarks>
         internal TextStyle(string name, string font, bool checkName)
             : base(name, DxfObjectCode.TextStyle, checkName)
         {
@@ -117,7 +117,7 @@ namespace netDxf.Tables
             this.isVertical = false;
             this.isBackward = false;
             this.isUpsideDown = false;
-            this.fontFamilyName = TrueTypeFontFamilyName(font);
+            this.fontFamilyName = string.Empty;
             this.fontStyle = FontStyle.Regular;
         }
 
@@ -196,8 +196,9 @@ namespace netDxf.Tables
                     !Path.GetExtension(value).Equals(".SHX", StringComparison.InvariantCultureIgnoreCase))
                     throw new ArgumentException("Only true type TTF fonts and ACAD compiled shape SHX fonts are allowed.");
 
-                this.fontFamilyName = TrueTypeFontFamilyName(value);
+                this.fontFamilyName = string.Empty;
                 this.bigFont = string.Empty;
+                this.fontStyle = FontStyle.Regular;
                 this.file = value;
             }
         }
@@ -230,8 +231,9 @@ namespace netDxf.Tables
         /// Gets or sets the true type font family name.
         /// </summary>
         /// <remarks>
-        /// When the font family name is manually specified the file font will not be used and it will be set to empty.
-        /// In this case the font information will be stored in the style extended data when saved to a DXF.
+        /// When the font family name is manually specified the file font will not be used and it will be set to empty,
+        /// the font style will also we set to FontStyle.Regular.
+        /// In this case the font information will be stored in the style extended data when saved to a DXF.<br />
         /// This value is only applicable for true type fonts.
         /// </remarks>
         public string FontFamilyName
@@ -243,6 +245,7 @@ namespace netDxf.Tables
                     throw new ArgumentNullException(nameof(value));
                 this.file = string.Empty;
                 this.bigFont = string.Empty;
+                this.fontStyle = FontStyle.Regular;
                 this.fontFamilyName = value;
             }
         }
@@ -251,25 +254,17 @@ namespace netDxf.Tables
         /// Gets or sets the true type font style.
         /// </summary>
         /// <remarks>
-        /// The font style value is ignored when a font file has been specified.<br />
+        /// The font style value is ignored and will always return FontStyle.Regular when a font file has been specified.<br />
         /// All styles might or might not be available for the current font family.
         /// </remarks>
         public FontStyle FontStyle
         {
             get { return this.fontStyle; }
-            set { this.fontStyle = value; }
-        }
-
-        /// <summary>
-        /// Gets if the font used is a true type.
-        /// </summary>
-        /// <remarks>
-        /// It will not only return false for SHX fonts but also if the font file has not been found,
-        /// this is applicable to true type fonts not registered in the system.
-        /// </remarks>
-        public bool IsTrueType
-        {
-            get { return !string.IsNullOrEmpty(this.FontFamilyName); }
+            set
+            {
+                if (!string.IsNullOrEmpty(this.file)) return;
+                this.fontStyle = value;
+            }
         }
 
         /// <summary>
@@ -355,9 +350,15 @@ namespace netDxf.Tables
 
         #endregion
 
-        #region private methods
+        #region public methods
 
-        private static string TrueTypeFontFamilyName(string ttfFont)
+        /// <summary>
+        /// Find the font family name of an specified TTF font file.
+        /// </summary>
+        /// <param name="ttfFont">TTF font file.</param>
+        /// <returns>The font family name of the specified TTF font file.</returns>
+        /// <remarks>This method will return an empty string if the specified font is not found in its path or the system font folder or if it is not a valid TTF font.</remarks>
+        public static string TrueTypeFontFamilyName(string ttfFont)
         {
             if (string.IsNullOrEmpty(ttfFont)) throw new ArgumentNullException(nameof(ttfFont));
 
@@ -366,21 +367,23 @@ namespace netDxf.Tables
                 return string.Empty;
 
             // try to find the file in the specified directory, if not try it in the fonts system folder
-            string fontFile;
-            if (File.Exists(ttfFont))
-                fontFile = Path.GetFullPath(ttfFont);
-            else
-                fontFile = string.Format("{0}{1}{2}", Environment.GetFolderPath(Environment.SpecialFolder.Fonts), Path.DirectorySeparatorChar, Path.GetFileName(ttfFont));
+            string fontFile = File.Exists(ttfFont) ?
+                Path.GetFullPath(ttfFont) :
+                string.Format("{0}{1}{2}", Environment.GetFolderPath(Environment.SpecialFolder.Fonts), Path.DirectorySeparatorChar, Path.GetFileName(ttfFont));
 
+            PrivateFontCollection fontCollection = new PrivateFontCollection();
             try
-            {
-                PrivateFontCollection fontCollection = new PrivateFontCollection();
+            {              
                 fontCollection.AddFontFile(fontFile);
                 return fontCollection.Families[0].Name;
             }
             catch (FileNotFoundException)
             {
                 return string.Empty;
+            }
+            finally
+            {
+                fontCollection.Dispose();
             }
         }
 
@@ -397,19 +400,7 @@ namespace netDxf.Tables
         {
             TextStyle copy;
 
-            if (string.IsNullOrEmpty(this.file))
-            {
-                copy = new TextStyle(newName, this.fontFamilyName, this.fontStyle)
-                {
-                    Height = this.height,
-                    IsBackward = this.isBackward,
-                    IsUpsideDown = this.isUpsideDown,
-                    IsVertical = this.isVertical,
-                    ObliqueAngle = this.obliqueAngle,
-                    WidthFactor = this.widthFactor
-                };
-            }
-            else
+            if (string.IsNullOrEmpty(this.FontFamilyName))
             {
                 copy = new TextStyle(newName, this.file)
                 {
@@ -421,7 +412,19 @@ namespace netDxf.Tables
                     WidthFactor = this.widthFactor
                 };
             }
-            
+            else
+            {
+                copy = new TextStyle(newName, this.fontFamilyName, this.fontStyle)
+                {
+                    Height = this.height,
+                    IsBackward = this.isBackward,
+                    IsUpsideDown = this.isUpsideDown,
+                    IsVertical = this.isVertical,
+                    ObliqueAngle = this.obliqueAngle,
+                    WidthFactor = this.widthFactor
+                };
+            }
+
             foreach (XData data in this.XData.Values)
                 copy.XData.Add((XData)data.Clone());
 
