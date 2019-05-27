@@ -1,5 +1,8 @@
 ## Change history
 
+[2019/05/27]
+* Improved the ellipse TransformBy method, now it should work under all circumstances.
+
 [2019/05/21]
 * Modify the TextStyle class to use a font file or a font family name plus its font style, but not both.
 * Deleted the property IsTrueType from the TextStyle class.

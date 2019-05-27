@@ -32,6 +32,7 @@ namespace TestDxfDocument
 
             #region Samples for new and modified features 2.3.0
 
+            //TransformEllipse();
             //AddHeaderVariable();
             //ViewportTransform();
             //MLineMirrorAndExplode();
@@ -243,6 +244,25 @@ namespace TestDxfDocument
         }
 
         #region Samples for new and modified features 2.3.0
+
+        public static void TransformEllipse()
+        {
+            Ellipse ellipse = new Ellipse {Center = new Vector3( 0.616, 0.933, 0.0), MajorAxis = 2, MinorAxis = 1, StartAngle = 30, EndAngle = 160, Rotation = 30};
+            Block block = new Block("MyBlock");
+            block.Entities.Add(ellipse);
+
+            Insert insert = new Insert(block);
+            insert.Position = new Vector3(12,22,4);
+            insert.Scale = new Vector3(-1.25,-0.75,1);
+            insert.Normal = new Vector3(1,1,1);
+           
+            DxfDocument doc = new DxfDocument();
+            doc.AddEntity(insert);
+            List<EntityObject> entities = insert.Explode();
+            doc.AddEntity(entities);
+            doc.Save("test.dxf");
+
+        }
 
         public static void AddHeaderVariable()
         {
