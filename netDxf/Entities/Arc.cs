@@ -209,29 +209,19 @@ namespace netDxf.Entities
         /// <remarks>Non-uniform scaling is not supported, create an ellipse arc from the arc data and transform that instead.</remarks>
         public override void TransformBy(Matrix3 transformation, Vector3 translation)
         {
-            Vector3 newCenter;
-            Vector3 newNormal;
-            double newRadius;
-            double newStartAngle;
-            double newEndAngle;
-            double newScale;
-
-            newCenter = transformation * this.Center + translation;
-            newNormal = transformation * this.Normal;
+            Vector3 newCenter = transformation * this.Center + translation;
+            Vector3 newNormal = transformation * this.Normal;
+            if (Vector3.Equals(Vector3.Zero, newNormal)) newNormal = this.Normal;
 
             Matrix3 transOW = MathHelper.ArbitraryAxis(this.Normal);
             Matrix3 transWO = MathHelper.ArbitraryAxis(newNormal).Transpose();
 
-            //Vector2 axis = new Vector2(this.Radius, 0.0);
-            //Vector3 v = transOW * new Vector3(axis.X, axis.Y, 0.0);
-            //v = transformation * v;
-            //v = transWO * v;
-            //Vector2 axisPoint = new Vector2(v.X, v.Y);
-            //newRadius = axisPoint.Modulus();
-            //newRadius = newRadius <= 0 ? MathHelper.Epsilon : newRadius;
-
-            newScale = newNormal.Modulus();
-            newRadius = this.Radius * newScale;
+            Vector2 axis = new Vector2(this.Radius, 0.0);
+            Vector3 v = transOW * new Vector3(axis.X, axis.Y, 0.0);
+            v = transformation * v;
+            v = transWO * v;
+            Vector2 axisPoint = new Vector2(v.X, v.Y);
+            double newRadius = axisPoint.Modulus();
             if (MathHelper.IsZero(newRadius)) newRadius = MathHelper.Epsilon;
 
             Vector2 start = Vector2.Rotate(new Vector2(this.Radius, 0.0), this.StartAngle * MathHelper.DegToRad);
@@ -248,15 +238,13 @@ namespace netDxf.Entities
             Vector2 startPoint = new Vector2(vStart.X, vStart.Y);
             Vector2 endPoint = new Vector2(vEnd.X, vEnd.Y);
 
-            double sign = Math.Sign(transformation.M11 * transformation.M22 * transformation.M33) < 0 ? 180 : 0;
-            newStartAngle = sign + Vector2.Angle(startPoint) * MathHelper.RadToDeg;
-            newEndAngle = sign + Vector2.Angle(endPoint) * MathHelper.RadToDeg;
-
             this.Normal = newNormal;
             this.Center = newCenter;
             this.Radius = newRadius;
-            this.StartAngle = newStartAngle;
-            this.EndAngle = newEndAngle;
+
+            double invert = Math.Sign(transformation.M11 * transformation.M22 * transformation.M33) < 0 ? 180.0 : 0.0;
+            this.StartAngle = invert + Vector2.Angle(startPoint) * MathHelper.RadToDeg;
+            this.EndAngle = invert + Vector2.Angle(endPoint) * MathHelper.RadToDeg;
         }
 
         /// <summary>

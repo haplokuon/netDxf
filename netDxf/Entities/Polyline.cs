@@ -263,7 +263,9 @@ namespace netDxf.Entities
                 point.Position = transformation * point.Position + translation;
             }
 
-            this.Normal = transformation * this.Normal;
+            Vector3 newNormal = transformation * this.Normal;
+            if (Vector3.Equals(Vector3.Zero, newNormal)) newNormal = this.Normal;
+            this.Normal = newNormal;
         }
 
         /// <summary>

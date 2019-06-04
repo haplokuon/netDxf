@@ -128,10 +128,10 @@ namespace netDxf.Entities
         /// <param name="translation">Translation vector.</param>
         public override void TransformBy(Matrix3 transformation, Vector3 translation)
         {
-            Vector3 newNormal;
             double newElevation = this.Elevation;
 
-            newNormal = transformation * this.Normal;
+            Vector3 newNormal = transformation * this.Normal;
+            if (Vector3.Equals(Vector3.Zero, newNormal)) newNormal = this.Normal;
 
             Matrix3 transOW = MathHelper.ArbitraryAxis(this.Normal);
             Matrix3 transWO = MathHelper.ArbitraryAxis(newNormal).Transpose();

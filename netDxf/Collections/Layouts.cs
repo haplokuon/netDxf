@@ -1,7 +1,7 @@
-#region netDxf library, Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
+#region netDxf library, Copyright (C) 2009-2019 Daniel Carvajal (haplokuon@gmail.com)
 
 //                        netDxf library
-// Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2009-2019 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -133,9 +133,6 @@ namespace netDxf.Collections
             associatadBlock.Record.Layout = layout;
             this.Owner.Blocks.References[associatadBlock.Name].Add(layout);
 
-            if (layout.Viewport != null)
-                layout.Viewport.Owner = associatadBlock;
-
             if (assignHandle || string.IsNullOrEmpty(layout.Handle))
                 this.Owner.NumHandles = layout.AsignHandle(this.Owner.NumHandles);
 
@@ -209,7 +206,6 @@ namespace netDxf.Collections
 
             item.Handle = null;
             item.Owner = null;
-            item.Viewport.Owner = null;
 
             item.NameChanged -= this.Item_NameChanged;
 
@@ -228,7 +224,6 @@ namespace netDxf.Collections
                     index += 1;
 
                     // we need to redefine the owner of the layout entities
-                    l.Viewport.Owner = l.AssociatedBlock;
                     foreach (DxfObject o in this.references[l.Name])
                         o.Owner = l.AssociatedBlock;
                 }

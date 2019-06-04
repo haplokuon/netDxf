@@ -32,6 +32,9 @@ namespace TestDxfDocument
 
             #region Samples for new and modified features 2.3.0
 
+            //TransformArc();
+            //TransformCircle();
+            //TransformLwPolyline();
             //TransformEllipse();
             //AddHeaderVariable();
             //ViewportTransform();
@@ -245,16 +248,105 @@ namespace TestDxfDocument
 
         #region Samples for new and modified features 2.3.0
 
+        public static void TransformArc()
+        {
+            Arc arc = new Arc {Center = new Vector3(0,0,10), Radius = 2, StartAngle = 30, EndAngle = 160};
+            Block block = new Block("MyBlock");
+            block.Entities.Add(arc);
+
+            Insert insert = new Insert(block);
+            //insert.Position = new Vector3(12,22,4);
+            //insert.Scale = new Vector3(-1.25,0.75,1);
+            insert.Scale = new Vector3(1,1,2);
+            //insert.Rotation = 30;
+            //insert.Normal = new Vector3(1,1,1);
+
+            Arc circle2 = (Arc) arc.Clone();
+            circle2.Color = AciColor.Blue;
+            circle2.TransformBy(Matrix3.Scale(4,4,0), Vector3.Zero);
+
+            DxfDocument doc = new DxfDocument();
+            doc.AddEntity(insert);
+            List<EntityObject> entities = insert.Explode();
+            doc.AddEntity(entities);
+            doc.AddEntity(circle2);
+            doc.Save("test.dxf");
+        }
+
+        public static void TransformCircle()
+        {
+            Circle circle = new Circle {Center = new Vector3(0,0,10), Radius = 2};
+            Block block = new Block("MyBlock");
+            block.Entities.Add(circle);
+
+            Insert insert = new Insert(block);
+            //insert.Position = new Vector3(12,22,4);
+            //insert.Scale = new Vector3(-1.25,0.75,1);
+            insert.Scale = new Vector3(1,1,2);
+            //insert.Rotation = 30;
+            //insert.Normal = new Vector3(1,1,1);
+
+            Circle circle2 = (Circle) circle.Clone();
+            circle2.Color = AciColor.Blue;
+            circle2.TransformBy(Matrix3.Scale(4,4,0), Vector3.Zero);
+
+            DxfDocument doc = new DxfDocument();
+            doc.AddEntity(insert);
+            List<EntityObject> entities = insert.Explode();
+            doc.AddEntity(entities);
+            doc.AddEntity(circle2);
+            doc.Save("test.dxf");
+        }
+
+        public static void TransformLwPolyline()
+        {
+            double bulge = -Math.Tan(Math.PI / 8);
+            LwPolylineVertex p1 = new LwPolylineVertex(-100, 75, bulge);
+            LwPolylineVertex p2 = new LwPolylineVertex(-75, 100, 0);
+            LwPolylineVertex p3 = new LwPolylineVertex(75, 100, bulge);
+            LwPolylineVertex p4 = new LwPolylineVertex(100, 75, 0);
+            LwPolylineVertex p5 = new LwPolylineVertex(100, -75, bulge);
+            LwPolylineVertex p6 = new LwPolylineVertex(75, -100, 0);
+            LwPolylineVertex p7 = new LwPolylineVertex(-75, -100, bulge);
+            LwPolylineVertex p8 = new LwPolylineVertex(-100, -75, 0);
+
+            LwPolyline poly = new LwPolyline(new[] {p1,p2,p3,p4,p5,p6,p7,p8}, true);
+            //poly.Normal = Vector3.UnitX;
+            poly.TransformBy(Matrix3.RotationZ(30*MathHelper.DegToRad), Vector3.Zero);
+
+            Block block = new Block("MyBlock");
+            block.Entities.Add(poly);
+
+            Insert insert = new Insert(block);
+            //insert.Position = new Vector3(12,22,4);
+            //insert.Scale = new Vector3(1.25,0.75,1);
+            insert.Scale = new Vector3(1,2,3);
+            insert.Rotation = 30;
+            //insert.Normal = new Vector3(1,1,1);
+
+
+            DxfDocument doc = new DxfDocument();
+            //doc.AddEntity(poly);
+            doc.AddEntity(insert);
+            List<EntityObject> entities = insert.Explode();
+            doc.AddEntity(entities);
+            doc.Save("test.dxf");
+
+        }
+
         public static void TransformEllipse()
         {
-            Ellipse ellipse = new Ellipse {Center = new Vector3( 0.616, 0.933, 0.0), MajorAxis = 2, MinorAxis = 1, StartAngle = 30, EndAngle = 160, Rotation = 30};
+            Ellipse ellipse = new Ellipse {Center = Vector3.Zero, MajorAxis = 2, MinorAxis = 1, StartAngle = 350, EndAngle = 80, Rotation = 30};
+            //Ellipse ellipse = new Ellipse {Center = new Vector3( 0.616, 0.933, 0.0), MajorAxis = 2, MinorAxis = 1, StartAngle = 30, EndAngle = 160, Rotation = 30};
             Block block = new Block("MyBlock");
             block.Entities.Add(ellipse);
 
             Insert insert = new Insert(block);
-            insert.Position = new Vector3(12,22,4);
-            insert.Scale = new Vector3(-1.25,-0.75,1);
-            insert.Normal = new Vector3(1,1,1);
+            //insert.Position = new Vector3(12,22,4);
+            //insert.Scale = new Vector3(-1.25,0.75,1);
+            insert.Scale = new Vector3(1,-1,2);
+            insert.Rotation = 30;
+            //insert.Normal = new Vector3(1,1,1);
            
             DxfDocument doc = new DxfDocument();
             doc.AddEntity(insert);
@@ -406,7 +498,7 @@ namespace TestDxfDocument
 
             doc.Save("test.dxf");
 
-            DxfDocument dxf = DxfDocument.Load("text.dxf");
+            DxfDocument dxf = DxfDocument.Load("test.dxf");
         }
 
         private static void ShapeMirror()
@@ -477,8 +569,6 @@ namespace TestDxfDocument
 
             Matrix3 trans = Matrix3.RotationX(MathHelper.HalfPI);
             mline2.TransformBy(trans, Vector3.Zero);
-
-
 
             DxfDocument doc = new DxfDocument(DxfVersion.AutoCad2010);
             doc.DrawingVariables.LtScale = 10;

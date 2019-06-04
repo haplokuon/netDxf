@@ -22,6 +22,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using netDxf.Blocks;
 using netDxf.Tables;
 
@@ -295,10 +296,12 @@ namespace netDxf.Entities
 
         private void SetDimensionLinePosition(Vector2 point, bool updateRefs)
         {
-            Vector2 center = this.CenterPoint;
-
-            if (Vector2.IsNaN(center))
+            Vector2 dir1 = this.endFirstLine - this.startFirstLine;
+            Vector2 dir2 = this.endSecondLine - this.startSecondLine;
+            if (Vector2.AreParallel(dir1, dir2))
                 throw new ArgumentException("The two lines that define the dimension are parallel.");
+
+            Vector2 center = this.CenterPoint;
 
             if (updateRefs)
             {
@@ -349,7 +352,9 @@ namespace netDxf.Entities
                 }
             }
 
-            this.offset = Vector2.Distance(center, point);
+            double newOffset = Vector2.Distance(center, point);
+            this.offset = MathHelper.IsZero(newOffset) ? MathHelper.Epsilon : newOffset;
+            
             this.defPoint = this.endSecondLine;
 
             double measure = this.Measurement * MathHelper.DegToRad;
@@ -386,17 +391,14 @@ namespace netDxf.Entities
         /// </summary>
         /// <param name="transformation">Transformation matrix.</param>
         /// <param name="translation">Translation vector.</param>
+        /// <remarks>
+        /// Non-uniform and zero scaling local to the dimension entity are not supported.<br />
+        /// The transformation will not be applied if the resulting reference lines are parallel.
+        /// </remarks>
         public override void TransformBy(Matrix3 transformation, Vector3 translation)
         {
-            Vector2 newStart1;
-            Vector2 newEnd1;
-            Vector2 newStart2;
-            Vector2 newEnd2;
-            Vector2 newArcDefPoint;
-            Vector3 newNormal;
-            double newElevation;
-
-            newNormal = transformation * this.Normal;
+            Vector3 newNormal = transformation * this.Normal;
+            if (Vector3.Equals(Vector3.Zero, newNormal)) newNormal = this.Normal;
 
             Matrix3 transOW = MathHelper.ArbitraryAxis(this.Normal);
             Matrix3 transWO = MathHelper.ArbitraryAxis(newNormal).Transpose();
@@ -404,28 +406,36 @@ namespace netDxf.Entities
             Vector3 v = transOW * new Vector3(this.StartFirstLine.X, this.StartFirstLine.Y, this.Elevation);
             v = transformation * v + translation;
             v = transWO * v;
-            newStart1 = new Vector2(v.X, v.Y);
-            newElevation = v.Z;
+            Vector2 newStart1 = new Vector2(v.X, v.Y);
+            double newElevation = v.Z;
 
             v = transOW * new Vector3(this.EndFirstLine.X, this.EndFirstLine.Y, this.Elevation);
             v = transformation * v + translation;
             v = transWO * v;
-            newEnd1 = new Vector2(v.X, v.Y);
+            Vector2 newEnd1 = new Vector2(v.X, v.Y);
 
             v = transOW * new Vector3(this.StartSecondLine.X, this.StartSecondLine.Y, this.Elevation);
             v = transformation * v + translation;
             v = transWO * v;
-            newStart2 = new Vector2(v.X, v.Y);
+            Vector2 newStart2 = new Vector2(v.X, v.Y);
 
             v = transOW * new Vector3(this.EndSecondLine.X, this.EndSecondLine.Y, this.Elevation);
             v = transformation * v + translation;
             v = transWO * v;
-            newEnd2 = new Vector2(v.X, v.Y);
+            Vector2 newEnd2 = new Vector2(v.X, v.Y);
+
+            Vector2 dir1 = newEnd1 - newStart1;
+            Vector2 dir2 = newEnd2 - newStart2;
+            if (Vector2.AreParallel(dir1, dir2))
+            {
+                Debug.Assert(false, "The transformation cannot be applied, the resulting reference lines are parallel.");
+                return;
+            }
 
             v = transOW * new Vector3(this.ArcDefinitionPoint.X, this.ArcDefinitionPoint.Y, this.Elevation);
             v = transformation * v + translation;
             v = transWO * v;
-            newArcDefPoint = new Vector2(v.X, v.Y);
+            Vector2 newArcDefPoint = new Vector2(v.X, v.Y);
 
             if (this.TextPositionManuallySet)
             {
@@ -456,13 +466,15 @@ namespace netDxf.Entities
         /// </summary>
         protected override void CalculteReferencePoints()
         {
+            Vector2 dir1 = this.endFirstLine - this.startFirstLine;
+            Vector2 dir2 = this.endSecondLine - this.startSecondLine;
+            if (Vector2.AreParallel(dir1, dir2))
+                throw new ArgumentException("The two lines that define the dimension are parallel.");
+
             DimensionStyleOverride styleOverride;
 
             double measure = this.Measurement * MathHelper.DegToRad ;
             Vector2 center = this.CenterPoint;
-
-            if (Vector2.IsNaN(center))
-                throw new ArgumentException("The two lines that define the dimension are parallel.");
 
             double startAngle = Vector2.Angle(center, this.endFirstLine);
             double midRot = startAngle + measure * 0.5;
@@ -551,9 +563,8 @@ namespace netDxf.Entities
 
             foreach (DimensionStyleOverride styleOverride in this.StyleOverrides.Values)
             {
-                object copy;
                 ICloneable value = styleOverride.Value as ICloneable;
-                copy = value != null ? value.Clone() : styleOverride.Value;
+                object copy = value != null ? value.Clone() : styleOverride.Value;
 
                 entity.StyleOverrides.Add(new DimensionStyleOverride(styleOverride.Type, copy));
             }

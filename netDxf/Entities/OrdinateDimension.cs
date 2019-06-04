@@ -256,13 +256,8 @@ namespace netDxf.Entities
         /// <param name="translation">Translation vector.</param>
         public override void TransformBy(Matrix3 transformation, Vector3 translation)
         {
-            Vector2 newStart;
-            Vector2 newEnd;
-            Vector3 newNormal;
-            double newElevation;
-            double newRotation;
-
-            newNormal = transformation * this.Normal;
+            Vector3 newNormal = transformation * this.Normal;
+            if (Vector3.Equals(Vector3.Zero, newNormal)) newNormal = this.Normal;
 
             Matrix3 transOW = MathHelper.ArbitraryAxis(this.Normal);
             Matrix3 transWO = MathHelper.ArbitraryAxis(newNormal).Transpose();
@@ -270,18 +265,18 @@ namespace netDxf.Entities
             Vector3 refAxis = transOW * Vector3.UnitX;
             refAxis = transformation * refAxis;
             refAxis = transWO * refAxis;
-            newRotation = Vector2.Angle(new Vector2(refAxis.X, refAxis.Y)) * MathHelper.RadToDeg;
+            double newRotation = Vector2.Angle(new Vector2(refAxis.X, refAxis.Y)) * MathHelper.RadToDeg;
 
             Vector3 v = transOW * new Vector3(this.FeaturePoint.X, this.FeaturePoint.Y, this.Elevation);
             v = transformation * v + translation;
             v = transWO * v;
-            newStart = new Vector2(v.X, v.Y);
-            newElevation = v.Z;
+            Vector2 newStart = new Vector2(v.X, v.Y);
+            double newElevation = v.Z;
 
             v = transOW * new Vector3(this.LeaderEndPoint.X, this.LeaderEndPoint.Y, this.Elevation);
             v = transformation * v + translation;
             v = transWO * v;
-            newEnd = new Vector2(v.X, v.Y);
+            Vector2 newEnd = new Vector2(v.X, v.Y);
 
             v = transOW * new Vector3(this.textRefPoint.X, this.textRefPoint.Y, this.Elevation);
             v = transformation * v + translation;
@@ -372,9 +367,8 @@ namespace netDxf.Entities
 
             foreach (DimensionStyleOverride styleOverride in this.StyleOverrides.Values)
             {
-                object copy;
                 ICloneable value = styleOverride.Value as ICloneable;
-                copy = value != null ? value.Clone() : styleOverride.Value;
+                object copy = value != null ? value.Clone() : styleOverride.Value;
 
                 entity.StyleOverrides.Add(new DimensionStyleOverride(styleOverride.Type, copy));
             }

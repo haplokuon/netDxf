@@ -677,38 +677,37 @@ namespace netDxf.Entities
         /// </remarks>
         public override void TransformBy(Matrix3 transformation, Vector3 translation)
         {
-            Vector3 newNormal;
-            double newElevation;
-            double newScale;
+            Vector3 newNormal = transformation * this.Normal;
+            if (Vector3.Equals(Vector3.Zero, newNormal)) newNormal = this.Normal;
 
-            newNormal = transformation * this.Normal;
-            newElevation = this.Elevation;
-            newScale = newNormal.Modulus();
+            double newElevation = this.Elevation;
 
             Matrix3 transOW = MathHelper.ArbitraryAxis(this.Normal);
             Matrix3 transWO = MathHelper.ArbitraryAxis(newNormal).Transpose();
 
+            Vector3 axis = transOW * Vector3.UnitX;
+            axis = transformation * axis;
+            axis = transWO * axis;
+            Vector2 axisPoint = new Vector2(axis.X, axis.Y);
+            double newScale = axisPoint.Modulus();
+
             for (int i = 0; i < this.Vertexes.Count; i++)
             {
-                Vector2 position;
-                Vector2 direction;
-                Vector2 mitter;
-
                 Vector3 v = transOW * new Vector3(this.Vertexes[i].Position.X, this.Vertexes[i].Position.Y, this.Elevation);
                 v = transformation * v + translation;
                 v = transWO * v;
-                position = new Vector2(v.X, v.Y);
+                Vector2 position = new Vector2(v.X, v.Y);
                 newElevation = v.Z;
 
                 v = transOW * new Vector3(this.Vertexes[i].Direction.X, this.Vertexes[i].Direction.Y, this.Elevation);
                 v = transformation * v;
                 v = transWO * v;
-                direction = new Vector2(v.X, v.Y);
+                Vector2 direction = new Vector2(v.X, v.Y);
 
                 v = transOW * new Vector3(this.Vertexes[i].Miter.X, this.Vertexes[i].Miter.Y, this.Elevation);
                 v = transformation * v;
                 v = transWO * v;
-                mitter = new Vector2(v.X, v.Y);
+                Vector2 mitter = new Vector2(v.X, v.Y);
 
                 List<double>[] newDistances = new List<double>[this.style.Elements.Count];
                 for (int j = 0; j < this.style.Elements.Count; j++)

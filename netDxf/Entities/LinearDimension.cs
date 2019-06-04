@@ -258,7 +258,8 @@ namespace netDxf.Entities
                 dimRotation = this.rotation*MathHelper.DegToRad;
             }
 
-            this.offset = MathHelper.PointLineDistance(midRef, point, dimDir);
+            double newOffset = MathHelper.PointLineDistance(midRef, point, dimDir);
+            this.offset = MathHelper.IsZero(newOffset) ? MathHelper.Epsilon : newOffset;
 
             Vector2 offsetDir = Vector2.Rotate(Vector2.UnitY, dimRotation);
             Vector2 midDimLine = midRef + this.offset* offsetDir;
@@ -299,13 +300,8 @@ namespace netDxf.Entities
         /// <param name="translation">Translation vector.</param>
         public override void TransformBy(Matrix3 transformation, Vector3 translation)
         {
-            Vector2 newStart;
-            Vector2 newEnd;
-            Vector3 newNormal;
-            double newElevation;
-            double newRotation;
-
-            newNormal = transformation * this.Normal;
+            Vector3 newNormal = transformation * this.Normal;
+            if (Vector3.Equals(Vector3.Zero, newNormal)) newNormal = this.Normal;
 
             Matrix3 transOW = MathHelper.ArbitraryAxis(this.Normal);
             Matrix3 transWO = MathHelper.ArbitraryAxis(newNormal).Transpose();
@@ -315,13 +311,13 @@ namespace netDxf.Entities
             v = transOW * new Vector3(this.FirstReferencePoint.X, this.FirstReferencePoint.Y, this.Elevation);
             v = transformation * v + translation;
             v = transWO * v;
-            newStart = new Vector2(v.X, v.Y);
-            newElevation = v.Z;
+            Vector2 newStart = new Vector2(v.X, v.Y);
+            double newElevation = v.Z;
 
             v = transOW * new Vector3(this.SecondReferencePoint.X, this.SecondReferencePoint.Y, this.Elevation);
             v = transformation * v + translation;
             v = transWO * v;
-            newEnd = new Vector2(v.X, v.Y);
+            Vector2 newEnd = new Vector2(v.X, v.Y);
 
             if (this.TextPositionManuallySet)
             {
@@ -341,7 +337,7 @@ namespace netDxf.Entities
             v = transformation * v;
             v = transWO * v;
             Vector2 axis = new Vector2(v.X, v.Y);
-            newRotation = Vector2.Angle(axis) * MathHelper.RadToDeg;
+            double newRotation = Vector2.Angle(axis) * MathHelper.RadToDeg;
 
             this.Rotation = newRotation;
             this.FirstReferencePoint = newStart;
@@ -457,9 +453,8 @@ namespace netDxf.Entities
 
             foreach (DimensionStyleOverride styleOverride in this.StyleOverrides.Values)
             {
-                object copy;
                 ICloneable value = styleOverride.Value as ICloneable;
-                copy = value != null ? value.Clone() : styleOverride.Value;
+                object copy = value != null ? value.Clone() : styleOverride.Value;
 
                 entity.StyleOverrides.Add(new DimensionStyleOverride(styleOverride.Type, copy));
             }

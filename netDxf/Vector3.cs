@@ -267,7 +267,7 @@ namespace netDxf
         /// <returns>Distance.</returns>
         public static double Distance(Vector3 u, Vector3 v)
         {
-            return Math.Sqrt((u.X - v.X)*(u.X - v.X) + (u.Y - v.Y)*(u.Y - v.Y) + (u.Z - v.Z)*(u.Z - v.Z));
+            return Math.Sqrt(SquareDistance(u, v));
         }
 
         /// <summary>

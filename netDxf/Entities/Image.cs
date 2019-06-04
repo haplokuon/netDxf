@@ -145,9 +145,10 @@ namespace netDxf.Entities
             get { return this.uvector; }
             set
             {
-                this.uvector = Vector2.Normalize(value);
-                if (Vector2.IsNaN(this.uvector))
+                if(Vector2.Equals(Vector2.Zero, value))
                     throw new ArgumentException("The U vector can not be the zero vector.", nameof(value));
+
+                this.uvector = Vector2.Normalize(value);
             }
         }
 
@@ -159,9 +160,10 @@ namespace netDxf.Entities
             get { return this.vvector; }
             set
             {
+                if(Vector2.Equals(Vector2.Zero, value))
+                    throw new ArgumentException("The V vector can not be the zero vector.", nameof(value));
+
                 this.vvector = Vector2.Normalize(value);
-                if (Vector2.IsNaN(this.vvector))
-                    throw new ArgumentException("The V-vector can not be the zero vector.", nameof(value));
             }
         }
 
@@ -309,15 +311,9 @@ namespace netDxf.Entities
         /// <param name="translation">Translation vector.</param>
         public override void TransformBy(Matrix3 transformation, Vector3 translation)
         {
-            Vector3 newPosition;
-            Vector3 newNormal;
-            Vector2 newUvector;
-            Vector2 newVvector;
-            double newWidth;
-            double newHeight;
-
-            newPosition = transformation * this.Position + translation;
-            newNormal = transformation * this.Normal;
+            Vector3 newPosition = transformation * this.Position + translation;
+            Vector3 newNormal = transformation * this.Normal;
+            if (Vector3.Equals(Vector3.Zero, newNormal)) newNormal = this.Normal;
 
             Matrix3 transOW = MathHelper.ArbitraryAxis(this.Normal);
 
@@ -328,17 +324,34 @@ namespace netDxf.Entities
             v = transOW * new Vector3(this.Uvector.X * this.Width, this.Uvector.Y * this.Width, 0.0);
             v = transformation * v;
             v = transWO * v;
-            newUvector = new Vector2(v.X, v.Y);
+            Vector2 newUvector = new Vector2(v.X, v.Y);
+            
+            double newWidth;
+            if (Vector2.Equals(Vector2.Zero, newUvector))
+            {
+                newUvector = this.Uvector;
+                newWidth = MathHelper.Epsilon;
+            }
+            else
+            {
+                newWidth = newUvector.Modulus();
+            }
 
             v = transOW * new Vector3(this.Vvector.X * this.Height, this.Vvector.Y * this.Height, 0.0);
             v = transformation * v;
             v = transWO * v;
-            newVvector = new Vector2(v.X, v.Y);
+            Vector2 newVvector = new Vector2(v.X, v.Y);
 
-            newWidth = newUvector.Modulus();
-            newWidth = MathHelper.IsZero(newWidth) ? MathHelper.Epsilon : newWidth;
-            newHeight = newVvector.Modulus();
-            newHeight = MathHelper.IsZero(newHeight) ? MathHelper.Epsilon : newHeight;
+            double newHeight;
+            if (Vector2.Equals(Vector2.Zero, newVvector))
+            {
+                newVvector = this.Uvector;
+                newHeight = MathHelper.Epsilon;
+            }
+            else
+            {
+                newHeight = newVvector.Modulus();
+            }
 
             this.Position = newPosition;
             this.Normal = newNormal;

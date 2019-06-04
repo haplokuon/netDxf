@@ -29,7 +29,7 @@ using netDxf.Units;
 namespace netDxf.Header
 {
     /// <summary>
-    /// Represents the header variables of a dxf document.
+    /// Represents the header variables of a DXF document.
     /// </summary>
     public class HeaderVariables
     {
@@ -110,7 +110,7 @@ namespace netDxf.Header
             set
             {
                 if (value < DxfVersion.AutoCad2000)
-                        throw new NotSupportedException("Only AutoCad2000 and newer dxf versions are supported.");
+                        throw new NotSupportedException("Only AutoCad2000 and newer DXF versions are supported.");
                 this.variables[HeaderVariableCode.AcadVer].Value = value;
             }
         }
@@ -615,7 +615,7 @@ namespace netDxf.Header
         #region public methods
 
         /// <summary>
-        /// Gets the collection of the known header variables.
+        /// Gets a collection of the known header variables.
         /// </summary>
         /// <returns>A list with the known header variables.</returns>
         public List<HeaderVariable> KnownValues()
@@ -624,7 +624,7 @@ namespace netDxf.Header
         }
 
         /// <summary>
-        /// Gets the collection of the known header variables names.
+        /// Gets a collection of the known header variables names.
         /// </summary>
         /// <returns>A list with the known header variables names.</returns>
         public List<string> KnownNames()
@@ -633,7 +633,7 @@ namespace netDxf.Header
         }
 
         /// <summary>
-        /// Gets the collection of the custom header variables.
+        /// Gets a collection of the custom header variables.
         /// </summary>
         /// <returns>A list with the custom header variables.</returns>
         public List<HeaderVariable> CustomValues()
@@ -642,7 +642,7 @@ namespace netDxf.Header
         }
 
         /// <summary>
-        /// Gets the collection of the custom header variables names.
+        /// Gets a collection of the custom header variables names.
         /// </summary>
         /// <returns>A list with the custom header variables names.</returns>
         public List<string> CustomNames()
@@ -654,10 +654,20 @@ namespace netDxf.Header
         /// Adds a custom <see cref="HeaderVariable">HeaderVariable</see> to the list.
         /// </summary>
         /// <param name="variable">Header variable to add to the list.</param>
+        /// <remarks>
+        /// All header variable names must start with the character '$'.<br />
+        /// Header variable names that already exists in the known list cannot be added.
+        /// </remarks>
         public void AddCustomVariable(HeaderVariable variable)
         {
             if(variable == null)
-                throw new ArgumentNullException(nameof(variable), "The header variable cannot be null.");
+                throw new ArgumentNullException(nameof(variable), "A custom header variable cannot be null.");
+
+            if(!variable.Name.StartsWith("$"))
+                throw new ArgumentException("A header variable name must start with '$'.", nameof(variable));
+
+            if(this.variables.ContainsKey(variable.Name))
+                throw new ArgumentException("A known header variable with the same name already exists.", nameof(variable));
 
             this.customVariables.Add(variable.Name, variable);
         }

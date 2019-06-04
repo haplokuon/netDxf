@@ -95,9 +95,10 @@ namespace netDxf.Entities
             get { return this.direction; }
             set
             {
-                this.direction = Vector3.Normalize(value);
-                if (Vector3.IsNaN(this.direction))
+                if(Vector3.Equals(Vector3.Zero, value))
                     throw new ArgumentException("The direction can not be the zero vector.", nameof(value));
+
+                this.direction = Vector3.Normalize(value);
             }
         }
 
@@ -113,8 +114,14 @@ namespace netDxf.Entities
         public override void TransformBy(Matrix3 transformation, Vector3 translation)
         {
             this.Origin = transformation * this.Origin + translation;
-            this.Direction = transformation * this.Direction;
-            this.Normal = transformation * this.Normal;
+
+            Vector3 newDirection = transformation * this.Direction;
+            if (Vector3.Equals(Vector3.Zero, newDirection)) newDirection = this.Direction;
+            this.Direction = newDirection;
+
+            Vector3 newNormal = transformation * this.Normal;
+            if (Vector3.Equals(Vector3.Zero, newNormal)) newNormal = this.Normal;
+            this.Normal = newNormal;
         }
 
         /// <summary>

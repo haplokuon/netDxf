@@ -236,9 +236,9 @@ namespace netDxf.Entities
             get { return this.normal; }
             set
             {
-                this.normal = Vector3.Normalize(value);
-                if (Vector3.IsNaN(this.normal))
+                if(Vector3.Equals(Vector3.Zero, value))
                     throw new ArgumentException("The normal can not be the zero vector.", nameof(value));
+                this.normal = Vector3.Normalize(value);
             }
         }
 

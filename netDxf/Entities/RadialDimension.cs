@@ -21,6 +21,7 @@
 #endregion
 
 using System;
+using System.Diagnostics;
 using netDxf.Blocks;
 using netDxf.Tables;
 
@@ -142,12 +143,15 @@ namespace netDxf.Entities
         public RadialDimension(Vector2 centerPoint, Vector2 referencePoint, DimensionStyle style)
             : base(DimensionType.Radius)
         {
+            if(Vector2.Equals(centerPoint, referencePoint))
+                throw new ArgumentException("The center and the reference point cannot be the same");
             this.center = centerPoint;
             this.refPoint = referencePoint;
 
             if (style == null)
                 throw new ArgumentNullException(nameof(style));
             this.Style = style;
+
             this.Update();
         }
 
@@ -231,16 +235,13 @@ namespace netDxf.Entities
         /// <param name="transformation">Transformation matrix.</param>
         /// <param name="translation">Translation vector.</param>
         /// <remarks>
-        /// Non-uniform scaling is not supported.
+        /// Non-uniform and zero scaling local to the dimension entity are not supported.<br />
+        /// The transformation will not be applied if the resulting center and reference points are the same.
         /// </remarks>
         public override void TransformBy(Matrix3 transformation, Vector3 translation)
         {
-            Vector2 newCenter;
-            Vector2 newRefPoint;
-            Vector3 newNormal;
-            double newElevation;
-
-            newNormal = transformation * this.Normal;
+            Vector3 newNormal = transformation * this.Normal;
+            if (Vector3.Equals(Vector3.Zero, newNormal)) newNormal = this.Normal;
 
             Matrix3 transOW = MathHelper.ArbitraryAxis(this.Normal);
             Matrix3 transWO = MathHelper.ArbitraryAxis(newNormal).Transpose();
@@ -248,13 +249,19 @@ namespace netDxf.Entities
             Vector3 v = transOW * new Vector3(this.CenterPoint.X, this.CenterPoint.Y, this.Elevation);
             v = transformation * v + translation;
             v = transWO * v;
-            newCenter = new Vector2(v.X, v.Y);
-            newElevation = v.Z;
+            Vector2 newCenter = new Vector2(v.X, v.Y);
+            double newElevation = v.Z;
 
             v = transOW * new Vector3(this.ReferencePoint.X, this.ReferencePoint.Y, this.Elevation);
             v = transformation * v + translation;
             v = transWO * v;
-            newRefPoint = new Vector2(v.X, v.Y);
+            Vector2 newRefPoint = new Vector2(v.X, v.Y);
+
+            if(Vector2.Equals(newCenter, newRefPoint))
+            {
+                Debug.Assert(false, "The transformation cannot be applied, the resulting center and reference points are the same.");
+                return;
+            }
 
             v = transOW * new Vector3(this.textRefPoint.X, this.textRefPoint.Y, this.Elevation);
             v = transformation * v + translation;
@@ -274,6 +281,9 @@ namespace netDxf.Entities
 
         protected override void CalculteReferencePoints()
         {            
+            if(Vector2.Equals(this.center, this.refPoint))
+                throw new ArgumentException("The center and the reference point cannot be the same");
+
             this.defPoint = this.center;
 
             if (this.TextPositionManuallySet)
@@ -351,10 +361,8 @@ namespace netDxf.Entities
 
             foreach (DimensionStyleOverride styleOverride in this.StyleOverrides.Values)
             {
-                object copy;
                 ICloneable value = styleOverride.Value as ICloneable;
-                copy = value != null ? value.Clone() : styleOverride.Value;
-
+                object copy = value != null ? value.Clone() : styleOverride.Value;
                 entity.StyleOverrides.Add(new DimensionStyleOverride(styleOverride.Type, copy));
             }
 

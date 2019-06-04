@@ -187,8 +187,6 @@ namespace netDxf.IO
 
             this.Open(stream, this.doc.DrawingVariables.AcadVer < DxfVersion.AutoCad2007 ? Encoding.ASCII : null);
 
-            //this.Open(stream, this.doc.DrawingVariables.AcadVer < DxfVersion.AutoCad2007 ? Encoding.Default : null);
-
             // The comment group, 999, is not used in binary DXF files.
             if (!this.isBinary)
             {
@@ -202,6 +200,12 @@ namespace netDxf.IO
             {
                 this.WriteSystemVariable(variable);
             }
+
+            // writing a copy of the active dimension style variables in the header section will avoid to be displayed as <style overrides> in AutoCAD
+            DimensionStyle activeDimStyle;
+            if (this.doc.DimensionStyles.TryGetValue(this.doc.DrawingVariables.DimStyle, out activeDimStyle))
+                this.WriteActiveDimensionStyleSystemVaribles(activeDimStyle);
+            this.EndSection();
 
             foreach (HeaderVariable variable in this.doc.DrawingVariables.CustomValues())
             {
@@ -224,12 +228,6 @@ namespace netDxf.IO
                     this.chunk.Write(variable.GroupCode, variable.Value);
                 }               
             }
-
-            // writing a copy of the active dimension style variables in the header section will avoid to be displayed as <style overrides> in AutoCad
-            DimensionStyle activeDimStyle;
-            if (this.doc.DimensionStyles.TryGetValue(this.doc.DrawingVariables.DimStyle, out activeDimStyle))
-                this.WriteActiveDimensionStyleSystemVaribles(activeDimStyle);
-            this.EndSection();
 
             //CLASSES SECTION
             this.BeginSection(DxfObjectCode.ClassesSection);
@@ -339,8 +337,6 @@ namespace netDxf.IO
                     string index = layout.AssociatedBlock.Name.Remove(0, 12);
                     if (string.IsNullOrEmpty(index))
                     {
-                        this.WriteEntity(layout.Viewport, layout);
-
                         foreach (AttributeDefinition attDef in layout.AssociatedBlock.AttributeDefinitions.Values)
                         {
                             this.WriteAttributeDefinition(attDef, layout);
@@ -375,22 +371,18 @@ namespace netDxf.IO
             {
                 this.WriteDictionary(dictionary);
             }
-
             foreach (Group group in this.doc.Groups.Items)
             {
                 this.WriteGroup(group, groupDictionary.Handle);
             }
-
             foreach (Layout layout in this.doc.Layouts)
             {
                 this.WriteLayout(layout, layoutDictionary.Handle);
             }
-
             foreach (MLineStyle style in this.doc.MlineStyles.Items)
             {
                 this.WriteMLineStyle(style, mLineStyleDictionary.Handle);
             }
-
             foreach (UnderlayDgnDefinition underlayDef in this.doc.UnderlayDgnDefinitions.Items)
             {
                 this.WriteUnderlayDefinition(underlayDef, dgnDefinitionDictionary.Handle);
@@ -1764,8 +1756,6 @@ namespace netDxf.IO
                 if (!(string.Equals(layout.AssociatedBlock.Name, Block.DefaultModelSpaceName, StringComparison.OrdinalIgnoreCase) ||
                       string.Equals(layout.AssociatedBlock.Name, Block.DefaultPaperSpaceName, StringComparison.OrdinalIgnoreCase)))
                 {
-                    this.WriteEntity(layout.Viewport, layout);
-
                     foreach (AttributeDefinition attdef in layout.AssociatedBlock.AttributeDefinitions.Values)
                     {
                         this.WriteAttributeDefinition(attdef, layout);

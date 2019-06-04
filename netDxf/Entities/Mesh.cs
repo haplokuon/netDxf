@@ -134,6 +134,10 @@ namespace netDxf.Entities
             {
                 this.Vertexes[i] = transformation * this.Vertexes[i] + translation;
             }
+
+            Vector3 newNormal = transformation * this.Normal;
+            if (Vector3.Equals(Vector3.Zero, newNormal)) newNormal = this.Normal;
+            this.Normal = newNormal;
         }
 
         /// <summary>

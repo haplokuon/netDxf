@@ -122,12 +122,9 @@ namespace netDxf.Entities
         /// <param name="translation">Translation vector.</param>
         public override void TransformBy(Matrix3 transformation, Vector3 translation)
         {
-            Vector3 newPosition;
-            Vector3 newNormal;
-            double newRotation;
-
-            newPosition = transformation * this.Position + translation;
-            newNormal = transformation * this.Normal;
+            Vector3 newPosition = transformation * this.Position + translation;
+            Vector3 newNormal = transformation * this.Normal;
+            if (Vector3.Equals(Vector3.Zero, newNormal)) newNormal = this.Normal;
 
             Matrix3 transOW = MathHelper.ArbitraryAxis(this.Normal);
             Matrix3 transWO = MathHelper.ArbitraryAxis(newNormal).Transpose();
@@ -136,11 +133,11 @@ namespace netDxf.Entities
             Vector3 v = transOW * new Vector3(refAxis.X, refAxis.Y, 0.0);
             v = transformation * v;
             v = transWO * v;
-            newRotation = Vector2.Angle(new Vector2(v.X, v.Y)) * MathHelper.RadToDeg;
+            double newRotation = Vector2.Angle(new Vector2(v.X, v.Y)) * MathHelper.RadToDeg;
 
             this.Position = newPosition;
-            this.Normal = newNormal;
             this.Rotation = newRotation;
+            this.Normal = newNormal;
         }
 
         /// <summary>

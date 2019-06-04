@@ -100,6 +100,39 @@ namespace netDxf
         #region static methods
 
         /// <summary>
+        /// Returns a value indicating the sign of a double-precision floating-point number.
+        /// </summary>
+        /// <param name="number">Double precision number.
+        /// </param>
+        /// <returns>A number that indicates the sign of value.
+        /// Return value Meaning -1 value is less than zero.
+        /// 0 value is equal to zero.
+        /// 1 value is greater than zero.
+        /// </returns>
+        /// <remarks>This method will test for values of number very close to zero.</remarks>
+        public static int Sign(double number)
+        {
+            return IsZero(number) ? 0 : Math.Sign(number);
+        }
+
+        /// <summary>
+        /// Returns a value indicating the sign of a double-precision floating-point number.
+        /// </summary>
+        /// <param name="number">Double precision number.
+        /// <param name="threshold">Tolerance.</param>
+        /// </param>
+        /// <returns>A number that indicates the sign of value.
+        /// Return value Meaning -1 value is less than zero.
+        /// 0 value is equal to zero.
+        /// 1 value is greater than zero.
+        /// </returns>
+        /// <remarks>This method will test for values of number very close to zero.</remarks>
+        public static int Sign(double number, double threshold)
+        {
+            return IsZero(number, threshold) ? 0 : Math.Sign(number);
+        }
+
+        /// <summary>
         /// Checks if a number is close to one.
         /// </summary>
         /// <param name="number">Double precision number.</param>

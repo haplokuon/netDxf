@@ -734,13 +734,9 @@ namespace netDxf.Entities
         /// <remarks>Non-uniform scaling is not supported, also is not possible to make a symmetry of a Tolerance.</remarks>
         public override void TransformBy(Matrix3 transformation, Vector3 translation)
         {
-            Vector3 newPosition;
-            Vector3 newNormal;
-            double newRotation;
-            double newTextHeight;
-
-            newPosition = transformation * this.Position + translation;
-            newNormal = transformation * this.Normal;
+            Vector3 newPosition = transformation * this.Position + translation;
+            Vector3 newNormal = transformation * this.Normal;
+            if (Vector3.Equals(Vector3.Zero, newNormal)) newNormal = this.Normal;
 
             Matrix3 transOW = MathHelper.ArbitraryAxis(this.Normal);
             transOW *= Matrix3.RotationZ(this.Rotation * MathHelper.DegToRad);
@@ -751,12 +747,12 @@ namespace netDxf.Entities
             Vector3 v = transOW * Vector3.UnitX;
             v = transformation * v;
             v = transWO * v;
+            Vector2 axisPoint = new Vector2(v.X, v.Y);
+            double newRotation = Vector2.Angle(axisPoint) * MathHelper.RadToDeg;
 
-            double scale = newNormal.Modulus();;
-            newTextHeight = this.TextHeight * scale;
+            double scale = axisPoint.Modulus();;
+            double newTextHeight = this.TextHeight * scale;
             if (MathHelper.IsZero(newTextHeight)) newTextHeight = MathHelper.Epsilon;
-
-            newRotation = Vector2.Angle(new Vector2(v.X, v.Y)) * MathHelper.RadToDeg;
 
             this.TextHeight = newTextHeight;
             this.Position = newPosition;

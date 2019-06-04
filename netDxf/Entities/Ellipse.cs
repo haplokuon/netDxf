@@ -126,20 +126,25 @@ namespace netDxf.Entities
                 double e = coeficients[4];
                 double f = coeficients[5];
 
-                double denom = b * b - 4 * a * c;
+                double q = b * b - 4 * a * c;
                            
-                if (denom >= 0) return false; // not an ellipse
+                if (q >= 0) return false; // not an ellipse
 
-                center.X = (2 * c * d - b * e) / denom;
-                center.Y = (2 * a * e - b * d) / denom;
+                center.X = (2 * c * d - b * e) / q;
+                center.Y = (2 * a * e - b * d) / q;
 
-                double temp = Math.Sqrt((a - c) * (a - c) + b * b);
-                double axis1 = -Math.Sqrt(2 * (a * e * e + c * d * d - b * d * e + (b * b - 4 * a * c) * f) * (a + c + temp)) / denom;
-                double axis2 = -Math.Sqrt(2 * (a * e * e + c * d * d - b * d * e + (b * b - 4 * a * c) * f) * (a + c - temp)) / denom;
+                double m = Math.Sqrt((a - c) * (a - c) + b * b);
+                double n = 2 * (a * e * e + c * d * d - b * d * e + q * f);
+                double axis1 = -Math.Sqrt(n * (a + c + m)) / q;
+                double axis2 = -Math.Sqrt(n * (a + c - m)) / q;
 
                 if (MathHelper.IsZero(b))
                 {
-                    rotation = 0.0; // ellipse parallel to world axis
+                    // ellipse parallel to world axis
+                    if (MathHelper.IsEqual(a, c))
+                        rotation = 0.0;
+                    else
+                        rotation = a < c ? 0.0 : MathHelper.HalfPI;
                 }
                 else
                 {
@@ -157,7 +162,6 @@ namespace netDxf.Entities
                     semiMinorAxis = axis1;
                     rotation += MathHelper.HalfPI;
                 }
-
                 return true;
             }
         }
@@ -447,6 +451,8 @@ namespace netDxf.Entities
             }
 
             Vector3 newNormal = transformation * this.Normal;
+            if (Vector3.Equals(Vector3.Zero, newNormal)) newNormal = this.Normal;
+
             List<Vector3> rectPoints = MathHelper.Transform(wcsPoints, newNormal, CoordinateSystem.World, CoordinateSystem.Object);
             
             // corners of the transformed rectangle that circumscribe the new ellipse        
@@ -469,7 +475,7 @@ namespace netDxf.Entities
             Vector2 pointY = MathHelper.FindIntersection(pointA, pointC - pointA, pointX, pointC - pointB);
             if (Vector2.IsNaN(pointY))
             {
-                Debug.Assert(false, "Unknown error during the ellipse transformation.");
+                Debug.Assert(false, "The transformation cannot be applied.");
                 return;
             }
 
@@ -477,7 +483,7 @@ namespace netDxf.Entities
             Vector2 pointZ = MathHelper.FindIntersection(pointM, pointX - pointM, pointN, pointY - pointN);
             if(Vector2.IsNaN(pointZ))
             {
-                Debug.Assert(false, "Unknown error during the ellipse transformation.");
+                Debug.Assert(false, "The transformation cannot be applied.");
                 return;
             }
             
@@ -491,58 +497,83 @@ namespace netDxf.Entities
 
             if (ConicThroughFivePoints.EllipseProperties(pointM, pointN, pointH, pointK, pointZ, out newCenter, out newSemiMajorAxis, out newSemiMinorAxis, out newRotation))
             {
+                double axis1 = 2 * newSemiMajorAxis;
+                axis1 = axis1 <= 0 ? MathHelper.Epsilon : axis1;
+                double axis2 = 2 * newSemiMinorAxis;
+                axis2 = axis2 <= 0 ? MathHelper.Epsilon : axis2;
+
                 this.Center = transformation * this.Center + translation;
-                this.MajorAxis = 2 * newSemiMajorAxis;
-                this.MinorAxis = 2 * newSemiMinorAxis;
+                this.MajorAxis = axis1;
+                this.MinorAxis = axis2;
                 this.Rotation = newRotation * MathHelper.RadToDeg;
                 this.Normal = newNormal;
             }
             else
             {
-                Debug.Assert(false, "Unknown error during the ellipse transformation.");
+                Debug.Assert(false, "The transformation cannot be applied.");
                 return;
             }
 
+            if (this.IsFullEllipse) return;
+
             //if not full ellipse calculate start and end angles
-            if (!this.IsFullEllipse)
+            Vector2 start = this.PolarCoordinateRelativeToCenter(this.StartAngle);
+            Vector2 end = this.PolarCoordinateRelativeToCenter(this.EndAngle);
+
+            double beta = oldRotation * MathHelper.DegToRad;
+            double sinbeta = Math.Sin(beta);
+            double cosbeta = Math.Cos(beta);
+
+            Vector3 pStart = new Vector3(start.X * cosbeta - start.Y * sinbeta, start.X * sinbeta + start.Y * cosbeta, 0.0);
+            Vector3 pEnd = new Vector3(end.X * cosbeta - end.Y * sinbeta, end.X * sinbeta + end.Y * cosbeta, 0.0);
+            List<Vector3> wcsAnglePoints = MathHelper.Transform(new[] {pStart, pEnd}, oldNormal, CoordinateSystem.Object, CoordinateSystem.World);
+            for (int i = 0; i < wcsAnglePoints.Count; i++)
             {
-                Vector2 start = this.PolarCoordinateRelativeToCenter(this.StartAngle);
-                Vector2 end = this.PolarCoordinateRelativeToCenter(this.EndAngle);
+                wcsPoints[i] += this.Center;
 
-                double beta = oldRotation * MathHelper.DegToRad;
-                double sinbeta = Math.Sin(beta);
-                double cosbeta = Math.Cos(beta);
+                wcsAnglePoints[i] = transformation * wcsAnglePoints[i];
+                wcsPoints[i] += translation;
 
-                Vector3 pStart = new Vector3(start.X * cosbeta - start.Y * sinbeta, start.X * sinbeta + start.Y * cosbeta, 0.0);
-                Vector3 pEnd = new Vector3(end.X * cosbeta - end.Y * sinbeta, end.X * sinbeta + end.Y * cosbeta, 0.0);
-                List<Vector3> wcsAnglePoints = MathHelper.Transform(new[] { pStart, pEnd }, oldNormal, CoordinateSystem.Object, CoordinateSystem.World);
-                for (int i = 0; i < wcsAnglePoints.Count; i++)
-                {
-                    wcsPoints[i] += this.Center;
+            }
+            List<Vector3> ocsAnglePoints = MathHelper.Transform(wcsAnglePoints, newNormal, CoordinateSystem.World, CoordinateSystem.Object);
 
-                    wcsAnglePoints[i] = transformation * wcsAnglePoints[i];
-                    wcsPoints[i] += translation;
+            Vector2 newStart = new Vector2(ocsAnglePoints[0].X, ocsAnglePoints[0].Y);
+            Vector2 newEnd = new Vector2(ocsAnglePoints[1].X, ocsAnglePoints[1].Y);
 
-                }
-                List<Vector3> ocsAnglePoints = MathHelper.Transform(wcsAnglePoints, newNormal, CoordinateSystem.World, CoordinateSystem.Object);
+            double invert = Math.Sign(transformation.M11 * transformation.M22 * transformation.M33) < 0 ? 180.0 : 0.0;
+            this.StartAngle = invert + Vector2.Angle(newStart) * MathHelper.RadToDeg - this.Rotation;
+            this.EndAngle = invert + Vector2.Angle(newEnd) * MathHelper.RadToDeg - this.Rotation;
 
-                double angleStart = Vector2.Angle(new Vector2(ocsAnglePoints[0].X, ocsAnglePoints[0].Y)) * MathHelper.RadToDeg;
-                double angleEnd = Vector2.Angle(new Vector2(ocsAnglePoints[1].X, ocsAnglePoints[1].Y)) * MathHelper.RadToDeg;    
-                            
-                angleStart = MathHelper.NormalizeAngle(angleStart - this.Rotation);
-                angleEnd = MathHelper.NormalizeAngle(angleEnd - this.Rotation);
+            //double angleStart = Vector2.Angle(newStart) * MathHelper.RadToDeg - this.Rotation;
+            //double angleEnd = Vector2.Angle(newEnd) * MathHelper.RadToDeg - this.Rotation;    
 
-                if (angleEnd > angleStart)
-                {
-                    this.StartAngle = angleStart;
-                    this.EndAngle = angleEnd;
-                }
-                else
-                {
-                    this.StartAngle = angleEnd;
-                    this.EndAngle = angleStart;
-                }
-            }           
+            //Vector2 startPrime = Vector2.Rotate(newStart, -this.Rotation*MathHelper.DegToRad);
+            //if (MathHelper.Sign(start.X)*MathHelper.Sign(startPrime.X)>=0)
+            //{
+            //    if (MathHelper.Sign(start.Y) * MathHelper.Sign(startPrime.Y) >= 0)
+            //    {
+            //        this.StartAngle = angleStart;
+            //        this.EndAngle = angleEnd;
+            //    }
+            //    else
+            //    {
+            //        this.StartAngle = angleEnd;
+            //        this.EndAngle = angleStart;
+            //    }
+            //}
+            //else
+            //{
+            //    if (MathHelper.Sign(start.Y)*MathHelper.Sign(startPrime.Y)>=0)
+            //    {
+            //        this.StartAngle = angleEnd;
+            //        this.EndAngle = angleStart;
+            //    }
+            //    else
+            //    {
+            //        this.StartAngle = angleStart;
+            //        this.EndAngle = angleEnd;
+            //    }
+            //}
         }
 
         /// <summary>

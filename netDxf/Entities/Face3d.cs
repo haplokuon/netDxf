@@ -171,6 +171,11 @@ namespace netDxf.Entities
             this.SecondVertex = transformation * this.SecondVertex + translation;
             this.ThirdVertex = transformation * this.ThirdVertex + translation;
             this.FourthVertex = transformation * this.FourthVertex + translation;
+
+            Vector3 newNormal = transformation * this.Normal;
+            if (Vector3.Equals(Vector3.Zero, newNormal)) newNormal = this.Normal;
+            this.Normal = newNormal;
+
         }
 
         /// <summary>

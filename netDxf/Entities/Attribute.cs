@@ -461,17 +461,9 @@ namespace netDxf.Entities
             else
                 mirrText = this.Owner.Owner.Record.Owner.Owner.DrawingVariables.MirrText;
 
-            Vector3 newPosition;
-            Vector3 newNormal;
-            Vector2 newUvector;
-            Vector2 newVvector;
-            double newWidthFactor;
-            double newHeight;
-            double newRotation;
-            double newObliqueAngle;
-
-            newPosition = transformation * this.Position + translation;
-            newNormal = transformation * this.Normal;
+            Vector3 newPosition = transformation * this.Position + translation;
+            Vector3 newNormal = transformation * this.Normal;
+            if (Vector3.Equals(Vector3.Zero, newNormal)) newNormal = this.Normal;
 
             Matrix3 transOW = MathHelper.ArbitraryAxis(this.Normal);
 
@@ -490,15 +482,15 @@ namespace netDxf.Entities
             v = transOW * new Vector3(uv[0].X, uv[0].Y, 0.0);
             v = transformation * v;
             v = transWO * v;
-            newUvector = new Vector2(v.X, v.Y);
+            Vector2 newUvector = new Vector2(v.X, v.Y);
 
             v = transOW * new Vector3(uv[1].X, uv[1].Y, 0.0);
             v = transformation * v;
             v = transWO * v;
-            newVvector = new Vector2(v.X, v.Y);
+            Vector2 newVvector = new Vector2(v.X, v.Y);
 
-            newRotation = Vector2.Angle(newUvector) * MathHelper.RadToDeg;
-            newObliqueAngle = Vector2.Angle(newVvector) * MathHelper.RadToDeg;
+            double newRotation = Vector2.Angle(newUvector) * MathHelper.RadToDeg;
+            double newObliqueAngle = Vector2.Angle(newVvector) * MathHelper.RadToDeg;
 
             if (mirrText)
             {
@@ -583,7 +575,6 @@ namespace netDxf.Entities
             }
 
             // the oblique angle is defined between -85 nad 85 degrees
-            //if (newObliqueAngle >= 360) newObliqueAngle -= 360;
             newObliqueAngle = MathHelper.NormalizeAngle(newObliqueAngle);
             if (newObliqueAngle > 180)
                 newObliqueAngle = 180 - newObliqueAngle;
@@ -593,11 +584,11 @@ namespace netDxf.Entities
                 newObliqueAngle = 85;
 
             // the height must be greater than zero, the cos is always positive between -85 and 85
-            newHeight = newVvector.Modulus() * Math.Cos(newObliqueAngle * MathHelper.DegToRad);
+            double newHeight = newVvector.Modulus() * Math.Cos(newObliqueAngle * MathHelper.DegToRad);
             newHeight = MathHelper.IsZero(newHeight) ? MathHelper.Epsilon : newHeight;
 
             // the width factor is defined between 0.01 nad 100
-            newWidthFactor = newUvector.Modulus() / newHeight;
+            double newWidthFactor = newUvector.Modulus() / newHeight;
             if(newWidthFactor<0.01)
                 newWidthFactor = 0.01;
             else if (newWidthFactor > 100)

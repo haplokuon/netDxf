@@ -783,42 +783,32 @@ namespace netDxf.Entities
         {
             bool mirrText = this.Owner == null ? DefaultMirrText : this.Owner.Record.Owner.Owner.DrawingVariables.MirrText;
 
-            Vector3 newPosition;
-            Vector3 newNormal;
-            Vector2 newUvector;
-            Vector2 newVvector;
-            double scale;
-            double newHeight;
-            double newRotation;
-
-            newPosition = transformation * this.Position + translation;
-            newNormal = transformation * this.Normal;
+            Vector3 newPosition = transformation * this.Position + translation;
+            Vector3 newNormal = transformation * this.Normal;
+            if (Vector3.Equals(Vector3.Zero, newNormal)) newNormal = this.Normal;
 
             Matrix3 transOW = MathHelper.ArbitraryAxis(this.Normal);
 
             Matrix3 transWO = MathHelper.ArbitraryAxis(newNormal);
             transWO = transWO.Transpose();
 
-            List<Vector2> uv = MathHelper.Transform(new List<Vector2>
-                {
-                    Vector2.UnitX,
-                    Vector2.UnitY
-                },
-                this.Rotation * MathHelper.DegToRad,
-                CoordinateSystem.Object, CoordinateSystem.World);
+            List<Vector2> uv = MathHelper.Transform( new[] { Vector2.UnitX, Vector2.UnitY}, this.Rotation * MathHelper.DegToRad, CoordinateSystem.Object, CoordinateSystem.World);
 
             Vector3 v;
             v = transOW * new Vector3(uv[0].X, uv[0].Y, 0.0);
             v = transformation * v;
             v = transWO * v;
-            newUvector = new Vector2(v.X, v.Y);
+            Vector2 newUvector = new Vector2(v.X, v.Y);
+
+            // the MText entity does not support non-uniform scaling
+            double scale = newUvector.Modulus();
 
             v = transOW * new Vector3(uv[1].X, uv[1].Y, 0.0);
             v = transformation * v;
             v = transWO * v;
-            newVvector = new Vector2(v.X, v.Y);
+            Vector2 newVvector = new Vector2(v.X, v.Y);
 
-            newRotation = Vector2.Angle(newUvector) * MathHelper.RadToDeg;
+            double newRotation = Vector2.Angle(newUvector) * MathHelper.RadToDeg;
 
             if (mirrText)
             {
@@ -885,10 +875,7 @@ namespace netDxf.Entities
                 }
             }
 
-            // the MText entity does not support non-uniform scaling
-            scale = newNormal.Modulus();
-
-            newHeight = this.Height * scale;
+            double newHeight = this.Height * scale;
             newHeight = MathHelper.IsZero(newHeight) ? MathHelper.Epsilon : newHeight;
 
             this.Position = newPosition;

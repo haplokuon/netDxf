@@ -199,14 +199,14 @@ namespace netDxf.Entities
         /// <summary>
         /// Gets or sets the insert <see cref="Vector3">scale</see>.
         /// </summary>
-        /// <remarks>Any of the vector scale components cannot be zero.</remarks>
+        /// <remarks>None of the vector scale components can be zero.</remarks>
         public Vector3 Scale
         {
             get { return this.scale; }
             set
             {
                 if (MathHelper.IsZero(value.X) || MathHelper.IsZero(value.Y) || MathHelper.IsZero(value.Z))
-                    throw new ArgumentOutOfRangeException(nameof(value), value, "Any of the vector scale components cannot be zero.");
+                    throw new ArgumentOutOfRangeException(nameof(value), value, "None of the vector scale components can be zero.");
                 this.scale = value;
             }
         }
@@ -352,20 +352,17 @@ namespace netDxf.Entities
         /// Explodes the current insert.
         /// </summary>
         /// <returns>A list of entities.</returns>
-        /// <remarks>
-        /// Non-uniform scaling is not supported by all entities. Read the documentation of the entities TransformBy method.
-        /// </remarks>
         public List<EntityObject> Explode()
         {
-            bool isUniformScale = MathHelper.IsEqual(this.scale.X, this.scale.Y) &&
-                                  MathHelper.IsEqual(this.scale.Y, this.scale.Z);
-
             List<EntityObject> entities = new List<EntityObject>();
             Matrix3 transformation = this.GetTransformation();
             Vector3 translation = this.Position - transformation * this.block.Origin;
 
             foreach (EntityObject entity in this.block.Entities)
             {
+                Vector3 localScale = MathHelper.Transform(this.Scale, entity.Normal, CoordinateSystem.World, CoordinateSystem.Object);
+                bool isUniformScale = MathHelper.IsEqual(localScale.X, localScale.Y);
+
                 // entities with reactors are associated with other entities they will handle the transformation
                 if (entity.Reactors.Count > 0)
                     continue;
@@ -377,7 +374,6 @@ namespace netDxf.Entities
                         case EntityType.Circle:
                         {
                             Circle circle = (Circle) entity;
-
                             Ellipse ellipse = new Ellipse
                             {
                                 //EntityObject properties
@@ -395,8 +391,6 @@ namespace netDxf.Entities
                                 MinorAxis = 2 * circle.Radius,
                                 Thickness = circle.Thickness
                             };
-                            foreach (XData data in this.XData.Values)
-                                entity.XData.Add((XData) data.Clone());
 
                             ellipse.TransformBy(transformation, translation);
                             entities.Add(ellipse);
@@ -424,6 +418,7 @@ namespace netDxf.Entities
                                 EndAngle = arc.EndAngle,
                                 Thickness = arc.Thickness
                             };
+
                             ellipse.TransformBy(transformation, translation);
                             entities.Add(ellipse);
                             break;
@@ -433,8 +428,37 @@ namespace netDxf.Entities
                             List<EntityObject> newEntities = ((LwPolyline) entity).Explode();
                             foreach (EntityObject newEntity in newEntities)
                             {
-                                newEntity.TransformBy(transformation, translation);
-                                entities.Add(newEntity);
+                                if (newEntity.Type == EntityType.Arc)
+                                {
+                                    Arc arc = (Arc) newEntity;
+                                    Ellipse ellipse = new Ellipse
+                                    {
+                                        //EntityObject properties
+                                        Layer = (Layer) entity.Layer.Clone(),
+                                        Linetype = (Linetype) entity.Linetype.Clone(),
+                                        Color = (AciColor) entity.Color.Clone(),
+                                        Lineweight = entity.Lineweight,
+                                        Transparency = (Transparency) entity.Transparency.Clone(),
+                                        LinetypeScale = entity.LinetypeScale,
+                                        Normal = entity.Normal,
+                                        IsVisible = entity.IsVisible,
+                                        //Ellipse properties
+                                        Center = arc.Center,
+                                        MajorAxis = 2 * arc.Radius,
+                                        MinorAxis = 2 * arc.Radius,
+                                        StartAngle = arc.StartAngle,
+                                        EndAngle = arc.EndAngle,
+                                        Thickness = arc.Thickness
+                                    };
+
+                                    ellipse.TransformBy(transformation, translation);
+                                    entities.Add(ellipse);
+                                }
+                                else
+                                {
+                                    newEntity.TransformBy(transformation, translation);
+                                    entities.Add(newEntity);
+                                }                                
                             }
                             break;
                         }
@@ -443,8 +467,37 @@ namespace netDxf.Entities
                             List<EntityObject> newEntities = ((MLine)entity).Explode();
                             foreach (EntityObject newEntity in newEntities)
                             {
-                                newEntity.TransformBy(transformation, translation);
-                                entities.Add(newEntity);
+                                if (newEntity.Type == EntityType.Arc)
+                                {
+                                    Arc arc = (Arc) newEntity;
+                                    Ellipse ellipse = new Ellipse
+                                    {
+                                        //EntityObject properties
+                                        Layer = (Layer) entity.Layer.Clone(),
+                                        Linetype = (Linetype) entity.Linetype.Clone(),
+                                        Color = (AciColor) entity.Color.Clone(),
+                                        Lineweight = entity.Lineweight,
+                                        Transparency = (Transparency) entity.Transparency.Clone(),
+                                        LinetypeScale = entity.LinetypeScale,
+                                        Normal = entity.Normal,
+                                        IsVisible = entity.IsVisible,
+                                        //Ellipse properties
+                                        Center = arc.Center,
+                                        MajorAxis = 2 * arc.Radius,
+                                        MinorAxis = 2 * arc.Radius,
+                                        StartAngle = arc.StartAngle,
+                                        EndAngle = arc.EndAngle,
+                                        Thickness = arc.Thickness
+                                    };
+
+                                    ellipse.TransformBy(transformation, translation);
+                                    entities.Add(ellipse);
+                                }
+                                else
+                                {
+                                    newEntity.TransformBy(transformation, translation);
+                                    entities.Add(newEntity);
+                                }                             
                             }
                             break;
                         }
@@ -507,13 +560,9 @@ namespace netDxf.Entities
         /// <param name="translation">Translation vector.</param>
         public override void TransformBy(Matrix3 transformation, Vector3 translation)
         {
-            Vector3 newPosition;
-            Vector3 newNormal;
-            Vector3 newScale;
-            double newRotation;
-
-            newPosition = transformation * this.Position + translation;
-            newNormal = transformation * this.Normal;
+            Vector3 newPosition = transformation * this.Position + translation;
+            Vector3 newNormal = transformation * this.Normal;
+            if (Vector3.Equals(Vector3.Zero, newNormal)) newNormal = this.Normal;
 
             Matrix3 transOW = MathHelper.ArbitraryAxis(this.Normal);
             transOW *= Matrix3.RotationZ(this.Rotation * MathHelper.DegToRad);
@@ -524,14 +573,17 @@ namespace netDxf.Entities
             Vector3 v = transOW * Vector3.UnitX;
             v = transformation * v;
             v = transWO * v;
-            newRotation = Vector2.Angle(new Vector2(v.X, v.Y))* MathHelper.RadToDeg;
+            double newRotation = Vector2.Angle(new Vector2(v.X, v.Y))* MathHelper.RadToDeg;
 
             transWO = Matrix3.RotationZ(newRotation * MathHelper.DegToRad).Transpose() * transWO;
 
             Vector3 s = transOW * this.Scale;
             s = transformation * s;
             s = transWO * s;
-            newScale = s;
+            Vector3 newScale = new Vector3(
+                MathHelper.IsZero(s.X) ? MathHelper.Epsilon : s.X,
+                MathHelper.IsZero(s.Y) ? MathHelper.Epsilon : s.Y,
+                MathHelper.IsZero(s.Z) ? MathHelper.Epsilon : s.Z);
 
             this.Normal = newNormal;
             this.Position = newPosition;

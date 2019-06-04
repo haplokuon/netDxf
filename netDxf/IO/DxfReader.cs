@@ -570,9 +570,14 @@ namespace netDxf.IO
                         this.doc.DrawingVariables.UcsYDir = this.ReadHeaderVector();
                         break;
                     default:
-                        // not recognized header variables will be added to the custom list, except those that correspond to the dimension style
-                        if (!varName.StartsWith("$DIM"))
+                        // not recognized header variables will be added to the custom list
+                        if (string.Equals(varName, "$ACADMAINTVER", StringComparison.InvariantCultureIgnoreCase))
                         {
+                            // this header variable should be ignored, and causes problems if it appears in the DXF version AutoCAD2018
+                        }
+                        else if (!varName.StartsWith("$DIM", StringComparison.InvariantCultureIgnoreCase))
+                        { 
+                            // except those that correspond to the dimension style
                             HeaderVariable variable;
                             if (this.chunk.Code == 10)
                             {
@@ -580,7 +585,7 @@ namespace netDxf.IO
                                 this.chunk.Next();
                                 double y = this.chunk.ReadDouble();
                                 this.chunk.Next();
-                                // the code 30 is optional it might not exist
+                                // the code 30 might not exist
                                 if (this.chunk.Code == 30)
                                 {
                                     double z = this.chunk.ReadDouble();
@@ -9905,16 +9910,14 @@ namespace netDxf.IO
             foreach (KeyValuePair<DxfObject, string> pair in this.entityList)
             {
                 Layout layout;
-                Block block;
                 if (pair.Value == null)
                 {
                     // the Model layout is the default in case the entity has not one defined
                     layout = this.doc.Layouts[Layout.ModelSpaceName];
-                    block = layout.AssociatedBlock;
                 }
                 else
                 {
-                    block = this.GetBlock(((BlockRecord) this.doc.GetObjectByHandle(pair.Value)).Name);
+                    Block block = this.GetBlock(((BlockRecord) this.doc.GetObjectByHandle(pair.Value)).Name);
                     layout = block.Record.Layout;
                 }
 
@@ -9922,17 +9925,11 @@ namespace netDxf.IO
                 Viewport viewport = pair.Key as Viewport;
                 if (viewport != null)
                 {
-                    if (viewport.Id == 1)
-                    {
-                        // the base layout viewport has always id = 1 and we will not add it to the entities list of the document.
-                        // this viewport has no graphical representation, it is the view of the paper space layout itself and it does not show the model.
-                        layout.Viewport = viewport;
-                        layout.Viewport.Owner = block;
-                    }
-                    else
-                    {
+                    // the base layout viewport has always id = 1 and we will not add it to the entities list of the document.
+                    // it is not necessary and its purpose is more related to the UI rather than a geometric object
+                    // this viewport has no graphical representation, it is the view of the paper space layout itself and it does not show the model.
+                    if (viewport.Id != 1)
                         this.doc.Blocks[layout.AssociatedBlock.Name].Entities.Add(viewport);
-                    }
                 }
                 else
                 {
@@ -9955,16 +9952,6 @@ namespace netDxf.IO
                     if (entity != null)
                         layout.AssociatedBlock.Entities.Add(entity);
                 }
-            }
-
-            // assign a handle to the default layout viewports
-            foreach (Layout layout in this.doc.Layouts)
-            {
-                if (layout.Viewport == null)
-                    continue;
-
-                if (string.IsNullOrEmpty(layout.Viewport.Handle))
-                    this.doc.NumHandles = layout.Viewport.AsignHandle(this.doc.NumHandles);
             }
 
             // post process viewports clipping boundaries

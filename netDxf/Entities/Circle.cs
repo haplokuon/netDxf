@@ -181,27 +181,18 @@ namespace netDxf.Entities
         /// <remarks>Non-uniform scaling is not supported, create an ellipse from the circle data and transform that instead.</remarks>
         public override void TransformBy(Matrix3 transformation, Vector3 translation)
         {
-            Vector3 newCenter;
-            Vector3 newNormal;
-            double newRadius;
-            double newScale;
+            Vector3 newCenter = transformation * this.Center + translation;
+            Vector3 newNormal = transformation * this.Normal;
+            if (Vector3.Equals(Vector3.Zero, newNormal)) newNormal = this.Normal;
 
-            newCenter = transformation * this.Center + translation;
-            newNormal = transformation * this.Normal;
+            Matrix3 transOW = MathHelper.ArbitraryAxis(this.Normal);
+            Matrix3 transWO = MathHelper.ArbitraryAxis(newNormal).Transpose();
 
-            //Matrix3 transOW = MathHelper.ArbitraryAxis(this.Normal);
-            //Matrix3 transWO = MathHelper.ArbitraryAxis(newNormal).Transpose();
-
-            //Vector2 axis = new Vector2(this.Radius, 0.0);
-
-            //Vector3 v = transOW * new Vector3(axis.X, axis.Y, 0.0);
-            //v = transformation * v;
-            //v = transWO * v;
-            //Vector2 axisPoint = new Vector2(v.X, v.Y);
-            //newRadius = axisPoint.Modulus();
-
-            newScale = newNormal.Modulus();
-            newRadius = this.Radius * newScale;
+            Vector3 axis = transOW * new Vector3(this.Radius, 0.0, 0.0);
+            axis = transformation * axis;
+            axis = transWO * axis;
+            Vector2 axisPoint = new Vector2(axis.X, axis.Y);
+            double newRadius = axisPoint.Modulus();
             if (MathHelper.IsZero(newRadius)) newRadius = MathHelper.Epsilon;
 
             this.Normal = newNormal;

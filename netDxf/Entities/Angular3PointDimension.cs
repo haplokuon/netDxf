@@ -21,6 +21,7 @@
 #endregion
 
 using System;
+using System.Diagnostics;
 using netDxf.Blocks;
 using netDxf.Tables;
 
@@ -113,6 +114,10 @@ namespace netDxf.Entities
         public Angular3PointDimension(Vector2 centerPoint, Vector2 startPoint, Vector2 endPoint, double offset, DimensionStyle style)
             : base(DimensionType.Angular3Point)
         {
+            Vector2 dir1 = startPoint - centerPoint;
+            Vector2 dir2 = endPoint - centerPoint;
+            if (Vector2.AreParallel(dir1, dir2))
+                throw new ArgumentException("The two lines that define the dimension are parallel.");
             this.center = centerPoint;
             this.start = startPoint;
             this.end = endPoint;
@@ -242,7 +247,8 @@ namespace netDxf.Entities
                 }
             }
             
-            this.offset = Vector2.Distance(this.center, point);
+            double newOffset = Vector2.Distance(this.center, point);
+            this.offset = MathHelper.IsZero(newOffset) ? MathHelper.Epsilon : newOffset;
 
             double startAngle = Vector2.Angle(this.center, this.start);
             double midRot = startAngle + this.Measurement * MathHelper.DegToRad * 0.5;
@@ -277,15 +283,14 @@ namespace netDxf.Entities
         /// </summary>
         /// <param name="transformation">Transformation matrix.</param>
         /// <param name="translation">Translation vector.</param>
+        /// <remarks>
+        /// Non-uniform and zero scaling local to the dimension entity are not supported.<br />
+        /// The transformation will not be applied if the resulting reference lines are parallel.
+        /// </remarks>
         public override void TransformBy(Matrix3 transformation, Vector3 translation)
         {
-            Vector2 newStart;
-            Vector2 newEnd;
-            Vector2 newCenter;
-            Vector3 newNormal;
-            double newElevation;
-
-            newNormal = transformation * this.Normal;
+            Vector3 newNormal = transformation * this.Normal;
+            if (Vector3.Equals(Vector3.Zero, newNormal)) newNormal = this.Normal;
 
             Matrix3 transOW = MathHelper.ArbitraryAxis(this.Normal);
             Matrix3 transWO = MathHelper.ArbitraryAxis(newNormal).Transpose();
@@ -293,18 +298,26 @@ namespace netDxf.Entities
             Vector3 v = transOW * new Vector3(this.StartPoint.X, this.StartPoint.Y, this.Elevation);
             v = transformation * v + translation;
             v = transWO * v;
-            newStart = new Vector2(v.X, v.Y);
-            newElevation = v.Z;
+            Vector2 newStart = new Vector2(v.X, v.Y);
+            double newElevation = v.Z;
 
             v = transOW * new Vector3(this.EndPoint.X, this.EndPoint.Y, this.Elevation);
             v = transformation * v + translation;
             v = transWO * v;
-            newEnd = new Vector2(v.X, v.Y);
+            Vector2 newEnd = new Vector2(v.X, v.Y);
 
             v = transOW * new Vector3(this.CenterPoint.X, this.CenterPoint.Y, this.Elevation);
             v = transformation * v + translation;
             v = transWO * v;
-            newCenter = new Vector2(v.X, v.Y);
+            Vector2 newCenter = new Vector2(v.X, v.Y);
+
+            Vector2 dir1 = newStart - newCenter;
+            Vector2 dir2 = newEnd - newCenter;
+            if (Vector2.AreParallel(dir1, dir2))
+            {
+                Debug.Assert(false, "The transformation cannot be applied, the resulting reference lines are parallel.");
+                return;
+            }
 
             if (this.TextPositionManuallySet)
             {
@@ -333,6 +346,11 @@ namespace netDxf.Entities
         /// </summary>
         protected override void CalculteReferencePoints()
         {
+            Vector2 dir1 = this.start - this.center;
+            Vector2 dir2 = this.end - this.center;
+            if (Vector2.AreParallel(dir1, dir2))
+                throw new ArgumentException("The two lines that define the dimension are parallel.");
+
             DimensionStyleOverride styleOverride;
 
             double measure = this.Measurement;
@@ -420,9 +438,8 @@ namespace netDxf.Entities
 
             foreach (DimensionStyleOverride styleOverride in this.StyleOverrides.Values)
             {
-                object copy;
                 ICloneable value = styleOverride.Value as ICloneable;
-                copy = value != null ? value.Clone() : styleOverride.Value;
+                object copy = value != null ? value.Clone() : styleOverride.Value;
 
                 entity.StyleOverrides.Add(new DimensionStyleOverride(styleOverride.Type, copy));
             }

@@ -135,9 +135,12 @@ namespace netDxf.Entities
         /// <param name="translation">Translation vector.</param>
         public override void TransformBy(Matrix3 transformation, Vector3 translation)
         {
+            Vector3 newNormal = transformation * this.Normal;
+            if (Vector3.Equals(Vector3.Zero, newNormal)) newNormal = this.Normal;
+
             this.StartPoint = transformation * this.StartPoint + translation;
             this.EndPoint = transformation * this.EndPoint + translation;
-            this.Normal = transformation * this.Normal;
+            this.Normal = newNormal;
         }
 
         /// <summary>

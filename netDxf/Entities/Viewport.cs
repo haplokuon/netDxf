@@ -484,6 +484,10 @@ namespace netDxf.Entities
         /// <param name="translation">Translation vector.</param>
         public override void TransformBy(Matrix3 transformation, Vector3 translation)
         {
+            Vector3 newNormal = transformation * this.Normal;
+            if (Vector3.Equals(Vector3.Zero, newNormal)) newNormal = this.Normal;
+            this.Normal = newNormal;
+
             EntityObject clippingEntity = this.ClippingBoundary;
             if (clippingEntity == null)
             {
@@ -503,6 +507,7 @@ namespace netDxf.Entities
                 };
                 clippingEntity = new LwPolyline(vertexes, true);
             }
+
             clippingEntity.TransformBy(transformation, translation);
             this.ClippingBoundary = clippingEntity;
         }

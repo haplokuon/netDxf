@@ -1,5 +1,10 @@
 ## Change history
 
+[2019/06/04]
+* When exploding an Insert with non-uniform scaling that contains LwPolylines with rounded vertexes they will be decomposed in lines and ellipse arcs.
+* Some adjustments to the ellipse transform code to handle the start and end angles correctly.
+* Deleted the layout Viewport. This is the viewport with id 1 that represents the view to the paper space, it is more related to the UI, it has no graphical representation, and it will not be loaded.
+
 [2019/05/27]
 * Improved the ellipse TransformBy method, now it should work under all circumstances.
 

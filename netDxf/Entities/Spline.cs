@@ -435,8 +435,9 @@ namespace netDxf.Entities
                 this.FitPoints[i] = transformation * this.FitPoints[i] + translation;
             }
 
-            this.Normal = transformation * this.Normal;
-
+            Vector3 newNormal = transformation * this.Normal;
+            if (Vector3.Equals(Vector3.Zero, newNormal)) newNormal = this.Normal;
+            this.Normal = newNormal;
         }
 
         /// <summary>

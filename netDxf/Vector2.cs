@@ -264,17 +264,6 @@ namespace netDxf
         }
 
         /// <summary>
-        /// Obtains the distance between two points.
-        /// </summary>
-        /// <param name="u">Vector2.</param>
-        /// <param name="v">Vector2.</param>
-        /// <returns>Distance.</returns>
-        public static double Distance(Vector2 u, Vector2 v)
-        {
-            return Math.Sqrt((u.X - v.X)*(u.X - v.X) + (u.Y - v.Y)*(u.Y - v.Y));
-        }
-
-        /// <summary>
         /// Obtains the square distance between two points.
         /// </summary>
         /// <param name="u">Vector2.</param>
@@ -283,6 +272,17 @@ namespace netDxf
         public static double SquareDistance(Vector2 u, Vector2 v)
         {
             return (u.X - v.X)*(u.X - v.X) + (u.Y - v.Y)*(u.Y - v.Y);
+        }
+
+        /// <summary>
+        /// Obtains the distance between two points.
+        /// </summary>
+        /// <param name="u">Vector2.</param>
+        /// <param name="v">Vector2.</param>
+        /// <returns>Distance.</returns>
+        public static double Distance(Vector2 u, Vector2 v)
+        {
+            return Math.Sqrt(SquareDistance(u, v));
         }
 
         /// <summary>

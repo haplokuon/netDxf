@@ -238,68 +238,45 @@ namespace netDxf.Entities
         /// </remarks>
         public override void TransformBy(Matrix3 transformation, Vector3 translation)
         {
-            Vector3 newPosition;
-            Vector3 newNormal;
-            Vector2 newUvector;
-            Vector2 newVvector;
-            Vector2 newScale;
-            double newRotation;
-
-            newPosition = transformation * this.Position + translation;
-            newNormal = transformation * this.Normal;
+            Vector3 newPosition = transformation * this.Position + translation;
+            Vector3 newNormal = transformation * this.Normal;
+            if (Vector3.Equals(Vector3.Zero, newNormal)) newNormal = this.Normal;
 
             Matrix3 transOW = MathHelper.ArbitraryAxis(this.Normal);
 
             Matrix3 transWO = MathHelper.ArbitraryAxis(newNormal);
             transWO = transWO.Transpose();
 
-            List<Vector2> uv = MathHelper.Transform(new List<Vector2> { this.Scale.X * Vector2.UnitX, this.Scale.Y * Vector2.UnitY },
+            List<Vector2> uv = MathHelper.Transform(
+                new[] {this.Scale.X * Vector2.UnitX, this.Scale.Y * Vector2.UnitY},
                 this.rotation * MathHelper.DegToRad,
                 CoordinateSystem.Object, CoordinateSystem.World);
-
-            int sign = Math.Sign(transformation.M11 * transformation.M22 * transformation.M33) < 0 ? -1 : 1;
 
             Vector3 v;
             v = transOW * new Vector3(uv[0].X , uv[0].Y, 0.0);
             v = transformation * v;
             v = transWO * v;
-            newUvector = new Vector2(v.X, v.Y);
+            Vector2 newUvector = new Vector2(v.X, v.Y);
 
             v = transOW * new Vector3(uv[1].X, uv[1].Y, 0.0);
             v = transformation * v;
             v = transWO * v;
-            newVvector = new Vector2(v.X, v.Y);
+            Vector2 newVvector = new Vector2(v.X, v.Y);
+
+            int sign = Math.Sign(transformation.M11 * transformation.M22 * transformation.M33) < 0 ? -1 : 1;
 
             double scaleX = sign * newUvector.Modulus();
             scaleX = MathHelper.IsZero(scaleX) ? MathHelper.Epsilon : scaleX;
             double scaleY = newVvector.Modulus();
             scaleY = MathHelper.IsZero(scaleY) ? MathHelper.Epsilon : scaleY;
 
-            newScale = new Vector2(scaleX, scaleY);
-            newRotation = Vector2.Angle(sign * newUvector) * MathHelper.RadToDeg;
+            Vector2 newScale = new Vector2(scaleX, scaleY);
+            double newRotation = Vector2.Angle(sign * newUvector) * MathHelper.RadToDeg;
 
             this.Position = newPosition;
             this.Normal = newNormal;
             this.Rotation = newRotation;
-            this.Scale = newScale;
-            
-            //if (this.ClippingBoundary == null) return;
-
-            //List<Vector2> vertexes = new List<Vector2>();
-
-            //foreach (Vector2 vertex in this.ClippingBoundary.Vertexes)
-            //{
-            //    v = transOW * new Vector3(vertex.X, vertex.Y, 0.0);
-            //    v = transformation * v + translation;
-            //    v = transWO * v;
-            //    vertexes.Add(new Vector2(v.X, v.Y));
-            //}
-
-            //ClippingBoundary newClipping = this.ClippingBoundary.Type == ClippingBoundaryType.Rectangular
-            //    ? new ClippingBoundary(vertexes[0], vertexes[1])
-            //    : new ClippingBoundary(vertexes);
-
-            //this.ClippingBoundary = newClipping;
+            this.Scale = newScale;           
         }
 
         /// <summary>
