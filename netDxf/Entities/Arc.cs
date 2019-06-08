@@ -216,11 +216,10 @@ namespace netDxf.Entities
             Matrix3 transOW = MathHelper.ArbitraryAxis(this.Normal);
             Matrix3 transWO = MathHelper.ArbitraryAxis(newNormal).Transpose();
 
-            Vector2 axis = new Vector2(this.Radius, 0.0);
-            Vector3 v = transOW * new Vector3(axis.X, axis.Y, 0.0);
-            v = transformation * v;
-            v = transWO * v;
-            Vector2 axisPoint = new Vector2(v.X, v.Y);
+            Vector3 axis = transOW * new Vector3(this.Radius, 0.0, 0.0);
+            axis = transformation * axis;
+            axis = transWO * axis;
+            Vector2 axisPoint = new Vector2(axis.X, axis.Y);
             double newRadius = axisPoint.Modulus();
             if (MathHelper.IsZero(newRadius)) newRadius = MathHelper.Epsilon;
 

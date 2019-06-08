@@ -104,12 +104,13 @@ namespace netDxf
         /// </summary>
         /// <param name="number">Double precision number.
         /// </param>
-        /// <returns>A number that indicates the sign of value.
+        /// <returns>
+        /// A number that indicates the sign of value.
         /// Return value Meaning -1 value is less than zero.
         /// 0 value is equal to zero.
         /// 1 value is greater than zero.
         /// </returns>
-        /// <remarks>This method will test for values of number very close to zero.</remarks>
+        /// <remarks>This method will test for values of numbers very close to zero.</remarks>
         public static int Sign(double number)
         {
             return IsZero(number) ? 0 : Math.Sign(number);
@@ -121,12 +122,13 @@ namespace netDxf
         /// <param name="number">Double precision number.
         /// <param name="threshold">Tolerance.</param>
         /// </param>
-        /// <returns>A number that indicates the sign of value.
+        /// <returns>
+        /// A number that indicates the sign of value.
         /// Return value Meaning -1 value is less than zero.
         /// 0 value is equal to zero.
         /// 1 value is greater than zero.
         /// </returns>
-        /// <remarks>This method will test for values of number very close to zero.</remarks>
+        /// <remarks>This method will test for values of numbers very close to zero.</remarks>
         public static int Sign(double number, double threshold)
         {
             return IsZero(number, threshold) ? 0 : Math.Sign(number);
@@ -243,19 +245,24 @@ namespace netDxf
 
             double sin = Math.Sin(rotation);
             double cos = Math.Cos(rotation);
+
             List<Vector2> transPoints;
             if (from == CoordinateSystem.World && to == CoordinateSystem.Object)
             {
                 transPoints = new List<Vector2>();
                 foreach (Vector2 p in points)
+                {
                     transPoints.Add(new Vector2(p.X*cos + p.Y*sin, -p.X*sin + p.Y*cos));
+                }
                 return transPoints;
             }
             if (from == CoordinateSystem.Object && to == CoordinateSystem.World)
             {
                 transPoints = new List<Vector2>();
                 foreach (Vector2 p in points)
+                {
                     transPoints.Add(new Vector2(p.X*cos - p.Y*sin, p.X*sin + p.Y*cos));
+                }
                 return transPoints;
             }
             return new List<Vector2>(points);
@@ -343,10 +350,14 @@ namespace netDxf
             Vector3 wZ = Vector3.UnitZ;
             Vector3 aX;
 
-            if ((Math.Abs(zAxis.X) < 1/64.0) && (Math.Abs(zAxis.Y) < 1/64.0))
+            if ((Math.Abs(zAxis.X) < 1 / 64.0) && (Math.Abs(zAxis.Y) < 1 / 64.0))
+            {
                 aX = Vector3.CrossProduct(wY, zAxis);
+            }
             else
+            {
                 aX = Vector3.CrossProduct(wZ, zAxis);
+            }
 
             aX.Normalize();
 

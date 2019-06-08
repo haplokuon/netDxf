@@ -440,7 +440,22 @@ namespace netDxf.Blocks
         /// </remarks>
         public static Block Load(string file)
         {
-            return Load(file, null);
+            return Load(file, string.Empty, new List<string>());
+        }
+
+        /// <summary>
+        /// Creates a block from an external dxf file.
+        /// </summary>
+        /// <param name="file">Dxf file name.</param>
+        /// <param name="supportFolders">List of the document support folders.</param>
+        /// <returns>The block build from the dxf file content. It will return null if the file has not been able to load.</returns>
+        /// <remarks>
+        /// The name of the block will be the file name without extension, and
+        /// only the entities contained in ModelSpace will make part of the block.
+        /// </remarks>
+        public static Block Load(string file, IEnumerable<string> supportFolders)
+        {
+            return Load(file, string.Empty, supportFolders);
         }
 
         /// <summary>
@@ -452,13 +467,26 @@ namespace netDxf.Blocks
         /// <remarks>Only the entities contained in ModelSpace will make part of the block.</remarks>
         public static Block Load(string file, string name)
         {
+            return Load(file, name, new List<string>());
+        }
+
+        /// <summary>
+        /// Creates a block from an external dxf file.
+        /// </summary>
+        /// <param name="file">Dxf file name.</param>
+        /// <param name="name">Name of the new block.</param>
+        /// <param name="supportFolders">List of the document support folders.</param>
+        /// <returns>The block build from the dxf file content. It will return null if the file has not been able to load.</returns>
+        /// <remarks>Only the entities contained in ModelSpace will make part of the block.</remarks>
+        public static Block Load(string file, string name, IEnumerable<string> supportFolders)
+        {
 #if DEBUG
-            DxfDocument dwg = DxfDocument.Load(file);
+            DxfDocument dwg = DxfDocument.Load(file, supportFolders);
 #else
             DxfDocument dwg;
             try 
             {
-                dwg = DxfDocument.Load(file);
+                dwg = DxfDocument.Load(file, supportFolders);
             }
             catch
             {

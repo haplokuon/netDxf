@@ -571,11 +571,7 @@ namespace netDxf.IO
                         break;
                     default:
                         // not recognized header variables will be added to the custom list
-                        if (string.Equals(varName, "$ACADMAINTVER", StringComparison.InvariantCultureIgnoreCase))
-                        {
-                            // this header variable should be ignored, and causes problems if it appears in the DXF version AutoCAD2018
-                        }
-                        else if (!varName.StartsWith("$DIM", StringComparison.InvariantCultureIgnoreCase))
+                        if (!varName.StartsWith("$DIM", StringComparison.InvariantCultureIgnoreCase))
                         { 
                             // except those that correspond to the dimension style
                             HeaderVariable variable;
@@ -6286,18 +6282,18 @@ namespace netDxf.IO
                 double a = ellipse.MajorAxis*0.5;
                 double b = ellipse.MinorAxis*0.5;
 
-                Vector2 startPoint = new Vector2(a*Math.Cos(param[0]), b*Math.Sin(param[0]));
-                Vector2 endPoint = new Vector2(a*Math.Cos(param[1]), b*Math.Sin(param[1]));
+                Vector2 startPoint = new Vector2(a * Math.Cos(param[0]), b * Math.Sin(param[0]));
+                Vector2 endPoint = new Vector2(a * Math.Cos(param[1]), b * Math.Sin(param[1]));
 
-                if (Equals(startPoint, endPoint))
+                if (Vector2.Equals(startPoint, endPoint))
                 {
                     ellipse.StartAngle = 0.0;
                     ellipse.EndAngle = 0.0;
                 }
                 else
                 {
-                    ellipse.StartAngle = Vector2.Angle(startPoint)*MathHelper.RadToDeg;
-                    ellipse.EndAngle = Vector2.Angle(endPoint)*MathHelper.RadToDeg;
+                    ellipse.StartAngle = Vector2.Angle(startPoint) * MathHelper.RadToDeg;
+                    ellipse.EndAngle = Vector2.Angle(endPoint) * MathHelper.RadToDeg;
                 }
             }
         }

@@ -282,7 +282,24 @@ namespace netDxf.Entities
         /// </summary>
         /// <param name="transformation">Transformation matrix.</param>
         /// <param name="translation">Translation vector.</param>
+        /// <remarks>The transformation matrix is column major.</remarks>
+        /// <remarks>Matrix3 adopts the convention of using column vectors to represent a transformation matrix.</remarks>
         public abstract void TransformBy(Matrix3 transformation, Vector3 translation);
+
+        /// <summary>
+        /// Moves, scales, and/or rotates the current entity given a 4x4 transformation matrix.
+        /// </summary>
+        /// <param name="transformation">Transformation matrix.</param>
+        /// <remarks>Matrix4 adopts the convention of using column vectors to represent a transformation matrix.</remarks>
+        public void TransformBy(Matrix4 transformation)
+        {
+            Matrix3 m = new Matrix3(transformation.M11, transformation.M12, transformation.M13,
+                                    transformation.M21, transformation.M22, transformation.M23,
+                                    transformation.M31, transformation.M32, transformation.M33);
+            Vector3 v = new Vector3(transformation.M14, transformation.M24, transformation.M34);
+
+            this.TransformBy(m, v);
+        }
 
         #endregion
 

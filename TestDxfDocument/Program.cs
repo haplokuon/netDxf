@@ -26,9 +26,28 @@ namespace TestDxfDocument
     /// </summary>
     public class Program
     {
+        public static void ExplodeInsert()
+        {
+            Block block = Block.Load("sample.dxf", new List<string> {@".\Support"});
+            Insert insert = new Insert(block);
+            //insert.Position = new Vector3(500,250,0);
+            //insert.Scale = new Vector3(2);
+            //insert.Rotation = 30;
+            insert.Normal = new Vector3(1);
+            List<EntityObject> explode = insert.Explode();
+
+            DxfDocument doc = new DxfDocument(DxfVersion.AutoCad2010, new List<string> {@".\Support"});
+            doc.BuildDimensionBlocks = true;
+            doc.AddEntity(insert);
+            doc.AddEntity(explode);
+            doc.Save("test.dxf");
+        }
+
         public static void Main()
         {
-            DxfDocument doc = Test(@"sample.dxf");
+            ExplodeInsert();
+
+            //DxfDocument doc = Test(@"sample.dxf");
 
             #region Samples for new and modified features 2.3.0
 
@@ -5072,22 +5091,6 @@ namespace TestDxfDocument
             }
             return dxf;
         }
-
-        //private static void ExplodeInsert()
-        //{
-        //    DxfDocument dxf = DxfDocument.Load("explode\\ExplodeInsertUniformScale.dxf");
-
-        //    List<DxfObject> refs = dxf.Blocks.References["ExplodeBlock"];
-        //    Insert insert = (Insert)refs[0];
-        //    dxf.RemoveEntity(insert);
-        //    insert.Layer = new Layer("Original block");
-        //    insert.Layer.Color = AciColor.DarkGrey;
-        //    dxf.AddEntity(insert);
-        //    List<Entity> explodedEntities = insert.Explode();
-        //    dxf.AddEntity(explodedEntities);
-
-        //    dxf.Save("ExplodeInsert.dxf");
-        //}
 
         public static void ImageAndClipBoundary()
         {

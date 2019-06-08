@@ -540,34 +540,12 @@ namespace netDxf
         /// <summary>
         /// Multiplies two vectors component by component.
         /// </summary>
-        /// <param name="u">Vector2.</param>
-        /// <param name="v">Vector2.</param>
+        /// <param name="u">Vector3.</param>
+        /// <param name="v">Vector3.</param>
         /// <returns>The multiplication of u times v.</returns>
         public static Vector3 Multiply(Vector3 u, Vector3 v)
         {
             return new Vector3(u.X * v.X, u.Y * v.Y, u.Z * v.Z);
-        }
-
-        /// <summary>
-        /// Divides a vector with an scalar.
-        /// </summary>
-        /// <param name="u">Vector3.</param>
-        /// <param name="a">Scalar.</param>
-        /// <returns>The division of u times a.</returns>
-        public static Vector3 operator /(double a, Vector3 u)
-        {
-            return new Vector3(a * u.X, a * u.Y, a * u.Z);
-        }
-
-        /// <summary>
-        /// Divides a scalar with a vector.
-        /// </summary>
-        /// <param name="a">Scalar.</param>
-        /// <param name="u">Vector3.</param>
-        /// <returns>The division of u times a.</returns>
-        public static Vector3 Divide(double a, Vector3 u)
-        {
-            return new Vector3(a * u.X, a * u.Y, a * u.Z);
         }
 
         /// <summary>
@@ -608,8 +586,8 @@ namespace netDxf
         /// <summary>
         /// Divides two vectors component by component.
         /// </summary>
-        /// <param name="u">Vector2.</param>
-        /// <param name="v">Vector2.</param>
+        /// <param name="u">Vector3.</param>
+        /// <param name="v">Vector3.</param>
         /// <returns>The multiplication of u times v.</returns>
         public static Vector3 Divide(Vector3 u, Vector3 v)
         {

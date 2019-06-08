@@ -1,5 +1,14 @@
 ## Change history
 
+[2019/06/08]
+* If the contents of a Matrix3 is modified and the IsIdentity property is called, the matrix will be check to see if it is actually the identity, not only for matrices that were initialized as the identity.
+* Added Matrix2 struct.
+* Added Matrix4 struct.
+* Added Vector4 struct.
+* Added TransformBy method that takes a Matrix4 as argument to the EntityObject class.
+* Deleted the Matrix3 constructor that takes an array as argument. It was actually using the row major convention while the transformation matrices are written as column major.
+* Improved the way the Ellipse method PolygonalVertexes generates the points in an ellipse arc.
+
 [2019/06/04]
 * When exploding an Insert with non-uniform scaling that contains LwPolylines with rounded vertexes they will be decomposed in lines and ellipse arcs.
 * Some adjustments to the ellipse transform code to handle the start and end angles correctly.

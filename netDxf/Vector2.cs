@@ -247,7 +247,7 @@ namespace netDxf
                 return u;
             double sin = Math.Sin(angle);
             double cos = Math.Cos(angle);
-            return new Vector2(u.X*cos - u.Y*sin, u.X*sin + u.Y*cos) {isNormalized = u.IsNormalized};
+            return new Vector2(u.X * cos - u.Y * sin, u.X * sin + u.Y * cos) { isNormalized = u.IsNormalized };
         }
 
         /// <summary>
@@ -565,28 +565,6 @@ namespace netDxf
         public static Vector2 Multiply(Vector2 u, Vector2 v)
         {
             return new Vector2(u.X * v.X, u.Y * v.Y);
-        }
-
-        /// <summary>
-        /// Divides a scalar with a vector.
-        /// </summary>
-        /// <param name="a">Scalar.</param>
-        /// <param name="u">Vector2.</param>
-        /// <returns>The division of u times a.</returns>
-        public static Vector2 operator /(double a, Vector2 u)
-        {
-            return new Vector2(a* u.X, a* u.Y);
-        }
-
-        /// <summary>
-        /// Divides a scalar with a vector.
-        /// </summary>
-        /// <param name="a">Scalar.</param>
-        /// <param name="u">Vector2.</param>
-        /// <returns>The division of u times a.</returns>
-        public static Vector2 Divide(double a, Vector2 u)
-        {
-            return new Vector2(a * u.X, a * u.Y);
         }
 
         /// <summary>

@@ -201,7 +201,7 @@ namespace netDxf.Entities
 
             List<Vector2> uv = MathHelper.Transform(new List<Vector2>
                 {
-                    this.WidthFactor * this.Size * Vector2.UnitX,
+                    Vector2.UnitX * this.WidthFactor * this.Size,
                     new Vector2(this.Size * Math.Tan(this.ObliqueAngle * MathHelper.DegToRad), this.Size)
                 },
                 this.Rotation * MathHelper.DegToRad,

@@ -35,6 +35,77 @@ namespace netDxf.Entities
     {
         #region private classes
 
+        public class CalculatePoints
+        {
+            public static void main()
+            {
+                // TODO Auto-generated method stub
+
+                /*
+                 * 
+                dp(t) = sqrt( (r1*sin(t))^2 + (r2*cos(t))^2)
+                circ = sum(dp(t), t=0..2*Pi step 0.0001)
+            
+                n = 20
+            
+                nextPoint = 0
+                run = 0.0
+                for t=0..2*Pi step 0.0001
+                    if n*run/circ >= nextPoint then
+                        set point (r1*cos(t), r2*sin(t))
+                        nextPoint = nextPoint + 1
+                    next
+                    run = run + dp(t)
+                next
+             */
+
+
+                double r1 = 20.0;
+                double r2 = 10.0;
+
+                double theta = 0.0;
+                double twoPi = Math.PI*2.0;
+                double deltaTheta = 0.0001;
+                double numIntegrals = Math.Round(twoPi/deltaTheta);
+                double circ=0.0;
+                double dpt=0.0;
+
+                /* integrate over the elipse to get the circumference */
+                for( int i=0; i < numIntegrals; i++ ) {
+                    theta += i*deltaTheta;
+                    dpt = computeDpt( r1, r2, theta);
+                    circ += dpt;
+                }
+
+                int n=20;
+                int nextPoint = 0;
+                double run = 0.0;
+                theta = 0.0;
+
+                for( int i=0; i < numIntegrals; i++ ) {
+                    theta += deltaTheta;
+                    double subIntegral = n*run/circ;
+                    if( (int) subIntegral >= nextPoint ) {
+                        double x = r1 * Math.Cos(theta);
+                        double y = r2 * Math.Sin(theta);
+                        nextPoint++;
+                    }
+                    run += computeDpt(r1, r2, theta);
+                }
+            }
+
+            static double computeDpt( double r1, double r2, double theta )
+            {
+                double dp=0.0;
+
+                double dpt_sin = Math.Pow(r1*Math.Sin(theta), 2.0);
+                double dpt_cos = Math.Pow( r2*Math.Cos(theta), 2.0);
+                dp = Math.Sqrt(dpt_sin + dpt_cos);
+
+                return dp;
+            }
+        }
+
         private static class ConicThroughFivePoints
         {
             private static double[] CoefficientsLine(Vector2 p1, Vector2 p2)
@@ -341,7 +412,7 @@ namespace netDxf.Entities
         /// <summary>
         /// Converts the ellipse in a list of vertexes.
         /// </summary>
-        /// <param name="precision">Number of divisions.</param>
+        /// <param name="precision">Number of vertexes generated.</param>
         /// <returns>A list vertexes that represents the ellipse expressed in object coordinate system.</returns>
         public List<Vector2> PolygonalVertexes(int precision)
         {
@@ -349,44 +420,50 @@ namespace netDxf.Entities
             double beta = this.rotation * MathHelper.DegToRad;
             double sinbeta = Math.Sin(beta);
             double cosbeta = Math.Cos(beta);
+            double start;
+            double end;
+            double steps;
 
             if (this.IsFullEllipse)
             {
-                double delta = MathHelper.TwoPI/precision;
-                for (int i = 0; i < precision; i++)
-                {
-                    double angle = delta*i;
-                    double sinalpha = Math.Sin(angle);
-                    double cosalpha = Math.Cos(angle);
-
-                    double pointX = 0.5*(this.majorAxis*cosalpha*cosbeta - this.minorAxis*sinalpha*sinbeta);
-                    double pointY = 0.5*(this.majorAxis*cosalpha*sinbeta + this.minorAxis*sinalpha*cosbeta);
-
-                    points.Add(new Vector2(pointX, pointY));
-                }
+                start = 0;
+                end = MathHelper.TwoPI;
+                steps = precision;
             }
             else
             {
-                double start = this.startAngle;
-                double end = this.endAngle;
-                if (end < start) end += 360.0;
-                double delta = (end - start) / precision;
-                for (int i = 0; i <= precision; i++)
-                {
-                    Vector2 point = this.PolarCoordinateRelativeToCenter(start + delta*i);
-                    // we need to apply the ellipse rotation to the local point
-                    double pointX = point.X * cosbeta - point.Y * sinbeta;
-                    double pointY = point.X * sinbeta + point.Y * cosbeta;
-                    points.Add(new Vector2(pointX, pointY));
-                }
+                Vector2 startPoint = this.PolarCoordinateRelativeToCenter(this.startAngle);
+                Vector2 endPoint = this.PolarCoordinateRelativeToCenter(this.endAngle);
+                double a = 1 / (0.5 *this.majorAxis);
+                double b = 1 / (0.5 * this.minorAxis);
+                start = Math.Atan2(startPoint.Y * b, startPoint.X * a);
+                end = Math.Atan2(endPoint.Y * b, endPoint.X * a);
+
+                if (end < start) end += MathHelper.TwoPI;
+                steps = precision - 1;
             }
+           
+            double delta = (end - start) / steps;
+
+            for (int i = 0; i < precision; i++)
+            {
+                double angle = start + delta*i;
+                double sinalpha = Math.Sin(angle);
+                double cosalpha = Math.Cos(angle);
+
+                double pointX = 0.5 * (this.majorAxis * cosalpha * cosbeta - this.minorAxis * sinalpha * sinbeta);
+                double pointY = 0.5 * (this.majorAxis * cosalpha * sinbeta + this.minorAxis * sinalpha * cosbeta);
+
+                points.Add(new Vector2(pointX, pointY));
+            }
+
             return points;
         }
 
         /// <summary>
         /// Converts the ellipse in a Polyline.
         /// </summary>
-        /// <param name="precision">Number of divisions.</param>
+        /// <param name="precision">Number of vertexes generated.</param>
         /// <returns>A new instance of <see cref="LwPolyline">LightWeightPolyline</see> that represents the ellipse.</returns>
         public LwPolyline ToPolyline(int precision)
         {
@@ -498,9 +575,9 @@ namespace netDxf.Entities
             if (ConicThroughFivePoints.EllipseProperties(pointM, pointN, pointH, pointK, pointZ, out newCenter, out newSemiMajorAxis, out newSemiMinorAxis, out newRotation))
             {
                 double axis1 = 2 * newSemiMajorAxis;
-                axis1 = axis1 <= 0 ? MathHelper.Epsilon : axis1;
+                axis1 = MathHelper.IsZero(axis1) ? MathHelper.Epsilon : axis1;
                 double axis2 = 2 * newSemiMinorAxis;
-                axis2 = axis2 <= 0 ? MathHelper.Epsilon : axis2;
+                axis2 = MathHelper.IsZero(axis2) ? MathHelper.Epsilon : axis2;
 
                 this.Center = transformation * this.Center + translation;
                 this.MajorAxis = axis1;
@@ -520,12 +597,19 @@ namespace netDxf.Entities
             Vector2 start = this.PolarCoordinateRelativeToCenter(this.StartAngle);
             Vector2 end = this.PolarCoordinateRelativeToCenter(this.EndAngle);
 
-            double beta = oldRotation * MathHelper.DegToRad;
-            double sinbeta = Math.Sin(beta);
-            double cosbeta = Math.Cos(beta);
+            if (!MathHelper.IsZero(this.Rotation))
+            {
+                double beta = oldRotation * MathHelper.DegToRad;
+                double sinbeta = Math.Sin(beta);
+                double cosbeta = Math.Cos(beta);
 
-            Vector3 pStart = new Vector3(start.X * cosbeta - start.Y * sinbeta, start.X * sinbeta + start.Y * cosbeta, 0.0);
-            Vector3 pEnd = new Vector3(end.X * cosbeta - end.Y * sinbeta, end.X * sinbeta + end.Y * cosbeta, 0.0);
+                start = new Vector2(start.X * cosbeta - start.Y * sinbeta, start.X * sinbeta + start.Y * cosbeta);
+                end = new Vector2(end.X * cosbeta - end.Y * sinbeta, end.X * sinbeta + end.Y * cosbeta);
+            }
+
+            Vector3 pStart = new Vector3(start.X, start.Y, 0.0);
+            Vector3 pEnd = new Vector3(end.X, end.Y, 0.0);
+
             List<Vector3> wcsAnglePoints = MathHelper.Transform(new[] {pStart, pEnd}, oldNormal, CoordinateSystem.Object, CoordinateSystem.World);
             for (int i = 0; i < wcsAnglePoints.Count; i++)
             {
@@ -543,37 +627,6 @@ namespace netDxf.Entities
             double invert = Math.Sign(transformation.M11 * transformation.M22 * transformation.M33) < 0 ? 180.0 : 0.0;
             this.StartAngle = invert + Vector2.Angle(newStart) * MathHelper.RadToDeg - this.Rotation;
             this.EndAngle = invert + Vector2.Angle(newEnd) * MathHelper.RadToDeg - this.Rotation;
-
-            //double angleStart = Vector2.Angle(newStart) * MathHelper.RadToDeg - this.Rotation;
-            //double angleEnd = Vector2.Angle(newEnd) * MathHelper.RadToDeg - this.Rotation;    
-
-            //Vector2 startPrime = Vector2.Rotate(newStart, -this.Rotation*MathHelper.DegToRad);
-            //if (MathHelper.Sign(start.X)*MathHelper.Sign(startPrime.X)>=0)
-            //{
-            //    if (MathHelper.Sign(start.Y) * MathHelper.Sign(startPrime.Y) >= 0)
-            //    {
-            //        this.StartAngle = angleStart;
-            //        this.EndAngle = angleEnd;
-            //    }
-            //    else
-            //    {
-            //        this.StartAngle = angleEnd;
-            //        this.EndAngle = angleStart;
-            //    }
-            //}
-            //else
-            //{
-            //    if (MathHelper.Sign(start.Y)*MathHelper.Sign(startPrime.Y)>=0)
-            //    {
-            //        this.StartAngle = angleEnd;
-            //        this.EndAngle = angleStart;
-            //    }
-            //    else
-            //    {
-            //        this.StartAngle = angleStart;
-            //        this.EndAngle = angleEnd;
-            //    }
-            //}
         }
 
         /// <summary>

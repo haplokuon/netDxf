@@ -215,7 +215,8 @@ namespace netDxf.IO
 
         public string ReadHex()
         {
-            return (string)this.value;        }
+            return (string)this.value;
+        }
 
         public override string ToString()
         {
