@@ -26,28 +26,90 @@ namespace TestDxfDocument
     /// </summary>
     public class Program
     {
-        public static void ExplodeInsert()
+        private static void TestDim()
         {
-            Block block = Block.Load("sample.dxf", new List<string> {@".\Support"});
+            AlignedDimension dim = new AlignedDimension(new Vector2(0,0), new Vector2(10,10), 2);
+
+            DxfDocument doc = new DxfDocument();
+            doc.AddEntity(dim);
+            doc.Save("test.dxf");
+
+            DxfDocument loaded = DxfDocument.Load("test.dxf");
+            loaded.Save("test compare.dxf");
+
+        }
+
+        private static void TestShape()
+        {
+            ShapeStyle style = new ShapeStyle("shape.shx");
+            Shape shape = new Shape("MyShape", style);
+
+            Block block = new Block("MyBlock");
+            block.Entities.Add(shape);
             Insert insert = new Insert(block);
-            //insert.Position = new Vector3(500,250,0);
+            insert.Position = new Vector3(50,0,0);
             //insert.Scale = new Vector3(2);
             //insert.Rotation = 30;
-            insert.Normal = new Vector3(1);
+            insert.Normal = new Vector3(1,0,0);
             List<EntityObject> explode = insert.Explode();
 
             DxfDocument doc = new DxfDocument(DxfVersion.AutoCad2010, new List<string> {@".\Support"});
-            doc.BuildDimensionBlocks = true;
+            doc.AddEntity(insert);
+            doc.AddEntity(explode);
+            doc.Save("test.dxf");
+
+        }
+
+        public static void TestMLine()
+        {
+            MLine mline = new MLine(new [] {new Vector2(0,0), new Vector2(0,10)});
+            mline.Elevation = 2;
+            Block block = new Block("MyBlock");
+            block.Entities.Add(mline);
+            Insert insert = new Insert(block);
+            insert.Position = new Vector3(5,0,0);
+            insert.Scale = new Vector3(2);
+            insert.Rotation = 30;
+            insert.Normal = new Vector3(1);
+            List<EntityObject> explode = insert.Explode();
+
+            DxfDocument doc = new DxfDocument();
             doc.AddEntity(insert);
             doc.AddEntity(explode);
             doc.Save("test.dxf");
         }
 
+        public static void ExplodeInsert()
+        {
+            Block block = Block.Load("sample.dxf", new List<string> {@".\Support"});
+            Insert insert = new Insert(block);
+            insert.Position = new Vector3(500,250,0);
+            insert.Scale = new Vector3(2);
+            insert.Rotation = 30;
+            insert.Normal = new Vector3(1);
+            List<EntityObject> explode = insert.Explode();
+
+            DxfDocument doc = new DxfDocument(DxfVersion.AutoCad2010, new List<string> {@".\Support"});
+            //doc.BuildDimensionBlocks = true;
+            doc.AddEntity(insert);
+            doc.AddEntity(explode);
+            doc.Save("test.dxf");
+
+            DxfDocument loaded = DxfDocument.Load("test.dxf", new List<string> {@".\Support"});
+            loaded.Save("test compare.dxf");
+        }
+
         public static void Main()
         {
-            ExplodeInsert();
+            //TestDim();
+            
+            //TestMLine();
 
-            //DxfDocument doc = Test(@"sample.dxf");
+            //TestShape();
+
+            //ExplodeInsert();
+
+            DxfDocument doc = Test(@"sample.dxf");
 
             #region Samples for new and modified features 2.3.0
 

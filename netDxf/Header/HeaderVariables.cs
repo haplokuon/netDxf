@@ -647,7 +647,7 @@ namespace netDxf.Header
         /// <returns>A list with the custom header variables names.</returns>
         public List<string> CustomNames()
         {
-            return new List<string>(this.variables.Keys);
+            return new List<string>(this.customVariables.Keys);
         }
 
         /// <summary>

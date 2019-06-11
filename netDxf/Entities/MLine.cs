@@ -692,19 +692,22 @@ namespace netDxf.Entities
             double newScale = axisPoint.Modulus();
 
             for (int i = 0; i < this.Vertexes.Count; i++)
-            {
-                Vector3 v = transOW * new Vector3(this.Vertexes[i].Position.X, this.Vertexes[i].Position.Y, this.Elevation);
+            {                
+                Vector2 p = this.Vertexes[i].Position;
+                Vector3 v = transOW * new Vector3(p.X, p.Y, this.Elevation);
                 v = transformation * v + translation;
                 v = transWO * v;
                 Vector2 position = new Vector2(v.X, v.Y);
                 newElevation = v.Z;
 
-                v = transOW * new Vector3(this.Vertexes[i].Direction.X, this.Vertexes[i].Direction.Y, this.Elevation);
+                Vector2 d = this.Vertexes[i].Direction;
+                v = transOW * new Vector3(d.X, d.Y, 0.0);
                 v = transformation * v;
                 v = transWO * v;
                 Vector2 direction = new Vector2(v.X, v.Y);
 
-                v = transOW * new Vector3(this.Vertexes[i].Miter.X, this.Vertexes[i].Miter.Y, this.Elevation);
+                Vector2 m = this.Vertexes[i].Miter;
+                v = transOW * new Vector3(m.X, m.Y, 0.0);
                 v = transformation * v;
                 v = transWO * v;
                 Vector2 mitter = new Vector2(v.X, v.Y);

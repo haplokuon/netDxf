@@ -1,5 +1,11 @@
 ## Change history
 
+[2019/06/11]
+* (fixed) Issue when saving MLine direction and miter coordinates.
+* (fixed) Issue when saving Shape position. The official DXF documentation is wrong it says that it is saved as WCS coordinates but it is actually in OCS coordinates.
+* (fixed) The HeaderVariables property was returning the known variable names instead of the custom names.
+* (fixed) The property DimTxtDirection of the DimensionStyle class was not read properly from the DXF.
+
 [2019/06/08]
 * If the contents of a Matrix3 is modified and the IsIdentity property is called, the matrix will be check to see if it is actually the identity, not only for matrices that were initialized as the identity.
 * Added Matrix2 struct.

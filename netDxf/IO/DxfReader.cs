@@ -1783,7 +1783,7 @@ namespace netDxf.IO
                         this.chunk.Next();
                         break;
                     case 294:
-                        dimtxtdirection = this.chunk.ReadBool() ? DimensionStyleTextDirection.LeftToRight : DimensionStyleTextDirection.RightToLeft;
+                        dimtxtdirection = this.chunk.ReadBool() ? DimensionStyleTextDirection.RightToLeft : DimensionStyleTextDirection.LeftToRight;
                         this.chunk.Next();
                         break;
                     case 340:
@@ -4852,9 +4852,8 @@ namespace netDxf.IO
                 }
             }
 
-            // this is just an example of the stupid DXF way of doing things, while an ellipse the center is given in world coordinates,
+            // this is just an example of the DXF way of doing things, while an ellipse the center is given in world coordinates,
             // the center of a circle is given in object coordinates (different rules for the same concept).
-            // It is a lot more intuitive to give the center in world coordinates and then define the orientation with the normal..
             Vector3 wcsCenter = MathHelper.Transform(center, normal, CoordinateSystem.Object, CoordinateSystem.World);
 
             Circle entity = new Circle
@@ -6561,7 +6560,8 @@ namespace netDxf.IO
 
             Shape entity = new Shape(name, style)
             {
-                Position = position,
+                // The official DXF documentation is WRONG the SHAPE position is saved as OCS coordinates NOT as WCS
+                Position = MathHelper.Transform(position, normal, CoordinateSystem.Object, CoordinateSystem.World),
                 Size = size,
                 Rotation = rotation + rotateNegativeSize,
                 WidthFactor = widthFactor,
@@ -7464,7 +7464,6 @@ namespace netDxf.IO
             elevation = 0.0;
 
             List<MLineVertex> segments = new List<MLineVertex>();
-            Matrix3 trans = MathHelper.ArbitraryAxis(normal).Transpose();
             for (int i = 0; i < numVertexes; i++)
             {
                 Vector3 vertex = new Vector3();
@@ -7514,17 +7513,16 @@ namespace netDxf.IO
                 }
 
                 // we need to convert WCS coordinates to OCS coordinates
-                if (!normal.Equals(Vector3.UnitZ))
-                {
-                    vertex = trans*vertex;
-                    dir = trans*dir;
-                    mitter = trans*mitter;
-                }
+                Matrix3 trans = MathHelper.ArbitraryAxis(normal).Transpose();
+                vertex = trans*vertex;
+                dir = trans*dir;
+                mitter = trans*mitter;
 
                 MLineVertex segment = new MLineVertex(new Vector2(vertex.X, vertex.Y),
                     new Vector2(dir.X, dir.Y),
                     new Vector2(mitter.X, mitter.Y),
                     distances);
+
                 elevation = vertex.Z;
                 segments.Add(segment);
             }

@@ -2244,9 +2244,12 @@ namespace netDxf.IO
             this.chunk.Write(100, SubclassMarker.Shape);
 
             this.chunk.Write(39, shape.Thickness);
-            this.chunk.Write(10, shape.Position.X);
-            this.chunk.Write(20, shape.Position.Y);
-            this.chunk.Write(30, shape.Position.Z);
+
+            // The official DXF documentation is WRONG the SHAPE position is saved as OCS coordinates NOT as WCS
+            Vector3 ocsBasePoint = MathHelper.Transform(shape.Position, shape.Normal, CoordinateSystem.World, CoordinateSystem.Object);
+            this.chunk.Write(10, ocsBasePoint.X);
+            this.chunk.Write(20, ocsBasePoint.Y);
+            this.chunk.Write(30, ocsBasePoint.Z);
             this.chunk.Write(40, shape.Size);
             this.chunk.Write(2, shape.Name);
             this.chunk.Write(50, shape.Rotation);
@@ -2356,7 +2359,6 @@ namespace netDxf.IO
                 Vector2 endPoint = ellipse.PolarCoordinateRelativeToCenter(ellipse.EndAngle);
                 double a = 1 / (0.5 * ellipse.MajorAxis);
                 double b = 1 / (0.5 * ellipse.MinorAxis);
-
                 atan1 = Math.Atan2(startPoint.Y * b, startPoint.X * a);
                 atan2 = Math.Atan2(endPoint.Y * b, endPoint.X * a);
             }
@@ -4091,8 +4093,8 @@ namespace netDxf.IO
             this.chunk.Write(73, (short) mLine.Style.Elements.Count);
 
             // the MLine information is in OCS we need to save it in WCS
-            // this behavior is similar to the LWPolyline, the info is in OCS because these entities are strictly 2d. Normally they are used in the XY plane whose
-            // normal is (0, 0, 1) so no transformation is needed, OCS are equal to WCS
+            // this behavior is similar to the LWPolyline, the info is in OCS because these entities are strictly 2d.
+            // Normally they are used in the XY plane whose normal is (0, 0, 1) so no transformation is needed, OCS are equal to WCS
             List<Vector3> ocsVertexes = new List<Vector3>();
             foreach (MLineVertex segment in mLine.Vertexes)
             {
@@ -4100,11 +4102,11 @@ namespace netDxf.IO
             }
             List<Vector3> vertexes = MathHelper.Transform(ocsVertexes, mLine.Normal, CoordinateSystem.Object, CoordinateSystem.World);
 
-            Vector3[] wcsVertexes = new Vector3[vertexes.Count];
-            vertexes.CopyTo(wcsVertexes, 0);
+            //Vector3[] wcsVertexes = new Vector3[vertexes.Count];
+            //vertexes.CopyTo(wcsVertexes, 0);
 
             // Although it is not recommended the vertex list might have 0 entries
-            if (wcsVertexes.Length == 0)
+            if (vertexes.Count == 0)
             {
                 this.chunk.Write(10, 0.0);
                 this.chunk.Write(20, 0.0);
@@ -4112,29 +4114,29 @@ namespace netDxf.IO
             }
             else
             {
-                this.chunk.Write(10, wcsVertexes[0].X);
-                this.chunk.Write(20, wcsVertexes[0].Y);
-                this.chunk.Write(30, wcsVertexes[0].Z);
+                this.chunk.Write(10, vertexes[0].X);
+                this.chunk.Write(20, vertexes[0].Y);
+                this.chunk.Write(30, vertexes[0].Z);
             }
 
             this.chunk.Write(210, mLine.Normal.X);
             this.chunk.Write(220, mLine.Normal.Y);
             this.chunk.Write(230, mLine.Normal.Z);
 
-            for (int i = 0; i < wcsVertexes.Length; i++)
+            for (int i = 0; i < vertexes.Count; i++)
             {
-                this.chunk.Write(11, wcsVertexes[i].X);
-                this.chunk.Write(21, wcsVertexes[i].Y);
-                this.chunk.Write(31, wcsVertexes[i].Z);
+                this.chunk.Write(11, vertexes[i].X);
+                this.chunk.Write(21, vertexes[i].Y);
+                this.chunk.Write(31, vertexes[i].Z);
 
-                // the directions are written in world coordinates
+                // the direction and miter vectors are written in world coordinates, but do NOT apply the MLINE elevation
                 Vector2 dir = mLine.Vertexes[i].Direction;
-                Vector3 wcsDir = MathHelper.Transform(new Vector3(dir.X, dir.Y, mLine.Elevation), mLine.Normal, CoordinateSystem.Object, CoordinateSystem.World);
+                Vector3 wcsDir = MathHelper.Transform(new Vector3(dir.X, dir.Y, 0.0), mLine.Normal, CoordinateSystem.Object, CoordinateSystem.World);
                 this.chunk.Write(12, wcsDir.X);
                 this.chunk.Write(22, wcsDir.Y);
                 this.chunk.Write(32, wcsDir.Z);
                 Vector2 mitter = mLine.Vertexes[i].Miter;
-                Vector3 wcsMitter = MathHelper.Transform(new Vector3(mitter.X, mitter.Y, mLine.Elevation), mLine.Normal, CoordinateSystem.Object, CoordinateSystem.World);
+                Vector3 wcsMitter = MathHelper.Transform(new Vector3(mitter.X, mitter.Y, 0.0), mLine.Normal, CoordinateSystem.Object, CoordinateSystem.World);
                 this.chunk.Write(13, wcsMitter.X);
                 this.chunk.Write(23, wcsMitter.Y);
                 this.chunk.Write(33, wcsMitter.Z);
