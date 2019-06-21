@@ -30,7 +30,7 @@ namespace netDxf
     /// <summary>
     /// Helper class for working with 'extended' enums using <see cref="StringValueAttribute"/> attributes.
     /// </summary>
-    public class StringEnum<T> where T: struct, IConvertible // TODO: when upgrading to C# 7.3 change to System.Enum
+    public class StringEnum<T> // TODO: when upgrading to C# 7.3 add constrain System.Enum, the check if T is an Enum will not be necessary
     {
         #region private fields
 
@@ -79,36 +79,31 @@ namespace netDxf
             {
                 //Check for our custom attribute
                 StringValueAttribute[] attrs = fi.GetCustomAttributes(typeof (StringValueAttribute), false) as StringValueAttribute[];
-                if (attrs != null)
-                    if (attrs.Length > 0)
-                        values.Add(attrs[0].Value);
+                if (attrs == null) continue;
+                if (attrs.Length > 0) values.Add(attrs[0].Value);
             }
 
             return values;
         }
 
         /// <summary>
-        /// Gets the values as a list data source.
+        /// Gets the enum entry and string value pairs.
         /// </summary>
-        /// <returns>IList for data binding</returns>
+        /// <returns>A dictionary containing each enum entry with its corresponding string value.</returns>
         public Dictionary<T, string> GetValues()
         {
-            Type underlyingType = Enum.GetUnderlyingType(this.enumType);
-
             Dictionary<T, string> values = new Dictionary<T, string>();
             //Look for our string value associated with fields in this enum
             foreach (FieldInfo fi in this.enumType.GetFields())
             {
                 //Check for our custom attribute
                 StringValueAttribute[] attrs = fi.GetCustomAttributes(typeof (StringValueAttribute), false) as StringValueAttribute[];
-                if (attrs != null)
-                    if (attrs.Length > 0)
-                    {
-                        object str = Convert.ChangeType(Enum.Parse(this.enumType, fi.Name), underlyingType);
-                        if (str == null)
-                            throw new Exception();
-                        values.Add((T) str, attrs[0].Value);
-                    }
+                if (attrs == null) continue;
+                if (attrs.Length > 0)
+                {
+                    object str = Enum.Parse(this.enumType, fi.Name);
+                    values.Add((T) str, attrs[0].Value);
+                }
             }
 
             return values;

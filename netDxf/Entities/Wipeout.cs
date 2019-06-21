@@ -31,7 +31,7 @@ namespace netDxf.Entities
     /// </summary>
     /// <remarks>
     /// The Wipeout dxf definition includes three variables for brightness, contrast, and fade but those variables have no effect; in AutoCad you cannot even change them.<br/>
-    /// The Wipeout entity is related with the system variable WIPEOUTFRAME but this variable is not saved in a dxf.
+    /// The Wipeout entity is related with the system variable WIPEOUTFRAME but this variable is not saved in a DXF.
     /// </remarks>
     public class Wipeout :
         EntityObject
@@ -126,6 +126,7 @@ namespace netDxf.Entities
         /// </summary>
         /// <param name="transformation">Transformation matrix.</param>
         /// <param name="translation">Translation vector.</param>
+        /// <remarks>Matrix3 adopts the convention of using column vectors to represent a transformation matrix.</remarks>
         public override void TransformBy(Matrix3 transformation, Vector3 translation)
         {
             double newElevation = this.Elevation;

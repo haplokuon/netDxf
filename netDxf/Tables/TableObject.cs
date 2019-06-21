@@ -1,7 +1,7 @@
-﻿#region netDxf library, Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
+﻿#region netDxf library, Copyright (C) 2009-2019 Daniel Carvajal (haplokuon@gmail.com)
 
 //                        netDxf library
-// Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2009-2019 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -21,13 +21,13 @@
 #endregion
 
 using System;
-using System.Collections.Generic;
+using System.Linq;
 using netDxf.Collections;
 
 namespace netDxf.Tables
 {
     /// <summary>
-    /// Defines classes that can be accessed by name. They are usually part of the dxf table section but can also be part of the objects section.
+    /// Defines classes that can be accessed by name. They are usually part of the DXF TABLE section but can also be part of the OBJECTS section.
     /// </summary>
     public abstract class TableObject :
         DxfObject,
@@ -71,7 +71,7 @@ namespace netDxf.Tables
 
         #region private fields
 
-        private static readonly IReadOnlyList<string> invalidCharacters = new[] {"\\", "/", ":", "*", "?", "\"", "<", ">", "|", ";", ",", "=", "`"};
+        private static readonly char[] invalidCharacters = { '\\', '/', ':', '*', '?', '"', '<', '>', '|', ';', ',', '=', '`' };
         private bool reserved;
         private string name;
         private readonly XDataDictionary xData;
@@ -128,9 +128,9 @@ namespace netDxf.Tables
         /// <summary>
         /// Gets the array of characters not supported as table object names.
         /// </summary>
-        public static IReadOnlyList<string> InvalidCharacters
+        public static char[] InvalidCharacters
         {
-            get { return invalidCharacters; }
+            get { return invalidCharacters.ToArray(); }
         }
 
         /// <summary>
@@ -155,17 +155,7 @@ namespace netDxf.Tables
             if (string.IsNullOrEmpty(name))
                 return false;
 
-            foreach (string s in InvalidCharacters)
-            {
-                if (name.Contains(s))
-                    return false;
-            }
-
-            // using regular expressions is slower
-            //if (Regex.IsMatch(name, "[\\<>/?\":;*|,=`]"))
-            //    throw new ArgumentException("The following characters \\<>/?\":;*|,=` are not supported for table object names.", "name");
-
-            return true;
+            return name.IndexOfAny(invalidCharacters) == -1;
         }
 
         #endregion

@@ -833,7 +833,7 @@ namespace netDxf
             StringBuilder s = new StringBuilder();
             s.Append(string.Format("|{0}{3} {1}{3} {2}|" + Environment.NewLine, this.m11, this.m12, this.m13, separator));
             s.Append(string.Format("|{0}{3} {1}{3} {2}|" + Environment.NewLine, this.m21, this.m22, this.m23, separator));
-            s.Append(string.Format("|{0}{3} {1}{3} {2}|" + Environment.NewLine, this.m31, this.m32, this.m33, separator));
+            s.Append(string.Format("|{0}{3} {1}{3} {2}|", this.m31, this.m32, this.m33, separator));
             return s.ToString();
         }
 
@@ -848,7 +848,7 @@ namespace netDxf
             StringBuilder s = new StringBuilder();
             s.Append(string.Format("|{0}{3} {1}{3} {2}|" + Environment.NewLine, this.m11.ToString(provider), this.m12.ToString(provider), this.m13.ToString(provider), separator));
             s.Append(string.Format("|{0}{3} {1}{3} {2}|" + Environment.NewLine, this.m21.ToString(provider), this.m22.ToString(provider), this.m23.ToString(provider), separator));
-            s.Append(string.Format("|{0}{3} {1}{3} {2}|" + Environment.NewLine, this.m31.ToString(provider), this.m32.ToString(provider), this.m33.ToString(provider), separator));
+            s.Append(string.Format("|{0}{3} {1}{3} {2}|", this.m31.ToString(provider), this.m32.ToString(provider), this.m33.ToString(provider), separator));
             return s.ToString();
         }
 

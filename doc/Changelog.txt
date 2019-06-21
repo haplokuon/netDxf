@@ -1,5 +1,11 @@
 ## Change history
 
+[2019/06/21]
+* Improved the speed of the method IsValidName of the TableObject class. This will improve the overall speed of adding table objects blocks, layers, styles,... to the document; what, also, will improve the DXF loading performance.
+* The InvalidCharcters property of the TableObject class will return a char[] instead of a IReadOnlyList<string>.
+* Deleted last NewLine character in the ToString methods of the matrix classes.
+* Some minor changes.
+
 [2019/06/11]
 * (fixed) Issue when saving MLine direction and miter coordinates.
 * (fixed) Issue when saving Shape position. The official DXF documentation is wrong it says that it is saved as WCS coordinates but it is actually in OCS coordinates.
@@ -30,7 +36,7 @@
 * (fixed) When reading a TextStyle if both the font file and the font extended data information the font style was not applied.
 
 [2019/05/08]
-* Deleted a few unnecessary checks when adding an entity to a block, this will improve the process of adding entities to a document and reading a DXF file.
+* Deleted a few unnecessary checks when adding an entity to a block, this will improve the process of adding entities to a document; what, also, will improve the DXF loading performance.
 * Updated the StringEnum class to use generics.
 * Updated the HeaderVariable class to avoid direct access to the known header variables, they must be modified through its properties.
 * (fixed) Error when combining open LwPolylines or Polylines with other entities to create a HatchBoundaryPath.
@@ -56,7 +62,7 @@
 * (fixed) When cloning a Viewport the frozen layers were not being cloned.
 
 * The Tolerance TransformBy method now supports uniform scaling.
-* Added Tolerance TextHeigth property controls the height of the tolerance text overriden the default value defined in its style.
+* Added Tolerance TextHeigth property controls the height of the tolerance text overridden the default value defined in its style.
 * Renamed Tolerance Height property to ProjectedToleranceZoneValue.
 * Renamed Tolerance ParseRepresentation method to ParseStringRepresentation.
 * Renamed Tolerance TryParseStringRepresentation method to TryParseStringRepresentation.
@@ -79,7 +85,7 @@
 
 [2019/03/06] 
 * Added Explode method to Insert entity. A few entities might not appear as expected when a non-uniform and/or negative scaling is applied, read the TransformBy method documentation of each entity.
-* Added Explode method to MLine entity. It will convert the actual mline to its Line and Arcs components.
+* Added Explode method to MLine entity. It will convert the actual MLine to its Line and Arcs components.
 * Added TransformBy method to EntityObjects, Attributes and AttributeDefinitions classes.
 * Added property IsIdentity to Matrix3. This value will only be true for matrices initialized as the identity. This will allow to avoid unnecessary multiplications during transformations.
 * Added two new constructors to the Underlay class that takes also the position and scale.

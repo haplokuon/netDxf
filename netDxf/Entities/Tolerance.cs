@@ -731,7 +731,10 @@ namespace netDxf.Entities
         /// </summary>
         /// <param name="transformation">Transformation matrix.</param>
         /// <param name="translation">Translation vector.</param>
-        /// <remarks>Non-uniform scaling is not supported, also is not possible to make a symmetry of a Tolerance.</remarks>
+        /// <remarks>
+        /// Non-uniform scaling is not supported, also is not possible to make a symmetry of a Tolerance.<br />
+        /// Matrix3 adopts the convention of using column vectors to represent a transformation matrix.
+        /// </remarks>
         public override void TransformBy(Matrix3 transformation, Vector3 translation)
         {
             Vector3 newPosition = transformation * this.Position + translation;
@@ -750,7 +753,7 @@ namespace netDxf.Entities
             Vector2 axisPoint = new Vector2(v.X, v.Y);
             double newRotation = Vector2.Angle(axisPoint) * MathHelper.RadToDeg;
 
-            double scale = axisPoint.Modulus();;
+            double scale = axisPoint.Modulus();
             double newTextHeight = this.TextHeight * scale;
             if (MathHelper.IsZero(newTextHeight)) newTextHeight = MathHelper.Epsilon;
 

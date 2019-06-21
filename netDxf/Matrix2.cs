@@ -596,7 +596,7 @@ namespace netDxf
             string separator = Thread.CurrentThread.CurrentCulture.TextInfo.ListSeparator;
             StringBuilder s = new StringBuilder();
             s.Append(string.Format("|{0}{2} {1}|" + Environment.NewLine, this.m11, this.m12, separator));
-            s.Append(string.Format("|{0}{2} {1}|" + Environment.NewLine, this.m21, this.m22, separator));
+            s.Append(string.Format("|{0}{2} {1}|", this.m21, this.m22, separator));
             return s.ToString();
         }
 
@@ -610,7 +610,7 @@ namespace netDxf
             string separator = Thread.CurrentThread.CurrentCulture.TextInfo.ListSeparator;
             StringBuilder s = new StringBuilder();
             s.Append(string.Format("|{0}{2} {1}|" + Environment.NewLine, this.m11.ToString(provider), this.m12.ToString(provider), separator));
-            s.Append(string.Format("|{0}{2} {1}|" + Environment.NewLine, this.m21.ToString(provider), this.m22.ToString(provider), separator));
+            s.Append(string.Format("|{0}{2} {1}|", this.m21.ToString(provider), this.m22.ToString(provider), separator));
             return s.ToString();
         }
 

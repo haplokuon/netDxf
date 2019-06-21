@@ -26,93 +26,13 @@ namespace TestDxfDocument
     /// </summary>
     public class Program
     {
-        private static void TestDim()
-        {
-            AlignedDimension dim = new AlignedDimension(new Vector2(0,0), new Vector2(10,10), 2);
-
-            DxfDocument doc = new DxfDocument();
-            doc.AddEntity(dim);
-            doc.Save("test.dxf");
-
-            DxfDocument loaded = DxfDocument.Load("test.dxf");
-            loaded.Save("test compare.dxf");
-
-        }
-
-        private static void TestShape()
-        {
-            ShapeStyle style = new ShapeStyle("shape.shx");
-            Shape shape = new Shape("MyShape", style);
-
-            Block block = new Block("MyBlock");
-            block.Entities.Add(shape);
-            Insert insert = new Insert(block);
-            insert.Position = new Vector3(50,0,0);
-            //insert.Scale = new Vector3(2);
-            //insert.Rotation = 30;
-            insert.Normal = new Vector3(1,0,0);
-            List<EntityObject> explode = insert.Explode();
-
-            DxfDocument doc = new DxfDocument(DxfVersion.AutoCad2010, new List<string> {@".\Support"});
-            doc.AddEntity(insert);
-            doc.AddEntity(explode);
-            doc.Save("test.dxf");
-
-        }
-
-        public static void TestMLine()
-        {
-            MLine mline = new MLine(new [] {new Vector2(0,0), new Vector2(0,10)});
-            mline.Elevation = 2;
-            Block block = new Block("MyBlock");
-            block.Entities.Add(mline);
-            Insert insert = new Insert(block);
-            insert.Position = new Vector3(5,0,0);
-            insert.Scale = new Vector3(2);
-            insert.Rotation = 30;
-            insert.Normal = new Vector3(1);
-            List<EntityObject> explode = insert.Explode();
-
-            DxfDocument doc = new DxfDocument();
-            doc.AddEntity(insert);
-            doc.AddEntity(explode);
-            doc.Save("test.dxf");
-        }
-
-        public static void ExplodeInsert()
-        {
-            Block block = Block.Load("sample.dxf", new List<string> {@".\Support"});
-            Insert insert = new Insert(block);
-            insert.Position = new Vector3(500,250,0);
-            insert.Scale = new Vector3(2);
-            insert.Rotation = 30;
-            insert.Normal = new Vector3(1);
-            List<EntityObject> explode = insert.Explode();
-
-            DxfDocument doc = new DxfDocument(DxfVersion.AutoCad2010, new List<string> {@".\Support"});
-            //doc.BuildDimensionBlocks = true;
-            doc.AddEntity(insert);
-            doc.AddEntity(explode);
-            doc.Save("test.dxf");
-
-            DxfDocument loaded = DxfDocument.Load("test.dxf", new List<string> {@".\Support"});
-            loaded.Save("test compare.dxf");
-        }
-
         public static void Main()
         {
-            //TestDim();
-            
-            //TestMLine();
-
-            //TestShape();
-
-            //ExplodeInsert();
-
             DxfDocument doc = Test(@"sample.dxf");
 
             #region Samples for new and modified features 2.3.0
 
+            //ExplodeInsert();
             //TransformArc();
             //TransformCircle();
             //TransformLwPolyline();
@@ -329,6 +249,40 @@ namespace TestDxfDocument
 
         #region Samples for new and modified features 2.3.0
 
+        public static void ExplodeInsert()
+        {
+            // create a block with all the drawing objects in the ModelSpace of the sample.dxf file
+            Block block = Block.Load("sample.dxf", new List<string> {@".\Support"});
+            // create an Insert from that block
+            Insert insert = new Insert(block);
+
+            // some transformation
+            insert.Position = new Vector3(500, 250, 0);
+            insert.Scale = new Vector3(2);
+            insert.Rotation = 30;
+            insert.Normal = new Vector3(0, -1, 0);
+
+            // the above transformation also can be achieve using the TransformBy method
+            // keep in mind that the transformation uses the column major convention.
+            //insert.TransformBy(Matrix3.RotationX(MathHelper.HalfPI) * Matrix3.RotationZ(30 * MathHelper.DegToRad) * Matrix3.Scale(2), new Vector3(500,250,0));
+            // using row major convention is equivalent to (A*B)t = At*Bt, where t means transpose
+            //insert.TransformBy((Matrix3.Scale(2).Transpose() * Matrix3.RotationZ(30 * MathHelper.DegToRad).Transpose() * Matrix3.RotationX(MathHelper.HalfPI).Transpose()).Transpose(), new Vector3(500,250,0));
+
+            // explode the block, this will decompose the insert and apply the insert transformation
+            List<EntityObject> explode = insert.Explode();
+            // create a document
+            DxfDocument doc = new DxfDocument(DxfVersion.AutoCad2010, new List<string> {@".\Support"});
+            // add the insert to the document as reference
+            doc.AddEntity(insert);
+            // add the entities from the exploded insert
+            doc.AddEntity(explode);
+            // save
+            doc.Save("test.dxf");
+
+            DxfDocument loaded = DxfDocument.Load("test.dxf", new List<string> {@".\Support"});
+            loaded.Save("test compare.dxf");
+        }
+
         public static void TransformArc()
         {
             Arc arc = new Arc {Center = new Vector3(0,0,10), Radius = 2, StartAngle = 30, EndAngle = 160};
@@ -475,43 +429,6 @@ namespace TestDxfDocument
             doc.Save("test.dxf");
         }
 
-        public static void ViewportTransform()
-        {
-            DxfDocument doc = DxfDocument.Load("ViewportTransform.dxf");
-            doc.Save("ViewportTransform1.dxf");
-
-            doc.ActiveLayout = "Layout1";
-            Viewport view = doc.Viewports.ElementAt(0);
-            //viewport.TransformBy(Matrix3.Identity, new Vector3(50,50, 0));
-            //doc.AddEntity(viewport.ClippingBoundary);
-
-            Vector2 center = new Vector2(180, 120);
-            double width = 100;
-            double height = 80;
-            //Viewport viewport = new Viewport(center, width, height);
-
-            LwPolyline lwPolyline = new LwPolyline(
-                new List<LwPolylineVertex>()
-                {
-                    new LwPolylineVertex(center.X - width*0.5 -20, center.Y - height *0.5 -20),
-                    new LwPolylineVertex(center.X + width*0.5, center.Y - height *0.5),
-                    new LwPolylineVertex(center.X + width*0.5, center.Y + height *0.5),
-                    new LwPolylineVertex(center.X - width*0.5, center.Y + height *0.5)
-
-                }, true) {Color = AciColor.Blue};
-            Viewport viewport = new Viewport(lwPolyline);
-
-            doc.AddEntity(viewport);
-            doc.AddEntity((EntityObject) viewport.Clone());
-            viewport.TransformBy(Matrix3.Identity, new Vector3(-15,-15, 0));
-
-            viewport.ClippingBoundary = null;
-
-            viewport.ClippingBoundary = lwPolyline;
-
-            doc.Save("test.dxf");
-        }
-
         public static void MTextMirror()
         {
             MText text1 = new MText(new Vector2(50,20), 10);
@@ -582,7 +499,7 @@ namespace TestDxfDocument
             DxfDocument dxf = DxfDocument.Load("test.dxf");
         }
 
-        private static void ShapeMirror()
+        public static void ShapeMirror()
         {
             ShapeStyle style = new ShapeStyle("shape.shx");
             Shape shape1 = new Shape("MyShape", style);
@@ -678,7 +595,7 @@ namespace TestDxfDocument
 
         }
 
-        private static void LeaderMirror()
+        public static void LeaderMirror()
         {
             // a text annotation with style
             DimensionStyle style = new DimensionStyle("MyStyle");
@@ -4761,7 +4678,10 @@ namespace TestDxfDocument
                 return null;
             }
 
+            Stopwatch watch = new Stopwatch();
+            watch.Start();
             DxfDocument dxf = DxfDocument.Load(file, new List<string> {@".\Support"});
+            watch.Stop();
 
             // check if there has been any problems loading the file,
             // this might be the case of a corrupt file or a problem in the library
@@ -4788,7 +4708,8 @@ namespace TestDxfDocument
 
             // the dxf has been properly loaded, let's show some information about it
             Console.WriteLine("FILE NAME: {0}", file);
-            Console.WriteLine("\tbinary dxf: {0}", isBinary);
+            Console.WriteLine("\tbinary DXF: {0}", isBinary);
+            Console.WriteLine("\tloading time: {0} seconds", watch.ElapsedMilliseconds / 1000.0);
             Console.WriteLine();
             Console.WriteLine("FILE VERSION: {0}", dxf.DrawingVariables.AcadVer);
             Console.WriteLine();
@@ -5124,22 +5045,68 @@ namespace TestDxfDocument
             // the dxf version is controlled by the DrawingVariables property of the dxf document,
             // also a HeaderVariables instance or a DxfVersion can be passed to the constructor to initialize a new DxfDocument.
             dxf.DrawingVariables.AcadVer = DxfVersion.AutoCad2018;
+            watch.Reset();
+            watch.Start();
             dxf.Save("sample 2018.dxf");
+            watch.Stop();
+            Console.WriteLine();
+            Console.WriteLine("DXF version AutoCad2018 saved in {0} seconds", watch.ElapsedMilliseconds/1000.0);
+
             dxf.DrawingVariables.AcadVer = DxfVersion.AutoCad2013;
+            watch.Reset();
+            watch.Start();
             dxf.Save("sample 2013.dxf");
+            watch.Stop();
+            Console.WriteLine();
+            Console.WriteLine("DXF version AutoCad2013 saved in {0} seconds", watch.ElapsedMilliseconds/1000.0);
+
             dxf.DrawingVariables.AcadVer = DxfVersion.AutoCad2010;
+            watch.Reset();
+            watch.Start();
             dxf.Save("sample 2010.dxf");
+            watch.Stop();
+            Console.WriteLine();
+            Console.WriteLine("DXF version AutoCad2010 saved in {0} seconds", watch.ElapsedMilliseconds/1000.0);
+
             dxf.DrawingVariables.AcadVer = DxfVersion.AutoCad2007;
+            watch.Reset();
+            watch.Start();
             dxf.Save("sample 2007.dxf");
+            watch.Stop();
+            Console.WriteLine();
+            Console.WriteLine("DXF version AutoCad2007 saved in {0} seconds", watch.ElapsedMilliseconds/1000.0);
+
             dxf.DrawingVariables.AcadVer = DxfVersion.AutoCad2004;
+            watch.Reset();
+            watch.Start();
             dxf.Save("sample 2004.dxf");
+            watch.Stop();
+            Console.WriteLine();
+            Console.WriteLine("DXF version AutoCad2004 saved in {0} seconds", watch.ElapsedMilliseconds/1000.0);
+
             dxf.DrawingVariables.AcadVer = DxfVersion.AutoCad2000;
+            watch.Reset();
+            watch.Start();
             dxf.Save("sample 2000.dxf");
+            watch.Stop();
+            Console.WriteLine();
+            Console.WriteLine("DXF version AutoCad2000 saved in {0} seconds", watch.ElapsedMilliseconds/1000.0);
 
             // saving to binary dxf
-            dxf.DrawingVariables.AcadVer = DxfVersion.AutoCad2013;
+            dxf.DrawingVariables.AcadVer = DxfVersion.AutoCad2010;
+            watch.Reset();
+            watch.Start();
             dxf.Save("binary test.dxf", true);
+            watch.Stop();
+            Console.WriteLine();
+            Console.WriteLine("Binary DXF version AutoCad2010 saved in {0} seconds", watch.ElapsedMilliseconds/1000.0);
+
+            watch.Reset();
+            watch.Start();
             DxfDocument test = DxfDocument.Load("binary test.dxf", new List<string> { @".\Support" });
+            watch.Stop();
+            Console.WriteLine();
+            Console.WriteLine("Binary DXF version AutoCad2010 loaded in {0} seconds", watch.ElapsedMilliseconds/1000.0);
 
             if (outputLog)
             {
@@ -5148,6 +5115,7 @@ namespace TestDxfDocument
             }
             else
             {
+                Console.WriteLine();
                 Console.WriteLine("Press a key to continue...");
                 Console.ReadLine();
             }

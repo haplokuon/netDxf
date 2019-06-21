@@ -237,7 +237,8 @@ namespace netDxf.Entities
         /// <param name="translation">Translation vector.</param>
         /// <remarks>
         /// Non-uniform and zero scaling local to the dimension entity are not supported.<br />
-        /// The transformation will not be applied if the resulting center and reference points are the same.
+        /// The transformation will not be applied if the resulting center and reference points are the same.<br />
+        /// Matrix3 adopts the convention of using column vectors to represent a transformation matrix.
         /// </remarks>
         public override void TransformBy(Matrix3 transformation, Vector3 translation)
         {

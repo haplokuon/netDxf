@@ -514,106 +514,6 @@ namespace netDxf
             }
         }
 
-        public bool IsIdentityB()
-        {
-            return Equals(this, Identity);
-        }
-
-        public bool IsIdentityA()
-        {
-                // row 1
-                if (!MathHelper.IsOne(this.M11))
-                {
-                    this.isIdentity = false;
-                    return this.isIdentity;
-                }
-                if (!MathHelper.IsZero(this.M12))
-                {
-                    this.isIdentity = false;
-                    return this.isIdentity;
-                }
-                if (!MathHelper.IsZero(this.M13))
-                {
-                    this.isIdentity = false;
-                    return this.isIdentity;
-                }
-                if (!MathHelper.IsZero(this.M14))
-                {
-                    this.isIdentity = false;
-                    return this.isIdentity;
-                }
-
-                // row 2
-                if (!MathHelper.IsZero(this.M21))
-                {
-                    this.isIdentity = false;
-                    return this.isIdentity;
-                }
-                if (!MathHelper.IsOne(this.M22))
-                {
-                    this.isIdentity = false;
-                    return this.isIdentity;
-                }
-                if (!MathHelper.IsZero(this.M23))
-                {
-                    this.isIdentity = false;
-                    return this.isIdentity;
-                }
-                if (!MathHelper.IsZero(this.M24))
-                {
-                    this.isIdentity = false;
-                    return this.isIdentity;
-                }
-
-                // row 3
-                if (!MathHelper.IsZero(this.M31))
-                {
-                    this.isIdentity = false;
-                    return this.isIdentity;
-                }
-                if (!MathHelper.IsZero(this.M32))
-                {
-                    this.isIdentity = false;
-                    return this.isIdentity;
-                }
-                if (!MathHelper.IsOne(this.M33))
-                {
-                    this.isIdentity = false;
-                    return this.isIdentity;
-                }
-                if (!MathHelper.IsZero(this.M34))
-                {
-                    this.isIdentity = false;
-                    return this.isIdentity;
-                }
-
-                // row 4
-                if (!MathHelper.IsZero(this.M41))
-                {
-                    this.isIdentity = false;
-                    return this.isIdentity;
-                }
-                if (!MathHelper.IsZero(this.M42))
-                {
-                    this.isIdentity = false;
-                    return this.isIdentity;
-                }
-                if (!MathHelper.IsZero(this.M43))
-                {
-                    this.isIdentity = false;
-                    return this.isIdentity;
-                }
-                if (!MathHelper.IsOne(this.M44))
-                {
-                    this.isIdentity = false;
-                    return this.isIdentity;
-                }
-
-                this.isIdentity = true;
-                return this.isIdentity;
-
-        }
-
         /// <summary>
         /// Gets if the actual matrix is the identity.
         /// </summary>
@@ -722,24 +622,6 @@ namespace netDxf
 
                 return this.isIdentity;
             }
-
-            //if (this.dirty)
-                //{
-                //    bool check = true;
-                //    for (int i = 0; i < 4; i++)
-                //    {
-                //        for (int j = 0; j < 4; j++)
-                //        {
-                //            check = i == j ? MathHelper.IsOne(this[i, j]) : MathHelper.IsZero(this[i, j]);
-                //            if(!check) break;
-                //        }
-                //        if(!check) break;
-                //    }
-                //    this.dirty = false;
-                //    this.isIdentity = check;
-                //}
-                //return this.isIdentity;
-            //}
         }
 
         #endregion
@@ -928,18 +810,10 @@ namespace netDxf
         {
             return this.IsIdentity
                 ? 1.0
-                : (this.m11 * ((this.m22 * (this.m33 * this.m44 - this.m34 * this.m43)) +
-                               (-this.m23 * (this.m32 * this.m44 - this.m34 * this.m42)) +
-                               (this.m24 * (this.m32 * this.m43 - this.m33 * this.m42)))) +
-                  (-this.m12 * ((this.m21 * (this.m33 * this.m44 - this.m34 * this.m43)) +
-                                (-this.m23 * (this.m31 * this.m44 - this.m34 * this.m41)) +
-                                (this.m24 * (this.m31 * this.m43 - this.m33 * this.m41)))) +
-                  (this.m13 * ((this.m21 * (this.m32 * this.m44 - this.m34 * this.m42)) +
-                               (-this.m22 * (this.m31 * this.m44 - this.m34 * this.m41)) +
-                               (this.m24 * (this.m31 * this.m42 - this.m32 * this.m41)))) +
-                  (-this.m14 * ((this.m21 * (this.m32 * this.m43 - this.m33 * this.m42)) +
-                                (-this.m22 * (this.m31 * this.m43 - this.m33 * this.m41)) +
-                                (this.m23 * (this.m31 * this.m42 - this.m32 * this.m41))));
+                : this.m11 * (this.m22 * (this.m33 * this.m44 - this.m34 * this.m43) - this.m23 * (this.m32 * this.m44 - this.m34 * this.m42) + this.m24 * (this.m32 * this.m43 - this.m33 * this.m42)) -
+                  this.m12 * (this.m21 * (this.m33 * this.m44 - this.m34 * this.m43) - this.m23 * (this.m31 * this.m44 - this.m34 * this.m41) + this.m24 * (this.m31 * this.m43 - this.m33 * this.m41)) +
+                  this.m13 * (this.m21 * (this.m32 * this.m44 - this.m34 * this.m42) - this.m22 * (this.m31 * this.m44 - this.m34 * this.m41) + this.m24 * (this.m31 * this.m42 - this.m32 * this.m41)) -
+                  this.m14 * (this.m21 * (this.m32 * this.m43 - this.m33 * this.m42) - this.m22 * (this.m31 * this.m43 - this.m33 * this.m41) + this.m23 * (this.m31 * this.m42 - this.m32 * this.m41));
         }
 
         /// <summary>
@@ -957,22 +831,22 @@ namespace netDxf
             det = 1/det;
 
             return new Matrix4(
-					det * ((this.m22 * (this.m33 * this.m44 - this.m34 * this.m43)) + (- this.m23 * (this.m32 * this.m44 - this.m34 * this.m42)) + (this.m24 * (this.m32 * this.m43 - this.m33 * this.m42))),
-					det * - ((this.m12 * (this.m33 * this.m44 - this.m34 * this.m43)) + (- this.m13 * (this.m32 * this.m44 - this.m34 * this.m42)) + (this.m14 * (this.m32 * this.m43 - this.m33 * this.m42))),
-					det * ((this.m12 * (this.m23 * this.m44 - this.m24 * this.m43)) + (- this.m13 * (this.m22 * this.m44 - this.m24 * this.m42)) + (this.m14 * (this.m22 * this.m43 - this.m23 * this.m42))),
-					det * - ((this.m12 * (this.m23 * this.m34 - this.m24 * this.m33)) + (- this.m13 * (this.m22 * this.m34 - this.m24 * this.m32)) + (this.m14 * (this.m22 * this.m33 - this.m23 * this.m32))),
-					det * - ((this.m21 * (this.m33 * this.m44 - this.m34 * this.m43)) + (- this.m23 * (this.m31 * this.m44 - this.m34 * this.m41)) + (this.m24 * (this.m31 * this.m43 - this.m33 * this.m41))),
-					det * ((this.m11 * (this.m33 * this.m44 - this.m34 * this.m43)) + (- this.m13 * (this.m31 * this.m44 - this.m34 * this.m41)) + (this.m14 * (this.m31 * this.m43 - this.m33 * this.m41))),
-					det * - ((this.m11 * (this.m23 * this.m44 - this.m24 * this.m43)) + (- this.m13 * (this.m21 * this.m44 - this.m24 * this.m41)) + (this.m14 * (this.m21 * this.m43 - this.m23 * this.m41))),
-					det * ((this.m11 * (this.m23 * this.m34 - this.m24 * this.m33)) + (- this.m13 * (this.m21 * this.m34 - this.m24 * this.m31)) + (this.m14 * (this.m21 * this.m33 - this.m23 * this.m31))),
-					det * ((this.m21 * (this.m32 * this.m44 - this.m34 * this.m42)) + (- this.m22 * (this.m31 * this.m44 - this.m34 * this.m41)) + (this.m24 * (this.m31 * this.m42 - this.m32 * this.m41))),
-					det * - ((this.m11 * (this.m32 * this.m44 - this.m34 * this.m42)) + (- this.m12 * (this.m31 * this.m44 - this.m34 * this.m41)) + (this.m14 * (this.m31 * this.m42 - this.m32 * this.m41))),
-					det * ((this.m11 * (this.m22 * this.m44 - this.m24 * this.m42)) + (- this.m12 * (this.m21 * this.m44 - this.m24 * this.m41)) + (this.m14 * (this.m21 * this.m42 - this.m22 * this.m41))),
-					det * - ((this.m11 * (this.m22 * this.m34 - this.m24 * this.m32)) + (- this.m12 * (this.m21 * this.m34 - this.m24 * this.m31)) + (this.m14 * (this.m21 * this.m32 - this.m22 * this.m31))),
-					det * - ((this.m21 * (this.m32 * this.m43 - this.m33 * this.m42)) + (- this.m22 * (this.m31 * this.m43 - this.m33 * this.m41)) + (this.m23 * (this.m31 * this.m42 - this.m32 * this.m41))),
-					det * ((this.m11 * (this.m32 * this.m43 - this.m33 * this.m42)) + (- this.m12 * (this.m31 * this.m43 - this.m33 * this.m41)) + (this.m13 * (this.m31 * this.m42 - this.m32 * this.m41))),
-					det * - ((this.m11 * (this.m22 * this.m43 - this.m23 * this.m42)) + (- this.m12 * (this.m21 * this.m43 - this.m23 * this.m41)) + (this.m13 * (this.m21 * this.m42 - this.m22 * this.m41))),
-					det * ((this.m11 * (this.m22 * this.m33 - this.m23 * this.m32)) + (- this.m12 * (this.m21 * this.m33 - this.m23 * this.m31)) + (this.m13 * (this.m21 * this.m32 - this.m22 * this.m31))));
+                det * (this.m22 * (this.m33 * this.m44 - this.m34 * this.m43) - this.m23 * (this.m32 * this.m44 - this.m34 * this.m42) + this.m24 * (this.m32 * this.m43 - this.m33 * this.m42)),
+                det * -(this.m12 * (this.m33 * this.m44 - this.m34 * this.m43) - this.m13 * (this.m32 * this.m44 - this.m34 * this.m42) + this.m14 * (this.m32 * this.m43 - this.m33 * this.m42)),
+                det * (this.m12 * (this.m23 * this.m44 - this.m24 * this.m43) - this.m13 * (this.m22 * this.m44 - this.m24 * this.m42) + this.m14 * (this.m22 * this.m43 - this.m23 * this.m42)),
+                det * -(this.m12 * (this.m23 * this.m34 - this.m24 * this.m33) - this.m13 * (this.m22 * this.m34 - this.m24 * this.m32) + this.m14 * (this.m22 * this.m33 - this.m23 * this.m32)),
+                det * -(this.m21 * (this.m33 * this.m44 - this.m34 * this.m43) - this.m23 * (this.m31 * this.m44 - this.m34 * this.m41) + this.m24 * (this.m31 * this.m43 - this.m33 * this.m41)),
+                det * (this.m11 * (this.m33 * this.m44 - this.m34 * this.m43) - this.m13 * (this.m31 * this.m44 - this.m34 * this.m41) + this.m14 * (this.m31 * this.m43 - this.m33 * this.m41)),
+                det * -(this.m11 * (this.m23 * this.m44 - this.m24 * this.m43) - this.m13 * (this.m21 * this.m44 - this.m24 * this.m41) + this.m14 * (this.m21 * this.m43 - this.m23 * this.m41)),
+                det * (this.m11 * (this.m23 * this.m34 - this.m24 * this.m33) - this.m13 * (this.m21 * this.m34 - this.m24 * this.m31) + this.m14 * (this.m21 * this.m33 - this.m23 * this.m31)),
+                det * (this.m21 * (this.m32 * this.m44 - this.m34 * this.m42) - this.m22 * (this.m31 * this.m44 - this.m34 * this.m41) + this.m24 * (this.m31 * this.m42 - this.m32 * this.m41)),
+                det * -(this.m11 * (this.m32 * this.m44 - this.m34 * this.m42) - this.m12 * (this.m31 * this.m44 - this.m34 * this.m41) + this.m14 * (this.m31 * this.m42 - this.m32 * this.m41)),
+                det * (this.m11 * (this.m22 * this.m44 - this.m24 * this.m42) - this.m12 * (this.m21 * this.m44 - this.m24 * this.m41) + this.m14 * (this.m21 * this.m42 - this.m22 * this.m41)),
+                det * -(this.m11 * (this.m22 * this.m34 - this.m24 * this.m32) - this.m12 * (this.m21 * this.m34 - this.m24 * this.m31) + this.m14 * (this.m21 * this.m32 - this.m22 * this.m31)),
+                det * -(this.m21 * (this.m32 * this.m43 - this.m33 * this.m42) - this.m22 * (this.m31 * this.m43 - this.m33 * this.m41) + this.m23 * (this.m31 * this.m42 - this.m32 * this.m41)),
+                det * (this.m11 * (this.m32 * this.m43 - this.m33 * this.m42) - this.m12 * (this.m31 * this.m43 - this.m33 * this.m41) + this.m13 * (this.m31 * this.m42 - this.m32 * this.m41)),
+                det * -(this.m11 * (this.m22 * this.m43 - this.m23 * this.m42) - this.m12 * (this.m21 * this.m43 - this.m23 * this.m41) + this.m13 * (this.m21 * this.m42 - this.m22 * this.m41)),
+                det * (this.m11 * (this.m22 * this.m33 - this.m23 * this.m32) - this.m12 * (this.m21 * this.m33 - this.m23 * this.m31) + this.m13 * (this.m21 * this.m32 - this.m22 * this.m31)));
         }
 
         /// <summary>
@@ -1211,7 +1085,7 @@ namespace netDxf
             s.Append(string.Format("|{0}{4} {1}{4} {2}{4} {3}|" + Environment.NewLine, this.m11, this.m12, this.m13, this.m14, separator));
             s.Append(string.Format("|{0}{4} {1}{4} {2}{4} {3}|" + Environment.NewLine, this.m21, this.m22, this.m23, this.m24, separator));
             s.Append(string.Format("|{0}{4} {1}{4} {2}{4} {3}|" + Environment.NewLine, this.m31, this.m32, this.m33, this.m34, separator));
-            s.Append(string.Format("|{0}{4} {1}{4} {2}{4} {3}|" + Environment.NewLine, this.m41, this.m42, this.m43, this.m44, separator));
+            s.Append(string.Format("|{0}{4} {1}{4} {2}{4} {3}|", this.m41, this.m42, this.m43, this.m44, separator));
             return s.ToString();
         }
 
@@ -1227,7 +1101,7 @@ namespace netDxf
             s.Append(string.Format("|{0}{4} {1}{4} {2}{4} {3}|" + Environment.NewLine, this.m11.ToString(provider), this.m12.ToString(provider), this.m13.ToString(provider), this.m14.ToString(provider), separator));
             s.Append(string.Format("|{0}{4} {1}{4} {2}{4} {3}|" + Environment.NewLine, this.m21.ToString(provider), this.m22.ToString(provider), this.m23.ToString(provider), this.m24.ToString(provider), separator));
             s.Append(string.Format("|{0}{4} {1}{4} {2}{4} {3}|" + Environment.NewLine, this.m31.ToString(provider), this.m32.ToString(provider), this.m33.ToString(provider), this.m34.ToString(provider), separator));
-            s.Append(string.Format("|{0}{4} {1}{4} {2}{4} {3}|" + Environment.NewLine, this.m41.ToString(provider), this.m42.ToString(provider), this.m43.ToString(provider), this.m44.ToString(provider), separator));
+            s.Append(string.Format("|{0}{4} {1}{4} {2}{4} {3}|", this.m41.ToString(provider), this.m42.ToString(provider), this.m43.ToString(provider), this.m44.ToString(provider), separator));
             return s.ToString();
         }
 

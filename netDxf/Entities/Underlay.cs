@@ -234,7 +234,8 @@ namespace netDxf.Entities
         /// <param name="translation">Translation vector.</param>
         /// <remarks>
         /// Non-uniform scaling for rotated underlays is not supported.
-        /// This is not a limitation of the code but the DXF format, unlike the Image there is no way to define the local UV vectors.
+        /// This is not a limitation of the code but the DXF format, unlike the Image there is no way to define the local UV vectors.<br />
+        /// Matrix3 adopts the convention of using column vectors to represent a transformation matrix.
         /// </remarks>
         public override void TransformBy(Matrix3 transformation, Vector3 translation)
         {
@@ -248,7 +249,11 @@ namespace netDxf.Entities
             transWO = transWO.Transpose();
 
             List<Vector2> uv = MathHelper.Transform(
-                new[] {this.Scale.X * Vector2.UnitX, this.Scale.Y * Vector2.UnitY},
+                new[]
+                {
+                    this.Scale.X * Vector2.UnitX,
+                    this.Scale.Y * Vector2.UnitY
+                },
                 this.rotation * MathHelper.DegToRad,
                 CoordinateSystem.Object, CoordinateSystem.World);
 

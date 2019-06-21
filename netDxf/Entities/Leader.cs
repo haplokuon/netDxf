@@ -802,44 +802,6 @@ namespace netDxf.Entities
             return  this.Hook - dir * arrowSize * dimScale;
         }
 
-        private void ChangeAnnotationCoordinateSystem(Vector3 newNormal, double newElevation)
-        {
-            if (this.annotation == null)
-                return;
-
-            Vector3 position;
-            Vector3 ocsPosition;
-            Vector3 wcsPosition;
-            this.annotation.Normal = newNormal;
-            switch (this.annotation.Type)
-            {
-                case EntityType.MText:
-                    position = ((MText)this.annotation).Position;
-                    ocsPosition = MathHelper.Transform(position, this.Normal, CoordinateSystem.World, CoordinateSystem.Object);
-                    wcsPosition = MathHelper.Transform(new Vector3(ocsPosition.X, ocsPosition.Y, newElevation), newNormal, CoordinateSystem.Object, CoordinateSystem.World);
-                    ((MText)this.annotation).Position = wcsPosition;
-                    break;
-                case EntityType.Insert:
-                    position = ((Insert)this.annotation).Position;
-                    ocsPosition = MathHelper.Transform(position, this.Normal, CoordinateSystem.World, CoordinateSystem.Object);
-                    wcsPosition = MathHelper.Transform(new Vector3(ocsPosition.X, ocsPosition.Y, newElevation), newNormal, CoordinateSystem.Object, CoordinateSystem.World);
-                    ((Insert)this.annotation).Position = wcsPosition;
-                    break;
-                case EntityType.Tolerance:
-                    position = ((Tolerance)this.annotation).Position;
-                    ocsPosition = MathHelper.Transform(position, this.Normal, CoordinateSystem.World, CoordinateSystem.Object);
-                    wcsPosition = MathHelper.Transform(new Vector3(ocsPosition.X, ocsPosition.Y, newElevation), newNormal, CoordinateSystem.Object, CoordinateSystem.World);
-                    ((Tolerance)this.annotation).Position = wcsPosition;
-                    break;
-                case EntityType.Text:
-                    position = ((Text)this.annotation).Position;
-                    ocsPosition = MathHelper.Transform(position, this.Normal, CoordinateSystem.World, CoordinateSystem.Object);
-                    wcsPosition = MathHelper.Transform(new Vector3(ocsPosition.X, ocsPosition.Y, newElevation), newNormal, CoordinateSystem.Object, CoordinateSystem.World);
-                    ((Text)this.annotation).Position = wcsPosition;
-                    break;
-            }
-        }
-
         #endregion
 
         #region overrides
@@ -849,6 +811,7 @@ namespace netDxf.Entities
         /// </summary>
         /// <param name="transformation">Transformation matrix.</param>
         /// <param name="translation">Translation vector.</param>
+        /// <remarks>Matrix3 adopts the convention of using column vectors to represent a transformation matrix.</remarks>
         public override void TransformBy(Matrix3 transformation, Vector3 translation)
         {
             Vector3 newNormal = transformation * this.Normal;

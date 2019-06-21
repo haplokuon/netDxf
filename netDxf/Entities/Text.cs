@@ -307,10 +307,11 @@ namespace netDxf.Entities
         /// <param name="transformation">Transformation matrix.</param>
         /// <param name="translation">Translation vector.</param>
         /// <remarks>
-        /// When the current Text entity does not belong to a DXF document, the text will be mirrored by default when a symmetry is performed;
+        /// When the current Text entity does not belong to a DXF document, the text will use the DefaultMirrText when a symmetry is performed;
         /// otherwise, the drawing variable MirrText will be used.<br />
         /// A symmetry around the X axis when the text uses an Alignment.BaseLineLeft, Alignment.BaseLineCenter, Alignment.BaseLineRight, Alignment.Fit or an Alignment.Aligned.
-        /// A symmetry around the Y axis when the text uses an Alignment.Fit or an Alignment.Aligned .
+        /// A symmetry around the Y axis when the text uses an Alignment.Fit or an Alignment.Aligned.<br />
+        /// Matrix3 adopts the convention of using column vectors to represent a transformation matrix.
         /// </remarks>
         public override void TransformBy(Matrix3 transformation, Vector3 translation)
         {
@@ -325,7 +326,8 @@ namespace netDxf.Entities
             Matrix3 transWO = MathHelper.ArbitraryAxis(newNormal);
             transWO = transWO.Transpose();
 
-            List<Vector2> uv = MathHelper.Transform(new List<Vector2>
+            List<Vector2> uv = MathHelper.Transform(
+                new[]
                 {
                     this.WidthFactor * this.Height * Vector2.UnitX,
                     new Vector2(this.Height * Math.Tan(this.ObliqueAngle * MathHelper.DegToRad), this.Height)

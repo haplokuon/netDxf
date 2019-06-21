@@ -263,8 +263,14 @@ namespace netDxf.Entities
                     if (MathHelper.IsZero(r))
                     {
                         // the polyline edge is a line
-                        Vector3 start = MathHelper.Transform(new Vector3(p1.X, p1.Y, this.elevation), this.Normal, CoordinateSystem.Object, CoordinateSystem.World);
-                        Vector3 end = MathHelper.Transform(new Vector3(p2.X, p2.Y, this.elevation), this.Normal, CoordinateSystem.Object, CoordinateSystem.World);
+                        List<Vector3> points = MathHelper.Transform(
+                            new []
+                            {
+                                new Vector3(p1.X, p1.Y, this.elevation),
+                                new Vector3(p2.X, p2.Y, this.elevation)
+                            },
+                            this.Normal,
+                            CoordinateSystem.Object, CoordinateSystem.World);
 
                         entities.Add(new Line
                         {
@@ -275,8 +281,8 @@ namespace netDxf.Entities
                             Transparency = (Transparency)this.Transparency.Clone(),
                             LinetypeScale = this.LinetypeScale,
                             Normal = this.Normal,
-                            StartPoint = start,
-                            EndPoint = end,
+                            StartPoint = points[0],
+                            EndPoint = points[1],
                             Thickness = this.Thickness,
                         });
                     }
@@ -411,7 +417,8 @@ namespace netDxf.Entities
         /// <param name="translation">Translation vector.</param>
         /// <remarks>
         /// Non-uniform scaling is not supported if a bulge different than zero is applied to any of the LwPolyline vertexes,
-        /// a non-uniform scaling cannot be applied to the arc segments. Explode the entity and convert the arcs into ellipse arcs and transform them instead.
+        /// a non-uniform scaling cannot be applied to the arc segments. Explode the entity and convert the arcs into ellipse arcs and transform them instead.<br />
+        /// Matrix3 adopts the convention of using column vectors to represent a transformation matrix.
         /// </remarks>
         public override void TransformBy(Matrix3 transformation, Vector3 translation)
         {

@@ -35,14 +35,14 @@ namespace netDxf.Tables
         #region constructors
 
         /// <summary>
-        /// Initializes a new instance of the <c>LinetypeSìmpleSegment</c> class.
+        /// Initializes a new instance of the <c>LinetypeSimpleSegment</c> class.
         /// </summary>
         public LinetypeSimpleSegment() : this(0.0)
         {
         }
 
         /// <summary>
-        /// Initializes a new instance of the <c>LinetypeSìmpleSegment</c> class.
+        /// Initializes a new instance of the <c>LinetypeSimpleSegment</c> class.
         /// </summary>
         /// <param name="length">Dash or space length of the segment.</param>
         public LinetypeSimpleSegment(double length) : base (LinetypeSegmentType.Simple, length)

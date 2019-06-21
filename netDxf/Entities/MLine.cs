@@ -673,7 +673,8 @@ namespace netDxf.Entities
         /// <param name="translation">Translation vector.</param>
         /// <remarks>
         /// Non-uniform scaling is not supported for multilines.
-        /// Explode the entity and, in case round end caps has been applied, convert the arcs into ellipse arcs and transform them instead.
+        /// Explode the entity and, in case round end caps has been applied, convert the arcs into ellipse arcs and transform them instead.<br />
+        /// Matrix3 adopts the convention of using column vectors to represent a transformation matrix.
         /// </remarks>
         public override void TransformBy(Matrix3 transformation, Vector3 translation)
         {

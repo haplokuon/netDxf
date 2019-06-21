@@ -178,7 +178,10 @@ namespace netDxf.Entities
         /// </summary>
         /// <param name="transformation">Transformation matrix.</param>
         /// <param name="translation">Translation vector.</param>
-        /// <remarks>Non-uniform scaling is not supported, create an ellipse from the circle data and transform that instead.</remarks>
+        /// <remarks>
+        /// Non-uniform scaling is not supported, create an ellipse from the circle data and transform that instead.<br />
+        /// Matrix3 adopts the convention of using column vectors to represent a transformation matrix.
+        /// </remarks>
         public override void TransformBy(Matrix3 transformation, Vector3 translation)
         {
             Vector3 newCenter = transformation * this.Center + translation;

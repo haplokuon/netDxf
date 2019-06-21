@@ -776,8 +776,9 @@ namespace netDxf.Entities
         /// <param name="translation">Translation vector.</param>
         /// <remarks>
         /// Non-uniform scaling is not supported, it would require to decompose each line into independent Text entities.
-        /// When the current MText entity does not belong to a DXF document, the text will be mirrored by default when a symmetry is performed;
-        /// otherwise, the drawing variable MirrText will be used.
+        /// When the current Text entity does not belong to a DXF document, the text will use the DefaultMirrText when a symmetry is performed;
+        /// otherwise, the drawing variable MirrText will be used.<br />
+        /// Matrix3 adopts the convention of using column vectors to represent a transformation matrix.
         /// </remarks>
         public override void TransformBy(Matrix3 transformation, Vector3 translation)
         {
@@ -792,7 +793,13 @@ namespace netDxf.Entities
             Matrix3 transWO = MathHelper.ArbitraryAxis(newNormal);
             transWO = transWO.Transpose();
 
-            List<Vector2> uv = MathHelper.Transform( new[] { Vector2.UnitX, Vector2.UnitY}, this.Rotation * MathHelper.DegToRad, CoordinateSystem.Object, CoordinateSystem.World);
+            List<Vector2> uv = MathHelper.Transform(
+                new[]
+                {
+                    Vector2.UnitX, Vector2.UnitY
+                }, 
+                this.Rotation * MathHelper.DegToRad,
+                CoordinateSystem.Object, CoordinateSystem.World);
 
             Vector3 v;
             v = transOW * new Vector3(uv[0].X, uv[0].Y, 0.0);

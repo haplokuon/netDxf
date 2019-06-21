@@ -73,6 +73,8 @@ namespace netDxf.Entities
                 throw new ArgumentNullException(nameof(style));
             this.style = style;
             this.position = position;
+            if (size <= 0)
+                throw new ArgumentOutOfRangeException(nameof(size), size, "The shape size must be greater than zero.");
             this.size = size;
             this.rotation = rotation;
             this.obliqueAngle = 0.0;
@@ -186,6 +188,7 @@ namespace netDxf.Entities
         /// </summary>
         /// <param name="transformation">Transformation matrix.</param>
         /// <param name="translation">Translation vector.</param>
+        /// <remarks>Matrix3 adopts the convention of using column vectors to represent a transformation matrix.</remarks>
         public override void TransformBy(Matrix3 transformation, Vector3 translation)
         {
             bool mirrorShape;
@@ -199,7 +202,8 @@ namespace netDxf.Entities
             Matrix3 transWO = MathHelper.ArbitraryAxis(newNormal);
             transWO = transWO.Transpose();
 
-            List<Vector2> uv = MathHelper.Transform(new List<Vector2>
+            List<Vector2> uv = MathHelper.Transform(
+                new[]
                 {
                     Vector2.UnitX * this.WidthFactor * this.Size,
                     new Vector2(this.Size * Math.Tan(this.ObliqueAngle * MathHelper.DegToRad), this.Size)

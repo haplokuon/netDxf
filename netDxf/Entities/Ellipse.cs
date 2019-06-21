@@ -434,7 +434,7 @@ namespace netDxf.Entities
             {
                 Vector2 startPoint = this.PolarCoordinateRelativeToCenter(this.startAngle);
                 Vector2 endPoint = this.PolarCoordinateRelativeToCenter(this.endAngle);
-                double a = 1 / (0.5 *this.majorAxis);
+                double a = 1 / (0.5 * this.majorAxis);
                 double b = 1 / (0.5 * this.minorAxis);
                 start = Math.Atan2(startPoint.Y * b, startPoint.X * a);
                 end = Math.Atan2(endPoint.Y * b, endPoint.X * a);
@@ -499,6 +499,7 @@ namespace netDxf.Entities
         /// </summary>
         /// <param name="transformation">Transformation matrix.</param>
         /// <param name="translation">Translation vector.</param>
+        /// <remarks>Matrix3 adopts the convention of using column vectors to represent a transformation matrix.</remarks>
         public override void TransformBy(Matrix3 transformation, Vector3 translation)
         {
             // NOTE: this is a generic implementation of the ellipse transformation,
