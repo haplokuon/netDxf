@@ -651,10 +651,7 @@ namespace netDxf.Tables
         private void Segments_BeforeAddItem(ObservableCollection<LinetypeSegment> sender, ObservableCollectionEventArgs<LinetypeSegment> e)
         {
             // null items are not allowed
-            if (e.Item == null)
-                e.Cancel = true;
-            else
-                e.Cancel = false;
+            e.Cancel = e.Item == null;
         }
 
         private void Segments_AddItem(ObservableCollection<LinetypeSegment> sender, ObservableCollectionEventArgs<LinetypeSegment> e)

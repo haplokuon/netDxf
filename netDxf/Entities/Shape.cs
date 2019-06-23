@@ -34,7 +34,7 @@ namespace netDxf.Entities
     {
         #region private fields
 
-        private string name;
+        private readonly string name;
         private ShapeStyle style;
         private Vector3 position;
         private double size;

@@ -35,77 +35,6 @@ namespace netDxf.Entities
     {
         #region private classes
 
-        public class CalculatePoints
-        {
-            public static void main()
-            {
-                // TODO Auto-generated method stub
-
-                /*
-                 * 
-                dp(t) = sqrt( (r1*sin(t))^2 + (r2*cos(t))^2)
-                circ = sum(dp(t), t=0..2*Pi step 0.0001)
-            
-                n = 20
-            
-                nextPoint = 0
-                run = 0.0
-                for t=0..2*Pi step 0.0001
-                    if n*run/circ >= nextPoint then
-                        set point (r1*cos(t), r2*sin(t))
-                        nextPoint = nextPoint + 1
-                    next
-                    run = run + dp(t)
-                next
-             */
-
-
-                double r1 = 20.0;
-                double r2 = 10.0;
-
-                double theta = 0.0;
-                double twoPi = Math.PI*2.0;
-                double deltaTheta = 0.0001;
-                double numIntegrals = Math.Round(twoPi/deltaTheta);
-                double circ=0.0;
-                double dpt=0.0;
-
-                /* integrate over the elipse to get the circumference */
-                for( int i=0; i < numIntegrals; i++ ) {
-                    theta += i*deltaTheta;
-                    dpt = computeDpt( r1, r2, theta);
-                    circ += dpt;
-                }
-
-                int n=20;
-                int nextPoint = 0;
-                double run = 0.0;
-                theta = 0.0;
-
-                for( int i=0; i < numIntegrals; i++ ) {
-                    theta += deltaTheta;
-                    double subIntegral = n*run/circ;
-                    if( (int) subIntegral >= nextPoint ) {
-                        double x = r1 * Math.Cos(theta);
-                        double y = r2 * Math.Sin(theta);
-                        nextPoint++;
-                    }
-                    run += computeDpt(r1, r2, theta);
-                }
-            }
-
-            static double computeDpt( double r1, double r2, double theta )
-            {
-                double dp=0.0;
-
-                double dpt_sin = Math.Pow(r1*Math.Sin(theta), 2.0);
-                double dpt_cos = Math.Pow( r2*Math.Cos(theta), 2.0);
-                dp = Math.Sqrt(dpt_sin + dpt_cos);
-
-                return dp;
-            }
-        }
-
         private static class ConicThroughFivePoints
         {
             private static double[] CoefficientsLine(Vector2 p1, Vector2 p2)
@@ -618,8 +547,8 @@ namespace netDxf.Entities
 
                 wcsAnglePoints[i] = transformation * wcsAnglePoints[i];
                 wcsPoints[i] += translation;
-
             }
+
             List<Vector3> ocsAnglePoints = MathHelper.Transform(wcsAnglePoints, newNormal, CoordinateSystem.World, CoordinateSystem.Object);
 
             Vector2 newStart = new Vector2(ocsAnglePoints[0].X, ocsAnglePoints[0].Y);

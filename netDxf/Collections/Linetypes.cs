@@ -105,12 +105,11 @@ namespace netDxf.Collections
         /// </remarks>
         public bool AddFromFile(string file, string linetypeName, bool reload)
         {
-            Linetype linetype;
             string f = this.Owner.SupportFolders.FindFile(file);
             if (string.IsNullOrEmpty(f))
                 throw new FileNotFoundException("The LIN file has not been found.", file);
 
-            linetype = Linetype.Load(f, linetypeName);
+            Linetype linetype = Linetype.Load(f, linetypeName);
 
             if (linetype == null) return false;
 

@@ -1,5 +1,9 @@
 ## Change history
 
+[2019/06/23]
+* (fixed) When a new element is added to a MLineStyle that already belongs to a document, it was not registering the style as a user of the linetype.
+* Cleanup some unneeded code.
+
 [2019/06/21]
 * Improved the speed of the method IsValidName of the TableObject class. This will improve the overall speed of adding table objects blocks, layers, styles,... to the document; what, also, will improve the DXF loading performance.
 * The InvalidCharcters property of the TableObject class will return a char[] instead of a IReadOnlyList<string>.

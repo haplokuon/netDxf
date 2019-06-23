@@ -3984,49 +3984,71 @@ namespace netDxf.IO
                 while (records.MoveNext())
                 {
                     XDataRecord data = records.Current;
+                    if(data == null) return textHeight;
 
                     // the tolerance text height are stored under the string "DSTYLE"
                     if (data.Code == XDataCode.String && string.Equals((string) data.Value, "DSTYLE", StringComparison.OrdinalIgnoreCase))
                     {
                         if (records.MoveNext())
+                        {
                             data = records.Current;
+                            if(data == null) return textHeight;
+                        }
                         else
+                        {
                             return textHeight; // premature end
+                        }
 
                         // all style overrides are enclosed between XDataCode.ControlString "{" and "}"
                         if (data.Code != XDataCode.ControlString && (string) data.Value != "{")
+                        {
                             return textHeight; // premature end
+                        }
 
                         if (records.MoveNext())
+                        {
                             data = records.Current;
+                            if(data == null) return textHeight;
+                        }
                         else
+                        {
                             return textHeight; // premature end
+                        }
 
                         while (!(data.Code == XDataCode.ControlString && (string) data.Value == "}"))
                         {
-                            if (data.Code != XDataCode.Int16)
-                                return textHeight;
+                            if (data.Code != XDataCode.Int16) return textHeight;
+
                             short textHeightCode = (short) data.Value;
                             if (records.MoveNext())
+                            {
                                 data = records.Current;
+                                if(data == null) return textHeight;
+                            }
                             else
+                            {
                                 return textHeight; // premature end
+                            }
 
                             //the xData overrides must be read in pairs.
                             //the first is the dimension style property to override, the second is the new value
                             switch (textHeightCode)
                             {
                                 case 140:
-                                    if (data.Code != XDataCode.Real)
-                                        return textHeight; // premature end
+                                    if (data.Code != XDataCode.Real) return textHeight; // premature end
                                     textHeight = (double) data.Value;
                                     break;
                             }
 
                             if (records.MoveNext())
+                            {
                                 data = records.Current;
+                                if(data == null) return textHeight;
+                            }
                             else
+                            {
                                 return textHeight; // premature end
+                            }
                         }
                     }
                 }

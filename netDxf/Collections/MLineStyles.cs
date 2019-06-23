@@ -172,7 +172,7 @@ namespace netDxf.Collections
         private void MLineStyle_ElementAdded(MLineStyle sender, MLineStyleElementChangeEventArgs e)
         {
             e.Item.Linetype = this.Owner.Linetypes.Add(e.Item.Linetype);
-            //this.Owner.Linetypes.References[e.Item.Linetype.Name].Add(sender);
+            this.Owner.Linetypes.References[e.Item.Linetype.Name].Add(sender);
         }
 
         private void MLineStyle_ElementRemoved(MLineStyle sender, MLineStyleElementChangeEventArgs e)
