@@ -1,119 +1,77 @@
 ## Change history
 
-[2019/06/23]
-* (fixed) When a new element is added to a MLineStyle that already belongs to a document, it was not registering the style as a user of the linetype.
-* Cleanup some unneeded code.
 
-[2019/06/21]
-* Improved the speed of the method IsValidName of the TableObject class. This will improve the overall speed of adding table objects blocks, layers, styles,... to the document; what, also, will improve the DXF loading performance.
-* The InvalidCharcters property of the TableObject class will return a char[] instead of a IReadOnlyList<string>.
-* Deleted last NewLine character in the ToString methods of the matrix classes.
-* Some minor changes.
-
-[2019/06/11]
-* (fixed) Issue when saving MLine direction and miter coordinates.
-* (fixed) Issue when saving Shape position. The official DXF documentation is wrong it says that it is saved as WCS coordinates but it is actually in OCS coordinates.
-* (fixed) The HeaderVariables property was returning the known variable names instead of the custom names.
-* (fixed) The property DimTxtDirection of the DimensionStyle class was not read properly from the DXF.
-
-[2019/06/08]
-* If the contents of a Matrix3 is modified and the IsIdentity property is called, the matrix will be check to see if it is actually the identity, not only for matrices that were initialized as the identity.
+### [2.3.0 - 2018/10/23]
 * Added Matrix2 struct.
 * Added Matrix4 struct.
 * Added Vector4 struct.
-* Added TransformBy method that takes a Matrix4 as argument to the EntityObject class.
-* Deleted the Matrix3 constructor that takes an array as argument. It was actually using the row major convention while the transformation matrices are written as column major.
-* Improved the way the Ellipse method PolygonalVertexes generates the points in an ellipse arc.
-
-[2019/06/04]
-* When exploding an Insert with non-uniform scaling that contains LwPolylines with rounded vertexes they will be decomposed in lines and ellipse arcs.
-* Some adjustments to the ellipse transform code to handle the start and end angles correctly.
-* Deleted the layout Viewport. This is the viewport with id 1 that represents the view to the paper space, it is more related to the UI, it has no graphical representation, and it will not be loaded.
-
-[2019/05/27]
-* Improved the ellipse TransformBy method, now it should work under all circumstances.
-
-[2019/05/21]
-* Modify the TextStyle class to use a font file or a font family name plus its font style, but not both.
-* Deleted the property IsTrueType from the TextStyle class.
-* The TextStyle method TrueTypeFontFamilyName is now public static in case it is needed, the constructor does not use it anymore.
-* (fixed) When reading a TextStyle if both the font file and the font extended data information the font style was not applied.
-
-[2019/05/08]
-* Deleted a few unnecessary checks when adding an entity to a block, this will improve the process of adding entities to a document; what, also, will improve the DXF loading performance.
-* Updated the StringEnum class to use generics.
-* Updated the HeaderVariable class to avoid direct access to the known header variables, they must be modified through its properties.
-* (fixed) Error when combining open LwPolylines or Polylines with other entities to create a HatchBoundaryPath.
-
-[2019/04/14]
-* Now it is possible to manually add custom header variables to the drawing. When a DXF is loaded all unrecognized header variables will be automatically added as custom header variables to the drawing.
-* Added several methods to the DrawingVariables class to handle custom header variables.
-* Deleted the ExtMax and ExtMin properties from the DrawingVariables class, since those values are not calculated. It is still possible to access them as a custom header variable if the loaded DXF contains them. See sample AddHeaderVariable().
-
-[2019/04/07]
+* Added property IsIdentity to Matrix3. This will allow to avoid unnecessary multiplications during transformations.
+* Added TransformBy method that takes a Matrix4 (transformation, column major convention) as argument to the EntityObject class.
+* Added TransformBy method that takes a Matrix3 (rotation and scale, column major convention) and a Vector3 (translation) as arguments to the EntityObject class.
+* Added Explode method to Insert entity. A few entities might not appear as expected when a non-uniform and/or negative scaling is applied, read the TransformBy method documentation of each entity.
+* Added Explode method to MLine entity. It will convert the actual MLine to its Line and Arcs components.
+* Added custom drawing variables, now it is possible to add your own header variables to the drawing. When a DXF is loaded all unrecognized header variables will be automatically added as custom header variables to the drawing.
 * Added Width property to Text entity it is only applicable if the Alignment is Fit or Aligned.
 * Added MirrText DrawingVariable to the document, it controls whether the text will be mirrored or not when a symmetry is performed.
 * Added the static property DefaultMirrText to the Text and MText entity. It is the equivalent MirrText DrawingVariable used when the entity does not belong to a DxfDocument.
 * Added the static property DefaultInsUnits to the Insert entity. It is the equivalent InsUnits DrawingVariable used when the entity does not belong to a DxfDocument.
-* (fixed) The Text Alignment Fit and Aligned should work properly.
-
-* Implemented TransformBy method for Viewport entities.
 * Added two new constructors to Viewport class to create rectangular viewports.
-* The Viewport will show the grid by default.
-* When a Leader is removed from a document, the annotation, if exists, will also be removed; although AutoCad does not.
-* (fixed) Adding and removing the clipping boundary of a viewport, when it already belongs to a document, will be automatically add and remove, respectively, the entity from the document.
-* (fixed) Adding and removing the annotation of a leader, when it already belongs to a document, will be automatically add and remove, respectively, the entity from the document.
-* (fixed) When cloning a Viewport the frozen layers were not being cloned.
-
-* The Tolerance TransformBy method now supports uniform scaling.
-* Added Tolerance TextHeigth property controls the height of the tolerance text overridden the default value defined in its style.
-* Renamed Tolerance Height property to ProjectedToleranceZoneValue.
-* Renamed Tolerance ParseRepresentation method to ParseStringRepresentation.
-* Renamed Tolerance TryParseStringRepresentation method to TryParseStringRepresentation.
-* (fixed) When writing a DXF the Tolerance code 73 is 0 for both Text and MText annotations.
-* (fixed) Issues when making a symmetry of an MText.
-
-* (fixed) Radial and Diametric dimensions not showing the "R" and "Ø" when no prefix is use in the dimension style.
-
-* Improved and fixed some issues with the TransformBy methods.
-* (fixed) A few issues when cloning a Tolerance entity.
-
-* Added properties IsBackward and IsUpsideDown to Attribute and AttributeDefinition objects.
-* The Shape entity Size property now does not allow negative values, rotate it 180 degrees to achieve the same result.
-* The Shape entity WidthFactor property now admits negative numbers.
+* Added two new constructors to the Underlay class that takes also the position and scale.
+* Added properties IsByLayer and IsByBlock to the Linetype class.
 * Added properties IsBackward and IsUpsideDown to Text entity.
 * Added property to Matrix3 to access its [row,column] elements by index.
-* (fixed) Avoid the raise of exceptions for some degenerated cases in the MLine.Explode method.
-* (fixed) A few issues with the MLine.Explode method.
-
-
-[2019/03/06] 
-* Added Explode method to Insert entity. A few entities might not appear as expected when a non-uniform and/or negative scaling is applied, read the TransformBy method documentation of each entity.
-* Added Explode method to MLine entity. It will convert the actual MLine to its Line and Arcs components.
-* Added TransformBy method to EntityObjects, Attributes and AttributeDefinitions classes.
-* Added property IsIdentity to Matrix3. This value will only be true for matrices initialized as the identity. This will allow to avoid unnecessary multiplications during transformations.
-* Added two new constructors to the Underlay class that takes also the position and scale.
+* Added properties IsBackward and IsUpsideDown to Attribute and AttributeDefinition objects.
+* Added Tolerance TextHeigth property controls the height of the tolerance text overridden the default value defined in its style.
+* Improved the way the Ellipse method PolygonalVertexes generates the points in an ellipse arc.
+* Improved the speed of the method IsValidName of the TableObject class. This will improve the overall speed of adding table objects blocks, layers, styles,... to the document; what, also, will improve the DXF loading performance.
+* The InvalidCharacters property of the TableObject class will return a char[] instead of a IReadOnlyList<string>.
 * Polyline entities now can be used to create a HatchBoundaryPath.
 * The Underlay scale is now a Vector2 and its components must be greater than zero, the Z value has no use.
 * The Insert vector scale components cannot be zero.
+* The Shape entity WidthFactor property now admits negative numbers.
+* The Viewport will show the grid by default.
+* Modified the TextStyle class to use a font file or a font family name plus its font style, but not both.
+* The TextStyle method TrueTypeFontFamilyName is now public static in case it is needed, the constructor does not use it anymore.
+* Deleted last NewLine character in the ToString methods of the matrix classes.
+* Deleted the property IsTrueType from the TextStyle class.
+* Deleted the ExtMax and ExtMin properties from the DrawingVariables class, since those values are not calculated. It is still possible to access them as a custom header variable if the loaded DXF contains them. See sample AddHeaderVariable().
+* Deleted a few unnecessary checks when adding an entity to a block. This will improve the overall speed of adding entities to the document; what, also, will improve the DXF loading performance.
+* Deleted the Matrix3 constructor that takes an array as argument. It was actually using the row major convention while the transformation matrices are written as column major.
+* Deleted the layout Viewport. This is the viewport with id 1 that represents the view to the paper space, it is more related to the UI, it has no graphical representation, and it will not be loaded.
+* Updated the StringEnum class to use generics.
+* When a Leader is removed from a document, the annotation, if exists, will also be removed; although AutoCad does not.
+* The Shape entity Size property now does not allow negative values, rotate it 180 degrees to achieve the same result.
+* Renamed Tolerance Height property to ProjectedToleranceZoneValue.
+* Renamed Tolerance ParseRepresentation method to ParseStringRepresentation.
+* Renamed Tolerance TryParseStringRepresentation method to TryParseStringRepresentation.
 * Renamed EntityType.LightWeightPolyline to EntityType.LwPolyline for short and same name as the class.
 * Renamed PolyfaceMeshVertex.Location to PolyfaceMeshVertex.Position as it is in similar cases.
 * Renamed MLineVertex.Location to MLineVertex.Position as it is in similar cases.
 * Renamed MLineStyleFlags.StartSquareEndCap to MLineStyleFlags.StartSquareCap.
 * Renamed MLineStyleFlags.ShowMiters to MLineStyleFlags.DisplayJoints this is the name given in the AutoCad UI and it is a more accurate definitions. This options does not include the miters line at the start and end vertexes only the inner corners.
+* (fixed) Issue when saving MLine direction and miter coordinates.
+* (fixed) Issue when saving Shape position. The official DXF documentation is wrong it says that it is saved as WCS coordinates but it is actually in OCS coordinates.
+* (fixed) When reading a TextStyle if both the font file and the font extended data information the font style was not applied.
+* (fixed) The property DimTxtDirection of the DimensionStyle class was not read properly from the DXF.
+* (fixed) Error when combining open LwPolylines or Polylines with other entities to create a HatchBoundaryPath.
+* (fixed) A few issues when cloning a Tolerance entity.
+* (fixed) The Text Alignment Fit and Aligned should work properly.
+* (fixed) Adding and removing the clipping boundary of a viewport, when it already belongs to a document, will be automatically add and remove, respectively, the entity from the document.
+* (fixed) Adding and removing the annotation of a leader, when it already belongs to a document, will be automatically add and remove, respectively, the entity from the document.
+* (fixed) When cloning a Viewport the frozen layers were not being cloned.
+* (fixed) When writing a DXF the Tolerance code 73 is 0 for both Text and MText annotations.
+* (fixed) Radial and Diametric dimensions not showing the "R" and "Ø" when no prefix is use in the dimension style.
 * (fixed) The MLineStyleElements needs to be ordered from larger to smaller offset values.
 * (fixed) Bug when creating boundary paths for hatches when the normal was not the UnitZ (0,0,1).
 * (fixed) Only a single HatchBoundary.Edge of type Polyline can be used to initialize a hatch boundary, it also must always be closed.
 * (fixed) Error when cloning an associative Hatch with a polyline as boundary path.
 * (fixed) The method DxfDocument.CheckFileVersion will fail if an invalid $ACADVER value is found in the DXf header.
-
-
-[2019/02/01]
-* Added properties IsByLayer and IsByBlock to the Linetype class.
 * (fixed) If while reading a DXF the Layer Lineweight value is invalid it will change it to the Default.
 * (fixed) If while reading a DXF the Layer Color value is invalid it will change it to the Default.
 * (fixed) If while reading a DXF the Layer Linetype value is invalid it will change it to Continuous.
 * (fixed) In the TrueTypeFamily method in TextStyle class, the PrivateFontCollection.AddFontFile might also fail if the font is incompatible. Also delete unnecessary check if the file exists.
+* (fixed) When a new element is added to a MLineStyle that already belongs to a document, it was not registering its linetype.
+* Some other minor additions and fixes that probably forgot.
 
 
 ### [2.2.1 - 2018/10/17]
