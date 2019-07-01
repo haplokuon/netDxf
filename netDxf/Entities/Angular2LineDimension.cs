@@ -308,14 +308,8 @@ namespace netDxf.Entities
                 double cross = Vector2.CrossProduct(this.EndFirstLine - this.StartFirstLine, this.EndSecondLine - this.StartSecondLine);
                 if (cross < 0)
                 {
-                    Vector2 temp1 = this.startFirstLine;
-                    Vector2 temp2 = this.endFirstLine;
-
-                    this.startFirstLine = this.startSecondLine;
-                    this.endFirstLine = this.endSecondLine;
-
-                    this.startSecondLine = temp1;
-                    this.endSecondLine = temp2;
+                    MathHelper.Swap(ref this.startFirstLine, ref this.startSecondLine);
+                    MathHelper.Swap(ref this.endFirstLine, ref this.endSecondLine);
                 }
 
                 Vector2 ref1Start = this.StartFirstLine;

@@ -738,7 +738,7 @@ namespace netDxf.Tables
         /// Gets or sets the vertical position of text in relation to the dimension line. (DIMTAD)
         /// </summary>
         /// <remarks>
-        /// Default: Above
+        /// Default: Centered
         /// </remarks>
         public DimensionStyleTextVerticalPlacement TextVerticalPlacement
         {

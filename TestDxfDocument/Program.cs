@@ -2007,9 +2007,9 @@ namespace TestDxfDocument
             doc.AddEntity(dimY1);
             doc.AddEntity(dim5);
             doc.AddEntity(dim6);
-            doc.Save("test1.dxf");
+            doc.Save("test.dxf");
 
-            doc = DxfDocument.Load("test1.dxf");
+            doc = DxfDocument.Load("test.dxf");
             foreach (Dimension d in doc.Dimensions)
             {
                 d.Update();
@@ -2018,7 +2018,7 @@ namespace TestDxfDocument
             doc.AddEntity((EntityObject) dimY1.Clone());
             doc.AddEntity((EntityObject) dim5.Clone());
             doc.AddEntity((EntityObject) dim6.Clone());
-            doc.Save("test2.dxf");
+            doc.Save("test.dxf");
         }
 
         private static void AlignedDimensionTest()
@@ -2093,7 +2093,7 @@ namespace TestDxfDocument
             dxf.AddEntity(dim2);
             dxf.AddEntity(dim3);
             dxf.AddEntity(dim4);
-            dxf.Save("test1.dxf");
+            dxf.Save("test.dxf");
 
             //dxf = DxfDocument.Load("test1.dxf");
             //foreach (var d in dxf.Dimensions)
@@ -3128,6 +3128,7 @@ namespace TestDxfDocument
         private static void LinearDimension()
         {
             DxfDocument dxf = new DxfDocument(DxfVersion.AutoCad2010);
+
             DimensionStyle myStyle = CreateDimStyle();
 
             Vector3 p1 = new Vector3(0, -5, 0);

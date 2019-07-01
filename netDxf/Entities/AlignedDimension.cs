@@ -217,22 +217,19 @@ namespace netDxf.Entities
         /// <param name="point">Point along the dimension line.</param>
         public void SetDimensionLinePosition(Vector2 point)
         {
-            Vector2 refDir = Vector2.Normalize(this.secondRefPoint - this.firstRefPoint);
+            Vector2 refDir = this.secondRefPoint - this.firstRefPoint;
             Vector2 offsetDir = point - this.firstRefPoint;
 
             double cross = Vector2.CrossProduct(refDir, offsetDir);
             if (cross < 0)
             {
-                Vector2 tmp = this.firstRefPoint;
-                this.firstRefPoint = this.secondRefPoint;
-                this.secondRefPoint = tmp;
+                MathHelper.Swap(ref this.firstRefPoint, ref this.secondRefPoint);
                 refDir *= -1;
             }
+            refDir.Normalize();
 
             Vector2 vec = Vector2.Perpendicular(refDir);
-            double newOffset = MathHelper.PointLineDistance(point, this.firstRefPoint, refDir);
-            this.offset = MathHelper.IsZero(newOffset) ? MathHelper.Epsilon : newOffset;
-
+            this.offset = MathHelper.PointLineDistance(point, this.firstRefPoint, refDir);
             this.defPoint = this.secondRefPoint + this.offset * vec;
 
             if (!this.TextPositionManuallySet)

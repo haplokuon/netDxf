@@ -240,31 +240,33 @@ namespace netDxf.Entities
         /// <param name="point">Point along the dimension line.</param>
         public void SetDimensionLinePosition(Vector2 point)
         {
-            Vector2 ref1 = this.firstRefPoint;
-            Vector2 ref2 = this.secondRefPoint;
-            Vector2 midRef = Vector2.MidPoint(ref1, ref2);
+            Vector2 midRef = Vector2.MidPoint(this.firstRefPoint, this.secondRefPoint);
 
-            Vector2 refDir = Vector2.Normalize(this.secondRefPoint - this.firstRefPoint);
+            Vector2 pointDir = point - this.firstRefPoint;
+
             double dimRotation = this.rotation * MathHelper.DegToRad;
             Vector2 dimDir = new Vector2(Math.Cos(dimRotation), Math.Sin(dimRotation));
             
-            double cross = Vector2.CrossProduct(refDir, point - this.firstRefPoint);
+            double cross = Vector2.CrossProduct(this.secondRefPoint - this.firstRefPoint, pointDir);
             if (cross < 0)
             {
-                Vector2 tmp = this.firstRefPoint;
-                this.firstRefPoint = this.secondRefPoint;
-                this.secondRefPoint = tmp;
-                this.Rotation += 180;
-                dimRotation = this.rotation*MathHelper.DegToRad;
+                MathHelper.Swap(ref this.firstRefPoint, ref this.secondRefPoint);
             }
 
-            double newOffset = MathHelper.PointLineDistance(midRef, point, dimDir);
-            this.offset = MathHelper.IsZero(newOffset) ? MathHelper.Epsilon : newOffset;
+            double crossDim = Vector2.CrossProduct(dimDir, pointDir);
+            if (crossDim < 0)
+            {
+                this.Rotation += 180;
+                dimDir *= -1;
+                dimRotation = this.rotation * MathHelper.DegToRad;
+            }
 
-            Vector2 offsetDir = Vector2.Rotate(Vector2.UnitY, dimRotation);
-            Vector2 midDimLine = midRef + this.offset* offsetDir;
+            this.offset = MathHelper.PointLineDistance(midRef, point, dimDir);
 
-            this.defPoint = midDimLine - this.Measurement * 0.5 * Vector2.Perpendicular(Vector2.Normalize(offsetDir));
+            Vector2 offsetDir = Vector2.Perpendicular(dimDir);
+            Vector2 midDimLine = midRef + this.offset * offsetDir;
+
+            this.defPoint = midDimLine + 0.5 * this.Measurement * dimDir;
 
             if (!this.TextPositionManuallySet)
             {
@@ -348,7 +350,6 @@ namespace netDxf.Entities
             this.SetDimensionLinePosition(this.defPoint);
         }
 
-
         /// <summary>
         /// Calculate the dimension reference points.
         /// </summary>
@@ -400,7 +401,9 @@ namespace netDxf.Entities
 
                 double gap = textGap * scale;
                 if (dimRotation > MathHelper.HalfPI && dimRotation <= MathHelper.ThreeHalfPI)
+                {
                     gap = -gap;
+                }
 
                 this.textRefPoint = midDimLine + gap * vec;
             }

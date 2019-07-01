@@ -540,6 +540,19 @@ namespace netDxf
             return q;
         }
 
+        /// <summary>
+        /// Swaps two variables.
+        /// </summary>
+        /// <typeparam name="T">Variable type.</typeparam>
+        /// <param name="obj1">An object of type T.</param>
+        /// <param name="obj2">An object of type T.</param>
+        public static void Swap<T>(ref T obj1, ref T obj2)
+        {
+            T tmp = obj1;
+            obj1 = obj2;
+            obj2 = tmp;
+        }
+
         #endregion
     }
 }

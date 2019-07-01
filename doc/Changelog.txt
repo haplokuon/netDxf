@@ -1,5 +1,10 @@
 ## Change history
 
+### [2019/07/01]
+* Added Swap method to the MathHelper class.
+* (fixed) Issue with LinearDimension entities related to its rotation, when the were loaded from a DXF file.
+* (fixed) Comment in TextVerticalPlacement property of the DimensionStyle class, the default value is Centered not Above.
+
 
 ### [2.3.0 - 2019/06/23]
 * Added Matrix2 struct.
