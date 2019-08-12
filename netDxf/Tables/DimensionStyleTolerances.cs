@@ -25,7 +25,7 @@ using System;
 namespace netDxf.Tables
 {
     /// <summary>
-    /// Represents the way tolerances are formated in dimension entities
+    /// Represents the way tolerances are formatted in dimension entities
     /// </summary>
     public class DimensionStyleTolerances :
         ICloneable

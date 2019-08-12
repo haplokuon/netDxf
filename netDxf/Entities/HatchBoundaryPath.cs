@@ -78,7 +78,7 @@ namespace netDxf.Entities
             /// <summary>
             /// Clones the actual edge.
             /// </summary>
-            /// <returns>A copy of tye actual edge.</returns>
+            /// <returns>A copy of the actual edge.</returns>
             public abstract object Clone();
         }
 
@@ -102,7 +102,7 @@ namespace netDxf.Entities
             public bool IsClosed;
 
             /// <summary>
-            /// Initializes a new instance of the the <c>HatchBoundaryPath.Polyline</c> class.
+            /// Initializes a new instance of the <c>HatchBoundaryPath.Polyline</c> class.
             /// </summary>
             public Polyline()
                 : base(EdgeType.Polyline)
@@ -111,7 +111,7 @@ namespace netDxf.Entities
             }
 
             /// <summary>
-            /// Initializes a new instance of the the <c>HatchBoundaryPath.Polyline</c> class.
+            /// Initializes a new instance of the <c>HatchBoundaryPath.Polyline</c> class.
             /// </summary>
             /// <param name="entity"><see cref="EntityObject">Entity</see> that represents the edge.</param>
             public Polyline(EntityObject entity)
@@ -148,7 +148,7 @@ namespace netDxf.Entities
             }
 
             /// <summary>
-            /// Initializes a new instance of the the <c>HatchBoundaryPath.Polyline</c> class.
+            /// Initializes a new instance of the <c>HatchBoundaryPath.Polyline</c> class.
             /// </summary>
             /// <param name="entity"><see cref="EntityObject">Entity</see> that represents the edge.</param>
             public static Polyline ConvertFrom(EntityObject entity)
@@ -173,7 +173,7 @@ namespace netDxf.Entities
             /// <summary>
             /// Clones the actual edge.
             /// </summary>
-            /// <returns>A copy of tye actual edge.</returns>
+            /// <returns>A copy of the actual edge.</returns>
             public override object Clone()
             {
                 Polyline copy = new Polyline
@@ -206,7 +206,7 @@ namespace netDxf.Entities
             public Vector2 End;
 
             /// <summary>
-            /// Initializes a new instance of the the <c>HatchBoundaryPath.Line</c> class.
+            /// Initializes a new instance of the <c>HatchBoundaryPath.Line</c> class.
             /// </summary>
             public Line()
                 : base(EdgeType.Line)
@@ -214,7 +214,7 @@ namespace netDxf.Entities
             }
 
             /// <summary>
-            /// Initializes a new instance of the the <c>HatchBoundaryPath.Line</c> class.
+            /// Initializes a new instance of the <c>HatchBoundaryPath.Line</c> class.
             /// </summary>
             /// <param name="entity"><see cref="EntityObject">Entity</see> that represents the edge.</param>
             public Line(EntityObject entity)
@@ -258,7 +258,7 @@ namespace netDxf.Entities
             /// <summary>
             /// Clones the actual edge.
             /// </summary>
-            /// <returns>A copy of tye actual edge.</returns>
+            /// <returns>A copy of the actual edge.</returns>
             public override object Clone()
             {
                 Line copy = new Line
@@ -303,7 +303,7 @@ namespace netDxf.Entities
             public bool IsCounterclockwise;
 
             /// <summary>
-            /// Initializes a new instance of the the <c>HatchBoundaryPath.Arc</c> class.
+            /// Initializes a new instance of the <c>HatchBoundaryPath.Arc</c> class.
             /// </summary>
             public Arc()
                 : base(EdgeType.Arc)
@@ -311,7 +311,7 @@ namespace netDxf.Entities
             }
 
             /// <summary>
-            /// Initializes a new instance of the the <c>HatchBoundaryPath.Arc</c> class.
+            /// Initializes a new instance of the <c>HatchBoundaryPath.Arc</c> class.
             /// </summary>
             /// <param name="entity"><see cref="EntityObject">Entity</see> that represents the edge.</param>
             public Arc(EntityObject entity)
@@ -347,7 +347,7 @@ namespace netDxf.Entities
             }
 
             /// <summary>
-            /// Initializes a new instance of the the <c>HatchBoundaryPath.Arc</c> class.
+            /// Initializes a new instance of the <c>HatchBoundaryPath.Arc</c> class.
             /// </summary>
             /// <param name="entity"><see cref="EntityObject">Entity</see> that represents the edge.</param>
             public static Arc ConvertFrom(EntityObject entity)
@@ -372,7 +372,7 @@ namespace netDxf.Entities
             /// <summary>
             /// Clones the actual edge.
             /// </summary>
-            /// <returns>A copy of tye actual edge.</returns>
+            /// <returns>A copy of the actual edge.</returns>
             public override object Clone()
             {
                 Arc copy = new Arc
@@ -425,7 +425,7 @@ namespace netDxf.Entities
             public bool IsCounterclockwise;
 
             /// <summary>
-            /// Initializes a new instance of the the <c>HatchBoundaryPath.Ellipse</c> class.
+            /// Initializes a new instance of the <c>HatchBoundaryPath.Ellipse</c> class.
             /// </summary>
             public Ellipse()
                 : base(EdgeType.Ellipse)
@@ -433,7 +433,7 @@ namespace netDxf.Entities
             }
 
             /// <summary>
-            /// Initializes a new instance of the the <c>HatchBoundaryPath.Ellipse</c> class.
+            /// Initializes a new instance of the <c>HatchBoundaryPath.Ellipse</c> class.
             /// </summary>
             /// <param name="entity"><see cref="EntityObject">Entity</see> that represents the edge.</param>
             public Ellipse(EntityObject entity)
@@ -469,7 +469,7 @@ namespace netDxf.Entities
             }
 
             /// <summary>
-            /// Initializes a new instance of the the <c>HatchBoundaryPath.Ellipse</c> class.
+            /// Initializes a new instance of the <c>HatchBoundaryPath.Ellipse</c> class.
             /// </summary>
             /// <param name="entity"><see cref="EntityObject">Entity</see> that represents the edge.</param>
             public static Ellipse ConvertFrom(EntityObject entity)
@@ -505,7 +505,7 @@ namespace netDxf.Entities
             /// <summary>
             /// Clones the actual edge.
             /// </summary>
-            /// <returns>A copy of tye actual edge.</returns>
+            /// <returns>A copy of the actual edge.</returns>
             public override object Clone()
             {
                 Ellipse copy = new Ellipse
@@ -557,7 +557,7 @@ namespace netDxf.Entities
             public Vector3[] ControlPoints; // location: (x, y) weight: z
 
             /// <summary>
-            /// Initializes a new instance of the the <c>HatchBoundaryPath.Spline</c> class.
+            /// Initializes a new instance of the <c>HatchBoundaryPath.Spline</c> class.
             /// </summary>
             public Spline()
                 : base(EdgeType.Spline)
@@ -565,7 +565,7 @@ namespace netDxf.Entities
             }
 
             /// <summary>
-            /// Initializes a new instance of the the <c>HatchBoundaryPath.Spline</c> class.
+            /// Initializes a new instance of the <c>HatchBoundaryPath.Spline</c> class.
             /// </summary>
             /// <param name="entity"><see cref="EntityObject">Entity</see> that represents the edge.</param>
             public Spline(EntityObject entity)
@@ -600,7 +600,7 @@ namespace netDxf.Entities
             }
 
             /// <summary>
-            /// Initializes a new instance of the the <c>HatchBoundaryPath.Spline</c> class.
+            /// Initializes a new instance of the <c>HatchBoundaryPath.Spline</c> class.
             /// </summary>
             /// <param name="entity"><see cref="EntityObject">Entity</see> that represents the edge.</param>
             public static Spline ConvertFrom(EntityObject entity)
@@ -625,7 +625,7 @@ namespace netDxf.Entities
             /// <summary>
             /// Clones the actual edge.
             /// </summary>
-            /// <returns>A copy of tye actual edge.</returns>
+            /// <returns>A copy of the actual edge.</returns>
             public override object Clone()
             {
                 Spline copy = new Spline

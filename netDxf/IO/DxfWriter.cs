@@ -1210,7 +1210,7 @@ namespace netDxf.IO
             this.chunk.Write(45, style.DimRoundoff);
             this.chunk.Write(46, style.DimLineExtend);
             this.chunk.Write(47, style.Tolerances.UpperLimit);
-            // code 48 is written later
+            this.chunk.Write(48, style.Tolerances.LowerLimit);
             this.chunk.Write(49, style.ExtLineFixedLength);
 
             if (style.TextFillColor != null)
@@ -1234,12 +1234,10 @@ namespace netDxf.IO
                     this.chunk.Write(72, (short) 0);
                     break;
                 case DimensionStyleTolerancesDisplayMethod.Deviation:
-                    this.chunk.Write(48, MathHelper.IsZero(style.Tolerances.LowerLimit) ? MathHelper.Epsilon : style.Tolerances.LowerLimit);
                     this.chunk.Write(71, (short) 1);
                     this.chunk.Write(72, (short) 0);
                     break;
                 case DimensionStyleTolerancesDisplayMethod.Limits:
-                    this.chunk.Write(48, style.Tolerances.LowerLimit);
                     this.chunk.Write(71, (short) 0);
                     this.chunk.Write(72, (short) 1);
                     break;
@@ -3336,10 +3334,6 @@ namespace netDxf.IO
             bool altSuppressZeroFeet = true;
             bool altSuppressZeroInches = true;
 
-            bool writeDIMTOL = false;
-            double dimtm = 0;
-            DimensionStyleTolerancesDisplayMethod dimtol = DimensionStyleTolerancesDisplayMethod.None;
-
             bool writeDIMTZIN = false;
             bool tolSuppressLinearLeadingZeros = false;
             bool tolSuppressLinearTrailingZeros = false;
@@ -3651,14 +3645,32 @@ namespace netDxf.IO
                         altSuppressZeroInches = (bool) styleOverride.Value;
                         break;
                     case DimensionStyleOverrideType.TolerancesDisplayMethod:
-                        dimtol = (DimensionStyleTolerancesDisplayMethod) styleOverride.Value;
+                        short dimtol = 0;
+                        short dimlin = 0;
+                        switch ((DimensionStyleTolerancesDisplayMethod) styleOverride.Value)
+                        {
+                            case DimensionStyleTolerancesDisplayMethod.None:
+                                break;
+                            case DimensionStyleTolerancesDisplayMethod.Symmetrical:
+                            case DimensionStyleTolerancesDisplayMethod.Deviation:
+                                dimtol = 1;
+                                break;
+                            case DimensionStyleTolerancesDisplayMethod.Limits:
+                                dimlin = 1;
+                                break;
+                        }
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 71));
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, dimtol));
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 72));
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, dimlin));
                         break;
-                    case DimensionStyleOverrideType.TolerancesUpperLimit:
+                    case DimensionStyleOverrideType.TolerancesLowerLimit:
                         xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 47));
                         xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Real, (double) styleOverride.Value));
                         break;
-                    case DimensionStyleOverrideType.TolerancesLowerLimit:
-                        dimtm = (double) styleOverride.Value;
+                    case DimensionStyleOverrideType.TolerancesUpperLimit:
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 48));
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Real, (double) styleOverride.Value));
                         break;
                     case DimensionStyleOverrideType.TolerancesVerticalPlacement:
                         xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 283));
@@ -3728,8 +3740,7 @@ namespace netDxf.IO
             {
                 xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 78));
                 xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16,
-                    GetSupressZeroesValue(suppressLinearLeadingZeros, suppressLinearTrailingZeros, suppressZeroFeet,
-                        suppressZeroInches)));
+                    GetSupressZeroesValue(suppressLinearLeadingZeros, suppressLinearTrailingZeros, suppressZeroFeet, suppressZeroInches)));
             }
 
             if (writeDIMAZIN)
@@ -3787,42 +3798,6 @@ namespace netDxf.IO
                 xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16,
                     GetSupressZeroesValue(altSuppressLinearLeadingZeros, altSuppressLinearTrailingZeros,
                         altSuppressZeroFeet, altSuppressZeroInches)));
-            }
-
-            // tolerances
-            if (writeDIMTOL)
-            { 
-                switch (dimtol)
-                {
-                    case DimensionStyleTolerancesDisplayMethod.None:
-                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 71));
-                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (double) 0));
-                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 72));
-                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (double) 0));
-                        break;
-                    case DimensionStyleTolerancesDisplayMethod.Symmetrical:
-                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 71));
-                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (double) 1));
-                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 72));
-                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (double) 0));
-                        break;
-                    case DimensionStyleTolerancesDisplayMethod.Deviation:
-                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 48));
-                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Real, MathHelper.IsZero(dimtm) ? MathHelper.Epsilon : dimtm));
-                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 71));
-                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (double) 1));
-                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 72));
-                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (double) 0));
-                        break;
-                    case DimensionStyleTolerancesDisplayMethod.Limits:
-                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 48));
-                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Real, dimtm));
-                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 71));
-                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (double) 0));
-                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 72));
-                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (double) 1));
-                        break;
-                }
             }
 
             if (writeDIMTZIN)

@@ -1,5 +1,8 @@
 ## Change history
 
+### [2019/08/12]
+*(fixed) Fixed a few issues with the tolerances display method in the dimension style and its equivalent override. 
+
 ### [2019/07/01]
 * Added Swap method to the MathHelper class.
 * (fixed) Issue with LinearDimension entities related to its rotation, when the were loaded from a DXF file.

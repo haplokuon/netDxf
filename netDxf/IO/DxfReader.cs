@@ -1952,7 +1952,9 @@ namespace netDxf.IO
             if (dimtol == 0 && dimlim == 0 )
                 style.Tolerances.DisplayMethod =  DimensionStyleTolerancesDisplayMethod.None;
             if (dimtol == 1 && dimlim == 0)
-                style.Tolerances.DisplayMethod = Math.Abs(style.Tolerances.LowerLimit) > 0 ? DimensionStyleTolerancesDisplayMethod.Deviation : DimensionStyleTolerancesDisplayMethod.Symmetrical;
+                style.Tolerances.DisplayMethod =
+                    MathHelper.IsEqual(style.Tolerances.UpperLimit, style.Tolerances.LowerLimit) ?
+                        DimensionStyleTolerancesDisplayMethod.Symmetrical : DimensionStyleTolerancesDisplayMethod.Deviation;
             if (dimtol == 0 && dimlim == 1)
                 style.Tolerances.DisplayMethod = DimensionStyleTolerancesDisplayMethod.Limits;
 
@@ -5084,17 +5086,18 @@ namespace netDxf.IO
             
             bool[] suppress;
 
-            short dimtfill = 0;
+            short dimtfill = -1;
             AciColor dimtfillclrt = null;
             short dimzin = -1;
             short dimazin = -1;
 
-            short dimaltu = 0;
+            short dimaltu = -1;
             short dimaltz = -1;
 
             short dimtol = -1;
             short dimlim = -1;
-            double dimtm = 0;
+            double dimtm = 0.0;
+            double dimtp = 0.0;
             short dimtzin = -1;
             short dimalttz = -1;
 
@@ -5196,7 +5199,8 @@ namespace netDxf.IO
                                 case 47: // DIMTP
                                     if (data.Code != XDataCode.Real)
                                         return overrides; // premature end
-                                    overrides.Add(new DimensionStyleOverride(DimensionStyleOverrideType.TolerancesUpperLimit, (double) data.Value));
+                                    dimtp = (double) data.Value;
+                                    overrides.Add(new DimensionStyleOverride(DimensionStyleOverrideType.TolerancesUpperLimit, dimtp));
                                     break;
                                 case 48: // DIMTM
                                     if (data.Code != XDataCode.Real)
@@ -5522,11 +5526,11 @@ namespace netDxf.IO
                         }
                     }
                 }
-
             }
 
             // dimension text fill color
-            overrides.Add(new DimensionStyleOverride(DimensionStyleOverrideType.TextFillColor, dimtfill == 2 ? dimtfillclrt : null));
+            if (dimtfill >= 0)
+                overrides.Add(new DimensionStyleOverride(DimensionStyleOverrideType.TextFillColor, dimtfill == 2 ? dimtfillclrt : null));
 
             // dim arrows
             if (dimsah)
@@ -5539,7 +5543,7 @@ namespace netDxf.IO
                 if (!string.IsNullOrEmpty(handleDimblk2))
                 {
                     BlockRecord dimblk2 = this.doc.GetObjectByHandle(handleDimblk2) as BlockRecord;
-                overrides.Add(new DimensionStyleOverride(DimensionStyleOverrideType.DimArrow2, dimblk2 == null ? null : this.doc.Blocks[dimblk2.Name]));
+                    overrides.Add(new DimensionStyleOverride(DimensionStyleOverrideType.DimArrow2, dimblk2 == null ? null : this.doc.Blocks[dimblk2.Name]));
                 }
             }
             else
@@ -5614,10 +5618,6 @@ namespace netDxf.IO
                     overrides.Add(new DimensionStyleOverride(DimensionStyleOverrideType.AltUnitsLengthUnits, LinearUnitType.Fractional));
                     overrides.Add(new DimensionStyleOverride(DimensionStyleOverrideType.AltUnitsStackedUnits, false));
                     break;
-                default:
-                    overrides.Add(new DimensionStyleOverride(DimensionStyleOverrideType.AltUnitsLengthUnits, LinearUnitType.Scientific));
-                    overrides.Add(new DimensionStyleOverride(DimensionStyleOverrideType.AltUnitsStackedUnits, false));
-                    break;
             }
 
             // suppress leading and/or trailing zeros
@@ -5657,9 +5657,9 @@ namespace netDxf.IO
             else if (dimtol == 1 && dimlim == 0)
             {
                 overrides.Add(new DimensionStyleOverride(DimensionStyleOverrideType.TolerancesDisplayMethod,
-                    Math.Abs(dimtm) > 0
-                        ? DimensionStyleTolerancesDisplayMethod.Deviation
-                        : DimensionStyleTolerancesDisplayMethod.Symmetrical));
+                    MathHelper.IsEqual(dimtm, dimtp)
+                        ? DimensionStyleTolerancesDisplayMethod.Symmetrical
+                        : DimensionStyleTolerancesDisplayMethod.Deviation));
             }
             else if (dimtol == 0 && dimlim == 1)
             {
