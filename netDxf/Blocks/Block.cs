@@ -66,7 +66,9 @@ namespace netDxf.Blocks
         {
             EntityAddedEventHandler ae = this.EntityAdded;
             if (ae != null)
+            {
                 ae(this, new BlockEntityChangeEventArgs(item));
+            }
         }
 
         public delegate void EntityRemovedEventHandler(Block sender, BlockEntityChangeEventArgs e);
@@ -77,7 +79,9 @@ namespace netDxf.Blocks
         {
             EntityRemovedEventHandler ae = this.EntityRemoved;
             if (ae != null)
+            {
                 ae(this, new BlockEntityChangeEventArgs(item));
+            }
         }
 
         public delegate void AttributeDefinitionAddedEventHandler(Block sender, BlockAttributeDefinitionChangeEventArgs e);
@@ -88,7 +92,9 @@ namespace netDxf.Blocks
         {
             AttributeDefinitionAddedEventHandler ae = this.AttributeDefinitionAdded;
             if (ae != null)
+            {
                 ae(this, new BlockAttributeDefinitionChangeEventArgs(item));
+            }
         }
 
         public delegate void AttributeDefinitionRemovedEventHandler(Block sender, BlockAttributeDefinitionChangeEventArgs e);
@@ -99,7 +105,9 @@ namespace netDxf.Blocks
         {
             AttributeDefinitionRemovedEventHandler ae = this.AttributeDefinitionRemoved;
             if (ae != null)
+            {
                 ae(this, new BlockAttributeDefinitionChangeEventArgs(item));
+            }
         }
 
         #endregion
@@ -172,12 +180,16 @@ namespace netDxf.Blocks
             : this(name, null, null, true)
         {
             if (string.IsNullOrEmpty(xrefFile))
+            {
                 throw new ArgumentNullException(nameof(xrefFile));
+            }
 
             this.xrefFile = xrefFile;
             this.flags = BlockTypeFlags.XRef | BlockTypeFlags.ResolvedExternalReference;
             if (overlay)
+            {
                 this.flags |= BlockTypeFlags.XRefOverlay;
+            }
         }
 
         /// <summary>
@@ -231,14 +243,20 @@ namespace netDxf.Blocks
             this.entities.AddItem += this.Entities_AddItem;
             this.entities.BeforeRemoveItem += this.Entities_BeforeRemoveItem;
             this.entities.RemoveItem += this.Entities_RemoveItem;
-            if (entities != null) this.entities.AddRange(entities);
+            if (entities != null)
+            {
+                this.entities.AddRange(entities);
+            }
 
             this.attributes = new AttributeDefinitionDictionary();
             this.attributes.BeforeAddItem += this.AttributeDefinitions_BeforeAddItem;
             this.attributes.AddItem += this.AttributeDefinitions_ItemAdd;
             this.attributes.BeforeRemoveItem += this.AttributeDefinitions_BeforeRemoveItem;
             this.attributes.RemoveItem += this.AttributeDefinitions_RemoveItem;
-            if (attributes != null) this.attributes.AddRange(attributes);
+            if (attributes != null)
+            {
+                this.attributes.AddRange(attributes);
+            }
         }
 
         #endregion
@@ -255,7 +273,9 @@ namespace netDxf.Blocks
             set
             {
                 if (this.forInternalUse)
+                {
                     throw new ArgumentException("Blocks for internal use cannot be renamed.", nameof(value));
+                }
                 base.Name = value;
                 this.Record.Name = value;
             }
@@ -289,7 +309,9 @@ namespace netDxf.Blocks
             set
             {
                 if (value == null)
+                {
                     throw new ArgumentNullException(nameof(value));
+                }
                 this.layer = this.OnLayerChangedEvent(this.layer, value);
             }
         }
@@ -352,13 +374,13 @@ namespace netDxf.Blocks
             get { return this.flags.HasFlag(BlockTypeFlags.XRef); }
         }
 
-        ///// <summary>
-        ///// All blocks that starts with "*" are for internal use only.
-        ///// </summary>
-        //public bool IsForInternalUseOnly
-        //{
-        //    get { return this.forInternalUse; }
-        //}
+        /// <summary>
+        /// All blocks that starts with "*" are for internal use only.
+        /// </summary>
+        public bool IsForInternalUseOnly
+        {
+            get { return this.Name.StartsWith("*"); }
+        }
 
         #endregion
 
@@ -386,54 +408,42 @@ namespace netDxf.Blocks
         public static Block Create(DxfDocument doc, string name)
         {
             if (doc == null)
+            {
                 throw new ArgumentNullException(nameof(doc));
+            }
 
             Block block = new Block(name) {Origin = doc.DrawingVariables.InsBase};
             block.Record.Units = doc.DrawingVariables.InsUnits;
 
-            foreach (EntityObject entity in doc.Layouts[Layout.ModelSpaceName].AssociatedBlock.Entities)
+            // When a Block is created form a DxfDocument or DXF file, any Hatch entity that it may contain will have its associative property set to false.
+            // This will avoid problems when the same entity its associated to multiple hatches,
+            // or when any of any of its paths is defined by the intersection of several entities.
+            foreach (Hatch hatch in doc.Hatches)
             {
-                // entities with reactors will be handle by the entity that controls it
-                // and will not be added to the block automatically
-                if (entity.Reactors.Count > 0)
-                {
-                    // only entities that belong only to groups will be added
-                    // blocks cannot contain groups
-                    bool add = false;
-                    foreach (DxfObject reactor in entity.Reactors)
-                    {
-                        Group group = reactor as Group;
-                        if (group != null)
-                        {
-                            add = true;
-                        }
-                        else
-                        {
-                            add = false; // at least one reactor is not a group, skip the entity
-                            break;
-                        }
-                    }
-                    if(!add) continue;
-                }
-
-                EntityObject clone = (EntityObject) entity.Clone();
-                block.Entities.Add(clone);
+                hatch.UnLinkBoundary();
             }
 
+            // copy the entities of the document,
+            // only entities in the ModelSpace will be part of a block
+            foreach (EntityObject entity in doc.Layouts[Layout.ModelSpaceName].AssociatedBlock.Entities)
+            {
+                block.Entities.Add((EntityObject) entity.Clone());
+            }
+
+            // copy the attribute definitions to the new block
             foreach (AttributeDefinition attdef in doc.Layouts[Layout.ModelSpaceName].AssociatedBlock.AttributeDefinitions.Values)
             {
-                AttributeDefinition clone = (AttributeDefinition) attdef.Clone();
-                block.AttributeDefinitions.Add(clone);
+                block.AttributeDefinitions.Add((AttributeDefinition) attdef.Clone());
             }
 
             return block;
         }
 
         /// <summary>
-        /// Creates a block from an external dxf file.
+        /// Creates a block from an external DXF file.
         /// </summary>
-        /// <param name="file">Dxf file name.</param>
-        /// <returns>The block build from the dxf file content. It will return null if the file has not been able to load.</returns>
+        /// <param name="file">DXF file name.</param>
+        /// <returns>The block build from the DXF file content. It will return null if the file has not been able to load.</returns>
         /// <remarks>
         /// The name of the block will be the file name without extension, and
         /// only the entities contained in ModelSpace will make part of the block.
@@ -444,11 +454,11 @@ namespace netDxf.Blocks
         }
 
         /// <summary>
-        /// Creates a block from an external dxf file.
+        /// Creates a block from an external DXF file.
         /// </summary>
-        /// <param name="file">Dxf file name.</param>
+        /// <param name="file">DXF file name.</param>
         /// <param name="supportFolders">List of the document support folders.</param>
-        /// <returns>The block build from the dxf file content. It will return null if the file has not been able to load.</returns>
+        /// <returns>The block build from the DXF file content. It will return null if the file has not been able to load.</returns>
         /// <remarks>
         /// The name of the block will be the file name without extension, and
         /// only the entities contained in ModelSpace will make part of the block.
@@ -459,11 +469,11 @@ namespace netDxf.Blocks
         }
 
         /// <summary>
-        /// Creates a block from an external dxf file.
+        /// Creates a block from an external DXF file.
         /// </summary>
-        /// <param name="file">Dxf file name.</param>
+        /// <param name="file">DXF file name.</param>
         /// <param name="name">Name of the new block.</param>
-        /// <returns>The block build from the dxf file content. It will return null if the file has not been able to load.</returns>
+        /// <returns>The block build from the DXF file content. It will return null if the file has not been able to load.</returns>
         /// <remarks>Only the entities contained in ModelSpace will make part of the block.</remarks>
         public static Block Load(string file, string name)
         {
@@ -471,12 +481,12 @@ namespace netDxf.Blocks
         }
 
         /// <summary>
-        /// Creates a block from an external dxf file.
+        /// Creates a block from an external DXF file.
         /// </summary>
-        /// <param name="file">Dxf file name.</param>
+        /// <param name="file">DXF file name.</param>
         /// <param name="name">Name of the new block.</param>
         /// <param name="supportFolders">List of the document support folders.</param>
-        /// <returns>The block build from the dxf file content. It will return null if the file has not been able to load.</returns>
+        /// <returns>The block build from the DXF file content. It will return null if the file has not been able to load.</returns>
         /// <remarks>Only the entities contained in ModelSpace will make part of the block.</remarks>
         public static Block Load(string file, string name, IEnumerable<string> supportFolders)
         {
@@ -499,10 +509,10 @@ namespace netDxf.Blocks
         }
 
         /// <summary>
-        /// Saves a block to a text dxf file.
+        /// Saves a block to a text DXF file.
         /// </summary>
-        /// <param name="file">Dxf file name.</param>
-        /// <param name="version">Version of the dxf database version.</param>
+        /// <param name="file">DXF file name.</param>
+        /// <param name="version">Version of the DXF database version.</param>
         /// <returns>Return true if the file has been successfully save, false otherwise.</returns>
         public bool Save(string file, DxfVersion version)
         {
@@ -510,10 +520,10 @@ namespace netDxf.Blocks
         }
 
         /// <summary>
-        /// Saves a block to a dxf file.
+        /// Saves a block to a DXF file.
         /// </summary>
-        /// <param name="file">Dxf file name.</param>
-        /// <param name="version">Version of the dxf database version.</param>
+        /// <param name="file">DXF file name.</param>
+        /// <param name="version">Version of the DXF database version.</param>
         /// <param name="isBinary">Defines if the file will be saved as binary.</param>
         /// <returns>Return true if the file has been successfully save, false otherwise.</returns>
         public bool Save(string file, DxfVersion version, bool isBinary)
@@ -529,8 +539,9 @@ namespace netDxf.Blocks
             }
 
             foreach (EntityObject entity in this.entities)
+            {
                 dwg.Layouts[Layout.ModelSpaceName].AssociatedBlock.Entities.Add((EntityObject) entity.Clone());
-
+            }
 
             return dwg.Save(file, isBinary);
         }
@@ -557,7 +568,9 @@ namespace netDxf.Blocks
         private static TableObject Clone(Block block, string newName, bool checkName)
         {
             if (block.Record.Layout != null && !IsValidName(newName))
+            {
                 throw new ArgumentException("*Model_Space and *Paper_Space# blocks can only be cloned with a new valid name.");
+            }
 
             Block copy = new Block(newName, null, null, checkName)
             {
@@ -569,19 +582,29 @@ namespace netDxf.Blocks
 
             // remove anonymous flag for renamed anonymous blocks
             if (checkName)
+            {
                 copy.Flags &= ~BlockTypeFlags.AnonymousBlock;
+            }
 
             foreach (EntityObject e in block.entities)
+            {
                 copy.entities.Add((EntityObject)e.Clone());
+            }
 
             foreach (AttributeDefinition a in block.attributes.Values)
+            {
                 copy.attributes.Add((AttributeDefinition)a.Clone());
+            }
 
             foreach (XData data in block.XData.Values)
+            {
                 copy.XData.Add((XData)data.Clone());
+            }
 
             foreach (XData data in block.Record.XData.Values)
+            {
                 copy.Record.XData.Add((XData)data.Clone());
+            }
 
             return copy;
         }
@@ -622,6 +645,7 @@ namespace netDxf.Blocks
             {
                 entityNumber = attdef.AsignHandle(entityNumber);
             }
+
             return base.AsignHandle(entityNumber);
         }
 
@@ -633,13 +657,21 @@ namespace netDxf.Blocks
         {
             // null items, entities already owned by another Block, attribute definitions and attributes are not allowed in the entities list.
             if (e.Item == null)
+            {
                 e.Cancel = true;
+            }
             else if (this.Flags.HasFlag(BlockTypeFlags.ExternallyDependent))
+            {
                 e.Cancel = true;
+            }
             else if (e.Item.Owner != null)
+            {
                 e.Cancel = true;
+            }
             else
+            {
                 e.Cancel = false;
+            }
         }
 
         private void Entities_AddItem(EntityCollection sender, EntityCollectionEventArgs e)
@@ -658,14 +690,18 @@ namespace netDxf.Blocks
                 foreach (HatchBoundaryPath path in hatch.BoundaryPaths)
                 {
                     foreach (EntityObject entity in path.Entities)
+                    {
                         this.entities.Add(entity);
+                    }
                 }
             }
             else if (e.Item.Type == EntityType.Viewport)
             {
                 Viewport viewport = (Viewport) e.Item;
                 if (viewport.ClippingBoundary != null)
+                {
                     this.entities.Add(viewport.ClippingBoundary);
+                }
             }
             this.OnEntityAddedEvent(e.Item);
             e.Item.Owner = this;
@@ -673,11 +709,15 @@ namespace netDxf.Blocks
 
         private void Entities_BeforeRemoveItem(EntityCollection sender, EntityCollectionEventArgs e)
         {
+            // only items owned by the actual block can be removed
             if (e.Item.Reactors.Count > 0)
+            {
                 e.Cancel = true;
+            }
             else
-                // only items owned by the actual block can be removed
+            {
                 e.Cancel = !ReferenceEquals(e.Item.Owner, this);
+            }
         }
 
         private void Entities_RemoveItem(EntityCollection sender, EntityCollectionEventArgs e)
@@ -694,17 +734,29 @@ namespace netDxf.Blocks
         {
             // attributes with the same tag, and attribute definitions already owned by another Block are not allowed in the attributes list.
             if (e.Item == null)
+            {
                 e.Cancel = true;
+            }
             else if (this.Flags.HasFlag(BlockTypeFlags.ExternallyDependent))
+            {
                 e.Cancel = true;
-            else if(this.Name.StartsWith(DefaultPaperSpaceName)) // paper space blocks do not contain attribute definitions
+            }
+            else if (this.Name.StartsWith(DefaultPaperSpaceName)) // paper space blocks do not contain attribute definitions
+            {
                 e.Cancel = true;
+            }
             else if (this.attributes.ContainsTag(e.Item.Tag))
+            {
                 e.Cancel = true;
+            }
             else if (e.Item.Owner != null)
+            {
                 e.Cancel = true;
+            }
             else
+            {
                 e.Cancel = false;
+            }
         }
 
         private void AttributeDefinitions_ItemAdd(AttributeDefinitionDictionary sender, AttributeDefinitionDictionaryEventArgs e)
@@ -726,7 +778,9 @@ namespace netDxf.Blocks
             this.OnAttributeDefinitionRemovedEvent(e.Item);
             e.Item.Owner = null;
             if (this.attributes.Count == 0)
+            {
                 this.flags &= ~BlockTypeFlags.NonConstantAttributeDefinitions;
+            }
         }
 
         #endregion

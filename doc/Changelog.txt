@@ -1,7 +1,13 @@
 ## Change history
 
+### [2019/08/16]
+* (fixed) When a Block is created form a DxfDocument or DXF file, any Hatch entity that it may contain will have its associative property set to false.
+          This will avoid problems when the same entity its associated to multiple hatches, or when any of any of its paths is defined by the intersection of several entities.
+* (fixed) When cloning (Clone) a Hatch entity its associative property will be set to false, to avoid problems when the same entity its associated to multiple hatches.
+* (fixed) When transforming (TransformBy) a Hatch entity its associative property will be set to false, to avoid problems when the same entity its associated to multiple hatches.
+
 ### [2019/08/12]
-*(fixed) Fixed a few issues with the tolerances display method in the dimension style and its equivalent override. 
+* (fixed) Fixed a few issues with the tolerances display method in the dimension style and its equivalent override. 
 
 ### [2019/07/01]
 * Added Swap method to the MathHelper class.

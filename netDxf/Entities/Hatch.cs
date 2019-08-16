@@ -43,7 +43,9 @@ namespace netDxf.Entities
         {
             HatchBoundaryPathAddedEventHandler ae = this.HatchBoundaryPathAdded;
             if (ae != null)
+            {
                 ae(this, new ObservableCollectionEventArgs<HatchBoundaryPath>(item));
+            }
         }
 
         public delegate void HatchBoundaryPathRemovedEventHandler(Hatch sender, ObservableCollectionEventArgs<HatchBoundaryPath> e);
@@ -54,7 +56,9 @@ namespace netDxf.Entities
         {
             HatchBoundaryPathRemovedEventHandler ae = this.HatchBoundaryPathRemoved;
             if (ae != null)
+            {
                 ae(this, new ObservableCollectionEventArgs<HatchBoundaryPath>(item));
+            }
         }
 
         #endregion
@@ -86,7 +90,9 @@ namespace netDxf.Entities
             : base(EntityType.Hatch, DxfObjectCode.Hatch)
         {
             if (pattern == null)
+            {
                 throw new ArgumentNullException(nameof(pattern));
+            }
             this.pattern = pattern;
             this.boundaryPaths = new ObservableCollection<HatchBoundaryPath>();
             this.boundaryPaths.BeforeAddItem += this.BoundaryPaths_BeforeAddItem;
@@ -111,11 +117,15 @@ namespace netDxf.Entities
             : base(EntityType.Hatch, DxfObjectCode.Hatch)
         {
             if (pattern == null)
+            {
                 throw new ArgumentNullException(nameof(pattern));
+            }
             this.pattern = pattern;
 
             if (paths == null)
+            {
                 throw new ArgumentNullException(nameof(paths));
+            }
             this.boundaryPaths = new ObservableCollection<HatchBoundaryPath>();
             this.boundaryPaths.BeforeAddItem += this.BoundaryPaths_BeforeAddItem;
             this.boundaryPaths.AddItem += this.BoundaryPaths_AddItem;
@@ -126,7 +136,9 @@ namespace netDxf.Entities
             foreach (HatchBoundaryPath path in paths)
             {
                 if (!associative)
+                {
                     path.ClearContour();
+                }
                 this.boundaryPaths.Add(path);
             }
         }
@@ -144,7 +156,9 @@ namespace netDxf.Entities
             set
             {
                 if (value == null)
+                {
                     throw new ArgumentNullException(nameof(value));
+                }
                 this.pattern = value;
             }
         }
@@ -216,7 +230,9 @@ namespace netDxf.Entities
         public List<EntityObject> CreateBoundary(bool linkBoundary)
         {
             if (this.associative)
+            {
                 this.UnLinkBoundary();
+            }
 
             this.associative = linkBoundary;
             List<EntityObject> boundary = new List<EntityObject>();
@@ -267,30 +283,30 @@ namespace netDxf.Entities
 
         private static EntityObject ProcessArc(Arc arc, Matrix3 trans, Vector3 pos)
         {
-            arc.Center = trans*arc.Center + pos;
-            arc.Normal = trans*arc.Normal;
+            arc.Center = trans * arc.Center + pos;
+            arc.Normal = trans * arc.Normal;
             return arc;
         }
 
         private static EntityObject ProcessCircle(Circle circle, Matrix3 trans, Vector3 pos)
         {
-            circle.Center = trans*circle.Center + pos;
-            circle.Normal = trans*circle.Normal;
+            circle.Center = trans * circle.Center + pos;
+            circle.Normal = trans * circle.Normal;
             return circle;
         }
 
         private static Ellipse ProcessEllipse(Ellipse ellipse, Matrix3 trans, Vector3 pos)
         {
-            ellipse.Center = trans*ellipse.Center + pos;
-            ellipse.Normal = trans*ellipse.Normal;
+            ellipse.Center = trans * ellipse.Center + pos;
+            ellipse.Normal = trans * ellipse.Normal;
             return ellipse;
         }
 
         private static Line ProcessLine(Line line, Matrix3 trans, Vector3 pos)
         {
-            line.StartPoint = trans*line.StartPoint + pos;
-            line.EndPoint = trans*line.EndPoint + pos;
-            line.Normal = trans*line.Normal;
+            line.StartPoint = trans * line.StartPoint + pos;
+            line.EndPoint = trans * line.EndPoint + pos;
+            line.Normal = trans * line.Normal;
             return line;
         }
 
@@ -304,15 +320,96 @@ namespace netDxf.Entities
         private static Spline ProcessSpline(Spline spline, Matrix3 trans, Vector3 pos)
         {
             foreach (SplineVertex vertex in spline.ControlPoints)
-                vertex.Position = trans*vertex.Position + pos;
-
-            spline.Normal = trans*spline.Normal;
+            {
+                vertex.Position = trans * vertex.Position + pos;
+            }
+            spline.Normal = trans * spline.Normal;
             return spline;
         }
 
         #endregion
 
         #region overrides
+
+        // TODO: apply the transformation directly to edges
+        public void TransformBy2(Matrix3 transformation, Vector3 translation)
+        {
+            if (this.associative)
+            {
+                this.UnLinkBoundary();
+            }
+
+            Vector3 newNormal = transformation * this.Normal;
+            if (Vector3.Equals(Vector3.Zero, newNormal))
+            {
+                newNormal = this.Normal;
+            }
+
+            Matrix3 transOW = MathHelper.ArbitraryAxis(this.Normal);
+            Matrix3 transWO = MathHelper.ArbitraryAxis(newNormal).Transpose();
+
+            Vector3 position = transOW * new Vector3(0.0, 0.0, this.Elevation);
+
+            foreach (HatchBoundaryPath path in this.BoundaryPaths)
+            {
+                foreach (HatchBoundaryPath.Edge edge in path.Edges)
+                {
+                    switch (edge.Type)
+                    {
+                        case HatchBoundaryPath.EdgeType.Arc:
+                            break;
+
+                        case HatchBoundaryPath.EdgeType.Ellipse:
+                            break;
+
+                        case HatchBoundaryPath.EdgeType.Line:
+                            HatchBoundaryPath.Line line = (HatchBoundaryPath.Line)edge;
+                            Vector3 start = new Vector3(line.Start.X, line.Start.Y, 0.0);
+                            Vector3 end = new Vector3(line.End.X, line.End.Y, 0.0);
+
+                            // to world coordinates
+                            start = transOW * start + position;
+                            end = transOW * end + position;
+
+                            // transformation
+                            start = transformation * start + translation;
+                            end = transformation * end + translation;
+
+                            Vector3 point;
+                            point = transWO * start;
+                            line.Start = new Vector2(point.X, point.Y);
+                            point = transWO * end;
+                            line.End = new Vector2(point.X, point.Y);
+                            break;
+
+                        case HatchBoundaryPath.EdgeType.Polyline:
+                            break;
+
+                        case HatchBoundaryPath.EdgeType.Spline:
+                            break;
+                    }
+                }
+            }
+
+            position = transformation * position + translation;
+            position = transWO * position;
+
+            Vector2 refAxis = Vector2.Rotate(Vector2.UnitX, this.Pattern.Angle * MathHelper.DegToRad);
+            refAxis = this.Pattern.Scale * refAxis;
+            Vector3 v = transOW * new Vector3(refAxis.X, refAxis.Y, 0.0);
+            v = transformation * v;
+            v = transWO * v;
+            Vector2 axis = new Vector2(v.X, v.Y);
+            double newAngle = Vector2.Angle(axis) * MathHelper.RadToDeg;
+
+            double newScale = axis.Modulus();
+            newScale = MathHelper.IsZero(newScale) ? MathHelper.Epsilon : newScale;
+
+            this.Pattern.Scale = newScale;
+            this.Pattern.Angle = newAngle;
+            this.Elevation = position.Z;
+            this.Normal = newNormal;
+        }
 
         /// <summary>
         /// Moves, scales, and/or rotates the current entity given a 3x3 transformation matrix and a translation vector.
@@ -322,11 +419,18 @@ namespace netDxf.Entities
         /// <remarks>Matrix3 adopts the convention of using column vectors to represent a transformation matrix.</remarks>
         public override void TransformBy(Matrix3 transformation, Vector3 translation)
         {
+            if (this.associative)
+            {
+                this.UnLinkBoundary();
+            }
+
             Vector3 newNormal = transformation * this.Normal;
             if (Vector3.Equals(Vector3.Zero, newNormal)) newNormal = this.Normal;
 
             Matrix3 transOW = MathHelper.ArbitraryAxis(this.Normal);
             Matrix3 transWO = MathHelper.ArbitraryAxis(newNormal).Transpose();
+
+            Vector3 position = transOW * new Vector3(0.0, 0.0, this.Elevation);
 
             List<HatchBoundaryPath> paths = new List<HatchBoundaryPath>();
 
@@ -341,22 +445,22 @@ namespace netDxf.Entities
                     switch (entity.Type)
                     {
                         case EntityType.Arc:
-                            entity = ProcessArc((Arc)entity, transOW, transOW * new Vector3(0.0, 0.0, this.Elevation));
+                            entity = ProcessArc((Arc) entity, transOW, position);
                             break;
                         case EntityType.Circle:
-                            entity = ProcessCircle((Circle)entity, transOW, transOW * new Vector3(0.0, 0.0, this.Elevation));
+                            entity = ProcessCircle((Circle) entity, transOW, position);
                             break;
                         case EntityType.Ellipse:
-                            entity = ProcessEllipse((Ellipse)entity, transOW, transOW * new Vector3(0.0, 0.0, this.Elevation));
+                            entity = ProcessEllipse((Ellipse) entity, transOW, position);
                             break;
                         case EntityType.Line:
-                            entity = ProcessLine((Line)entity, transOW, transOW * new Vector3(0.0, 0.0, this.Elevation));
+                            entity = ProcessLine((Line) entity, transOW, position);
                             break;
                         case EntityType.LwPolyline:
-                            entity = ProcessLwPolyline((LwPolyline)entity, this.Normal, this.Elevation);
+                            entity = ProcessLwPolyline((LwPolyline) entity, this.Normal, this.Elevation);
                             break;
                         case EntityType.Spline:
-                            entity = ProcessSpline((Spline)entity, transOW, transOW * new Vector3(0.0, 0.0, this.Elevation));
+                            entity = ProcessSpline((Spline) entity, transOW, position);
                             break;
                     }
                     entity.TransformBy(transformation, translation);
@@ -365,7 +469,6 @@ namespace netDxf.Entities
                 paths.Add(new HatchBoundaryPath(data));
             }
 
-            Vector3 position = transOW * new Vector3(0.0, 0.0, this.Elevation);
             position = transformation * position + translation;
             position = transWO * position;
 
@@ -393,10 +496,13 @@ namespace netDxf.Entities
         /// Creates a new Hatch that is a copy of the current instance.
         /// </summary>
         /// <returns>A new Hatch that is a copy of this instance.</returns>
-        /// <remarks>If the hatch is associative the referenced boundary entities will not be automatically cloned. Use CreateBoundary if required.</remarks>
+        /// <remarks>
+        /// If the hatch is associative the referenced boundary entities will not be automatically cloned, its associative property will be set to false.
+        /// Use CreateBoundary if required after cloning.
+        /// </remarks>
         public override object Clone()
         {
-            Hatch entity = new Hatch((HatchPattern) this.pattern.Clone(), this.associative)
+            Hatch entity = new Hatch((HatchPattern) this.pattern.Clone(), false)
             {
                 //EntityObject properties
                 Layer = (Layer) this.Layer.Clone(),
@@ -445,6 +551,7 @@ namespace netDxf.Entities
             {
                 e.Item.ClearContour();
             }
+
             this.OnHatchBoundaryPathAddedEvent(e.Item);
         }
 

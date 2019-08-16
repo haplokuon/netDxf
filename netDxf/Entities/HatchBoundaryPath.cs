@@ -652,7 +652,7 @@ namespace netDxf.Entities
 
         #region private fields
 
-        private readonly List<EntityObject> contour;
+        private readonly List<EntityObject> entities;
         private readonly List<Edge> edges;
         private HatchBoundaryPathTypeFlags pathType;
 
@@ -667,19 +667,23 @@ namespace netDxf.Entities
         public HatchBoundaryPath(IEnumerable<EntityObject> edges)
         {
             if (edges == null)
+            {
                 throw new ArgumentNullException(nameof(edges));
+            }
             this.edges = new List<Edge>();
             this.pathType = HatchBoundaryPathTypeFlags.Derived | HatchBoundaryPathTypeFlags.External;
-            this.contour = new List<EntityObject>(edges);
+            this.entities = new List<EntityObject>(edges);
             this.Update();
         }
 
         internal HatchBoundaryPath(IEnumerable<Edge> edges)
         {
             if (edges == null)
+            {
                 throw new ArgumentNullException(nameof(edges));
+            }
             this.pathType = HatchBoundaryPathTypeFlags.Derived | HatchBoundaryPathTypeFlags.External;
-            this.contour = new List<EntityObject>();
+            this.entities = new List<EntityObject>();
             this.edges = new List<Edge>(edges);
             if (this.edges.Count == 1 && this.edges[0].Type == EdgeType.Polyline)
             {
@@ -721,7 +725,7 @@ namespace netDxf.Entities
         /// <remarks>If the boundary path belongs to a non-associative hatch this list will contain zero entities.</remarks>
         public IReadOnlyList<EntityObject> Entities
         {
-            get { return this.contour; }
+            get { return this.entities; }
         }
 
         #endregion
@@ -730,17 +734,17 @@ namespace netDxf.Entities
 
         internal void AddContour(EntityObject entity)
         {
-            this.contour.Add(entity);
+            this.entities.Add(entity);
         }
 
         internal void ClearContour()
         {
-            this.contour.Clear();
+            this.entities.Clear();
         }
 
         internal bool RemoveContour(EntityObject entity)
         {
-            return this.contour.Remove(entity);
+            return this.entities.Remove(entity);
         }
 
         #endregion
@@ -756,19 +760,19 @@ namespace netDxf.Entities
         /// </remarks>
         public void Update()
         {
-            this.SetInternalInfo(this.contour, true);
+            this.SetInternalInfo(this.entities, true);
         }
 
         #endregion
 
         #region private methods
 
-        private void SetInternalInfo(IEnumerable<EntityObject> entities, bool clearEdges)
+        private void SetInternalInfo(IEnumerable<EntityObject> contourn, bool clearEdges)
         {
             bool containsPolyline = false;
             if(clearEdges) this.edges.Clear();
 
-            foreach (EntityObject entity in entities)
+            foreach (EntityObject entity in contourn)
             {
                 if (containsPolyline)
                     throw new ArgumentException("Closed polylines cannot be combined with other entities to make a hatch boundary path.");
@@ -833,27 +837,16 @@ namespace netDxf.Entities
         /// Creates a new HatchBoundaryPath that is a copy of the current instance.
         /// </summary>
         /// <returns>A new HatchBoundaryPath that is a copy of this instance.</returns>
+        /// <remarks>When cloning a HatchBoundaryPath, if it has entities that defines its contour, they will not be cloned.</remarks>
         public object Clone()
         {
-            HatchBoundaryPath copy;
+            List<Edge> copyEdges = new List<Edge>();
+            foreach (Edge edge in this.edges)
+            {
+                copyEdges.Add((Edge) edge.Clone());
+            }
 
-            //// the hatch is associative
-            if (this.contour.Count > 0)
-            {
-                List<EntityObject> copyContour = new List<EntityObject>();
-                foreach (EntityObject entity in this.contour)
-                    copyContour.Add((EntityObject)entity.Clone());
-                copy = new HatchBoundaryPath(copyContour);
-            }
-            else
-            {
-                List<Edge> copyEdges = new List<Edge>();
-                foreach (Edge edge in this.edges)
-                    copyEdges.Add((Edge) edge.Clone());
-                copy = new HatchBoundaryPath(copyEdges);
-            }
-            //copy.PathType = this.pathType;
-            return copy;
+            return new HatchBoundaryPath(copyEdges);
         }
 
         #endregion
