@@ -5336,7 +5336,7 @@ namespace netDxf.IO
                                 case 175: // DIMSOXD
                                     if (data.Code != XDataCode.Int16)
                                         return overrides; // premature end
-                                    overrides.Add(new DimensionStyleOverride(DimensionStyleOverrideType.FitDimLineInside, (short) data.Value != 0));
+                                    overrides.Add(new DimensionStyleOverride(DimensionStyleOverrideType.FitDimLineInside, (short) data.Value == 0));
                                     break;
                                 case 176: // DIMCLRD:
                                     if (data.Code != XDataCode.Int16)

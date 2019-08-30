@@ -1,6 +1,9 @@
 ## Change history
 
 ### [2019/08/30]
+* (fixed) Hotfix for previous update. The DimensionStyle FitDimLineInside (DIMSOXD value) now is read correctly when it is part of a dimension style override.
+
+### [2019/08/30]
 * (fixed) The DimensionStyle FitDimLineInside (DIMSOXD value) was used incorrectly, when it was true is should be false and vice versa.
 
 ### [2019/08/16]
