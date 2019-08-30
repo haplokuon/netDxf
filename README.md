@@ -75,4 +75,4 @@ All entities can be grouped.
 All entities and table objects may contain extended data information.
 AutoCad Table entities will be imported as Inserts (block references).
 Both simple and complex line types are supported.
-The library will never be able to read some entities like Regions and 3dSolids, since they depend on undocumented proprietary data.
+The library will never be able to read some entities like REGIONs, SURFACEs, and 3DSOLIDs, since they depend on undocumented proprietary data.
