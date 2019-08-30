@@ -1646,7 +1646,7 @@ namespace netDxf.IO
                         this.chunk.Next();
                         break;
                     case 175:
-                        dimsoxd = this.chunk.ReadShort() != 0;
+                        dimsoxd = this.chunk.ReadShort() == 0;
                         this.chunk.Next();
                         break;
                     case 176:

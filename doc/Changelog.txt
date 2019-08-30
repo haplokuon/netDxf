@@ -1,5 +1,8 @@
 ## Change history
 
+### [2019/08/30]
+* (fixed) The DimensionStyle FitDimLineInside (DIMSOXD value) was used incorrectly, when it was true is should be false and vice versa.
+
 ### [2019/08/16]
 * (fixed) When a Block is created form a DxfDocument or DXF file, any Hatch entity that it may contain will have its associative property set to false.
           This will avoid problems when the same entity its associated to multiple hatches, or when any of any of its paths is defined by the intersection of several entities.

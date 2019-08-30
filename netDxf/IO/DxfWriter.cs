@@ -42,7 +42,7 @@ using Trace = netDxf.Entities.Trace;
 namespace netDxf.IO
 {
     /// <summary>
-    /// Low level dxf writer.
+    /// Low level DXF writer.
     /// </summary>
     internal sealed class DxfWriter
     {
@@ -917,7 +917,7 @@ namespace netDxf.IO
             this.chunk.Write(70, style.ExtLine2Off ? (short) 1 : (short) 0);
 
             this.chunk.Write(9, "$DIMSOXD");
-            this.chunk.Write(70, style.FitDimLineInside ? (short) 1 : (short) 0);
+            this.chunk.Write(70, style.FitDimLineInside ? (short) 0 : (short) 1);
 
             this.chunk.Write(9, "$DIMTAD");
             this.chunk.Write(70, (short) style.TextVerticalPlacement);
@@ -1279,7 +1279,7 @@ namespace netDxf.IO
             this.chunk.Write(172, style.FitDimLineForce ? (short) 1 : (short) 0);
             // code 173 is written later
             this.chunk.Write(174, style.FitTextInside ? (short) 1 : (short) 0);
-            this.chunk.Write(175, style.FitDimLineInside ? (short) 1 : (short) 0);
+            this.chunk.Write(175, style.FitDimLineInside ? (short) 0 : (short) 1);
             this.chunk.Write(176, style.DimLineColor.Index);
             this.chunk.Write(177, style.ExtLineColor.Index);
             this.chunk.Write(178, style.TextColor.Index);
@@ -3514,7 +3514,7 @@ namespace netDxf.IO
                         break;
                     case DimensionStyleOverrideType.FitDimLineInside:
                         xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 175));
-                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (bool) styleOverride.Value ? (short) 1 : (short) 0));
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (bool) styleOverride.Value ? (short) 0 : (short) 1));
                         break;
                     case DimensionStyleOverrideType.DimScaleOverall:
                         xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 40));
