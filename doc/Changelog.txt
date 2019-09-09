@@ -1,5 +1,10 @@
 ## Change history
 
+### [2019/09/09]
+* (fixed) The LinearDimension block that represents the dimension drawing was not generated correctly. Now, the extension lines should not appear crossed under some circumstances.
+* (fixed) The MathHelper methods PointInSegment will consider the start and end points as part of the segment.
+* (fixed) The MathHelper method NormalizeAngle will not round almost zero angles automatically.
+
 ### [2019/08/30]
 * (fixed) Hotfix for previous update. The DimensionStyle FitDimLineInside (DIMSOXD value) now is read correctly when it is part of a dimension style override.
 
@@ -41,7 +46,7 @@
 * Added properties IsBackward and IsUpsideDown to Text entity.
 * Added property to Matrix3 to access its [row,column] elements by index.
 * Added properties IsBackward and IsUpsideDown to Attribute and AttributeDefinition objects.
-* Added Tolerance TextHeigth property controls the height of the tolerance text overridden the default value defined in its style.
+* Added Tolerance TextHeight property controls the height of the tolerance text overridden the default value defined in its style.
 * Improved the way the Ellipse method PolygonalVertexes generates the points in an ellipse arc.
 * Improved the speed of the method IsValidName of the TableObject class. This will improve the overall speed of adding table objects blocks, layers, styles,... to the document; what, also, will improve the DXF loading performance.
 * The InvalidCharacters property of the TableObject class will return a char[] instead of a IReadOnlyList<string>.

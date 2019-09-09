@@ -31,7 +31,7 @@ namespace netDxf.Entities
     /// Represents the base class for a dimension <see cref="EntityObject">entity</see>.
     /// </summary>
     /// <reamarks>
-    /// Once a dimension is added to the dxf document, its properties should not be modified or the changes will not be reflected in the saved dxf file.
+    /// Once a dimension is added to the DXF document, its properties should not be modified or the changes will not be reflected in the saved DXF file.
     /// </reamarks>
     public abstract class Dimension :
         EntityObject

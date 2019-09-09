@@ -406,17 +406,22 @@ namespace netDxf
         /// <param name="start">Segment start point.</param>
         /// <param name="end">Segment end point.</param>
         /// <returns>Zero if the point is inside the segment, 1 if the point is after the end point, and -1 if the point is before the start point.</returns>
+        /// <remarks>
+        /// For testing purposes a point is considered inside a segment,
+        /// if it falls inside the volume from start to end of the segment that extends infinitely perpendicularly to its direction.
+        /// Later, if needed, you can use the PointLineDistance method, if the distance is zero the point is along the line defined by the start and end points.
+        /// </remarks>
         public static int PointInSegment(Vector3 p, Vector3 start, Vector3 end)
         {
             Vector3 dir = end - start;
             Vector3 pPrime = p - start;
             double t = Vector3.DotProduct(dir, pPrime);
-            if (t <= 0)
+            if (t < 0)
             {
                 return -1;
             }
             double dot = Vector3.DotProduct(dir, dir);
-            if (t >= dot)
+            if (t > dot)
             {
                 return 1;
             }
@@ -430,17 +435,22 @@ namespace netDxf
         /// <param name="start">Segment start point.</param>
         /// <param name="end">Segment end point.</param>
         /// <returns>Zero if the point is inside the segment, 1 if the point is after the end point, and -1 if the point is before the start point.</returns>
+        /// <remarks>
+        /// For testing purposes a point is considered inside a segment,
+        /// if it falls inside the area from start to end of the segment that extends infinitely perpendicularly to its direction.
+        /// Later, if needed, you can use the PointLineDistance method, if the distance is zero the point is along the line defined by the start and end points.
+        /// </remarks>
         public static int PointInSegment(Vector2 p, Vector2 start, Vector2 end)
         {
             Vector2 dir = end - start;
             Vector2 pPrime = p - start;
             double t = Vector2.DotProduct(dir, pPrime);
-            if (t <= 0)
+            if (t < 0)
             {
                 return -1;
             }
             double dot = Vector2.DotProduct(dir, dir);
-            if (t >= dot)
+            if (t > dot)
             {
                 return 1;
             }
@@ -492,11 +502,9 @@ namespace netDxf
         /// <remarks>Negative angles will be converted to its positive equivalent.</remarks>
         public static double NormalizeAngle(double angle)
         {
-            double c = angle%360.0;
-            if (IsZero(c)) c = 0.0;
-            if (c < 0)
-                return 360.0 + c;
-            return c;
+            double normalized = angle%360.0;
+            if (normalized < 0) return 360.0 + normalized;
+            return normalized;
         }
 
         /// <summary>

@@ -241,23 +241,16 @@ namespace netDxf.Entities
         public void SetDimensionLinePosition(Vector2 point)
         {
             Vector2 midRef = Vector2.MidPoint(this.firstRefPoint, this.secondRefPoint);
+            double dimRotation = this.Rotation * MathHelper.DegToRad;
 
             Vector2 pointDir = point - this.firstRefPoint;
-
-            double dimRotation = this.rotation * MathHelper.DegToRad;
-            Vector2 dimDir = new Vector2(Math.Cos(dimRotation), Math.Sin(dimRotation));
+            Vector2 dimDir = Vector2.Normalize(Vector2.Rotate(Vector2.UnitX, dimRotation));
             
-            double cross = Vector2.CrossProduct(this.secondRefPoint - this.firstRefPoint, pointDir);
+            double cross = Vector2.CrossProduct(dimDir, pointDir);
             if (cross < 0)
             {
-                MathHelper.Swap(ref this.firstRefPoint, ref this.secondRefPoint);
-            }
-
-            double crossDim = Vector2.CrossProduct(dimDir, pointDir);
-            if (crossDim < 0)
-            {
                 this.Rotation += 180;
-                dimDir *= -1;
+                dimDir *= -1; // rotate the dimension direction 180 degrees
                 dimRotation = this.rotation * MathHelper.DegToRad;
             }
 
@@ -265,8 +258,13 @@ namespace netDxf.Entities
 
             Vector2 offsetDir = Vector2.Perpendicular(dimDir);
             Vector2 midDimLine = midRef + this.offset * offsetDir;
-
             this.defPoint = midDimLine + 0.5 * this.Measurement * dimDir;
+
+            cross = Vector2.CrossProduct(this.secondRefPoint - this.firstRefPoint, offsetDir);
+            if (cross < 0)
+            {
+                MathHelper.Swap(ref this.firstRefPoint, ref this.secondRefPoint);
+            }
 
             if (!this.TextPositionManuallySet)
             {
@@ -358,18 +356,15 @@ namespace netDxf.Entities
             DimensionStyleOverride styleOverride;
 
             double measure = this.Measurement;
-            Vector2 ref1 = this.firstRefPoint;
-            Vector2 ref2 = this.secondRefPoint;
-            Vector2 midRef = Vector2.MidPoint(ref1, ref2);
+            Vector2 midRef = Vector2.MidPoint(this.firstRefPoint, this.secondRefPoint);
             double dimRotation = this.Rotation * MathHelper.DegToRad;
 
             Vector2 vec = Vector2.Normalize(Vector2.Rotate(Vector2.UnitY, dimRotation));
             Vector2 midDimLine = midRef + this.offset * vec;
-            double cross = Vector2.CrossProduct(ref2 - ref1, vec);
+            double cross = Vector2.CrossProduct(this.secondRefPoint - this.firstRefPoint, vec);
             if (cross < 0)
             {
-                this.firstRefPoint = ref2;
-                this.secondRefPoint = ref1;
+                MathHelper.Swap(ref this.firstRefPoint, ref this.secondRefPoint);
             }
             this.defPoint = midDimLine - measure * 0.5 * Vector2.Perpendicular(vec);
 
