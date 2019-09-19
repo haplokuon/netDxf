@@ -165,8 +165,6 @@ namespace netDxf.Entities
             if (string.IsNullOrEmpty(tag))
                 throw new ArgumentNullException(nameof(tag));
 
-            if (tag.Contains(" "))
-                throw new ArgumentException("The tag string cannot contain spaces.", nameof(tag));
             this.tag = tag;
             this.flags = AttributeFlags.Visible;
             this.prompt = string.Empty;
