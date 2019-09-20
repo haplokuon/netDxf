@@ -282,14 +282,13 @@ namespace netDxf.Tables
         /// <summary>
         /// Gets or sets the line type description.
         /// </summary>
+        /// <remarks>
+        /// New line characters are not allowed.
+        /// </remarks>
         public string Description
         {
             get { return this.description; }
-            set
-            {
-                if (string.IsNullOrEmpty(value)) this.description = string.Empty;
-                this.description = value;
-            }
+            set { this.description = string.IsNullOrEmpty(value) ? string.Empty : value; }
         }
 
         /// <summary>

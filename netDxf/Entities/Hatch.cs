@@ -332,84 +332,84 @@ namespace netDxf.Entities
         #region overrides
 
         // TODO: apply the transformation directly to edges
-        public void TransformBy2(Matrix3 transformation, Vector3 translation)
-        {
-            if (this.associative)
-            {
-                this.UnLinkBoundary();
-            }
+        //public void TransformBy2(Matrix3 transformation, Vector3 translation)
+        //{
+        //    if (this.associative)
+        //    {
+        //        this.UnLinkBoundary();
+        //    }
 
-            Vector3 newNormal = transformation * this.Normal;
-            if (Vector3.Equals(Vector3.Zero, newNormal))
-            {
-                newNormal = this.Normal;
-            }
+        //    Vector3 newNormal = transformation * this.Normal;
+        //    if (Vector3.Equals(Vector3.Zero, newNormal))
+        //    {
+        //        newNormal = this.Normal;
+        //    }
 
-            Matrix3 transOW = MathHelper.ArbitraryAxis(this.Normal);
-            Matrix3 transWO = MathHelper.ArbitraryAxis(newNormal).Transpose();
+        //    Matrix3 transOW = MathHelper.ArbitraryAxis(this.Normal);
+        //    Matrix3 transWO = MathHelper.ArbitraryAxis(newNormal).Transpose();
 
-            Vector3 position = transOW * new Vector3(0.0, 0.0, this.Elevation);
+        //    Vector3 position = transOW * new Vector3(0.0, 0.0, this.Elevation);
 
-            foreach (HatchBoundaryPath path in this.BoundaryPaths)
-            {
-                foreach (HatchBoundaryPath.Edge edge in path.Edges)
-                {
-                    switch (edge.Type)
-                    {
-                        case HatchBoundaryPath.EdgeType.Arc:
-                            break;
+        //    foreach (HatchBoundaryPath path in this.BoundaryPaths)
+        //    {
+        //        foreach (HatchBoundaryPath.Edge edge in path.Edges)
+        //        {
+        //            switch (edge.Type)
+        //            {
+        //                case HatchBoundaryPath.EdgeType.Arc:
+        //                    break;
 
-                        case HatchBoundaryPath.EdgeType.Ellipse:
-                            break;
+        //                case HatchBoundaryPath.EdgeType.Ellipse:
+        //                    break;
 
-                        case HatchBoundaryPath.EdgeType.Line:
-                            HatchBoundaryPath.Line line = (HatchBoundaryPath.Line)edge;
-                            Vector3 start = new Vector3(line.Start.X, line.Start.Y, 0.0);
-                            Vector3 end = new Vector3(line.End.X, line.End.Y, 0.0);
+        //                case HatchBoundaryPath.EdgeType.Line:
+        //                    HatchBoundaryPath.Line line = (HatchBoundaryPath.Line)edge;
+        //                    Vector3 start = new Vector3(line.Start.X, line.Start.Y, 0.0);
+        //                    Vector3 end = new Vector3(line.End.X, line.End.Y, 0.0);
 
-                            // to world coordinates
-                            start = transOW * start + position;
-                            end = transOW * end + position;
+        //                    // to world coordinates
+        //                    start = transOW * start + position;
+        //                    end = transOW * end + position;
 
-                            // transformation
-                            start = transformation * start + translation;
-                            end = transformation * end + translation;
+        //                    // transformation
+        //                    start = transformation * start + translation;
+        //                    end = transformation * end + translation;
 
-                            Vector3 point;
-                            point = transWO * start;
-                            line.Start = new Vector2(point.X, point.Y);
-                            point = transWO * end;
-                            line.End = new Vector2(point.X, point.Y);
-                            break;
+        //                    Vector3 point;
+        //                    point = transWO * start;
+        //                    line.Start = new Vector2(point.X, point.Y);
+        //                    point = transWO * end;
+        //                    line.End = new Vector2(point.X, point.Y);
+        //                    break;
 
-                        case HatchBoundaryPath.EdgeType.Polyline:
-                            break;
+        //                case HatchBoundaryPath.EdgeType.Polyline:
+        //                    break;
 
-                        case HatchBoundaryPath.EdgeType.Spline:
-                            break;
-                    }
-                }
-            }
+        //                case HatchBoundaryPath.EdgeType.Spline:
+        //                    break;
+        //            }
+        //        }
+        //    }
 
-            position = transformation * position + translation;
-            position = transWO * position;
+        //    position = transformation * position + translation;
+        //    position = transWO * position;
 
-            Vector2 refAxis = Vector2.Rotate(Vector2.UnitX, this.Pattern.Angle * MathHelper.DegToRad);
-            refAxis = this.Pattern.Scale * refAxis;
-            Vector3 v = transOW * new Vector3(refAxis.X, refAxis.Y, 0.0);
-            v = transformation * v;
-            v = transWO * v;
-            Vector2 axis = new Vector2(v.X, v.Y);
-            double newAngle = Vector2.Angle(axis) * MathHelper.RadToDeg;
+        //    Vector2 refAxis = Vector2.Rotate(Vector2.UnitX, this.Pattern.Angle * MathHelper.DegToRad);
+        //    refAxis = this.Pattern.Scale * refAxis;
+        //    Vector3 v = transOW * new Vector3(refAxis.X, refAxis.Y, 0.0);
+        //    v = transformation * v;
+        //    v = transWO * v;
+        //    Vector2 axis = new Vector2(v.X, v.Y);
+        //    double newAngle = Vector2.Angle(axis) * MathHelper.RadToDeg;
 
-            double newScale = axis.Modulus();
-            newScale = MathHelper.IsZero(newScale) ? MathHelper.Epsilon : newScale;
+        //    double newScale = axis.Modulus();
+        //    newScale = MathHelper.IsZero(newScale) ? MathHelper.Epsilon : newScale;
 
-            this.Pattern.Scale = newScale;
-            this.Pattern.Angle = newAngle;
-            this.Elevation = position.Z;
-            this.Normal = newNormal;
-        }
+        //    this.Pattern.Scale = newScale;
+        //    this.Pattern.Angle = newAngle;
+        //    this.Elevation = position.Z;
+        //    this.Normal = newNormal;
+        //}
 
         /// <summary>
         /// Moves, scales, and/or rotates the current entity given a 3x3 transformation matrix and a translation vector.

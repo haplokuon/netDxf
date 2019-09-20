@@ -4134,14 +4134,15 @@ namespace TestDxfDocument
             // Add the viewport to the document. This will also add the ellipse to the document.
             dxf.AddEntity(viewport2);
 
+
             Layout layout3 = new Layout("AnyName");
             dxf.Layouts.Add(layout3);
             //layout can also be renamed
             layout3.Name = "Layout3";
+            dxf.ActiveLayout = layout3.Name;
+            Viewport test = (Viewport) viewport2.Clone();
+            dxf.AddEntity(test);
 
-            //dxf.Layouts.Remove(layout2.Name);
-
-            ShowDxfDocumentInformation(dxf);
 
             // Save the document as always.
             dxf.Save("PaperSpace.dxf");
@@ -4166,7 +4167,7 @@ namespace TestDxfDocument
             ok = dxf.RemoveEntity(ellipse); // OK = true
 
             // Save the document if you want to test the changes
-            dxf.Save("PaperSpace.dxf");
+            dxf.Save("PaperSpace2.dxf");
 
             #endregion
 
@@ -4190,10 +4191,14 @@ namespace TestDxfDocument
             // This mimics the behavior in AutoCad, when a layout is deleted all entities in it will also be deleted.
             dxfLoad.Layouts.Remove(layout1.Name);
 
-            Layout layout4 = (Layout) layout2.Clone("Layout4");
+            Layout layout4 = (Layout) layout3.Clone("Layout4");
             dxfLoad.Layouts.Add(layout4);
-
-            ShowDxfDocumentInformation(dxfLoad);
+            // when cloning a PaperSpace layout its contents will not be cloned it needs to be done manually after adding the layout to the DXF
+            foreach (EntityObject entity in layout3.AssociatedBlock.Entities)
+            {
+                dxfLoad.ActiveLayout = layout4.Name;
+                dxfLoad.AddEntity((EntityObject) entity.Clone());
+            }
 
             dxfLoad.Save("PaperSpace removed.dxf");
         }

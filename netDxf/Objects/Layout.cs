@@ -23,6 +23,7 @@
 using System;
 using netDxf.Blocks;
 using netDxf.Collections;
+using netDxf.Entities;
 using netDxf.Tables;
 
 namespace netDxf.Objects
@@ -47,6 +48,7 @@ namespace netDxf.Objects
         private Vector3 xAxis;
         private Vector3 yAxis;
         private short tabOrder;
+        private Viewport viewport;
         private readonly bool isPaperSpace;
         private Block associatedBlock;
 
@@ -93,12 +95,21 @@ namespace netDxf.Objects
             {
                 this.IsReserved = true;
                 this.isPaperSpace = false;
+                this.viewport = null;
                 plotSettings.Flags = PlotFlags.Initializing | PlotFlags.UpdatePaper | PlotFlags.ModelType | PlotFlags.DrawViewportsFirst | PlotFlags.PrintLineweights | PlotFlags.PlotPlotStyles | PlotFlags.UseStandardScale;
             }
             else
             {
                 this.IsReserved = false;
                 this.isPaperSpace = true;
+                this.viewport = new Viewport(1)
+                {
+                    ViewCenter = new Vector2(50.0, 100.0),
+                    Status = ViewportStatusFlags.AdaptiveGridDisplay |
+                             ViewportStatusFlags.DisplayGridBeyondDrawingLimits |
+                             ViewportStatusFlags.CurrentlyAlwaysEnabled |
+                             ViewportStatusFlags.UcsIconVisibility
+                };
             }
 
             this.tabOrder = 0;
@@ -237,6 +248,17 @@ namespace netDxf.Objects
         }
 
         /// <summary>
+        /// Gets the viewport associated with this layout. This is the viewport with Id 1 that represents the paper space itself,
+        /// it has no graphical representation, and does not show the model.
+        /// </summary>
+        /// <remarks>The ModelSpace layout does not require a viewport and it will always return null.</remarks>
+        public Viewport Viewport
+        {
+            get { return this.viewport; }
+            internal set { this.viewport = value; }
+        }
+
+        /// <summary>
         /// Gets the owner of the actual layout.
         /// </summary>
         public new Layouts Owner
@@ -263,11 +285,16 @@ namespace netDxf.Objects
         /// </summary>
         /// <param name="newName">Layout name of the copy.</param>
         /// <returns>A new Layout that is a copy of this instance.</returns>
-        /// <remarks>The Model Layout cannot be cloned.</remarks>
+        /// <remarks>
+        /// The Model Layout cannot be cloned.<br />
+        /// When cloning a PaperSpace layout the contents of the layout will not be cloned.
+        /// </remarks>
         public override TableObject Clone(string newName)
         {
-            if (this.Name == ModelSpaceName || newName == ModelSpaceName)
+            if(!this.IsPaperSpace)
                 throw new NotSupportedException("The Model layout cannot be cloned.");
+            if (string.Equals(newName, ModelSpaceName, StringComparison.OrdinalIgnoreCase))
+                throw new ArgumentException("The layout name \"Model\" is reserved for the ModelSpace.");
 
             Layout copy = new Layout(newName, null, (PlotSettings) this.plot.Clone())
             {
@@ -281,6 +308,7 @@ namespace netDxf.Objects
                 UcsOrigin = this.origin,
                 UcsXAxis = this.xAxis,
                 UcsYAxis = this.yAxis,
+                Viewport = (Viewport) this.viewport.Clone()
             };
 
             foreach (XData data in this.XData.Values)
@@ -293,7 +321,10 @@ namespace netDxf.Objects
         /// Creates a new Layout that is a copy of the current instance.
         /// </summary>
         /// <returns>A new Layout that is a copy of this instance.</returns>
-        /// <remarks>The Model Layout cannot be cloned.</remarks>
+        /// <remarks>
+        /// The Model Layout cannot be cloned.<br />
+        /// When cloning a PaperSpace layout the contents of the layout will not be cloned.
+        /// </remarks>
         public override object Clone()
         {
             return this.Clone(this.Name);
@@ -311,6 +342,8 @@ namespace netDxf.Objects
         internal override long AsignHandle(long entityNumber)
         {
             entityNumber = this.Owner.AsignHandle(entityNumber);
+            if (this.isPaperSpace)
+                entityNumber = this.viewport.AsignHandle(entityNumber);
             return base.AsignHandle(entityNumber);
         }
 

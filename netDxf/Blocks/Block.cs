@@ -284,6 +284,13 @@ namespace netDxf.Blocks
         /// <summary>
         /// Gets or sets the block description.
         /// </summary>
+        /// <remarks>
+        /// AutoCAD has an unknown limit on the number of characters for the description when loading an external DXF,
+        /// while, on the other hand is perfectly capable of saving a Block description that surpasses such limit.<br />
+        /// Keep in mind that when saving a DXF prior to the AutoCad2007 version, non-ASCII characters will be encoded,
+        /// therefore a single letter might consume more characters when saved into the DXF.<br />
+        /// New line characters are not allowed.
+        /// </remarks>
         public string Description
         {
             get { return this.description; }

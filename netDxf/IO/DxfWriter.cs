@@ -344,6 +344,9 @@ namespace netDxf.IO
                     string index = layout.AssociatedBlock.Name.Remove(0, 12);
                     if (string.IsNullOrEmpty(index))
                     {
+                        // write the layout viewport with ID=1, only for PaperSpace layouts
+                        this.WriteEntity(layout.Viewport, layout);
+
                         foreach (AttributeDefinition attDef in layout.AssociatedBlock.AttributeDefinitions.Values)
                         {
                             this.WriteAttributeDefinition(attDef, layout);
@@ -1415,7 +1418,7 @@ namespace netDxf.IO
 
         private static void AddBlockRecordUnitsXData(BlockRecord record)
         {
-            // for dxf versions prior to AutoCad2007 the block record units is stored in an extended data block
+            // for DXF versions prior to AutoCad2007 the block record units is stored in an extended data block
             XData xdataEntry;
             if (record.XData.ContainsAppId(ApplicationRegistry.DefaultName))
             {
@@ -1496,7 +1499,7 @@ namespace netDxf.IO
                         this.chunk.Write(75, shapeSegment.Style.ShapeNumber(shapeSegment.Name)); // this.ShapeNumberFromSHPfile(shapeSegment.Name, shapeSegment.Style.File));
                         this.chunk.Write(340, shapeSegment.Style.Handle);
                         this.chunk.Write(46, shapeSegment.Scale);
-                        this.chunk.Write(50, shapeSegment.Rotation); // the dxf documentation is wrong the rotation value is stored in degrees not radians
+                        this.chunk.Write(50, shapeSegment.Rotation); // the DXF documentation is wrong the rotation value is stored in degrees not radians
                         this.chunk.Write(44, shapeSegment.Offset.X);
                         this.chunk.Write(45, shapeSegment.Offset.Y);
 
@@ -1558,7 +1561,7 @@ namespace netDxf.IO
 
         private static void AddLayerTransparencyXData(Layer layer)
         {
-            // for dxf versions prior to AutoCad2007 the block record units is stored in an extended data block
+            // for DXF versions prior to AutoCad2007 the block record units is stored in an extended data block
             XData xdataEntry;
             if (layer.XData.ContainsAppId("AcCmTransparency"))
             {
@@ -1625,7 +1628,7 @@ namespace netDxf.IO
 
         private void AddTextStyleFontXData(TextStyle style)
         {
-            // for dxf versions prior to AutoCad2007 the block record units is stored in an extended data block
+            // for DXF versions prior to AutoCad2007 the block record units is stored in an extended data block
             XData xdataEntry;
             if (style.XData.ContainsAppId(ApplicationRegistry.DefaultName))
             {
@@ -1742,6 +1745,7 @@ namespace netDxf.IO
             this.chunk.Write(20, block.Origin.Y);
             this.chunk.Write(30, block.Origin.Z);
             this.chunk.Write(3, name);
+            this.chunk.Write(4, this.EncodeNonAsciiCharacters(block.Description));
 
             if (layout == null)
             {
@@ -1757,10 +1761,13 @@ namespace netDxf.IO
             }
             else
             {
-                // the entities of the model space and the first paper space are written in the entities section
+                // the entities of the model space and the first paper space are written in the entities section,
+                // the rest are written in the Block
                 if (!(string.Equals(layout.AssociatedBlock.Name, Block.DefaultModelSpaceName, StringComparison.OrdinalIgnoreCase) ||
                       string.Equals(layout.AssociatedBlock.Name, Block.DefaultPaperSpaceName, StringComparison.OrdinalIgnoreCase)))
                 {
+                    this.WriteEntity(layout.Viewport, layout);
+
                     foreach (AttributeDefinition attdef in layout.AssociatedBlock.AttributeDefinitions.Values)
                     {
                         this.WriteAttributeDefinition(attdef, layout);
@@ -2923,7 +2930,7 @@ namespace netDxf.IO
             this.chunk.Write(41, mText.RectangleWidth);
             this.chunk.Write(44, mText.LineSpacingFactor);
 
-            //even if the AutoCAD dxf documentation says that the rotation is in radians, this is wrong this value must be saved in degrees
+            //even if the AutoCAD DXF documentation says that the rotation is in radians, this is wrong this value must be saved in degrees
             //this.chunk.Write(50, mText.Rotation);
 
             //the other option for the rotation is to store the horizontal vector of the text
@@ -4724,7 +4731,7 @@ namespace netDxf.IO
 
             this.chunk.Write(100, SubclassMarker.Layout);
             this.chunk.Write(1, this.EncodeNonAsciiCharacters(layout.Name));
-            this.chunk.Write(70, (short) 1);
+            //this.chunk.Write(70, (short) 1);
             this.chunk.Write(71, layout.TabOrder);
 
             this.chunk.Write(10, layout.MinLimit.X);
@@ -4836,7 +4843,7 @@ namespace netDxf.IO
 
         private string EncodeNonAsciiCharacters(string text)
         {
-            // for dxf database version prior to AutoCad 2007 non ASCII characters must be encoded to the template \U+####,
+            // for DXF database version prior to AutoCad 2007 non ASCII characters must be encoded to the template \U+####,
             // where #### is the for digits hexadecimal number that represent that character.
             if (this.doc.DrawingVariables.AcadVer >= DxfVersion.AutoCad2007)
                 return text;

@@ -2749,6 +2749,7 @@ namespace netDxf.IO
             BlockRecord blockRecord;
             Layer layer = Layer.Default;
             string name = string.Empty;
+            string description = String.Empty;
             string handle = string.Empty;
             string xrefFile = string.Empty;
             BlockTypeFlags type = BlockTypeFlags.None;
@@ -2764,6 +2765,10 @@ namespace netDxf.IO
                 {
                     case 1:
                         xrefFile = this.DecodeEncodedNonAsciiCharacters(this.chunk.ReadString());
+                        this.chunk.Next();
+                        break;
+                    case 4:
+                        description = this.DecodeEncodedNonAsciiCharacters(this.chunk.ReadString());
                         this.chunk.Next();
                         break;
                     case 5:
@@ -2860,6 +2865,7 @@ namespace netDxf.IO
                 block = new Block(name, xrefFile)
                 {
                     Handle = handle,
+                    Description = description,
                     Owner = blockRecord,
                     Origin = basePoint,
                     Layer = layer,
@@ -2871,6 +2877,7 @@ namespace netDxf.IO
                 block = new Block(name, null, null, false)
                 {
                     Handle = handle,
+                    Description = description,
                     Owner = blockRecord,
                     Origin = basePoint,
                     Layer = layer,
@@ -9926,14 +9933,16 @@ namespace netDxf.IO
             foreach (KeyValuePair<DxfObject, string> pair in this.entityList)
             {
                 Layout layout;
+                Block block;
                 if (pair.Value == null)
                 {
                     // the Model layout is the default in case the entity has not one defined
                     layout = this.doc.Layouts[Layout.ModelSpaceName];
+                    block = layout.AssociatedBlock;
                 }
                 else
                 {
-                    Block block = this.GetBlock(((BlockRecord) this.doc.GetObjectByHandle(pair.Value)).Name);
+                    block = this.GetBlock(((BlockRecord) this.doc.GetObjectByHandle(pair.Value)).Name);
                     layout = block.Record.Layout;
                 }
 
@@ -9941,11 +9950,17 @@ namespace netDxf.IO
                 Viewport viewport = pair.Key as Viewport;
                 if (viewport != null)
                 {
-                    // the base layout viewport has always id = 1 and we will not add it to the entities list of the document.
-                    // it is not necessary and its purpose is more related to the UI rather than a geometric object
-                    // this viewport has no graphical representation, it is the view of the paper space layout itself and it does not show the model.
-                    if (viewport.Id != 1)
+                    if (viewport.Id == 1)
+                    {
+                        // the base layout viewport has always id = 1 and we will not add it to the entities list of the document.
+                        // this viewport has no graphical representation, it is the view of the paper space layout itself and it does not show the model.
+                        layout.Viewport = viewport;
+                        layout.Viewport.Owner = block;
+                    }
+                    else
+                    {
                         this.doc.Blocks[layout.AssociatedBlock.Name].Entities.Add(viewport);
+                    }
                 }
                 else
                 {
@@ -9968,6 +9983,16 @@ namespace netDxf.IO
                     if (entity != null)
                         layout.AssociatedBlock.Entities.Add(entity);
                 }
+            }
+
+            // assign a handle to the default layout viewports in case there was no layout viewport with ID=1 in the DXF
+            foreach (Layout layout in this.doc.Layouts)
+            {
+                if (layout.Viewport == null)
+                    continue;
+
+                if (string.IsNullOrEmpty(layout.Viewport.Handle))
+                    this.doc.NumHandles = layout.Viewport.AsignHandle(this.doc.NumHandles);
             }
 
             // post process viewports clipping boundaries
