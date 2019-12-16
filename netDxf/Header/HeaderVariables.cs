@@ -51,7 +51,7 @@ namespace netDxf.Header
             this.variables = new Dictionary<string, HeaderVariable>(StringComparer.OrdinalIgnoreCase)
             {
                 {HeaderVariableCode.AcadVer, new HeaderVariable(HeaderVariableCode.AcadVer, 1, DxfVersion.AutoCad2000)},
-                {HeaderVariableCode.DwgCodePage, new HeaderVariable(HeaderVariableCode.DwgCodePage, 3, "ANSI_" + Encoding.Default.WindowsCodePage)},
+                {HeaderVariableCode.DwgCodePage, new HeaderVariable(HeaderVariableCode.DwgCodePage, 3, "ANSI_" + Encoding.ASCII.WindowsCodePage)},
                 {HeaderVariableCode.LastSavedBy, new HeaderVariable(HeaderVariableCode.LastSavedBy, 1, Environment.UserName)},
                 {HeaderVariableCode.HandleSeed, new HeaderVariable(HeaderVariableCode.HandleSeed, 5, "1")},
                 {HeaderVariableCode.Angbase, new HeaderVariable(HeaderVariableCode.Angbase, 50, 0.0)},
