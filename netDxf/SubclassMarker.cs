@@ -1,7 +1,7 @@
-﻿#region netDxf library, Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
+﻿#region netDxf library, Copyright (C) 2009-2019 Daniel Carvajal (haplokuon@gmail.com)
 
 //                        netDxf library
-// Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2009-2019 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -105,5 +105,37 @@ namespace netDxf
         public const string Section = "AcDbSection";
         public const string Sun = "AcDbSun";
         public const string Surface = "AcDbSurface";
+        public const string VbaProject = "AcDbVbaProject";
+        public const string ProxyObject = "AcDbProxyObject";
+        public const string DictionaryWithDefault = "AcDbDictionaryWithDefault";
+        public const string NavisworksModelDef = "AcDbNavisworksModelDef";
+        public const string DataTable = "AcDbDataTable";
+        public const string DimAssoc = "AcDbDimAssoc";
+        public const string IdBuffer = "AcDbIdBuffer";
+        public const string Filter = "AcDbFilter";
+        public const string LayerFilter = "AcDbLayerFilter";
+        public const string Index = "AcDbIndex";
+        public const string LayerIndex = "AcDbLayerIndex";
+        public const string LightList = "AcDbLightList";
+        public const string Material = "AcDbMaterial";
+        public const string MentalRayRenderSettings = "AcDbMentalRayRenderSettings";
+        public const string RenderEnvironment = "AcDbRenderEnvironment";
+        public const string RenderGlobal = "AcDbRenderGlobal";
+        public const string IBLBackground = "AcDbIBLBackground";
+        public const string RenderSettings = "AcDbRenderSettings";
+        public const string RapidRTRenderSettings = "AcDbRapidRTRenderSettings";
+        public const string SectionManager = "AcDbSectionManager";
+        public const string SectionSettings = "AcDbSectionSettings";
+        public const string SortentsTable = "AcDbSortentsTable";
+        public const string SpatialFilter = "AcDbSpatialFilter";
+        public const string SpatialIndex = "AcDbSpatialIndex";
+        public const string SunStudy = "AcDbSunStudy";
+        public const string TableStyle = "AcDbTableStyle";
+        public const string VisualStyle = "AcDbVisualStyle";
+        public const string ProxyEntity = "AcDbProxyEntity";
+        public const string ExtrudedSurface = "AcDbExtrudedSurface";
+        public const string LoftedSurface = "AcDbLoftedSurface";
+        public const string RevolvedSurface = "AcDbRevolvedSurface";
+        public const string SweptSurface = "AcDbSweptSurface";
     }
 }
