@@ -95,5 +95,15 @@ namespace netDxf
         public const string Group = "AcDbGroup";
         public const string Layout = "AcDbLayout";
         public const string PlotSettings = "AcDbPlotSettings";
+        public const string ModelerGeometry = "AcDbModelerGeometry";
+        public const string Solid3d = "AcDb3dSolid";
+        public const string Xrecord = "AcDbXrecord";
+        public const string NavisworksModel = "AcDbNavisworksModel";
+        public const string Light = "AcDbLight";
+        public const string OleFrame = "AcDbOleFrame";
+        public const string Ole2Frame = "AcDbOle2Frame";
+        public const string Section = "AcDbSection";
+        public const string Sun = "AcDbSun";
+        public const string Surface = "AcDbSurface";
     }
 }
