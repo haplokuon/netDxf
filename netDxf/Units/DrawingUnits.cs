@@ -1,7 +1,7 @@
-﻿#region netDxf library, Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+﻿#region netDxf library, Copyright (C) 2009-2019 Daniel Carvajal (haplokuon@gmail.com)
 
 //                        netDxf library
-// Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2009-2019 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -130,6 +130,26 @@ namespace netDxf.Units
         /// <summary>
         /// Parsecs.
         /// </summary>
-        Parsecs = 20
+        Parsecs = 20,
+
+        /// <summary>
+        /// USSurveyFeet.
+        /// </summary>
+        USSurveyFeet = 21,
+
+        /// <summary>
+        /// USSurveyInch.
+        /// </summary>
+        USSurveyInch = 22,
+
+        /// <summary>
+        /// USSurveyYard.
+        /// </summary>
+        USSurveyYard = 23,
+
+        /// <summary>
+        /// USSurveyMile.
+        /// </summary>
+        USSurveyMile = 24
     }
 }
