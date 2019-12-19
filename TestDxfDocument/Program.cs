@@ -28,7 +28,7 @@ namespace TestDxfDocument
     {
         public static void Main()
         {
-            DxfDocument doc = Test(@"sample.dxf");
+            DxfDocument doc = Test(@"sampleOneSolid3D.dxf");
 
             #region Samples for new and modified features 2.3.0
 

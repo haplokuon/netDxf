@@ -22,10 +22,6 @@
 
 namespace netDxf.Header
 {
-    using System.Reflection.Emit;
-    using System.Runtime.Remoting.Metadata.W3cXsd2001;
-    using System.Runtime.Serialization;
-
     /// <summary>
     /// Strings system variables
     /// </summary>
@@ -34,7 +30,7 @@ namespace netDxf.Header
         /// <summary>
         /// Maintenance version number (should be ignored)
         /// </summary>
-        public const string AcadMainVer = "$ACADMAINTVER";
+        public const string AcadMaintVer = "$ACADMAINTVER";
 
         /// <summary>
         /// The AutoCAD drawing database version number.
@@ -42,43 +38,21 @@ namespace netDxf.Header
         public const string AcadVer = "$ACADVER";
 
         /// <summary>
-        /// Next available handle.
-        /// </summary>
-        public const string HandleSeed = "$HANDSEED";
-
-        /// <summary>
-        /// Specifies HIDETEXT system variable:
-        /// 0 = HIDE ignores text objects when producing the hidden view
-        /// 1 = HIDE does not ignore text objects
-        /// </summary>
-        public const string HideText = "$HIDETEXT";
-
-        /// <summary>
-        /// Path for all relative hyperlinks in the drawing. If null, the drawing path is used
-        /// </summary>
-        public const string HyperlinkBase = "$HYPERLINKBASE";
-
-        /// <summary>
-        /// Controls whether layer and spatial indexes are created and saved in drawing files:
-        /// 0 = No indexes are created
-        /// 1 = Layer index is created
-        /// 2 = Spatial index is created
-        /// 3 = Layer and spatial indexes are created
-        /// </summary>
-        public const string IndexCtl = "$INDEXCTL";
-
-        /// <summary>
         /// Angle 0 direction.
         /// </summary>
         public const string Angbase = "$ANGBASE";
 
         /// <summary>
-        /// 1 = Clockwise angles, 0 = Counterclockwise.
+        /// 1 = Clockwise angles
+        /// 0 = Counterclockwise.
         /// </summary>
         public const string Angdir = "$ANGDIR";
 
         /// <summary>
-        /// Attribute visibility.
+        /// Attribute visibility
+        /// 0 = None
+        /// 1 = Normal
+        /// 2 = All
         /// </summary>
         public const string AttMode = "$ATTMODE";
 
@@ -94,6 +68,8 @@ namespace netDxf.Header
 
         /// <summary>
         /// Current entity color.
+        /// 0 = BYBLOCK
+        /// 256 = BYLAYER
         /// </summary>
         public const string CeColor = "$CECOLOR";
 
@@ -103,7 +79,14 @@ namespace netDxf.Header
         public const string CeLtScale = "$CELTSCALE";
 
         /// <summary>
-        /// Current entity lineweight.
+        /// Entity linetype name,
+        /// or BYBLOCK
+        /// or BYLAYER
+        /// </summary>
+        public const string CeLtype = "$CELTYPE";
+
+        /// <summary>
+        /// Lineweight of new objects
         /// </summary>
         public const string CeLweight = "$CELWEIGHT";
 
@@ -141,11 +124,6 @@ namespace netDxf.Header
         /// Chamfer angle
         /// </summary>
         public const string ChamferD = "$CHAMFERD";
-
-        /// <summary>
-        /// Current entity line type name.
-        /// </summary>
-        public const string CeLtype = "$CELTYPE";
 
         /// <summary>
         /// Current layer name.
@@ -374,6 +352,143 @@ namespace netDxf.Header
         public const string DimFac = "$DIMFAC";
 
         /// <summary>
+        /// Dimension line gap
+        /// </summary>
+        public const string DimGap = "$DIMGAP";
+
+        /// <summary>
+        /// Horizontal dimension text position:
+        /// 0 = Above dimension line and center-justified between extension lines
+        /// 1 = Above dimension line and next to first extension line
+        /// 2 = Above dimension line and next to second extension line
+        /// 3 = Above and center-justified to first extension line
+        /// 4 = Above and center-justified to second extension line
+        /// </summary>
+        public const string DimJust = "$DIMJUST";
+
+        /// <summary>
+        /// Arrow block name for leaders
+        /// </summary>
+        public const string DimLdrBlk = "$DIMLDRBLK";
+
+        /// <summary>
+        /// Linear measurements scale factor
+        /// 0 = English
+        /// 1 = Metric
+        /// </summary>
+        public const string DimLfAc = "$DIMLFAC";
+
+        /// <summary>
+        /// Dimension limits generated if nonzero
+        /// </summary>
+        public const string DimLim = "$DIMLIM";
+
+        /// <summary>
+        /// Sets units for all dimension types except Angular:
+        /// 1 = Scientific
+        /// 2 = Decimal
+        /// 3 = Engineering
+        /// 4 = Architectural
+        /// 5 = Fractional
+        /// 6 = Operating system
+        /// </summary>
+        public const string DimLUnit = "$DIMLUNIT";
+
+        /// <summary>
+        /// Dimension line lineweight:
+        /// -3 = Standard
+        /// -2 = ByLayer
+        /// -1 = ByBlock
+        /// 0-211 = an integer representing 100th of mm
+        /// </summary>
+        public const string DimLwD = "$DIMLWD";
+
+        /// <summary>
+        /// Extension line lineweight:
+        /// -3 = Standard
+        /// -2 = ByLayer
+        /// -1 = ByBlock
+        /// 0-211 = an integer representing 100th of mm
+        /// </summary>
+        public const string DimLwE = "$DIMLWE";
+
+        /// <summary>
+        /// General dimensioning suffix
+        /// </summary>
+        public const string DimPost = "$DIMPOST";
+
+
+        /// <summary>
+        /// Rounding value for dimension distances
+        /// </summary>
+        public const string DimRnd = "$DIMRND";
+
+        /// <summary>
+        /// Use separate arrow blocks if nonzero
+        /// </summary>
+        public const string DimSah = "$DIMSAH";
+
+        /// <summary>
+        /// Overall dimensioning scale factor
+        /// </summary>
+        public const string DimScale = "$DIMSCALE";
+
+        /// <summary>
+        /// Suppression of first extension line:
+        /// 0 = Not suppressed
+        /// 1 = Suppressed
+        /// </summary>
+        public const string DimSd1 = "$DIMSD1";
+
+        /// <summary>
+        /// Suppression of second extension line:
+        /// 0 = Not suppressed
+        /// 1 = Suppressed
+        /// </summary>
+        public const string DimSd2 = "$DIMSD2";
+
+        /// <summary>
+        /// First extension line suppressed if nonzero
+        /// </summary>
+        public const string DimSe1 = "$DIMSE1";
+
+        /// <summary>
+        /// Second extension line suppressed if nonzero
+        /// </summary>
+        public const string DimSe2 = "$DIMSE2";
+
+        /// <summary>
+        /// 1 = Recompute dimensions while dragging
+        /// 0 = Drag original image
+        /// </summary>
+        public const string DimSho = "$DIMSHO";
+
+        /// <summary>
+        /// Suppress outside-extensions dimension lines if nonzero
+        /// </summary>
+        public const string DimSoXD = "$DIMSOXD";
+
+        /// <summary>
+        /// Current dimension style name.
+        /// </summary>
+        public const string DimStyle = "$DIMSTYLE";
+
+        /// <summary>
+        /// Text above dimension line if nonzero
+        /// </summary>
+        public const string DimTad = "$DIMTAD";
+
+        /// <summary>
+        /// Number of decimal places to display the tolerance values
+        /// </summary>
+        public const string DimTDec = "$DIMTDEC";
+
+        /// <summary>
+        /// Dimension tolerance display scale factor
+        /// </summary>
+        public const string DimTFac = "$DIMTFAC";
+
+        /// <summary>
         /// Text inside horizontal if nonzero
         /// </summary>
         public const string DimTih = "$DIMTIH";
@@ -386,7 +501,7 @@ namespace netDxf.Header
         /// <summary>
         /// Minus tolerance
         /// </summary>
-        public const string DimMtm = "$DIMTM";
+        public const string DimTm = "$DIMTM";
 
         /// <summary>
         /// Dimension text movement rules:
@@ -491,275 +606,8 @@ namespace netDxf.Header
         public const string DragVs = "$DRAGVS";
 
         /// <summary>
-        /// Dimension line gap
-        /// </summary>
-        public const string DimGap = "$DIMGAP";
-
-        /// <summary>
-        /// Horizontal dimension text position:
-        /// 0 = Above dimension line and center-justified between extension lines
-        /// 1 = Above dimension line and next to first extension line
-        /// 2 = Above dimension line and next to second extension line
-        /// 3 = Above and center-justified to first extension line
-        /// 4 = Above and center-justified to second extension line
-        /// </summary>
-        public const string DimJust = "$DIMJUST";
-
-        /// <summary>
-        /// Arrow block name for leaders
-        /// </summary>
-        public const string DimLdrBlk = "$DIMLDRBLK";
-
-        /// <summary>
-        /// Linear measurements scale factor
-        /// 0 = English
-        /// 1 = Metric
-        /// </summary>
-        public const string DimLfAc = "$DIMLFAC";
-
-        /// <summary>
-        /// Name of menu file
-        /// </summary>
-        public const string Menu = "$MENU";
-
-        /// <summary>
-        /// Specifies the color of obscured lines.
-        /// An obscured line is a hidden line made visible by changing its color and linetype and is visible only when the HIDE or SHADEMODE command is used.
-        /// The OBSCUREDCOLOR setting is visible only if the OBSCUREDLTYPE is turned ON by setting it to a value other than 0.
-        /// 0 and 256 = Entity color
-        /// 1-255 = An AutoCAD color index (ACI)
-        /// </summary>
-        public const string ObsColor = "$OBSCOLOR";
-
-        /// <summary>
-        /// Specifies the linetype of obscured lines. Obscured linetypes are independent of zoom level, unlike standard object
-        /// linetypes. Value 0 turns off display of obscured lines and is the default. Linetype values are defined as follows:
-        /// 0 = Off
-        /// 1 = Solid
-        /// 2 = Dashed
-        /// 3 = Dotted
-        /// 4 = Short Dash
-        /// 5 = Medium Dash
-        /// 6 = Long Dash
-        /// 7 = Double Short Dash
-        /// 8 = Double Medium Dash
-        /// 9 = Double Long Dash
-        /// 10 = Medium Long Dash
-        /// 11 = Sparse Dot
-        /// </summary>
-        public const string ObsLtype = "$OBSLTYPE";
-
-        /// <summary>
-        /// Ortho mode on if nonzero
-        /// </summary>
-        public const string OrthoMode = "$ORTHOMODE";
-
-        /// <summary>
-        /// Dimension limits generated if nonzero
-        /// </summary>
-        public const string DimLim = "$DIMLIM";
-
-        /// <summary>
-        /// Sets units for all dimension types except Angular:
-        /// 1 = Scientific
-        /// 2 = Decimal
-        /// 3 = Engineering
-        /// 4 = Architectural
-        /// 5 = Fractional
-        /// 6 = Operating system
-        /// </summary>
-        public const string DimLUnit = "$DIMLUNIT";
-
-        /// <summary>
-        /// Dimension line lineweight:
-        /// -3 = Standard
-        /// -2 = ByLayer
-        /// -1 = ByBlock
-        /// 0-211 = an integer representing 100th of mm
-        /// </summary>
-        public const string DimLwD = "$DIMLWD";
-
-        /// <summary>
-        /// Extension line lineweight:
-        /// -3 = Standard
-        /// -2 = ByLayer
-        /// -1 = ByBlock
-        /// 0-211 = an integer representing 100th of mm
-        /// </summary>
-        public const string DimLwE = "$DIMLWE";
-
-        /// <summary>
-        /// General dimensioning suffix
-        /// </summary>
-        public const string DimPost = "$DIMPOST";
-
-        /// <summary>
-        /// Rounding value for dimension distances
-        /// </summary>
-        public const string DimRnd = "$DIMRND";
-
-        /// <summary>
-        /// Use separate arrow blocks if nonzero
-        /// </summary>
-        public const string DimSah = "$DIMSAH";
-
-        /// <summary>
-        /// Overall dimensioning scale factor
-        /// </summary>
-        public const string DimScale = "$DIMSCALE";
-
-        /// <summary>
-        /// Suppression of first extension line:
-        /// 0 = Not suppressed
-        /// 1 = Suppressed
-        /// </summary>
-        public const string DimSd1 = "$DIMSD1";
-
-        /// <summary>
-        /// Suppression of second extension line:
-        /// 0 = Not suppressed
-        /// 1 = Suppressed
-        /// </summary>
-        public const string DimSd2 = "$DIMSD2";
-
-        /// <summary>
-        /// First extension line suppressed if nonzero
-        /// </summary>
-        public const string DimSe1 = "$DIMSE1";
-
-        /// <summary>
-        /// Second extension line suppressed if nonzero
-        /// </summary>
-        public const string DimSe2 = "$DIMSE2";
-
-        /// <summary>
-        /// 1 = Recompute dimensions while dragging
-        /// 0 = Drag original image
-        /// </summary>
-        public const string DimSho = "$DIMSHO";
-
-        /// <summary>
-        /// Suppress outside-extensions dimension lines if nonzero
-        /// </summary>
-        public const string DimSoXD = "$DIMSOXD";
-
-        /// <summary>
-        /// Current dimension style name.
-        /// </summary>
-        public const string DimStyle = "$DIMSTYLE";
-
-        /// <summary>
-        /// Text above dimension line if nonzero
-        /// </summary>
-        public const string DimTad = "$DIMTAD";
-
-        /// <summary>
-        /// Number of decimal places to display the tolerance values
-        /// </summary>
-        public const string DimTDec = "$DIMTDEC";
-
-        /// <summary>
-        /// Default text height.
-        /// </summary>
-        public const string TextSize = "$TEXTSIZE";
-
-        /// <summary>
-        /// Current text style name.
-        /// </summary>
-        public const string TextStyle = "$TEXTSTYLE";
-
-        /// <summary>
-        /// Current thickness set by ELEV command
-        /// </summary>
-        public const string Thickness = "$THICKNESS";
-
-        /// <summary>
-        /// 1 for previous release compatibility mode;
-        /// 0 otherwise
-        /// </summary>
-        public const string TileMode = "$TILEMODE";
-
-        /// <summary>
-        /// Default trace width
-        /// </summary>
-        public const string TraceWid = "$TRACEWID";
-
-        /// <summary>
-        /// Specifies the maximum depth of the spatial index
-        /// </summary>
-        public const string TreeDepth = "$TREEDEPTH";
-
-        /// <summary>
-        /// Name of the UCS that defines the origin and orientation of orthographic UCS settings
-        /// </summary>
-        public const string UcsBase = "$UCSBASE";
-
-        /// <summary>
-        /// Name of current UCS
-        /// </summary>
-        public const string UcsName = "$UCSNAME";
-
-        /// <summary>
-        /// Point which becomes the new UCS origin after changing model space UCS to BACK when UCSBASE is set to WORLD
-        /// </summary>
-        public const string UcsOrgBack = "$UCSORGBACK";
-
-        /// <summary>
-        /// Point which becomes the new UCS origin after changing model space UCS to BOTTOM when UCSBASE is set to WORLD
-        /// </summary>
-        public const string UcsOrgBottom = "$UCSORGBOTTOM";
-
-        /// <summary>
-        /// Point which becomes the new UCS origin after changing model space UCS to FRONT when UCSBASE is set to WORLD
-        /// </summary>
-        public const string UcsOrgFront = "$UCSORGFRONT";
-
-        /// <summary>
-        /// Point which becomes the new UCS origin after changing model space UCS to LEFT when UCSBASE is set to WORLD
-        /// </summary>
-        public const string UcsOrgLeft = "$UCSORGLEFT";
-
-        /// <summary>
-        /// Point which becomes the new UCS origin after changing model space UCS to RIGHT when UCSBASE is set to WORLD
-        /// </summary>
-        public const string UcsOrgRight = "$UCSORGRIGHT";
-
-        /// <summary>
-        /// Point which becomes the new UCS origin after changing model space UCS to TOP when UCSBASE is set to WORLD
-        /// </summary>
-        public const string UcsOrgTop = "$UCSORGTOP";
-
-        /// <summary>
-        /// If model space UCS is orthographic (UCSORTHOVIEW not equal to 0),
-        /// this is the name of the UCS that the orthographic UCS is relative to. If blank,
-        /// UCS is relative to WORLD
-        /// </summary>
-        public const string UcsOrthoRef = "$UCSORTHOREF";
-
-        /// <summary>
-        /// Orthographic view type of model space UCS:
-        /// 0 = UCS is not orthographic
-        /// 1 = Top
-        /// 2 = Bottom
-        /// 3 = Front
-        /// 4 = Back
-        /// 5 = Left
-        /// 6 = Right
-        /// </summary>
-        public const string UcsOrthoView = "$UCSORTHOVIEW";
-
-        /// <summary>
-        /// Units format for coordinates and distances.
-        /// </summary>
-        public const string LUnits = "$LUNITS";
-
-        /// <summary>
-        /// Units precision for coordinates and distances.
-        /// </summary>
-        public const string LUprec = "$LUPREC";
-
-        /// <summary>
-        /// Drawing code page; set to the system code page when a new drawing is created, but not otherwise maintained by AutoCAD.
+        /// Drawing code page; set to the system code page when a new drawing is created,
+        /// but not otherwise maintained by AutoCAD.
         /// </summary>
         public const string DwgCodePage = "$DWGCODEPAGE";
 
@@ -776,6 +624,7 @@ namespace netDxf.Header
         /// 3 = Square
         /// </summary>
         public const string EndCaps = "$ENDCAPS";
+
 
         /// <summary>
         /// X, Y, and Z drawing extents upper-right corner (in WCS)
@@ -823,6 +672,32 @@ namespace netDxf.Header
         /// A haloed line is shortened at the point where it is hidden when HIDE or the Hidden option of SHADEMODE is used
         /// </summary>
         public const string HaloGap = "$HALOGAP";
+
+        /// <summary>
+        /// Next available handle.
+        /// </summary>
+        public const string HandleSeed = "$HANDSEED";
+
+        /// <summary>
+        /// Specifies HIDETEXT system variable:
+        /// 0 = HIDE ignores text objects when producing the hidden view
+        /// 1 = HIDE does not ignore text objects
+        /// </summary>
+        public const string HideText = "$HIDETEXT";
+
+        /// <summary>
+        /// Path for all relative hyperlinks in the drawing. If null, the drawing path is used
+        /// </summary>
+        public const string HyperlinkBase = "$HYPERLINKBASE";
+
+        /// <summary>
+        /// Controls whether layer and spatial indexes are created and saved in drawing files:
+        /// 0 = No indexes are created
+        /// 1 = Layer index is created
+        /// 2 = Spatial index is created
+        /// 3 = Layer and spatial indexes are created
+        /// </summary>
+        public const string IndexCtl = "$INDEXCTL";
 
         /// <summary>
         /// Insertion base point for the current drawing.
@@ -921,9 +796,19 @@ namespace netDxf.Header
         public const string LimMin = "$LIMMIN";
 
         /// <summary>
-        /// User name that saved the file.
+        /// Global line type scale.
         /// </summary>
-        public const string LastSavedBy = "$LASTSAVEDBY";
+        public const string LtScale = "$LTSCALE";
+
+        /// <summary>
+        /// Units format for coordinates and distances.
+        /// </summary>
+        public const string LUnits = "$LUNITS";
+
+        /// <summary>
+        /// Units precision for coordinates and distances.
+        /// </summary>
+        public const string LUprec = "$LUPREC";
 
         /// <summary>
         /// Controls the display of lineweights on the Model or Layout tab.
@@ -940,14 +825,54 @@ namespace netDxf.Header
         public const string MaxActVp = "$MAXACTVP";
 
         /// <summary>
-        /// Global line type scale.
+        /// Sets drawing units:
+        /// 0 = English
+        /// 1 = Metric
         /// </summary>
-        public const string LtScale = "$LTSCALE";
+        public const string Measurement = "$MEASUREMENT";
+
+        /// <summary>
+        /// Name of menu file
+        /// </summary>
+        public const string Menu = "$MENU";
 
         /// <summary>
         /// Controls if the text will be mirrored during a symmetry.
         /// </summary>
-        public const string MirrText  = "$MIRRTEXT";
+        public const string MirrText = "$MIRRTEXT";
+
+        /// <summary>
+        /// Specifies the color of obscured lines.
+        /// An obscured line is a hidden line made visible by changing its color and linetype and is visible only when the HIDE or SHADEMODE command is used.
+        /// The OBSCUREDCOLOR setting is visible only if the OBSCUREDLTYPE is turned ON by setting it to a value other than 0.
+        /// 0 and 256 = Entity color
+        /// 1-255 = An AutoCAD color index (ACI)
+        /// </summary>
+        public const string ObsColor = "$OBSCOLOR";
+
+        /// <summary>
+        /// Specifies the linetype of obscured lines. Obscured linetypes are independent of zoom level, unlike standard object
+        /// linetypes. Value 0 turns off display of obscured lines and is the default. Linetype values are defined as follows:
+        /// 0 = Off
+        /// 1 = Solid
+        /// 2 = Dashed
+        /// 3 = Dotted
+        /// 4 = Short Dash
+        /// 5 = Medium Dash
+        /// 6 = Long Dash
+        /// 7 = Double Short Dash
+        /// 8 = Double Medium Dash
+        /// 9 = Double Long Dash
+        /// 10 = Medium Long Dash
+        /// 11 = Sparse Dot
+        /// </summary>
+        public const string ObsLtype = "$OBSLTYPE";
+
+        /// <summary>
+        /// Ortho mode on if nonzero
+        /// </summary>
+        public const string OrthoMode = "$ORTHOMODE";
+
 
         /// <summary>
         /// Controls the <see cref="PointShape">shape</see> to draw a point entity.
@@ -972,7 +897,7 @@ namespace netDxf.Header
         /// <summary>
         /// Maximum X, Y, and Z extents for paper space
         /// </summary>
-        public const string PExtMan = "$PEXTMAX";
+        public const string PExtMax = "$PEXTMAX";
 
         /// <summary>
         /// Minimum X, Y, and Z extents for paper space
@@ -997,7 +922,7 @@ namespace netDxf.Header
         /// <summary>
         /// Minimum X and Y limits in paper space
         /// </summary>
-        public const string PLimMin = "$PLIMMin";
+        public const string PLimMin = "$PLIMMIN";
 
         /// <summary>
         /// Governs the generation of line type patterns around the vertexes of a 2D polyline.
@@ -1221,6 +1146,11 @@ namespace netDxf.Header
         public const string TdCreate = "$TDCREATE";
 
         /// <summary>
+        /// Cumulative editing time for this drawing.
+        /// </summary>
+        public const string TdinDwg = "$TDINDWG";
+
+        /// <summary>
         /// Universal date/time the drawing was created.
         /// </summary>
         public const string TduCreate = "$TDUCREATE";
@@ -1241,14 +1171,99 @@ namespace netDxf.Header
         public const string TduUpdate = "$TDUUPDATE";
 
         /// <summary>
-        /// Cumulative editing time for this drawing.
+        /// Default text height.
         /// </summary>
-        public const string TdinDwg = "$TDINDWG";
+        public const string TextSize = "$TEXTSIZE";
+
+        /// <summary>
+        /// Current text style name.
+        /// </summary>
+        public const string TextStyle = "$TEXTSTYLE";
+
+        /// <summary>
+        /// Current thickness set by ELEV command
+        /// </summary>
+        public const string Thickness = "$THICKNESS";
+
+        /// <summary>
+        /// 1 for previous release compatibility mode;
+        /// 0 otherwise
+        /// </summary>
+        public const string TileMode = "$TILEMODE";
+
+        /// <summary>
+        /// Default trace width
+        /// </summary>
+        public const string TraceWid = "$TRACEWID";
+
+        /// <summary>
+        /// Specifies the maximum depth of the spatial index
+        /// </summary>
+        public const string TreeDepth = "$TREEDEPTH";
+
+        /// <summary>
+        /// Name of the UCS that defines the origin and orientation of orthographic UCS settings
+        /// </summary>
+        public const string UcsBase = "$UCSBASE";
+
+        /// <summary>
+        /// Name of current UCS
+        /// </summary>
+        public const string UcsName = "$UCSNAME";
 
         /// <summary>
         /// Origin of current UCS (in WCS).
         /// </summary>
         public const string UcsOrg = "$UCSORG";
+
+        /// <summary>
+        /// Point which becomes the new UCS origin after changing model space UCS to BACK when UCSBASE is set to WORLD
+        /// </summary>
+        public const string UcsOrgBack = "$UCSORGBACK";
+
+        /// <summary>
+        /// Point which becomes the new UCS origin after changing model space UCS to BOTTOM when UCSBASE is set to WORLD
+        /// </summary>
+        public const string UcsOrgBottom = "$UCSORGBOTTOM";
+
+        /// <summary>
+        /// Point which becomes the new UCS origin after changing model space UCS to FRONT when UCSBASE is set to WORLD
+        /// </summary>
+        public const string UcsOrgFront = "$UCSORGFRONT";
+
+        /// <summary>
+        /// Point which becomes the new UCS origin after changing model space UCS to LEFT when UCSBASE is set to WORLD
+        /// </summary>
+        public const string UcsOrgLeft = "$UCSORGLEFT";
+
+        /// <summary>
+        /// Point which becomes the new UCS origin after changing model space UCS to RIGHT when UCSBASE is set to WORLD
+        /// </summary>
+        public const string UcsOrgRight = "$UCSORGRIGHT";
+
+        /// <summary>
+        /// Point which becomes the new UCS origin after changing model space UCS to TOP when UCSBASE is set to WORLD
+        /// </summary>
+        public const string UcsOrgTop = "$UCSORGTOP";
+
+        /// <summary>
+        /// If model space UCS is orthographic (UCSORTHOVIEW not equal to 0),
+        /// this is the name of the UCS that the orthographic UCS is relative to. If blank,
+        /// UCS is relative to WORLD
+        /// </summary>
+        public const string UcsOrthoRef = "$UCSORTHOREF";
+
+        /// <summary>
+        /// Orthographic view type of model space UCS:
+        /// 0 = UCS is not orthographic
+        /// 1 = Top
+        /// 2 = Bottom
+        /// 3 = Front
+        /// 4 = Back
+        /// 5 = Left
+        /// 6 = Right
+        /// </summary>
+        public const string UcsOrthoView = "$UCSORTHOVIEW";
 
         /// <summary>
         /// Direction of the current UCS X axis (in WCS).
@@ -1268,27 +1283,27 @@ namespace netDxf.Header
         /// <summary>
         /// Five integer variables intended for use by third-party developers
         /// </summary>
-        public const string UserI1 = "USERI1";
+        public const string UserI1 = "$USERI1";
 
         /// <summary>
         /// Five integer variables intended for use by third-party developers
         /// </summary>
-        public const string UserI2 = "USERI2";
+        public const string UserI2 = "$USERI2";
 
         /// <summary>
         /// Five integer variables intended for use by third-party developers
         /// </summary>
-        public const string UserI3 = "USERI3";
+        public const string UserI3 = "$USERI3";
 
         /// <summary>
         /// Five integer variables intended for use by third-party developers
         /// </summary>
-        public const string UserI4 = "USERI4";
+        public const string UserI4 = "$USERI4";
 
         /// <summary>
         /// Five integer variables intended for use by third-party developers
         /// </summary>
-        public const string UserI5 = "USERI5";
+        public const string UserI5 = "$USERI5";
 
         /// <summary>
         /// Five real variables intended for use by third-party developers
@@ -1355,5 +1370,10 @@ namespace netDxf.Header
         /// 1 = Can use in-place reference editing
         /// </summary>
         public const string XEdit = "$XEDIT";
+
+        /// <summary>
+        /// User name that saved the file.
+        /// </summary>
+        public const string LastSavedBy = "$LASTSAVEDBY";
     }
 }

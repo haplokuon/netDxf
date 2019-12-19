@@ -33,7 +33,6 @@ namespace netDxf.Header
 
         private readonly string name;
         private readonly short groupCode;
-        private object variable;
 
         #endregion
 
@@ -54,11 +53,14 @@ namespace netDxf.Header
         /// </remarks>
         public HeaderVariable(string name, short groupCode, object value)
         {
-            if(!name.StartsWith("$", StringComparison.InvariantCultureIgnoreCase))
+            if (!name.StartsWith("$", StringComparison.InvariantCultureIgnoreCase))
+            {
                 throw new ArgumentException("Header variable names always starts with '$'", nameof(name));
+            }
+
             this.name = name;
             this.groupCode = groupCode;
-            this.variable = value;
+            Value = value;
         }
 
         #endregion
@@ -69,18 +71,12 @@ namespace netDxf.Header
         /// Gets the header variable name.
         /// </summary>
         /// <remarks>The header variable name is case insensitive.</remarks>
-        public string Name
-        {
-            get { return this.name; }
-        }
+        public string Name => name;
 
         /// <summary>
         /// Gets the header variable group code.
         /// </summary>
-        public short GroupCode
-        {
-            get { return this.groupCode; }
-        }
+        public short GroupCode => groupCode;
 
         /// <summary>
         /// Gets the header variable stored value.
@@ -92,11 +88,7 @@ namespace netDxf.Header
         /// If the header value is a Vector3 use the group code 30, if it is a Vector2 use group code 20,
         /// when the variable is written to the DXF the codes 10, 20, and 30 will be added as necessary.
         /// </remarks>
-        public object Value
-        {
-            get { return this.variable; }
-            set { this.variable = value; }
-        }
+        public object Value { get; set; }
 
         #endregion
 
@@ -108,7 +100,7 @@ namespace netDxf.Header
         /// <returns>A string text.</returns>
         public override string ToString()
         {
-            return string.Format("{0}:{1}", this.name, this.variable);
+            return string.Format("{0}:{1}", this.name, this.Value);
         }
 
         #endregion

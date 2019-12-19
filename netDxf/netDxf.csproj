@@ -100,9 +100,11 @@
     <Compile Include="Matrix2.cs" />
     <Compile Include="Matrix4.cs" />
     <Compile Include="Objects\PaperMargin.cs" />
+    <Compile Include="Objects\PlotStyleType.cs" />
     <Compile Include="Objects\PlotType.cs" />
     <Compile Include="Objects\ShadePlotMode.cs" />
     <Compile Include="Objects\ShadePlotResolutionMode.cs" />
+    <Compile Include="Objects\ShadowMode.cs" />
     <Compile Include="Tables\DimensionStyleAlternateUnits.cs" />
     <Compile Include="Tables\DimensionStyleTextDirection.cs" />
     <Compile Include="Tables\DimensionStyleTextVerticalPlacement.cs" />
@@ -282,6 +284,7 @@
     <Compile Include="Units\ImageResolutionUnits.cs" />
     <Compile Include="Units\ImageUnits.cs" />
     <Compile Include="Units\LinearUnitType.cs" />
+    <Compile Include="Units\UnitFormatsDimStyle.cs" />
     <Compile Include="Units\UnitHelper.cs" />
     <Compile Include="Units\UnitStyleFormat.cs" />
     <Compile Include="Vector2.cs" />
