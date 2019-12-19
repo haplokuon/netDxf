@@ -570,10 +570,23 @@ namespace netDxf.IO
                         this.doc.DrawingVariables.UcsYDir = this.ReadHeaderVector();
                         break;
                     default:
-                        // not recognized header variables will be added to the custom list
-                        if (!varName.StartsWith("$DIM", StringComparison.InvariantCultureIgnoreCase))
-                        { 
-                            // except those that correspond to the dimension style
+
+                        // avoid reading the header variables related with the current dimension style
+                        // avoid reading the $ACADMAINTVER variable the official DXF documentation says "Maintenance version number (should be ignored)"
+                        // avoid reading the $INTERFEREOBJVS and $INTERFEREVPVS variables, they are related to the visual style information that netDxf does not support
+                        // and if present in a saved DXF file they, somehow, interfere with the copying to the clipboard inside AutoCAD
+                        if (varName.StartsWith("$DIM", StringComparison.InvariantCultureIgnoreCase) ||
+                            varName.Equals("$ACADMAINTVER", StringComparison.InvariantCultureIgnoreCase) ||
+                            varName.Equals("$INTERFEREOBJVS", StringComparison.InvariantCultureIgnoreCase) ||
+                            varName.Equals("$INTERFEREVPVS", StringComparison.InvariantCultureIgnoreCase))
+                        {
+                            // some header variables have more than one entry
+                            while (this.chunk.Code != 0 && this.chunk.Code != 9)
+                                this.chunk.Next();
+                        }
+                        else 
+                        {
+                            // not recognized header variables will be added to the custom list
                             HeaderVariable variable;
                             if (this.chunk.Code == 10)
                             {
@@ -600,16 +613,12 @@ namespace netDxf.IO
                             }
 
                             //avoid duplicate custom header variables
-                            if (this.doc.DrawingVariables.ContainsCustomVariable(varName)) this.doc.DrawingVariables.RemoveCustomVariable(varName);
+                            if (this.doc.DrawingVariables.ContainsCustomVariable(varName))
+                                this.doc.DrawingVariables.RemoveCustomVariable(varName);
 
                             this.doc.DrawingVariables.AddCustomVariable(variable);
                         }
-                        else
-                        {
-                            // some header variables have more than one entry
-                            while (this.chunk.Code != 0 && this.chunk.Code != 9)
-                                this.chunk.Next();
-                        }
+
                         break;
                 }
             }
@@ -1218,7 +1227,7 @@ namespace netDxf.IO
                         }                       
                         break;
                     default:
-                        this.ReadUnkownTableEntry();
+                        this.ReadUnknownTableEntry();
                         return;
                 }
             }
@@ -2731,7 +2740,7 @@ namespace netDxf.IO
             return vport;
         }
 
-        private void ReadUnkownTableEntry()
+        private void ReadUnknownTableEntry()
         {
             do
                 this.chunk.Next();
@@ -9994,7 +10003,9 @@ namespace netDxf.IO
                 if (string.IsNullOrEmpty(layout.Viewport.Handle))
                     this.doc.NumHandles = layout.Viewport.AsignHandle(this.doc.NumHandles);
             }
-
+            // After loading a DXF the layouts associated blocks will be renamed to strictly follow *Paper_Space, *Paper_Space0, *Paper_Space1,... 
+            this.doc.Layouts.RenameAssociatedBlocks();
+            
             // post process viewports clipping boundaries
             foreach (KeyValuePair<Viewport, string> pair in this.viewports)
             {

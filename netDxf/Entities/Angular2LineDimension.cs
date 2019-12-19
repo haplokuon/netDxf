@@ -459,7 +459,7 @@ namespace netDxf.Entities
         /// <summary>
         /// Calculate the dimension reference points.
         /// </summary>
-        protected override void CalculteReferencePoints()
+        protected override void CalculateReferencePoints()
         {
             Vector2 dir1 = this.endFirstLine - this.startFirstLine;
             Vector2 dir2 = this.endSecondLine - this.startSecondLine;

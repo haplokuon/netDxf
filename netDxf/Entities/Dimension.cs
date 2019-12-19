@@ -313,7 +313,7 @@ namespace netDxf.Entities
         /// <summary>
         /// Calculate the dimension reference points.
         /// </summary>
-        protected abstract void CalculteReferencePoints();
+        protected abstract void CalculateReferencePoints();
 
         /// <summary>
         /// Gets the block that contains the entities that make up the dimension picture.
@@ -334,7 +334,7 @@ namespace netDxf.Entities
         /// </remarks>
         public void Update()
         {
-            this.CalculteReferencePoints();
+            this.CalculateReferencePoints();
 
             if (this.block != null)
             {

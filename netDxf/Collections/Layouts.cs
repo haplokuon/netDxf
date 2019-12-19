@@ -122,29 +122,29 @@ namespace netDxf.Collections
 
             layout.Owner = this;
 
-            Block associatadBlock = layout.AssociatedBlock;
+            Block associatedBlock = layout.AssociatedBlock;
 
             // create and add the corresponding PaperSpace block
-            if (layout.IsPaperSpace && associatadBlock == null)
+            if (layout.IsPaperSpace && associatedBlock == null)
             {
                 // the PaperSpace block names follow the naming Paper_Space, Paper_Space0, Paper_Space1, ...
                 string spaceName = this.list.Count == 1 ? Block.DefaultPaperSpaceName : string.Concat(Block.DefaultPaperSpaceName, this.list.Count - 2);
-                associatadBlock = new Block(spaceName, null, null, false);
+                associatedBlock = new Block(spaceName, null, null, false);
                 if (layout.TabOrder == 0)
                 {
                     layout.TabOrder = (short) this.list.Count;
                 }
             }
 
-            associatadBlock = this.Owner.Blocks.Add(associatadBlock);
+            associatedBlock = this.Owner.Blocks.Add(associatedBlock);
 
-            layout.AssociatedBlock = associatadBlock;
-            associatadBlock.Record.Layout = layout;
-            this.Owner.Blocks.References[associatadBlock.Name].Add(layout);
+            layout.AssociatedBlock = associatedBlock;
+            associatedBlock.Record.Layout = layout;
+            this.Owner.Blocks.References[associatedBlock.Name].Add(layout);
 
             if (layout.Viewport != null)
             {
-                layout.Viewport.Owner = associatadBlock;
+                layout.Viewport.Owner = associatedBlock;
             }
 
             if (assignHandle || string.IsNullOrEmpty(layout.Handle))
@@ -216,6 +216,13 @@ namespace netDxf.Collections
 
             item.NameChanged -= this.Item_NameChanged;
 
+            this.RenameAssociatedBlocks();
+
+            return true;
+        }
+
+        internal void RenameAssociatedBlocks()
+        {
             // When a layout is removed we need to rebuild the PaperSpace block names, to follow the naming Paper_Space, Paper_Space0, Paper_Space1, ...
             int index = 0;
             foreach (Layout l in this.list.Values)
@@ -228,7 +235,6 @@ namespace netDxf.Collections
                     index += 1;
                 }
             }
-            return true;
         }
 
         #endregion

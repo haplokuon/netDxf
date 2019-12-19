@@ -280,7 +280,7 @@ namespace netDxf.Entities
             this.Normal = newNormal;
         }
 
-        protected override void CalculteReferencePoints()
+        protected override void CalculateReferencePoints()
         {            
             if(Vector2.Equals(this.center, this.refPoint))
                 throw new ArgumentException("The center and the reference point cannot be the same");

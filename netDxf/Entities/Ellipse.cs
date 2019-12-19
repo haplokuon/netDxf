@@ -40,24 +40,24 @@ namespace netDxf.Entities
             private static double[] CoefficientsLine(Vector2 p1, Vector2 p2)
             {
                 // line: A*x + B*y + C = 0
-                double[] coeficients = new double[3];
-                coeficients[0] = p1.Y - p2.Y; //A
-                coeficients[1] = p2.X - p1.X; //B
-                coeficients[2] = p1.X * p2.Y - p2.X * p1.Y; //C
-                return coeficients;
+                double[] coefficients = new double[3];
+                coefficients[0] = p1.Y - p2.Y; //A
+                coefficients[1] = p2.X - p1.X; //B
+                coefficients[2] = p1.X * p2.Y - p2.X * p1.Y; //C
+                return coefficients;
             }
 
             private static double[] CoefficientsProductLines(double[] l1, double[] l2)
             {
                 // lines product: A*x2 + B*xy + C*y2 + D*x + E*y + F = 0
-                double[] coeficients = new double[6];
-                coeficients[0] = l1[0] * l2[0]; //A
-                coeficients[1] = l1[0] * l2[1] + l1[1] * l2[0]; //B
-                coeficients[2] = l1[1] * l2[1]; //C
-                coeficients[3] = l1[0] * l2[2] + l1[2] * l2[0]; //D
-                coeficients[4] = l1[1] * l2[2] + l1[2] * l2[1]; //E
-                coeficients[5] = l1[2] * l2[2]; //F
-                return coeficients;
+                double[] coefficients = new double[6];
+                coefficients[0] = l1[0] * l2[0]; //A
+                coefficients[1] = l1[0] * l2[1] + l1[1] * l2[0]; //B
+                coefficients[2] = l1[1] * l2[1]; //C
+                coefficients[3] = l1[0] * l2[2] + l1[2] * l2[0]; //D
+                coefficients[4] = l1[1] * l2[2] + l1[2] * l2[1]; //E
+                coefficients[5] = l1[2] * l2[2]; //F
+                return coefficients;
             }
 
             private static double Lambda(double[] alpha_beta, double[] gamma_delta, Vector2 p)
@@ -87,26 +87,26 @@ namespace netDxf.Entities
 
             private static double[] ConicCoefficients(Vector2 point1, Vector2 point2, Vector2 point3, Vector2 point4, Vector2 point5)
             {
-                double[] line_alpha = CoefficientsLine(point1, point2);
-                double[] line_beta = CoefficientsLine(point3, point4);
-                double[] line_gamma = CoefficientsLine(point1, point3);
-                double[] line_delta = CoefficientsLine(point2, point4);
+                double[] lineAlpha = CoefficientsLine(point1, point2);
+                double[] lineBeta = CoefficientsLine(point3, point4);
+                double[] lineGamma = CoefficientsLine(point1, point3);
+                double[] lineDelta = CoefficientsLine(point2, point4);
 
-                double[] alpha_beta = CoefficientsProductLines(line_alpha, line_beta);
-                double[] gamma_delta = CoefficientsProductLines(line_gamma, line_delta);
+                double[] alphaBeta = CoefficientsProductLines(lineAlpha, lineBeta);
+                double[] gammaDelta = CoefficientsProductLines(lineGamma, lineDelta);
 
-                double lambda = Lambda(alpha_beta, gamma_delta, point5);
+                double lambda = Lambda(alphaBeta, gammaDelta, point5);
                 if (double.IsNaN(lambda)) return null; // conic coefficients cannot be found, duplicate points
 
-                double[] coeficients = new double[6];
-                coeficients[0] = alpha_beta[0] + lambda * gamma_delta[0];          
-                coeficients[1] = alpha_beta[1] + lambda * gamma_delta[1];
-                coeficients[2] = alpha_beta[2] + lambda * gamma_delta[2];
-                coeficients[3] = alpha_beta[3] + lambda * gamma_delta[3];
-                coeficients[4] = alpha_beta[4] + lambda * gamma_delta[4];
-                coeficients[5] = alpha_beta[5] + lambda * gamma_delta[5];
+                double[] coefficients = new double[6];
+                coefficients[0] = alphaBeta[0] + lambda * gammaDelta[0];          
+                coefficients[1] = alphaBeta[1] + lambda * gammaDelta[1];
+                coefficients[2] = alphaBeta[2] + lambda * gammaDelta[2];
+                coefficients[3] = alphaBeta[3] + lambda * gammaDelta[3];
+                coefficients[4] = alphaBeta[4] + lambda * gammaDelta[4];
+                coefficients[5] = alphaBeta[5] + lambda * gammaDelta[5];
 
-                return coeficients;
+                return coefficients;
             }
 
             public static bool EllipseProperties(Vector2 point1, Vector2 point2, Vector2 point3, Vector2 point4, Vector2 point5, out Vector2 center, out double semiMajorAxis, out double semiMinorAxis, out double rotation)
@@ -116,15 +116,15 @@ namespace netDxf.Entities
                 semiMinorAxis = double.NaN;
                 rotation = double.NaN;
 
-                double[] coeficients = ConicCoefficients(point1, point2, point3, point4, point5);
-                if(coeficients == null) return false;
+                double[] coefficients = ConicCoefficients(point1, point2, point3, point4, point5);
+                if(coefficients == null) return false;
 
-                double a = coeficients[0];
-                double b = coeficients[1];
-                double c = coeficients[2];
-                double d = coeficients[3];
-                double e = coeficients[4];
-                double f = coeficients[5];
+                double a = coefficients[0];
+                double b = coefficients[1];
+                double c = coefficients[2];
+                double d = coefficients[3];
+                double e = coefficients[4];
+                double f = coefficients[5];
 
                 double q = b * b - 4 * a * c;
                            
@@ -444,11 +444,11 @@ namespace netDxf.Entities
             Vector2 p4 = new Vector2(semiMajorAxis, -semiMinorAxis);
             List<Vector2> ocsPoints = MathHelper.Transform(new[] {p1, p2, p3, p4}, this.Rotation * MathHelper.DegToRad, CoordinateSystem.Object, CoordinateSystem.World);
 
-            Vector3 p1prime = new Vector3(ocsPoints[0].X, ocsPoints[0].Y, 0.0);
-            Vector3 p2prime = new Vector3(ocsPoints[1].X, ocsPoints[1].Y, 0.0);
-            Vector3 p3prime = new Vector3(ocsPoints[2].X, ocsPoints[2].Y, 0.0);
-            Vector3 p4prime = new Vector3(ocsPoints[3].X, ocsPoints[3].Y, 0.0);
-            List<Vector3> wcsPoints = MathHelper.Transform(new[] {p1prime, p2prime, p3prime, p4prime}, this.Normal, CoordinateSystem.Object, CoordinateSystem.World);
+            Vector3 p1Prime = new Vector3(ocsPoints[0].X, ocsPoints[0].Y, 0.0);
+            Vector3 p2Prime = new Vector3(ocsPoints[1].X, ocsPoints[1].Y, 0.0);
+            Vector3 p3Prime = new Vector3(ocsPoints[2].X, ocsPoints[2].Y, 0.0);
+            Vector3 p4Prime = new Vector3(ocsPoints[3].X, ocsPoints[3].Y, 0.0);
+            List<Vector3> wcsPoints = MathHelper.Transform(new[] {p1Prime, p2Prime, p3Prime, p4Prime}, this.Normal, CoordinateSystem.Object, CoordinateSystem.World);
             for (int i = 0; i < wcsPoints.Count; i++)
             {
                 wcsPoints[i] += this.Center;
@@ -527,14 +527,14 @@ namespace netDxf.Entities
             Vector2 start = this.PolarCoordinateRelativeToCenter(this.StartAngle);
             Vector2 end = this.PolarCoordinateRelativeToCenter(this.EndAngle);
 
-            if (!MathHelper.IsZero(this.Rotation))
+            if (!MathHelper.IsZero(oldRotation))
             {
                 double beta = oldRotation * MathHelper.DegToRad;
-                double sinbeta = Math.Sin(beta);
-                double cosbeta = Math.Cos(beta);
+                double sinBeta = Math.Sin(beta);
+                double cosBeta = Math.Cos(beta);
 
-                start = new Vector2(start.X * cosbeta - start.Y * sinbeta, start.X * sinbeta + start.Y * cosbeta);
-                end = new Vector2(end.X * cosbeta - end.Y * sinbeta, end.X * sinbeta + end.Y * cosbeta);
+                start = new Vector2(start.X * cosBeta - start.Y * sinBeta, start.X * sinBeta + start.Y * cosBeta);
+                end = new Vector2(end.X * cosBeta - end.Y * sinBeta, end.X * sinBeta + end.Y * cosBeta);
             }
 
             Vector3 pStart = new Vector3(start.X, start.Y, 0.0);

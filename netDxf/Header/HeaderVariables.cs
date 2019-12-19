@@ -102,8 +102,8 @@ namespace netDxf.Header
         /// <summary>
         /// The AutoCAD drawing database version number.
         /// </summary>
-        /// <remarks>Only AutoCad2000 and higher dxf versions are supported.</remarks>
-        /// <exception cref="NotSupportedException">Only AutoCad2000 and higher dxf versions are supported.</exception>
+        /// <remarks>Only AutoCad2000 and higher DXF versions are supported.</remarks>
+        /// <exception cref="NotSupportedException">Only AutoCad2000 and higher DXF versions are supported.</exception>
         public DxfVersion AcadVer
         {
             get { return (DxfVersion) this.variables[HeaderVariableCode.AcadVer].Value; }
