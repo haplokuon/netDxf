@@ -1,5 +1,7 @@
 ## Change history
 
+### [2019/12/21]
+* Additional change related to pull request #150. Force the use of the ASCII.WindowsCodePage encoding in the DxfReader class, just for cases where there was a problem reading the codepage from the file.
 
 ### [2019/12/19]
 *(fixed) Error when trying to copy to clipboard inside AutoCAD for DXF files saved with netDXF that contains the header variables $INTERFEREOBJVS and $INTERFEREVPVS, since this variables refer to visual style information that netDxf does not save. This variables will not be loaded in case they appear in a DXF.
