@@ -554,9 +554,16 @@ namespace netDxf.Entities
             Vector2 newStart = new Vector2(ocsAnglePoints[0].X, ocsAnglePoints[0].Y);
             Vector2 newEnd = new Vector2(ocsAnglePoints[1].X, ocsAnglePoints[1].Y);
 
-            double invert = Math.Sign(transformation.M11 * transformation.M22 * transformation.M33) < 0 ? 180.0 : 0.0;
-            this.StartAngle = invert + Vector2.Angle(newStart) * MathHelper.RadToDeg - this.Rotation;
-            this.EndAngle = invert + Vector2.Angle(newEnd) * MathHelper.RadToDeg - this.Rotation;
+            if (Math.Sign(transformation.M11 * transformation.M22 * transformation.M33) < 0)
+            {
+                this.EndAngle = Vector2.Angle(newStart) * MathHelper.RadToDeg;
+                this.StartAngle = Vector2.Angle(newEnd) * MathHelper.RadToDeg;
+            }
+            else
+            {
+                this.StartAngle = Vector2.Angle(newStart) * MathHelper.RadToDeg;
+                this.EndAngle = Vector2.Angle(newEnd) * MathHelper.RadToDeg;
+            }
         }
 
         /// <summary>

@@ -1,5 +1,9 @@
 ## Change history
 
+### [2019/12/30]
+* (fixed) Issue with the start and end angles when performing symmetries in Arc entities:
+* (fixed) Issue with the start and end angles when performing symmetries in Ellipse arc entities:
+
 ### [2019/12/21]
 * Additional change related to pull request #150. Force the use of the ASCII.WindowsCodePage encoding in the DxfReader class, just for cases where there was a problem reading the codepage from the file.
 

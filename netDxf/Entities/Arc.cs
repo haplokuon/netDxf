@@ -244,9 +244,16 @@ namespace netDxf.Entities
             this.Center = newCenter;
             this.Radius = newRadius;
 
-            double invert = Math.Sign(transformation.M11 * transformation.M22 * transformation.M33) < 0 ? 180.0 : 0.0;
-            this.StartAngle = invert + Vector2.Angle(startPoint) * MathHelper.RadToDeg;
-            this.EndAngle = invert + Vector2.Angle(endPoint) * MathHelper.RadToDeg;
+            if (Math.Sign(transformation.M11 * transformation.M22 * transformation.M33) < 0)
+            {
+                this.EndAngle = Vector2.Angle(startPoint) * MathHelper.RadToDeg;
+                this.StartAngle = Vector2.Angle(endPoint) * MathHelper.RadToDeg;
+            }
+            else
+            {
+                this.StartAngle = Vector2.Angle(startPoint) * MathHelper.RadToDeg;
+                this.EndAngle = Vector2.Angle(endPoint) * MathHelper.RadToDeg;
+            }
         }
 
         /// <summary>
