@@ -23,7 +23,7 @@
 namespace netDxf
 {
     /// <summary>
-    /// Dxf string codes.
+    /// DXF string codes.
     /// </summary>
     public static class DxfObjectCode
     {

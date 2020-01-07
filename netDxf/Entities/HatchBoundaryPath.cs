@@ -579,7 +579,7 @@ namespace netDxf.Entities
                     throw new ArgumentException("The entity is not an Spline", nameof(entity));
 
                 this.Degree = spline.Degree;
-                this.IsRational = spline.Flags.HasFlag(SplinetypeFlags.Rational);
+                this.IsRational = spline.Flags.HasFlag(SplineTypeFlags.Rational);
                 this.IsPeriodic = spline.IsPeriodic;
                 if (spline.ControlPoints.Count == 0)
                     throw new ArgumentException("The HatchBoundaryPath spline edge requires a spline entity with control points.", nameof(entity));

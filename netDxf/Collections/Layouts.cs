@@ -149,7 +149,7 @@ namespace netDxf.Collections
 
             if (assignHandle || string.IsNullOrEmpty(layout.Handle))
             {
-                this.Owner.NumHandles = layout.AsignHandle(this.Owner.NumHandles);
+                this.Owner.NumHandles = layout.AssignHandle(this.Owner.NumHandles);
             }
 
             this.list.Add(layout.Name, layout);

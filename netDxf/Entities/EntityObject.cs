@@ -125,7 +125,7 @@ namespace netDxf.Entities
         #region public properties
 
         /// <summary>
-        /// Gets the list of dxf objects that has been attached to this entity.
+        /// Gets the list of DXF objects that has been attached to this entity.
         /// </summary>
         public IReadOnlyList<DxfObject> Reactors
         {
@@ -243,7 +243,7 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets the owner of the actual dxf object.
+        /// Gets the owner of the actual DXF object.
         /// </summary>
         public new Block Owner
         {

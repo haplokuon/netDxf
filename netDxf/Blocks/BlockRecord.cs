@@ -141,7 +141,7 @@ namespace netDxf.Blocks
         /// Gets or sets if the block can be exploded.
         /// </summary>
         /// <remarks>
-        /// This property is only compatible with dxf version AutoCad2007 and upwards.
+        /// This property is only compatible with DXF version AutoCad2007 and upwards.
         /// </remarks>
         public bool AllowExploding
         {
@@ -153,7 +153,7 @@ namespace netDxf.Blocks
         /// Gets or sets if the block must be scaled uniformly.
         /// </summary>
         /// <remarks>
-        /// This property is only compatible with dxf version AutoCad2007 and upwards.
+        /// This property is only compatible with DXF version AutoCad2007 and upwards.
         /// </remarks>
         public bool ScaleUniformly
         {
@@ -162,7 +162,7 @@ namespace netDxf.Blocks
         }
 
         /// <summary>
-        /// Gets the owner of the actual dxf object.
+        /// Gets the owner of the actual DXF object.
         /// </summary>
         public new BlockRecords Owner
         {

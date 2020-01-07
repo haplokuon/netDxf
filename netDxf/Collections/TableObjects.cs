@@ -53,7 +53,7 @@ namespace netDxf.Collections
             this.Owner = document;
 
             if (string.IsNullOrEmpty(handle))
-                this.Owner.NumHandles = base.AsignHandle(this.Owner.NumHandles);
+                this.Owner.NumHandles = base.AssignHandle(this.Owner.NumHandles);
             else
                 this.Handle = handle;
 
@@ -116,7 +116,7 @@ namespace netDxf.Collections
         }
 
         /// <summary>
-        /// Gets the owner of the actual dxf object.
+        /// Gets the owner of the actual DXF object.
         /// </summary>
         public new DxfDocument Owner
         {

@@ -313,7 +313,7 @@ namespace netDxf.Tables
         }
 
         /// <summary>
-        /// Gets the owner of the actual dxf object.
+        /// Gets the owner of the actual DXF object.
         /// </summary>
         public new Linetypes Owner
         {

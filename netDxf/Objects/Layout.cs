@@ -339,12 +339,12 @@ namespace netDxf.Objects
         /// Some objects might consume more than one, is, for example, the case of polylines that will assign
         /// automatically a handle to its vertexes. The entity number will be converted to an hexadecimal number.
         /// </remarks>
-        internal override long AsignHandle(long entityNumber)
+        internal override long AssignHandle(long entityNumber)
         {
-            entityNumber = this.Owner.AsignHandle(entityNumber);
+            entityNumber = this.Owner.AssignHandle(entityNumber);
             if (this.isPaperSpace)
-                entityNumber = this.viewport.AsignHandle(entityNumber);
-            return base.AsignHandle(entityNumber);
+                entityNumber = this.viewport.AssignHandle(entityNumber);
+            return base.AssignHandle(entityNumber);
         }
 
         #endregion

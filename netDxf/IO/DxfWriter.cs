@@ -93,12 +93,12 @@ namespace netDxf.IO
 
             // Named dictionary it is always the first to appear in the object section
             DictionaryObject namedObjectDictionary = new DictionaryObject(this.doc);
-            this.doc.NumHandles = namedObjectDictionary.AsignHandle(this.doc.NumHandles);
+            this.doc.NumHandles = namedObjectDictionary.AssignHandle(this.doc.NumHandles);
             dictionaries.Add(namedObjectDictionary);
 
             // create the Group dictionary, this dictionary always appear even if there are no groups in the drawing
             DictionaryObject groupDictionary = new DictionaryObject(namedObjectDictionary);
-            this.doc.NumHandles = groupDictionary.AsignHandle(this.doc.NumHandles);
+            this.doc.NumHandles = groupDictionary.AssignHandle(this.doc.NumHandles);
             foreach (Group group in this.doc.Groups.Items)
             {
                 groupDictionary.Entries.Add(group.Handle, group.Name);
@@ -108,7 +108,7 @@ namespace netDxf.IO
 
             // Layout dictionary
             DictionaryObject layoutDictionary = new DictionaryObject(namedObjectDictionary);
-            this.doc.NumHandles = layoutDictionary.AsignHandle(this.doc.NumHandles);
+            this.doc.NumHandles = layoutDictionary.AssignHandle(this.doc.NumHandles);
             if (this.doc.Layouts.Count > 0)
             {
                 foreach (Layout layout in this.doc.Layouts.Items)
@@ -121,7 +121,7 @@ namespace netDxf.IO
 
             // create the Underlay definitions dictionary
             DictionaryObject dgnDefinitionDictionary = new DictionaryObject(namedObjectDictionary);
-            this.doc.NumHandles = dgnDefinitionDictionary.AsignHandle(this.doc.NumHandles);
+            this.doc.NumHandles = dgnDefinitionDictionary.AssignHandle(this.doc.NumHandles);
             if (this.doc.UnderlayDgnDefinitions.Count > 0)
             {
                 foreach (UnderlayDgnDefinition underlayDef in this.doc.UnderlayDgnDefinitions.Items)
@@ -132,7 +132,7 @@ namespace netDxf.IO
                 }
             }
             DictionaryObject dwfDefinitionDictionary = new DictionaryObject(namedObjectDictionary);
-            this.doc.NumHandles = dwfDefinitionDictionary.AsignHandle(this.doc.NumHandles);
+            this.doc.NumHandles = dwfDefinitionDictionary.AssignHandle(this.doc.NumHandles);
             if (this.doc.UnderlayDwfDefinitions.Count > 0)
             {
                 foreach (UnderlayDwfDefinition underlayDef in this.doc.UnderlayDwfDefinitions.Items)
@@ -143,7 +143,7 @@ namespace netDxf.IO
                 }
             }
             DictionaryObject pdfDefinitionDictionary = new DictionaryObject(namedObjectDictionary);
-            this.doc.NumHandles = pdfDefinitionDictionary.AsignHandle(this.doc.NumHandles);
+            this.doc.NumHandles = pdfDefinitionDictionary.AssignHandle(this.doc.NumHandles);
             if (this.doc.UnderlayPdfDefinitions.Count > 0)
             {
                 foreach (UnderlayPdfDefinition underlayDef in this.doc.UnderlayPdfDefinitions.Items)
@@ -156,7 +156,7 @@ namespace netDxf.IO
 
             // create the MLine style dictionary
             DictionaryObject mLineStyleDictionary = new DictionaryObject(namedObjectDictionary);
-            this.doc.NumHandles = mLineStyleDictionary.AsignHandle(this.doc.NumHandles);
+            this.doc.NumHandles = mLineStyleDictionary.AssignHandle(this.doc.NumHandles);
             if (this.doc.MlineStyles.Count > 0)
             {
                 foreach (MLineStyle mLineStyle in this.doc.MlineStyles.Items)
@@ -169,7 +169,7 @@ namespace netDxf.IO
 
             // create the image dictionary
             DictionaryObject imageDefDictionary = new DictionaryObject(namedObjectDictionary);
-            this.doc.NumHandles = imageDefDictionary.AsignHandle(this.doc.NumHandles);
+            this.doc.NumHandles = imageDefDictionary.AssignHandle(this.doc.NumHandles);
             if (this.doc.ImageDefinitions.Count > 0)
             {
                 foreach (ImageDefinition imageDef in this.doc.ImageDefinitions.Items)
@@ -204,7 +204,7 @@ namespace netDxf.IO
             // writing a copy of the active dimension style variables in the header section will avoid to be displayed as <style overrides> in AutoCAD
             DimensionStyle activeDimStyle;
             if (this.doc.DimensionStyles.TryGetValue(this.doc.DrawingVariables.DimStyle, out activeDimStyle))
-                this.WriteActiveDimensionStyleSystemVaribles(activeDimStyle);
+                this.WriteActiveDimensionStyleSystemVariables(activeDimStyle);
 
             // write the custom header values
             foreach (HeaderVariable variable in this.doc.DrawingVariables.CustomValues())
@@ -431,7 +431,7 @@ namespace netDxf.IO
         #region private methods
 
         /// <summary>
-        /// Open the dxf writer.
+        /// Open the DXF writer.
         /// </summary>
         private void Open(Stream stream, Encoding encoding)
         {
@@ -442,7 +442,7 @@ namespace netDxf.IO
         }
 
         /// <summary>
-        /// Closes the dxf writer.
+        /// Closes the DXF writer.
         /// </summary>
         private void Close()
         {
@@ -705,7 +705,7 @@ namespace netDxf.IO
             }
         }
 
-        private void WriteActiveDimensionStyleSystemVaribles(DimensionStyle style)
+        private void WriteActiveDimensionStyleSystemVariables(DimensionStyle style)
         {
             this.chunk.Write(9, "$DIMADEC");
             this.chunk.Write(70, style.AngularPrecision);
@@ -726,7 +726,7 @@ namespace netDxf.IO
             this.chunk.Write(70, style.Tolerances.AlternatePrecision);
 
             this.chunk.Write(9, "$DIMALTTZ");
-            this.chunk.Write(70, GetSupressZeroesValue(
+            this.chunk.Write(70, GetSuppressZeroesValue(
                     style.Tolerances.AlternateSuppressLinearLeadingZeros,
                     style.Tolerances.AlternateSuppressLinearTrailingZeros,
                     style.Tolerances.AlternateSuppressZeroFeet,
@@ -753,7 +753,7 @@ namespace netDxf.IO
             }
 
             this.chunk.Write(9, "$DIMALTZ");
-            this.chunk.Write(70, GetSupressZeroesValue(
+            this.chunk.Write(70, GetSuppressZeroesValue(
                     style.AlternateUnits.SuppressLinearLeadingZeros,
                     style.AlternateUnits.SuppressLinearTrailingZeros,
                     style.AlternateUnits.SuppressZeroFeet,
@@ -1007,20 +1007,20 @@ namespace netDxf.IO
             this.chunk.Write(70, (short) style.TextDirection);
 
             this.chunk.Write(9, "$DIMTZIN");
-            this.chunk.Write(70, GetSupressZeroesValue(
+            this.chunk.Write(70, GetSuppressZeroesValue(
                     style.Tolerances.SuppressLinearLeadingZeros,
                     style.Tolerances.SuppressLinearTrailingZeros,
                     style.Tolerances.SuppressZeroFeet,
                     style.Tolerances.SuppressZeroInches));
 
             this.chunk.Write(9, "$DIMZIN");
-            this.chunk.Write(70, GetSupressZeroesValue(
+            this.chunk.Write(70, GetSuppressZeroesValue(
                     style.SuppressLinearLeadingZeros,
                     style.SuppressLinearTrailingZeros,
                     style.SuppressZeroFeet,
                     style.SuppressZeroInches));
 
-            // CAUTION: The next four codes are not documented in the official dxf docs
+            // CAUTION: The next four codes are not documented in the official DXF docs
             this.chunk.Write(9, "$DIMFRAC");
             this.chunk.Write(70, (short) style.FractionType);
 
@@ -1045,7 +1045,7 @@ namespace netDxf.IO
             this.chunk.Write(2, SubclassMarker.RasterImage);
             this.chunk.Write(3, "ISM");
 
-            // default codes as shown in the dxf documentation
+            // default codes as shown in the DXF documentation
             this.chunk.Write(90, 127);
             if (this.doc.DrawingVariables.AcadVer > DxfVersion.AutoCad2000)
                 this.chunk.Write(91, count);
@@ -1060,7 +1060,7 @@ namespace netDxf.IO
             this.chunk.Write(2, SubclassMarker.RasterImageDef);
             this.chunk.Write(3, "ISM");
 
-            // default codes as shown in the dxf documentation
+            // default codes as shown in the DXF documentation
             this.chunk.Write(90, 0);
             if (this.doc.DrawingVariables.AcadVer > DxfVersion.AutoCad2000)
                 this.chunk.Write(91, count);
@@ -1075,7 +1075,7 @@ namespace netDxf.IO
             this.chunk.Write(2, SubclassMarker.RasterImageDefReactor);
             this.chunk.Write(3, "ISM");
 
-            // default codes as shown in the dxf documentation
+            // default codes as shown in the DXF documentation
             this.chunk.Write(90, 1);
             if (this.doc.DrawingVariables.AcadVer > DxfVersion.AutoCad2000)
                 this.chunk.Write(91, count);
@@ -1090,7 +1090,7 @@ namespace netDxf.IO
             this.chunk.Write(2, SubclassMarker.RasterVariables);
             this.chunk.Write(3, "ISM");
 
-            // default codes as shown in the dxf documentation
+            // default codes as shown in the DXF documentation
             this.chunk.Write(90, 0);
             if (this.doc.DrawingVariables.AcadVer > DxfVersion.AutoCad2000)
                 this.chunk.Write(91, count);
@@ -1252,7 +1252,7 @@ namespace netDxf.IO
             this.chunk.Write(76, style.ExtLine2Off ? (short) 1 : (short) 0);
 
             this.chunk.Write(77, (short) style.TextVerticalPlacement);
-            this.chunk.Write(78, GetSupressZeroesValue(
+            this.chunk.Write(78, GetSuppressZeroesValue(
                     style.SuppressLinearLeadingZeros,
                     style.SuppressLinearTrailingZeros,
                     style.SuppressZeroFeet,
@@ -1317,17 +1317,17 @@ namespace netDxf.IO
             this.chunk.Write(281, style.DimLine1Off ? (short) 1 : (short) 0);
             this.chunk.Write(282, style.DimLine2Off ? (short) 1 : (short) 0);
             this.chunk.Write(283, (short) style.Tolerances.VerticalPlacement);
-            this.chunk.Write(284, GetSupressZeroesValue(
+            this.chunk.Write(284, GetSuppressZeroesValue(
                     style.Tolerances.SuppressLinearLeadingZeros,
                     style.Tolerances.SuppressLinearTrailingZeros,
                     style.Tolerances.SuppressZeroFeet,
                     style.Tolerances.SuppressZeroInches));
-            this.chunk.Write(285, GetSupressZeroesValue(
+            this.chunk.Write(285, GetSuppressZeroesValue(
                     style.AlternateUnits.SuppressLinearLeadingZeros,
                     style.AlternateUnits.SuppressLinearTrailingZeros,
                     style.AlternateUnits.SuppressZeroFeet,
                     style.AlternateUnits.SuppressZeroInches));
-            this.chunk.Write(286, GetSupressZeroesValue(
+            this.chunk.Write(286, GetSuppressZeroesValue(
                     style.Tolerances.AlternateSuppressLinearLeadingZeros,
                     style.Tolerances.AlternateSuppressLinearTrailingZeros,
                     style.Tolerances.AlternateSuppressZeroFeet,
@@ -1370,7 +1370,7 @@ namespace netDxf.IO
                 this.chunk.Write(344, style.DimArrow2.Record.Handle);
             }
 
-            // CAUTION: The next three codes are undocumented in the official dxf docs
+            // CAUTION: The next three codes are undocumented in the official DXF docs
             this.chunk.Write(345, style.DimLineLinetype.Handle);
             this.chunk.Write(346, style.ExtLine1Linetype.Handle);
             this.chunk.Write(347, style.ExtLine2Linetype.Handle);
@@ -1406,7 +1406,7 @@ namespace netDxf.IO
             if (blockRecord.IsForInternalUseOnly)
                 return;
 
-            // The next three values will only work for dxf version AutoCad2007 and upwards
+            // The next three values will only work for DXF version AutoCad2007 and upwards
             this.chunk.Write(70, (short) blockRecord.Units);
             this.chunk.Write(280, blockRecord.AllowExploding ? (short) 1 : (short) 0);
             this.chunk.Write(281, blockRecord.ScaleUniformly ? (short) 1 : (short) 0);
@@ -1483,7 +1483,7 @@ namespace netDxf.IO
                         this.chunk.Write(75, (short)0);
                         this.chunk.Write(340, textSegment.Style.Handle);
                         this.chunk.Write(46, textSegment.Scale);
-                        this.chunk.Write(50, textSegment.Rotation); // the dxf documentation is wrong the rotation value is stored in degrees not radians
+                        this.chunk.Write(50, textSegment.Rotation); // the DXF documentation is wrong the rotation value is stored in degrees not radians
                         this.chunk.Write(44, textSegment.Offset.X);
                         this.chunk.Write(45, textSegment.Offset.Y);
                         this.chunk.Write(9, this.EncodeNonAsciiCharacters(textSegment.Text));
@@ -2274,7 +2274,7 @@ namespace netDxf.IO
 
             this.chunk.Write(39, arc.Thickness);
 
-            // this is just an example of the weird Autodesk dxf way of doing things, while an ellipse the center is given in world coordinates,
+            // this is just an example of the weird Autodesk DXF way of doing things, while an ellipse the center is given in world coordinates,
             // the center of an arc is given in object coordinates (different rules for the same concept).
             // It is a lot more intuitive to give the center in world coordinates and then define the orientation with the normal..
             Vector3 ocsCenter = MathHelper.Transform(arc.Center, arc.Normal, CoordinateSystem.World, CoordinateSystem.Object);
@@ -2300,7 +2300,7 @@ namespace netDxf.IO
         {
             this.chunk.Write(100, SubclassMarker.Circle);
 
-            // this is just an example of the stupid autodesk dxf way of doing things, while an ellipse the center is given in world coordinates,
+            // this is just an example of the stupid autodesk DXF way of doing things, while an ellipse the center is given in world coordinates,
             // the center of a circle is given in object coordinates (different rules for the same concept).
             // It is a lot more intuitive to give the center in world coordinates and then define the orientation with the normal..
             Vector3 ocsCenter = MathHelper.Transform(circle.Center, circle.Normal, CoordinateSystem.World, CoordinateSystem.Object);
@@ -2463,19 +2463,19 @@ namespace netDxf.IO
 
             if (spline.CreationMethod == SplineCreationMethod.FitPoints)
             {
-                flags += (short) SplinetypeFlags.FitPointCreationMethod;
+                flags += (short) SplineTypeFlags.FitPointCreationMethod;
                 flags += (short) spline.KnotParameterization;
             }
 
             if (spline.IsPeriodic)
-                flags += (short) SplinetypeFlags.ClosedPeriodicSpline;
+                flags += (short) SplineTypeFlags.ClosedPeriodicSpline;
 
             this.chunk.Write(70, flags);
             this.chunk.Write(71, spline.Degree);
 
             // the next three codes are purely cosmetic and writing them causes more bad than good.
             // internally AutoCad allows for an INT number of knots, control points, and fit points;
-            // but for some weird decision they decided to define them in the dxf with codes 72, 73, and 74 (16-bit integer value), a short.
+            // but for some weird decision they decided to define them in the DXF with codes 72, 73, and 74 (16-bit integer value), a short.
             // I guess this is the result of legacy code, nevertheless AutoCad do not use those values when importing Spline entities
             //this.chunk.Write(72, (short)spline.Knots.Length);
             //this.chunk.Write(73, (short)spline.ControlPoints.Count);
@@ -2549,7 +2549,7 @@ namespace netDxf.IO
             if (insert.Attributes.Count > 0)
             {
                 //Obsolete; formerly an entities follow flag (optional; ignore if present)
-                //AutoCAD will fail loading the file if it is not there, more dxf voodoo
+                //AutoCAD will fail loading the file if it is not there, more DXF voodoo
                 this.chunk.Write(66, (short) 1);
 
                 this.WriteXData(insert.XData);
@@ -2776,7 +2776,7 @@ namespace netDxf.IO
             this.chunk.Write(220, point.Normal.Y);
             this.chunk.Write(230, point.Normal.Z);
 
-            // for unknown reasons the dxf likes the point rotation inverted
+            // for unknown reasons the DXF likes the point rotation inverted
             this.chunk.Write(50, 360.0 - point.Rotation);
 
             this.WriteXData(point.XData);
@@ -3134,7 +3134,7 @@ namespace netDxf.IO
 
                 HatchBoundaryPath.Spline spline = (HatchBoundaryPath.Spline) entity;
 
-                // another dxf inconsistency!; while the Spline entity degree is written as a short (code 71)
+                // another DXF inconsistency!; while the Spline entity degree is written as a short (code 71)
                 // the degree of a hatch boundary path spline is written as an int (code 94)
                 this.chunk.Write(94, (int) spline.Degree);
                 this.chunk.Write(73, spline.IsRational ? (short) 1 : (short) 0);
@@ -3184,7 +3184,7 @@ namespace netDxf.IO
             this.chunk.Write(10, 0.0);
             this.chunk.Write(20, 0.0);
 
-            // dxf AutoCad2000 does not support hatch gradient patterns
+            // DXF AutoCad2000 does not support hatch gradient patterns
             if (this.doc.DrawingVariables.AcadVer <= DxfVersion.AutoCad2000)
                 return;
 
@@ -3219,7 +3219,7 @@ namespace netDxf.IO
                 double scale = pattern.Scale;
                 double angle = line.Angle + pattern.Angle;
                 // Pattern fill data.
-                // In theory this should hold the same information as the pat file but for unknown reason the dxf requires global data instead of local,
+                // In theory this should hold the same information as the pat file but for unknown reason the DXF requires global data instead of local,
                 // it's a guess the documentation is kinda obscure.
                 // This means we have to apply the pattern rotation and scale to the line definitions
                 this.chunk.Write(53, angle);
@@ -3747,7 +3747,7 @@ namespace netDxf.IO
             {
                 xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 78));
                 xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16,
-                    GetSupressZeroesValue(suppressLinearLeadingZeros, suppressLinearTrailingZeros, suppressZeroFeet, suppressZeroInches)));
+                    GetSuppressZeroesValue(suppressLinearLeadingZeros, suppressLinearTrailingZeros, suppressZeroFeet, suppressZeroInches)));
             }
 
             if (writeDIMAZIN)
@@ -3803,7 +3803,7 @@ namespace netDxf.IO
             {
                 xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 285));
                 xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16,
-                    GetSupressZeroesValue(altSuppressLinearLeadingZeros, altSuppressLinearTrailingZeros,
+                    GetSuppressZeroesValue(altSuppressLinearLeadingZeros, altSuppressLinearTrailingZeros,
                         altSuppressZeroFeet, altSuppressZeroInches)));
             }
 
@@ -3811,14 +3811,14 @@ namespace netDxf.IO
             {
                 xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 284));
                 xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16,
-                    GetSupressZeroesValue(tolSuppressLinearLeadingZeros, tolSuppressLinearTrailingZeros, tolSuppressZeroFeet, tolSuppressZeroInches)));
+                    GetSuppressZeroesValue(tolSuppressLinearLeadingZeros, tolSuppressLinearTrailingZeros, tolSuppressZeroFeet, tolSuppressZeroInches)));
             }
 
             if (writeDIMALTTZ)
             {
                 xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 286));
                 xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16,
-                    GetSupressZeroesValue(tolAltSuppressLinearLeadingZeros, tolAltSuppressLinearTrailingZeros, tolAltSuppressZeroFeet, tolAltSuppressZeroInches)));
+                    GetSuppressZeroesValue(tolAltSuppressLinearLeadingZeros, tolAltSuppressLinearTrailingZeros, tolAltSuppressZeroFeet, tolAltSuppressZeroInches)));
             }
 
             xdataEntry.XDataRecord.Add(XDataRecord.CloseControlString);
@@ -4817,7 +4817,7 @@ namespace netDxf.IO
 
         #region private methods
 
-        private static short GetSupressZeroesValue(bool leading, bool trailing, bool feet, bool inches)
+        private static short GetSuppressZeroesValue(bool leading, bool trailing, bool feet, bool inches)
         {
             short rtn = 0;
             if (feet && inches)

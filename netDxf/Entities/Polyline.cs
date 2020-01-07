@@ -37,7 +37,7 @@ namespace netDxf.Entities
 
         private readonly EndSequence endSequence;
         private readonly ObservableCollection<PolylineVertex> vertexes;
-        private PolylinetypeFlags flags;
+        private PolylineTypeFlags flags;
         private PolylineSmoothType smoothType;
 
         #endregion
@@ -80,7 +80,7 @@ namespace netDxf.Entities
             foreach (Vector3 vertex in vertexes)
                 this.vertexes.Add(new PolylineVertex(vertex));
 
-            this.flags = isClosed ? PolylinetypeFlags.ClosedPolylineOrClosedPolygonMeshInM | PolylinetypeFlags.Polyline3D : PolylinetypeFlags.Polyline3D;
+            this.flags = isClosed ? PolylineTypeFlags.ClosedPolylineOrClosedPolygonMeshInM | PolylineTypeFlags.Polyline3D : PolylineTypeFlags.Polyline3D;
             this.smoothType = PolylineSmoothType.NoSmooth;
             this.endSequence = new EndSequence(this);
         }
@@ -113,7 +113,7 @@ namespace netDxf.Entities
 
             this.vertexes.AddRange(vertexes);
 
-            this.flags = isClosed ? PolylinetypeFlags.ClosedPolylineOrClosedPolygonMeshInM | PolylinetypeFlags.Polyline3D : PolylinetypeFlags.Polyline3D;
+            this.flags = isClosed ? PolylineTypeFlags.ClosedPolylineOrClosedPolygonMeshInM | PolylineTypeFlags.Polyline3D : PolylineTypeFlags.Polyline3D;
             this.smoothType = PolylineSmoothType.NoSmooth;
             this.endSequence = new EndSequence(this);
         }
@@ -135,13 +135,13 @@ namespace netDxf.Entities
         /// </summary>
         public bool IsClosed
         {
-            get { return this.flags.HasFlag(PolylinetypeFlags.ClosedPolylineOrClosedPolygonMeshInM); }
+            get { return this.flags.HasFlag(PolylineTypeFlags.ClosedPolylineOrClosedPolygonMeshInM); }
             set
             {
                 if (value)
-                    this.flags |= PolylinetypeFlags.ClosedPolylineOrClosedPolygonMeshInM;
+                    this.flags |= PolylineTypeFlags.ClosedPolylineOrClosedPolygonMeshInM;
                 else
-                    this.flags &= ~PolylinetypeFlags.ClosedPolylineOrClosedPolygonMeshInM;
+                    this.flags &= ~PolylineTypeFlags.ClosedPolylineOrClosedPolygonMeshInM;
             }
         }
 
@@ -150,13 +150,13 @@ namespace netDxf.Entities
         /// </summary>
         public bool LinetypeGeneration
         {
-            get { return this.flags.HasFlag(PolylinetypeFlags.ContinuousLinetypePattern); }
+            get { return this.flags.HasFlag(PolylineTypeFlags.ContinuousLinetypePattern); }
             set
             {
                 if (value)
-                    this.flags |= PolylinetypeFlags.ContinuousLinetypePattern;
+                    this.flags |= PolylineTypeFlags.ContinuousLinetypePattern;
                 else
-                    this.flags &= ~PolylinetypeFlags.ContinuousLinetypePattern;
+                    this.flags &= ~PolylineTypeFlags.ContinuousLinetypePattern;
             }
         }
 
@@ -176,7 +176,7 @@ namespace netDxf.Entities
         /// <summary>
         /// Gets the polyline type.
         /// </summary>
-        internal PolylinetypeFlags Flags
+        internal PolylineTypeFlags Flags
         {
             get { return this.flags; }
             set { this.flags = value; }
@@ -278,15 +278,15 @@ namespace netDxf.Entities
         /// Some objects might consume more than one, is, for example, the case of polylines that will assign
         /// automatically a handle to its vertexes. The entity number will be converted to an hexadecimal number.
         /// </remarks>
-        internal override long AsignHandle(long entityNumber)
+        internal override long AssignHandle(long entityNumber)
         {
             foreach (PolylineVertex v in this.vertexes)
             {
-                entityNumber = v.AsignHandle(entityNumber);
+                entityNumber = v.AssignHandle(entityNumber);
             }
-            entityNumber = this.endSequence.AsignHandle(entityNumber);
+            entityNumber = this.endSequence.AssignHandle(entityNumber);
 
-            return base.AsignHandle(entityNumber);
+            return base.AssignHandle(entityNumber);
         }
 
         /// <summary>
@@ -341,7 +341,7 @@ namespace netDxf.Entities
             {
                 // get the document
                 DxfDocument doc = this.Owner.Record.Owner.Owner;
-                doc.NumHandles = e.Item.AsignHandle(doc.NumHandles);
+                doc.NumHandles = e.Item.AssignHandle(doc.NumHandles);
             }
             e.Item.Owner = this;
         }

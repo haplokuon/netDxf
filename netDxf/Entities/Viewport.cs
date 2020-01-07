@@ -393,7 +393,7 @@ namespace netDxf.Entities
         /// AutoCad does not allow the creation of viewports from open shapes such as LwPolylines, Polylines, or ellipse arcs;
         /// but if they are edited afterward, making them open, it will not complain, and they will work without problems.
         /// So, it is possible to use open shapes as clipping boundaries, even if it is not recommended.
-        /// It might not be supported by all programs that read dxf files and a redraw of the layout might be required to show them correctly inside AutoCad.<br />
+        /// It might not be supported by all programs that read DXF files and a redraw of the layout might be required to show them correctly inside AutoCad.<br />
         /// Only X and Y coordinates will be used the entity normal will be considered as UnitZ.<br />
         /// When the viewport is added to the document this entity will be added too.
         /// </remarks>

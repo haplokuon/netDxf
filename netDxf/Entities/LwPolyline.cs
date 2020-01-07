@@ -38,7 +38,7 @@ namespace netDxf.Entities
         #region private fields
 
         private readonly List<LwPolylineVertex> vertexes;
-        private PolylinetypeFlags flags;
+        private PolylineTypeFlags flags;
         private double elevation;
         private double thickness;
 
@@ -78,7 +78,7 @@ namespace netDxf.Entities
                 this.vertexes.Add(new LwPolylineVertex(vertex));
             this.elevation = 0.0;
             this.thickness = 0.0;
-            this.flags = isClosed ? PolylinetypeFlags.ClosedPolylineOrClosedPolygonMeshInM : PolylinetypeFlags.OpenPolyline;
+            this.flags = isClosed ? PolylineTypeFlags.ClosedPolylineOrClosedPolygonMeshInM : PolylineTypeFlags.OpenPolyline;
         }
 
         /// <summary>
@@ -103,7 +103,7 @@ namespace netDxf.Entities
             this.vertexes = new List<LwPolylineVertex>(vertexes);
             this.elevation = 0.0;
             this.thickness = 0.0;
-            this.flags = isClosed ? PolylinetypeFlags.ClosedPolylineOrClosedPolygonMeshInM : PolylinetypeFlags.OpenPolyline;
+            this.flags = isClosed ? PolylineTypeFlags.ClosedPolylineOrClosedPolygonMeshInM : PolylineTypeFlags.OpenPolyline;
         }
 
         #endregion
@@ -123,13 +123,13 @@ namespace netDxf.Entities
         /// </summary>
         public bool IsClosed
         {
-            get { return this.flags.HasFlag(PolylinetypeFlags.ClosedPolylineOrClosedPolygonMeshInM); }
+            get { return this.flags.HasFlag(PolylineTypeFlags.ClosedPolylineOrClosedPolygonMeshInM); }
             set
             {
                 if (value)
-                    this.flags |= PolylinetypeFlags.ClosedPolylineOrClosedPolygonMeshInM;
+                    this.flags |= PolylineTypeFlags.ClosedPolylineOrClosedPolygonMeshInM;
                 else
-                    this.flags &= ~PolylinetypeFlags.ClosedPolylineOrClosedPolygonMeshInM;
+                    this.flags &= ~PolylineTypeFlags.ClosedPolylineOrClosedPolygonMeshInM;
             }
         }
 
@@ -157,13 +157,13 @@ namespace netDxf.Entities
         /// </summary>
         public bool LinetypeGeneration
         {
-            get { return this.flags.HasFlag(PolylinetypeFlags.ContinuousLinetypePattern); }
+            get { return this.flags.HasFlag(PolylineTypeFlags.ContinuousLinetypePattern); }
             set
             {
                 if (value)
-                    this.flags |= PolylinetypeFlags.ContinuousLinetypePattern;
+                    this.flags |= PolylineTypeFlags.ContinuousLinetypePattern;
                 else
-                    this.flags &= ~PolylinetypeFlags.ContinuousLinetypePattern;
+                    this.flags &= ~PolylineTypeFlags.ContinuousLinetypePattern;
             }
         }
 
@@ -174,7 +174,7 @@ namespace netDxf.Entities
         /// <summary>
         /// Gets the light weight polyline type.
         /// </summary>
-        internal PolylinetypeFlags Flags
+        internal PolylineTypeFlags Flags
         {
             get { return this.flags; }
             set { this.flags = value; }

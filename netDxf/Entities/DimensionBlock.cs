@@ -55,12 +55,12 @@ namespace netDxf.Entities
                 DecimalSeparator = style.DecimalSeparator.ToString(),
                 FractionHeightScale = style.TextFractionHeightScale,
                 FractionType = style.FractionType,
-                SupressLinearLeadingZeros = style.SuppressLinearLeadingZeros,
-                SupressLinearTrailingZeros = style.SuppressLinearTrailingZeros,
-                SupressAngularLeadingZeros = style.SuppressAngularLeadingZeros,
-                SupressAngularTrailingZeros = style.SuppressAngularTrailingZeros,
-                SupressZeroFeet = style.SuppressZeroFeet,
-                SupressZeroInches = style.SuppressZeroInches
+                SuppressLinearLeadingZeros = style.SuppressLinearLeadingZeros,
+                SuppressLinearTrailingZeros = style.SuppressLinearTrailingZeros,
+                SuppressAngularLeadingZeros = style.SuppressAngularLeadingZeros,
+                SuppressAngularTrailingZeros = style.SuppressAngularTrailingZeros,
+                SuppressZeroFeet = style.SuppressZeroFeet,
+                SuppressZeroInches = style.SuppressZeroInches
             };
 
             if (dimType== DimensionType.Angular || dimType == DimensionType.Angular3Point)

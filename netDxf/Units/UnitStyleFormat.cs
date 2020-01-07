@@ -42,14 +42,14 @@ namespace netDxf.Units
         private string gradiansSymbol;
         private string feetSymbol;
         private string inchesSymbol;
-        private double fractionHeigthScale;
+        private double fractionHeightScale;
         private FractionFormatType fractionType;
-        private bool supressLinearLeadingZeros;
-        private bool supressLinearTrailingZeros;
-        private bool supressAngularLeadingZeros;
-        private bool supressAngularTrailingZeros;
-        private bool supressZeroFeet;
-        private bool supressZeroInches;
+        private bool suppressLinearLeadingZeros;
+        private bool suppressLinearTrailingZeros;
+        private bool suppressAngularLeadingZeros;
+        private bool suppressAngularTrailingZeros;
+        private bool suppressZeroFeet;
+        private bool suppressZeroInches;
 
         #endregion
 
@@ -71,14 +71,14 @@ namespace netDxf.Units
             this.gradiansSymbol = "g";
             this.feetSymbol = "\'";
             this.inchesSymbol = "\"";
-            this.fractionHeigthScale = 1.0;
+            this.fractionHeightScale = 1.0;
             this.fractionType = FractionFormatType.Horizontal;
-            this.supressLinearLeadingZeros = false;
-            this.supressLinearTrailingZeros = false;
-            this.supressAngularLeadingZeros = false;
-            this.supressAngularTrailingZeros = false;
-            this.supressZeroFeet = true;
-            this.supressZeroInches = true;
+            this.suppressLinearLeadingZeros = false;
+            this.suppressLinearTrailingZeros = false;
+            this.suppressAngularLeadingZeros = false;
+            this.suppressAngularTrailingZeros = false;
+            this.suppressZeroFeet = true;
+            this.suppressZeroInches = true;
         }
 
         #endregion
@@ -202,12 +202,12 @@ namespace netDxf.Units
         /// </summary>
         public double FractionHeightScale
         {
-            get { return this.fractionHeigthScale; }
+            get { return this.fractionHeightScale; }
             set
             {
                 if (value <= 0)
                     throw new ArgumentOutOfRangeException(nameof(value), value, "The fraction height scale must be greater than zero.");
-                this.fractionHeigthScale = value;
+                this.fractionHeightScale = value;
             }
         }
 
@@ -228,55 +228,55 @@ namespace netDxf.Units
         /// <summary>
         /// Suppresses leading zeros in linear decimal dimensions (for example, 0.5000 becomes .5000).
         /// </summary>
-        public bool SupressLinearLeadingZeros
+        public bool SuppressLinearLeadingZeros
         {
-            get { return this.supressLinearLeadingZeros; }
-            set { this.supressLinearLeadingZeros = value; }
+            get { return this.suppressLinearLeadingZeros; }
+            set { this.suppressLinearLeadingZeros = value; }
         }
 
         /// <summary>
         /// Suppresses trailing zeros in linear decimal dimensions (for example, 12.5000 becomes 12.5).
         /// </summary>
-        public bool SupressLinearTrailingZeros
+        public bool SuppressLinearTrailingZeros
         {
-            get { return this.supressLinearTrailingZeros; }
-            set { this.supressLinearTrailingZeros = value; }
+            get { return this.suppressLinearTrailingZeros; }
+            set { this.suppressLinearTrailingZeros = value; }
         }
 
         /// <summary>
         /// Suppresses leading zeros in angular decimal dimensions (for example, 0.5000 becomes .5000).
         /// </summary>
-        public bool SupressAngularLeadingZeros
+        public bool SuppressAngularLeadingZeros
         {
-            get { return this.supressAngularLeadingZeros; }
-            set { this.supressAngularLeadingZeros = value; }
+            get { return this.suppressAngularLeadingZeros; }
+            set { this.suppressAngularLeadingZeros = value; }
         }
 
         /// <summary>
         /// Suppresses trailing zeros in angular decimal dimensions (for example, 12.5000 becomes 12.5).
         /// </summary>
-        public bool SupressAngularTrailingZeros
+        public bool SuppressAngularTrailingZeros
         {
-            get { return this.supressAngularTrailingZeros; }
-            set { this.supressAngularTrailingZeros = value; }
+            get { return this.suppressAngularTrailingZeros; }
+            set { this.suppressAngularTrailingZeros = value; }
         }
 
         /// <summary>
         /// Suppresses zero feet in architectural dimensions.
         /// </summary>
-        public bool SupressZeroFeet
+        public bool SuppressZeroFeet
         {
-            get { return this.supressZeroFeet; }
-            set { this.supressZeroFeet = value; }
+            get { return this.suppressZeroFeet; }
+            set { this.suppressZeroFeet = value; }
         }
 
         /// <summary>
         /// Suppresses zero inches in architectural dimensions.
         /// </summary>
-        public bool SupressZeroInches
+        public bool SuppressZeroInches
         {
-            get { return this.supressZeroInches; }
-            set { this.supressZeroInches = value; }
+            get { return this.suppressZeroInches; }
+            set { this.suppressZeroInches = value; }
         }
 
         #endregion

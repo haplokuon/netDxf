@@ -125,7 +125,7 @@ namespace netDxf.Entities
                 else
                 {
                     if (value < 0.25 || value > 4.0)
-                    throw new ArgumentOutOfRangeException(nameof(value), value, "The paragraph spacing valid values range from 0.25 to 4.0");
+                        throw new ArgumentOutOfRangeException(nameof(value), value, "The paragraph spacing valid values range from 0.25 to 4.0");
                     this.spaceBefore = value;
                 }                
             }

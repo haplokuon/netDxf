@@ -1,5 +1,9 @@
 ## Change history
 
+### [2020/01/07]
+* Misspelling corrections.
+* Renamed LeaderPathType.StraightLineSegements to LeaderPathType.StraightLineSegments
+
 ### [2019/12/30]
 * (fixed) Issue with the start and end angles when performing symmetries in Arc entities:
 * (fixed) Issue with the start and end angles when performing symmetries in Ellipse arc entities:
@@ -8,9 +12,9 @@
 * Additional change related to pull request #150. Force the use of the ASCII.WindowsCodePage encoding in the DxfReader class, just for cases where there was a problem reading the codepage from the file.
 
 ### [2019/12/19]
-*(fixed) Error when trying to copy to clipboard inside AutoCAD for DXF files saved with netDXF that contains the header variables $INTERFEREOBJVS and $INTERFEREVPVS, since this variables refer to visual style information that netDxf does not save. This variables will not be loaded in case they appear in a DXF.
-*(fixed) After loading a DXF the layouts associated blocks will be renamed to strictly follow *Paper_Space, *Paper_Space0, *Paper_Space1,... 
-*(fixed) Transforming an ellipse might not show the correct result under special circumstances.
+* (fixed) Error when trying to copy to clipboard inside AutoCAD for DXF files saved with netDXF that contains the header variables $INTERFEREOBJVS and $INTERFEREVPVS, since this variables refer to visual style information that netDxf does not save. This variables will not be loaded in case they appear in a DXF.
+* (fixed) After loading a DXF the layouts associated blocks will be renamed to strictly follow *Paper_Space, *Paper_Space0, *Paper_Space1,... 
+* (fixed) Transforming an ellipse might not show the correct result under special circumstances.
 
 ### [2019/09/20]
 * Added the main Viewport of the Layout, that was deleted in v2.3.0.

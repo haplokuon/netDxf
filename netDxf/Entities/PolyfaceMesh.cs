@@ -39,7 +39,7 @@ namespace netDxf.Entities
 
         private readonly List<PolyfaceMeshFace> faces;
         private readonly List<PolyfaceMeshVertex> vertexes;
-        private readonly PolylinetypeFlags flags;
+        private readonly PolylineTypeFlags flags;
         private readonly EndSequence endSequence;
 
         #endregion
@@ -54,7 +54,7 @@ namespace netDxf.Entities
         public PolyfaceMesh(IEnumerable<PolyfaceMeshVertex> vertexes, IEnumerable<PolyfaceMeshFace> faces)
             : base(EntityType.PolyfaceMesh, DxfObjectCode.Polyline)
         {
-            this.flags = PolylinetypeFlags.PolyfaceMesh;
+            this.flags = PolylineTypeFlags.PolyfaceMesh;
             if (vertexes == null)
                 throw new ArgumentNullException(nameof(vertexes));
             this.vertexes = new List<PolyfaceMeshVertex>(vertexes);
@@ -97,7 +97,7 @@ namespace netDxf.Entities
         /// <summary>
         /// Gets the polyface mesh flag type.
         /// </summary>
-        internal PolylinetypeFlags Flags
+        internal PolylineTypeFlags Flags
         {
             get { return this.flags; }
         }
@@ -123,18 +123,18 @@ namespace netDxf.Entities
         /// Some objects might consume more than one, is, for example, the case of polylines that will assign
         /// automatically a handle to its vertexes. The entity number will be converted to an hexadecimal number.
         /// </remarks>
-        internal override long AsignHandle(long entityNumber)
+        internal override long AssignHandle(long entityNumber)
         {
-            entityNumber = this.endSequence.AsignHandle(entityNumber);
+            entityNumber = this.endSequence.AssignHandle(entityNumber);
             foreach (PolyfaceMeshVertex v in this.vertexes)
             {
-                entityNumber = v.AsignHandle(entityNumber);
+                entityNumber = v.AssignHandle(entityNumber);
             }
             foreach (PolyfaceMeshFace f in this.faces)
             {
-                entityNumber = f.AsignHandle(entityNumber);
+                entityNumber = f.AssignHandle(entityNumber);
             }
-            return base.AsignHandle(entityNumber);
+            return base.AssignHandle(entityNumber);
         }
 
         #endregion

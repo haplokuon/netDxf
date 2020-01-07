@@ -63,7 +63,7 @@ namespace netDxf.Entities
         /// Initializes a new instance of the <c>HatchPattern</c> class.
         /// </summary>
         /// <param name="name">Pattern name, always stored as uppercase.</param>
-        /// <param name="description">Description of the pattern (optional, this information is not saved in the dxf file). By default it will use the supplied name.</param>
+        /// <param name="description">Description of the pattern (optional, this information is not saved in the DXF file). By default it will use the supplied name.</param>
         public HatchPattern(string name, string description)
             : this(name, null, description)
         {
@@ -84,7 +84,7 @@ namespace netDxf.Entities
         /// </summary>
         /// <param name="name">Pattern name, always stored as uppercase.</param>
         /// <param name="lineDefinitions">The definition of the lines that make up the pattern (not applicable in Solid fills).</param>
-        /// <param name="description">Description of the pattern (optional, this information is not saved in the dxf file). By default it will use the supplied name.</param>
+        /// <param name="description">Description of the pattern (optional, this information is not saved in the DXF file). By default it will use the supplied name.</param>
         public HatchPattern(string name, IEnumerable<HatchPatternLineDefinition> lineDefinitions, string description)
         {
             this.name = string.IsNullOrEmpty(name) ? string.Empty : name;

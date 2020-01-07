@@ -73,7 +73,7 @@ namespace netDxf.Collections
                 return add;
 
             if (assignHandle || string.IsNullOrEmpty(block.Handle))
-                this.Owner.NumHandles = block.AsignHandle(this.Owner.NumHandles);
+                this.Owner.NumHandles = block.AssignHandle(this.Owner.NumHandles);
 
             this.list.Add(block.Name, block);
             this.references.Add(block.Name, new List<DxfObject>());

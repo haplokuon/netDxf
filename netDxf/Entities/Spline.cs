@@ -44,7 +44,7 @@ namespace netDxf.Entities
         private double fitTolerance = 0.0000000001;
         private List<SplineVertex> controlPoints;
         private List<double> knots;
-        private readonly SplinetypeFlags flags;
+        private readonly SplineTypeFlags flags;
         private readonly short degree;
         private readonly bool isClosed;
         private readonly bool isPeriodic;
@@ -70,7 +70,7 @@ namespace netDxf.Entities
             this.fitPoints = new List<Vector3>(fitPoints);
             this.creationMethod = SplineCreationMethod.FitPoints;
             this.isClosed = this.fitPoints[0].Equals(this.fitPoints[this.fitPoints.Count - 1]);
-            this.flags = this.isClosed ? SplinetypeFlags.Closed | SplinetypeFlags.Rational : SplinetypeFlags.Rational;
+            this.flags = this.isClosed ? SplineTypeFlags.Closed | SplineTypeFlags.Rational : SplineTypeFlags.Rational;
         }
 
         /// <summary>
@@ -141,12 +141,12 @@ namespace netDxf.Entities
             if (this.isPeriodic)
             {
                 this.isClosed = true;
-                this.flags = SplinetypeFlags.Closed | SplinetypeFlags.Periodic | SplinetypeFlags.Rational;
+                this.flags = SplineTypeFlags.Closed | SplineTypeFlags.Periodic | SplineTypeFlags.Rational;
             }
             else
             {
                 this.isClosed = controlPoints[0].Position.Equals(controlPoints[controlPoints.Count - 1].Position);
-                this.flags = this.isClosed ? SplinetypeFlags.Closed | SplinetypeFlags.Rational : SplinetypeFlags.Rational;
+                this.flags = this.isClosed ? SplineTypeFlags.Closed | SplineTypeFlags.Rational : SplineTypeFlags.Rational;
             }
             this.Create(controlPoints);
         }
@@ -183,12 +183,12 @@ namespace netDxf.Entities
             if (this.isPeriodic)
             {
                 this.isClosed = true;
-                this.flags = SplinetypeFlags.Closed | SplinetypeFlags.Periodic | SplinetypeFlags.Rational;
+                this.flags = SplineTypeFlags.Closed | SplineTypeFlags.Periodic | SplineTypeFlags.Rational;
             }
             else
             {
                 this.isClosed = controlPoints[0].Position.Equals(controlPoints[controlPoints.Count - 1].Position);
-                this.flags = this.isClosed ? SplinetypeFlags.Closed | SplinetypeFlags.Rational : SplinetypeFlags.Rational;
+                this.flags = this.isClosed ? SplineTypeFlags.Closed | SplineTypeFlags.Rational : SplineTypeFlags.Rational;
             }
         }
 
@@ -335,7 +335,7 @@ namespace netDxf.Entities
         /// <summary>
         /// Gets the spline type.
         /// </summary>
-        internal SplinetypeFlags Flags
+        internal SplineTypeFlags Flags
         {
             get { return this.flags; }
         }
@@ -511,33 +511,33 @@ namespace netDxf.Entities
             if (this.controlPoints.Count == 0)
                 throw new NotSupportedException("A spline entity with control points is required.");
 
-            double u_start;
-            double u_end;
+            double uStart;
+            double uEnd;
             List<Vector3> vertexes = new List<Vector3>();
 
             // added a few fixes to make it work for open, closed, and periodic closed splines.
             if (!this.isClosed)
             {
                 precision -= 1;
-                u_start = this.knots[0];
-                u_end = this.knots[this.knots.Count - 1];
+                uStart = this.knots[0];
+                uEnd = this.knots[this.knots.Count - 1];
             }
             else if (this.isPeriodic)
             {
-                u_start = this.knots[this.degree];
-                u_end = this.knots[this.knots.Count - this.degree - 1];
+                uStart = this.knots[this.degree];
+                uEnd = this.knots[this.knots.Count - this.degree - 1];
             }
             else
             {
-                u_start = this.knots[0];
-                u_end = this.knots[this.knots.Count - 1];
+                uStart = this.knots[0];
+                uEnd = this.knots[this.knots.Count - 1];
             }
 
-            double u_delta = (u_end - u_start)/precision;
+            double uDelta = (uEnd - uStart)/precision;
 
             for (int i = 0; i < precision; i++)
             {
-                double u = u_start + u_delta*i;
+                double u = uStart + uDelta*i;
                 vertexes.Add(this.C(u));
             }
 

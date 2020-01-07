@@ -334,7 +334,7 @@ namespace netDxf.Entities
 
             double radius = (a*b)/Math.Sqrt(b1*b1 + a1*a1);
 
-            // convert the radius back to cartesian coordinates
+            // convert the radius back to Cartesian coordinates
             return new Vector2(radius*Math.Cos(radians), radius*Math.Sin(radians));
         }
 

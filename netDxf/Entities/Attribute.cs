@@ -269,7 +269,7 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets the owner of the actual dxf object.
+        /// Gets the owner of the actual DXF object.
         /// </summary>
         public new Insert Owner
         {
@@ -576,7 +576,7 @@ namespace netDxf.Entities
                 }
             }
 
-            // the oblique angle is defined between -85 nad 85 degrees
+            // the oblique angle is defined between -85 and 85 degrees
             newObliqueAngle = MathHelper.NormalizeAngle(newObliqueAngle);
             if (newObliqueAngle > 180)
                 newObliqueAngle = 180 - newObliqueAngle;
@@ -589,7 +589,7 @@ namespace netDxf.Entities
             double newHeight = newVvector.Modulus() * Math.Cos(newObliqueAngle * MathHelper.DegToRad);
             newHeight = MathHelper.IsZero(newHeight) ? MathHelper.Epsilon : newHeight;
 
-            // the width factor is defined between 0.01 nad 100
+            // the width factor is defined between 0.01 and 100
             double newWidthFactor = newUvector.Modulus() / newHeight;
             if(newWidthFactor<0.01)
                 newWidthFactor = 0.01;

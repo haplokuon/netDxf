@@ -29,7 +29,7 @@ namespace netDxf.Entities
     /// Represents a polyface mesh face. 
     /// </summary>
     /// <remarks>
-    /// The way the vertex indexes for a polyface mesh are defined follows the dxf documentation.
+    /// The way the vertex indexes for a polyface mesh are defined follows the DXF documentation.
     /// The values of the vertex indexes specify one of the previously defined vertexes by the index in the list plus one.
     /// If the index is negative, the edge that begins with that vertex is invisible.
     /// For example if the vertex index in the list is 0 the vertex index for the face will be 1, and

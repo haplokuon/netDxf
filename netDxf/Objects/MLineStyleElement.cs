@@ -101,7 +101,7 @@ namespace netDxf.Objects
         /// Gets or sets the element color.
         /// </summary>
         /// <remarks>
-        /// AutoCad2000 dxf version does not support true colors for MLineStyleElement color.
+        /// AutoCad2000 DXF version does not support true colors for MLineStyleElement color.
         /// </remarks>
         public AciColor Color
         {

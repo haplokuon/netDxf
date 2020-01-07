@@ -413,7 +413,7 @@ namespace netDxf.Tables
         /// <remarks>
         /// Default: 0.38<br />
         /// This value is stored only for information purposes.
-        /// Base dimensions are a compound entity made of several dimensions, there is no actual dxf entity that represents that.
+        /// Base dimensions are a compound entity made of several dimensions, there is no actual DXF entity that represents that.
         /// </remarks>
         public double DimBaselineSpacing
         {

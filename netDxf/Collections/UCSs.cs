@@ -71,7 +71,7 @@ namespace netDxf.Collections
                 return add;
 
             if (assignHandle || string.IsNullOrEmpty(ucs.Handle))
-                this.Owner.NumHandles = ucs.AsignHandle(this.Owner.NumHandles);
+                this.Owner.NumHandles = ucs.AssignHandle(this.Owner.NumHandles);
 
             this.list.Add(ucs.Name, ucs);
             this.references.Add(ucs.Name, new List<DxfObject>());

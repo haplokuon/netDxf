@@ -28,7 +28,7 @@ namespace netDxf.Entities
     /// Represents the hatch gradient pattern style.
     /// </summary>
     /// <remarks>
-    /// Gradient patterns are only supported by AutoCad2004 and higher dxf versions. It will default to a solid pattern if saved as AutoCad2000.
+    /// Gradient patterns are only supported by AutoCad2004 and higher DXF versions. It will default to a solid pattern if saved as AutoCad2000.
     /// </remarks>
     public class HatchGradientPattern :
         HatchPattern
@@ -57,7 +57,7 @@ namespace netDxf.Entities
         /// <summary>
         /// Initializes a new instance of the <c>HatchGradientPattern</c> class as a default linear gradient. 
         /// </summary>
-        /// <param name="description">Description of the pattern (optional, this information is not saved in the dxf file). By default it will use the supplied name.</param>
+        /// <param name="description">Description of the pattern (optional, this information is not saved in the DXF file). By default it will use the supplied name.</param>
         public HatchGradientPattern(string description)
             : base("SOLID", description)
         {
@@ -86,7 +86,7 @@ namespace netDxf.Entities
         /// <param name="color">Gradient <see cref="AciColor">color</see>.</param>
         /// <param name="tint">Gradient tint.</param>
         /// <param name="type">Gradient <see cref="HatchGradientPatternType">type</see>.</param>
-        /// <param name="description">Description of the pattern (optional, this information is not saved in the dxf file). By default it will use the supplied name.</param>
+        /// <param name="description">Description of the pattern (optional, this information is not saved in the DXF file). By default it will use the supplied name.</param>
         public HatchGradientPattern(AciColor color, double tint, HatchGradientPatternType type, string description)
             : base("SOLID", description)
         {
@@ -117,7 +117,7 @@ namespace netDxf.Entities
         /// <param name="color1">Gradient <see cref="AciColor">color</see> 1.</param>
         /// <param name="color2">Gradient <see cref="AciColor">color</see> 2.</param>
         /// <param name="type">Gradient <see cref="HatchGradientPatternType">type</see>.</param>
-        /// <param name="description">Description of the pattern (optional, this information is not saved in the dxf file). By default it will use the supplied name.</param>
+        /// <param name="description">Description of the pattern (optional, this information is not saved in the DXF file). By default it will use the supplied name.</param>
         public HatchGradientPattern(AciColor color1, AciColor color2, HatchGradientPatternType type, string description)
             : base("SOLID", description)
         {

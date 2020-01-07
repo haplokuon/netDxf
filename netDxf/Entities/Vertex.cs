@@ -26,10 +26,10 @@ using netDxf.Tables;
 namespace netDxf.Entities
 {
     /// <summary>
-    /// Represents a dxf Vertex.
+    /// Represents a DXF Vertex.
     /// </summary>
     /// <remarks>
-    /// The Vertex class holds all the information read from the dxf file even if its needed or not. For internal use only.
+    /// The Vertex class holds all the information read from the DXF file even if its needed or not. For internal use only.
     /// </remarks>
     internal class Vertex :
         DxfObject

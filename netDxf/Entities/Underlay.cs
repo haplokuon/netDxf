@@ -149,7 +149,7 @@ namespace netDxf.Entities
         /// <remarks>
         /// Any of the vector scale components cannot be zero.<br />
         /// Even thought the DXF has a code for the Z scale it seems that it has no use.
-        /// The X and Y components multiplied by the original size of the pdf page represent the width and height of the final underlay.
+        /// The X and Y components multiplied by the original size of the PDF page represent the width and height of the final underlay.
         /// The Z component even thought it is present in the DXF it seems it has no use.
         /// </remarks>
         public Vector2 Scale

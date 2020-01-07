@@ -644,16 +644,16 @@ namespace netDxf.Blocks
         /// Some objects might consume more than one, is, for example, the case of polylines that will assign
         /// automatically a handle to its vertexes. The entity number will be converted to an hexadecimal number.
         /// </remarks>
-        internal override long AsignHandle(long entityNumber)
+        internal override long AssignHandle(long entityNumber)
         {
-            entityNumber = this.Owner.AsignHandle(entityNumber);
-            entityNumber = this.end.AsignHandle(entityNumber);
+            entityNumber = this.Owner.AssignHandle(entityNumber);
+            entityNumber = this.end.AssignHandle(entityNumber);
             foreach (AttributeDefinition attdef in this.attributes.Values)
             {
-                entityNumber = attdef.AsignHandle(entityNumber);
+                entityNumber = attdef.AssignHandle(entityNumber);
             }
 
-            return base.AsignHandle(entityNumber);
+            return base.AssignHandle(entityNumber);
         }
 
         #endregion

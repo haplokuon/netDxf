@@ -170,7 +170,7 @@ namespace netDxf.Collections
                 return add;
 
             if (assignHandle || string.IsNullOrEmpty(linetype.Handle))
-                this.Owner.NumHandles = linetype.AsignHandle(this.Owner.NumHandles);
+                this.Owner.NumHandles = linetype.AssignHandle(this.Owner.NumHandles);
 
             foreach (LinetypeSegment segment in linetype.Segments)
             {

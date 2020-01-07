@@ -52,7 +52,7 @@ namespace netDxf
 
         #endregion
 
-        #region public propertiex
+        #region public properties
 
         /// <summary>
         /// Gets the underlying enum type for this instance.

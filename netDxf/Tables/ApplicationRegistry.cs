@@ -77,7 +77,7 @@ namespace netDxf.Tables
         #region public properties
 
         /// <summary>
-        /// Gets the owner of the actual dxf object.
+        /// Gets the owner of the actual DXF object.
         /// </summary>
         public new ApplicationRegistries Owner
         {

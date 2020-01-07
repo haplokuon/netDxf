@@ -143,7 +143,7 @@ namespace netDxf.Entities
             this.style = style;
             this.hasHookline = false;
             this.showArrowhead = true;
-            this.pathType = LeaderPathType.StraightLineSegements;
+            this.pathType = LeaderPathType.StraightLineSegments;
             this.annotation = null;
             this.lineColor = AciColor.ByLayer;
             this.elevation = 0.0;
@@ -179,7 +179,7 @@ namespace netDxf.Entities
             this.style = style;
             this.hasHookline = true;
             this.showArrowhead = true;
-            this.pathType = LeaderPathType.StraightLineSegements;
+            this.pathType = LeaderPathType.StraightLineSegments;
             this.lineColor = AciColor.ByLayer;
             this.elevation = 0.0;
             this.offset = Vector2.Zero;
@@ -217,7 +217,7 @@ namespace netDxf.Entities
             this.style = style;
             this.hasHookline = false;
             this.showArrowhead = true;
-            this.pathType = LeaderPathType.StraightLineSegements;
+            this.pathType = LeaderPathType.StraightLineSegments;
             this.lineColor = AciColor.ByLayer;
             this.elevation = 0.0;
             this.offset = Vector2.Zero;
@@ -254,7 +254,7 @@ namespace netDxf.Entities
             this.style = style;
             this.hasHookline = false;
             this.showArrowhead = true;
-            this.pathType = LeaderPathType.StraightLineSegements;
+            this.pathType = LeaderPathType.StraightLineSegments;
             this.lineColor = AciColor.ByLayer;
             this.elevation = 0.0;
             this.offset = Vector2.Zero;

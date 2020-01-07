@@ -90,14 +90,14 @@ namespace netDxf.Units
             {
                 if (feet == 0)
                 {
-                    if (format.SupressZeroFeet)
+                    if (format.SuppressZeroFeet)
                         return string.Format("0{0}", format.InchesSymbol);
-                    if (format.SupressZeroInches)
+                    if (format.SuppressZeroInches)
                         return string.Format("0{0}", format.FeetSymbol);
 
                     return string.Format("0{0}{1}0{2}", format.FeetSymbol, format.FeetInchesSeparator, format.InchesSymbol);
                 }
-                if (format.SupressZeroInches)
+                if (format.SuppressZeroInches)
                     return string.Format("{0}{1}", feet, format.FeetSymbol);
 
                 return string.Format("{0}{1}{2}0{3}", feet, format.FeetSymbol, format.FeetInchesSeparator, format.InchesSymbol);
@@ -113,21 +113,21 @@ namespace netDxf.Units
                 {
                     if (feet == 0)
                     {
-                        if (format.SupressZeroFeet)
+                        if (format.SuppressZeroFeet)
                             return string.Format("0{0}", format.InchesSymbol);
-                        if (format.SupressZeroInches)
+                        if (format.SuppressZeroInches)
                             return string.Format("0{0}", format.FeetSymbol);
 
                         return string.Format("0{0}{1}0{2}", format.FeetSymbol, format.FeetInchesSeparator, format.InchesSymbol);
                     }
-                    if (format.SupressZeroInches)
+                    if (format.SuppressZeroInches)
                         return string.Format("{0}{1}", feet, format.FeetSymbol);
 
                     return string.Format("{0}{1}{2}0{3}", feet, format.FeetSymbol, format.FeetInchesSeparator, format.InchesSymbol);
                 }
                 if (feet == 0)
                 {
-                    if (format.SupressZeroFeet)
+                    if (format.SuppressZeroFeet)
                         return string.Format("{0}{1}", inches, format.InchesSymbol );
 
                     return string.Format("0{0}{1}{2}{3}", format.FeetSymbol, format.FeetInchesSeparator, inches, format.InchesSymbol);
@@ -138,7 +138,7 @@ namespace netDxf.Units
 
             string text = string.Empty;
             string feetStr;
-            if (format.SupressZeroFeet && feet == 0)
+            if (format.SuppressZeroFeet && feet == 0)
                 feetStr = string.Empty;
             else
                 feetStr = feet + format.FeetSymbol + format.FeetInchesSeparator;
@@ -180,13 +180,13 @@ namespace netDxf.Units
             {
                 if (feet == 0)
                 {
-                    if (format.SupressZeroFeet)
+                    if (format.SuppressZeroFeet)
                         return string.Format("0{0}", format.InchesSymbol);
-                    if (format.SupressZeroInches)
+                    if (format.SuppressZeroInches)
                         return string.Format("0{0}", format.FeetSymbol);
                     return string.Format("0{0}{1}0{2}", format.FeetSymbol, format.FeetInchesSeparator, format.InchesSymbol);
                 }
-                if (format.SupressZeroInches)
+                if (format.SuppressZeroInches)
                     return string.Format("{0}{1}", feet, format.FeetSymbol);
 
                 return string.Format("{0}{1}{2}0{3}", feet, format.FeetSymbol, format.FeetInchesSeparator, format.InchesSymbol);
@@ -195,7 +195,7 @@ namespace netDxf.Units
             string inchesDec = inches.ToString(DecimalNumberFormat(format), numberFormat);
             if (feet == 0)
             {
-                if (format.SupressZeroFeet)
+                if (format.SuppressZeroFeet)
                     return string.Format("{0}{1}", inches, format.InchesSymbol);
 
                 return string.Format("0{0}{1}{2}{3}", format.FeetSymbol, format.FeetInchesSeparator, inchesDec, format.InchesSymbol);
@@ -244,7 +244,7 @@ namespace netDxf.Units
         private static string DecimalNumberFormat(UnitStyleFormat format)
         {
             char[] zeroes = new char[format.LinearDecimalPlaces + 2];
-            if (format.SupressLinearLeadingZeros)
+            if (format.SuppressLinearLeadingZeros)
                 zeroes[0] = '#';
             else
                 zeroes[0] = '0';
@@ -253,7 +253,7 @@ namespace netDxf.Units
 
             for (int i = 2; i < zeroes.Length; i++)
             {
-                if (format.SupressLinearTrailingZeros)
+                if (format.SuppressLinearTrailingZeros)
                     zeroes[i] = '#';
                 else
                     zeroes[i] = '0';

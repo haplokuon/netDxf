@@ -126,7 +126,7 @@ namespace netDxf.Units
         private static string DecimalNumberFormat(UnitStyleFormat format)
         {
             char[] zeroes = new char[format.AngularDecimalPlaces + 2];
-            if (format.SupressAngularLeadingZeros)
+            if (format.SuppressAngularLeadingZeros)
                 zeroes[0] = '#';
             else
                 zeroes[0] = '0';
@@ -135,7 +135,7 @@ namespace netDxf.Units
 
             for (int i = 2; i < zeroes.Length; i++)
             {
-                if (format.SupressAngularTrailingZeros)
+                if (format.SuppressAngularTrailingZeros)
                     zeroes[i] = '#';
                 else
                     zeroes[i] = '0';

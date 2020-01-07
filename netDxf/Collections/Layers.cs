@@ -70,7 +70,7 @@ namespace netDxf.Collections
                 return add;
 
             if (assignHandle || string.IsNullOrEmpty(layer.Handle))
-                this.Owner.NumHandles = layer.AsignHandle(this.Owner.NumHandles);
+                this.Owner.NumHandles = layer.AssignHandle(this.Owner.NumHandles);
 
             this.list.Add(layer.Name, layer);
             this.references.Add(layer.Name, new List<DxfObject>());

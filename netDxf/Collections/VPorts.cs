@@ -49,7 +49,7 @@ namespace netDxf.Collections
 
             // add the current document viewport, it is always present
             VPort active = VPort.Active;
-            this.Owner.NumHandles = active.AsignHandle(this.Owner.NumHandles);
+            this.Owner.NumHandles = active.AssignHandle(this.Owner.NumHandles);
 
             this.Owner.AddedObjects.Add(active.Handle, active);
             this.list.Add(active.Name, active);

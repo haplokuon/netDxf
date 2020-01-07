@@ -603,14 +603,14 @@ namespace netDxf.Entities
         /// Some objects might consume more than one, is, for example, the case of polylines that will assign
         /// automatically a handle to its vertexes. The entity number will be converted to an hexadecimal number.
         /// </remarks>
-        internal override long AsignHandle(long entityNumber)
+        internal override long AssignHandle(long entityNumber)
         {
-            entityNumber = this.endSequence.AsignHandle(entityNumber);
+            entityNumber = this.endSequence.AssignHandle(entityNumber);
             foreach (Attribute attrib in this.attributes)
             {
-                entityNumber = attrib.AsignHandle(entityNumber);
+                entityNumber = attrib.AssignHandle(entityNumber);
             }
-            return base.AsignHandle(entityNumber);
+            return base.AssignHandle(entityNumber);
         }
 
 

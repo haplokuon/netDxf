@@ -30,7 +30,7 @@ namespace netDxf.Entities
     /// Represents a wipeout <see cref="EntityObject">entity</see>.
     /// </summary>
     /// <remarks>
-    /// The Wipeout dxf definition includes three variables for brightness, contrast, and fade but those variables have no effect; in AutoCad you cannot even change them.<br/>
+    /// The Wipeout DXF definition includes three variables for brightness, contrast, and fade but those variables have no effect; in AutoCad you cannot even change them.<br/>
     /// The Wipeout entity is related with the system variable WIPEOUTFRAME but this variable is not saved in a DXF.
     /// </remarks>
     public class Wipeout :

@@ -71,7 +71,7 @@ namespace netDxf.Collections
                 return add;
 
             if (assignHandle || string.IsNullOrEmpty(underlayPdfDefinition.Handle))
-                this.Owner.NumHandles = underlayPdfDefinition.AsignHandle(this.Owner.NumHandles);
+                this.Owner.NumHandles = underlayPdfDefinition.AssignHandle(this.Owner.NumHandles);
 
             this.list.Add(underlayPdfDefinition.Name, underlayPdfDefinition);
             this.references.Add(underlayPdfDefinition.Name, new List<DxfObject>());

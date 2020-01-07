@@ -192,7 +192,7 @@ namespace netDxf.Objects
         /// Gets or sets the MLine fill color.
         /// </summary>
         /// <remarks>
-        /// AutoCad2000 dxf version does not support true colors for MLineStyle fill color.
+        /// AutoCad2000 DXF version does not support true colors for MLineStyle fill color.
         /// </remarks>
         public AciColor FillColor
         {

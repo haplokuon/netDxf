@@ -65,8 +65,8 @@ namespace netDxf.IO
         private Dictionary<Viewport, string> viewports;
 
         private Dictionary<Hatch, List<HatchBoundaryPath>> hatchToPaths;
-        // HatchBoundaryPaths, they will be processed at the end <Entity: HatchBoundaryPath, string: entity contourn handle>.
-        private Dictionary<HatchBoundaryPath, List<string>> hatchContourns;
+        // HatchBoundaryPaths, they will be processed at the end <Entity: HatchBoundaryPath, string: entity contour handle>.
+        private Dictionary<HatchBoundaryPath, List<string>> hatchContours;
 
         // in nested blocks (blocks that contains Insert entities) the block definition might be defined AFTER the block that references them
         // temporarily these variables will store information to post process the nested block list
@@ -199,7 +199,7 @@ namespace netDxf.IO
             this.entityList = new Dictionary<DxfObject, string>();
             this.viewports = new Dictionary<Viewport, string>();
             this.hatchToPaths = new Dictionary<Hatch, List<HatchBoundaryPath>>();
-            this.hatchContourns = new Dictionary<HatchBoundaryPath, List<string>>();
+            this.hatchContours = new Dictionary<HatchBoundaryPath, List<string>>();
             this.decodedStrings = new Dictionary<string, string>();
             this.leaderAnnotation = new Dictionary<Leader, string>();
 
@@ -3638,7 +3638,7 @@ namespace netDxf.IO
                 Normal = normal
             };
             // since we are converting the table entity to an insert we also need to assign a new handle to the internal EndSequence
-            this.doc.NumHandles = insert.EndSequence.AsignHandle(this.doc.NumHandles);
+            this.doc.NumHandles = insert.EndSequence.AssignHandle(this.doc.NumHandles);
             insert.XData.AddRange(xData);
 
             //Vector3 ocsDirection = MathHelper.Transform(direction, normal, CoordinateSystem.World, CoordinateSystem.Object);
@@ -4079,7 +4079,7 @@ namespace netDxf.IO
         {
             DimensionStyle style = DimensionStyle.Default;
             bool showArrowhead = true;
-            LeaderPathType path = LeaderPathType.StraightLineSegements;
+            LeaderPathType path = LeaderPathType.StraightLineSegments;
             bool hasHookline = false;
             List<Vector3> wcsVertexes = null;
             AciColor lineColor = AciColor.ByLayer;
@@ -6833,7 +6833,7 @@ namespace netDxf.IO
 
         private Spline ReadSpline()
         {
-            SplinetypeFlags flags = SplinetypeFlags.None;
+            SplineTypeFlags flags = SplineTypeFlags.None;
             Vector3 normal = Vector3.UnitZ;
             short degree = 3;
             int ctrlPointIndex = -1;
@@ -6886,7 +6886,7 @@ namespace netDxf.IO
                         this.chunk.Next();
                         break;
                     case 70:
-                        flags = (SplinetypeFlags) this.chunk.ReadShort();
+                        flags = (SplineTypeFlags) this.chunk.ReadShort();
                         this.chunk.Next();
                         break;
                     case 71:
@@ -7021,7 +7021,7 @@ namespace netDxf.IO
             }
 
             Spline entity;
-            SplineCreationMethod method = flags.HasFlag(SplinetypeFlags.FitPointCreationMethod) ? SplineCreationMethod.FitPoints : SplineCreationMethod.ControlPoints;
+            SplineCreationMethod method = flags.HasFlag(SplineTypeFlags.FitPointCreationMethod) ? SplineCreationMethod.FitPoints : SplineCreationMethod.ControlPoints;
 
             if (method == SplineCreationMethod.FitPoints && ctrlPoints.Count == 0)
             {
@@ -7036,7 +7036,7 @@ namespace netDxf.IO
             }
             else
             {
-                bool isPeriodic = flags.HasFlag(SplinetypeFlags.ClosedPeriodicSpline) || flags.HasFlag(SplinetypeFlags.Periodic);
+                bool isPeriodic = flags.HasFlag(SplineTypeFlags.ClosedPeriodicSpline) || flags.HasFlag(SplineTypeFlags.Periodic);
                 entity = new Spline(ctrlPoints, knots, degree, fitPoints, method, isPeriodic)
                 {
                     KnotTolerance = knotTolerance,
@@ -7047,13 +7047,13 @@ namespace netDxf.IO
                 };
             }
 
-            if (flags.HasFlag(SplinetypeFlags.FitChord))
+            if (flags.HasFlag(SplineTypeFlags.FitChord))
                 entity.KnotParameterization = SplineKnotParameterization.FitChord;
-            else if (flags.HasFlag(SplinetypeFlags.FitSqrtChord))
+            else if (flags.HasFlag(SplineTypeFlags.FitSqrtChord))
                 entity.KnotParameterization = SplineKnotParameterization.FitSqrtChord;
-            else if (flags.HasFlag(SplinetypeFlags.FitUniform))
+            else if (flags.HasFlag(SplineTypeFlags.FitUniform))
                 entity.KnotParameterization = SplineKnotParameterization.FitUniform;
-            else if (flags.HasFlag(SplinetypeFlags.FitCustom))
+            else if (flags.HasFlag(SplineTypeFlags.FitCustom))
                 entity.KnotParameterization = SplineKnotParameterization.FitCustom;
 
             entity.XData.AddRange(xData);
@@ -7520,12 +7520,12 @@ namespace netDxf.IO
                 dir.Z = this.chunk.ReadDouble(); // code 32
                 this.chunk.Next();
 
-                Vector3 mitter = new Vector3();
-                mitter.X = this.chunk.ReadDouble(); // code 13
+                Vector3 miter = new Vector3();
+                miter.X = this.chunk.ReadDouble(); // code 13
                 this.chunk.Next();
-                mitter.Y = this.chunk.ReadDouble(); // code 23
+                miter.Y = this.chunk.ReadDouble(); // code 23
                 this.chunk.Next();
-                mitter.Z = this.chunk.ReadDouble(); // code 33
+                miter.Z = this.chunk.ReadDouble(); // code 33
                 this.chunk.Next();
 
                 List<double>[] distances = new List<double>[numStyleElements];
@@ -7554,11 +7554,11 @@ namespace netDxf.IO
                 Matrix3 trans = MathHelper.ArbitraryAxis(normal).Transpose();
                 vertex = trans*vertex;
                 dir = trans*dir;
-                mitter = trans*mitter;
+                miter = trans*miter;
 
                 MLineVertex segment = new MLineVertex(new Vector2(vertex.X, vertex.Y),
                     new Vector2(dir.X, dir.Y),
-                    new Vector2(mitter.X, mitter.Y),
+                    new Vector2(miter.X, miter.Y),
                     distances);
 
                 elevation = vertex.Z;
@@ -7572,7 +7572,7 @@ namespace netDxf.IO
         {
             double elevation = 0.0;
             double thickness = 0.0;
-            PolylinetypeFlags flags = PolylinetypeFlags.OpenPolyline;
+            PolylineTypeFlags flags = PolylineTypeFlags.OpenPolyline;
             double constantWidth = -1.0;
             List<LwPolylineVertex> polVertexes = new List<LwPolylineVertex>();
             LwPolylineVertex v = null;
@@ -7601,7 +7601,7 @@ namespace netDxf.IO
                         this.chunk.Next();
                         break;
                     case 70:
-                        flags = (PolylinetypeFlags) this.chunk.ReadShort();
+                        flags = (PolylineTypeFlags) this.chunk.ReadShort();
                         this.chunk.Next();
                         break;
                     case 90:
@@ -7688,7 +7688,7 @@ namespace netDxf.IO
             // polyface mesh
             // polylines 2d is the old way of writing polylines the AutoCAD2000 and newer always use LwPolylines to define a 2d polyline
             // this way of reading 2d polylines is here for compatibility reasons with older DXF versions.
-            PolylinetypeFlags flags = PolylinetypeFlags.OpenPolyline;
+            PolylineTypeFlags flags = PolylineTypeFlags.OpenPolyline;
             PolylineSmoothType smoothType = PolylineSmoothType.NoSmooth;
             double elevation = 0.0;
             double thickness = 0.0;
@@ -7711,7 +7711,7 @@ namespace netDxf.IO
                         this.chunk.Next();
                         break;
                     case 70:
-                        flags = (PolylinetypeFlags) this.chunk.ReadShort();
+                        flags = (PolylineTypeFlags) this.chunk.ReadShort();
                         this.chunk.Next();
                         break;
                     case 75:
@@ -7784,11 +7784,11 @@ namespace netDxf.IO
             }
 
             EntityObject pol;
-            bool isClosed = flags.HasFlag(PolylinetypeFlags.ClosedPolylineOrClosedPolygonMeshInM);
+            bool isClosed = flags.HasFlag(PolylineTypeFlags.ClosedPolylineOrClosedPolygonMeshInM);
 
             //to avoid possible errors between the vertex type and the polyline type
             //the polyline type will decide which information to use from the read vertex
-            if (flags.HasFlag(PolylinetypeFlags.Polyline3D) || flags.HasFlag(PolylinetypeFlags.SplineFit))
+            if (flags.HasFlag(PolylineTypeFlags.Polyline3D) || flags.HasFlag(PolylineTypeFlags.SplineFit))
             {
                 List<PolylineVertex> polyline3dVertexes = new List<PolylineVertex>();
                 foreach (Vertex v in vertexes)
@@ -7810,7 +7810,7 @@ namespace netDxf.IO
                 };
                 ((Polyline) pol).EndSequence.Handle = endSequenceHandle;
             }
-            else if (flags.HasFlag(PolylinetypeFlags.PolyfaceMesh))
+            else if (flags.HasFlag(PolylineTypeFlags.PolyfaceMesh))
             {
                 //the vertex list created contains vertex and face information
                 List<PolyfaceMeshVertex> polyfaceVertexes = new List<PolyfaceMeshVertex>();
@@ -8496,12 +8496,12 @@ namespace netDxf.IO
             // read all referenced entities
             Debug.Assert(this.chunk.Code == 97, "The reference count code 97 was expected.");
             int numBoundaryObjects = this.chunk.ReadInt();
-            this.hatchContourns.Add(path, new List<string>(numBoundaryObjects));
+            this.hatchContours.Add(path, new List<string>(numBoundaryObjects));
             this.chunk.Next();
             for (int i = 0; i < numBoundaryObjects; i++)
             {
                 Debug.Assert(this.chunk.Code == 330, "The reference handle code 330 was expected.");
-                this.hatchContourns[path].Add(this.chunk.ReadString());
+                this.hatchContours[path].Add(this.chunk.ReadString());
                 this.chunk.Next();
             }
 
@@ -8694,12 +8694,12 @@ namespace netDxf.IO
             // read all referenced entities
             Debug.Assert(this.chunk.Code == 97, "The reference count code 97 was expected.");
             int numBoundaryObjects = this.chunk.ReadInt();
-            this.hatchContourns.Add(path, new List<string>(numBoundaryObjects));
+            this.hatchContours.Add(path, new List<string>(numBoundaryObjects));
             this.chunk.Next();
             for (int i = 0; i < numBoundaryObjects; i++)
             {
                 Debug.Assert(this.chunk.Code == 330, "The reference handle code 330 was expected.");
-                this.hatchContourns[path].Add(this.chunk.ReadString());
+                this.hatchContours[path].Add(this.chunk.ReadString());
                 this.chunk.Next();
             }
 
@@ -8867,7 +8867,7 @@ namespace netDxf.IO
                 double cosDelta = Math.Cos(angle*MathHelper.DegToRad);
                 delta = new Vector2(cosDelta*delta.X/patternScale + sinDelta*delta.Y/patternScale, -sinDelta*delta.X/patternScale + cosDelta*delta.Y/patternScale);
 
-                HatchPatternLineDefinition lineDefiniton = new HatchPatternLineDefinition
+                HatchPatternLineDefinition lineDefinition = new HatchPatternLineDefinition
                 {
                     Angle = angle - patternAngle,
                     Origin = origin,
@@ -8877,11 +8877,11 @@ namespace netDxf.IO
                 for (int j = 0; j < numSegments; j++)
                 {
                     // positive values means solid segments and negative values means spaces (one entry per element)
-                    lineDefiniton.DashPattern.Add(this.chunk.ReadDouble()/patternScale); // code 49
+                    lineDefinition.DashPattern.Add(this.chunk.ReadDouble()/patternScale); // code 49
                     this.chunk.Next();
                 }
 
-                lineDefinitions.Add(lineDefiniton);
+                lineDefinitions.Add(lineDefinition);
             }
 
             return lineDefinitions;
@@ -10001,7 +10001,7 @@ namespace netDxf.IO
                     continue;
 
                 if (string.IsNullOrEmpty(layout.Viewport.Handle))
-                    this.doc.NumHandles = layout.Viewport.AsignHandle(this.doc.NumHandles);
+                    this.doc.NumHandles = layout.Viewport.AssignHandle(this.doc.NumHandles);
             }
             // After loading a DXF the layouts associated blocks will be renamed to strictly follow *Paper_Space, *Paper_Space0, *Paper_Space1,... 
             this.doc.Layouts.RenameAssociatedBlocks();
@@ -10020,7 +10020,7 @@ namespace netDxf.IO
                 Hatch hatch = pair.Key;
                 foreach (HatchBoundaryPath path in pair.Value)
                 {
-                    List<string> entities = this.hatchContourns[path];
+                    List<string> entities = this.hatchContours[path];
                     foreach (string handle in entities)
                     {
                         EntityObject entity = this.doc.GetObjectByHandle(handle) as EntityObject;

@@ -30,7 +30,7 @@ namespace netDxf.Entities
         /// <summary>
         /// Draws the leader line as a set of straight line segments.
         /// </summary>
-        StraightLineSegements = 0,
+        StraightLineSegments = 0,
 
         /// <summary>
         /// Draws the leader line as a spline.

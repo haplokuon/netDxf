@@ -431,7 +431,7 @@ namespace netDxf.Entities
                 }
             }
 
-            // the oblique angle is defined between -85 nad 85 degrees
+            // the oblique angle is defined between -85 and 85 degrees
             //if (newObliqueAngle >= 360) newObliqueAngle -= 360;
             newObliqueAngle = MathHelper.NormalizeAngle(newObliqueAngle);
             if (newObliqueAngle > 180)
@@ -445,7 +445,7 @@ namespace netDxf.Entities
             double newHeight = newVvector.Modulus() * Math.Cos(newObliqueAngle * MathHelper.DegToRad);
             newHeight = MathHelper.IsZero(newHeight) ? MathHelper.Epsilon : newHeight;
 
-            // the width factor is defined between 0.01 nad 100
+            // the width factor is defined between 0.01 and 100
             double newWidthFactor = newUvector.Modulus() / newHeight;
             if(newWidthFactor<0.01)
                 newWidthFactor = 0.01;

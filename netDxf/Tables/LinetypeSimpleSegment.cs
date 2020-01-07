@@ -58,9 +58,9 @@ namespace netDxf.Tables
         #region overrides
 
         /// <summary>
-        /// Creates a new <c>LinetypeSìmpleSegment</c> that is a copy of the current instance.
+        /// Creates a new <c>LinetypeSimpleSegment</c> that is a copy of the current instance.
         /// </summary>
-        /// <returns>A new <c>LinetypeSìmpleSegment</c> that is a copy of this instance.</returns>
+        /// <returns>A new <c>LinetypeSimpleSegment</c> that is a copy of this instance.</returns>
         public override object Clone()
         {
             return new LinetypeSimpleSegment(this.Length);

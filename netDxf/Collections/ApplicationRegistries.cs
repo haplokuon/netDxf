@@ -70,7 +70,7 @@ namespace netDxf.Collections
                 return add;
 
             if (assignHandle || string.IsNullOrEmpty(appReg.Handle))
-                this.Owner.NumHandles = appReg.AsignHandle(this.Owner.NumHandles);
+                this.Owner.NumHandles = appReg.AssignHandle(this.Owner.NumHandles);
 
             this.list.Add(appReg.Name, appReg);
             this.references.Add(appReg.Name, new List<DxfObject>());

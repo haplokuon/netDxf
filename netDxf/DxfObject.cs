@@ -65,7 +65,7 @@ namespace netDxf
         /// Gets the handle assigned to the DXF object.
         /// </summary>
         /// <remarks>
-        /// The handle is a unique hexadecimal number assigned automatically to every dxf object,
+        /// The handle is a unique hexadecimal number assigned automatically to every DXF object,
         /// that has been added to a <see cref="DxfDocument">DxfDocument</see>.
         /// </remarks>
         public string Handle
@@ -96,7 +96,7 @@ namespace netDxf
         /// Some objects might consume more than one, is, for example, the case of polylines that will assign
         /// automatically a handle to its vertexes. The entity number will be converted to an hexadecimal number.
         /// </remarks>
-        internal virtual long AsignHandle(long entityNumber)
+        internal virtual long AssignHandle(long entityNumber)
         {
             this.handle = entityNumber.ToString("X");
             return entityNumber + 1;

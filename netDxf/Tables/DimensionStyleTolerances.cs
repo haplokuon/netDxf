@@ -253,9 +253,9 @@ namespace netDxf.Tables
         #region implements ICloneable
 
         /// <summary>
-        /// Creates a new <c>DimensionStyle.TolernacesFormat</c> that is a copy of the current instance.
+        /// Creates a new <c>DimensionStyle.TolerancesFormat</c> that is a copy of the current instance.
         /// </summary>
-        /// <returns>A new <c>DimensionStyle.TolernacesFormat</c> that is a copy of this instance.</returns>
+        /// <returns>A new <c>DimensionStyle.TolerancesFormat</c> that is a copy of this instance.</returns>
         public object Clone()
         {
             return new DimensionStyleTolerances

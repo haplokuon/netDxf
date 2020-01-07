@@ -27,7 +27,7 @@ namespace netDxf.Tables
     /// </summary>
     /// <remarks>
     /// The Basic method for displaying tolerances in dimensions is not available,
-    /// use a negative number for the <c>TextOffet</c> of the dimension style. The result is exactly the same.
+    /// use a negative number for the <c>TextOffset</c> of the dimension style. The result is exactly the same.
     /// </remarks>
     public enum DimensionStyleTolerancesDisplayMethod
     {

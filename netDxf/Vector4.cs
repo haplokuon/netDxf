@@ -479,8 +479,8 @@ namespace netDxf
         /// <returns>The division of u times a.</returns>
         public static Vector4 operator /(Vector4 u, double a)
         {
-            double invEscalar = 1/a;
-            return new Vector4(u.X*invEscalar, u.Y*invEscalar, u.Z*invEscalar, u.W*invEscalar);
+            double invScalar = 1/a;
+            return new Vector4(u.X*invScalar, u.Y*invScalar, u.Z*invScalar, u.W*invScalar);
         }
 
         /// <summary>
@@ -491,8 +491,8 @@ namespace netDxf
         /// <returns>The division of u times a.</returns>
         public static Vector4 Divide(Vector4 u, double a)
         {
-            double invEscalar = 1/a;
-            return new Vector4(u.X*invEscalar, u.Y*invEscalar, u.Z*invEscalar, u.W*invEscalar);
+            double invScalar = 1/a;
+            return new Vector4(u.X*invScalar, u.Y*invScalar, u.Z*invScalar, u.W*invScalar);
         }
 
         /// <summary>

@@ -29,7 +29,7 @@ namespace netDxf.Entities
     /// </summary>
     /// <remarks>Bit flag.</remarks>
     [Flags]
-    internal enum SplinetypeFlags
+    internal enum SplineTypeFlags
     {
         /// <summary>
         /// Default (open 3d spline).
