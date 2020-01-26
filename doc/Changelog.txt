@@ -1,5 +1,8 @@
 ## Change history
 
+### [2020/01/26]
+* (fixed) More issues with the transformation of Ellipse arcs.
+
 ### [2020/01/07]
 * Misspelling corrections.
 * Renamed LeaderPathType.StraightLineSegements to LeaderPathType.StraightLineSegments
