@@ -22,6 +22,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using netDxf.Blocks;
 using netDxf.Entities;
 using netDxf.Objects;
@@ -225,13 +226,13 @@ namespace netDxf.Collections
         {
             // When a layout is removed we need to rebuild the PaperSpace block names, to follow the naming Paper_Space, Paper_Space0, Paper_Space1, ...
             int index = 0;
-            foreach (Layout l in this.list.Values)
+            foreach (Layout l in this.list.Values.OrderBy(x => x.AssociatedBlock))
             {
                 // rename the corresponding PaperSpace block
                 if (l.IsPaperSpace)
                 {
                     string spaceName = index == 0 ? Block.PaperSpace.Name : string.Concat(Block.PaperSpace.Name, index - 1);
-                    l.AssociatedBlock.SetName(spaceName, false);                  
+                    l.AssociatedBlock.SetName(spaceName, false);
                     index += 1;
                 }
             }
