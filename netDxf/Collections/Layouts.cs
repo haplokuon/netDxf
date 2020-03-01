@@ -1,7 +1,7 @@
-#region netDxf library, Copyright (C) 2009-2019 Daniel Carvajal (haplokuon@gmail.com)
+#region netDxf library, Copyright (C) 2009-2020 Daniel Carvajal (haplokuon@gmail.com)
 
 //                        netDxf library
-// Copyright (C) 2009-2019 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2009-2020 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -221,19 +221,36 @@ namespace netDxf.Collections
             return true;
         }
 
+        #endregion
+
+        #region internal methods
+
         internal void RenameAssociatedBlocks()
         {
-            // When a layout is removed we need to rebuild the PaperSpace block names, to follow the naming Paper_Space, Paper_Space0, Paper_Space1, ...
-            int index = 0;
+            List<int> names = new List<int>();
             foreach (Layout l in this.list.Values)
             {
-                // rename the corresponding PaperSpace block
                 if (l.IsPaperSpace)
                 {
-                    string spaceName = index == 0 ? Block.PaperSpace.Name : string.Concat(Block.PaperSpace.Name, index - 1);
-                    l.AssociatedBlock.SetName(spaceName, false);                  
-                    index += 1;
+                    string blockName = l.AssociatedBlock.Name.Remove(0, Block.PaperSpace.Name.Length);
+                    int index;
+                    if (int.TryParse(blockName, out index))
+                    {
+                        names.Add(index);
+                    }
+                    else
+                    {
+                        names.Add(-1); // for the *Paper_Space block name
+                    }
                 }
+            }
+            names.Sort();
+
+            for (int i = 0; i < names.Count; i++)
+            {
+                string originalName = names[i] == -1 ? Block.PaperSpace.Name : string.Concat(Block.PaperSpace.Name, names[i]);
+                string newName = i == 0 ? Block.PaperSpace.Name : string.Concat(Block.PaperSpace.Name, i - 1);
+                this.Owner.Blocks[originalName].SetName(newName, false);
             }
         }
 

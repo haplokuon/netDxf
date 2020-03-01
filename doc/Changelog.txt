@@ -1,5 +1,10 @@
 ## Change history
 
+### [2020/03/01]
+* Added a check for the binary data record of the extended data. It cannot exceed 127 bytes, if needed divide it into multiples XDataCode.BinaryData records.
+* Removed the scale restrictions for the complex linetype segments. Even thought I would recommend to always use values greater than zero, you might not get the desired results.
+* (fixed) Renaming Layouts associated blocks.
+
 ### [2020/01/26]
 * (fixed) More issues with the transformation of Ellipse arcs.
 

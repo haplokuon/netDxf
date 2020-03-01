@@ -1,7 +1,7 @@
-﻿#region netDxf library, Copyright (C) 2009-2019 Daniel Carvajal (haplokuon@gmail.com)
+﻿#region netDxf library, Copyright (C) 2009-2020 Daniel Carvajal (haplokuon@gmail.com)
 
 //                        netDxf library
-// Copyright (C) 2009-2019 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2009-2020 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -30,6 +30,15 @@ namespace netDxf.IO
     internal class TextCodeValueReader :
         ICodeValueReader
     {
+        #region private fields
+
+        private readonly TextReader reader;
+        private short code;
+        private object value;
+        private long currentPosition;
+
+        #endregion
+
         #region constructors
 
         public TextCodeValueReader(TextReader reader)
@@ -39,15 +48,6 @@ namespace netDxf.IO
             this.value = null;
             this.currentPosition = 0;
         }
-
-        #endregion
-
-        #region private fields
-
-        private readonly TextReader reader;
-        private short code;
-        private object value;
-        private long currentPosition;
 
         #endregion
 
@@ -314,7 +314,9 @@ namespace netDxf.IO
         {
             byte result;
             if (byte.TryParse(valueString, NumberStyles.AllowLeadingWhite | NumberStyles.AllowTrailingWhite, CultureInfo.InvariantCulture, out result))
+            {
                 return result;
+            }
 
             throw new Exception(string.Format("Value {0} not valid at line {1}", valueString, this.currentPosition));
         }
@@ -327,9 +329,13 @@ namespace netDxf.IO
                 string hex = string.Concat(valueString[i], valueString[++i]);
                 byte result;
                 if (byte.TryParse(hex, NumberStyles.AllowHexSpecifier | NumberStyles.AllowLeadingWhite | NumberStyles.AllowTrailingWhite, CultureInfo.InvariantCulture, out result))
+                {
                     bytes.Add(result);
+                }
                 else
+                {
                     throw new Exception(string.Format("Value {0} not valid at line {1}", hex, this.currentPosition));
+                }
             }
 
             return bytes.ToArray();
@@ -339,7 +345,9 @@ namespace netDxf.IO
         {
             short result;
             if (short.TryParse(valueString, NumberStyles.Integer, CultureInfo.InvariantCulture, out result))
+            {
                 return result;
+            }
 
             throw new Exception(string.Format("Value {0} not valid at line {1}", valueString, this.currentPosition));
         }
@@ -348,7 +356,9 @@ namespace netDxf.IO
         {
             int result;
             if (int.TryParse(valueString, NumberStyles.Integer, CultureInfo.InvariantCulture, out result))
+            {
                 return result;
+            }
 
             throw new Exception(string.Format("Value {0} not valid at line {1}", valueString, this.currentPosition));
         }
@@ -357,7 +367,9 @@ namespace netDxf.IO
         {
             long result;
             if (long.TryParse(valueString, NumberStyles.Integer, CultureInfo.InvariantCulture, out result))
+            {
                 return result;
+            }
 
             throw new Exception(string.Format("Value {0} not valid at line {1}", valueString, this.currentPosition));
         }
@@ -372,7 +384,9 @@ namespace netDxf.IO
         {
             double result;
             if (double.TryParse(valueString, NumberStyles.Float, CultureInfo.InvariantCulture, out result))
+            {
                 return result;
+            }
 
             throw new Exception(string.Format("Value {0} not valid at line {1}", valueString, this.currentPosition));
         }
@@ -386,7 +400,9 @@ namespace netDxf.IO
         {
             long test;
             if (long.TryParse(valueString, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out test))
+            {
                 return test.ToString("X");
+            }
 
             throw new Exception(string.Format("Value {0} not valid at line {1}", valueString, this.currentPosition));
         }

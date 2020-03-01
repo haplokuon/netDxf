@@ -1,7 +1,7 @@
-﻿#region netDxf library, Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
+﻿#region netDxf library, Copyright (C) 2009-2020 Daniel Carvajal (haplokuon@gmail.com)
 
 //                        netDxf library
-// Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2009-2020 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -80,6 +80,7 @@ namespace netDxf.IO
         {
             this.dxfCode = code;
             this.writer.Write(code);
+
             if (code >= 0 && code <= 9) // string
             {
                 Debug.Assert(value is string, "Incorrect value type.");
@@ -326,9 +327,13 @@ namespace netDxf.IO
         public void WriteBool(bool value)
         {
             if (value)
+            {
                 this.writer.Write((byte) 1);
+            }
             else
+            {
                 this.writer.Write((byte) 0);
+            }
         }
 
         public void WriteDouble(double value)
