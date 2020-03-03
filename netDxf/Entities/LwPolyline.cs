@@ -361,7 +361,7 @@ namespace netDxf.Entities
                     p2 = new Vector2(this.vertexes[index + 1].Position.X, this.vertexes[index + 1].Position.Y);
                 }
 
-                if (!p1.Equals(p2, weldThreshold))
+                if (!p1.Equals(p2, weldThreshold) ||(index == this.Vertexes.Count - 1 && !this.IsClosed) )
                 {
                     if (MathHelper.IsZero(bulge) || bulgePrecision == 0)
                     {
@@ -381,16 +381,17 @@ namespace netDxf.Entities
                             Vector2 a1 = p1 - center;
                             double angle = Math.Sign(bulge) * theta / (bulgePrecision + 1);
                             ocsVertexes.Add(p1);
+                            Vector2 prevCurvePoint = p1;
                             for (int i = 1; i <= bulgePrecision; i++)
                             {
                                 Vector2 curvePoint = new Vector2();
-                                Vector2 prevCurvePoint = new Vector2(this.vertexes[this.vertexes.Count - 1].Position.X, this.vertexes[this.vertexes.Count - 1].Position.Y);
                                 curvePoint.X = center.X + Math.Cos(i * angle) * a1.X - Math.Sin(i * angle) * a1.Y;
                                 curvePoint.Y = center.Y + Math.Sin(i * angle) * a1.X + Math.Cos(i * angle) * a1.Y;
 
                                 if (!curvePoint.Equals(prevCurvePoint, weldThreshold) && !curvePoint.Equals(p2, weldThreshold))
                                 {
                                     ocsVertexes.Add(curvePoint);
+                                    prevCurvePoint = curvePoint;
                                 }
                             }
                         }
