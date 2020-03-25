@@ -2367,7 +2367,7 @@ namespace netDxf.IO
             string description = null;
             List<LinetypeSegment> segments = new List<LinetypeSegment>();
             List<XData> xData = new List<XData>();
-
+            double? segmentsLengthPattern=null;
             this.chunk.Next();
 
             while (this.chunk.Code != 0)
@@ -2396,7 +2396,8 @@ namespace netDxf.IO
                         this.chunk.Next();
                         break;
                     case 40:
-                        //length of the line type segments (not needed)
+                        //length of the line type segments (needed for scaling the segments)
+                        segmentsLengthPattern= this.chunk.ReadDouble();
                         this.chunk.Next();
                         break;
                     case 49:
@@ -2439,6 +2440,10 @@ namespace netDxf.IO
             if(!TableObject.IsValidName(name)) return null;
 
             Linetype linetype = new Linetype(name, segments, description, false);
+            if (segmentsLengthPattern.HasValue)
+                if (segmentsLengthPattern.Value>0)
+                    linetype.SegmentsPatternLength = segmentsLengthPattern.Value;
+
             if (xData.Count > 0)
             {
                 this.hasXData.Add(linetype, xData);

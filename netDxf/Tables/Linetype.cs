@@ -82,7 +82,7 @@ namespace netDxf.Tables
 
         private string description;
         private readonly ObservableCollection<LinetypeSegment> segments;
-
+        private double segmentsPatternLength;
         #endregion
 
         #region constants
@@ -302,6 +302,15 @@ namespace netDxf.Tables
                 result += Math.Abs(s.Length);
             }
             return result;
+        }
+
+        /// <summary>
+        /// Gets the or sets segments pattern total length of the line type.
+        /// </summary>
+        public double SegmentsPatternLength
+        {
+            get { return this.segmentsPatternLength; }
+            set { this.segmentsPatternLength = value; }
         }
 
         /// <summary>
