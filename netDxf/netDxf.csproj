@@ -76,6 +76,7 @@
     <Reference Include="System.Drawing" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AciColor.ColorDictionary.cs" />
     <Compile Include="Blocks\BlockAttributeDefinitionChangeEventArgs.cs" />
     <Compile Include="Collections\DimensionStyleOverrideDictionaryEventArgs.cs" />
     <Compile Include="Collections\DimensionStyleOverrideDictionary.cs" />
