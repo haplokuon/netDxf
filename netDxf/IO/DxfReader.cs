@@ -191,6 +191,9 @@ namespace netDxf.IO
                         else
                         {
                             int codepage;
+
+                            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+
                             encoding = Encoding.GetEncoding(!int.TryParse(dwgcodepage.Split('_')[1], out codepage) ? Encoding.ASCII.WindowsCodePage : codepage);
                         }
                     }
