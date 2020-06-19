@@ -3333,6 +3333,8 @@ namespace netDxf.IO
             double rotation = 0.0;
             Vector3 normal = Vector3.UnitZ;
 
+            List<XData> xData = new List<XData>();
+
             // DxfObject codes
             this.chunk.Next();
             while (this.chunk.Code != 100)
@@ -3394,7 +3396,14 @@ namespace netDxf.IO
                         isVisible = this.chunk.ReadShort() == 0;
                         this.chunk.Next();
                         break;
+                    case 1001:
+                        string appId = this.DecodeEncodedNonAsciiCharacters(this.chunk.ReadString());
+                        XData data = this.ReadXDataRecord(new ApplicationRegistry(appId));
+                        xData.Add(data);
+                        break;
                     default:
+                        if (this.chunk.Code >= 1000 && this.chunk.Code <= 1071)
+                            throw new Exception("The extended data of an entity must start with the application registry code.");
                         this.chunk.Next();
                         break;
                 }
@@ -3542,7 +3551,8 @@ namespace netDxf.IO
                 ObliqueAngle = obliqueAngle,
                 Rotation = rotation
             };
-
+            
+            attribute.XData.AddRange(xData);
             return attribute;
         }
 
