@@ -22,6 +22,7 @@
 
 using System;
 using System.Collections.Generic;
+using netDxf.Collections;
 using netDxf.Tables;
 
 namespace netDxf.Entities
@@ -38,7 +39,8 @@ namespace netDxf.Entities
     /// </remarks>
     public class Attribute :
         DxfObject,
-        ICloneable
+        ICloneable,
+        IHasXData
     {
         #region delegates and events
 
@@ -89,6 +91,21 @@ namespace netDxf.Entities
             }
             return newTextStyle;
         }
+               public event XDataAddAppRegEventHandler XDataAddAppReg;
+        protected virtual void OnXDataAddAppRegEvent(ApplicationRegistry item)
+        {
+            XDataAddAppRegEventHandler ae = this.XDataAddAppReg;
+            if (ae != null)
+                ae(this, new ObservableCollectionEventArgs<ApplicationRegistry>(item));
+        }
+
+        public event XDataRemoveAppRegEventHandler XDataRemoveAppReg;
+        protected virtual void OnXDataRemoveAppRegEvent(ApplicationRegistry item)
+        {
+            XDataRemoveAppRegEventHandler ae = this.XDataRemoveAppReg;
+            if (ae != null)
+                ae(this, new ObservableCollectionEventArgs<ApplicationRegistry>(item));
+        }
 
         #endregion
 
@@ -117,6 +134,7 @@ namespace netDxf.Entities
         private TextAlignment alignment;
         private bool isBackward;
         private bool isUpsideDown;
+        private readonly XDataDictionary xData;
 
         #endregion
 
@@ -160,6 +178,9 @@ namespace netDxf.Entities
             this.alignment = definition.Alignment;
             this.isBackward = definition.IsBackward;
             this.isUpsideDown = definition.IsUpsideDown;
+
+            foreach (XData data in definition.XData.Values)
+                this.XData.Add((XData) data.Clone());
         }
 
         #endregion
@@ -442,6 +463,13 @@ namespace netDxf.Entities
             set { this.isUpsideDown = value; }
         }
 
+        /// <summary>
+        /// Gets the entity <see cref="XDataDictionary">extended data</see>.
+        /// </summary>
+        public XDataDictionary XData
+        {
+            get { return this.xData; }
+        }
         #endregion
 
         #region public methods
@@ -656,7 +684,24 @@ namespace netDxf.Entities
                 IsUpsideDown = this.isUpsideDown
             };
 
+            foreach (XData data in this.XData.Values)
+                entity.XData.Add((XData) data.Clone());
+
             return entity;
+        }
+
+        #endregion        
+        
+        #region XData events
+
+        private void XData_AddAppReg(XDataDictionary sender, ObservableCollectionEventArgs<ApplicationRegistry> e)
+        {
+            this.OnXDataAddAppRegEvent(e.Item);
+        }
+
+        private void XData_RemoveAppReg(XDataDictionary sender, ObservableCollectionEventArgs<ApplicationRegistry> e)
+        {
+            this.OnXDataRemoveAppRegEvent(e.Item);
         }
 
         #endregion
