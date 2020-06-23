@@ -33,7 +33,7 @@ namespace netDxf
         #region private fields
 
         private readonly XDataCode code;
-        private readonly object value;
+        private object value;
 
         #endregion
 
@@ -167,7 +167,7 @@ namespace netDxf
         #region public properties
 
         /// <summary>
-        /// Gets or set the XData code.
+        /// Gets the XData code.
         /// </summary>
         /// <remarks>The only valid values are the ones defined in the <see cref="XDataCode">XDataCode</see> class.</remarks>
         public XDataCode Code
@@ -181,6 +181,96 @@ namespace netDxf
         public object Value
         {
             get { return this.value; }
+            set
+            {
+                if (value == null)
+                {
+                    throw new ArgumentNullException(nameof(value));
+                }
+
+                switch (this.code)
+                {
+                    case XDataCode.BinaryData:
+                        byte[] bytes = value as byte[];
+
+                        if (bytes == null)
+                        {
+                            throw new ArgumentException("The value of a XDataCode.BinaryData must be a byte array.", nameof(value));
+                        }
+                        if (bytes.Length > 127)
+                        {
+                            throw new ArgumentOutOfRangeException(nameof(value), value, "The maximum length of a XDataCode.BinaryData is 127, if larger divide the data into multiple XDataCode.BinaryData records.");
+                        }
+                        break;
+                    case XDataCode.ControlString:
+                        string v = value as string;
+
+                        if (v == null)
+                        {
+                            throw new ArgumentException("The value of a XDataCode.ControlString must be a string.", nameof(value));
+                        }
+
+                        if (!string.Equals(v, "{") && !string.Equals(v, "}"))
+                        {
+                            throw new ArgumentException("The only valid values of a XDataCode.ControlString are { or }.", nameof(value));
+                        }
+                        break;
+                    case XDataCode.DatabaseHandle:
+                        string handle = value as string;
+
+                        if (handle == null)
+                        {
+                            throw new ArgumentException("The value of a XDataCode.DatabaseHandle must be an hexadecimal number.", nameof(value));
+                        }
+
+                        long test;
+                        if (!long.TryParse(handle, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out test))
+                        {
+                            throw new ArgumentException("The value of a XDataCode.DatabaseHandle must be an hexadecimal number.", nameof(value));
+                        }
+                        break;
+                    case XDataCode.Distance:
+                    case XDataCode.Real:
+                    case XDataCode.RealX:
+                    case XDataCode.RealY:
+                    case XDataCode.RealZ:
+                    case XDataCode.WorldSpacePositionX:
+                    case XDataCode.WorldSpacePositionY:
+                    case XDataCode.WorldSpacePositionZ:
+                    case XDataCode.ScaleFactor:
+                    case XDataCode.WorldDirectionX:
+                    case XDataCode.WorldDirectionY:
+                    case XDataCode.WorldDirectionZ:
+                    case XDataCode.WorldSpaceDisplacementX:
+                    case XDataCode.WorldSpaceDisplacementY:
+                    case XDataCode.WorldSpaceDisplacementZ:
+                        if (!(value is double))
+                        {
+                            throw new ArgumentException(string.Format("The value of a XDataCode.{0} must be a {1}.", code, typeof (double)), nameof(value));
+                        }
+                        break;
+                    case XDataCode.Int16:
+                        if (!(value is short))
+                        {
+                            throw new ArgumentException(string.Format("The value of a XDataCode.{0} must be a {1}.", code, typeof (short)), nameof(value));
+                        }
+                        break;
+                    case XDataCode.Int32:
+                        if (!(value is int))
+                        {
+                            throw new ArgumentException(string.Format("The value of a XDataCode.{0} must be an {1}.", code, typeof (int)), nameof(value));
+                        }
+                        break;
+                    case XDataCode.LayerName:
+                    case XDataCode.String:
+                        if (!(value is string))
+                        {
+                            throw new ArgumentException(string.Format("The value of a XDataCode.{0} must be a {1}.", code, typeof (string)), nameof(value));
+                        }
+                        break;
+                }
+                this.value = value;
+            }
         }
 
         #endregion
