@@ -134,6 +134,7 @@ namespace netDxf.Entities
         private TextAlignment alignment;
         private bool isBackward;
         private bool isUpsideDown;
+
         private readonly XDataDictionary xData;
 
         #endregion
@@ -178,6 +179,10 @@ namespace netDxf.Entities
             this.alignment = definition.Alignment;
             this.isBackward = definition.IsBackward;
             this.isUpsideDown = definition.IsUpsideDown;
+
+            this.xData = new XDataDictionary();
+            this.xData.AddAppReg += this.XData_AddAppReg;
+            this.xData.RemoveAppReg += this.XData_RemoveAppReg;
 
             foreach (XData data in definition.XData.Values)
                 this.XData.Add((XData) data.Clone());
