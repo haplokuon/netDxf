@@ -4474,6 +4474,8 @@ namespace netDxf.IO
                     this.chunk.Write(74, (short) 0);
                     break;
             }
+            
+            this.WriteXData(attrib.XData);
         }
 
         private void WriteViewport(Viewport vp)
