@@ -1,5 +1,13 @@
 ## Change history
 
+### [2020/08/04]
+* Renamed DxfObjectCode.LightWeightPolyline to DxfObjectCode.LwPolyline.
+* Renamed SubclassMarker.LightWeightPolyline to SubclassMarker.LwPolyline.
+* Force the use of the ASCII.WindowsCodePage encoding in the DxfReader class, just for cases where there was a problem reading the codepage from the file.
+* (fixed) Index to RGB color equivalent in the AciColor class.
+* (fixed) The FrozenLayers list of the Viewport entity cannot contain null items or layers that belong to different documents.
+* (fixed) When an open LwPolyline is converted to a set of vertexes (PolygonalVertexes method) the last vertex will not be welded to the first if they fall inside the defined threshold.
+
 ### [2020/03/01]
 * Added a check for the binary data record of the extended data. It cannot exceed 127 bytes, if needed divide it into multiples XDataCode.BinaryData records.
 * Removed the scale restrictions for the complex linetype segments. Even thought I would recommend to always use values greater than zero, you might not get the desired results.
@@ -115,7 +123,7 @@
 * (fixed) Adding and removing the annotation of a leader, when it already belongs to a document, will be automatically add and remove, respectively, the entity from the document.
 * (fixed) When cloning a Viewport the frozen layers were not being cloned.
 * (fixed) When writing a DXF the Tolerance code 73 is 0 for both Text and MText annotations.
-* (fixed) Radial and Diametric dimensions not showing the "R" and "Ø" when no prefix is use in the dimension style.
+* (fixed) Radial and Diametric dimensions not showing the "R" and "ï¿½" when no prefix is use in the dimension style.
 * (fixed) The MLineStyleElements needs to be ordered from larger to smaller offset values.
 * (fixed) Bug when creating boundary paths for hatches when the normal was not the UnitZ (0,0,1).
 * (fixed) Only a single HatchBoundary.Edge of type Polyline can be used to initialize a hatch boundary, it also must always be closed.

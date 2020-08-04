@@ -1,7 +1,7 @@
-﻿#region netDxf library, Copyright (C) 2009-2019 Daniel Carvajal (haplokuon@gmail.com)
+﻿#region netDxf library, Copyright (C) 2009-2020 Daniel Carvajal (haplokuon@gmail.com)
 
 //                        netDxf library
-// Copyright (C) 2009-2019 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2009-2020 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -313,7 +313,7 @@ namespace netDxf.Tables
         /// <returns>True if two TableObject are equal or false in any other case.</returns>
         /// <remarks>
         /// Two TableObjects are considered equals if their names are the same, regardless of their internal values.
-        /// This is done this way because in a dxf two TableObjects cannot have the same name.
+        /// This is done this way because in a DXF two TableObjects cannot have the same name.
         /// </remarks>
         public override bool Equals(object other)
         {
@@ -333,7 +333,7 @@ namespace netDxf.Tables
         /// <returns>True if two TableObject are equal or false in any other case.</returns>
         /// <remarks>
         /// Two TableObjects are considered equals if their names are the same, regardless of their internal values.
-        /// This is done this way because in a dxf two TableObjects cannot have the same name.
+        /// This is done this way because in a DXF two TableObjects cannot have the same name.
         /// </remarks>
         public bool Equals(TableObject other)
         {

@@ -1,7 +1,7 @@
-﻿#region netDxf library, Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
+﻿#region netDxf library, Copyright (C) 2009-2020 Daniel Carvajal (haplokuon@gmail.com)
 
 //                        netDxf library
-// Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2009-2020 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -23,7 +23,7 @@
 namespace netDxf
 {
     /// <summary>
-    /// Dxf object subclass string markers (code 100).
+    /// DXF object subclass string markers (code 100).
     /// </summary>
     internal static class SubclassMarker
     {
@@ -66,7 +66,7 @@ namespace netDxf
         public const string Vertex = "AcDbVertex";
         public const string Polyline = "AcDb2dPolyline";
         public const string Leader = "AcDbLeader";
-        public const string LightWeightPolyline = "AcDbPolyline";
+        public const string LwPolyline = "AcDbPolyline";
         public const string PolylineVertex = "AcDb2dVertex ";
         public const string Polyline3d = "AcDb3dPolyline";
         public const string Polyline3dVertex = "AcDb3dPolylineVertex";

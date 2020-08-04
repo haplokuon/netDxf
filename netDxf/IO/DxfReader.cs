@@ -85,6 +85,7 @@ namespace netDxf.IO
         private Dictionary<Leader, string> leaderAnnotation;
         private Dictionary<Block, List<EntityObject>> blockEntities;
         private Dictionary<Group, List<string>> groupEntities;
+        private Dictionary<Viewport, List<Layer>> viewportFrozenLayers;
 
         // the order of each table group in the tables section may vary
         private Dictionary<DimensionStyle, string[]> dimStyleToHandles;
@@ -210,6 +211,7 @@ namespace netDxf.IO
             this.hatchContours = new Dictionary<HatchBoundaryPath, List<string>>();
             this.decodedStrings = new Dictionary<string, string>();
             this.leaderAnnotation = new Dictionary<Leader, string>();
+            this.viewportFrozenLayers = new Dictionary<Viewport, List<Layer>>();
 
             //tables
             this.hasXData = new Dictionary<IHasXData, List<XData>>();
@@ -3680,7 +3682,7 @@ namespace netDxf.IO
                 case DxfObjectCode.Line:
                     dxfObject = this.ReadLine();
                     break;
-                case DxfObjectCode.LightWeightPolyline:
+                case DxfObjectCode.LwPolyline:
                     dxfObject = this.ReadLwPolyline();
                     break;
                 case DxfObjectCode.Mesh:
@@ -4598,7 +4600,7 @@ namespace netDxf.IO
             Vector3 ucsOrigin = Vector3.Zero;
             Vector3 ucsXAxis = Vector3.UnitX;
             Vector3 ucsYAxis = Vector3.UnitY;
-
+            List<Layer> frozenLayers = new List<Layer>();
             List<XData> xData = new List<XData>();
 
             this.chunk.Next();
@@ -4719,8 +4721,8 @@ namespace netDxf.IO
                         this.chunk.Next();
                         break;
                     case 331:
-                        Layer layer = (Layer) this.doc.GetObjectByHandle(this.chunk.ReadString());
-                        viewport.FrozenLayers.Add(layer);
+                        // we will post process the frozen layers after the viewport is added to the document
+                        frozenLayers.Add((Layer) this.doc.GetObjectByHandle(this.chunk.ReadHex()));
                         this.chunk.Next();
                         break;
                     case 90:
@@ -4791,8 +4793,9 @@ namespace netDxf.IO
             viewport.UcsOrigin = ucsOrigin;
             viewport.UcsXAxis = ucsXAxis;
             viewport.UcsYAxis = ucsYAxis;
-
             viewport.XData.AddRange(xData);
+
+            this.viewportFrozenLayers.Add(viewport, frozenLayers);
 
             return viewport;
         }
@@ -10207,13 +10210,17 @@ namespace netDxf.IO
                     AttributeDefinition attDef = pair.Key as AttributeDefinition;
                     if (attDef != null)
                     {
-                        if(!layout.AssociatedBlock.AttributeDefinitions.ContainsTag(attDef.Tag))
+                        if (!layout.AssociatedBlock.AttributeDefinitions.ContainsTag(attDef.Tag))
+                        {
                             layout.AssociatedBlock.AttributeDefinitions.Add(attDef);
+                        }
                     }
 
                     EntityObject entity = pair.Key as EntityObject;
                     if (entity != null)
+                    {
                         layout.AssociatedBlock.Entities.Add(entity);
+                    }
                 }
             }
 
@@ -10221,10 +10228,14 @@ namespace netDxf.IO
             foreach (Layout layout in this.doc.Layouts)
             {
                 if (layout.Viewport == null)
+                {
                     continue;
+                }
 
                 if (string.IsNullOrEmpty(layout.Viewport.Handle))
+                {
                     this.doc.NumHandles = layout.Viewport.AssignHandle(this.doc.NumHandles);
+                }
             }
             // After loading a DXF the layouts associated blocks will be renamed to strictly follow *Paper_Space, *Paper_Space0, *Paper_Space1,... 
             this.doc.Layouts.RenameAssociatedBlocks();
@@ -10248,8 +10259,13 @@ namespace netDxf.IO
                     {
                         EntityObject entity = this.doc.GetObjectByHandle(handle) as EntityObject;
                         if (entity != null)
+                        {
                             if (ReferenceEquals(hatch.Owner, entity.Owner))
+                            {
                                 path.AddContour(entity);
+                            }
+
+                        }
                     }
                     hatch.BoundaryPaths.Add(path);
                 }
@@ -10262,7 +10278,9 @@ namespace netDxf.IO
                 {
                     EntityObject entity = this.doc.GetObjectByHandle(handle) as EntityObject;
                     if (entity != null)
+                    {
                         pair.Key.Entities.Add(entity);
+                    }
                 }
             }
 
@@ -10273,13 +10291,17 @@ namespace netDxf.IO
             {
                 XData xDataOverrides;
                 if (dim.XData.TryGetValue(ApplicationRegistry.DefaultName, out xDataOverrides))
+                {
                     dim.StyleOverrides.AddRange(this.ReadDimensionStyleOverrideXData(xDataOverrides));
+                }
             }
             foreach (Leader leader in this.doc.Leaders)
             {
                 XData xDataOverrides;
                 if (leader.XData.TryGetValue(ApplicationRegistry.DefaultName, out xDataOverrides))
+                {
                     leader.StyleOverrides.AddRange(this.ReadDimensionStyleOverrideXData(xDataOverrides));
+                }
             }
 
             // post process leader annotations
@@ -10290,6 +10312,23 @@ namespace netDxf.IO
                 {
                     pair.Key.Annotation = entity;
                     pair.Key.Update(true);
+                }
+            }
+
+            // post process viewport frozen layers
+            foreach (KeyValuePair<Viewport, List<Layer>> pair in this.viewportFrozenLayers)
+            {
+                foreach (Layer layer in pair.Value)
+                {
+                    if (layer == null)
+                    {
+                        continue;
+                    }
+                    if(pair.Key.FrozenLayers.Contains(layer))
+                    {
+                       continue; 
+                    }
+                    pair.Key.FrozenLayers.AddRange(pair.Value);
                 }
             }
         }

@@ -167,7 +167,7 @@ namespace netDxf
         #region public properties
 
         /// <summary>
-        /// Gets or set the XData code.
+        /// Gets the XData code.
         /// </summary>
         /// <remarks>The only valid values are the ones defined in the <see cref="XDataCode">XDataCode</see> class.</remarks>
         public XDataCode Code
@@ -176,7 +176,7 @@ namespace netDxf
         }
 
         /// <summary>
-        /// Gets or sets the XData value.
+        /// Gets the XData value.
         /// </summary>
         public object Value
         {

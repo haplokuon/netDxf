@@ -22,6 +22,8 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using netDxf.Collections;
 using netDxf.Tables;
 
 namespace netDxf.Entities
@@ -82,7 +84,7 @@ namespace netDxf.Entities
         private double twistAngle;
         private short circleZoomPercent;
         private ViewportStatusFlags status;
-        private readonly List<Layer> frozenLayers;
+        private readonly ObservableCollection<Layer> frozenLayers;
         private Vector3 ucsOrigin;
         private Vector3 ucsXAxis;
         private Vector3 ucsYAxis;
@@ -150,7 +152,8 @@ namespace netDxf.Entities
                           ViewportStatusFlags.CurrentlyAlwaysEnabled |
                           ViewportStatusFlags.UcsIconVisibility |
                           ViewportStatusFlags.GridMode;
-            this.frozenLayers = new List<Layer>();
+            this.frozenLayers = new ObservableCollection<Layer>();
+            this.frozenLayers.BeforeAddItem += this.FrozenLayers_BeforeAddItem;
             this.ucsOrigin = Vector3.Zero;
             this.ucsXAxis = Vector3.UnitX;
             this.ucsYAxis = Vector3.UnitY;
@@ -336,7 +339,11 @@ namespace netDxf.Entities
         /// <summary>
         /// Gets the list of layers that are frozen in this viewport.
         /// </summary>
-        public List<Layer> FrozenLayers
+        /// <remarks>
+        /// The FrozenLayers list cannot contain null items and layers that belong to different documents.
+        /// Even if duplicate items should not cause any problems, it is not allowed to have two layers with the same name in the list.
+        /// </remarks>
+        public ObservableCollection<Layer> FrozenLayers
         {
             get { return this.frozenLayers; }
         }
@@ -564,6 +571,42 @@ namespace netDxf.Entities
                 viewport.XData.Add((XData) data.Clone());
 
             return viewport;
+        }
+
+        #endregion
+
+        #region FrozenLayers events
+
+        private void FrozenLayers_BeforeAddItem(ObservableCollection<Layer> sender, ObservableCollectionEventArgs<Layer> e)
+        {
+            if (e.Item == null)
+            {
+                // the frozen layer list cannot contain null items
+                e.Cancel = true; 
+            }
+            else if (this.Owner != null && e.Item.Owner == null)
+            {
+                // the frozen layer and the viewport must belong to the same document
+                e.Cancel = true;
+            }
+            else if (this.Owner == null && e.Item.Owner != null)
+            {
+                // the frozen layer and the viewport must belong to the same document
+                e.Cancel = true;
+            }
+            else if (this.Owner != null && e.Item.Owner != null)
+            {
+               // the frozen layer and the viewport must belong to the same document
+               if (!ReferenceEquals(this.Owner.Owner.Owner.Owner, e.Item.Owner.Owner))
+               {
+                   e.Cancel = true;
+               }
+            }
+            else if (this.frozenLayers.Contains(e.Item))
+            {
+                // the frozen layer list cannot contain duplicates
+                e.Cancel = true;
+            }
         }
 
         #endregion

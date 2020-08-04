@@ -1,7 +1,7 @@
-﻿#region netDxf library, Copyright (C) 2009-2019 Daniel Carvajal (haplokuon@gmail.com)
+﻿#region netDxf library, Copyright (C) 2009-2020 Daniel Carvajal (haplokuon@gmail.com)
 
 //                        netDxf library
-// Copyright (C) 2009-2019 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2009-2020 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -69,7 +69,7 @@ namespace netDxf.Entities
         /// <param name="vertexes">LwPolyline <see cref="Vector2">vertex</see> list in object coordinates.</param>
         /// <param name="isClosed">Sets if the polyline is closed, by default it will create an open polyline.</param>
         public LwPolyline(IEnumerable<Vector2> vertexes, bool isClosed)
-            : base(EntityType.LwPolyline, DxfObjectCode.LightWeightPolyline)
+            : base(EntityType.LwPolyline, DxfObjectCode.LwPolyline)
         {
             if (vertexes == null)
                 throw new ArgumentNullException(nameof(vertexes));
@@ -96,7 +96,7 @@ namespace netDxf.Entities
         /// <param name="vertexes">LwPolyline <see cref="LwPolylineVertex">vertex</see> list in object coordinates.</param>
         /// <param name="isClosed">Sets if the polyline is closed  (default: false).</param>
         public LwPolyline(IEnumerable<LwPolylineVertex> vertexes, bool isClosed)
-            : base(EntityType.LwPolyline, DxfObjectCode.LightWeightPolyline)
+            : base(EntityType.LwPolyline, DxfObjectCode.LwPolyline)
         {
             if (vertexes == null)
                 throw new ArgumentNullException(nameof(vertexes));
@@ -337,6 +337,87 @@ namespace netDxf.Entities
         /// <param name="bulgeThreshold">Minimum distance from which approximate curved segments of the polyline.</param>
         /// <returns>A list of vertexes expressed in object coordinate system.</returns>
         public List<Vector2> PolygonalVertexes(int bulgePrecision, double weldThreshold, double bulgeThreshold)
+        {
+            List<Vector2> ocsVertexes = new List<Vector2>();
+
+            int index = 0;
+
+            foreach (LwPolylineVertex vertex in this.Vertexes)
+            {
+                double bulge = vertex.Bulge;
+                Vector2 p1;
+                Vector2 p2;
+
+                if (index == this.Vertexes.Count - 1)
+                {
+                    p1 = new Vector2(vertex.Position.X, vertex.Position.Y);
+                    if (!this.IsClosed)
+                    {
+                        ocsVertexes.Add(p1);
+                        continue;
+                    }
+                    p2 = new Vector2(this.vertexes[0].Position.X, this.vertexes[0].Position.Y);
+                }
+                else
+                {
+                    p1 = new Vector2(vertex.Position.X, vertex.Position.Y);
+                    p2 = new Vector2(this.vertexes[index + 1].Position.X, this.vertexes[index + 1].Position.Y);
+                }
+
+                if (!p1.Equals(p2, weldThreshold))
+                {
+                    if (MathHelper.IsZero(bulge) || bulgePrecision == 0)
+                    {
+                        ocsVertexes.Add(p1);
+                    }
+                    else
+                    {
+                        double c = Vector2.Distance(p1, p2);
+                        if (c >= bulgeThreshold)
+                        {
+                            double s = (c / 2) * Math.Abs(bulge);
+                            double r = ((c / 2) * (c / 2) + s * s) / (2 * s);
+                            double theta = 4 * Math.Atan(Math.Abs(bulge));
+                            double gamma = (Math.PI - theta) / 2;
+                            double phi = Vector2.Angle(p1, p2) + Math.Sign(bulge) * gamma;
+                            Vector2 center = new Vector2(p1.X + r * Math.Cos(phi), p1.Y + r * Math.Sin(phi));
+                            Vector2 a1 = p1 - center;
+                            double angle = Math.Sign(bulge) * theta / (bulgePrecision + 1);
+                            ocsVertexes.Add(p1);
+                            Vector2 prevCurvePoint = p1;
+                            for (int i = 1; i <= bulgePrecision; i++)
+                            {
+                                Vector2 curvePoint = new Vector2();
+                                curvePoint.X = center.X + Math.Cos(i * angle) * a1.X - Math.Sin(i * angle) * a1.Y;
+                                curvePoint.Y = center.Y + Math.Sin(i * angle) * a1.X + Math.Cos(i * angle) * a1.Y;
+
+                                if (!curvePoint.Equals(prevCurvePoint, weldThreshold) && !curvePoint.Equals(p2, weldThreshold))
+                                {
+                                    ocsVertexes.Add(curvePoint);
+                                    prevCurvePoint = curvePoint;
+                                }
+                            }
+                        }
+                        else
+                        {
+                            ocsVertexes.Add(p1);
+                        }
+                    }
+                }
+                index++;
+            }
+
+            return ocsVertexes;
+        }
+
+        /// <summary>
+        /// Obtains a list of vertexes that represent the polyline approximating the curve segments as necessary.
+        /// </summary>
+        /// <param name="bulgePrecision">Curve segments precision (a value of zero means that no approximation will be made).</param>
+        /// <param name="weldThreshold">Tolerance to consider if two new generated vertexes are equal.</param>
+        /// <param name="bulgeThreshold">Minimum distance from which approximate curved segments of the polyline.</param>
+        /// <returns>A list of vertexes expressed in object coordinate system.</returns>
+        public List<Vector2> PolygonalVertexes2(int bulgePrecision, double weldThreshold, double bulgeThreshold)
         {
             List<Vector2> ocsVertexes = new List<Vector2>();
 
