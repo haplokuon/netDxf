@@ -1,7 +1,7 @@
-﻿#region netDxf library, Copyright (C) 2009-2019 Daniel Carvajal (haplokuon@gmail.com)
+﻿#region netDxf library, Copyright (C) 2009-2020 Daniel Carvajal (haplokuon@gmail.com)
 
 //                        netDxf library
-// Copyright (C) 2009-2019 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2009-2020 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -23,7 +23,6 @@
 using System;
 using System.Collections.Generic;
 using netDxf.Blocks;
-using netDxf.Collections;
 using netDxf.Tables;
 
 namespace netDxf.Entities
@@ -33,7 +32,6 @@ namespace netDxf.Entities
     /// </summary>
     public abstract class EntityObject :
         DxfObject,
-        IHasXData,
         ICloneable
     {
         #region delegates and events
@@ -66,22 +64,6 @@ namespace netDxf.Entities
             return newLinetype;
         }
 
-        public event XDataAddAppRegEventHandler XDataAddAppReg;
-        protected virtual void OnXDataAddAppRegEvent(ApplicationRegistry item)
-        {
-            XDataAddAppRegEventHandler ae = this.XDataAddAppReg;
-            if (ae != null)
-                ae(this, new ObservableCollectionEventArgs<ApplicationRegistry>(item));
-        }
-
-        public event XDataRemoveAppRegEventHandler XDataRemoveAppReg;
-        protected virtual void OnXDataRemoveAppRegEvent(ApplicationRegistry item)
-        {
-            XDataRemoveAppRegEventHandler ae = this.XDataRemoveAppReg;
-            if (ae != null)
-                ae(this, new ObservableCollectionEventArgs<ApplicationRegistry>(item));
-        }
-
         #endregion
 
         #region private fields
@@ -95,7 +77,6 @@ namespace netDxf.Entities
         private double linetypeScale;
         private bool isVisible;
         private Vector3 normal;
-        private readonly XDataDictionary xData;
         private readonly List<DxfObject> reactors;
 
         #endregion
@@ -115,9 +96,6 @@ namespace netDxf.Entities
             this.isVisible = true;
             this.normal = Vector3.UnitZ;
             this.reactors = new List<DxfObject>();
-            this.xData = new XDataDictionary();
-            this.xData.AddAppReg += this.XData_AddAppReg;
-            this.xData.RemoveAppReg += this.XData_RemoveAppReg;
         }
 
         #endregion
@@ -251,14 +229,6 @@ namespace netDxf.Entities
             internal set { base.Owner = value; }
         }
 
-        /// <summary>
-        /// Gets the entity <see cref="XDataDictionary">extended data</see>.
-        /// </summary>
-        public XDataDictionary XData
-        {
-            get { return this.xData; }
-        }
-
         #endregion
 
         #region internal methods
@@ -325,18 +295,5 @@ namespace netDxf.Entities
 
         #endregion
 
-        #region XData events
-
-        private void XData_AddAppReg(XDataDictionary sender, ObservableCollectionEventArgs<ApplicationRegistry> e)
-        {
-            this.OnXDataAddAppRegEvent(e.Item);
-        }
-
-        private void XData_RemoveAppReg(XDataDictionary sender, ObservableCollectionEventArgs<ApplicationRegistry> e)
-        {
-            this.OnXDataRemoveAppRegEvent(e.Item);
-        }
-
-        #endregion
     }
 }

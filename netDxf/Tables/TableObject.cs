@@ -22,7 +22,6 @@
 
 using System;
 using System.Linq;
-using netDxf.Collections;
 
 namespace netDxf.Tables
 {
@@ -31,7 +30,6 @@ namespace netDxf.Tables
     /// </summary>
     public abstract class TableObject :
         DxfObject,
-        IHasXData,
         ICloneable,
         IComparable,
         IComparable<TableObject>,
@@ -51,22 +49,6 @@ namespace netDxf.Tables
             }
         }
 
-        public event XDataAddAppRegEventHandler XDataAddAppReg;
-        protected virtual void OnXDataAddAppRegEvent(ApplicationRegistry item)
-        {
-            XDataAddAppRegEventHandler ae = this.XDataAddAppReg;
-            if (ae != null)
-                ae(this, new ObservableCollectionEventArgs<ApplicationRegistry>(item));
-        }
-
-        public event XDataRemoveAppRegEventHandler XDataRemoveAppReg;
-        protected virtual void OnXDataRemoveAppRegEvent(ApplicationRegistry item)
-        {
-            XDataRemoveAppRegEventHandler ae = this.XDataRemoveAppReg;
-            if (ae != null)
-                ae(this, new ObservableCollectionEventArgs<ApplicationRegistry>(item));
-        }
-
         #endregion
 
         #region private fields
@@ -74,7 +56,6 @@ namespace netDxf.Tables
         private static readonly char[] invalidCharacters = { '\\', '/', ':', '*', '?', '"', '<', '>', '|', ';', ',', '=', '`' };
         private bool reserved;
         private string name;
-        private readonly XDataDictionary xData;
 
         #endregion
 
@@ -97,9 +78,6 @@ namespace netDxf.Tables
 
             this.name = name;
             this.reserved = false;
-            this.xData = new XDataDictionary();
-            this.xData.AddAppReg += this.XData_AddAppReg;
-            this.xData.RemoveAppReg += this.XData_RemoveAppReg;
         }
 
         #endregion
@@ -131,14 +109,6 @@ namespace netDxf.Tables
         public static char[] InvalidCharacters
         {
             get { return invalidCharacters.ToArray(); }
-        }
-
-        /// <summary>
-        /// Gets the table <see cref="XDataDictionary">extended data</see>.
-        /// </summary>
-        public XDataDictionary XData
-        {
-            get { return this.xData; }
         }
 
         #endregion
@@ -362,18 +332,5 @@ namespace netDxf.Tables
 
         #endregion
 
-        #region XData events
-
-        private void XData_AddAppReg(XDataDictionary sender, ObservableCollectionEventArgs<ApplicationRegistry> e)
-        {
-            this.OnXDataAddAppRegEvent(e.Item);
-        }
-
-        private void XData_RemoveAppReg(XDataDictionary sender, ObservableCollectionEventArgs<ApplicationRegistry> e)
-        {
-            this.OnXDataRemoveAppRegEvent(e.Item);
-        }
-
-        #endregion
     }
 }

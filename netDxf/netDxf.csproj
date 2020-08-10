@@ -95,7 +95,6 @@
     <Compile Include="Entities\MTextParagraphOptions.cs" />
     <Compile Include="Entities\MTextParagraphVerticalAlignment.cs" />
     <Compile Include="Entities\Shape.cs" />
-    <Compile Include="IHasXData.cs" />
     <Compile Include="IO\DxfVersionNotSupportedException.cs" />
     <Compile Include="Matrix2.cs" />
     <Compile Include="Matrix4.cs" />

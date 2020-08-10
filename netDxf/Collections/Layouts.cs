@@ -33,13 +33,19 @@ namespace netDxf.Collections
     /// Represents a collection of layouts.
     /// </summary>
     /// <remarks>
-    /// AutoCad limits the number of layouts to 256, but at the same time it allows to import DXF files with more than that,
-    /// for this reason the max capacity has been set to short.MaxValue.
-    /// The maximum number of layouts is also limited by the number of blocks, due to that for each layout a block record must exist in the blocks collection.
+    /// You can add a maximum of 255 layouts to your drawing, the "Model" layout is always present what limits the maximum number of layouts to 256.
+    /// Even though this limit is imposed through the AutoCad UI, it can import larger numbers, but exceeding this limit might make it to crash.
     /// </remarks>
     public sealed class Layouts :
         TableObjects<Layout>
     {
+
+        #region private fields
+
+        public const short MaxCapacity = 256;
+
+        #endregion
+
         #region constructor
 
         internal Layouts(DxfDocument document)
@@ -50,7 +56,6 @@ namespace netDxf.Collections
         internal Layouts(DxfDocument document, string handle)
             : base(document, DxfObjectCode.LayoutDictionary, handle)
         {
-            this.MaxCapacity = short.MaxValue;
             this.references = null;
         }
 
@@ -99,13 +104,14 @@ namespace netDxf.Collections
         /// <param name="layout"><see cref="Layout">Layout</see> to add to the list.</param>
         /// <param name="assignHandle">Specifies if a handle needs to be generated for the layout parameter.</param>
         /// <returns>
+        /// You can add a maximum of 255 layouts to your drawing, the "Model" layout is always present what limits the maximum number of layouts to 256.
         /// If a layout already exists with the same name as the instance that is being added the method returns the existing layout.
         /// </returns>
         internal override Layout Add(Layout layout, bool assignHandle)
         {
-            if (this.list.Count >= this.MaxCapacity)
+            if (this.list.Count >= MaxCapacity)
             {
-                throw new OverflowException(string.Format("Table overflow. The maximum number of elements the table {0} can have is {1}", this.CodeName, this.MaxCapacity));
+                throw new OverflowException(string.Format("Table overflow. The maximum number of elements the table {0} can have is {1}", this.CodeName, MaxCapacity));
             }
 
             if (layout == null)

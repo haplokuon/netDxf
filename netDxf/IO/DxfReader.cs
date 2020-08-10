@@ -96,7 +96,7 @@ namespace netDxf.IO
         private Dictionary<LinetypeShapeSegment, short> linetypeShapeSegmentToNumber;
 
         // XData for table objects
-        private Dictionary<IHasXData, List<XData>> hasXData;
+        private Dictionary<DxfObject, List<XData>> hasXData;
 
         // the MLineStyles are defined, in the objects section, AFTER the MLine that references them,
         // temporarily this variables will store information to post process the MLine list
@@ -214,7 +214,7 @@ namespace netDxf.IO
             this.viewportFrozenLayers = new Dictionary<Viewport, List<Layer>>();
 
             //tables
-            this.hasXData = new Dictionary<IHasXData, List<XData>>();
+            this.hasXData = new Dictionary<DxfObject, List<XData>>();
             this.dimStyleToHandles = new Dictionary<DimensionStyle, string[]>();
             this.complexLinetypes = new List<Linetype>();
             this.linetypeSegmentStyleHandles = new Dictionary<LinetypeSegment, string>();
@@ -797,10 +797,9 @@ namespace netDxf.IO
             }
 
             //post process XData
-            foreach (KeyValuePair<IHasXData, List<XData>> pair in this.hasXData)
+            foreach (KeyValuePair<DxfObject, List<XData>> pair in this.hasXData)
             {
-                IHasXData o = pair.Key;
-                ApplicationRegistry appReg = o as ApplicationRegistry;
+                ApplicationRegistry appReg = pair.Key as ApplicationRegistry;
                 if (appReg == null)
                 {
                     pair.Key.XData.AddRange(pair.Value);
@@ -971,6 +970,18 @@ namespace netDxf.IO
             // raster variables
             if (this.doc.RasterVariables == null)
                 this.doc.RasterVariables = new RasterVariables();
+
+
+            // assign XData to collections
+            foreach (KeyValuePair<string, DictionaryObject> dictionary in this.dictionaries)
+            {
+                DxfObject table = this.doc.GetObjectByHandle(dictionary.Key);
+                if (table != null)
+                {
+                    table.XData.AddRange(dictionary.Value.XData.Values);
+                }
+
+            }
         }
 
         private void RelinkOrphanLayouts()
@@ -1094,7 +1105,7 @@ namespace netDxf.IO
         private void ReadTable()
         {
             Debug.Assert(this.chunk.ReadString() == DxfObjectCode.Table);
-
+            List<XData> xData = new List<XData>();
             string handle = null;
             this.chunk.Next();
             string tableName = this.chunk.ReadString();
@@ -1122,7 +1133,18 @@ namespace netDxf.IO
                         Debug.Assert(this.chunk.ReadString() == SubclassMarker.Table || this.chunk.ReadString() == SubclassMarker.DimensionStyleTable);
                         this.chunk.Next();
                         break;
+                    case 1001:
+                        string appId = this.DecodeEncodedNonAsciiCharacters(this.chunk.ReadString());
+                        //XData data = this.ReadXDataRecord(this.GetApplicationRegistry(appId));
+                        XData data = this.ReadXDataRecord(new ApplicationRegistry(appId));
+                        xData.Add(data);
+                        break;
                     default:
+                        if (this.chunk.Code >= 1000 && this.chunk.Code <= 1071)
+                        {
+                            throw new Exception("The extended data of an entity must start with the application registry code.");
+                        }
+
                         this.chunk.Next();
                         break;
                 }
@@ -1133,31 +1155,39 @@ namespace netDxf.IO
             {
                 case DxfObjectCode.ApplicationIdTable:
                     this.doc.ApplicationRegistries = new ApplicationRegistries(this.doc, handle);
+                    this.doc.ApplicationRegistries.XData.AddRange(xData);
                     break;
                 case DxfObjectCode.BlockRecordTable:
                     this.doc.Blocks = new BlockRecords(this.doc, handle);
+                    this.doc.Blocks.XData.AddRange(xData);
                     break;
                 case DxfObjectCode.DimensionStyleTable:
                     this.doc.DimensionStyles = new DimensionStyles(this.doc, handle);
+                    this.doc.DimensionStyles.XData.AddRange(xData);
                     break;
                 case DxfObjectCode.LayerTable:
                     this.doc.Layers = new Layers(this.doc, handle);
+                    this.doc.Layers.XData.AddRange(xData);
                     break;
                 case DxfObjectCode.LinetypeTable:
                     this.doc.Linetypes = new Linetypes(this.doc, handle);
                     break;
                 case DxfObjectCode.TextStyleTable:
                     this.doc.TextStyles = new TextStyles(this.doc, handle);
+                    this.doc.TextStyles.XData.AddRange(xData);
                     this.doc.ShapeStyles = new ShapeStyles(this.doc);
                     break;
                 case DxfObjectCode.UcsTable:
                     this.doc.UCSs = new UCSs(this.doc, handle);
+                    this.doc.UCSs.XData.AddRange(xData);
                     break;
                 case DxfObjectCode.ViewTable:
                     this.doc.Views = new Views(this.doc, handle);
+                    this.doc.Views.XData.AddRange(xData);
                     break;
                 case DxfObjectCode.VportTable:
                     this.doc.VPorts = new VPorts(this.doc, handle);
+                    this.doc.VPorts.XData.AddRange(xData);
                     break;
                 default:
                     throw new Exception(string.Format("Unknown Table name {0} at position {1}", tableName, this.chunk.CurrentPosition));
@@ -3334,6 +3364,7 @@ namespace netDxf.IO
             short verticalAlignment = 0;
             double rotation = 0.0;
             Vector3 normal = Vector3.UnitZ;
+            List<XData> xData = new List<XData>();
 
             // DxfObject codes
             this.chunk.Next();
@@ -3496,7 +3527,14 @@ namespace netDxf.IO
                         normal.Z = this.chunk.ReadDouble();
                         this.chunk.Next();
                         break;
+                    case 1001:
+                        string appId = this.DecodeEncodedNonAsciiCharacters(this.chunk.ReadString());
+                        XData data = this.ReadXDataRecord(new ApplicationRegistry(appId));
+                        xData.Add(data);
+                        break;
                     default:
+                        if (this.chunk.Code >= 1000 && this.chunk.Code <= 1071)
+                            throw new Exception("The extended data of an entity must start with the application registry code.");
                         this.chunk.Next();
                         break;
                 }
@@ -3544,6 +3582,8 @@ namespace netDxf.IO
                 ObliqueAngle = obliqueAngle,
                 Rotation = rotation
             };
+
+            attribute.XData.AddRange(xData);
 
             return attribute;
         }
@@ -9167,6 +9207,7 @@ namespace netDxf.IO
             // create the collections with the provided handles
             this.doc.Groups = new Groups(this.doc, groupsHandle);
             this.doc.Layouts = new Layouts(this.doc, layoutsHandle);
+            this.doc.Layouts.XData.AddRange(namedDict.XData.Values);
             this.doc.MlineStyles = new MLineStyles(this.doc, mlineStylesHandle);
             this.doc.ImageDefinitions = new ImageDefinitions(this.doc, imageDefsHandle);
             this.doc.UnderlayDgnDefinitions = new UnderlayDgnDefinitions(this.doc, underlayDgnDefsHandle);
@@ -9176,9 +9217,10 @@ namespace netDxf.IO
 
         private DictionaryObject ReadDictionary()
         {
+            List<XData> xData = new List<XData>();
             string handle = null;
             //string handleOwner = null;
-            DictionaryCloningFlags clonning = DictionaryCloningFlags.KeepExisting;
+            DictionaryCloningFlags cloning = DictionaryCloningFlags.KeepExisting;
             bool isHardOwner = false;
             int numEntries = 0;
             List<string> names = new List<string>();
@@ -9202,7 +9244,7 @@ namespace netDxf.IO
                         this.chunk.Next();
                         break;
                     case 281:
-                        clonning = (DictionaryCloningFlags) this.chunk.ReadShort();
+                        cloning = (DictionaryCloningFlags) this.chunk.ReadShort();
                         this.chunk.Next();
                         break;
                     case 3:
@@ -9219,7 +9261,17 @@ namespace netDxf.IO
                         handlesToOwner.Add(this.chunk.ReadHex());
                         this.chunk.Next();
                         break;
+                    case 1001:
+                        string appId = this.DecodeEncodedNonAsciiCharacters(this.chunk.ReadString());
+                        XData data = this.ReadXDataRecord(this.GetApplicationRegistry(appId));
+                        xData.Add(data);
+                        break;
                     default:
+                        if (this.chunk.Code >= 1000 && this.chunk.Code <= 1071)
+                        {
+                            throw new Exception("The extended data of an entity must start with the application registry code.");
+                        }
+
                         this.chunk.Next();
                         break;
                 }
@@ -9233,7 +9285,7 @@ namespace netDxf.IO
             {
                 Handle = handle,
                 IsHardOwner = isHardOwner,
-                Cloning = clonning
+                Cloning = cloning
             };
 
             for (int i = 0; i < numEntries; i++)
@@ -9244,12 +9296,16 @@ namespace netDxf.IO
                 dictionary.Entries.Add(id, names[i]);
             }
 
+            dictionary.XData.AddRange(xData);
+
             return dictionary;
         }
 
         private RasterVariables ReadRasterVariables()
         {
             RasterVariables variables = new RasterVariables();
+            List<XData> xData = new List<XData>();
+
             this.chunk.Next();
             while (this.chunk.Code != 0)
             {
@@ -9271,11 +9327,20 @@ namespace netDxf.IO
                         variables.Units = (ImageUnits) this.chunk.ReadShort();
                         this.chunk.Next();
                         break;
+                    case 1001:
+                        string appId = this.DecodeEncodedNonAsciiCharacters(this.chunk.ReadString());
+                        XData data = this.ReadXDataRecord(new ApplicationRegistry(appId));
+                        xData.Add(data);
+                        break;
                     default:
+                        if (this.chunk.Code >= 1000 && this.chunk.Code <= 1071)
+                            throw new Exception("The extended data of an entity must start with the application registry code.");
                         this.chunk.Next();
                         break;
                 }
             }
+
+            variables.XData.AddRange(xData);
 
             return variables;
         }
@@ -10016,6 +10081,7 @@ namespace netDxf.IO
             string ownerHandle = null;
             string fileName = null;
             string name = null;
+            List<XData> xData = new List<XData>();
 
             this.chunk.Next();
             while (this.chunk.Code != 0)
@@ -10038,7 +10104,14 @@ namespace netDxf.IO
                         ownerHandle = this.chunk.ReadHex();
                         this.chunk.Next();
                         break;
+                    case 1001:
+                        string appId = this.DecodeEncodedNonAsciiCharacters(this.chunk.ReadString());
+                        XData data = this.ReadXDataRecord(new ApplicationRegistry(appId));
+                        xData.Add(data);
+                        break;
                     default:
+                        if (this.chunk.Code >= 1000 && this.chunk.Code <= 1071)
+                            throw new Exception("The extended data of an entity must start with the application registry code.");
                         this.chunk.Next();
                         break;
                 }
@@ -10082,6 +10155,9 @@ namespace netDxf.IO
             if(string.IsNullOrEmpty(underlayDef.Handle))
                 throw new NullReferenceException("Underlay reference definition handle.");
             this.underlayDefHandles.Add(underlayDef.Handle, underlayDef);
+
+            underlayDef.XData.AddRange(xData);
+
             return underlayDef;
         }
 

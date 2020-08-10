@@ -859,7 +859,10 @@ namespace netDxf
             foreach (byte key in IndexRgb.Keys)
             {
                 byte[] color = IndexRgb[key];
-                double dist = Math.Abs(0.3*(r - color[0]) + 0.59*(g - color[1]) + 0.11*(b - color[2]));
+                double r0 = r - color[0];
+                double g0 = g - color[1];
+                double b0 = b - color[2];
+                double dist = r0*r0 + g0*g0 + b0*b0;
                 if (dist < prevDist)
                 {
                     prevDist = dist;

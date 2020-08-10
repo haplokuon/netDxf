@@ -108,6 +108,7 @@ namespace netDxf.IO
 
             // Layout dictionary
             DictionaryObject layoutDictionary = new DictionaryObject(namedObjectDictionary);
+            layoutDictionary.XData.AddRange(this.doc.Layouts.XData.Values);
             this.doc.NumHandles = layoutDictionary.AssignHandle(this.doc.NumHandles);
             if (this.doc.Layouts.Count > 0)
             {
@@ -191,7 +192,9 @@ namespace netDxf.IO
             if (!this.isBinary)
             {
                 foreach (string comment in this.doc.Comments)
+                {
                     this.WriteComment(comment);
+                }
             }
 
             //HEADER SECTION
@@ -204,7 +207,9 @@ namespace netDxf.IO
             // writing a copy of the active dimension style variables in the header section will avoid to be displayed as <style overrides> in AutoCAD
             DimensionStyle activeDimStyle;
             if (this.doc.DimensionStyles.TryGetValue(this.doc.DrawingVariables.DimStyle, out activeDimStyle))
+            {
                 this.WriteActiveDimensionStyleSystemVariables(activeDimStyle);
+            }
 
             // write the custom header values
             foreach (HeaderVariable variable in this.doc.DrawingVariables.CustomValues())
@@ -251,7 +256,7 @@ namespace netDxf.IO
             this.BeginSection(DxfObjectCode.TablesSection);
 
             //registered application tables
-            this.BeginTable(this.doc.ApplicationRegistries.CodeName, (short) this.doc.ApplicationRegistries.Count, this.doc.ApplicationRegistries.Handle);
+            this.BeginTable(this.doc.ApplicationRegistries.CodeName, this.doc.ApplicationRegistries.Handle, this.doc.ApplicationRegistries.XData);
             foreach (ApplicationRegistry id in this.doc.ApplicationRegistries.Items)
             {
                 this.WriteApplicationRegistry(id);
@@ -259,7 +264,7 @@ namespace netDxf.IO
             this.EndTable();
 
             //viewport tables
-            this.BeginTable(this.doc.VPorts.CodeName, (short) this.doc.VPorts.Count, this.doc.VPorts.Handle);
+            this.BeginTable(this.doc.VPorts.CodeName, this.doc.VPorts.Handle, this.doc.VPorts.XData);
             foreach (VPort vport in this.doc.VPorts)
             {
                 this.WriteVPort(vport);
@@ -269,7 +274,7 @@ namespace netDxf.IO
             //line type tables
             //The LTYPE table always precedes the LAYER table. I guess because the layers reference the line types,
             //why this same rule is not applied to DIMSTYLE tables is a mystery, since they also reference text styles and block records
-            this.BeginTable(this.doc.Linetypes.CodeName, (short) this.doc.Linetypes.Count, this.doc.Linetypes.Handle);
+            this.BeginTable(this.doc.Linetypes.CodeName, this.doc.Linetypes.Handle, this.doc.Linetypes.XData);
             foreach (Linetype linetype in this.doc.Linetypes.Items)
             {
                 this.WriteLinetype(linetype);
@@ -277,7 +282,7 @@ namespace netDxf.IO
             this.EndTable();
 
             //layer tables
-            this.BeginTable(this.doc.Layers.CodeName, (short) this.doc.Layers.Count, this.doc.Layers.Handle);
+            this.BeginTable(this.doc.Layers.CodeName, this.doc.Layers.Handle, this.doc.Layers.XData);
             foreach (Layer layer in this.doc.Layers.Items)
             {
                 this.WriteLayer(layer);
@@ -285,7 +290,11 @@ namespace netDxf.IO
             this.EndTable();
 
             //style tables text and shapes
-            this.BeginTable(this.doc.TextStyles.CodeName, (short) (this.doc.TextStyles.Count + this.doc.ShapeStyles.Count), this.doc.TextStyles.Handle);
+            //the TextStyles and ShapeStyles extended data information will be combined into the DXF STYLES table
+            XDataDictionary xdata = new XDataDictionary();
+            xdata.AddRange(this.doc.TextStyles.XData.Values);
+            xdata.AddRange(this.doc.ShapeStyles.XData.Values);
+            this.BeginTable(this.doc.TextStyles.CodeName, this.doc.TextStyles.Handle, xdata);
             foreach (TextStyle style in this.doc.TextStyles.Items)
             {
                 this.WriteTextStyle(style);
@@ -297,7 +306,7 @@ namespace netDxf.IO
             this.EndTable();
 
             //dimension style tables
-            this.BeginTable(this.doc.DimensionStyles.CodeName, (short) this.doc.DimensionStyles.Count, this.doc.DimensionStyles.Handle);
+            this.BeginTable(this.doc.DimensionStyles.CodeName, this.doc.DimensionStyles.Handle, this.doc.DimensionStyles.XData);
             foreach (DimensionStyle style in this.doc.DimensionStyles.Items)
             {
                 this.WriteDimensionStyle(style);
@@ -305,11 +314,11 @@ namespace netDxf.IO
             this.EndTable();
 
             //view
-            this.BeginTable(this.doc.Views.CodeName, (short) this.doc.Views.Count, this.doc.Views.Handle);
+            this.BeginTable(this.doc.Views.CodeName, this.doc.Views.Handle, this.doc.Views.XData);
             this.EndTable();
 
             //UCS
-            this.BeginTable(this.doc.UCSs.CodeName, (short) this.doc.UCSs.Count, this.doc.UCSs.Handle);
+            this.BeginTable(this.doc.UCSs.CodeName, this.doc.UCSs.Handle, this.doc.Blocks.XData);
             foreach (UCS ucs in this.doc.UCSs.Items)
             {
                 this.WriteUCS(ucs);
@@ -317,7 +326,7 @@ namespace netDxf.IO
             this.EndTable();
 
             //block record table
-            this.BeginTable(this.doc.Blocks.CodeName, (short) this.doc.Blocks.Count, this.doc.Blocks.Handle);
+            this.BeginTable(this.doc.Blocks.CodeName, this.doc.Blocks.Handle, this.doc.Blocks.XData);
             foreach (Block block in this.doc.Blocks.Items)
             {
                 this.WriteBlockRecord(block.Record);
@@ -406,18 +415,14 @@ namespace netDxf.IO
                 this.WriteUnderlayDefinition(underlayDef, pdfDefinitionDictionary.Handle);
             }
 
-            // the raster variables dictionary is only needed when the drawing has image entities
-            if (this.doc.ImageDefinitions.Count > 0)
+            this.WriteRasterVariables(this.doc.RasterVariables, imageDefDictionary.Handle);
+            foreach (ImageDefinition imageDef in this.doc.ImageDefinitions.Items)
             {
-                this.WriteRasterVariables(this.doc.RasterVariables, imageDefDictionary.Handle);
-                foreach (ImageDefinition imageDef in this.doc.ImageDefinitions.Items)
+                foreach (ImageDefinitionReactor reactor in imageDef.Reactors.Values)
                 {
-                    foreach (ImageDefinitionReactor reactor in imageDef.Reactors.Values)
-                    {
-                        this.WriteImageDefReactor(reactor);
-                    }
-                    this.WriteImageDef(imageDef, imageDefDictionary.Handle);
+                    this.WriteImageDefReactor(reactor);
                 }
+                this.WriteImageDef(imageDef, imageDefDictionary.Handle);
             }
 
             this.EndSection(); //End section objects
@@ -436,9 +441,13 @@ namespace netDxf.IO
         private void Open(Stream stream, Encoding encoding)
         {
             if (this.isBinary)
+            {
                 this.chunk = new BinaryCodeValueWriter(encoding == null ? new BinaryWriter(stream, new UTF8Encoding(false)) : new BinaryWriter(stream, encoding));
+            }
             else
+            {
                 this.chunk = new TextCodeValueWriter(encoding == null ? new StreamWriter(stream, new UTF8Encoding(false)) : new StreamWriter(stream, encoding));
+            }
         }
 
         /// <summary>
@@ -480,7 +489,7 @@ namespace netDxf.IO
         /// </summary>
         /// <param name="table">Table type to open.</param>
         /// <param name="handle">Handle assigned to this table</param>
-        private void BeginTable(string table, short numEntries, string handle)
+        private void BeginTable(string table, string handle, XDataDictionary xdata)
         {
             Debug.Assert(this.activeSection == DxfObjectCode.TablesSection);
 
@@ -490,10 +499,12 @@ namespace netDxf.IO
             this.chunk.Write(330, "0");
 
             this.chunk.Write(100, SubclassMarker.Table);
-            this.chunk.Write(70, numEntries);
+            // this.chunk.Write(70, numEntries); this code is obsolete, there is no limit for the number of entries except for layouts according to the AutoCad ActiveX documentation
 
             if (table == DxfObjectCode.DimensionStyleTable)
                 this.chunk.Write(100, SubclassMarker.DimensionStyleTable);
+
+            this.WriteXData(xdata);
 
             this.activeTable = table;
         }
@@ -2047,6 +2058,8 @@ namespace netDxf.IO
                     this.chunk.Write(21, vertex.Y);
                 }
             }
+
+            this.WriteXData(underlay.XData);
         }
 
         private void WriteTolerance(Tolerance tolerance)
@@ -4474,6 +4487,8 @@ namespace netDxf.IO
                     this.chunk.Write(74, (short) 0);
                     break;
             }
+
+            this.WriteXData(attrib.XData);
         }
 
         private void WriteViewport(Viewport vp)
@@ -4557,13 +4572,18 @@ namespace netDxf.IO
             this.chunk.Write(281, (short) dictionary.Cloning);
 
             if (dictionary.Entries == null)
+            {
+                this.WriteXData(dictionary.XData);
                 return;
+            }
 
             foreach (KeyValuePair<string, string> entry in dictionary.Entries)
             {
                 this.chunk.Write(3, this.EncodeNonAsciiCharacters(entry.Value));
                 this.chunk.Write(350, entry.Key);
             }
+
+            this.WriteXData(dictionary.XData);
         }
 
         private void WriteUnderlayDefinition(UnderlayDefinition underlayDef, string ownerHandle)
@@ -4609,6 +4629,8 @@ namespace netDxf.IO
                     this.chunk.Write(2, this.EncodeNonAsciiCharacters(((UnderlayPdfDefinition) underlayDef).Page));
                     break;
             }
+
+            this.WriteXData(underlayDef.XData);
         }
 
         private void WriteImageDefReactor(ImageDefinitionReactor reactor)
@@ -4666,6 +4688,8 @@ namespace netDxf.IO
             this.chunk.Write(70, variables.DisplayFrame ? (short) 1 : (short) 0);
             this.chunk.Write(71, (short) variables.DisplayQuality);
             this.chunk.Write(72, (short) variables.Units);
+
+            this.WriteXData(variables.XData);
         }
 
         private void WriteMLineStyle(MLineStyle style, string ownerHandle)
@@ -4773,7 +4797,7 @@ namespace netDxf.IO
             this.WriteXData(layout.XData);
         }
 
-        private void WritePlotSettings( PlotSettings plot)
+        private void WritePlotSettings(PlotSettings plot)
         {
             this.chunk.Write(100, SubclassMarker.PlotSettings);
             this.chunk.Write(1, this.EncodeNonAsciiCharacters(plot.PageSetupName));

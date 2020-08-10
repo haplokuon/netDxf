@@ -1,7 +1,7 @@
-#region netDxf library, Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
+#region netDxf library, Copyright (C) 2009-2020 Daniel Carvajal (haplokuon@gmail.com)
 
 //                        netDxf library
-// Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2009-2020 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -43,7 +43,6 @@ namespace netDxf.Collections
         internal DimensionStyles(DxfDocument document, string handle)
             : base(document, DxfObjectCode.DimensionStyleTable, handle)
         {
-            this.MaxCapacity = short.MaxValue;
         }
 
         #endregion
@@ -61,8 +60,6 @@ namespace netDxf.Collections
         /// </returns>
         internal override DimensionStyle Add(DimensionStyle style, bool assignHandle)
         {
-            if (this.list.Count >= this.MaxCapacity)
-                throw new OverflowException(string.Format("Table overflow. The maximum number of elements the table {0} can have is {1}", this.CodeName, this.MaxCapacity));
             if (style == null)
                 throw new ArgumentNullException(nameof(style));
 

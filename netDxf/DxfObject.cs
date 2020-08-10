@@ -1,7 +1,7 @@
-﻿#region netDxf library, Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+﻿#region netDxf library, Copyright (C) 2009-2020 Daniel Carvajal (haplokuon@gmail.com)
 
 //                        netDxf library
-// Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2009-2020 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -20,6 +20,9 @@
 
 #endregion
 
+using netDxf.Collections;
+using netDxf.Tables;
+
 namespace netDxf
 {
     /// <summary>
@@ -27,11 +30,35 @@ namespace netDxf
     /// </summary>
     public abstract class DxfObject
     {
+        #region delegates and events
+
+        public delegate void XDataAddAppRegEventHandler(DxfObject sender, ObservableCollectionEventArgs<ApplicationRegistry> e);
+
+        public event XDataAddAppRegEventHandler XDataAddAppReg;
+        protected virtual void OnXDataAddAppRegEvent(ApplicationRegistry item)
+        {
+            XDataAddAppRegEventHandler ae = this.XDataAddAppReg;
+            if (ae != null)
+                ae(this, new ObservableCollectionEventArgs<ApplicationRegistry>(item));
+        }
+
+        public delegate void XDataRemoveAppRegEventHandler(DxfObject sender, ObservableCollectionEventArgs<ApplicationRegistry> e);
+        public event XDataRemoveAppRegEventHandler XDataRemoveAppReg;
+        protected virtual void OnXDataRemoveAppRegEvent(ApplicationRegistry item)
+        {
+            XDataRemoveAppRegEventHandler ae = this.XDataRemoveAppReg;
+            if (ae != null)
+                ae(this, new ObservableCollectionEventArgs<ApplicationRegistry>(item));
+        }
+
+        #endregion
+
         #region private fields
 
         private string codename;
         private string handle;
         private DxfObject owner;
+        private readonly XDataDictionary xData;
 
         #endregion
 
@@ -46,6 +73,9 @@ namespace netDxf
             this.codename = codename;
             this.handle = null;
             this.owner = null;
+            this.xData = new XDataDictionary();
+            this.xData.AddAppReg += this.XData_AddAppReg;
+            this.xData.RemoveAppReg += this.XData_RemoveAppReg;
         }
 
         #endregion
@@ -83,6 +113,14 @@ namespace netDxf
             internal set { this.owner = value; }
         }
 
+        /// <summary>
+        /// Gets the entity <see cref="XDataDictionary">extended data</see>.
+        /// </summary>
+        public XDataDictionary XData
+        {
+            get { return this.xData; }
+        }
+
         #endregion
 
         #region internal methods
@@ -116,5 +154,20 @@ namespace netDxf
         }
 
         #endregion
+
+        #region XData events
+
+        private void XData_AddAppReg(XDataDictionary sender, ObservableCollectionEventArgs<ApplicationRegistry> e)
+        {
+            this.OnXDataAddAppRegEvent(e.Item);
+        }
+
+        private void XData_RemoveAppReg(XDataDictionary sender, ObservableCollectionEventArgs<ApplicationRegistry> e)
+        {
+            this.OnXDataRemoveAppRegEvent(e.Item);
+        }
+
+        #endregion
+
     }
 }

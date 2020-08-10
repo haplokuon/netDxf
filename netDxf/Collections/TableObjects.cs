@@ -1,7 +1,7 @@
-#region netDxf library, Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
+#region netDxf library, Copyright (C) 2009-2020 Daniel Carvajal (haplokuon@gmail.com)
 
 //                        netDxf library
-// Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2009-2020 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -37,7 +37,6 @@ namespace netDxf.Collections
     {
         #region private fields
 
-        private int maxCapacity = int.MaxValue;
         protected readonly Dictionary<string, T> list;
         protected Dictionary<string, List<DxfObject>> references;
 
@@ -101,18 +100,6 @@ namespace netDxf.Collections
         public int Count
         {
             get { return this.list.Count; }
-        }
-
-        /// <summary>
-        /// Gets the maximum number of objects the collection can hold.
-        /// </summary>
-        /// <remarks>
-        /// This is an approximate value, the actual exact value is unknown. In any case is not recommended to get even close to this number for any practical use.
-        /// </remarks>
-        public int MaxCapacity
-        {
-            get { return this.maxCapacity; }
-            internal set { this.maxCapacity = value; }
         }
 
         /// <summary>

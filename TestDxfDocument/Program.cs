@@ -1,5 +1,4 @@
 ﻿using System;
-using System.CodeDom.Compiler;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
@@ -27,196 +26,8 @@ namespace TestDxfDocument
     /// </summary>
     public class Program
     {
-        public static void ViewportEntity()
-        {
-
-            Layer layer1 = new Layer("Layer1") {Color = AciColor.Yellow};
-            Layer layer2 = new Layer("Layer2") {Color = AciColor.Green};
-            Layer layer3 = new Layer("Layer3") {Color = AciColor.Blue};
-            Layer layer4 = new Layer("Layer1") {Color = AciColor.Magenta};
-            Layer layer5 = new Layer("Layer5") {Color = AciColor.LightGray};
-
-            DxfDocument doc2 = new DxfDocument();
-            doc2.Layers.Add(layer4);
-            
-
-            Viewport viewport = new Viewport(new Vector2(125, 100), 150, 100);
-            viewport.Color = AciColor.Red;
-            viewport.FrozenLayers.Add(layer1);
-            viewport.FrozenLayers.Add(layer2);
-            viewport.FrozenLayers.Add(layer3);
-            //viewport.FrozenLayers.Add(layer1);
-            //viewport.FrozenLayers.Add(layer4);
-
-            DxfDocument doc = new DxfDocument();
-            doc.Layers.Add(layer5);
-            doc.Layouts.Add(new Layout("Layout1"));
-            doc.ActiveLayout = "Layout1";
-            doc.AddEntity(viewport);
-            //viewport.FrozenLayers.Add(layer4);
-            viewport.FrozenLayers.Add(layer5);
-
-            doc.Save("test.dxf");
-
-
-            DxfDocument load = DxfDocument.Load("test.dxf");
-            load.Save("test.dxf");
-
-        }
-
-        public static void Foo()
-        {
-            LwPolyline polyline = new LwPolyline();
-            polyline.Vertexes.Add(new LwPolylineVertex(0,0, -0.1));
-            polyline.Vertexes.Add(new LwPolylineVertex(0,10, -0.1));
-            polyline.Vertexes.Add(new LwPolylineVertex(10,10, -0.1));
-            polyline.Vertexes.Add(new LwPolylineVertex(10,0, -0.1));
-            polyline.Vertexes.Add(new LwPolylineVertex(0.01,0, -0.1));
-            polyline.IsClosed = true;
-
-            //List<Vector2> vertexes = polyline.PolygonalVertexes(10, 0.05, 0.05);
-            //LwPolyline p = new LwPolyline(vertexes);
-            LwPolyline p = polyline;
-            DxfDocument doc = new DxfDocument();
-            doc.AddEntity(p);
-            doc.Save("test.dxf");
-        }
-
-        public static void AddAlignDimensionForQuestion()
-        {
-            DimensionStyle dimensionStyle = new DimensionStyle("MytName")
-            {
-                DimScaleLinear = 1000,
-                LengthPrecision = 0,
-                TextHeight = 0.05d,
-                ArrowSize = 0.01d,
-                ExtLineExtend = 0.005d,
-                ExtLineOffset = 0d,
-                FitTextInside = true,
-                TextOffset = 0.005d,
-                TextVerticalPlacement = DimensionStyleTextVerticalPlacement.Outside,
-                DimBaselineSpacing = 0d
-            };
-            Vector2 pt1 = new Vector2(1, 5);
-            Vector2 pt2 = new Vector2(1, 6);
-
-            Line refLine = new Line(pt1, pt2);
-            AlignedDimension dimension = new AlignedDimension(refLine, 0.1);
-            dimension.Style = dimensionStyle;
-            DxfDocument doc = new DxfDocument();
-            doc.BuildDimensionBlocks = true;
-            doc.AddEntity(dimension);
-            doc.Save("test.dxf");
-        }
-
-        public static void Foo2()
-        {
-            LwPolyline poly = new LwPolyline();
-            poly.Vertexes.Add(new LwPolylineVertex(-10, -10));
-            poly.Vertexes.Add(new LwPolylineVertex(10, -10));
-            poly.Vertexes.Add(new LwPolylineVertex(10, 10));
-            poly.Vertexes.Add(new LwPolylineVertex(-10, 10));
-            poly.IsClosed = true;
-
-            Circle circle1 = new Circle(new Vector2(0, 10), 5);
-            Circle circle2 = new Circle(new Vector2(10, 10), 8);
-
-            List<HatchBoundaryPath> boundary = new List<HatchBoundaryPath>
-            {
-                new HatchBoundaryPath(new List<EntityObject> {circle2, circle1}),
-                //new HatchBoundaryPath(new List<EntityObject> {circle1}),
-                //new HatchBoundaryPath(new List<EntityObject> {circle2}),
-            };
-
-            Hatch hatch = new Hatch(HatchPattern.Line, boundary, true);
-            hatch.Layer = new Layer("hatch");
-            hatch.Pattern.Angle = 45;
-
-            DxfDocument doc = new DxfDocument();
-            doc.AddEntity(hatch);
-            doc.Save("test.dxf");
-        }
-
-        public static void Foo3()
-        {
-            DxfDocument dxf = new DxfDocument();
-                DimensionStyle style = new DimensionStyle("MyStyle")
-                {
-                    DimArrow1 = DimensionArrowhead.None,
-                    DimArrow2 = DimensionArrowhead.None,
-                    TextOffset = 0.0,
-                    TextStyle = new TextStyle("Arial.ttf"),
-                    DimLine1Off = true,
-                    DimLine2Off = true,
-                    //TextHeight = th,
-            
-                };
-
-                Line line = new Line(new Vector2(0,0), new Vector2(10.0) );
-                AlignedDimension dim = new AlignedDimension(line, 2.0, style )
-                {
-                    //Layer = dxf.Layers[mLayers[(int)layer].ToString()],
-                    Color = AciColor.ByLayer,
-                    //UserText = text.ToString(),
-                    Lineweight = Lineweight.ByLayer
-            
-            
-                };
-                dxf.AddEntity(dim);
-
-                dxf.Save("test.dxf");
-
-        }
-
-        public static void Foo4()
-        {
-
-            //DxfDocument doc = DxfDocument.Load("Schalter Hebel t-0-t 2xEin 12mm (100-000-026).dxf");
-            DxfDocument doc = DxfDocument.Load("entity order.dxf");
-            doc.Save("test.dxf");
-
-        }
-
-        public static void Foo5()
-        {
-            Stream input = File.Open("AciColor to RGB.txt", FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
-            Stream output = File.Create("Code.txt");
-            TextReader reader = new StreamReader(input);
-            TextWriter writer = new StreamWriter(output);
-            byte index = 1;
-            writer.WriteLine("private static readonly IReadOnlyDictionary<byte, byte[]> indexRgb = new Dictionary<byte, byte[]>");
-            writer.WriteLine(")");
-
-            string line = reader.ReadLine();
-            while (!string.IsNullOrEmpty(line))
-            {
-                string[] rgb = line.Split(';');
-                byte r, g, b;
-                r = byte.Parse(rgb[0]);
-                g = byte.Parse(rgb[1]);
-                b = byte.Parse(rgb[2]);
-                writer.WriteLine("{" + index + ", new byte[] {" + r + ", " + g + ", " + b + "}},");
-
-                line = reader.ReadLine();
-                index += 1;
-            }
-            writer.WriteLine(");");
-
-            reader.Close();
-            writer.Close();
-        }
-
         public static void Main()
         {
-            //Foo5();
-
-            //DxfDocument doc = DxfDocument.Load("Drawing1.dxf");
-
-            //ViewportEntity();
-
-            //AddAlignDimensionForQuestion();
-            //Foo2();
-
             DxfDocument doc = Test(@"sample.dxf");
 
             #region Samples for new and modified features 2.3.0
@@ -3164,6 +2975,7 @@ namespace TestDxfDocument
             // we can also change the name of the application registry name
             doc.ApplicationRegistries["newXData"].Name = "netDxfRenamed";
 
+            doc.RasterVariables.XData.Add(xdata);
             doc.Save("xData.dxf");
 
             doc = DxfDocument.Load("xData.dxf");

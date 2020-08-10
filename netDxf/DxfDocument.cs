@@ -278,6 +278,15 @@ namespace netDxf
             }
         }
 
+        /// <summary>
+        /// The DxfDocument XData property always throws a <code>FieldAccessException</code>, it cannot contain extended data information.
+        /// </summary>
+        /// <exception cref="FieldAccessException"></exception>
+        public new XDataDictionary XData
+        {
+            get { throw new FieldAccessException("The DxfDocument cannot contain extended data information."); }
+        }
+
         #region header
 
         /// <summary>
@@ -1494,9 +1503,9 @@ namespace netDxf
             // add referenced text style
             if (overrides.TryGetValue(DimensionStyleOverrideType.TextStyle, out styleOverride))
             {
-                TextStyle dimtxtsty = (TextStyle) styleOverride.Value;
-                overrides[styleOverride.Type] = new DimensionStyleOverride(styleOverride.Type, this.textStyles.Add(dimtxtsty, assignHandle));
-                this.textStyles.References[dimtxtsty.Name].Add(entity);
+                TextStyle txtStyle = (TextStyle) styleOverride.Value;
+                overrides[styleOverride.Type] = new DimensionStyleOverride(styleOverride.Type, this.textStyles.Add(txtStyle, assignHandle));
+                this.textStyles.References[txtStyle.Name].Add(entity);
             }
 
             // add referenced blocks
@@ -1562,8 +1571,8 @@ namespace netDxf
             overrides.TryGetValue(DimensionStyleOverrideType.TextStyle, out styleOverride);
             if (styleOverride != null)
             {
-                TextStyle dimtxtsty = (TextStyle) styleOverride.Value;
-                this.textStyles.References[dimtxtsty.Name].Remove(entity);
+                TextStyle txtStyle = (TextStyle) styleOverride.Value;
+                this.textStyles.References[txtStyle.Name].Remove(entity);
             }
 
             // remove referenced blocks
@@ -1673,7 +1682,7 @@ namespace netDxf
 
         #endregion
 
-        #region entity events
+        #region EntityObject events
 
         private void MLine_MLineStyleChanged(MLine sender, TableObjectChangedEventArgs<MLineStyle> e)
         {
@@ -1959,7 +1968,7 @@ namespace netDxf
 
         #endregion
 
-        #region IHasXData events
+        #region DxfObject events
 
         private void AddedObjects_BeforeAddItem(ObservableDictionary<string, DxfObject> sender, ObservableDictionaryEventArgs<string, DxfObject> e)
         {
@@ -1967,7 +1976,7 @@ namespace netDxf
 
         private void AddedObjects_AddItem(ObservableDictionary<string, DxfObject> sender, ObservableDictionaryEventArgs<string, DxfObject> e)
         {
-            IHasXData o = e.Item.Value as IHasXData;
+            DxfObject o = e.Item.Value;
             if (o != null)
             {
                 foreach (string appReg in o.XData.AppIds)
@@ -1987,7 +1996,7 @@ namespace netDxf
 
         private void AddedObjects_RemoveItem(ObservableDictionary<string, DxfObject> sender, ObservableDictionaryEventArgs<string, DxfObject> e)
         {
-            IHasXData o = e.Item.Value as IHasXData;
+            DxfObject o = e.Item.Value;
             if (o != null)
             {
                 foreach (string appReg in o.XData.AppIds)
@@ -1999,15 +2008,15 @@ namespace netDxf
             }
         }
 
-        private void IHasXData_XDataAddAppReg(IHasXData sender, ObservableCollectionEventArgs<ApplicationRegistry> e)
+        private void IHasXData_XDataAddAppReg(DxfObject sender, ObservableCollectionEventArgs<ApplicationRegistry> e)
         {
             sender.XData[e.Item.Name].ApplicationRegistry = this.appRegistries.Add(sender.XData[e.Item.Name].ApplicationRegistry);
-            this.appRegistries.References[e.Item.Name].Add(sender as DxfObject);
+            this.appRegistries.References[e.Item.Name].Add(sender);
         }
 
-        private void IHasXData_XDataRemoveAppReg(IHasXData sender, ObservableCollectionEventArgs<ApplicationRegistry> e)
+        private void IHasXData_XDataRemoveAppReg(DxfObject sender, ObservableCollectionEventArgs<ApplicationRegistry> e)
         {
-            this.appRegistries.References[e.Item.Name].Remove(sender as DxfObject);
+            this.appRegistries.References[e.Item.Name].Remove(sender);
         }
 
         #endregion

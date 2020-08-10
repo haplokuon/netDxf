@@ -1,7 +1,7 @@
-#region netDxf library, Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
+#region netDxf library, Copyright (C) 2009-2020 Daniel Carvajal (haplokuon@gmail.com)
 
 //                        netDxf library
-// Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2009-2020 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -32,35 +32,8 @@ namespace netDxf.Blocks
     /// Represent the record of a block in the tables section.
     /// </summary>
     public class BlockRecord :
-        DxfObject,
-        IHasXData
+        DxfObject
     {
-        #region delegates and events
-
-        //public delegate void XDataAddAppRegEventHandler(EntityObject sender, ObservableCollectionEventArgs<ApplicationRegistry> e);
-
-        public event XDataAddAppRegEventHandler XDataAddAppReg;
-
-        protected virtual void OnXDataAddAppRegEvent(ApplicationRegistry item)
-        {
-            XDataAddAppRegEventHandler ae = this.XDataAddAppReg;
-            if (ae != null)
-                ae(this, new ObservableCollectionEventArgs<ApplicationRegistry>(item));
-        }
-
-        //public delegate void XDataRemoveAppRegEventHandler(EntityObject sender, ObservableCollectionEventArgs<ApplicationRegistry> e);
-
-        public event XDataRemoveAppRegEventHandler XDataRemoveAppReg;
-
-        protected virtual void OnXDataRemoveAppRegEvent(ApplicationRegistry item)
-        {
-            XDataRemoveAppRegEventHandler ae = this.XDataRemoveAppReg;
-            if (ae != null)
-                ae(this, new ObservableCollectionEventArgs<ApplicationRegistry>(item));
-        }
-
-        #endregion
-
         #region private fields
 
         private string name;
@@ -69,7 +42,6 @@ namespace netDxf.Blocks
         private DrawingUnits units;
         private bool allowExploding;
         private bool scaleUniformly;
-        private readonly XDataDictionary xData;
 
         #endregion
 
@@ -89,7 +61,6 @@ namespace netDxf.Blocks
             this.units = DefaultUnits;
             this.allowExploding = true;
             this.scaleUniformly = false;
-            this.xData = new XDataDictionary();
         }
 
         #endregion
@@ -179,14 +150,6 @@ namespace netDxf.Blocks
         public bool IsForInternalUseOnly
         {
             get { return this.name.StartsWith("*"); }
-        }
-
-        /// <summary>
-        /// Gets the block record <see cref="XDataDictionary">extended data</see>.
-        /// </summary>
-        public XDataDictionary XData
-        {
-            get { return this.xData; }
         }
 
         #endregion
