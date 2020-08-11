@@ -96,9 +96,9 @@ namespace netDxf.IO
             this.doc.NumHandles = namedObjectDictionary.AssignHandle(this.doc.NumHandles);
             dictionaries.Add(namedObjectDictionary);
 
-            // create the Group dictionary, this dictionary always appear even if there are no groups in the drawing
-            DictionaryObject groupDictionary = new DictionaryObject(namedObjectDictionary);
-            this.doc.NumHandles = groupDictionary.AssignHandle(this.doc.NumHandles);
+            // create the Group dictionary
+            DictionaryObject groupDictionary = new DictionaryObject(namedObjectDictionary) {Handle = this.doc.Groups.Handle};
+            groupDictionary.XData.AddRange(this.doc.Groups.XData.Values);
             foreach (Group group in this.doc.Groups.Items)
             {
                 groupDictionary.Entries.Add(group.Handle, group.Name);
@@ -107,82 +107,63 @@ namespace netDxf.IO
             namedObjectDictionary.Entries.Add(groupDictionary.Handle, DxfObjectCode.GroupDictionary);
 
             // Layout dictionary
-            DictionaryObject layoutDictionary = new DictionaryObject(namedObjectDictionary);
+            DictionaryObject layoutDictionary = new DictionaryObject(namedObjectDictionary) {Handle = this.doc.Layouts.Handle};
             layoutDictionary.XData.AddRange(this.doc.Layouts.XData.Values);
-            this.doc.NumHandles = layoutDictionary.AssignHandle(this.doc.NumHandles);
-            if (this.doc.Layouts.Count > 0)
+            foreach (Layout layout in this.doc.Layouts.Items)
             {
-                foreach (Layout layout in this.doc.Layouts.Items)
-                {
-                    layoutDictionary.Entries.Add(layout.Handle, layout.Name);
-                }
-                dictionaries.Add(layoutDictionary);
-                namedObjectDictionary.Entries.Add(layoutDictionary.Handle, DxfObjectCode.LayoutDictionary);
+                layoutDictionary.Entries.Add(layout.Handle, layout.Name);
             }
+            dictionaries.Add(layoutDictionary);
+            namedObjectDictionary.Entries.Add(layoutDictionary.Handle, DxfObjectCode.LayoutDictionary);
 
             // create the Underlay definitions dictionary
-            DictionaryObject dgnDefinitionDictionary = new DictionaryObject(namedObjectDictionary);
-            this.doc.NumHandles = dgnDefinitionDictionary.AssignHandle(this.doc.NumHandles);
-            if (this.doc.UnderlayDgnDefinitions.Count > 0)
+            DictionaryObject dgnDefinitionDictionary = new DictionaryObject(namedObjectDictionary) {Handle = this.doc.UnderlayDgnDefinitions.Handle};
+            dgnDefinitionDictionary.XData.AddRange(this.doc.UnderlayDgnDefinitions.XData.Values);
+            foreach (UnderlayDgnDefinition underlayDef in this.doc.UnderlayDgnDefinitions.Items)
             {
-                foreach (UnderlayDgnDefinition underlayDef in this.doc.UnderlayDgnDefinitions.Items)
-                {
-                    dgnDefinitionDictionary.Entries.Add(underlayDef.Handle, underlayDef.Name);
-                    dictionaries.Add(dgnDefinitionDictionary);
-                    namedObjectDictionary.Entries.Add(dgnDefinitionDictionary.Handle, DxfObjectCode.UnderlayDgnDefinitionDictionary);
-                }
+                dgnDefinitionDictionary.Entries.Add(underlayDef.Handle, underlayDef.Name);
+                dictionaries.Add(dgnDefinitionDictionary);
+                namedObjectDictionary.Entries.Add(dgnDefinitionDictionary.Handle, DxfObjectCode.UnderlayDgnDefinitionDictionary);
             }
-            DictionaryObject dwfDefinitionDictionary = new DictionaryObject(namedObjectDictionary);
-            this.doc.NumHandles = dwfDefinitionDictionary.AssignHandle(this.doc.NumHandles);
-            if (this.doc.UnderlayDwfDefinitions.Count > 0)
+
+            DictionaryObject dwfDefinitionDictionary = new DictionaryObject(namedObjectDictionary) {Handle = this.doc.UnderlayDwfDefinitions.Handle};
+            dwfDefinitionDictionary.XData.AddRange(this.doc.UnderlayDwfDefinitions.XData.Values);
+            foreach (UnderlayDwfDefinition underlayDef in this.doc.UnderlayDwfDefinitions.Items)
             {
-                foreach (UnderlayDwfDefinition underlayDef in this.doc.UnderlayDwfDefinitions.Items)
-                {
-                    dwfDefinitionDictionary.Entries.Add(underlayDef.Handle, underlayDef.Name);
-                    dictionaries.Add(dwfDefinitionDictionary);
-                    namedObjectDictionary.Entries.Add(dwfDefinitionDictionary.Handle, DxfObjectCode.UnderlayDwfDefinitionDictionary);
-                }
+                dwfDefinitionDictionary.Entries.Add(underlayDef.Handle, underlayDef.Name);
+                dictionaries.Add(dwfDefinitionDictionary);
+                namedObjectDictionary.Entries.Add(dwfDefinitionDictionary.Handle, DxfObjectCode.UnderlayDwfDefinitionDictionary);
             }
-            DictionaryObject pdfDefinitionDictionary = new DictionaryObject(namedObjectDictionary);
-            this.doc.NumHandles = pdfDefinitionDictionary.AssignHandle(this.doc.NumHandles);
-            if (this.doc.UnderlayPdfDefinitions.Count > 0)
+
+            DictionaryObject pdfDefinitionDictionary = new DictionaryObject(namedObjectDictionary) {Handle = this.doc.UnderlayPdfDefinitions.Handle};
+            pdfDefinitionDictionary.XData.AddRange(this.doc.UnderlayPdfDefinitions.XData.Values);
+            foreach (UnderlayPdfDefinition underlayDef in this.doc.UnderlayPdfDefinitions.Items)
             {
-                foreach (UnderlayPdfDefinition underlayDef in this.doc.UnderlayPdfDefinitions.Items)
-                {
-                    pdfDefinitionDictionary.Entries.Add(underlayDef.Handle, underlayDef.Name);
-                    dictionaries.Add(pdfDefinitionDictionary);
-                    namedObjectDictionary.Entries.Add(pdfDefinitionDictionary.Handle, DxfObjectCode.UnderlayPdfDefinitionDictionary);
-                }
+                pdfDefinitionDictionary.Entries.Add(underlayDef.Handle, underlayDef.Name);
+                dictionaries.Add(pdfDefinitionDictionary);
+                namedObjectDictionary.Entries.Add(pdfDefinitionDictionary.Handle, DxfObjectCode.UnderlayPdfDefinitionDictionary);
             }
 
             // create the MLine style dictionary
-            DictionaryObject mLineStyleDictionary = new DictionaryObject(namedObjectDictionary);
-            this.doc.NumHandles = mLineStyleDictionary.AssignHandle(this.doc.NumHandles);
-            if (this.doc.MlineStyles.Count > 0)
+            DictionaryObject mLineStyleDictionary = new DictionaryObject(namedObjectDictionary) {Handle = this.doc.MlineStyles.Handle};
+            mLineStyleDictionary.XData.AddRange(this.doc.MlineStyles.XData.Values);
+            foreach (MLineStyle mLineStyle in this.doc.MlineStyles.Items)
             {
-                foreach (MLineStyle mLineStyle in this.doc.MlineStyles.Items)
-                {
-                    mLineStyleDictionary.Entries.Add(mLineStyle.Handle, mLineStyle.Name);
-                }
-                dictionaries.Add(mLineStyleDictionary);
-                namedObjectDictionary.Entries.Add(mLineStyleDictionary.Handle, DxfObjectCode.MLineStyleDictionary);
+                mLineStyleDictionary.Entries.Add(mLineStyle.Handle, mLineStyle.Name);
             }
+            dictionaries.Add(mLineStyleDictionary);
+            namedObjectDictionary.Entries.Add(mLineStyleDictionary.Handle, DxfObjectCode.MLineStyleDictionary);
 
             // create the image dictionary
-            DictionaryObject imageDefDictionary = new DictionaryObject(namedObjectDictionary);
-            this.doc.NumHandles = imageDefDictionary.AssignHandle(this.doc.NumHandles);
-            if (this.doc.ImageDefinitions.Count > 0)
+            DictionaryObject imageDefDictionary = new DictionaryObject(namedObjectDictionary) {Handle = this.doc.ImageDefinitions.Handle};
+            imageDefDictionary.XData.AddRange(this.doc.ImageDefinitions.XData.Values);
+            foreach (ImageDefinition imageDef in this.doc.ImageDefinitions.Items)
             {
-                foreach (ImageDefinition imageDef in this.doc.ImageDefinitions.Items)
-                {
-                    imageDefDictionary.Entries.Add(imageDef.Handle, imageDef.Name);
-                }
-
-                dictionaries.Add(imageDefDictionary);
-
-                namedObjectDictionary.Entries.Add(imageDefDictionary.Handle, DxfObjectCode.ImageDefDictionary);
-                namedObjectDictionary.Entries.Add(this.doc.RasterVariables.Handle, DxfObjectCode.ImageVarsDictionary);
+                imageDefDictionary.Entries.Add(imageDef.Handle, imageDef.Name);
             }
+            dictionaries.Add(imageDefDictionary);
+            namedObjectDictionary.Entries.Add(imageDefDictionary.Handle, DxfObjectCode.ImageDefDictionary);
+            namedObjectDictionary.Entries.Add(this.doc.RasterVariables.Handle, DxfObjectCode.ImageVarsDictionary);
 
             this.doc.DrawingVariables.HandleSeed = this.doc.NumHandles.ToString("X");
 
@@ -1541,18 +1522,29 @@ namespace netDxf.IO
 
             LayerFlags flags = LayerFlags.None;
             if (layer.IsFrozen)
+            {
                 flags = flags | LayerFlags.Frozen;
+            }
             if (layer.IsLocked)
+            {
                 flags = flags | LayerFlags.Locked;
+            }
             this.chunk.Write(70, (short) flags);
 
             //a negative color represents a hidden layer.
             if (layer.IsVisible)
+            {
                 this.chunk.Write(62, layer.Color.Index);
+            }
             else
+            {
                 this.chunk.Write(62, (short) -layer.Color.Index);
+            }
+
             if (layer.Color.UseTrueColor)
+            {
                 this.chunk.Write(420, AciColor.ToTrueColor(layer.Color));
+            }
 
             this.chunk.Write(6, this.EncodeNonAsciiCharacters(layer.Linetype.Name));
 

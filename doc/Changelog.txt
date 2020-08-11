@@ -1,12 +1,16 @@
 ## Change history
 
+### [2020/08/11]
+* The DxfDocument class derives from DxfObject for convenience of this library not because of the DXF structure. It can contain external data XData information, but it will not saved in the DXF.
+* (fixed) Table collection handles that are saved in the DXF OBJECTS section were not preserved.
+* (fixed) The RasterVariables object didn't have an owner.
+
 ### [2020/08/10]
 * All classes derived from DxfObject can contain XData (extended data).
-	The DxfDocument class derives from DxfObject for convenience of this library not because of the DXF structure. It cannot contain external data XData information, there is no way to save it in the DXF.
 	The TextStyles and ShapeStyles extended data information will be combined into the DXF STYLE table.
 * Deleted the IHasXData interface, it is not needed anymore.
 * The RasterVariables object is always saved, regardless if the document contains images or not.
-* Removed the MaxCapacity limits from the TableObject collections, except for layouts that it is 256 = 255 (paper space) + 1 (model space) exceeding this limit might crash AutoCad.
+* Removed the MaxCapacity limits from the TableObject collections, except for layouts that it is 256 = 255 (paper space) + 1 (model space) exceeding this limit may crash AutoCad.
 	According to the AutoCad ActiveX documentation there is no limit, therefore the DXF code 70 maximum number of entries in table is obsolete, it represents a 16-bit integer value. 
 * Removed the MaxCapacity property from the TableObject collections.
 

@@ -38,6 +38,10 @@ namespace netDxf
     /// <summary>
     /// Represents a document to read and write DXF files.
     /// </summary>
+    /// <remarks>
+    /// The DxfDocument class derives from DxfObject for convenience of this library not because of the DXF structure.
+    /// It can contain external data (XData) information, but it is not saved in the DXF.
+    /// </remarks>
     public sealed class DxfDocument :
         DxfObject
     {
@@ -169,19 +173,20 @@ namespace netDxf
             this.NumHandles = this.AssignHandle(0);
             this.DimensionBlocksIndex = -1;
             this.GroupNamesIndex = 0;
-            this.AddedObjects = new ObservableDictionary<string, DxfObject>
-            {
-                {this.Handle, this}
-            }; // keeps track of the added objects
+
+            this.AddedObjects = new ObservableDictionary<string, DxfObject>();
             this.AddedObjects.BeforeAddItem += this.AddedObjects_BeforeAddItem;
             this.AddedObjects.AddItem += this.AddedObjects_AddItem;
             this.AddedObjects.BeforeRemoveItem += this.AddedObjects_BeforeRemoveItem;
             this.AddedObjects.RemoveItem += this.AddedObjects_RemoveItem;
+            this.AddedObjects.Add(this.Handle, this);
 
             this.activeLayout = Layout.ModelSpaceName;
 
             if (createDefaultObjects)
+            {
                 this.AddDefaultObjects();
+            }
         }
 
         #endregion
@@ -276,15 +281,6 @@ namespace netDxf
                 this.AddedObjects.Add(value.Handle, value);
                 this.rasterVariables = value;
             }
-        }
-
-        /// <summary>
-        /// The DxfDocument XData property always throws a <code>FieldAccessException</code>, it cannot contain extended data information.
-        /// </summary>
-        /// <exception cref="FieldAccessException"></exception>
-        public new XDataDictionary XData
-        {
-            get { throw new FieldAccessException("The DxfDocument cannot contain extended data information."); }
         }
 
         #region header
@@ -1677,7 +1673,7 @@ namespace netDxf
             this.layouts.Add(Layout.ModelSpace);
 
             // raster variables
-            this.RasterVariables = new RasterVariables();
+            this.RasterVariables = new RasterVariables(this);
         }
 
         #endregion
@@ -1985,8 +1981,8 @@ namespace netDxf
                     this.appRegistries.References[appReg].Add(e.Item.Value);
                 }
 
-                o.XDataAddAppReg += this.IHasXData_XDataAddAppReg;
-                o.XDataRemoveAppReg += this.IHasXData_XDataRemoveAppReg;
+                o.XDataAddAppReg += this.DxfObject_XDataAddAppReg;
+                o.XDataRemoveAppReg += this.DxfObject_XDataRemoveAppReg;
             }
         }
 
@@ -2003,18 +1999,18 @@ namespace netDxf
                 {
                     this.appRegistries.References[appReg].Remove(e.Item.Value);
                 }
-                o.XDataAddAppReg -= this.IHasXData_XDataAddAppReg;
-                o.XDataRemoveAppReg -= this.IHasXData_XDataRemoveAppReg;
+                o.XDataAddAppReg -= this.DxfObject_XDataAddAppReg;
+                o.XDataRemoveAppReg -= this.DxfObject_XDataRemoveAppReg;
             }
         }
 
-        private void IHasXData_XDataAddAppReg(DxfObject sender, ObservableCollectionEventArgs<ApplicationRegistry> e)
+        private void DxfObject_XDataAddAppReg(DxfObject sender, ObservableCollectionEventArgs<ApplicationRegistry> e)
         {
             sender.XData[e.Item.Name].ApplicationRegistry = this.appRegistries.Add(sender.XData[e.Item.Name].ApplicationRegistry);
             this.appRegistries.References[e.Item.Name].Add(sender);
         }
 
-        private void IHasXData_XDataRemoveAppReg(DxfObject sender, ObservableCollectionEventArgs<ApplicationRegistry> e)
+        private void DxfObject_XDataRemoveAppReg(DxfObject sender, ObservableCollectionEventArgs<ApplicationRegistry> e)
         {
             this.appRegistries.References[e.Item.Name].Remove(sender);
         }
