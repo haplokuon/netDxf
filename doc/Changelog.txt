@@ -1,5 +1,8 @@
 ## Change history
 
+### [2020/08/13]
+* Added US Survey Feet, US Survey Inches, US Survey Yards, and US Survey Miles to the DrawingUnits.
+
 ### [2020/08/11]
 * The DxfDocument class derives from DxfObject for convenience of this library not because of the DXF structure. It can contain external data XData information, but it will not saved in the DXF.
 * (fixed) Table collection handles that are saved in the DXF OBJECTS section were not preserved.

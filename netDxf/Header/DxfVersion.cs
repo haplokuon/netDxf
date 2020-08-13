@@ -1,7 +1,7 @@
-#region netDxf library, Copyright (C) 2009-2019 Daniel Carvajal (haplokuon@gmail.com)
+#region netDxf library, Copyright (C) 2009-2020 Daniel Carvajal (haplokuon@gmail.com)
 
 //                        netDxf library
-// Copyright (C) 2009-2019 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2009-2020 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -88,7 +88,7 @@ namespace netDxf.Header
         AutoCad2013 = 9,
 
         /// <summary>
-        /// AutoCAD 2018 DXF file. AutoCAD 2018/2019/2020.
+        /// AutoCAD 2018 DXF file. AutoCAD 2018/2019/2020/2021.
         /// </summary>
         [StringValue("AC1032")]
         AutoCad2018 = 10

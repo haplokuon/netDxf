@@ -159,7 +159,8 @@ namespace netDxf.Header
         /// Default drawing units for AutoCAD DesignCenter blocks.
         /// </summary>
         /// <remarks>
-        /// Also applies to raster image units, even thought they have the RasterVariables object and units in ImageDefinition.
+        /// The US Surveyor Units were introduced in the AutoCad2018 DXF version (AC1032),
+        /// they may be not supported if the file is loaded in earlier versions of AutoCad.
         /// </remarks>
         public const string InsUnits = "$INSUNITS";
 
