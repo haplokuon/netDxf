@@ -41,7 +41,9 @@ namespace netDxf.Units
         public static string ToDecimal(double angle, UnitStyleFormat format)
         {
             if (format == null)
+            {
                 throw new ArgumentNullException(nameof(format));
+            }
 
             NumberFormatInfo numberFormat = new NumberFormatInfo
             {
@@ -60,11 +62,13 @@ namespace netDxf.Units
         public static string ToDegreesMinutesSeconds(double angle, UnitStyleFormat format)
         {
             if (format == null)
+            {
                 throw new ArgumentNullException(nameof(format));
+            }
 
             double degrees = angle;
-            double minutes = (degrees - (int) degrees)*60;
-            double seconds = (minutes - (int) minutes)*60;
+            double minutes = (degrees - (int) degrees) * 60;
+            double seconds = (minutes - (int) minutes) * 60;
 
             NumberFormatInfo numberFormat = new NumberFormatInfo
             {
@@ -72,11 +76,20 @@ namespace netDxf.Units
             };
 
             if (format.AngularDecimalPlaces == 0)
+            {
                 return string.Format(numberFormat, "{0}" + format.DegreesSymbol, (int) Math.Round(degrees, 0));
+            }
+
             if (format.AngularDecimalPlaces == 1 || format.AngularDecimalPlaces == 2)
+            {
                 return string.Format(numberFormat, "{0}" + format.DegreesSymbol + "{1}" + format.MinutesSymbol, (int) degrees, (int) Math.Round(minutes, 0));
+            }
+
             if (format.AngularDecimalPlaces == 3 || format.AngularDecimalPlaces == 4)
+            {
                 return string.Format(numberFormat, "{0}" + format.DegreesSymbol + "{1}" + format.MinutesSymbol + "{2}" + format.SecondsSymbol, (int) degrees, (int) minutes, (int) Math.Round(seconds, 0));
+            }
+
             // the suppression of leading or trailing zeros is not applicable to DegreesMinutesSeconds angles format
             string f = "0." + new string('0', format.AngularDecimalPlaces - 4);
             return string.Format(numberFormat, "{0}" + format.DegreesSymbol + "{1}" + format.MinutesSymbol + "{2}" + format.SecondsSymbol, (int) degrees, (int) minutes, seconds.ToString(f, numberFormat));
@@ -91,7 +104,9 @@ namespace netDxf.Units
         public static string ToGradians(double angle, UnitStyleFormat format)
         {
             if (format == null)
+            {
                 throw new ArgumentNullException(nameof(format));
+            }
 
             NumberFormatInfo numberFormat = new NumberFormatInfo
             {
@@ -110,7 +125,9 @@ namespace netDxf.Units
         public static string ToRadians(double angle, UnitStyleFormat format)
         {
             if (format == null)
+            {
                 throw new ArgumentNullException(nameof(format));
+            }
 
             NumberFormatInfo numberFormat = new NumberFormatInfo
             {
@@ -127,18 +144,26 @@ namespace netDxf.Units
         {
             char[] zeroes = new char[format.AngularDecimalPlaces + 2];
             if (format.SuppressAngularLeadingZeros)
+            {
                 zeroes[0] = '#';
+            }
             else
+            {
                 zeroes[0] = '0';
+            }
 
             zeroes[1] = '.';
 
             for (int i = 2; i < zeroes.Length; i++)
             {
                 if (format.SuppressAngularTrailingZeros)
+                {
                     zeroes[i] = '#';
+                }
                 else
+                {
                     zeroes[i] = '0';
+                }
             }
             return new string(zeroes);
         }

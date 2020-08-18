@@ -97,7 +97,9 @@ namespace netDxf.Units
             set
             {
                 if (value < 0)
+                {
                     throw new ArgumentOutOfRangeException(nameof(value), value, "The number of decimal places must be equals or greater than zero.");
+                }
                 this.linearDecimalPlaces = value;
             }
         }
@@ -111,7 +113,9 @@ namespace netDxf.Units
             set
             {
                 if (value < 0)
+                {
                     throw new ArgumentOutOfRangeException(nameof(value), value, "The number of decimal places must be equals or greater than zero.");
+                }
                 this.angularDecimalPlaces = value;
             }
         }
@@ -206,7 +210,9 @@ namespace netDxf.Units
             set
             {
                 if (value <= 0)
+                {
                     throw new ArgumentOutOfRangeException(nameof(value), value, "The fraction height scale must be greater than zero.");
+                }
                 this.fractionHeightScale = value;
             }
         }

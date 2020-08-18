@@ -2348,7 +2348,7 @@ namespace netDxf.IO
                         this.chunk.Next();
                         break;
                     case 420: // the layer uses true color
-                        color = AciColor.FromTrueColor(this.chunk.ReadInt());
+                        color = AciColorFromTrueColor(this.chunk.ReadInt());
                         this.chunk.Next();
                         break;
                     case 6:
@@ -3441,7 +3441,7 @@ namespace netDxf.IO
                         this.chunk.Next();
                         break;
                     case 420: // the entity uses true color
-                        color = AciColor.FromTrueColor(this.chunk.ReadInt());
+                        color = AciColorFromTrueColor(this.chunk.ReadInt());
                         this.chunk.Next();
                         break;
                     case 6: // type line code
@@ -3689,7 +3689,7 @@ namespace netDxf.IO
                         this.chunk.Next();
                         break;
                     case 420: //the entity uses true color
-                        color = AciColor.FromTrueColor(this.chunk.ReadInt());
+                        color = AciColorFromTrueColor(this.chunk.ReadInt());
                         this.chunk.Next();
                         break;
                     case 440: //transparency
@@ -8205,7 +8205,7 @@ namespace netDxf.IO
                         this.chunk.Next();
                         break;
                     case 420: //the entity uses true color
-                        color = AciColor.FromTrueColor(this.chunk.ReadInt());
+                        color = AciColorFromTrueColor(this.chunk.ReadInt());
                         this.chunk.Next();
                         break;
                     case 6:
@@ -9103,12 +9103,12 @@ namespace netDxf.IO
             this.chunk.Next(); // code 463 not needed (0.0)
             this.chunk.Next(); // code 63
             this.chunk.Next(); // code 421
-            AciColor color1 = AciColor.FromTrueColor(this.chunk.ReadInt());
+            AciColor color1 = AciColorFromTrueColor(this.chunk.ReadInt());
 
             this.chunk.Next(); // code 463 not needed (1.0)
             this.chunk.Next(); // code 63
             this.chunk.Next(); // code 421
-            AciColor color2 = AciColor.FromTrueColor(this.chunk.ReadInt());
+            AciColor color2 = AciColorFromTrueColor(this.chunk.ReadInt());
 
             this.chunk.Next(); // code 470
             string typeName = this.chunk.ReadString();
@@ -9548,7 +9548,7 @@ namespace netDxf.IO
                         this.chunk.Next();
                         break;
                     case 420:
-                        fillColor = AciColor.FromTrueColor(this.chunk.ReadInt());
+                        fillColor = AciColorFromTrueColor(this.chunk.ReadInt());
                         this.chunk.Next();
                         break;
                     case 70:
@@ -9618,7 +9618,7 @@ namespace netDxf.IO
 
                 if (this.chunk.Code == 420)
                 {
-                    color = AciColor.FromTrueColor(this.chunk.ReadInt()); // code 420
+                    color = AciColorFromTrueColor(this.chunk.ReadInt()); // code 420
                     this.chunk.Next();
                 }
 
@@ -10738,6 +10738,12 @@ namespace netDxf.IO
                 return style;
 
             return this.doc.MlineStyles.Add(new MLineStyle(name));
+        }
+
+        private static AciColor AciColorFromTrueColor(int value)
+        {
+            byte[] bytes = BitConverter.GetBytes(value);
+            return new AciColor(bytes[2], bytes[1], bytes[0]);
         }
 
         #endregion

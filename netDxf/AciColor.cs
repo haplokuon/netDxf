@@ -25,7 +25,6 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Globalization;
 using System.Threading;
-using netDxf.Entities;
 
 namespace netDxf
 {
@@ -462,9 +461,9 @@ namespace netDxf
                 throw new ArgumentOutOfRangeException(nameof(b), b, "Blue component input values range from 0 to 1.");
             }
 
-            this.r = (byte) Math.Round(r*255);
-            this.g = (byte) Math.Round(g*255);
-            this.b = (byte) Math.Round(b*255);
+            this.r = (byte) Math.Round(r * 255);
+            this.g = (byte) Math.Round(g * 255);
+            this.b = (byte) Math.Round(b * 255);
             this.useTrueColor = true;
             this.index = RgbToAci(this.r, this.g, this.b);
         }
@@ -585,6 +584,38 @@ namespace netDxf
         #endregion
 
         #region public methods
+
+        /// <summary>
+        /// Obtains the approximate color index from the RGB components.
+        /// </summary>
+        /// <param name="r">Red component.</param>
+        /// <param name="g">Green component.</param>
+        /// <param name="b">Blue component.</param>
+        /// <returns>The approximate color index from the RGB components.</returns>
+        public static byte RgbToAci(byte r, byte g, byte b)
+        {
+            int prevDist = int.MaxValue;
+            byte index = 0;
+            foreach (byte key in IndexRgb.Keys)
+            {
+                byte[] color = IndexRgb[key];
+                int red = r - color[0];
+                int green = g - color[1];
+                int blue = b - color[2];
+                int dist = red * red + green * green + blue * blue;
+                if (dist == 0) // the RGB components correspond to one of the indexed colors
+                {
+                    return key;
+                }
+                if (dist < prevDist)
+                {
+                    prevDist = dist;
+                    index = key;
+                }
+            }
+
+            return index;
+        }
 
         /// <summary>
         /// Converts HSL (hue, saturation, lightness) value to an <see cref="AciColor">AciColor</see>.
@@ -787,34 +818,6 @@ namespace netDxf
         }
 
         /// <summary>
-        /// Gets the 24-bit color value from an AciColor.
-        /// </summary>
-        /// <param name="color">A <see cref="AciColor">color</see>.</param>
-        /// <returns> A 24-bit color value (BGR order).</returns>
-        /// <remarks>This is a conversion method between an AciColor and the value for the DXF code 420 when writing true colors.</remarks>
-        public static int ToTrueColor(AciColor color)
-        {
-            if (color == null)
-            {
-                throw new ArgumentNullException(nameof(color));
-            }
-
-            return BitConverter.ToInt32(new byte[] {color.B, color.G, color.R, 0}, 0);
-        }
-
-        /// <summary>
-        /// Gets the <see cref="AciColor">color</see> from a 24-bit color value.
-        /// </summary>
-        /// <param name="value">A 24-bit color value (BGR order).</param>
-        /// <returns>A <see cref="AciColor">color</see>.</returns>
-        /// <remarks>This is a conversion method between an AciColor and the value for the DXF code 420 when writing true colors.</remarks>
-        public static AciColor FromTrueColor(int value)
-        {
-            byte[] bytes = BitConverter.GetBytes(value);
-            return new AciColor(bytes[2], bytes[1], bytes[0]);
-        }
-
-        /// <summary>
         /// Gets the <see cref="AciColor">color</see> from an index.
         /// </summary>
         /// <param name="index">A CAD indexed AciColor index.</param>
@@ -910,42 +913,6 @@ namespace netDxf
             }
 
             return (other.r == this.r) && (other.g == this.g) && (other.b == this.b);
-        }
-
-        #endregion
-
-        #region private methods
-
-        /// <summary>
-        /// Obtains the approximate color index from the RGB components.
-        /// </summary>
-        /// <param name="r">Red component.</param>
-        /// <param name="g">Green component.</param>
-        /// <param name="b">Blue component.</param>
-        /// <returns>The approximate color index from the RGB components.</returns>
-        public static byte RgbToAci(byte r, byte g, byte b)
-        {
-            int prevDist = int.MaxValue;
-            byte index = 0;
-            foreach (byte key in IndexRgb.Keys)
-            {
-                byte[] color = IndexRgb[key];
-                int red = r - color[0];
-                int green = g - color[1];
-                int blue = b - color[2];
-                int dist = red*red + green*green + blue*blue;
-                if (dist == 0) // the RGB components correspond to one of the indexed colors
-                {
-                    return key;
-                }
-                if (dist < prevDist)
-                {
-                    prevDist = dist;
-                    index = key;
-                }
-            }
-
-            return index;
         }
 
         #endregion

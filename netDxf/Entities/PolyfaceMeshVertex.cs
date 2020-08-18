@@ -1,7 +1,7 @@
-﻿#region netDxf library, Copyright (C) 2009-2019 Daniel Carvajal (haplokuon@gmail.com)
+﻿#region netDxf library, Copyright (C) 2009-2020 Daniel Carvajal (haplokuon@gmail.com)
 
 //                        netDxf library
-// Copyright (C) 2009-2019 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2009-2020 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -27,6 +27,9 @@ namespace netDxf.Entities
     /// <summary>
     /// Represents a polyface mesh vertex. 
     /// </summary>
+    /// <remarks>
+    /// The PolyfaceMeshVertex can contain external data (XData) information, but it is not saved in the DXF.
+    /// </remarks>
     public class PolyfaceMeshVertex :
         DxfObject, ICloneable
     {

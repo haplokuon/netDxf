@@ -255,9 +255,9 @@ namespace netDxf.Entities
                 else
                 {
                     // the polyline edge is an arc
-                    double theta = 4*Math.Atan(Math.Abs(bulge));
+                    double theta = 4 * Math.Atan(Math.Abs(bulge));
                     double c = Vector2.Distance(p1, p2);
-                    double r = (c/2)/Math.Sin(theta/2);
+                    double r = (c / 2) / Math.Sin(theta / 2);
 
                     // avoid arcs with very small radius, draw a line instead
                     if (MathHelper.IsZero(r))
@@ -332,7 +332,7 @@ namespace netDxf.Entities
         /// <summary>
         /// Obtains a list of vertexes that represent the polyline approximating the curve segments as necessary.
         /// </summary>
-        /// <param name="bulgePrecision">Curve segments precision (a value of zero means that no approximation will be made).</param>
+        /// <param name="bulgePrecision">Curve segments precision. The number of vertexes created, a value of zero means that no approximation will be made.</param>
         /// <param name="weldThreshold">Tolerance to consider if two new generated vertexes are equal.</param>
         /// <param name="bulgeThreshold">Minimum distance from which approximate curved segments of the polyline.</param>
         /// <returns>A list of vertexes expressed in object coordinate system.</returns>
@@ -395,83 +395,6 @@ namespace netDxf.Entities
                                 {
                                     ocsVertexes.Add(curvePoint);
                                     prevCurvePoint = curvePoint;
-                                }
-                            }
-                        }
-                        else
-                        {
-                            ocsVertexes.Add(p1);
-                        }
-                    }
-                }
-                index++;
-            }
-
-            return ocsVertexes;
-        }
-
-        /// <summary>
-        /// Obtains a list of vertexes that represent the polyline approximating the curve segments as necessary.
-        /// </summary>
-        /// <param name="bulgePrecision">Curve segments precision (a value of zero means that no approximation will be made).</param>
-        /// <param name="weldThreshold">Tolerance to consider if two new generated vertexes are equal.</param>
-        /// <param name="bulgeThreshold">Minimum distance from which approximate curved segments of the polyline.</param>
-        /// <returns>A list of vertexes expressed in object coordinate system.</returns>
-        public List<Vector2> PolygonalVertexes2(int bulgePrecision, double weldThreshold, double bulgeThreshold)
-        {
-            List<Vector2> ocsVertexes = new List<Vector2>();
-
-            int index = 0;
-
-            foreach (LwPolylineVertex vertex in this.Vertexes)
-            {
-                double bulge = vertex.Bulge;
-                Vector2 p1;
-                Vector2 p2;
-
-                if (index == this.Vertexes.Count - 1)
-                {
-                    p1 = new Vector2(vertex.Position.X, vertex.Position.Y);
-                    p2 = new Vector2(this.vertexes[0].Position.X, this.vertexes[0].Position.Y);
-                    // ignore bulge value of last vertex for open polylines
-                    if(!this.IsClosed) bulge = 0;
-                }
-                else
-                {
-                    p1 = new Vector2(vertex.Position.X, vertex.Position.Y);
-                    p2 = new Vector2(this.vertexes[index + 1].Position.X, this.vertexes[index + 1].Position.Y);
-                }
-
-                if (!p1.Equals(p2, weldThreshold))
-                {
-                    if (MathHelper.IsZero(bulge) || bulgePrecision == 0)
-                    {
-                        ocsVertexes.Add(p1);
-                    }
-                    else
-                    {
-                        double c = Vector2.Distance(p1, p2);
-                        if (c >= bulgeThreshold)
-                        {
-                            double s = (c / 2) * Math.Abs(bulge);
-                            double r = ((c / 2) * (c / 2) + s * s) / (2 * s);
-                            double theta = 4 * Math.Atan(Math.Abs(bulge));
-                            double gamma = (Math.PI - theta) / 2;
-                            double phi = Vector2.Angle(p1, p2) + Math.Sign(bulge) * gamma;
-                            Vector2 center = new Vector2(p1.X + r * Math.Cos(phi), p1.Y + r * Math.Sin(phi));
-                            Vector2 a1 = p1 - center;
-                            double angle = Math.Sign(bulge) * theta / (bulgePrecision + 1);
-                            ocsVertexes.Add(p1);
-                            for (int i = 1; i <= bulgePrecision; i++)
-                            {
-                                Vector2 curvePoint = new Vector2();
-                                Vector2 prevCurvePoint = new Vector2(this.vertexes[this.vertexes.Count - 1].Position.X, this.vertexes[this.vertexes.Count - 1].Position.Y);
-                                curvePoint.X = center.X + Math.Cos(i * angle) * a1.X - Math.Sin(i * angle) * a1.Y;
-                                curvePoint.Y = center.Y + Math.Sin(i * angle) * a1.X + Math.Cos(i * angle) * a1.Y;
-
-                                if (!curvePoint.Equals(prevCurvePoint, weldThreshold) && !curvePoint.Equals(p2, weldThreshold))
-                                {
-                                    ocsVertexes.Add(curvePoint);
                                 }
                             }
                         }

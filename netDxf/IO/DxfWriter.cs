@@ -1543,7 +1543,7 @@ namespace netDxf.IO
 
             if (layer.Color.UseTrueColor)
             {
-                this.chunk.Write(420, AciColor.ToTrueColor(layer.Color));
+                this.chunk.Write(420, AciColorToTrueColor(layer.Color));
             }
 
             this.chunk.Write(6, this.EncodeNonAsciiCharacters(layer.Linetype.Name));
@@ -1935,7 +1935,7 @@ namespace netDxf.IO
 
             this.chunk.Write(62, entity.Color.Index);
             if (entity.Color.UseTrueColor)
-                this.chunk.Write(420, AciColor.ToTrueColor(entity.Color));
+                this.chunk.Write(420, AciColorToTrueColor(entity.Color));
 
             if (entity.Transparency.Value >= 0)
                 this.chunk.Write(440, Transparency.ToAlphaValue(entity.Transparency));
@@ -2680,7 +2680,8 @@ namespace netDxf.IO
 
                 this.chunk.Write(62, polyline.Color.Index); // the vertex color should be the same as the polyline color
                 if (polyline.Color.UseTrueColor)
-                    this.chunk.Write(420, AciColor.ToTrueColor(polyline.Color));
+                    this.chunk.Write(420, AciColorToTrueColor(polyline.Color));
+
                 this.chunk.Write(100, SubclassMarker.Vertex);
                 this.chunk.Write(100, SubclassMarker.Polyline3dVertex);
                 this.chunk.Write(10, v.Position.X);
@@ -2727,7 +2728,7 @@ namespace netDxf.IO
 
                 this.chunk.Write(62, mesh.Color.Index); // the polyface mesh vertex color should be the same as the polyface mesh color
                 if (mesh.Color.UseTrueColor)
-                    this.chunk.Write(420, AciColor.ToTrueColor(mesh.Color));
+                    this.chunk.Write(420, AciColorToTrueColor(mesh.Color));
                 this.chunk.Write(100, SubclassMarker.Vertex);
                 this.chunk.Write(100, SubclassMarker.PolyfaceMeshVertex);
                 this.chunk.Write(70, (short) v.Flags);
@@ -2745,7 +2746,7 @@ namespace netDxf.IO
                 this.chunk.Write(8, layerName); // the polyface mesh face layer should be the same as the polyface mesh layer
                 this.chunk.Write(62, mesh.Color.Index); // the polyface mesh face color should be the same as the polyface mesh color
                 if (mesh.Color.UseTrueColor)
-                    this.chunk.Write(420, AciColor.ToTrueColor(mesh.Color));
+                    this.chunk.Write(420, AciColorToTrueColor(mesh.Color));
                 this.chunk.Write(100, SubclassMarker.PolyfaceMeshFace);
                 this.chunk.Write(70, (short) VertexTypeFlags.PolyfaceMeshVertex);
                 this.chunk.Write(10, 0.0);
@@ -3210,10 +3211,10 @@ namespace netDxf.IO
             this.chunk.Write(453, 2);
             this.chunk.Write(463, 0.0);
             this.chunk.Write(63, pattern.Color1.Index);
-            this.chunk.Write(421, AciColor.ToTrueColor(pattern.Color1));
+            this.chunk.Write(421, AciColorToTrueColor(pattern.Color1));
             this.chunk.Write(463, 1.0);
             this.chunk.Write(63, pattern.Color2.Index);
-            this.chunk.Write(421, AciColor.ToTrueColor(pattern.Color2));
+            this.chunk.Write(421, AciColorToTrueColor(pattern.Color2));
             this.chunk.Write(470, StringEnum<HatchGradientPatternType>.GetStringValue(pattern.GradientType));
         }
 
@@ -4168,7 +4169,7 @@ namespace netDxf.IO
 
             this.chunk.Write(62, def.Color.Index);
             if (def.Color.UseTrueColor)
-                this.chunk.Write(420, AciColor.ToTrueColor(def.Color));
+                this.chunk.Write(420, AciColorToTrueColor(def.Color));
 
             if (def.Transparency.Value >= 0)
                 this.chunk.Write(440, Transparency.ToAlphaValue(def.Transparency));
@@ -4333,7 +4334,7 @@ namespace netDxf.IO
 
             this.chunk.Write(62, attrib.Color.Index);
             if (attrib.Color.UseTrueColor)
-                this.chunk.Write(420, AciColor.ToTrueColor(attrib.Color));
+                this.chunk.Write(420, AciColorToTrueColor(attrib.Color));
 
             if (attrib.Transparency.Value >= 0)
                 this.chunk.Write(440, Transparency.ToAlphaValue(attrib.Transparency));
@@ -4700,7 +4701,7 @@ namespace netDxf.IO
 
             this.chunk.Write(62, style.FillColor.Index);
             if (style.FillColor.UseTrueColor) // && this.doc.DrawingVariables.AcadVer > DxfVersion.AutoCad2000)
-                this.chunk.Write(420, AciColor.ToTrueColor(style.FillColor));
+                this.chunk.Write(420, AciColorToTrueColor(style.FillColor));
             this.chunk.Write(51, style.StartAngle);
             this.chunk.Write(52, style.EndAngle);
             this.chunk.Write(71, (short) style.Elements.Count);
@@ -4709,7 +4710,7 @@ namespace netDxf.IO
                 this.chunk.Write(49, element.Offset);
                 this.chunk.Write(62, element.Color.Index);
                 if (element.Color.UseTrueColor) // && this.doc.DrawingVariables.AcadVer > DxfVersion.AutoCad2000)
-                    this.chunk.Write(420, AciColor.ToTrueColor(element.Color));
+                    this.chunk.Write(420, AciColorToTrueColor(element.Color));
 
                 this.chunk.Write(6, this.EncodeNonAsciiCharacters(element.Linetype.Name));
             }
@@ -4927,6 +4928,16 @@ namespace netDxf.IO
                         this.chunk.Write(code, value);
                 }
             }
+        }
+
+        public static int AciColorToTrueColor(AciColor color)
+        {
+            if (color == null)
+            {
+                throw new ArgumentNullException(nameof(color));
+            }
+
+            return BitConverter.ToInt32(new byte[] { color.B, color.G, color.R, 0 }, 0);
         }
 
         #endregion
