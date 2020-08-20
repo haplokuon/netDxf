@@ -1,32 +1,32 @@
 # netDxf
-netDxf 2.3.0 Copyright(C) 2009-2019 Daniel Carvajal, Licensed under LGPL
+netDxf 2.4.0 Copyright(C) 2009-2020 Daniel Carvajal, Licensed under LGPL
 ## Description
-netDxf is a .net library programmed in C# to read and write AutoCAD dxf files. It supports AutoCad2000, AutoCad2004, AutoCad2007, AutoCad2010,  AutoCad2013, and AutoCad2018 dxf database versions, in both text and binary format.
+netDxf is a .net library programmed in C# to read and write AutoCAD DXF files. It supports AutoCad2000, AutoCad2004, AutoCad2007, AutoCad2010,  AutoCad2013, and AutoCad2018 DXF database versions, in both text and binary format.
 
 The library is easy to use and I tried to keep the procedures as straightforward as possible, for example you will not need to fill up the table section with layers, styles or line type definitions. The DxfDocument will take care of that every time a new item is added.
 
-If you need more information, you can find the official dxf documentation [here](https://help.autodesk.com/view/OARX/2019/ENU/?guid=GUID-235B22E0-A567-4CF6-92D3-38A2306D73F3).
+If you need more information, you can find the official DXF documentation [here](https://help.autodesk.com/view/OARX/2021/ENU/?guid=GUID-235B22E0-A567-4CF6-92D3-38A2306D73F3).
 
 Code example:
 
 ```c#
 public static void Main()
 {
-	// your dxf file name
+	// your DXF file name
 	string file = "sample.dxf";
 
-	// by default it will create an AutoCad2000 DXF version
-	DxfDocument dxf = new DxfDocument();
+	// create a new document, by default it will create an AutoCad2000 DXF version
+	DxfDocument doc = new DxfDocument();
 	// an entity
 	Line entity = new Line(new Vector2(5, 5), new Vector2(10, 5));
 	// add your entities here
-	dxf.AddEntity(entity);
+	doc.AddEntity(entity);
 	// save to file
-	dxf.Save(file);
+	doc.Save(file);
 
 	// this check is optional but recommended before loading a DXF file
 	DxfVersion dxfVersion = DxfDocument.CheckDxfFileVersion(file);
-	// netDxf is only compatible with AutoCad2000 and higher DXF version
+	// netDxf is only compatible with AutoCad2000 and higher DXF versions
 	if (dxfVersion < DxfVersion.AutoCad2000) return;
 	// load file
 	DxfDocument loaded = DxfDocument.Load(file);
@@ -72,7 +72,7 @@ See [changelog.txt](https://github.com/haplokuon/netDxf/blob/master/doc/Changelo
 * XLine (aka construction line)
 
 All entities can be grouped.
-All entities and table objects may contain extended data information.
+All DXF objects may contain extended data information. 
 AutoCad Table entities will be imported as Inserts (block references).
 Both simple and complex line types are supported.
 The library will never be able to read some entities like REGIONs, SURFACEs, and 3DSOLIDs, since they depend on undocumented proprietary data.

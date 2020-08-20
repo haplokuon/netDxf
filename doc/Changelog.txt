@@ -1,86 +1,48 @@
 ## Change history
 
-### [2020/08/18]
-* The public classes PolylineVertex and PolyfaceMeshVertex can contain extended data information XData, but they will not be saved in the DXF AutoCad crashes if they are.
-* Deleted the AciColor methods ToTrueColor and FromTrueColor, they have no use outside the DxfWriter and DxfReader classes. 
-
-### [2020/08/13]
+### [2.4.0 - 2020/08/20]
 * Added US Survey Feet, US Survey Inches, US Survey Yards, and US Survey Miles to the DrawingUnits.
-
-### [2020/08/11]
-* The DxfDocument class derives from DxfObject for convenience of this library not because of the DXF structure. It can contain external data information XData, but it will not be saved in the DXF.
-* (fixed) Table collection handles that are saved in the DXF OBJECTS section were not preserved.
-* (fixed) The RasterVariables object didn't have an owner.
-
-### [2020/08/10]
 * All classes derived from DxfObject can contain XData (extended data).
 	The TextStyles and ShapeStyles extended data information will be combined into the DXF STYLE table.
-* Deleted the IHasXData interface, it is not needed anymore.
-* The RasterVariables object is always saved, regardless if the document contains images or not.
+	The DxfDocument class derives from DxfObject for convenience of this library not because of the DXF structure. It can contain external data information XData, but it will not be saved in the DXF.
+	The public classes PolylineVertex and PolyfaceMeshVertex can contain extended data information XData, but they will not be saved in the DXF AutoCad crashes if they are.
+* Removed the IHasXData interface, it is not needed anymore.
+* Removed the AciColor methods ToTrueColor and FromTrueColor, they have no use outside the DxfWriter and DxfReader classes. 
 * Removed the MaxCapacity limits from the TableObject collections, except for layouts that it is 256 = 255 (paper space) + 1 (model space) exceeding this limit may crash AutoCad.
 	According to the AutoCad ActiveX documentation there is no limit, therefore the DXF code 70 maximum number of entries in table is obsolete, it represents a 16-bit integer value. 
 * Removed the MaxCapacity property from the TableObject collections.
-
-### [2020/08/04]
+* The RasterVariables object is always saved, regardless if the document contains images or not.
+* Added a check for the binary data record of the extended data. It cannot exceed 127 bytes, if needed divide it into multiples XDataCode.BinaryData records.
+* Added the main Viewport of the Layout, that was deleted in v2.3.0.
+* Added Swap method to the MathHelper class.
+* The block description is now loaded and saved to the DXF.
+* Removed the scale restrictions for the complex linetype segments. Even thought I would recommend to always use values greater than zero, you might not get the desired results.
+* Renamed LeaderPathType.StraightLineSegements to LeaderPathType.StraightLineSegments.
 * Renamed DxfObjectCode.LightWeightPolyline to DxfObjectCode.LwPolyline.
 * Renamed SubclassMarker.LightWeightPolyline to SubclassMarker.LwPolyline.
 * Force the use of the ASCII.WindowsCodePage encoding in the DxfReader class, just for cases where there was a problem reading the codepage from the file.
+* Misspelling corrections.
+* (fixed) Table collection handles that are saved in the DXF OBJECTS section were not preserved.
+* (fixed) The RasterVariables object didn't have an owner.
 * (fixed) Index to RGB color equivalent in the AciColor class.
 * (fixed) The FrozenLayers list of the Viewport entity cannot contain null items or layers that belong to different documents.
 * (fixed) When an open LwPolyline is converted to a set of vertexes (PolygonalVertexes method) the last vertex will not be welded to the first if they fall inside the defined threshold.
-
-### [2020/03/01]
-* Added a check for the binary data record of the extended data. It cannot exceed 127 bytes, if needed divide it into multiples XDataCode.BinaryData records.
-* Removed the scale restrictions for the complex linetype segments. Even thought I would recommend to always use values greater than zero, you might not get the desired results.
 * (fixed) Renaming Layouts associated blocks.
-
-### [2020/01/26]
-* (fixed) More issues with the transformation of Ellipse arcs.
-
-### [2020/01/07]
-* Misspelling corrections.
-* Renamed LeaderPathType.StraightLineSegements to LeaderPathType.StraightLineSegments
-
-### [2019/12/30]
 * (fixed) Issue with the start and end angles when performing symmetries in Arc entities:
 * (fixed) Issue with the start and end angles when performing symmetries in Ellipse arc entities:
-
-### [2019/12/21]
-* Additional change related to pull request #150. Force the use of the ASCII.WindowsCodePage encoding in the DxfReader class, just for cases where there was a problem reading the codepage from the file.
-
-### [2019/12/19]
 * (fixed) Error when trying to copy to clipboard inside AutoCAD for DXF files saved with netDXF that contains the header variables $INTERFEREOBJVS and $INTERFEREVPVS, since this variables refer to visual style information that netDxf does not save. This variables will not be loaded in case they appear in a DXF.
 * (fixed) After loading a DXF the layouts associated blocks will be renamed to strictly follow *Paper_Space, *Paper_Space0, *Paper_Space1,... 
 * (fixed) Transforming an ellipse might not show the correct result under special circumstances.
-
-### [2019/09/20]
-* Added the main Viewport of the Layout, that was deleted in v2.3.0.
-* The block description is now loaded and saved to the DXF.
 * (fixed) Issue when renaming layouts.
 * (fixed) Issue when removing layouts.
-
-### [2019/09/09]
 * (fixed) The LinearDimension block that represents the dimension drawing was not generated correctly. Now, the extension lines should not appear crossed under some circumstances.
 * (fixed) The MathHelper methods PointInSegment will consider the start and end points as part of the segment.
 * (fixed) The MathHelper method NormalizeAngle will not round almost zero angles automatically.
-
-### [2019/08/30]
-* (fixed) Hotfix for previous update. The DimensionStyle FitDimLineInside (DIMSOXD value) now is read correctly when it is part of a dimension style override.
-
-### [2019/08/30]
 * (fixed) The DimensionStyle FitDimLineInside (DIMSOXD value) was used incorrectly, when it was true is should be false and vice versa.
-
-### [2019/08/16]
-* (fixed) When a Block is created form a DxfDocument or DXF file, any Hatch entity that it may contain will have its associative property set to false.
-          This will avoid problems when the same entity its associated to multiple hatches, or when any of any of its paths is defined by the intersection of several entities.
+* (fixed) When a Block is created form a DxfDocument or DXF file, any Hatch entity that it may contain will have its associative property set to false. This will avoid problems when the same entity its associated to multiple hatches, or when any of any of its paths is defined by the intersection of several entities.
 * (fixed) When cloning (Clone) a Hatch entity its associative property will be set to false, to avoid problems when the same entity its associated to multiple hatches.
 * (fixed) When transforming (TransformBy) a Hatch entity its associative property will be set to false, to avoid problems when the same entity its associated to multiple hatches.
-
-### [2019/08/12]
 * (fixed) Fixed a few issues with the tolerances display method in the dimension style and its equivalent override. 
-
-### [2019/07/01]
-* Added Swap method to the MathHelper class.
 * (fixed) Issue with LinearDimension entities related to its rotation, when the were loaded from a DXF file.
 * (fixed) Comment in TextVerticalPlacement property of the DimensionStyle class, the default value is Centered not Above.
 
@@ -144,7 +106,7 @@
 * (fixed) Adding and removing the annotation of a leader, when it already belongs to a document, will be automatically add and remove, respectively, the entity from the document.
 * (fixed) When cloning a Viewport the frozen layers were not being cloned.
 * (fixed) When writing a DXF the Tolerance code 73 is 0 for both Text and MText annotations.
-* (fixed) Radial and Diametric dimensions not showing the "R" and "ï¿½" when no prefix is use in the dimension style.
+* (fixed) Radial and Diametric dimensions not showing the "R" and "Ø" when no prefix is use in the dimension style.
 * (fixed) The MLineStyleElements needs to be ordered from larger to smaller offset values.
 * (fixed) Bug when creating boundary paths for hatches when the normal was not the UnitZ (0,0,1).
 * (fixed) Only a single HatchBoundary.Edge of type Polyline can be used to initialize a hatch boundary, it also must always be closed.
