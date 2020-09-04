@@ -30,6 +30,8 @@ namespace TestDxfDocument
         {
             DxfDocument doc = Test(@"sample.dxf");
 
+            // sample for fillet polyline
+            FilletLwPolyline(doc, 10);
             #region Samples for new and modified features 2.3.0
 
             //ExplodeInsert();
@@ -4340,6 +4342,14 @@ namespace TestDxfDocument
 
         #endregion
 
+        private static void FilletLwPolyline(DxfDocument dxf, double radius)
+        {
+            foreach (var pline in dxf.LwPolylines)
+            {
+                pline.FilletLwPolyline(radius);
+            }
+            dxf.Save(@"sample with filleted lwpolylines.dxf");
+        }
         private static void ShowDxfDocumentInformation(DxfDocument dxf)
         {
             Console.WriteLine("FILE VERSION: {0}", dxf.DrawingVariables.AcadVer);

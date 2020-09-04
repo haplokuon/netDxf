@@ -240,11 +240,11 @@ namespace netDxf.Entities
 
                     entities.Add(new Line
                     {
-                        Layer = (Layer) this.Layer.Clone(),
-                        Linetype = (Linetype) this.Linetype.Clone(),
-                        Color = (AciColor) this.Color.Clone(),
+                        Layer = (Layer)this.Layer.Clone(),
+                        Linetype = (Linetype)this.Linetype.Clone(),
+                        Color = (AciColor)this.Color.Clone(),
                         Lineweight = this.Lineweight,
-                        Transparency = (Transparency) this.Transparency.Clone(),
+                        Transparency = (Transparency)this.Transparency.Clone(),
                         LinetypeScale = this.LinetypeScale,
                         Normal = this.Normal,
                         StartPoint = start,
@@ -264,7 +264,7 @@ namespace netDxf.Entities
                     {
                         // the polyline edge is a line
                         List<Vector3> points = MathHelper.Transform(
-                            new []
+                            new[]
                             {
                                 new Vector3(p1.X, p1.Y, this.elevation),
                                 new Vector3(p2.X, p2.Y, this.elevation)
@@ -288,31 +288,31 @@ namespace netDxf.Entities
                     }
                     else
                     {
-                        double gamma = (Math.PI - theta)/2;
-                        double phi = Vector2.Angle(p1, p2) + Math.Sign(bulge)*gamma;
-                        Vector2 center = new Vector2(p1.X + r*Math.Cos(phi), p1.Y + r*Math.Sin(phi));
+                        double gamma = (Math.PI - theta) / 2;
+                        double phi = Vector2.Angle(p1, p2) + Math.Sign(bulge) * gamma;
+                        Vector2 center = new Vector2(p1.X + r * Math.Cos(phi), p1.Y + r * Math.Sin(phi));
                         double startAngle;
                         double endAngle;
                         if (bulge > 0)
                         {
-                            startAngle = MathHelper.RadToDeg*Vector2.Angle(p1 - center);
-                            endAngle = startAngle + MathHelper.RadToDeg*theta;
+                            startAngle = MathHelper.RadToDeg * Vector2.Angle(p1 - center);
+                            endAngle = startAngle + MathHelper.RadToDeg * theta;
                         }
                         else
                         {
-                            endAngle = MathHelper.RadToDeg*Vector2.Angle(p1 - center);
-                            startAngle = endAngle - MathHelper.RadToDeg*theta;
+                            endAngle = MathHelper.RadToDeg * Vector2.Angle(p1 - center);
+                            startAngle = endAngle - MathHelper.RadToDeg * theta;
                         }
                         Vector3 point = MathHelper.Transform(new Vector3(center.X, center.Y, this.elevation), this.Normal,
                             CoordinateSystem.Object,
                             CoordinateSystem.World);
                         entities.Add(new Arc
                         {
-                            Layer = (Layer) this.Layer.Clone(),
-                            Linetype = (Linetype) this.Linetype.Clone(),
-                            Color = (AciColor) this.Color.Clone(),
+                            Layer = (Layer)this.Layer.Clone(),
+                            Linetype = (Linetype)this.Linetype.Clone(),
+                            Color = (AciColor)this.Color.Clone(),
                             Lineweight = this.Lineweight,
-                            Transparency = (Transparency) this.Transparency.Clone(),
+                            Transparency = (Transparency)this.Transparency.Clone(),
                             LinetypeScale = this.LinetypeScale,
                             Normal = this.Normal,
                             Center = point,
@@ -410,6 +410,128 @@ namespace netDxf.Entities
             return ocsVertexes;
         }
 
+        /// <summary>
+        /// Fillet all corners of the LwPolyline with inputted radius. Same behaviour as in Autocad Fillet Polyline command.
+        /// </summary>
+        /// <param name="radius"></param>
+        public void FilletLwPolyline(double radius)
+        {
+            List<EntityObject> myEntities = this.Explode();
+            LwPolyline MyFilletedPolyline = new LwPolyline();
+
+            // loop to get each two lines
+            for (int i = 0; i < myEntities.Count; i++)
+            {
+                // Handling closed polyline last vertex
+                EntityObject entity1 = myEntities[i];
+                EntityObject entity2;
+                if (this.IsClosed && i == myEntities.Count - 1)
+                {
+                    entity2 = myEntities[0];
+                }
+                else if (i == myEntities.Count - 1)
+                {
+                    break;
+                }
+                else
+                {
+                    entity2 = myEntities[i + 1];
+                }
+
+                if (entity1 is Line && entity2 is Line)
+                {
+                    Line line1 = entity1 as Line;
+                    Line line2 = entity2 as Line;
+
+                    // offset by radius
+                    Vector2 normalizedPerpVector1 = Vector2.Perpendicular(new Vector2(line1.Direction.X, line1.Direction.Y));
+                    Vector2 normalizedPerpVector2 = Vector2.Perpendicular(new Vector2(line2.Direction.X, line2.Direction.Y));
+                    normalizedPerpVector1.Normalize();
+                    normalizedPerpVector2.Normalize();
+
+                    Vector2 perpVector1 = Vector2.Multiply(radius, normalizedPerpVector1);
+                    Vector2 perpVector2 = Vector2.Multiply(radius, normalizedPerpVector2);
+
+                    Line offLine1 = line1.Clone() as Line;
+                    Line offLine2 = line2.Clone() as Line;
+
+                    offLine1.TransformBy(Matrix4.Translation(new Vector3(perpVector1.X, perpVector1.Y, 0)));
+                    offLine2.TransformBy(Matrix4.Translation(new Vector3(perpVector2.X, perpVector2.Y, 0)));
+
+                    Vector2 endPoint1 = new Vector2(offLine1.EndPoint.X, offLine1.EndPoint.Y);
+                    Vector2 startPoint2 = new Vector2(offLine2.StartPoint.X, offLine2.StartPoint.Y);
+                    //get intersection poinnt (center of arc)
+                    Vector2 center = MathHelper.FindIntersection(endPoint1, offLine1.Direction.ToVector2(), startPoint2, offLine2.Direction.ToVector2());
+
+                    // should be zero if point inside line
+                    int centerAnalysis = MathHelper.PointInSegment(center, offLine1.StartPoint.ToVector2(), offLine1.EndPoint.ToVector2());
+                    Vector2 arcStart = Vector2.Add(center, -perpVector1);
+                    Vector2 arcEnd = Vector2.Add(center, -perpVector2);
+                    if (centerAnalysis != 0)
+                    {
+                        offLine1.TransformBy(Matrix4.Translation(new Vector3(-2 * perpVector1.X, -2 * perpVector1.Y, 0)));
+                        offLine2.TransformBy(Matrix4.Translation(new Vector3(-2 * perpVector2.X, -2 * perpVector2.Y, 0)));
+                        endPoint1 = new Vector2(offLine1.EndPoint.X, offLine1.EndPoint.Y);
+                        startPoint2 = new Vector2(offLine2.StartPoint.X, offLine2.StartPoint.Y);
+                        center = MathHelper.FindIntersection(endPoint1, offLine1.Direction.ToVector2(), startPoint2, offLine2.Direction.ToVector2());
+                        arcStart = Vector2.Add(center, perpVector1);
+                        arcEnd = Vector2.Add(center, perpVector2);
+                    }
+                    if (center != Vector2.NaN)
+                    {
+                        // Check that fillet radius can be achieved
+                        if (MathHelper.PointInSegment(arcStart, line1.StartPoint.ToVector2(), line1.EndPoint.ToVector2()) != 0 ||
+                            MathHelper.PointInSegment(arcEnd, line2.StartPoint.ToVector2(), line2.EndPoint.ToVector2()) != 0)
+                        {
+                            MyFilletedPolyline.Vertexes.Add(new LwPolylineVertex(line1.StartPoint.ToVector2(), 0));
+                            MyFilletedPolyline.Vertexes.Add(new LwPolylineVertex(line1.EndPoint.ToVector2(), 0));
+                            if (i == myEntities.Count - 2)
+                            {
+                                MyFilletedPolyline.Vertexes.Add(new LwPolylineVertex(line2.EndPoint.ToVector2(), 0));
+                            }
+                            continue;
+                        }
+                        if (this.IsClosed && i == 0) { }
+                        else
+                        {
+                            MyFilletedPolyline.Vertexes.Add(new LwPolylineVertex(line1.StartPoint.ToVector2(), 0));
+                        }
+
+                        double startAngle = Vector2.Angle(-perpVector1) * (180 / Math.PI);
+                        double endAngle = Vector2.Angle(-perpVector2) * (180 / Math.PI);
+                        double totalAngle = startAngle < endAngle ? endAngle - startAngle : 360 - (startAngle - endAngle);
+
+                        // Trimming extra line parts
+                        line1.EndPoint = arcStart.ToVector3();
+
+                        LwPolylineVertex arcStartVertex = new LwPolylineVertex(line1.EndPoint.ToVector2(), Math.Tan(Vector2.AngleBetween(perpVector1, perpVector2) / 4.0));
+                        if (totalAngle > 180)
+                        {
+                            endAngle = Vector2.Angle(perpVector1) * (180 / Math.PI);
+                            startAngle = Vector2.Angle(perpVector2) * (180 / Math.PI);
+                            arcStartVertex = new LwPolylineVertex(line1.EndPoint.ToVector2(), -Math.Tan(Vector2.AngleBetween(perpVector1, perpVector2) / 4.0));
+                        }
+
+                        MyFilletedPolyline.Vertexes.Add(arcStartVertex);
+
+                        // Handling last vertex
+                        line2.StartPoint = arcEnd.ToVector3();
+                        if (this.IsClosed && i == myEntities.Count - 1)
+                        {
+                            MyFilletedPolyline.Vertexes.Add(new LwPolylineVertex(line2.StartPoint.ToVector2(), 0));
+                        }
+                        if (!this.IsClosed && i == myEntities.Count - 2)
+                        {
+                            MyFilletedPolyline.Vertexes.Add(new LwPolylineVertex(line2.StartPoint.ToVector2(), 0));
+                            MyFilletedPolyline.Vertexes.Add(new LwPolylineVertex(line2.EndPoint.ToVector2(), 0));
+                        }
+                    }
+                }
+            }
+
+            this.Vertexes.Clear();
+            this.Vertexes.AddRange(MyFilletedPolyline.Vertexes);
+        }
         #endregion
 
         #region overrides
@@ -454,11 +576,11 @@ namespace netDxf.Entities
             LwPolyline entity = new LwPolyline
             {
                 //EntityObject properties
-                Layer = (Layer) this.Layer.Clone(),
-                Linetype = (Linetype) this.Linetype.Clone(),
-                Color = (AciColor) this.Color.Clone(),
+                Layer = (Layer)this.Layer.Clone(),
+                Linetype = (Linetype)this.Linetype.Clone(),
+                Color = (AciColor)this.Color.Clone(),
                 Lineweight = this.Lineweight,
-                Transparency = (Transparency) this.Transparency.Clone(),
+                Transparency = (Transparency)this.Transparency.Clone(),
                 LinetypeScale = this.LinetypeScale,
                 Normal = this.Normal,
                 IsVisible = this.IsVisible,
@@ -469,10 +591,10 @@ namespace netDxf.Entities
             };
 
             foreach (LwPolylineVertex vertex in this.vertexes)
-                entity.Vertexes.Add((LwPolylineVertex) vertex.Clone());
+                entity.Vertexes.Add((LwPolylineVertex)vertex.Clone());
 
             foreach (XData data in this.XData.Values)
-                entity.XData.Add((XData) data.Clone());
+                entity.XData.Add((XData)data.Clone());
 
             return entity;
         }

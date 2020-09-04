@@ -656,6 +656,15 @@ namespace netDxf
             return new[] {this.x, this.y};
         }
 
+        /// <summary>
+        /// Return Vector3 with X and Y, setting Z = 0
+        /// </summary>
+        /// <returns></returns>
+        public Vector3 ToVector3()
+        {
+            return new Vector3(this.x, this.y, 0);
+        }
+
         #endregion
 
         #region comparison methods
