@@ -638,6 +638,15 @@ namespace netDxf
             return new[] {this.x, this.y, this.z};
         }
 
+        /// <summary>
+        /// Returns Vector2 with X and Y only, ignoring Z
+        /// </summary>
+        /// <returns></returns>
+        public Vector2 ToVector2()
+        {
+            return new Vector2(this.x, this.y);
+        }
+
         #endregion
 
         #region comparison methods
