@@ -503,7 +503,7 @@ namespace netDxf
         public static double NormalizeAngle(double angle)
         {
             double normalized = angle%360.0;
-            if (normalized < 0) return 360.0 + normalized;
+            if (Sign(normalized) == -1) return 360.0 + normalized;
             return normalized;
         }
 
