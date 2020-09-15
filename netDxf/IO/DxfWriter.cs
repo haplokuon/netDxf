@@ -2545,7 +2545,13 @@ namespace netDxf.IO
             this.chunk.Write(42, insert.Scale.Y*scale);
             this.chunk.Write(43, insert.Scale.Z*scale);
 
+            this.chunk.Write(44, insert.ColumnSpacing);
+            this.chunk.Write(45, insert.RowSpacing);
+
             this.chunk.Write(50, insert.Rotation);
+
+            this.chunk.Write(70, insert.ColumnCount);
+            this.chunk.Write(71, insert.RowCount);
 
             this.chunk.Write(210, insert.Normal.X);
             this.chunk.Write(220, insert.Normal.Y);
