@@ -7371,6 +7371,8 @@ namespace netDxf.IO
             Block block = null;
             List<Attribute> attributes = new List<Attribute>();
             List<XData> xData = new List<XData>();
+            int columnCount = 1, rowCount = 1;
+            double columnSpacing = 0, rowSpacing = 0;
 
             this.chunk.Next();
             while (this.chunk.Code != 0)
@@ -7410,8 +7412,26 @@ namespace netDxf.IO
                         if (MathHelper.IsZero(scale.Z)) scale.Z = 1.0; // just in case, the insert scale components cannot be zero
                         this.chunk.Next();
                         break;
+                    case 44:
+                        columnSpacing = this.chunk.ReadDouble();
+                        this.chunk.Next();
+                        break;
+                    case 45:
+                        rowSpacing = this.chunk.ReadDouble();
+                        this.chunk.Next();
+                        break;
                     case 50:
                         rotation = this.chunk.ReadDouble();
+                        this.chunk.Next();
+                        break;
+                    case 70:
+                        columnCount = this.chunk.ReadInt();
+                        if (columnCount < 1) columnCount = 1;
+                        this.chunk.Next();
+                        break;
+                    case 71:
+                        rowCount = this.chunk.ReadInt();
+                        if (rowCount < 1) rowCount = 1;
                         this.chunk.Next();
                         break;
                     case 210:
