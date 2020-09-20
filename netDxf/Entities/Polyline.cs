@@ -167,7 +167,7 @@ namespace netDxf.Entities
         /// <summary>
         /// Gets or sets the curve smooth type.
         /// </summary>
-        internal PolylineSmoothType SmoothType
+        public PolylineSmoothType SmoothType
         {
             get { return this.smoothType; }
             set { this.smoothType = value; }
@@ -176,7 +176,7 @@ namespace netDxf.Entities
         /// <summary>
         /// Gets the polyline type.
         /// </summary>
-        internal PolylineTypeFlags Flags
+        public PolylineTypeFlags Flags
         {
             get { return this.flags; }
             set { this.flags = value; }
