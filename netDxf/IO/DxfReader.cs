@@ -7371,7 +7371,7 @@ namespace netDxf.IO
             Block block = null;
             List<Attribute> attributes = new List<Attribute>();
             List<XData> xData = new List<XData>();
-            int columnCount = 1, rowCount = 1;
+            short columnCount = 1, rowCount = 1;
             double columnSpacing = 0, rowSpacing = 0;
 
             this.chunk.Next();
@@ -7425,12 +7425,12 @@ namespace netDxf.IO
                         this.chunk.Next();
                         break;
                     case 70:
-                        columnCount = this.chunk.ReadInt();
+                        columnCount = this.chunk.ReadShort();
                         if (columnCount < 1) columnCount = 1;
                         this.chunk.Next();
                         break;
                     case 71:
-                        rowCount = this.chunk.ReadInt();
+                        rowCount = this.chunk.ReadShort();
                         if (rowCount < 1) rowCount = 1;
                         this.chunk.Next();
                         break;
