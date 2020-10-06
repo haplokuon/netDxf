@@ -594,7 +594,7 @@ namespace netDxf
         /// <returns>The approximate color index from the RGB components.</returns>
         public static byte RgbToAci(byte r, byte g, byte b)
         {
-            int prevDist = int.MaxValue;
+            int prevDist = Int32.MaxValue;
             byte index = 0;
             foreach (byte key in IndexRgb.Keys)
             {
@@ -846,6 +846,37 @@ namespace netDxf
             return new AciColor(index);
         }
 
+        /// <summary>
+        /// Gets the <see cref="AciColor">color</see> from a 24-bit color value.
+        /// </summary>
+        /// <param name="value">A 32-bit color value.</param>
+        /// <returns>A <see cref="AciColor">color</see>.</returns>
+        public static AciColor FromTrueColor(int value)
+        {
+            byte[] bytes = BitConverter.GetBytes(value);
+            return new AciColor(bytes[2], bytes[1], bytes[0]);
+        }
+
+        /// <summary>
+        /// Gets the 32-bit color value from an AciColor.
+        /// </summary>
+        /// <param name="color">A <see cref="AciColor">color</see>.</param>
+        /// <returns>A 32-bit color value.</returns>
+        public static int ToTrueColor(AciColor color)
+        {
+            if (color == null)
+            {
+                throw new ArgumentNullException(nameof(color));
+            }
+
+            // AutoCad weirdness at its best
+            // the forth byte seems to have no use,
+            // when AutoCad saves a layer color as a true color this fourth byte is always 0,
+            // when the layer color is read it seems that it doesn't care about the value of this fourth byte 
+            // but if the fourth byte is not set as 194 the layer state color will be shown as an index color
+            return BitConverter.ToInt32(new byte[] { color.B, color.G, color.R, 194 }, 0);
+        }
+
         #endregion
 
         #region overrides
@@ -868,7 +899,7 @@ namespace netDxf
 
             if (this.useTrueColor)
             {
-                return string.Format("{0}{3}{1}{3}{2}", this.r, this.g, this.b, Thread.CurrentThread.CurrentCulture.TextInfo.ListSeparator);
+                return String.Format("{0}{3}{1}{3}{2}", this.r, this.g, this.b, Thread.CurrentThread.CurrentCulture.TextInfo.ListSeparator);
             }
 
             return this.index.ToString(CultureInfo.CurrentCulture);

@@ -77,13 +77,18 @@ namespace netDxf.Entities
         internal Insert(List<Attribute> attributes)
             : base(EntityType.Insert, DxfObjectCode.Insert)
         {
-            if(attributes == null)
+            if (attributes == null)
+            {
                 throw new ArgumentNullException(nameof(attributes));
+            }
+
             this.attributes = new AttributeCollection(attributes);
             foreach (Attribute att in this.attributes)
             {
-                if(att.Owner!=null)
+                if (att.Owner != null)
+                {
                     throw new ArgumentException("The attributes list contains at least an attribute that already has an owner.", nameof(attributes));
+                }
                 att.Owner = this;
             }
 
@@ -206,7 +211,10 @@ namespace netDxf.Entities
             set
             {
                 if (MathHelper.IsZero(value.X) || MathHelper.IsZero(value.Y) || MathHelper.IsZero(value.Z))
+                {
                     throw new ArgumentOutOfRangeException(nameof(value), value, "None of the vector scale components can be zero.");
+                }
+
                 this.scale = value;
             }
         }
@@ -279,9 +287,13 @@ namespace netDxf.Entities
         {
             DrawingUnits insUnits;
             if (this.Owner == null)
+            {
                 insUnits = DefaultInsUnits;
+            }
             else
+            {
                 insUnits = this.Owner.Record.Layout == null ? this.Owner.Record.Units : this.Owner.Record.Owner.Owner.DrawingVariables.InsUnits;
+            }
 
             double docScale = UnitHelper.ConversionFactor(this.Block.Record.Units, insUnits);
             Matrix3 trans = MathHelper.ArbitraryAxis(this.Normal);
@@ -322,27 +334,31 @@ namespace netDxf.Entities
         {
             // if the insert does not contain attributes there is nothing to do
             if (this.attributes.Count == 0)
+            {
                 return;
+            }
 
             Matrix3 transformation = this.GetTransformation();
             Vector3 translation = this.Position - transformation * this.block.Origin;
 
             foreach (Attribute att in this.attributes)
             {
-                AttributeDefinition attdef = att.Definition;
-                if (attdef == null)
+                AttributeDefinition attDef = att.Definition;
+                if (attDef == null)
+                {
                     continue;
+                }
 
                 // reset the attribute to its default values
-                att.Position = attdef.Position;
-                att.Height = attdef.Height;
-                att.Width = attdef.Width;
-                att.WidthFactor = attdef.WidthFactor;
-                att.ObliqueAngle = attdef.ObliqueAngle;
-                att.Rotation = attdef.Rotation;
-                att.Normal = attdef.Normal;
-                att.IsBackward = attdef.IsBackward;
-                att.IsUpsideDown = attdef.IsUpsideDown;
+                att.Position = attDef.Position;
+                att.Height = attDef.Height;
+                att.Width = attDef.Width;
+                att.WidthFactor = attDef.WidthFactor;
+                att.ObliqueAngle = attDef.ObliqueAngle;
+                att.Rotation = attDef.Rotation;
+                att.Normal = attDef.Normal;
+                att.IsBackward = attDef.IsBackward;
+                att.IsUpsideDown = attDef.IsUpsideDown;
 
                 att.TransformBy(transformation, translation);
             }

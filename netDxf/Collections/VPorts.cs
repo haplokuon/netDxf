@@ -29,6 +29,9 @@ namespace netDxf.Collections
     /// <summary>
     /// Represents a collection of viewports.
     /// </summary>
+    /// <remarks>
+    /// Multiple Model viewports are not supported, there can be only one called "*Active".
+    /// </remarks>
     public sealed class VPorts :
         TableObjects<VPort>
     {

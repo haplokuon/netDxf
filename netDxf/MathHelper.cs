@@ -106,8 +106,9 @@ namespace netDxf
         /// </param>
         /// <returns>
         /// A number that indicates the sign of value.
-        /// Return value Meaning -1 value is less than zero.
-        /// 0 value is equal to zero.
+        /// Return value, meaning:<br />
+        /// -1 value is less than zero.<br />
+        /// 0 value is equal to zero.<br />
         /// 1 value is greater than zero.
         /// </returns>
         /// <remarks>This method will test for values of numbers very close to zero.</remarks>
@@ -124,8 +125,9 @@ namespace netDxf
         /// </param>
         /// <returns>
         /// A number that indicates the sign of value.
-        /// Return value Meaning -1 value is less than zero.
-        /// 0 value is equal to zero.
+        /// Return value, meaning:<br />
+        /// -1 value is less than zero.<br />
+        /// 0 value is equal to zero.<br />
         /// 1 value is greater than zero.
         /// </returns>
         /// <remarks>This method will test for values of numbers very close to zero.</remarks>
@@ -211,7 +213,9 @@ namespace netDxf
         {
             // if the rotation is 0 no transformation is needed the transformation matrix is the identity
             if (IsZero(rotation))
+            {
                 return point;
+            }
 
             double sin = Math.Sin(rotation);
             double cos = Math.Cos(rotation);
@@ -237,11 +241,15 @@ namespace netDxf
         public static List<Vector2> Transform(IEnumerable<Vector2> points, double rotation, CoordinateSystem from, CoordinateSystem to)
         {
             if (points == null)
+            {
                 throw new ArgumentNullException(nameof(points));
+            }
 
             // if the rotation is 0 no transformation is needed the transformation matrix is the identity
             if (IsZero(rotation))
+            {
                 return new List<Vector2>(points);
+            }
 
             double sin = Math.Sin(rotation);
             double cos = Math.Cos(rotation);
@@ -280,7 +288,9 @@ namespace netDxf
         {
             // if the normal is (0,0,1) no transformation is needed the transformation matrix is the identity
             if (zAxis.Equals(Vector3.UnitZ))
+            {
                 return point;
+            }
 
             Matrix3 trans = ArbitraryAxis(zAxis);
             if (from == CoordinateSystem.World && to == CoordinateSystem.Object)
@@ -306,10 +316,14 @@ namespace netDxf
         public static List<Vector3> Transform(IEnumerable<Vector3> points, Vector3 zAxis, CoordinateSystem from, CoordinateSystem to)
         {
             if (points == null)
+            {
                 throw new ArgumentNullException(nameof(points));
+            }
 
             if (zAxis.Equals(Vector3.UnitZ))
+            {
                 return new List<Vector3>(points);
+            }
 
             Matrix3 trans = ArbitraryAxis(zAxis);
             List<Vector3> transPoints;
@@ -344,7 +358,10 @@ namespace netDxf
         {
             zAxis.Normalize();
 
-            if (zAxis.Equals(Vector3.UnitZ)) return Matrix3.Identity;
+            if (zAxis.Equals(Vector3.UnitZ))
+            {
+                return Matrix3.Identity;
+            }
 
             Vector3 wY = Vector3.UnitY;
             Vector3 wZ = Vector3.UnitZ;
@@ -485,12 +502,14 @@ namespace netDxf
         {
             // test for parallelism.
             if (Vector2.AreParallel(dir0, dir1, threshold))
+            {
                 return new Vector2(double.NaN, double.NaN);
+            }
 
             // lines are not parallel
-            Vector2 vect = point1 - point0;
+            Vector2 v = point1 - point0;
             double cross = Vector2.CrossProduct(dir0, dir1);
-            double s = (vect.X*dir1.Y - vect.Y*dir1.X)/cross;
+            double s = (v.X*dir1.Y - v.Y*dir1.X)/cross;
             return point0 + s*dir0;
         }
 
@@ -502,8 +521,17 @@ namespace netDxf
         /// <remarks>Negative angles will be converted to its positive equivalent.</remarks>
         public static double NormalizeAngle(double angle)
         {
-            double normalized = angle%360.0;
-            if (normalized < 0) return 360.0 + normalized;
+            double normalized = angle % 360.0;
+            if (IsZero(normalized))
+            {
+                return 0.0;
+            }
+
+            if (normalized < 0)
+            {
+                return 360.0 + normalized;
+            }
+
             return normalized;
         }
 

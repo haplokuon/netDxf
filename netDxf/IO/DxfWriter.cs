@@ -70,16 +70,22 @@ namespace netDxf.IO
             this.isBinary = binary;
             DxfVersion version = this.doc.DrawingVariables.AcadVer;
             if (version < DxfVersion.AutoCad2000)
+            {
                 throw new DxfVersionNotSupportedException(string.Format("DXF file version not supported : {0}.", version), version);
+            }
 
             if (!Vector3.ArePerpendicular(this.doc.DrawingVariables.UcsXDir, this.doc.DrawingVariables.UcsYDir))
+            {
                 throw new ArithmeticException("The drawing variables vectors UcsXDir and UcsYDir must be perpendicular.");
+            }
 
             this.encodedStrings = new Dictionary<string, string>();
 
             // create the default PaperSpace layout in case it does not exist. The ModelSpace layout always exists
             if (this.doc.Layouts.Count == 1)
+            {
                 this.doc.Layouts.Add(new Layout("Layout1"));
+            }
 
             // create the application registry AcCmTransparency in case it doesn't exists, it is required by the layer transparency
             this.doc.ApplicationRegistries.Add(new ApplicationRegistry("AcCmTransparency"));
@@ -164,6 +170,19 @@ namespace netDxf.IO
             dictionaries.Add(imageDefDictionary);
             namedObjectDictionary.Entries.Add(imageDefDictionary.Handle, DxfObjectCode.ImageDefDictionary);
             namedObjectDictionary.Entries.Add(this.doc.RasterVariables.Handle, DxfObjectCode.ImageVarsDictionary);
+
+            // Layer states dictionary
+            DictionaryObject layerStatesDictionary = new DictionaryObject(this.doc.Layers) {Handle = this.doc.Layers.StateManager.Handle};
+            dictionaries.Add(layerStatesDictionary);
+
+            DictionaryObject layerStates = new DictionaryObject(layerStatesDictionary);
+            this.doc.NumHandles = layerStates.AssignHandle(this.doc.NumHandles);
+            foreach (LayerState ls in this.doc.Layers.StateManager.Items)
+            {
+                layerStates.Entries.Add(ls.Handle, ls.Name);
+            }
+            dictionaries.Add(layerStates);
+            layerStatesDictionary.Entries.Add(layerStates.Handle, DxfObjectCode.LayerStates);
 
             this.doc.DrawingVariables.HandleSeed = this.doc.NumHandles.ToString("X");
 
@@ -371,26 +390,32 @@ namespace netDxf.IO
             {
                 this.WriteDictionary(dictionary);
             }
+
             foreach (Group group in this.doc.Groups.Items)
             {
                 this.WriteGroup(group, groupDictionary.Handle);
             }
+
             foreach (Layout layout in this.doc.Layouts)
             {
                 this.WriteLayout(layout, layoutDictionary.Handle);
             }
+
             foreach (MLineStyle style in this.doc.MlineStyles.Items)
             {
                 this.WriteMLineStyle(style, mLineStyleDictionary.Handle);
             }
+
             foreach (UnderlayDgnDefinition underlayDef in this.doc.UnderlayDgnDefinitions.Items)
             {
                 this.WriteUnderlayDefinition(underlayDef, dgnDefinitionDictionary.Handle);
             }
+
             foreach (UnderlayDwfDefinition underlayDef in this.doc.UnderlayDwfDefinitions.Items)
             {
                 this.WriteUnderlayDefinition(underlayDef, dwfDefinitionDictionary.Handle);
             }
+
             foreach (UnderlayPdfDefinition underlayDef in this.doc.UnderlayPdfDefinitions.Items)
             {
                 this.WriteUnderlayDefinition(underlayDef, pdfDefinitionDictionary.Handle);
@@ -404,6 +429,11 @@ namespace netDxf.IO
                     this.WriteImageDefReactor(reactor);
                 }
                 this.WriteImageDef(imageDef, imageDefDictionary.Handle);
+            }
+
+            foreach (LayerState layerState in this.doc.Layers.StateManager.Items)
+            {
+                this.WriteLayerState(layerState, layerStates.Handle);
             }
 
             this.EndSection(); //End section objects
@@ -477,13 +507,21 @@ namespace netDxf.IO
             this.chunk.Write(0, DxfObjectCode.Table);
             this.chunk.Write(2, table);
             this.chunk.Write(5, handle);
+            if (table == DxfObjectCode.Layer)
+            {
+                this.chunk.Write(102, "{ACAD_XDICTIONARY");
+                this.chunk.Write(360, this.doc.Layers.StateManager.Handle);
+                this.chunk.Write(102, "{");
+            }
             this.chunk.Write(330, "0");
 
             this.chunk.Write(100, SubclassMarker.Table);
             // this.chunk.Write(70, numEntries); this code is obsolete, there is no limit for the number of entries except for layouts according to the AutoCad ActiveX documentation
 
             if (table == DxfObjectCode.DimensionStyleTable)
+            {
                 this.chunk.Write(100, SubclassMarker.DimensionStyleTable);
+            }
 
             this.WriteXData(xdata);
 
@@ -1543,7 +1581,7 @@ namespace netDxf.IO
 
             if (layer.Color.UseTrueColor)
             {
-                this.chunk.Write(420, AciColorToTrueColor(layer.Color));
+                this.chunk.Write(420, AciColor.ToTrueColor(layer.Color));
             }
 
             this.chunk.Write(6, this.EncodeNonAsciiCharacters(layer.Linetype.Name));
@@ -1564,7 +1602,8 @@ namespace netDxf.IO
 
         private static void AddLayerTransparencyXData(Layer layer)
         {
-            // for DXF versions prior to AutoCad2007 the block record units is stored in an extended data block
+            int alpha = Transparency.ToAlphaValue(layer.Transparency);
+
             XData xdataEntry;
             if (layer.XData.ContainsAppId("AcCmTransparency"))
             {
@@ -1573,12 +1612,10 @@ namespace netDxf.IO
             }
             else
             {
-                xdataEntry = new XData(new ApplicationRegistry(ApplicationRegistry.DefaultName));
+                xdataEntry = new XData(new ApplicationRegistry("AcCmTransparency"));
                 layer.XData.Add(xdataEntry);
             }
 
-            int alpha = Transparency.ToAlphaValue(layer.Transparency);
-            xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.String, "DesignCenter Data"));
             xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int32, alpha));
         }
 
@@ -1935,7 +1972,7 @@ namespace netDxf.IO
 
             this.chunk.Write(62, entity.Color.Index);
             if (entity.Color.UseTrueColor)
-                this.chunk.Write(420, AciColorToTrueColor(entity.Color));
+                this.chunk.Write(420, AciColor.ToTrueColor(entity.Color));
 
             if (entity.Transparency.Value >= 0)
                 this.chunk.Write(440, Transparency.ToAlphaValue(entity.Transparency));
@@ -2680,7 +2717,7 @@ namespace netDxf.IO
 
                 this.chunk.Write(62, polyline.Color.Index); // the vertex color should be the same as the polyline color
                 if (polyline.Color.UseTrueColor)
-                    this.chunk.Write(420, AciColorToTrueColor(polyline.Color));
+                    this.chunk.Write(420, AciColor.ToTrueColor(polyline.Color));
 
                 this.chunk.Write(100, SubclassMarker.Vertex);
                 this.chunk.Write(100, SubclassMarker.Polyline3dVertex);
@@ -2728,7 +2765,7 @@ namespace netDxf.IO
 
                 this.chunk.Write(62, mesh.Color.Index); // the polyface mesh vertex color should be the same as the polyface mesh color
                 if (mesh.Color.UseTrueColor)
-                    this.chunk.Write(420, AciColorToTrueColor(mesh.Color));
+                    this.chunk.Write(420, AciColor.ToTrueColor(mesh.Color));
                 this.chunk.Write(100, SubclassMarker.Vertex);
                 this.chunk.Write(100, SubclassMarker.PolyfaceMeshVertex);
                 this.chunk.Write(70, (short) v.Flags);
@@ -2746,7 +2783,7 @@ namespace netDxf.IO
                 this.chunk.Write(8, layerName); // the polyface mesh face layer should be the same as the polyface mesh layer
                 this.chunk.Write(62, mesh.Color.Index); // the polyface mesh face color should be the same as the polyface mesh color
                 if (mesh.Color.UseTrueColor)
-                    this.chunk.Write(420, AciColorToTrueColor(mesh.Color));
+                    this.chunk.Write(420, AciColor.ToTrueColor(mesh.Color));
                 this.chunk.Write(100, SubclassMarker.PolyfaceMeshFace);
                 this.chunk.Write(70, (short) VertexTypeFlags.PolyfaceMeshVertex);
                 this.chunk.Write(10, 0.0);
@@ -3211,10 +3248,10 @@ namespace netDxf.IO
             this.chunk.Write(453, 2);
             this.chunk.Write(463, 0.0);
             this.chunk.Write(63, pattern.Color1.Index);
-            this.chunk.Write(421, AciColorToTrueColor(pattern.Color1));
+            this.chunk.Write(421, AciColor.ToTrueColor(pattern.Color1));
             this.chunk.Write(463, 1.0);
             this.chunk.Write(63, pattern.Color2.Index);
-            this.chunk.Write(421, AciColorToTrueColor(pattern.Color2));
+            this.chunk.Write(421, AciColor.ToTrueColor(pattern.Color2));
             this.chunk.Write(470, StringEnum<HatchGradientPatternType>.GetStringValue(pattern.GradientType));
         }
 
@@ -4169,7 +4206,7 @@ namespace netDxf.IO
 
             this.chunk.Write(62, def.Color.Index);
             if (def.Color.UseTrueColor)
-                this.chunk.Write(420, AciColorToTrueColor(def.Color));
+                this.chunk.Write(420, AciColor.ToTrueColor(def.Color));
 
             if (def.Transparency.Value >= 0)
                 this.chunk.Write(440, Transparency.ToAlphaValue(def.Transparency));
@@ -4334,7 +4371,7 @@ namespace netDxf.IO
 
             this.chunk.Write(62, attrib.Color.Index);
             if (attrib.Color.UseTrueColor)
-                this.chunk.Write(420, AciColorToTrueColor(attrib.Color));
+                this.chunk.Write(420, AciColor.ToTrueColor(attrib.Color));
 
             if (attrib.Transparency.Value >= 0)
                 this.chunk.Write(440, Transparency.ToAlphaValue(attrib.Transparency));
@@ -4573,7 +4610,7 @@ namespace netDxf.IO
             foreach (KeyValuePair<string, string> entry in dictionary.Entries)
             {
                 this.chunk.Write(3, this.EncodeNonAsciiCharacters(entry.Value));
-                this.chunk.Write(350, entry.Key);
+                this.chunk.Write(entry.Value.Equals(DxfObjectCode.LayerStates, StringComparison.InvariantCultureIgnoreCase) ? (short) 360 : (short) 350, entry.Key);
             }
 
             this.WriteXData(dictionary.XData);
@@ -4597,13 +4634,18 @@ namespace netDxf.IO
                     objects = this.doc.UnderlayPdfDefinitions.References[underlayDef.Name];
                     break;
             }
+
             if (objects == null)
+            {
                 throw new NullReferenceException("Underlay references list cannot be null");
+            }
             foreach (DxfObject o in objects)
             {
                 Underlay underlay = o as Underlay;
                 if (underlay != null)
+                {
                     this.chunk.Write(330, underlay.Handle);
+                }
             }
             this.chunk.Write(102, "}");
             this.chunk.Write(330, ownerHandle);
@@ -4701,7 +4743,7 @@ namespace netDxf.IO
 
             this.chunk.Write(62, style.FillColor.Index);
             if (style.FillColor.UseTrueColor) // && this.doc.DrawingVariables.AcadVer > DxfVersion.AutoCad2000)
-                this.chunk.Write(420, AciColorToTrueColor(style.FillColor));
+                this.chunk.Write(420, AciColor.ToTrueColor(style.FillColor));
             this.chunk.Write(51, style.StartAngle);
             this.chunk.Write(52, style.EndAngle);
             this.chunk.Write(71, (short) style.Elements.Count);
@@ -4710,7 +4752,7 @@ namespace netDxf.IO
                 this.chunk.Write(49, element.Offset);
                 this.chunk.Write(62, element.Color.Index);
                 if (element.Color.UseTrueColor) // && this.doc.DrawingVariables.AcadVer > DxfVersion.AutoCad2000)
-                    this.chunk.Write(420, AciColorToTrueColor(element.Color));
+                    this.chunk.Write(420, AciColor.ToTrueColor(element.Color));
 
                 this.chunk.Write(6, this.EncodeNonAsciiCharacters(element.Linetype.Name));
             }
@@ -4830,6 +4872,56 @@ namespace netDxf.IO
             this.chunk.Write(149, plot.PaperImageOrigin.Y);
         }
 
+        private void WriteLayerState(LayerState layerState, string ownerHandle)
+        {
+            this.chunk.Write(0, DxfObjectCode.XRecord);
+            this.chunk.Write(5, layerState.Handle);
+
+            // for who-knows-why reason the ACAD_REACTORS thing is necessary, it will not work without it
+            // even though there is already a separated 330 code that stores the same information
+            // and most of the time it is not necessary in similar cases
+            // since Autodesk doesn't know how to document its own crap consider everything I say about the DXF format as a guess
+            this.chunk.Write(102, "{ACAD_REACTORS");
+            this.chunk.Write(330, ownerHandle);
+            this.chunk.Write(102, "}");
+            this.chunk.Write(330, ownerHandle);
+
+            this.chunk.Write(100, SubclassMarker.XRecord);
+            this.chunk.Write(280, (short) 1); // Duplicate record cloning flag
+            this.chunk.Write(91, 2047); // unknown code functionality <- 32-bit integer value
+            this.chunk.Write(301, this.EncodeNonAsciiCharacters(layerState.Description));
+            this.chunk.Write(290, layerState.PaperSpace);
+            this.chunk.Write(302, this.EncodeNonAsciiCharacters(layerState.CurrentLayer));
+
+            foreach (LayerStateProperties properties in layerState.Properties.Values)
+            {
+                this.WriteLayerStateProperties(properties);
+            }
+        }
+
+        private void WriteLayerStateProperties(LayerStateProperties properties)
+        {
+            // both options seems to work storing the handle (code 330) or the name (code 8) of the layer
+            this.chunk.Write(330, this.doc.Layers[properties.Name].Handle);
+            //this.chunk.Write(8, this.EncodeNonAsciiCharacters(properties.Name));
+
+            this.chunk.Write(90, (int) properties.Flags);
+            this.chunk.Write(62, properties.Color.Index);
+            this.chunk.Write(370, (short) properties.Lineweight);
+
+            //this.chunk.Write(6, properties.LinetypeName);
+            this.chunk.Write(331, this.doc.Linetypes[properties.LinetypeName].Handle);
+
+            //this.chunk.Write(1, properties.PlotStyleName);
+            this.chunk.Write(440, properties.Transparency.Value == 0 ? 0 : Transparency.ToAlphaValue(properties.Transparency));
+
+            if (properties.Color.UseTrueColor)
+            {
+                // this code only appears if the layer color has been defined as true color
+                this.chunk.Write(92, AciColor.ToTrueColor(properties.Color));
+            }
+        }
+
         #endregion
 
         #region private methods
@@ -4838,22 +4930,38 @@ namespace netDxf.IO
         {
             short rtn = 0;
             if (feet && inches)
+            {
                 rtn = 0;
+            }
             if (!feet && !inches)
+            {
                 rtn += 1;
+            }
             if (!feet && inches)
+            {
                 rtn += 2;
+            }
             if (feet && !inches)
+            {
                 rtn += 3;
+            }
 
             if (!leading && !trailing)
+            {
                 rtn += 0;
+            }
             if (leading && !trailing)
+            {
                 rtn += 4;
+            }
             if (!leading && trailing)
+            {
                 rtn += 8;
+            }
             if (leading && trailing)
+            {
                 rtn += 12;
+            }
 
             return rtn;
         }
@@ -4863,22 +4971,32 @@ namespace netDxf.IO
             // for DXF database version prior to AutoCad 2007 non ASCII characters must be encoded to the template \U+####,
             // where #### is the for digits hexadecimal number that represent that character.
             if (this.doc.DrawingVariables.AcadVer >= DxfVersion.AutoCad2007)
+            {
                 return text;
+            }
 
             if (string.IsNullOrEmpty(text))
+            {
                 return string.Empty;
+            }
 
             string encoded;
             if (this.encodedStrings.TryGetValue(text, out encoded))
+            {
                 return encoded;
+            }
 
             StringBuilder sb = new StringBuilder();
             foreach (char c in text)
             {
                 if (c > 127)
+                {
                     sb.Append(string.Concat("\\U+", string.Format("{0:X4}", Convert.ToInt32(c))));
+                }
                 else
+                {
                     sb.Append(c);
+                }
             }
 
             encoded = sb.ToString();
@@ -4925,19 +5043,11 @@ namespace netDxf.IO
                         this.chunk.Write(code, data);
                     }
                     else
+                    {
                         this.chunk.Write(code, value);
+                    }
                 }
             }
-        }
-
-        public static int AciColorToTrueColor(AciColor color)
-        {
-            if (color == null)
-            {
-                throw new ArgumentNullException(nameof(color));
-            }
-
-            return BitConverter.ToInt32(new byte[] { color.B, color.G, color.R, 0 }, 0);
         }
 
         #endregion

@@ -52,9 +52,13 @@ namespace netDxf.Collections
             this.Owner = document;
 
             if (string.IsNullOrEmpty(handle))
+            {
                 this.Owner.NumHandles = base.AssignHandle(this.Owner.NumHandles);
+            }
             else
+            {
                 this.Handle = handle;
+            }
 
             this.Owner.AddedObjects.Add(this.Handle, this);
         }
@@ -139,7 +143,10 @@ namespace netDxf.Collections
         public List<DxfObject> GetReferences(string name)
         {
             if (!this.Contains(name))
+            {
                 return new List<DxfObject>();
+            }
+
             return new List<DxfObject>(this.references[name]);
         }
 
@@ -155,7 +162,10 @@ namespace netDxf.Collections
         public List<DxfObject> GetReferences(T item)
         {
             if (item == null)
+            {
                 throw new ArgumentNullException(nameof(item));
+            }
+
             return this.GetReferences(item.Name);
         }
 
@@ -202,7 +212,10 @@ namespace netDxf.Collections
         public T Add(T item)
         {
             if (item == null)
+            {
                 throw new ArgumentNullException(nameof(item));
+            }
+
             return this.Add(item, true);
         }
 
@@ -232,7 +245,9 @@ namespace netDxf.Collections
             string[] names = new string[this.list.Count];
             this.list.Keys.CopyTo(names, 0);
             foreach (string o in names)
+            {
                 this.Remove(o);
+            }
         }
 
         #endregion

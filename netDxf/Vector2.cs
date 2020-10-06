@@ -71,10 +71,15 @@ namespace netDxf
         public Vector2(double[] array)
         {
             if (array == null)
+            {
                 throw new ArgumentNullException(nameof(array));
+            }
 
             if (array.Length != 2)
+            {
                 throw new ArgumentOutOfRangeException(nameof(array), array.Length, "The dimension of the array must be two");
+            }
+
             this.x = array[0];
             this.y = array[1];
             this.isNormalized = false;
@@ -89,7 +94,7 @@ namespace netDxf
         /// </summary>
         public static Vector2 Zero
         {
-            get { return new Vector2(0, 0); }
+            get { return new Vector2(0.0, 0.0); }
         }
 
         /// <summary>
@@ -97,7 +102,7 @@ namespace netDxf
         /// </summary>
         public static Vector2 UnitX
         {
-            get { return new Vector2(1, 0) {isNormalized = true}; }
+            get { return new Vector2(1.0, 0.0) {isNormalized = true}; }
         }
 
         /// <summary>
@@ -105,7 +110,7 @@ namespace netDxf
         /// </summary>
         public static Vector2 UnitY
         {
-            get { return new Vector2(0, 1) {isNormalized = true}; }
+            get { return new Vector2(0.0, 1.0) {isNormalized = true}; }
         }
 
         /// <summary>
@@ -243,8 +248,6 @@ namespace netDxf
         /// <returns></returns>
         public static Vector2 Rotate(Vector2 u, double angle)
         {
-            if (MathHelper.IsZero(angle))
-                return u;
             double sin = Math.Sin(angle);
             double cos = Math.Cos(angle);
             return new Vector2(u.X * cos - u.Y * sin, u.X * sin + u.Y * cos) { isNormalized = u.IsNormalized };
@@ -294,7 +297,9 @@ namespace netDxf
         {
             double angle = Math.Atan2(u.Y, u.X);
             if (angle < 0)
+            {
                 return MathHelper.TwoPI + angle;
+            }
             return angle;
         }
 
@@ -320,9 +325,14 @@ namespace netDxf
         {
             double cos = DotProduct(u, v)/(u.Modulus()*v.Modulus());
             if (cos >= 1.0)
+            {
                 return 0.0;
+            }
+
             if (cos <= -1.0)
+            {
                 return Math.PI;
+            }
 
             return Math.Acos(cos);
         }
@@ -402,11 +412,17 @@ namespace netDxf
         /// <returns>A normalized vector.</returns>
         public static Vector2 Normalize(Vector2 u)
         {
-            if (u.isNormalized) return u;
+            if (u.isNormalized)
+            {
+                return u;
+            }
 
             double mod = u.Modulus();
             if (MathHelper.IsZero(mod))
+            {
                 return NaN;
+            }
+
             double modInv = 1/mod;
             return new Vector2(u.x*modInv, u.y*modInv) {isNormalized = true};
         }
@@ -626,7 +642,9 @@ namespace netDxf
 
             double mod = this.Modulus();
             if (MathHelper.IsZero(mod))
+            {
                 this = NaN;
+            }
             else
             {
                 double modInv = 1/mod;
@@ -642,7 +660,10 @@ namespace netDxf
         /// <returns>Vector modulus.</returns>
         public double Modulus()
         {
-            if (this.isNormalized) return 1.0;
+            if (this.isNormalized)
+            {
+                return 1.0;
+            }
 
             return Math.Sqrt(DotProduct(this, this));
         }
@@ -712,7 +733,9 @@ namespace netDxf
         public override bool Equals(object other)
         {
             if (other is Vector2)
+            {
                 return this.Equals((Vector2) other);
+            }
             return false;
         }
 

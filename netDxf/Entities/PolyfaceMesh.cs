@@ -186,7 +186,7 @@ namespace netDxf.Entities
                     continue;
                 }
 
-                Face3dEdgeFlags edgeVisibility = Face3dEdgeFlags.Visibles;
+                Face3dEdgeFlags edgeVisibility = Face3dEdgeFlags.None;
 
                 short indexV1 = face.VertexIndexes[0];
                 short indexV2 = face.VertexIndexes[1];

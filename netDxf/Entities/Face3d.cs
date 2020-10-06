@@ -104,7 +104,7 @@ namespace netDxf.Entities
             this.secondVertex = secondVertex;
             this.thirdVertex = thirdVertex;
             this.fourthVertex = fourthVertex;
-            this.edgeFlags = Face3dEdgeFlags.Visibles;
+            this.edgeFlags = Face3dEdgeFlags.None;
         }
 
         #endregion

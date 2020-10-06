@@ -75,10 +75,15 @@ namespace netDxf
         public Vector3(double[] array)
         {
             if (array == null)
+            {
                 throw new ArgumentNullException(nameof(array));
+            }
 
             if (array.Length != 3)
+            {
                 throw new ArgumentOutOfRangeException(nameof(array), array.Length, "The dimension of the array must be three.");
+            }
+
             this.x = array[0];
             this.y = array[1];
             this.z = array[2];
@@ -94,7 +99,7 @@ namespace netDxf
         /// </summary>
         public static Vector3 Zero
         {
-            get { return new Vector3(0, 0, 0); }
+            get { return new Vector3(0.0, 0.0, 0.0); }
         }
 
         /// <summary>
@@ -102,7 +107,7 @@ namespace netDxf
         /// </summary>
         public static Vector3 UnitX
         {
-            get { return new Vector3(1, 0, 0) {isNormalized = true}; }
+            get { return new Vector3(1.0, 0.0, 0.0) {isNormalized = true}; }
         }
 
         /// <summary>
@@ -110,7 +115,7 @@ namespace netDxf
         /// </summary>
         public static Vector3 UnitY
         {
-            get { return new Vector3(0, 1, 0) {isNormalized = true}; }
+            get { return new Vector3(0.0, 1.0, 0.0) {isNormalized = true}; }
         }
 
         /// <summary>
@@ -118,7 +123,7 @@ namespace netDxf
         /// </summary>
         public static Vector3 UnitZ
         {
-            get { return new Vector3(0, 0, 1) {isNormalized = true}; }
+            get { return new Vector3(0.0, 0.0, 1.0) {isNormalized = true}; }
         }
 
         /// <summary>
@@ -291,9 +296,14 @@ namespace netDxf
         {
             double cos = DotProduct(u, v)/(u.Modulus()*v.Modulus());
             if (cos >= 1.0)
+            {
                 return 0.0;
+            }
+
             if (cos <= -1.0)
+            {
                 return Math.PI;
+            }
 
             return Math.Acos(cos);
         }
@@ -355,11 +365,20 @@ namespace netDxf
             Vector3 cross = CrossProduct(u, v);
 
             if (!MathHelper.IsZero(cross.X, threshold))
+            {
                 return false;
+            }
+
             if (!MathHelper.IsZero(cross.Y, threshold))
+            {
                 return false;
+            }
+
             if (!MathHelper.IsZero(cross.Z, threshold))
+            {
                 return false;
+            }
+
             return true;
         }
 
@@ -381,15 +400,19 @@ namespace netDxf
         /// <returns>A normalized vector.</returns>
         public static Vector3 Normalize(Vector3 u)
         {
-            if (u.isNormalized) return u;
+            if (u.isNormalized)
+            {
+                return u;
+            }
 
             double mod = u.Modulus();
             if (MathHelper.IsZero(mod))
+            {
                 return NaN;
+            }
+
             double modInv = 1/mod;
-            Vector3 vec = new Vector3(u.x*modInv, u.y*modInv, u.z*modInv);
-            vec.isNormalized = true;
-            return vec;
+            return new Vector3(u.x * modInv, u.y * modInv, u.z * modInv) {isNormalized = true};
         }
 
         #endregion
@@ -603,11 +626,16 @@ namespace netDxf
         /// </summary>
         public void Normalize()
         {
-            if (this.isNormalized) return;
+            if (this.isNormalized)
+            {
+                return;
+            }
 
             double mod = this.Modulus();
             if (MathHelper.IsZero(mod))
+            {
                 this = NaN;
+            }
             else
             {
                 double modInv = 1/mod;
@@ -615,6 +643,7 @@ namespace netDxf
                 this.y *= modInv;
                 this.z *= modInv;
             }
+
             this.isNormalized = true;
         }
 
@@ -624,7 +653,10 @@ namespace netDxf
         /// <returns>Vector modulus.</returns>
         public double Modulus()
         {
-            if (this.isNormalized) return 1.0;
+            if (this.isNormalized)
+            {
+                return 1.0;
+            }
 
             return Math.Sqrt(DotProduct(this, this));
         }
@@ -694,7 +726,10 @@ namespace netDxf
         public override bool Equals(object other)
         {
             if (other is Vector3)
+            {
                 return this.Equals((Vector3) other);
+            }
+
             return false;
         }
 

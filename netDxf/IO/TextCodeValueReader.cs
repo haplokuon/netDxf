@@ -75,36 +75,46 @@ namespace netDxf.IO
         public void Next()
         {
             string readCode = this.reader.ReadLine();
-            this.currentPosition += 1;
-            if (!short.TryParse(readCode, NumberStyles.Integer, CultureInfo.InvariantCulture, out this.code))
-                throw new Exception(string.Format("Code {0} not valid at line {1}", this.code, this.currentPosition));
-            this.value = this.ReadValue(this.reader.ReadLine());
-            this.currentPosition += 1;
+            if (readCode == null)
+            {
+                this.code = 0;
+                this.value = DxfObjectCode.EndOfFile;
+            }
+            else
+            {
+                this.currentPosition += 1;
+                if (!short.TryParse(readCode, NumberStyles.Integer, CultureInfo.InvariantCulture, out this.code))
+                {
+                    throw new Exception(string.Format("Code {0} not valid at line {1}", this.code, this.currentPosition));
+                }
+                this.value = this.ReadValue(this.reader.ReadLine());
+                this.currentPosition += 1;
+            }
         }
 
         public byte ReadByte()
         {
-            return (byte)this.value;
+            return (byte) this.value;
         }
 
         public byte[] ReadBytes()
         {
-            return (byte[])this.value;
+            return (byte[]) this.value;
         }
 
         public short ReadShort()
         {
-            return (short)this.value;
+            return (short) this.value;
         }
 
         public int ReadInt()
         {
-            return (int)this.value;
+            return (int) this.value;
         }
 
         public long ReadLong()
         {
-            return (long)this.value;
+            return (long) this.value;
         }
 
         public bool ReadBool()
@@ -114,17 +124,17 @@ namespace netDxf.IO
 
         public double ReadDouble()
         {
-            return (double)this.value;
+            return (double) this.value;
         }
 
         public string ReadString()
         {
-            return (string)this.value;
+            return (string) this.value;
         }
 
         public string ReadHex()
         {
-            return (string)this.value;
+            return (string) this.value;
         }
 
         public override string ToString()

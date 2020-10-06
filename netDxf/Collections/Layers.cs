@@ -32,6 +32,12 @@ namespace netDxf.Collections
     public sealed class Layers :
         TableObjects<Layer>
     {
+        #region private fields
+
+        private readonly LayerStateManager stateManager;
+
+        #endregion
+
         #region constructor
 
         internal Layers(DxfDocument document)
@@ -42,6 +48,19 @@ namespace netDxf.Collections
         internal Layers(DxfDocument document, string handle)
             : base(document, DxfObjectCode.LayerTable, handle)
         {
+            this.stateManager = new LayerStateManager(document);
+        }
+
+        #endregion
+
+        #region public properties
+
+        /// <summary>
+        /// Gets the layer state manager.
+        /// </summary>
+        public LayerStateManager StateManager
+        {
+            get { return this.stateManager; }
         }
 
         #endregion
@@ -60,14 +79,20 @@ namespace netDxf.Collections
         internal override Layer Add(Layer layer, bool assignHandle)
         {
             if (layer == null)
+            {
                 throw new ArgumentNullException(nameof(layer));
+            }
 
             Layer add;
             if (this.list.TryGetValue(layer.Name, out add))
+            {
                 return add;
+            }
 
             if (assignHandle || string.IsNullOrEmpty(layer.Handle))
+            {
                 this.Owner.NumHandles = layer.AssignHandle(this.Owner.NumHandles);
+            }
 
             this.list.Add(layer.Name, layer);
             this.references.Add(layer.Name, new List<DxfObject>());
@@ -104,16 +129,24 @@ namespace netDxf.Collections
         public override bool Remove(Layer item)
         {
             if (item == null)
+            {
                 return false;
+            }
 
             if (!this.Contains(item))
+            {
                 return false;
+            }
 
             if (item.IsReserved)
+            {
                 return false;
+            }
 
             if (this.references[item.Name].Count != 0)
+            {
                 return false;
+            }
 
             this.Owner.Linetypes.References[item.Linetype.Name].Remove(item);
             this.Owner.AddedObjects.Remove(item.Handle);
@@ -136,7 +169,9 @@ namespace netDxf.Collections
         private void Item_NameChanged(TableObject sender, TableObjectChangedEventArgs<string> e)
         {
             if (this.Contains(e.NewValue))
+            {
                 throw new ArgumentException("There is already another layer with the same name.");
+            }
 
             this.list.Remove(sender.Name);
             this.list.Add(e.NewValue, (Layer) sender);

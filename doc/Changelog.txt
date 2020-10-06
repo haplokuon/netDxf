@@ -1,5 +1,17 @@
 ## Change history
 
+
+### [2020/08/20]
+* Added LayerStates accessible trough the Layers.StateManager. For more details see LayerStateManager() sample.
+* Renamed AttributeFlags.Visible to AttributeFlags.None.
+* Renamed Face3dEdgeFlags.Visibles to AttributeFlags.None.
+* (fixed) The layer transparency was not being written correctly to the DXF.
+* (fixed) Blocks associated to paper space layouts can contain attribute definitions, although its use is uncommon there is no reason they cannot have them.
+* (fixed) Issue with DXFs with multiple Model viewports (VPorts) that contain extended data information.
+* (fixed) Texts containing commas in any LinetypeTextSegment of a complex linetype.
+* (fixed) LwPolyline.Reverse method when its vertexes have different bulge values.
+
+
 ### [2.4.0 - 2020/08/20]
 * Added US Survey Feet, US Survey Inches, US Survey Yards, and US Survey Miles to the DrawingUnits.
 * All classes derived from DxfObject can contain XData (extended data).

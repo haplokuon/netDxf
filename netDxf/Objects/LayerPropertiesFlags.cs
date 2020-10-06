@@ -1,7 +1,7 @@
-﻿#region netDxf library, Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
+﻿#region netDxf library, Copyright (C) 2009-2020 Daniel Carvajal (haplokuon@gmail.com)
 
 //                        netDxf library
-// Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2009-2020 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -20,41 +20,55 @@
 
 #endregion
 
+using System;
+
 namespace netDxf.Objects
 {
     /// <summary>
-    /// Defines the portion of paper space to output to the media.
+    /// Layer properties flags.
     /// </summary>
-    public enum PlotType
+    [Flags]
+    public enum LayerPropertiesFlags
     {
         /// <summary>
-        /// Last screen display
+        /// No flags equivalent to layer On / Thawed / Unlocked / No Plot / No NewVpFreeze / No VpFreeze.
         /// </summary>
-        LastScreenDisplay = 0,
+        None = 0,
 
         /// <summary>
-        /// Drawing extents.
+        /// Layer visibility flag On/Off.
         /// </summary>
-        DrawingExtents = 1,
+        Hidden = 1,
 
         /// <summary>
-        /// Drawing limits.
+        /// Layer freeze flag Frozen/Thawed.
         /// </summary>
-        DrawingLimits = 2,
+        Frozen = 2,
 
         /// <summary>
-        /// View specified by the plot view name.
+        /// Layer lock flag Locked/Unlocked.
         /// </summary>
-        View = 3,
+        Locked = 4,
 
         /// <summary>
-        /// Window specified by the upper-right and bottom-left window corners.
+        /// Layer plot flag Plot/NoPlot.
         /// </summary>
-        Window = 4,
+        Plot = 8,
 
         /// <summary>
-        /// Layout information.
+        /// Freeze layer in newly created viewports.
         /// </summary>
-        LayoutInformation = 5
+        /// <remarks>
+        /// Not currently implemented. To freeze a layer in a viewport add it to its FrozenLayers list.
+        /// </remarks>
+        NewVpFrozen = 16,
+
+        /// <summary>
+        /// Freeze layer in current viewport.
+        /// </summary>
+        /// <remarks>
+        /// Not currently implemented. To freeze a layer in a viewport add it to its FrozenLayers list.
+        /// </remarks>
+        VpFrozen = 32
     }
 }

@@ -117,10 +117,10 @@ namespace netDxf
         {
             get
             {
-                return new Matrix4(0, 0, 0, 0,
-                                   0, 0, 0, 0,
-                                   0, 0, 0, 0,
-                                   0, 0, 0, 0);
+                return new Matrix4(0.0, 0.0, 0.0, 0.0,
+                                   0.0, 0.0, 0.0, 0.0,
+                                   0.0, 0.0, 0.0, 0.0,
+                                   0.0, 0.0, 0.0, 0.0);
             }
         }
 
@@ -131,10 +131,10 @@ namespace netDxf
         {
             get
             {
-                return new Matrix4(1, 0, 0, 0,
-                                   0, 1, 0, 0,
-                                   0, 0, 1, 0,
-                                   0, 0, 0, 1) {dirty = false, isIdentity = true};
+                return new Matrix4(1.0, 0.0, 0.0, 0.0,
+                                   0.0, 1.0, 0.0, 0.0,
+                                   0.0, 0.0, 1.0, 0.0,
+                                   0.0, 0.0, 0.0, 1.0) {dirty = false, isIdentity = true};
             }
         }
 
@@ -692,8 +692,15 @@ namespace netDxf
         /// <returns>Matrix3.</returns>
         public static Matrix4 operator *(Matrix4 a, Matrix4 b)
         {
-            if (a.IsIdentity) return b;
-            if (b.IsIdentity) return a;
+            if (a.IsIdentity)
+            {
+                return b;
+            }
+
+            if (b.IsIdentity)
+            {
+                return a;
+            }
 
             return new Matrix4(a.M11 * b.M11 + a.M12 * b.M21 + a.M13 * b.M31 + a.M14 * b.M41, a.M11 * b.M12 + a.M12 * b.M22 + a.M13 * b.M32 + a.M14 * b.M42, a.M11 * b.M13 + a.M12 * b.M23 + a.M13 * b.M33 + a.M14 * b.M43, a.M11 * b.M14 + a.M12 * b.M24 + a.M13 * b.M34 + a.M14 * b.M44,
                                a.M21 * b.M11 + a.M22 * b.M21 + a.M23 * b.M31 + a.M24 * b.M41, a.M21 * b.M12 + a.M22 * b.M22 + a.M23 * b.M32 + a.M24 * b.M42, a.M21 * b.M13 + a.M22 * b.M23 + a.M23 * b.M33 + a.M24 * b.M43, a.M21 * b.M14 + a.M22 * b.M24 + a.M23 * b.M34 + a.M24 * b.M44,
@@ -709,8 +716,15 @@ namespace netDxf
         /// <returns>Matrix4.</returns>
         public static Matrix4 Multiply(Matrix4 a, Matrix4 b)
         {
-            if (a.IsIdentity) return b;
-            if (b.IsIdentity) return a;
+            if (a.IsIdentity)
+            {
+                return b;
+            }
+
+            if (b.IsIdentity)
+            {
+                return a;
+            }
 
             return new Matrix4(a.M11 * b.M11 + a.M12 * b.M21 + a.M13 * b.M31 + a.M14 * b.M41, a.M11 * b.M12 + a.M12 * b.M22 + a.M13 * b.M32 + a.M14 * b.M42, a.M11 * b.M13 + a.M12 * b.M23 + a.M13 * b.M33 + a.M14 * b.M43, a.M11 * b.M14 + a.M12 * b.M24 + a.M13 * b.M34 + a.M14 * b.M44,
                                a.M21 * b.M11 + a.M22 * b.M21 + a.M23 * b.M31 + a.M24 * b.M41, a.M21 * b.M12 + a.M22 * b.M22 + a.M23 * b.M32 + a.M24 * b.M42, a.M21 * b.M13 + a.M22 * b.M23 + a.M23 * b.M33 + a.M24 * b.M43, a.M21 * b.M14 + a.M22 * b.M24 + a.M23 * b.M34 + a.M24 * b.M44,
@@ -822,11 +836,16 @@ namespace netDxf
         /// <returns>Inverse Matrix3.</returns>
         public Matrix4 Inverse()
         {
-            if (this.IsIdentity) return Identity;
+            if (this.IsIdentity)
+            {
+                return Identity;
+            }
 
             double det = this.Determinant();
             if (MathHelper.IsZero(det))
+            {
                 throw new ArithmeticException("The matrix is not invertible.");
+            }
 
             det = 1/det;
 
@@ -875,10 +894,10 @@ namespace netDxf
         {
             double cos = Math.Cos(angle);
             double sin = Math.Sin(angle);
-            return new Matrix4(1, 0, 0, 0,
-                               0, cos, -sin, 0,
-                               0, sin, cos, 0,
-                               0, 0, 0, 1);
+            return new Matrix4(1.0, 0.0, 0.0, 0.0,
+                               0.0, cos, -sin, 0.0,
+                               0.0, sin, cos, 0.0,
+                               0.0, 0.0, 0.0, 1.0);
         }
 
         /// <summary>
@@ -891,10 +910,10 @@ namespace netDxf
         {
             double cos = Math.Cos(angle);
             double sin = Math.Sin(angle);
-            return new Matrix4(cos, 0, sin, 0,
-                               0, 1, 0, 0,
-                               -sin, 0, cos, 0,
-                               0, 0, 0, 1);
+            return new Matrix4(cos, 0.0, sin, 0.0,
+                               0.0, 1.0, 0.0, 0.0,
+                               -sin, 0.0, cos, 0.0,
+                               0.0, 0.0, 0.0, 1.0);
         }
 
         /// <summary>
@@ -907,10 +926,10 @@ namespace netDxf
         {
             double cos = Math.Cos(angle);
             double sin = Math.Sin(angle);
-            return new Matrix4(cos, -sin, 0, 0,
-                               sin, cos, 0, 0,
-                               0, 0, 1, 0,
-                               0, 0, 0, 1);
+            return new Matrix4(cos, -sin, 0.0, 0.0,
+                               sin, cos, 0.0, 0.0,
+                               0.0, 0.0, 1.0, 0.0,
+                               0.0, 0.0, 0.0, 1.0);
         }
 
         /// <summary>
@@ -942,10 +961,10 @@ namespace netDxf
         /// <returns>A scaling matrix.</returns>
         public static Matrix4 Scale(double x, double y, double z)
         {
-            return new Matrix4(x, 0, 0, 0,
-                               0, y, 0, 0,
-                               0, 0, z, 0,
-                               0, 0, 0, 1);
+            return new Matrix4(x, 0.0, 0.0, 0.0,
+                               0.0, y, 0.0, 0.0,
+                               0.0, 0.0, z, 0.0,
+                               0.0, 0.0, 0.0, 1.0);
         }
 		
 		/// <summary>
@@ -956,10 +975,10 @@ namespace netDxf
 		/// <remarks>Matrix4 adopts the convention of using column vectors to represent a transformation matrix.</remarks>
 		public static Matrix4 Translation(Vector3 vector)
 		{
-			return new Matrix4(1, 0, 0, vector.X,
-                               0, 1, 0, vector.Y,
-                               0, 0, 1, vector.Z,
-                               0, 0, 0, 1);
+			return new Matrix4(1.0, 0.0, 0.0, vector.X,
+                               0.0, 1.0, 0.0, vector.Y,
+                               0.0, 0.0, 1.0, vector.Z,
+                               0.0, 0.0, 0.0, 1.0);
 		}
 		
 		/// <summary>
@@ -972,10 +991,10 @@ namespace netDxf
 		/// <remarks>Matrix4 adopts the convention of using column vectors to represent a transformation matrix.</remarks>
 		public static Matrix4 Translation(double x, double y, double z)
 		{
-			return new Matrix4(1, 0, 0, x,
-                               0, 1, 0, y,
-                               0, 0, 1, z,
-                               0, 0, 0, 1);
+			return new Matrix4(1.0, 0.0, 0.0, x,
+                               0.0, 1.0, 0.0, y,
+                               0.0, 0.0, 1.0, z,
+                               0.0, 0.0, 0.0, 1);
 		}
 
         #endregion

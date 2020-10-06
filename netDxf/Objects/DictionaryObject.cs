@@ -40,7 +40,7 @@ namespace netDxf.Objects
         public DictionaryObject(DxfObject owner)
             : base(DxfObjectCode.Dictionary)
         {
-            this.isHardOwner = false;
+            this.isHardOwner = true;
             this.cloning = DictionaryCloningFlags.KeepExisting;
             this.entries = new Dictionary<string, string>();
             this.Owner = owner;

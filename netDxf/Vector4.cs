@@ -67,10 +67,15 @@ namespace netDxf
         public Vector4(double[] array)
         {
             if (array == null)
+            {
                 throw new ArgumentNullException(nameof(array));
+            }
 
             if (array.Length != 4)
+            {
                 throw new ArgumentOutOfRangeException(nameof(array), array.Length, "The dimension of the array must be four.");
+            }
+
             this.x = array[0];
             this.y = array[1];
             this.z = array[2];
@@ -87,7 +92,7 @@ namespace netDxf
         /// </summary>
         public static Vector4 Zero
         {
-            get { return new Vector4(0, 0, 0, 0); }
+            get { return new Vector4(0.0, 0.0, 0.0, 0.0); }
         }
 
         /// <summary>
@@ -95,7 +100,7 @@ namespace netDxf
         /// </summary>
         public static Vector4 UnitX
         {
-            get { return new Vector4(1, 0, 0, 0) {isNormalized = true}; }
+            get { return new Vector4(1.0, 0.0, 0.0, 0.0) {isNormalized = true}; }
         }
 
         /// <summary>
@@ -103,7 +108,7 @@ namespace netDxf
         /// </summary>
         public static Vector4 UnitY
         {
-            get { return new Vector4(0, 1, 0, 0) {isNormalized = true}; }
+            get { return new Vector4(0.0, 1.0, 0.0, 0.0) {isNormalized = true}; }
         }
 
         /// <summary>
@@ -119,7 +124,7 @@ namespace netDxf
         /// </summary>
         public static Vector4 UnitW
         {
-            get { return new Vector4(0, 0, 0, 1) {isNormalized = true}; }
+            get { return new Vector4(0.0, 0.0, 0.0, 1.0) {isNormalized = true}; }
         }
 
         /// <summary>
@@ -304,15 +309,19 @@ namespace netDxf
         /// <returns>A normalized vector.</returns>
         public static Vector4 Normalize(Vector4 u)
         {
-            if (u.isNormalized) return u;
+            if (u.isNormalized)
+            {
+                return u;
+            }
 
             double mod = u.Modulus();
             if (MathHelper.IsZero(mod))
+            {
                 return NaN;
+            }
+
             double modInv = 1/mod;
-            Vector4 vec = new Vector4(u.X*modInv, u.Y*modInv, u.Z*modInv, u.W*modInv);
-            vec.isNormalized = true;
-            return vec;
+            return new Vector4(u.X * modInv, u.Y * modInv, u.Z * modInv, u.W * modInv) {isNormalized = true};
         }
 
         #endregion
@@ -526,11 +535,16 @@ namespace netDxf
         /// </summary>
         public void Normalize()
         {
-            if (this.isNormalized) return;
+            if (this.isNormalized)
+            {
+                return;
+            }
 
             double mod = this.Modulus();
             if (MathHelper.IsZero(mod))
+            {
                 this = NaN;
+            }
             else
             {
                 double modInv = 1/mod;
@@ -548,7 +562,10 @@ namespace netDxf
         /// <returns>Vector modulus.</returns>
         public double Modulus()
         {
-            if (this.isNormalized) return 1.0;
+            if (this.isNormalized)
+            {
+                return 1.0;
+            }
 
             return Math.Sqrt(DotProduct(this, this));
         }
@@ -621,7 +638,10 @@ namespace netDxf
         public override bool Equals(object other)
         {
             if (other is Vector4)
+            {
                 return this.Equals((Vector4) other);
+            }
+
             return false;
         }
 

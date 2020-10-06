@@ -30,7 +30,7 @@ namespace netDxf.Entities
     /// Represents a light weight polyline <see cref="EntityObject">entity</see>.
     /// </summary>
     /// <remarks>
-    /// Light weight polylines are bidimensional polylines that can hold information about the width of the lines and arcs that compose them.
+    /// Light weight polylines are bi-dimensional polylines that can hold information about the width of the lines and arcs that compose them.
     /// </remarks>
     public class LwPolyline :
         EntityObject
@@ -72,10 +72,16 @@ namespace netDxf.Entities
             : base(EntityType.LwPolyline, DxfObjectCode.LwPolyline)
         {
             if (vertexes == null)
+            {
                 throw new ArgumentNullException(nameof(vertexes));
+            }
+
             this.vertexes = new List<LwPolylineVertex>();
             foreach (Vector2 vertex in vertexes)
+            {
                 this.vertexes.Add(new LwPolylineVertex(vertex));
+            }
+
             this.elevation = 0.0;
             this.thickness = 0.0;
             this.flags = isClosed ? PolylineTypeFlags.ClosedPolylineOrClosedPolygonMeshInM : PolylineTypeFlags.OpenPolyline;
@@ -99,7 +105,10 @@ namespace netDxf.Entities
             : base(EntityType.LwPolyline, DxfObjectCode.LwPolyline)
         {
             if (vertexes == null)
+            {
                 throw new ArgumentNullException(nameof(vertexes));
+            }
+
             this.vertexes = new List<LwPolylineVertex>(vertexes);
             this.elevation = 0.0;
             this.thickness = 0.0;
@@ -127,9 +136,13 @@ namespace netDxf.Entities
             set
             {
                 if (value)
+                {
                     this.flags |= PolylineTypeFlags.ClosedPolylineOrClosedPolygonMeshInM;
+                }
                 else
+                {
                     this.flags &= ~PolylineTypeFlags.ClosedPolylineOrClosedPolygonMeshInM;
+                }
             }
         }
 
@@ -161,9 +174,13 @@ namespace netDxf.Entities
             set
             {
                 if (value)
+                {
                     this.flags |= PolylineTypeFlags.ContinuousLinetypePattern;
+                }
                 else
+                {
                     this.flags &= ~PolylineTypeFlags.ContinuousLinetypePattern;
+                }
             }
         }
 
@@ -189,7 +206,21 @@ namespace netDxf.Entities
         /// </summary>
         public void Reverse()
         {
+            if (this.vertexes.Count < 2)
+            {
+                return;
+            }
+
             this.vertexes.Reverse();
+
+            double firstBulge = this.vertexes[0].Bulge;
+       
+            for (int i = 0; i < this.vertexes.Count - 1; i++)
+            {
+                this.vertexes[i].Bulge = -this.vertexes[i+1].Bulge;
+            }
+
+            this.vertexes[this.vertexes.Count - 1].Bulge = -firstBulge;
         }
 
         /// <summary>
@@ -222,7 +253,9 @@ namespace netDxf.Entities
                 if (index == this.Vertexes.Count - 1)
                 {
                     if (!this.IsClosed)
+                    {
                         break;
+                    }
                     p1 = new Vector2(vertex.Position.X, vertex.Position.Y);
                     p2 = new Vector2(this.vertexes[0].Position.X, this.vertexes[0].Position.Y);
                 }
@@ -469,10 +502,14 @@ namespace netDxf.Entities
             };
 
             foreach (LwPolylineVertex vertex in this.vertexes)
+            {
                 entity.Vertexes.Add((LwPolylineVertex) vertex.Clone());
+            }
 
             foreach (XData data in this.XData.Values)
+            {
                 entity.XData.Add((XData) data.Clone());
+            }
 
             return entity;
         }

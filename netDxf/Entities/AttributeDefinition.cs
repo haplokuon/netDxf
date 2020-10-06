@@ -146,7 +146,7 @@ namespace netDxf.Entities
                 throw new ArgumentNullException(nameof(tag));
 
             this.tag = tag;
-            this.flags = AttributeFlags.Visible;
+            this.flags = AttributeFlags.None;
             this.prompt = string.Empty;
             this.attValue = null;
             this.position = Vector3.Zero;

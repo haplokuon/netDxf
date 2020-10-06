@@ -88,6 +88,7 @@ namespace netDxf
         public const string Attribute = "AcDbAttribute";
         public const string AttributeDefinition = "AcDbAttributeDefinition";
         public const string Dictionary = "AcDbDictionary";
+        public const string XRecord = "AcDbXrecord";
         public const string RasterImage = "AcDbRasterImage";
         public const string RasterImageDef = "AcDbRasterImageDef";
         public const string RasterImageDefReactor = "AcDbRasterImageDefReactor";

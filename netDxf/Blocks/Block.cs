@@ -748,10 +748,6 @@ namespace netDxf.Blocks
             {
                 e.Cancel = true;
             }
-            else if (this.Name.StartsWith(DefaultPaperSpaceName)) // paper space blocks do not contain attribute definitions
-            {
-                e.Cancel = true;
-            }
             else if (this.attributes.ContainsTag(e.Item.Tag))
             {
                 e.Cancel = true;

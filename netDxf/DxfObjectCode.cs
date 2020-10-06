@@ -193,6 +193,11 @@ namespace netDxf
         public const string UnderlayPdfDefinitionDictionary = "ACAD_PDFDEFINITIONS";
 
         /// <summary>
+        /// Layer states dictionary.
+        /// </summary>
+        public const string LayerStates = "ACAD_LAYERSTATES";
+
+        /// <summary>
         /// End of file.
         /// </summary>
         public const string EndOfFile = "EOF";
@@ -446,6 +451,11 @@ namespace netDxf
         /// Dictionary.
         /// </summary>
         public const string Dictionary = "DICTIONARY";
+
+        /// <summary>
+        /// XRecord.
+        /// </summary>
+        public const string XRecord = "XRECORD";
 
         /// <summary>
         /// Raster image.

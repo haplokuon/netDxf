@@ -94,9 +94,9 @@ namespace netDxf
         {
             get
             {
-                return new Matrix3(0, 0, 0,
-                                   0, 0, 0,
-                                   0, 0, 0);
+                return new Matrix3(0.0, 0.0, 0.0,
+                                   0.0, 0.0, 0.0,
+                                   0.0, 0.0, 0.0);
             }
         }
 
@@ -107,9 +107,9 @@ namespace netDxf
         {
             get
             {
-                return new Matrix3(1, 0, 0,
-                                   0, 1, 0,
-                                   0, 0, 1) {dirty = false, isIdentity = true};
+                return new Matrix3(1.0, 0.0, 0.0,
+                                   0.0, 1.0, 0.0,
+                                   0.0, 0.0, 1.0) {dirty = false, isIdentity = true};
             }
         }
 
@@ -501,8 +501,15 @@ namespace netDxf
         /// <returns>Matrix3.</returns>
         public static Matrix3 operator *(Matrix3 a, Matrix3 b)
         {
-            if (a.IsIdentity) return b;
-            if (b.IsIdentity) return a;
+            if (a.IsIdentity)
+            {
+                return b;
+            }
+
+            if (b.IsIdentity)
+            {
+                return a;
+            }
 
             return new Matrix3(a.M11*b.M11 + a.M12*b.M21 + a.M13*b.M31, a.M11*b.M12 + a.M12*b.M22 + a.M13*b.M32, a.M11*b.M13 + a.M12*b.M23 + a.M13*b.M33,
                                a.M21*b.M11 + a.M22*b.M21 + a.M23*b.M31, a.M21*b.M12 + a.M22*b.M22 + a.M23*b.M32, a.M21*b.M13 + a.M22*b.M23 + a.M23*b.M33,
@@ -517,8 +524,15 @@ namespace netDxf
         /// <returns>Matrix3.</returns>
         public static Matrix3 Multiply(Matrix3 a, Matrix3 b)
         {
-            if (a.IsIdentity) return b;
-            if (b.IsIdentity) return a;
+            if (a.IsIdentity)
+            {
+                return b;
+            }
+
+            if (b.IsIdentity)
+            {
+                return a;
+            }
 
             return new Matrix3(a.M11*b.M11 + a.M12*b.M21 + a.M13*b.M31, a.M11*b.M12 + a.M12*b.M22 + a.M13*b.M32, a.M11*b.M13 + a.M12*b.M23 + a.M13*b.M33,
                                a.M21*b.M11 + a.M22*b.M21 + a.M23*b.M31, a.M21*b.M12 + a.M22*b.M22 + a.M23*b.M32, a.M21*b.M13 + a.M22*b.M23 + a.M23*b.M33,
@@ -607,7 +621,10 @@ namespace netDxf
         /// <returns>Determinant.</returns>
         public double Determinant()
         {
-            if (this.IsIdentity) return 1.0;
+            if (this.IsIdentity)
+            {
+                return 1.0;
+            }
 
             return this.m11*this.m22*this.m33 +
                    this.m12*this.m23*this.m31 +
@@ -623,11 +640,16 @@ namespace netDxf
         /// <returns>Inverse Matrix3.</returns>
         public Matrix3 Inverse()
         {
-            if (this.IsIdentity) return Identity;
+            if (this.IsIdentity)
+            {
+                return Identity;
+            }
 
             double det = this.Determinant();
             if (MathHelper.IsZero(det))
+            {
                 throw new ArithmeticException("The matrix is not invertible.");
+            }
 
             det = 1/det;
 
@@ -669,9 +691,9 @@ namespace netDxf
         {
             double cos = Math.Cos(angle);
             double sin = Math.Sin(angle);
-            return new Matrix3(1, 0, 0,
-                               0, cos, -sin,
-                               0, sin, cos);
+            return new Matrix3(1.0, 0.0, 0.0,
+                               0.0, cos, -sin,
+                               0.0, sin, cos);
         }
 
         /// <summary>
@@ -684,9 +706,9 @@ namespace netDxf
         {
             double cos = Math.Cos(angle);
             double sin = Math.Sin(angle);
-            return new Matrix3(cos, 0, sin,
-                               0, 1, 0,
-                               -sin, 0, cos);
+            return new Matrix3(cos, 0.0, sin,
+                               0.0, 1.0, 0.0,
+                               -sin, 0.0, cos);
         }
 
         /// <summary>
@@ -699,9 +721,9 @@ namespace netDxf
         {
             double cos = Math.Cos(angle);
             double sin = Math.Sin(angle);
-            return new Matrix3(cos, -sin, 0,
-                               sin, cos, 0,
-                               0, 0, 1);
+            return new Matrix3(cos, -sin, 0.0,
+                               sin, cos, 0.0,
+                               0.0, 0.0, 1.0);
         }
 
         /// <summary>
@@ -733,9 +755,9 @@ namespace netDxf
         /// <returns>A scaling matrix.</returns>
         public static Matrix3 Scale(double x, double y, double z)
         {
-            return new Matrix3(x, 0, 0,
-                               0, y, 0,
-                               0, 0, z);
+            return new Matrix3(x, 0.0, 0.0,
+                               0.0, y, 0.0,
+                               0.0, 0.0, z);
         }
 
         #endregion
@@ -803,7 +825,9 @@ namespace netDxf
         public override bool Equals(object obj)
         {
             if (obj is Matrix3)
+            {
                 return this.Equals((Matrix3) obj);
+            }
             return false;
         }
 

@@ -1,7 +1,7 @@
-﻿#region netDxf library, Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+﻿#region netDxf library, Copyright (C) 2009-2020 Daniel Carvajal (haplokuon@gmail.com)
 
 //                        netDxf library
-// Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2009-2020 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -135,12 +135,12 @@ namespace netDxf
         public static int ToAlphaValue(Transparency transparency)
         {
             if (transparency == null)
+            {
                 throw new ArgumentNullException(nameof(transparency));
+            }
 
-            byte alpha = (byte) (255*(100 - transparency.Value)/100.0);
-            byte[] bytes = {alpha, 0, 0, 2};
-            if (transparency.IsByBlock)
-                bytes[3] = 1;
+            byte alpha = (byte) (255 * (100 - transparency.Value) / 100.0);
+            byte[] bytes = transparency.IsByBlock ? new byte[] {0, 0, 0, 1} : new byte[] {alpha, 0, 0, 2};
             return BitConverter.ToInt32(bytes, 0);
         }
 
@@ -152,20 +152,28 @@ namespace netDxf
         public static Transparency FromAlphaValue(int value)
         {
             byte[] bytes = BitConverter.GetBytes(value);
-            short alpha = (short) (100 - (bytes[0]/255.0)*100);
+            short alpha = (short) (100 - (bytes[0] / 255.0) * 100);
             return FromCadIndex(alpha);
         }
 
-        #endregion
-
-        #region private methods
-
-        private static Transparency FromCadIndex(short alpha)
+        public static Transparency FromCadIndex(short alpha)
         {
             if (alpha == -1)
+            {
                 return ByLayer;
+            }
             if (alpha == 100)
+            {
                 return ByBlock;
+            }
+            if (alpha < 0)
+            {
+                return new Transparency(0);
+            }
+            if (alpha > 90)
+            {
+                return new Transparency(90);
+            }
 
             return new Transparency(alpha);
         }

@@ -70,7 +70,10 @@ namespace netDxf.Entities
             : base(EntityType.Polyline, DxfObjectCode.Polyline)
         {
             if (vertexes == null)
+            {
                 throw new ArgumentNullException(nameof(vertexes));
+            }
+
             this.vertexes = new ObservableCollection<PolylineVertex>();
             this.vertexes.BeforeAddItem += this.Vertexes_BeforeAddItem;
             this.vertexes.AddItem += this.Vertexes_AddItem;
@@ -78,7 +81,9 @@ namespace netDxf.Entities
             this.vertexes.RemoveItem += this.Vertexes_RemoveItem;
 
             foreach (Vector3 vertex in vertexes)
+            {
                 this.vertexes.Add(new PolylineVertex(vertex));
+            }
 
             this.flags = isClosed ? PolylineTypeFlags.ClosedPolylineOrClosedPolygonMeshInM | PolylineTypeFlags.Polyline3D : PolylineTypeFlags.Polyline3D;
             this.smoothType = PolylineSmoothType.NoSmooth;
@@ -104,7 +109,10 @@ namespace netDxf.Entities
             : base(EntityType.Polyline, DxfObjectCode.Polyline)
         {
             if (vertexes == null)
+            {
                 throw new ArgumentNullException(nameof(vertexes));
+            }
+
             this.vertexes = new ObservableCollection<PolylineVertex>();
             this.vertexes.BeforeAddItem += this.Vertexes_BeforeAddItem;
             this.vertexes.AddItem += this.Vertexes_AddItem;
@@ -139,9 +147,13 @@ namespace netDxf.Entities
             set
             {
                 if (value)
+                {
                     this.flags |= PolylineTypeFlags.ClosedPolylineOrClosedPolygonMeshInM;
+                }
                 else
+                {
                     this.flags &= ~PolylineTypeFlags.ClosedPolylineOrClosedPolygonMeshInM;
+                }
             }
         }
 
@@ -154,9 +166,13 @@ namespace netDxf.Entities
             set
             {
                 if (value)
+                {
                     this.flags |= PolylineTypeFlags.ContinuousLinetypePattern;
+                }
                 else
+                {
                     this.flags &= ~PolylineTypeFlags.ContinuousLinetypePattern;
+                }
             }
         }
 
@@ -199,6 +215,11 @@ namespace netDxf.Entities
         /// </summary>
         public void Reverse()
         {
+            if (this.vertexes.Count < 2)
+            {
+                return;
+            }
+
             this.vertexes.Reverse();
         }
 
@@ -218,7 +239,9 @@ namespace netDxf.Entities
                 if (index == this.Vertexes.Count - 1)
                 {
                     if (!this.IsClosed)
+                    {
                         break;
+                    }
                     start = vertex.Position;
                     end = this.vertexes[0].Position;
                 }
@@ -311,10 +334,14 @@ namespace netDxf.Entities
             };
 
             foreach (PolylineVertex vertex in this.vertexes)
+            {
                 entity.Vertexes.Add((PolylineVertex) vertex.Clone());
+            }
 
             foreach (XData data in this.XData.Values)
+            {
                 entity.XData.Add((XData) data.Clone());
+            }
 
             return entity;
         }
@@ -327,11 +354,17 @@ namespace netDxf.Entities
         {
             // null items and vertexes that belong to another polyline are not allowed.
             if (e.Item == null)
+            {
                 e.Cancel = true;
+            }
             else if (e.Item.Owner != null)
+            {
                 e.Cancel = true;
+            }
             else
+            {
                 e.Cancel = false;
+            }
         }
 
         private void Vertexes_AddItem(ObservableCollection<PolylineVertex> sender, ObservableCollectionEventArgs<PolylineVertex> e)

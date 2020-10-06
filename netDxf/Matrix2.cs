@@ -77,8 +77,8 @@ namespace netDxf
         {
             get
             {
-                return new Matrix2(0, 0,
-                                   0, 0);
+                return new Matrix2(0.0, 0.0,
+                                   0.0, 0.0);
             }
         }
 
@@ -89,8 +89,8 @@ namespace netDxf
         {
             get
             {
-                return new Matrix2(1, 0,
-                                   0, 1) {dirty = false, isIdentity = true};
+                return new Matrix2(1.0, 0.0,
+                                   0.0, 1.0) {dirty = false, isIdentity = true};
             }
         }
 
@@ -327,8 +327,15 @@ namespace netDxf
         /// <returns>Matrix2.</returns>
         public static Matrix2 operator *(Matrix2 a, Matrix2 b)
         {
-            if (a.IsIdentity) return b;
-            if (b.IsIdentity) return a;
+            if (a.IsIdentity)
+            {
+                return b;
+            }
+
+            if (b.IsIdentity)
+            {
+                return a;
+            }
 
             return new Matrix2(a.M11*b.M11 + a.M12*b.M21, a.M11*b.M12 + a.M12*b.M22,
                                a.M21*b.M11 + a.M22*b.M21, a.M21*b.M12 + a.M22*b.M22);
@@ -342,8 +349,15 @@ namespace netDxf
         /// <returns>Matrix2.</returns>
         public static Matrix2 Multiply(Matrix2 a, Matrix2 b)
         {
-            if (a.IsIdentity) return b;
-            if (b.IsIdentity) return a;
+            if (a.IsIdentity)
+            {
+                return b;
+            }
+
+            if (b.IsIdentity)
+            {
+                return a;
+            }
 
             return new Matrix2(a.M11*b.M11 + a.M12*b.M21, a.M11*b.M12 + a.M12*b.M22,
                                a.M21*b.M11 + a.M22*b.M21, a.M21*b.M12 + a.M22*b.M22);
@@ -440,13 +454,19 @@ namespace netDxf
         /// <returns>Inverse Matrix2.</returns>
         public Matrix2 Inverse()
         {
-            if (this.IsIdentity) return Identity;
+            if (this.IsIdentity)
+            {
+                return Identity;
+            }
 
             double det = this.Determinant();
             if (MathHelper.IsZero(det))
+            {
                 throw new ArithmeticException("The matrix is not invertible.");
+            }
 
             det = 1/det;
+
             return new Matrix2(det*this.m22, -det*this.m12,
                                -det*this.m21, det*this.m11);
         }
@@ -506,8 +526,8 @@ namespace netDxf
         /// <returns>A scaling matrix.</returns>
         public static Matrix2 Scale(double x, double y)
         {
-            return new Matrix2(x, 0,
-                               0, y);
+            return new Matrix2(x, 0.0,
+                               0.0, y);
         }
 
         #endregion
@@ -570,7 +590,10 @@ namespace netDxf
         public override bool Equals(object obj)
         {
             if (obj is Matrix2)
+            {
                 return this.Equals((Matrix2) obj);
+            }
+
             return false;
         }
 

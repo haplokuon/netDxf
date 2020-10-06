@@ -30,6 +30,12 @@ namespace TestDxfDocument
         {
             DxfDocument doc = Test(@"sample.dxf");
 
+            #region Samples for new and modified features 2.4.1
+
+            //LayerStateManager();
+
+            #endregion
+
             #region Samples for new and modified features 2.3.0
 
             //ExplodeInsert();
@@ -245,6 +251,84 @@ namespace TestDxfDocument
 
             #endregion
         }
+
+        #region Samples for new and modified features 2.4.1
+
+        private static void LayerStateManager()
+        {
+            //Autodesk may have changed the LAS format through the years, if you find a problem with them open an issue at Github
+
+            // a list of layer as a basis to create a layer state
+            List<Layer> layers = new List<Layer>();
+            layers.Add(new Layer("Layer1")
+            {
+                Color = AciColor.Red,
+                Lineweight = Lineweight.W15
+            });
+            layers.Add(new Layer("Layer2")
+            {
+                Color = AciColor.Green,
+                Lineweight = Lineweight.W35
+            });
+            layers.Add(new Layer("Layer3")
+            {
+                Color = AciColor.Blue,
+                Lineweight = Lineweight.W70
+            });
+
+            // this will create a new layer state from the properties of the layers in the list
+            LayerState layerState = new LayerState("LayerState1", layers);
+            // now we can save it to an external LAS file for later use
+            layerState.Save("LayerStateTest.las");
+
+            // we can also create a layer state from an external LAS file
+            LayerState layerStateLoad = LayerState.Load("LayerStateTest.las");
+
+            // lets apply this into a new document
+            DxfDocument doc = new DxfDocument();
+
+            // add the newly loaded layer state
+            doc.Layers.StateManager.Add(layerStateLoad);
+
+            // the main methods to work with layer states are done through the StateManger accessible through the Layers of the document
+            // import the external LAS file into the document
+            // you can set if the imported layer state will overwrite any existing layer state with the same name
+            // in this case there is one and we want to overwrite it, if it is set to false in this case the imported LAS file will not be added
+            doc.Layers.StateManager.Import("LayerStateTest.las", true);
+
+            // create a new layer state from the actual layer list of the document
+            doc.Layers.StateManager.AddNew("LayerState2");
+            // this is equivalent to this, it is a shortcut
+            // doc.Layers.StateManager.Add(new LayerState("LayerState2", doc.Layers));
+
+            doc.Layers.StateManager["LayerState2"].Properties["Layer1"].Color = AciColor.Yellow;
+            doc.Layers.StateManager["LayerState2"].Properties["Layer2"].Color = AciColor.Magenta;
+            doc.Layers.StateManager["LayerState2"].Properties["Layer3"].Color = AciColor.Cyan;
+
+            // this will reset the actual layer properties with the ones stored in the specified layer state
+            // optionally you can set the which properties you want to restore with the LayerStateManager.Options
+            doc.Layers.StateManager.Options = LayerPropertiesRestoreFlags.Color;
+            doc.Layers.StateManager.Restore("LayerState2");
+
+            LayerStateProperties prop = new LayerStateProperties("OtherLayer");
+            // this will generate an error,
+            // when a layer state belongs to a document the newly added layer state properties must refer to one of the already existing layers
+            //doc.Layers.StateManager["LayerState2"].Properties.Add(prop.Name, prop);
+
+            // it is not a problem for not owned layer states
+            LayerState otherLayerState = new LayerState("OtherLayerState");
+            otherLayerState.Properties.Add(prop.Name, prop);
+            // when adding it to the layer state manager of a document the missing "OtherLayer" will be created
+            doc.Layers.StateManager.Add(otherLayerState);
+
+            // the layer states will be stored in the DXF
+            doc.Save("test.dxf");
+
+            DxfDocument loaded = DxfDocument.Load("test.dxf");
+            loaded.Save("test.dxf");
+        }
+
+        #endregion
 
         #region Samples for new and modified features 2.3.0
 

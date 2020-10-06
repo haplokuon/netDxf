@@ -1,7 +1,7 @@
-#region netDxf library, Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+#region netDxf library, Copyright (C) 2009-2020 Daniel Carvajal (haplokuon@gmail.com)
 
 //                        netDxf library
-// Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2009-2020 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -31,9 +31,9 @@ namespace netDxf.Entities
     public enum Face3dEdgeFlags
     {
         /// <summary>
-        /// All edges are visible (default).
+        /// No flags equivalent to all edges are visible.
         /// </summary>
-        Visibles = 0,
+        None = 0,
 
         /// <summary>
         /// First edge is invisible.

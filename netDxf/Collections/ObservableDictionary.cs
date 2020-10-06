@@ -20,6 +20,7 @@
 
 #endregion
 
+using System;
 using System.Collections;
 using System.Collections.Generic;
 
@@ -124,9 +125,15 @@ namespace netDxf.Collections
                 KeyValuePair<TKey, TValue> add = new KeyValuePair<TKey, TValue>(key, value);
 
                 if (this.BeforeRemoveItemEvent(remove))
+                {
                     return;
+                }
+
                 if (this.BeforeAddItemEvent(add))
+                {
                     return;
+                }
+
                 this.innerDictionary[key] = value;
                 this.AddItemEvent(add);
                 this.RemoveItemEvent(remove);
@@ -161,7 +168,9 @@ namespace netDxf.Collections
         {
             KeyValuePair<TKey, TValue> add = new KeyValuePair<TKey, TValue>(key, value);
             if (this.BeforeAddItemEvent(add))
-                return;
+            {
+                throw new ArgumentException("The item cannot be added to the dictionary.", nameof(value));
+            }
             this.innerDictionary.Add(key, value);
             this.AddItemEvent(add);
         }
@@ -174,11 +183,16 @@ namespace netDxf.Collections
         public bool Remove(TKey key)
         {
             if (!this.innerDictionary.ContainsKey(key))
+            {
                 return false;
+            }
 
             KeyValuePair<TKey, TValue> remove = new KeyValuePair<TKey, TValue>(key, this.innerDictionary[key]);
             if (this.BeforeRemoveItemEvent(remove))
+            {
                 return false;
+            }
+
             this.innerDictionary.Remove(key);
             this.RemoveItemEvent(remove);
 
@@ -188,7 +202,10 @@ namespace netDxf.Collections
         bool ICollection<KeyValuePair<TKey, TValue>>.Remove(KeyValuePair<TKey, TValue> item)
         {
             if (!ReferenceEquals(item.Value, this.innerDictionary[item.Key]))
+            {
                 return false;
+            }
+
             return this.Remove(item.Key);
         }
 

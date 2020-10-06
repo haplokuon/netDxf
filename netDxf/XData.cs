@@ -51,8 +51,10 @@ namespace netDxf
         /// <param name="appReg">Name of the application associated with the list of extended data records.</param>
         public XData(ApplicationRegistry appReg)
         {
-            if(appReg == null)
+            if (appReg == null)
+            {
                 throw new ArgumentNullException(nameof(appReg));
+            }
             this.appReg = appReg;
             this.xData = new List<XDataRecord>();
         }
@@ -107,7 +109,9 @@ namespace netDxf
         {
             XData xdata = new XData((ApplicationRegistry) this.appReg.Clone());
             foreach (XDataRecord record in this.xData)
+            {
                 xdata.XDataRecord.Add(new XDataRecord(record.Code, record.Value));
+            }
 
             return xdata;
         }

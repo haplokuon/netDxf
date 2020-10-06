@@ -168,6 +168,5 @@ namespace netDxf
         }
 
         #endregion
-
     }
 }

@@ -25,6 +25,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Text;
 using netDxf.Blocks;
 using netDxf.Collections;
@@ -116,6 +117,12 @@ namespace netDxf.IO
         // temporarily this dictionary will store information to check any possible errors on model and paper space layouts
         private Dictionary<string, BlockRecord> blockRecordPointerToLayout;
         private List<Layout> orphanLayouts;
+
+        // layer state manager handle, this is stored in the Layer table and points to a dictionary in the Objects section
+        private string layerStateManagerDictionaryHandle;
+
+        // XRecords
+        private Dictionary<string, XRecord> xRecords;
 
         #endregion
 
@@ -237,6 +244,9 @@ namespace netDxf.IO
             this.mLineToStyleNames = new Dictionary<MLine, string>();
             this.underlayToDefinitionHandles = new Dictionary<Underlay, string>();
             this.underlayDefHandles = new Dictionary<string, UnderlayDefinition>();
+            this.layerStateManagerDictionaryHandle = string.Empty;
+            this.xRecords = new Dictionary<string, XRecord>() ;
+
 
             // for layouts errors workarounds
             this.blockRecordPointerToLayout = new Dictionary<string, BlockRecord>(StringComparer.OrdinalIgnoreCase);
@@ -983,6 +993,10 @@ namespace netDxf.IO
                         UnderlayPdfDefinition underlayPdfDef = (UnderlayPdfDefinition) this.ReadUnderlayDefinition(UnderlayType.PDF);
                         this.doc.UnderlayPdfDefinitions.Add(underlayPdfDef, false);
                         break;
+                    case DxfObjectCode.XRecord:
+                        XRecord xRecord = this.ReadXRecord();
+                        this.xRecords.Add(xRecord.Handle, xRecord);
+                        break;
                     default:
                         do
                         {
@@ -991,6 +1005,8 @@ namespace netDxf.IO
                         break;
                 }
             }
+
+            this.BuildLayerStateManager();
 
             // this will try to fix problems with layouts and model/paper space blocks
             // nothing of this is be necessary in a well formed DXF
@@ -1012,92 +1028,6 @@ namespace netDxf.IO
                 }
 
             }
-        }
-
-        private void RelinkOrphanLayouts()
-        {
-            // add any additional layouts corresponding to the PaperSpace block records not referenced by any layout
-            // these are fixes for possible errors with layouts and their associated blocks. This should never happen.
-            foreach (BlockRecord r in this.blockRecordPointerToLayout.Values)
-            {
-                Layout layout = null;
-
-                // the *ModelSpace block must be linked to a layout called "Model"
-                if (string.Equals(r.Name, Block.DefaultModelSpaceName, StringComparison.OrdinalIgnoreCase))
-                {
-                    foreach (Layout l in this.orphanLayouts)
-                    {
-                        if (string.Equals(l.Name, Layout.ModelSpaceName, StringComparison.OrdinalIgnoreCase))
-                        {
-                            layout = l;
-                            break;
-                        }
-                    }
-
-                    if (layout == null)
-                    {
-                        // we will create a "Model" layout since we haven't found any
-                        layout = Layout.ModelSpace;
-                        this.doc.Layouts.Add(layout);
-                        continue;
-                    }
-                    // we have a suitable layout
-                    layout.AssociatedBlock = this.doc.Blocks[r.Name];
-                    this.orphanLayouts.Remove(layout);
-                    this.doc.Layouts.Add(layout);
-                    continue;
-                }
-
-                // the *PaperSpace block cannot be linked with a layout called "Model"
-                // check if we have any orphan layouts
-                if (this.orphanLayouts.Count > 0)
-                {
-                    foreach (Layout l in this.orphanLayouts)
-                    {
-                        // find the first occurrence of a layout not named "Model"
-                        if (!string.Equals(l.Name, Layout.ModelSpaceName, StringComparison.OrdinalIgnoreCase))
-                        {
-                            layout = l;
-                            break;
-                        }
-                    }
-                    if (layout != null)
-                    {
-                        // we have a suitable layout
-                        layout = this.orphanLayouts[0];
-                        layout.AssociatedBlock = this.doc.Blocks[r.Name];
-                        this.doc.Layouts.Add(layout);
-                        this.orphanLayouts.Remove(layout);
-                        continue;
-                    }
-                }
-
-                // create a new Layout in case there are now more suitable orphans
-                short counter = 1;
-                string layoutName = "Layout" + 1;
-
-                while (this.doc.Layouts.Contains(layoutName))
-                {
-                    counter += 1;
-                    layoutName = "Layout" + counter;
-                }
-                layout = new Layout(layoutName)
-                {
-                    TabOrder = (short) (this.doc.Layouts.Count + 1),
-                    AssociatedBlock = this.doc.Blocks[r.Name]
-                };
-
-                this.doc.Layouts.Add(layout);
-            }
-
-            // if there are still orphan layouts add them to the list, it will create an associate block for them
-            foreach (Layout orphan in this.orphanLayouts)
-            {
-                this.doc.Layouts.Add(orphan, false);
-            }
-
-            // add ModelSpace layout if it does not exist
-            this.doc.Layouts.Add(Layout.ModelSpace);
         }
 
         private void ReadThumbnailImage()
@@ -1156,7 +1086,11 @@ namespace netDxf.IO
                         this.chunk.Next();
                         break;
                     case 102:
-                        this.ReadExtensionDictionaryGroup();
+                        string dictHandle = this.ReadExtensionDictionaryGroup();
+                        if (string.Equals(tableName, DxfObjectCode.LayerTable))
+                        {
+                            this.layerStateManagerDictionaryHandle = dictHandle;
+                        }
                         this.chunk.Next();
                         break;
                     case 100:
@@ -1354,26 +1288,35 @@ namespace netDxf.IO
                         //this.doc.Views.Add((View) entry);
                         break;
                     case DxfObjectCode.VportTable:
-                        VPort vport = this.ReadVPort();
-                        if (vport != null && active == null)
+                        if (active == null)
                         {
-                            // only the first *Active VPort is supported, this one describes the current document view.
-                            if (vport.Name.Equals(VPort.DefaultName, StringComparison.OrdinalIgnoreCase))
+                            VPort vport = this.ReadVPort();
+                            if (vport != null)
                             {
-                                active = this.doc.Viewport;
-                                active.Handle = handle;
-                                active.ViewCenter = vport.ViewCenter;
-                                active.SnapBasePoint = vport.SnapBasePoint;
-                                active.SnapSpacing = vport.SnapSpacing;
-                                active.GridSpacing = vport.GridSpacing;
-                                active.ViewDirection = vport.ViewDirection;
-                                active.ViewTarget = vport.ViewTarget;
-                                active.ViewHeight = vport.ViewHeight;
-                                active.ViewAspectRatio = vport.ViewAspectRatio;
-                                active.ShowGrid = vport.ShowGrid;
-                                active.SnapMode = vport.SnapMode;
+                                // only the first *Active VPort is supported, this one describes the current document view.
+                                if (vport.Name.Equals(VPort.DefaultName, StringComparison.OrdinalIgnoreCase))
+                                {
+                                    this.doc.Viewport.Handle = handle;
+                                    this.doc.Viewport.ViewCenter = vport.ViewCenter;
+                                    this.doc.Viewport.SnapBasePoint = vport.SnapBasePoint;
+                                    this.doc.Viewport.SnapSpacing = vport.SnapSpacing;
+                                    this.doc.Viewport.GridSpacing = vport.GridSpacing;
+                                    this.doc.Viewport.ViewDirection = vport.ViewDirection;
+                                    this.doc.Viewport.ViewTarget = vport.ViewTarget;
+                                    this.doc.Viewport.ViewHeight = vport.ViewHeight;
+                                    this.doc.Viewport.ViewAspectRatio = vport.ViewAspectRatio;
+                                    this.doc.Viewport.ShowGrid = vport.ShowGrid;
+                                    this.doc.Viewport.SnapMode = vport.SnapMode;
+                                    active = this.doc.Viewport;
+                                }
                             }
-                        }                       
+                        }
+                        else
+                        {
+                            // there is only need to read the first active VPort
+                            // multiple Model viewports are not supported
+                            this.ReadUnknownTableEntry();
+                        }                     
                         break;
                     default:
                         this.ReadUnknownTableEntry();
@@ -2348,7 +2291,7 @@ namespace netDxf.IO
                         this.chunk.Next();
                         break;
                     case 420: // the layer uses true color
-                        color = AciColorFromTrueColor(this.chunk.ReadInt());
+                        color = AciColor.FromTrueColor(this.chunk.ReadInt());
                         this.chunk.Next();
                         break;
                     case 6:
@@ -3220,7 +3163,7 @@ namespace netDxf.IO
             string tag = string.Empty;
             string text = string.Empty;
             object value = null;
-            AttributeFlags flags = AttributeFlags.Visible;
+            AttributeFlags flags = AttributeFlags.None;
             Vector3 firstAlignmentPoint = Vector3.Zero;
             Vector3 secondAlignmentPoint = Vector3.Zero;
             TextStyle style = TextStyle.Default;
@@ -3386,7 +3329,7 @@ namespace netDxf.IO
             bool isVisible = true;
             Transparency transparency = Transparency.ByLayer;
 
-            AttributeFlags flags = AttributeFlags.Visible;
+            AttributeFlags flags = AttributeFlags.None;
             Vector3 firstAlignmentPoint = Vector3.Zero;
             Vector3 secondAlignmentPoint = Vector3.Zero;
             TextStyle style = TextStyle.Default;
@@ -3441,7 +3384,7 @@ namespace netDxf.IO
                         this.chunk.Next();
                         break;
                     case 420: // the entity uses true color
-                        color = AciColorFromTrueColor(this.chunk.ReadInt());
+                        color = AciColor.FromTrueColor(this.chunk.ReadInt());
                         this.chunk.Next();
                         break;
                     case 6: // type line code
@@ -3689,7 +3632,7 @@ namespace netDxf.IO
                         this.chunk.Next();
                         break;
                     case 420: //the entity uses true color
-                        color = AciColorFromTrueColor(this.chunk.ReadInt());
+                        color = AciColor.FromTrueColor(this.chunk.ReadInt());
                         this.chunk.Next();
                         break;
                     case 440: //transparency
@@ -6712,7 +6655,7 @@ namespace netDxf.IO
             Vector3 v1 = Vector3.Zero;
             Vector3 v2 = Vector3.Zero;
             Vector3 v3 = Vector3.Zero;
-            Face3dEdgeFlags flags = Face3dEdgeFlags.Visibles;
+            Face3dEdgeFlags flags = Face3dEdgeFlags.None;
             List<XData> xData = new List<XData>();
 
             this.chunk.Next();
@@ -8205,7 +8148,7 @@ namespace netDxf.IO
                         this.chunk.Next();
                         break;
                     case 420: //the entity uses true color
-                        color = AciColorFromTrueColor(this.chunk.ReadInt());
+                        color = AciColor.FromTrueColor(this.chunk.ReadInt());
                         this.chunk.Next();
                         break;
                     case 6:
@@ -9103,12 +9046,12 @@ namespace netDxf.IO
             this.chunk.Next(); // code 463 not needed (0.0)
             this.chunk.Next(); // code 63
             this.chunk.Next(); // code 421
-            AciColor color1 = AciColorFromTrueColor(this.chunk.ReadInt());
+            AciColor color1 = AciColor.FromTrueColor(this.chunk.ReadInt());
 
             this.chunk.Next(); // code 463 not needed (1.0)
             this.chunk.Next(); // code 63
             this.chunk.Next(); // code 421
-            AciColor color2 = AciColorFromTrueColor(this.chunk.ReadInt());
+            AciColor color2 = AciColor.FromTrueColor(this.chunk.ReadInt());
 
             this.chunk.Next(); // code 470
             string typeName = this.chunk.ReadString();
@@ -9326,7 +9269,9 @@ namespace netDxf.IO
             {
                 string id = handlesToOwner[i];
                 if (id == null)
+                {
                     throw new NullReferenceException("Null handle in dictionary.");
+                }
                 dictionary.Entries.Add(id, names[i]);
             }
 
@@ -9548,7 +9493,7 @@ namespace netDxf.IO
                         this.chunk.Next();
                         break;
                     case 420:
-                        fillColor = AciColorFromTrueColor(this.chunk.ReadInt());
+                        fillColor = AciColor.FromTrueColor(this.chunk.ReadInt());
                         this.chunk.Next();
                         break;
                     case 70:
@@ -9618,7 +9563,7 @@ namespace netDxf.IO
 
                 if (this.chunk.Code == 420)
                 {
-                    color = AciColorFromTrueColor(this.chunk.ReadInt()); // code 420
+                    color = AciColor.FromTrueColor(this.chunk.ReadInt()); // code 420
                     this.chunk.Next();
                 }
 
@@ -10195,6 +10140,67 @@ namespace netDxf.IO
             return underlayDef;
         }
 
+        private XRecord ReadXRecord()
+        {
+            string handle = null;
+            string ownerHandle = null;
+            DictionaryCloningFlags flags = DictionaryCloningFlags.KeepExisting;
+            List<XRecordEntry> entries = new List<XRecordEntry>();
+            this.chunk.Next();
+            while (this.chunk.Code != 0)
+            {
+                switch (this.chunk.Code)
+                {
+                    case 5:
+                        handle = this.chunk.ReadHex();
+                        this.chunk.Next();
+                        break;
+                    case 330:
+                        ownerHandle = this.chunk.ReadHex();
+                        this.chunk.Next();
+                        break;
+                    case 100:
+                        this.chunk.Next();
+                        flags = (DictionaryCloningFlags) this.chunk.ReadShort();
+                        this.chunk.Next();
+                        entries = this.XRecordEntries();
+                        break;
+                    case 102:
+                        this.ReadExtensionDictionaryGroup();
+                        this.chunk.Next();
+                        break;
+                    default:
+                        this.chunk.Next();
+                        break;
+                }
+            }
+            XRecord xRecord = new XRecord
+            {
+                Handle = handle,
+                OwnerHandle = ownerHandle,
+                Flags = flags
+            };
+
+            xRecord.Entries.AddRange(entries);
+
+            return xRecord;
+        }
+
+        private List<XRecordEntry> XRecordEntries()
+        {
+            List<XRecordEntry> entries = new List<XRecordEntry>();
+            while (this.chunk.Code != 0)
+            {
+                //if (this.chunk.Code >= 1 && this.chunk.Code <= 369 && this.chunk.Code != 5 && this.chunk.Code != 105)
+                //{
+                    entries.Add(new XRecordEntry(this.chunk.Code, this.chunk.Value));
+                //}
+                this.chunk.Next();
+            }
+
+            return entries;
+        }
+
         #endregion
 
         #region private methods
@@ -10443,22 +10449,256 @@ namespace netDxf.IO
             }
         }
 
-        private void ReadExtensionDictionaryGroup()
+        private void BuildLayerStateManager()
         {
-            //string dictionaryGroup = this.chunk.ReadString().Remove(0, 1);
-            this.chunk.Next();
+            if (string.IsNullOrEmpty(this.layerStateManagerDictionaryHandle))
+            {
+                return;
+            }
 
+            DictionaryObject lsMangerDictionary = this.dictionaries[this.layerStateManagerDictionaryHandle];
+            if (lsMangerDictionary == null)
+            {
+                return;
+            }
+
+            DictionaryObject lsDictionary = this.dictionaries[lsMangerDictionary.Entries.Keys.ElementAt(0)];
+            foreach (KeyValuePair<string, string> entry in lsMangerDictionary.Entries)
+            {
+                if (string.Equals(entry.Value, DxfObjectCode.LayerStates))
+                {
+                    lsDictionary = this.dictionaries[entry.Key];
+                }
+            }
+
+            if (lsDictionary == null)
+            {
+                return;
+            }
+
+            foreach (KeyValuePair<string, string> entry in lsDictionary.Entries)
+            {
+                LayerState layerState = new LayerState(entry.Value);
+                this.doc.Layers.StateManager.Add(layerState);
+
+                XRecord ls = this.xRecords[entry.Key];
+
+                using (IEnumerator<XRecordEntry> enumerator = ls.Entries.GetEnumerator())
+                {
+                    enumerator.MoveNext();
+
+                    while (enumerator.Current != null)
+                    {
+                        XRecordEntry recordEntry = enumerator.Current;
+
+                        LayerStateProperties properties;
+                        switch (recordEntry.Code)
+                        {
+                            case 301:
+                                layerState.Description = this.DecodeEncodedNonAsciiCharacters((string) recordEntry.Value);
+                                enumerator.MoveNext();
+                                break;
+                            case 302:
+                                layerState.CurrentLayer = this.DecodeEncodedNonAsciiCharacters((string) recordEntry.Value);
+                                enumerator.MoveNext();
+                                break;
+                            case 290:
+                                layerState.PaperSpace = (bool) recordEntry.Value;
+                                enumerator.MoveNext();
+                                break;
+                            case 330:
+                                Layer layer = (Layer) this.doc.GetObjectByHandle((string) recordEntry.Value);
+                                properties = this.ReadLayerStateProperties(layer.Name, enumerator);
+                                layerState.Properties.Add(properties.Name, properties);
+                                break;
+                            case 8:
+                                properties = this.ReadLayerStateProperties((string) recordEntry.Value, enumerator);
+                                layerState.Properties.Add(properties.Name, properties);
+                                break;
+                            default:
+                                enumerator.MoveNext();
+                                break;
+                        }
+                    }
+                }
+            }
+        }
+
+        private LayerStateProperties ReadLayerStateProperties(string name, IEnumerator<XRecordEntry> enumerator)
+        {
+            LayerPropertiesFlags flags = LayerPropertiesFlags.Plot;
+            string lineTypeName = String.Empty;
+            string plotStyle = string.Empty;
+            AciColor color = AciColor.Default;
+            Lineweight lineweight = Lineweight.Default;
+            Transparency transparency = new Transparency(0);
+
+            while (enumerator.MoveNext())
+            {
+                if (enumerator.Current == null)
+                {
+                    break;
+                }
+
+                XRecordEntry recordEntry = enumerator.Current;
+                if (recordEntry.Code == 8 || recordEntry.Code == 330)
+                {
+                    break;
+                }
+
+                switch (recordEntry.Code)
+                {
+                    case 90:
+                        flags = (LayerPropertiesFlags) (int) recordEntry.Value;
+                        break;
+                    case 62:
+                        color = AciColor.FromCadIndex((short) recordEntry.Value);
+                        break;
+                    case 370:
+                        lineweight = (Lineweight) (short) recordEntry.Value;
+                        break;
+                    case 331:
+                        Linetype linetype = (Linetype) this.doc.GetObjectByHandle((string) recordEntry.Value);
+                        lineTypeName = linetype.Name;
+                        break;
+                    case 6:
+                        lineTypeName = (string) recordEntry.Value;
+                        break;
+                    case 1:
+                        plotStyle = (string) recordEntry.Value;
+                        break;
+                    case 440:
+                        int alpha = (int) recordEntry.Value;
+                        transparency = alpha == 0 ? new Transparency(0) : Transparency.FromAlphaValue(alpha);
+                        break;
+                    case 92:
+                        color = AciColor.FromTrueColor((int) recordEntry.Value);
+                        break;
+                }
+            }
+
+
+            LayerStateProperties properties = new LayerStateProperties(name)
+            {
+                Flags = flags,
+                Color = color,
+                Lineweight = lineweight,
+                LinetypeName = lineTypeName,
+                //PlotStyleName = plotStyle,
+                Transparency = transparency
+            };
+
+            return properties;
+        }
+
+        private void RelinkOrphanLayouts()
+        {
+            // add any additional layouts corresponding to the PaperSpace block records not referenced by any layout
+            // these are fixes for possible errors with layouts and their associated blocks. This should never happen.
+            foreach (BlockRecord r in this.blockRecordPointerToLayout.Values)
+            {
+                Layout layout = null;
+
+                // the *ModelSpace block must be linked to a layout called "Model"
+                if (string.Equals(r.Name, Block.DefaultModelSpaceName, StringComparison.OrdinalIgnoreCase))
+                {
+                    foreach (Layout l in this.orphanLayouts)
+                    {
+                        if (string.Equals(l.Name, Layout.ModelSpaceName, StringComparison.OrdinalIgnoreCase))
+                        {
+                            layout = l;
+                            break;
+                        }
+                    }
+
+                    if (layout == null)
+                    {
+                        // we will create a "Model" layout since we haven't found any
+                        layout = Layout.ModelSpace;
+                        this.doc.Layouts.Add(layout);
+                        continue;
+                    }
+                    // we have a suitable layout
+                    layout.AssociatedBlock = this.doc.Blocks[r.Name];
+                    this.orphanLayouts.Remove(layout);
+                    this.doc.Layouts.Add(layout);
+                    continue;
+                }
+
+                // the *PaperSpace block cannot be linked with a layout called "Model"
+                // check if we have any orphan layouts
+                if (this.orphanLayouts.Count > 0)
+                {
+                    foreach (Layout l in this.orphanLayouts)
+                    {
+                        // find the first occurrence of a layout not named "Model"
+                        if (!string.Equals(l.Name, Layout.ModelSpaceName, StringComparison.OrdinalIgnoreCase))
+                        {
+                            layout = l;
+                            break;
+                        }
+                    }
+                    if (layout != null)
+                    {
+                        // we have a suitable layout
+                        layout = this.orphanLayouts[0];
+                        layout.AssociatedBlock = this.doc.Blocks[r.Name];
+                        this.doc.Layouts.Add(layout);
+                        this.orphanLayouts.Remove(layout);
+                        continue;
+                    }
+                }
+
+                // create a new Layout in case there are now more suitable orphans
+                short counter = 1;
+                string layoutName = "Layout" + 1;
+
+                while (this.doc.Layouts.Contains(layoutName))
+                {
+                    counter += 1;
+                    layoutName = "Layout" + counter;
+                }
+                layout = new Layout(layoutName)
+                {
+                    TabOrder = (short) (this.doc.Layouts.Count + 1),
+                    AssociatedBlock = this.doc.Blocks[r.Name]
+                };
+
+                this.doc.Layouts.Add(layout);
+            }
+
+            // if there are still orphan layouts add them to the list, it will create an associate block for them
+            foreach (Layout orphan in this.orphanLayouts)
+            {
+                this.doc.Layouts.Add(orphan, false);
+            }
+
+            // add ModelSpace layout if it does not exist
+            this.doc.Layouts.Add(Layout.ModelSpace);
+        }
+
+        private string ReadExtensionDictionaryGroup()
+        {
+            string handle = string.Empty;
+            //string dictionaryGroup = this.chunk.ReadString().Remove(0, 1);
+
+            this.chunk.Next();
+            
             while (this.chunk.Code != 102)
             {
                 switch (this.chunk.Code)
                 {
-                    case 330:
-                        break;
+                    //case 330:
+                    //    handle = this.chunk.ReadHex();
+                    //    break;
                     case 360:
+                        handle = this.chunk.ReadHex();
                         break;
                 }
                 this.chunk.Next();
             }
+
+            return handle;
         }
 
         private XData ReadXDataRecord(ApplicationRegistry appReg)
@@ -10529,11 +10769,15 @@ namespace netDxf.IO
         private string DecodeEncodedNonAsciiCharacters(string text)
         {
             if (string.IsNullOrEmpty(text))
+            {
                 return text;
+            }
 
             string decoded;
             if (this.decodedStrings.TryGetValue(text, out decoded))
+            {
                 return decoded;
+            }
 
             int length = text.Length;
             StringBuilder sb = new StringBuilder();
@@ -10738,12 +10982,6 @@ namespace netDxf.IO
                 return style;
 
             return this.doc.MlineStyles.Add(new MLineStyle(name));
-        }
-
-        private static AciColor AciColorFromTrueColor(int value)
-        {
-            byte[] bytes = BitConverter.GetBytes(value);
-            return new AciColor(bytes[2], bytes[1], bytes[0]);
         }
 
         #endregion

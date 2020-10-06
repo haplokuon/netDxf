@@ -953,7 +953,7 @@ namespace netDxf
         /// </summary>
         /// <param name="file">File name.</param>
         /// <param name="isBinary">Defines if the file will be saved as binary.</param>
-        /// <returns>Return true if the file has been successfully save, false otherwise.</returns>
+        /// <returns>Returns true if the file has been successfully saved, false otherwise.</returns>
         /// <exception cref="DxfVersionNotSupportedException"></exception>
         /// <remarks>
         /// If the file already exists it will be overwritten.<br />

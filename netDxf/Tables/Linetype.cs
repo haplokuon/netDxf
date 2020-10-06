@@ -1,7 +1,7 @@
-﻿#region netDxf library, Copyright (C) 2009-2019 Daniel Carvajal (haplokuon@gmail.com)
+﻿#region netDxf library, Copyright (C) 2009-2020 Daniel Carvajal (haplokuon@gmail.com)
 
 //                        netDxf library
-// Copyright (C) 2009-2019 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2009-2020 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -46,7 +46,9 @@ namespace netDxf.Tables
         {
             LinetypeSegmentAddedEventHandler ae = this.LinetypeSegmentAdded;
             if (ae != null)
+            {
                 ae(this, new LinetypeSegmentChangeEventArgs(item));
+            }
         }
 
         public delegate void LinetypeSegmentRemovedEventHandler(Linetype sender, LinetypeSegmentChangeEventArgs e);
@@ -57,7 +59,9 @@ namespace netDxf.Tables
         {
             LinetypeSegmentRemovedEventHandler ae = this.LinetypeSegmentRemoved;
             if (ae != null)
+            {
                 ae(this, new LinetypeSegmentChangeEventArgs(item));
+            }
         }
 
         public delegate void LinetypeTextSegmentStyleChangedEventHandler(Linetype sender, TableObjectChangedEventArgs<TextStyle> e);
@@ -244,7 +248,9 @@ namespace netDxf.Tables
             : base(name, DxfObjectCode.Linetype, checkName)
         {
             if (string.IsNullOrEmpty(name))
+            {
                 throw new ArgumentNullException(nameof(name), "The line type name should be at least one character long.");
+            }
 
             this.IsReserved = name.Equals(ByLayerName, StringComparison.OrdinalIgnoreCase) ||
                               name.Equals(ByBlockName, StringComparison.OrdinalIgnoreCase) ||
@@ -256,7 +262,10 @@ namespace netDxf.Tables
             this.segments.AddItem += this.Segments_AddItem;
             this.segments.BeforeRemoveItem += this.Segments_BeforeRemoveItem;
             this.segments.RemoveItem += this.Segments_RemoveItem;
-            if(segments != null) this.segments.AddRange(segments);
+            if (segments != null)
+            {
+                this.segments.AddRange(segments);
+            }
         }
 
         #endregion
@@ -292,19 +301,6 @@ namespace netDxf.Tables
         }
 
         /// <summary>
-        /// Gets the total length of the line type.
-        /// </summary>
-        public double Length()
-        {
-            double result = 0.0;
-            foreach (LinetypeSegment s in this.segments)
-            {
-                result += Math.Abs(s.Length);
-            }
-            return result;
-        }
-
-        /// <summary>
         /// Gets the list of line type segments.
         /// </summary>
         public ObservableCollection<LinetypeSegment> Segments
@@ -326,6 +322,19 @@ namespace netDxf.Tables
         #region public methods
 
         /// <summary>
+        /// Gets the total length of the line type.
+        /// </summary>
+        public double Length()
+        {
+            double result = 0.0;
+            foreach (LinetypeSegment s in this.segments)
+            {
+                result += Math.Abs(s.Length);
+            }
+            return result;
+        }
+
+        /// <summary>
         /// Gets the list of linetype names defined in a LIN file.
         /// </summary>
         /// <param name="file">Linetype definitions file.</param>
@@ -339,11 +348,15 @@ namespace netDxf.Tables
                 {
                     string line = reader.ReadLine();
                     if (line == null)
+                    {
                         throw new FileLoadException("Unknown error reading LIN file.", file);
+                    }
 
                     // every line type definition starts with '*'
                     if (!line.StartsWith("*"))
+                    {
                         continue;
+                    }
 
                     // reading line type name and description
                     int endName = line.IndexOf(',');
@@ -370,14 +383,18 @@ namespace netDxf.Tables
                 {
                     string line = reader.ReadLine();
                     if (line == null)
+                    {
                         throw new FileLoadException("Unknown error reading LIN file.", file);
+                    }
 
                     // every line type definition starts with '*'
                     if (!line.StartsWith("*"))
+                    {
                         continue;
+                    }
 
                     // reading line type name and description
-                    int endName = line.IndexOf(','); // the first semicolon divides the name from the description that might contain more semicolons
+                    int endName = line.IndexOf(','); // the first comma divides the name from the description that might contain more commas
                     string name = line.Substring(1, endName - 1);
                     string description = line.Substring(endName + 1, line.Length - endName - 1);
 
@@ -389,9 +406,11 @@ namespace netDxf.Tables
                         // we have found the line type name, the next line of the file contains the line type definition
                         line = reader.ReadLine();
                         if (line == null)
+                        {
                             throw new FileLoadException("Unknown error reading LIN file.", file);
+                        }
 
-                        string[] tokens = line.Split(',');
+                        string[] tokens = System.Text.RegularExpressions.Regex.Split(line, ",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)");
 
                         // the index 0 is always A (alignment field)
                         for (int i = 1; i < tokens.Length; i++)
@@ -399,25 +418,34 @@ namespace netDxf.Tables
                             double length;
                             if (double.TryParse(tokens[i], NumberStyles.Float, CultureInfo.InvariantCulture, out length))
                             {
-                                // is the length followed by a shape o text segment
+                                // is the length followed by a shape or text segment
                                 if (i + 1 < tokens.Length)
                                 {
                                     if (tokens[i + 1].StartsWith("["))
                                     {
-                                        StringBuilder data = new StringBuilder();
+                                        List<string> data = new List<string>();
+
                                         // there are two kinds of complex linetype Text and Shape, the data is enclosed in brackets
-                                        for ( ++i; i < tokens.Length; i++)
+                                        for (++i; i < tokens.Length; i++)
                                         {
-                                            data.Append(tokens[i]);
+                                            data.Add(tokens[i]);
                                             
                                             // text and shape data must be enclosed by brackets
-                                            if (i >= tokens.Length) throw new FormatException("The linetype definition is not well formatted."); 
-                                            if (tokens[i].EndsWith("]")) break;
-                                            
-                                            data.Append(",");
+                                            if (i >= tokens.Length)
+                                            {
+                                                throw new FormatException("The linetype definition is not well formatted.");
+                                            }
+
+                                            if (tokens[i].EndsWith("]"))
+                                            {
+                                                break;
+                                            }
                                         }
-                                        LinetypeSegment segment = ReadLineTypeComplexSegment(data.ToString(), length);
-                                        if (segment != null) segments.Add(segment);
+                                        LinetypeSegment segment = ReadLineTypeComplexSegment(data.ToArray(), length);
+                                        if (segment != null)
+                                        {
+                                            segments.Add(segment);
+                                        }
                                     }
                                     else
                                     {
@@ -522,56 +550,59 @@ namespace netDxf.Tables
 
         #region private methods
 
-        private static LinetypeSegment ReadLineTypeComplexSegment(string data, double length)
+        private static LinetypeSegment ReadLineTypeComplexSegment(string[] data, double length)
         {
             // the data is enclosed in brackets
-            Debug.Assert(data[0] == '[' || data[data.Length-1] == ']', "The data is enclosed in brackets.");
+            Debug.Assert(data[0][0] == '[' || data[data.Length-1][data[data.Length-1].Length-1] == ']', "The data is enclosed in brackets.");
 
             // the first data item in a complex linetype definition segment
             // can be a shape name or a text string, the last always is enclosed in ""
-            LinetypeSegmentType type = data[1] != '"' ? LinetypeSegmentType.Shape : LinetypeSegmentType.Text;
+            LinetypeSegmentType type = data[0][1] == '"' ? LinetypeSegmentType.Text : LinetypeSegmentType.Shape;
 
-            data = data.Substring(1, data.Length - 2);
+            // remove the start and end brackets
+            data[0] = data[0].Remove(0, 1);
+            data[data.Length - 1] = data[data.Length - 1].Remove(data[data.Length - 1].Length - 1, 1);
 
             Vector2 position = Vector2.Zero;
             LinetypeSegmentRotationType rotationType = LinetypeSegmentRotationType.Relative;
             double rotation = 0.0;
             double scale = 0.1;
 
-            string[] tokens = data.Split(',');
-
             // at least two items must be present the shape name and file
-            if (tokens.Length < 2) return null;
+            if (data.Length < 2) return null;
 
-            string name = tokens[0].Trim('"');
-            string style = tokens[1];
-            for (int i = 2; i < tokens.Length; i++)
+            string name = data[0].Trim('"');
+            string style = data[1];
+            for (int i = 2; i < data.Length; i++)
             {
-                string value = tokens[i].Remove(0, 2);
-                if (tokens[i].StartsWith("X=", StringComparison.InvariantCultureIgnoreCase))
+                string value = data[i].Remove(0, 2);
+                if (data[i].StartsWith("X=", StringComparison.InvariantCultureIgnoreCase))
                 {
                     position.X = double.Parse(value, NumberStyles.Float, CultureInfo.InvariantCulture);
                 }
-                else if (tokens[i].StartsWith("Y=", StringComparison.InvariantCultureIgnoreCase))
+                else if (data[i].StartsWith("Y=", StringComparison.InvariantCultureIgnoreCase))
                 {
                     position.Y = double.Parse(value, NumberStyles.Float, CultureInfo.InvariantCulture);
                 }
-                else if (tokens[i].StartsWith("S=", StringComparison.InvariantCultureIgnoreCase))
+                else if (data[i].StartsWith("S=", StringComparison.InvariantCultureIgnoreCase))
                 {
                     scale = double.Parse(value, NumberStyles.Float, CultureInfo.InvariantCulture);
-                    if (scale <= 0.0) scale = 0.1;
+                    if (scale <= 0.0)
+                    {
+                        scale = 0.1;
+                    }
                 }
-                else if (tokens[i].StartsWith("R=", StringComparison.InvariantCultureIgnoreCase))
+                else if (data[i].StartsWith("R=", StringComparison.InvariantCultureIgnoreCase))
                 {
                     rotationType = LinetypeSegmentRotationType.Relative;
                     rotation = ReadRotation(value);
                 }
-                else if (tokens[i].StartsWith("Q=", StringComparison.InvariantCultureIgnoreCase))
+                else if (data[i].StartsWith("Q=", StringComparison.InvariantCultureIgnoreCase))
                 {
                     rotationType = LinetypeSegmentRotationType.Absolute;
                     rotation = ReadRotation(value);
                 }
-                else if (tokens[i].StartsWith("U=", StringComparison.InvariantCultureIgnoreCase))
+                else if (data[i].StartsWith("U=", StringComparison.InvariantCultureIgnoreCase))
                 {
                     rotationType = LinetypeSegmentRotationType.Upright;
                     rotation = ReadRotation(value);
@@ -624,12 +655,16 @@ namespace netDxf.Tables
         {
             List<LinetypeSegment> items = new List<LinetypeSegment>(this.segments.Count);
             foreach (LinetypeSegment segment in this.segments)
+            {
                 items.Add((LinetypeSegment)segment.Clone());
+            }
 
             Linetype copy = new Linetype(newName, items, this.description);
 
             foreach (XData data in this.XData.Values)
+            {
                 copy.XData.Add((XData)data.Clone());
+            }
 
             return copy;
         }

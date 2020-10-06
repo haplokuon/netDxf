@@ -101,7 +101,9 @@ namespace netDxf
         public BoundingRectangle(IEnumerable<Vector2> points)
         {
             if (points == null)
+            {
                 throw new ArgumentNullException(nameof(points));
+            }
 
             double minX = double.MaxValue;
             double minY = double.MaxValue;
@@ -113,13 +115,24 @@ namespace netDxf
             {
                 any = true;
                 if (minX > point.X)
+                {
                     minX = point.X;
+                }
+
                 if (minY > point.Y)
+                {
                     minY = point.Y;
+                }
+
                 if (maxX < point.X)
+                {
                     maxX = point.X;
+                }
+
                 if (maxY < point.Y)
+                {
                     maxY = point.Y;
+                }
             }
             if (any)
             {
@@ -211,25 +224,41 @@ namespace netDxf
         public static BoundingRectangle Union(BoundingRectangle aabr1, BoundingRectangle aabr2)
         {
             if (aabr1 == null && aabr2 == null)
+            {
                 return null;
+            }
+
             if (aabr1 == null)
+            {
                 return aabr2;
+            }
+
             if (aabr2 == null)
+            {
                 return aabr1;
+            }
 
             Vector2 min = new Vector2();
             Vector2 max = new Vector2();
             for (int i = 0; i < 2; i++)
             {
                 if (aabr1.Min[i] <= aabr2.Min[i])
+                {
                     min[i] = aabr1.Min[i];
+                }
                 else
+                {
                     min[i] = aabr2.Min[i];
+                }
 
                 if (aabr1.Max[i] >= aabr2.Max[i])
+                {
                     max[i] = aabr1.Max[i];
+                }
                 else
+                {
                     max[i] = aabr2.Max[i];
+                }
             }
             return new BoundingRectangle(min, max);
         }
@@ -242,11 +271,15 @@ namespace netDxf
         public static BoundingRectangle Union(IEnumerable<BoundingRectangle> rectangles)
         {
             if (rectangles == null)
+            {
                 throw new ArgumentNullException(nameof(rectangles));
+            }
 
             BoundingRectangle rtnAABR = null;
             foreach (BoundingRectangle aabr in rectangles)
+            {
                 rtnAABR = Union(rtnAABR, aabr);
+            }
 
             return rtnAABR;
         }

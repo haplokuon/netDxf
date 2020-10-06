@@ -25,7 +25,7 @@ namespace netDxf.IO
     internal interface ICodeValueWriter
     {
         /// <summary>
-        /// Gets the dxf code.
+        /// Gets the DXF code.
         /// </summary>
         short Code { get; }
 
