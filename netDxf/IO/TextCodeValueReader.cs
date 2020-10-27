@@ -413,6 +413,10 @@ namespace netDxf.IO
             {
                 return test.ToString("X");
             }
+            else
+            {
+                return "0";
+            }
 
             throw new Exception(string.Format("Value {0} not valid at line {1}", valueString, this.currentPosition));
         }

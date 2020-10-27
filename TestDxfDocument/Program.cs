@@ -28,7 +28,7 @@ namespace TestDxfDocument
     {
         public static void Main()
         {
-            DxfDocument doc = Test(@"sample.dxf");
+            DxfDocument doc = Test(@"Tool.dxf");
 
             #region Samples for new and modified features 2.4.1
 
@@ -4904,7 +4904,7 @@ namespace TestDxfDocument
                     if (mtxt != null) Debug.Assert(ReferenceEquals(mtxt.Style, dxf.TextStyles[mtxt.Style.Name]), "Object reference not equal.");
 
                     Dimension dim = e as Dimension;
-                    if (dim != null)
+                    if (dim?.Block != null)
                     {
                         Debug.Assert(ReferenceEquals(dim.Style, dxf.DimensionStyles[dim.Style.Name]), "Object reference not equal.");
                         Debug.Assert(ReferenceEquals(dim.Block, dxf.Blocks[dim.Block.Name]), "Object reference not equal.");
