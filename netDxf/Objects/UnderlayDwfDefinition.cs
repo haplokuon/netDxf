@@ -80,7 +80,9 @@ namespace netDxf.Objects
             UnderlayDwfDefinition copy = new UnderlayDwfDefinition(newName, this.File);
 
             foreach (XData data in this.XData.Values)
+            {
                 copy.XData.Add((XData)data.Clone());
+            }
 
             return copy;
         }

@@ -256,7 +256,7 @@ namespace netDxf.IO
             this.BeginSection(DxfObjectCode.TablesSection);
 
             //registered application tables
-            this.BeginTable(this.doc.ApplicationRegistries.CodeName, this.doc.ApplicationRegistries.Handle, this.doc.ApplicationRegistries.XData);
+            this.BeginTable(this.doc.ApplicationRegistries.CodeName, this.doc.ApplicationRegistries.Handle, (short) this.doc.ApplicationRegistries.Count, this.doc.ApplicationRegistries.XData);
             foreach (ApplicationRegistry id in this.doc.ApplicationRegistries.Items)
             {
                 this.WriteApplicationRegistry(id);
@@ -264,7 +264,7 @@ namespace netDxf.IO
             this.EndTable();
 
             //viewport tables
-            this.BeginTable(this.doc.VPorts.CodeName, this.doc.VPorts.Handle, this.doc.VPorts.XData);
+            this.BeginTable(this.doc.VPorts.CodeName, this.doc.VPorts.Handle, (short) this.doc.VPorts.Count, this.doc.VPorts.XData);
             foreach (VPort vport in this.doc.VPorts)
             {
                 this.WriteVPort(vport);
@@ -274,7 +274,7 @@ namespace netDxf.IO
             //line type tables
             //The LTYPE table always precedes the LAYER table. I guess because the layers reference the line types,
             //why this same rule is not applied to DIMSTYLE tables is a mystery, since they also reference text styles and block records
-            this.BeginTable(this.doc.Linetypes.CodeName, this.doc.Linetypes.Handle, this.doc.Linetypes.XData);
+            this.BeginTable(this.doc.Linetypes.CodeName, this.doc.Linetypes.Handle, (short) this.doc.Linetypes.Count, this.doc.Linetypes.XData);
             foreach (Linetype linetype in this.doc.Linetypes.Items)
             {
                 this.WriteLinetype(linetype);
@@ -282,7 +282,7 @@ namespace netDxf.IO
             this.EndTable();
 
             //layer tables
-            this.BeginTable(this.doc.Layers.CodeName, this.doc.Layers.Handle, this.doc.Layers.XData);
+            this.BeginTable(this.doc.Layers.CodeName, this.doc.Layers.Handle, (short) this.doc.Layers.Count, this.doc.Layers.XData);
             foreach (Layer layer in this.doc.Layers.Items)
             {
                 this.WriteLayer(layer);
@@ -294,7 +294,7 @@ namespace netDxf.IO
             XDataDictionary xdata = new XDataDictionary();
             xdata.AddRange(this.doc.TextStyles.XData.Values);
             xdata.AddRange(this.doc.ShapeStyles.XData.Values);
-            this.BeginTable(this.doc.TextStyles.CodeName, this.doc.TextStyles.Handle, xdata);
+            this.BeginTable(this.doc.TextStyles.CodeName, this.doc.TextStyles.Handle, (short) this.doc.TextStyles.Count, xdata);
             foreach (TextStyle style in this.doc.TextStyles.Items)
             {
                 this.WriteTextStyle(style);
@@ -306,7 +306,7 @@ namespace netDxf.IO
             this.EndTable();
 
             //dimension style tables
-            this.BeginTable(this.doc.DimensionStyles.CodeName, this.doc.DimensionStyles.Handle, this.doc.DimensionStyles.XData);
+            this.BeginTable(this.doc.DimensionStyles.CodeName, this.doc.DimensionStyles.Handle, (short) this.doc.DimensionStyles.Count, this.doc.DimensionStyles.XData);
             foreach (DimensionStyle style in this.doc.DimensionStyles.Items)
             {
                 this.WriteDimensionStyle(style);
@@ -314,11 +314,11 @@ namespace netDxf.IO
             this.EndTable();
 
             //view
-            this.BeginTable(this.doc.Views.CodeName, this.doc.Views.Handle, this.doc.Views.XData);
+            this.BeginTable(this.doc.Views.CodeName, this.doc.Views.Handle, (short) this.doc.Views.Count, this.doc.Views.XData);
             this.EndTable();
 
             //UCS
-            this.BeginTable(this.doc.UCSs.CodeName, this.doc.UCSs.Handle, this.doc.Blocks.XData);
+            this.BeginTable(this.doc.UCSs.CodeName, this.doc.UCSs.Handle, (short) this.doc.UCSs.Count, this.doc.Blocks.XData);
             foreach (UCS ucs in this.doc.UCSs.Items)
             {
                 this.WriteUCS(ucs);
@@ -326,7 +326,7 @@ namespace netDxf.IO
             this.EndTable();
 
             //block record table
-            this.BeginTable(this.doc.Blocks.CodeName, this.doc.Blocks.Handle, this.doc.Blocks.XData);
+            this.BeginTable(this.doc.Blocks.CodeName, this.doc.Blocks.Handle, (short) this.doc.Blocks.Count, this.doc.Blocks.XData);
             foreach (Block block in this.doc.Blocks.Items)
             {
                 this.WriteBlockRecord(block.Record);
@@ -500,7 +500,7 @@ namespace netDxf.IO
         /// </summary>
         /// <param name="table">Table type to open.</param>
         /// <param name="handle">Handle assigned to this table</param>
-        private void BeginTable(string table, string handle, XDataDictionary xdata)
+        private void BeginTable(string table, string handle, short numEntries, XDataDictionary xdata)
         {
             Debug.Assert(this.activeSection == DxfObjectCode.TablesSection);
 
@@ -511,12 +511,12 @@ namespace netDxf.IO
             {
                 this.chunk.Write(102, "{ACAD_XDICTIONARY");
                 this.chunk.Write(360, this.doc.Layers.StateManager.Handle);
-                this.chunk.Write(102, "{");
+                this.chunk.Write(102, "}");
             }
             this.chunk.Write(330, "0");
 
             this.chunk.Write(100, SubclassMarker.Table);
-            // this.chunk.Write(70, numEntries); this code is obsolete, there is no limit for the number of entries except for layouts according to the AutoCad ActiveX documentation
+            this.chunk.Write(70, numEntries); // this code is obsolete, there is no limit for the number of entries except for layouts according to the AutoCad ActiveX documentation
 
             if (table == DxfObjectCode.DimensionStyleTable)
             {

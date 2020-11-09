@@ -73,7 +73,9 @@ namespace netDxf.Tables
             if (checkName)
             {
                 if (!IsValidName(name))
+                {
                     throw new ArgumentException("The name should be at least one character long and the following characters \\<>/?\":;*|,=` are not supported.", nameof(name));
+                }
             }
 
             this.name = name;
@@ -123,7 +125,9 @@ namespace netDxf.Tables
         public static bool IsValidName(string name)
         {
             if (string.IsNullOrEmpty(name))
+            {
                 return false;
+            }
 
             return name.IndexOfAny(invalidCharacters) == -1;
         }
@@ -139,14 +143,27 @@ namespace netDxf.Tables
         internal void SetName(string newName, bool checkName)
         {
             if (string.IsNullOrEmpty(newName))
+            {
                 throw new ArgumentNullException(nameof(newName));
+            }
+
             if (this.IsReserved)
+            {
                 throw new ArgumentException("Reserved table objects cannot be renamed.", nameof(newName));
+            }
+
             if (string.Equals(this.name, newName, StringComparison.OrdinalIgnoreCase))
+            {
                 return;
+            }
+
             if (checkName)
+            {
                 if (!IsValidName(newName))
+                {
                     throw new ArgumentException("The following characters \\<>/?\":;*|,=` are not supported for table object names.", nameof(newName));
+                }
+            }
             this.OnNameChangedEvent(this.name, newName);
             this.name = newName;
         }
@@ -196,7 +213,9 @@ namespace netDxf.Tables
         public int CompareTo(TableObject other)
         {
             if (other == null)
+            {
                 throw new ArgumentNullException(nameof(other));
+            }
 
             return this.GetType() == other.GetType() ? string.Compare(this.Name, other.Name, StringComparison.OrdinalIgnoreCase) : 0;
         }
@@ -288,10 +307,14 @@ namespace netDxf.Tables
         public override bool Equals(object other)
         {
             if (other == null)
+            {
                 return false;
+            }
 
             if (this.GetType() != other.GetType())
+            {
                 return false;
+            }
 
             return this.Equals((TableObject) other);
         }
@@ -308,7 +331,9 @@ namespace netDxf.Tables
         public bool Equals(TableObject other)
         {
             if (other == null)
+            {
                 return false;
+            }
 
             return string.Equals(this.Name, other.Name, StringComparison.OrdinalIgnoreCase);
         }

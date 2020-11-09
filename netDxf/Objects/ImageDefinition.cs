@@ -109,23 +109,39 @@ namespace netDxf.Objects
             : base(name, DxfObjectCode.ImageDef, false)
         {
             if (string.IsNullOrEmpty(file))
+            {
                 throw new ArgumentNullException(nameof(file));
+            }
+
+            if (file.IndexOfAny(Path.GetInvalidPathChars()) == 0)
+            {
+                throw new ArgumentException("File path contains invalid characters.", nameof(file));
+            }
+
             this.file = file;
 
             if (width <= 0)
+            {
                 throw new ArgumentOutOfRangeException(nameof(width), width, "The ImageDefinition width must be greater than zero.");
+            }
             this.width = width;
 
             if (height <= 0)
+            {
                 throw new ArgumentOutOfRangeException(nameof(height), height, "The ImageDefinition height must be greater than zero.");
+            }
             this.height = height;
 
             if (horizontalResolution <= 0)
+            {
                 throw new ArgumentOutOfRangeException(nameof(horizontalResolution), horizontalResolution, "The ImageDefinition horizontal resolution must be greater than zero.");
+            }
             this.horizontalResolution = horizontalResolution;
 
             if (verticalResolution <= 0)
+            {
                 throw new ArgumentOutOfRangeException(nameof(verticalResolution), verticalResolution, "The ImageDefinition vertical resolution must be greater than zero.");
+            }
             this.verticalResolution = verticalResolution;
 
             this.resolutionUnits = units;
@@ -183,11 +199,15 @@ namespace netDxf.Objects
             : base(name, DxfObjectCode.ImageDef, false)
         {
             if (string.IsNullOrEmpty(file))
+            {
                 throw new ArgumentNullException(nameof(file), "The image file name should be at least one character long.");
+            }
 
             FileInfo info = new FileInfo(file);
             if (!info.Exists)
+            {
                 throw new FileNotFoundException("Image file not found", file);
+            }
 
             this.file = file;
 

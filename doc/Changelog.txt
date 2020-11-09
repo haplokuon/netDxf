@@ -1,6 +1,11 @@
 ## Change history
 
 
+### [2020/10/14]
+* Added some workarounds for invalid values in buggy DXF files.
+* (fixed) In the ACAD_DICTIONARY info, for the Layer table, a "{" was written instead of "}".
+
+
 ### [2020/08/20]
 * Added LayerStates accessible trough the Layers.StateManager. For more details see LayerStateManager() sample.
 * Renamed AttributeFlags.Visible to AttributeFlags.None.

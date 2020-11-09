@@ -22,6 +22,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Text;
@@ -334,11 +335,16 @@ namespace netDxf.IO
 
         private string ReadHex(string hex)
         {
-            long test;
-            if (long.TryParse(hex, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out test))
-                return test.ToString("X");
+            long result;
+            if (long.TryParse(hex, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out result))
+            {
+                return result.ToString("X");
+            }
 
-            throw new Exception(string.Format("Value {0} not valid at line {1}", hex, this.CurrentPosition));
+            Debug.Assert(false, string.Format("Value \"{0}\" not valid at line {1}", hex, this.CurrentPosition));
+
+            return String.Empty;
+
         }
 
         #endregion       

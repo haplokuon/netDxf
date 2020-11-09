@@ -22,6 +22,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using netDxf.Collections;
 using netDxf.Entities;
 using netDxf.Header;
@@ -184,6 +185,11 @@ namespace netDxf.Blocks
                 throw new ArgumentNullException(nameof(xrefFile));
             }
 
+            if (xrefFile.IndexOfAny(Path.GetInvalidPathChars()) == 0)
+            {
+                throw new ArgumentException("File path contains invalid characters.", nameof(xrefFile));
+            }
+
             this.xrefFile = xrefFile;
             this.flags = BlockTypeFlags.XRef | BlockTypeFlags.ResolvedExternalReference;
             if (overlay)
@@ -226,7 +232,9 @@ namespace netDxf.Blocks
             : base(name, DxfObjectCode.Block, checkName)
         {
             if (string.IsNullOrEmpty(name))
+            {
                 throw new ArgumentNullException(nameof(name));
+            }
 
             this.IsReserved = string.Equals(name, DefaultModelSpaceName, StringComparison.OrdinalIgnoreCase);
             this.forInternalUse = name.StartsWith("*");

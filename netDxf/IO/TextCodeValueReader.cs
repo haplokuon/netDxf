@@ -22,6 +22,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 
@@ -317,7 +318,7 @@ namespace netDxf.IO
                 return this.ReadInt(valueString);
             }
 
-            throw new Exception(string.Format("Code {0} not valid at line {1}", this.code, this.currentPosition));
+            throw new Exception(string.Format("Code \"{0}\" not valid at line {1}", this.code, this.currentPosition));
         }
 
         private byte ReadByte(string valueString)
@@ -328,7 +329,9 @@ namespace netDxf.IO
                 return result;
             }
 
-            throw new Exception(string.Format("Value {0} not valid at line {1}", valueString, this.currentPosition));
+            Debug.Assert(false, string.Format("Value \"{0}\" not valid at line {1}", valueString, this.currentPosition));
+
+            return 0;
         }
 
         private byte[] ReadBytes(string valueString)
@@ -344,7 +347,9 @@ namespace netDxf.IO
                 }
                 else
                 {
-                    throw new Exception(string.Format("Value {0} not valid at line {1}", hex, this.currentPosition));
+                    Debug.Assert(false, string.Format("Value \"{0}\" not valid at line {1}", valueString, this.currentPosition));
+
+                    return new byte[0];
                 }
             }
 
@@ -359,7 +364,9 @@ namespace netDxf.IO
                 return result;
             }
 
-            throw new Exception(string.Format("Value {0} not valid at line {1}", valueString, this.currentPosition));
+            Debug.Assert(false, string.Format("Value \"{0}\" not valid at line {1}", valueString, this.currentPosition));
+
+            return 0;
         }
 
         private int ReadInt(string valueString)
@@ -370,7 +377,9 @@ namespace netDxf.IO
                 return result;
             }
 
-            throw new Exception(string.Format("Value {0} not valid at line {1}", valueString, this.currentPosition));
+            Debug.Assert(false, string.Format("Value \"{0}\" not valid at line {1}", valueString, this.currentPosition));
+
+            return 0;
         }
 
         private long ReadLong(string valueString)
@@ -381,13 +390,22 @@ namespace netDxf.IO
                 return result;
             }
 
-            throw new Exception(string.Format("Value {0} not valid at line {1}", valueString, this.currentPosition));
+            Debug.Assert(false, string.Format("Value \"{0}\" not valid at line {1}", valueString, this.currentPosition));
+
+            return 0;
         }
 
         private bool ReadBool(string valueString)
         {
-            byte result = this.ReadByte(valueString);
-            return result > 0;
+            byte result;
+            if (byte.TryParse(valueString, NumberStyles.Integer, CultureInfo.InvariantCulture, out result))
+            {
+                return result > 0;
+            }
+
+            Debug.Assert(false, string.Format("Value \"{0}\" not valid at line {1}", valueString, this.currentPosition));
+
+            return false;
         }
 
         private double ReadDouble(string valueString)
@@ -398,7 +416,9 @@ namespace netDxf.IO
                 return result;
             }
 
-            throw new Exception(string.Format("Value {0} not valid at line {1}", valueString, this.currentPosition));
+            Debug.Assert(false, string.Format("Value \"{0}\" not valid at line {1}", valueString, this.currentPosition));
+
+            return 0.0;
         }
 
         private string ReadString(string valueString)
@@ -408,13 +428,15 @@ namespace netDxf.IO
 
         private string ReadHex(string valueString)
         {
-            long test;
-            if (long.TryParse(valueString, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out test))
+            long result;
+            if (long.TryParse(valueString, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out result))
             {
-                return test.ToString("X");
+                return result.ToString("X");
             }
 
-            throw new Exception(string.Format("Value {0} not valid at line {1}", valueString, this.currentPosition));
+            Debug.Assert(false, string.Format("Value \"{0}\" not valid at line {1}", valueString, this.currentPosition));
+
+            return string.Empty;
         }
 
         #endregion

@@ -99,7 +99,9 @@ namespace netDxf.Objects
             };
 
             foreach (XData data in this.XData.Values)
+            {
                 copy.XData.Add((XData)data.Clone());
+            }
 
             return copy;
         }

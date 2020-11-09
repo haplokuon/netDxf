@@ -61,14 +61,20 @@ namespace netDxf.Collections
         internal override ImageDefinition Add(ImageDefinition imageDefinition, bool assignHandle)
         {
             if (imageDefinition == null)
+            {
                 throw new ArgumentNullException(nameof(imageDefinition));
+            }
 
             ImageDefinition add;
             if (this.list.TryGetValue(imageDefinition.Name, out add))
+            {
                 return add;
+            }
 
             if (assignHandle || string.IsNullOrEmpty(imageDefinition.Handle))
+            {
                 this.Owner.NumHandles = imageDefinition.AssignHandle(this.Owner.NumHandles);
+            }
 
             this.list.Add(imageDefinition.Name, imageDefinition);
             this.references.Add(imageDefinition.Name, new List<DxfObject>());

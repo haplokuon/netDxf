@@ -23,7 +23,6 @@
 using System;
 using netDxf.Collections;
 using netDxf.Objects;
-using netDxf.Tables;
 using netDxf.Units;
 
 namespace netDxf.Blocks
@@ -55,7 +54,9 @@ namespace netDxf.Blocks
             : base(DxfObjectCode.BlockRecord)
         {
             if (string.IsNullOrEmpty(name))
+            {
                 throw new ArgumentNullException(nameof(name));
+            }
             this.name = name;
             this.layout = null;
             this.units = DefaultUnits;

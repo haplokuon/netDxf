@@ -250,6 +250,7 @@ namespace TestDxfDocument
             //WriteInsert();
 
             #endregion
+
         }
 
         #region Samples for new and modified features 2.4.1

@@ -300,6 +300,19 @@ namespace netDxf.Collections
             return true;
         }
 
+        /// <summary>
+        /// Removes all layers states.
+        /// </summary>
+        public void RemoveAll()
+        {
+            string[] names = new string[this.Names.Count];
+            this.Names.CopyTo(names, 0);
+            foreach (string name in names)
+            {
+                this.Remove(name);
+            }
+        }
+
         #region Layer events
 
         private void Item_NameChanged(TableObject sender, TableObjectChangedEventArgs<string> e)
