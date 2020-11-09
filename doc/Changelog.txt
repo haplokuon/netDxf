@@ -1,7 +1,7 @@
 ## Change history
 
 
-### [2020/10/14]
+### [2020/11/09]
 * Added some workarounds for invalid values in buggy DXF files.
 * (fixed) In the ACAD_DICTIONARY info, for the Layer table, a "{" was written instead of "}".
 
