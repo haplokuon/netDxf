@@ -195,13 +195,24 @@ namespace netDxf.Entities
                 int indexV4 = face.VertexIndexes.Count == 3 ? face.VertexIndexes[2] : face.VertexIndexes[3];
 
                 if (indexV1 < 0)
+                {
                     edgeVisibility = edgeVisibility | Face3dEdgeFlags.First;
+                }
+
                 if (indexV2 < 0)
+                {
                     edgeVisibility = edgeVisibility | Face3dEdgeFlags.Second;
+                }
+
                 if (indexV3 < 0)
+                {
                     edgeVisibility = edgeVisibility | Face3dEdgeFlags.Third;
+                }
+
                 if (indexV4 < 0)
+                {
                     edgeVisibility = edgeVisibility | Face3dEdgeFlags.Fourth;
+                }
 
                 Vector3 v1 = this.Vertexes[Math.Abs(indexV1) - 1].Position;
                 Vector3 v2 = this.Vertexes[Math.Abs(indexV2) - 1].Position;
@@ -226,6 +237,7 @@ namespace netDxf.Entities
 
                 entities.Add(face3d);
             }
+
             return entities;
         }
 
@@ -247,7 +259,10 @@ namespace netDxf.Entities
             }
 
             Vector3 newNormal = transformation * this.Normal;
-            if (Vector3.Equals(Vector3.Zero, newNormal)) newNormal = this.Normal;
+            if (Vector3.Equals(Vector3.Zero, newNormal))
+            {
+                newNormal = this.Normal;
+            }
             this.Normal = newNormal;
         }
 
@@ -283,7 +298,9 @@ namespace netDxf.Entities
             };
 
             foreach (XData data in this.XData.Values)
+            {
                 entity.XData.Add((XData) data.Clone());
+            }
 
             return entity;
         }

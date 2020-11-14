@@ -27,7 +27,7 @@ namespace netDxf.Objects
     {
         #region private fields
 
-        private string imageHandle;
+        private readonly string imageHandle;
 
         #endregion
 

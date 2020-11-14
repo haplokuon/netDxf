@@ -42,7 +42,6 @@ namespace netDxf.Objects
         private readonly int width;
         private readonly int height;
         private ImageResolutionUnits resolutionUnits;
-        // internally we will store the resolution in PPI
         private double horizontalResolution;
         private double verticalResolution;
 
@@ -200,13 +199,13 @@ namespace netDxf.Objects
         {
             if (string.IsNullOrEmpty(file))
             {
-                throw new ArgumentNullException(nameof(file), "The image file name should be at least one character long.");
+                throw new ArgumentNullException(nameof(file));
             }
 
             FileInfo info = new FileInfo(file);
             if (!info.Exists)
             {
-                throw new FileNotFoundException("Image file not found", file);
+                throw new FileNotFoundException("Image file not found.", file);
             }
 
             this.file = file;

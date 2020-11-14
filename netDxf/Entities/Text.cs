@@ -137,10 +137,14 @@ namespace netDxf.Entities
             this.alignment = TextAlignment.BaselineLeft;
             this.Normal = Vector3.UnitZ;
             if (style == null)
+            {
                 throw new ArgumentNullException(nameof(style));
+            }
             this.style = style;
             if (height <= 0)
+            {
                 throw new ArgumentOutOfRangeException(nameof(height), this.text, "The Text height must be greater than zero.");
+            }
             this.height = height;
             this.width = 1.0;
             this.widthFactor = style.WidthFactor;
@@ -319,7 +323,10 @@ namespace netDxf.Entities
 
             Vector3 newPosition = transformation * this.Position + translation;
             Vector3 newNormal = transformation * this.Normal;
-            if (Vector3.Equals(Vector3.Zero, newNormal)) newNormal = this.Normal;
+            if (Vector3.Equals(Vector3.Zero, newNormal))
+            {
+                newNormal = this.Normal;
+            }
 
             Matrix3 transOW = MathHelper.ArbitraryAxis(this.Normal);
 
@@ -435,11 +442,18 @@ namespace netDxf.Entities
             //if (newObliqueAngle >= 360) newObliqueAngle -= 360;
             newObliqueAngle = MathHelper.NormalizeAngle(newObliqueAngle);
             if (newObliqueAngle > 180)
+            {
                 newObliqueAngle = 180 - newObliqueAngle;
+            }
+
             if (newObliqueAngle < -85)
+            {
                 newObliqueAngle = -85;
+            }
             else if (newObliqueAngle > 85)
+            {
                 newObliqueAngle = 85;
+            }
 
             // the height must be greater than zero, the cos is always positive between -85 and 85
             double newHeight = newVvector.Modulus() * Math.Cos(newObliqueAngle * MathHelper.DegToRad);
@@ -447,10 +461,14 @@ namespace netDxf.Entities
 
             // the width factor is defined between 0.01 and 100
             double newWidthFactor = newUvector.Modulus() / newHeight;
-            if(newWidthFactor<0.01)
+            if (newWidthFactor < 0.01)
+            {
                 newWidthFactor = 0.01;
+            }
             else if (newWidthFactor > 100)
+            {
                 newWidthFactor = 100;
+            }
 
             this.Position = newPosition;
             this.Normal = newNormal;
@@ -492,7 +510,9 @@ namespace netDxf.Entities
             };
 
             foreach (XData data in this.XData.Values)
+            {
                 entity.XData.Add((XData) data.Clone());
+            }
 
             return entity;
         }

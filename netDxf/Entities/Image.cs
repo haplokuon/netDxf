@@ -33,6 +33,24 @@ namespace netDxf.Entities
     public class Image :
         EntityObject
     {
+        #region delegates and events
+
+        public delegate void ImageDefinitionChangedEventHandler(Image sender, TableObjectChangedEventArgs<ImageDefinition> e);
+        public event ImageDefinitionChangedEventHandler ImageDefinitionChanged;
+        protected virtual ImageDefinition OnImageDefinitionChangedEvent(ImageDefinition oldImageDefinition, ImageDefinition newImageDefinition)
+        {
+            ImageDefinitionChangedEventHandler ae = this.ImageDefinitionChanged;
+            if (ae != null)
+            {
+                TableObjectChangedEventArgs<ImageDefinition> eventArgs = new TableObjectChangedEventArgs<ImageDefinition>(oldImageDefinition, newImageDefinition);
+                ae(this, eventArgs);
+                return eventArgs.NewValue;
+            }
+            return newImageDefinition;
+        }
+
+        #endregion
+
         #region private fields
 
         private Vector3 position;
@@ -233,7 +251,14 @@ namespace netDxf.Entities
         public ImageDefinition Definition
         {
             get { return this.imageDefinition; }
-            internal set { this.imageDefinition = value; }
+            set
+            {
+                if (value == null)
+                {
+                    throw new ArgumentNullException(nameof(value));
+                }
+                this.imageDefinition = this.OnImageDefinitionChangedEvent(this.imageDefinition, value);
+            }
         }
 
         /// <summary>

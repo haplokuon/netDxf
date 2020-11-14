@@ -21,6 +21,7 @@
 #endregion
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using netDxf.Collections;
 
@@ -34,7 +35,7 @@ namespace netDxf.Tables
     {
         #region private fields
 
-        private readonly string file;
+        private readonly string shapeFile;
         private readonly double size;
         private readonly double widthFactor;
         private readonly double obliqueAngle;
@@ -88,7 +89,7 @@ namespace netDxf.Tables
                 throw new ArgumentException("File path contains invalid characters.", nameof(file));
             }
 
-            this.file = file;
+            this.shapeFile = file;
             this.size = size;
             this.widthFactor = widthFactor;
             this.obliqueAngle = obliqueAngle;
@@ -103,7 +104,7 @@ namespace netDxf.Tables
         /// </summary>
         public string File
         {
-            get { return this.file; }
+            get { return this.shapeFile; }
         }
 
         /// <summary>
@@ -147,14 +148,148 @@ namespace netDxf.Tables
         #region public methods
 
         /// <summary>
-        /// Checks if the actual shape style contains a shape with the specified name.
+        /// Gets the list of shapes names defined in a SHP file.
+        /// </summary>
+        /// <param name="file">Shape SHP file.</param>
+        /// <returns>List of shape names contained in the specified SHP file.</returns>
+        public static List<string> NamesFromFile(string file)
+        {
+            List<string> names = new List<string>();
+
+            if (string.IsNullOrEmpty(file))
+            {
+                throw new ArgumentNullException(nameof(file));
+            }
+
+            if (!string.Equals(Path.GetExtension(file), ".SHP", StringComparison.InvariantCultureIgnoreCase))
+            {
+                throw new ArgumentException("The shape file must have the extension SHP.", nameof(file));
+            }
+
+            using (StreamReader reader = new StreamReader(System.IO.File.Open(file, FileMode.Open, FileAccess.Read, FileShare.ReadWrite), true))
+            {
+                while (!reader.EndOfStream)
+                {
+                    string line = reader.ReadLine();
+                    if (line == null)
+                    {
+                        throw new FileLoadException("Unknown error reading SHP file.", file);
+                    }
+                    // lines starting with semicolons are comments
+                    if (line.StartsWith(";"))
+                    {
+                        continue;
+                    }
+                    // every shape definition starts with '*'
+                    if (!line.StartsWith("*"))
+                    {
+                        continue;
+                    }
+
+                    string[] tokens = line.TrimStart('*').Split(',');
+                    names.Add(tokens[2]);
+                }
+            }
+            return names;
+        }
+
+        /// <summary>
+        /// Checks if the shape SHP file contains a shape with the specified name.
+        /// </summary>
+        /// <param name="file">Shape SHP file.</param>
+        /// <param name="shapeName">Shape name.</param>
+        /// <returns>True if the shape SHP file that contains a shape with the specified name, false otherwise.</returns>
+        public static bool ContainsShapeName(string file, string shapeName)
+        {
+            if (string.IsNullOrEmpty(file))
+            {
+                throw new ArgumentNullException(nameof(file));
+            }
+
+            if (!string.Equals(Path.GetExtension(file), ".SHP", StringComparison.InvariantCultureIgnoreCase))
+            {
+                throw new ArgumentException("The shape file must have the extension SHP.", nameof(file));
+            }
+
+            if (string.IsNullOrEmpty(shapeName))
+            {
+                return false;
+            }
+
+            using (StreamReader reader = new StreamReader(System.IO.File.Open(file, FileMode.Open, FileAccess.Read, FileShare.ReadWrite), true))
+            {
+                while (!reader.EndOfStream)
+                {
+                    string line = reader.ReadLine();
+                    if (line == null)
+                    {
+                        throw new FileLoadException("Unknown error reading SHP file.", file);
+                    }
+                    // lines starting with semicolons are comments
+                    if (line.StartsWith(";"))
+                    {
+                        continue;
+                    }
+                    // every shape definition starts with '*'
+                    if (!line.StartsWith("*"))
+                    {
+                        continue;
+                    }
+
+                    string[] tokens = line.TrimStart('*').Split(',');
+                    if (string.Equals(shapeName, tokens[2], StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        //the shape style that contains a shape with the specified name has been found
+                        return true;
+                    }
+                }
+            }
+            // there are no shape styles that contain a shape with the specified name
+            return false;
+        }
+
+        /// <summary>
+        /// Gets the list of shapes names defined in the actual shape style (the shape SHP file must be accessible).
+        /// </summary>
+        /// <returns>List of shape names contained in the actual shape style.</returns>
+        /// <remarks>
+        /// If the actual shape style belongs to a document, it will look for the SHP file also in the document support folders.
+        /// </remarks>
+        public List<string> NamesFromShapeStyle(string file)
+        {
+            string f = Path.ChangeExtension(this.shapeFile, "SHP");
+            if (this.Owner != null)
+            {
+                f = this.Owner.Owner.SupportFolders.FindFile(f);
+            }
+            else
+            {
+                if(!System.IO.File.Exists(f)) f = string.Empty;
+            }
+
+            // we will look for the shape name in the SHP file         
+            if (string.IsNullOrEmpty(f))
+            {
+                return new List<string>();
+            }
+
+            return NamesFromFile(f);
+        }
+
+        /// <summary>
+        /// Checks if the actual shape style contains a shape with the specified name (the shape SHP file must be accessible).
         /// </summary>
         /// <param name="name">Shape name.</param>
         /// <returns>True if the shape style that contains a shape with the specified name, false otherwise.</returns>
         /// <remarks>If the actual shape style belongs to a document, it will look for the SHP file also in the document support folders.</remarks>
         public bool ContainsShapeName(string name)
         {
-            string f = Path.ChangeExtension(this.file, "SHP");
+            if (string.IsNullOrEmpty(name))
+            {
+                return false;
+            }
+
+            string f = Path.ChangeExtension(this.shapeFile, "SHP");
             if (this.Owner != null)
             {
                 f = this.Owner.Owner.SupportFolders.FindFile(f);
@@ -170,37 +305,13 @@ namespace netDxf.Tables
                 return false;
             }
 
-            using (StreamReader reader = new StreamReader(System.IO.File.Open(f, FileMode.Open, FileAccess.Read, FileShare.ReadWrite), true))
-            {
-                while (!reader.EndOfStream)
-                {
-                    string line = reader.ReadLine();
-                    if (line == null)
-                    {
-                        throw new FileLoadException("Unknown error reading SHP file.", f);
-                    }
-                    // lines starting with semicolons are comments
-                    if (line.StartsWith(";"))
-                    {
-                        continue;
-                    }
-                    // every shape definition starts with '*'
-                    if (!line.StartsWith("*"))
-                    {
-                        continue;
-                    }
+            return ContainsShapeName(f, name);
 
-                    string[] tokens = line.TrimStart('*').Split(',');
-                    if (string.Equals(name, tokens[2], StringComparison.InvariantCultureIgnoreCase))
-                    {
-                        //the shape style that contains a shape with the specified name has been found
-                        return true;
-                    }
-                }
-            }
-            // there are no shape styles that contain a shape with the specified name
-            return false;
         }
+
+        #endregion
+
+        #region internal methods
 
         /// <summary>
         /// Gets the number of the shape with the specified name.
@@ -208,10 +319,15 @@ namespace netDxf.Tables
         /// <param name="name">Name of the shape.</param>
         /// <returns>The number of the shape, 0 in case the shape has not been found.</returns>
         /// <remarks>If the actual shape style belongs to a document, it will look for the SHP file also in the document support folders.</remarks>
-        public short ShapeNumber(string name)
+        internal short ShapeNumber(string name)
         {
+            if (string.IsNullOrEmpty(name))
+            {
+                return 0;
+            }
+
             // we will look for the shape name in the SHP file
-            string f = Path.ChangeExtension(this.file, "SHP");
+            string f = Path.ChangeExtension(this.shapeFile, "SHP");
             if (this.Owner != null)
             {
                 f = this.Owner.Owner.SupportFolders.FindFile(f);
@@ -263,10 +379,10 @@ namespace netDxf.Tables
         /// <param name="number">Number of the shape.</param>
         /// <returns>The name of the shape, empty in case the shape has not been found.</returns>
         /// <remarks>If the actual shape style belongs to a document, it will look for the SHP file also in the document support folders.</remarks>
-        public string ShapeName(short number)
+        internal string ShapeName(short number)
         {
             // we will look for the shape name in the SHP file
-            string f = Path.ChangeExtension(this.file, "SHP");
+            string f = Path.ChangeExtension(this.shapeFile, "SHP");
             if (this.Owner != null)
             {
                 f = this.Owner.Owner.SupportFolders.FindFile(f);
@@ -321,7 +437,7 @@ namespace netDxf.Tables
         /// <returns>A new TextStyle that is a copy of this instance.</returns>
         public override TableObject Clone(string newName)
         {
-            ShapeStyle copy = new ShapeStyle(newName, this.file, this.size, this.widthFactor, this.obliqueAngle);
+            ShapeStyle copy = new ShapeStyle(newName, this.shapeFile, this.size, this.widthFactor, this.obliqueAngle);
 
             foreach (XData data in this.XData.Values)
                 copy.XData.Add((XData)data.Clone());

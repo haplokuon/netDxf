@@ -281,11 +281,15 @@ namespace netDxf.Entities
             this.position = position;
             this.attachmentPoint = MTextAttachmentPoint.TopLeft;
             if (style == null)
+            {
                 throw new ArgumentNullException(nameof(style));
+            }
             this.style = style;
             this.rectangleWidth = rectangleWidth;
             if (height <= 0.0)
+            {
                 throw new ArgumentOutOfRangeException(nameof(height), this.text, "The MText height must be greater than zero.");
+            }
             this.height = height;
             this.lineSpacing = 1.0;
             this.lineSpacingStyle = MTextLineSpacingStyle.AtLeast;
@@ -324,7 +328,9 @@ namespace netDxf.Entities
             set
             {
                 if (value <= 0)
+                {
                     throw new ArgumentOutOfRangeException(nameof(value), value, "The MText height must be greater than zero.");
+                }
                 this.height = value;
             }
         }
@@ -341,7 +347,9 @@ namespace netDxf.Entities
             set
             {
                 if (value < 0.25 || value > 4.0)
+                {
                     throw new ArgumentOutOfRangeException(nameof(value), value, "The MText LineSpacingFactor valid values range from 0.25 to 4.0");
+                }
                 this.lineSpacing = value;
             }
         }
@@ -351,15 +359,17 @@ namespace netDxf.Entities
         /// Get or sets the <see cref="MTextLineSpacingStyle">line spacing style</see>.
         /// </summary>
         /// <remarks>
-        /// 
+        /// The only available options are AtLeast and Exact, Default and Multiple are only applicable to MTextParagraphOptions objects.
         /// </remarks>
         public MTextLineSpacingStyle LineSpacingStyle
         {
             get { return this.lineSpacingStyle; }
             set
             {
-                if(value == MTextLineSpacingStyle.Default || value == MTextLineSpacingStyle.Multiple)
-                    throw new ArgumentOutOfRangeException(nameof(value), value, "");
+                if (value == MTextLineSpacingStyle.Default || value == MTextLineSpacingStyle.Multiple)
+                {
+                    throw new ArgumentOutOfRangeException(nameof(value), value, "The Default and Multiple options are only applicable to MTextParagraphOptions objects.");
+                }
                 this.lineSpacingStyle = value;
             }
         }
@@ -387,7 +397,9 @@ namespace netDxf.Entities
             set
             {
                 if (value < 0.0)
+                {
                     throw new ArgumentOutOfRangeException(nameof(value), value, "The MText rectangle width must be equals or greater than zero.");
+                }
                 this.rectangleWidth = value;
             }
         }
@@ -410,7 +422,9 @@ namespace netDxf.Entities
             set
             {
                 if (value == null)
+                {
                     throw new ArgumentNullException(nameof(value));
+                }
                 this.style = this.OnTextStyleChangedEvent(this.style, value);
             }
         }
@@ -521,25 +535,46 @@ namespace netDxf.Entities
 
             string f;
             if (string.IsNullOrEmpty(options.FontName))
+            {
                 f = string.IsNullOrEmpty(this.style.FontFamilyName) ? this.style.FontFile : this.style.FontFamilyName;
+            }
             else
+            {
                 f = options.FontName;
+            }
 
             if (options.Bold && options.Italic)
+            {
                 formattedText = string.Format("\\F{0}|b1|i1;{1}", f, formattedText);
+            }
             else if (options.Bold && !options.Italic)
+            {
                 formattedText = string.Format("\\F{0}|b1|i0;{1}", f, formattedText);
+            }
             else if (!options.Bold && options.Italic)
+            {
                 formattedText = string.Format("\\F{0}|i1|b0;{1}", f, formattedText);
+            }
             else
+            {
                 formattedText = string.Format("\\F{0}|b0|i0;{1}", f, formattedText);
+            }
 
             if (options.Overline)
+            {
                 formattedText = string.Format("\\O{0}\\o", formattedText);
+            }
+
             if (options.Underline)
+            {
                 formattedText = string.Format("\\L{0}\\l", formattedText);
+            }
+
             if (options.StrikeThrough)
+            {
                 formattedText = string.Format("\\K{0}\\k", formattedText);
+            }
+
             if (options.Color != null)
             {
                 // The DXF is not consistent in the way it converts a true color to its 24-bit representation,
@@ -550,13 +585,24 @@ namespace netDxf.Entities
             }
 
             if (!MathHelper.IsOne(baseHeightFactor))
+            {
                 formattedText = string.Format("\\H{0}x;{1}", baseHeightFactor.ToString(CultureInfo.InvariantCulture), formattedText);
+            }
+
             if (!MathHelper.IsZero(options.ObliqueAngle))
+            {
                 formattedText = string.Format("\\Q{0};{1}", options.ObliqueAngle.ToString(CultureInfo.InvariantCulture), formattedText);
+            }
+
             if (!MathHelper.IsOne(options.CharacterSpaceFactor))
+            {
                 formattedText = string.Format("\\T{0};{1}", options.CharacterSpaceFactor.ToString(CultureInfo.InvariantCulture), formattedText);
+            }
+
             if (!MathHelper.IsOne(options.WidthFactor))
+            {
                 formattedText = string.Format("\\W{0};{1}", options.WidthFactor.ToString(CultureInfo.InvariantCulture), formattedText);
+            }
 
             this.text += "{" + formattedText + "}";
         }
@@ -625,7 +671,9 @@ namespace netDxf.Entities
             // when the first line indent is negative, it cannot be lower than the available space left by the left indent
             double fli = options.FirstLineIndent;
             if (fli < 0.0 && Math.Abs(fli) > options.LeftIndent)
+            {
                 fli = -options.LeftIndent;
+            }
 
             codes = string.Format("\\pi{0},l{1},r{2},b{3},a{4};{5}",
                 fli.ToString(CultureInfo.InvariantCulture),
@@ -786,7 +834,10 @@ namespace netDxf.Entities
 
             Vector3 newPosition = transformation * this.Position + translation;
             Vector3 newNormal = transformation * this.Normal;
-            if (Vector3.Equals(Vector3.Zero, newNormal)) newNormal = this.Normal;
+            if (Vector3.Equals(Vector3.Zero, newNormal))
+            {
+                newNormal = this.Normal;
+            }
 
             Matrix3 transOW = MathHelper.ArbitraryAxis(this.Normal);
 
@@ -923,7 +974,9 @@ namespace netDxf.Entities
             };
 
             foreach (XData data in this.XData.Values)
+            {
                 entity.XData.Add((XData) data.Clone());
+            }
 
             return entity;
         }

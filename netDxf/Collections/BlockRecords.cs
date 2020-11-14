@@ -62,14 +62,20 @@ namespace netDxf.Collections
         internal override Block Add(Block block, bool assignHandle)
         {
             if (block == null)
+            {
                 throw new ArgumentNullException(nameof(block));
+            }
 
             Block add;
             if (this.list.TryGetValue(block.Name, out add))
+            {
                 return add;
+            }
 
             if (assignHandle || string.IsNullOrEmpty(block.Handle))
+            {
                 this.Owner.NumHandles = block.AssignHandle(this.Owner.NumHandles);
+            }
 
             this.list.Add(block.Name, block);
             this.references.Add(block.Name, new List<DxfObject>());
@@ -79,11 +85,15 @@ namespace netDxf.Collections
 
             //for new block definitions configure its entities
             foreach (EntityObject entity in block.Entities)
+            {
                 this.Owner.AddEntityToDocument(entity, block, assignHandle);
+            }
 
             //for new block definitions configure its attributes
             foreach (AttributeDefinition attDef in block.AttributeDefinitions.Values)
+            {
                 this.Owner.AddAttributeDefinitionToDocument(attDef, assignHandle);
+            }
 
             block.Record.Owner = this;
 
@@ -120,27 +130,39 @@ namespace netDxf.Collections
         public override bool Remove(Block item)
         {
             if (item == null)
+            {
                 return false;
+            }
 
             if (!this.Contains(item))
+            {
                 return false;
+            }
 
             if (item.IsReserved)
+            {
                 return false;
+            }
 
             if (this.references[item.Name].Count != 0)
+            {
                 return false;
+            }
 
             // remove the block from the associated layer
             this.Owner.Layers.References[item.Layer.Name].Remove(item);
 
             // we will remove all entities from the block definition
             foreach (EntityObject entity in item.Entities)
+            {
                 this.Owner.RemoveEntityFromDocument(entity);
+            }
 
             // remove all attribute definitions from the associated layers
             foreach (AttributeDefinition attDef in item.AttributeDefinitions.Values)
+            {
                 this.Owner.RemoveAttributeDefinitionFromDocument(attDef);
+            }
 
             this.Owner.AddedObjects.Remove(item.Handle);
             this.references.Remove(item.Name);
@@ -169,7 +191,9 @@ namespace netDxf.Collections
         private void Item_NameChanged(TableObject sender, TableObjectChangedEventArgs<string> e)
         {
             if (this.Contains(e.NewValue))
+            {
                 throw new ArgumentException("There is already another block with the same name.");
+            }
 
             this.list.Remove(sender.Name);
             this.list.Add(e.NewValue, (Block) sender);

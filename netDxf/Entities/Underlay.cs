@@ -33,6 +33,24 @@ namespace netDxf.Entities
     public class Underlay :
         EntityObject
     {
+        #region delegates and events
+
+        public delegate void UnderlayDefinitionChangedEventHandler(Underlay sender, TableObjectChangedEventArgs<UnderlayDefinition> e);
+        public event UnderlayDefinitionChangedEventHandler UnderlayDefinitionChanged;
+        protected virtual UnderlayDefinition OnUnderlayDefinitionChangedEvent(UnderlayDefinition oldUnderlayDefinition, UnderlayDefinition newUnderlayDefinition)
+        {
+            UnderlayDefinitionChangedEventHandler ae = this.UnderlayDefinitionChanged;
+            if (ae != null)
+            {
+                TableObjectChangedEventArgs<UnderlayDefinition> eventArgs = new TableObjectChangedEventArgs<UnderlayDefinition>(oldUnderlayDefinition, newUnderlayDefinition);
+                ae(this, eventArgs);
+                return eventArgs.NewValue;
+            }
+            return newUnderlayDefinition;
+        }
+
+        #endregion
+
         #region private fields
 
         private UnderlayDefinition definition;
@@ -116,8 +134,15 @@ namespace netDxf.Entities
         public UnderlayDefinition Definition
         {
             get { return this.definition; }
-            internal set
+            set
             {
+                if (value == null)
+                {
+                    throw new ArgumentNullException(nameof(value));
+                }
+
+                this.definition = this.OnUnderlayDefinitionChangedEvent(this.definition, value);
+
                 switch (value.Type)
                 {
                     case UnderlayType.DGN:
@@ -130,7 +155,6 @@ namespace netDxf.Entities
                         this.CodeName = DxfObjectCode.UnderlayPdf;
                         break;
                 }
-                this.definition = value;
             }
         }
 
@@ -158,7 +182,9 @@ namespace netDxf.Entities
             set
             {
                 if (MathHelper.IsZero(value.X) || MathHelper.IsZero(value.Y))
+                {
                     throw new ArgumentOutOfRangeException(nameof(value), value, "Any of the vector scale components cannot be zero.");
+                }
                 this.scale = value;
             }
         }
@@ -182,7 +208,9 @@ namespace netDxf.Entities
             set
             {
                 if (value < 20 || value > 100)
+                {
                     throw new ArgumentOutOfRangeException(nameof(value), value, "Accepted contrast values range from 20 to 100.");
+                }
                 this.contrast = value;
             }
         }
@@ -197,7 +225,9 @@ namespace netDxf.Entities
             set
             {
                 if (value < 0 || value > 80)
+                {
                     throw new ArgumentOutOfRangeException(nameof(value), value, "Accepted fade values range from 0 to 80.");
+                }
                 this.fade = value;
             }
         }

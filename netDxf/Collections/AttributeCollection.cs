@@ -56,7 +56,9 @@ namespace netDxf.Collections
         public AttributeCollection(IEnumerable<Attribute> attributes)
         {
             if (attributes == null)
+            {
                 throw new ArgumentNullException(nameof(attributes));
+            }
             this.innerArray = new List<Attribute>(attributes);
         }
 
@@ -132,12 +134,18 @@ namespace netDxf.Collections
         public Attribute AttributeWithTag(string tag)
         {
             if (string.IsNullOrEmpty(tag))
+            {
                 return null;
+            }
             foreach (Attribute att in this.innerArray)
             {
                 if (att.Definition != null)
+                {
                     if (string.Equals(tag, att.Tag, StringComparison.OrdinalIgnoreCase))
+                    {
                         return att;
+                    }
+                }
             }
 
             return null;

@@ -307,7 +307,10 @@ namespace netDxf.IO
                             this.ReadAcdsData();
                             break;
                         default:
-                            throw new Exception(string.Format("Unknown section {0}.", this.chunk.ReadString()));
+                            Debug.Assert(false, string.Format("Unknown section {0}.", this.chunk.ReadString()));
+                            this.ReadUnknowData();
+                            break;
+                            //throw new Exception(string.Format("Unknown section {0}.", this.chunk.ReadString()));
                     }
                 }
                 this.chunk.Next();
@@ -652,7 +655,9 @@ namespace netDxf.IO
                         {
                             // some header variables have more than one entry
                             while (this.chunk.Code != 0 && this.chunk.Code != 9)
+                            {
                                 this.chunk.Next();
+                            }
                         }
                         else 
                         {
@@ -736,11 +741,7 @@ namespace netDxf.IO
             this.chunk.Next();
             while (this.chunk.ReadString() != DxfObjectCode.EndSection)
             {
-                //read the class
-                do
-                {
-                    this.chunk.Next();
-                } while (this.chunk.Code != 0);
+                this.ReadUnknowData();
             }
         }
 
@@ -968,10 +969,7 @@ namespace netDxf.IO
                         break;
                     case DxfObjectCode.ImageDef:
                         ImageDefinition imageDefinition = this.ReadImageDefinition();
-                        //if (imageDefinition != null)
-                        //{
-                            this.doc.ImageDefinitions.Add(imageDefinition, false);
-                        //}
+                        this.doc.ImageDefinitions.Add(imageDefinition, false);
                         break;
                     case DxfObjectCode.ImageDefReactor:
                         ImageDefinitionReactor reactor = this.ReadImageDefReactor();
@@ -1001,24 +999,15 @@ namespace netDxf.IO
                         break;
                     case DxfObjectCode.UnderlayDgnDefinition:
                         UnderlayDgnDefinition underlayDgnDef = (UnderlayDgnDefinition) this.ReadUnderlayDefinition(UnderlayType.DGN);
-                        //if (underlayDgnDef != null)
-                        //{
-                            this.doc.UnderlayDgnDefinitions.Add(underlayDgnDef, false);
-                        //}
+                        this.doc.UnderlayDgnDefinitions.Add(underlayDgnDef, false);
                         break;
                     case DxfObjectCode.UnderlayDwfDefinition:
                         UnderlayDwfDefinition underlayDwfDef = (UnderlayDwfDefinition) this.ReadUnderlayDefinition(UnderlayType.DWF);
-                        //if (underlayDwfDef != null)
-                        //{
-                            this.doc.UnderlayDwfDefinitions.Add(underlayDwfDef, false);
-                        //}
+                        this.doc.UnderlayDwfDefinitions.Add(underlayDwfDef, false);
                         break;
                     case DxfObjectCode.UnderlayPdfDefinition:
                         UnderlayPdfDefinition underlayPdfDef = (UnderlayPdfDefinition) this.ReadUnderlayDefinition(UnderlayType.PDF);
-                        //if (underlayPdfDef != null)
-                        //{
-                            this.doc.UnderlayPdfDefinitions.Add(underlayPdfDef, false);
-                        //}
+                        this.doc.UnderlayPdfDefinitions.Add(underlayPdfDef, false);
                         break;
                     case DxfObjectCode.XRecord:
                         XRecord xRecord = this.ReadXRecord();
@@ -1130,11 +1119,7 @@ namespace netDxf.IO
                         xData.Add(data);
                         break;
                     default:
-                        if (this.chunk.Code >= 1000 && this.chunk.Code <= 1071)
-                        {
-                            throw new Exception("The extended data of an entity must start with the application registry code.");
-                        }
-
+                        Debug.Assert(!(this.chunk.Code >= 1000 && this.chunk.Code <= 1071), "The extended data of an entity must start with the application registry code.");
                         this.chunk.Next();
                         break;
                 }
@@ -1342,11 +1327,11 @@ namespace netDxf.IO
                         {
                             // there is only need to read the first active VPort
                             // multiple Model viewports are not supported
-                            this.ReadUnknownTableEntry();
+                            this.ReadUnknowData();
                         }                     
                         break;
                     default:
-                        this.ReadUnknownTableEntry();
+                        this.ReadUnknowData();
                         return;
                 }
             }
@@ -1374,10 +1359,7 @@ namespace netDxf.IO
                         xData.Add(data);
                         break;
                     default:
-                        if (this.chunk.Code >= 1000 && this.chunk.Code <= 1071)
-                        {
-                            throw new Exception("The extended data of an entity must start with the application registry code.");
-                        }
+                        Debug.Assert(!(this.chunk.Code >= 1000 && this.chunk.Code <= 1071), "The extended data of an entity must start with the application registry code.");
                         this.chunk.Next();
                         break;
                 }
@@ -1438,11 +1420,7 @@ namespace netDxf.IO
                         xData.Add(data);
                         break;
                     default:
-                        if (this.chunk.Code >= 1000 && this.chunk.Code <= 1071)
-                        {
-                            throw new Exception("The extended data of an entity must start with the application registry code.");
-                        }
-
+                        Debug.Assert(!(this.chunk.Code >= 1000 && this.chunk.Code <= 1071), "The extended data of an entity must start with the application registry code.");
                         this.chunk.Next();
                         break;
                 }
@@ -2031,11 +2009,7 @@ namespace netDxf.IO
                         xData.Add(data);
                         break;
                     default:
-                        if (this.chunk.Code >= 1000 && this.chunk.Code <= 1071)
-                        {
-                            throw new Exception("The extended data of an entity must start with the application registry code.");
-                        }
-
+                        Debug.Assert(!(this.chunk.Code >= 1000 && this.chunk.Code <= 1071), "The extended data of an entity must start with the application registry code.");
                         this.chunk.Next();
                         break;
                 }
@@ -2360,10 +2334,7 @@ namespace netDxf.IO
                         xData.Add(data);
                         break;
                     default:
-                        if (this.chunk.Code >= 1000 && this.chunk.Code <= 1071)
-                        {
-                            throw new Exception("The extended data of an entity must start with the application registry code.");
-                        }
+                        Debug.Assert(!(this.chunk.Code >= 1000 && this.chunk.Code <= 1071), "The extended data of an entity must start with the application registry code.");
                         this.chunk.Next();
                         break;
                 }
@@ -2372,7 +2343,6 @@ namespace netDxf.IO
             if (!TableObject.IsValidName(name))
             {
                 Debug.Assert(false, string.Format("Table object name \"{0}\" is not valid.", name));
-
                 return null;
             }
 
@@ -2478,10 +2448,7 @@ namespace netDxf.IO
                         xData.Add(data);
                         break;
                     default:
-                        if (this.chunk.Code >= 1000 && this.chunk.Code <= 1071)
-                        {
-                            throw new Exception("The extended data of an entity must start with the application registry code.");
-                        }
+                        Debug.Assert(!(this.chunk.Code >= 1000 && this.chunk.Code <= 1071), "The extended data of an entity must start with the application registry code.");
                         this.chunk.Next();
                         break;
                 }
@@ -2490,7 +2457,6 @@ namespace netDxf.IO
             if (!TableObject.IsValidName(name))
             {
                 Debug.Assert(false, "Table object name is not valid.");
-
                 return null;
             }
 
@@ -2680,16 +2646,12 @@ namespace netDxf.IO
                         xData.Add(data);
                         break;
                     default:
-                        if (this.chunk.Code >= 1000 && this.chunk.Code <= 1071)
-                        {
-                            throw new Exception("The extended data of an entity must start with the application registry code.");
-                        }
+                        Debug.Assert(!(this.chunk.Code >= 1000 && this.chunk.Code <= 1071), "The extended data of an entity must start with the application registry code.");
                         this.chunk.Next();
                         break;
                 }
             }
 
-            
             // shape styles are handle in a separate list
             if (isShapeStyle)
             {
@@ -2697,7 +2659,6 @@ namespace netDxf.IO
                 if (string.IsNullOrEmpty(file))
                 {
                     Debug.Assert(false, "File path is null or empty.");
-
                     file = FileNotValid;
                 }
 
@@ -2705,7 +2666,6 @@ namespace netDxf.IO
                 if (file.IndexOfAny(Path.GetInvalidPathChars()) == 0)
                 {
                     Debug.Assert(false, "File path contains invalid characters: " + file);
-
                     file = FileNotValid;
                 }
 
@@ -2722,7 +2682,6 @@ namespace netDxf.IO
             if (!TableObject.IsValidName(name))
             {
                 Debug.Assert(false, "Table object name is not valid.");
-
                 return null;
             }
 
@@ -2882,10 +2841,7 @@ namespace netDxf.IO
                         xData.Add(data);
                         break;
                     default:
-                        if (this.chunk.Code >= 1000 && this.chunk.Code <= 1071)
-                        {
-                            throw new Exception("The extended data of an entity must start with the application registry code.");
-                        }
+                        Debug.Assert(!(this.chunk.Code >= 1000 && this.chunk.Code <= 1071), "The extended data of an entity must start with the application registry code.");
                         this.chunk.Next();
                         break;
                 }
@@ -3030,10 +2986,7 @@ namespace netDxf.IO
                         xData.Add(data);
                         break;
                     default:
-                        if (this.chunk.Code >= 1000 && this.chunk.Code <= 1071)
-                        {
-                            throw new Exception("The extended data of an entity must start with the application registry code.");
-                        }
+                        Debug.Assert(!(this.chunk.Code >= 1000 && this.chunk.Code <= 1071), "The extended data of an entity must start with the application registry code.");
                         this.chunk.Next();
                         break;
                 }
@@ -3071,13 +3024,6 @@ namespace netDxf.IO
             }
 
             return vport;
-        }
-
-        private void ReadUnknownTableEntry()
-        {
-            do
-                this.chunk.Next();
-            while (this.chunk.Code != 0);
         }
 
         #endregion
@@ -3257,7 +3203,9 @@ namespace netDxf.IO
                 // As all this entities do not need an insert entity to have a visual representation,
                 // they will be stored in the global entities lists together with the rest of the entities of *Model_Space and *Paper_Space
                 foreach (EntityObject entity in entities)
+                {
                     this.entityList.Add(entity, blockRecord.Handle);
+                }
 
                 // this kind of blocks do not store attribute definitions
             }
@@ -3896,7 +3844,7 @@ namespace netDxf.IO
                     dxfObject = this.ReadAcadTable(isBlockEntity);
                     break;
                 default:
-                    this.ReadUnknowEntity();
+                    this.ReadUnknowData();
                     return null;
             }
 
@@ -4005,11 +3953,7 @@ namespace netDxf.IO
                         xData.Add(data);
                         break;
                     default:
-                        if (this.chunk.Code >= 1000 && this.chunk.Code <= 1071)
-                        {
-                            throw new Exception("The extended data of an entity must start with the application registry code.");
-                        }
-
+                        Debug.Assert(!(this.chunk.Code >= 1000 && this.chunk.Code <= 1071), "The extended data of an entity must start with the application registry code.");
                         this.chunk.Next();
                         break;
                 }
@@ -4096,7 +4040,7 @@ namespace netDxf.IO
                         this.chunk.Next();
                         break;
                     case 91:
-                        // we cannot rely in this information it might or might not appear
+                        // we cannot rely in this information it may or may not appear
                         this.chunk.Next();
                         break;
                     case 14:
@@ -4113,9 +4057,7 @@ namespace netDxf.IO
                         xData.Add(data);
                         break;
                     default:
-                        if (this.chunk.Code >= 1000 && this.chunk.Code <= 1071)
-                            throw new Exception("The extended data of an entity must start with the application registry code.");
-
+                        Debug.Assert(!(this.chunk.Code >= 1000 && this.chunk.Code <= 1071), "The extended data of an entity must start with the application registry code.");
                         this.chunk.Next();
                         break;
                 }
@@ -4255,11 +4197,7 @@ namespace netDxf.IO
                         xData.Add(data);
                         break;
                     default:
-                        if (this.chunk.Code >= 1000 && this.chunk.Code <= 1071)
-                        {
-                            throw new Exception("The extended data of an entity must start with the application registry code.");
-                        }
-
+                        Debug.Assert(!(this.chunk.Code >= 1000 && this.chunk.Code <= 1071), "The extended data of an entity must start with the application registry code.");
                         this.chunk.Next();
                         break;
                 }
@@ -4373,10 +4311,7 @@ namespace netDxf.IO
                         xData.Add(data);
                         break;
                     default:
-                        if (this.chunk.Code >= 1000 && this.chunk.Code <= 1071)
-                        {
-                            throw new Exception("The extended data of an entity must start with the application registry code.");
-                        }
+                        Debug.Assert(!(this.chunk.Code >= 1000 && this.chunk.Code <= 1071), "The extended data of an entity must start with the application registry code.");
                         this.chunk.Next();
                         break;
                 }
@@ -4599,10 +4534,7 @@ namespace netDxf.IO
                         xData.Add(data);
                         break;
                     default:
-                        if (this.chunk.Code >= 1000 && this.chunk.Code <= 1071)
-                        {
-                            throw new Exception("The extended data of an entity must start with the application registry code.");
-                        }
+                        Debug.Assert(!(this.chunk.Code >= 1000 && this.chunk.Code <= 1071), "The extended data of an entity must start with the application registry code.");
                         this.chunk.Next();
                         break;
                 }
@@ -4722,10 +4654,7 @@ namespace netDxf.IO
                         xData.Add(data);
                         break;
                     default:
-                        if (this.chunk.Code >= 1000 && this.chunk.Code <= 1071)
-                        {
-                            throw new Exception("The extended data of an entity must start with the application registry code.");
-                        }
+                        Debug.Assert(!(this.chunk.Code >= 1000 && this.chunk.Code <= 1071), "The extended data of an entity must start with the application registry code.");
                         this.chunk.Next();
                         break;
                 }
@@ -5000,10 +4929,7 @@ namespace netDxf.IO
                         xData.Add(data);
                         break;
                     default:
-                        if (this.chunk.Code >= 1000 && this.chunk.Code <= 1071)
-                        {
-                            throw new Exception("The extended data of an entity must start with the application registry code.");
-                        }
+                        Debug.Assert(!(this.chunk.Code >= 1000 && this.chunk.Code <= 1071), "The extended data of an entity must start with the application registry code.");
                         this.chunk.Next();
                         break;
                 }
@@ -5140,10 +5066,7 @@ namespace netDxf.IO
                         xData.Add(data);
                         break;
                     default:
-                        if (this.chunk.Code >= 1000 && this.chunk.Code <= 1071)
-                        {
-                            throw new Exception("The extended data of an entity must start with the application registry code.");
-                        }
+                        Debug.Assert(!(this.chunk.Code >= 1000 && this.chunk.Code <= 1071), "The extended data of an entity must start with the application registry code.");
                         this.chunk.Next();
                         break;
                 }
@@ -5262,8 +5185,7 @@ namespace netDxf.IO
                         xData.Add(data);
                         break;
                     default:
-                        if (this.chunk.Code >= 1000 && this.chunk.Code <= 1071)
-                            throw new Exception("The extended data of an entity must start with the application registry code.");
+                        Debug.Assert(!(this.chunk.Code >= 1000 && this.chunk.Code <= 1071), "The extended data of an entity must start with the application registry code.");
                         this.chunk.Next();
                         break;
                 }
@@ -5341,8 +5263,7 @@ namespace netDxf.IO
                         xData.Add(data);
                         break;
                     default:
-                        if (this.chunk.Code >= 1000 && this.chunk.Code <= 1071)
-                            throw new Exception("The extended data of an entity must start with the application registry code.");
+                        Debug.Assert(!(this.chunk.Code >= 1000 && this.chunk.Code <= 1071), "The extended data of an entity must start with the application registry code.");
                         this.chunk.Next();
                         break;
                 }
@@ -5477,7 +5398,10 @@ namespace netDxf.IO
                             marker == SubclassMarker.Angular3PointDimension ||
                             marker == SubclassMarker.Angular2LineDimension ||
                             marker == SubclassMarker.OrdinateDimension)
-                            dimInfo = true; // we have finished reading the basic dimension info
+                        {
+                            // we have finished reading the basic dimension info
+                            dimInfo = true; 
+                        }
                         this.chunk.Next();
                         break;
                     default:
@@ -5532,22 +5456,24 @@ namespace netDxf.IO
                     throw new ArgumentException(string.Format("The dimension type: {0} is not implemented or unknown.", type));
             }
 
-            if (dim == null)
-                return null;
+            if (dim != null)
+            {
+                dim.Style = style;
+                dim.Block = drawingBlock;
+                dim.TextReferencePoint = new Vector2(midtxtPoint.X, midtxtPoint.Y);
+                dim.TextPositionManuallySet = userTextPosition;
+                dim.AttachmentPoint = attachmentPoint;
+                dim.LineSpacingStyle = lineSpacingStyle;
+                dim.LineSpacingFactor = lineSpacingFactor;
+                dim.Normal = normal;
+                dim.TextRotation = textRotation;
+                dim.UserText = userText;
 
-            dim.Style = style;
-            dim.Block = drawingBlock;
-            dim.TextReferencePoint = new Vector2(midtxtPoint.X, midtxtPoint.Y);
-            dim.TextPositionManuallySet = userTextPosition;
-            dim.AttachmentPoint = attachmentPoint;
-            dim.LineSpacingStyle = lineSpacingStyle;
-            dim.LineSpacingFactor = lineSpacingFactor;
-            dim.Normal = normal;
-            dim.TextRotation = textRotation;
-            dim.UserText = userText;
-
-            if (isBlockEntity)
-                this.nestedDimensions.Add(dim, drawingBlockName);
+                if (isBlockEntity)
+                {
+                    this.nestedDimensions.Add(dim, drawingBlockName);
+                }
+            }
 
             return dim;
         }
@@ -5588,28 +5514,44 @@ namespace netDxf.IO
                     if (data.Code == XDataCode.String && string.Equals((string) data.Value, "DSTYLE", StringComparison.OrdinalIgnoreCase))
                     {
                         if (records.MoveNext())
+                        {
                             data = records.Current;
+                        }
                         else
+                        {
                             return overrides; // premature end
+                        }
 
                         // all style overrides are enclosed between XDataCode.ControlString "{" and "}"
                         if (data.Code != XDataCode.ControlString && (string) data.Value != "{")
+                        {
                             return overrides; // premature end
+                        }
 
                         if (records.MoveNext())
+                        {
                             data = records.Current;
+                        }
                         else
+                        {
                             return overrides; // premature end
+                        }
 
                         while (!(data.Code == XDataCode.ControlString && (string)data.Value == "}"))
                         {
                             if (data.Code != XDataCode.Int16)
+                            {
                                 return overrides;
+                            }
                             short styleOverrideCode = (short)data.Value;
                             if (records.MoveNext())
+                            {
                                 data = records.Current;
+                            }
                             else
+                            {
                                 return overrides; // premature end
+                            }
 
                             //the xData overrides must be read in pairs.
                             //the first is the dimension style property to override, the second is the new value
@@ -5617,27 +5559,47 @@ namespace netDxf.IO
                             {
                                 case 3: // DIMPOST
                                     if (data.Code != XDataCode.String)
+                                    {
                                         return overrides; // premature end
+                                    }
+
                                     string dimpost = this.DecodeEncodedNonAsciiCharacters((string) data.Value);
                                     string[] textPrefixSuffix = GetDimStylePrefixAndSuffix(dimpost, '<', '>');
                                     if (!string.IsNullOrEmpty(textPrefixSuffix[0]))
+                                    {
                                         overrides.Add(new DimensionStyleOverride(DimensionStyleOverrideType.DimPrefix, textPrefixSuffix[0]));
+                                    }
+
                                     if (!string.IsNullOrEmpty(textPrefixSuffix[1]))
+                                    {
                                         overrides.Add(new DimensionStyleOverride(DimensionStyleOverrideType.DimSuffix, textPrefixSuffix[1]));
+                                    }
+
                                     break;
                                 case 4: // DIMAPOST
                                     if (data.Code != XDataCode.String)
+                                    {
                                         return overrides; // premature end
+                                    }
+
                                     string dimapost = this.DecodeEncodedNonAsciiCharacters((string) data.Value);
                                     string[] altTextPrefixSuffix = GetDimStylePrefixAndSuffix(dimapost, '[', ']');
                                     if (!string.IsNullOrEmpty(altTextPrefixSuffix[0]))
+                                    {
                                         overrides.Add(new DimensionStyleOverride(DimensionStyleOverrideType.DimPrefix, altTextPrefixSuffix[0]));
+                                    }
+
                                     if (!string.IsNullOrEmpty(altTextPrefixSuffix[1]))
+                                    {
                                         overrides.Add(new DimensionStyleOverride(DimensionStyleOverrideType.DimSuffix, altTextPrefixSuffix[1]));
+                                    }
+
                                     break;
                                 case 40: // DIMSCALE
                                     if (data.Code != XDataCode.Real)
+                                    {
                                         return overrides; // premature end
+                                    }
                                     overrides.Add(new DimensionStyleOverride(DimensionStyleOverrideType.DimScaleOverall, (double) data.Value));
                                     break;
                                 case 41: // DIMASZ:
@@ -5647,7 +5609,10 @@ namespace netDxf.IO
                                     break;
                                 case 42: // DIMEXO
                                     if (data.Code != XDataCode.Real)
+                                    {
                                         return overrides; // premature end
+                                    }
+
                                     overrides.Add(new DimensionStyleOverride(DimensionStyleOverrideType.ExtLineOffset, (double) data.Value));
                                     break;
                                 case 43: // DIMDLI
@@ -5655,28 +5620,43 @@ namespace netDxf.IO
                                     break;
                                 case 44: // DIMEXE
                                     if (data.Code != XDataCode.Real)
+                                    {
                                         return overrides; // premature end
+                                    }
+
                                     overrides.Add(new DimensionStyleOverride(DimensionStyleOverrideType.ExtLineExtend, (double) data.Value));
                                     break;
                                 case 45: // DIMRND
                                     if (data.Code != XDataCode.Int16)
+                                    {
                                         return overrides; // premature end
+                                    }
+
                                     overrides.Add(new DimensionStyleOverride(DimensionStyleOverrideType.DimRoundoff, (short) data.Value));
                                     break;
                                 case 46: // DIMDLE
                                     if (data.Code != XDataCode.Real)
+                                    {
                                         return overrides; // premature end
+                                    }
+
                                     overrides.Add(new DimensionStyleOverride(DimensionStyleOverrideType.DimLineExtend, (double) data.Value));
                                     break;
                                 case 47: // DIMTP
                                     if (data.Code != XDataCode.Real)
+                                    {
                                         return overrides; // premature end
+                                    }
+
                                     dimtp = (double) data.Value;
                                     overrides.Add(new DimensionStyleOverride(DimensionStyleOverrideType.TolerancesUpperLimit, dimtp));
                                     break;
                                 case 48: // DIMTM
                                     if (data.Code != XDataCode.Real)
+                                    {
                                         return overrides; // premature end
+                                    }
+
                                     dimtm = (double) data.Value;
                                     overrides.Add(new DimensionStyleOverride(DimensionStyleOverrideType.TolerancesLowerLimit, dimtm));
                                     break;
@@ -5687,69 +5667,106 @@ namespace netDxf.IO
                                     break;
                                 case 69: // DIMTFILL
                                     if (data.Code != XDataCode.Int16)
+                                    {
                                         return overrides; // premature end
+                                    }
+
                                     dimtfill = (short) data.Value;
                                     break;
                                 case 70: // DIMTFILLCLRT
                                     if (data.Code != XDataCode.Int16)
+                                    {
                                         return overrides; // premature end
+                                    }
+
                                     dimtfillclrt = AciColor.FromCadIndex((short) data.Value);
                                     break;
                                 case 71: // DIMTOLL
                                     if (data.Code != XDataCode.Int16)
+                                    {
                                         return overrides; // premature end
+                                    }
+
                                     dimtol = (short) data.Value;
                                     break;
                                 case 72: // DIMLIN
                                     if (data.Code != XDataCode.Int16)
+                                    {
                                         return overrides; // premature end
+                                    }
+
                                     dimlim = (short) data.Value;
                                     break;
                                 case 73: // DIMTIH
                                     if (data.Code != XDataCode.Int16)
+                                    {
                                         return overrides; // premature end
-                                    overrides.Add(new DimensionStyleOverride(
-                                        DimensionStyleOverrideType.TextInsideAlign, (short) data.Value != 0));
+                                    }
+
+                                    overrides.Add(new DimensionStyleOverride(DimensionStyleOverrideType.TextInsideAlign, (short) data.Value != 0));
                                     break;
                                 case 74: // DIMTOH
                                     if (data.Code != XDataCode.Int16)
+                                    {
                                         return overrides; // premature end
-                                    overrides.Add(new DimensionStyleOverride(
-                                        DimensionStyleOverrideType.TextOutsideAlign, (short) data.Value != 0));
+                                    }
+
+                                    overrides.Add(new DimensionStyleOverride(DimensionStyleOverrideType.TextOutsideAlign, (short) data.Value != 0));
                                     break;
                                 case 75: // DIMSE1
                                     if (data.Code != XDataCode.Int16)
+                                    {
                                         return overrides; // premature end
+                                    }
+
                                     overrides.Add(new DimensionStyleOverride(DimensionStyleOverrideType.ExtLine1Off, (short) data.Value != 0));
                                     break;
                                 case 76: // DIMSE2
                                     if (data.Code != XDataCode.Int16)
+                                    {
                                         return overrides; // premature end
+                                    }
+
                                     overrides.Add(new DimensionStyleOverride(DimensionStyleOverrideType.ExtLine2Off, (short) data.Value != 0));
                                     break;
                                 case 77: // DIMTAD
                                     if (data.Code != XDataCode.Int16)
+                                    {
                                         return overrides; // premature end
+                                    }
+
                                     overrides.Add(new DimensionStyleOverride(DimensionStyleOverrideType.TextVerticalPlacement, (DimensionStyleTextVerticalPlacement) (short) data.Value));
                                     break;
                                 case 78: // DIMZIN
                                     if (data.Code != XDataCode.Int16)
+                                    {
                                         return overrides; // premature end
+                                    }
+
                                     dimzin = (short) data.Value;
                                     break;
                                 case 79: // DIMAZIN
                                     if (data.Code != XDataCode.Int16)
+                                    {
                                         return overrides; // premature end
+                                    }
+
                                     dimazin = (short) data.Value;
                                     break;
                                 case 140: // DIMTXT
                                     if (data.Code != XDataCode.Real)
+                                    {
                                         return overrides; // premature end
+                                    }
+
                                     overrides.Add(new DimensionStyleOverride(DimensionStyleOverrideType.TextHeight, (double) data.Value));
                                     break;
                                 case 141: // DIMCEN
                                     if (data.Code != XDataCode.Real)
+                                    {
                                         return overrides; // premature end
+                                    }
+
                                     overrides.Add(new DimensionStyleOverride(DimensionStyleOverrideType.CenterMarkSize, (double) data.Value));
                                     break;
                                 case 143: // DIMALTF
@@ -5759,7 +5776,10 @@ namespace netDxf.IO
                                     break;
                                 case 144: // DIMLFAC:
                                     if (data.Code != XDataCode.Real)
+                                    {
                                         return overrides; // premature end
+                                    }
+
                                     overrides.Add(new DimensionStyleOverride(DimensionStyleOverrideType.DimScaleLinear, (double) data.Value));
                                     break;
                                 case 145: // DIMTVP
@@ -5767,32 +5787,50 @@ namespace netDxf.IO
                                     break;
                                 case 146: // DIMTFAC
                                     if (data.Code != XDataCode.Real)
+                                    {
                                         return overrides; // premature end
+                                    }
+
                                     overrides.Add(new DimensionStyleOverride(DimensionStyleOverrideType.TextFractionHeightScale, (double) data.Value));
                                     break;
                                 case 147: // DIMGAP
                                     if (data.Code != XDataCode.Real)
+                                    {
                                         return overrides; // premature end
+                                    }
+
                                     overrides.Add(new DimensionStyleOverride(DimensionStyleOverrideType.TextOffset, (double) data.Value));
                                     break;
                                 case 148: // DIMALTRND
                                     if (data.Code != XDataCode.Real)
+                                    {
                                         return overrides; // premature end
+                                    }
+
                                     overrides.Add(new DimensionStyleOverride(DimensionStyleOverrideType.AltUnitsRoundoff, (double) data.Value));
                                     break;
                                 case 170: // DIMALT
                                     if (data.Code != XDataCode.Int16)
+                                    {
                                         return overrides; // premature end
+                                    }
+
                                     overrides.Add(new DimensionStyleOverride(DimensionStyleOverrideType.AltUnitsEnabled, (short) data.Value != 0));
                                     break;
                                 case 171: // DIMALTD
                                     if (data.Code != XDataCode.Int16)
+                                    {
                                         return overrides; // premature end
+                                    }
+
                                     overrides.Add(new DimensionStyleOverride(DimensionStyleOverrideType.AltUnitsLengthPrecision, (short) data.Value));
                                     break;
                                 case 172: // DIMTOFL
                                     if (data.Code != XDataCode.Int16)
+                                    {
                                         return overrides; // premature end
+                                    }
+
                                     overrides.Add(new DimensionStyleOverride(DimensionStyleOverrideType.FitDimLineForce, (short) data.Value != 0));
                                     break;
                                 case 173: // DIMSAH
@@ -5802,12 +5840,18 @@ namespace netDxf.IO
                                     break;
                                 case 174: // DIMTIX
                                     if (data.Code != XDataCode.Int16)
+                                    {
                                         return overrides; // premature end
+                                    }
+
                                     overrides.Add(new DimensionStyleOverride(DimensionStyleOverrideType.FitTextInside, (short) data.Value != 0));
                                     break;
                                 case 175: // DIMSOXD
                                     if (data.Code != XDataCode.Int16)
+                                    {
                                         return overrides; // premature end
+                                    }
+
                                     overrides.Add(new DimensionStyleOverride(DimensionStyleOverrideType.FitDimLineInside, (short) data.Value == 0));
                                     break;
                                 case 176: // DIMCLRD:
@@ -5817,97 +5861,154 @@ namespace netDxf.IO
                                     break;
                                 case 177: // DIMCLRE
                                     if (data.Code != XDataCode.Int16)
+                                    {
                                         return overrides; // premature end
+                                    }
+
                                     overrides.Add(new DimensionStyleOverride(DimensionStyleOverrideType.ExtLineColor, AciColor.FromCadIndex((short) data.Value)));
                                     break;
                                 case 178: // DIMCLRT
                                     if (data.Code != XDataCode.Int16)
+                                    {
                                         return overrides; // premature end
+                                    }
+
                                     overrides.Add(new DimensionStyleOverride(DimensionStyleOverrideType.TextColor, AciColor.FromCadIndex((short) data.Value)));
                                     break;
                                 case 179: // DIMADEC
                                     if (data.Code != XDataCode.Int16)
+                                    {
                                         return overrides; // premature end
+                                    }
+
                                     overrides.Add(new DimensionStyleOverride(DimensionStyleOverrideType.AngularPrecision, (short) data.Value));
                                     break;
                                 case 271: // DIMDEC
                                     if (data.Code != XDataCode.Int16)
+                                    {
                                         return overrides; // premature end
+                                    }
+
                                     overrides.Add(new DimensionStyleOverride(DimensionStyleOverrideType.LengthPrecision, (short) data.Value));
                                     break;
                                 case 272: // DIMTDEC
                                     if (data.Code != XDataCode.Int16)
+                                    {
                                         return overrides; // premature end
+                                    }
+
                                     overrides.Add(new DimensionStyleOverride(DimensionStyleOverrideType.TolerancesPrecision, (short) data.Value));
                                     break;
                                 case 273: // DIMALTU
                                     if (data.Code != XDataCode.Int16)
+                                    {
                                         return overrides; // premature end
+                                    }
+
                                     dimaltu = (short) data.Value;
                                     break;
                                 case 274: // DIMALTTD
                                     if (data.Code != XDataCode.Int16)
+                                    {
                                         return overrides; // premature end
+                                    }
+
                                     overrides.Add(new DimensionStyleOverride(DimensionStyleOverrideType.TolerancesAlternatePrecision, (short) data.Value));
                                     break;
                                 case 275: // DIMAUNIT
                                     if (data.Code != XDataCode.Int16)
+                                    {
                                         return overrides; // premature end
+                                    }
+
                                     overrides.Add(new DimensionStyleOverride(DimensionStyleOverrideType.DimAngularUnits, (AngleUnitType) (short) data.Value));
                                     break;
                                 case 276: // DIMFRAC
                                     if (data.Code != XDataCode.Int16)
+                                    {
                                         return overrides; // premature end
+                                    }
+
                                     overrides.Add(new DimensionStyleOverride(DimensionStyleOverrideType.FractionalType, (FractionFormatType) (short) data.Value));
                                     break;
                                 case 277: // DIMLUNIT
                                     if (data.Code != XDataCode.Int16)
+                                    {
                                         return overrides; // premature end
+                                    }
+
                                     overrides.Add(new DimensionStyleOverride(DimensionStyleOverrideType.DimLengthUnits, (LinearUnitType) (short) data.Value));
                                     break;
                                 case 278: // DIMDSEP
                                     if (data.Code != XDataCode.Int16)
+                                    {
                                         return overrides; // premature end
+                                    }
+
                                     overrides.Add(new DimensionStyleOverride(DimensionStyleOverrideType.DecimalSeparator, (char) (short) data.Value));
                                     break;
                                 case 279: // DIMTMOVE
                                     if (data.Code != XDataCode.Int16)
+                                    {
                                         return overrides; // premature end
+                                    }
+
                                     overrides.Add(new DimensionStyleOverride(DimensionStyleOverrideType.FitTextMove, (DimensionStyleFitTextMove) (short) data.Value));
                                     break;
                                 case 280: // DIMJUST
                                     if (data.Code != XDataCode.Int16)
+                                    {
                                         return overrides; // premature end
+                                    }
+
                                     overrides.Add(new DimensionStyleOverride(DimensionStyleOverrideType.TextHorizontalPlacement, (DimensionStyleTextHorizontalPlacement) (short) data.Value));
                                     break;
                                 case 281: // DIMSD1
                                     if (data.Code != XDataCode.Int16)
+                                    {
                                         return overrides; // premature end
+                                    }
+
                                     overrides.Add(new DimensionStyleOverride(DimensionStyleOverrideType.DimLine1Off, (short) data.Value != 0));
                                     break;
                                 case 282: // DIMSD2
                                     if (data.Code != XDataCode.Int16)
+                                    {
                                         return overrides; // premature end
+                                    }
+
                                     overrides.Add(new DimensionStyleOverride(DimensionStyleOverrideType.DimLine2Off, (short) data.Value != 0));
                                     break;
                                 case 283: // DIMTOLJ
                                     if (data.Code != XDataCode.Int16)
+                                    {
                                         return overrides; // premature end
+                                    }
+
                                     overrides.Add(new DimensionStyleOverride(DimensionStyleOverrideType.TolerancesVerticalPlacement, (DimensionStyleTolerancesVerticalPlacement) (short) data.Value));
                                     break;
                                 case 284: // DIMTZIN
                                     if (data.Code != XDataCode.Int16)
+                                    {
                                         return overrides; // premature end
+                                    }
+
                                     dimtzin = (short) data.Value;
                                     break;
                                 case 285: // DIMALTZ
                                     if (data.Code != XDataCode.Int16)
+                                    {
                                         return overrides; // premature end
+                                    }
+
                                     dimaltz = (short) data.Value;
                                     break;
                                 case 286: // DIMALTTZ
                                     if (data.Code != XDataCode.Int16)
+                                    {
                                         return overrides; // premature end
+                                    }
+
                                     dimalttz = (short) data.Value;
                                     break;
                                 case 288: // DIMUPT
@@ -5915,86 +6016,138 @@ namespace netDxf.IO
                                     break;
                                 case 289: // AIMATFIT
                                     if (data.Code != XDataCode.Int16)
+                                    {
                                         return overrides; // premature end
+                                    }
+
                                     overrides.Add(new DimensionStyleOverride(DimensionStyleOverrideType.FitOptions, (DimensionStyleFitOptions) (short) data.Value));
                                     break;
                                 case 290: // DIMFXLON
                                     if (data.Code != XDataCode.Int16)
+                                    {
                                         return overrides; // premature end
+                                    }
+
                                     overrides.Add(new DimensionStyleOverride(DimensionStyleOverrideType.ExtLineFixed, (short) data.Value != 0));
                                     break;
                                 case 294: // DIMTXTDIRECTION
                                     if (data.Code != XDataCode.Int16)
+                                    {
                                         return overrides; // premature end
+                                    }
+
                                     overrides.Add(new DimensionStyleOverride(DimensionStyleOverrideType.TextDirection, (DimensionStyleTextDirection) (short) data.Value));
                                     break;
                                 case 340: // DIMTXSTY
                                     if (data.Code != XDataCode.DatabaseHandle)
+                                    {
                                         return overrides; // premature end
+                                    }
+
                                     TextStyle dimtxtsty = this.doc.GetObjectByHandle((string) data.Value) as TextStyle;
                                     overrides.Add(new DimensionStyleOverride(DimensionStyleOverrideType.TextStyle, dimtxtsty == null ? this.doc.TextStyles[TextStyle.DefaultName] : dimtxtsty));
                                     break;
                                 case 341: // DIMLDRBLK
                                     if (data.Code != XDataCode.DatabaseHandle)
+                                    {
                                         return overrides; // premature end
+                                    }
+
                                     BlockRecord dimldrblk = this.doc.GetObjectByHandle((string) data.Value) as BlockRecord;
                                     overrides.Add(new DimensionStyleOverride(DimensionStyleOverrideType.LeaderArrow, dimldrblk == null ? null : this.doc.Blocks[dimldrblk.Name]));
                                     break;
                                 case 342: // DIMBLK used if DIMSAH is false
                                     if (data.Code != XDataCode.DatabaseHandle)
+                                    {
                                         return overrides; // premature end
+                                    }
+
                                     handleDimblk = (string) data.Value;
                                     break;
                                 case 343: // DIMBLK1
                                     if (data.Code != XDataCode.DatabaseHandle)
+                                    {
                                         return overrides; // premature end
+                                    }
+
                                     handleDimblk1 = (string) data.Value;
                                     break;
                                 case 344: // DIMBLK2
                                     if (data.Code != XDataCode.DatabaseHandle)
+                                    {
                                         return overrides; // premature end
+                                    }
+
                                     handleDimblk2 = (string) data.Value;
                                     break;
                                 case 345: // DIMLTYPE
                                     if (data.Code != XDataCode.DatabaseHandle)
+                                    {
                                         return overrides; // premature end
+                                    }
+
                                     Linetype dimltype = this.doc.GetObjectByHandle((string) data.Value) as Linetype;
                                     if (dimltype == null)
+                                    {
                                         dimltype = this.doc.Linetypes[Linetype.DefaultName];
+                                    }
+
                                     overrides.Add(new DimensionStyleOverride(DimensionStyleOverrideType.DimLineLinetype, dimltype));
                                     break;
                                 case 346: // DIMLTEX1
                                     if (data.Code != XDataCode.DatabaseHandle)
+                                    {
                                         return overrides; // premature end
+                                    }
+
                                     Linetype dimltex1 = this.doc.GetObjectByHandle((string) data.Value) as Linetype;
                                     if (dimltex1 == null)
+                                    {
                                         dimltex1 = this.doc.Linetypes[Linetype.DefaultName];
+                                    }
+
                                     overrides.Add(new DimensionStyleOverride(DimensionStyleOverrideType.ExtLine1Linetype, dimltex1));
                                     break;
                                 case 347: // DIMLTEX2
                                     if (data.Code != XDataCode.DatabaseHandle)
+                                    {
                                         return overrides; // premature end
+                                    }
+
                                     Linetype dimltex2 = this.doc.GetObjectByHandle((string) data.Value) as Linetype;
                                     if (dimltex2 == null)
+                                    {
                                         dimltex2 = this.doc.Linetypes[Linetype.DefaultName];
+                                    }
+
                                     overrides.Add(new DimensionStyleOverride(DimensionStyleOverrideType.ExtLine2Linetype, dimltex2));
                                     break;
                                 case 371: // DIMLWD
                                     if (data.Code != XDataCode.Int16)
+                                    {
                                         return overrides; // premature end
+                                    }
+
                                     overrides.Add(new DimensionStyleOverride(DimensionStyleOverrideType.DimLineLineweight, (Lineweight) (short) data.Value));
                                     break;
                                 case 372: // DIMLWE
                                     if (data.Code != XDataCode.Int16)
+                                    {
                                         return overrides; // premature end
+                                    }
+
                                     overrides.Add(new DimensionStyleOverride(DimensionStyleOverrideType.ExtLineLineweight, (Lineweight) (short) data.Value));
                                     break;
                             }
 
                             if (records.MoveNext())
+                            {
                                 data = records.Current;
+                            }
                             else
+                            {
                                 return overrides; // premature end
+                            }
                         }
                     }
                 }
@@ -6002,7 +6155,9 @@ namespace netDxf.IO
 
             // dimension text fill color
             if (dimtfill >= 0)
+            {
                 overrides.Add(new DimensionStyleOverride(DimensionStyleOverrideType.TextFillColor, dimtfill == 2 ? dimtfillclrt : null));
+            }
 
             // dim arrows
             if (dimsah)
@@ -6181,8 +6336,7 @@ namespace netDxf.IO
                         xData.Add(data);
                         break;
                     default:
-                        if (this.chunk.Code >= 1000 && this.chunk.Code <= 1071)
-                            throw new Exception("The extended data of an entity must start with the application registry code.");
+                        Debug.Assert(!(this.chunk.Code >= 1000 && this.chunk.Code <= 1071), "The extended data of an entity must start with the application registry code.");
                         this.chunk.Next();
                         break;
                 }
@@ -6259,8 +6413,7 @@ namespace netDxf.IO
                         xData.Add(data);
                         break;
                     default:
-                        if (this.chunk.Code >= 1000 && this.chunk.Code <= 1071)
-                            throw new Exception("The extended data of an entity must start with the application registry code.");
+                        Debug.Assert(!(this.chunk.Code >= 1000 && this.chunk.Code <= 1071), "The extended data of an entity must start with the application registry code.");
                         this.chunk.Next();
                         break;
                 }
@@ -6319,8 +6472,7 @@ namespace netDxf.IO
                         xData.Add(data);
                         break;
                     default:
-                        if (this.chunk.Code >= 1000 && this.chunk.Code <= 1071)
-                            throw new Exception("The extended data of an entity must start with the application registry code.");
+                        Debug.Assert(!(this.chunk.Code >= 1000 && this.chunk.Code <= 1071), "The extended data of an entity must start with the application registry code.");
                         this.chunk.Next();
                         break;
                 }
@@ -6377,8 +6529,7 @@ namespace netDxf.IO
                         xData.Add(data);
                         break;
                     default:
-                        if (this.chunk.Code >= 1000 && this.chunk.Code <= 1071)
-                            throw new Exception("The extended data of an entity must start with the application registry code.");
+                        Debug.Assert(!(this.chunk.Code >= 1000 && this.chunk.Code <= 1071), "The extended data of an entity must start with the application registry code.");
                         this.chunk.Next();
                         break;
                 }
@@ -6460,8 +6611,7 @@ namespace netDxf.IO
                         xData.Add(data);
                         break;
                     default:
-                        if (this.chunk.Code >= 1000 && this.chunk.Code <= 1071)
-                            throw new Exception("The extended data of an entity must start with the application registry code.");
+                        Debug.Assert(!(this.chunk.Code >= 1000 && this.chunk.Code <= 1071), "The extended data of an entity must start with the application registry code.");
                         this.chunk.Next();
                         break;
                 }
@@ -6556,8 +6706,7 @@ namespace netDxf.IO
                         xData.Add(data);
                         break;
                     default:
-                        if (this.chunk.Code >= 1000 && this.chunk.Code <= 1071)
-                            throw new Exception("The extended data of an entity must start with the application registry code.");
+                        Debug.Assert(!(this.chunk.Code >= 1000 && this.chunk.Code <= 1071), "The extended data of an entity must start with the application registry code.");
                         this.chunk.Next();
                         break;
                 }
@@ -6636,8 +6785,7 @@ namespace netDxf.IO
                         xData.Add(data);
                         break;
                     default:
-                        if (this.chunk.Code >= 1000 && this.chunk.Code <= 1071)
-                            throw new Exception("The extended data of an entity must start with the application registry code.");
+                        Debug.Assert(!(this.chunk.Code >= 1000 && this.chunk.Code <= 1071), "The extended data of an entity must start with the application registry code.");
                         this.chunk.Next();
                         break;
                 }
@@ -6735,8 +6883,7 @@ namespace netDxf.IO
                         xData.Add(data);
                         break;
                     default:
-                        if (this.chunk.Code >= 1000 && this.chunk.Code <= 1071)
-                            throw new Exception("The extended data of an entity must start with the application registry code.");
+                        Debug.Assert(!(this.chunk.Code >= 1000 && this.chunk.Code <= 1071), "The extended data of an entity must start with the application registry code.");
                         this.chunk.Next();
                         break;
                 }
@@ -6842,8 +6989,7 @@ namespace netDxf.IO
                         xData.Add(data);
                         break;
                     default:
-                        if (this.chunk.Code >= 1000 && this.chunk.Code <= 1071)
-                            throw new Exception("The extended data of an entity must start with the application registry code.");
+                        Debug.Assert(!(this.chunk.Code >= 1000 && this.chunk.Code <= 1071), "The extended data of an entity must start with the application registry code.");
                         this.chunk.Next();
                         break;
                 }
@@ -6934,8 +7080,7 @@ namespace netDxf.IO
                         xData.Add(data);
                         break;
                     default:
-                        if (this.chunk.Code >= 1000 && this.chunk.Code <= 1071)
-                            throw new Exception("The extended data of an entity must start with the application registry code.");
+                        Debug.Assert(!(this.chunk.Code >= 1000 && this.chunk.Code <= 1071), "The extended data of an entity must start with the application registry code.");
                         this.chunk.Next();
                         break;
                 }
@@ -7034,9 +7179,7 @@ namespace netDxf.IO
                         xData.Add(data);
                         break;
                     default:
-                        if (this.chunk.Code >= 1000 && this.chunk.Code <= 1071)
-                            throw new Exception("The extended data of an entity must start with the application registry code.");
-
+                        Debug.Assert(!(this.chunk.Code >= 1000 && this.chunk.Code <= 1071), "The extended data of an entity must start with the application registry code.");
                         this.chunk.Next();
                         break;
                 }
@@ -7160,9 +7303,7 @@ namespace netDxf.IO
                         xData.Add(data);
                         break;
                     default:
-                        if (this.chunk.Code >= 1000 && this.chunk.Code <= 1071)
-                            throw new Exception("The extended data of an entity must start with the application registry code.");
-
+                        Debug.Assert(!(this.chunk.Code >= 1000 && this.chunk.Code <= 1071), "The extended data of an entity must start with the application registry code.");
                         this.chunk.Next();
                         break;
                 }
@@ -7269,9 +7410,7 @@ namespace netDxf.IO
                         xData.Add(data);
                         break;
                     default:
-                        if (this.chunk.Code >= 1000 && this.chunk.Code <= 1071)
-                            throw new Exception("The extended data of an entity must start with the application registry code.");
-
+                        Debug.Assert(!(this.chunk.Code >= 1000 && this.chunk.Code <= 1071), "The extended data of an entity must start with the application registry code.");
                         this.chunk.Next();
                         break;
                 }
@@ -7474,9 +7613,7 @@ namespace netDxf.IO
                         xData.Add(data);
                         break;
                     default:
-                        if (this.chunk.Code >= 1000 && this.chunk.Code <= 1071)
-                            throw new Exception("The extended data of an entity must start with the application registry code.");
-
+                        Debug.Assert(!(this.chunk.Code >= 1000 && this.chunk.Code <= 1071), "The extended data of an entity must start with the application registry code.");
                         this.chunk.Next();
                         break;
                 }
@@ -7510,13 +7647,21 @@ namespace netDxf.IO
             }
 
             if (flags.HasFlag(SplineTypeFlags.FitChord))
+            {
                 entity.KnotParameterization = SplineKnotParameterization.FitChord;
+            }
             else if (flags.HasFlag(SplineTypeFlags.FitSqrtChord))
+            {
                 entity.KnotParameterization = SplineKnotParameterization.FitSqrtChord;
+            }
             else if (flags.HasFlag(SplineTypeFlags.FitUniform))
+            {
                 entity.KnotParameterization = SplineKnotParameterization.FitUniform;
+            }
             else if (flags.HasFlag(SplineTypeFlags.FitCustom))
+            {
                 entity.KnotParameterization = SplineKnotParameterization.FitCustom;
+            }
 
             entity.XData.AddRange(xData);
 
@@ -7542,7 +7687,9 @@ namespace netDxf.IO
                     case 2:
                         blockName = this.DecodeEncodedNonAsciiCharacters(this.chunk.ReadString());
                         if (!isBlockEntity)
+                        {
                             block = this.GetBlock(blockName);
+                        }
                         this.chunk.Next();
                         break;
                     case 10:
@@ -7594,9 +7741,7 @@ namespace netDxf.IO
                         xData.Add(data);
                         break;
                     default:
-                        if (this.chunk.Code >= 1000 && this.chunk.Code <= 1071)
-                            throw new Exception("The extended data of an entity must start with the application registry code.");
-
+                        Debug.Assert(!(this.chunk.Code >= 1000 && this.chunk.Code <= 1071), "The extended data of an entity must start with the application registry code.");
                         this.chunk.Next();
                         break;
                 }
@@ -7608,7 +7753,9 @@ namespace netDxf.IO
                 {
                     Attribute attribute = this.ReadAttribute(block, isBlockEntity);
                     if (attribute != null)
+                    {
                         attributes.Add(attribute);
+                    }
                 }
             }
 
@@ -7651,7 +7798,9 @@ namespace netDxf.IO
 
             // post process nested inserts
             if (isBlockEntity)
+            {
                 this.nestedInserts.Add(insert, blockName);
+            }
 
             return insert;
         }
@@ -7715,9 +7864,7 @@ namespace netDxf.IO
                         xData.Add(data);
                         break;
                     default:
-                        if (this.chunk.Code >= 1000 && this.chunk.Code <= 1071)
-                            throw new Exception("The extended data of an entity must start with the application registry code.");
-
+                        Debug.Assert(!(this.chunk.Code >= 1000 && this.chunk.Code <= 1071), "The extended data of an entity must start with the application registry code.");
                         this.chunk.Next();
                         break;
                 }
@@ -7777,8 +7924,7 @@ namespace netDxf.IO
                         xData.Add(data);
                         break;
                     default:
-                        if (this.chunk.Code >= 1000 && this.chunk.Code <= 1071)
-                            throw new Exception("The extended data of an entity must start with the application registry code.");
+                        Debug.Assert(!(this.chunk.Code >= 1000 && this.chunk.Code <= 1071), "The extended data of an entity must start with the application registry code.");
                         this.chunk.Next();
                         break;
                 }
@@ -7836,9 +7982,7 @@ namespace netDxf.IO
                         xData.Add(data);
                         break;
                     default:
-                        if (this.chunk.Code >= 1000 && this.chunk.Code <= 1071)
-                            throw new Exception("The extended data of an entity must start with the application registry code.");
-
+                        Debug.Assert(!(this.chunk.Code >= 1000 && this.chunk.Code <= 1071), "The extended data of an entity must start with the application registry code.");
                         this.chunk.Next();
                         break;
                 }
@@ -7935,8 +8079,7 @@ namespace netDxf.IO
                         xData.Add(data);
                         break;
                     default:
-                        if (this.chunk.Code >= 1000 && this.chunk.Code <= 1071)
-                            throw new Exception("The extended data of an entity must start with the application registry code.");
+                        Debug.Assert(!(this.chunk.Code >= 1000 && this.chunk.Code <= 1071), "The extended data of an entity must start with the application registry code.");
                         this.chunk.Next();
                         break;
                 }
@@ -8037,7 +8180,7 @@ namespace netDxf.IO
             PolylineTypeFlags flags = PolylineTypeFlags.OpenPolyline;
             double constantWidth = -1.0;
             List<LwPolylineVertex> polVertexes = new List<LwPolylineVertex>();
-            LwPolylineVertex v = null;
+            LwPolylineVertex v = new LwPolylineVertex();
             double vX = 0.0;
             Vector3 normal = Vector3.UnitZ;
 
@@ -8082,21 +8225,24 @@ namespace netDxf.IO
                         break;
                     case 40:
                         double startWidth = this.chunk.ReadDouble();
-                        if (v != null)
-                            if (startWidth >= 0.0)
-                                v.StartWidth = startWidth;
+                        if (startWidth >= 0.0)
+                        {
+                            v.StartWidth = startWidth;
+                        }
+
                         this.chunk.Next();
                         break;
                     case 41:
                         double endWidth = this.chunk.ReadDouble();
-                        if (v != null)
-                            if (endWidth >= 0.0)
-                                v.EndWidth = endWidth;
+                        if (endWidth >= 0.0)
+                        {
+                            v.EndWidth = endWidth;
+                        }
+
                         this.chunk.Next();
                         break;
                     case 42:
-                        if (v != null)
-                            v.Bulge = this.chunk.ReadDouble();
+                        v.Bulge = this.chunk.ReadDouble();
                         this.chunk.Next();
                         break;
                     case 210:
@@ -8117,9 +8263,7 @@ namespace netDxf.IO
                         xData.Add(data);
                         break;
                     default:
-                        if (this.chunk.Code >= 1000 && this.chunk.Code <= 1071)
-                            throw new Exception("The extended data of an entity must start with the application registry code.");
-
+                        Debug.Assert(!(this.chunk.Code >= 1000 && this.chunk.Code <= 1071), "The extended data of an entity must start with the application registry code.");
                         this.chunk.Next();
                         break;
                 }
@@ -8207,8 +8351,7 @@ namespace netDxf.IO
                         xData.Add(data);
                         break;
                     default:
-                        if (this.chunk.Code >= 1000 && this.chunk.Code <= 1071)
-                            throw new Exception("The extended data of an entity must start with the application registry code.");
+                        Debug.Assert(!(this.chunk.Code >= 1000 && this.chunk.Code <= 1071), "The extended data of an entity must start with the application registry code.");
                         this.chunk.Next();
                         break;
                 }
@@ -8390,13 +8533,17 @@ namespace netDxf.IO
                     case 40:
                         startWidth = this.chunk.ReadDouble();
                         if (startWidth < 0.0)
+                        {
                             startWidth = 0.0;
+                        }
                         this.chunk.Next();
                         break;
                     case 41:
                         endWidth = this.chunk.ReadDouble();
                         if (endWidth < 0.0)
+                        {
                             endWidth = 0.0;
+                        }
                         this.chunk.Next();
                         break;
                     case 42:
@@ -8499,13 +8646,17 @@ namespace netDxf.IO
                     case 40:
                         height = this.chunk.ReadDouble();
                         if (height <= 0.0)
+                        {
                             height = this.doc.DrawingVariables.TextSize;
+                        }
                         this.chunk.Next();
                         break;
                     case 41:
                         widthFactor = this.chunk.ReadDouble();
                         if (widthFactor < 0.01 || widthFactor > 100.0)
+                        {
                             widthFactor = this.doc.DrawingVariables.TextSize;
+                        }
                         this.chunk.Next();
                         break;
                     case 50:
@@ -8515,22 +8666,30 @@ namespace netDxf.IO
                     case 51:
                         obliqueAngle = this.chunk.ReadDouble();
                         if (obliqueAngle < -85.0 || obliqueAngle > 85.0)
+                        {
                             obliqueAngle = 0.0;
+                        }
                         this.chunk.Next();
                         break;
                     case 7:
                         string styleName = this.DecodeEncodedNonAsciiCharacters(this.chunk.ReadString());
                         if (string.IsNullOrEmpty(styleName))
+                        {
                             styleName = this.doc.DrawingVariables.TextStyle;
+                        }
                         style = this.GetTextStyle(styleName);
                         this.chunk.Next();
                         break;
                     case 71:
                         short textGeneration = this.chunk.ReadShort();
                         if (textGeneration - 2 == 0)
+                        {
                             isBackward = true;
+                        }
                         if (textGeneration - 4 == 0)
+                        {
                             isUpsideDown = true;
+                        }
                         if (textGeneration - 6 == 0)
                         {
                             isBackward = true;
@@ -8564,9 +8723,7 @@ namespace netDxf.IO
                         xData.Add(data);
                         break;
                     default:
-                        if (this.chunk.Code >= 1000 && this.chunk.Code <= 1071)
-                            throw new Exception("The extended data of an entity must start with the application registry code.");
-
+                        Debug.Assert(!(this.chunk.Code >= 1000 && this.chunk.Code <= 1071), "The extended data of an entity must start with the application registry code.");
                         this.chunk.Next();
                         break;
                 }
@@ -8669,19 +8826,25 @@ namespace netDxf.IO
                     case 40:
                         height = this.chunk.ReadDouble();
                         if (height <= 0.0)
+                        {
                             height = this.doc.DrawingVariables.TextSize;
+                        }
                         this.chunk.Next();
                         break;
                     case 41:
                         rectangleWidth = this.chunk.ReadDouble();
                         if (rectangleWidth < 0.0)
+                        {
                             rectangleWidth = 0.0;
+                        }
                         this.chunk.Next();
                         break;
                     case 44:
                         lineSpacing = this.chunk.ReadDouble();
                         if (lineSpacing < 0.25 || lineSpacing > 4.0)
+                        {
                             lineSpacing = 1.0;
+                        }
                         this.chunk.Next();
                         break;
                     case 50: // even if the AutoCAD DXF documentation says that the rotation is in radians, this is wrong this value is in degrees
@@ -8692,7 +8855,9 @@ namespace netDxf.IO
                     case 7:
                         string styleName = this.DecodeEncodedNonAsciiCharacters(this.chunk.ReadString());
                         if (string.IsNullOrEmpty(styleName))
+                        {
                             styleName = this.doc.DrawingVariables.TextStyle;
+                        }
                         style = this.GetTextStyle(styleName);
                         this.chunk.Next();
                         break;
@@ -8732,12 +8897,12 @@ namespace netDxf.IO
                         // until the end of the entity definition or the XData information
                         //string unknown = this.chunk.ReadString();
                         while (!(this.chunk.Code == 0 || this.chunk.Code == 1001))
-                            this.chunk.Next();                                         
+                        {
+                            this.chunk.Next();
+                        }                                         
                         break;
                     default:
-                        if (this.chunk.Code >= 1000 && this.chunk.Code <= 1071)
-                            throw new Exception("The extended data of an entity must start with the application registry code.");
-
+                        Debug.Assert(!(this.chunk.Code >= 1000 && this.chunk.Code <= 1071), "The extended data of an entity must start with the application registry code.");
                         this.chunk.Next();
                         break;
                 }
@@ -8839,9 +9004,7 @@ namespace netDxf.IO
                         xData.Add(data);
                         break;
                     default:
-                        if (this.chunk.Code >= 1000 && this.chunk.Code <= 1071)
-                            throw new Exception("The extended data of an entity must start with the application registry code.");
-
+                        Debug.Assert(!(this.chunk.Code >= 1000 && this.chunk.Code <= 1071), "The extended data of an entity must start with the application registry code.");
                         this.chunk.Next();
                         break;
                 }
@@ -8868,9 +9031,13 @@ namespace netDxf.IO
                 foreach (XDataRecord record in patternOrigin.XDataRecord)
                 {
                     if (record.Code == XDataCode.RealX)
+                    {
                         origin.X = (double) record.Value;
+                    }
                     else if (record.Code == XDataCode.RealY)
+                    {
                         origin.Y = (double) record.Value;
+                    }
                     // record.Code == XDataCode.RealZ is always 0
                 }
             }
@@ -9237,7 +9404,9 @@ namespace netDxf.IO
             }
 
             if (!isGradient)
+            {
                 hatch = new HatchPattern(name);
+            }
 
             hatch.Angle = angle;
             hatch.Style = style;
@@ -9347,16 +9516,6 @@ namespace netDxf.IO
             }
 
             return lineDefinitions;
-        }
-
-        private void ReadUnknowEntity()
-        {
-            // if the entity is unknown keep reading until an end of section or a new entity is found
-            this.chunk.Next();
-            while (this.chunk.Code != 0)
-            {
-                this.chunk.Next();
-            }
         }
 
         #endregion
@@ -9761,8 +9920,7 @@ namespace netDxf.IO
                         xData.Add(data);
                         break;
                     default:
-                        if (this.chunk.Code >= 1000 && this.chunk.Code <= 1071)
-                            throw new Exception("The extended data of an entity must start with the application registry code.");
+                        Debug.Assert(!(this.chunk.Code >= 1000 && this.chunk.Code <= 1071), "The extended data of an entity must start with the application registry code.");
                         this.chunk.Next();
                         break;
                 }
@@ -9872,8 +10030,7 @@ namespace netDxf.IO
                         xData.Add(data);
                         break;
                     default:
-                        if (this.chunk.Code >= 1000 && this.chunk.Code <= 1071)
-                            throw new Exception("The extended data of an entity must start with the application registry code.");
+                        Debug.Assert(!(this.chunk.Code >= 1000 && this.chunk.Code <= 1071), "The extended data of an entity must start with the application registry code.");
                         this.chunk.Next();
                         break;
                 }
@@ -10062,8 +10219,7 @@ namespace netDxf.IO
                         xData.Add(data);
                         break;
                     default:
-                        if (this.chunk.Code >= 1000 && this.chunk.Code <= 1071)
-                            throw new Exception("The extended data of an entity must start with the application registry code.");
+                        Debug.Assert(!(this.chunk.Code >= 1000 && this.chunk.Code <= 1071), "The extended data of an entity must start with the application registry code.");
                         this.chunk.Next();
                         break;
                 }
@@ -10328,10 +10484,7 @@ namespace netDxf.IO
                         xData.Add(data);
                         break;
                     default:
-                        if (this.chunk.Code >= 1000 && this.chunk.Code <= 1071)
-                        {
-                            throw new Exception("The extended data of an entity must start with the application registry code.");
-                        }
+                        Debug.Assert(!(this.chunk.Code >= 1000 && this.chunk.Code <= 1071), "The extended data of an entity must start with the application registry code.");
                         this.chunk.Next();
                         break;
                 }
@@ -10464,6 +10617,15 @@ namespace netDxf.IO
         #endregion
 
         #region private methods
+
+        private void ReadUnknowData()
+        {
+            do
+            {
+                this.chunk.Next();
+            }
+            while (this.chunk.Code != 0);
+        }
 
         private void PostProcesses()
         {           

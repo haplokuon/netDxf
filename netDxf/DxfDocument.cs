@@ -1113,11 +1113,15 @@ namespace netDxf
         {
             // null entities are not allowed
             if (entity == null)
+            {
                 throw new ArgumentNullException(nameof(entity));
+            }
 
             // assign a handle
             if (assignHandle || string.IsNullOrEmpty(entity.Handle))
+            {
                 this.NumHandles = entity.AssignHandle(this.NumHandles);
+            }
 
             // the entities that are part of a block do not belong to any of the entities lists but to the block definition.
             switch (entity.Type)
@@ -1198,18 +1202,17 @@ namespace netDxf
                     }
                     insert.AttributeAdded += this.Insert_AttributeAdded;
                     insert.AttributeRemoved += this.Insert_AttributeRemoved;
+                    //insert.BlockChanged += this.Insert_BlockChanged;
                     break;
                 case EntityType.LwPolyline:
                     break;
                 case EntityType.Line:
                     break;
                 case EntityType.Shape:
-                    Shape shape = (Shape)entity;
+                    Shape shape = (Shape) entity;
                     shape.Style = this.shapeStyles.Add(shape.Style, assignHandle);
                     this.shapeStyles.References[shape.Style.Name].Add(shape);
-                    //check if the shape style contains a shape with the stored name
-                    if(!shape.Style.ContainsShapeName(shape.Name))
-                        throw new ArgumentException("The shape style does not contain a shape with the stored name.", nameof(entity));
+                    shape.StyleChanged += this.Shape_StyleChanged;
                     break;
                 case EntityType.Point:
                     break;
@@ -1239,12 +1242,14 @@ namespace netDxf
                     Image image = (Image) entity;
                     image.Definition = this.imageDefs.Add(image.Definition, assignHandle);
                     this.imageDefs.References[image.Definition.Name].Add(image);
+
                     if (!image.Definition.Reactors.ContainsKey(image.Handle))
                     {
                         ImageDefinitionReactor reactor = new ImageDefinitionReactor(image.Handle);
                         this.NumHandles = reactor.AssignHandle(this.NumHandles);
                         image.Definition.Reactors.Add(image.Handle, reactor);
                     }
+                    image.ImageDefinitionChanged += this.Image_ImageDefinitionChanged;
                     break;
                 case EntityType.MLine:
                     MLine mline = (MLine) entity;
@@ -1273,6 +1278,7 @@ namespace netDxf
                             this.underlayPdfDefs.References[underlay.Definition.Name].Add(underlay);
                             break;
                     }
+                    underlay.UnderlayDefinitionChanged += this.Underlay_UnderlayDefinitionChanged;
                     break;
                 case EntityType.Wipeout:
                     break;
@@ -1305,11 +1311,15 @@ namespace netDxf
         {
             // null entities are not allowed
             if (attDef == null)
+            {
                 throw new ArgumentNullException(nameof(attDef));
+            }
 
             // assign a handle
             if (assignHandle || string.IsNullOrEmpty(attDef.Handle))
+            {
                 this.NumHandles = attDef.AssignHandle(this.NumHandles);
+            }
 
             attDef.Style = this.textStyles.Add(attDef.Style, assignHandle);
             this.textStyles.References[attDef.Style.Name].Add(attDef);
@@ -1395,6 +1405,7 @@ namespace netDxf
                     }
                     insert.AttributeAdded -= this.Insert_AttributeAdded;
                     insert.AttributeRemoved -= this.Insert_AttributeRemoved;
+                    //insert.BlockChanged -= this.Insert_BlockChanged;
                     break;
                 case EntityType.LwPolyline:
                     break;
@@ -1403,6 +1414,7 @@ namespace netDxf
                 case EntityType.Shape:
                     Shape shape = (Shape)entity;
                     this.shapeStyles.References[shape.Style.Name].Remove(entity);
+                    shape.StyleChanged -= this.Shape_StyleChanged;
                     break;
                 case EntityType.Point:
                     break;
@@ -1430,6 +1442,7 @@ namespace netDxf
                     Image image = (Image) entity;
                     this.imageDefs.References[image.Definition.Name].Remove(image);
                     image.Definition.Reactors.Remove(image.Handle);
+                    image.ImageDefinitionChanged -= this.Image_ImageDefinitionChanged;
                     break;
                 case EntityType.MLine:
                     MLine mline = (MLine) entity;
@@ -1439,6 +1452,24 @@ namespace netDxf
                 case EntityType.Ray:
                     break;
                 case EntityType.XLine:
+                    break;
+                case EntityType.Underlay:
+                    Underlay underlay = (Underlay) entity;
+                    switch (underlay.Definition.Type)
+                    {
+                        case UnderlayType.DGN:
+                            this.underlayDgnDefs.References[underlay.Definition.Name].Remove(underlay);
+                            break;
+                        case UnderlayType.DWF:
+                            this.underlayDwfDefs.References[underlay.Definition.Name].Remove(underlay);
+                            break;
+                        case UnderlayType.PDF:
+                            this.underlayPdfDefs.References[underlay.Definition.Name].Remove(underlay);
+                            break;
+                    }
+                    underlay.UnderlayDefinitionChanged -= this.Underlay_UnderlayDefinitionChanged;
+                    break;
+                case EntityType.Wipeout:
                     break;
                 case EntityType.Viewport:
                     Viewport viewport = (Viewport) entity;
@@ -1789,7 +1820,10 @@ namespace netDxf
                 case DimensionStyleOverrideType.DimArrow2:
                     Block block = (Block) e.Item.Value;
                     if (block == null)
-                        return; // the block might be defined as null to indicate that the default arrowhead will be used
+                    {
+                        // the block might be defined as null to indicate that the default arrowhead will be used
+                        return;
+                    }
                     sender.StyleOverrides[e.Item.Type] = new DimensionStyleOverride(e.Item.Type, this.blocks.Add(block));
                     this.blocks.References[block.Name].Add(sender);
                     break;
@@ -1910,6 +1944,14 @@ namespace netDxf
             e.Item.TextStyleChanged += this.Entity_TextStyleChanged;
         }
 
+        //private void Insert_BlockChanged(Insert sender, TableObjectChangedEventArgs<Block> e)
+        //{
+        //    this.blocks.References[e.OldValue.Name].Remove(sender);
+
+        //    e.NewValue = this.blocks.Add(e.NewValue);
+        //    this.blocks.References[e.NewValue.Name].Add(sender);
+        //}
+
         private void Hatch_BoundaryPathAdded(Hatch sender, ObservableCollectionEventArgs<HatchBoundaryPath> e)
         {
             Layout layout = sender.Owner.Record.Layout;
@@ -1960,6 +2002,62 @@ namespace netDxf
         private void Viewport_ClippingBoundaryRemoved(Viewport sender, EntityChangeEventArgs e)
         {
             this.RemoveEntity(e.Item);
+        }
+
+        private void Image_ImageDefinitionChanged(Image sender, TableObjectChangedEventArgs<ImageDefinition> e)
+        {
+            this.imageDefs.References[e.OldValue.Name].Remove(sender);
+
+            e.NewValue = this.imageDefs.Add(e.NewValue);
+            this.imageDefs.References[e.NewValue.Name].Add(sender);
+
+            if (!e.NewValue.Reactors.ContainsKey(sender.Handle))
+            {
+                ImageDefinitionReactor reactor = new ImageDefinitionReactor(sender.Handle);
+                this.NumHandles = reactor.AssignHandle(this.NumHandles);
+                e.NewValue.Reactors.Add(sender.Handle, reactor);
+            }
+        }
+
+        private void Underlay_UnderlayDefinitionChanged(Underlay sender, TableObjectChangedEventArgs<UnderlayDefinition> e)
+        {
+            switch (e.OldValue.Type)
+            {
+                case UnderlayType.DGN:
+                    this.underlayDgnDefs.References[e.OldValue.Name].Remove(sender);
+                    break;
+                case UnderlayType.DWF:
+                    this.underlayDwfDefs.References[e.OldValue.Name].Remove(sender);
+                    break;
+                case UnderlayType.PDF:
+                    this.underlayPdfDefs.References[e.OldValue.Name].Remove(sender);
+                    break;
+            }
+
+
+            switch (e.NewValue.Type)
+            {
+                case UnderlayType.DGN:
+                    e.NewValue = this.underlayDgnDefs.Add((UnderlayDgnDefinition) e.NewValue);
+                    this.underlayDgnDefs.References[e.NewValue.Name].Add(sender);
+                    break;
+                case UnderlayType.DWF:
+                    e.NewValue = this.underlayDwfDefs.Add((UnderlayDwfDefinition) e.NewValue);
+                    this.underlayDwfDefs.References[e.NewValue.Name].Add(sender);
+                    break;
+                case UnderlayType.PDF:
+                    e.NewValue = this.underlayPdfDefs.Add((UnderlayPdfDefinition) e.NewValue);
+                    this.underlayPdfDefs.References[e.NewValue.Name].Add(sender);
+                    break;
+            }
+        }
+
+        private void Shape_StyleChanged(Shape sender, TableObjectChangedEventArgs<ShapeStyle> e)
+        {
+            this.shapeStyles.References[e.OldValue.Name].Remove(sender);
+
+            e.NewValue = this.shapeStyles.Add(e.NewValue);
+            this.shapeStyles.References[e.NewValue.Name].Add(sender);
         }
 
         #endregion

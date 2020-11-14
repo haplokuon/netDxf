@@ -37,26 +37,40 @@ namespace netDxf.Entities
     {
         #region delegates and events
 
+        //public delegate void BlockChangedEventHandler(Insert sender, TableObjectChangedEventArgs<Block> e);
+        //public event BlockChangedEventHandler BlockChanged;
+        //protected virtual Block OnBlockChangedEvent(Block oldBlock, Block newBlock)
+        //{
+        //    BlockChangedEventHandler ae = this.BlockChanged;
+        //    if (ae != null)
+        //    {
+        //        TableObjectChangedEventArgs<Block> eventArgs = new TableObjectChangedEventArgs<Block>(oldBlock, newBlock);
+        //        ae(this, eventArgs);
+        //        return eventArgs.NewValue;
+        //    }
+        //    return newBlock;
+        //}
+
         public delegate void AttributeAddedEventHandler(Insert sender, AttributeChangeEventArgs e);
-
         public event AttributeAddedEventHandler AttributeAdded;
-
         protected virtual void OnAttributeAddedEvent(Attribute item)
         {
             AttributeAddedEventHandler ae = this.AttributeAdded;
             if (ae != null)
+            {
                 ae(this, new AttributeChangeEventArgs(item));
+            }
         }
 
         public delegate void AttributeRemovedEventHandler(Insert sender, AttributeChangeEventArgs e);
-
         public event AttributeRemovedEventHandler AttributeRemoved;
-
         protected virtual void OnAttributeRemovedEvent(Attribute item)
         {
             AttributeRemovedEventHandler ae = this.AttributeRemoved;
             if (ae != null)
+            {
                 ae(this, new AttributeChangeEventArgs(item));
+            }
         }
 
         #endregion
@@ -97,7 +111,6 @@ namespace netDxf.Entities
             this.scale = new Vector3(1.0);
             this.rotation = 0.0;
             this.endSequence = new EndSequence(this);
-
         }
 
         /// <summary>
@@ -138,12 +151,16 @@ namespace netDxf.Entities
             : base(EntityType.Insert, DxfObjectCode.Insert)
         {
             if (block == null)
+            {
                 throw new ArgumentNullException(nameof(block));
+            }
 
             this.block = block;
             this.position = position;
             if (scale <= 0)
+            {
                 throw new ArgumentOutOfRangeException(nameof(scale), scale, "The Insert scale must be greater than zero.");
+            }
             this.scale = new Vector3(scale);
             this.rotation = 0.0;
             this.endSequence = new EndSequence(this);
@@ -186,10 +203,37 @@ namespace netDxf.Entities
         /// <summary>
         /// Gets the insert <see cref="Block">block definition</see>.
         /// </summary>
+        /// <remarks>
+        /// When changing the block associated to 
+        /// </remarks>
         public Block Block
         {
             get { return this.block; }
-            internal set { this.block = value; }
+            internal set
+            {
+                //if (value == null)
+                //{
+                //    throw new ArgumentNullException(nameof(value));
+                //}
+
+                //if (value.IsForInternalUseOnly)
+                //{
+                //    throw new ArgumentException("The block is for internal use only.");
+                //}
+
+                //this.block = this.OnBlockChangedEvent(this.block, value);
+
+                //// remove all attributes in the actual insert
+                //foreach (Attribute att in this.attributes)
+                //{
+                //    this.OnAttributeRemovedEvent(att);
+                //    att.Handle = null;
+                //    att.Owner = null;
+                //}
+                //this.attributes = new AttributeCollection();
+
+                this.block = value;
+            }
         }
 
         /// <summary>

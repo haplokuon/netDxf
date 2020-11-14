@@ -341,6 +341,16 @@ namespace netDxf.Tables
         /// <returns>List of linetype names contained in the specified LIN file.</returns>
         public static List<string> NamesFromFile(string file)
         {
+            if (string.IsNullOrEmpty(file))
+            {
+                throw new ArgumentNullException(nameof(file));
+            }
+
+            if (!string.Equals(Path.GetExtension(file), ".LIN", StringComparison.InvariantCultureIgnoreCase))
+            {
+                throw new ArgumentException("The linetype definitions file must have the extension LIN.", nameof(file));
+            }
+
             List<string> names = new List<string>();
             using (StreamReader reader = new StreamReader(File.Open(file, FileMode.Open, FileAccess.Read, FileShare.ReadWrite), true))
             {
@@ -375,6 +385,22 @@ namespace netDxf.Tables
         /// <returns>The linetype defined in the LIN file with the specified name, null if the linetype has not been found in the linetype definitions file.</returns>
         public static Linetype Load(string file, string linetypeName)
         {
+
+            if (string.IsNullOrEmpty(file))
+            {
+                throw new ArgumentNullException(nameof(file));
+            }
+
+            if (!string.Equals(Path.GetExtension(file), ".LIN", StringComparison.InvariantCultureIgnoreCase))
+            {
+                throw new ArgumentException("The linetype definitions file must have the extension LIN.", nameof(file));
+            }
+
+            if (string.IsNullOrEmpty(linetypeName))
+            {
+                return null;
+            }
+
             Linetype linetype = null;            
             List<LinetypeSegment> segments = new List<LinetypeSegment>();
             using (StreamReader reader = new StreamReader(File.Open(file, FileMode.Open, FileAccess.Read, FileShare.ReadWrite), true))

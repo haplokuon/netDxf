@@ -1,5 +1,12 @@
 ## Change history
 
+### [2020/11/14]
+* Now it is possible to change the ImageDefinition of an Image entity.
+* Now it is possible to change the UnderlayDefinition of an Underlay entity.
+* Now it is possible to change the ShapeStyle and Name of a Shape entity.
+	You will need to make sure that the actual shape style file has a shape with the actual name.
+	There are a few methods to help you with that in the ShapeStyle class but they only work with the SHP shape files.
+* (fixed) Error creating the Underlay definition dictionaries when multiple entries of the same type PDF, DWF, or DGN where present.
 
 ### [2020/11/09]
 * Added some workarounds for invalid values in buggy DXF files.
