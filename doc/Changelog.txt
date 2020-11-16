@@ -1,5 +1,11 @@
 ## Change history
 
+### [2020/11/16]
+* The AttributeDefiniton and Attribute Value property are now stored as strings.
+	The user will be responsible on how to convert this value to and from the string.
+	In the end this value is always stored in a DXF file as a string (code 1), 
+	and how the conversion is done from a generic object value may differ from user to user.
+
 ### [2020/11/14]
 * Now it is possible to change the ImageDefinition of an Image entity.
 * Now it is possible to change the UnderlayDefinition of an Underlay entity.

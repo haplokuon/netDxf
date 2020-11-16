@@ -1522,7 +1522,7 @@ namespace TestDxfDocument
             AttributeDefinition attdef = new AttributeDefinition("MyAttribute")
             {
                 Prompt = "Enter a value:",
-                Value = 0,
+                Value = "0",
                 Position = Vector3.Zero,
                 Layer = new Layer("MyLayer")
                 {
@@ -1582,7 +1582,7 @@ namespace TestDxfDocument
             AttributeDefinition def = new AttributeDefinition("AttDefOutsideBlock")
             {
                 Prompt = "Enter value:",
-                Value = 0,
+                Value = "0",
                 Color = AciColor.Blue,
                 Position = new Vector3(0, 30, 0)
             };
@@ -3693,7 +3693,7 @@ namespace TestDxfDocument
             AttributeDefinition attdef = new AttributeDefinition("MyAttribute")
             {
                 Prompt = "Enter a value:",
-                Value = 0,
+                Value = "0",
                 Position = Vector3.Zero,
                 Layer = new Layer("MyLayer")
                 {
@@ -3753,7 +3753,7 @@ namespace TestDxfDocument
             AttributeDefinition def = new AttributeDefinition("AttDefOutsideBlock")
             {
                 Prompt = "Enter value:",
-                Value = 0,
+                Value = "0",
                 Color = AciColor.Blue,
                 Position = new Vector3(0, 30, 0)
             };
@@ -4304,7 +4304,7 @@ namespace TestDxfDocument
             // this is the text prompt shown to introduce the attribute value when a new Insert entity is inserted into the drawing
             attdef.Prompt = "InfoText";
             // optionally we can set a default value for new Insert entities
-            attdef.Value = 0;
+            attdef.Value = "0";
             // the attribute definition position is in local coordinates to the Insert entity to which it belongs
             attdef.Position = new Vector3(1, 1, 0);
 
@@ -4355,7 +4355,7 @@ namespace TestDxfDocument
             insert1.TransformAttributes();
 
             // Once the insert has been created we can modify the attributes properties, the list cannot be modified only the items stored in it
-            insert1.Attributes[0].Value = 24;
+            insert1.Attributes[0].Value = 24.ToString();
 
             // Modifying directly the layer might not get the desired results. Create one or get one from the layers table, modify it and assign it to the insert
             // One thing to note, if there is already a layer with the same name, the existing one in the layers table will override the new one, when the entity is added to the document.
@@ -4378,7 +4378,7 @@ namespace TestDxfDocument
             Insert insert2 = new Insert(block, new Vector3(10, 5, 0));
 
             // as before now we can change the insert2 attribute value
-            insert2.Attributes[0].Value = 34;
+            insert2.Attributes[0].Value = 34.ToString();
 
             // additionally we can insert extended data information
             XData xdata1 = new XData(new ApplicationRegistry("netDxf"));
@@ -7503,10 +7503,10 @@ namespace TestDxfDocument
             nestedBlock.AttributeDefinitions.Add(attdef);
 
             Insert nestedInsert = new Insert(nestedBlock, new Vector3(0, 0, 0)); // the position will be relative to the position of the insert that nest it
-            nestedInsert.Attributes[0].Value = 24;
+            nestedInsert.Attributes[0].Value = 24.ToString();
 
             Insert nestedInsert2 = new Insert(nestedBlock, new Vector3(-20, 0, 0)); // the position will be relative to the position of the insert that nest it
-            nestedInsert2.Attributes[0].Value = -20;
+            nestedInsert2.Attributes[0].Value = (-20).ToString();
 
             Block block = new Block("MyBlock");
             block.Entities.Add(new Line(new Vector3(-5, -5, 0), new Vector3(5, 5, 0)));

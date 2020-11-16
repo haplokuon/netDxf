@@ -310,7 +310,6 @@ namespace netDxf.IO
                             Debug.Assert(false, string.Format("Unknown section {0}.", this.chunk.ReadString()));
                             this.ReadUnknowData();
                             break;
-                            //throw new Exception(string.Format("Unknown section {0}.", this.chunk.ReadString()));
                     }
                 }
                 this.chunk.Next();
@@ -1365,10 +1364,9 @@ namespace netDxf.IO
                 }
             }
 
+            Debug.Assert(TableObject.IsValidName(appId), "Table object name is not valid.");
             if (!TableObject.IsValidName(appId))
             {
-                Debug.Assert(false, "Table object name is not valid.");
-
                 return null;
             }
 
@@ -2015,10 +2013,9 @@ namespace netDxf.IO
                 }
             }
 
+            Debug.Assert(TableObject.IsValidName(name), "Table object name is not valid.");
             if (!TableObject.IsValidName(name))
             {
-                Debug.Assert(false, "Table object name is not valid.");
-
                 return null;
             }
 
@@ -2340,9 +2337,9 @@ namespace netDxf.IO
                 }
             }
 
+            Debug.Assert(TableObject.IsValidName(name), string.Format("Table object name \"{0}\" is not valid.", name));
             if (!TableObject.IsValidName(name))
             {
-                Debug.Assert(false, string.Format("Table object name \"{0}\" is not valid.", name));
                 return null;
             }
 
@@ -2454,9 +2451,9 @@ namespace netDxf.IO
                 }
             }
 
+            Debug.Assert(TableObject.IsValidName(name), "Table object name is not valid.");
             if (!TableObject.IsValidName(name))
             {
-                Debug.Assert(false, "Table object name is not valid.");
                 return null;
             }
 
@@ -2656,21 +2653,21 @@ namespace netDxf.IO
             if (isShapeStyle)
             {
                 // file cannot be null or empty
+                Debug.Assert(!string.IsNullOrEmpty(file), "File path is null or empty.");
                 if (string.IsNullOrEmpty(file))
                 {
-                    Debug.Assert(false, "File path is null or empty.");
                     file = FileNotValid;
                 }
 
                 // basic check if file is a file path
-                if (file.IndexOfAny(Path.GetInvalidPathChars()) == 0)
+                Debug.Assert(file.IndexOfAny(Path.GetInvalidPathChars()) == -1, "File path contains invalid characters: " + file);
+                if (file.IndexOfAny(Path.GetInvalidPathChars()) != -1)
                 {
-                    Debug.Assert(false, "File path contains invalid characters: " + file);
                     file = FileNotValid;
                 }
 
                 //ShapeStyle shapeStyle = new ShapeStyle(Path.GetFileNameWithoutExtension(file), file, height, widthFactor, obliqueAngle);
-                ShapeStyle shapeStyle = new ShapeStyle("ShapeStyle" + ++this.shapeStyleCounter, file, height, widthFactor, obliqueAngle);
+                ShapeStyle shapeStyle = new ShapeStyle("ShapeStyle - " + ++this.shapeStyleCounter, file, height, widthFactor, obliqueAngle);
                 if (xData.Count > 0)
                 {
                     this.tableEntryXData.Add(shapeStyle, xData);
@@ -2679,9 +2676,9 @@ namespace netDxf.IO
             }
 
             // text styles
+            Debug.Assert(TableObject.IsValidName(name), "Table object name is not valid.");
             if (!TableObject.IsValidName(name))
             {
-                Debug.Assert(false, "Table object name is not valid.");
                 return null;
             }
 
@@ -2707,19 +2704,18 @@ namespace netDxf.IO
             TextStyle style;
 
             // basic check if file is a file path
+            Debug.Assert(file.IndexOfAny(Path.GetInvalidPathChars()) == -1, "File path contains invalid characters.");
             if (file.IndexOfAny(Path.GetInvalidPathChars()) != -1)
             {
-                Debug.Assert(false, "File path contains invalid characters.");
-
                 return null;
             }
 
             // the information stored in the extended data takes precedence before the font file (this is only applicable for true type fonts)
             if (string.IsNullOrEmpty(fontFamily))
             {
+                Debug.Assert(!string.IsNullOrEmpty(file), "File path is null or empty.");
                 if (string.IsNullOrEmpty(file))
                 {
-                    Debug.Assert(false, "File path is null or empty.");
                     file = "simplex.shx";
                 }
                 else
@@ -2847,10 +2843,9 @@ namespace netDxf.IO
                 }
             }
 
+            Debug.Assert(TableObject.IsValidName(name), "Table object name is not valid.");
             if (!TableObject.IsValidName(name))
             {
-                Debug.Assert(false, "Table object name is not valid.");
-
                 return null;
             }
 
@@ -2997,10 +2992,9 @@ namespace netDxf.IO
                 return null;
             }
 
+            Debug.Assert(TableObject.IsValidName(name), "Table object name is not valid.");
             if (!TableObject.IsValidName(name))
             {
-                Debug.Assert(false, "Table object name is not valid.");
-
                 return null;
             }
 
@@ -3155,17 +3149,15 @@ namespace netDxf.IO
 
             if (type.HasFlag(BlockTypeFlags.XRef))
             {
+                Debug.Assert(!string.IsNullOrEmpty(xrefFile), "File path is null or empty.");
                 if (string.IsNullOrEmpty(xrefFile))
                 {
-                    Debug.Assert(false, "File path is null or empty.");
-
                     xrefFile = FileNotValid;
                 }
 
-                if (xrefFile.IndexOfAny(Path.GetInvalidPathChars()) == 0)
+                Debug.Assert(xrefFile.IndexOfAny(Path.GetInvalidPathChars()) == -1, "File path contains invalid characters: " + xrefFile);
+                if (xrefFile.IndexOfAny(Path.GetInvalidPathChars()) != -1)
                 {
-                    Debug.Assert(false, "File path contains invalid characters: " + xrefFile);
-
                     xrefFile = FileNotValid;
                 }
 
@@ -3232,7 +3224,7 @@ namespace netDxf.IO
         {
             string tag = string.Empty;
             string text = string.Empty;
-            object value = null;
+            string value = string.Empty;
             AttributeFlags flags = AttributeFlags.None;
             Vector3 firstAlignmentPoint = Vector3.Zero;
             Vector3 secondAlignmentPoint = Vector3.Zero;
@@ -3252,16 +3244,16 @@ namespace netDxf.IO
             {
                 switch (this.chunk.Code)
                 {
+                    case 1:
+                        value = this.DecodeEncodedNonAsciiCharacters(this.chunk.ReadString());
+                        this.chunk.Next();
+                        break;
                     case 2:
                         tag = this.DecodeEncodedNonAsciiCharacters(this.chunk.ReadString());
                         this.chunk.Next();
                         break;
                     case 3:
                         text = this.DecodeEncodedNonAsciiCharacters(this.chunk.ReadString());
-                        this.chunk.Next();
-                        break;
-                    case 1:
-                        value = this.DecodeEncodedNonAsciiCharacters(this.chunk.ReadString());
                         this.chunk.Next();
                         break;
                     case 70:
@@ -3347,10 +3339,7 @@ namespace netDxf.IO
                         xData.Add(data);
                         break;
                     default:
-                        if (this.chunk.Code >= 1000 && this.chunk.Code <= 1071)
-                        {
-                            throw new Exception("The extended data of an entity must start with the application registry code.");
-                        }
+                        Debug.Assert(!(this.chunk.Code >= 1000 && this.chunk.Code <= 1071), "The extended data of an entity must start with the application registry code.");
                         this.chunk.Next();
                         break;
                 }
@@ -3452,7 +3441,9 @@ namespace netDxf.IO
                         break;
                     case 62: // ACI color code
                         if (!color.UseTrueColor)
+                        {
                             color = AciColor.FromCadIndex(this.chunk.ReadShort());
+                        }
                         this.chunk.Next();
                         break;
                     case 440: //transparency
@@ -3486,9 +3477,9 @@ namespace netDxf.IO
                 }
             }
 
-            string atttag = null;
-            AttributeDefinition attdef = null;
-            object value = null;
+            AttributeDefinition attDef = null;
+            string attTag = string.Empty;
+            string value = string.Empty;
 
             this.chunk.Next();
             while (this.chunk.Code != 0)
@@ -3496,12 +3487,12 @@ namespace netDxf.IO
                 switch (this.chunk.Code)
                 {
                     case 2:
-                        atttag = this.DecodeEncodedNonAsciiCharacters(this.chunk.ReadString());
-                        // seems that some programs might export insert entities with attributes which definitions are not defined in the block
+                        attTag = this.DecodeEncodedNonAsciiCharacters(this.chunk.ReadString());
+                        // seems that some programs may export insert entities with attributes which definitions are not defined in the block
                         // if it is not present the insert attribute will have a null definition
                         if (!isBlockEntity)
                         {
-                            block.AttributeDefinitions.TryGetValue(atttag, out attdef);
+                            block.AttributeDefinitions.TryGetValue(attTag, out attDef);
                         }
                         this.chunk.Next();
                         break;
@@ -3592,10 +3583,7 @@ namespace netDxf.IO
                         xData.Add(data);
                         break;
                     default:
-                        if (this.chunk.Code >= 1000 && this.chunk.Code <= 1071)
-                        {
-                            throw new Exception("The extended data of an entity must start with the application registry code.");
-                        }
+                        Debug.Assert(!(this.chunk.Code >= 1000 && this.chunk.Code <= 1071), "The extended data of an entity must start with the application registry code.");
                         this.chunk.Next();
                         break;
                 }
@@ -3605,21 +3593,28 @@ namespace netDxf.IO
 
             Vector3 ocsBasePoint;
 
-            if (alignment == TextAlignment.BaselineLeft)
+            switch (alignment)
             {
-                ocsBasePoint = firstAlignmentPoint;
-            }
-            else if (alignment == TextAlignment.Fit || alignment == TextAlignment.Aligned)
-            {
-                width = (secondAlignmentPoint - firstAlignmentPoint).Modulus();
-                ocsBasePoint = firstAlignmentPoint;
-            }
-            else
-            {
-                ocsBasePoint = secondAlignmentPoint;
+                case TextAlignment.BaselineLeft:
+                    ocsBasePoint = firstAlignmentPoint;
+                    break;
+                case TextAlignment.Fit:
+                case TextAlignment.Aligned:
+                    width = (secondAlignmentPoint - firstAlignmentPoint).Modulus();
+                    ocsBasePoint = firstAlignmentPoint;
+                    break;
+                default:
+                    ocsBasePoint = secondAlignmentPoint;
+                    break;
             }
 
-            Attribute attribute = new Attribute
+            Debug.Assert(!string.IsNullOrEmpty(attTag), "The attribute tag cannot be null or empty.");
+            if (string.IsNullOrEmpty(attTag))
+            {
+                return null;
+            }
+
+            Attribute attribute = new Attribute(attTag)
             {
                 Handle = handle,
                 Color = color,
@@ -3629,8 +3624,7 @@ namespace netDxf.IO
                 LinetypeScale = linetypeScale,
                 Transparency = transparency,
                 IsVisible = isVisible,
-                Definition = attdef,
-                Tag = atttag,
+                Definition = attDef,
                 Position = MathHelper.Transform(ocsBasePoint, normal, CoordinateSystem.Object, CoordinateSystem.World),
                 Normal = normal,
                 Alignment = alignment,
@@ -3712,7 +3706,9 @@ namespace netDxf.IO
                         break;
                     case 62: //ACI color code
                         if (!color.UseTrueColor)
+                        {
                             color = AciColor.FromCadIndex(this.chunk.ReadShort());
+                        }
                         this.chunk.Next();
                         break;
                     case 420: //the entity uses true color
@@ -3735,7 +3731,9 @@ namespace netDxf.IO
                     case 48: //line type scale
                         linetypeScale = this.chunk.ReadDouble();
                         if (linetypeScale <= 0.0)
+                        {
                             linetypeScale = 1.0;
+                        }
                         this.chunk.Next();
                         break;
                     case 60: //object visibility
@@ -9783,17 +9781,15 @@ namespace netDxf.IO
                 }
             }
 
+            Debug.Assert(!string.IsNullOrEmpty(file), "File path is null or empty.");
             if (string.IsNullOrEmpty(file))
             {
-                Debug.Assert(false, "File path is null or empty.");
-
                 file = FileNotValid;
             }
 
-            if (file.IndexOfAny(Path.GetInvalidPathChars()) == 0)
+            Debug.Assert(file.IndexOfAny(Path.GetInvalidPathChars()) == -1, "File path contains invalid characters: " + file);
+            if (file.IndexOfAny(Path.GetInvalidPathChars()) != -1)
             {
-                Debug.Assert(false, "File path contains invalid characters: " + file);
-
                 file = FileNotValid;
             }
 
@@ -10490,17 +10486,15 @@ namespace netDxf.IO
                 }
             }
 
+            Debug.Assert(!string.IsNullOrEmpty(file), "File path is null or empty.");
             if (string.IsNullOrEmpty(file))
             {
-                Debug.Assert(false, "File path is null or empty.");
-
                 file = FileNotValid;
             }
 
-            if (file.IndexOfAny(Path.GetInvalidPathChars()) == 0)
+            Debug.Assert(file.IndexOfAny(Path.GetInvalidPathChars()) == -1, "File path contains invalid characters: " + file);
+            if (file.IndexOfAny(Path.GetInvalidPathChars()) != -1)
             {
-                Debug.Assert(false, "File path contains invalid characters: " + file);
-
                 file = FileNotValid;
             }
 
@@ -11379,13 +11373,11 @@ namespace netDxf.IO
         private Block GetBlock(string name)
         {
             Block block;
+            Debug.Assert(this.doc.Blocks.TryGetValue(name, out block), "The block with name " + name + " does not exist.");
             if (this.doc.Blocks.TryGetValue(name, out block))
             {
                 return block;
             }
-
-            Debug.Assert(false, "The block with name " + name + " does not exist.");
-
             return this.doc.Blocks.Add(new Block(name));
         }
 

@@ -4328,10 +4328,14 @@ namespace netDxf.IO
 
             this.chunk.Write(62, def.Color.Index);
             if (def.Color.UseTrueColor)
+            {
                 this.chunk.Write(420, AciColor.ToTrueColor(def.Color));
+            }
 
             if (def.Transparency.Value >= 0)
+            {
                 this.chunk.Write(440, Transparency.ToAlphaValue(def.Transparency));
+            }
 
             this.chunk.Write(6, this.EncodeNonAsciiCharacters(def.Linetype.Name));
 
@@ -4349,13 +4353,7 @@ namespace netDxf.IO
 
             this.chunk.Write(40, def.Height);
 
-            object value = def.Value;
-            if (value == null)
-                this.chunk.Write(1, string.Empty);
-            else if (value is string)
-                this.chunk.Write(1, this.EncodeNonAsciiCharacters((string) value));
-            else
-                this.chunk.Write(1, value.ToString());
+            this.chunk.Write(1, this.EncodeNonAsciiCharacters(def.Value));
 
             switch (def.Alignment)
             {
@@ -4521,19 +4519,7 @@ namespace netDxf.IO
 
             this.chunk.Write(7, this.EncodeNonAsciiCharacters(attrib.Style.Name));
 
-            object value = attrib.Value;
-            if (value == null)
-            {
-                this.chunk.Write(1, string.Empty);
-            }
-            else if (value is string)
-            {
-                this.chunk.Write(1, this.EncodeNonAsciiCharacters((string) value));
-            }
-            else
-            {
-                this.chunk.Write(1, value.ToString());
-            }
+            this.chunk.Write(1, this.EncodeNonAsciiCharacters(attrib.Value));
 
             switch (attrib.Alignment)
             {
