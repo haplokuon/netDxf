@@ -233,6 +233,10 @@ namespace netDxf.Collections
             if (this.references[item.Name].Count != 0)
                 return false;
 
+            LinetypeSegment[] segments = new LinetypeSegment[item.Segments.Count];
+            item.Segments.CopyTo(segments, 0);
+            item.Segments.Remove(segments);
+
             this.Owner.AddedObjects.Remove(item.Handle);
             this.references.Remove(item.Name);
             this.list.Remove(item.Name);
@@ -268,13 +272,13 @@ namespace netDxf.Collections
             {
                 LinetypeTextSegment textSegment = (LinetypeTextSegment)e.Item;
                 textSegment.Style = this.Owner.TextStyles.Add(textSegment.Style);
-                //this.Owner.TextStyles.References[textSegment.Style.Name].Add(sender);
+                this.Owner.TextStyles.References[textSegment.Style.Name].Add(sender);
             }
             if (e.Item.Type == LinetypeSegmentType.Shape)
             {
                 LinetypeShapeSegment shapeSegment = (LinetypeShapeSegment)e.Item;
                 shapeSegment.Style = this.Owner.ShapeStyles.Add(shapeSegment.Style);
-                //this.Owner.ShapeStyles.References[shapeSegment.Name].Add(sender);
+                this.Owner.ShapeStyles.References[shapeSegment.Name].Add(sender);
             }
         }
 

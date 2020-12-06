@@ -136,7 +136,7 @@ namespace netDxf.Collections
                     throw new ArgumentException(string.Format("The dictionary tag: {0}, and the attribute definition tag: {1}, must be the same", tag, value.Tag));
 
                 // there is no need to add the same object, it might cause overflow issues
-                if (ReferenceEquals(this.innerDictionary[tag].Value, value))
+                if (ReferenceEquals(this.innerDictionary[tag], value))
                     return;
 
                 AttributeDefinition remove = this.innerDictionary[tag];

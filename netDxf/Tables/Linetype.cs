@@ -229,6 +229,7 @@ namespace netDxf.Tables
         /// Initializes a new instance of the <c>Linetype</c> class.
         /// </summary>
         /// <param name="name">Line type name.</param>
+        /// <param name="segments">List of linetype segments.</param>
         public Linetype(string name, IEnumerable<LinetypeSegment> segments)
             : this(name, segments, string.Empty, true)
         {
@@ -238,6 +239,7 @@ namespace netDxf.Tables
         /// Initializes a new instance of the <c>Linetype</c> class.
         /// </summary>
         /// <param name="name">Line type name.</param>
+        /// <param name="segments">List of linetype segments.</param>
         /// <param name="description">Line type description.</param>
         public Linetype(string name, IEnumerable<LinetypeSegment> segments, string description)
             : this(name, segments, description, true)

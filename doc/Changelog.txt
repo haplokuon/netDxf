@@ -1,28 +1,21 @@
 ## Change history
 
-### [2020/11/16]
+### [2.4.1 - 2020/12/06]
+* Added LayerStates accessible trough the Layers.StateManager. For more details see LayerStateManager() sample.
+* Added some workarounds for invalid values in buggy DXF files.
+* Renamed AttributeFlags.Visible to AttributeFlags.None.
+* Renamed Face3dEdgeFlags.Visibles to AttributeFlags.None.
 * The AttributeDefiniton and Attribute Value property are now stored as strings.
 	The user will be responsible on how to convert this value to and from the string.
 	In the end this value is always stored in a DXF file as a string (code 1), 
 	and how the conversion is done from a generic object value may differ from user to user.
-
-### [2020/11/14]
 * Now it is possible to change the ImageDefinition of an Image entity.
 * Now it is possible to change the UnderlayDefinition of an Underlay entity.
 * Now it is possible to change the ShapeStyle and Name of a Shape entity.
 	You will need to make sure that the actual shape style file has a shape with the actual name.
 	There are a few methods to help you with that in the ShapeStyle class but they only work with the SHP shape files.
 * (fixed) Error creating the Underlay definition dictionaries when multiple entries of the same type PDF, DWF, or DGN where present.
-
-### [2020/11/09]
-* Added some workarounds for invalid values in buggy DXF files.
-* (fixed) In the ACAD_DICTIONARY info, for the Layer table, a "{" was written instead of "}".
-
-
-### [2020/08/20]
-* Added LayerStates accessible trough the Layers.StateManager. For more details see LayerStateManager() sample.
-* Renamed AttributeFlags.Visible to AttributeFlags.None.
-* Renamed Face3dEdgeFlags.Visibles to AttributeFlags.None.
+* (fixed) Linetypes that contain complex segments were not being added to corresponding reference list of the TextSyle or ShapeStyle.
 * (fixed) The layer transparency was not being written correctly to the DXF.
 * (fixed) Blocks associated to paper space layouts can contain attribute definitions, although its use is uncommon there is no reason they cannot have them.
 * (fixed) Issue with DXFs with multiple Model viewports (VPorts) that contain extended data information.

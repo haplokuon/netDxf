@@ -27,7 +27,7 @@ using netDxf.Tables;
 namespace netDxf.Entities
 {
     /// <summary>
-    /// Represents a attribute <see cref="EntityObject">entity</see>.
+    /// Represents a attribute.
     /// </summary>
     /// <remarks>
     /// The attribute position, rotation, height and width factor values also includes the transformation of the <see cref="Insert">Insert</see> entity to which it belongs.<br />
@@ -701,6 +701,11 @@ namespace netDxf.Entities
                 IsBackward = this.isBackward,
                 IsUpsideDown = this.isUpsideDown
             };
+
+            foreach (XData data in this.XData.Values)
+            {
+                entity.XData.Add((XData) data.Clone());
+            }
 
             return entity;
         }

@@ -28,7 +28,7 @@ using netDxf.Tables;
 namespace netDxf.Entities
 {
     /// <summary>
-    /// Represents an attribute definition <see cref="EntityObject">entity</see>.
+    /// Represents an attribute definition.
     /// </summary>
     /// <remarks>
     /// AutoCad allows to have duplicate tags in the attribute definitions list, but this library does not.
@@ -716,6 +716,5 @@ namespace netDxf.Entities
         }
 
         #endregion
-
     }
 }
