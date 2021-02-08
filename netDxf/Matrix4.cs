@@ -833,7 +833,7 @@ namespace netDxf
         /// <summary>
         /// Calculates the inverse matrix.
         /// </summary>
-        /// <returns>Inverse Matrix3.</returns>
+        /// <returns>Inverse Matrix4.</returns>
         public Matrix4 Inverse()
         {
             if (this.IsIdentity)
