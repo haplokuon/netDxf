@@ -3697,7 +3697,7 @@ namespace netDxf.IO
                         break;
                     case DimensionStyleOverrideType.FitOptions:
                         xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 289));
-                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) styleOverride.Value));
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) (DimensionStyleFitOptions) styleOverride.Value));
                         break;
                     case DimensionStyleOverrideType.FitTextInside:
                         xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 174));
