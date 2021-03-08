@@ -1,5 +1,14 @@
 ## Change history
 
+### [2021/03/08]
+* The Insert Sync method will not modify any value assigned to the attribute Value property.
+* (fixed) A couple errors when writing the style overrides of a dimension to the extended data.
+* (fixed) Error when reading frozen layers from a DXF.
+* (fixed) Round off issues when transforming insert attributes, this may also affect other text based entities and attribute definitions.
+The MathHelper.NormalizeAngle method will check if the normalized angle is very close to 360 or -360 and return 0 in these cases.
+* (fixed) Error when saving to a file an absolute rotation value of complex linetypes.
+* (fixed) Negative scale values should be allowed in the Insert constructor as it is in the Scale property. Deleted the Insert constructor "public Insert(Block block, Vector3 position, double scale)", change the Scale property instead.
+
 ### [2.4.1 - 2020/12/06]
 * Added LayerStates accessible trough the Layers.StateManager. For more details see LayerStateManager() sample.
 * Added some workarounds for invalid values in buggy DXF files.

@@ -286,32 +286,46 @@ namespace netDxf.Entities
         #region public methods
 
         /// <summary>
-        /// Updates the actual insert with the attribute properties currently defined in the block. This does not affect any values assigned to attributes in each block.
+        /// Updates the attribute list of the actual insert with the attribute definition list of the referenced block. This does not affect any value assigned to the Value property.
         /// </summary>
-        /// <remarks>This method will automatically call the TransformAttributes method, to keep all attributes position and orientation up to date.</remarks>
-        /// <remarks></remarks>
+        /// <remarks>
+        /// This method will automatically call the TransformAttributes method, to keep all attributes position and orientation up to date.<br />
+        /// This method will does not change the values assigned to attributes in the actual insert, besides the ones modified by the TransformAttributes() method;
+        /// position, normal, rotation, text height, width factor, oblique angle, is backwards, is upside down, and alignment values.
+        /// </remarks>
         public void Sync()
         {
-            List<Attribute> atts = new List<Attribute>(this.block.AttributeDefinitions.Count);
+            List<Attribute> atts = new List<Attribute>();
 
-            // remove all attributes in the actual insert
+            // remove all attributes that have no attribute definition in the block
             foreach (Attribute att in this.attributes)
             {
-                this.OnAttributeRemovedEvent(att);
-                att.Handle = null;
-                att.Owner = null;
+                string tag = att.Tag;
+                if (this.block.AttributeDefinitions.ContainsTag(tag))
+                {
+                    atts.Add(att);
+                }
+                else
+                {
+                    this.OnAttributeRemovedEvent(att);
+                    att.Handle = null;
+                    att.Owner = null;
+                }
             }
 
             // add any new attributes from the attribute definitions of the block
             foreach (AttributeDefinition attdef in this.block.AttributeDefinitions.Values)
             {
-                Attribute att = new Attribute(attdef)
+                if (this.attributes.AttributeWithTag(attdef.Tag) == null)
                 {
-                    Owner = this
-                };
+                    Attribute att = new Attribute(attdef)
+                    {
+                        Owner = this
+                    };
 
-                atts.Add(att);
-                this.OnAttributeAddedEvent(att);
+                    atts.Add(att);
+                    this.OnAttributeAddedEvent(att);
+                }
             }
             this.attributes = new AttributeCollection(atts);
 

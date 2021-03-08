@@ -3706,7 +3706,7 @@ namespace netDxf.IO
                         break;
                     case DimensionStyleOverrideType.FitTextMove:
                         xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 279));
-                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) (DimensionStyleFitOptions) styleOverride.Value));
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) (DimensionStyleFitTextMove) styleOverride.Value));
                         break;
                     case DimensionStyleOverrideType.AngularPrecision:
                         xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 179));

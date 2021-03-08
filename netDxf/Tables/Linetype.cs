@@ -620,14 +620,14 @@ namespace netDxf.Tables
                         scale = 0.1;
                     }
                 }
+                else if (data[i].StartsWith("A=", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    rotationType = LinetypeSegmentRotationType.Absolute;
+                    rotation = ReadRotation(value);
+                }
                 else if (data[i].StartsWith("R=", StringComparison.InvariantCultureIgnoreCase))
                 {
                     rotationType = LinetypeSegmentRotationType.Relative;
-                    rotation = ReadRotation(value);
-                }
-                else if (data[i].StartsWith("Q=", StringComparison.InvariantCultureIgnoreCase))
-                {
-                    rotationType = LinetypeSegmentRotationType.Absolute;
                     rotation = ReadRotation(value);
                 }
                 else if (data[i].StartsWith("U=", StringComparison.InvariantCultureIgnoreCase))

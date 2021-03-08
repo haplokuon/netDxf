@@ -522,7 +522,7 @@ namespace netDxf
         public static double NormalizeAngle(double angle)
         {
             double normalized = angle % 360.0;
-            if (IsZero(normalized))
+            if (IsZero(normalized) || IsEqual(Math.Abs(normalized), 360.0))
             {
                 return 0.0;
             }
