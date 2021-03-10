@@ -3070,7 +3070,7 @@ namespace netDxf.IO
             this.chunk.Write(220, mText.Normal.Y);
             this.chunk.Write(230, mText.Normal.Z);
 
-            this.WriteMTextChunks(this.EncodeNonAsciiCharacters(mText.Value));
+            this.WriteMTextChunks(this.EncodeNonAsciiCharacters(mText.Value.Replace("\r\n", @"\P")));
 
             this.chunk.Write(40, mText.Height);
             this.chunk.Write(41, mText.RectangleWidth);
