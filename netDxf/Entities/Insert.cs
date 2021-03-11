@@ -1,7 +1,7 @@
-﻿#region netDxf library, Copyright (C) 2009-2019 Daniel Carvajal (haplokuon@gmail.com)
+﻿#region netDxf library, Copyright (C) 2009-2021 Daniel Carvajal (haplokuon@gmail.com)
 
 //                        netDxf library
-// Copyright (C) 2009-2019 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (C) 2009-2021 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -138,16 +138,6 @@ namespace netDxf.Entities
         /// <param name="block">Insert block definition.</param>
         /// <param name="position">Insert <see cref="Vector3">point</see> in world coordinates.</param>
         public Insert(Block block, Vector3 position)
-            : this(block, position, 1.0)
-        {           
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <c>Insert</c> class.
-        /// </summary>
-        /// <param name="block">Insert block definition.</param>
-        /// <param name="position">Insert <see cref="Vector3">point</see> in world coordinates.</param>
-        public Insert(Block block, Vector3 position, double scale)
             : base(EntityType.Insert, DxfObjectCode.Insert)
         {
             if (block == null)
@@ -157,11 +147,7 @@ namespace netDxf.Entities
 
             this.block = block;
             this.position = position;
-            if (scale <= 0)
-            {
-                throw new ArgumentOutOfRangeException(nameof(scale), scale, "The Insert scale must be greater than zero.");
-            }
-            this.scale = new Vector3(scale);
+            this.scale = new Vector3(1.0);
             this.rotation = 0.0;
             this.endSequence = new EndSequence(this);
 
