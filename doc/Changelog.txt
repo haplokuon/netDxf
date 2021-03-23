@@ -1,10 +1,7 @@
 ## Change history
 
-###  [2021/03/11]
+###  [2.4.2 - 2021/03/23]
 * Now the ShapeStyle does not require the SHP file to read the shape information only the SHX must be present.
-* Deleted the Insert constructor "public Insert(Block block, Vector3 position, double scale)", change the Scale property instead.
-
-### [2021/03/08]
 * The Insert Sync method will not modify any value assigned to the attribute Value property.
 * (fixed) A couple errors when writing the style overrides of a dimension to the extended data.
 * (fixed) Error when reading frozen layers from a DXF.
