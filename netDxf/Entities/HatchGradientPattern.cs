@@ -1,23 +1,23 @@
-﻿#region netDxf library, Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
-
-//                        netDxf library
-// Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+﻿#region netDxf library licensed under the MIT License, Copyright © 2009-2021 Daniel Carvajal (haplokuon@gmail.com)
 // 
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2.1 of the License, or (at your option) any later version.
+//                        netDxf library
+// Copyright © 2021 Daniel Carvajal (haplokuon@gmail.com)
+// 
+// Permission is hereby granted, free of charge, to any person obtaining a copy of this software
+// and associated documentation files (the “Software”), to deal in the Software without restriction,
+// including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense,
+// and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so,
+// subject to the following conditions:
 // 
 // The above copyright notice and this permission notice shall be included in all
 // copies or substantial portions of the Software.
 // 
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
 // FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
 // COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
 // IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
 #endregion
 
 using System;
@@ -90,9 +90,7 @@ namespace netDxf.Entities
         public HatchGradientPattern(AciColor color, double tint, HatchGradientPatternType type, string description)
             : base("SOLID", description)
         {
-            if (color == null)
-                throw new ArgumentNullException(nameof(color));
-            this.color1 = color;
+            this.color1 = color ?? throw new ArgumentNullException(nameof(color));
             this.color2 = this.Color2FromTint(tint);
             this.singleColor = true;
             this.gradientType = type;
@@ -121,12 +119,8 @@ namespace netDxf.Entities
         public HatchGradientPattern(AciColor color1, AciColor color2, HatchGradientPatternType type, string description)
             : base("SOLID", description)
         {
-            if (color1 == null)
-                throw new ArgumentNullException(nameof(color1));
-            this.color1 = color1;
-            if (color2 == null)
-                throw new ArgumentNullException(nameof(color2));
-            this.color2 = color2;
+            this.color1 = color1 ?? throw new ArgumentNullException(nameof(color1));
+            this.color2 = color2 ?? throw new ArgumentNullException(nameof(color2));
             this.singleColor = false;
             this.gradientType = type;
             this.tint = 1.0;
@@ -154,9 +148,7 @@ namespace netDxf.Entities
             get { return this.color1; }
             set
             {
-                if (value == null)
-                    throw new ArgumentNullException(nameof(value));
-                this.color1 = value;
+                this.color1 = value ?? throw new ArgumentNullException(nameof(value));
             }
         }
 
@@ -171,10 +163,8 @@ namespace netDxf.Entities
             get { return this.color2; }
             set
             {
-                if (value == null)
-                    throw new ArgumentNullException(nameof(value));
                 this.singleColor = false;
-                this.color2 = value;
+                this.color2 = value ?? throw new ArgumentNullException(nameof(value));
             }
         }
 

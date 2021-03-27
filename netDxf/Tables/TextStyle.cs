@@ -1,29 +1,28 @@
-﻿#region netDxf library, Copyright (C) 2009-2019 Daniel Carvajal (haplokuon@gmail.com)
-
-//                        netDxf library
-// Copyright (C) 2009-2019 Daniel Carvajal (haplokuon@gmail.com)
+﻿#region netDxf library licensed under the MIT License, Copyright © 2009-2021 Daniel Carvajal (haplokuon@gmail.com)
 // 
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2.1 of the License, or (at your option) any later version.
+//                        netDxf library
+// Copyright © 2021 Daniel Carvajal (haplokuon@gmail.com)
+// 
+// Permission is hereby granted, free of charge, to any person obtaining a copy of this software
+// and associated documentation files (the “Software”), to deal in the Software without restriction,
+// including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense,
+// and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so,
+// subject to the following conditions:
 // 
 // The above copyright notice and this permission notice shall be included in all
 // copies or substantial portions of the Software.
 // 
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
 // FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
 // COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
 // IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
 #endregion
 
 using System;
 using System.IO;
 using netDxf.Collections;
-using System.Drawing.Text;
 
 namespace netDxf.Tables
 {
@@ -99,16 +98,22 @@ namespace netDxf.Tables
             : base(name, DxfObjectCode.TextStyle, checkName)
         {
             if (string.IsNullOrEmpty(name))
+            {
                 throw new ArgumentNullException(nameof(name), "The text style name should be at least one character long.");
-            this.IsReserved = name.Equals(DefaultName, StringComparison.OrdinalIgnoreCase);
+            }
 
             if (string.IsNullOrEmpty(font))
+            {
                 throw new ArgumentNullException(nameof(font));
+            }
 
-            if (!Path.GetExtension(font).Equals(".TTF", StringComparison.InvariantCultureIgnoreCase) &&
-                !Path.GetExtension(font).Equals(".SHX", StringComparison.InvariantCultureIgnoreCase))
+            if (!Path.GetExtension(font).Equals(".TTF", StringComparison.OrdinalIgnoreCase) &&
+                !Path.GetExtension(font).Equals(".SHX", StringComparison.OrdinalIgnoreCase))
+            {
                 throw new ArgumentException("Only true type TTF fonts and ACAD compiled shape SHX fonts are allowed.");
+            }
 
+            this.IsReserved = name.Equals(DefaultName, StringComparison.OrdinalIgnoreCase);
             this.file = font;
             this.bigFont = string.Empty;
             this.widthFactor = 1.0;
@@ -166,8 +171,10 @@ namespace netDxf.Tables
             this.isVertical = false;
             this.isBackward = false;
             this.isUpsideDown = false;
-            if(string.IsNullOrEmpty(fontFamily))
+            if (string.IsNullOrEmpty(fontFamily))
+            {
                 throw new ArgumentNullException(nameof(fontFamily));
+            }
             this.fontFamilyName = fontFamily;
             this.fontStyle = fontStyle;
         }
@@ -190,11 +197,15 @@ namespace netDxf.Tables
             set
             {
                 if (string.IsNullOrEmpty(value))
+                {
                     throw new ArgumentNullException(nameof(value));
+                }
 
-                if (!Path.GetExtension(value).Equals(".TTF", StringComparison.InvariantCultureIgnoreCase) &&
-                    !Path.GetExtension(value).Equals(".SHX", StringComparison.InvariantCultureIgnoreCase))
+                if (!Path.GetExtension(value).Equals(".TTF", StringComparison.OrdinalIgnoreCase) &&
+                    !Path.GetExtension(value).Equals(".SHX", StringComparison.OrdinalIgnoreCase))
+                {
                     throw new ArgumentException("Only true type TTF fonts and ACAD compiled shape SHX fonts are allowed.");
+                }
 
                 this.fontFamilyName = string.Empty;
                 this.bigFont = string.Empty;
@@ -213,15 +224,26 @@ namespace netDxf.Tables
             set
             {
                 if (string.IsNullOrEmpty(value))
+                {
                     this.bigFont = string.Empty;
+                }
                 else
                 {
                     if (string.IsNullOrEmpty(this.file))
+                    {
                         throw new NullReferenceException("The Big Font is only applicable for SHX Asian fonts.");
-                    if (!Path.GetExtension(this.file).Equals(".SHX", StringComparison.InvariantCultureIgnoreCase))
+                    }
+
+                    if (!Path.GetExtension(this.file).Equals(".SHX", StringComparison.OrdinalIgnoreCase))
+                    {
                         throw new NullReferenceException("The Big Font is only applicable for SHX Asian fonts.");
-                    if(!Path.GetExtension(value).Equals(".SHX", StringComparison.InvariantCultureIgnoreCase))
+                    }
+
+                    if (!Path.GetExtension(value).Equals(".SHX", StringComparison.OrdinalIgnoreCase))
+                    {
                         throw new ArgumentException("The Big Font is only applicable for SHX Asian fonts.", nameof(value));
+                    }
+
                     this.bigFont = value;
                 }               
             }
@@ -242,7 +264,9 @@ namespace netDxf.Tables
             set
             {
                 if (string.IsNullOrEmpty(value))
+                {
                     throw new ArgumentNullException(nameof(value));
+                }
                 this.file = string.Empty;
                 this.bigFont = string.Empty;
                 this.fontStyle = FontStyle.Regular;
@@ -262,8 +286,10 @@ namespace netDxf.Tables
             get { return this.fontStyle; }
             set
             {
-                if (!string.IsNullOrEmpty(this.file)) return;
-                this.fontStyle = value;
+                if (string.IsNullOrEmpty(this.file))
+                {
+                    this.fontStyle = value;
+                }
             }
         }
 
@@ -277,7 +303,9 @@ namespace netDxf.Tables
             set
             {
                 if (value < 0)
+                {
                     throw new ArgumentOutOfRangeException(nameof(value), value, "The TextStyle height must be equals or greater than zero.");
+                }
                 this.height = value;
             }
         }
@@ -292,7 +320,9 @@ namespace netDxf.Tables
             set
             {
                 if (value < 0.01 || value > 100.0)
+                {
                     throw new ArgumentOutOfRangeException(nameof(value), value, "The TextStyle width factor valid values range from 0.01 to 100.");
+                }
                 this.widthFactor = value;
             }
         }
@@ -307,7 +337,9 @@ namespace netDxf.Tables
             set
             {
                 if (value < -85.0 || value > 85.0)
+                {
                     throw new ArgumentOutOfRangeException(nameof(value), value, "The TextStyle oblique angle valid values range from -85 to 85.");
+                }
                 this.obliqueAngle = value;
             }
         }
@@ -352,28 +384,35 @@ namespace netDxf.Tables
 
         #region public methods
 
+#if NET45
+
         /// <summary>
-        /// Find the font family name of an specified TTF font file.
+        /// Find the font family name of an specified TTF font file. Only available for Net Framework 4.5 builds.
         /// </summary>
         /// <param name="ttfFont">TTF font file.</param>
         /// <returns>The font family name of the specified TTF font file.</returns>
         /// <remarks>This method will return an empty string if the specified font is not found in its path or the system font folder or if it is not a valid TTF font.</remarks>
         public static string TrueTypeFontFamilyName(string ttfFont)
         {
-            if (string.IsNullOrEmpty(ttfFont)) throw new ArgumentNullException(nameof(ttfFont));
+            if (string.IsNullOrEmpty(ttfFont))
+            {
+                throw new ArgumentNullException(nameof(ttfFont));
+            }
 
             // the following information is only applied to TTF not SHX fonts
             if (!Path.GetExtension(ttfFont).Equals(".TTF", StringComparison.InvariantCultureIgnoreCase))
+            {
                 return string.Empty;
+            }
 
             // try to find the file in the specified directory, if not try it in the fonts system folder
             string fontFile = File.Exists(ttfFont) ?
                 Path.GetFullPath(ttfFont) :
                 string.Format("{0}{1}{2}", Environment.GetFolderPath(Environment.SpecialFolder.Fonts), Path.DirectorySeparatorChar, Path.GetFileName(ttfFont));
 
-            PrivateFontCollection fontCollection = new PrivateFontCollection();
+            System.Drawing.Text.PrivateFontCollection fontCollection = new System.Drawing.Text.PrivateFontCollection();
             try
-            {              
+            {
                 fontCollection.AddFontFile(fontFile);
                 return fontCollection.Families[0].Name;
             }
@@ -386,6 +425,8 @@ namespace netDxf.Tables
                 fontCollection.Dispose();
             }
         }
+
+#endif
 
         #endregion
 
@@ -426,7 +467,9 @@ namespace netDxf.Tables
             }
 
             foreach (XData data in this.XData.Values)
+            {
                 copy.XData.Add((XData)data.Clone());
+            }
 
             return copy;
         }

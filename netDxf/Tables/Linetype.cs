@@ -1,23 +1,23 @@
-﻿#region netDxf library, Copyright (C) 2009-2020 Daniel Carvajal (haplokuon@gmail.com)
-
-//                        netDxf library
-// Copyright (C) 2009-2020 Daniel Carvajal (haplokuon@gmail.com)
+﻿#region netDxf library licensed under the MIT License, Copyright © 2009-2021 Daniel Carvajal (haplokuon@gmail.com)
 // 
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2.1 of the License, or (at your option) any later version.
+//                        netDxf library
+// Copyright © 2021 Daniel Carvajal (haplokuon@gmail.com)
+// 
+// Permission is hereby granted, free of charge, to any person obtaining a copy of this software
+// and associated documentation files (the “Software”), to deal in the Software without restriction,
+// including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense,
+// and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so,
+// subject to the following conditions:
 // 
 // The above copyright notice and this permission notice shall be included in all
 // copies or substantial portions of the Software.
 // 
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
 // FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
 // COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
 // IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
 #endregion
 
 using System;
@@ -26,6 +26,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Text;
+using System.Text.RegularExpressions;
 using netDxf.Collections;
 
 namespace netDxf.Tables
@@ -39,9 +40,7 @@ namespace netDxf.Tables
         #region delegates and events
 
         public delegate void LinetypeSegmentAddedEventHandler(Linetype sender, LinetypeSegmentChangeEventArgs e);
-
         public event LinetypeSegmentAddedEventHandler LinetypeSegmentAdded;
-
         protected virtual void OnLinetypeSegmentAddedEvent(LinetypeSegment item)
         {
             LinetypeSegmentAddedEventHandler ae = this.LinetypeSegmentAdded;
@@ -52,9 +51,7 @@ namespace netDxf.Tables
         }
 
         public delegate void LinetypeSegmentRemovedEventHandler(Linetype sender, LinetypeSegmentChangeEventArgs e);
-
         public event LinetypeSegmentRemovedEventHandler LinetypeSegmentRemoved;
-
         protected virtual void OnLinetypeSegmentRemovedEvent(LinetypeSegment item)
         {
             LinetypeSegmentRemovedEventHandler ae = this.LinetypeSegmentRemoved;
@@ -65,9 +62,7 @@ namespace netDxf.Tables
         }
 
         public delegate void LinetypeTextSegmentStyleChangedEventHandler(Linetype sender, TableObjectChangedEventArgs<TextStyle> e);
-
         public event LinetypeTextSegmentStyleChangedEventHandler LinetypeTextSegmentStyleChanged;
-
         protected virtual TextStyle OnLinetypeTextSegmentStyleChangedEvent(TextStyle oldTextStyle, TextStyle newTextStyle)
         {
             LinetypeTextSegmentStyleChangedEventHandler ae = this.LinetypeTextSegmentStyleChanged;
@@ -376,6 +371,7 @@ namespace netDxf.Tables
                     names.Add(line.Substring(1, endName - 1));
                 }
             }
+
             return names;
         }
 
@@ -438,13 +434,12 @@ namespace netDxf.Tables
                             throw new FileLoadException("Unknown error reading LIN file.", file);
                         }
 
-                        string[] tokens = System.Text.RegularExpressions.Regex.Split(line, ",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)");
+                        string[] tokens = Regex.Split(line, ",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)");
 
                         // the index 0 is always A (alignment field)
                         for (int i = 1; i < tokens.Length; i++)
                         {
-                            double length;
-                            if (double.TryParse(tokens[i], NumberStyles.Float, CultureInfo.InvariantCulture, out length))
+                            if (double.TryParse(tokens[i], NumberStyles.Float, CultureInfo.InvariantCulture, out double length))
                             {
                                 // is the length followed by a shape or text segment
                                 if (i + 1 < tokens.Length)
@@ -457,7 +452,7 @@ namespace netDxf.Tables
                                         for (++i; i < tokens.Length; i++)
                                         {
                                             data.Add(tokens[i]);
-                                            
+
                                             // text and shape data must be enclosed by brackets
                                             if (i >= tokens.Length)
                                             {
@@ -469,6 +464,7 @@ namespace netDxf.Tables
                                                 break;
                                             }
                                         }
+
                                         LinetypeSegment segment = ReadLineTypeComplexSegment(data.ToArray(), length);
                                         if (segment != null)
                                         {
@@ -490,11 +486,13 @@ namespace netDxf.Tables
                                 throw new FormatException("The linetype definition is not well formatted.");
                             }
                         }
+
                         linetype = new Linetype(name, segments, description);
                         break;
                     }
                 }
             }
+
             return linetype;
         }
 
@@ -581,7 +579,7 @@ namespace netDxf.Tables
         private static LinetypeSegment ReadLineTypeComplexSegment(string[] data, double length)
         {
             // the data is enclosed in brackets
-            Debug.Assert(data[0][0] == '[' || data[data.Length-1][data[data.Length-1].Length-1] == ']', "The data is enclosed in brackets.");
+            Debug.Assert(data[0][0] == '[' || data[data.Length - 1][data[data.Length - 1].Length-1] == ']', "The data is enclosed in brackets.");
 
             // the first data item in a complex linetype definition segment
             // can be a shape name or a text string, the last always is enclosed in ""

@@ -1,23 +1,23 @@
-﻿#region netDxf library, Copyright (C) 2009-2019 Daniel Carvajal (haplokuon@gmail.com)
-
-//                        netDxf library
-// Copyright (C) 2009-2019 Daniel Carvajal (haplokuon@gmail.com)
+﻿#region netDxf library licensed under the MIT License, Copyright © 2009-2021 Daniel Carvajal (haplokuon@gmail.com)
 // 
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2.1 of the License, or (at your option) any later version.
+//                        netDxf library
+// Copyright © 2021 Daniel Carvajal (haplokuon@gmail.com)
+// 
+// Permission is hereby granted, free of charge, to any person obtaining a copy of this software
+// and associated documentation files (the “Software”), to deal in the Software without restriction,
+// including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense,
+// and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so,
+// subject to the following conditions:
 // 
 // The above copyright notice and this permission notice shall be included in all
 // copies or substantial portions of the Software.
 // 
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
 // FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
 // COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
 // IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
 #endregion
 
 using System;
@@ -36,9 +36,7 @@ namespace netDxf.Entities
         #region delegates and events
 
         public delegate void ToleranceStyleChangedEventHandler(Tolerance sender, TableObjectChangedEventArgs<DimensionStyle> e);
-
         public event ToleranceStyleChangedEventHandler ToleranceStyleChanged;
-
         protected virtual DimensionStyle OnDimensionStyleChangedEvent(DimensionStyle oldStyle, DimensionStyle newStyle)
         {
             ToleranceStyleChangedEventHandler ae = this.ToleranceStyleChanged;
@@ -152,7 +150,9 @@ namespace netDxf.Entities
             set
             {
                 if (value <= 0)
+                {
                     throw new ArgumentOutOfRangeException(nameof(value), value, "The tolerance text height must be greater than zero.");
+                }
                 this.textHeight = value;
             }
         }
@@ -201,7 +201,9 @@ namespace netDxf.Entities
             set
             {
                 if (value == null)
+                {
                     throw new ArgumentNullException(nameof(value));
+                }
                 this.style = this.OnDimensionStyleChangedEvent(this.style, value);
             }
         }
@@ -564,7 +566,9 @@ namespace netDxf.Entities
                         if (chars.MoveNext())
                         {
                             if (chars.Current == '}')
+                            {
                                 return s;
+                            }
 
                             throw new FormatException("The tolerance string representation is not well formatted");
                         }
@@ -656,7 +660,9 @@ namespace netDxf.Entities
         private static ToleranceValue ParseToleranceValue(string s)
         {
             if (string.IsNullOrEmpty(s))
+            {
                 return null;
+            }
 
             bool hasDiameterSymbol = false;
             StringBuilder value = new StringBuilder();
@@ -670,9 +676,13 @@ namespace netDxf.Entities
                 {
                     char symbol = Symbol(chars);
                     if (symbol == 'n')
+                    {
                         hasDiameterSymbol = true;
+                    }
                     else
+                    {
                         mat = ParseMaterialCondition(symbol);
+                    }
                 }
                 else
                 {
@@ -739,7 +749,10 @@ namespace netDxf.Entities
         {
             Vector3 newPosition = transformation * this.Position + translation;
             Vector3 newNormal = transformation * this.Normal;
-            if (Vector3.Equals(Vector3.Zero, newNormal)) newNormal = this.Normal;
+            if (Vector3.Equals(Vector3.Zero, newNormal))
+            {
+                newNormal = this.Normal;
+            }
 
             Matrix3 transOW = MathHelper.ArbitraryAxis(this.Normal);
             transOW *= Matrix3.RotationZ(this.Rotation * MathHelper.DegToRad);
@@ -755,7 +768,10 @@ namespace netDxf.Entities
 
             double scale = axisPoint.Modulus();
             double newTextHeight = this.TextHeight * scale;
-            if (MathHelper.IsZero(newTextHeight)) newTextHeight = MathHelper.Epsilon;
+            if (MathHelper.IsZero(newTextHeight))
+            {
+                newTextHeight = MathHelper.Epsilon;
+            }
 
             this.TextHeight = newTextHeight;
             this.Position = newPosition;
@@ -789,7 +805,9 @@ namespace netDxf.Entities
             };
 
             foreach (XData data in this.XData.Values)
+            {
                 entity.XData.Add((XData) data.Clone());
+            }
 
             return entity;
         }

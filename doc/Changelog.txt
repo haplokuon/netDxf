@@ -1,5 +1,21 @@
 ## Change history
 
+### [2021/03/27]
+* The netDxf library is now licensed under the MIT License.
+* Updated solution file to Visual Studio 2019.
+* netDxf targets multiple frameworks, predefined frameworks for Net Framework 4.5, Net Standard 2.1, Net Core 3.1, and NET 5.0.
+* The ImageDefinition properties File, Width, Height, HorizontalResolution, and VerticalResoultion now can be modified.
+* The ShapeStyle property File can now be modified.
+* The UnderlayDefinition property File can now be modified. The file extension must match its type.
+* To declutter the DxfDocument, the entity operations such as adding, removing, or retiveing a specific list of entities (Lines, Circles,...) that where done directly through the drawing document have been moved to the Entities property of the DxfDocument.
+	These are no more than shortcuts to the real place where the entities are stored in a document, this is the drawing.Layouts[layoutName].AssociatedBlock.Entities.
+	The layout where the operations are performed is defined by the ActiveLayout.
+* The ImageDefinition constructors "public ImageDefinition(string file)" and "public ImageDefinition(string name, string file)" are only available  when targeting the Net 4.5 framework. This is to avoid the use of the additional System.Drawing.Common.dll library. See CreateImageDefinition() sample.
+* The TextStyle method "public static string TrueTypeFontFamilyName(string ttfFont)" is only available  when targeting the Net 4.5 framework. This is to avoid the use of the additional System.Drawing.Common.dll library. It will now only available when targeting the Net 4.5 framework.
+* The HeaderVariable DwgCodePage will not be used to load or save DXF files, prior to DxfVersion.AutoCad2007 ASCII encoding will be use and UTF8 for later.
+	It doesn't seems to play any role, open a new issue at GitHub if non-ASCII characters does not show up correctly.
+	This will avoid the use of additional libraries to handle the encoding code pages.
+
 ###  [2.4.2 - 2021/03/23]
 * Now the ShapeStyle does not require the SHP file to read the shape information only the SHX must be present.
 * The Insert Sync method will not modify any value assigned to the attribute Value property.

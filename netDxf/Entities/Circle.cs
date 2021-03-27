@@ -1,23 +1,23 @@
-#region netDxf library, Copyright (C) 2009-2019 Daniel Carvajal (haplokuon@gmail.com)
-
-//                        netDxf library
-// Copyright (C) 2009-2019 Daniel Carvajal (haplokuon@gmail.com)
+#region netDxf library licensed under the MIT License, Copyright © 2009-2021 Daniel Carvajal (haplokuon@gmail.com)
 // 
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2.1 of the License, or (at your option) any later version.
+//                        netDxf library
+// Copyright © 2021 Daniel Carvajal (haplokuon@gmail.com)
+// 
+// Permission is hereby granted, free of charge, to any person obtaining a copy of this software
+// and associated documentation files (the “Software”), to deal in the Software without restriction,
+// including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense,
+// and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so,
+// subject to the following conditions:
 // 
 // The above copyright notice and this permission notice shall be included in all
 // copies or substantial portions of the Software.
 // 
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
 // FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
 // COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
 // IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
 #endregion
 
 using System;
@@ -60,7 +60,9 @@ namespace netDxf.Entities
         {
             this.center = center;
             if (radius <= 0)
+            {
                 throw new ArgumentOutOfRangeException(nameof(radius), radius, "The circle radius must be greater than zero.");
+            }
             this.radius = radius;
             this.thickness = 0.0;
         }
@@ -97,7 +99,9 @@ namespace netDxf.Entities
             set
             {
                 if (value <= 0)
+                {
                     throw new ArgumentOutOfRangeException(nameof(value), value, "The circle radius must be greater than zero.");
+                }
                 this.radius = value;
             }
         }
@@ -123,7 +127,9 @@ namespace netDxf.Entities
         public List<Vector2> PolygonalVertexes(int precision)
         {
             if (precision < 3)
+            {
                 throw new ArgumentOutOfRangeException(nameof(precision), precision, "The circle precision must be greater or equal to three");
+            }
 
             List<Vector2> ocsVertexes = new List<Vector2>();
 
@@ -186,7 +192,10 @@ namespace netDxf.Entities
         {
             Vector3 newCenter = transformation * this.Center + translation;
             Vector3 newNormal = transformation * this.Normal;
-            if (Vector3.Equals(Vector3.Zero, newNormal)) newNormal = this.Normal;
+            if (Vector3.Equals(Vector3.Zero, newNormal))
+            {
+                newNormal = this.Normal;
+            }
 
             Matrix3 transOW = MathHelper.ArbitraryAxis(this.Normal);
             Matrix3 transWO = MathHelper.ArbitraryAxis(newNormal).Transpose();
@@ -196,7 +205,10 @@ namespace netDxf.Entities
             axis = transWO * axis;
             Vector2 axisPoint = new Vector2(axis.X, axis.Y);
             double newRadius = axisPoint.Modulus();
-            if (MathHelper.IsZero(newRadius)) newRadius = MathHelper.Epsilon;
+            if (MathHelper.IsZero(newRadius))
+            {
+                newRadius = MathHelper.Epsilon;
+            }
 
             this.Normal = newNormal;
             this.Center = newCenter;
@@ -227,7 +239,9 @@ namespace netDxf.Entities
             };
 
             foreach (XData data in this.XData.Values)
+            {
                 entity.XData.Add((XData) data.Clone());
+            }
 
             return entity;
         }

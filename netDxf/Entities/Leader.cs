@@ -1,23 +1,23 @@
-﻿#region netDxf library, Copyright (C) 2009-2019 Daniel Carvajal (haplokuon@gmail.com)
-
-//                        netDxf library
-// Copyright (C) 2009-2019 Daniel Carvajal (haplokuon@gmail.com)
+﻿#region netDxf library licensed under the MIT License, Copyright © 2009-2021 Daniel Carvajal (haplokuon@gmail.com)
 // 
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2.1 of the License, or (at your option) any later version.
+//                        netDxf library
+// Copyright © 2021 Daniel Carvajal (haplokuon@gmail.com)
+// 
+// Permission is hereby granted, free of charge, to any person obtaining a copy of this software
+// and associated documentation files (the “Software”), to deal in the Software without restriction,
+// including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense,
+// and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so,
+// subject to the following conditions:
 // 
 // The above copyright notice and this permission notice shall be included in all
 // copies or substantial portions of the Software.
 // 
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
 // FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
 // COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
 // IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
 #endregion
 
 using System;
@@ -37,9 +37,7 @@ namespace netDxf.Entities
         #region delegates and events
 
         public delegate void LeaderStyleChangedEventHandler(Leader sender, TableObjectChangedEventArgs<DimensionStyle> e);
-
         public event LeaderStyleChangedEventHandler LeaderStyleChanged;
-
         protected virtual DimensionStyle OnDimensionStyleChangedEvent(DimensionStyle oldStyle, DimensionStyle newStyle)
         {
             LeaderStyleChangedEventHandler ae = this.LeaderStyleChanged;
@@ -53,9 +51,7 @@ namespace netDxf.Entities
         }
 
         public delegate void AnnotationAddedEventHandler(Leader sender, EntityChangeEventArgs e);
-
         public event AnnotationAddedEventHandler AnnotationAdded;
-
         protected virtual void OnAnnotationAddedEvent(EntityObject item)
         {
             AnnotationAddedEventHandler ae = this.AnnotationAdded;
@@ -64,9 +60,7 @@ namespace netDxf.Entities
         }
 
         public delegate void AnnotationRemovedEventHandler(Leader sender, EntityChangeEventArgs e);
-
         public event AnnotationRemovedEventHandler AnnotationRemoved;
-
         protected virtual void OnAnnotationRemovedEvent(EntityObject item)
         {
             AnnotationRemovedEventHandler ae = this.AnnotationRemoved;
@@ -79,9 +73,7 @@ namespace netDxf.Entities
         #region delegates and events for style overrides
 
         public delegate void DimensionStyleOverrideAddedEventHandler(Leader sender, DimensionStyleOverrideChangeEventArgs e);
-
         public event DimensionStyleOverrideAddedEventHandler DimensionStyleOverrideAdded;
-
         protected virtual void OnDimensionStyleOverrideAddedEvent(DimensionStyleOverride item)
         {
             DimensionStyleOverrideAddedEventHandler ae = this.DimensionStyleOverrideAdded;
@@ -90,9 +82,7 @@ namespace netDxf.Entities
         }
 
         public delegate void DimensionStyleOverrideRemovedEventHandler(Leader sender, DimensionStyleOverrideChangeEventArgs e);
-
         public event DimensionStyleOverrideRemovedEventHandler DimensionStyleOverrideRemoved;
-
         protected virtual void OnDimensionStyleOverrideRemovedEvent(DimensionStyleOverride item)
         {
             DimensionStyleOverrideRemovedEventHandler ae = this.DimensionStyleOverrideRemoved;
@@ -144,12 +134,7 @@ namespace netDxf.Entities
                 throw new ArgumentOutOfRangeException(nameof(vertexes), this.vertexes.Count, "The leader vertexes list requires at least two points.");
             }
 
-            if (style == null)
-            {
-                throw new ArgumentNullException(nameof(style));
-            }
-
-            this.style = style;
+            this.style = style ?? throw new ArgumentNullException(nameof(style));
             this.hasHookline = false;
             this.showArrowhead = true;
             this.pathType = LeaderPathType.StraightLineSegments;
@@ -189,12 +174,7 @@ namespace netDxf.Entities
                 throw new ArgumentOutOfRangeException(nameof(vertexes), this.vertexes.Count, "The leader vertexes list requires at least two points.");
             }
 
-            if (style == null)
-            {
-                throw new ArgumentNullException(nameof(style));
-            }
-
-            this.style = style;
+            this.style = style ?? throw new ArgumentNullException(nameof(style));
             this.hasHookline = true;
             this.showArrowhead = true;
             this.pathType = LeaderPathType.StraightLineSegments;
@@ -236,12 +216,7 @@ namespace netDxf.Entities
                 throw new ArgumentOutOfRangeException(nameof(vertexes), this.vertexes.Count, "The leader vertexes list requires at least two points.");
             }
 
-            if (style == null)
-            {
-                throw new ArgumentNullException(nameof(style));
-            }
-
-            this.style = style;
+            this.style = style ?? throw new ArgumentNullException(nameof(style));
             this.hasHookline = false;
             this.showArrowhead = true;
             this.pathType = LeaderPathType.StraightLineSegments;
@@ -282,12 +257,7 @@ namespace netDxf.Entities
                 throw new ArgumentOutOfRangeException(nameof(vertexes), this.vertexes.Count, "The leader vertexes list requires at least two points.");
             }
 
-            if (style == null)
-            {
-                throw new ArgumentNullException(nameof(style));
-            }
-
-            this.style = style;
+            this.style = style ?? throw new ArgumentNullException(nameof(style));
             this.hasHookline = false;
             this.showArrowhead = true;
             this.pathType = LeaderPathType.StraightLineSegments;
@@ -465,11 +435,7 @@ namespace netDxf.Entities
             get { return this.lineColor; }
             set
             {
-                if (value == null)
-                {
-                    throw new ArgumentNullException(nameof(value));
-                }
-                this.lineColor = value;
+                this.lineColor = value ?? throw new ArgumentNullException(nameof(value));
             }
         }
 
@@ -877,7 +843,7 @@ namespace netDxf.Entities
                 arrowSize = (double)styleOverride.Value;
             }
 
-            Vector2 v = this.Vertexes[this.Vertexes.Count - 1] - this.Vertexes[this.Vertexes.Count - 2];
+            Vector2 v = this.vertexes[this.vertexes.Count - 1] - this.vertexes[this.vertexes.Count - 2];
 
             Vector2 dir = v.X >= 0 ? Vector2.UnitX : -Vector2.UnitX;
 

@@ -1,23 +1,23 @@
-﻿#region netDxf library, Copyright (C) 2009-2019 Daniel Carvajal (haplokuon@gmail.com)
-
-//                        netDxf library
-// Copyright (C) 2009-2019 Daniel Carvajal (haplokuon@gmail.com)
+﻿#region netDxf library licensed under the MIT License, Copyright © 2009-2021 Daniel Carvajal (haplokuon@gmail.com)
 // 
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2.1 of the License, or (at your option) any later version.
+//                        netDxf library
+// Copyright © 2021 Daniel Carvajal (haplokuon@gmail.com)
+// 
+// Permission is hereby granted, free of charge, to any person obtaining a copy of this software
+// and associated documentation files (the “Software”), to deal in the Software without restriction,
+// including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense,
+// and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so,
+// subject to the following conditions:
 // 
 // The above copyright notice and this permission notice shall be included in all
 // copies or substantial portions of the Software.
 // 
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
 // FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
 // COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
 // IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
 #endregion
 
 using System;
@@ -36,9 +36,7 @@ namespace netDxf.Entities
         #region delegates and events
 
         public delegate void MLineStyleChangedEventHandler(MLine sender, TableObjectChangedEventArgs<MLineStyle> e);
-
         public event MLineStyleChangedEventHandler MLineStyleChanged;
-
         protected virtual MLineStyle OnMLineStyleChangedEvent(MLineStyle oldMLineStyle, MLineStyle newMLineStyle)
         {
             MLineStyleChangedEventHandler ae = this.MLineStyleChanged;
@@ -137,20 +135,31 @@ namespace netDxf.Entities
         {
             this.scale = scale;
             if (style == null)
+            {
                 throw new ArgumentNullException(nameof(style));
+            }
+
             if (isClosed)
+            {
                 this.flags = MLineFlags.Has | MLineFlags.Closed;
+            }
             else
+            {
                 this.flags = MLineFlags.Has;
+            }
 
             this.style = style;
             this.justification = MLineJustification.Zero;
             this.elevation = 0.0;
             if (vertexes == null)
+            {
                 throw new ArgumentNullException(nameof(vertexes));
+            }
             this.vertexes = new List<MLineVertex>();
             foreach (Vector2 point in vertexes)
+            {
                 this.vertexes.Add(new MLineVertex(point, Vector2.Zero, Vector2.Zero, null));
+            }
             this.Update();
         }
 
@@ -193,9 +202,13 @@ namespace netDxf.Entities
             set
             {
                 if (value)
+                {
                     this.flags |= MLineFlags.Closed;
+                }
                 else
+                {
                     this.flags &= ~MLineFlags.Closed;
+                }
             }
         }
 
@@ -208,9 +221,13 @@ namespace netDxf.Entities
             set
             {
                 if (value)
+                {
                     this.flags |= MLineFlags.NoStartCaps;
+                }
                 else
+                {
                     this.flags &= ~MLineFlags.NoStartCaps;
+                }
             }
         }
 
@@ -223,9 +240,13 @@ namespace netDxf.Entities
             set
             {
                 if (value)
+                {
                     this.flags |= MLineFlags.NoEndCaps;
+                }
                 else
+                {
                     this.flags &= ~MLineFlags.NoEndCaps;
+                }
             }
         }
 
@@ -247,7 +268,9 @@ namespace netDxf.Entities
             set
             {
                 if (value == null)
+                {
                     throw new ArgumentNullException(nameof(value));
+                }
                 this.style = this.OnMLineStyleChangedEvent(this.style, value);
             }
         }
@@ -374,7 +397,9 @@ namespace netDxf.Entities
         public void Update()
         {
             if (this.vertexes.Count == 0)
+            {
                 return;
+            }
 
             double reference = 0.0;
             switch (this.justification)
@@ -392,7 +417,9 @@ namespace netDxf.Entities
 
             Vector2 prevDir;
             if (this.vertexes[0].Position.Equals(this.vertexes[this.vertexes.Count - 1].Position))
+            {
                 prevDir = Vector2.UnitY;
+            }
             else
             {
                 prevDir = this.vertexes[0].Position - this.vertexes[this.vertexes.Count - 1].Position;
@@ -407,7 +434,9 @@ namespace netDxf.Entities
                 if (i == 0)
                 {
                     if (this.vertexes[i + 1].Position.Equals(position))
+                    {
                         dir = Vector2.UnitY;
+                    }
                     else
                     {
                         dir = this.vertexes[i + 1].Position - position;
@@ -429,7 +458,9 @@ namespace netDxf.Entities
                     if (this.IsClosed)
                     {
                         if (this.vertexes[0].Position.Equals(position))
+                        {
                             dir = Vector2.UnitY;
+                        }
                         else
                         {
                             dir = this.vertexes[0].Position - position;
@@ -448,7 +479,9 @@ namespace netDxf.Entities
                 else
                 {
                     if (this.vertexes[i + 1].Position.Equals(position))
+                    {
                         dir = Vector2.UnitY;
+                    }
                     else
                     {
                         dir = this.vertexes[i + 1].Position - position;
@@ -497,9 +530,13 @@ namespace netDxf.Entities
                 MLineVertex nextVertex;
 
                 if (this.IsClosed && i == this.vertexes.Count - 1)
+                {
                     nextVertex = this.vertexes[0];
+                }
                 else if (!this.IsClosed && i == this.vertexes.Count - 1)
+                {
                     continue;
+                }
                 else
                 {
                     nextVertex = this.vertexes[i + 1];
@@ -510,7 +547,10 @@ namespace netDxf.Entities
 
                 for (int j = 0; j < this.style.Elements.Count; j++)
                 {
-                    if(vertex.Distances[j].Count == 0) continue;
+                    if (vertex.Distances[j].Count == 0)
+                    {
+                        continue;
+                    }
 
                     Vector2 refStart = vertex.Position + vertex.Miter * vertex.Distances[j][0];
                     cornerVertexes[i][j] = refStart;
@@ -545,7 +585,10 @@ namespace netDxf.Entities
 
                 for (int i = 0; i < cornerVertexes.Length; i++)
                 {
-                    if (!this.IsClosed && (i == 0 || i == cornerVertexes.Length - 1)) continue;
+                    if (!this.IsClosed && (i == 0 || i == cornerVertexes.Length - 1))
+                    {
+                        continue;
+                    }
 
                     Vector2 start = cornerVertexes[i][0];
                     Vector2 end = cornerVertexes[i][cornerVertexes[0].Length - 1];
@@ -679,7 +722,10 @@ namespace netDxf.Entities
         public override void TransformBy(Matrix3 transformation, Vector3 translation)
         {
             Vector3 newNormal = transformation * this.Normal;
-            if (Vector3.Equals(Vector3.Zero, newNormal)) newNormal = this.Normal;
+            if (Vector3.Equals(Vector3.Zero, newNormal))
+            {
+                newNormal = this.Normal;
+            }
 
             double newElevation = this.Elevation;
 
@@ -758,10 +804,14 @@ namespace netDxf.Entities
             };
 
             foreach (MLineVertex vertex in this.vertexes)
+            {
                 entity.vertexes.Add((MLineVertex) vertex.Clone());
+            }
 
             foreach (XData data in this.XData.Values)
+            {
                 entity.XData.Add((XData) data.Clone());
+            }
 
             return entity;
         }

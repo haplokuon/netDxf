@@ -1,23 +1,23 @@
-#region netDxf library, Copyright (C) 2009-2020 Daniel Carvajal (haplokuon@gmail.com)
-
-//                        netDxf library
-// Copyright (C) 2009-2020 Daniel Carvajal (haplokuon@gmail.com)
+#region netDxf library licensed under the MIT License, Copyright © 2009-2021 Daniel Carvajal (haplokuon@gmail.com)
 // 
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2.1 of the License, or (at your option) any later version.
+//                        netDxf library
+// Copyright © 2021 Daniel Carvajal (haplokuon@gmail.com)
+// 
+// Permission is hereby granted, free of charge, to any person obtaining a copy of this software
+// and associated documentation files (the “Software”), to deal in the Software without restriction,
+// including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense,
+// and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so,
+// subject to the following conditions:
 // 
 // The above copyright notice and this permission notice shall be included in all
 // copies or substantial portions of the Software.
 // 
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
 // FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
 // COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
 // IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
 #endregion
 
 using System;
@@ -71,22 +71,6 @@ namespace netDxf.Collections
         internal override VPort Add(VPort vport, bool assignHandle)
         {
             throw new ArgumentException("VPorts cannot be added to the collection. There is only one VPort in the list the \"*Active\".", nameof(vport));
-
-            //if (this.list.Count >= this.maxCapacity)
-            //    throw new OverflowException(string.Format("Table overflow. The maximum number of elements the table {0} can have is {1}", this.codeName, this.maxCapacity));
-
-            //VPort add;
-            //if (this.list.TryGetValue(vport.Name, out add))
-            //    return add;
-
-            //if (assignHandle || string.IsNullOrEmpty(vport.Handle))
-            //    this.document.NumHandles = vport.AsignHandle(this.document.NumHandles);
-
-            //this.list.Add(vport.Name, vport);
-            //this.references.Add(vport.Name, new List<DxfObject>());
-            //vport.Owner = this;
-            //this.document.AddedObjects.Add(vport.Handle, vport);
-            //return vport;
         }
 
         /// <summary>
@@ -98,8 +82,6 @@ namespace netDxf.Collections
         public override bool Remove(string name)
         {
             throw new ArgumentException("VPorts cannot be removed from the collection.", nameof(name));
-
-            //return this.Remove(this[name]);
         }
 
         /// <summary>
@@ -111,25 +93,6 @@ namespace netDxf.Collections
         public override bool Remove(VPort item)
         {
             throw new ArgumentException("VPorts cannot be removed from the collection.", nameof(item));
-
-            //if (vport == null)
-            //    return false;
-
-            //if (!this.Contains(vport))
-            //    return false;
-
-            //if (vport.IsReserved)
-            //    return false;
-
-            //if (this.references[vport.Name].Count != 0)
-            //    return false;
-
-            //vport.Owner = null;
-            //this.document.AddedObjects.Remove(vport.Handle);
-            //this.references.Remove(vport.Name);
-            //this.list.Remove(vport.Name);
-
-            //return true;
         }
 
         #endregion

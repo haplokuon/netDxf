@@ -1,23 +1,23 @@
-﻿#region netDxf library, Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
-
-//                        netDxf library
-// Copyright (C) 2009-2016 Daniel Carvajal (haplokuon@gmail.com)
+﻿#region netDxf library licensed under the MIT License, Copyright © 2009-2021 Daniel Carvajal (haplokuon@gmail.com)
 // 
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2.1 of the License, or (at your option) any later version.
+//                        netDxf library
+// Copyright © 2021 Daniel Carvajal (haplokuon@gmail.com)
+// 
+// Permission is hereby granted, free of charge, to any person obtaining a copy of this software
+// and associated documentation files (the “Software”), to deal in the Software without restriction,
+// including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense,
+// and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so,
+// subject to the following conditions:
 // 
 // The above copyright notice and this permission notice shall be included in all
 // copies or substantial portions of the Software.
 // 
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
 // FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
 // COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
 // IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
 #endregion
 
 using System;
@@ -131,15 +131,26 @@ namespace netDxf.Collections
             set
             {
                 if (value == null)
+                {
                     throw new ArgumentNullException(nameof(value));
+                }
+
                 if (type != value.Type)
+                {
                     throw new ArgumentException(string.Format("The dictionary type: {0}, and the DimensionStyleOverride type: {1}, must be the same", type, value.Type));
+                }
 
                 DimensionStyleOverride remove = this.innerDictionary[type];
                 if (this.OnBeforeRemoveItemEvent(remove))
+                {
                     return;
+                }
+
                 if (this.OnBeforeAddItemEvent(value))
+                {
                     return;
+                }
+
                 this.innerDictionary[type] = value;
                 this.OnAddItemEvent(value);
                 this.OnRemoveItemEvent(remove);
@@ -200,9 +211,15 @@ namespace netDxf.Collections
         public void Add(DimensionStyleOverride item)
         {
             if (item == null)
+            {
                 throw new ArgumentNullException(nameof(item));
+            }
+
             if (this.OnBeforeAddItemEvent(item))
+            {
                 throw new ArgumentException(string.Format("The DimensionStyleOverride {0} cannot be added to the collection.", item), nameof(item));
+            }
+
             this.innerDictionary.Add(item.Type, item);
             this.OnAddItemEvent(item);
         }
@@ -214,10 +231,15 @@ namespace netDxf.Collections
         public void AddRange(IEnumerable<DimensionStyleOverride> collection)
         {
             if (collection == null)
+            {
                 throw new ArgumentNullException(nameof(collection));
+            }
+
             // we will make room for so the collection will fit without having to resize the internal array during the Add method
             foreach (DimensionStyleOverride item in collection)
+            {
                 this.Add(item);
+            }
         }
 
         /// <summary>
@@ -227,11 +249,16 @@ namespace netDxf.Collections
         /// <returns>True if the <see cref="DimensionStyleOverride">DimensionStyleOverride</see> is successfully removed; otherwise, false.</returns>
         public bool Remove(DimensionStyleOverrideType type)
         {
-            DimensionStyleOverride remove;
-            if (!this.innerDictionary.TryGetValue(type, out remove))
+            if (!this.innerDictionary.TryGetValue(type, out DimensionStyleOverride remove))
+            {
                 return false;
+            }
+
             if (this.OnBeforeRemoveItemEvent(remove))
+            {
                 return false;
+            }
+
             this.innerDictionary.Remove(type);
             this.OnRemoveItemEvent(remove);
             return true;
@@ -322,7 +349,10 @@ namespace netDxf.Collections
         bool ICollection<KeyValuePair<DimensionStyleOverrideType, DimensionStyleOverride>>.Remove(KeyValuePair<DimensionStyleOverrideType, DimensionStyleOverride> item)
         {
             if (!ReferenceEquals(item.Value, this.innerDictionary[item.Key]))
+            {
                 return false;
+            }
+
             return this.Remove(item.Key);
         }
 

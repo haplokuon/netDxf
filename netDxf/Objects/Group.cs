@@ -1,23 +1,23 @@
-﻿#region netDxf library, Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
-
-//                        netDxf library
-// Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
+﻿#region netDxf library licensed under the MIT License, Copyright © 2009-2021 Daniel Carvajal (haplokuon@gmail.com)
 // 
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2.1 of the License, or (at your option) any later version.
+//                        netDxf library
+// Copyright © 2021 Daniel Carvajal (haplokuon@gmail.com)
+// 
+// Permission is hereby granted, free of charge, to any person obtaining a copy of this software
+// and associated documentation files (the “Software”), to deal in the Software without restriction,
+// including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense,
+// and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so,
+// subject to the following conditions:
 // 
 // The above copyright notice and this permission notice shall be included in all
 // copies or substantial portions of the Software.
 // 
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
 // FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
 // COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
 // IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
 #endregion
 
 using System.Collections.Generic;
@@ -36,9 +36,7 @@ namespace netDxf.Objects
         #region delegates and events
 
         public delegate void EntityAddedEventHandler(Group sender, GroupEntityChangeEventArgs e);
-
         public event EntityAddedEventHandler EntityAdded;
-
         protected virtual void OnEntityAddedEvent(EntityObject item)
         {
             EntityAddedEventHandler ae = this.EntityAdded;
@@ -47,9 +45,7 @@ namespace netDxf.Objects
         }
 
         public delegate void EntityRemovedEventHandler(Group sender, GroupEntityChangeEventArgs e);
-
         public event EntityRemovedEventHandler EntityRemoved;
-
         protected virtual void OnEntityRemovedEvent(EntityObject item)
         {
             EntityRemovedEventHandler ae = this.EntityRemoved;
@@ -124,8 +120,10 @@ namespace netDxf.Objects
             this.entities.AddItem += this.Entities_AddItem;
             this.entities.BeforeRemoveItem += this.Entities_BeforeRemoveItem;
             this.entities.RemoveItem += this.Entities_RemoveItem;
-            if(entities != null)
+            if (entities != null)
+            {
                 this.entities.AddRange(entities);
+            }
         }
 
         internal Group(string name, bool checkName)
@@ -232,7 +230,9 @@ namespace netDxf.Objects
             };
 
             foreach (XData data in this.XData.Values)
+            {
                 copy.XData.Add((XData)data.Clone());
+            }
 
             return copy;
         }
@@ -254,11 +254,17 @@ namespace netDxf.Objects
         {
             // null or duplicate items are not allowed in the entities list.
             if (e.Item == null)
+            {
                 e.Cancel = true;
+            }
             else if (this.entities.Contains(e.Item))
+            {
                 e.Cancel = true;
+            }
             else
+            {
                 e.Cancel = false;
+            }
         }
 
         private void Entities_AddItem(EntityCollection sender, EntityCollectionEventArgs e)

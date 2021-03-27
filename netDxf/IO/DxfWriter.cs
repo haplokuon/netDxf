@@ -1,23 +1,23 @@
-﻿#region netDxf library, Copyright (C) 2009-2020 Daniel Carvajal (haplokuon@gmail.com)
-
-//                        netDxf library
-// Copyright (C) 2009-2020 Daniel Carvajal (haplokuon@gmail.com)
+﻿#region netDxf library licensed under the MIT License, Copyright © 2009-2021 Daniel Carvajal (haplokuon@gmail.com)
 // 
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2.1 of the License, or (at your option) any later version.
+//                        netDxf library
+// Copyright © 2021 Daniel Carvajal (haplokuon@gmail.com)
+// 
+// Permission is hereby granted, free of charge, to any person obtaining a copy of this software
+// and associated documentation files (the “Software”), to deal in the Software without restriction,
+// including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense,
+// and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so,
+// subject to the following conditions:
 // 
 // The above copyright notice and this permission notice shall be included in all
 // copies or substantial portions of the Software.
 // 
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
 // FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
 // COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
 // IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
 #endregion
 
 using System;
@@ -174,7 +174,10 @@ namespace netDxf.IO
             namedObjectDictionary.Entries.Add(this.doc.RasterVariables.Handle, DxfObjectCode.ImageVarsDictionary);
 
             // Layer states dictionary
-            DictionaryObject layerStatesDictionary = new DictionaryObject(this.doc.Layers) {Handle = this.doc.Layers.StateManager.Handle};
+            DictionaryObject layerStatesDictionary = new DictionaryObject(this.doc.Layers)
+            {
+                Handle = this.doc.Layers.StateManager.Handle
+            };
             dictionaries.Add(layerStatesDictionary);
 
             DictionaryObject layerStates = new DictionaryObject(layerStatesDictionary);
@@ -188,11 +191,15 @@ namespace netDxf.IO
 
             this.doc.DrawingVariables.HandleSeed = this.doc.NumHandles.ToString("X");
 
-            this.Open(stream, this.doc.DrawingVariables.AcadVer < DxfVersion.AutoCad2007 ? Encoding.ASCII : null);
-
-            // The comment group, 999, is not used in binary DXF files.
-            if (!this.isBinary)
+            if (this.isBinary)
             {
+                this.chunk = new BinaryCodeValueWriter(new BinaryWriter(stream, new UTF8Encoding(false)));
+            }
+            else
+            {
+                this.chunk = new TextCodeValueWriter(new StreamWriter(stream, new UTF8Encoding(false)));
+
+                // The comment group, 999, is not used in binary DXF files.
                 foreach (string comment in this.doc.Comments)
                 {
                     this.WriteComment(comment);
@@ -207,8 +214,7 @@ namespace netDxf.IO
             }
 
             // writing a copy of the active dimension style variables in the header section will avoid to be displayed as <style overrides> in AutoCAD
-            DimensionStyle activeDimStyle;
-            if (this.doc.DimensionStyles.TryGetValue(this.doc.DrawingVariables.DimStyle, out activeDimStyle))
+            if (this.doc.DimensionStyles.TryGetValue(this.doc.DrawingVariables.DimStyle, out DimensionStyle activeDimStyle))
             {
                 this.WriteActiveDimensionStyleSystemVariables(activeDimStyle);
             }
@@ -249,8 +255,8 @@ namespace netDxf.IO
             if (this.doc.ImageDefinitions.Items.Count > 0)
             {
                 this.WriteImageDefClass(this.doc.ImageDefinitions.Count);
-                this.WriteImageDefRectorClass(this.doc.Images.Count());
-                this.WriteImageClass(this.doc.Images.Count());
+                this.WriteImageDefRectorClass(this.doc.Entities.Images.Count());
+                this.WriteImageClass(this.doc.Entities.Images.Count());
             }
             this.EndSection();
 
@@ -447,22 +453,7 @@ namespace netDxf.IO
         #endregion
 
         #region private methods
-
-        /// <summary>
-        /// Open the DXF writer.
-        /// </summary>
-        private void Open(Stream stream, Encoding encoding)
-        {
-            if (this.isBinary)
-            {
-                this.chunk = new BinaryCodeValueWriter(encoding == null ? new BinaryWriter(stream, new UTF8Encoding(false)) : new BinaryWriter(stream, encoding));
-            }
-            else
-            {
-                this.chunk = new TextCodeValueWriter(encoding == null ? new StreamWriter(stream, new UTF8Encoding(false)) : new StreamWriter(stream, encoding));
-            }
-        }
-
+        
         /// <summary>
         /// Closes the DXF writer.
         /// </summary>
@@ -502,6 +493,8 @@ namespace netDxf.IO
         /// </summary>
         /// <param name="table">Table type to open.</param>
         /// <param name="handle">Handle assigned to this table</param>
+        /// <param name="numEntries">Number of entries in the table (obsolete).</param>
+        /// <param name="xdata">Extended data information of the table.</param>
         private void BeginTable(string table, string handle, short numEntries, XDataDictionary xdata)
         {
             Debug.Assert(this.activeSection == DxfObjectCode.TablesSection);
@@ -1957,7 +1950,7 @@ namespace netDxf.IO
                     this.WriteLeader((Leader) entity);
                     break;
                 case EntityType.LwPolyline:
-                    this.WriteLightWeightPolyline((LwPolyline) entity);
+                    this.WriteLwPolyline((LwPolyline) entity);
                     break;
                 case EntityType.Line:
                     this.WriteLine((Line) entity);
@@ -2291,7 +2284,7 @@ namespace netDxf.IO
             this.chunk.Write(220, leader.Normal.Y);
             this.chunk.Write(230, leader.Normal.Z);
 
-            Vector3 dir = ocsVertexes[ocsVertexes.Count-1] - ocsVertexes[ocsVertexes.Count - 2];
+            Vector3 dir = ocsVertexes[ocsVertexes.Count - 1] - ocsVertexes[ocsVertexes.Count - 2];
 
             Vector3 xDir = MathHelper.Transform(new Vector3(dir.X, dir.Y, 0.0), leader.Normal, CoordinateSystem.Object, CoordinateSystem.World);
             xDir.Normalize();
@@ -2756,7 +2749,7 @@ namespace netDxf.IO
             this.WriteXData(xline.XData);
         }
 
-        private void WriteLightWeightPolyline(LwPolyline polyline)
+        private void WriteLwPolyline(LwPolyline polyline)
         {
             this.chunk.Write(100, SubclassMarker.LwPolyline);
             this.chunk.Write(90, polyline.Vertexes.Count);
@@ -3344,8 +3337,7 @@ namespace netDxf.IO
                 return;
             }
 
-            HatchGradientPattern gradientPattern = pattern as HatchGradientPattern;
-            if (gradientPattern != null)
+            if (pattern is HatchGradientPattern gradientPattern)
             {
                 this.WriteGradientHatchPattern(gradientPattern);
             }
@@ -3425,8 +3417,7 @@ namespace netDxf.IO
                 flags |= DimensionTypeFlags.UserTextPosition;
             }
 
-            OrdinateDimension ordinateDim = dim as OrdinateDimension;
-            if (ordinateDim != null)
+            if (dim is OrdinateDimension ordinateDim)
             {
                 // even if the documentation says that code 51 is optional, rotated ordinate dimensions will not work correctly if this value is not provided
                 this.chunk.Write(51, 360.0 - ordinateDim.Rotation);
@@ -3586,7 +3577,7 @@ namespace netDxf.IO
                         break;
                     case DimensionStyleOverrideType.ExtLine2Off:
                         xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 76));
-                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16,(bool) styleOverride.Value ? (short) 1 : (short) 0));
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (bool) styleOverride.Value ? (short) 1 : (short) 0));
                         break;
                     case DimensionStyleOverrideType.ExtLineOffset:
                         xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 42));
@@ -3665,7 +3656,7 @@ namespace netDxf.IO
                         break;
                     case DimensionStyleOverrideType.TextVerticalPlacement:
                         xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 77));
-                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short)(DimensionStyleTextVerticalPlacement) styleOverride.Value));
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) (DimensionStyleTextVerticalPlacement) styleOverride.Value));
                         break;
                     case DimensionStyleOverrideType.TextHorizontalPlacement:
                         xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 280));
@@ -3701,8 +3692,7 @@ namespace netDxf.IO
                         break;
                     case DimensionStyleOverrideType.FitTextInside:
                         xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 174));
-                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16,
-                            (bool) styleOverride.Value ? (short) 1 : (short) 0));
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (bool) styleOverride.Value ? (short) 1 : (short) 0));
                         break;
                     case DimensionStyleOverrideType.FitTextMove:
                         xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 279));
@@ -4763,8 +4753,7 @@ namespace netDxf.IO
             }
             foreach (DxfObject o in objects)
             {
-                Underlay underlay = o as Underlay;
-                if (underlay != null)
+                if (o is Underlay underlay)
                 {
                     this.chunk.Write(330, underlay.Handle);
                 }
@@ -5106,8 +5095,7 @@ namespace netDxf.IO
                 return string.Empty;
             }
 
-            string encoded;
-            if (this.encodedStrings.TryGetValue(text, out encoded))
+            if (this.encodedStrings.TryGetValue(text, out string encoded))
             {
                 return encoded;
             }

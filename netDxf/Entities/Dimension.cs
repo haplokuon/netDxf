@@ -1,23 +1,23 @@
-﻿#region netDxf library, Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
-
-//                        netDxf library
-// Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
+﻿#region netDxf library licensed under the MIT License, Copyright © 2009-2021 Daniel Carvajal (haplokuon@gmail.com)
 // 
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2.1 of the License, or (at your option) any later version.
+//                        netDxf library
+// Copyright © 2021 Daniel Carvajal (haplokuon@gmail.com)
+// 
+// Permission is hereby granted, free of charge, to any person obtaining a copy of this software
+// and associated documentation files (the “Software”), to deal in the Software without restriction,
+// including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense,
+// and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so,
+// subject to the following conditions:
 // 
 // The above copyright notice and this permission notice shall be included in all
 // copies or substantial portions of the Software.
 // 
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
 // FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
 // COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
 // IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
 #endregion
 
 using System;
@@ -39,9 +39,7 @@ namespace netDxf.Entities
         #region delegates and events
 
         public delegate void DimensionStyleChangedEventHandler(Dimension sender, TableObjectChangedEventArgs<DimensionStyle> e);
-
         public event DimensionStyleChangedEventHandler DimensionStyleChanged;
-
         protected virtual DimensionStyle OnDimensionStyleChangedEvent(DimensionStyle oldStyle, DimensionStyle newStyle)
         {
             DimensionStyleChangedEventHandler ae = this.DimensionStyleChanged;
@@ -55,9 +53,7 @@ namespace netDxf.Entities
         }
 
         public delegate void DimensionBlockChangedEventHandler(Dimension sender, TableObjectChangedEventArgs<Block> e);
-
         public event DimensionBlockChangedEventHandler DimensionBlockChanged;
-
         protected virtual Block OnDimensionBlockChangedEvent(Block oldBlock, Block newBlock)
         {
             DimensionBlockChangedEventHandler ae = this.DimensionBlockChanged;
@@ -75,25 +71,25 @@ namespace netDxf.Entities
         #region delegates and events for style overrides
 
         public delegate void DimensionStyleOverrideAddedEventHandler(Dimension sender, DimensionStyleOverrideChangeEventArgs e);
-
         public event DimensionStyleOverrideAddedEventHandler DimensionStyleOverrideAdded;
-
         protected virtual void OnDimensionStyleOverrideAddedEvent(DimensionStyleOverride item)
         {
             DimensionStyleOverrideAddedEventHandler ae = this.DimensionStyleOverrideAdded;
             if (ae != null)
+            {
                 ae(this, new DimensionStyleOverrideChangeEventArgs(item));
+            }
         }
 
         public delegate void DimensionStyleOverrideRemovedEventHandler(Dimension sender, DimensionStyleOverrideChangeEventArgs e);
-
         public event DimensionStyleOverrideRemovedEventHandler DimensionStyleOverrideRemoved;
-
         protected virtual void OnDimensionStyleOverrideRemovedEvent(DimensionStyleOverride item)
         {
             DimensionStyleOverrideRemovedEventHandler ae = this.DimensionStyleOverrideRemoved;
             if (ae != null)
+            {
                 ae(this, new DimensionStyleOverrideChangeEventArgs(item));
+            }
         }
 
         #endregion
@@ -133,7 +129,7 @@ namespace netDxf.Entities
             this.block = null;
             this.style = DimensionStyle.Default;
             this.textRotation = 0.0;
-            this.userText = null;
+            this.userText = string.Empty;
             this.elevation = 0.0;
             this.styleOverrides = new DimensionStyleOverrideDictionary();
             this.styleOverrides.BeforeAddItem += this.StyleOverrides_BeforeAddItem;
@@ -196,7 +192,9 @@ namespace netDxf.Entities
             set
             {
                 if (value == null)
+                {
                     throw new ArgumentNullException(nameof(value));
+                }
                 this.style = this.OnDimensionStyleChangedEvent(this.style, value);
             }
         }
@@ -253,7 +251,9 @@ namespace netDxf.Entities
             set
             {
                 if (value < 0.25 || value > 4.0)
+                {
                     throw new ArgumentOutOfRangeException(nameof(value), value, "The line spacing factor valid values range from 0.25 to 4.00");
+                }
                 this.lineSpacing = value;
             }
         }
@@ -294,7 +294,7 @@ namespace netDxf.Entities
         public string UserText
         {
             get { return this.userText; }
-            set { this.userText = value; }
+            set { this.userText = string.IsNullOrEmpty(value) ? string.Empty : value; }
         }
 
         /// <summary>
@@ -349,10 +349,13 @@ namespace netDxf.Entities
 
         private void StyleOverrides_BeforeAddItem(DimensionStyleOverrideDictionary sender, DimensionStyleOverrideDictionaryEventArgs e)
         {
-            DimensionStyleOverride old;
-            if (sender.TryGetValue(e.Item.Type, out old))
+            if (sender.TryGetValue(e.Item.Type, out DimensionStyleOverride old))
+            {
                 if (ReferenceEquals(old.Value, e.Item.Value))
+                {
                     e.Cancel = true;
+                }
+            }
         }
 
         private void StyleOverrides_AddItem(DimensionStyleOverrideDictionary sender, DimensionStyleOverrideDictionaryEventArgs e)

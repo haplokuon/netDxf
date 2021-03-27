@@ -1,23 +1,23 @@
-﻿#region netDxf library, Copyright (C) 2009-2021 Daniel Carvajal (haplokuon@gmail.com)
-
-//                        netDxf library
-// Copyright (C) 2009-2021 Daniel Carvajal (haplokuon@gmail.com)
+﻿#region netDxf library licensed under the MIT License, Copyright © 2009-2021 Daniel Carvajal (haplokuon@gmail.com)
 // 
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2.1 of the License, or (at your option) any later version.
+//                        netDxf library
+// Copyright © 2021 Daniel Carvajal (haplokuon@gmail.com)
+// 
+// Permission is hereby granted, free of charge, to any person obtaining a copy of this software
+// and associated documentation files (the “Software”), to deal in the Software without restriction,
+// including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense,
+// and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so,
+// subject to the following conditions:
 // 
 // The above copyright notice and this permission notice shall be included in all
 // copies or substantial portions of the Software.
 // 
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
 // FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
 // COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
 // IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
 #endregion
 
 using System;
@@ -139,13 +139,8 @@ namespace netDxf.Entities
         /// <param name="position">Insert <see cref="Vector3">point</see> in world coordinates.</param>
         public Insert(Block block, Vector3 position)
             : base(EntityType.Insert, DxfObjectCode.Insert)
-        {
-            if (block == null)
-            {
-                throw new ArgumentNullException(nameof(block));
-            }
-
-            this.block = block;
+        {  
+            this.block = block ?? throw new ArgumentNullException(nameof(block));
             this.position = position;
             this.scale = new Vector3(1.0);
             this.rotation = 0.0;
@@ -363,16 +358,16 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Recalculate the attributes position, normal, rotation, text height, width factor, and oblique angle from the values applied to the insertion.
+        /// Recalculate the attributes position, normal, rotation, height, width, width factor, oblique angle, backwards, and upside down properties from the transformation state of the insertion.
         /// </summary>
         /// <remarks>
-        /// Changes to the insert, the block, or the document insertion units will require this method to be called manually.<br />
+        /// Making changes to the insert position, rotation, normal, and/or scale;
+        /// when changing the block origin and/or units; or even the document insertion units will require this method to be called manually.<br />
         /// The attributes position, normal, rotation, text height, width factor, and oblique angle values includes the transformations applied to the insertion,
         /// if required this method will calculate the proper values according to the ones defined by the attribute definition.<br />
         /// All the attribute values can be changed manually independently to its definition,
         /// but, usually, you will want them to be transformed with the insert based on the local values defined by the attribute definition.<br />
-        /// This method only applies to attributes that have a definition, some DXF files might generate attributes that have no definition in the block.<br />
-        /// At the moment the attribute width factor and oblique angle are not calculated, this is applied to inserts with non uniform scaling.
+        /// This method only applies to attributes that have a definition, some DXF files might generate attributes that have no definition in the block.
         /// </remarks>
         public void TransformAttributes()
         {
@@ -390,6 +385,8 @@ namespace netDxf.Entities
                 AttributeDefinition attDef = att.Definition;
                 if (attDef == null)
                 {
+                    // do not modify attributes with no attribute definition.
+                    // They will need to be handle manually
                     continue;
                 }
 
@@ -425,7 +422,9 @@ namespace netDxf.Entities
 
                 // entities with reactors are associated with other entities they will handle the transformation
                 if (entity.Reactors.Count > 0)
+                {
                     continue;
+                }
 
                 if(!isUniformScale)
                 {
@@ -595,7 +594,7 @@ namespace netDxf.Entities
                     Height = attribute.Height,
                     WidthFactor = attribute.WidthFactor,
                     ObliqueAngle = attribute.ObliqueAngle,
-                    Value = attribute.Value.ToString(),
+                    Value = attribute.Value,
                     Style = (TextStyle) attribute.Style.Clone(),
                     Position = attribute.Position,
                     Rotation = attribute.Rotation,
@@ -618,12 +617,18 @@ namespace netDxf.Entities
         /// </summary>
         /// <param name="transformation">Transformation matrix.</param>
         /// <param name="translation">Translation vector.</param>
-        /// <remarks>Matrix3 adopts the convention of using column vectors to represent a transformation matrix.</remarks>
+        /// <remarks>
+        /// Matrix3 adopts the convention of using column vectors to represent a transformation matrix.<br />
+        /// The transformation will also be applied to the insert attributes.
+        /// </remarks>
         public override void TransformBy(Matrix3 transformation, Vector3 translation)
         {
             Vector3 newPosition = transformation * this.Position + translation;
             Vector3 newNormal = transformation * this.Normal;
-            if (Vector3.Equals(Vector3.Zero, newNormal)) newNormal = this.Normal;
+            if (Vector3.Equals(Vector3.Zero, newNormal))
+            {
+                newNormal = this.Normal;
+            }
 
             Matrix3 transOW = MathHelper.ArbitraryAxis(this.Normal);
             transOW *= Matrix3.RotationZ(this.Rotation * MathHelper.DegToRad);
@@ -651,7 +656,10 @@ namespace netDxf.Entities
             this.Scale = newScale;
             this.Rotation = newRotation;
 
-            this.TransformAttributes();
+            foreach (Attribute att in this.attributes)
+            {
+                att.TransformBy(transformation, translation);
+            }
         }
 
         /// <summary>

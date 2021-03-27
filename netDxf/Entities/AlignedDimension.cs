@@ -1,23 +1,23 @@
-﻿#region netDxf library, Copyright (C) 2009-2019 Daniel Carvajal (haplokuon@gmail.com)
-
-//                        netDxf library
-// Copyright (C) 2009-2019 Daniel Carvajal (haplokuon@gmail.com)
+﻿#region netDxf library licensed under the MIT License, Copyright © 2009-2021 Daniel Carvajal (haplokuon@gmail.com)
 // 
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2.1 of the License, or (at your option) any later version.
+//                        netDxf library
+// Copyright © 2021 Daniel Carvajal (haplokuon@gmail.com)
+// 
+// Permission is hereby granted, free of charge, to any person obtaining a copy of this software
+// and associated documentation files (the “Software”), to deal in the Software without restriction,
+// including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense,
+// and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so,
+// subject to the following conditions:
 // 
 // The above copyright notice and this permission notice shall be included in all
 // copies or substantial portions of the Software.
 // 
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
 // FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
 // COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
 // IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
 #endregion
 
 using System;
@@ -98,19 +98,24 @@ namespace netDxf.Entities
             : base(DimensionType.Aligned)
         {
             if (referenceLine == null)
+            {
                 throw new ArgumentNullException(nameof(referenceLine));
+            }
 
             List<Vector3> ocsPoints = MathHelper.Transform(
-                new List<Vector3> { referenceLine.StartPoint, referenceLine.EndPoint }, normal, CoordinateSystem.World, CoordinateSystem.Object);
+                new List<Vector3> { referenceLine.StartPoint, referenceLine.EndPoint },
+                normal,
+                CoordinateSystem.World,
+                CoordinateSystem.Object);
             this.firstRefPoint = new Vector2(ocsPoints[0].X, ocsPoints[0].Y);
             this.secondRefPoint = new Vector2(ocsPoints[1].X, ocsPoints[1].Y);
 
             if (offset < 0)
+            {
                 throw new ArgumentOutOfRangeException(nameof(offset), "The offset value must be equal or greater than zero.");
+            }
             this.offset = offset;
-            if (style == null)
-                throw new ArgumentNullException(nameof(style));
-            this.Style = style;
+            this.Style = style ?? throw new ArgumentNullException(nameof(style));
             this.Normal = normal;
             this.Elevation = ocsPoints[0].Z;
             this.Update();
@@ -142,11 +147,13 @@ namespace netDxf.Entities
             this.firstRefPoint = firstPoint;
             this.secondRefPoint = secondPoint;
             if (offset < 0)
+            {
                 throw new ArgumentOutOfRangeException(nameof(offset), "The offset value must be equal or greater than zero.");
+            }
+
             this.offset = offset;
-            if (style == null)
-                throw new ArgumentNullException(nameof(style));
-            this.Style = style;
+            this.Style = style ?? throw new ArgumentNullException(nameof(style));
+
             this.Update();
         }
 
@@ -193,7 +200,9 @@ namespace netDxf.Entities
             set
             {
                 if (value < 0)
+                {
                     throw new ArgumentOutOfRangeException(nameof(value), "The offset value must be equal or greater than zero.");
+                }
                 this.offset = value;
             }
         }
@@ -238,12 +247,12 @@ namespace netDxf.Entities
                 double textGap = this.Style.TextOffset;
                 if (this.StyleOverrides.TryGetValue(DimensionStyleOverrideType.TextOffset, out styleOverride))
                 {
-                    textGap = (double)styleOverride.Value;
+                    textGap = (double) styleOverride.Value;
                 }
                 double scale = this.Style.DimScaleOverall;
                 if (this.StyleOverrides.TryGetValue(DimensionStyleOverrideType.DimScaleOverall, out styleOverride))
                 {
-                    scale = (double)styleOverride.Value;
+                    scale = (double) styleOverride.Value;
                 }
 
                 double gap = this.offset + textGap * scale;
@@ -397,14 +406,14 @@ namespace netDxf.Entities
 
             foreach (DimensionStyleOverride styleOverride in this.StyleOverrides.Values)
             {
-                ICloneable value = styleOverride.Value as ICloneable;
-                object copy = value != null ? value.Clone() : styleOverride.Value;
-
+                object copy = styleOverride.Value is ICloneable value ? value.Clone() : styleOverride.Value;
                 entity.StyleOverrides.Add(new DimensionStyleOverride(styleOverride.Type, copy));
             }
 
             foreach (XData data in this.XData.Values)
+            {
                 entity.XData.Add((XData) data.Clone());
+            }
 
             return entity;
         }

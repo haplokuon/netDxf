@@ -1,23 +1,23 @@
-#region netDxf library, Copyright (C) 2009-2020 Daniel Carvajal (haplokuon@gmail.com)
-
-//                        netDxf library
-// Copyright (C) 2009-2019 Daniel Carvajal (haplokuon@gmail.com)
+#region netDxf library licensed under the MIT License, Copyright © 2009-2021 Daniel Carvajal (haplokuon@gmail.com)
 // 
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2.1 of the License, or (at your option) any later version.
+//                        netDxf library
+// Copyright © 2021 Daniel Carvajal (haplokuon@gmail.com)
+// 
+// Permission is hereby granted, free of charge, to any person obtaining a copy of this software
+// and associated documentation files (the “Software”), to deal in the Software without restriction,
+// including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense,
+// and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so,
+// subject to the following conditions:
 // 
 // The above copyright notice and this permission notice shall be included in all
 // copies or substantial portions of the Software.
 // 
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
 // FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
 // COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
 // IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
 #endregion
 
 using System;
@@ -218,10 +218,14 @@ namespace netDxf.Entities
         {
             this.center = center;
             if (majorAxis <= 0)
+            {
                 throw new ArgumentOutOfRangeException(nameof(majorAxis), majorAxis, "The major axis value must be greater than zero.");
+            }
             this.majorAxis = majorAxis;
             if (minorAxis <= 0)
+            {
                 throw new ArgumentOutOfRangeException(nameof(minorAxis), minorAxis, "The minor axis value must be greater than zero.");
+            }
             this.minorAxis = minorAxis;
             this.startAngle = 0.0;
             this.endAngle = 0.0;
@@ -252,7 +256,9 @@ namespace netDxf.Entities
             set
             {
                 if (value <= 0)
+                {
                     throw new ArgumentOutOfRangeException(nameof(value), value, "The major axis value must be greater than zero.");
+                }
                 this.majorAxis = value;
             }
         }
@@ -266,7 +272,9 @@ namespace netDxf.Entities
             set
             {
                 if (value <= 0)
+                {
                     throw new ArgumentOutOfRangeException(nameof(value), value, "The minor axis value must be greater than zero.");
+                }
                 this.minorAxis = value;
             }
         }
@@ -372,7 +380,10 @@ namespace netDxf.Entities
                 start = Math.Atan2(startPoint.Y * b, startPoint.X * a);
                 end = Math.Atan2(endPoint.Y * b, endPoint.X * a);
 
-                if (end < start) end += MathHelper.TwoPI;
+                if (end < start)
+                {
+                    end += MathHelper.TwoPI;
+                }
                 steps = precision - 1;
             }
            
@@ -420,6 +431,7 @@ namespace netDxf.Entities
             {
                 poly.Vertexes.Add(new LwPolylineVertex(v.X + ocsCenter.X, v.Y + ocsCenter.Y));
             }
+
             return poly;
         }
 
@@ -462,7 +474,10 @@ namespace netDxf.Entities
             }
 
             Vector3 newNormal = transformation * this.Normal;
-            if (Vector3.Equals(Vector3.Zero, newNormal)) newNormal = this.Normal;
+            if (Vector3.Equals(Vector3.Zero, newNormal))
+            {
+                newNormal = this.Normal;
+            }
 
             List<Vector3> rectPoints = MathHelper.Transform(wcsPoints, newNormal, CoordinateSystem.World, CoordinateSystem.Object);
             
@@ -500,13 +515,8 @@ namespace netDxf.Entities
             
             Vector3 oldNormal = this.Normal;
             double oldRotation = this.Rotation * MathHelper.DegToRad;
-            
-            Vector2 newCenter;
-            double newSemiMajorAxis;
-            double newSemiMinorAxis;
-            double newRotation;
 
-            if (ConicThroughFivePoints.EllipseProperties(pointM, pointN, pointH, pointK, pointZ, out newCenter, out newSemiMajorAxis, out newSemiMinorAxis, out newRotation))
+            if (ConicThroughFivePoints.EllipseProperties(pointM, pointN, pointH, pointK, pointZ, out Vector2 _, out double newSemiMajorAxis, out double newSemiMinorAxis, out double newRotation))
             {
                 double axis1 = 2 * newSemiMajorAxis;
                 axis1 = MathHelper.IsZero(axis1) ? MathHelper.Epsilon : axis1;
@@ -587,7 +597,9 @@ namespace netDxf.Entities
             };
 
             foreach (XData data in this.XData.Values)
+            {
                 entity.XData.Add((XData) data.Clone());
+            }
 
             return entity;
         }

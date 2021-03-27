@@ -1,23 +1,23 @@
-#region netDxf library, Copyright (C) 2009-2020 Daniel Carvajal (haplokuon@gmail.com)
-
-//                        netDxf library
-// Copyright (C) 2009-2020 Daniel Carvajal (haplokuon@gmail.com)
+#region netDxf library licensed under the MIT License, Copyright © 2009-2021 Daniel Carvajal (haplokuon@gmail.com)
 // 
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2.1 of the License, or (at your option) any later version.
+//                        netDxf library
+// Copyright © 2021 Daniel Carvajal (haplokuon@gmail.com)
+// 
+// Permission is hereby granted, free of charge, to any person obtaining a copy of this software
+// and associated documentation files (the “Software”), to deal in the Software without restriction,
+// including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense,
+// and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so,
+// subject to the following conditions:
 // 
 // The above copyright notice and this permission notice shall be included in all
 // copies or substantial portions of the Software.
 // 
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
 // FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
 // COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
 // IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
 #endregion
 
 using System;
@@ -44,9 +44,7 @@ namespace netDxf.Blocks
         #region delegates and events
 
         public delegate void LayerChangedEventHandler(Block sender, TableObjectChangedEventArgs<Layer> e);
-
         public event LayerChangedEventHandler LayerChanged;
-
         protected virtual Layer OnLayerChangedEvent(Layer oldLayer, Layer newLayer)
         {
             LayerChangedEventHandler ae = this.LayerChanged;
@@ -60,9 +58,7 @@ namespace netDxf.Blocks
         }
 
         public delegate void EntityAddedEventHandler(Block sender, BlockEntityChangeEventArgs e);
-
         public event EntityAddedEventHandler EntityAdded;
-
         protected virtual void OnEntityAddedEvent(EntityObject item)
         {
             EntityAddedEventHandler ae = this.EntityAdded;
@@ -73,9 +69,7 @@ namespace netDxf.Blocks
         }
 
         public delegate void EntityRemovedEventHandler(Block sender, BlockEntityChangeEventArgs e);
-
         public event EntityRemovedEventHandler EntityRemoved;
-
         protected virtual void OnEntityRemovedEvent(EntityObject item)
         {
             EntityRemovedEventHandler ae = this.EntityRemoved;
@@ -86,9 +80,7 @@ namespace netDxf.Blocks
         }
 
         public delegate void AttributeDefinitionAddedEventHandler(Block sender, BlockAttributeDefinitionChangeEventArgs e);
-
         public event AttributeDefinitionAddedEventHandler AttributeDefinitionAdded;
-
         protected virtual void OnAttributeDefinitionAddedEvent(AttributeDefinition item)
         {
             AttributeDefinitionAddedEventHandler ae = this.AttributeDefinitionAdded;
@@ -99,9 +91,7 @@ namespace netDxf.Blocks
         }
 
         public delegate void AttributeDefinitionRemovedEventHandler(Block sender, BlockAttributeDefinitionChangeEventArgs e);
-
         public event AttributeDefinitionRemovedEventHandler AttributeDefinitionRemoved;
-
         protected virtual void OnAttributeDefinitionRemovedEvent(AttributeDefinition item)
         {
             AttributeDefinitionRemovedEventHandler ae = this.AttributeDefinitionRemoved;
@@ -433,7 +423,7 @@ namespace netDxf.Blocks
             // When a Block is created form a DxfDocument or DXF file, any Hatch entity that it may contain will have its associative property set to false.
             // This will avoid problems when the same entity its associated to multiple hatches,
             // or when any of any of its paths is defined by the intersection of several entities.
-            foreach (Hatch hatch in doc.Hatches)
+            foreach (Hatch hatch in doc.Entities.Hatches)
             {
                 hatch.UnLinkBoundary();
             }
@@ -549,8 +539,10 @@ namespace netDxf.Blocks
 
             foreach (AttributeDefinition attdef in this.attributes.Values)
             {
-                if(!dwg.Layouts[Layout.ModelSpaceName].AssociatedBlock.AttributeDefinitions.ContainsTag(attdef.Tag))
+                if (!dwg.Layouts[Layout.ModelSpaceName].AssociatedBlock.AttributeDefinitions.ContainsTag(attdef.Tag))
+                {
                     dwg.Layouts[Layout.ModelSpaceName].AssociatedBlock.AttributeDefinitions.Add((AttributeDefinition) attdef.Clone());
+                }
             }
 
             foreach (EntityObject entity in this.entities)
@@ -565,12 +557,10 @@ namespace netDxf.Blocks
 
         #region internal methods
 
-        /// <summary>
-        /// Hack to change the table name without having to check its name. Some invalid characters are used for internal purposes only.
-        /// </summary>
-        /// <param name="newName">Table object new name.</param>
         internal new void SetName(string newName, bool checkName)
         {
+            // Hack to change the table name without having to check its name.
+            // Some invalid characters are used for internal purposes only.
             base.SetName(newName, checkName);
             this.Record.Name = newName;
             this.forInternalUse = newName.StartsWith("*");
@@ -591,7 +581,7 @@ namespace netDxf.Blocks
             {
                 Description = block.description,
                 Flags = block.flags,
-                Layer = (Layer)block.Layer.Clone(),
+                Layer = (Layer) block.Layer.Clone(),
                 Origin = block.origin
             };
 

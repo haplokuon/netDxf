@@ -1,23 +1,23 @@
-﻿#region netDxf library, Copyright (C) 2009-2020 Daniel Carvajal (haplokuon@gmail.com)
-
-//                        netDxf library
-// Copyright (C) 2009-2020 Daniel Carvajal (haplokuon@gmail.com)
+﻿#region netDxf library licensed under the MIT License, Copyright © 2009-2021 Daniel Carvajal (haplokuon@gmail.com)
 // 
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2.1 of the License, or (at your option) any later version.
+//                        netDxf library
+// Copyright © 2021 Daniel Carvajal (haplokuon@gmail.com)
+// 
+// Permission is hereby granted, free of charge, to any person obtaining a copy of this software
+// and associated documentation files (the “Software”), to deal in the Software without restriction,
+// including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense,
+// and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so,
+// subject to the following conditions:
 // 
 // The above copyright notice and this permission notice shall be included in all
 // copies or substantial portions of the Software.
 // 
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
 // FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
 // COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
 // IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
 #endregion
 
 using System;
@@ -321,18 +321,17 @@ namespace netDxf.IO
             throw new Exception(string.Format("Code \"{0}\" not valid at line {1}", this.code, this.currentPosition));
         }
 
-        private byte ReadByte(string valueString)
-        {
-            byte result;
-            if (byte.TryParse(valueString, NumberStyles.AllowLeadingWhite | NumberStyles.AllowTrailingWhite, CultureInfo.InvariantCulture, out result))
-            {
-                return result;
-            }
+        //private byte ReadByte(string valueString)
+        //{
+        //    if (byte.TryParse(valueString, NumberStyles.AllowLeadingWhite | NumberStyles.AllowTrailingWhite, CultureInfo.InvariantCulture, out byte result))
+        //    {
+        //        return result;
+        //    }
 
-            Debug.Assert(false, string.Format("Value \"{0}\" not valid at line {1}", valueString, this.currentPosition));
+        //    Debug.Assert(false, string.Format("Value \"{0}\" not valid at line {1}", valueString, this.currentPosition));
 
-            return 0;
-        }
+        //    return 0;
+        //}
 
         private byte[] ReadBytes(string valueString)
         {
@@ -340,8 +339,7 @@ namespace netDxf.IO
             for (int i = 0; i < valueString.Length; i++)
             {
                 string hex = string.Concat(valueString[i], valueString[++i]);
-                byte result;
-                if (byte.TryParse(hex, NumberStyles.AllowHexSpecifier | NumberStyles.AllowLeadingWhite | NumberStyles.AllowTrailingWhite, CultureInfo.InvariantCulture, out result))
+                if (byte.TryParse(hex, NumberStyles.AllowHexSpecifier | NumberStyles.AllowLeadingWhite | NumberStyles.AllowTrailingWhite, CultureInfo.InvariantCulture, out byte result))
                 {
                     bytes.Add(result);
                 }
@@ -358,8 +356,7 @@ namespace netDxf.IO
 
         private short ReadShort(string valueString)
         {
-            short result;
-            if (short.TryParse(valueString, NumberStyles.Integer, CultureInfo.InvariantCulture, out result))
+            if (short.TryParse(valueString, NumberStyles.Integer, CultureInfo.InvariantCulture, out short result))
             {
                 return result;
             }
@@ -371,8 +368,7 @@ namespace netDxf.IO
 
         private int ReadInt(string valueString)
         {
-            int result;
-            if (int.TryParse(valueString, NumberStyles.Integer, CultureInfo.InvariantCulture, out result))
+            if (int.TryParse(valueString, NumberStyles.Integer, CultureInfo.InvariantCulture, out int result))
             {
                 return result;
             }
@@ -384,8 +380,7 @@ namespace netDxf.IO
 
         private long ReadLong(string valueString)
         {
-            long result;
-            if (long.TryParse(valueString, NumberStyles.Integer, CultureInfo.InvariantCulture, out result))
+            if (long.TryParse(valueString, NumberStyles.Integer, CultureInfo.InvariantCulture, out long result))
             {
                 return result;
             }
@@ -397,8 +392,7 @@ namespace netDxf.IO
 
         private bool ReadBool(string valueString)
         {
-            byte result;
-            if (byte.TryParse(valueString, NumberStyles.Integer, CultureInfo.InvariantCulture, out result))
+            if (byte.TryParse(valueString, NumberStyles.Integer, CultureInfo.InvariantCulture, out byte result))
             {
                 return result > 0;
             }
@@ -410,8 +404,7 @@ namespace netDxf.IO
 
         private double ReadDouble(string valueString)
         {
-            double result;
-            if (double.TryParse(valueString, NumberStyles.Float, CultureInfo.InvariantCulture, out result))
+            if (double.TryParse(valueString, NumberStyles.Float, CultureInfo.InvariantCulture, out double result))
             {
                 return result;
             }
@@ -428,8 +421,7 @@ namespace netDxf.IO
 
         private string ReadHex(string valueString)
         {
-            long result;
-            if (long.TryParse(valueString, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out result))
+            if (long.TryParse(valueString, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out long result))
             {
                 return result.ToString("X");
             }

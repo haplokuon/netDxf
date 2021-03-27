@@ -1,23 +1,23 @@
-﻿#region netDxf library, Copyright (C) 2009-2019 Daniel Carvajal (haplokuon@gmail.com)
-
-//                        netDxf library
-// Copyright (C) 2009-2019 Daniel Carvajal (haplokuon@gmail.com)
+﻿#region netDxf library licensed under the MIT License, Copyright © 2009-2021 Daniel Carvajal (haplokuon@gmail.com)
 // 
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2.1 of the License, or (at your option) any later version.
+//                        netDxf library
+// Copyright © 2021 Daniel Carvajal (haplokuon@gmail.com)
+// 
+// Permission is hereby granted, free of charge, to any person obtaining a copy of this software
+// and associated documentation files (the “Software”), to deal in the Software without restriction,
+// including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense,
+// and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so,
+// subject to the following conditions:
 // 
 // The above copyright notice and this permission notice shall be included in all
 // copies or substantial portions of the Software.
 // 
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
 // FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
 // COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
 // IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
 #endregion
 
 using System;
@@ -66,7 +66,10 @@ namespace netDxf.Entities
             this.controlPoints = new List<SplineVertex>();
             this.knots = new List<double>();
             if (fitPoints == null)
+            {
                 throw new ArgumentNullException(nameof(fitPoints));
+            }
+
             this.fitPoints = new List<Vector3>(fitPoints);
             this.creationMethod = SplineCreationMethod.FitPoints;
             this.isClosed = this.fitPoints[0].Equals(this.fitPoints[this.fitPoints.Count - 1]);
@@ -125,13 +128,24 @@ namespace netDxf.Entities
             : base(EntityType.Spline, DxfObjectCode.Spline)
         {
             if (degree < 1 || degree > 10)
+            {
                 throw new ArgumentOutOfRangeException(nameof(degree), degree, "The spline degree valid values range from 1 to 10.");
+            }
+
             if (controlPoints == null)
+            {
                 throw new ArgumentNullException(nameof(controlPoints));
+            }
+
             if (controlPoints.Count < 2)
+            {
                 throw new ArgumentException("The number of control points must be equal or greater than 2.");
+            }
+
             if (controlPoints.Count < degree + 1)
+            {
                 throw new ArgumentException("The number of control points must be equal or greater than the spline degree + 1.");
+            }
 
             this.fitPoints = new List<Vector3>();
             this.degree = degree;
@@ -148,6 +162,7 @@ namespace netDxf.Entities
                 this.isClosed = controlPoints[0].Position.Equals(controlPoints[controlPoints.Count - 1].Position);
                 this.flags = this.isClosed ? SplineTypeFlags.Closed | SplineTypeFlags.Rational : SplineTypeFlags.Rational;
             }
+
             this.Create(controlPoints);
         }
 
@@ -161,17 +176,34 @@ namespace netDxf.Entities
             : base(EntityType.Spline, DxfObjectCode.Spline)
         {
             if (degree < 1 || degree > 10)
+            {
                 throw new ArgumentOutOfRangeException(nameof(degree), degree, "The spline degree valid values range from 1 to 10.");
+            }
+
             if (controlPoints == null)
+            {
                 throw new ArgumentNullException(nameof(controlPoints));
+            }
+
             if (controlPoints.Count < 2)
+            {
                 throw new ArgumentException("The number of control points must be equal or greater than 2.");
+            }
+
             if (controlPoints.Count < degree + 1)
+            {
                 throw new ArgumentException("The number of control points must be equal or greater than the spline degree + 1.");
+            }
+
             if (knots == null)
+            {
                 throw new ArgumentNullException(nameof(knots));
+            }
+
             if (knots.Count != controlPoints.Count + degree + 1)
+            {
                 throw new ArgumentException("The number of knots must be equals to the number of control points + spline degree + 1.");
+            }
 
             this.fitPoints = fitPoints;
             this.controlPoints = controlPoints;
@@ -251,7 +283,10 @@ namespace netDxf.Entities
             set
             {
                 if (value <= 0)
+                {
                     throw new ArgumentOutOfRangeException(nameof(value), value, "The knot tolerance must be greater than zero.");
+                }
+
                 this.knotTolerance = value;
             }
         }
@@ -265,7 +300,10 @@ namespace netDxf.Entities
             set
             {
                 if (value <= 0)
+                {
                     throw new ArgumentOutOfRangeException(nameof(value), value, "The control point tolerance must be greater than zero.");
+                }
+
                 this.ctrlPointTolerance = value;
             }
         }
@@ -279,7 +317,10 @@ namespace netDxf.Entities
             set
             {
                 if (value <= 0)
+                {
                     throw new ArgumentOutOfRangeException(nameof(value), value, "The fit tolerance must be greater than zero.");
+                }
+
                 this.fitTolerance = value;
             }
         }
@@ -394,23 +435,31 @@ namespace netDxf.Entities
             int numKnots = numControlPoints + this.degree + 1;
             this.knots = new List<double>(numKnots);
 
-            double factor = 1.0/(numControlPoints - this.degree);
+            double factor = 1.0 / (numControlPoints - this.degree);
             if (!this.isPeriodic)
             {
                 int i;
                 for (i = 0; i <= this.degree; i++)
+                {
                     this.knots.Add(0.0);
+                }
 
                 for (; i < numControlPoints; i++)
+                {
                     this.knots.Add(i - this.degree);
+                }
 
                 for (; i < numKnots; i++)
+                {
                     this.knots.Add(numControlPoints - this.degree);
+                }
             }
             else
             {
                 for (int i = 0; i < numKnots; i++)
-                    this.knots.Add((i - this.degree)*factor);
+                {
+                    this.knots.Add((i - this.degree) * factor);
+                }
             }
         }
 
@@ -474,6 +523,7 @@ namespace netDxf.Entities
                 {
                     copyControlPoints.Add((SplineVertex) vertex.Clone());
                 }
+
                 List<double> copyKnots = new List<double>(this.knots);
 
                 entity = new Spline(copyControlPoints, copyKnots, this.degree)
@@ -499,7 +549,7 @@ namespace netDxf.Entities
 
         #endregion
 
-        #region NURBS evaluator provided by mikau16 based on Michael V. implementation, roughly follows the notation of http://cs.mtu.edu/~shene/PUBLICATIONS/2004/NURBS.pdf
+        #region NURBS evaluator provided by mikau16 based on Michael V. implementation, roughly follows the notation of http: //cs.mtu.edu/~shene/PUBLICATIONS/2004/NURBS.pdf
 
         /// <summary>
         /// Converts the spline in a list of vertexes.
@@ -509,7 +559,9 @@ namespace netDxf.Entities
         public List<Vector3> PolygonalVertexes(int precision)
         {
             if (this.controlPoints.Count == 0)
+            {
                 throw new NotSupportedException("A spline entity with control points is required.");
+            }
 
             double uStart;
             double uEnd;
@@ -533,16 +585,18 @@ namespace netDxf.Entities
                 uEnd = this.knots[this.knots.Count - 1];
             }
 
-            double uDelta = (uEnd - uStart)/precision;
+            double uDelta = (uEnd - uStart) / precision;
 
             for (int i = 0; i < precision; i++)
             {
-                double u = uStart + uDelta*i;
+                double u = uStart + uDelta * i;
                 vertexes.Add(this.C(u));
             }
 
             if (!this.isClosed)
+            {
                 vertexes.Add(this.controlPoints[this.controlPoints.Count - 1].Position);
+            }
 
             return vertexes;
         }
@@ -571,6 +625,7 @@ namespace netDxf.Entities
             {
                 poly.Vertexes.Add(new PolylineVertex(v));
             }
+
             return poly;
         }
 
@@ -583,15 +638,17 @@ namespace netDxf.Entities
             for (int i = 0; i < this.controlPoints.Count; i++)
             {
                 double n = this.N(i, this.degree, u);
-                denominatorSum += n*this.controlPoints[i].Weight;
-                vectorSum += this.controlPoints[i].Weight*n*this.controlPoints[i].Position;
+                denominatorSum += n * this.controlPoints[i].Weight;
+                vectorSum += this.controlPoints[i].Weight * n * this.controlPoints[i].Position;
             }
 
             // avoid possible divided by zero error, this should never happen
             if (Math.Abs(denominatorSum) < double.Epsilon)
+            {
                 return Vector3.Zero;
+            }
 
-            return (1.0/denominatorSum)*vectorSum;
+            return (1.0 / denominatorSum) * vectorSum;
         }
 
         private double N(int i, int p, double u)
@@ -599,19 +656,26 @@ namespace netDxf.Entities
             if (p <= 0)
             {
                 if (this.knots[i] <= u && u < this.knots[i + 1])
+                {
                     return 1;
+                }
+
                 return 0.0;
             }
 
             double leftCoefficient = 0.0;
             if (!(Math.Abs(this.knots[i + p] - this.knots[i]) < double.Epsilon))
-                leftCoefficient = (u - this.knots[i])/(this.knots[i + p] - this.knots[i]);
+            {
+                leftCoefficient = (u - this.knots[i]) / (this.knots[i + p] - this.knots[i]);
+            }
 
             double rightCoefficient = 0.0; // article contains error here, denominator is Knots[i + p + 1] - Knots[i + 1]
             if (!(Math.Abs(this.knots[i + p + 1] - this.knots[i + 1]) < double.Epsilon))
-                rightCoefficient = (this.knots[i + p + 1] - u)/(this.knots[i + p + 1] - this.knots[i + 1]);
+            {
+                rightCoefficient = (this.knots[i + p + 1] - u) / (this.knots[i + p + 1] - this.knots[i + 1]);
+            }
 
-            return leftCoefficient*this.N(i, p - 1, u) + rightCoefficient*this.N(i + 1, p - 1, u);
+            return leftCoefficient * this.N(i, p - 1, u) + rightCoefficient * this.N(i + 1, p - 1, u);
         }
 
         #endregion

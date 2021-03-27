@@ -1,23 +1,23 @@
-﻿#region netDxf library, Copyright (C) 2009-2019 Daniel Carvajal (haplokuon@gmail.com)
-
-//                        netDxf library
-// Copyright (C) 2009-2019 Daniel Carvajal (haplokuon@gmail.com)
+﻿#region netDxf library licensed under the MIT License, Copyright © 2009-2021 Daniel Carvajal (haplokuon@gmail.com)
 // 
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2.1 of the License, or (at your option) any later version.
+//                        netDxf library
+// Copyright © 2021 Daniel Carvajal (haplokuon@gmail.com)
+// 
+// Permission is hereby granted, free of charge, to any person obtaining a copy of this software
+// and associated documentation files (the “Software”), to deal in the Software without restriction,
+// including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense,
+// and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so,
+// subject to the following conditions:
 // 
 // The above copyright notice and this permission notice shall be included in all
 // copies or substantial portions of the Software.
 // 
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
 // FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
 // COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
 // IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
 #endregion
 
 using System;
@@ -34,7 +34,7 @@ namespace netDxf.Entities
     /// if these conditions are not met the result might be unpredictable. <br />
     /// Entities expressed in 3d coordinates like lines, polylines, and splines will be projected into its local plane.
     /// All edges that make a HatchBoundaryPath are 2d objects, only have X and Y coordinates.
-    /// This is why to avoid unexpected results is important that all entities that define the paths have the same normal, same reference plane.
+    /// This is why to avoid unexpected results, it is important that all entities that define the paths have the same normal, same reference plane.
     /// </remarks>
     public class HatchBoundaryPath :
         ICloneable
@@ -118,7 +118,9 @@ namespace netDxf.Entities
                 : base(EdgeType.Polyline)
             {
                 if (entity == null)
+                {
                     throw new ArgumentNullException(nameof(entity));
+                }
 
                 if (entity.Type == EntityType.LwPolyline)
                 {
@@ -362,9 +364,14 @@ namespace netDxf.Entities
             public override EntityObject ConvertTo()
             {
                 if (MathHelper.IsEqual(MathHelper.NormalizeAngle(this.StartAngle), MathHelper.NormalizeAngle(this.EndAngle)))
+                {
                     return new Entities.Circle(this.Center, this.Radius);
+                }
+
                 if (this.IsCounterclockwise)
+                {
                     return new Entities.Arc(this.Center, this.Radius, this.StartAngle, this.EndAngle);
+                }
 
                 return new Entities.Arc(this.Center, this.Radius, 360 - this.EndAngle, 360 - this.StartAngle);
             }
@@ -703,7 +710,7 @@ namespace netDxf.Entities
         #region public properties
 
         /// <summary>
-        /// Gets the list of entities that makes a loop for the hatch boundary paths.
+        /// Gets the list of edges that makes a loop for the hatch boundary path.
         /// </summary>
         public IReadOnlyList<Edge> Edges
         {
@@ -767,15 +774,20 @@ namespace netDxf.Entities
 
         #region private methods
 
-        private void SetInternalInfo(IEnumerable<EntityObject> contourn, bool clearEdges)
+        private void SetInternalInfo(IEnumerable<EntityObject> contour, bool clearEdges)
         {
             bool containsPolyline = false;
-            if(clearEdges) this.edges.Clear();
+            if (clearEdges)
+            {
+                this.edges.Clear();
+            }
 
-            foreach (EntityObject entity in contourn)
+            foreach (EntityObject entity in contour)
             {
                 if (containsPolyline)
+                {
                     throw new ArgumentException("Closed polylines cannot be combined with other entities to make a hatch boundary path.");
+                }
 
                 // it seems that AutoCad does not have problems on creating loops that theoretically does not make sense,
                 // like, for example, an internal loop that is made of a single arc.
@@ -799,7 +811,9 @@ namespace netDxf.Entities
                         if (lwpoly.IsClosed)
                         {
                             if (this.edges.Count != 0)
+                            {
                                 throw new ArgumentException("Closed polylines cannot be combined with other entities to make a hatch boundary path.");
+                            }
                             this.edges.Add(Polyline.ConvertFrom(entity));
                             this.pathType |= HatchBoundaryPathTypeFlags.Polyline;
                             containsPolyline = true;
@@ -812,7 +826,9 @@ namespace netDxf.Entities
                         if (poly.IsClosed)
                         {
                             if (this.edges.Count != 0)
+                            {
                                 throw new ArgumentException("Closed polylines cannot be combined with other entities to make a hatch boundary path.");
+                            }
                             this.edges.Add(Polyline.ConvertFrom(entity));
                             this.pathType |= HatchBoundaryPathTypeFlags.Polyline;
                             containsPolyline = true;

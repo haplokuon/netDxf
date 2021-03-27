@@ -1,23 +1,23 @@
-﻿#region netDxf library, Copyright (C) 2009-2019 Daniel Carvajal (haplokuon@gmail.com)
-
-//                        netDxf library
-// Copyright (C) 2009-2019 Daniel Carvajal (haplokuon@gmail.com)
+﻿#region netDxf library licensed under the MIT License, Copyright © 2009-2021 Daniel Carvajal (haplokuon@gmail.com)
 // 
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2.1 of the License, or (at your option) any later version.
+//                        netDxf library
+// Copyright © 2021 Daniel Carvajal (haplokuon@gmail.com)
+// 
+// Permission is hereby granted, free of charge, to any person obtaining a copy of this software
+// and associated documentation files (the “Software”), to deal in the Software without restriction,
+// including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense,
+// and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so,
+// subject to the following conditions:
 // 
 // The above copyright notice and this permission notice shall be included in all
 // copies or substantial portions of the Software.
 // 
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
 // FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
 // COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
 // IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
 #endregion
 
 using System;
@@ -89,7 +89,9 @@ namespace netDxf.Objects
             : base(name, DxfObjectCode.Layout, true)
         {
             if (string.IsNullOrEmpty(name))
+            {
                 throw new ArgumentNullException(nameof(name), "The layout name should be at least one character long.");
+            }
 
             if (name.Equals(ModelSpaceName, StringComparison.OrdinalIgnoreCase))
             {
@@ -144,7 +146,9 @@ namespace netDxf.Objects
             set
             {
                 if (value <= 0)
+                {
                     throw new ArgumentException("The tab order index must be greater than zero.", nameof(value));
+                }
                 this.tabOrder = value;
             }
         }
@@ -291,10 +295,15 @@ namespace netDxf.Objects
         /// </remarks>
         public override TableObject Clone(string newName)
         {
-            if(!this.IsPaperSpace)
+            if (!this.IsPaperSpace)
+            {
                 throw new NotSupportedException("The Model layout cannot be cloned.");
+            }
+
             if (string.Equals(newName, ModelSpaceName, StringComparison.OrdinalIgnoreCase))
+            {
                 throw new ArgumentException("The layout name \"Model\" is reserved for the ModelSpace.");
+            }
 
             Layout copy = new Layout(newName, null, (PlotSettings) this.plot.Clone())
             {
@@ -312,7 +321,9 @@ namespace netDxf.Objects
             };
 
             foreach (XData data in this.XData.Values)
+            {
                 copy.XData.Add((XData)data.Clone());
+            }
 
             return copy;
         }
@@ -343,7 +354,9 @@ namespace netDxf.Objects
         {
             entityNumber = this.Owner.AssignHandle(entityNumber);
             if (this.isPaperSpace)
+            {
                 entityNumber = this.viewport.AssignHandle(entityNumber);
+            }
             return base.AssignHandle(entityNumber);
         }
 
@@ -363,7 +376,9 @@ namespace netDxf.Objects
         public int CompareTo(Layout other)
         {
             if (other == null)
+            {
                 throw new ArgumentNullException(nameof(other));
+            }
 
             return this.tabOrder.CompareTo(other.tabOrder);
         }

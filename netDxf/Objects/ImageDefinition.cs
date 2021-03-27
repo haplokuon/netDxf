@@ -1,28 +1,27 @@
-#region netDxf library, Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
-
-//                        netDxf library
-// Copyright (C) 2009-2018 Daniel Carvajal (haplokuon@gmail.com)
+#region netDxf library licensed under the MIT License, Copyright © 2009-2021 Daniel Carvajal (haplokuon@gmail.com)
 // 
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2.1 of the License, or (at your option) any later version.
+//                        netDxf library
+// Copyright © 2021 Daniel Carvajal (haplokuon@gmail.com)
+// 
+// Permission is hereby granted, free of charge, to any person obtaining a copy of this software
+// and associated documentation files (the “Software”), to deal in the Software without restriction,
+// including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense,
+// and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so,
+// subject to the following conditions:
 // 
 // The above copyright notice and this permission notice shall be included in all
 // copies or substantial portions of the Software.
 // 
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
 // FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
 // COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
 // IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
 #endregion
 
 using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.IO;
 using netDxf.Collections;
 using netDxf.Tables;
@@ -38,9 +37,9 @@ namespace netDxf.Objects
     {
         #region private fields
 
-        private readonly string file;
-        private readonly int width;
-        private readonly int height;
+        private string file;
+        private int width;
+        private int height;
         private ImageResolutionUnits resolutionUnits;
         private double horizontalResolution;
         private double verticalResolution;
@@ -148,8 +147,10 @@ namespace netDxf.Objects
             this.reactors = new Dictionary<string, ImageDefinitionReactor>();
         }
 
+#if NET45
+
         ///  <summary>
-        ///  Initializes a new instance of the <c>ImageDefinition</c> class.
+        ///  Initializes a new instance of the <c>ImageDefinition</c> class. Only available for Net Framework 4.5 builds.
         ///  </summary>
         ///  <param name="file">Image file name with full or relative path.</param>
         /// <remarks>
@@ -174,7 +175,7 @@ namespace netDxf.Objects
         }
 
         ///  <summary>
-        ///  Initializes a new instance of the <c>ImageDefinition</c> class.
+        ///  Initializes a new instance of the <c>ImageDefinition</c> class. Only available for Net Framework 4.5 builds.
         ///  </summary>
         /// <param name="name">Image definition name.</param>
         /// <param name="file">Image file name with full or relative path.</param>
@@ -212,7 +213,7 @@ namespace netDxf.Objects
 
             try
             {
-                using (Image bitmap = Image.FromFile(file))
+                using (System.Drawing.Image bitmap = System.Drawing.Image.FromFile(file))
                 {
                     this.width = bitmap.Width;
                     this.height = bitmap.Height;
@@ -230,32 +231,100 @@ namespace netDxf.Objects
             this.reactors = new Dictionary<string, ImageDefinitionReactor>();
         }
 
+#endif
+
         #endregion
 
         #region public properties
 
         /// <summary>
-        /// Gets the image file.
+        /// Gets or sets the image file.
         /// </summary>
+        /// <remarks>
+        /// When changing the image file the other properties should also be modified accordingly to avoid distortions in the final image.
+        /// </remarks>
         public string File
         {
             get { return this.file; }
+            set
+            {
+                if (string.IsNullOrEmpty(value))
+                {
+                    throw new ArgumentNullException(nameof(value));
+                }
+
+                if (value.IndexOfAny(Path.GetInvalidPathChars()) == 0)
+                {
+                    throw new ArgumentException("File path contains invalid characters.", nameof(value));
+                }
+
+                this.file = value;
+            }
         }
 
         /// <summary>
-        /// Gets the image width in pixels.
+        /// Gets or sets the image width in pixels.
         /// </summary>
         public int Width
         {
             get { return this.width; }
+            set
+            {
+                if (value <= 0)
+                {
+                    throw new ArgumentOutOfRangeException(nameof(value), value, "The ImageDefinition width must be greater than zero.");
+                }
+                this.width = value;
+
+            }
         }
 
         /// <summary>
-        /// Gets the image height in pixels.
+        /// Gets or sets the image height in pixels.
         /// </summary>
         public int Height
         {
             get { return this.height; }
+            set
+            {
+                if (value <= 0)
+                {
+                    throw new ArgumentOutOfRangeException(nameof(value), value, "The ImageDefinition height must be greater than zero.");
+                }
+                this.height = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the image horizontal resolution in pixels per unit.
+        /// </summary>
+        public double HorizontalResolution
+        {
+            get { return this.horizontalResolution; }
+            set
+            {
+                if (value <= 0)
+                {
+                    throw new ArgumentOutOfRangeException(nameof(value), value, "The ImageDefinition horizontal resolution must be greater than zero.");
+                }
+                this.horizontalResolution = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the image vertical resolution in pixels per unit.
+        /// </summary>
+        public double VerticalResolution
+        {
+            get { return this.verticalResolution; }
+            set
+            {
+                if (value <= 0)
+                {
+                    throw new ArgumentOutOfRangeException(nameof(value), value, "The ImageDefinition vertical resolution must be greater than zero.");
+                }
+                this.verticalResolution = value;
+            }
         }
 
         /// <summary>
@@ -286,21 +355,6 @@ namespace netDxf.Objects
             }
         }
 
-        /// <summary>
-        /// Gets the image horizontal resolution in pixels per unit.
-        /// </summary>
-        public double HorizontalResolution
-        {
-            get { return this.horizontalResolution; }
-        }
-
-        /// <summary>
-        /// Gets the image vertical resolution in pixels per unit.
-        /// </summary>
-        public double VerticalResolution
-        {
-            get { return this.verticalResolution; }
-        }
 
         /// <summary>
         /// Gets the owner of the actual image definition.
@@ -334,7 +388,9 @@ namespace netDxf.Objects
             ImageDefinition copy = new ImageDefinition(newName, this.file, this.width, this.horizontalResolution, this.height, this.verticalResolution, this.resolutionUnits);
 
             foreach (XData data in this.XData.Values)
+            {
                 copy.XData.Add((XData)data.Clone());
+            }
 
             return copy;
         }

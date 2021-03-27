@@ -1,23 +1,23 @@
-#region netDxf library, Copyright (C) 2009-2020 Daniel Carvajal (haplokuon@gmail.com)
-
-//                        netDxf library
-// Copyright (C) 2009-2020 Daniel Carvajal (haplokuon@gmail.com)
+#region netDxf library licensed under the MIT License, Copyright © 2009-2021 Daniel Carvajal (haplokuon@gmail.com)
 // 
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2.1 of the License, or (at your option) any later version.
+//                        netDxf library
+// Copyright © 2021 Daniel Carvajal (haplokuon@gmail.com)
+// 
+// Permission is hereby granted, free of charge, to any person obtaining a copy of this software
+// and associated documentation files (the “Software”), to deal in the Software without restriction,
+// including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense,
+// and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so,
+// subject to the following conditions:
 // 
 // The above copyright notice and this permission notice shall be included in all
 // copies or substantial portions of the Software.
 // 
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
 // FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
 // COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
 // IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
 #endregion
 
 using System;
@@ -119,9 +119,7 @@ namespace netDxf.Collections
                 throw new ArgumentNullException(nameof(layout));
             }
 
-            Layout add;
-
-            if (this.list.TryGetValue(layout.Name, out add))
+            if (this.list.TryGetValue(layout.Name, out Layout add))
             {
                 return add;
             }
@@ -190,11 +188,20 @@ namespace netDxf.Collections
         /// <remarks>Reserved layouts or any other referenced by objects cannot be removed.</remarks>
         public override bool Remove(Layout item)
         {
-            if (item == null) return false;
+            if (item == null)
+            {
+                return false;
+            }
 
-            if (!this.Contains(item)) return false;
+            if (!this.Contains(item))
+            {
+                return false;
+            }
 
-            if (item.IsReserved) return false;
+            if (item.IsReserved)
+            {
+                return false;
+            }
 
             // remove the entities of the layout
             List<DxfObject> refObjects = this.GetReferences(item.Name);
@@ -204,7 +211,7 @@ namespace netDxf.Collections
                 refObjects.CopyTo(entities);
                 foreach (DxfObject e in entities)
                 {
-                    this.Owner.RemoveEntity(e as EntityObject);
+                    this.Owner.Entities.Remove(e as EntityObject);
                 }
             }
 
@@ -239,8 +246,7 @@ namespace netDxf.Collections
                 if (l.IsPaperSpace)
                 {
                     string blockName = l.AssociatedBlock.Name.Remove(0, Block.PaperSpace.Name.Length);
-                    int index;
-                    if (int.TryParse(blockName, out index))
+                    if (int.TryParse(blockName, out int index))
                     {
                         names.Add(index);
                     }

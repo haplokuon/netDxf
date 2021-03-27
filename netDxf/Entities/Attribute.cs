@@ -1,23 +1,23 @@
-#region netDxf library, Copyright (C) 2009-2019 Daniel Carvajal (haplokuon@gmail.com)
-
-//                        netDxf library
-// Copyright (C) 2009-2019 Daniel Carvajal (haplokuon@gmail.com)
+#region netDxf library licensed under the MIT License, Copyright © 2009-2021 Daniel Carvajal (haplokuon@gmail.com)
 // 
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2.1 of the License, or (at your option) any later version.
+//                        netDxf library
+// Copyright © 2021 Daniel Carvajal (haplokuon@gmail.com)
+// 
+// Permission is hereby granted, free of charge, to any person obtaining a copy of this software
+// and associated documentation files (the “Software”), to deal in the Software without restriction,
+// including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense,
+// and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so,
+// subject to the following conditions:
 // 
 // The above copyright notice and this permission notice shall be included in all
 // copies or substantial portions of the Software.
 // 
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
 // FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
 // COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
 // IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
 #endregion
 
 using System;
@@ -27,7 +27,7 @@ using netDxf.Tables;
 namespace netDxf.Entities
 {
     /// <summary>
-    /// Represents a attribute.
+    /// Represents an attribute.
     /// </summary>
     /// <remarks>
     /// The attribute position, rotation, height and width factor values also includes the transformation of the <see cref="Insert">Insert</see> entity to which it belongs.<br />
@@ -104,7 +104,7 @@ namespace netDxf.Entities
         private Vector3 normal;
 
         private AttributeDefinition definition;
-        private string tag;
+        private readonly string tag;
         private string attValue;
         private TextStyle style;
         private Vector3 position;
@@ -177,11 +177,7 @@ namespace netDxf.Entities
             get { return this.color; }
             set
             {
-                if (value == null)
-                {
-                    throw new ArgumentNullException(nameof(value));
-                }
-                this.color = value;
+                this.color = value ?? throw new ArgumentNullException(nameof(value));
             }
         }
 
@@ -234,11 +230,7 @@ namespace netDxf.Entities
             get { return this.transparency; }
             set
             {
-                if (value == null)
-                {
-                    throw new ArgumentNullException(nameof(value));
-                }
-                this.transparency = value;
+                this.transparency = value ?? throw new ArgumentNullException(nameof(value));
             }
         }
 
@@ -529,7 +521,7 @@ namespace netDxf.Entities
 
             if (mirrText)
             {
-                if (Vector2.CrossProduct(newUvector, newVvector) < 0)
+                if (Vector2.CrossProduct(newUvector, newVvector) < 0.0)
                 {
                     newObliqueAngle = 90 - (newRotation - newObliqueAngle);
                     if (!(this.Alignment == TextAlignment.Fit || this.Alignment == TextAlignment.Aligned))
@@ -704,7 +696,7 @@ namespace netDxf.Entities
 
             foreach (XData data in this.XData.Values)
             {
-                entity.XData.Add((XData) data.Clone());
+                entity.XData.Add((XData)data.Clone());
             }
 
             return entity;

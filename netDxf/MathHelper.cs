@@ -1,23 +1,23 @@
-﻿#region netDxf library, Copyright (C) 2009-2019 Daniel Carvajal (haplokuon@gmail.com)
-
-//                        netDxf library
-// Copyright (C) 2009-2019 Daniel Carvajal (haplokuon@gmail.com)
+﻿#region netDxf library licensed under the MIT License, Copyright © 2009-2021 Daniel Carvajal (haplokuon@gmail.com)
 // 
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2.1 of the License, or (at your option) any later version.
+//                        netDxf library
+// Copyright © 2021 Daniel Carvajal (haplokuon@gmail.com)
+// 
+// Permission is hereby granted, free of charge, to any person obtaining a copy of this software
+// and associated documentation files (the “Software”), to deal in the Software without restriction,
+// including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense,
+// and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so,
+// subject to the following conditions:
 // 
 // The above copyright notice and this permission notice shall be included in all
 // copies or substantial portions of the Software.
 // 
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
 // FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
 // COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
 // IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
 #endregion
 
 using System;
@@ -89,8 +89,10 @@ namespace netDxf
             get { return epsilon; }
             set
             {
-                if(value<=0.0)
+                if (value <= 0.0)
+                {
                     throw new ArgumentOutOfRangeException(nameof(value), value, "The epsilon value must be a positive number greater than zero.");
+                }
                 epsilon = value;
             }
         }
@@ -120,9 +122,8 @@ namespace netDxf
         /// <summary>
         /// Returns a value indicating the sign of a double-precision floating-point number.
         /// </summary>
-        /// <param name="number">Double precision number.
+        /// <param name="number">Double precision number.</param>
         /// <param name="threshold">Tolerance.</param>
-        /// </param>
         /// <returns>
         /// A number that indicates the sign of value.
         /// Return value, meaning:<br />
@@ -219,15 +220,15 @@ namespace netDxf
 
             double sin = Math.Sin(rotation);
             double cos = Math.Cos(rotation);
-            if (from == CoordinateSystem.World && to == CoordinateSystem.Object)
+            switch (from)
             {
-                return new Vector2(point.X*cos + point.Y*sin, -point.X*sin + point.Y*cos);
+                case CoordinateSystem.World when to == CoordinateSystem.Object:
+                    return new Vector2(point.X*cos + point.Y*sin, -point.X*sin + point.Y*cos);
+                case CoordinateSystem.Object when to == CoordinateSystem.World:
+                    return new Vector2(point.X*cos - point.Y*sin, point.X*sin + point.Y*cos);
+                default:
+                    return point;
             }
-            if (from == CoordinateSystem.Object && to == CoordinateSystem.World)
-            {
-                return new Vector2(point.X*cos - point.Y*sin, point.X*sin + point.Y*cos);
-            }
-            return point;
         }
 
         /// <summary>
@@ -255,25 +256,29 @@ namespace netDxf
             double cos = Math.Cos(rotation);
 
             List<Vector2> transPoints;
-            if (from == CoordinateSystem.World && to == CoordinateSystem.Object)
+            switch (from)
             {
-                transPoints = new List<Vector2>();
-                foreach (Vector2 p in points)
+                case CoordinateSystem.World when to == CoordinateSystem.Object:
                 {
-                    transPoints.Add(new Vector2(p.X*cos + p.Y*sin, -p.X*sin + p.Y*cos));
+                    transPoints = new List<Vector2>();
+                    foreach (Vector2 p in points)
+                    {
+                        transPoints.Add(new Vector2(p.X*cos + p.Y*sin, -p.X*sin + p.Y*cos));
+                    }
+                    return transPoints;
                 }
-                return transPoints;
-            }
-            if (from == CoordinateSystem.Object && to == CoordinateSystem.World)
-            {
-                transPoints = new List<Vector2>();
-                foreach (Vector2 p in points)
+                case CoordinateSystem.Object when to == CoordinateSystem.World:
                 {
-                    transPoints.Add(new Vector2(p.X*cos - p.Y*sin, p.X*sin + p.Y*cos));
+                    transPoints = new List<Vector2>();
+                    foreach (Vector2 p in points)
+                    {
+                        transPoints.Add(new Vector2(p.X*cos - p.Y*sin, p.X*sin + p.Y*cos));
+                    }
+                    return transPoints;
                 }
-                return transPoints;
+                default:
+                    return new List<Vector2>(points);
             }
-            return new List<Vector2>(points);
         }
 
         /// <summary>
@@ -293,16 +298,16 @@ namespace netDxf
             }
 
             Matrix3 trans = ArbitraryAxis(zAxis);
-            if (from == CoordinateSystem.World && to == CoordinateSystem.Object)
+            switch (from)
             {
-                trans = trans.Transpose();
-                return trans*point;
+                case CoordinateSystem.World when to == CoordinateSystem.Object:
+                    trans = trans.Transpose();
+                    return trans*point;
+                case CoordinateSystem.Object when to == CoordinateSystem.World:
+                    return trans*point;
+                default:
+                    return point;
             }
-            if (from == CoordinateSystem.Object && to == CoordinateSystem.World)
-            {
-                return trans*point;
-            }
-            return point;
         }
 
         /// <summary>
@@ -327,26 +332,30 @@ namespace netDxf
 
             Matrix3 trans = ArbitraryAxis(zAxis);
             List<Vector3> transPoints;
-            if (from == CoordinateSystem.World && to == CoordinateSystem.Object)
+            switch (from)
             {
-                transPoints = new List<Vector3>();
-                trans = trans.Transpose();
-                foreach (Vector3 p in points)
+                case CoordinateSystem.World when to == CoordinateSystem.Object:
                 {
-                    transPoints.Add(trans*p);
+                    transPoints = new List<Vector3>();
+                    trans = trans.Transpose();
+                    foreach (Vector3 p in points)
+                    {
+                        transPoints.Add(trans*p);
+                    }
+                    return transPoints;
                 }
-                return transPoints;
-            }
-            if (from == CoordinateSystem.Object && to == CoordinateSystem.World)
-            {
-                transPoints = new List<Vector3>();
-                foreach (Vector3 p in points)
+                case CoordinateSystem.Object when to == CoordinateSystem.World:
                 {
-                    transPoints.Add(trans*p);
+                    transPoints = new List<Vector3>();
+                    foreach (Vector3 p in points)
+                    {
+                        transPoints.Add(trans*p);
+                    }
+                    return transPoints;
                 }
-                return transPoints;
+                default:
+                    return new List<Vector3>(points);
             }
-            return new List<Vector3>(points);
         }
 
         /// <summary>
@@ -503,13 +512,13 @@ namespace netDxf
             // test for parallelism.
             if (Vector2.AreParallel(dir0, dir1, threshold))
             {
-                return new Vector2(double.NaN, double.NaN);
+                return Vector2.NaN;
             }
 
             // lines are not parallel
             Vector2 v = point1 - point0;
             double cross = Vector2.CrossProduct(dir0, dir1);
-            double s = (v.X*dir1.Y - v.Y*dir1.X)/cross;
+            double s = (v.X * dir1.Y - v.Y * dir1.X) / cross;
             return point0 + s*dir0;
         }
 
@@ -561,17 +570,17 @@ namespace netDxf
             double cos = Math.Cos(angle);
             double sin = Math.Sin(angle);
 
-            q.X += (cos + (1 - cos)*axis.X*axis.X)*v.X;
-            q.X += ((1 - cos)*axis.X*axis.Y - axis.Z*sin)*v.Y;
-            q.X += ((1 - cos)*axis.X*axis.Z + axis.Y*sin)*v.Z;
+            q.X += (cos + (1 - cos) * axis.X * axis.X) * v.X;
+            q.X += ((1 - cos) * axis.X * axis.Y - axis.Z * sin) * v.Y;
+            q.X += ((1 - cos) * axis.X * axis.Z + axis.Y * sin) * v.Z;
 
-            q.Y += ((1 - cos)*axis.X*axis.Y + axis.Z*sin)*v.X;
-            q.Y += (cos + (1 - cos)*axis.Y*axis.Y)*v.Y;
-            q.Y += ((1 - cos)*axis.Y*axis.Z - axis.X*sin)*v.Z;
+            q.Y += ((1 - cos) * axis.X * axis.Y + axis.Z * sin) * v.X;
+            q.Y += (cos + (1 - cos) * axis.Y * axis.Y) * v.Y;
+            q.Y += ((1 - cos) * axis.Y * axis.Z - axis.X * sin) * v.Z;
 
-            q.Z += ((1 - cos)*axis.X*axis.Z - axis.Y*sin)*v.X;
-            q.Z += ((1 - cos)*axis.Y*axis.Z + axis.X*sin)*v.Y;
-            q.Z += (cos + (1 - cos)*axis.Z*axis.Z)*v.Z;
+            q.Z += ((1 - cos) * axis.X * axis.Z - axis.Y * sin) * v.X;
+            q.Z += ((1 - cos) * axis.Y * axis.Z + axis.X * sin) * v.Y;
+            q.Z += (cos + (1 - cos) * axis.Z * axis.Z) * v.Z;
 
             return q;
         }

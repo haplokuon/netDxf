@@ -1,23 +1,23 @@
-#region netDxf library, Copyright (C) 2009-2019 Daniel Carvajal (haplokuon@gmail.com)
-
-//                        netDxf library
-// Copyright (C) 2009-2019 Daniel Carvajal (haplokuon@gmail.com)
+#region netDxf library licensed under the MIT License, Copyright © 2009-2021 Daniel Carvajal (haplokuon@gmail.com)
 // 
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2.1 of the License, or (at your option) any later version.
+//                        netDxf library
+// Copyright © 2021 Daniel Carvajal (haplokuon@gmail.com)
+// 
+// Permission is hereby granted, free of charge, to any person obtaining a copy of this software
+// and associated documentation files (the “Software”), to deal in the Software without restriction,
+// including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense,
+// and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so,
+// subject to the following conditions:
 // 
 // The above copyright notice and this permission notice shall be included in all
 // copies or substantial portions of the Software.
 // 
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
 // FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
 // COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
 // IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 // CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
 #endregion
 
 using System;
@@ -30,7 +30,7 @@ namespace netDxf
     /// <summary>
     /// Helper class for working with 'extended' enums using <see cref="StringValueAttribute"/> attributes.
     /// </summary>
-    public class StringEnum<T> // TODO: when upgrading to C# 7.3 add constrain System.Enum, the check if T is an Enum will not be necessary
+    public class StringEnum<T> where T : Enum
     {
         #region private fields
 
@@ -46,8 +46,6 @@ namespace netDxf
         public StringEnum()
         {
             this.enumType = typeof(T);
-            if(!this.enumType.IsEnum)
-                throw new ArgumentException("T must be an Enum", nameof(T));
         }
 
         #endregion
@@ -78,9 +76,16 @@ namespace netDxf
             foreach (FieldInfo fi in this.enumType.GetFields())
             {
                 //Check for our custom attribute
-                StringValueAttribute[] attrs = fi.GetCustomAttributes(typeof (StringValueAttribute), false) as StringValueAttribute[];
-                if (attrs == null) continue;
-                if (attrs.Length > 0) values.Add(attrs[0].Value);
+                StringValueAttribute[] attrs = fi.GetCustomAttributes(typeof(StringValueAttribute), false) as StringValueAttribute[];
+                if (attrs == null)
+                {
+                    continue;
+                }
+
+                if (attrs.Length > 0)
+                {
+                    values.Add(attrs[0].Value);
+                }
             }
 
             return values;
@@ -97,8 +102,12 @@ namespace netDxf
             foreach (FieldInfo fi in this.enumType.GetFields())
             {
                 //Check for our custom attribute
-                StringValueAttribute[] attrs = fi.GetCustomAttributes(typeof (StringValueAttribute), false) as StringValueAttribute[];
-                if (attrs == null) continue;
+                StringValueAttribute[] attrs = fi.GetCustomAttributes(typeof(StringValueAttribute), false) as StringValueAttribute[];
+                if (attrs == null)
+                {
+                    continue;
+                }
+
                 if (attrs.Length > 0)
                 {
                     object str = Enum.Parse(this.enumType, fi.Name);
@@ -110,7 +119,7 @@ namespace netDxf
         }
 
         #endregion
-        
+
         #region static methods
 
         /// <summary>
@@ -152,19 +161,29 @@ namespace netDxf
             Hashtable stringValues = new Hashtable();
 
             if (stringValues.ContainsKey(value))
-                output = ((StringValueAttribute) stringValues[value]).Value;
+            {
+                if (stringValues[value] != null)
+                {
+                    output = ((StringValueAttribute) stringValues[value]).Value;
+                }
+            }
             else
             {
                 //Look for our 'StringValueAttribute' in the field's custom attributes
                 FieldInfo fi = type.GetField(value.ToString());
-                StringValueAttribute[] attrs = fi.GetCustomAttributes(typeof (StringValueAttribute), false) as StringValueAttribute[];
-                if (attrs != null)
-                    if (attrs.Length > 0)
+                if (fi != null)
+                {
+                    if (fi.GetCustomAttributes(typeof(StringValueAttribute), false) is StringValueAttribute[] attrs)
                     {
-                        stringValues.Add(value, attrs[0]);
-                        output = attrs[0].Value;
+                        if (attrs.Length > 0)
+                        {
+                            stringValues.Add(value, attrs[0]);
+                            output = attrs[0].Value;
+                        }
                     }
+                }
             }
+
             return output;
         }
 
@@ -187,29 +206,28 @@ namespace netDxf
         public static T Parse(string value, StringComparison comparisonType)
         {
             Type type = typeof(T);
-            if (type == null)
-                throw new ArgumentNullException(nameof(type));
-
-            T output = default(T);
+            T output = default;
             string enumStringValue = null;
-
-            if (!type.IsEnum)
-                throw new ArgumentException(string.Format("The supplied type \"{0}\" must be an Enum.", type));
 
             //Look for our string value associated with fields in this enum
             foreach (FieldInfo fi in type.GetFields())
             {
                 //Check for our custom attribute
-                StringValueAttribute[] attrs = fi.GetCustomAttributes(typeof (StringValueAttribute), false) as StringValueAttribute[];
-                if (attrs != null)
+                if (fi.GetCustomAttributes(typeof(StringValueAttribute), false) is StringValueAttribute[] attrs)
+                {
                     if (attrs.Length > 0)
+                    {
                         enumStringValue = attrs[0].Value;
+                    }
+                }
 
                 //Check for equality then select actual enum value.
                 if (string.Compare(enumStringValue, value, comparisonType) == 0)
                 {
                     if (Enum.IsDefined(type, fi.Name))
+                    {
                         output = (T) Enum.Parse(type, fi.Name);
+                    }
                     break;
                 }
             }
