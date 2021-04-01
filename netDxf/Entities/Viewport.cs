@@ -485,7 +485,7 @@ namespace netDxf.Entities
             /// <summary>
             /// Gets or sets the ShadePlot mode.
             /// </summary>
-		    public ShadePlotMode ShadePlotMode 
+	    public ShadePlotMode ShadePlotMode 
             { 
                 get { return this.shadePlotMode; }
                 set { this.shadePlotMode = value; }
