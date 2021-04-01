@@ -4695,6 +4695,8 @@ namespace netDxf.IO
             this.chunk.Write(112, vp.UcsYAxis.X);
             this.chunk.Write(122, vp.UcsYAxis.Y);
             this.chunk.Write(132, vp.UcsYAxis.Z);
+            
+            this.chunk.Write(170, vp.ShadePlotMode);
 
             this.WriteXData(vp.XData);
         }
