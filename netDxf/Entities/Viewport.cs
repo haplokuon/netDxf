@@ -89,6 +89,7 @@ namespace netDxf.Entities
         private Vector3 ucsYAxis;
         private double elevation;
         private EntityObject boundary;
+        private ShadePlotMode shadePlotMode;
 
         #endregion
 
@@ -158,6 +159,7 @@ namespace netDxf.Entities
             this.ucsYAxis = Vector3.UnitY;
             this.elevation = 0.0;
             this.boundary = null;
+            this.shadePlotMode = ShadePlotMode.AsDisplayed;
         }
 
         #endregion
@@ -478,6 +480,15 @@ namespace netDxf.Entities
                 }
 
                 this.boundary = value;
+            }
+            
+            /// <summary>
+            /// Gets or sets the ShadePlot mode.
+            /// </summary>
+		    public ShadePlotMode ShadePlotMode 
+            { 
+                get { return this.shadePlotMode; }
+                set { this.shadePlotMode = value; }
             }
         }
 
