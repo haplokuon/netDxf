@@ -145,12 +145,22 @@ namespace netDxf.IO
         /// <param name="supportFolders">List of the document support folders.</param>
         public DxfDocument Read(Stream stream, IEnumerable<string> supportFolders)
         {
-            long startPosition = stream.Position;
+            long startPosition;
+
             if (stream == null)
             {
                 throw new ArgumentNullException(nameof(stream));
             }
 
+            try
+            {
+                startPosition = stream.Position;
+            }
+            catch (NotSupportedException ex)
+            {
+                throw new ArgumentException("Streams with not accessible Position property are not supported.", nameof(stream), ex);
+            }
+            
             DxfVersion version = DxfDocument.CheckDxfFileVersion(stream, out this.isBinary);
             stream.Position = startPosition;
 
@@ -306,7 +316,22 @@ namespace netDxf.IO
 
         public static string CheckHeaderVariable(Stream stream, string headerVariable, out bool isBinary)
         {
-            long startPosition = stream.Position;
+            long startPosition;
+
+            if (stream == null)
+            {
+                throw new ArgumentNullException(nameof(stream));
+            }
+
+            try
+            {
+                startPosition = stream.Position;
+            }
+            catch (NotSupportedException ex)
+            {
+                throw new ArgumentException("Streams with not accessible Position property are not supported.", nameof(stream), ex);
+            }
+
             ICodeValueReader chunk;
             isBinary = IsBinary(stream);
             stream.Position = startPosition;
@@ -10951,6 +10976,11 @@ namespace netDxf.IO
                                 if (o is Layer layer)
                                 {
                                     properties = this.ReadLayerStateProperties(layer.Name, enumerator);
+                                    // if the linetype does not exist in the document, the default will be assigned
+                                    if (!this.doc.Linetypes.Contains(properties.LinetypeName))
+                                    {
+                                        properties.LinetypeName = Linetype.DefaultName;
+                                    }
                                     layerState.Properties.Add(properties.Name, properties);
                                 }
                                 else
@@ -10961,7 +10991,17 @@ namespace netDxf.IO
                                 break;
                             case 8:
                                 properties = this.ReadLayerStateProperties((string) recordEntry.Value, enumerator);
-                                layerState.Properties.Add(properties.Name, properties);
+                                // only layer properties that exist in the actual document will be added
+                                if (this.doc.Layers.Contains(properties.Name))
+                                {
+                                    // if the linetype does not exist in the document, the default will be assigned
+                                    if (!this.doc.Linetypes.Contains(properties.LinetypeName))
+                                    {
+                                        properties.LinetypeName = Linetype.DefaultName;
+                                    }
+                                    layerState.Properties.Add(properties.Name, properties);
+                                }
+
                                 break;
                             default:
                                 enumerator.MoveNext();
@@ -10975,7 +11015,7 @@ namespace netDxf.IO
         private LayerStateProperties ReadLayerStateProperties(string name, IEnumerator<XRecordEntry> enumerator)
         {
             LayerPropertiesFlags flags = LayerPropertiesFlags.Plot;
-            string lineTypeName = string.Empty;
+            string lineTypeName = Linetype.DefaultName;
             //string plotStyle = string.Empty;
             AciColor color = AciColor.Default;
             Lineweight lineweight = Lineweight.Default;
@@ -11025,8 +11065,7 @@ namespace netDxf.IO
                 }
             }
 
-
-            LayerStateProperties properties = new LayerStateProperties(name)
+            return new LayerStateProperties(name)
             {
                 Flags = flags,
                 Color = color,
@@ -11035,8 +11074,6 @@ namespace netDxf.IO
                 //PlotStyleName = plotStyle,
                 Transparency = transparency
             };
-
-            return properties;
         }
 
         private void RelinkOrphanLayouts()

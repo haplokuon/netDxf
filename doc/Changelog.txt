@@ -1,5 +1,13 @@
 ## Change history
 
+### [2021/05/02]
+* Added netDxf.nuspec file.
+* Ellipses with its major axis smaller than its minor axis are not allowed.
+* Streams with not accessible Position property are not supported.
+* (fixed) LayerState containing a non existent layer will not be added.
+	This behaviour differs when the LayerState comes from an external LAS file, in the latter case the non existent layer is added to the document. This is to allow the LAS file to be used layers templates.
+	Additionally if the LayerState points to a non existent linetype, the default "Standard" will be assigned.
+
 ### [2021/03/27]
 * The netDxf library is now licensed under the MIT License.
 * Updated solution file to Visual Studio 2019.

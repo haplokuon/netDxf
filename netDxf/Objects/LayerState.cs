@@ -342,7 +342,7 @@ namespace netDxf.Objects
         private static LayerStateProperties ReadLayerProperties(TextCodeValueReader chunk)
         {
             LayerPropertiesFlags flags = LayerPropertiesFlags.Plot;
-            string lineType = String.Empty;
+            string lineType = Linetype.DefaultName;
             //string plotStyle = string.Empty;
             AciColor color = AciColor.Default;
             Lineweight lineweight = Lineweight.Default;

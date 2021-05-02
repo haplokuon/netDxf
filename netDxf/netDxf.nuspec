@@ -1,0 +1,22 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2012/06/nuspec.xsd">
+  <metadata>
+    <id>netDxf</id>
+    <version>3.0.0</version>
+    <authors>Daniel Carvajal</authors>
+    <projectUrl>https://github.com/haplokuon/netDxf</projectUrl>
+	<license type="expression">MIT License</license>
+    <licenseUrl>https://github.com/haplokuon/netDxf/blob/master/LICENSE</licenseUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>netDxf is a .net library programmed in C# to read and write AutoCAD DXF files. It supports AutoCad2000, AutoCad2004, AutoCad2007, AutoCad2010, AutoCad2013, and AutoCad2018 DXF database versions, in both text and binary format.</description>
+    <copyright>Daniel Carvajal © 2021</copyright>
+	<tags>netDxf, DXF, AutoCAD</tags>
+    <repository url="https://github.com/haplokuon/netDxf" />
+    <dependencies>
+      <group targetFramework=".NETFramework4.5" />
+      <group targetFramework=".NETCoreApp3.1" />
+      <group targetFramework="net5.0" />
+      <group targetFramework=".NETStandard2.1" />
+    </dependencies>
+  </metadata>
+</package>

@@ -1894,28 +1894,29 @@ namespace netDxf.IO
             Debug.Assert(this.activeSection == DxfObjectCode.EntitiesSection || this.activeSection == DxfObjectCode.BlocksSection);
             Debug.Assert(entity != null);
 
-            // hatches with zero boundaries are not allowed
             if (entity.Type == EntityType.Hatch && ((Hatch) entity).BoundaryPaths.Count == 0)
             {
-                return;
+                throw new ArgumentException("Hatches with zero boundaries are not allowed." + "Entity handle: " + entity.Handle, nameof(entity));
             }
 
-            // leader entities with less than two vertexes are not allowed
             if (entity.Type == EntityType.Leader && ((Leader) entity).Vertexes.Count < 2)
             {
-                return;
+                throw new ArgumentException("Leader entities with less than two vertexes are not allowed." + "Entity handle: " + entity.Handle, nameof(entity));
             }
 
-            // polyline entities with less than two vertexes are not allowed
             if (entity.Type == EntityType.Polyline && ((Polyline) entity).Vertexes.Count < 2)
             {
-                return;
+                throw new ArgumentException("Polyline entities with less than two vertexes are not allowed." + "Entity handle: " + entity.Handle, nameof(entity));
             }
 
-            // lwPolyline entities with less than two vertexes are not allowed
             if (entity.Type == EntityType.LwPolyline && ((LwPolyline) entity).Vertexes.Count < 2)
             {
-                return;
+                throw new ArgumentException("LwPolyline entities with less than two vertexes are not allowed." + "Entity handle: " + entity.Handle, nameof(entity));
+            }
+
+            if (entity.Type == EntityType.Ellipse && ((Ellipse) entity).MajorAxis < ((Ellipse) entity).MinorAxis)
+            {
+                throw new ArgumentException("Ellipses with its major axis smaller than its minor axis are not allowed." + "Entity handle: " + entity.Handle, nameof(entity));
             }
 
             this.WriteEntityCommonCodes(entity, layout);

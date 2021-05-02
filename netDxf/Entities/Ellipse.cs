@@ -217,15 +217,23 @@ namespace netDxf.Entities
             : base(EntityType.Ellipse, DxfObjectCode.Ellipse)
         {
             this.center = center;
+
             if (majorAxis <= 0)
             {
                 throw new ArgumentOutOfRangeException(nameof(majorAxis), majorAxis, "The major axis value must be greater than zero.");
             }
-            this.majorAxis = majorAxis;
+
             if (minorAxis <= 0)
             {
                 throw new ArgumentOutOfRangeException(nameof(minorAxis), minorAxis, "The minor axis value must be greater than zero.");
             }
+
+            if (minorAxis > majorAxis)
+            {
+                throw new ArgumentException("The major axis must be greater than the minor axis.");
+            }
+
+            this.majorAxis = majorAxis;
             this.minorAxis = minorAxis;
             this.startAngle = 0.0;
             this.endAngle = 0.0;
@@ -250,6 +258,7 @@ namespace netDxf.Entities
         /// <summary>
         /// Gets or sets the ellipse mayor axis.
         /// </summary>
+        /// <remarks>The MajorAxis value must be positive and greater than the MinorAxis.</remarks>
         public double MajorAxis
         {
             get { return this.majorAxis; }
@@ -266,6 +275,7 @@ namespace netDxf.Entities
         /// <summary>
         /// Gets or sets the ellipse minor axis.
         /// </summary>
+        /// <remarks>The MinorAxis value must be positive and smaller than the MajorAxis.</remarks>
         public double MinorAxis
         {
             get { return this.minorAxis; }
