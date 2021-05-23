@@ -77,7 +77,7 @@ namespace netDxf
 
             if (array.Length != 2)
             {
-                throw new ArgumentOutOfRangeException(nameof(array), array.Length, "The dimension of the array must be two");
+                throw new ArgumentOutOfRangeException(nameof(array), array.Length, "The dimension of the array must be two.");
             }
 
             this.x = array[0];
@@ -274,7 +274,7 @@ namespace netDxf
         /// <returns>Square distance.</returns>
         public static double SquareDistance(Vector2 u, Vector2 v)
         {
-            return (u.X - v.X)*(u.X - v.X) + (u.Y - v.Y)*(u.Y - v.Y);
+            return (u.X - v.X) * (u.X - v.X) + (u.Y - v.Y) * (u.Y - v.Y);
         }
 
         /// <summary>
@@ -323,7 +323,7 @@ namespace netDxf
         /// <returns>Angle in radians.</returns>
         public static double AngleBetween(Vector2 u, Vector2 v)
         {
-            double cos = DotProduct(u, v)/(u.Modulus()*v.Modulus());
+            double cos = DotProduct(u, v) / (u.Modulus() * v.Modulus());
             if (cos >= 1.0)
             {
                 return 0.0;
@@ -345,7 +345,7 @@ namespace netDxf
         /// <returns>Vector2.</returns>
         public static Vector2 MidPoint(Vector2 u, Vector2 v)
         {
-            return new Vector2((v.X + u.X)*0.5, (v.Y + u.Y)*0.5);
+            return new Vector2((v.X + u.X) * 0.5, (v.Y + u.Y) * 0.5);
         }
 
         /// <summary>
@@ -423,8 +423,8 @@ namespace netDxf
                 return NaN;
             }
 
-            double modInv = 1/mod;
-            return new Vector2(u.x*modInv, u.y*modInv) {isNormalized = true};
+            double modInv = 1 / mod;
+            return new Vector2(u.x * modInv, u.y * modInv) {isNormalized = true};
         }
 
         #endregion
@@ -638,7 +638,10 @@ namespace netDxf
         /// </summary>
         public void Normalize()
         {
-            if (this.isNormalized) return;
+            if (this.isNormalized)
+            {
+                return;
+            }
 
             double mod = this.Modulus();
             if (MathHelper.IsZero(mod))
@@ -660,12 +663,7 @@ namespace netDxf
         /// <returns>Vector modulus.</returns>
         public double Modulus()
         {
-            if (this.isNormalized)
-            {
-                return 1.0;
-            }
-
-            return Math.Sqrt(DotProduct(this, this));
+            return this.isNormalized ? 1.0 : Math.Sqrt(DotProduct(this, this));
         }
 
         /// <summary>

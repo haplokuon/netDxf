@@ -6781,41 +6781,59 @@
             <summary>
             Initializes a new instance of the <c>Leader</c> class.
             </summary>
+            <param name="vertexes">List of leader vertexes in local coordinates.</param>
         </member>
         <member name="M:netDxf.Entities.Leader.#ctor(System.Collections.Generic.IEnumerable{netDxf.Vector2},netDxf.Tables.DimensionStyle)">
             <summary>
             Initializes a new instance of the <c>Leader</c> class.
             </summary>
+            <param name="vertexes">List of leader vertexes in local coordinates.</param>
+            <param name="style">Leader style.</param>
         </member>
         <member name="M:netDxf.Entities.Leader.#ctor(System.String,System.Collections.Generic.IEnumerable{netDxf.Vector2})">
             <summary>
             Initializes a new instance of the <c>Leader</c> class.
             </summary>
+            <param name="text">Leader text annotation.</param>
+            <param name="vertexes">List of leader vertexes in local coordinates.</param>
         </member>
         <member name="M:netDxf.Entities.Leader.#ctor(System.String,System.Collections.Generic.IEnumerable{netDxf.Vector2},netDxf.Tables.DimensionStyle)">
             <summary>
             Initializes a new instance of the <c>Leader</c> class.
             </summary>
+            <param name="text">Leader text annotation.</param>
+            <param name="vertexes">List of leader vertexes in local coordinates.</param>
+            <param name="style">Leader style.</param>
         </member>
         <member name="M:netDxf.Entities.Leader.#ctor(netDxf.Entities.ToleranceEntry,System.Collections.Generic.IEnumerable{netDxf.Vector2})">
             <summary>
             Initializes a new instance of the <c>Leader</c> class.
             </summary>
+            <param name="tolerance">Leader tolerance annotation.</param>
+            <param name="vertexes">List of leader vertexes in local coordinates.</param>
         </member>
         <member name="M:netDxf.Entities.Leader.#ctor(netDxf.Entities.ToleranceEntry,System.Collections.Generic.IEnumerable{netDxf.Vector2},netDxf.Tables.DimensionStyle)">
             <summary>
             Initializes a new instance of the <c>Leader</c> class.
             </summary>
+            <param name="tolerance">Leader tolerance annotation.</param>
+            <param name="vertexes">List of leader vertexes in local coordinates.</param>
+            <param name="style">Leader style.</param>
         </member>
         <member name="M:netDxf.Entities.Leader.#ctor(netDxf.Blocks.Block,System.Collections.Generic.IEnumerable{netDxf.Vector2})">
             <summary>
             Initializes a new instance of the <c>Leader</c> class.
             </summary>
+            <param name="block">Leader block annotation.</param>
+            <param name="vertexes">List of leader vertexes in local coordinates.</param>
         </member>
         <member name="M:netDxf.Entities.Leader.#ctor(netDxf.Blocks.Block,System.Collections.Generic.IEnumerable{netDxf.Vector2},netDxf.Tables.DimensionStyle)">
             <summary>
             Initializes a new instance of the <c>Leader</c> class.
             </summary>
+            <param name="block">Leader block annotation.</param>
+            <param name="vertexes">List of leader vertexes in local coordinates.</param>
+            <param name="style">Leader style.</param>
         </member>
         <member name="P:netDxf.Entities.Leader.Style">
             <summary>
@@ -6827,8 +6845,7 @@
             Gets the dimension style overrides list.
             </summary>
             <remarks>
-            Any dimension style value stored in this list will override its corresponding value in the assigned style to
-            the dimension.
+            Any dimension style value stored in this list will override its corresponding value in the assigned style.
             </remarks>
         </member>
         <member name="P:netDxf.Entities.Leader.ShowArrowhead">
@@ -6845,6 +6862,9 @@
             <summary>
             Gets the leader vertexes list in local coordinates.
             </summary>
+            <remarks>
+            The leader vertexes list must have at least two points.
+            </remarks>
         </member>
         <member name="P:netDxf.Entities.Leader.Annotation">
             <summary>
@@ -6863,7 +6883,6 @@
             </summary>
             <remarks>
             This property allows easy access to the last leader vertex, aka leader hook position.
-            Remember the leader vertexes list must have at least two points.
             </remarks>
         </member>
         <member name="P:netDxf.Entities.Leader.HasHookline">
@@ -6894,6 +6913,11 @@
         <member name="P:netDxf.Entities.Leader.Offset">
             <summary>
             Gets or sets the offset from the last leader vertex (hook) to the annotation position.
+            </summary>
+        </member>
+        <member name="P:netDxf.Entities.Leader.Direction">
+            <summary>
+            Gets the leader annotation direction.
             </summary>
         </member>
         <member name="M:netDxf.Entities.Leader.Update(System.Boolean)">
@@ -9359,6 +9383,9 @@
             <param name="controlPoints">Spline control points.</param>
             <param name="knots">Spline knot vector.</param>
             <param name="degree">Degree of the spline curve.  Valid values are 1 (linear), degree 2 (quadratic), degree 3 (cubic), and so on up to degree 10.</param>
+            <param name="fitPoints">Spine fit points.</param>
+            <param name="method">Spline creation method.</param>
+            <param name="isPeriodic">Sets if the spline as periodic closed (default false).</param>
         </member>
         <member name="P:netDxf.Entities.Spline.FitPoints">
             <summary>
@@ -12198,6 +12225,42 @@
             <param name="from">Points coordinate system.</param>
             <param name="to">Coordinate system of the transformed points.</param>
             <returns>Transformed point list.</returns>
+        </member>
+        <member name="M:netDxf.MathHelper.Transform(netDxf.Vector2,netDxf.Vector3,System.Double)">
+            <summary>
+            Transform a 2d point from object coordinates to world coordinates.
+            </summary>
+            <param name="point">Points to transform.</param>
+            <param name="zAxis">Object normal vector.</param>
+            <param name="elevation">Object elevation.</param>
+            <returns>Transformed point.</returns>
+        </member>
+        <member name="M:netDxf.MathHelper.Transform(System.Collections.Generic.IEnumerable{netDxf.Vector2},netDxf.Vector3,System.Double)">
+            <summary>
+            Transform a 2d point list from object coordinates to world coordinates.
+            </summary>
+            <param name="points">Point to transform.</param>
+            <param name="zAxis">Object normal vector.</param>
+            <param name="elevation">Object elevation.</param>
+            <returns>Transformed points.</returns>
+        </member>
+        <member name="M:netDxf.MathHelper.Transform(netDxf.Vector3,netDxf.Vector3,System.Double@)">
+            <summary>
+            Transform a 3d point from world coordinates to object coordinates.
+            </summary>
+            <param name="point">Point to transform.</param>
+            <param name="zAxis">Object normal vector.</param>
+            <param name="elevation">Z axis value of the transformed point.</param>
+            <returns>Transformed point.</returns>
+        </member>
+        <member name="M:netDxf.MathHelper.Transform(System.Collections.Generic.IEnumerable{netDxf.Vector3},netDxf.Vector3,System.Double@)">
+            <summary>
+            Transform a 3d point list from world coordinates to object coordinates.
+            </summary>
+            <param name="points">Points to transform.</param>
+            <param name="zAxis">Object normal vector.</param>
+            <param name="elevation">Average Z axis value of the transformed points.</param>
+            <returns>Transformed points.</returns>
         </member>
         <member name="M:netDxf.MathHelper.ArbitraryAxis(netDxf.Vector3)">
             <summary>

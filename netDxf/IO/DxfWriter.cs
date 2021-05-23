@@ -2240,11 +2240,11 @@ namespace netDxf.IO
                     case EntityType.MText:
                         this.chunk.Write(73, (short) 0);
                         break;
+                    case EntityType.Tolerance:
+                        this.chunk.Write(73, (short) 1);
+                        break;
                     case EntityType.Insert:
                         this.chunk.Write(73, (short) 2);
-                        break;
-                    default:
-                        this.chunk.Write(73, (short) 3);
                         break;
                 }
             }
@@ -2287,17 +2287,13 @@ namespace netDxf.IO
 
             Vector3 dir = ocsVertexes[ocsVertexes.Count - 1] - ocsVertexes[ocsVertexes.Count - 2];
 
-            Vector3 xDir = MathHelper.Transform(new Vector3(dir.X, dir.Y, 0.0), leader.Normal, CoordinateSystem.Object, CoordinateSystem.World);
+            Vector3 xDir = MathHelper.Transform(leader.Direction, leader.Normal, 0.0);
             xDir.Normalize();
             this.chunk.Write(211, xDir.X);
             this.chunk.Write(221, xDir.Y);
             this.chunk.Write(231, xDir.Z);
 
-            Vector3 wcsOffset = MathHelper.Transform(new Vector3(leader.Offset.X, leader.Offset.Y, leader.Elevation), leader.Normal, CoordinateSystem.Object, CoordinateSystem.World);
-            this.chunk.Write(212, wcsOffset.X);
-            this.chunk.Write(222, wcsOffset.Y);
-            this.chunk.Write(232, wcsOffset.Z);
-
+            Vector3 wcsOffset = MathHelper.Transform(leader.Offset, leader.Normal, leader.Elevation);
             this.chunk.Write(213, wcsOffset.X);
             this.chunk.Write(223, wcsOffset.Y);
             this.chunk.Write(233, wcsOffset.Z);
@@ -2858,7 +2854,9 @@ namespace netDxf.IO
 
                 this.chunk.Write(62, mesh.Color.Index); // the polyface mesh vertex color should be the same as the polyface mesh color
                 if (mesh.Color.UseTrueColor)
+                {
                     this.chunk.Write(420, AciColor.ToTrueColor(mesh.Color));
+                }
                 this.chunk.Write(100, SubclassMarker.Vertex);
                 this.chunk.Write(100, SubclassMarker.PolyfaceMeshVertex);
                 this.chunk.Write(70, (short) v.Flags);
@@ -3399,11 +3397,14 @@ namespace netDxf.IO
         {
             this.chunk.Write(100, SubclassMarker.Dimension);
 
-            if(dim.Block != null)
+            if (dim.Block != null)
+            {
                 this.chunk.Write(2, this.EncodeNonAsciiCharacters(dim.Block.Name));
+            }
 
-            Vector3 ocsDef = new Vector3(dim.DefinitionPoint.X, dim.DefinitionPoint.Y, dim.Elevation);
-            Vector3 wcsDef = MathHelper.Transform(ocsDef, dim.Normal, CoordinateSystem.Object, CoordinateSystem.World);
+            //Vector3 ocsDef = new Vector3(dim.DefinitionPoint.X, dim.DefinitionPoint.Y, dim.Elevation);
+            //Vector3 wcsDef = MathHelper.Transform(ocsDef, dim.Normal, CoordinateSystem.Object, CoordinateSystem.World);
+            Vector3 wcsDef = MathHelper.Transform(dim.DefinitionPoint, dim.Normal, dim.Elevation);
             this.chunk.Write(10, wcsDef.X);
             this.chunk.Write(20, wcsDef.Y);
             this.chunk.Write(30, wcsDef.Z);
@@ -3606,23 +3607,23 @@ namespace netDxf.IO
                         break;
                     case DimensionStyleOverrideType.LeaderArrow:
                         xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 341));
-                        xdataEntry.XDataRecord.Add(styleOverride.Value != null
-                            ? new XDataRecord(XDataCode.DatabaseHandle, ((Block) styleOverride.Value).Record.Handle)
-                            : new XDataRecord(XDataCode.DatabaseHandle, "0"));
+                        xdataEntry.XDataRecord.Add(styleOverride.Value != null ?
+                            new XDataRecord(XDataCode.DatabaseHandle, ((Block) styleOverride.Value).Record.Handle) :
+                            new XDataRecord(XDataCode.DatabaseHandle, "0"));
                         break;
                     case DimensionStyleOverrideType.DimArrow1:
                         writeDIMSAH = true;
                         xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 343));
-                        xdataEntry.XDataRecord.Add(styleOverride.Value != null
-                            ? new XDataRecord(XDataCode.DatabaseHandle, ((Block) styleOverride.Value).Record.Handle)
-                            : new XDataRecord(XDataCode.DatabaseHandle, "0"));
+                        xdataEntry.XDataRecord.Add(styleOverride.Value != null ?
+                            new XDataRecord(XDataCode.DatabaseHandle, ((Block) styleOverride.Value).Record.Handle) :
+                            new XDataRecord(XDataCode.DatabaseHandle, "0"));
                         break;
                     case DimensionStyleOverrideType.DimArrow2:
                         writeDIMSAH = true;
                         xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 344));
-                        xdataEntry.XDataRecord.Add(styleOverride.Value != null
-                            ? new XDataRecord(XDataCode.DatabaseHandle, ((Block) styleOverride.Value).Record.Handle)
-                            : new XDataRecord(XDataCode.DatabaseHandle, "0"));
+                        xdataEntry.XDataRecord.Add(styleOverride.Value != null ?
+                            new XDataRecord(XDataCode.DatabaseHandle, ((Block) styleOverride.Value).Record.Handle) :
+                            new XDataRecord(XDataCode.DatabaseHandle, "0"));
                         break;
                     case DimensionStyleOverrideType.TextStyle:
                         xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 340));
@@ -3913,13 +3914,21 @@ namespace netDxf.IO
             {
                 short angSupress = 3;
                 if (suppressAngularLeadingZeros && suppressAngularTrailingZeros)
+                {
                     angSupress = 3;
+                }
                 else if (!suppressAngularLeadingZeros && !suppressAngularTrailingZeros)
+                {
                     angSupress = 0;
+                }
                 else if (!suppressAngularLeadingZeros && suppressAngularTrailingZeros)
+                {
                     angSupress = 2;
+                }
                 else if (suppressAngularLeadingZeros && !suppressAngularTrailingZeros)
+                {
                     angSupress = 1;
+                }
 
                 xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 79));
                 xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, angSupress));
@@ -3987,13 +3996,7 @@ namespace netDxf.IO
         {
             this.chunk.Write(100, SubclassMarker.AlignedDimension);
 
-            List<Vector3> wcsPoints = MathHelper.Transform(
-                new[]
-                {
-                    new Vector3(dim.FirstReferencePoint.X, dim.FirstReferencePoint.Y, dim.Elevation),
-                    new Vector3(dim.SecondReferencePoint.X, dim.SecondReferencePoint.Y, dim.Elevation)
-                },
-                dim.Normal, CoordinateSystem.Object, CoordinateSystem.World);
+            List<Vector3> wcsPoints = MathHelper.Transform(new[] {dim.FirstReferencePoint, dim.SecondReferencePoint}, dim.Normal, dim.Elevation);
 
             this.chunk.Write(13, wcsPoints[0].X);
             this.chunk.Write(23, wcsPoints[0].Y);
@@ -4010,13 +4013,7 @@ namespace netDxf.IO
         {
             this.chunk.Write(100, SubclassMarker.AlignedDimension);
 
-            List<Vector3> wcsPoints = MathHelper.Transform(
-                new[]
-                {
-                    new Vector3(dim.FirstReferencePoint.X, dim.FirstReferencePoint.Y, dim.Elevation),
-                    new Vector3(dim.SecondReferencePoint.X, dim.SecondReferencePoint.Y, dim.Elevation)
-                },
-                dim.Normal, CoordinateSystem.Object, CoordinateSystem.World);
+            List<Vector3> wcsPoints = MathHelper.Transform(new[] {dim.FirstReferencePoint, dim.SecondReferencePoint}, dim.Normal, dim.Elevation);
 
             this.chunk.Write(13, wcsPoints[0].X);
             this.chunk.Write(23, wcsPoints[0].Y);
@@ -4040,7 +4037,8 @@ namespace netDxf.IO
         {
             this.chunk.Write(100, SubclassMarker.RadialDimension);
 
-            Vector3 wcsPoint = MathHelper.Transform(new Vector3(dim.ReferencePoint.X, dim.ReferencePoint.Y, dim.Elevation), dim.Normal, CoordinateSystem.Object, CoordinateSystem.World);
+            Vector3 wcsPoint = MathHelper.Transform(dim.ReferencePoint, dim.Normal , dim.Elevation);
+
             this.chunk.Write(15, wcsPoint.X);
             this.chunk.Write(25, wcsPoint.Y);
             this.chunk.Write(35, wcsPoint.Z);
@@ -4054,7 +4052,8 @@ namespace netDxf.IO
         {
             this.chunk.Write(100, SubclassMarker.DiametricDimension);
 
-            Vector3 wcsPoint = MathHelper.Transform(new Vector3(dim.ReferencePoint.X, dim.ReferencePoint.Y, dim.Elevation), dim.Normal, CoordinateSystem.Object, CoordinateSystem.World);
+            Vector3 wcsPoint = MathHelper.Transform(dim.ReferencePoint, dim.Normal, dim.Elevation);
+
             this.chunk.Write(15, wcsPoint.X);
             this.chunk.Write(25, wcsPoint.Y);
             this.chunk.Write(35, wcsPoint.Z);
@@ -4068,14 +4067,7 @@ namespace netDxf.IO
         {
             this.chunk.Write(100, SubclassMarker.Angular3PointDimension);
 
-            List<Vector3> wcsPoints = MathHelper.Transform(
-                new[]
-                {
-                    new Vector3(dim.StartPoint.X, dim.StartPoint.Y, dim.Elevation),
-                    new Vector3(dim.EndPoint.X, dim.EndPoint.Y, dim.Elevation),
-                    new Vector3(dim.CenterPoint.X, dim.CenterPoint.Y, dim.Elevation)
-                },
-                dim.Normal, CoordinateSystem.Object, CoordinateSystem.World);
+            List<Vector3> wcsPoints = MathHelper.Transform(new[] {dim.StartPoint, dim.EndPoint, dim.CenterPoint}, dim.Normal, dim.Elevation);
 
             this.chunk.Write(13, wcsPoints[0].X);
             this.chunk.Write(23, wcsPoints[0].Y);
@@ -4098,14 +4090,7 @@ namespace netDxf.IO
         {
             this.chunk.Write(100, SubclassMarker.Angular2LineDimension);
 
-            List<Vector3> wcsPoints = MathHelper.Transform(
-                new[]
-                {
-                    new Vector3(dim.StartFirstLine.X, dim.StartFirstLine.Y, dim.Elevation),
-                    new Vector3(dim.EndFirstLine.X, dim.EndFirstLine.Y, dim.Elevation),
-                    new Vector3(dim.StartSecondLine.X, dim.StartSecondLine.Y, dim.Elevation)
-                },
-                dim.Normal, CoordinateSystem.Object, CoordinateSystem.World);
+            List<Vector3> wcsPoints = MathHelper.Transform(new[] {dim.StartFirstLine, dim.EndFirstLine, dim.StartSecondLine}, dim.Normal, dim.Elevation);
 
             this.chunk.Write(13, wcsPoints[0].X);
             this.chunk.Write(23, wcsPoints[0].Y);
@@ -4132,13 +4117,7 @@ namespace netDxf.IO
         {
             this.chunk.Write(100, SubclassMarker.OrdinateDimension);
 
-            List<Vector3> wcsPoints = MathHelper.Transform(
-                new[]
-                {
-                    new Vector3(dim.FeaturePoint.X, dim.FeaturePoint.Y, dim.Elevation),
-                    new Vector3(dim.LeaderEndPoint.X, dim.LeaderEndPoint.Y, dim.Elevation)
-                },
-                dim.Normal, CoordinateSystem.Object, CoordinateSystem.World);
+            List<Vector3> wcsPoints = MathHelper.Transform(new[] {dim.FeaturePoint, dim.LeaderEndPoint}, dim.Normal, dim.Elevation);
 
             this.chunk.Write(13, wcsPoints[0].X);
             this.chunk.Write(23, wcsPoints[0].Y);
@@ -4162,12 +4141,13 @@ namespace netDxf.IO
             Vector2 u = image.Uvector * (image.Width / image.Definition.Width);
             Vector2 v = image.Vvector * (image.Height / image.Definition.Height);
 
-            Vector3 ocsU = new Vector3(u.X, u.Y, 0.0);
-            Vector3 ocsV = new Vector3(v.X, v.Y, 0.0);
-            List<Vector3> wcsUV = MathHelper.Transform(new List<Vector3> { ocsU, ocsV },
-                image.Normal,
-                CoordinateSystem.Object,
-                CoordinateSystem.World);
+            //Vector3 ocsU = new Vector3(u.X, u.Y, 0.0);
+            //Vector3 ocsV = new Vector3(v.X, v.Y, 0.0);
+            //List<Vector3> wcsUV = MathHelper.Transform(new List<Vector3> { ocsU, ocsV },
+            //    image.Normal,
+            //    CoordinateSystem.Object,
+            //    CoordinateSystem.World);
+            List<Vector3> wcsUV = MathHelper.Transform(new[] {u, v}, image.Normal, 0.0);
 
             double factor = UnitHelper.ConversionFactor(this.doc.RasterVariables.Units, this.doc.DrawingVariables.InsUnits);
 
@@ -4236,14 +4216,14 @@ namespace netDxf.IO
             // the MLine information is in OCS we need to save it in WCS
             // this behavior is similar to the LWPolyline, the info is in OCS because these entities are strictly 2d.
             // Normally they are used in the XY plane whose normal is (0, 0, 1) so no transformation is needed, OCS are equal to WCS
-            List<Vector3> ocsVertexes = new List<Vector3>();
+            List<Vector2> ocsVertexes = new List<Vector2>();
             foreach (MLineVertex segment in mLine.Vertexes)
             {
-                ocsVertexes.Add(new Vector3(segment.Position.X, segment.Position.Y, mLine.Elevation));
+                ocsVertexes.Add(segment.Position);
             }
-            List<Vector3> vertexes = MathHelper.Transform(ocsVertexes, mLine.Normal, CoordinateSystem.Object, CoordinateSystem.World);
+            List<Vector3> vertexes = MathHelper.Transform(ocsVertexes, mLine.Normal, mLine.Elevation);
 
-            // Although it is not recommended the vertex list might have 0 entries
+            // Although it is not recommended the vertex list can have 0 entries
             if (vertexes.Count == 0)
             {
                 this.chunk.Write(10, 0.0);
@@ -4269,12 +4249,12 @@ namespace netDxf.IO
 
                 // the direction and miter vectors are written in world coordinates, but do NOT apply the MLINE elevation
                 Vector2 dir = mLine.Vertexes[i].Direction;
-                Vector3 wcsDir = MathHelper.Transform(new Vector3(dir.X, dir.Y, 0.0), mLine.Normal, CoordinateSystem.Object, CoordinateSystem.World);
+                Vector3 wcsDir = MathHelper.Transform(dir, mLine.Normal, 0.0);
                 this.chunk.Write(12, wcsDir.X);
                 this.chunk.Write(22, wcsDir.Y);
                 this.chunk.Write(32, wcsDir.Z);
                 Vector2 miter = mLine.Vertexes[i].Miter;
-                Vector3 wcsMiter = MathHelper.Transform(new Vector3(miter.X, miter.Y, 0.0), mLine.Normal, CoordinateSystem.Object, CoordinateSystem.World);
+                Vector3 wcsMiter = MathHelper.Transform(miter, mLine.Normal, 0.0);
                 this.chunk.Write(13, wcsMiter.X);
                 this.chunk.Write(23, wcsMiter.Y);
                 this.chunk.Write(33, wcsMiter.Z);
@@ -4313,7 +4293,9 @@ namespace netDxf.IO
             this.chunk.Write(100, SubclassMarker.Entity);
 
             if (layout != null)
+            {
                 this.chunk.Write(67, layout.IsPaperSpace ? (short)1 : (short)0);
+            }
 
             this.chunk.Write(8, this.EncodeNonAsciiCharacters(def.Layer.Name));
 

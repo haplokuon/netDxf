@@ -1,5 +1,17 @@
 ## Change history
 
+
+### [2021/05/23]
+* Added two methods to the MathHelper class to transform object 2d coordinates to world coordinates given the entity normal and elevation.
+* Added two methods to the MathHelper class to transform world coordinates to object 2d coordinates given the entity normal, they also return as an out parameter the average Z axis value of the transformed points.
+* Deleted netDxf.nuspec file.
+* Improved the Leader.Update method, its results should be more consistent in transformed Leader entities.
+* Added the property Direction to the Leader class. It represents the direction of the annotation.
+* (fixed) When loading a Leader with a text annotation, it was assumed that it always had a hook line. It might not be always the case.
+	Now when assigning a text annotation to a Leader it will not automatically add one, it needs to be done manually if desired.
+	Also a call to the Update method is not done automatically. It is needed to reflect the actual properties and style of the Leader, but there might be special cases when it is needed to have control over it.
+	See "AssignAnnotationToLeader()" sample.
+
 ### [2021/05/02]
 * Added netDxf.nuspec file.
 * Ellipses with its major axis smaller than its minor axis are not allowed.

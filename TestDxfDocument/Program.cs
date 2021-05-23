@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
-using System.IO.Compression;
 using System.Linq;
 using System.Text;
 using netDxf;
@@ -33,6 +32,7 @@ namespace TestDxfDocument
 
             #region Samples for new and modified features 3.0.0
 
+            //AssignAnnotationToLeader();
             //CreateImageDefinition();
 
             #endregion
@@ -261,6 +261,58 @@ namespace TestDxfDocument
         }
 
         #region Samples for new and modified features 3.0.0
+
+        private static void AssignAnnotationToLeader()
+        {
+            // We will create a Leader entity creating the annotation manually and assigning to it.
+            // This will be the same as:
+             Leader original = new Leader("Sample annotation", new[] {new Vector2(0, 0), new Vector2(2.5, 2.5)});
+            
+            // Create a leader with no annotation
+            Leader leader = new Leader(new[] {new Vector2(0, 0), new Vector2(2.5, 2.5)});
+            //leader.Offset = new Vector2(0.1, 0.1);
+
+            // Create the text that will become the leader annotation
+            MText text = new MText("Sample annotation", new Vector2(5.0,5.0), .5) {Rotation = 0};
+            text.AttachmentPoint = MTextAttachmentPoint.MiddleLeft;
+            // Assign the text annotation to the leader
+            leader.Annotation = text;
+            // The next two code lines are the important ones, that use to be automatically applied but now it has to be done manually.
+            // When assigning a text annotation to a leader it will not automatically add a hook line to it.
+            // Usually Text and MText annotations have hook lines, but Insert and Tolerance annotations do not.
+            leader.HasHookline = true;
+            // Also a call to the Update method is not done automatically.
+            // It is needed to reflect the actual properties and style of the Leader,
+            // but it might be special cases when it is needed to have control over it.
+            leader.Update(true);
+            
+            // Assign the leader to a new layer, keep in mind that the annotation will maintain its original layer
+            leader.Layer = new Layer("Layer1") {Color = AciColor.Blue};
+
+            // test cloning and transformation
+            Leader copy1 = (Leader)leader.Clone();
+            copy1.TransformBy(Matrix3.RotationZ(90 * MathHelper.DegToRad), Vector3.Zero);
+            // after transforming a Leader entity is not necessary to call the Update method
+            // this is just a check to ensure that the shape of the leader is kept, regardless
+            copy1.Update(true);
+
+            Leader copy2 = (Leader)leader.Clone();
+            copy2.TransformBy(Matrix3.Scale(1, -1, 1), Vector3.Zero);
+            copy2.Update(true);
+
+            Leader copy3 = (Leader) leader.Clone();
+            copy3.TransformBy(Matrix3.RotationZ(200 * MathHelper.DegToRad), Vector3.Zero);
+            copy3.Update(true);
+
+            // And the typical create document, add entity, and save file.
+            DxfDocument doc = new DxfDocument();
+            doc.Entities.Add(original);
+            doc.Entities.Add(leader);
+            doc.Entities.Add(copy1);
+            doc.Entities.Add(copy2);
+            doc.Entities.Add(copy3);
+            doc.Save("test.dxf");
+        }
 
         private static void CreateImageDefinition()
         {
@@ -730,6 +782,8 @@ namespace TestDxfDocument
 
             Leader leader1 = new Leader(vertexes1, style);
             leader1.Annotation = new MText("Sample annotation");
+            leader1.HasHookline = true;
+            leader1.Update(true);
             //leader1.Annotation = new Text("Sample annotation", style.TextHeight);
 
             //// a tolerance annotation
@@ -1516,7 +1570,7 @@ namespace TestDxfDocument
             vertexes4.Add(new Vector2(-7.5, -5));
             Leader leader4 = new Leader(block, vertexes4);
             // change the leader offset to move  the leader hook (the last vertex of the leader vertexes list) in relation to the annotation position.
-            leader4.Offset = new Vector2(-0.5, 0);
+            //leader4.Offset = new Vector2(-0.5, 0);
             leader4.Update(true);
 
             DxfDocument doc = new DxfDocument();
@@ -2479,8 +2533,8 @@ namespace TestDxfDocument
             //leader1.Update(true);
 
 
-            DxfDocument compare = DxfDocument.Load("Leader compare.dxf");
-            Leader l = compare.Entities.Leaders.ElementAt(0);
+            //DxfDocument compare = DxfDocument.Load("Leader compare.dxf");
+            //Leader l = compare.Entities.Leaders.ElementAt(0);
 
             // leader not in the XY plane
             Leader cloned = (Leader) leader1.Clone();
@@ -2530,8 +2584,8 @@ namespace TestDxfDocument
             vertexes4.Add(new Vector2(-5, -5));
             vertexes4.Add(new Vector2(-7.5, -5));
             Leader leader4 = new Leader(block, vertexes4);
-            // change the leader offset to move  the leader hook (the last vertex of the leader vertexes list) in relation to the annotation position.
-            leader4.Offset = new Vector2(1, 1);
+            // change the leader offset to move the leader hook (the last vertex of the leader vertexes list) in relation to the annotation position.
+            //leader4.Offset = new Vector2(1, 1);
             leader4.Update(true);
 
             // add entities to the document

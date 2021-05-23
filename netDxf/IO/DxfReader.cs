@@ -4034,16 +4034,15 @@ namespace netDxf.IO
             }
 
             Vector3 normal = Vector3.Normalize(Vector3.CrossProduct(u, v));
-            List<Vector3> ocsPoints = MathHelper.Transform(new List<Vector3> {position, u, v}, normal, CoordinateSystem.World, CoordinateSystem.Object);
+            List<Vector2> ocsPoints = MathHelper.Transform(new List<Vector3> {position, u, v}, normal, out double elevation);
             double bx = ocsPoints[0].X;
             double by = ocsPoints[0].Y;
-            double elevation = ocsPoints[0].Z;
             double max = ocsPoints[1].X;
 
             for (int i = 0; i < vertexes.Count; i++)
             {
-                double vx = bx + max*(vertexes[i].X + 0.5);
-                double vy = by + max*(0.5 - vertexes[i].Y);
+                double vx = bx + max * (0.5 + vertexes[i].X);
+                double vy = by + max * (0.5 - vertexes[i].Y);
                 vertexes[i] = new Vector2(vx, vy);
             }
 
@@ -4417,7 +4416,6 @@ namespace netDxf.IO
             AciColor lineColor = AciColor.ByLayer;
             string annotation = string.Empty;
             Vector3 normal = Vector3.UnitZ;
-            double elevation = 0.0;
             Vector3 offset = Vector3.Zero;
 
             List<XData> xData = new List<XData>();
@@ -4512,16 +4510,11 @@ namespace netDxf.IO
             {
                 wcsVertexes.RemoveAt(wcsVertexes.Count - 2);
             }
-            List<Vector3> ocsVertexes = MathHelper.Transform(wcsVertexes, normal, CoordinateSystem.World, CoordinateSystem.Object);
-            List<Vector2> vertexes = new List<Vector2>();
-            foreach (Vector3 v in ocsVertexes)
-            {
-                vertexes.Add(new Vector2(v.X, v.Y));
-                elevation = v.Z;
-            }
 
-            // The text vertical position is stored in the Leader extended data
-            Vector3 ocsOffset = MathHelper.Transform(offset, normal, CoordinateSystem.World, CoordinateSystem.Object);
+            List<Vector2> vertexes = MathHelper.Transform(wcsVertexes, normal, out double elevation);
+
+            Vector2 ocsOffset = MathHelper.Transform(offset, normal, out _);
+
             Leader leader = new Leader(vertexes)
             {
                 Style = style,
@@ -4530,7 +4523,7 @@ namespace netDxf.IO
                 LineColor = lineColor,
                 Elevation = elevation,
                 Normal = normal,
-                Offset = new Vector2(ocsOffset.X, ocsOffset.Y),
+                Offset = ocsOffset,
                 HasHookline = hasHookline
             };
 
@@ -10887,7 +10880,7 @@ namespace netDxf.IO
                 if (this.doc.GetObjectByHandle(pair.Value) is EntityObject entity)
                 {
                     pair.Key.Annotation = entity;
-                    pair.Key.Update(true);
+                    //pair.Key.Update(true);
                 }
             }
 

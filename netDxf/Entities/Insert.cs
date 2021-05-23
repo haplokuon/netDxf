@@ -639,9 +639,9 @@ namespace netDxf.Entities
             Vector3 v = transOW * Vector3.UnitX;
             v = transformation * v;
             v = transWO * v;
-            double newRotation = Vector2.Angle(new Vector2(v.X, v.Y))* MathHelper.RadToDeg;
+            double newRotation = Vector2.Angle(new Vector2(v.X, v.Y));
 
-            transWO = Matrix3.RotationZ(newRotation * MathHelper.DegToRad).Transpose() * transWO;
+            transWO = Matrix3.RotationZ(newRotation).Transpose() * transWO;
 
             Vector3 s = transOW * this.Scale;
             s = transformation * s;
@@ -654,7 +654,7 @@ namespace netDxf.Entities
             this.Normal = newNormal;
             this.Position = newPosition;
             this.Scale = newScale;
-            this.Rotation = newRotation;
+            this.Rotation = newRotation * MathHelper.RadToDeg;
 
             foreach (Attribute att in this.attributes)
             {

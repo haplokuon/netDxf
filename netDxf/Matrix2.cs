@@ -337,8 +337,8 @@ namespace netDxf
                 return a;
             }
 
-            return new Matrix2(a.M11*b.M11 + a.M12*b.M21, a.M11*b.M12 + a.M12*b.M22,
-                               a.M21*b.M11 + a.M22*b.M21, a.M21*b.M12 + a.M22*b.M22);
+            return new Matrix2(a.M11 * b.M11 + a.M12 * b.M21, a.M11 * b.M12 + a.M12 * b.M22,
+                               a.M21 * b.M11 + a.M22 * b.M21, a.M21 * b.M12 + a.M22 * b.M22);
         }
 
         /// <summary>
@@ -359,8 +359,8 @@ namespace netDxf
                 return a;
             }
 
-            return new Matrix2(a.M11*b.M11 + a.M12*b.M21, a.M11*b.M12 + a.M12*b.M22,
-                               a.M21*b.M11 + a.M22*b.M21, a.M21*b.M12 + a.M22*b.M22);
+            return new Matrix2(a.M11 * b.M11 + a.M12 * b.M21, a.M11 * b.M12 + a.M12 * b.M22,
+                               a.M21 * b.M11 + a.M22 * b.M21, a.M21 * b.M12 + a.M22 * b.M22);
         }
 
         /// <summary>
@@ -372,8 +372,8 @@ namespace netDxf
         /// <remarks>Matrix2 adopts the convention of using column vectors.</remarks>
         public static Vector2 operator *(Matrix2 a, Vector2 u)
         {
-            return a.IsIdentity ? u : new Vector2(a.M11*u.X + a.M12*u.Y,
-                                                  a.M21*u.X + a.M22*u.Y);
+            return a.IsIdentity ? u : new Vector2(a.M11 * u.X + a.M12 * u.Y,
+                                                  a.M21 * u.X + a.M22 * u.Y);
         }
 
         /// <summary>
@@ -385,8 +385,8 @@ namespace netDxf
         /// <remarks>Matrix2 adopts the convention of using column vectors.</remarks>
         public static Vector2 Multiply(Matrix2 a, Vector2 u)
         {
-            return a.IsIdentity ? u : new Vector2(a.M11*u.X + a.M12*u.Y,
-                                                  a.M21*u.X + a.M22*u.Y);
+            return a.IsIdentity ? u : new Vector2(a.M11 * u.X + a.M12 * u.Y,
+                                                  a.M21 * u.X + a.M22 * u.Y);
         }
 
         /// <summary>
@@ -397,8 +397,8 @@ namespace netDxf
         /// <returns>Matrix2.</returns>
         public static Matrix2 operator *(Matrix2 m, double a)
         {
-            return new Matrix2(m.M11*a, m.M12*a,
-                               m.M21*a, m.M22*a);
+            return new Matrix2(m.M11 * a, m.M12 * a,
+                               m.M21 * a, m.M22 * a);
         }
 
         /// <summary>
@@ -409,8 +409,8 @@ namespace netDxf
         /// <returns>Matrix2.</returns>
         public static Matrix2 Multiply(Matrix2 m, double a)
         {
-            return new Matrix2(m.M11*a, m.M12*a,
-                               m.M21*a, m.M22*a);
+            return new Matrix2(m.M11 * a, m.M12 * a,
+                               m.M21 * a, m.M22 * a);
         }
 
         /// <summary>
@@ -465,10 +465,10 @@ namespace netDxf
                 throw new ArithmeticException("The matrix is not invertible.");
             }
 
-            det = 1/det;
+            det = 1 / det;
 
-            return new Matrix2(det*this.m22, -det*this.m12,
-                               -det*this.m21, det*this.m11);
+            return new Matrix2(det * this.m22, -det * this.m12,
+                               -det * this.m21, det * this.m11);
         }
 
         /// <summary>

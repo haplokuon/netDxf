@@ -653,12 +653,7 @@ namespace netDxf
         /// <returns>Vector modulus.</returns>
         public double Modulus()
         {
-            if (this.isNormalized)
-            {
-                return 1.0;
-            }
-
-            return Math.Sqrt(DotProduct(this, this));
+            return this.isNormalized ? 1.0 : Math.Sqrt(DotProduct(this, this));
         }
 
         /// <summary>

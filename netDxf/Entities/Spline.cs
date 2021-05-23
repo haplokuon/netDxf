@@ -172,6 +172,9 @@ namespace netDxf.Entities
         /// <param name="controlPoints">Spline control points.</param>
         /// <param name="knots">Spline knot vector.</param>
         /// <param name="degree">Degree of the spline curve.  Valid values are 1 (linear), degree 2 (quadratic), degree 3 (cubic), and so on up to degree 10.</param>
+        /// <param name="fitPoints">Spine fit points.</param>
+        /// <param name="method">Spline creation method.</param>
+        /// <param name="isPeriodic">Sets if the spline as periodic closed (default false).</param>
         internal Spline(List<SplineVertex> controlPoints, List<double> knots, short degree, List<Vector3> fitPoints, SplineCreationMethod method, bool isPeriodic)
             : base(EntityType.Spline, DxfObjectCode.Spline)
         {

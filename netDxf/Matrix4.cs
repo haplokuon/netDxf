@@ -757,9 +757,9 @@ namespace netDxf
         public static Vector4 Multiply(Matrix4 a, Vector4 u)
         {
             return a.IsIdentity ? u : new Vector4(a.M11 * u.X + a.M12 * u.Y + a.M13 * u.Z + a.M14 * u.W,
-                                          a.M21 * u.X + a.M22 * u.Y + a.M23 * u.Z + a.M24 * u.W,
-                                          a.M31 * u.X + a.M32 * u.Y + a.M33 * u.Z + a.M34 * u.W,
-                                          a.M41 * u.X + a.M42 * u.Y + a.M43 * u.Z + a.M44 * u.W);
+                                                  a.M21 * u.X + a.M22 * u.Y + a.M23 * u.Z + a.M24 * u.W,
+                                                  a.M31 * u.X + a.M32 * u.Y + a.M33 * u.Z + a.M34 * u.W,
+                                                  a.M41 * u.X + a.M42 * u.Y + a.M43 * u.Z + a.M44 * u.W);
         }
 
         /// <summary>
@@ -847,7 +847,7 @@ namespace netDxf
                 throw new ArithmeticException("The matrix is not invertible.");
             }
 
-            det = 1/det;
+            det = 1 / det;
 
             return new Matrix4(
                 det * (this.m22 * (this.m33 * this.m44 - this.m34 * this.m43) - this.m23 * (this.m32 * this.m44 - this.m34 * this.m42) + this.m24 * (this.m32 * this.m43 - this.m33 * this.m42)),

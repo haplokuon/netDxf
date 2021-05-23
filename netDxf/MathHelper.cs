@@ -263,7 +263,7 @@ namespace netDxf
                     transPoints = new List<Vector2>();
                     foreach (Vector2 p in points)
                     {
-                        transPoints.Add(new Vector2(p.X*cos + p.Y*sin, -p.X*sin + p.Y*cos));
+                        transPoints.Add(new Vector2(p.X * cos + p.Y * sin, -p.X * sin + p.Y * cos));
                     }
                     return transPoints;
                 }
@@ -272,7 +272,7 @@ namespace netDxf
                     transPoints = new List<Vector2>();
                     foreach (Vector2 p in points)
                     {
-                        transPoints.Add(new Vector2(p.X*cos - p.Y*sin, p.X*sin + p.Y*cos));
+                        transPoints.Add(new Vector2(p.X * cos - p.Y * sin, p.X * sin + p.Y * cos));
                     }
                     return transPoints;
                 }
@@ -291,20 +291,14 @@ namespace netDxf
         /// <returns>Transformed point.</returns>
         public static Vector3 Transform(Vector3 point, Vector3 zAxis, CoordinateSystem from, CoordinateSystem to)
         {
-            // if the normal is (0,0,1) no transformation is needed the transformation matrix is the identity
-            if (zAxis.Equals(Vector3.UnitZ))
-            {
-                return point;
-            }
-
             Matrix3 trans = ArbitraryAxis(zAxis);
             switch (from)
             {
                 case CoordinateSystem.World when to == CoordinateSystem.Object:
                     trans = trans.Transpose();
-                    return trans*point;
+                    return trans * point;
                 case CoordinateSystem.Object when to == CoordinateSystem.World:
-                    return trans*point;
+                    return trans * point;
                 default:
                     return point;
             }
@@ -323,11 +317,6 @@ namespace netDxf
             if (points == null)
             {
                 throw new ArgumentNullException(nameof(points));
-            }
-
-            if (zAxis.Equals(Vector3.UnitZ))
-            {
-                return new List<Vector3>(points);
             }
 
             Matrix3 trans = ArbitraryAxis(zAxis);
@@ -356,6 +345,85 @@ namespace netDxf
                 default:
                     return new List<Vector3>(points);
             }
+        }
+
+        /// <summary>
+        /// Transform a 2d point from object coordinates to world coordinates.
+        /// </summary>
+        /// <param name="point">Points to transform.</param>
+        /// <param name="zAxis">Object normal vector.</param>
+        /// <param name="elevation">Object elevation.</param>
+        /// <returns>Transformed point.</returns>
+        public static Vector3 Transform(Vector2 point, Vector3 zAxis, double elevation)
+        {
+            Matrix3 trans = ArbitraryAxis(zAxis);
+            return trans * new Vector3(point.X, point.Y, elevation);
+        }
+
+        /// <summary>
+        /// Transform a 2d point list from object coordinates to world coordinates.
+        /// </summary>
+        /// <param name="points">Point to transform.</param>
+        /// <param name="zAxis">Object normal vector.</param>
+        /// <param name="elevation">Object elevation.</param>
+        /// <returns>Transformed points.</returns>
+        public static List<Vector3> Transform(IEnumerable<Vector2> points, Vector3 zAxis, double elevation)
+        {
+            if (points == null)
+            {
+                throw new ArgumentNullException(nameof(points));
+            }
+
+            List<Vector3> transPoints = new List<Vector3>();
+            Matrix3 trans = ArbitraryAxis(zAxis);
+            foreach (Vector2 p in points)
+            {
+                transPoints.Add(trans * new Vector3(p.X, p.Y, elevation));
+            }
+            return transPoints;
+        }
+
+        /// <summary>
+        /// Transform a 3d point from world coordinates to object coordinates.
+        /// </summary>
+        /// <param name="point">Point to transform.</param>
+        /// <param name="zAxis">Object normal vector.</param>
+        /// <param name="elevation">Z axis value of the transformed point.</param>
+        /// <returns>Transformed point.</returns>
+        public static Vector2 Transform(Vector3 point, Vector3 zAxis, out double elevation)
+        {
+            Matrix3 trans = ArbitraryAxis(zAxis).Transpose();
+            Vector3 p = trans * point;
+            elevation = point.Z;
+            return new Vector2(point.X, point.Y);
+        }
+
+        /// <summary>
+        /// Transform a 3d point list from world coordinates to object coordinates.
+        /// </summary>
+        /// <param name="points">Points to transform.</param>
+        /// <param name="zAxis">Object normal vector.</param>
+        /// <param name="elevation">Average Z axis value of the transformed points.</param>
+        /// <returns>Transformed points.</returns>
+        public static List<Vector2> Transform(IEnumerable<Vector3> points, Vector3 zAxis, out double elevation)
+        {
+            if (points == null)
+            {
+                throw new ArgumentNullException(nameof(points));
+            }
+
+            List<Vector2> transPoints = new List<Vector2>();
+            Matrix3 trans = ArbitraryAxis(zAxis).Transpose();
+            elevation = 0.0;
+            foreach (Vector3 point in points)
+            {
+                Vector3 p = trans * point;
+                elevation += p.Z;
+                transPoints.Add(new Vector2(p.X, p.Y));
+            }
+
+            elevation /= transPoints.Count;
+            return transPoints;
         }
 
         /// <summary>

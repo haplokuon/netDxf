@@ -535,9 +535,9 @@ namespace netDxf
                 return a;
             }
 
-            return new Matrix3(a.M11*b.M11 + a.M12*b.M21 + a.M13*b.M31, a.M11*b.M12 + a.M12*b.M22 + a.M13*b.M32, a.M11*b.M13 + a.M12*b.M23 + a.M13*b.M33,
-                               a.M21*b.M11 + a.M22*b.M21 + a.M23*b.M31, a.M21*b.M12 + a.M22*b.M22 + a.M23*b.M32, a.M21*b.M13 + a.M22*b.M23 + a.M23*b.M33,
-                               a.M31*b.M11 + a.M32*b.M21 + a.M33*b.M31, a.M31*b.M12 + a.M32*b.M22 + a.M33*b.M32, a.M31*b.M13 + a.M32*b.M23 + a.M33*b.M33);
+            return new Matrix3(a.M11 * b.M11 + a.M12 * b.M21 + a.M13 * b.M31, a.M11 * b.M12 + a.M12 * b.M22 + a.M13 * b.M32, a.M11 * b.M13 + a.M12 * b.M23 + a.M13 * b.M33,
+                               a.M21 * b.M11 + a.M22 * b.M21 + a.M23 * b.M31, a.M21 * b.M12 + a.M22 * b.M22 + a.M23 * b.M32, a.M21 * b.M13 + a.M22 * b.M23 + a.M23 * b.M33,
+                               a.M31 * b.M11 + a.M32 * b.M21 + a.M33 * b.M31, a.M31 * b.M12 + a.M32 * b.M22 + a.M33 * b.M32, a.M31 * b.M13 + a.M32 * b.M23 + a.M33 * b.M33);
         }
 
         /// <summary>
@@ -549,7 +549,9 @@ namespace netDxf
         /// <remarks>Matrix3 adopts the convention of using column vectors.</remarks>
         public static Vector3 operator *(Matrix3 a, Vector3 u)
         {
-            return a.IsIdentity ? u : new Vector3(a.M11*u.X + a.M12*u.Y + a.M13*u.Z, a.M21*u.X + a.M22*u.Y + a.M23*u.Z, a.M31*u.X + a.M32*u.Y + a.M33*u.Z);
+            return a.IsIdentity ? u : new Vector3(a.M11 * u.X + a.M12 * u.Y + a.M13 * u.Z,
+                                                  a.M21 * u.X + a.M22 * u.Y + a.M23 * u.Z,
+                                                  a.M31 * u.X + a.M32 * u.Y + a.M33 * u.Z);
         }
 
         /// <summary>
@@ -561,7 +563,9 @@ namespace netDxf
         /// <remarks>Matrix3 adopts the convention of using column vectors.</remarks>
         public static Vector3 Multiply(Matrix3 a, Vector3 u)
         {
-            return a.IsIdentity ? u : new Vector3(a.M11*u.X + a.M12*u.Y + a.M13*u.Z, a.M21*u.X + a.M22*u.Y + a.M23*u.Z, a.M31*u.X + a.M32*u.Y + a.M33*u.Z);
+            return a.IsIdentity ? u : new Vector3(a.M11 * u.X + a.M12 * u.Y + a.M13 * u.Z, 
+                                                  a.M21 * u.X + a.M22 * u.Y + a.M23 * u.Z, 
+                                                  a.M31 * u.X + a.M32 * u.Y + a.M33 * u.Z);
         }
 
         /// <summary>
@@ -572,9 +576,9 @@ namespace netDxf
         /// <returns>Matrix3.</returns>
         public static Matrix3 operator *(Matrix3 m, double a)
         {
-            return new Matrix3(m.M11*a, m.M12*a, m.M13*a,
-                               m.M21*a, m.M22*a, m.M23*a,
-                               m.M31*a, m.M32*a, m.M33*a);
+            return new Matrix3(m.M11 * a, m.M12 * a, m.M13 * a,
+                               m.M21 * a, m.M22 * a, m.M23 * a,
+                               m.M31 * a, m.M32 * a, m.M33 * a);
         }
 
         /// <summary>
@@ -585,9 +589,9 @@ namespace netDxf
         /// <returns>Matrix3.</returns>
         public static Matrix3 Multiply(Matrix3 m, double a)
         {
-            return new Matrix3(m.M11*a, m.M12*a, m.M13*a,
-                               m.M21*a, m.M22*a, m.M23*a,
-                               m.M31*a, m.M32*a, m.M33*a);
+            return new Matrix3(m.M11 * a, m.M12 * a, m.M13 * a,
+                               m.M21 * a, m.M22 * a, m.M23 * a,
+                               m.M31 * a, m.M32 * a, m.M33 * a);
         }
 
         /// <summary>
@@ -627,12 +631,12 @@ namespace netDxf
                 return 1.0;
             }
 
-            return this.m11*this.m22*this.m33 +
-                   this.m12*this.m23*this.m31 +
-                   this.m13*this.m21*this.m32 -
-                   this.m13*this.m22*this.m31 -
-                   this.m11*this.m23*this.m32 -
-                   this.m12*this.m21*this.m33;
+            return this.m11 * this.m22 * this.m33 +
+                   this.m12 * this.m23 * this.m31 +
+                   this.m13 * this.m21 * this.m32 -
+                   this.m13 * this.m22 * this.m31 -
+                   this.m11 * this.m23 * this.m32 -
+                   this.m12 * this.m21 * this.m33;
         }
 
         /// <summary>
@@ -652,18 +656,18 @@ namespace netDxf
                 throw new ArithmeticException("The matrix is not invertible.");
             }
 
-            det = 1/det;
+            det = 1 / det;
 
             return new Matrix3(
-                det*(this.m22*this.m33 - this.m23*this.m32),
-                det*(this.m13*this.m32 - this.m12*this.m33),
-                det*(this.m12*this.m23 - this.m13*this.m22),
-                det*(this.m23*this.m31 - this.m21*this.m33),
-                det*(this.m11*this.m33 - this.m13*this.m31),
-                det*(this.m13*this.m21 - this.m11*this.m23),
-                det*(this.m21*this.m32 - this.m22*this.m31),
-                det*(this.m12*this.m31 - this.m11*this.m32),
-                det*(this.m11*this.m22 - this.m12*this.m21));
+                det * (this.m22 * this.m33 - this.m23 * this.m32),
+                det * (this.m13 * this.m32 - this.m12 * this.m33),
+                det * (this.m12 * this.m23 - this.m13 * this.m22),
+                det * (this.m23 * this.m31 - this.m21 * this.m33),
+                det * (this.m11 * this.m33 - this.m13 * this.m31),
+                det * (this.m13 * this.m21 - this.m11 * this.m23),
+                det * (this.m21 * this.m32 - this.m22 * this.m31),
+                det * (this.m12 * this.m31 - this.m11 * this.m32),
+                det * (this.m11 * this.m22 - this.m12 * this.m21));
         }
 
         /// <summary>
