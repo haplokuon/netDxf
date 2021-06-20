@@ -4,6 +4,7 @@
     <TargetFrameworks>net45;netstandard2.1;netcoreapp3.1;net5.0</TargetFrameworks>
     <Version>3.0.0</Version>
     <Authors>Daniel Carvajal</Authors>
+    <Owners>haplokuon</Owners>
     <Company>netDxf</Company>
     <Product />
     <Copyright>Daniel Carvajal © 2021</Copyright>
@@ -14,10 +15,10 @@
     <PackageProjectUrl>https://github.com/haplokuon/netDxf</PackageProjectUrl>
     <RepositoryUrl>https://github.com/haplokuon/netDxf</RepositoryUrl>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-  </PropertyGroup>
-
-  <PropertyGroup Condition=" '$(TargetFrameworks)' == 'net45'">
-    <DefineConstants>NET45</DefineConstants>
+    <PackageLicenseFile></PackageLicenseFile>
+    <PackageReleaseNotes>netDxf is a .net library programmed in C# to read and write AutoCAD DXF files. It supports AutoCad2000, AutoCad2004, AutoCad2007, AutoCad2010, AutoCad2013, and AutoCad2018 DXF database versions, in both text and binary format.</PackageReleaseNotes>
+    <PackageTags>netDxf, Dxf, Dxf reader, Dxf writer, AutoCad</PackageTags>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -34,5 +35,13 @@
     <OutputPath></OutputPath>
     <NoWarn>1701;1702</NoWarn>
   </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(TargetFramework)' == 'net45'">
+    <DefineConstants>NET45</DefineConstants>
+  </PropertyGroup>
+  
+  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.1'">
+    <PackageReference Include="System.Text.Encoding.CodePages" Version="5.0.0"/>
+  </ItemGroup>
 
 </Project>

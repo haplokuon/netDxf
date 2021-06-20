@@ -1,5 +1,7 @@
 ## Change history
 
+### [2021/06/20]
+* Loading AutoCad2000 (AC1015) or AutoCad2004 (AC1018) DXF files containing non-ASCII characters will work once again. Additionally the Net Standard 2.1 build requires a reference to the external library "System.Text.Encoding.CodePages".
 
 ### [2021/05/23]
 * Added two methods to the MathHelper class to transform object 2d coordinates to world coordinates given the entity normal and elevation.

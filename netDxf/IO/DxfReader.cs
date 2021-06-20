@@ -145,38 +145,68 @@ namespace netDxf.IO
         /// <param name="supportFolders">List of the document support folders.</param>
         public DxfDocument Read(Stream stream, IEnumerable<string> supportFolders)
         {
-            long startPosition;
-
             if (stream == null)
             {
                 throw new ArgumentNullException(nameof(stream));
             }
 
-            try
-            {
-                startPosition = stream.Position;
-            }
-            catch (NotSupportedException ex)
-            {
-                throw new ArgumentException("Streams with not accessible Position property are not supported.", nameof(stream), ex);
-            }
-            
             DxfVersion version = DxfDocument.CheckDxfFileVersion(stream, out this.isBinary);
-            stream.Position = startPosition;
 
             if (version < DxfVersion.AutoCad2000)
             {
                 throw new DxfVersionNotSupportedException(string.Format("DXF file version not supported : {0}.", version), version);
             }
 
-            if (this.isBinary)
+            Encoding encoding;
+            if (version < DxfVersion.AutoCad2007)
             {
-                this.chunk = new BinaryCodeValueReader(new BinaryReader(stream), version >= DxfVersion.AutoCad2007 ? Encoding.UTF8 : Encoding.ASCII);
+
+#if !NET45
+                Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+#endif
+
+                string dwgCodePage = CheckHeaderVariable(stream, HeaderVariableCode.DwgCodePage, out this.isBinary);
+                if (string.IsNullOrEmpty(dwgCodePage))
+                {
+                    Debug.Assert(false, "No code page defined in the DXF.");
+                    encoding = Encoding.GetEncoding(Encoding.ASCII.WindowsCodePage);
+                }
+                else
+                {
+                    if (int.TryParse(dwgCodePage.Split('_')[1], out int codepage))
+                    {
+                        try
+                        {
+                            encoding = Encoding.GetEncoding(codepage);
+                        }
+                        catch
+                        {
+                            Debug.Assert(false, "Invalid or not compatible code page defined in the DXF.");
+                            encoding = Encoding.GetEncoding(Encoding.ASCII.WindowsCodePage);
+                        }
+                    }
+                    else
+                    {
+                        Debug.Assert(false, "Invalid code page defined in the DXF.");
+                        encoding = Encoding.GetEncoding(Encoding.ASCII.WindowsCodePage);
+                    }
+                }
+
             }
             else
             {
-                this.chunk = new TextCodeValueReader(new StreamReader(stream, version >= DxfVersion.AutoCad2007 ? Encoding.UTF8 : Encoding.ASCII, true));
+                encoding = Encoding.UTF8;
             }
+
+            if (this.isBinary)
+            {
+                this.chunk = new BinaryCodeValueReader(new BinaryReader(stream), encoding);
+            }
+            else
+            {
+                this.chunk = new TextCodeValueReader(new StreamReader(stream, encoding, true));
+            }
+
             
             this.doc = new DxfDocument(new HeaderVariables(), false, supportFolders);
             this.shapeStyleCounter = 0;
@@ -301,7 +331,7 @@ namespace netDxf.IO
             return this.doc;
         }
 
-        public static bool IsBinary(Stream stream)
+        private static bool IsBinary(Stream stream)
         {
             BinaryReader reader = new BinaryReader(stream);
             byte[] sentinel = reader.ReadBytes(22);
@@ -333,6 +363,7 @@ namespace netDxf.IO
             }
 
             ICodeValueReader chunk;
+            string variable = string.Empty;
             isBinary = IsBinary(stream);
             stream.Position = startPosition;
 
@@ -359,7 +390,8 @@ namespace netDxf.IO
 
                         if (varName == headerVariable)
                         {
-                            return chunk.ReadString(); // we found the variable we are looking for
+                            variable = chunk.ReadString(); // we found the variable we are looking for
+                            break;
                         }
                         // some header variables have more than one entry
                         while (chunk.Code != 0 && chunk.Code != 9)
@@ -368,10 +400,11 @@ namespace netDxf.IO
                         }
                     }
                     // we only need to read the header section
-                    return null;
+                    break;
                 }
             }
-            return null;
+            stream.Position = startPosition;
+            return variable;
         }
 
         #endregion
