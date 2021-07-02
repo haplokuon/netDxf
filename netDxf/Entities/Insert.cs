@@ -83,7 +83,10 @@ namespace netDxf.Entities
         private Vector3 scale;
         private double rotation;
         private AttributeCollection attributes;
-
+        private short columnCount = 1;
+        private short rowCount = 1;
+        private double columnSpacing;
+        private double rowSpacing;
         #endregion
 
         #region constructors
@@ -251,6 +254,42 @@ namespace netDxf.Entities
         {
             get { return this.rotation; }
             set { this.rotation = MathHelper.NormalizeAngle(value); }
+        }
+
+        /// <summary>
+        /// Gets or sets column count for multiple insert (default=1)
+        /// </summary>
+        public short ColumnCount
+        {
+            get { return this.columnCount; }
+            set { this.columnCount = value; }
+        }
+
+        /// <summary>
+        /// Gets or sets row count for multiple insert (default=1)
+        /// </summary>
+        public short RowCount
+        {
+            get { return this.rowCount; }
+            set { this.rowCount = value; }
+        }
+
+        /// <summary>
+        /// Gets or sets column spacing for multiple insert
+        /// </summary>
+        public double ColumnSpacing
+        {
+            get { return this.columnSpacing; }
+            set { this.columnSpacing = value; }
+        }
+
+        /// <summary>
+        /// Gets or sets row spacing for multiple insert
+        /// </summary>
+        public double RowSpacing
+        {
+            get { return this.rowSpacing; }
+            set { this.rowSpacing = value; }
         }
 
         #endregion
