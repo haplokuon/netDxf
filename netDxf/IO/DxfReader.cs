@@ -143,7 +143,8 @@ namespace netDxf.IO
         /// </summary>
         /// <param name="stream">Stream.</param>
         /// <param name="supportFolders">List of the document support folders.</param>
-        public DxfDocument Read(Stream stream, IEnumerable<string> supportFolders)
+        /// <param name="skipEmptyLeaders">Should reading leaders with 0-1 vertices cause an error or be skipped?</param>
+        public DxfDocument Read(Stream stream, IEnumerable<string> supportFolders, bool skipEmptyLeaders = false)
         {
             if (stream == null)
             {
@@ -279,10 +280,10 @@ namespace netDxf.IO
                             this.ReadTables();
                             break;
                         case DxfObjectCode.BlocksSection:
-                            this.ReadBlocks();
+                            this.ReadBlocks(skipEmptyLeaders);
                             break;
                         case DxfObjectCode.EntitiesSection:
-                            this.ReadEntities();
+                            this.ReadEntities(skipEmptyLeaders);
                             break;
                         case DxfObjectCode.ObjectsSection:
                             this.ReadObjects();
@@ -867,7 +868,7 @@ namespace netDxf.IO
             }
         }
 
-        private void ReadBlocks()
+        private void ReadBlocks(bool skipEmptyLeaders)
         {
             Debug.Assert(this.chunk.ReadString() == DxfObjectCode.BlocksSection);
 
@@ -880,7 +881,7 @@ namespace netDxf.IO
                 switch (this.chunk.ReadString())
                 {
                     case DxfObjectCode.BeginBlock:
-                        Block block = this.ReadBlock();
+                        Block block = this.ReadBlock(skipEmptyLeaders);
                         blocks.Add(block.Name, block);
                         break;
                     default:
@@ -933,14 +934,14 @@ namespace netDxf.IO
             }
         }
 
-        private void ReadEntities()
+        private void ReadEntities(bool skipEmptyLeaders)
         {
             Debug.Assert(this.chunk.ReadString() == DxfObjectCode.EntitiesSection);
 
             this.chunk.Next();
             while (this.chunk.ReadString() != DxfObjectCode.EndSection)
             {
-                this.ReadEntity(false);
+                this.ReadEntity(isBlockEntity: false, skipEmptyLeaders);
             }
         }
 
@@ -3020,7 +3021,7 @@ namespace netDxf.IO
 
         #region block methods
 
-        private Block ReadBlock()
+        private Block ReadBlock(bool skipEmptyLeaders)
         {
             Debug.Assert(this.chunk.ReadString() == DxfObjectCode.BeginBlock);
 
@@ -3102,7 +3103,7 @@ namespace netDxf.IO
             // read block entities
             while (this.chunk.ReadString() != DxfObjectCode.EndBlock)
             {
-                DxfObject dxfObject = this.ReadEntity(true);
+                DxfObject dxfObject = this.ReadEntity(isBlockEntity: true, skipEmptyLeaders);
                 if (dxfObject != null)
                 {
                     if (dxfObject is AttributeDefinition attDef)
@@ -3645,7 +3646,7 @@ namespace netDxf.IO
 
         #region entity methods
 
-        private DxfObject ReadEntity(bool isBlockEntity)
+        private DxfObject ReadEntity(bool isBlockEntity, bool skipEmptyLeaders = false)
         {
             string handle = null;
             string owner = null;
@@ -3777,7 +3778,7 @@ namespace netDxf.IO
                     dxfObject = this.ReadInsert(isBlockEntity);
                     break;
                 case DxfObjectCode.Leader:
-                    dxfObject = this.ReadLeader();
+                    dxfObject = this.ReadLeader(skipEmptyLeaders);
                     break;
                 case DxfObjectCode.Line:
                     dxfObject = this.ReadLine();
@@ -4439,7 +4440,7 @@ namespace netDxf.IO
             return textHeight;
         }
 
-        private Leader ReadLeader()
+        private Leader ReadLeader(bool skipEmptyLeaders)
         {
             DimensionStyle style = DimensionStyle.Default;
             bool showArrowhead = true;
@@ -4547,6 +4548,11 @@ namespace netDxf.IO
             List<Vector2> vertexes = MathHelper.Transform(wcsVertexes, normal, out double elevation);
 
             Vector2 ocsOffset = MathHelper.Transform(offset, normal, out _);
+
+            if (skipEmptyLeaders && vertexes.Count < 2)
+            {
+                return null;
+            }
 
             Leader leader = new Leader(vertexes)
             {
