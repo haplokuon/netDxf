@@ -1048,14 +1048,7 @@ namespace netDxf.Tables
         public AngleUnitType DimAngularUnits
         {
             get { return this.dimaunit; }
-            set
-            {
-                if (value == AngleUnitType.SurveyorUnits)
-                {
-                    throw new ArgumentException("Surveyor's units are not applicable in angular dimensions.");
-                }
-                this.dimaunit = value;
-            }
+            set { this.dimaunit = value; }
         }
 
         /// <summary>

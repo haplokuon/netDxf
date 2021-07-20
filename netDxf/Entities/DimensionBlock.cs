@@ -80,8 +80,9 @@ namespace netDxf.Entities
                         dimText = AngleUnitFormat.ToRadians(measure, unitFormat);
                         break;
                     case AngleUnitType.SurveyorUnits:
-                        dimText = AngleUnitFormat.ToDecimal(measure, unitFormat);
-                        break;
+                        throw new ArgumentException("Surveyor's units are not applicable in angular dimensions.");
+                        //dimText = AngleUnitFormat.ToDecimal(measure, unitFormat);
+                        //break;
                 }
             }
             else
