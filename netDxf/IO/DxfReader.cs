@@ -150,6 +150,9 @@ namespace netDxf.IO
                 throw new ArgumentNullException(nameof(stream));
             }
 
+            // Check for 16kB binary prefix that starts with rtfd\0 and is mostly null (\0) chars.
+            CheckBinaryHeaderLength(stream);
+
             DxfVersion version = DxfDocument.CheckDxfFileVersion(stream, out this.isBinary);
 
             if (version < DxfVersion.AutoCad2000)
@@ -329,6 +332,62 @@ namespace netDxf.IO
             this.doc.Entities.ActiveLayout = Layout.ModelSpaceName;
 
             return this.doc;
+        }
+
+        public static void CheckBinaryHeaderLength(Stream stream)
+        {
+            long startPosition;
+
+            try
+            {
+                startPosition = stream.Position;
+            }
+            catch (NotSupportedException ex)
+            {
+                throw new ArgumentException("Streams with not accessible Position property are not supported.", nameof(stream), ex);
+            }
+
+            bool isBinary = IsBinary(stream);
+            stream.Position = startPosition;
+
+            if (isBinary)
+            {
+                return;
+            }
+
+            int RTFD_HEADER_LENGTH = 16384;
+            byte[] buffer = new byte[5];
+            int nRead = stream.Read(buffer, 0, buffer.Length);
+
+            if (nRead == buffer.Length
+                && buffer[0] == 'r'
+                && buffer[1] == 't'
+                && buffer[2] == 'f'
+                && buffer[3] == 'd'
+                && buffer[4] == 0)
+            {
+                int nullCount = 0;
+                bool longEnough = true;
+                for (int i = 0; i < RTFD_HEADER_LENGTH; i++)
+                {
+                    int dataPreview = stream.ReadByte();
+                    if (dataPreview == -1)
+                    {
+                        longEnough = false;
+                        break;
+                    }
+                    else if (dataPreview == 0)
+                    {
+                        nullCount++;
+                    }
+                }
+                if (longEnough && nullCount > RTFD_HEADER_LENGTH / 2)
+                {
+                    startPosition += RTFD_HEADER_LENGTH;
+                }
+            }
+
+            stream.Position = startPosition;
         }
 
         private static bool IsBinary(Stream stream)
