@@ -28,7 +28,7 @@ namespace netDxf.Entities
     /// Defines the vertex type.
     /// </summary>
     [Flags]
-    internal enum VertexTypeFlags
+    public enum VertexTypeFlags
     {
         /// <summary>
         /// 2d polyline vertex.

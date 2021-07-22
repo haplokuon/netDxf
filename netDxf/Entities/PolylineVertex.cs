@@ -88,7 +88,7 @@ namespace netDxf.Entities
         /// <summary>
         /// Gets the vertex type.
         /// </summary>
-        internal VertexTypeFlags Flags
+        public VertexTypeFlags Flags
         {
             get { return this.flags; }
             set { this.flags = value; }
