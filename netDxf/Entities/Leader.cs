@@ -103,6 +103,7 @@ namespace netDxf.Entities
         private AciColor lineColor;
         private double elevation;
         private Vector2 offset;
+        private Vector2 direction;
         private readonly DimensionStyleOverrideDictionary styleOverrides;
 
         #endregion
@@ -124,6 +125,11 @@ namespace netDxf.Entities
         /// <param name="vertexes">List of leader vertexes in local coordinates.</param>
         /// <param name="style">Leader style.</param>
         public Leader(IEnumerable<Vector2> vertexes, DimensionStyle style)
+            : this(vertexes, style, false)
+        {
+        }
+
+        internal Leader(IEnumerable<Vector2> vertexes, DimensionStyle style, bool hasHookline)
             : base(EntityType.Leader, DxfObjectCode.Leader)
         {
             if (vertexes == null)
@@ -138,13 +144,14 @@ namespace netDxf.Entities
             }
 
             this.style = style ?? throw new ArgumentNullException(nameof(style));
-            this.hasHookline = false;
+            this.hasHookline = hasHookline;
             this.showArrowhead = true;
             this.pathType = LeaderPathType.StraightLineSegments;
             this.annotation = null;
             this.lineColor = AciColor.ByLayer;
             this.elevation = 0.0;
             this.offset = Vector2.Zero;
+            this.direction = Vector2.UnitX;
             this.styleOverrides = new DimensionStyleOverrideDictionary();
             this.styleOverrides.BeforeAddItem += this.StyleOverrides_BeforeAddItem;
             this.styleOverrides.AddItem += this.StyleOverrides_AddItem;
@@ -172,6 +179,8 @@ namespace netDxf.Entities
             : this(vertexes, style)
         {
             this.Annotation = this.BuildAnnotation(text);
+            this.CalculateAnnotationDirection();
+
         }
 
         /// <summary>
@@ -413,13 +422,65 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets the leader annotation direction.
+        /// Gets or sets the leader annotation direction.
         /// </summary>
         public Vector2 Direction
         {
-            get
+            get { return this.direction; }
+            set { this.direction = Vector2.Normalize(value); }
+        }
+
+        #endregion
+
+        #region public methods
+
+        /// <summary>
+        /// Updates the leader entity to reflect the latest changes made to its properties.
+        /// </summary>
+        /// <param name="resetAnnotationPosition">
+        /// If true the annotation position will be modified according to the position of the leader hook (last leader vertex),
+        /// otherwise the leader hook will be moved according to the actual annotation position.
+        /// </param>
+        /// <remarks>
+        /// This method should be manually called if the annotation position is modified, or the leader properties like Style, Annotation, TextVerticalPosition, and/or Offset.
+        /// </remarks>
+        public void Update(bool resetAnnotationPosition)
+        {
+            if (this.vertexes.Count < 2)
             {
-                double angle = 0.0;
+                throw new Exception("The leader vertexes list requires at least two points.");
+            }
+
+            if (this.annotation == null)
+            {
+                return;
+            }
+
+            this.CalculateAnnotationDirection();
+
+            if (resetAnnotationPosition)
+            {
+                this.ResetAnnotationPosition();
+            }
+            else
+            {
+                this.ResetHookPosition();
+            }
+
+            if (this.hasHookline)
+            {
+                Vector2 vertex = this.CalculateHookLine();
+                this.vertexes[this.vertexes.Count - 2] = vertex;
+            }
+        }
+
+        #endregion
+
+        #region private methods
+
+        private void CalculateAnnotationDirection()
+        {
+            double angle = 0.0;
 
                 if (this.annotation != null)
                 {
@@ -460,55 +521,27 @@ namespace netDxf.Entities
                             throw new ArgumentException("Only MText, Text, Insert, and Tolerance entities are supported as a leader annotation.", nameof(this.annotation));
                     }
                 }
-                return Vector2.Rotate(Vector2.UnitX, angle * MathHelper.DegToRad);
-            }
+                this.direction = Vector2.Rotate(Vector2.UnitX, angle * MathHelper.DegToRad);
         }
 
-        #endregion
-
-        #region public methods
-
-        /// <summary>
-        /// Updates the leader entity to reflect the latest changes made to its properties.
-        /// </summary>
-        /// <param name="resetAnnotationPosition">
-        /// If true the annotation position will be modified according to the position of the leader hook (last leader vertex),
-        /// otherwise the leader hook will be moved according to the actual annotation position.
-        /// </param>
-        /// <remarks>
-        /// This method should be manually called if the annotation position is modified, or the leader properties like Style, Annotation, TextVerticalPosition, and/or Offset.
-        /// </remarks>
-        public void Update(bool resetAnnotationPosition)
+        private Vector2 CalculateHookLine()
         {
-            if (this.vertexes.Count < 2)
+            DimensionStyleOverride styleOverride;
+
+            double dimScale = this.Style.DimScaleOverall;
+            if (this.StyleOverrides.TryGetValue(DimensionStyleOverrideType.DimScaleOverall, out styleOverride))
             {
-                throw new Exception("The leader vertexes list requires at least two points.");
+                dimScale = (double) styleOverride.Value;
             }
 
-            if (this.annotation == null)
+            double arrowSize = this.Style.ArrowSize;
+            if (this.StyleOverrides.TryGetValue(DimensionStyleOverrideType.ArrowSize, out styleOverride))
             {
-                return;
+                arrowSize = (double) styleOverride.Value;
             }
 
-            if (resetAnnotationPosition)
-            {
-                this.ResetAnnotationPosition();
-            }
-            else
-            {
-                this.ResetHookPosition();
-            }
-
-            if (this.hasHookline)
-            {
-                Vector2 vertex = this.CalculateHookLine();
-                this.vertexes[this.vertexes.Count - 2] = vertex;
-            }
+            return  this.Hook - this.Direction * arrowSize * dimScale;
         }
-
-        #endregion
-
-        #region private methods
 
         /// <summary>
         /// Resets the leader hook position according to the annotation position.
@@ -889,25 +922,6 @@ namespace netDxf.Entities
                 Color = this.style.TextColor.IsByBlock ? AciColor.ByLayer : this.style.TextColor,
                 Style = this.style
             };
-        }
-
-        private Vector2 CalculateHookLine()
-        {
-            DimensionStyleOverride styleOverride;
-
-            double dimScale = this.Style.DimScaleOverall;
-            if (this.StyleOverrides.TryGetValue(DimensionStyleOverrideType.DimScaleOverall, out styleOverride))
-            {
-                dimScale = (double) styleOverride.Value;
-            }
-
-            double arrowSize = this.Style.ArrowSize;
-            if (this.StyleOverrides.TryGetValue(DimensionStyleOverrideType.ArrowSize, out styleOverride))
-            {
-                arrowSize = (double) styleOverride.Value;
-            }
-
-            return  this.Hook - this.Direction * arrowSize * dimScale;
         }
 
         #endregion

@@ -1,5 +1,14 @@
 ## Change history
 
+### [2021/09/18]
+* Leader entitities with less than two vertices will be deleted when loading a DXF file.
+* (fixed) Changed the default DxfDocument comment to show that netDxf is licensed under MIT.
+* (fixed) Possible out of range error for the LuPrec header variable when reading a DXF file. Out of range values will default to 4.
+* (fixed) When writing a DXF file the codes for the dimension style overrides TolerancesLowerLimit and TolerancesUpperLimit were switched.
+* (fixed) Error in the ShapeStyle when trying to get the a shape name from a specified number.
+* (fixed) The default linetype will be given to a layer state if the specified one in the DXF is not found. This will affect linetypes that comes from externally referenced drawings. 
+* (fixed) Complex linetypes assigned to a layer were not properly initialized.
+
 ### [2021/06/20]
 * Loading AutoCad2000 (AC1015) or AutoCad2004 (AC1018) DXF files containing non-ASCII characters will work once again. Additionally the Net Standard 2.1 build requires a reference to the external library "System.Text.Encoding.CodePages".
 

@@ -53,8 +53,11 @@ namespace netDxf.IO
             {
                 sb.Append((char) sentinel[i]);
             }
+
             if (sb.ToString() != "AutoCAD Binary DXF")
+            {
                 throw new ArgumentException("Not a valid binary DXF.");
+            }
 
             this.code = 0;
             this.value = null;

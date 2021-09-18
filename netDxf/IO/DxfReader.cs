@@ -97,6 +97,9 @@ namespace netDxf.IO
         // the order of each table group in the tables section may vary
         private Dictionary<DimensionStyle, string[]> dimStyleToHandles;
 
+        // layer for post-processing
+        private List<Layer> layers;
+
         // complex linetypes for post-processing
         private List<Linetype> complexLinetypes;
         private Dictionary<LinetypeSegment, string> linetypeSegmentStyleHandles;
@@ -223,6 +226,7 @@ namespace netDxf.IO
             this.tableXData = new Dictionary<DxfObject, List<XData>>() ;
             this.tableEntryXData = new Dictionary<DxfObject, List<XData>>();
             this.dimStyleToHandles = new Dictionary<DimensionStyle, string[]>();
+            this.layers = new List<Layer>();
             this.complexLinetypes = new List<Linetype>();
             this.linetypeSegmentStyleHandles = new Dictionary<LinetypeSegment, string>();
             this.linetypeShapeSegmentToNumber = new Dictionary<LinetypeShapeSegment, short>();
@@ -529,7 +533,12 @@ namespace netDxf.IO
                         this.chunk.Next();
                         break;
                     case HeaderVariableCode.LUprec:
-                        this.doc.DrawingVariables.LUprec = this.chunk.ReadShort();
+                        short luprec = this.chunk.ReadShort();
+                        if (luprec < 0 || luprec > 8)
+                        {
+                            luprec = 4;
+                        }
+                        this.doc.DrawingVariables.LUprec = luprec;
                         this.chunk.Next();
                         break;
                     case HeaderVariableCode.DwgCodePage:
@@ -808,13 +817,13 @@ namespace netDxf.IO
                     case LinetypeSegmentType.Shape:
                         if (this.doc.GetObjectByHandle(pair.Value) is ShapeStyle shape)
                         {
-                            ((LinetypeShapeSegment)pair.Key).Style = shape;
+                            ((LinetypeShapeSegment) pair.Key).Style = shape;
                         }
                         break;
                     case LinetypeSegmentType.Text:
                         if (this.doc.GetObjectByHandle(pair.Value) is TextStyle style)
                         {
-                            ((LinetypeTextSegment)pair.Key).Style = style;
+                            ((LinetypeTextSegment) pair.Key).Style = style;
                         }
                         break;
                 }
@@ -843,6 +852,22 @@ namespace netDxf.IO
                     complexLinetype.Segments.Remove(s);
                 }
                 this.doc.Linetypes.Add(complexLinetype, false);
+            }
+
+            foreach (Linetype complexLinetype in this.complexLinetypes)
+            {
+                // remove invalid linetype shape segments
+                foreach (LinetypeSegment s in remove)
+                {
+                    complexLinetype.Segments.Remove(s);
+                }
+                this.doc.Linetypes.Add(complexLinetype, false);
+            }
+
+            // now that the linetype list is fully initialized we can add the layer to the document
+            foreach (Layer layer in this.layers)
+            {
+                this.doc.Layers.Add(layer, false);
             }
 
             // post process extended data information for table collections
@@ -1248,7 +1273,8 @@ namespace netDxf.IO
                         if (layer != null)
                         {
                             layer.Handle = handle;
-                            this.doc.Layers.Add(layer, false);
+                            this.layers.Add(layer);
+                            //this.doc.Layers.Add(layer, false);
                         }
                         break;
                     case DxfObjectCode.LinetypeTable:
@@ -4450,6 +4476,7 @@ namespace netDxf.IO
             string annotation = string.Empty;
             Vector3 normal = Vector3.UnitZ;
             Vector3 offset = Vector3.Zero;
+            Vector3 direction = Vector3.UnitX;
 
             List<XData> xData = new List<XData>();
 
@@ -4510,6 +4537,18 @@ namespace netDxf.IO
                         normal.Z = this.chunk.ReadDouble();
                         this.chunk.Next();
                         break;
+                    case 211:
+                        direction.X = this.chunk.ReadDouble();
+                        this.chunk.Next();
+                        break;
+                    case 221:
+                        direction.Y = this.chunk.ReadDouble();
+                        this.chunk.Next();
+                        break;
+                    case 231:
+                        direction.Z = this.chunk.ReadDouble();
+                        this.chunk.Next();
+                        break;
                     case 213:
                         offset.X = this.chunk.ReadDouble();
                         this.chunk.Next();
@@ -4538,26 +4577,25 @@ namespace netDxf.IO
             {
                 return null;
             }
-
-            if (hasHookline && wcsVertexes.Count >= 3)
+            if (wcsVertexes.Count < 2)
             {
-                wcsVertexes.RemoveAt(wcsVertexes.Count - 2);
+                return null;
             }
 
             List<Vector2> vertexes = MathHelper.Transform(wcsVertexes, normal, out double elevation);
 
             Vector2 ocsOffset = MathHelper.Transform(offset, normal, out _);
+            Vector2 ocsDirection = MathHelper.Transform(direction, normal, out _);
 
-            Leader leader = new Leader(vertexes)
+            Leader leader = new Leader(vertexes, style, hasHookline)
             {
-                Style = style,
                 ShowArrowhead = showArrowhead,
                 PathType = path,
                 LineColor = lineColor,
                 Elevation = elevation,
                 Normal = normal,
                 Offset = ocsOffset,
-                HasHookline = hasHookline
+                Direction = ocsDirection
             };
 
             leader.XData.AddRange(xData);
@@ -7433,7 +7471,7 @@ namespace netDxf.IO
             double ctrlX = 0;
             double ctrlY = 0;
             double ctrlZ;
-            double ctrlWeigth = -1;
+            double ctrlWeight = -1;
 
             // tolerances (not used)
             double knotTolerance = 0.0000001;
@@ -7554,32 +7592,34 @@ namespace netDxf.IO
                         break;
                     case 30:
                         ctrlZ = this.chunk.ReadDouble();
-                        if (ctrlWeigth <= 0)
+                        if (ctrlWeight <= 0)
                         {
                             ctrlPoints.Add(new SplineVertex(ctrlX, ctrlY, ctrlZ));
                             ctrlPointIndex = ctrlPoints.Count - 1;
                         }
                         else
                         {
-                            ctrlPoints.Add(new SplineVertex(ctrlX, ctrlY, ctrlZ, ctrlWeigth));
+                            ctrlPoints.Add(new SplineVertex(ctrlX, ctrlY, ctrlZ, ctrlWeight));
                             ctrlPointIndex = -1;
                         }
                         this.chunk.Next();
                         break;
                     case 41:
                         // code 41 might appear before or after the control point coordinates.
-                        double weigth = this.chunk.ReadDouble();
-                        if (weigth <= 0.0)
-                            weigth = 1.0;
+                        double weight = this.chunk.ReadDouble();
+                        if (weight <= 0.0)
+                        {
+                            weight = 1.0;
+                        }
 
                         if (ctrlPointIndex == -1)
                         {
-                            ctrlWeigth = weigth;
+                            ctrlWeight = weight;
                         }
                         else
                         {
-                            ctrlPoints[ctrlPointIndex].Weight = weigth;
-                            ctrlWeigth = -1;
+                            ctrlPoints[ctrlPointIndex].Weight = weight;
+                            ctrlWeight = -1;
                         }
                         this.chunk.Next();
                         break;
@@ -7610,7 +7650,6 @@ namespace netDxf.IO
 
             Spline entity;
             SplineCreationMethod method = flags.HasFlag(SplineTypeFlags.FitPointCreationMethod) ? SplineCreationMethod.FitPoints : SplineCreationMethod.ControlPoints;
-
             if (method == SplineCreationMethod.FitPoints && ctrlPoints.Count == 0)
             {
                 entity = new Spline(fitPoints)
@@ -11073,7 +11112,8 @@ namespace netDxf.IO
                         break;
                     case 331:
                         Linetype linetype = (Linetype) this.doc.GetObjectByHandle((string) recordEntry.Value);
-                        lineTypeName = linetype.Name;
+                        Debug.Assert(linetype != null);
+                        lineTypeName = linetype == null ? Linetype.DefaultName : linetype.Name;
                         break;
                     case 6:
                         lineTypeName = (string) recordEntry.Value;
@@ -11486,7 +11526,16 @@ namespace netDxf.IO
             {
                 return linetype;
             }
-
+            else
+            {
+                foreach (Linetype complexLinetype in this.complexLinetypes)
+                {
+                    if (string.Equals(name, complexLinetype.Name, StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        return complexLinetype;
+                    }
+                }
+            }
             // if an entity references a table object not defined in the tables section a new one will be created
             return this.doc.Linetypes.Add(new Linetype(name));
         }

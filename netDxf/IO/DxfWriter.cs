@@ -791,7 +791,10 @@ namespace netDxf.IO
             this.chunk.Write(9, "$DIMAPOST");
 
             string dimapost = style.AlternateUnits.Suffix;
-            if (!string.IsNullOrEmpty(style.AlternateUnits.Prefix)) dimapost = style.AlternateUnits.Prefix + "<>" + dimapost;
+            if (!string.IsNullOrEmpty(style.AlternateUnits.Prefix))
+            {
+                dimapost = style.AlternateUnits.Prefix + "<>" + dimapost;
+            }
             this.chunk.Write(1, this.EncodeNonAsciiCharacters(dimapost));
 
             this.chunk.Write(9, "$DIMATFIT");
@@ -805,15 +808,25 @@ namespace netDxf.IO
 
             short angSupress;
             if (style.SuppressAngularLeadingZeros && style.SuppressAngularTrailingZeros)
+            {
                 angSupress = 3;
+            }
             else if (!style.SuppressAngularLeadingZeros && !style.SuppressAngularTrailingZeros)
+            {
                 angSupress = 0;
+            }
             else if (!style.SuppressAngularLeadingZeros && style.SuppressAngularTrailingZeros)
+            {
                 angSupress = 2;
+            }
             else if (style.SuppressAngularLeadingZeros && !style.SuppressAngularTrailingZeros)
+            {
                 angSupress = 1;
+            }
             else
+            {
                 angSupress = 3;
+            }
 
             this.chunk.Write(9, "$DIMAZIN");
             this.chunk.Write(70, angSupress);
@@ -2181,7 +2194,7 @@ namespace netDxf.IO
             this.chunk.Write(220, tolerance.Normal.Y);
             this.chunk.Write(230, tolerance.Normal.Z);
 
-            double angle = tolerance.Rotation*MathHelper.DegToRad;
+            double angle = tolerance.Rotation * MathHelper.DegToRad;
             Vector3 xAxis = new Vector3(Math.Cos(angle), Math.Sin(angle), 0.0);
             xAxis = MathHelper.Transform(xAxis, tolerance.Normal, CoordinateSystem.Object, CoordinateSystem.World);
 
@@ -2284,8 +2297,6 @@ namespace netDxf.IO
             this.chunk.Write(210, leader.Normal.X);
             this.chunk.Write(220, leader.Normal.Y);
             this.chunk.Write(230, leader.Normal.Z);
-
-            Vector3 dir = ocsVertexes[ocsVertexes.Count - 1] - ocsVertexes[ocsVertexes.Count - 2];
 
             Vector3 xDir = MathHelper.Transform(leader.Direction, leader.Normal, 0.0);
             xDir.Normalize();
@@ -2597,7 +2608,7 @@ namespace netDxf.IO
             this.chunk.Write(71, spline.Degree);
 
             // the next three codes are purely cosmetic and writing them causes more bad than good.
-            // internally AutoCad allows for an INT number of knots, control points, and fit points;
+            // internally AutoCad allows for an integer number of knots, control points, and fit points;
             // but for some weird decision they decided to define them in the DXF with codes 72, 73, and 74 (16-bit integer value), a short.
             // I guess this is the result of legacy code, nevertheless AutoCad do not use those values when importing Spline entities
             //this.chunk.Write(72, (short)spline.Knots.Length);
@@ -2629,10 +2640,10 @@ namespace netDxf.IO
 
             foreach (SplineVertex point in spline.ControlPoints)
             {
-                this.chunk.Write(41, point.Weight);
                 this.chunk.Write(10, point.Position.X);
                 this.chunk.Write(20, point.Position.Y);
                 this.chunk.Write(30, point.Position.Z);
+                this.chunk.Write(41, point.Weight);
             }
 
             foreach (Vector3 point in spline.FitPoints)
@@ -2658,7 +2669,7 @@ namespace netDxf.IO
             this.chunk.Write(20, ocsInsertion.Y);
             this.chunk.Write(30, ocsInsertion.Z);
 
-            // we need to apply the scaling factor between the block and the document or the block that owns it in case of nested blocks
+            // we need to apply the scaling factor between the block and the document, or the block that owns it in case of nested blocks
             double scale = UnitHelper.ConversionFactor(insert.Block.Record.Units, insert.Owner.Record.IsForInternalUseOnly ? this.doc.DrawingVariables.InsUnits : insert.Owner.Record.Units);
 
             this.chunk.Write(41, insert.Scale.X*scale);
@@ -2914,7 +2925,7 @@ namespace netDxf.IO
             this.chunk.Write(220, point.Normal.Y);
             this.chunk.Write(230, point.Normal.Z);
 
-            // for unknown reasons the DXF likes the point rotation inverted
+            // for unknown reasons the DXF likes the point rotation inverted, NONSENSE
             this.chunk.Write(50, 360.0 - point.Rotation);
 
             this.WriteXData(point.XData);
@@ -2926,7 +2937,7 @@ namespace netDxf.IO
 
             this.chunk.Write(1, this.EncodeNonAsciiCharacters(text.Value));
 
-            // another example of this OCS vs WCS non sense.
+            // another example of this OCS vs WCS nonsense.
             // while the MText position is written in WCS the position of the Text is written in OCS (different rules for the same concept).
             Vector3 ocsBasePoint = MathHelper.Transform(text.Position, text.Normal, CoordinateSystem.World, CoordinateSystem.Object);
 
@@ -3072,6 +3083,7 @@ namespace netDxf.IO
             //this.chunk.Write(50, mText.Rotation);
 
             //the other option for the rotation is to store the horizontal vector of the text
+            //this is what happens when duplicate information is stored, always ends in trouble
             //it will be used just in case other programs read the rotation as radians, QCAD seems to do that.
             Vector2 direction = Vector2.Rotate(Vector2.UnitX, mText.Rotation * MathHelper.DegToRad);
             direction.Normalize();
@@ -3274,12 +3286,12 @@ namespace netDxf.IO
                 HatchBoundaryPath.Spline spline = (HatchBoundaryPath.Spline) entity;
 
                 // another DXF inconsistency!; while the Spline entity degree is written as a short (code 71)
-                // the degree of a hatch boundary path spline is written as an int (code 94)
+                // the degree of a hatch boundary path spline is written as an integer (code 94)
                 this.chunk.Write(94, (int) spline.Degree);
                 this.chunk.Write(73, spline.IsRational ? (short) 1 : (short) 0);
                 this.chunk.Write(74, spline.IsPeriodic ? (short) 1 : (short) 0);
 
-                // now the number of knots and control points of a spline are written as an int, as it should be.
+                // now the number of knots and control points of a spline are written as an integer, as it should be.
                 // but in the Spline entities they are defined as shorts. Guess what, while you can avoid writing these two codes for the Spline entity, now they are required.
                 this.chunk.Write(95, spline.Knots.Length);
                 this.chunk.Write(96, spline.ControlPoints.Length);
@@ -3402,8 +3414,6 @@ namespace netDxf.IO
                 this.chunk.Write(2, this.EncodeNonAsciiCharacters(dim.Block.Name));
             }
 
-            //Vector3 ocsDef = new Vector3(dim.DefinitionPoint.X, dim.DefinitionPoint.Y, dim.Elevation);
-            //Vector3 wcsDef = MathHelper.Transform(ocsDef, dim.Normal, CoordinateSystem.Object, CoordinateSystem.World);
             Vector3 wcsDef = MathHelper.Transform(dim.DefinitionPoint, dim.Normal, dim.Elevation);
             this.chunk.Write(10, wcsDef.X);
             this.chunk.Write(20, wcsDef.Y);
@@ -3832,11 +3842,11 @@ namespace netDxf.IO
                         xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, dimlin));
                         break;
                     case DimensionStyleOverrideType.TolerancesLowerLimit:
-                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 47));
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 48));
                         xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Real, (double) styleOverride.Value));
                         break;
                     case DimensionStyleOverrideType.TolerancesUpperLimit:
-                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 48));
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 47));
                         xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Real, (double) styleOverride.Value));
                         break;
                     case DimensionStyleOverrideType.TolerancesVerticalPlacement:
@@ -4140,13 +4150,6 @@ namespace netDxf.IO
 
             Vector2 u = image.Uvector * (image.Width / image.Definition.Width);
             Vector2 v = image.Vvector * (image.Height / image.Definition.Height);
-
-            //Vector3 ocsU = new Vector3(u.X, u.Y, 0.0);
-            //Vector3 ocsV = new Vector3(v.X, v.Y, 0.0);
-            //List<Vector3> wcsUV = MathHelper.Transform(new List<Vector3> { ocsU, ocsV },
-            //    image.Normal,
-            //    CoordinateSystem.Object,
-            //    CoordinateSystem.World);
             List<Vector3> wcsUV = MathHelper.Transform(new[] {u, v}, image.Normal, 0.0);
 
             double factor = UnitHelper.ConversionFactor(this.doc.RasterVariables.Units, this.doc.DrawingVariables.InsUnits);

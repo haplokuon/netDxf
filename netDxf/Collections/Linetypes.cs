@@ -196,7 +196,7 @@ namespace netDxf.Collections
                 }
                 if (segment.Type == LinetypeSegmentType.Shape)
                 {
-                    LinetypeShapeSegment shapeSegment = (LinetypeShapeSegment)segment;
+                    LinetypeShapeSegment shapeSegment = (LinetypeShapeSegment) segment;
                     shapeSegment.Style = this.Owner.ShapeStyles.Add(shapeSegment.Style);
                     this.Owner.ShapeStyles.References[shapeSegment.Style.Name].Add(linetype);
                     if (!shapeSegment.Style.ContainsShapeName(shapeSegment.Name))

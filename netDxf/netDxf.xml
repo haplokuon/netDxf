@@ -6917,7 +6917,7 @@
         </member>
         <member name="P:netDxf.Entities.Leader.Direction">
             <summary>
-            Gets the leader annotation direction.
+            Gets or sets the leader annotation direction.
             </summary>
         </member>
         <member name="M:netDxf.Entities.Leader.Update(System.Boolean)">

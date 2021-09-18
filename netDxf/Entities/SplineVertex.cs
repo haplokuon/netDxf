@@ -98,7 +98,9 @@ namespace netDxf.Entities
         public SplineVertex(Vector3 position, double weight)
         {
             if (weight <= 0)
+            {
                 throw new ArgumentOutOfRangeException(nameof(weight), weight, "The spline vertex weight must be greater than zero.");
+            }
             this.position = position;
             this.weight = weight;
         }

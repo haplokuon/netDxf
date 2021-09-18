@@ -213,7 +213,7 @@ namespace netDxf.Tables
                 for (int i = 0; i < num; i++)
                 {
                     names.Add(NullTerminatedString(reader, encoding));
-                    reader.ReadBytes(numBytes[i] - (names[i].Length + 1));
+                    reader.ReadBytes(numBytes[i] - (names[i].Length + 1)); // these bytes holds the shape geometry
                 }
             }
 
@@ -293,7 +293,7 @@ namespace netDxf.Tables
         /// <param name="name">Name of the shape.</param>
         /// <returns>The number of the shape, 0 in case the shape has not been found.</returns>
         /// <remarks>If the actual shape style belongs to a document, it will look for the SHX file also in the document support folders.</remarks>
-        internal short ShapeNumber(string name)
+        public short ShapeNumber(string name)
         {
             if (string.IsNullOrEmpty(name))
             {
@@ -350,6 +350,7 @@ namespace netDxf.Tables
                 for (int i = 0; i < num; i++)
                 {
                     string n = NullTerminatedString(reader, encoding);
+                    reader.ReadBytes(numBytes[i] - (n.Length + 1)); // these bytes holds the shape geometry
                     if (name.Equals(n, StringComparison.InvariantCultureIgnoreCase))
                     {
                         return numbers[i];
@@ -366,7 +367,7 @@ namespace netDxf.Tables
         /// <param name="number">Number of the shape.</param>
         /// <returns>The name of the shape, empty in case the shape has not been found.</returns>
         /// <remarks>If the actual shape style belongs to a document, it will look for the SHX file also in the document support folders.</remarks>
-        internal string ShapeName(short number)
+        public string ShapeName(short number)
         {
             string f = this.shapeFile;
             if (this.Owner != null)
@@ -424,10 +425,12 @@ namespace netDxf.Tables
 
                 for (int i = 0; i < num; i++)
                 {
-                    string n = NullTerminatedString(reader, encoding);
+                    string name = NullTerminatedString(reader, encoding);
+                    reader.ReadBytes(numBytes[i] - (name.Length + 1)); // these bytes holds the shape geometry
+
                     if (index == i)
                     {
-                        return n;
+                        return name;
                     }
                 }
             }
