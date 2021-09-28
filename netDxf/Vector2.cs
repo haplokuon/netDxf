@@ -42,7 +42,7 @@ namespace netDxf
         #region constructors
 
         /// <summary>
-        /// Initializes a new instance of Vector3.
+        /// Initializes a new instance of Vector2.
         /// </summary>
         /// <param name="value">X, Y component.</param>
         public Vector2(double value)
