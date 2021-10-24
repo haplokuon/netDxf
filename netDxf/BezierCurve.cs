@@ -23,41 +23,64 @@
 // 
 #endregion
 
-namespace netDxf.Objects
+using System;
+using System.Collections.Generic;
+using System.Linq;
+
+namespace netDxf
 {
     /// <summary>
-    /// Defines the portion of paper space to output to the media.
+    /// Represent a bezier curve.
     /// </summary>
-    public enum PlotType
+    public abstract class BezierCurve
     {
-        /// <summary>
-        /// Last screen display
-        /// </summary>
-        LastScreenDisplay = 0,
+        #region private fields
+
+        protected readonly Vector3[] controlPoints;
+        protected readonly int degree;
+
+        #endregion
+
+        #region constructors
 
         /// <summary>
-        /// Drawing extents.
+        /// Initializes a new instance of the <c>BezierCurve</c> class.
         /// </summary>
-        DrawingExtents = 1,
+        /// <param name="controlPoints">A list of control points.</param>
+        /// <remarks>
+        /// The curve degree will be equal to the number of control points minus one.
+        /// </remarks>
+        protected BezierCurve(IEnumerable<Vector3> controlPoints)
+        {
+            if (controlPoints == null)
+            {
+                throw new ArgumentNullException(nameof(controlPoints));
+            }
+
+            this.controlPoints = controlPoints.ToArray();
+            this.degree = this.controlPoints.Length - 1;
+        }
+
+        #endregion
+
+        #region public properties
 
         /// <summary>
-        /// Drawing limits.
+        /// Gets the control points.
         /// </summary>
-        DrawingLimits = 2,
+        public Vector3[] ControlPoints
+        {
+            get { return this.controlPoints; }
+        }
 
         /// <summary>
-        /// View specified by the plot view name.
+        /// Gets the bezier curve degree.
         /// </summary>
-        View = 3,
+        public int Degree
+        {
+            get { return this.degree; }
+        }
 
-        /// <summary>
-        /// Window specified by the upper-right and bottom-left window corners.
-        /// </summary>
-        Window = 4,
-
-        /// <summary>
-        /// Layout information.
-        /// </summary>
-        LayoutInformation = 5
+        #endregion
     }
 }

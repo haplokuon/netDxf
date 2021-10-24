@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
@@ -32,6 +32,11 @@ namespace TestDxfDocument
 
             #region Samples for new and modified features 3.0.0
 
+            //SmoothPolyline();
+            //SplitBezierCurve();
+            //FitBezierCurve();
+            //BezierCurve();
+            //PolyfaceMesh();
             //AssignAnnotationToLeader();
             //CreateImageDefinition();
 
@@ -261,6 +266,197 @@ namespace TestDxfDocument
         }
 
         #region Samples for new and modified features 3.0.0
+
+        public static void SmoothPolyline()
+        {
+            // polyline points
+            List<Vector3> points = new List<Vector3>
+            {
+                new Vector3(0, 0, 0),
+                new Vector3(0,5,0),
+                new Vector3(5,2.5,0),
+                new Vector3(10, 5, 0),
+                new Vector3(10, 0, 0),
+            };
+
+            // create the polyline
+            Polyline poly = new Polyline(points);
+
+            // polyline smooth type
+            // the resulting smoothed polyline is the same as a Spline of second (Quadratic) or third (Cubic) degree
+            // it is recommended to use a Spline entity instead, if you are planning to smooth the polyline
+            poly.SmoothType = PolylineSmoothType.Quadratic;
+
+            // closing the polyline will generate a closed periodic spline
+            poly.IsClosed = true;
+
+            DxfDocument doc = new DxfDocument();
+            doc.Entities.Add(poly);
+
+            // for testing purposes
+            // AutoCad uses the $SPLINESEGS header variable as a base number to generate the spline curve that represents the smoothed polyline
+            // I do not know how exactly this variable is applied, at the moment, when the DXF file is saved,
+            // the precision used to generate the vertexes that represent the smoothed polyline is
+            // For open polylines: Precision = $SPLINESEGS * (Number of Vertices - 1),
+            // For closed polylines: Precision = $SPLINESEGS * Number of Vertices.
+            Polyline testPoly = new Polyline(poly.PolygonalVertexes(doc.DrawingVariables.SplineSegs * poly.Vertexes.Count))
+            {
+                IsClosed = poly.IsClosed,
+                Color = AciColor.Yellow
+            };
+            doc.Entities.Add(testPoly);
+
+            doc.Save("test.dxf");
+        }
+
+        public static void SplitBezierCurve()
+        {
+            // this same procedure can be applied to quadratic bezier curves
+
+            // cubic bezier curve control points
+            List<Vector3> points = new List<Vector3>
+            {
+                new Vector3(0, 0, 0),
+                new Vector3(5,2,5),
+                new Vector3(7,5,-5),
+                new Vector3(15, -10, 0)
+            };
+
+            // create the bezier curve
+            BezierCurveCubic curveCubic = new BezierCurveCubic(points);
+
+            // split the curve at parameter t = 0.25
+            BezierCurveCubic[] splitCurves = curveCubic.Split(0.25);
+
+            DxfDocument doc = new DxfDocument();
+
+            doc.Entities.Add(new Spline(new[] {splitCurves[0]}));
+            doc.Entities.Add(new Spline(new[] {splitCurves[1]}));
+
+            // original curve for testing
+            doc.Entities.Add(new Spline(new[] {curveCubic}) {Color = AciColor.Yellow});
+
+            doc.Save("test.dxf");
+        }
+
+        public static void FitBezierCurve()
+        {
+            // list of point that the Spline must pass through
+            List<Vector3> fitPoints = new List<Vector3>
+            {
+                new Vector3(0, 0, 0),
+                new Vector3(5, 5, 0),
+                new Vector3(10, 0, 0),
+                new Vector3(15, -5, 0),
+                new Vector3(20, 0, 0)
+            };
+
+            // initializing a Spline from a set of fit points will create as set of cubic bezier curves that passes through those points
+            // the resulting curves will be used to create the Spline (see the BezierCurve() sample).
+            Spline spline = new Spline(fitPoints);
+            //Spline spline = new Spline(curves);
+            spline.Color = AciColor.Blue;
+            DxfDocument doc = new DxfDocument();
+            doc.Entities.Add(spline);
+
+            // testing that the result is the same
+            List<BezierCurveCubic> curves = BezierCurveCubic.CreateFromFitPoints(fitPoints);
+            foreach (BezierCurveCubic curve in curves)
+            {
+                doc.Entities.Add(new Polyline(curve.PolygonalVertexes(10)) {Color = AciColor.Yellow});
+            }
+
+            doc.Save("test.dxf");
+        }
+
+        public static void BezierCurve()
+        {
+            // this sample uses cubic bezier curves
+            // this same procedure can be done with a quadratic bezier curves
+
+            // cubic bezier control points (degree = number of control points - 1)
+            List<Vector3> points1 = new List<Vector3>
+            {
+                new Vector3(0,0,0),
+                new Vector3(5,5,0),
+                new Vector3(10,5,0),
+                new Vector3(15,0,0)
+            };
+
+            // cubic bezier control points (degree = number of control points - 1)
+            List<Vector3> points2 = new List<Vector3>
+            {
+                new Vector3(15,0,0),
+                new Vector3(20,-5,0),
+                new Vector3(25,-5,0),
+                new Vector3(30,0,0)
+            };
+
+            // create the cubic bezier curves
+            BezierCurveCubic curve1 = new BezierCurveCubic(points1);
+            BezierCurveCubic curve2 = new BezierCurveCubic(points2);
+            
+            // create a polyline from a bezier curve given a precision of 10
+            Polyline polyline1 = new Polyline(curve1.PolygonalVertexes(10));
+            polyline1.Color = AciColor.Blue;
+
+            // create a polyline from a bezier curve given a precision of 10
+            Polyline polyline2 = new Polyline(curve2.PolygonalVertexes(10));
+            polyline2.Color = AciColor.Red;
+
+            // create a Spline from a set of concatenated cubic bezier curves
+            // the end point point of the previous curve should be the start point of the next
+            Spline spline1 = new Spline(new []{curve1, curve2});
+            spline1.Color = AciColor.Yellow;
+            DxfDocument doc = new DxfDocument();
+            doc.Entities.Add(spline1);
+            doc.Entities.Add(polyline1);
+            doc.Entities.Add(polyline2);
+            doc.Save("test.dxf");
+        }
+
+        private static void PolyfaceMesh()
+        {
+            // list of vertices of the PolyfaceMesh
+            List<Vector3> vertexes = new List<Vector3>
+            {
+                new Vector3(0, 0, 0),
+                new Vector3(10, 0, 0),
+                new Vector3(10, 10, 0),
+                new Vector3(5, 15, 0),
+                new Vector3(0, 10, 0)
+            };
+
+            // list of face indexes of the PolyfaceMesh
+            List<short[]> faces = new List<short[]>
+            {
+                new short[] {1, 2, -3},
+                new short[] {-1, 3, -4},
+                new short[] {-1, 4, 5}
+            };
+
+            // directly initializing the faces of the PolyfaceMesh
+            //List<PolyfaceMeshFace> faces = new List<PolyfaceMeshFace>
+            //{
+            //    new PolyfaceMeshFace(new short[] {1, 2, -3, 5}) {Color = AciColor.Blue},
+            //    new PolyfaceMeshFace(new short[] {-5, 3, 4}) {Color = AciColor.Red}
+            //};
+
+            DxfDocument doc = new DxfDocument();
+            Layer layer2 = doc.Layers.Add(new Layer("layer2") {Color = AciColor.Red});
+            PolyfaceMesh mesh = new PolyfaceMesh(vertexes, faces);
+            mesh.Faces[0].Layer = new Layer("layer1") { Color = AciColor.Blue }; // assign a new layer to the face
+            mesh.Faces[1].Layer = layer2; // assign an existing layer to the face
+            //mesh.Faces[0].Color = AciColor.Yellow; // PolyfaceMesh faces can also have their own color
+            //mesh.Faces[1].Color = AciColor.Green; // PolyfaceMesh faces can also have their own color
+            doc.Entities.Add(mesh);
+
+            doc.Save("test.dxf");
+
+            // Test
+            doc = DxfDocument.Load("test.dxf");
+            doc.Save("test.dxf");
+        }
 
         private static void AssignAnnotationToLeader()
         {
@@ -1964,8 +2160,8 @@ namespace TestDxfDocument
             doc.Entities.Add(poly2);
 
             // both polylines were added to the document now it is safe to add new vertexes to the polyline without the document failing to save.
-            poly.Vertexes.Add(new PolylineVertex(-1,-1,1));
-            poly2.Vertexes.Add(new PolylineVertex(-1, -1, 1));
+            poly.Vertexes.Add(new Vector3(-1,-1,1));
+            poly2.Vertexes.Add(new Vector3(-1, -1, 1));
 
             doc.Save("test.dxf");
 
@@ -6021,12 +6217,12 @@ namespace TestDxfDocument
         {
             DxfDocument dxf = new DxfDocument();
 
-            List<PolylineVertex> vertexes = new List<PolylineVertex>
+            List<Vector3> vertexes = new List<Vector3>
             {
-                new PolylineVertex(0, 0, 0),
-                new PolylineVertex(10, 0, 10),
-                new PolylineVertex(10, 10, 20),
-                new PolylineVertex(0, 10, 30)
+                new Vector3(0, 0, 0),
+                new Vector3(10, 0, 10),
+                new Vector3(10, 10, 20),
+                new Vector3(0, 10, 30)
             };
 
             Polyline poly = new Polyline(vertexes, true);
@@ -7402,10 +7598,10 @@ namespace TestDxfDocument
             DxfDocument dxf = new DxfDocument();
             dxf.DrawingVariables.AcadVer = DxfVersion.AutoCad2010;
             Polyline poly = new Polyline();
-            poly.Vertexes.Add(new PolylineVertex(0, 0, 0));
-            poly.Vertexes.Add(new PolylineVertex(10, 10, 0));
-            poly.Vertexes.Add(new PolylineVertex(20, 0, 0));
-            poly.Vertexes.Add(new PolylineVertex(30, 10, 0));
+            poly.Vertexes.Add(new Vector3(0, 0, 0));
+            poly.Vertexes.Add(new Vector3(10, 10, 0));
+            poly.Vertexes.Add(new Vector3(20, 0, 0));
+            poly.Vertexes.Add(new Vector3(30, 10, 0));
             dxf.Entities.Add(poly);
 
             dxf.Save("polyline.dxf");
@@ -7631,32 +7827,6 @@ namespace TestDxfDocument
             dxf.Save("nested insert copy.dxf");
         }
 
-        private static void WritePolyfaceMesh()
-        {
-            DxfDocument dxf = new DxfDocument();
-
-
-            List<PolyfaceMeshVertex> vertexes = new List<PolyfaceMeshVertex>
-            {
-                new PolyfaceMeshVertex(0, 0, 0),
-                new PolyfaceMeshVertex(10, 0, 0),
-                new PolyfaceMeshVertex(10, 10, 0),
-                new PolyfaceMeshVertex(5, 15, 0),
-                new PolyfaceMeshVertex(0, 10, 0)
-            };
-            List<PolyfaceMeshFace> faces = new List<PolyfaceMeshFace>
-            {
-                new PolyfaceMeshFace(new short[] {1, 2, -3}),
-                new PolyfaceMeshFace(new short[] {-1, 3, -4}),
-                new PolyfaceMeshFace(new short[] {-1, 4, 5})
-            };
-
-            PolyfaceMesh mesh = new PolyfaceMesh(vertexes, faces);
-            dxf.Entities.Add(mesh);
-
-            dxf.Save("mesh.dxf");
-        }
-
         private static void WriteDxfFile()
         {
             DxfDocument dxf = new DxfDocument();
@@ -7765,19 +7935,19 @@ namespace TestDxfDocument
             dxf.Entities.Add(lwPolyline);
 
             // polyfaceMesh
-            List<PolyfaceMeshVertex> meshVertexes = new List<PolyfaceMeshVertex>
+            List<Vector3> meshVertexes = new List<Vector3>
             {
-                new PolyfaceMeshVertex(0, 0, 0),
-                new PolyfaceMeshVertex(10, 0, 0),
-                new PolyfaceMeshVertex(10, 10, 0),
-                new PolyfaceMeshVertex(5, 15, 0),
-                new PolyfaceMeshVertex(0, 10, 0)
+                new Vector3(0, 0, 0),
+                new Vector3(10, 0, 0),
+                new Vector3(10, 10, 0),
+                new Vector3(5, 15, 0),
+                new Vector3(0, 10, 0)
             };
-            List<PolyfaceMeshFace> faces = new List<PolyfaceMeshFace>
+            List<short[]> faces = new List<short[]>
             {
-                new PolyfaceMeshFace(new short[] {1, 2, -3}),
-                new PolyfaceMeshFace(new short[] {-1, 3, -4}),
-                new PolyfaceMeshFace(new short[] {-1, 4, 5})
+                new short[] {1, 2, -3},
+                new short[] {-1, 3, -4},
+                new short[] {-1, 4, 5}
             };
 
             PolyfaceMesh mesh = new PolyfaceMesh(meshVertexes, faces);
@@ -7792,15 +7962,15 @@ namespace TestDxfDocument
             dxf.Entities.Add(line);
 
             //3d polyline
-            PolylineVertex vertex;
-            List<PolylineVertex> vertexes = new List<PolylineVertex>();
-            vertex = new PolylineVertex(new Vector3(-50, -50, 0));
+            Vector3 vertex;
+            List<Vector3> vertexes = new List<Vector3>();
+            vertex = new Vector3(-50, -50, 0);
             vertexes.Add(vertex);
-            vertex = new PolylineVertex(new Vector3(50, -50, 10));
+            vertex = new Vector3(50, -50, 10);
             vertexes.Add(vertex);
-            vertex = new PolylineVertex(new Vector3(50, 50, 25));
+            vertex = new Vector3(50, 50, 25);
             vertexes.Add(vertex);
-            vertex = new PolylineVertex(new Vector3(-50, 50, 50));
+            vertex = new Vector3(-50, 50, 50);
             vertexes.Add(vertex);
             Polyline polyline = new Polyline(vertexes, true);
             polyline.Layer = new Layer("polyline3d");
@@ -7842,12 +8012,12 @@ namespace TestDxfDocument
         {
             DxfDocument dxf = new DxfDocument();
 
-            List<PolylineVertex> vertexes = new List<PolylineVertex>
+            List<Vector3> vertexes = new List<Vector3>
             {
-                new PolylineVertex(0, 0, 0),
-                new PolylineVertex(10, 0, 10),
-                new PolylineVertex(10, 10, 20),
-                new PolylineVertex(0, 10, 30)
+                new Vector3(0, 0, 0),
+                new Vector3(10, 0, 10),
+                new Vector3(10, 10, 20),
+                new Vector3(0, 10, 30)
             };
 
             Polyline poly = new Polyline(vertexes, true);

@@ -1,27 +1,31 @@
-﻿#region netDxf library licensed under the MIT License, Copyright © 2009-2021 Daniel Carvajal (haplokuon@gmail.com)
+#region netDxf library licensed under the MIT License
 // 
-//                        netDxf library
-// Copyright © 2021 Daniel Carvajal (haplokuon@gmail.com)
+//                       netDxf library
+// Copyright (c) 2019-2021 Daniel Carvajal (haplokuon@gmail.com)
 // 
-// Permission is hereby granted, free of charge, to any person obtaining a copy of this software
-// and associated documentation files (the “Software”), to deal in the Software without restriction,
-// including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense,
-// and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so,
-// subject to the following conditions:
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
 // 
 // The above copyright notice and this permission notice shall be included in all
 // copies or substantial portions of the Software.
 // 
-// THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-// FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-// COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-// IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-// CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+// 
 #endregion
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using netDxf.Tables;
 
 namespace netDxf.Entities
@@ -29,16 +33,31 @@ namespace netDxf.Entities
     /// <summary>
     /// Represents a polyface mesh <see cref="EntityObject">entity</see>.
     /// </summary>
-    /// <remarks>
-    /// The maximum number of vertexes and faces that a PolyfaceMesh can have is short.MaxValue = 32767.
-    /// </remarks>
     public class PolyfaceMesh :
         EntityObject
     {
+        #region delegates and events
+
+        public delegate void PolyfaceMeshFaceLayerChangedEventHandler(PolyfaceMesh sender, TableObjectChangedEventArgs<Layer> e);
+        public event PolyfaceMeshFaceLayerChangedEventHandler PolyfaceMeshFaceLayerChanged;
+        protected virtual Layer OnPolyfaceMeshFaceLayerChangedEvent(Layer oldLayer, Layer newLayer)
+        {
+            PolyfaceMeshFaceLayerChangedEventHandler ae = this.PolyfaceMeshFaceLayerChanged;
+            if (ae != null)
+            {
+                TableObjectChangedEventArgs<Layer> eventArgs = new TableObjectChangedEventArgs<Layer>(oldLayer, newLayer);
+                ae(this, eventArgs);
+                return eventArgs.NewValue;
+            }
+            return newLayer;
+        }
+
+        #endregion
+
         #region private fields
 
-        private readonly List<PolyfaceMeshFace> faces;
-        private readonly List<PolyfaceMeshVertex> vertexes;
+        private readonly PolyfaceMeshFace[] faces;
+        private readonly Vector3[] vertexes;
         private readonly PolylineTypeFlags flags;
         private readonly EndSequence endSequence;
 
@@ -49,24 +68,78 @@ namespace netDxf.Entities
         /// <summary>
         /// Initializes a new instance of the <c>PolyfaceMesh</c> class.
         /// </summary>
-        /// <param name="vertexes">Polyface mesh <see cref="PolyfaceMeshVertex">vertex</see> list.</param>
-        /// <param name="faces">Polyface mesh <see cref="PolyfaceMeshFace">faces</see> list.</param>
-        public PolyfaceMesh(IEnumerable<PolyfaceMeshVertex> vertexes, IEnumerable<PolyfaceMeshFace> faces)
+        /// <param name="vertexes">Polyface mesh <see cref="Vector3">vertex</see> list.</param>
+        /// <param name="faces">Polyface mesh faces list, a maximum of 4 indexes per face.</param>
+        public PolyfaceMesh(IEnumerable<Vector3> vertexes, IEnumerable<short[]> faces)
             : base(EntityType.PolyfaceMesh, DxfObjectCode.Polyline)
         {
             this.flags = PolylineTypeFlags.PolyfaceMesh;
             if (vertexes == null)
+            {
                 throw new ArgumentNullException(nameof(vertexes));
-            this.vertexes = new List<PolyfaceMeshVertex>(vertexes);
-            if (this.vertexes.Count < 3)
-                throw new ArgumentOutOfRangeException(nameof(vertexes), this.vertexes.Count, "The polyface mesh faces list requires at least three points.");
+            }
+            this.vertexes = vertexes.ToArray();
+            if (this.vertexes.Length < 3)
+            {
+                throw new ArgumentOutOfRangeException(nameof(vertexes), this.vertexes.Length, "The polyface mesh faces list requires at least three points.");
+            }
 
             if (faces == null)
+            {
                 throw new ArgumentNullException(nameof(vertexes));
-            this.faces = new List<PolyfaceMeshFace>(faces);
-            if (this.faces.Count < 1)
-                throw new ArgumentOutOfRangeException(nameof(vertexes), this.faces.Count, "The polyface mesh faces list requires at least one face.");
+            }
 
+            int numFaces = faces.Count();
+            this.faces = new PolyfaceMeshFace[numFaces];
+            for (int i = 0; i < numFaces; i++)
+            {
+                this.faces[i] = new PolyfaceMeshFace(faces.ElementAt(i));
+            }
+            if (this.faces.Length < 1)
+            {
+                throw new ArgumentOutOfRangeException(nameof(vertexes), this.faces.Length, "The polyface mesh faces list requires at least one face.");
+            }
+            foreach (PolyfaceMeshFace face in this.faces)
+            {
+                face.LayerChanged += this.PolyfaceMeshFace_LayerChanged;
+            }
+            this.endSequence = new EndSequence(this);
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <c>PolyfaceMesh</c> class.
+        /// </summary>
+        /// <param name="vertexes">Polyface mesh <see cref="Vector3">vertex</see> list.</param>
+        /// <param name="faces">Polyface mesh faces list, a maximum of 4 indexes per face.</param>
+        public PolyfaceMesh(IEnumerable<Vector3> vertexes, IEnumerable<PolyfaceMeshFace> faces)
+            : base(EntityType.PolyfaceMesh, DxfObjectCode.Polyline)
+        {
+            this.flags = PolylineTypeFlags.PolyfaceMesh;
+            if (vertexes == null)
+            {
+                throw new ArgumentNullException(nameof(vertexes));
+            }
+            this.vertexes = vertexes.ToArray();
+            if (this.vertexes.Length < 3)
+            {
+                throw new ArgumentOutOfRangeException(nameof(vertexes), this.vertexes.Length, "The polyface mesh faces list requires at least three points.");
+            }
+
+            if (faces == null)
+            {
+                throw new ArgumentNullException(nameof(vertexes));
+            }
+
+            this.faces = faces.ToArray();
+            if (this.faces.Length < 1)
+            {
+                throw new ArgumentOutOfRangeException(nameof(vertexes), this.faces.Length, "The polyface mesh faces list requires at least one face.");
+            }
+
+            foreach (PolyfaceMeshFace face in this.faces)
+            {
+                face.LayerChanged += this.PolyfaceMeshFace_LayerChanged;
+            }
             this.endSequence = new EndSequence(this);
         }
 
@@ -75,9 +148,9 @@ namespace netDxf.Entities
         #region public properties
 
         /// <summary>
-        /// Gets or sets the polyface mesh <see cref="PolyfaceMeshVertex">vertexes</see>.
+        /// Gets or sets the polyface mesh <see cref="Vector3">vertexes</see>.
         /// </summary>
-        public IReadOnlyList<PolyfaceMeshVertex> Vertexes
+        public Vector3[] Vertexes
         {
             get { return this.vertexes; }
         }
@@ -119,21 +192,9 @@ namespace netDxf.Entities
         /// </summary>
         /// <param name="entityNumber">Number to assign.</param>
         /// <returns>Next available entity number.</returns>
-        /// <remarks>
-        /// Some objects might consume more than one, is, for example, the case of polylines that will assign
-        /// automatically a handle to its vertexes. The entity number will be converted to an hexadecimal number.
-        /// </remarks>
         internal override long AssignHandle(long entityNumber)
         {
             entityNumber = this.endSequence.AssignHandle(entityNumber);
-            foreach (PolyfaceMeshVertex v in this.vertexes)
-            {
-                entityNumber = v.AssignHandle(entityNumber);
-            }
-            foreach (PolyfaceMeshFace f in this.faces)
-            {
-                entityNumber = f.AssignHandle(entityNumber);
-            }
             return base.AssignHandle(entityNumber);
         }
 
@@ -150,37 +211,40 @@ namespace netDxf.Entities
         {
             List<EntityObject> entities = new List<EntityObject>();
 
-            foreach (PolyfaceMeshFace face in this.Faces)
+            foreach (PolyfaceMeshFace face in this.faces)
             {
-                if (face.VertexIndexes.Count == 1)
+                AciColor faceColor = face.Color == null ? this.Color : face.Color;
+                Layer faceLayer = face.Layer == null ? this.Layer : face.Layer;
+
+                if (face.VertexIndexes.Length == 1)
                 {
                     Point point = new Point
                     {
-                        Layer = (Layer) this.Layer.Clone(),
+                        Layer = (Layer) faceLayer.Clone(),
                         Linetype = (Linetype) this.Linetype.Clone(),
-                        Color = (AciColor) this.Color.Clone(),
+                        Color = (AciColor) faceColor.Clone(),
                         Lineweight = this.Lineweight,
                         Transparency = (Transparency) this.Transparency.Clone(),
                         LinetypeScale = this.LinetypeScale,
                         Normal = this.Normal,
-                        Position = this.Vertexes[Math.Abs(face.VertexIndexes[0]) - 1].Position,
+                        Position = this.Vertexes[Math.Abs(face.VertexIndexes[0]) - 1],
                     };
                     entities.Add(point);
                     continue;
                 }
-                if (face.VertexIndexes.Count == 2)
+                if (face.VertexIndexes.Length == 2)
                 {
                     Line line = new Line
                     {
-                        Layer = (Layer) this.Layer.Clone(),
+                        Layer = (Layer) faceLayer.Clone(),
                         Linetype = (Linetype) this.Linetype.Clone(),
-                        Color = (AciColor) this.Color.Clone(),
+                        Color = (AciColor) faceColor.Clone(),
                         Lineweight = this.Lineweight,
                         Transparency = (Transparency) this.Transparency.Clone(),
                         LinetypeScale = this.LinetypeScale,
                         Normal = this.Normal,
-                        StartPoint = this.Vertexes[Math.Abs(face.VertexIndexes[0]) - 1].Position,
-                        EndPoint = this.Vertexes[Math.Abs(face.VertexIndexes[1]) - 1].Position,
+                        StartPoint = this.Vertexes[Math.Abs(face.VertexIndexes[0]) - 1],
+                        EndPoint = this.Vertexes[Math.Abs(face.VertexIndexes[1]) - 1],
                     };
                     entities.Add(line);
                     continue;
@@ -192,38 +256,38 @@ namespace netDxf.Entities
                 short indexV2 = face.VertexIndexes[1];
                 short indexV3 = face.VertexIndexes[2];
                 // Polyface mesh faces are made of 3 or 4 vertexes, we will repeat the third vertex if the number of face vertexes is three
-                int indexV4 = face.VertexIndexes.Count == 3 ? face.VertexIndexes[2] : face.VertexIndexes[3];
+                int indexV4 = face.VertexIndexes.Length == 3 ? face.VertexIndexes[2] : face.VertexIndexes[3];
 
                 if (indexV1 < 0)
                 {
-                    edgeVisibility = edgeVisibility | Face3dEdgeFlags.First;
+                    edgeVisibility |= Face3dEdgeFlags.First;
                 }
 
                 if (indexV2 < 0)
                 {
-                    edgeVisibility = edgeVisibility | Face3dEdgeFlags.Second;
+                    edgeVisibility |= Face3dEdgeFlags.Second;
                 }
 
                 if (indexV3 < 0)
                 {
-                    edgeVisibility = edgeVisibility | Face3dEdgeFlags.Third;
+                    edgeVisibility |= Face3dEdgeFlags.Third;
                 }
 
                 if (indexV4 < 0)
                 {
-                    edgeVisibility = edgeVisibility | Face3dEdgeFlags.Fourth;
+                    edgeVisibility |= Face3dEdgeFlags.Fourth;
                 }
 
-                Vector3 v1 = this.Vertexes[Math.Abs(indexV1) - 1].Position;
-                Vector3 v2 = this.Vertexes[Math.Abs(indexV2) - 1].Position;
-                Vector3 v3 = this.Vertexes[Math.Abs(indexV3) - 1].Position;
-                Vector3 v4 = this.Vertexes[Math.Abs(indexV4) - 1].Position;
+                Vector3 v1 = this.Vertexes[Math.Abs(indexV1) - 1];
+                Vector3 v2 = this.Vertexes[Math.Abs(indexV2) - 1];
+                Vector3 v3 = this.Vertexes[Math.Abs(indexV3) - 1];
+                Vector3 v4 = this.Vertexes[Math.Abs(indexV4) - 1];
 
                 Face3d face3d = new Face3d
                 {
-                    Layer = (Layer) this.Layer.Clone(),
+                    Layer = (Layer) faceLayer.Clone(),
                     Linetype = (Linetype) this.Linetype.Clone(),
-                    Color = (AciColor) this.Color.Clone(),
+                    Color = (AciColor) faceColor.Clone(),
                     Lineweight = this.Lineweight,
                     Transparency = (Transparency) this.Transparency.Clone(),
                     LinetypeScale = this.LinetypeScale,
@@ -253,9 +317,9 @@ namespace netDxf.Entities
         /// <remarks>Matrix3 adopts the convention of using column vectors to represent a transformation matrix.</remarks>
         public override void TransformBy(Matrix3 transformation, Vector3 translation)
         {
-            foreach (PolyfaceMeshVertex point in this.Vertexes)
+            for (int i = 0; i < this.vertexes.Length; i++)
             {
-                point.Position = transformation * point.Position + translation;
+                this.vertexes[i] = transformation * this.vertexes[i] + translation;
             }
 
             Vector3 newNormal = transformation * this.Normal;
@@ -272,18 +336,7 @@ namespace netDxf.Entities
         /// <returns>A new PolyfaceMesh that is a copy of this instance.</returns>
         public override object Clone()
         {
-            List<PolyfaceMeshVertex> copyVertexes = new List<PolyfaceMeshVertex>();
-            foreach (PolyfaceMeshVertex vertex in this.vertexes)
-            {
-                copyVertexes.Add((PolyfaceMeshVertex) vertex.Clone());
-            }
-            List<PolyfaceMeshFace> copyFaces = new List<PolyfaceMeshFace>();
-            foreach (PolyfaceMeshFace face in this.faces)
-            {
-                copyFaces.Add((PolyfaceMeshFace) face.Clone());
-            }
-
-            PolyfaceMesh entity = new PolyfaceMesh(copyVertexes, copyFaces)
+            PolyfaceMesh entity = new PolyfaceMesh(this.vertexes, this.faces)
             {
                 //EntityObject properties
                 Layer = (Layer) this.Layer.Clone(),
@@ -303,6 +356,15 @@ namespace netDxf.Entities
             }
 
             return entity;
+        }
+
+        #endregion
+
+        #region PolyfaceMeshFace events
+
+        private void PolyfaceMeshFace_LayerChanged(PolyfaceMeshFace sender, TableObjectChangedEventArgs<Layer> e)
+        {
+            e.NewValue = this.OnPolyfaceMeshFaceLayerChangedEvent(e.OldValue, e.NewValue);
         }
 
         #endregion

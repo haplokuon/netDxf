@@ -1,23 +1,26 @@
-﻿#region netDxf library licensed under the MIT License, Copyright © 2009-2021 Daniel Carvajal (haplokuon@gmail.com)
+#region netDxf library licensed under the MIT License
 // 
-//                        netDxf library
-// Copyright © 2021 Daniel Carvajal (haplokuon@gmail.com)
+//                       netDxf library
+// Copyright (c) 2019-2021 Daniel Carvajal (haplokuon@gmail.com)
 // 
-// Permission is hereby granted, free of charge, to any person obtaining a copy of this software
-// and associated documentation files (the “Software”), to deal in the Software without restriction,
-// including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense,
-// and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so,
-// subject to the following conditions:
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
 // 
 // The above copyright notice and this permission notice shall be included in all
 // copies or substantial portions of the Software.
 // 
-// THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-// FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-// COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-// IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-// CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+// 
 #endregion
 
 using System;
@@ -141,7 +144,7 @@ namespace netDxf.Entities
                     this.Vertexes = new Vector3[poly.Vertexes.Count];
                     for (int i = 0; i < poly.Vertexes.Count; i++)
                     {
-                        Vector3 point = trans * poly.Vertexes[i].Position;
+                        Vector3 point = trans * poly.Vertexes[i];
                         this.Vertexes[i] = new Vector3(point.X, point.Y, 0.0);
                     }
                 }
@@ -579,17 +582,23 @@ namespace netDxf.Entities
                 : base(EdgeType.Spline)
             {
                 if (entity == null)
+                {
                     throw new ArgumentNullException(nameof(entity));
+                }
 
                 Entities.Spline spline = entity as Entities.Spline;
                 if (spline == null)
+                {
                     throw new ArgumentException("The entity is not an Spline", nameof(entity));
+                }
 
                 this.Degree = spline.Degree;
-                this.IsRational = spline.Flags.HasFlag(SplineTypeFlags.Rational);
-                this.IsPeriodic = spline.IsPeriodic;
+                this.IsRational = true;
+                this.IsPeriodic = spline.IsClosedPeriodic;
                 if (spline.ControlPoints.Count == 0)
+                {
                     throw new ArgumentException("The HatchBoundaryPath spline edge requires a spline entity with control points.", nameof(entity));
+                }
 
                 Matrix3 trans = MathHelper.ArbitraryAxis(entity.Normal).Transpose();
 
@@ -599,8 +608,9 @@ namespace netDxf.Entities
                     Vector3 point = trans * spline.ControlPoints[i].Position;
                     this.ControlPoints[i] = new Vector3(point.X, point.Y, spline.ControlPoints[i].Weight);
                 }
-                this.Knots = new double[spline.Knots.Count];
-                for (int i = 0; i < spline.Knots.Count; i++)
+
+                this.Knots = new double[spline.Knots.Length];
+                for (int i = 0; i < spline.Knots.Length; i++)
                 {
                     this.Knots[i] = spline.Knots[i];
                 }

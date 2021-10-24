@@ -1,23 +1,26 @@
-﻿#region netDxf library licensed under the MIT License, Copyright © 2009-2021 Daniel Carvajal (haplokuon@gmail.com)
+#region netDxf library licensed under the MIT License
 // 
-//                        netDxf library
-// Copyright © 2021 Daniel Carvajal (haplokuon@gmail.com)
+//                       netDxf library
+// Copyright (c) 2019-2021 Daniel Carvajal (haplokuon@gmail.com)
 // 
-// Permission is hereby granted, free of charge, to any person obtaining a copy of this software
-// and associated documentation files (the “Software”), to deal in the Software without restriction,
-// including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense,
-// and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so,
-// subject to the following conditions:
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
 // 
 // The above copyright notice and this permission notice shall be included in all
 // copies or substantial portions of the Software.
 // 
-// THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-// FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-// COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-// IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-// CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+// 
 #endregion
 
 using System;
@@ -56,6 +59,11 @@ namespace netDxf.IO
         // here we will store strings already encoded <string: original, string: encoded>
         private Dictionary<string, string> encodedStrings;
 
+        // preprocess polylines
+        private Dictionary<string, List<Vertex>> vertexesPolylines;
+        // preprocess polyface mesh
+        private Dictionary<string, List<Vertex>> vertexesPolyfaceMesh;
+
         #endregion
 
         #region constructors
@@ -80,11 +88,80 @@ namespace netDxf.IO
             }
 
             this.encodedStrings = new Dictionary<string, string>();
+            this.vertexesPolylines = new Dictionary<string, List<Vertex>>();
+            this.vertexesPolyfaceMesh = new Dictionary<string, List<Vertex>>();
 
             // create the default PaperSpace layout in case it does not exist. The ModelSpace layout always exists
             if (this.doc.Layouts.Count == 1)
             {
                 this.doc.Layouts.Add(new Layout("Layout1"));
+            }
+
+            // generate polyline3d vertexes
+            foreach (Polyline polyline in this.doc.Entities.Polylines)
+            {
+                List<Vertex> vertexes = new List<Vertex>();
+
+                // first create the polyline vertexes
+                foreach (Vector3 vertex in polyline.Vertexes)
+                {
+                    Vertex v = new Vertex(vertex)
+                    {
+                        Flags = polyline.SmoothType != PolylineSmoothType.NoSmooth ? VertexTypeFlags.SplineFrameControlPoint | VertexTypeFlags.Polyline3dVertex : VertexTypeFlags.Polyline3dVertex
+                    };
+                    this.doc.NumHandles = v.AssignHandle(this.doc.NumHandles);
+                    vertexes.Add(v);
+                }
+
+                // if the polyline is smooth then create the additional vertexes
+                if (polyline.SmoothType != PolylineSmoothType.NoSmooth)
+                {
+                    short splineSegs = this.doc.DrawingVariables.SplineSegs;
+                    int precision = polyline.IsClosed ? splineSegs * polyline.Vertexes.Count : splineSegs * (polyline.Vertexes.Count - 1);
+                    List<Vector3> points = polyline.PolygonalVertexes(precision);
+                    foreach (Vector3 p in points)
+                    {
+                        Vertex v = new Vertex(p)
+                        {
+                            Flags = VertexTypeFlags.SplineVertexFromSplineFitting | VertexTypeFlags.Polyline3dVertex
+                        };
+                        this.doc.NumHandles = v.AssignHandle(this.doc.NumHandles);
+                        vertexes.Add(v);
+                    }
+                }
+                this.vertexesPolylines.Add(polyline.Handle, vertexes);
+            }
+
+            // generate polyface mesh vertexes
+            foreach (PolyfaceMesh pMesh in this.doc.Entities.PolyfaceMeshes)
+            {
+                List<Vertex> vertexes = new List<Vertex>();
+
+                // first create the polyface mesh vertexes
+                foreach (Vector3 vertex in pMesh.Vertexes)
+                {
+                    Vertex v = new Vertex(vertex)
+                    {
+                        Flags = VertexTypeFlags.PolyfaceMeshVertex | VertexTypeFlags.Polygon3dMesh
+                    };
+                    this.doc.NumHandles = v.AssignHandle(this.doc.NumHandles);
+                    vertexes.Add(v);
+                }
+
+                // second create the polyface mesh faces
+                foreach (PolyfaceMeshFace face in pMesh.Faces)
+                {
+                    Vertex v = new Vertex
+                    {
+                        Layer = face.Layer,
+                        Color = face.Color,
+                        VertexIndexes = face.VertexIndexes,
+                        Flags = VertexTypeFlags.PolyfaceMeshVertex
+                    };
+                    this.doc.NumHandles = v.AssignHandle(this.doc.NumHandles);
+                    vertexes.Add(v);
+                }
+                this.vertexesPolyfaceMesh.Add(pMesh.Handle, vertexes);
             }
 
             // create the application registry AcCmTransparency in case it doesn't exists, it is required by the layer transparency
@@ -353,6 +430,7 @@ namespace netDxf.IO
 
             //ENTITIES SECTION
             this.BeginSection(DxfObjectCode.EntitiesSection);
+
             foreach (Layout layout in this.doc.Layouts)
             {
                 if (layout.IsPaperSpace)
@@ -2122,16 +2200,17 @@ namespace netDxf.IO
                     this.chunk.Write(14, x);
                     this.chunk.Write(24, y);
                 }
-                this.chunk.Write(14, (wipeout.ClippingBoundary.Vertexes[0].X - ocsInsPoint.X)/max - 0.5);
-                this.chunk.Write(24, -((wipeout.ClippingBoundary.Vertexes[0].Y - ocsInsPoint.Y)/max - 0.5));
+
+                this.chunk.Write(14, (wipeout.ClippingBoundary.Vertexes[0].X - ocsInsPoint.X) / max - 0.5);
+                this.chunk.Write(24, -((wipeout.ClippingBoundary.Vertexes[0].Y - ocsInsPoint.Y) / max - 0.5));
             }
             else
             {
                 this.chunk.Write(91, wipeout.ClippingBoundary.Vertexes.Count);
                 foreach (Vector2 vertex in wipeout.ClippingBoundary.Vertexes)
                 {
-                    double x = (vertex.X - ocsInsPoint.X)/max - 0.5;
-                    double y = -((vertex.Y - ocsInsPoint.Y)/max - 0.5);
+                    double x = (vertex.X - ocsInsPoint.X) / max - 0.5;
+                    double y = -((vertex.Y - ocsInsPoint.Y) / max - 0.5);
                     this.chunk.Write(14, x);
                     this.chunk.Write(24, y);
                 }
@@ -2406,9 +2485,9 @@ namespace netDxf.IO
 
             this.chunk.Write(39, arc.Thickness);
 
-            // this is just an example of the weird Autodesk DXF way of doing things, while an ellipse the center is given in world coordinates,
+            // this is just an example of the weird Autodesk DXF way of doing things, while an ellipse center is given in world coordinates,
             // the center of an arc is given in object coordinates (different rules for the same concept).
-            // It is a lot more intuitive to give the center in world coordinates and then define the orientation with the normal..
+            // It is a lot more intuitive to give the center in world coordinates and then define the orientation with the normal.
             Vector3 ocsCenter = MathHelper.Transform(arc.Center, arc.Normal, CoordinateSystem.World, CoordinateSystem.Object);
 
             this.chunk.Write(10, ocsCenter.X);
@@ -2432,7 +2511,7 @@ namespace netDxf.IO
         {
             this.chunk.Write(100, SubclassMarker.Circle);
 
-            // this is just an example of the stupid autodesk DXF way of doing things, while an ellipse the center is given in world coordinates,
+            // this is just an example of the stupid autodesk DXF way of doing things, while an ellipse center is given in world coordinates,
             // the center of a circle is given in object coordinates (different rules for the same concept).
             // It is a lot more intuitive to give the center in world coordinates and then define the orientation with the normal..
             Vector3 ocsCenter = MathHelper.Transform(circle.Center, circle.Normal, CoordinateSystem.World, CoordinateSystem.Object);
@@ -2591,18 +2670,12 @@ namespace netDxf.IO
         {
             this.chunk.Write(100, SubclassMarker.Spline);
 
-            short flags = (short) spline.Flags;
-
-            if (spline.CreationMethod == SplineCreationMethod.FitPoints)
-            {
-                flags += (short) SplineTypeFlags.FitPointCreationMethod;
-                flags += (short) spline.KnotParameterization;
-            }
-
-            if (spline.IsPeriodic)
-            {
-                flags += (short) SplineTypeFlags.ClosedPeriodicSpline;
-            }
+            short flags = (short) SplineTypeFlags.Rational;
+            if (spline.IsClosed) flags += (short) SplineTypeFlags.Closed;
+            if (spline.IsClosedPeriodic) flags += (short) SplineTypeFlags.ClosedPeriodicSpline;
+            
+            flags += (short) spline.CreationMethod;
+            flags += (short) spline.KnotParameterization;
 
             this.chunk.Write(70, flags);
             this.chunk.Write(71, spline.Degree);
@@ -2787,7 +2860,7 @@ namespace netDxf.IO
         {
             this.chunk.Write(100, SubclassMarker.Polyline3d);
 
-            //dummy point
+            //dummy point, use unknown
             this.chunk.Write(10, 0.0);
             this.chunk.Write(20, 0.0);
             this.chunk.Write(30, 0.0);
@@ -2803,7 +2876,10 @@ namespace netDxf.IO
 
             string layerName = this.EncodeNonAsciiCharacters(polyline.Layer.Name);
 
-            foreach (PolylineVertex v in polyline.Vertexes)
+            List<Vertex> vertexes = this.vertexesPolylines[polyline.Handle];
+
+            // More DXF weirdness, why polyline vertexes are considered as an entity? Legacy code?
+            foreach (Vertex v in vertexes)
             {
                 this.chunk.Write(0, v.CodeName);
                 this.chunk.Write(5, v.Handle);
@@ -2825,6 +2901,7 @@ namespace netDxf.IO
                 this.chunk.Write(70, (short) v.Flags);
             }
 
+            // More DXF weirdness, why polyline end sequence are considered as an entity, or why it even exists? Legacy code?
             this.chunk.Write(0, polyline.EndSequence.CodeName);
             this.chunk.Write(5, polyline.EndSequence.Handle);
             this.chunk.Write(100, SubclassMarker.Entity);
@@ -2836,7 +2913,7 @@ namespace netDxf.IO
             this.chunk.Write(100, SubclassMarker.PolyfaceMesh);
             this.chunk.Write(70, (short) mesh.Flags);
 
-            this.chunk.Write(71, (short) mesh.Vertexes.Count);
+            this.chunk.Write(71, (short) mesh.Vertexes.Length);
             this.chunk.Write(72, (short) mesh.Faces.Count);
 
             //dummy point
@@ -2855,54 +2932,55 @@ namespace netDxf.IO
 
             string layerName = this.EncodeNonAsciiCharacters(mesh.Layer.Name);
 
-            foreach (PolyfaceMeshVertex v in mesh.Vertexes)
+            List<Vertex> vertexes = this.vertexesPolyfaceMesh[mesh.Handle];
+
+            foreach (Vertex v in vertexes)
             {
                 this.chunk.Write(0, v.CodeName);
                 this.chunk.Write(5, v.Handle);
                 this.chunk.Write(100, SubclassMarker.Entity);
 
-                this.chunk.Write(8, layerName); // the polyface mesh vertex layer should be the same as the polyface mesh layer
-
-                this.chunk.Write(62, mesh.Color.Index); // the polyface mesh vertex color should be the same as the polyface mesh color
-                if (mesh.Color.UseTrueColor)
+                if (v.VertexIndexes == null)
                 {
-                    this.chunk.Write(420, AciColor.ToTrueColor(mesh.Color));
+                    this.chunk.Write(8, layerName);
+
+                    this.chunk.Write(62, mesh.Color.Index);
+                    if (mesh.Color.UseTrueColor)
+                    {
+                        this.chunk.Write(420, AciColor.ToTrueColor(mesh.Color));
+                    }
+                    this.chunk.Write(100, SubclassMarker.Vertex);
+                    this.chunk.Write(100, SubclassMarker.PolyfaceMeshVertex);
                 }
-                this.chunk.Write(100, SubclassMarker.Vertex);
-                this.chunk.Write(100, SubclassMarker.PolyfaceMeshVertex);
+                else
+                {
+                    // each face in a polyface mesh can have its own layer
+                    if (v.Layer != null)
+                    {
+                        this.chunk.Write(8, this.EncodeNonAsciiCharacters(v.Layer.Name));
+                    }
+
+                    // each face in a polyface mesh can have its own color
+                    if (v.Color != null)
+                    {
+                        this.chunk.Write(62, v.Color.Index);
+                        if (v.Color.UseTrueColor)
+                        {
+                            this.chunk.Write(420, AciColor.ToTrueColor(v.Color));
+                        }
+                    }
+
+                    this.chunk.Write(100, SubclassMarker.PolyfaceMeshFace);
+                    short code = 71;
+                    foreach (short index in v.VertexIndexes)
+                    {
+                        this.chunk.Write(code++, index);
+                    }
+                }
                 this.chunk.Write(70, (short) v.Flags);
                 this.chunk.Write(10, v.Position.X);
                 this.chunk.Write(20, v.Position.Y);
                 this.chunk.Write(30, v.Position.Z);
-            }
-
-            foreach (PolyfaceMeshFace face in mesh.Faces)
-            {
-                this.chunk.Write(0, face.CodeName);
-                this.chunk.Write(5, face.Handle);
-                this.chunk.Write(100, SubclassMarker.Entity);
-
-                this.chunk.Write(8, layerName); // the polyface mesh face layer should be the same as the polyface mesh layer
-                this.chunk.Write(62, mesh.Color.Index); // the polyface mesh face color should be the same as the polyface mesh color
-                if (mesh.Color.UseTrueColor)
-                {
-                    this.chunk.Write(420, AciColor.ToTrueColor(mesh.Color));
-                }
-                this.chunk.Write(100, SubclassMarker.PolyfaceMeshFace);
-                this.chunk.Write(70, (short) VertexTypeFlags.PolyfaceMeshVertex);
-                this.chunk.Write(10, 0.0);
-                this.chunk.Write(20, 0.0);
-                this.chunk.Write(30, 0.0);
-
-                if (face.VertexIndexes.Count > 4)
-                {
-                    throw new ArgumentException("The number of vertexes of a PolyfaceMeshFace cannot be larger than 4.");
-                }
-                short code = 71;
-                foreach (short index in face.VertexIndexes)
-                {
-                    this.chunk.Write(code++, index);
-                }
             }
 
             this.chunk.Write(0, mesh.EndSequence.CodeName);
@@ -2975,8 +3053,16 @@ namespace netDxf.IO
             this.chunk.Write(230, text.Normal.Z);
 
             short textGeneration = 0;
-            if (text.IsBackward) textGeneration += 2;
-            if (text.IsUpsideDown) textGeneration += 4;
+            if (text.IsBackward)
+            {
+                textGeneration += 2;
+            }
+
+            if (text.IsUpsideDown)
+            {
+                textGeneration += 4;
+            }
+
             this.chunk.Write(71, textGeneration);
 
             switch (text.Alignment)

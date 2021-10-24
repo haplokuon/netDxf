@@ -1,23 +1,26 @@
-#region netDxf library licensed under the MIT License, Copyright © 2009-2021 Daniel Carvajal (haplokuon@gmail.com)
+#region netDxf library licensed under the MIT License
 // 
-//                        netDxf library
-// Copyright © 2021 Daniel Carvajal (haplokuon@gmail.com)
+//                       netDxf library
+// Copyright (c) 2019-2021 Daniel Carvajal (haplokuon@gmail.com)
 // 
-// Permission is hereby granted, free of charge, to any person obtaining a copy of this software
-// and associated documentation files (the “Software”), to deal in the Software without restriction,
-// including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense,
-// and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so,
-// subject to the following conditions:
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
 // 
 // The above copyright notice and this permission notice shall be included in all
 // copies or substantial portions of the Software.
 // 
-// THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-// FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-// COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-// IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-// CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+// 
 #endregion
 
 using System;
@@ -34,10 +37,6 @@ namespace netDxf.Blocks
     /// <summary>
     /// Represents a block definition.
     /// </summary>
-    /// <remarks>
-    /// Avoid to add any kind of dimensions to the block's entities list, programs loading DXF files with them seems to behave in a weird fashion.
-    /// This is not applicable when working in the Model and Paper space blocks.
-    /// </remarks>
     public class Block :
         TableObject
     {
@@ -264,7 +263,13 @@ namespace netDxf.Blocks
         /// <summary>
         /// Gets the name of the table object.
         /// </summary>
-        /// <remarks>Table object names are case insensitive.</remarks>
+        /// <remarks>
+        /// Table object names are case insensitive.<br />
+        /// The internal blocks that start with "*U" or "*T" can be safely renamed.
+        /// They are internally created to represent dynamic blocks, arrays, and tables;
+        /// although the information of those objects is lost when importing the DXF,
+        /// the block that represent its graphical appearance is imported.
+        /// </remarks>
         public new string Name
         {
             get { return base.Name; }
@@ -272,7 +277,18 @@ namespace netDxf.Blocks
             {
                 if (this.forInternalUse)
                 {
-                    throw new ArgumentException("Blocks for internal use cannot be renamed.", nameof(value));
+                    if (this.Name.StartsWith("*U", StringComparison.InvariantCultureIgnoreCase) || this.Name.StartsWith("*T", StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        // The internal blocks that starts with "*U" and "*T" are created by AutoCad as a graphical representation of other kind of entities
+                        // like dynamic blocks, arrays, and tables; although the information of those objects is lost when importing the DXF,
+                        // the block that represent its graphical appearance is imported.
+                        // They should be safe to rename.
+                        this.flags &= ~BlockTypeFlags.AnonymousBlock;
+                    }
+                    else
+                    {
+                        throw new ArgumentException("Blocks for internal use cannot be renamed.", nameof(value));
+                    }
                 }
                 base.Name = value;
                 this.Record.Name = value;
@@ -417,7 +433,10 @@ namespace netDxf.Blocks
                 throw new ArgumentNullException(nameof(doc));
             }
 
-            Block block = new Block(name) {Origin = doc.DrawingVariables.InsBase};
+            Block block = new Block(name)
+            {
+                Origin = doc.DrawingVariables.InsBase
+            };
             block.Record.Units = doc.DrawingVariables.InsUnits;
 
             // When a Block is created form a DxfDocument or DXF file, any Hatch entity that it may contain will have its associative property set to false.

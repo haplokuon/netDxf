@@ -1,23 +1,26 @@
-﻿#region netDxf library licensed under the MIT License, Copyright © 2009-2021 Daniel Carvajal (haplokuon@gmail.com)
+#region netDxf library licensed under the MIT License
 // 
-//                        netDxf library
-// Copyright © 2021 Daniel Carvajal (haplokuon@gmail.com)
+//                       netDxf library
+// Copyright (c) 2019-2021 Daniel Carvajal (haplokuon@gmail.com)
 // 
-// Permission is hereby granted, free of charge, to any person obtaining a copy of this software
-// and associated documentation files (the “Software”), to deal in the Software without restriction,
-// including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense,
-// and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so,
-// subject to the following conditions:
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
 // 
 // The above copyright notice and this permission notice shall be included in all
 // copies or substantial portions of the Software.
 // 
-// THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-// FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-// COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-// IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-// CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+// 
 #endregion
 
 using System;
@@ -475,7 +478,9 @@ namespace netDxf
         public DxfObject GetObjectByHandle(string objectHandle)
         {
             if (string.IsNullOrEmpty(objectHandle))
+            {
                 return null;
+            }
 
             this.AddedObjects.TryGetValue(objectHandle, out DxfObject o);
             return o;
@@ -883,7 +888,7 @@ namespace netDxf
                 case EntityType.Line:
                     break;
                 case EntityType.Shape:
-                    Shape shape = (Shape)entity;
+                    Shape shape = (Shape) entity;
                     shape.Style = this.shapeStyles.Add(shape.Style, assignHandle);
                     this.shapeStyles.References[shape.Style.Name].Add(shape);
                     shape.StyleChanged += this.Shape_StyleChanged;
@@ -891,6 +896,16 @@ namespace netDxf
                 case EntityType.Point:
                     break;
                 case EntityType.PolyfaceMesh:
+                    PolyfaceMesh mesh = (PolyfaceMesh) entity;
+                    foreach (PolyfaceMeshFace face in mesh.Faces)
+                    {
+                        if (face.Layer != null)
+                        {
+                            face.Layer = this.layers.Add(face.Layer, assignHandle);
+                            this.layers.References[face.Layer.Name].Add(mesh);
+                        }
+                    }
+                    mesh.PolyfaceMeshFaceLayerChanged += this.Entity_LayerChanged;
                     break;
                 case EntityType.Polyline:
                     break;
@@ -901,19 +916,19 @@ namespace netDxf
                 case EntityType.Mesh:
                     break;
                 case EntityType.Text:
-                    Text text = (Text)entity;
+                    Text text = (Text) entity;
                     text.Style = this.textStyles.Add(text.Style, assignHandle);
                     this.textStyles.References[text.Style.Name].Add(text);
                     text.TextStyleChanged += this.Entity_TextStyleChanged;
                     break;
                 case EntityType.MText:
-                    MText mText = (MText)entity;
+                    MText mText = (MText) entity;
                     mText.Style = this.textStyles.Add(mText.Style, assignHandle);
                     this.textStyles.References[mText.Style.Name].Add(mText);
                     mText.TextStyleChanged += this.Entity_TextStyleChanged;
                     break;
                 case EntityType.Image:
-                    Image image = (Image)entity;
+                    Image image = (Image) entity;
                     image.Definition = this.imageDefs.Add(image.Definition, assignHandle);
                     this.imageDefs.References[image.Definition.Name].Add(image);
 
@@ -926,7 +941,7 @@ namespace netDxf
                     image.ImageDefinitionChanged += this.Image_ImageDefinitionChanged;
                     break;
                 case EntityType.MLine:
-                    MLine mline = (MLine)entity;
+                    MLine mline = (MLine) entity;
                     mline.Style = this.mlineStyles.Add(mline.Style, assignHandle);
                     this.mlineStyles.References[mline.Style.Name].Add(mline);
                     mline.MLineStyleChanged += this.MLine_MLineStyleChanged;
@@ -936,7 +951,7 @@ namespace netDxf
                 case EntityType.XLine:
                     break;
                 case EntityType.Underlay:
-                    Underlay underlay = (Underlay)entity;
+                    Underlay underlay = (Underlay) entity;
                     switch (underlay.Definition.Type)
                     {
                         case UnderlayType.DGN:
@@ -957,7 +972,7 @@ namespace netDxf
                 case EntityType.Wipeout:
                     break;
                 case EntityType.Viewport:
-                    Viewport viewport = (Viewport)entity;
+                    Viewport viewport = (Viewport) entity;
                     for (int i = 0; i < viewport.FrozenLayers.Count; i++)
                     {
                         viewport.FrozenLayers[i] = this.layers.Add(viewport.FrozenLayers[i], assignHandle);
@@ -1093,6 +1108,12 @@ namespace netDxf
                 case EntityType.Point:
                     break;
                 case EntityType.PolyfaceMesh:
+                    PolyfaceMesh mesh = (PolyfaceMesh) entity;
+                    foreach (PolyfaceMeshFace face in mesh.Faces)
+                    {
+                        this.layers.References[face.Layer.Name].Remove(mesh);
+                    }
+                    mesh.PolyfaceMeshFaceLayerChanged -= this.Entity_LayerChanged;
                     break;
                 case EntityType.Polyline:
                     break;
@@ -1558,32 +1579,56 @@ namespace netDxf
 
         private void Tolerance_DimStyleChanged(Tolerance sender, TableObjectChangedEventArgs<DimensionStyle> e)
         {
-            this.dimStyles.References[e.OldValue.Name].Remove(sender);
-
+            if (e.OldValue != null)
+            {
+                this.dimStyles.References[e.OldValue.Name].Remove(sender);
+            }
+            if (e.NewValue == null)
+            {
+                return;
+            }
             e.NewValue = this.dimStyles.Add(e.NewValue);
             this.dimStyles.References[e.NewValue.Name].Add(sender);
         }
 
         private void Entity_TextStyleChanged(DxfObject sender, TableObjectChangedEventArgs<TextStyle> e)
         {
-            this.textStyles.References[e.OldValue.Name].Remove(sender);
-
+            if (e.OldValue != null)
+            {
+                this.textStyles.References[e.OldValue.Name].Remove(sender);
+            }
+            if (e.NewValue == null)
+            {
+                return;
+            }
             e.NewValue = this.textStyles.Add(e.NewValue);
             this.textStyles.References[e.NewValue.Name].Add(sender);
         }
 
         private void Entity_LinetypeChanged(DxfObject sender, TableObjectChangedEventArgs<Linetype> e)
         {
-            this.linetypes.References[e.OldValue.Name].Remove(sender);
-
+            if (e.OldValue != null)
+            {
+                this.linetypes.References[e.OldValue.Name].Remove(sender);
+            }
+            if (e.NewValue == null)
+            {
+                return;
+            }
             e.NewValue = this.linetypes.Add(e.NewValue);
             this.linetypes.References[e.NewValue.Name].Add(sender);
         }
 
         private void Entity_LayerChanged(DxfObject sender, TableObjectChangedEventArgs<Layer> e)
         {
-            this.layers.References[e.OldValue.Name].Remove(sender);
-
+            if (e.OldValue != null)
+            {
+                this.layers.References[e.OldValue.Name].Remove(sender);
+            }
+            if (e.NewValue == null)
+            {
+                return;
+            }
             e.NewValue = this.layers.Add(e.NewValue);
             this.layers.References[e.NewValue.Name].Add(sender);
         }
@@ -1635,7 +1680,9 @@ namespace netDxf
                 {
                     // the hatch and its entities must belong to the same document or block
                     if (!ReferenceEquals(entity.Owner.Record.Layout, layout))
+                    {
                         throw new ArgumentException("The HatchBoundaryPath entity and the Hatch entity must belong to the same layout and document. Clone it instead.");
+                    }
                     // there is no need to do anything else we will not add the same entity twice
                 }
                 else
@@ -1662,7 +1709,9 @@ namespace netDxf
             {
                 // the viewport clipping boundary and its entities must belong to the same document or block
                 if (!ReferenceEquals(e.Item.Owner.Record.Layout, layout))
+                {
                     throw new ArgumentException("The viewport clipping boundary entity and the Viewport entity must belong to the same layout and document. Clone it instead.");
+                }
                 // there is no need to do anything else we will not add the same entity twice
             }
             else

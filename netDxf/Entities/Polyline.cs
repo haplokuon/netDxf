@@ -1,28 +1,30 @@
-﻿#region netDxf library licensed under the MIT License, Copyright © 2009-2021 Daniel Carvajal (haplokuon@gmail.com)
+#region netDxf library licensed under the MIT License
 // 
-//                        netDxf library
-// Copyright © 2021 Daniel Carvajal (haplokuon@gmail.com)
+//                       netDxf library
+// Copyright (c) 2019-2021 Daniel Carvajal (haplokuon@gmail.com)
 // 
-// Permission is hereby granted, free of charge, to any person obtaining a copy of this software
-// and associated documentation files (the “Software”), to deal in the Software without restriction,
-// including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense,
-// and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so,
-// subject to the following conditions:
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
 // 
 // The above copyright notice and this permission notice shall be included in all
 // copies or substantial portions of the Software.
 // 
-// THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-// FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-// COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-// IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-// CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+// 
 #endregion
 
 using System;
 using System.Collections.Generic;
-using netDxf.Collections;
 using netDxf.Tables;
 
 namespace netDxf.Entities
@@ -36,7 +38,7 @@ namespace netDxf.Entities
         #region private fields
 
         private readonly EndSequence endSequence;
-        private readonly ObservableCollection<PolylineVertex> vertexes;
+        private readonly List<Vector3> vertexes;
         private PolylineTypeFlags flags;
         private PolylineSmoothType smoothType;
 
@@ -48,7 +50,7 @@ namespace netDxf.Entities
         /// Initializes a new instance of the <c>Polyline3d</c> class.
         /// </summary>
         public Polyline()
-            : this(new List<PolylineVertex>(), false)
+            : this(new List<Vector3>(), false)
         {
         }
 
@@ -74,53 +76,7 @@ namespace netDxf.Entities
                 throw new ArgumentNullException(nameof(vertexes));
             }
 
-            this.vertexes = new ObservableCollection<PolylineVertex>();
-            this.vertexes.BeforeAddItem += this.Vertexes_BeforeAddItem;
-            this.vertexes.AddItem += this.Vertexes_AddItem;
-            this.vertexes.BeforeRemoveItem += this.Vertexes_BeforeRemoveItem;
-            this.vertexes.RemoveItem += this.Vertexes_RemoveItem;
-
-            foreach (Vector3 vertex in vertexes)
-            {
-                this.vertexes.Add(new PolylineVertex(vertex));
-            }
-
-            this.flags = isClosed ? PolylineTypeFlags.ClosedPolylineOrClosedPolygonMeshInM | PolylineTypeFlags.Polyline3D : PolylineTypeFlags.Polyline3D;
-            this.smoothType = PolylineSmoothType.NoSmooth;
-            this.endSequence = new EndSequence(this);
-        }
-
-
-        /// <summary>
-        /// Initializes a new instance of the <c>Polyline3d</c> class.
-        /// </summary>
-        /// <param name="vertexes">3d polyline <see cref="PolylineVertex">vertex</see> list.</param>
-        public Polyline(IEnumerable<PolylineVertex> vertexes)
-            : this(vertexes, false)
-        {
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <c>Polyline3d</c> class.
-        /// </summary>
-        /// <param name="vertexes">3d polyline <see cref="PolylineVertex">vertex</see> list.</param>
-        /// <param name="isClosed">Sets if the polyline is closed  (default: false).</param>
-        public Polyline(IEnumerable<PolylineVertex> vertexes, bool isClosed)
-            : base(EntityType.Polyline, DxfObjectCode.Polyline)
-        {
-            if (vertexes == null)
-            {
-                throw new ArgumentNullException(nameof(vertexes));
-            }
-
-            this.vertexes = new ObservableCollection<PolylineVertex>();
-            this.vertexes.BeforeAddItem += this.Vertexes_BeforeAddItem;
-            this.vertexes.AddItem += this.Vertexes_AddItem;
-            this.vertexes.BeforeRemoveItem += this.Vertexes_BeforeRemoveItem;
-            this.vertexes.RemoveItem += this.Vertexes_RemoveItem;
-
-            this.vertexes.AddRange(vertexes);
-
+            this.vertexes = new List<Vector3>(vertexes);
             this.flags = isClosed ? PolylineTypeFlags.ClosedPolylineOrClosedPolygonMeshInM | PolylineTypeFlags.Polyline3D : PolylineTypeFlags.Polyline3D;
             this.smoothType = PolylineSmoothType.NoSmooth;
             this.endSequence = new EndSequence(this);
@@ -131,9 +87,9 @@ namespace netDxf.Entities
         #region public properties
 
         /// <summary>
-        /// Gets the polyline <see cref="PolylineVertex">vertex</see> list.
+        /// Gets the polyline <see cref="Vector3">vertex</see> list.
         /// </summary>
-        public ObservableCollection<PolylineVertex> Vertexes
+        public List<Vector3> Vertexes
         {
             get { return this.vertexes; }
         }
@@ -176,18 +132,33 @@ namespace netDxf.Entities
             }
         }
 
-        #endregion
-
-        #region internal properties
-
         /// <summary>
         /// Gets or sets the curve smooth type.
         /// </summary>
-        internal PolylineSmoothType SmoothType
+        /// <remarks>
+        /// The additional polyline vertexes corresponding to the SplineFit will be created when writing the DXF file.
+        /// It is not recommended to use any kind of smoothness in polylines other than NoSmooth. Use a Spline entity instead.
+        /// </remarks>
+        public PolylineSmoothType SmoothType
         {
             get { return this.smoothType; }
-            set { this.smoothType = value; }
+            set
+            {
+                if (value == PolylineSmoothType.NoSmooth)
+                {
+                    this.flags &= ~PolylineTypeFlags.SplineFit;
+                }
+                else
+                {
+                    this.flags |= PolylineTypeFlags.SplineFit;
+                }
+                this.smoothType = value;
+            }
         }
+
+        #endregion
+
+        #region internal properties
 
         /// <summary>
         /// Gets the polyline type.
@@ -231,7 +202,7 @@ namespace netDxf.Entities
         {
             List<EntityObject> entities = new List<EntityObject>();
             int index = 0;
-            foreach (PolylineVertex vertex in this.Vertexes)
+            foreach (Vector3 vertex in this.Vertexes)
             {
                 Vector3 start;
                 Vector3 end;
@@ -242,13 +213,13 @@ namespace netDxf.Entities
                     {
                         break;
                     }
-                    start = vertex.Position;
-                    end = this.vertexes[0].Position;
+                    start = vertex;
+                    end = this.vertexes[0];
                 }
                 else
                 {
-                    start = vertex.Position;
-                    end = this.vertexes[index + 1].Position;
+                    start = vertex;
+                    end = this.vertexes[index + 1];
                 }
 
                 entities.Add(new Line
@@ -272,6 +243,74 @@ namespace netDxf.Entities
 
         #endregion
 
+        #region private methods
+
+        /// <summary>
+        /// Converts the polyline in a list of vertexes.
+        /// </summary>
+        /// <param name="precision">Number of vertexes generated, only applicable for smoothed polylines.</param>
+        /// <returns>A list vertexes that represents the polyline.</returns>
+        public List<Vector3> PolygonalVertexes(int precision)
+        {
+            int degree;
+            if (this.smoothType == PolylineSmoothType.Quadratic)
+            {
+                degree = 2;
+            }
+            else if (this.smoothType == PolylineSmoothType.Cubic)
+            {
+                degree = 3;
+            }
+            else
+            {
+                List<Vector3> points = new List<Vector3>(this.vertexes);
+                return points;
+            }
+
+            List<SplineVertex> ctrlPoints = new List<SplineVertex>();
+            foreach (Vector3 vertex in this.vertexes)
+            {
+                ctrlPoints.Add(new SplineVertex(vertex));
+            }
+
+            int replicate = this.IsClosed ? degree : 0;
+            for (int i = 0; i < replicate; i++)
+            {
+                ctrlPoints.Add(ctrlPoints[i]);
+            }
+
+            return Spline.NurbsEvaluator(ctrlPoints, null, degree, this.IsClosed, this.IsClosed, Math.Abs(precision));
+        }
+
+        /// <summary>
+        /// Converts the actual 3d polyline in a 2d polyline (LwPolyline).
+        /// </summary>
+        /// <param name="precision">Number of vertexes generated, only applicable for smoothed polylines.</param>
+        /// <returns>A LwPolyline that represents the polyline.</returns>
+        /// <remarks>
+        /// The resulting LwPolyline will be a projection of the actual polyline into the plane defined by its normal vector.
+        /// </remarks>
+        public LwPolyline ToLwPolyline(int precision)
+        {
+            List<Vector3> vertexes3D = this.PolygonalVertexes(precision);
+            List<Vector2> vertexes2D = MathHelper.Transform(vertexes3D, this.Normal, out double _);
+            LwPolyline lwPolyline = new LwPolyline(vertexes2D)
+            {
+                Layer = (Layer) this.Layer.Clone(),
+                Linetype = (Linetype) this.Linetype.Clone(),
+                Color = (AciColor) this.Color.Clone(),
+                Lineweight = this.Lineweight,
+                Transparency = (Transparency) this.Transparency.Clone(),
+                LinetypeScale = this.LinetypeScale,
+                Normal = this.Normal,
+                IsClosed = this.IsClosed
+            };
+
+            return lwPolyline;
+        }
+
+        #endregion
+
         #region overrides
 
         /// <summary>
@@ -282,9 +321,9 @@ namespace netDxf.Entities
         /// <remarks>Matrix3 adopts the convention of using column vectors to represent a transformation matrix.</remarks>
         public override void TransformBy(Matrix3 transformation, Vector3 translation)
         {
-            foreach (PolylineVertex point in this.Vertexes)
+            for (int i = 0; i < this.vertexes.Count; i++)
             {
-                point.Position = transformation * point.Position + translation;
+                this.vertexes[i] = transformation * this.vertexes[i] + translation;
             }
 
             Vector3 newNormal = transformation * this.Normal;
@@ -306,12 +345,7 @@ namespace netDxf.Entities
         /// </remarks>
         internal override long AssignHandle(long entityNumber)
         {
-            foreach (PolylineVertex v in this.vertexes)
-            {
-                entityNumber = v.AssignHandle(entityNumber);
-            }
             entityNumber = this.endSequence.AssignHandle(entityNumber);
-
             return base.AssignHandle(entityNumber);
         }
 
@@ -321,7 +355,7 @@ namespace netDxf.Entities
         /// <returns>A new Polyline that is a copy of this instance.</returns>
         public override object Clone()
         {
-            Polyline entity = new Polyline
+            Polyline entity = new Polyline(this.vertexes)
             {
                 //EntityObject properties
                 Layer = (Layer) this.Layer.Clone(),
@@ -336,60 +370,12 @@ namespace netDxf.Entities
                 Flags = this.flags
             };
 
-            foreach (PolylineVertex vertex in this.vertexes)
-            {
-                entity.Vertexes.Add((PolylineVertex) vertex.Clone());
-            }
-
             foreach (XData data in this.XData.Values)
             {
                 entity.XData.Add((XData) data.Clone());
             }
 
             return entity;
-        }
-
-        #endregion
-
-        #region Entities collection events
-
-        private void Vertexes_BeforeAddItem(ObservableCollection<PolylineVertex> sender, ObservableCollectionEventArgs<PolylineVertex> e)
-        {
-            // null items and vertexes that belong to another polyline are not allowed.
-            if (e.Item == null)
-            {
-                e.Cancel = true;
-            }
-            else if (e.Item.Owner != null)
-            {
-                e.Cancel = true;
-            }
-            else
-            {
-                e.Cancel = false;
-            }
-        }
-
-        private void Vertexes_AddItem(ObservableCollection<PolylineVertex> sender, ObservableCollectionEventArgs<PolylineVertex> e)
-        {
-            // if the polyline already belongs to a document
-            if (this.Owner != null)
-            {
-                // get the document
-                DxfDocument doc = this.Owner.Record.Owner.Owner;
-                doc.NumHandles = e.Item.AssignHandle(doc.NumHandles);
-            }
-            e.Item.Owner = this;
-        }
-
-        private void Vertexes_BeforeRemoveItem(ObservableCollection<PolylineVertex> sender, ObservableCollectionEventArgs<PolylineVertex> e)
-        {
-        }
-
-        private void Vertexes_RemoveItem(ObservableCollection<PolylineVertex> sender, ObservableCollectionEventArgs<PolylineVertex> e)
-        {
-            e.Item.Handle = null;
-            e.Item.Owner = null;
         }
 
         #endregion

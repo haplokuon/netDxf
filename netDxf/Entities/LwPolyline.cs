@@ -1,23 +1,26 @@
-﻿#region netDxf library licensed under the MIT License, Copyright © 2009-2021 Daniel Carvajal (haplokuon@gmail.com)
+#region netDxf library licensed under the MIT License
 // 
-//                        netDxf library
-// Copyright © 2021 Daniel Carvajal (haplokuon@gmail.com)
+//                       netDxf library
+// Copyright (c) 2019-2021 Daniel Carvajal (haplokuon@gmail.com)
 // 
-// Permission is hereby granted, free of charge, to any person obtaining a copy of this software
-// and associated documentation files (the “Software”), to deal in the Software without restriction,
-// including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense,
-// and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so,
-// subject to the following conditions:
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
 // 
 // The above copyright notice and this permission notice shall be included in all
 // copies or substantial portions of the Software.
 // 
-// THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-// FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-// COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-// IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-// CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+// 
 #endregion
 
 using System;
@@ -289,8 +292,8 @@ namespace netDxf.Entities
                 {
                     // the polyline edge is an arc
                     double theta = 4 * Math.Atan(Math.Abs(bulge));
-                    double c = Vector2.Distance(p1, p2);
-                    double r = (c / 2) / Math.Sin(theta / 2);
+                    double c = Vector2.Distance(p1, p2) / 2.0;
+                    double r = c / Math.Sin(theta / 2.0);
 
                     // avoid arcs with very small radius, draw a line instead
                     if (MathHelper.IsZero(r))
@@ -321,9 +324,9 @@ namespace netDxf.Entities
                     }
                     else
                     {
-                        double gamma = (Math.PI - theta)/2;
-                        double phi = Vector2.Angle(p1, p2) + Math.Sign(bulge)*gamma;
-                        Vector2 center = new Vector2(p1.X + r*Math.Cos(phi), p1.Y + r*Math.Sin(phi));
+                        double gamma = (Math.PI - theta) / 2;
+                        double phi = Vector2.Angle(p1, p2) + Math.Sign(bulge) * gamma;
+                        Vector2 center = new Vector2(p1.X + r * Math.Cos(phi), p1.Y + r * Math.Sin(phi));
                         double startAngle;
                         double endAngle;
                         if (bulge > 0)
@@ -336,9 +339,12 @@ namespace netDxf.Entities
                             endAngle = MathHelper.RadToDeg*Vector2.Angle(p1 - center);
                             startAngle = endAngle - MathHelper.RadToDeg*theta;
                         }
-                        Vector3 point = MathHelper.Transform(new Vector3(center.X, center.Y, this.elevation), this.Normal,
+                        Vector3 point = MathHelper.Transform(new Vector3(center.X, center.Y,
+                            this.elevation),
+                            this.Normal,
                             CoordinateSystem.Object,
                             CoordinateSystem.World);
+
                         entities.Add(new Arc
                         {
                             Layer = (Layer) this.Layer.Clone(),
@@ -371,6 +377,11 @@ namespace netDxf.Entities
         /// <returns>A list of vertexes expressed in object coordinate system.</returns>
         public List<Vector2> PolygonalVertexes(int bulgePrecision, double weldThreshold, double bulgeThreshold)
         {
+            if (bulgePrecision < 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(bulgePrecision), bulgePrecision, "The bulgePrecision must be equal or greater than zero.");
+            }
+
             List<Vector2> ocsVertexes = new List<Vector2>();
 
             int index = 0;
@@ -405,11 +416,11 @@ namespace netDxf.Entities
                     }
                     else
                     {
-                        double c = Vector2.Distance(p1, p2);
+                        double c = Vector2.Distance(p1, p2) / 2.0;
                         if (c >= bulgeThreshold)
                         {
-                            double s = (c / 2) * Math.Abs(bulge);
-                            double r = ((c / 2) * (c / 2) + s * s) / (2 * s);
+                            double s = c * Math.Abs(bulge);
+                            double r = (c * c + s * s) / (2.0 * s);
                             double theta = 4 * Math.Atan(Math.Abs(bulge));
                             double gamma = (Math.PI - theta) / 2;
                             double phi = Vector2.Angle(p1, p2) + Math.Sign(bulge) * gamma;

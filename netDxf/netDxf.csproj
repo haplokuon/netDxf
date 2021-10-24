@@ -14,7 +14,7 @@
     <AssemblyOriginatorKeyFile>netDxf.snk</AssemblyOriginatorKeyFile>
     <PackageProjectUrl>https://github.com/haplokuon/netDxf</PackageProjectUrl>
     <RepositoryUrl>https://github.com/haplokuon/netDxf</RepositoryUrl>
-    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <PackageLicenseFile></PackageLicenseFile>
     <PackageReleaseNotes>netDxf is a .net library programmed in C# to read and write AutoCAD DXF files. It supports AutoCad2000, AutoCad2004, AutoCad2007, AutoCad2010, AutoCad2013, and AutoCad2018 DXF database versions, in both text and binary format.</PackageReleaseNotes>
     <PackageTags>netDxf, Dxf, Dxf reader, Dxf writer, AutoCad</PackageTags>
@@ -41,7 +41,7 @@
   </PropertyGroup>
   
   <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.1'">
-    <PackageReference Include="System.Text.Encoding.CodePages" Version="5.0.0"/>
+    <PackageReference Include="System.Text.Encoding.CodePages" Version="5.0.0" />
   </ItemGroup>
 
 </Project>

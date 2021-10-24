@@ -1,12 +1,33 @@
 ## Change history
 
+### [2021/10/24]
+* The internal blocks that start with "*U" or "*T" can be safely renamed. They are internally created to represent dynamic blocks, arrays, and tables; although the information of those objects is lost when importing the DXF, the block that represent its graphical appearance is imported.
+* PolyfaceMesh vertexes are now a list of Vector3. The additional information that the DXF requires will be generated when the file is saved.
+* Deleted the PolyfaceMeshVertex class, there is no use for it anymore.
+* PolyfaceMeshFace does not inherit from DxfObject anymore..  The additional information that the DXF requires will be generated when the file is saved.
+* PolyfaceMeshFace can have its own Layer and/or Color. By default they are set to null to inherit from its parent PolyfaceMesh.
+* Polyline vertexes are now a list of Vector3. The additional information that the DXF requires will be generated when the file is saved.
+* Deleted the PolylineVertex class, there is no use for it anymore.
+* Added a new method ToLwPolyline to the Polyline and Spline class. It returns a LwPolyline(2d polyline) that is the result of projecting the entity into the plane defined by its normal.
+* Added a BezierCurveQuadratic class that represents a second degree bezier curve.
+* Added a BezierCurveCubic class that represents a third degree bezier curve.
+* Added a constructor to the Spline class that will initialize a nurbs curve from a set of quadratic or cubic bezier curves.
+* Added the SPLINESEGS as a header variable. It is used as the a base value for the precision when the additional vertexes for SplineFit Polylines are generated. For open polylines the Precision = SplineSegs * (Number of Vertices - 1), for closed ones Precision = SplineSegs * Number of Vertices.
+* Implemented the SmoothType property of the Polyline class to smooth out polylines as quadratic or cubic B-Splines, althought is recommended to use a Spline entity in these cases.
+* Smoothed Polylines by CurveFit will be imported as LwPolylines.
+* The Spline constructor that takes a set of fit points will also generate the control points so it can be fully utilized. It creates a list of cubic bezier curves that passes through the fit points, and with the resulting curves the spline will be initialized.
+* The Spline properties IsClosed and IsClosedAndPeriodic (renamed form IsPeriodic) can now be changed.
+* The Spline knot vector values can now be changed.
+* (fixed) Workaround for multiline styles with no name in bad formated DXF files.
+* (fixed) The precision argument of the Arc.PolygonalVertexes method represents the number of vertexes genarated not the number of division, as it is the case of similar methods of other entities.
+
 ### [2021/09/18]
 * Leader entitities with less than two vertices will be deleted when loading a DXF file.
 * (fixed) Changed the default DxfDocument comment to show that netDxf is licensed under MIT.
 * (fixed) Possible out of range error for the LuPrec header variable when reading a DXF file. Out of range values will default to 4.
 * (fixed) When writing a DXF file the codes for the dimension style overrides TolerancesLowerLimit and TolerancesUpperLimit were switched.
 * (fixed) Error in the ShapeStyle when trying to get the a shape name from a specified number.
-* (fixed) The default linetype will be given to a layer state if the specified one in the DXF is not found. This will affect linetypes that comes from externally referenced drawings. 
+* (fixed) The default linetype will be given to a layer state if the specified one in the DXF is not found. 
 * (fixed) Complex linetypes assigned to a layer were not properly initialized.
 
 ### [2021/06/20]

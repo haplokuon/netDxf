@@ -267,14 +267,195 @@
             <param name="other">Another color to compare to.</param>
             <returns>True if the three components are equal or false in any other case.</returns>
         </member>
+        <member name="T:netDxf.BezierCurve">
+            <summary>
+            Represent a bezier curve.
+            </summary>
+        </member>
+        <member name="M:netDxf.BezierCurve.#ctor(System.Collections.Generic.IEnumerable{netDxf.Vector3})">
+            <summary>
+            Initializes a new instance of the <c>BezierCurve</c> class.
+            </summary>
+            <param name="controlPoints">A list of control points.</param>
+            <remarks>
+            The curve degree will be equal to the number of control points minus one.
+            </remarks>
+        </member>
+        <member name="P:netDxf.BezierCurve.ControlPoints">
+            <summary>
+            Gets the control points.
+            </summary>
+        </member>
+        <member name="P:netDxf.BezierCurve.Degree">
+            <summary>
+            Gets the bezier curve degree.
+            </summary>
+        </member>
+        <member name="T:netDxf.BezierCurveCubic">
+            <summary>
+            Represent a cubic bezier curve.
+            </summary>
+        </member>
+        <member name="M:netDxf.BezierCurveCubic.#ctor(System.Collections.Generic.IEnumerable{netDxf.Vector3})">
+            <summary>
+            Initializes a new instance of the <c>BezierCurve</c> class.
+            </summary>
+            <param name="controlPoints">A list of four control points.</param>
+            <remarks>
+            The list must contain four control points.
+            The first index represents the start point or anchor,
+            the second represents the first control point,
+            the third the second control point,
+            and the last the end point.
+            </remarks>
+        </member>
+        <member name="M:netDxf.BezierCurveCubic.#ctor(netDxf.Vector3,netDxf.Vector3,netDxf.Vector3,netDxf.Vector3)">
+            <summary>
+            Initializes a new instance of the <c>BezierCurve</c> class.
+            </summary>
+            <param name="startPoint">Start anchor point.</param>
+            <param name="firstControlPoint">First control point.</param>
+            <param name="secondControlPoint">Second control point.</param>
+            <param name="endPoint">End anchor point.</param>
+        </member>
+        <member name="P:netDxf.BezierCurveCubic.StartPoint">
+            <summary>
+            Gets or sets the curve start point.
+            </summary>
+        </member>
+        <member name="P:netDxf.BezierCurveCubic.FirstControlPoint">
+            <summary>
+            Gets or sets the first control point.
+            </summary>
+        </member>
+        <member name="P:netDxf.BezierCurveCubic.SecondControlPoint">
+            <summary>
+            Gets or sets the second control point.
+            </summary>
+        </member>
+        <member name="P:netDxf.BezierCurveCubic.EndPoint">
+            <summary>
+            Gets or sets the curve end point.
+            </summary>
+        </member>
+        <member name="M:netDxf.BezierCurveCubic.CalculatePoint(System.Double)">
+            <summary>
+            Obtains a point along the curve at parameter t.
+            </summary>
+            <param name="t">Parameter t, between 0.0 and 1.0.</param>
+            <returns>A point along the curve.</returns>
+        </member>
+        <member name="M:netDxf.BezierCurveCubic.Split(System.Double)">
+            <summary>
+            Splits the actual bezier curve in two at parameter t.
+            </summary>
+            <param name="t">Parameter t, between 0.0 and 1.0.</param>
+            <returns>The two curves result of dividing the actual curve at parameter t.</returns>
+        </member>
+        <member name="M:netDxf.BezierCurveCubic.Reverse">
+            <summary>
+            Switch the bezier curve direction.
+            </summary>
+        </member>
+        <member name="M:netDxf.BezierCurveCubic.PolygonalVertexes(System.Int32)">
+            <summary>
+            Converts the bezier curve in a list of vertexes.
+            </summary>
+            <param name="precision">Number of vertexes generated.</param>
+            <returns>A list vertexes that represents the bezier curve.</returns>
+        </member>
+        <member name="M:netDxf.BezierCurveCubic.CreateFromFitPoints(System.Collections.Generic.IEnumerable{netDxf.Vector3})">
+            <summary>
+            Generate a list of continuous cubic bezier curves that passes through a set of points.
+            </summary>
+            <param name="fitPoints">List of points.</param>
+            <returns>A list of cubic bezier curves.</returns>
+            <returns>
+            Original https://www.codeproject.com/Articles/31859/Draw-a-Smooth-Curve-through-a-Set-of-2D-Points-wit by Oleg V. Polikarpotchkin and Peter Lee.
+            Modified to allow the use of 3D points, and other minor changes to accomodate the existing classes of this library.<br />
+            The total number of curves returned will be equal to the number of fit points minus 1,
+            therefore this method is not suitable to use over large number of fit points,
+            where other, more computational heavy methods, like the least-squares bezier curve fitting would return a less amount of curves.
+            In such cases, it is advisable to perform some method to reduce the number of points and to avoid duplicates or very close points.
+            </returns>
+        </member>
+        <member name="M:netDxf.BezierCurveCubic.GetFirstControlPoints(System.Double[])">
+            <summary>
+            Solves a tri-diagonal system for one of coordinates (X, Y, or Z) of first Bezier control points.
+            </summary>
+            <param name="rhs">Right hand side vector.</param>
+            <returns>Solution vector.</returns>
+        </member>
+        <member name="T:netDxf.BezierCurveQuadratic">
+            <summary>
+            Represent a quadratic bezier curve.
+            </summary>
+        </member>
+        <member name="M:netDxf.BezierCurveQuadratic.#ctor(System.Collections.Generic.IEnumerable{netDxf.Vector3})">
+            <summary>
+            Initializes a new instance of the <c>BezierCurveQuadratic</c> class.
+            </summary>
+            <param name="controlPoints">A list of three control points.</param>
+            <remarks>
+            The list must contain three control points.
+            The first index represents the start point or anchor,
+            the second represents the control point,
+            and the last the end point.
+            </remarks>
+        </member>
+        <member name="M:netDxf.BezierCurveQuadratic.#ctor(netDxf.Vector3,netDxf.Vector3,netDxf.Vector3)">
+            <summary>
+            Initializes a new instance of the <c>BezierCurve</c> class.
+            </summary>
+            <param name="startPoint">Start anchor point.</param>
+            <param name="controlPoint">Second control point.</param>
+            <param name="endPoint">End anchor point.</param>
+        </member>
+        <member name="P:netDxf.BezierCurveQuadratic.StartPoint">
+            <summary>
+            Gets or sets the curve start point.
+            </summary>
+        </member>
+        <member name="P:netDxf.BezierCurveQuadratic.ControlPoint">
+            <summary>
+            Gets or sets the control point.
+            </summary>
+        </member>
+        <member name="P:netDxf.BezierCurveQuadratic.EndPoint">
+            <summary>
+            Gets or sets the curve end point.
+            </summary>
+        </member>
+        <member name="M:netDxf.BezierCurveQuadratic.CalculatePoint(System.Double)">
+            <summary>
+            Obtains a point along the curve at parameter t.
+            </summary>
+            <param name="t">Parameter t, between 0.0 and 1.0.</param>
+            <returns>A point along the curve.</returns>
+        </member>
+        <member name="M:netDxf.BezierCurveQuadratic.Split(System.Double)">
+            <summary>
+            Splits the actual bezier curve in two at parameter t.
+            </summary>
+            <param name="t">Parameter t, between 0.0 and 1.0.</param>
+            <returns>The two curves result of dividing the actual curve at parameter t.</returns>
+        </member>
+        <member name="M:netDxf.BezierCurveQuadratic.Reverse">
+            <summary>
+            Switch the bezier curve direction.
+            </summary>
+        </member>
+        <member name="M:netDxf.BezierCurveQuadratic.PolygonalVertexes(System.Int32)">
+            <summary>
+            Converts the bezier curve in a list of vertexes.
+            </summary>
+            <param name="precision">Number of vertexes generated.</param>
+            <returns>A list vertexes that represents the bezier curve.</returns>
+        </member>
         <member name="T:netDxf.Blocks.Block">
             <summary>
             Represents a block definition.
             </summary>
-            <remarks>
-            Avoid to add any kind of dimensions to the block's entities list, programs loading DXF files with them seems to behave in a weird fashion.
-            This is not applicable when working in the Model and Paper space blocks.
-            </remarks>
         </member>
         <member name="F:netDxf.Blocks.Block.DefaultModelSpaceName">
             <summary>
@@ -338,7 +519,13 @@
             <summary>
             Gets the name of the table object.
             </summary>
-            <remarks>Table object names are case insensitive.</remarks>
+            <remarks>
+            Table object names are case insensitive.<br />
+            The internal blocks that start with "*U" or "*T" can be safely renamed.
+            They are internally created to represent dynamic blocks, arrays, and tables;
+            although the information of those objects is lost when importing the DXF,
+            the block that represent its graphical appearance is imported.
+            </remarks>
         </member>
         <member name="P:netDxf.Blocks.Block.Description">
             <summary>
@@ -4056,7 +4243,7 @@
             <summary>
             Converts the arc in a list of vertexes.
             </summary>
-            <param name="precision">Number of divisions.</param>
+            <param name="precision">Number of vertexes generated.</param>
             <returns>A list vertexes that represents the arc expressed in object coordinate system.</returns>
         </member>
         <member name="M:netDxf.Entities.Arc.ToPolyline(System.Int32)">
@@ -8633,20 +8820,24 @@
             <summary>
             Represents a polyface mesh <see cref="T:netDxf.Entities.EntityObject">entity</see>.
             </summary>
-            <remarks>
-            The maximum number of vertexes and faces that a PolyfaceMesh can have is short.MaxValue = 32767.
-            </remarks>
         </member>
-        <member name="M:netDxf.Entities.PolyfaceMesh.#ctor(System.Collections.Generic.IEnumerable{netDxf.Entities.PolyfaceMeshVertex},System.Collections.Generic.IEnumerable{netDxf.Entities.PolyfaceMeshFace})">
+        <member name="M:netDxf.Entities.PolyfaceMesh.#ctor(System.Collections.Generic.IEnumerable{netDxf.Vector3},System.Collections.Generic.IEnumerable{System.Int16[]})">
             <summary>
             Initializes a new instance of the <c>PolyfaceMesh</c> class.
             </summary>
-            <param name="vertexes">Polyface mesh <see cref="T:netDxf.Entities.PolyfaceMeshVertex">vertex</see> list.</param>
-            <param name="faces">Polyface mesh <see cref="T:netDxf.Entities.PolyfaceMeshFace">faces</see> list.</param>
+            <param name="vertexes">Polyface mesh <see cref="T:netDxf.Vector3">vertex</see> list.</param>
+            <param name="faces">Polyface mesh faces list, a maximum of 4 indexes per face.</param>
+        </member>
+        <member name="M:netDxf.Entities.PolyfaceMesh.#ctor(System.Collections.Generic.IEnumerable{netDxf.Vector3},System.Collections.Generic.IEnumerable{netDxf.Entities.PolyfaceMeshFace})">
+            <summary>
+            Initializes a new instance of the <c>PolyfaceMesh</c> class.
+            </summary>
+            <param name="vertexes">Polyface mesh <see cref="T:netDxf.Vector3">vertex</see> list.</param>
+            <param name="faces">Polyface mesh faces list, a maximum of 4 indexes per face.</param>
         </member>
         <member name="P:netDxf.Entities.PolyfaceMesh.Vertexes">
             <summary>
-            Gets or sets the polyface mesh <see cref="T:netDxf.Entities.PolyfaceMeshVertex">vertexes</see>.
+            Gets or sets the polyface mesh <see cref="T:netDxf.Vector3">vertexes</see>.
             </summary>
         </member>
         <member name="P:netDxf.Entities.PolyfaceMesh.Faces">
@@ -8670,10 +8861,6 @@
             </summary>
             <param name="entityNumber">Number to assign.</param>
             <returns>Next available entity number.</returns>
-            <remarks>
-            Some objects might consume more than one, is, for example, the case of polylines that will assign
-            automatically a handle to its vertexes. The entity number will be converted to an hexadecimal number.
-            </remarks>
         </member>
         <member name="M:netDxf.Entities.PolyfaceMesh.Explode">
             <summary>
@@ -8728,9 +8915,14 @@
             Gets the list of indexes to the vertex list of a polyface mesh that makes up the face.
             </summary>
         </member>
-        <member name="P:netDxf.Entities.PolyfaceMeshFace.Flags">
+        <member name="P:netDxf.Entities.PolyfaceMeshFace.Color">
             <summary>
-            Gets the vertex type.
+            Gets or sets the face color. Set to null to inherit from its parent polyface mesh.
+            </summary>
+        </member>
+        <member name="P:netDxf.Entities.PolyfaceMeshFace.Layer">
+            <summary>
+            Gets or sets the face layer. Set to null to inherit from its parent polyface mesh.
             </summary>
         </member>
         <member name="M:netDxf.Entities.PolyfaceMeshFace.ToString">
@@ -8744,55 +8936,6 @@
             Creates a new PolyfaceMeshFace that is a copy of the current instance.
             </summary>
             <returns>A new PolyfaceMeshFace that is a copy of this instance.</returns>
-        </member>
-        <member name="T:netDxf.Entities.PolyfaceMeshVertex">
-            <summary>
-            Represents a polyface mesh vertex. 
-            </summary>
-            <remarks>
-            The PolyfaceMeshVertex can contain external data (XData) information, but it is not saved in the DXF.
-            </remarks>
-        </member>
-        <member name="M:netDxf.Entities.PolyfaceMeshVertex.#ctor">
-            <summary>
-            Initializes a new instance of the <c>PolylineVertex</c> class.
-            </summary>
-        </member>
-        <member name="M:netDxf.Entities.PolyfaceMeshVertex.#ctor(System.Double,System.Double,System.Double)">
-            <summary>
-            Initializes a new instance of the PolylineVertex class.
-            </summary>
-            <param name="x">X coordinate.</param>
-            <param name="y">Y coordinate.</param>
-            <param name="z">Z coordinate.</param>
-        </member>
-        <member name="M:netDxf.Entities.PolyfaceMeshVertex.#ctor(netDxf.Vector3)">
-            <summary>
-            Initializes a new instance of the <c>PolylineVertex</c> class.
-            </summary>
-            <param name="location">Polyface mesh vertex <see cref="T:netDxf.Vector3">location</see>.</param>
-        </member>
-        <member name="P:netDxf.Entities.PolyfaceMeshVertex.Position">
-            <summary>
-            Gets or sets the polyface mesh vertex <see cref="T:netDxf.Vector3">position</see>.
-            </summary>
-        </member>
-        <member name="P:netDxf.Entities.PolyfaceMeshVertex.Flags">
-            <summary>
-            Gets the vertex type.
-            </summary>
-        </member>
-        <member name="M:netDxf.Entities.PolyfaceMeshVertex.ToString">
-            <summary>
-            Converts the value of this instance to its equivalent string representation.
-            </summary>
-            <returns>The string representation.</returns>
-        </member>
-        <member name="M:netDxf.Entities.PolyfaceMeshVertex.Clone">
-            <summary>
-            Creates a new PolyfaceMeshVertex that is a copy of the current instance.
-            </summary>
-            <returns>A new PolyfaceMeshVertex that is a copy of this instance.</returns>
         </member>
         <member name="T:netDxf.Entities.Polyline">
             <summary>
@@ -8817,22 +8960,9 @@
             <param name="vertexes">3d polyline <see cref="T:netDxf.Vector3">vertex</see> list.</param>
             <param name="isClosed">Sets if the polyline is closed, by default it will create an open polyline.</param>
         </member>
-        <member name="M:netDxf.Entities.Polyline.#ctor(System.Collections.Generic.IEnumerable{netDxf.Entities.PolylineVertex})">
-            <summary>
-            Initializes a new instance of the <c>Polyline3d</c> class.
-            </summary>
-            <param name="vertexes">3d polyline <see cref="T:netDxf.Entities.PolylineVertex">vertex</see> list.</param>
-        </member>
-        <member name="M:netDxf.Entities.Polyline.#ctor(System.Collections.Generic.IEnumerable{netDxf.Entities.PolylineVertex},System.Boolean)">
-            <summary>
-            Initializes a new instance of the <c>Polyline3d</c> class.
-            </summary>
-            <param name="vertexes">3d polyline <see cref="T:netDxf.Entities.PolylineVertex">vertex</see> list.</param>
-            <param name="isClosed">Sets if the polyline is closed  (default: false).</param>
-        </member>
         <member name="P:netDxf.Entities.Polyline.Vertexes">
             <summary>
-            Gets the polyline <see cref="T:netDxf.Entities.PolylineVertex">vertex</see> list.
+            Gets the polyline <see cref="T:netDxf.Vector3">vertex</see> list.
             </summary>
         </member>
         <member name="P:netDxf.Entities.Polyline.IsClosed">
@@ -8849,6 +8979,10 @@
             <summary>
             Gets or sets the curve smooth type.
             </summary>
+            <remarks>
+            The additional polyline vertexes corresponding to the SplineFit will be created when writing the DXF file.
+            It is not recommended to use any kind of smoothness in polylines other than NoSmooth. Use a Spline entity instead.
+            </remarks>
         </member>
         <member name="P:netDxf.Entities.Polyline.Flags">
             <summary>
@@ -8870,6 +9004,23 @@
             Decompose the actual polyline in a list of <see cref="T:netDxf.Entities.Line">lines</see>.
             </summary>
             <returns>A list of <see cref="T:netDxf.Entities.Line">lines</see> that made up the polyline.</returns>
+        </member>
+        <member name="M:netDxf.Entities.Polyline.PolygonalVertexes(System.Int32)">
+            <summary>
+            Converts the polyline in a list of vertexes.
+            </summary>
+            <param name="precision">Number of vertexes generated, only applicable for smoothed polylines.</param>
+            <returns>A list vertexes that represents the polyline.</returns>
+        </member>
+        <member name="M:netDxf.Entities.Polyline.ToLwPolyline(System.Int32)">
+            <summary>
+            Converts the actual 3d polyline in a 2d polyline (LwPolyline).
+            </summary>
+            <param name="precision">Number of vertexes generated, only applicable for smoothed polylines.</param>
+            <returns>A LwPolyline that represents the polyline.</returns>
+            <remarks>
+            The resulting LwPolyline will be a projection of the actual polyline into the plane defined by its normal vector.
+            </remarks>
         </member>
         <member name="M:netDxf.Entities.Polyline.TransformBy(netDxf.Matrix3,netDxf.Vector3)">
             <summary>
@@ -8898,7 +9049,7 @@
         </member>
         <member name="T:netDxf.Entities.PolylineSmoothType">
             <summary>
-            Defines the curves type.
+            Defines the smooth type of the polyline.
             </summary>
         </member>
         <member name="F:netDxf.Entities.PolylineSmoothType.NoSmooth">
@@ -8914,11 +9065,6 @@
         <member name="F:netDxf.Entities.PolylineSmoothType.Cubic">
             <summary>
             Cubic B-spline curve.
-            </summary>
-        </member>
-        <member name="F:netDxf.Entities.PolylineSmoothType.BezierSurface">
-            <summary>
-            Bezier surface.
             </summary>
         </member>
         <member name="T:netDxf.Entities.PolylineTypeFlags">
@@ -8971,55 +9117,6 @@
             <summary>
             The line type pattern is generated continuously around the vertexes of this polyline.
             </summary>
-        </member>
-        <member name="T:netDxf.Entities.PolylineVertex">
-            <summary>
-            Represents a <see cref="T:netDxf.Entities.Polyline">polyline</see> vertex.
-            </summary>
-            <remarks>
-            The PolylineVertex can contain external data (XData) information, but it is not saved in the DXF.
-            </remarks>
-        </member>
-        <member name="M:netDxf.Entities.PolylineVertex.#ctor">
-            <summary>
-            Initializes a new instance of the <c>PolylineVertex</c> class.
-            </summary>
-        </member>
-        <member name="M:netDxf.Entities.PolylineVertex.#ctor(System.Double,System.Double,System.Double)">
-            <summary>
-            Initializes a new instance of the <c>PolylineVertex</c> class.
-            </summary>
-            <param name="x">X coordinate.</param>
-            <param name="y">Y coordinate.</param>
-            <param name="z">Z coordinate.</param>
-        </member>
-        <member name="M:netDxf.Entities.PolylineVertex.#ctor(netDxf.Vector3)">
-            <summary>
-            Initializes a new instance of the <c>PolylineVertex</c> class.
-            </summary>
-            <param name="position">Polyline <see cref="T:netDxf.Vector3">vertex</see> coordinates.</param>
-        </member>
-        <member name="P:netDxf.Entities.PolylineVertex.Position">
-            <summary>
-            Gets or sets the vertex <see cref="T:netDxf.Vector3">position</see>.
-            </summary>
-        </member>
-        <member name="P:netDxf.Entities.PolylineVertex.Flags">
-            <summary>
-            Gets the vertex type.
-            </summary>
-        </member>
-        <member name="M:netDxf.Entities.PolylineVertex.ToString">
-            <summary>
-            Converts the value of this instance to its equivalent string representation.
-            </summary>
-            <returns>The string representation.</returns>
-        </member>
-        <member name="M:netDxf.Entities.PolylineVertex.Clone">
-            <summary>
-            Creates a new PolylineVertex that is a copy of the current instance.
-            </summary>
-            <returns>A new PolylineVertex that is a copy of this instance.</returns>
         </member>
         <member name="T:netDxf.Entities.RadialDimension">
             <summary>
@@ -9336,47 +9433,61 @@
             Initializes a new instance of the <c>Spline</c> class.
             </summary>
             <param name="fitPoints">Spline fit points.</param>
-            <remarks>Spline entities created with a list of fit points cannot be used as a boundary path in a hatch.</remarks>
+            <remarks>
+            The resulting spline curve will be created from a list of cubic bezier curves that passes through the specified fit points.
+            </remarks>
         </member>
-        <member name="M:netDxf.Entities.Spline.#ctor(System.Collections.Generic.List{netDxf.Entities.SplineVertex},System.Collections.Generic.List{System.Double},System.Int16)">
+        <member name="M:netDxf.Entities.Spline.#ctor(System.Collections.Generic.IEnumerable{netDxf.BezierCurveQuadratic})">
+            <summary>
+            Initializes a new instance of the <c>Spline</c> class.
+            </summary>
+            <param name="curves">List of cubic bezier curves.</param>
+        </member>
+        <member name="M:netDxf.Entities.Spline.#ctor(System.Collections.Generic.IEnumerable{netDxf.BezierCurveCubic})">
+            <summary>
+            Initializes a new instance of the <c>Spline</c> class.
+            </summary>
+            <param name="curves">List of cubic bezier curves.</param>
+        </member>
+        <member name="M:netDxf.Entities.Spline.#ctor(System.Collections.Generic.IEnumerable{netDxf.Entities.SplineVertex})">
+            <summary>
+            Initializes a new instance of the <c>Spline</c> class.
+            </summary>
+            <param name="controlPoints">Spline control points.</param>
+            <remarks>By default the degree of the spline is equal three.</remarks>
+        </member>
+        <member name="M:netDxf.Entities.Spline.#ctor(System.Collections.Generic.IEnumerable{netDxf.Entities.SplineVertex},System.Boolean)">
+            <summary>
+            Initializes a new instance of the <c>Spline</c> class.
+            </summary>
+            <param name="controlPoints">Spline control points.</param>
+            <param name="closedPeriodic">Sets if the spline as periodic closed (default false).</param>
+            <remarks>By default the degree of the spline is equal three.</remarks>
+        </member>
+        <member name="M:netDxf.Entities.Spline.#ctor(System.Collections.Generic.IEnumerable{netDxf.Entities.SplineVertex},System.Int16)">
+            <summary>
+            Initializes a new instance of the <c>Spline</c> class.
+            </summary>
+            <param name="controlPoints">Spline control points.</param>
+            <param name="degree">Degree of the spline curve.  Valid values are 1 (linear), degree 2 (quadratic), degree 3 (cubic), and so on up to degree 10.</param>
+        </member>
+        <member name="M:netDxf.Entities.Spline.#ctor(System.Collections.Generic.IEnumerable{netDxf.Entities.SplineVertex},System.Int16,System.Boolean)">
+            <summary>
+            Initializes a new instance of the <c>Spline</c> class.
+            </summary>
+            <param name="controlPoints">Spline control points.</param>
+            <param name="degree">Degree of the spline curve.  Valid values are 1 (linear), degree 2 (quadratic), degree 3 (cubic), and so on up to degree 10.</param>
+            <param name="closedPeriodic">Sets if the spline as periodic closed (default false).</param>
+        </member>
+        <member name="M:netDxf.Entities.Spline.#ctor(System.Collections.Generic.IEnumerable{netDxf.Entities.SplineVertex},System.Collections.Generic.IEnumerable{System.Double},System.Int16)">
             <summary>
             Initializes a new instance of the <c>Spline</c> class.
             </summary>
             <param name="controlPoints">Spline control points.</param>
             <param name="knots">Spline knot vector.</param>
-            <param name="degree">Degree of the spline curve.  Valid values are 1 (linear), degree 2 (quadratic), degree 3 (cubic), and so on up to degree 10.</param>
+            <param name="degree">Degree of the spline curve. Valid values are 1 (linear), degree 2 (quadratic), degree 3 (cubic), and so on up to degree 10.</param>
         </member>
-        <member name="M:netDxf.Entities.Spline.#ctor(System.Collections.Generic.List{netDxf.Entities.SplineVertex})">
-            <summary>
-            Initializes a new instance of the <c>Spline</c> class.
-            </summary>
-            <param name="controlPoints">Spline control points.</param>
-            <remarks>By default the degree of the spline is equal three.</remarks>
-        </member>
-        <member name="M:netDxf.Entities.Spline.#ctor(System.Collections.Generic.List{netDxf.Entities.SplineVertex},System.Boolean)">
-            <summary>
-            Initializes a new instance of the <c>Spline</c> class.
-            </summary>
-            <param name="controlPoints">Spline control points.</param>
-            <param name="periodic">Sets if the spline as periodic closed (default false).</param>
-            <remarks>By default the degree of the spline is equal three.</remarks>
-        </member>
-        <member name="M:netDxf.Entities.Spline.#ctor(System.Collections.Generic.List{netDxf.Entities.SplineVertex},System.Int16)">
-            <summary>
-            Initializes a new instance of the <c>Spline</c> class.
-            </summary>
-            <param name="controlPoints">Spline control points.</param>
-            <param name="degree">Degree of the spline curve.  Valid values are 1 (linear), degree 2 (quadratic), degree 3 (cubic), and so on up to degree 10.</param>
-        </member>
-        <member name="M:netDxf.Entities.Spline.#ctor(System.Collections.Generic.List{netDxf.Entities.SplineVertex},System.Int16,System.Boolean)">
-            <summary>
-            Initializes a new instance of the <c>Spline</c> class.
-            </summary>
-            <param name="controlPoints">Spline control points.</param>
-            <param name="degree">Degree of the spline curve.  Valid values are 1 (linear), degree 2 (quadratic), degree 3 (cubic), and so on up to degree 10.</param>
-            <param name="periodic">Sets if the spline as periodic closed (default false).</param>
-        </member>
-        <member name="M:netDxf.Entities.Spline.#ctor(System.Collections.Generic.List{netDxf.Entities.SplineVertex},System.Collections.Generic.List{System.Double},System.Int16,System.Collections.Generic.List{netDxf.Vector3},netDxf.Entities.SplineCreationMethod,System.Boolean)">
+        <member name="M:netDxf.Entities.Spline.#ctor(System.Collections.Generic.IEnumerable{netDxf.Entities.SplineVertex},System.Collections.Generic.IEnumerable{System.Double},System.Int16,System.Collections.Generic.IEnumerable{netDxf.Vector3},netDxf.Entities.SplineCreationMethod,System.Boolean)">
             <summary>
             Initializes a new instance of the <c>Spline</c> class.
             </summary>
@@ -9385,7 +9496,7 @@
             <param name="degree">Degree of the spline curve.  Valid values are 1 (linear), degree 2 (quadratic), degree 3 (cubic), and so on up to degree 10.</param>
             <param name="fitPoints">Spine fit points.</param>
             <param name="method">Spline creation method.</param>
-            <param name="isPeriodic">Sets if the spline as periodic closed (default false).</param>
+            <param name="closedPeriodic">Sets if the spline as periodic closed (default false).</param>
         </member>
         <member name="P:netDxf.Entities.Spline.FitPoints">
             <summary>
@@ -9408,7 +9519,10 @@
             <summary>
             Gets or set the knot parameterization computational method.
             </summary>
-            <remarks>Only applicable to splines created with fit points.</remarks>
+            <remarks>
+            Not usable. When initializing a Spline through a set of fit points, the resulting spline is approximated creating a list of cubic bezier curves.
+            It is only informative for splines that has been loaded from a DXF file.
+            </remarks>
         </member>
         <member name="P:netDxf.Entities.Spline.CreationMethod">
             <summary>
@@ -9440,13 +9554,23 @@
         </member>
         <member name="P:netDxf.Entities.Spline.IsClosed">
             <summary>
-            Gets if the spline is closed.
+            Gets or sets if the spline is closed.
             </summary>
+            <remarks>
+            Closing a spline will just repeat the last vertex.
+            Under normal circumstances maintaining the smoothness of the curve at the end point is desirable,
+            in these cases use the property IsClosedPeriodic, instead. <br />
+            Changing the property will rebuild the knot vector.
+            </remarks>
         </member>
-        <member name="P:netDxf.Entities.Spline.IsPeriodic">
+        <member name="P:netDxf.Entities.Spline.IsClosedPeriodic">
             <summary>
-            Gets if the spline is periodic.
+            Gets or sets if the spline is closed and periodic.
             </summary>
+            <remarks>
+            A periodic spline is always closed creating a smooth continuity at the end points. <br />
+            Changing the property will rebuild the knot vector.
+            </remarks>
         </member>
         <member name="P:netDxf.Entities.Spline.ControlPoints">
             <summary>
@@ -9459,14 +9583,9 @@
             </summary>
             <remarks>By default a uniform knot vector is created.</remarks>
         </member>
-        <member name="P:netDxf.Entities.Spline.Flags">
-            <summary>
-            Gets the spline type.
-            </summary>
-        </member>
         <member name="M:netDxf.Entities.Spline.Reverse">
             <summary>
-            Switch the polyline direction.
+            Switch the spline direction.
             </summary>
         </member>
         <member name="M:netDxf.Entities.Spline.SetUniformWeights(System.Double)">
@@ -9474,20 +9593,6 @@
             Sets all control point weights to the specified number.
             </summary>
             <param name="weight">Control point weight.</param>
-        </member>
-        <member name="M:netDxf.Entities.Spline.TransformBy(netDxf.Matrix3,netDxf.Vector3)">
-            <summary>
-            Moves, scales, and/or rotates the current entity given a 3x3 transformation matrix and a translation vector.
-            </summary>
-            <param name="transformation">Transformation matrix.</param>
-            <param name="translation">Translation vector.</param>
-            <remarks>Matrix3 adopts the convention of using column vectors to represent a transformation matrix.</remarks>
-        </member>
-        <member name="M:netDxf.Entities.Spline.Clone">
-            <summary>
-            Creates a new Spline that is a copy of the current instance.
-            </summary>
-            <returns>A new Spline that is a copy of this instance.</returns>
         </member>
         <member name="M:netDxf.Entities.Spline.PolygonalVertexes(System.Int32)">
             <summary>
@@ -9502,6 +9607,46 @@
             </summary>
             <param name="precision">Number of vertexes generated.</param>
             <returns>A new instance of <see cref="T:netDxf.Entities.Polyline">Polyline</see> that represents the spline.</returns>
+        </member>
+        <member name="M:netDxf.Entities.Spline.ToLwPolyline(System.Int32)">
+            <summary>
+            Converts the spline in a LwPolyline.
+            </summary>
+            <param name="precision">Number of vertexes generated.</param>
+            <returns>A new instance of <see cref="T:netDxf.Entities.LwPolyline">LwPolyline</see> that represents the spline.</returns>
+            <remarks>
+            The resulting LwPolyline will be a projection of the actual spline into the plane defined by its normal vector.
+            </remarks>
+        </member>
+        <member name="M:netDxf.Entities.Spline.NurbsEvaluator(System.Collections.Generic.List{netDxf.Entities.SplineVertex},System.Double[],System.Int32,System.Boolean,System.Boolean,System.Int32)">
+            <summary>
+            Calculate points along a NURBS curve.
+            </summary>
+            <param name="ctrlPoints">List of spline control points.</param>
+            <param name="knots">List of spline knot points. If null the knot vector will be automatically generated.</param>
+            <param name="degree">Spline degree.</param>
+            <param name="isClosed">Specifies if the spline is closed.</param>
+            <param name="isPeriodic">Specifies if the spline is periodic.</param>
+            <param name="precision">Number of vertexes generated.</param>
+            <returns>A list vertexes that represents the spline.</returns>
+            <remarks>
+            NURBS evaluator provided by mikau16 based on Michael V. implementation, roughly follows the notation of http://cs.mtu.edu/~shene/PUBLICATIONS/2004/NURBS.pdf
+            Added a few modifications to make it work for open, closed, and periodic closed splines.
+            </remarks>
+        </member>
+        <member name="M:netDxf.Entities.Spline.TransformBy(netDxf.Matrix3,netDxf.Vector3)">
+            <summary>
+            Moves, scales, and/or rotates the current entity given a 3x3 transformation matrix and a translation vector.
+            </summary>
+            <param name="transformation">Transformation matrix.</param>
+            <param name="translation">Translation vector.</param>
+            <remarks>Matrix3 adopts the convention of using column vectors to represent a transformation matrix.</remarks>
+        </member>
+        <member name="M:netDxf.Entities.Spline.Clone">
+            <summary>
+            Creates a new Spline that is a copy of the current instance.
+            </summary>
+            <returns>A new Spline that is a copy of this instance.</returns>
         </member>
         <member name="T:netDxf.Entities.SplineCreationMethod">
             <summary>
@@ -11266,6 +11411,11 @@
             0 = Viewport scaling governs line type scaling.
             </remarks>
         </member>
+        <member name="F:netDxf.Header.HeaderVariableCode.SplineSegs">
+            <summary>
+            Defines number of line segments to be generated for smoothed out polylines.
+            </summary>
+        </member>
         <member name="F:netDxf.Header.HeaderVariableCode.TdCreate">
             <summary>
             Local date/time of drawing creation.
@@ -11544,6 +11694,11 @@
             1 = No special line type scaling.<br />
             0 = Viewport scaling governs line type scaling.
             </remarks>
+        </member>
+        <member name="P:netDxf.Header.HeaderVariables.SplineSegs">
+            <summary>
+            Defines number of line segments to be generated for smoothed polylines.
+            </summary>
         </member>
         <member name="P:netDxf.Header.HeaderVariables.TdCreate">
             <summary>
@@ -18264,7 +18419,7 @@
         </member>
         <member name="M:netDxf.Vector2.#ctor(System.Double)">
             <summary>
-            Initializes a new instance of Vector3.
+            Initializes a new instance of Vector2.
             </summary>
             <param name="value">X, Y component.</param>
         </member>
@@ -19568,6 +19723,85 @@
         <member name="F:netDxf.XDataCode.WorldDirectionY">
             <summary>
             Also a 3D point that is rotated and mirrored along with the parent (but is not moved, scaled, or stretched)
+            </summary>
+        </member>
+        <member name="F:netDxf.XDataCode.WorldDirectionZ">
+            <summary>
+            Also a 3D point that is rotated and mirrored along with the parent (but is not moved, scaled, or stretched)
+            </summary>
+        </member>
+        <member name="F:netDxf.XDataCode.Real">
+            <summary>
+            A real value.
+            </summary>
+        </member>
+        <member name="F:netDxf.XDataCode.Distance">
+            <summary>
+            A real value that is scaled along with the parent entity
+            </summary>
+        </member>
+        <member name="F:netDxf.XDataCode.ScaleFactor">
+            <summary>
+            Also a real value that is scaled along with the parent.
+            The difference between a distance and a scale factor is application-defined
+            </summary>
+        </member>
+        <member name="F:netDxf.XDataCode.Int16">
+            <summary>
+            A 16-bit integer (signed or unsigned).
+            </summary>
+        </member>
+        <member name="F:netDxf.XDataCode.Int32">
+            <summary>
+            A 32-bit signed integer.
+            </summary>
+        </member>
+        <member name="T:netDxf.XDataRecord">
+            <summary>
+            Represents an entry in the extended data of an entity.
+            </summary>
+        </member>
+        <member name="P:netDxf.XDataRecord.OpenControlString">
+            <summary>
+            An extended data control string can be either "{"or "}".
+            These braces enable applications to organize their data by subdividing the data into lists.
+            The left brace begins a list, and the right brace terminates the most recent list. Lists can be nested.
+            </summary>
+        </member>
+        <member name="P:netDxf.XDataRecord.CloseControlString">
+            <summary>
+            An extended data control string can be either "{" or "}".
+            These braces enable applications to organize their data by subdividing the data into lists.
+            The left brace begins a list, and the right brace terminates the most recent list. Lists can be nested.
+            </summary>
+        </member>
+        <member name="M:netDxf.XDataRecord.#ctor(netDxf.XDataCode,System.Object)">
+            <summary>
+            Initializes a new XDataRecord.
+            </summary>
+            <param name="code">XData code.</param>
+            <param name="value">XData value.</param>
+        </member>
+        <member name="P:netDxf.XDataRecord.Code">
+            <summary>
+            Gets the XData code.
+            </summary>
+            <remarks>The only valid values are the ones defined in the <see cref="T:netDxf.XDataCode">XDataCode</see> class.</remarks>
+        </member>
+        <member name="P:netDxf.XDataRecord.Value">
+            <summary>
+            Gets the XData value.
+            </summary>
+        </member>
+        <member name="M:netDxf.XDataRecord.ToString">
+            <summary>
+            Obtains a string that represents the XDataRecord.
+            </summary>
+            <returns>A string text.</returns>
+        </member>
+    </members>
+</doc>
+along with the parent (but is not moved, scaled, or stretched)
             </summary>
         </member>
         <member name="F:netDxf.XDataCode.WorldDirectionZ">

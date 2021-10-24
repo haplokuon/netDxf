@@ -1,23 +1,26 @@
-﻿#region netDxf library licensed under the MIT License, Copyright © 2009-2021 Daniel Carvajal (haplokuon@gmail.com)
+#region netDxf library licensed under the MIT License
 // 
-//                        netDxf library
-// Copyright © 2021 Daniel Carvajal (haplokuon@gmail.com)
+//                       netDxf library
+// Copyright (c) 2019-2021 Daniel Carvajal (haplokuon@gmail.com)
 // 
-// Permission is hereby granted, free of charge, to any person obtaining a copy of this software
-// and associated documentation files (the “Software”), to deal in the Software without restriction,
-// including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense,
-// and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so,
-// subject to the following conditions:
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
 // 
 // The above copyright notice and this permission notice shall be included in all
 // copies or substantial portions of the Software.
 // 
-// THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-// FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-// COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-// IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-// CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+// 
 #endregion
 
 using System;
@@ -585,6 +588,10 @@ namespace netDxf.IO
                         this.doc.DrawingVariables.PsLtScale = this.chunk.ReadShort();
                         this.chunk.Next();
                         break;
+                    case HeaderVariableCode.SplineSegs:
+                        this.doc.DrawingVariables.SplineSegs = this.chunk.ReadShort();
+                        this.chunk.Next();
+                        break;
                     case HeaderVariableCode.TdCreate:
                         julian = this.chunk.ReadDouble();
                         if (julian < 1721426 || julian > 5373484)
@@ -993,7 +1000,11 @@ namespace netDxf.IO
                         break;
                     case DxfObjectCode.ImageDef:
                         ImageDefinition imageDefinition = this.ReadImageDefinition();
-                        this.doc.ImageDefinitions.Add(imageDefinition, false);
+                        Debug.Assert(imageDefinition != null, "ImageDefinition cannot be null");
+                        if (imageDefinition != null)
+                        {
+                            this.doc.ImageDefinitions.Add(imageDefinition, false);
+                        }
                         break;
                     case DxfObjectCode.ImageDefReactor:
                         ImageDefinitionReactor reactor = this.ReadImageDefReactor();
@@ -1004,14 +1015,23 @@ namespace netDxf.IO
                         break;
                     case DxfObjectCode.MLineStyle:
                         MLineStyle style = this.ReadMLineStyle();
-                        this.doc.MlineStyles.Add(style, false);
+                        Debug.Assert(style != null, "MLineStyle cannot be null");
+                        if (style != null)
+                        {
+                            this.doc.MlineStyles.Add(style, false);
+                        }
                         break;
                     case DxfObjectCode.Group:
                         Group group = this.ReadGroup();
-                        this.doc.Groups.Add(group, false);
+                        Debug.Assert(group != null, "Group cannot be null");
+                        if (group != null)
+                        {
+                            this.doc.Groups.Add(group, false);
+                        }
                         break;
                     case DxfObjectCode.Layout:
                         Layout layout = this.ReadLayout();
+                        Debug.Assert(layout != null, "Layout cannot be null");
                         if (layout.AssociatedBlock == null)
                         {
                             this.orphanLayouts.Add(layout);
@@ -1023,19 +1043,35 @@ namespace netDxf.IO
                         break;
                     case DxfObjectCode.UnderlayDgnDefinition:
                         UnderlayDgnDefinition underlayDgnDef = (UnderlayDgnDefinition) this.ReadUnderlayDefinition(UnderlayType.DGN);
-                        this.doc.UnderlayDgnDefinitions.Add(underlayDgnDef, false);
+                        Debug.Assert(underlayDgnDef != null, "UnderlayDgnDefinition cannot be null");
+                        if (underlayDgnDef != null)
+                        {
+                            this.doc.UnderlayDgnDefinitions.Add(underlayDgnDef, false);
+                        }
                         break;
                     case DxfObjectCode.UnderlayDwfDefinition:
                         UnderlayDwfDefinition underlayDwfDef = (UnderlayDwfDefinition) this.ReadUnderlayDefinition(UnderlayType.DWF);
-                        this.doc.UnderlayDwfDefinitions.Add(underlayDwfDef, false);
+                        Debug.Assert(underlayDwfDef != null, "UnderlayDwfDefinition cannot be null");
+                        if (underlayDwfDef != null)
+                        {
+                            this.doc.UnderlayDwfDefinitions.Add(underlayDwfDef, false);
+                        }
                         break;
                     case DxfObjectCode.UnderlayPdfDefinition:
                         UnderlayPdfDefinition underlayPdfDef = (UnderlayPdfDefinition) this.ReadUnderlayDefinition(UnderlayType.PDF);
-                        this.doc.UnderlayPdfDefinitions.Add(underlayPdfDef, false);
+                        Debug.Assert(underlayPdfDef != null, "UnderlayPdfDefinition cannot be null");
+                        if (underlayPdfDef != null)
+                        {
+                            this.doc.UnderlayPdfDefinitions.Add(underlayPdfDef, false);
+                        }
                         break;
                     case DxfObjectCode.XRecord:
                         XRecord xRecord = this.ReadXRecord();
-                        this.xRecords.Add(xRecord.Handle, xRecord);
+                        Debug.Assert(xRecord != null, "XRecord cannot be null");
+                        if (xRecord != null)
+                        {
+                            this.xRecords.Add(xRecord.Handle, xRecord);
+                        }
                         break;
                     default:
                         do
@@ -8050,7 +8086,9 @@ namespace netDxf.IO
                         // the MLineStyle will be applied to the MLine after parsing the whole file
                         styleName = this.DecodeEncodedNonAsciiCharacters(this.chunk.ReadString());
                         if (string.IsNullOrEmpty(styleName))
+                        {
                             styleName = this.doc.DrawingVariables.CMLStyle;
+                        }
                         this.chunk.Next();
                         break;
                     case 40:
@@ -8297,7 +8335,7 @@ namespace netDxf.IO
                 }
             }
 
-            LwPolyline entity = new LwPolyline
+            LwPolyline entity = new LwPolyline(polVertexes)
             {
                 Elevation = elevation,
                 Thickness = thickness,
@@ -8305,10 +8343,10 @@ namespace netDxf.IO
                 Normal = normal
             };
 
-            entity.Vertexes.AddRange(polVertexes);
-
             if (constantWidth >= 0.0)
+            {
                 entity.SetConstantWidth(constantWidth);
+            }
 
             entity.XData.AddRange(xData);
 
@@ -8319,9 +8357,10 @@ namespace netDxf.IO
         {
             // the entity Polyline in DXF can actually hold three kinds of entities
             // 3d polyline is the generic polyline
-            // polyface mesh
-            // polylines 2d is the old way of writing polylines the AutoCAD2000 and newer always use LwPolylines to define a 2d polyline
+            // Polyface mesh
+            // Polylines 2d is the old way of writing polylines the AutoCAD2000 and newer always use LwPolylines to define a 2d polyline
             // this way of reading 2d polylines is here for compatibility reasons with older DXF versions.
+            // Also, SplineFit 2d polylines are saved as a polyline
             PolylineTypeFlags flags = PolylineTypeFlags.OpenPolyline;
             PolylineSmoothType smoothType = PolylineSmoothType.NoSmooth;
             double elevation = 0.0;
@@ -8329,7 +8368,7 @@ namespace netDxf.IO
             Vector3 normal = Vector3.UnitZ;
             List<Vertex> vertexes = new List<Vertex>();
             List<XData> xData = new List<XData>();
-
+            
             this.chunk.Next();
 
             while (this.chunk.Code != 0)
@@ -8349,16 +8388,17 @@ namespace netDxf.IO
                         this.chunk.Next();
                         break;
                     case 75:
-                        smoothType = (PolylineSmoothType) this.chunk.ReadShort();
+                        short smooth = this.chunk.ReadShort();
+                        // SmoothType BezierSurface not implemented, reset to default
+                        smoothType = smooth == 8 ? PolylineSmoothType.NoSmooth : (PolylineSmoothType) smooth;
                         this.chunk.Next();
                         break;
                     case 71:
-                        //this field might not exist for polyface meshes, we cannot depend on it
-                        //numVertexes = int.Parse(code.Value); code = this.ReadCodePair();
+                        //this field may not exist for polyface meshes, we cannot depend on it
                         this.chunk.Next();
                         break;
                     case 72:
-                        //this field might not exist for polyface meshes, we cannot depend on it
+                        //this field may not exist for polyface meshes, we cannot depend on it
                         this.chunk.Next();
                         break;
                     case 210:
@@ -8421,24 +8461,99 @@ namespace netDxf.IO
 
             //to avoid possible errors between the vertex type and the polyline type
             //the polyline type will decide which information to use from the read vertex
-            if (flags.HasFlag(PolylineTypeFlags.Polyline3D) || flags.HasFlag(PolylineTypeFlags.SplineFit))
+            if (flags.HasFlag(PolylineTypeFlags.SplineFit))
             {
-                List<PolylineVertex> polyline3dVertexes = new List<PolylineVertex>();
+                List<Vector3> points = new List<Vector3>();
                 foreach (Vertex v in vertexes)
                 {
-                    PolylineVertex vertex = new PolylineVertex
+                    // the vertex list will only store the vertexes of the original polyline
+                    if (v.Flags.HasFlag(VertexTypeFlags.SplineFrameControlPoint))
                     {
-                        Flags = v.Flags,
-                        Position = v.Position,
-                        Handle = v.Handle,
+                        points.Add(v.Position);
+                    }
+                }
+
+                // the vertexes of SplineFit 2d polylines are expressed in local coordinates
+                if (!flags.HasFlag(PolylineTypeFlags.Polyline3D))
+                {
+                    points = MathHelper.Transform(points, normal, CoordinateSystem.Object, CoordinateSystem.World);
+                }
+
+                pol = new Polyline(points, isClosed)
+                {
+                    SmoothType = smoothType,
+                    Flags = flags,
+                    Normal = normal
+                };
+                ((Polyline) pol).EndSequence.Handle = endSequenceHandle;
+
+
+                // TO IMPORT SPLINEFIT POLYLINES INTO SPLINES
+                //List<SplineVertex> ctrlPoint = new List<SplineVertex>();
+                //foreach (Vertex v in vertexes)
+                //{
+                //    // the polyline vertex list will only store the vertexes of the original 
+                //    if (v.Flags.HasFlag(VertexTypeFlags.SplineFrameControlPoint))
+                //    {
+                //        SplineVertex vertex = new SplineVertex(v.Position);
+                //        ctrlPoint.Add(vertex);
+                //    }
+                //}
+
+                //short degree = 3;
+                //switch (smoothType)
+                //{
+                //    case PolylineSmoothType.Cubic:
+                //        degree = 3;
+                //        break;
+                //    case PolylineSmoothType.Quadratic:
+                //        degree = 2;
+                //        break;
+                //}
+                //pol = new Spline(ctrlPoint, degree, isClosed)
+                //{
+                //    Normal = normal
+                //};
+            }
+            else if (flags.HasFlag(PolylineTypeFlags.CurveFit))
+            {
+                // only applicable to 2d polylines, the vertexes are expressed in local coordinates
+                List<LwPolylineVertex> polylineVertexes = new List<LwPolylineVertex>();
+                foreach (Vertex v in vertexes)
+                {
+                    LwPolylineVertex vertex = new LwPolylineVertex
+                    {
+                        Position = new Vector2(v.Position.X, v.Position.Y),
+                        StartWidth = v.StartWidth,
+                        Bulge = v.Bulge,
+                        EndWidth = v.EndWidth,
                     };
-                    polyline3dVertexes.Add(vertex);
+                    polylineVertexes.Add(vertex);
+                }
+
+                pol = new LwPolyline(polylineVertexes, isClosed)
+                {
+                    Thickness = thickness,
+                    Elevation = elevation,
+                    Normal = normal,
+                };
+            }
+            else if (flags.HasFlag(PolylineTypeFlags.Polyline3D))
+            {
+                List<Vector3> polyline3dVertexes = new List<Vector3>();
+                foreach (Vertex v in vertexes)
+                {
+                    // the polyline vertex list will only store the vertexes of the original 
+                    if (v.Flags.HasFlag(VertexTypeFlags.Polyline3dVertex))
+                    {
+                        polyline3dVertexes.Add(v.Position);
+                    }
                 }
 
                 pol = new Polyline(polyline3dVertexes, isClosed)
                 {
-                    Flags = flags,
                     SmoothType = smoothType,
+                    Flags = flags,
                     Normal = normal
                 };
                 ((Polyline) pol).EndSequence.Handle = endSequenceHandle;
@@ -8446,26 +8561,17 @@ namespace netDxf.IO
             else if (flags.HasFlag(PolylineTypeFlags.PolyfaceMesh))
             {
                 //the vertex list created contains vertex and face information
-                List<PolyfaceMeshVertex> polyfaceVertexes = new List<PolyfaceMeshVertex>();
+                List<Vector3> polyfaceVertexes = new List<Vector3>();
                 List<PolyfaceMeshFace> polyfaceFaces = new List<PolyfaceMeshFace>();
                 foreach (Vertex v in vertexes)
                 {
                     if (v.Flags.HasFlag(VertexTypeFlags.PolyfaceMeshVertex | VertexTypeFlags.Polygon3dMesh))
                     {
-                        PolyfaceMeshVertex vertex = new PolyfaceMeshVertex
-                        {
-                            Position = v.Position,
-                            Handle = v.Handle,
-                        };
-                        polyfaceVertexes.Add(vertex);
+                        polyfaceVertexes.Add(v.Position);
                     }
                     else if (v.Flags.HasFlag(VertexTypeFlags.PolyfaceMeshVertex))
                     {
-                        PolyfaceMeshFace vertex = new PolyfaceMeshFace(v.VertexIndexes)
-                        {
-                            Handle = v.Handle
-                        };
-                        polyfaceFaces.Add(vertex);
+                        polyfaceFaces.Add(new PolyfaceMeshFace(v.VertexIndexes) {Layer = v.Layer, Color = v.Color});
                     }
                 }
                 pol = new PolyfaceMesh(polyfaceVertexes, polyfaceFaces)
@@ -8492,7 +8598,7 @@ namespace netDxf.IO
 
                 pol = new LwPolyline(polylineVertexes, isClosed)
                 {
-                    Flags = flags,
+                    //Flags = flags,
                     Thickness = thickness,
                     Elevation = elevation,
                     Normal = normal,
@@ -8507,8 +8613,8 @@ namespace netDxf.IO
         private Vertex ReadVertex()
         {
             string handle = string.Empty;
-            Layer layer = Layer.Default;
-            AciColor color = AciColor.ByLayer;
+            Layer layer = null;
+            AciColor color = null;
             Linetype linetype = Linetype.ByLayer;
             Vector3 position = new Vector3();
             double startWidth = 0.0;
@@ -8533,8 +8639,7 @@ namespace netDxf.IO
                         this.chunk.Next();
                         break;
                     case 62: //ACI color code
-                        if (!color.UseTrueColor)
-                            color = AciColor.FromCadIndex(this.chunk.ReadShort());
+                        color = AciColor.FromCadIndex(this.chunk.ReadShort());
                         this.chunk.Next();
                         break;
                     case 420: //the entity uses true color
@@ -11111,11 +11216,13 @@ namespace netDxf.IO
                         lineweight = (Lineweight) (short) recordEntry.Value;
                         break;
                     case 331:
-                        Linetype linetype = (Linetype) this.doc.GetObjectByHandle((string) recordEntry.Value);
+                        Linetype linetype = this.doc.GetObjectByHandle((string) recordEntry.Value) as Linetype;
                         Debug.Assert(linetype != null);
                         lineTypeName = linetype == null ? Linetype.DefaultName : linetype.Name;
                         break;
                     case 6:
+                        // bad decision of storing the same information in two different codes (6 and 331)
+                        // if there is a discrepancy between the values which one should be chosen?
                         lineTypeName = (string) recordEntry.Value;
                         break;
                     case 1:
