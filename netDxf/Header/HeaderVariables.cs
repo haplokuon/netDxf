@@ -27,6 +27,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using netDxf.Entities;
+using netDxf.Tables;
 using netDxf.Units;
 
 namespace netDxf.Header
@@ -38,6 +39,7 @@ namespace netDxf.Header
     {
         #region private fields
 
+        private UCS currentUCS;
         private readonly Dictionary<string, HeaderVariable> variables;
         private readonly Dictionary<string, HeaderVariable> customVariables;
 
@@ -90,12 +92,10 @@ namespace netDxf.Header
                 {HeaderVariableCode.TduCreate, new HeaderVariable(HeaderVariableCode.TduCreate, 40, DateTime.UtcNow)},
                 {HeaderVariableCode.TdUpdate, new HeaderVariable(HeaderVariableCode.TdUpdate, 40, DateTime.Now)},
                 {HeaderVariableCode.TduUpdate, new HeaderVariable(HeaderVariableCode.TduUpdate, 40, DateTime.UtcNow)},
-                {HeaderVariableCode.TdinDwg, new HeaderVariable(HeaderVariableCode.TdinDwg, 40, new TimeSpan())},
-                {HeaderVariableCode.UcsOrg, new HeaderVariable(HeaderVariableCode.UcsOrg, 30, Vector3.Zero)},
-                {HeaderVariableCode.UcsXDir, new HeaderVariable(HeaderVariableCode.UcsXDir, 30, Vector3.UnitX)},
-                {HeaderVariableCode.UcsYDir, new HeaderVariable(HeaderVariableCode.UcsYDir, 30, Vector3.UnitY)}
+                {HeaderVariableCode.TdinDwg, new HeaderVariable(HeaderVariableCode.TdinDwg, 40, new TimeSpan())}
             };
 
+            this.currentUCS = new UCS("Unnamed");
             this.customVariables = new Dictionary<string, HeaderVariable>(StringComparer.OrdinalIgnoreCase);
         }
 
@@ -621,36 +621,22 @@ namespace netDxf.Header
         }
 
         /// <summary>
-        /// Origin of current UCS (in WCS).
-        /// </summary>
-        public Vector3 UcsOrg
-        {
-            get { return (Vector3)this.variables[HeaderVariableCode.UcsOrg].Value; }
-            set { this.variables[HeaderVariableCode.UcsOrg].Value = value; }
-        }
-
-        /// <summary>
-        /// Direction of the current UCS X axis (in WCS).
+        /// Gets ore sets the current/active UCS of the drawing.
         /// </summary>
         /// <remarks>
-        /// The vectors UcsXDir and UcsYDir must be perpendicular.
+        /// This field encapsulates the three drawing variables UcsOrg, UcsXDir, and UcsYDir.
         /// </remarks>
-        public Vector3 UcsXDir
+        public UCS CurrentUCS
         {
-            get { return (Vector3)this.variables[HeaderVariableCode.UcsXDir].Value; }
-            set { this.variables[HeaderVariableCode.UcsXDir].Value = value; }
-        }
-
-        /// <summary>
-        /// Direction of the current UCS Y axis (in WCS).
-        /// </summary>
-        /// <remarks>
-        /// The vectors UcsXDir and UcsYDir must be perpendicular.
-        /// </remarks>
-        public Vector3 UcsYDir
-        {
-            get { return (Vector3)this.variables[HeaderVariableCode.UcsYDir].Value; }
-            set { this.variables[HeaderVariableCode.UcsYDir].Value = value; }
+            get { return this.currentUCS; } 
+            set
+            {
+                if (value == null)
+                {
+                    throw new ArgumentNullException(nameof(value));
+                }
+                this.currentUCS = value;
+            } 
         }
 
         #endregion

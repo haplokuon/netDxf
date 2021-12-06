@@ -282,7 +282,7 @@ namespace netDxf.Tables
         /// </summary>
         /// <remarks>
         /// The font style value is ignored and will always return FontStyle.Regular when a font file has been specified.<br />
-        /// All styles might or might not be available for the current font family.
+        /// All styles may not be available for the current font family.
         /// </remarks>
         public FontStyle FontStyle
         {

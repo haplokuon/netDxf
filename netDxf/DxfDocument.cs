@@ -883,7 +883,7 @@ namespace netDxf
                     insert.AttributeRemoved += this.Insert_AttributeRemoved;
                     //insert.BlockChanged += this.Insert_BlockChanged;
                     break;
-                case EntityType.LwPolyline:
+                case EntityType.Polyline2D:
                     break;
                 case EntityType.Line:
                     break;
@@ -907,7 +907,7 @@ namespace netDxf
                     }
                     mesh.PolyfaceMeshFaceLayerChanged += this.Entity_LayerChanged;
                     break;
-                case EntityType.Polyline:
+                case EntityType.Polyline3D:
                     break;
                 case EntityType.Solid:
                     break;
@@ -1096,7 +1096,7 @@ namespace netDxf
                     insert.AttributeRemoved -= this.Insert_AttributeRemoved;
                     //insert.BlockChanged -= this.Insert_BlockChanged;
                     break;
-                case EntityType.LwPolyline:
+                case EntityType.Polyline2D:
                     break;
                 case EntityType.Line:
                     break;
@@ -1115,7 +1115,7 @@ namespace netDxf
                     }
                     mesh.PolyfaceMeshFaceLayerChanged -= this.Entity_LayerChanged;
                     break;
-                case EntityType.Polyline:
+                case EntityType.Polyline3D:
                     break;
                 case EntityType.Solid:
                     break;

@@ -35,9 +35,9 @@ namespace netDxf.Entities
     internal enum SplineTypeFlags
     {
         /// <summary>
-        /// Default (open 3d spline).
+        /// Default (open spline).
         /// </summary>
-        None = 0,
+        Open = 0,
 
         /// <summary>
         /// Closed spline.
@@ -64,12 +64,12 @@ namespace netDxf.Entities
         /// </summary>
         Linear = 16,
 
-        // in AutoCAD 2012 the flags can be greater than 70 despite the information that shows the dxf documentation these values are just a guess.
+        // in AutoCAD 2012 the flags can be greater than 70 despite the information that shows the DXF documentation these values are just a guess.
         FitChord = 32,
         FitSqrtChord = 64,
         FitUniform = 128,
         FitCustom = 256,
-        Unknown2 = 512,
+        Unknown = 512,
 
         /// <summary>
         /// Used by splines created by fit points.

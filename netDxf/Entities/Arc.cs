@@ -179,16 +179,16 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Converts the arc in a Polyline.
+        /// Converts the arc in a Polyline2D.
         /// </summary>
         /// <param name="precision">Number of divisions.</param>
-        /// <returns>A new instance of <see cref="LwPolyline">LightWeightPolyline</see> that represents the arc.</returns>
-        public LwPolyline ToPolyline(int precision)
+        /// <returns>A new instance of <see cref="Polyline2D">Polyline2D</see> that represents the arc.</returns>
+        public Polyline2D ToPolyline2D(int precision)
         {
             IEnumerable<Vector2> vertexes = this.PolygonalVertexes(precision);
             Vector3 ocsCenter = MathHelper.Transform(this.center, this.Normal, CoordinateSystem.World, CoordinateSystem.Object);
 
-            LwPolyline poly = new LwPolyline
+            Polyline2D poly = new Polyline2D
             {
                 Layer = (Layer) this.Layer.Clone(),
                 Linetype = (Linetype) this.Linetype.Clone(),
@@ -203,7 +203,7 @@ namespace netDxf.Entities
             };
             foreach (Vector2 v in vertexes)
             {
-                poly.Vertexes.Add(new LwPolylineVertex(v.X + ocsCenter.X, v.Y + ocsCenter.Y));
+                poly.Vertexes.Add(new Polyline2DVertex(v.X + ocsCenter.X, v.Y + ocsCenter.Y));
             }
             return poly;
         }

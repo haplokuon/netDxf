@@ -54,6 +54,7 @@ namespace netDxf.Tables
 
         #region private fields
 
+        private string description;
         private AciColor color;
         private bool isVisible;
         private bool isFrozen;
@@ -101,6 +102,7 @@ namespace netDxf.Tables
                 throw new ArgumentNullException(nameof(name), "The layer name should be at least one character long.");
             }
 
+            this.description = string.Empty;
             this.IsReserved = name.Equals(DefaultName, StringComparison.OrdinalIgnoreCase);
             this.color = AciColor.Default;
             this.linetype = Linetype.Continuous;
@@ -113,6 +115,19 @@ namespace netDxf.Tables
         #endregion
 
         #region public properties
+
+        /// <summary>
+        /// Gets or sets the layer description.
+        /// </summary>
+        /// <remarks>
+        /// The layer description is saved in the extended data of the layer, it will be handle automatically when the file is saved or loaded.<br />
+        /// New line characters are not allowed.
+        /// </remarks>
+        public string Description
+        {
+            get { return this.description; }
+            set { this.description = string.IsNullOrEmpty(value) ? string.Empty : value; }
+        }
 
         /// <summary>
         /// Gets or sets the layer <see cref="Linetype">line type</see>.

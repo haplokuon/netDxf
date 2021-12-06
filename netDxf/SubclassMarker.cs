@@ -58,7 +58,7 @@ namespace netDxf
         public const string Circle = "AcDbCircle";
         public const string Ellipse = "AcDbEllipse";
         public const string Spline = "AcDbSpline";
-        public const string Face3d = "AcDbFace";
+        public const string Face3D = "AcDbFace";
         public const string Helix = "AcDbHelix";
         public const string Insert = "AcDbBlockReference";
         public const string Line = "AcDbLine";
@@ -67,12 +67,12 @@ namespace netDxf
         public const string MLine = "AcDbMline";
         public const string Point = "AcDbPoint";
         public const string Vertex = "AcDbVertex";
-        public const string Polyline = "AcDb2dPolyline";
         public const string Leader = "AcDbLeader";
-        public const string LwPolyline = "AcDbPolyline";
-        public const string PolylineVertex = "AcDb2dVertex ";
-        public const string Polyline3d = "AcDb3dPolyline";
-        public const string Polyline3dVertex = "AcDb3dPolylineVertex";
+        public const string Polyline = "AcDbPolyline";
+        public const string Polyline2D = "AcDb2dPolyline";
+        public const string Polyline2DVertex = "AcDb2dVertex";
+        public const string Polyline3D = "AcDb3dPolyline";
+        public const string Polyline3DVertex = "AcDb3dPolylineVertex";
         public const string PolyfaceMesh = "AcDbPolyFaceMesh";
         public const string PolyfaceMeshVertex = "AcDbPolyFaceMeshVertex";
         public const string PolyfaceMeshFace = "AcDbFaceRecord";

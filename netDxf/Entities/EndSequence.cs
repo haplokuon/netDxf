@@ -34,9 +34,10 @@ namespace netDxf.Entities
         /// <summary>
         /// Initializes a new instance of the <c>EndSequence</c> class.
         /// </summary>
-        public EndSequence(DxfObject owner) : base(DxfObjectCode.EndSequence)
+        public EndSequence()
+            : base(DxfObjectCode.EndSequence)
         {
-            this.Owner = owner;
+            this.Owner = null;
         }
     }
 }

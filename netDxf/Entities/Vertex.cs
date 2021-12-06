@@ -23,7 +23,6 @@
 // 
 #endregion
 
-using System;
 using netDxf.Tables;
 
 namespace netDxf.Entities
@@ -32,7 +31,9 @@ namespace netDxf.Entities
     /// Represents a DXF Vertex.
     /// </summary>
     /// <remarks>
-    /// The Vertex class holds all the information read from the DXF file even if its needed or not. For internal use only.
+    /// Under the VERTEX data the DXF stores information about the vertexes of smoothed Polylines2D (non-smoothed Polylines2D are stored as LWPOLYLINE,
+    /// Polylines3D (smoothed and non-smoothed), and PolyfaceMeshes.<br />
+    /// For internal use only.
     /// </remarks>
     internal class Vertex :
         DxfObject
@@ -48,6 +49,7 @@ namespace netDxf.Entities
         private AciColor color;
         private Layer layer;
         private Linetype linetype;
+        private string subclassMarker;
 
         #endregion
 
@@ -57,49 +59,10 @@ namespace netDxf.Entities
         /// Initializes a new instance of the <c>Vertex</c> class.
         /// </summary>
         public Vertex()
-            : this(Vector3.Zero)
-        {
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <c>Vertex</c> class.
-        /// </summary>
-        /// <param name="position">Vertex <see cref="Vector2">location</see>.</param>
-        public Vertex(Vector2 position)
-            : this(new Vector3(position.X, position.Y, 0.0))
-        {
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <c>Vertex</c> class.
-        /// </summary>
-        /// <param name="x">X coordinate.</param>
-        /// <param name="y">Y coordinate.</param>
-        /// <param name="z">Z coordinate.</param>
-        public Vertex(double x, double y, double z)
-            : this(new Vector3(x, y, z))
-        {
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <c>Vertex</c> class.
-        /// </summary>
-        /// <param name="x">X coordinate.</param>
-        /// <param name="y">Y coordinate.</param>
-        public Vertex(double x, double y)
-            : this(new Vector3(x, y, 0.0))
-        {
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <c>Vertex</c> class.
-        /// </summary>
-        /// <param name="position">Vertex <see cref="Vector3">location</see>.</param>
-        public Vertex(Vector3 position)
             : base(DxfObjectCode.Vertex)
         {
-            this.flags = VertexTypeFlags.PolylineVertex;
-            this.position = position;
+            this.flags = VertexTypeFlags.Polyline2DVertex;
+            this.position = Vector3.Zero;
             this.layer = null;
             this.color = null;
             this.linetype = null;
@@ -107,6 +70,7 @@ namespace netDxf.Entities
             this.startWidth = 0.0;
             this.endWidth = 0.0;
             this.vertexIndexes = null;
+            this.subclassMarker = netDxf.SubclassMarker.Polyline2DVertex;
         }
 
         #endregion
@@ -122,6 +86,9 @@ namespace netDxf.Entities
             set { this.position = value; }
         }
 
+        /// <summary>
+        /// Gets or sets the indexes, only applicable when the vertex represents a face of a polyface mesh.
+        /// </summary>
         public short[] VertexIndexes
         {
             get { return this.vertexIndexes; }
@@ -134,14 +101,7 @@ namespace netDxf.Entities
         public double StartWidth
         {
             get { return this.startWidth; }
-            set
-            {
-                if (value < 0)
-                {
-                    throw new ArgumentOutOfRangeException(nameof(value), value, "The Vertex width must be equals or greater than zero.");
-                }
-                this.startWidth = value;
-            }
+            set { this.startWidth = value; }
         }
 
         /// <summary>
@@ -150,35 +110,16 @@ namespace netDxf.Entities
         public double EndWidth
         {
             get { return this.endWidth; }
-            set
-            {
-                if (value < 0)
-                {
-                    throw new ArgumentOutOfRangeException(nameof(value), value, "The Vertex width must be equals or greater than zero.");
-                }
-                this.endWidth = value;
-            }
+            set { this.endWidth = value; }
         }
 
         /// <summary>
         /// Gets or set the light weight polyline bulge.Accepted values range from 0 to 1.
         /// </summary>
-        /// <remarks>
-        /// The bulge is the tangent of one fourth the included angle for an arc segment, 
-        /// made negative if the arc goes clockwise from the start point to the endpoint. 
-        /// A bulge of 0 indicates a straight segment, and a bulge of 1 is a semicircle.
-        /// </remarks>
         public double Bulge
         {
             get { return this.bulge; }
-            set
-            {
-                if (this.bulge < 0.0 || this.bulge > 1.0f)
-                {
-                    throw new ArgumentOutOfRangeException(nameof(value), value, "The bulge must be a value between zero and one");
-                }
-                this.bulge = value;
-            }
+            set { this.bulge = value; }
         }
 
         /// <summary>
@@ -217,13 +158,13 @@ namespace netDxf.Entities
             set { this.linetype = value; }
         }
 
-        #endregion
-
-        #region overrides
-
-        public override string ToString()
+        /// <summary>
+        /// Gets or sets the subclass marker
+        /// </summary>
+        public string SubclassMarker
         {
-            return this.CodeName;
+            get { return this.subclassMarker; }
+            set { this.subclassMarker = value; }
         }
 
         #endregion

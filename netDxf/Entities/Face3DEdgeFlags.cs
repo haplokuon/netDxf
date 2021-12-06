@@ -23,21 +23,39 @@
 // 
 #endregion
 
-namespace netDxf
+using System;
+
+namespace netDxf.Entities
 {
     /// <summary>
-    /// Defines the coordinate system reference.
+    /// Defines the Face3D hidden edges.
     /// </summary>
-    public enum CoordinateSystem
+    [Flags]
+    public enum Face3DEdgeFlags
     {
         /// <summary>
-        /// World coordinates.
+        /// No flags equivalent to all edges are visible.
         /// </summary>
-        World,
+        None = 0,
 
         /// <summary>
-        /// Object/Local coordinates.
+        /// First edge is invisible.
         /// </summary>
-        Object
+        First = 1,
+
+        /// <summary>
+        /// Second edge is invisible.
+        /// </summary>
+        Second = 2,
+
+        /// <summary>
+        /// Third edge is invisible.
+        /// </summary>
+        Third = 4,
+
+        /// <summary>
+        /// Fourth edge is invisible.
+        /// </summary>
+        Fourth = 8
     }
 }

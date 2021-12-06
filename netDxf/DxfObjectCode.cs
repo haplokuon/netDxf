@@ -316,7 +316,7 @@ namespace netDxf
         public const string Shape = "SHAPE";
 
         /// <summary>
-        /// Spline (nonuniform rational B-splines NURBS).
+        /// Spline (nonuniform rational B-splines, NURBS).
         /// </summary>
         public const string Spline = "SPLINE";
 

@@ -940,7 +940,7 @@
         </member>
         <member name="M:netDxf.BoundingRectangle.Union(System.Collections.Generic.IEnumerable{netDxf.BoundingRectangle})">
             <summary>
-            Obtains the union of a bounding rectangles list .
+            Obtains the union of a bounding rectangles list.
             </summary>
             <param name="rectangles">A list of bounding rectangles.</param>
             <returns>The resulting bounding rectangle.</returns>
@@ -1445,9 +1445,9 @@
             Gets the list of <see cref="T:netDxf.Entities.Circle">circles</see> in the active layout.
             </summary>
         </member>
-        <member name="P:netDxf.Collections.DrawingEntities.Faces3d">
+        <member name="P:netDxf.Collections.DrawingEntities.Faces3D">
             <summary>
-            Gets the list of <see cref="T:netDxf.Entities.Face3d">3d faces</see> in the active layout.
+            Gets the list of <see cref="T:netDxf.Entities.Face3D">3d faces</see> in the active layout.
             </summary>
         </member>
         <member name="P:netDxf.Collections.DrawingEntities.Solids">
@@ -1475,14 +1475,14 @@
             Gets the list of <see cref="T:netDxf.Entities.Shape">shapes</see> in the active layout.
             </summary>
         </member>
-        <member name="P:netDxf.Collections.DrawingEntities.Polylines">
+        <member name="P:netDxf.Collections.DrawingEntities.Polylines3D">
             <summary>
-            Gets the list of <see cref="T:netDxf.Entities.Polyline">polylines</see> in the active layout.
+            Gets the list of <see cref="T:netDxf.Entities.Polyline3D">polylines</see> in the active layout.
             </summary>
         </member>
-        <member name="P:netDxf.Collections.DrawingEntities.LwPolylines">
+        <member name="P:netDxf.Collections.DrawingEntities.Polylines2D">
             <summary>
-            Gets the list of <see cref="T:netDxf.Entities.LwPolyline">light weight polylines</see> in the active layout.
+            Gets the list of <see cref="T:netDxf.Entities.Polyline2D">polylines</see> in the active layout.
             </summary>
         </member>
         <member name="P:netDxf.Collections.DrawingEntities.PolyfaceMeshes">
@@ -2913,7 +2913,7 @@
         </member>
         <member name="F:netDxf.CoordinateSystem.Object">
             <summary>
-            Object coordinates.
+            Object/Local coordinates.
             </summary>
         </member>
         <member name="T:netDxf.DxfDocument">
@@ -3612,7 +3612,7 @@
         </member>
         <member name="F:netDxf.DxfObjectCode.Spline">
             <summary>
-            Spline (nonuniform rational B-splines NURBS).
+            Spline (nonuniform rational B-splines, NURBS).
             </summary>
         </member>
         <member name="F:netDxf.DxfObjectCode.Solid">
@@ -4246,12 +4246,12 @@
             <param name="precision">Number of vertexes generated.</param>
             <returns>A list vertexes that represents the arc expressed in object coordinate system.</returns>
         </member>
-        <member name="M:netDxf.Entities.Arc.ToPolyline(System.Int32)">
+        <member name="M:netDxf.Entities.Arc.ToPolyline2D(System.Int32)">
             <summary>
-            Converts the arc in a Polyline.
+            Converts the arc in a Polyline2D.
             </summary>
             <param name="precision">Number of divisions.</param>
-            <returns>A new instance of <see cref="T:netDxf.Entities.LwPolyline">LightWeightPolyline</see> that represents the arc.</returns>
+            <returns>A new instance of <see cref="T:netDxf.Entities.Polyline2D">Polyline2D</see> that represents the arc.</returns>
         </member>
         <member name="M:netDxf.Entities.Arc.TransformBy(netDxf.Matrix3,netDxf.Vector3)">
             <summary>
@@ -4707,12 +4707,12 @@
             <param name="precision">Number of vertexes generated.</param>
             <returns>A list vertexes that represents the circle expressed in object coordinate system.</returns>
         </member>
-        <member name="M:netDxf.Entities.Circle.ToPolyline(System.Int32)">
+        <member name="M:netDxf.Entities.Circle.ToPolyline2D(System.Int32)">
             <summary>
-            Converts the circle in a Polyline.
+            Converts the circle in a Polyline2D.
             </summary>
             <param name="precision">Number of vertexes generated.</param>
-            <returns>A new instance of <see cref="T:netDxf.Entities.LwPolyline">LightWeightPolyline</see> that represents the circle.</returns>
+            <returns>A new instance of <see cref="T:netDxf.Entities.Polyline2D">Polyline2D</see> that represents the circle.</returns>
         </member>
         <member name="M:netDxf.Entities.Circle.TransformBy(netDxf.Matrix3,netDxf.Vector3)">
             <summary>
@@ -5437,12 +5437,12 @@
             <param name="precision">Number of vertexes generated.</param>
             <returns>A list vertexes that represents the ellipse expressed in object coordinate system.</returns>
         </member>
-        <member name="M:netDxf.Entities.Ellipse.ToPolyline(System.Int32)">
+        <member name="M:netDxf.Entities.Ellipse.ToPolyline2D(System.Int32)">
             <summary>
-            Converts the ellipse in a Polyline.
+            Converts the ellipse in a Polyline2D.
             </summary>
             <param name="precision">Number of vertexes generated.</param>
-            <returns>A new instance of <see cref="T:netDxf.Entities.LwPolyline">LightWeightPolyline</see> that represents the ellipse.</returns>
+            <returns>A new instance of <see cref="T:netDxf.Entities.Polyline2D">Polyline2D</see> that represents the ellipse.</returns>
         </member>
         <member name="M:netDxf.Entities.Ellipse.TransformBy(netDxf.Matrix3,netDxf.Vector3)">
             <summary>
@@ -5463,7 +5463,7 @@
             Represents the terminator element of a vertex sequence in polylines or attributes in a block reference.
             </summary>
         </member>
-        <member name="M:netDxf.Entities.EndSequence.#ctor(netDxf.DxfObject)">
+        <member name="M:netDxf.Entities.EndSequence.#ctor">
             <summary>
             Initializes a new instance of the <c>EndSequence</c> class.
             </summary>
@@ -5621,11 +5621,6 @@
             Leader entity.
             </summary>
         </member>
-        <member name="F:netDxf.Entities.EntityType.LwPolyline">
-            <summary>
-            LwPolyline entity, aka lightweight polyline.
-            </summary>
-        </member>
         <member name="F:netDxf.Entities.EntityType.Line">
             <summary>
             Line entity.
@@ -5656,9 +5651,14 @@
             Polyface mesh entity.
             </summary>
         </member>
-        <member name="F:netDxf.Entities.EntityType.Polyline">
+        <member name="F:netDxf.Entities.EntityType.Polyline2D">
             <summary>
-            3d polyline entity.
+            Polyline2D entity.
+            </summary>
+        </member>
+        <member name="F:netDxf.Entities.EntityType.Polyline3D">
+            <summary>
+            Polyline3D entity.
             </summary>
         </member>
         <member name="F:netDxf.Entities.EntityType.Ray">
@@ -5716,76 +5716,76 @@
             XLine entity.
             </summary>
         </member>
-        <member name="T:netDxf.Entities.Face3d">
+        <member name="T:netDxf.Entities.Face3D">
             <summary>
-            Represents a 3dFace <see cref="T:netDxf.Entities.EntityObject">entity</see>.
+            Represents a 3d Face <see cref="T:netDxf.Entities.EntityObject">entity</see>.
             </summary>
         </member>
-        <member name="M:netDxf.Entities.Face3d.#ctor">
+        <member name="M:netDxf.Entities.Face3D.#ctor">
             <summary>
-            Initializes a new instance of the <c>Face3d</c> class.
+            Initializes a new instance of the <c>Face3D</c> class.
             </summary>
         </member>
-        <member name="M:netDxf.Entities.Face3d.#ctor(netDxf.Vector2,netDxf.Vector2,netDxf.Vector2)">
+        <member name="M:netDxf.Entities.Face3D.#ctor(netDxf.Vector2,netDxf.Vector2,netDxf.Vector2)">
             <summary>
-            Initializes a new instance of the <c>Face3d</c> class.
+            Initializes a new instance of the <c>Face3D</c> class.
             </summary>
-            <param name="firstVertex">3d face <see cref="T:netDxf.Vector2">first vertex</see>.</param>
-            <param name="secondVertex">3d face <see cref="T:netDxf.Vector2">second vertex</see>.</param>
-            <param name="thirdVertex">3d face <see cref="T:netDxf.Vector2">third vertex</see>.</param>
+            <param name="firstVertex">Face3D <see cref="T:netDxf.Vector2">first vertex</see>.</param>
+            <param name="secondVertex">Face3D <see cref="T:netDxf.Vector2">second vertex</see>.</param>
+            <param name="thirdVertex">Face3D <see cref="T:netDxf.Vector2">third vertex</see>.</param>
         </member>
-        <member name="M:netDxf.Entities.Face3d.#ctor(netDxf.Vector2,netDxf.Vector2,netDxf.Vector2,netDxf.Vector2)">
+        <member name="M:netDxf.Entities.Face3D.#ctor(netDxf.Vector2,netDxf.Vector2,netDxf.Vector2,netDxf.Vector2)">
             <summary>
-            Initializes a new instance of the <c>Face3d</c> class.
+            Initializes a new instance of the <c>Face3D</c> class.
             </summary>
-            <param name="firstVertex">3d face <see cref="T:netDxf.Vector2">first vertex</see>.</param>
-            <param name="secondVertex">3d face <see cref="T:netDxf.Vector2">second vertex</see>.</param>
-            <param name="thirdVertex">3d face <see cref="T:netDxf.Vector2">third vertex</see>.</param>
-            <param name="fourthVertex">3d face <see cref="T:netDxf.Vector2">fourth vertex</see>.</param>
+            <param name="firstVertex">Face3D <see cref="T:netDxf.Vector2">first vertex</see>.</param>
+            <param name="secondVertex">Face3D <see cref="T:netDxf.Vector2">second vertex</see>.</param>
+            <param name="thirdVertex">Face3D <see cref="T:netDxf.Vector2">third vertex</see>.</param>
+            <param name="fourthVertex">Face3D <see cref="T:netDxf.Vector2">fourth vertex</see>.</param>
         </member>
-        <member name="M:netDxf.Entities.Face3d.#ctor(netDxf.Vector3,netDxf.Vector3,netDxf.Vector3)">
+        <member name="M:netDxf.Entities.Face3D.#ctor(netDxf.Vector3,netDxf.Vector3,netDxf.Vector3)">
             <summary>
-            Initializes a new instance of the <c>Face3d</c> class.
+            Initializes a new instance of the <c>Face3D</c> class.
             </summary>
-            <param name="firstVertex">3d face <see cref="T:netDxf.Vector3">first vertex</see>.</param>
-            <param name="secondVertex">3d face <see cref="T:netDxf.Vector3">second vertex</see>.</param>
-            <param name="thirdVertex">3d face <see cref="T:netDxf.Vector3">third vertex</see>.</param>
+            <param name="firstVertex">Face3D <see cref="T:netDxf.Vector3">first vertex</see>.</param>
+            <param name="secondVertex">Face3D <see cref="T:netDxf.Vector3">second vertex</see>.</param>
+            <param name="thirdVertex">Face3D <see cref="T:netDxf.Vector3">third vertex</see>.</param>
         </member>
-        <member name="M:netDxf.Entities.Face3d.#ctor(netDxf.Vector3,netDxf.Vector3,netDxf.Vector3,netDxf.Vector3)">
+        <member name="M:netDxf.Entities.Face3D.#ctor(netDxf.Vector3,netDxf.Vector3,netDxf.Vector3,netDxf.Vector3)">
             <summary>
-            Initializes a new instance of the <c>Face3d</c> class.
+            Initializes a new instance of the <c>Face3D</c> class.
             </summary>
-            <param name="firstVertex">3d face <see cref="T:netDxf.Vector3">first vertex</see>.</param>
-            <param name="secondVertex">3d face <see cref="T:netDxf.Vector3">second vertex</see>.</param>
-            <param name="thirdVertex">3d face <see cref="T:netDxf.Vector3">third vertex</see>.</param>
-            <param name="fourthVertex">3d face <see cref="T:netDxf.Vector3">fourth vertex</see>.</param>
+            <param name="firstVertex">Face3D <see cref="T:netDxf.Vector3">first vertex</see>.</param>
+            <param name="secondVertex">Face3D <see cref="T:netDxf.Vector3">second vertex</see>.</param>
+            <param name="thirdVertex">Face3D <see cref="T:netDxf.Vector3">third vertex</see>.</param>
+            <param name="fourthVertex">Face3D <see cref="T:netDxf.Vector3">fourth vertex</see>.</param>
         </member>
-        <member name="P:netDxf.Entities.Face3d.FirstVertex">
+        <member name="P:netDxf.Entities.Face3D.FirstVertex">
             <summary>
-            Gets or sets the first 3d face <see cref="T:netDxf.Vector3">vertex</see>.
-            </summary>
-        </member>
-        <member name="P:netDxf.Entities.Face3d.SecondVertex">
-            <summary>
-            Gets or sets the second 3d face <see cref="T:netDxf.Vector3">vertex</see>.
+            Gets or sets the first Face3D <see cref="T:netDxf.Vector3">vertex</see>.
             </summary>
         </member>
-        <member name="P:netDxf.Entities.Face3d.ThirdVertex">
+        <member name="P:netDxf.Entities.Face3D.SecondVertex">
             <summary>
-            Gets or sets the third 3d face <see cref="T:netDxf.Vector3">vertex</see>.
+            Gets or sets the second Face3D <see cref="T:netDxf.Vector3">vertex</see>.
             </summary>
         </member>
-        <member name="P:netDxf.Entities.Face3d.FourthVertex">
+        <member name="P:netDxf.Entities.Face3D.ThirdVertex">
             <summary>
-            Gets or sets the fourth 3d face <see cref="T:netDxf.Vector3">vertex</see>.
+            Gets or sets the third Face3D <see cref="T:netDxf.Vector3">vertex</see>.
             </summary>
         </member>
-        <member name="P:netDxf.Entities.Face3d.EdgeFlags">
+        <member name="P:netDxf.Entities.Face3D.FourthVertex">
             <summary>
-            Gets or sets the 3d face edge visibility.
+            Gets or sets the fourth Face3D <see cref="T:netDxf.Vector3">vertex</see>.
             </summary>
         </member>
-        <member name="M:netDxf.Entities.Face3d.TransformBy(netDxf.Matrix3,netDxf.Vector3)">
+        <member name="P:netDxf.Entities.Face3D.EdgeFlags">
+            <summary>
+            Gets or sets the Face3D edge visibility.
+            </summary>
+        </member>
+        <member name="M:netDxf.Entities.Face3D.TransformBy(netDxf.Matrix3,netDxf.Vector3)">
             <summary>
             Moves, scales, and/or rotates the current entity given a 3x3 transformation matrix and a translation vector.
             </summary>
@@ -5793,38 +5793,38 @@
             <param name="translation">Translation vector.</param>
             <remarks>Matrix3 adopts the convention of using column vectors to represent a transformation matrix.</remarks>
         </member>
-        <member name="M:netDxf.Entities.Face3d.Clone">
+        <member name="M:netDxf.Entities.Face3D.Clone">
             <summary>
-            Creates a new Face3d that is a copy of the current instance.
+            Creates a new Face3D that is a copy of the current instance.
             </summary>
-            <returns>A new Face3d that is a copy of this instance.</returns>
+            <returns>A new Face3D that is a copy of this instance.</returns>
         </member>
-        <member name="T:netDxf.Entities.Face3dEdgeFlags">
+        <member name="T:netDxf.Entities.Face3DEdgeFlags">
             <summary>
-            Defines which edges are hidden.
+            Defines the Face3D hidden edges.
             </summary>
         </member>
-        <member name="F:netDxf.Entities.Face3dEdgeFlags.None">
+        <member name="F:netDxf.Entities.Face3DEdgeFlags.None">
             <summary>
             No flags equivalent to all edges are visible.
             </summary>
         </member>
-        <member name="F:netDxf.Entities.Face3dEdgeFlags.First">
+        <member name="F:netDxf.Entities.Face3DEdgeFlags.First">
             <summary>
             First edge is invisible.
             </summary>
         </member>
-        <member name="F:netDxf.Entities.Face3dEdgeFlags.Second">
+        <member name="F:netDxf.Entities.Face3DEdgeFlags.Second">
             <summary>
             Second edge is invisible.
             </summary>
         </member>
-        <member name="F:netDxf.Entities.Face3dEdgeFlags.Third">
+        <member name="F:netDxf.Entities.Face3DEdgeFlags.Third">
             <summary>
             Third edge is invisible.
             </summary>
         </member>
-        <member name="F:netDxf.Entities.Face3dEdgeFlags.Fourth">
+        <member name="F:netDxf.Entities.Face3DEdgeFlags.Fourth">
             <summary>
             Fourth edge is invisible.
             </summary>
@@ -5901,7 +5901,7 @@
             If the actual hatch is already associative, the old boundary entities will be unlinked, but not deleted from the hatch document.
             If linkBoundary is true, the new boundary entities will be added to the same layout and document as the hatch, in case it belongs to one,
             so, in this case, if you also try to add the return list to the document it will cause an error.<br/>
-            All entities are in world coordinates except the LwPolyline boundary path since by definition its vertexes are expressed in object coordinates.
+            All entities are in world coordinates except the Polyline2D boundary path since by definition its vertexes are expressed in object coordinates.
             </remarks>
         </member>
         <member name="M:netDxf.Entities.Hatch.TransformBy(netDxf.Matrix3,netDxf.Vector3)">
@@ -6895,7 +6895,7 @@
         </member>
         <member name="M:netDxf.Entities.Insert.GetTransformation">
             <summary>
-            Calculates the insertion rotation matrix.
+            Gets the insert transformation matrix.
             </summary>
             <returns>The insert transformation matrix.</returns>
             <remarks>
@@ -7357,197 +7357,6 @@
             Creates a new LinearDimension that is a copy of the current instance.
             </summary>
             <returns>A new LinearDimension that is a copy of this instance.</returns>
-        </member>
-        <member name="T:netDxf.Entities.LwPolyline">
-            <summary>
-            Represents a light weight polyline <see cref="T:netDxf.Entities.EntityObject">entity</see>.
-            </summary>
-            <remarks>
-            Light weight polylines are bi-dimensional polylines that can hold information about the width of the lines and arcs that compose them.
-            </remarks>
-        </member>
-        <member name="M:netDxf.Entities.LwPolyline.#ctor">
-            <summary>
-            Initializes a new instance of the <c>LwPolyline</c> class.
-            </summary>
-        </member>
-        <member name="M:netDxf.Entities.LwPolyline.#ctor(System.Collections.Generic.IEnumerable{netDxf.Vector2})">
-            <summary>
-            Initializes a new instance of the <c>LwPolyline</c> class.
-            </summary>
-            <param name="vertexes">LwPolyline <see cref="T:netDxf.Vector2">vertex</see> list in object coordinates.</param>
-        </member>
-        <member name="M:netDxf.Entities.LwPolyline.#ctor(System.Collections.Generic.IEnumerable{netDxf.Vector2},System.Boolean)">
-            <summary>
-            Initializes a new instance of the <c>LwPolyline</c> class.
-            </summary>
-            <param name="vertexes">LwPolyline <see cref="T:netDxf.Vector2">vertex</see> list in object coordinates.</param>
-            <param name="isClosed">Sets if the polyline is closed, by default it will create an open polyline.</param>
-        </member>
-        <member name="M:netDxf.Entities.LwPolyline.#ctor(System.Collections.Generic.IEnumerable{netDxf.Entities.LwPolylineVertex})">
-            <summary>
-            Initializes a new instance of the <c>LwPolyline</c> class.
-            </summary>
-            <param name="vertexes">LwPolyline <see cref="T:netDxf.Entities.LwPolylineVertex">vertex</see> list in object coordinates.</param>
-        </member>
-        <member name="M:netDxf.Entities.LwPolyline.#ctor(System.Collections.Generic.IEnumerable{netDxf.Entities.LwPolylineVertex},System.Boolean)">
-            <summary>
-            Initializes a new instance of the <c>LwPolyline</c> class.
-            </summary>
-            <param name="vertexes">LwPolyline <see cref="T:netDxf.Entities.LwPolylineVertex">vertex</see> list in object coordinates.</param>
-            <param name="isClosed">Sets if the polyline is closed  (default: false).</param>
-        </member>
-        <member name="P:netDxf.Entities.LwPolyline.Vertexes">
-            <summary>
-            Gets or sets the light weight polyline <see cref="T:netDxf.Entities.LwPolylineVertex">vertex</see> list.
-            </summary>
-        </member>
-        <member name="P:netDxf.Entities.LwPolyline.IsClosed">
-            <summary>
-            Gets or sets if the light weight polyline is closed.
-            </summary>
-        </member>
-        <member name="P:netDxf.Entities.LwPolyline.Thickness">
-            <summary>
-            Gets or sets the light weight polyline thickness.
-            </summary>
-        </member>
-        <member name="P:netDxf.Entities.LwPolyline.Elevation">
-            <summary>
-            Gets or sets the light weight polyline elevation.
-            </summary>
-            <remarks>This is the distance from the origin to the plane of the light weight polyline.</remarks>
-        </member>
-        <member name="P:netDxf.Entities.LwPolyline.LinetypeGeneration">
-            <summary>
-            Enable or disable if the line type pattern is generated continuously around the vertexes of the polyline.
-            </summary>
-        </member>
-        <member name="P:netDxf.Entities.LwPolyline.Flags">
-            <summary>
-            Gets the light weight polyline type.
-            </summary>
-        </member>
-        <member name="M:netDxf.Entities.LwPolyline.Reverse">
-            <summary>
-            Switch the polyline direction.
-            </summary>
-        </member>
-        <member name="M:netDxf.Entities.LwPolyline.SetConstantWidth(System.Double)">
-            <summary>
-            Sets a constant width for all the polyline segments.
-            </summary>
-            <param name="width">Polyline width.</param>
-        </member>
-        <member name="M:netDxf.Entities.LwPolyline.Explode">
-            <summary>
-            Decompose the actual polyline in its internal entities, <see cref="T:netDxf.Entities.Line">lines</see> and <see cref="T:netDxf.Entities.Arc">arcs</see>.
-            </summary>
-            <returns>A list of <see cref="T:netDxf.Entities.Line">lines</see> and <see cref="T:netDxf.Entities.Arc">arcs</see> that made up the polyline.</returns>
-        </member>
-        <member name="M:netDxf.Entities.LwPolyline.PolygonalVertexes(System.Int32,System.Double,System.Double)">
-            <summary>
-            Obtains a list of vertexes that represent the polyline approximating the curve segments as necessary.
-            </summary>
-            <param name="bulgePrecision">Curve segments precision. The number of vertexes created, a value of zero means that no approximation will be made.</param>
-            <param name="weldThreshold">Tolerance to consider if two new generated vertexes are equal.</param>
-            <param name="bulgeThreshold">Minimum distance from which approximate curved segments of the polyline.</param>
-            <returns>A list of vertexes expressed in object coordinate system.</returns>
-        </member>
-        <member name="M:netDxf.Entities.LwPolyline.TransformBy(netDxf.Matrix3,netDxf.Vector3)">
-            <summary>
-            Moves, scales, and/or rotates the current entity given a 3x3 transformation matrix and a translation vector.
-            </summary>
-            <param name="transformation">Transformation matrix.</param>
-            <param name="translation">Translation vector.</param>
-            <remarks>
-            Non-uniform scaling is not supported if a bulge different than zero is applied to any of the LwPolyline vertexes,
-            a non-uniform scaling cannot be applied to the arc segments. Explode the entity and convert the arcs into ellipse arcs and transform them instead.<br />
-            Matrix3 adopts the convention of using column vectors to represent a transformation matrix.
-            </remarks>
-        </member>
-        <member name="M:netDxf.Entities.LwPolyline.Clone">
-            <summary>
-            Creates a new LwPolyline that is a copy of the current instance.
-            </summary>
-            <returns>A new LwPolyline that is a copy of this instance.</returns>
-        </member>
-        <member name="T:netDxf.Entities.LwPolylineVertex">
-            <summary>
-            Represents a <see cref="T:netDxf.Entities.LwPolyline">LwPolyline</see> vertex.
-            </summary>
-        </member>
-        <member name="M:netDxf.Entities.LwPolylineVertex.#ctor">
-            <summary>
-            Initializes a new instance of the <c>LwPolylineVertex</c> class.
-            </summary>
-        </member>
-        <member name="M:netDxf.Entities.LwPolylineVertex.#ctor(System.Double,System.Double)">
-            <summary>
-            Initializes a new instance of the <c>LwPolylineVertex</c> class.
-            </summary>
-            <param name="x">X coordinate.</param>
-            <param name="y">Y coordinate.</param>
-        </member>
-        <member name="M:netDxf.Entities.LwPolylineVertex.#ctor(System.Double,System.Double,System.Double)">
-            <summary>
-            Initializes a new instance of the <c>LwPolylineVertex</c> class.
-            </summary>
-            <param name="x">X coordinate.</param>
-            <param name="y">Y coordinate.</param>
-            <param name="bulge">Vertex bulge  (default: 0.0).</param>
-        </member>
-        <member name="M:netDxf.Entities.LwPolylineVertex.#ctor(netDxf.Vector2)">
-            <summary>
-            Initializes a new instance of the <c>LwPolylineVertex</c> class.
-            </summary>
-            <param name="position">Lightweight polyline <see cref="T:netDxf.Vector2">vertex</see> coordinates.</param>
-        </member>
-        <member name="M:netDxf.Entities.LwPolylineVertex.#ctor(netDxf.Vector2,System.Double)">
-            <summary>
-            Initializes a new instance of the <c>LwPolylineVertex</c> class.
-            </summary>
-            <param name="position">Lightweight polyline <see cref="T:netDxf.Vector2">vertex</see> coordinates.</param>
-            <param name="bulge">Vertex bulge  (default: 0.0).</param>
-        </member>
-        <member name="P:netDxf.Entities.LwPolylineVertex.Position">
-            <summary>
-            Gets or sets the light weight polyline vertex <see cref="T:netDxf.Vector2">position</see>.
-            </summary>
-        </member>
-        <member name="P:netDxf.Entities.LwPolylineVertex.StartWidth">
-            <summary>
-            Gets or sets the light weight polyline start segment width.
-            </summary>
-            <remarks>Widths greater than zero produce wide lines.</remarks>
-        </member>
-        <member name="P:netDxf.Entities.LwPolylineVertex.EndWidth">
-            <summary>
-            Gets or sets the light weight polyline end segment width.
-            </summary>
-            <remarks>Widths greater than zero produce wide lines.</remarks>
-        </member>
-        <member name="P:netDxf.Entities.LwPolylineVertex.Bulge">
-            <summary>
-            Gets or set the light weight polyline bulge.
-            </summary>
-            <remarks>
-            The bulge is the tangent of one fourth the included angle for an arc segment, 
-            made negative if the arc goes clockwise from the start point to the endpoint. 
-            A bulge of 0 indicates a straight segment, and a bulge of 1 is a semicircle.
-            </remarks>
-        </member>
-        <member name="M:netDxf.Entities.LwPolylineVertex.ToString">
-            <summary>
-            Converts the value of this instance to its equivalent string representation.
-            </summary>
-            <returns>The string representation.</returns>
-        </member>
-        <member name="M:netDxf.Entities.LwPolylineVertex.Clone">
-            <summary>
-            Creates a new LwPolylineVertex that is a copy of the current instance.
-            </summary>
-            <returns>A new LwPolylineVertex that is a copy of this instance.</returns>
         </member>
         <member name="T:netDxf.Entities.Mesh">
             <summary>
@@ -8850,24 +8659,12 @@
             Gets the polyface mesh flag type.
             </summary>
         </member>
-        <member name="P:netDxf.Entities.PolyfaceMesh.EndSequence">
-            <summary>
-            Gets the end vertex sequence.
-            </summary>
-        </member>
-        <member name="M:netDxf.Entities.PolyfaceMesh.AssignHandle(System.Int64)">
-            <summary>
-            Assigns a handle to the object based in a integer counter.
-            </summary>
-            <param name="entityNumber">Number to assign.</param>
-            <returns>Next available entity number.</returns>
-        </member>
         <member name="M:netDxf.Entities.PolyfaceMesh.Explode">
             <summary>
             Decompose the actual polyface mesh faces in <see cref="T:netDxf.Entities.Point">points</see> (one vertex polyface mesh face),
-            <see cref="T:netDxf.Entities.Line">lines</see> (two vertexes polyface mesh face) and <see cref="T:netDxf.Entities.Face3d">3d faces</see> (three or four vertexes polyface mesh face).
+            <see cref="T:netDxf.Entities.Line">lines</see> (two vertexes polyface mesh face) and <see cref="T:netDxf.Entities.Face3D">3d faces</see> (three or four vertexes polyface mesh face).
             </summary>
-            <returns>A list of <see cref="T:netDxf.Entities.Face3d">3d faces</see> that made up the polyface mesh.</returns>
+            <returns>A list of <see cref="T:netDxf.Entities.Face3D">3d faces</see> that made up the polyface mesh.</returns>
         </member>
         <member name="M:netDxf.Entities.PolyfaceMesh.TransformBy(netDxf.Matrix3,netDxf.Vector3)">
             <summary>
@@ -8939,43 +8736,313 @@
         </member>
         <member name="T:netDxf.Entities.Polyline">
             <summary>
+            Represents a DXF Polyline.
+            </summary>
+            <remarks>
+            Under the POLYLINE data the DXF stores information about smoothed Polylines2D (non-smoothed Polylines2D are stored as LWPOLYLINE,
+            Polylines3D (smoothed and non-smoothed), and PolyfaceMeshes.<br />
+            For internal use only.
+            </remarks>
+        </member>
+        <member name="M:netDxf.Entities.Polyline.#ctor">
+            <summary>
+            Initializes a new instance of the <c>Polyline</c> class.
+            </summary>
+        </member>
+        <member name="P:netDxf.Entities.Polyline.SubclassMarker">
+            <summary>
+            Gets or sets the polyline subclass marker.
+            </summary>
+        </member>
+        <member name="P:netDxf.Entities.Polyline.Layer">
+            <summary>
+            Gets or sets the polyline layer.
+            </summary>
+        </member>
+        <member name="P:netDxf.Entities.Polyline.Elevation">
+            <summary>
+            Gets or sets the polyline elevation.
+            </summary>
+        </member>
+        <member name="P:netDxf.Entities.Polyline.Normal">
+            <summary>
+            Gets or sets the polyline normal.
+            </summary>
+        </member>
+        <member name="P:netDxf.Entities.Polyline.Color">
+            <summary>
+            Gets or sets the polyline color.
+            </summary>
+        </member>
+        <member name="P:netDxf.Entities.Polyline.EndSequence">
+            <summary>
+            Gets or sets the polyline EndSequence object.
+            </summary>
+        </member>
+        <member name="P:netDxf.Entities.Polyline.Vertexes">
+            <summary>
+            Gets or sets the polyline vertexes list.
+            </summary>
+        </member>
+        <member name="P:netDxf.Entities.Polyline.Flags">
+            <summary>
+            Gets or sets the polyline flags.
+            </summary>
+        </member>
+        <member name="P:netDxf.Entities.Polyline.SmoothType">
+            <summary>
+            Gets or sets the polyline smooth type.
+            </summary>
+        </member>
+        <member name="T:netDxf.Entities.Polyline2D">
+            <summary>
+            Represents a two dimensional polyline <see cref="T:netDxf.Entities.EntityObject">entity</see>.
+            </summary>
+            <remarks>
+            Two dimensional polylines can hold information about the width of the lines and arcs that compose them.
+            </remarks>
+        </member>
+        <member name="M:netDxf.Entities.Polyline2D.#ctor">
+            <summary>
+            Initializes a new instance of the <c>Polyline2D</c> class.
+            </summary>
+        </member>
+        <member name="M:netDxf.Entities.Polyline2D.#ctor(System.Collections.Generic.IEnumerable{netDxf.Vector2})">
+            <summary>
+            Initializes a new instance of the <c>Polyline2D</c> class.
+            </summary>
+            <param name="vertexes">Polyline2D <see cref="T:netDxf.Vector2">vertex</see> list in object coordinates.</param>
+        </member>
+        <member name="M:netDxf.Entities.Polyline2D.#ctor(System.Collections.Generic.IEnumerable{netDxf.Vector2},System.Boolean)">
+            <summary>
+            Initializes a new instance of the <c>Polyline2D</c> class.
+            </summary>
+            <param name="vertexes">Polyline2D <see cref="T:netDxf.Vector2">vertex</see> list in object coordinates.</param>
+            <param name="isClosed">Sets if the polyline is closed, by default it will create an open polyline.</param>
+        </member>
+        <member name="M:netDxf.Entities.Polyline2D.#ctor(System.Collections.Generic.IEnumerable{netDxf.Entities.Polyline2DVertex})">
+            <summary>
+            Initializes a new instance of the <c>Polyline2D</c> class.
+            </summary>
+            <param name="vertexes">Polyline2D <see cref="T:netDxf.Entities.Polyline2DVertex">vertex</see> list in object coordinates.</param>
+        </member>
+        <member name="M:netDxf.Entities.Polyline2D.#ctor(System.Collections.Generic.IEnumerable{netDxf.Entities.Polyline2DVertex},System.Boolean)">
+            <summary>
+            Initializes a new instance of the <c>Polyline2D</c> class.
+            </summary>
+            <param name="vertexes">Polyline2D <see cref="T:netDxf.Entities.Polyline2DVertex">vertex</see> list in object coordinates.</param>
+            <param name="isClosed">Sets if the polyline is closed (default: false).</param>
+        </member>
+        <member name="P:netDxf.Entities.Polyline2D.Vertexes">
+            <summary>
+            Gets or sets the polyline <see cref="T:netDxf.Entities.Polyline2DVertex">vertex</see> list.
+            </summary>
+        </member>
+        <member name="P:netDxf.Entities.Polyline2D.IsClosed">
+            <summary>
+            Gets or sets if the polyline is closed.
+            </summary>
+        </member>
+        <member name="P:netDxf.Entities.Polyline2D.Thickness">
+            <summary>
+            Gets or sets the polyline thickness.
+            </summary>
+        </member>
+        <member name="P:netDxf.Entities.Polyline2D.Elevation">
+            <summary>
+            Gets or sets the polyline elevation.
+            </summary>
+            <remarks>This is the distance from the origin to the plane of the light weight polyline.</remarks>
+        </member>
+        <member name="P:netDxf.Entities.Polyline2D.LinetypeGeneration">
+            <summary>
+            Enable or disable if the linetype pattern is generated continuously around the vertexes of the polyline.
+            </summary>
+        </member>
+        <member name="P:netDxf.Entities.Polyline2D.SmoothType">
+            <summary>
+            Gets or sets the polyline smooth type.
+            </summary>
+            <remarks>
+            The additional polyline vertexes corresponding to the SplineFit will be created when writing the DXF file.
+            It is not recommended to use any kind of smoothness in polylines other than NoSmooth. Use a Spline entity instead.
+            </remarks>
+        </member>
+        <member name="P:netDxf.Entities.Polyline2D.Flags">
+            <summary>
+            Gets the polyline flags.
+            </summary>
+        </member>
+        <member name="M:netDxf.Entities.Polyline2D.Reverse">
+            <summary>
+            Switch the polyline direction.
+            </summary>
+        </member>
+        <member name="M:netDxf.Entities.Polyline2D.SetConstantWidth(System.Double)">
+            <summary>
+            Sets a constant width for all the polyline segments.
+            </summary>
+            <param name="width">Polyline width.</param>
+            <remarks>
+            Smoothed polylines can only have a constant width, the start width of the first vertex will be used.
+            </remarks>
+        </member>
+        <member name="M:netDxf.Entities.Polyline2D.Explode">
+            <summary>
+            Decompose the actual polyline in its internal entities, <see cref="T:netDxf.Entities.Line">lines</see> and <see cref="T:netDxf.Entities.Arc">arcs</see>.
+            </summary>
+            <returns>A list of <see cref="T:netDxf.Entities.Line">lines</see> and <see cref="T:netDxf.Entities.Arc">arcs</see> that made up the polyline.</returns>
+        </member>
+        <member name="M:netDxf.Entities.Polyline2D.PolygonalVertexes(System.Int32)">
+            <summary>
+            Obtains a list of vertexes that represent the polyline approximating the curve segments as necessary.
+            </summary>
+            <param name="precision">Curve segments precision. The number of vertexes created, a value of zero means that no approximation will be made.</param>
+            <returns>A list of vertexes expressed in object coordinate system.</returns>
+        </member>
+        <member name="M:netDxf.Entities.Polyline2D.PolygonalVertexes(System.Int32,System.Double,System.Double)">
+            <summary>
+            Obtains a list of vertexes that represent the polyline approximating the curve segments as necessary.
+            </summary>
+            <param name="bulgePrecision">Curve segments precision. The number of vertexes created, a value of zero means that no approximation will be made.</param>
+            <param name="weldThreshold">Tolerance to consider if two new generated vertexes are equal.</param>
+            <param name="bulgeThreshold">Minimum distance from which approximate curved segments of the polyline.</param>
+            <returns>A list of vertexes expressed in object coordinate system.</returns>
+        </member>
+        <member name="M:netDxf.Entities.Polyline2D.TransformBy(netDxf.Matrix3,netDxf.Vector3)">
+            <summary>
+            Moves, scales, and/or rotates the current entity given a 3x3 transformation matrix and a translation vector.
+            </summary>
+            <param name="transformation">Transformation matrix.</param>
+            <param name="translation">Translation vector.</param>
+            <remarks>
+            Non-uniform scaling is not supported if a bulge different than zero is applied to any of the Polyline2D vertexes,
+            a non-uniform scaling cannot be applied to the arc segments. Explode the entity and convert the arcs into ellipse arcs and transform them instead.<br />
+            Matrix3 adopts the convention of using column vectors to represent a transformation matrix.
+            </remarks>
+        </member>
+        <member name="M:netDxf.Entities.Polyline2D.Clone">
+            <summary>
+            Creates a new Polyline2D that is a copy of the current instance.
+            </summary>
+            <returns>A new Polyline2D that is a copy of this instance.</returns>
+        </member>
+        <member name="T:netDxf.Entities.Polyline2DVertex">
+            <summary>
+            Represents a <see cref="T:netDxf.Entities.Polyline2D">Polyline2D</see> vertex.
+            </summary>
+        </member>
+        <member name="M:netDxf.Entities.Polyline2DVertex.#ctor">
+            <summary>
+            Initializes a new instance of the <c>Polyline2DVertex</c> class.
+            </summary>
+        </member>
+        <member name="M:netDxf.Entities.Polyline2DVertex.#ctor(System.Double,System.Double)">
+            <summary>
+            Initializes a new instance of the <c>Polyline2DVertex</c> class.
+            </summary>
+            <param name="x">X coordinate.</param>
+            <param name="y">Y coordinate.</param>
+        </member>
+        <member name="M:netDxf.Entities.Polyline2DVertex.#ctor(System.Double,System.Double,System.Double)">
+            <summary>
+            Initializes a new instance of the <c>Polyline2DVertex</c> class.
+            </summary>
+            <param name="x">X coordinate.</param>
+            <param name="y">Y coordinate.</param>
+            <param name="bulge">Vertex bulge  (default: 0.0).</param>
+        </member>
+        <member name="M:netDxf.Entities.Polyline2DVertex.#ctor(netDxf.Vector2)">
+            <summary>
+            Initializes a new instance of the <c>Polyline2DVertex</c> class.
+            </summary>
+            <param name="position">Lightweight polyline <see cref="T:netDxf.Vector2">vertex</see> coordinates.</param>
+        </member>
+        <member name="M:netDxf.Entities.Polyline2DVertex.#ctor(netDxf.Vector2,System.Double)">
+            <summary>
+            Initializes a new instance of the <c>Polyline2DVertex</c> class.
+            </summary>
+            <param name="position">Lightweight polyline <see cref="T:netDxf.Vector2">vertex</see> coordinates.</param>
+            <param name="bulge">Vertex bulge  (default: 0.0).</param>
+        </member>
+        <member name="P:netDxf.Entities.Polyline2DVertex.Position">
+            <summary>
+            Gets or sets the light weight polyline vertex <see cref="T:netDxf.Vector2">position</see>.
+            </summary>
+        </member>
+        <member name="P:netDxf.Entities.Polyline2DVertex.StartWidth">
+            <summary>
+            Gets or sets the light weight polyline start segment width.
+            </summary>
+            <remarks>Widths greater than zero produce wide lines.</remarks>
+        </member>
+        <member name="P:netDxf.Entities.Polyline2DVertex.EndWidth">
+            <summary>
+            Gets or sets the light weight polyline end segment width.
+            </summary>
+            <remarks>Widths greater than zero produce wide lines.</remarks>
+        </member>
+        <member name="P:netDxf.Entities.Polyline2DVertex.Bulge">
+            <summary>
+            Gets or set the light weight polyline bulge.
+            </summary>
+            <remarks>
+            The bulge is the tangent of one fourth the included angle for an arc segment, 
+            made negative if the arc goes clockwise from the start point to the endpoint. 
+            A bulge of 0 indicates a straight segment, and a bulge of 1 is a semicircle.
+            </remarks>
+        </member>
+        <member name="M:netDxf.Entities.Polyline2DVertex.ToString">
+            <summary>
+            Converts the value of this instance to its equivalent string representation.
+            </summary>
+            <returns>The string representation.</returns>
+        </member>
+        <member name="M:netDxf.Entities.Polyline2DVertex.Clone">
+            <summary>
+            Creates a new Polyline2DVertex that is a copy of the current instance.
+            </summary>
+            <returns>A new Polyline2DVertex that is a copy of this instance.</returns>
+        </member>
+        <member name="T:netDxf.Entities.Polyline3D">
+            <summary>
             Represents a generic polyline <see cref="T:netDxf.Entities.EntityObject">entity</see>.
             </summary>
         </member>
-        <member name="M:netDxf.Entities.Polyline.#ctor">
+        <member name="M:netDxf.Entities.Polyline3D.#ctor">
             <summary>
             Initializes a new instance of the <c>Polyline3d</c> class.
             </summary>
         </member>
-        <member name="M:netDxf.Entities.Polyline.#ctor(System.Collections.Generic.IEnumerable{netDxf.Vector3})">
+        <member name="M:netDxf.Entities.Polyline3D.#ctor(System.Collections.Generic.IEnumerable{netDxf.Vector3})">
             <summary>
             Initializes a new instance of the <c>Polyline3d</c> class.
             </summary>
             <param name="vertexes">3d polyline <see cref="T:netDxf.Vector3">vertex</see> list.</param>
         </member>
-        <member name="M:netDxf.Entities.Polyline.#ctor(System.Collections.Generic.IEnumerable{netDxf.Vector3},System.Boolean)">
+        <member name="M:netDxf.Entities.Polyline3D.#ctor(System.Collections.Generic.IEnumerable{netDxf.Vector3},System.Boolean)">
             <summary>
             Initializes a new instance of the <c>Polyline3d</c> class.
             </summary>
             <param name="vertexes">3d polyline <see cref="T:netDxf.Vector3">vertex</see> list.</param>
             <param name="isClosed">Sets if the polyline is closed, by default it will create an open polyline.</param>
         </member>
-        <member name="P:netDxf.Entities.Polyline.Vertexes">
+        <member name="P:netDxf.Entities.Polyline3D.Vertexes">
             <summary>
             Gets the polyline <see cref="T:netDxf.Vector3">vertex</see> list.
             </summary>
         </member>
-        <member name="P:netDxf.Entities.Polyline.IsClosed">
+        <member name="P:netDxf.Entities.Polyline3D.IsClosed">
             <summary>
             Gets or sets if the polyline is closed.
             </summary>
         </member>
-        <member name="P:netDxf.Entities.Polyline.LinetypeGeneration">
+        <member name="P:netDxf.Entities.Polyline3D.LinetypeGeneration">
             <summary>
             Enable or disable if the line type pattern is generated continuously around the vertexes of the polyline.
             </summary>
         </member>
-        <member name="P:netDxf.Entities.Polyline.SmoothType">
+        <member name="P:netDxf.Entities.Polyline3D.SmoothType">
             <summary>
             Gets or sets the curve smooth type.
             </summary>
@@ -8984,45 +9051,40 @@
             It is not recommended to use any kind of smoothness in polylines other than NoSmooth. Use a Spline entity instead.
             </remarks>
         </member>
-        <member name="P:netDxf.Entities.Polyline.Flags">
+        <member name="P:netDxf.Entities.Polyline3D.Flags">
             <summary>
             Gets the polyline type.
             </summary>
         </member>
-        <member name="P:netDxf.Entities.Polyline.EndSequence">
-            <summary>
-            Gets the end vertex sequence.
-            </summary>
-        </member>
-        <member name="M:netDxf.Entities.Polyline.Reverse">
+        <member name="M:netDxf.Entities.Polyline3D.Reverse">
             <summary>
             Switch the polyline direction.
             </summary>
         </member>
-        <member name="M:netDxf.Entities.Polyline.Explode">
+        <member name="M:netDxf.Entities.Polyline3D.Explode">
             <summary>
             Decompose the actual polyline in a list of <see cref="T:netDxf.Entities.Line">lines</see>.
             </summary>
             <returns>A list of <see cref="T:netDxf.Entities.Line">lines</see> that made up the polyline.</returns>
         </member>
-        <member name="M:netDxf.Entities.Polyline.PolygonalVertexes(System.Int32)">
+        <member name="M:netDxf.Entities.Polyline3D.PolygonalVertexes(System.Int32)">
             <summary>
             Converts the polyline in a list of vertexes.
             </summary>
             <param name="precision">Number of vertexes generated, only applicable for smoothed polylines.</param>
             <returns>A list vertexes that represents the polyline.</returns>
         </member>
-        <member name="M:netDxf.Entities.Polyline.ToLwPolyline(System.Int32)">
+        <member name="M:netDxf.Entities.Polyline3D.ToPolyline2D(System.Int32)">
             <summary>
-            Converts the actual 3d polyline in a 2d polyline (LwPolyline).
+            Converts the actual Polyline3D in a Polyline2D.
             </summary>
             <param name="precision">Number of vertexes generated, only applicable for smoothed polylines.</param>
-            <returns>A LwPolyline that represents the polyline.</returns>
+            <returns>A Polyline2D that represents the polyline.</returns>
             <remarks>
-            The resulting LwPolyline will be a projection of the actual polyline into the plane defined by its normal vector.
+            The resulting Polyline2D will be a projection of the actual polyline into the plane defined by its normal vector.
             </remarks>
         </member>
-        <member name="M:netDxf.Entities.Polyline.TransformBy(netDxf.Matrix3,netDxf.Vector3)">
+        <member name="M:netDxf.Entities.Polyline3D.TransformBy(netDxf.Matrix3,netDxf.Vector3)">
             <summary>
             Moves, scales, and/or rotates the current entity given a 3x3 transformation matrix and a translation vector.
             </summary>
@@ -9030,22 +9092,11 @@
             <param name="translation">Translation vector.</param>
             <remarks>Matrix3 adopts the convention of using column vectors to represent a transformation matrix.</remarks>
         </member>
-        <member name="M:netDxf.Entities.Polyline.AssignHandle(System.Int64)">
+        <member name="M:netDxf.Entities.Polyline3D.Clone">
             <summary>
-            Assigns a handle to the object based in a integer counter.
+            Creates a new Polyline3D that is a copy of the current instance.
             </summary>
-            <param name="entityNumber">Number to assign.</param>
-            <returns>Next available entity number.</returns>
-            <remarks>
-            Some objects might consume more than one, is, for example, the case of polylines that will assign
-            automatically a handle to its vertexes. The entity number will be converted to an hexadecimal number.
-            </remarks>
-        </member>
-        <member name="M:netDxf.Entities.Polyline.Clone">
-            <summary>
-            Creates a new Polyline that is a copy of the current instance.
-            </summary>
-            <returns>A new Polyline that is a copy of this instance.</returns>
+            <returns>A new Polyline3D that is a copy of this instance.</returns>
         </member>
         <member name="T:netDxf.Entities.PolylineSmoothType">
             <summary>
@@ -9075,7 +9126,7 @@
         </member>
         <member name="F:netDxf.Entities.PolylineTypeFlags.OpenPolyline">
             <summary>
-            Default, open polyline.
+            Default (open polyline).
             </summary>
         </member>
         <member name="F:netDxf.Entities.PolylineTypeFlags.ClosedPolylineOrClosedPolygonMeshInM">
@@ -9284,14 +9335,14 @@
             Initializes a new instance of the <c>Shape</c> class.
             </summary>
             <param name="name">Name of the shape which geometry is defined in the shape <see cref="T:netDxf.Tables.ShapeStyle">style</see>.</param>
-            <param name="style">Shape <see cref="T:netDxf.Tables.TextStyle">style</see>.</param>
+            <param name="style">Shape <see cref="T:netDxf.Tables.ShapeStyle">style</see>.</param>
         </member>
         <member name="M:netDxf.Entities.Shape.#ctor(System.String,netDxf.Tables.ShapeStyle,netDxf.Vector3,System.Double,System.Double)">
             <summary>
             Initializes a new instance of the <c>Shape</c> class.
             </summary>
             <param name="name">Name of the shape which geometry is defined in the shape <see cref="T:netDxf.Tables.ShapeStyle">style</see>.</param>
-            <param name="style">Shape <see cref="T:netDxf.Tables.TextStyle">style</see>.</param>
+            <param name="style">Shape <see cref="T:netDxf.Tables.ShapeStyle">style</see>.</param>
             <param name="position">Shape insertion point.</param>
             <param name="size">Shape size.</param>
             <param name="rotation">Shape rotation.</param>
@@ -9554,13 +9605,10 @@
         </member>
         <member name="P:netDxf.Entities.Spline.IsClosed">
             <summary>
-            Gets or sets if the spline is closed.
+            Gets if the spline is closed.
             </summary>
             <remarks>
-            Closing a spline will just repeat the last vertex.
-            Under normal circumstances maintaining the smoothness of the curve at the end point is desirable,
-            in these cases use the property IsClosedPeriodic, instead. <br />
-            Changing the property will rebuild the knot vector.
+            An Spline is closed when the start and end control points are the same.
             </remarks>
         </member>
         <member name="P:netDxf.Entities.Spline.IsClosedPeriodic">
@@ -9601,21 +9649,21 @@
             <param name="precision">Number of vertexes generated.</param>
             <returns>A list vertexes that represents the spline.</returns>
         </member>
-        <member name="M:netDxf.Entities.Spline.ToPolyline(System.Int32)">
+        <member name="M:netDxf.Entities.Spline.ToPolyline3D(System.Int32)">
             <summary>
-            Converts the spline in a Polyline.
+            Converts the spline in a Polyline3D.
             </summary>
             <param name="precision">Number of vertexes generated.</param>
-            <returns>A new instance of <see cref="T:netDxf.Entities.Polyline">Polyline</see> that represents the spline.</returns>
+            <returns>A new instance of <see cref="T:netDxf.Entities.Polyline3D">Polyline3D</see> that represents the spline.</returns>
         </member>
-        <member name="M:netDxf.Entities.Spline.ToLwPolyline(System.Int32)">
+        <member name="M:netDxf.Entities.Spline.ToPolyline2D(System.Int32)">
             <summary>
-            Converts the spline in a LwPolyline.
+            Converts the spline in a Polyline2D.
             </summary>
             <param name="precision">Number of vertexes generated.</param>
-            <returns>A new instance of <see cref="T:netDxf.Entities.LwPolyline">LwPolyline</see> that represents the spline.</returns>
+            <returns>A new instance of <see cref="T:netDxf.Entities.Polyline2D">Polyline2D</see> that represents the spline.</returns>
             <remarks>
-            The resulting LwPolyline will be a projection of the actual spline into the plane defined by its normal vector.
+            The resulting polyline will be a projection of the actual spline into the plane defined by its normal vector.
             </remarks>
         </member>
         <member name="M:netDxf.Entities.Spline.NurbsEvaluator(System.Collections.Generic.List{netDxf.Entities.SplineVertex},System.Double[],System.Int32,System.Boolean,System.Boolean,System.Int32)">
@@ -9626,7 +9674,7 @@
             <param name="knots">List of spline knot points. If null the knot vector will be automatically generated.</param>
             <param name="degree">Spline degree.</param>
             <param name="isClosed">Specifies if the spline is closed.</param>
-            <param name="isPeriodic">Specifies if the spline is periodic.</param>
+            <param name="isClosedPeriodic">Specifies if the spline is closed and periodic.</param>
             <param name="precision">Number of vertexes generated.</param>
             <returns>A list vertexes that represents the spline.</returns>
             <remarks>
@@ -9705,9 +9753,9 @@
             </summary>
             <remarks>Bit flag.</remarks>
         </member>
-        <member name="F:netDxf.Entities.SplineTypeFlags.None">
+        <member name="F:netDxf.Entities.SplineTypeFlags.Open">
             <summary>
-            Default (open 3d spline).
+            Default (open spline).
             </summary>
         </member>
         <member name="F:netDxf.Entities.SplineTypeFlags.Closed">
@@ -10563,7 +10611,9 @@
             Represents a DXF Vertex.
             </summary>
             <remarks>
-            The Vertex class holds all the information read from the DXF file even if its needed or not. For internal use only.
+            Under the VERTEX data the DXF stores information about the vertexes of smoothed Polylines2D (non-smoothed Polylines2D are stored as LWPOLYLINE,
+            Polylines3D (smoothed and non-smoothed), and PolyfaceMeshes.<br />
+            For internal use only.
             </remarks>
         </member>
         <member name="M:netDxf.Entities.Vertex.#ctor">
@@ -10571,36 +10621,14 @@
             Initializes a new instance of the <c>Vertex</c> class.
             </summary>
         </member>
-        <member name="M:netDxf.Entities.Vertex.#ctor(netDxf.Vector2)">
-            <summary>
-            Initializes a new instance of the <c>Vertex</c> class.
-            </summary>
-            <param name="position">Vertex <see cref="T:netDxf.Vector2">location</see>.</param>
-        </member>
-        <member name="M:netDxf.Entities.Vertex.#ctor(System.Double,System.Double,System.Double)">
-            <summary>
-            Initializes a new instance of the <c>Vertex</c> class.
-            </summary>
-            <param name="x">X coordinate.</param>
-            <param name="y">Y coordinate.</param>
-            <param name="z">Z coordinate.</param>
-        </member>
-        <member name="M:netDxf.Entities.Vertex.#ctor(System.Double,System.Double)">
-            <summary>
-            Initializes a new instance of the <c>Vertex</c> class.
-            </summary>
-            <param name="x">X coordinate.</param>
-            <param name="y">Y coordinate.</param>
-        </member>
-        <member name="M:netDxf.Entities.Vertex.#ctor(netDxf.Vector3)">
-            <summary>
-            Initializes a new instance of the <c>Vertex</c> class.
-            </summary>
-            <param name="position">Vertex <see cref="T:netDxf.Vector3">location</see>.</param>
-        </member>
         <member name="P:netDxf.Entities.Vertex.Position">
             <summary>
             Gets or sets the polyline vertex <see cref="T:netDxf.Vector3">location</see>.
+            </summary>
+        </member>
+        <member name="P:netDxf.Entities.Vertex.VertexIndexes">
+            <summary>
+            Gets or sets the indexes, only applicable when the vertex represents a face of a polyface mesh.
             </summary>
         </member>
         <member name="P:netDxf.Entities.Vertex.StartWidth">
@@ -10617,11 +10645,6 @@
             <summary>
             Gets or set the light weight polyline bulge.Accepted values range from 0 to 1.
             </summary>
-            <remarks>
-            The bulge is the tangent of one fourth the included angle for an arc segment, 
-            made negative if the arc goes clockwise from the start point to the endpoint. 
-            A bulge of 0 indicates a straight segment, and a bulge of 1 is a semicircle.
-            </remarks>
         </member>
         <member name="P:netDxf.Entities.Vertex.Flags">
             <summary>
@@ -10643,14 +10666,19 @@
             Gets or sets the entity line type.
             </summary>
         </member>
+        <member name="P:netDxf.Entities.Vertex.SubclassMarker">
+            <summary>
+            Gets or sets the subclass marker
+            </summary>
+        </member>
         <member name="T:netDxf.Entities.VertexTypeFlags">
             <summary>
             Defines the vertex type.
             </summary>
         </member>
-        <member name="F:netDxf.Entities.VertexTypeFlags.PolylineVertex">
+        <member name="F:netDxf.Entities.VertexTypeFlags.Polyline2DVertex">
             <summary>
-            2d polyline vertex.
+            Default (2D polyline vertex).
             </summary>
         </member>
         <member name="F:netDxf.Entities.VertexTypeFlags.CurveFittingExtraVertex">
@@ -10679,12 +10707,12 @@
             Spline frame control point.
             </summary>
         </member>
-        <member name="F:netDxf.Entities.VertexTypeFlags.Polyline3dVertex">
+        <member name="F:netDxf.Entities.VertexTypeFlags.Polyline3DVertex">
             <summary>
             3D polyline vertex.
             </summary>
         </member>
-        <member name="F:netDxf.Entities.VertexTypeFlags.Polygon3dMesh">
+        <member name="F:netDxf.Entities.VertexTypeFlags.Polygon3DMesh">
             <summary>
             3D polygon mesh.
             </summary>
@@ -11727,25 +11755,12 @@
             Cumulative editing time for this drawing.
             </summary>
         </member>
-        <member name="P:netDxf.Header.HeaderVariables.UcsOrg">
+        <member name="P:netDxf.Header.HeaderVariables.CurrentUCS">
             <summary>
-            Origin of current UCS (in WCS).
-            </summary>
-        </member>
-        <member name="P:netDxf.Header.HeaderVariables.UcsXDir">
-            <summary>
-            Direction of the current UCS X axis (in WCS).
+            Gets ore sets the current/active UCS of the drawing.
             </summary>
             <remarks>
-            The vectors UcsXDir and UcsYDir must be perpendicular.
-            </remarks>
-        </member>
-        <member name="P:netDxf.Header.HeaderVariables.UcsYDir">
-            <summary>
-            Direction of the current UCS Y axis (in WCS).
-            </summary>
-            <remarks>
-            The vectors UcsXDir and UcsYDir must be perpendicular.
+            This field encapsulates the three drawing variables UcsOrg, UcsXDir, and UcsYDir.
             </remarks>
         </member>
         <member name="M:netDxf.Header.HeaderVariables.KnownValues">
@@ -16610,6 +16625,15 @@
             </summary>
             <param name="name">Layer name.</param>
         </member>
+        <member name="P:netDxf.Tables.Layer.Description">
+            <summary>
+            Gets or sets the layer description.
+            </summary>
+            <remarks>
+            The layer description is saved in the extended data of the layer, it will be handle automatically when the file is saved or loaded.<br />
+            New line characters are not allowed.
+            </remarks>
+        </member>
         <member name="P:netDxf.Tables.Layer.Linetype">
             <summary>
             Gets or sets the layer <see cref="P:netDxf.Tables.Layer.Linetype">line type</see>.
@@ -17473,7 +17497,7 @@
             </summary>
             <remarks>
             The font style value is ignored and will always return FontStyle.Regular when a font file has been specified.<br />
-            All styles might or might not be available for the current font family.
+            All styles may not be available for the current font family.
             </remarks>
         </member>
         <member name="P:netDxf.Tables.TextStyle.Height">
@@ -17570,11 +17594,6 @@
             Gets the user coordinate system z-axis direction in WCS.
             </summary>
         </member>
-        <member name="P:netDxf.Tables.UCS.Elevation">
-            <summary>
-            Gets or sets the user coordinate system elevation.
-            </summary>
-        </member>
         <member name="P:netDxf.Tables.UCS.Owner">
             <summary>
             Gets the owner of the actual user coordinate system.
@@ -17594,8 +17613,18 @@
             <param name="name">User coordinate system name.</param>
             <param name="origin">Origin in WCS.</param>
             <param name="xDirection">X-axis direction in WCS.</param>
-            <param name="pointOnPlaneXY">Point on the XYplane.</param>
+            <param name="pointOnPlaneXY">Point on the XY plane.</param>
             <returns>A new user coordinate system.</returns>
+        </member>
+        <member name="M:netDxf.Tables.UCS.FromNormal(System.String,netDxf.Vector3,netDxf.Vector3)">
+            <summary>
+            Creates a new user coordinate system from the XY plane normal (z-axis).
+            </summary>
+            <param name="name">User coordinate system name.</param>
+            <param name="origin">Origin in WCS.</param>
+            <param name="normal">XY plane normal (z-axis).</param>
+            <returns>A new user coordinate system.</returns>
+            <remarks>This method uses the ArbitraryAxis algorithm to obtain the user coordinate system x-axis and y-axis.</remarks>
         </member>
         <member name="M:netDxf.Tables.UCS.FromNormal(System.String,netDxf.Vector3,netDxf.Vector3,System.Double)">
             <summary>
@@ -17607,6 +17636,30 @@
             <param name="rotation">The counter-clockwise angle in radians along the normal (z-axis).</param>
             <returns>A new user coordinate system.</returns>
             <remarks>This method uses the ArbitraryAxis algorithm to obtain the user coordinate system x-axis and y-axis.</remarks>
+        </member>
+        <member name="M:netDxf.Tables.UCS.GetTransformation">
+            <summary>
+            Gets the user coordinate system rotation matrix.
+            </summary>
+            <returns>A Matrix3.</returns>
+        </member>
+        <member name="M:netDxf.Tables.UCS.Transform(netDxf.Vector3,netDxf.CoordinateSystem,netDxf.CoordinateSystem)">
+            <summary>
+            Transforms a point between coordinate systems.
+            </summary>
+            <param name="point">Point to transform.</param>
+            <param name="from">Points coordinate system.</param>
+            <param name="to">Coordinate system of the transformed points.</param>
+            <returns>Transformed point list.</returns>
+        </member>
+        <member name="M:netDxf.Tables.UCS.Transform(System.Collections.Generic.IEnumerable{netDxf.Vector3},netDxf.CoordinateSystem,netDxf.CoordinateSystem)">
+            <summary>
+            Transforms a point list between coordinate systems.
+            </summary>
+            <param name="points">Points to transform.</param>
+            <param name="from">Points coordinate system.</param>
+            <param name="to">Coordinate system of the transformed points.</param>
+            <returns>Transformed point list.</returns>
         </member>
         <member name="M:netDxf.Tables.UCS.Clone(System.String)">
             <summary>
@@ -19723,85 +19776,6 @@
         <member name="F:netDxf.XDataCode.WorldDirectionY">
             <summary>
             Also a 3D point that is rotated and mirrored along with the parent (but is not moved, scaled, or stretched)
-            </summary>
-        </member>
-        <member name="F:netDxf.XDataCode.WorldDirectionZ">
-            <summary>
-            Also a 3D point that is rotated and mirrored along with the parent (but is not moved, scaled, or stretched)
-            </summary>
-        </member>
-        <member name="F:netDxf.XDataCode.Real">
-            <summary>
-            A real value.
-            </summary>
-        </member>
-        <member name="F:netDxf.XDataCode.Distance">
-            <summary>
-            A real value that is scaled along with the parent entity
-            </summary>
-        </member>
-        <member name="F:netDxf.XDataCode.ScaleFactor">
-            <summary>
-            Also a real value that is scaled along with the parent.
-            The difference between a distance and a scale factor is application-defined
-            </summary>
-        </member>
-        <member name="F:netDxf.XDataCode.Int16">
-            <summary>
-            A 16-bit integer (signed or unsigned).
-            </summary>
-        </member>
-        <member name="F:netDxf.XDataCode.Int32">
-            <summary>
-            A 32-bit signed integer.
-            </summary>
-        </member>
-        <member name="T:netDxf.XDataRecord">
-            <summary>
-            Represents an entry in the extended data of an entity.
-            </summary>
-        </member>
-        <member name="P:netDxf.XDataRecord.OpenControlString">
-            <summary>
-            An extended data control string can be either "{"or "}".
-            These braces enable applications to organize their data by subdividing the data into lists.
-            The left brace begins a list, and the right brace terminates the most recent list. Lists can be nested.
-            </summary>
-        </member>
-        <member name="P:netDxf.XDataRecord.CloseControlString">
-            <summary>
-            An extended data control string can be either "{" or "}".
-            These braces enable applications to organize their data by subdividing the data into lists.
-            The left brace begins a list, and the right brace terminates the most recent list. Lists can be nested.
-            </summary>
-        </member>
-        <member name="M:netDxf.XDataRecord.#ctor(netDxf.XDataCode,System.Object)">
-            <summary>
-            Initializes a new XDataRecord.
-            </summary>
-            <param name="code">XData code.</param>
-            <param name="value">XData value.</param>
-        </member>
-        <member name="P:netDxf.XDataRecord.Code">
-            <summary>
-            Gets the XData code.
-            </summary>
-            <remarks>The only valid values are the ones defined in the <see cref="T:netDxf.XDataCode">XDataCode</see> class.</remarks>
-        </member>
-        <member name="P:netDxf.XDataRecord.Value">
-            <summary>
-            Gets the XData value.
-            </summary>
-        </member>
-        <member name="M:netDxf.XDataRecord.ToString">
-            <summary>
-            Obtains a string that represents the XDataRecord.
-            </summary>
-            <returns>A string text.</returns>
-        </member>
-    </members>
-</doc>
-along with the parent (but is not moved, scaled, or stretched)
             </summary>
         </member>
         <member name="F:netDxf.XDataCode.WorldDirectionZ">

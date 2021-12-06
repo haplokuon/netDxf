@@ -83,7 +83,10 @@ namespace netDxf.Entities
                 double sum1 = a1 + b1 + c1 + d1 + e1 + f1;
                 double sum2 = a2 + b2 + c2 + d2 + e2 + f2;
 
-                if (MathHelper.IsZero(sum2)) return double.NaN;
+                if (MathHelper.IsZero(sum2))
+                {
+                    return double.NaN;
+                }
 
                 return -sum1 / sum2;
             }
@@ -99,10 +102,14 @@ namespace netDxf.Entities
                 double[] gammaDelta = CoefficientsProductLines(lineGamma, lineDelta);
 
                 double lambda = Lambda(alphaBeta, gammaDelta, point5);
-                if (double.IsNaN(lambda)) return null; // conic coefficients cannot be found, duplicate points
+                if (double.IsNaN(lambda))
+                { 
+                    // conic coefficients cannot be found, duplicate points
+                    return null;
+                }
 
                 double[] coefficients = new double[6];
-                coefficients[0] = alphaBeta[0] + lambda * gammaDelta[0];          
+                coefficients[0] = alphaBeta[0] + lambda * gammaDelta[0];
                 coefficients[1] = alphaBeta[1] + lambda * gammaDelta[1];
                 coefficients[2] = alphaBeta[2] + lambda * gammaDelta[2];
                 coefficients[3] = alphaBeta[3] + lambda * gammaDelta[3];
@@ -120,7 +127,10 @@ namespace netDxf.Entities
                 rotation = double.NaN;
 
                 double[] coefficients = ConicCoefficients(point1, point2, point3, point4, point5);
-                if(coefficients == null) return false;
+                if (coefficients == null)
+                {
+                    return false;
+                }
 
                 double a = coefficients[0];
                 double b = coefficients[1];
@@ -131,7 +141,11 @@ namespace netDxf.Entities
 
                 double q = b * b - 4 * a * c;
                            
-                if (q >= 0) return false; // not an ellipse
+                if (q >= 0)
+                {
+                    // not an ellipse
+                    return false;
+                }
 
                 center.X = (2 * c * d - b * e) / q;
                 center.Y = (2 * a * e - b * d) / q;
@@ -409,7 +423,7 @@ namespace netDxf.Entities
 
             for (int i = 0; i < precision; i++)
             {
-                double angle = start + delta*i;
+                double angle = start + delta * i;
                 double sinAlpha = Math.Sin(angle);
                 double cosAlpha = Math.Cos(angle);
 
@@ -423,15 +437,15 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Converts the ellipse in a Polyline.
+        /// Converts the ellipse in a Polyline2D.
         /// </summary>
         /// <param name="precision">Number of vertexes generated.</param>
-        /// <returns>A new instance of <see cref="LwPolyline">LightWeightPolyline</see> that represents the ellipse.</returns>
-        public LwPolyline ToPolyline(int precision)
+        /// <returns>A new instance of <see cref="Polyline2D">Polyline2D</see> that represents the ellipse.</returns>
+        public Polyline2D ToPolyline2D(int precision)
         {
             List<Vector2> vertexes = this.PolygonalVertexes(precision);
             Vector3 ocsCenter = MathHelper.Transform(this.center, this.Normal, CoordinateSystem.World, CoordinateSystem.Object);
-            LwPolyline poly = new LwPolyline
+            Polyline2D poly = new Polyline2D
             {
                 Layer = (Layer) this.Layer.Clone(),
                 Linetype = (Linetype) this.Linetype.Clone(),
@@ -447,7 +461,7 @@ namespace netDxf.Entities
 
             foreach (Vector2 v in vertexes)
             {
-                poly.Vertexes.Add(new LwPolylineVertex(v.X + ocsCenter.X, v.Y + ocsCenter.Y));
+                poly.Vertexes.Add(new Polyline2DVertex(v.X + ocsCenter.X, v.Y + ocsCenter.Y));
             }
 
             return poly;
@@ -553,7 +567,10 @@ namespace netDxf.Entities
                 return;
             }
 
-            if (this.IsFullEllipse) return;
+            if (this.IsFullEllipse)
+            {
+                return;
+            }
 
             //if not full ellipse calculate start and end angles
             Vector2 start = this.PolarCoordinateRelativeToCenter(this.StartAngle);

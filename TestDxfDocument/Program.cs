@@ -18,6 +18,8 @@ using FontStyle = netDxf.Tables.FontStyle;
 using Image = netDxf.Entities.Image;
 using Point = netDxf.Entities.Point;
 using Trace = netDxf.Entities.Trace;
+using Vector2 = netDxf.Vector2;
+using Vector3 = netDxf.Vector3;
 
 namespace TestDxfDocument
 {
@@ -32,7 +34,9 @@ namespace TestDxfDocument
 
             #region Samples for new and modified features 3.0.0
 
-            //SmoothPolyline();
+            //UcsTransform();
+            //SmoothPolyline2D();
+            //SmoothPolyline3D();
             //SplitBezierCurve();
             //FitBezierCurve();
             //BezierCurve();
@@ -254,8 +258,8 @@ namespace TestDxfDocument
             //Ellipse();
             //Solid();
             //Face3d();
-            //LwPolyline();
-            //Polyline();
+            //Polyline2D();
+            //Polyline3D();
             //Dxf2000();
             //SpeedTest();
             //WritePolyline3d();
@@ -267,7 +271,83 @@ namespace TestDxfDocument
 
         #region Samples for new and modified features 3.0.0
 
-        public static void SmoothPolyline()
+        public static void UcsTransform()
+        {
+            // start and end point of a line expressed in local coordinates
+            Vector3 start = new Vector3(5,2.5,0);
+            Vector3 end = new Vector3(8, 6.5, 0);
+
+            // local UCS
+            //UCS ucs = new UCS("MyUCS", new Vector3(-2, -4, 1), Vector3.UnitX, Vector3.UnitZ);
+            UCS ucs = UCS.FromNormal("MyUCS", new Vector3(-2, -4, 1), new Vector3(1), 30 * MathHelper.DegToRad);
+
+            // but the Line entity is always expressed in world coordinates
+            List<Vector3> wcsPoints = ucs.Transform(new List<Vector3> {start, end}, CoordinateSystem.Object, CoordinateSystem.World);
+            Line line = new Line(wcsPoints[0], wcsPoints[1]);
+
+            DxfDocument doc = new DxfDocument();
+
+            // add the UCS to the document
+            doc.UCSs.Add(ucs);
+            // (optional) make ucs the current/active UCS of the drawing
+            doc.DrawingVariables.CurrentUCS = ucs;
+
+            // add the line to the document
+            doc.Entities.Add(line);
+
+            doc.Save("test.dxf");
+
+        }
+
+        public static void SmoothPolyline2D()
+        {
+            // polyline points
+            List<Vector2> points = new List<Vector2>
+            {
+                new Vector2(0, 0),
+                new Vector2(0,5),
+                new Vector2(5,2.5),
+                new Vector2(10, 5),
+                new Vector2(10, 0),
+            };
+
+            // create the polyline
+            Polyline2D poly = new Polyline2D(points);
+
+            // polyline smooth type
+            // the resulting smoothed polyline is the same as a Spline of second (Quadratic) or third (Cubic) degree
+            // it is recommended to use a Spline entity instead, if you are planning to smooth the polyline
+            poly.SmoothType = PolylineSmoothType.Cubic;
+            poly.SetConstantWidth(0.5);
+            //poly.Elevation = 5;
+            //poly.Normal = new Vector3(0,1,0);
+
+            // closing the polyline will generate a closed periodic spline
+            poly.IsClosed = true;
+
+            DxfDocument doc = new DxfDocument();
+            doc.Entities.Add(poly);
+
+            // for testing purposes
+            // AutoCad uses the $SPLINESEGS header variable as a base number to generate the spline curve that represents the smoothed polyline
+            // I do not know how exactly this variable is applied, at the moment, when the DXF file is saved,
+            // the precision used to generate the vertexes that represent the smoothed polyline is
+            // for open polylines: Precision = $SPLINESEGS * (Number of Vertices - 1),
+            // for closed polylines: Precision = $SPLINESEGS * Number of Vertices.
+            Polyline2D testPoly = new Polyline2D(poly.PolygonalVertexes(doc.DrawingVariables.SplineSegs * poly.Vertexes.Count))
+            {
+                IsClosed = poly.IsClosed,
+                Color = AciColor.Yellow
+            };
+            //doc.Entities.Add(testPoly);
+
+            doc.Save("test.dxf");
+
+            DxfDocument dxf = DxfDocument.Load("test.dxf");
+            dxf.Save("test.dxf");
+        }
+
+        public static void SmoothPolyline3D()
         {
             // polyline points
             List<Vector3> points = new List<Vector3>
@@ -280,7 +360,7 @@ namespace TestDxfDocument
             };
 
             // create the polyline
-            Polyline poly = new Polyline(points);
+            Polyline3D poly = new Polyline3D(points);
 
             // polyline smooth type
             // the resulting smoothed polyline is the same as a Spline of second (Quadratic) or third (Cubic) degree
@@ -288,7 +368,7 @@ namespace TestDxfDocument
             poly.SmoothType = PolylineSmoothType.Quadratic;
 
             // closing the polyline will generate a closed periodic spline
-            poly.IsClosed = true;
+            //poly.IsClosed = true;
 
             DxfDocument doc = new DxfDocument();
             doc.Entities.Add(poly);
@@ -299,12 +379,12 @@ namespace TestDxfDocument
             // the precision used to generate the vertexes that represent the smoothed polyline is
             // For open polylines: Precision = $SPLINESEGS * (Number of Vertices - 1),
             // For closed polylines: Precision = $SPLINESEGS * Number of Vertices.
-            Polyline testPoly = new Polyline(poly.PolygonalVertexes(doc.DrawingVariables.SplineSegs * poly.Vertexes.Count))
+            Polyline3D testPoly = new Polyline3D(poly.PolygonalVertexes(doc.DrawingVariables.SplineSegs * poly.Vertexes.Count))
             {
                 IsClosed = poly.IsClosed,
                 Color = AciColor.Yellow
             };
-            doc.Entities.Add(testPoly);
+            //doc.Entities.Add(testPoly);
 
             doc.Save("test.dxf");
         }
@@ -363,7 +443,7 @@ namespace TestDxfDocument
             List<BezierCurveCubic> curves = BezierCurveCubic.CreateFromFitPoints(fitPoints);
             foreach (BezierCurveCubic curve in curves)
             {
-                doc.Entities.Add(new Polyline(curve.PolygonalVertexes(10)) {Color = AciColor.Yellow});
+                doc.Entities.Add(new Polyline3D(curve.PolygonalVertexes(10)) {Color = AciColor.Yellow});
             }
 
             doc.Save("test.dxf");
@@ -397,11 +477,11 @@ namespace TestDxfDocument
             BezierCurveCubic curve2 = new BezierCurveCubic(points2);
             
             // create a polyline from a bezier curve given a precision of 10
-            Polyline polyline1 = new Polyline(curve1.PolygonalVertexes(10));
+            Polyline3D polyline1 = new Polyline3D(curve1.PolygonalVertexes(10));
             polyline1.Color = AciColor.Blue;
 
             // create a polyline from a bezier curve given a precision of 10
-            Polyline polyline2 = new Polyline(curve2.PolygonalVertexes(10));
+            Polyline3D polyline2 = new Polyline3D(curve2.PolygonalVertexes(10));
             polyline2.Color = AciColor.Red;
 
             // create a Spline from a set of concatenated cubic bezier curves
@@ -443,9 +523,19 @@ namespace TestDxfDocument
             //};
 
             DxfDocument doc = new DxfDocument();
-            Layer layer2 = doc.Layers.Add(new Layer("layer2") {Color = AciColor.Red});
+            Layer layer2 = doc.Layers.Add(new Layer("layer2")
+            {
+                Description = "One face of a polyface mesh.",
+                Color = AciColor.Red
+            });
             PolyfaceMesh mesh = new PolyfaceMesh(vertexes, faces);
-            mesh.Faces[0].Layer = new Layer("layer1") { Color = AciColor.Blue }; // assign a new layer to the face
+            mesh.Faces[0].Layer = new Layer("layer1")
+            {
+                Description = "Another face of the polyface mesh",
+                Color = AciColor.Blue
+            };
+            
+            // assign a new layer to the face
             mesh.Faces[1].Layer = layer2; // assign an existing layer to the face
             //mesh.Faces[0].Color = AciColor.Yellow; // PolyfaceMesh faces can also have their own color
             //mesh.Faces[1].Color = AciColor.Green; // PolyfaceMesh faces can also have their own color
@@ -701,16 +791,16 @@ namespace TestDxfDocument
         public static void TransformLwPolyline()
         {
             double bulge = -Math.Tan(Math.PI / 8);
-            LwPolylineVertex p1 = new LwPolylineVertex(-100, 75, bulge);
-            LwPolylineVertex p2 = new LwPolylineVertex(-75, 100, 0);
-            LwPolylineVertex p3 = new LwPolylineVertex(75, 100, bulge);
-            LwPolylineVertex p4 = new LwPolylineVertex(100, 75, 0);
-            LwPolylineVertex p5 = new LwPolylineVertex(100, -75, bulge);
-            LwPolylineVertex p6 = new LwPolylineVertex(75, -100, 0);
-            LwPolylineVertex p7 = new LwPolylineVertex(-75, -100, bulge);
-            LwPolylineVertex p8 = new LwPolylineVertex(-100, -75, 0);
+            Polyline2DVertex p1 = new Polyline2DVertex(-100, 75, bulge);
+            Polyline2DVertex p2 = new Polyline2DVertex(-75, 100, 0);
+            Polyline2DVertex p3 = new Polyline2DVertex(75, 100, bulge);
+            Polyline2DVertex p4 = new Polyline2DVertex(100, 75, 0);
+            Polyline2DVertex p5 = new Polyline2DVertex(100, -75, bulge);
+            Polyline2DVertex p6 = new Polyline2DVertex(75, -100, 0);
+            Polyline2DVertex p7 = new Polyline2DVertex(-75, -100, bulge);
+            Polyline2DVertex p8 = new Polyline2DVertex(-100, -75, 0);
 
-            LwPolyline poly = new LwPolyline(new[] {p1,p2,p3,p4,p5,p6,p7,p8}, true);
+            Polyline2D poly = new Polyline2D(new[] {p1,p2,p3,p4,p5,p6,p7,p8}, true);
             //poly.Normal = Vector3.UnitX;
             poly.TransformBy(Matrix3.RotationZ(30*MathHelper.DegToRad), Vector3.Zero);
 
@@ -1673,11 +1763,11 @@ namespace TestDxfDocument
         {
             DxfDocument dxf = new DxfDocument(DxfVersion.AutoCad2010);
 
-            LwPolyline poly = new LwPolyline();
-            poly.Vertexes.Add(new LwPolylineVertex(-10, -10));
-            poly.Vertexes.Add(new LwPolylineVertex(10, -10));
-            poly.Vertexes.Add(new LwPolylineVertex(10, 10));
-            poly.Vertexes.Add(new LwPolylineVertex(-10, 10));
+            Polyline2D poly = new Polyline2D();
+            poly.Vertexes.Add(new Polyline2DVertex(-10, -10));
+            poly.Vertexes.Add(new Polyline2DVertex(10, -10));
+            poly.Vertexes.Add(new Polyline2DVertex(10, 10));
+            poly.Vertexes.Add(new Polyline2DVertex(-10, 10));
             poly.IsClosed = true;
             HatchBoundaryPath boundary1 = new HatchBoundaryPath(new List<EntityObject> { poly });
 
@@ -1882,7 +1972,7 @@ namespace TestDxfDocument
         #endregion
 
         #endregion
-
+        
         #region Samples for new and modified features 2.1.0
 
         private static void Shape()
@@ -2149,14 +2239,14 @@ namespace TestDxfDocument
                 new Vector3(1,-1,0.5)
             };
 
-            Polyline poly = new Polyline(vertexes);
+            Polyline3D poly = new Polyline3D(vertexes);
 
             Block block = new Block("MyBlock");
             block.Entities.Add(poly);
 
             DxfDocument doc = new DxfDocument();
             doc.Entities.Add(new Insert(block));
-            Polyline poly2 = (Polyline) poly.Clone();
+            Polyline3D poly2 = (Polyline3D) poly.Clone();
             doc.Entities.Add(poly2);
 
             // both polylines were added to the document now it is safe to add new vertexes to the polyline without the document failing to save.
@@ -2915,11 +3005,11 @@ namespace TestDxfDocument
         {
             DxfDocument dxf = new DxfDocument(DxfVersion.AutoCad2010);
 
-            LwPolyline poly = new LwPolyline();
-            poly.Vertexes.Add(new LwPolylineVertex(-10, -10));
-            poly.Vertexes.Add(new LwPolylineVertex(10, -10));
-            poly.Vertexes.Add(new LwPolylineVertex(10, 10));
-            poly.Vertexes.Add(new LwPolylineVertex(-10, 10));
+            Polyline2D poly = new Polyline2D();
+            poly.Vertexes.Add(new Polyline2DVertex(-10, -10));
+            poly.Vertexes.Add(new Polyline2DVertex(10, -10));
+            poly.Vertexes.Add(new Polyline2DVertex(10, 10));
+            poly.Vertexes.Add(new Polyline2DVertex(-10, 10));
             // optionally you can the normal of the polyline, by default it is the UnitZ vector
             //poly.Normal = new Vector3(1.0);
             poly.IsClosed = true;
@@ -2955,11 +3045,11 @@ namespace TestDxfDocument
             // you can remove boundaries from a hatch
             dxf2.Entities.Hatches.ElementAt(0).BoundaryPaths.Remove(dxf2.Entities.Hatches.ElementAt(0).BoundaryPaths[1]);
             // and add new ones
-            LwPolyline p = new LwPolyline();
-            p.Vertexes.Add(new LwPolylineVertex(-20, -20));
-            p.Vertexes.Add(new LwPolylineVertex(20, -20));
-            p.Vertexes.Add(new LwPolylineVertex(20, 20));
-            p.Vertexes.Add(new LwPolylineVertex(-20, 20));
+            Polyline2D p = new Polyline2D();
+            p.Vertexes.Add(new Polyline2DVertex(-20, -20));
+            p.Vertexes.Add(new Polyline2DVertex(20, -20));
+            p.Vertexes.Add(new Polyline2DVertex(20, 20));
+            p.Vertexes.Add(new Polyline2DVertex(-20, 20));
             p.IsClosed = true;
             dxf2.Entities.Hatches.ElementAt(0).BoundaryPaths.Add(new HatchBoundaryPath(new List<EntityObject> {p}));
             dxf2.Save("Hatch add and remove boundaries.dxf");
@@ -2984,7 +3074,7 @@ namespace TestDxfDocument
             {
                 // this will only work for associative hatches
                 HatchBoundaryPath path = dxf4.Entities.Hatches.ElementAt(0).BoundaryPaths[0];
-                LwPolyline entity = (LwPolyline) path.Entities[0];
+                Polyline2D entity = (Polyline2D) path.Entities[0];
                 entity.Vertexes[2].Position = new Vector2(15, 15);
                 // after modifying the boundary entities, it is necessary to rebuild the edges
                 path.Update();
@@ -3014,7 +3104,7 @@ namespace TestDxfDocument
         private static void SolidEntity()
         {
             // The solid vertexes are expressed in OCS (object coordinate system)
-            // Now they are stored as Vector2 to force all vertexes to lay on a plane, this is similar as how the LwPolyline works.
+            // Now they are stored as Vector2 to force all vertexes to lay on a plane, this is similar as how the Polyline2D works.
             // The Z coordinate is controlled by the elevation property of the Solid.
             Vector2 a = new Vector2(-1, -1);
             Vector2 b = new Vector2(1, -1);
@@ -3871,26 +3961,26 @@ namespace TestDxfDocument
 
             DxfDocument dxf = new DxfDocument();
 
-            Polyline pol;
+            Polyline3D pol;
 
             dxf.Entities.Add(openSpline);
             // we will convert the Spline to a Polyline
-            pol = openSpline.ToPolyline(100);
+            pol = openSpline.ToPolyline3D(100);
             pol.Layer = result;
             dxf.Entities.Add(pol);
 
             dxf.Entities.Add(closedNonPeriodicSpline);
-            pol = closedNonPeriodicSpline.ToPolyline(100);
+            pol = closedNonPeriodicSpline.ToPolyline3D(100);
             pol.Layer = result;
             dxf.Entities.Add(pol);
 
             dxf.Entities.Add(closedPeriodicSpline);
-            pol = closedPeriodicSpline.ToPolyline(100);
+            pol = closedPeriodicSpline.ToPolyline3D(100);
             pol.Layer = result;
             dxf.Entities.Add(pol);
 
             dxf.Entities.Add(splineCircle);
-            pol = splineCircle.ToPolyline(100);
+            pol = splineCircle.ToPolyline3D(100);
             pol.Layer = result;
             dxf.Entities.Add(pol);
 
@@ -4812,27 +4902,21 @@ namespace TestDxfDocument
                         Debug.Assert(ReferenceEquals(x.ApplicationRegistry, dxf.ApplicationRegistries[x.ApplicationRegistry.Name]), "Object reference not equal.");
                     }
 
-                    Text txt = e as Text;
-                    if (txt != null) Debug.Assert(ReferenceEquals(txt.Style, dxf.TextStyles[txt.Style.Name]), "Object reference not equal.");
+                    if (e is Text txt) Debug.Assert(ReferenceEquals(txt.Style, dxf.TextStyles[txt.Style.Name]), "Object reference not equal.");
 
-                    MText mtxt = e as MText;
-                    if (mtxt != null) Debug.Assert(ReferenceEquals(mtxt.Style, dxf.TextStyles[mtxt.Style.Name]), "Object reference not equal.");
+                    if (e is MText mtxt) Debug.Assert(ReferenceEquals(mtxt.Style, dxf.TextStyles[mtxt.Style.Name]), "Object reference not equal.");
 
-                    Dimension dim = e as Dimension;
-                    if (dim != null)
+                    if (e is Dimension dim)
                     {
                         Debug.Assert(ReferenceEquals(dim.Style, dxf.DimensionStyles[dim.Style.Name]), "Object reference not equal.");
                         Debug.Assert(ReferenceEquals(dim.Block, dxf.Blocks[dim.Block.Name]), "Object reference not equal.");
                     }
 
-                    MLine mline = e as MLine;
-                    if (mline != null) Debug.Assert(ReferenceEquals(mline.Style, dxf.MlineStyles[mline.Style.Name]), "Object reference not equal.");
+                    if (e is MLine mline) Debug.Assert(ReferenceEquals(mline.Style, dxf.MlineStyles[mline.Style.Name]), "Object reference not equal.");
 
-                    Image img = e as Image;
-                    if (img != null) Debug.Assert(ReferenceEquals(img.Definition, dxf.ImageDefinitions[img.Definition.Name]), "Object reference not equal.");
+                    if (e is Image img) Debug.Assert(ReferenceEquals(img.Definition, dxf.ImageDefinitions[img.Definition.Name]), "Object reference not equal.");
 
-                    Insert ins = e as Insert;
-                    if (ins != null)
+                    if (e is Insert ins)
                     {
                         Debug.Assert(ReferenceEquals(ins.Block, dxf.Blocks[ins.Block.Name]), "Object reference not equal.");
                         foreach (var a in ins.Attributes)
@@ -4955,19 +5039,19 @@ namespace TestDxfDocument
             Console.WriteLine("\t{0}; count: {1}", EntityType.Circle, dxf.Entities.Circles.Count());
             Console.WriteLine("\t{0}; count: {1}", EntityType.Dimension, dxf.Entities.Dimensions.Count());
             Console.WriteLine("\t{0}; count: {1}", EntityType.Ellipse, dxf.Entities.Ellipses.Count());
-            Console.WriteLine("\t{0}; count: {1}", EntityType.Face3D, dxf.Entities.Faces3d.Count());
+            Console.WriteLine("\t{0}; count: {1}", EntityType.Face3D, dxf.Entities.Faces3D.Count());
             Console.WriteLine("\t{0}; count: {1}", EntityType.Hatch, dxf.Entities.Hatches.Count());
             Console.WriteLine("\t{0}; count: {1}", EntityType.Image, dxf.Entities.Images.Count());
             Console.WriteLine("\t{0}; count: {1}", EntityType.Insert, dxf.Entities.Inserts.Count());
             Console.WriteLine("\t{0}; count: {1}", EntityType.Leader, dxf.Entities.Leaders.Count());
-            Console.WriteLine("\t{0}; count: {1}", EntityType.LwPolyline, dxf.Entities.LwPolylines.Count());
+            Console.WriteLine("\t{0}; count: {1}", EntityType.Polyline2D, dxf.Entities.Polylines2D.Count());
             Console.WriteLine("\t{0}; count: {1}", EntityType.Line, dxf.Entities.Lines.Count());
             Console.WriteLine("\t{0}; count: {1}", EntityType.Mesh, dxf.Entities.Meshes.Count());
             Console.WriteLine("\t{0}; count: {1}", EntityType.MLine, dxf.Entities.MLines.Count());
             Console.WriteLine("\t{0}; count: {1}", EntityType.MText, dxf.Entities.MTexts.Count());
             Console.WriteLine("\t{0}; count: {1}", EntityType.Point, dxf.Entities.Points.Count());
             Console.WriteLine("\t{0}; count: {1}", EntityType.PolyfaceMesh, dxf.Entities.PolyfaceMeshes.Count());
-            Console.WriteLine("\t{0}; count: {1}", EntityType.Polyline, dxf.Entities.Polylines.Count());
+            Console.WriteLine("\t{0}; count: {1}", EntityType.Polyline3D, dxf.Entities.Polylines3D.Count());
             Console.WriteLine("\t{0}; count: {1}", EntityType.Shape, dxf.Entities.Shapes.Count());
             Console.WriteLine("\t{0}; count: {1}", EntityType.Solid, dxf.Entities.Solids.Count());
             Console.WriteLine("\t{0}; count: {1}", EntityType.Spline, dxf.Entities.Splines.Count());
@@ -5187,27 +5271,25 @@ namespace TestDxfDocument
                         Debug.Assert(ReferenceEquals(x.ApplicationRegistry, dxf.ApplicationRegistries[x.ApplicationRegistry.Name]), "Object reference not equal.");
                     }
 
-                    Text txt = e as Text;
-                    if (txt != null) Debug.Assert(ReferenceEquals(txt.Style, dxf.TextStyles[txt.Style.Name]), "Object reference not equal.");
+                    if (e is Text txt)
+                        Debug.Assert(ReferenceEquals(txt.Style, dxf.TextStyles[txt.Style.Name]), "Object reference not equal.");
 
-                    MText mtxt = e as MText;
-                    if (mtxt != null) Debug.Assert(ReferenceEquals(mtxt.Style, dxf.TextStyles[mtxt.Style.Name]), "Object reference not equal.");
+                    if (e is MText mtxt)
+                        Debug.Assert(ReferenceEquals(mtxt.Style, dxf.TextStyles[mtxt.Style.Name]), "Object reference not equal.");
 
-                    Dimension dim = e as Dimension;
-                    if (dim != null)
+                    if (e is Dimension dim)
                     {
                         Debug.Assert(ReferenceEquals(dim.Style, dxf.DimensionStyles[dim.Style.Name]), "Object reference not equal.");
                         Debug.Assert(ReferenceEquals(dim.Block, dxf.Blocks[dim.Block.Name]), "Object reference not equal.");
                     }
 
-                    MLine mline = e as MLine;
-                    if (mline != null) Debug.Assert(ReferenceEquals(mline.Style, dxf.MlineStyles[mline.Style.Name]), "Object reference not equal.");
+                    if (e is MLine mline)                                   
+                        Debug.Assert(ReferenceEquals(mline.Style, dxf.MlineStyles[mline.Style.Name]), "Object reference not equal.");
 
-                    Image img = e as Image;
-                    if (img != null) Debug.Assert(ReferenceEquals(img.Definition, dxf.ImageDefinitions[img.Definition.Name]), "Object reference not equal.");
+                    if (e is Image img)
+                        Debug.Assert(ReferenceEquals(img.Definition, dxf.ImageDefinitions[img.Definition.Name]), "Object reference not equal.");
 
-                    Insert ins = e as Insert;
-                    if (ins != null)
+                    if (e is Insert ins)
                     {
                         Debug.Assert(ReferenceEquals(ins.Block, dxf.Blocks[ins.Block.Name]), "Object reference not equal.");
                         foreach (var a in ins.Attributes)
@@ -5240,8 +5322,7 @@ namespace TestDxfDocument
                 List<DxfObject> entities = dxf.Layouts.GetReferences(o.Name);
                 foreach (var e in entities)
                 {
-                    EntityObject entity = e as EntityObject;
-                    if (entity != null)
+                    if (e is EntityObject entity)
                     {
                         Debug.Assert(ReferenceEquals(entity.Layer, dxf.Layers[entity.Layer.Name]), "Object reference not equal.");
                         Debug.Assert(ReferenceEquals(entity.Linetype, dxf.Linetypes[entity.Linetype.Name]), "Object reference not equal.");
@@ -5252,27 +5333,25 @@ namespace TestDxfDocument
                         }
                     }
 
-                    Text txt = e as Text;
-                    if (txt != null) Debug.Assert(ReferenceEquals(txt.Style, dxf.TextStyles[txt.Style.Name]), "Object reference not equal.");
+                    if (e is Text txt)
+                        Debug.Assert(ReferenceEquals(txt.Style, dxf.TextStyles[txt.Style.Name]), "Object reference not equal.");
 
-                    MText mtxt = e as MText;
-                    if (mtxt != null) Debug.Assert(ReferenceEquals(mtxt.Style, dxf.TextStyles[mtxt.Style.Name]), "Object reference not equal.");
+                    if (e is MText mtxt)
+                        Debug.Assert(ReferenceEquals(mtxt.Style, dxf.TextStyles[mtxt.Style.Name]), "Object reference not equal.");
 
-                    Dimension dim = e as Dimension;
-                    if (dim != null)
+                    if (e is Dimension dim)
                     {
                         Debug.Assert(ReferenceEquals(dim.Style, dxf.DimensionStyles[dim.Style.Name]), "Object reference not equal.");
                         Debug.Assert(ReferenceEquals(dim.Block, dxf.Blocks[dim.Block.Name]), "Object reference not equal.");
                     }
 
-                    MLine mline = e as MLine;
-                    if (mline != null) Debug.Assert(ReferenceEquals(mline.Style, dxf.MlineStyles[mline.Style.Name]), "Object reference not equal.");
+                    if (e is MLine mline)
+                        Debug.Assert(ReferenceEquals(mline.Style, dxf.MlineStyles[mline.Style.Name]), "Object reference not equal.");
 
-                    Image img = e as Image;
-                    if (img != null) Debug.Assert(ReferenceEquals(img.Definition, dxf.ImageDefinitions[img.Definition.Name]), "Object reference not equal.");
+                    if (e is Image img)
+                        Debug.Assert(ReferenceEquals(img.Definition, dxf.ImageDefinitions[img.Definition.Name]), "Object reference not equal.");
 
-                    Insert ins = e as Insert;
-                    if (ins != null)
+                    if (e is Insert ins)
                     {
                         Debug.Assert(ReferenceEquals(ins.Block, dxf.Blocks[ins.Block.Name]), "Object reference not equal.");
                         foreach (var a in ins.Attributes)
@@ -5368,7 +5447,7 @@ namespace TestDxfDocument
                 }
             }
             Console.WriteLine("\t{0}; count: {1}", EntityType.Ellipse, dxf.Entities.Ellipses.Count());
-            Console.WriteLine("\t{0}; count: {1}", EntityType.Face3D, dxf.Entities.Faces3d.Count());
+            Console.WriteLine("\t{0}; count: {1}", EntityType.Face3D, dxf.Entities.Faces3D.Count());
             Console.WriteLine("\t{0}; count: {1}", EntityType.Hatch, dxf.Entities.Hatches.Count());
             Console.WriteLine("\t{0}; count: {1}", EntityType.Image, dxf.Entities.Images.Count());
             Console.WriteLine("\t{0}; count: {1}", EntityType.Insert, dxf.Entities.Inserts.Count());
@@ -5403,14 +5482,14 @@ namespace TestDxfDocument
                     }
                 }
             }
-            Console.WriteLine("\t{0}; count: {1}", EntityType.LwPolyline, dxf.Entities.LwPolylines.Count());
+            Console.WriteLine("\t{0}; count: {1}", EntityType.Polyline2D, dxf.Entities.Polylines2D.Count());
             Console.WriteLine("\t{0}; count: {1}", EntityType.Line, dxf.Entities.Lines.Count());
             Console.WriteLine("\t{0}; count: {1}", EntityType.Mesh, dxf.Entities.Meshes.Count());
             Console.WriteLine("\t{0}; count: {1}", EntityType.MLine, dxf.Entities.MLines.Count());
             Console.WriteLine("\t{0}; count: {1}", EntityType.MText, dxf.Entities.MTexts.Count());
             Console.WriteLine("\t{0}; count: {1}", EntityType.Point, dxf.Entities.Points.Count());
             Console.WriteLine("\t{0}; count: {1}", EntityType.PolyfaceMesh, dxf.Entities.PolyfaceMeshes.Count());
-            Console.WriteLine("\t{0}; count: {1}", EntityType.Polyline, dxf.Entities.Polylines.Count());
+            Console.WriteLine("\t{0}; count: {1}", EntityType.Polyline3D, dxf.Entities.Polylines3D.Count());
             Console.WriteLine("\t{0}; count: {1}", EntityType.Shape, dxf.Entities.Shapes.Count());
             Console.WriteLine("\t{0}; count: {1}", EntityType.Solid, dxf.Entities.Solids.Count());
             Console.WriteLine("\t{0}; count: {1}", EntityType.Spline, dxf.Entities.Splines.Count());
@@ -5683,11 +5762,11 @@ namespace TestDxfDocument
             Layer layer2 = new Layer("Layer2");
             layer2.Color = AciColor.Red;
 
-            LwPolyline poly = new LwPolyline();
-            poly.Vertexes.Add(new LwPolylineVertex(0, 0));
-            poly.Vertexes.Add(new LwPolylineVertex(10, 10));
-            poly.Vertexes.Add(new LwPolylineVertex(20, 0));
-            poly.Vertexes.Add(new LwPolylineVertex(30, 10));
+            Polyline2D poly = new Polyline2D();
+            poly.Vertexes.Add(new Polyline2DVertex(0, 0));
+            poly.Vertexes.Add(new Polyline2DVertex(10, 10));
+            poly.Vertexes.Add(new Polyline2DVertex(20, 0));
+            poly.Vertexes.Add(new Polyline2DVertex(30, 10));
             poly.Layer = layer1;
             dxf.Entities.Add(poly);
 
@@ -5709,13 +5788,13 @@ namespace TestDxfDocument
             {
                 foreach (DxfObject o in dxf.ApplicationRegistries.GetReferences(registry))
                 {
-                    if (o is EntityObject)
+                    if (o is EntityObject entityObject)
                     {
-                        foreach (KeyValuePair<string, XData> data in ((EntityObject) o).XData)
+                        foreach (KeyValuePair<string, XData> data in entityObject.XData)
                         {
                             if (data.Key == registry.Name)
                                 if (!ReferenceEquals(registry, data.Value.ApplicationRegistry))
-                                    Console.WriteLine("Application registry {0} not equal entity to {1}", registry.Name, o.CodeName);
+                                    Console.WriteLine("Application registry {0} not equal entity to {1}", registry.Name, entityObject.CodeName);
                         }
                     }
                 }
@@ -5725,9 +5804,9 @@ namespace TestDxfDocument
             {
                 foreach (DxfObject o in dxf.Blocks.GetReferences(block))
                 {
-                    if (o is Insert)
-                        if (!ReferenceEquals(block, ((Insert) o).Block))
-                            Console.WriteLine("Block {0} not equal entity to {1}", block.Name, o.CodeName);
+                    if (o is Insert insert)
+                        if (!ReferenceEquals(block, insert.Block))
+                            Console.WriteLine("Block {0} not equal entity to {1}", block.Name, insert.CodeName);
                 }
             }
 
@@ -5735,9 +5814,9 @@ namespace TestDxfDocument
             {
                 foreach (DxfObject o in dxf.ImageDefinitions.GetReferences(def))
                 {
-                    if (o is Image)
-                        if (!ReferenceEquals(def, ((Image) o).Definition))
-                            Console.WriteLine("Image definition {0} not equal entity to {1}", def.Name, o.CodeName);
+                    if (o is Image image)
+                        if (!ReferenceEquals(def, image.Definition))
+                            Console.WriteLine("Image definition {0} not equal entity to {1}", def.Name, image.CodeName);
                 }
             }
 
@@ -5745,9 +5824,9 @@ namespace TestDxfDocument
             {
                 foreach (DxfObject o in dxf.DimensionStyles.GetReferences(dimStyle))
                 {
-                    if (o is Dimension)
-                        if (!ReferenceEquals(dimStyle, ((Dimension) o).Style))
-                            Console.WriteLine("Dimension style {0} not equal entity to {1}", dimStyle.Name, o.CodeName);
+                    if (o is Dimension dimension)
+                        if (!ReferenceEquals(dimStyle, dimension.Style))
+                            Console.WriteLine("Dimension style {0} not equal entity to {1}", dimStyle.Name, dimension.CodeName);
                 }
             }
 
@@ -5763,6 +5842,7 @@ namespace TestDxfDocument
             {
                 foreach (DxfObject o in dxf.UCSs.GetReferences(u))
                 {
+                    // no references
                 }
             }
 
@@ -5770,17 +5850,17 @@ namespace TestDxfDocument
             {
                 foreach (DxfObject o in dxf.TextStyles.GetReferences(style))
                 {
-                    if (o is Text)
-                        if (!ReferenceEquals(style, ((Text) o).Style))
-                            Console.WriteLine("Text style {0} not equal entity to {1}", style.Name, o.CodeName);
+                    if (o is Text text)
+                        if (!ReferenceEquals(style, text.Style))
+                            Console.WriteLine("Text style {0} not equal entity to {1}", style.Name, text.CodeName);
 
-                    if (o is MText)
-                        if (!ReferenceEquals(style, ((MText) o).Style))
-                            Console.WriteLine("Text style {0} not equal entity to {1}", style.Name, o.CodeName);
+                    if (o is MText mText)
+                        if (!ReferenceEquals(style, mText.Style))
+                            Console.WriteLine("Text style {0} not equal entity to {1}", style.Name, mText.CodeName);
 
-                    if (o is DimensionStyle)
-                        if (!ReferenceEquals(style, ((DimensionStyle) o).TextStyle))
-                            Console.WriteLine("Text style {0} not equal entity to {1}", style.Name, o.CodeName);
+                    if (o is DimensionStyle dimensionStyle)
+                        if (!ReferenceEquals(style, dimensionStyle.TextStyle))
+                            Console.WriteLine("Text style {0} not equal entity to {1}", style.Name, dimensionStyle.CodeName);
                 }
             }
 
@@ -5788,12 +5868,12 @@ namespace TestDxfDocument
             {
                 foreach (DxfObject o in dxf.Layers.GetReferences(layer))
                 {
-                    if (o is Block)
-                        if (!ReferenceEquals(layer, ((Block) o).Layer))
-                            Console.WriteLine("Layer {0} not equal entity to {1}", layer.Name, o.CodeName);
-                    if (o is EntityObject)
-                        if (!ReferenceEquals(layer, ((EntityObject) o).Layer))
-                            Console.WriteLine("Layer {0} not equal entity to {1}", layer.Name, o.CodeName);
+                    if (o is Block block)
+                        if (!ReferenceEquals(layer, block.Layer))
+                            Console.WriteLine("Layer {0} not equal entity to {1}", layer.Name, block.CodeName);
+                    if (o is EntityObject entityObject)
+                        if (!ReferenceEquals(layer, entityObject.Layer))
+                            Console.WriteLine("Layer {0} not equal entity to {1}", layer.Name, entityObject.CodeName);
                 }
             }
 
@@ -5801,20 +5881,20 @@ namespace TestDxfDocument
             {
                 foreach (DxfObject o in dxf.Linetypes.GetReferences(lType))
                 {
-                    if (o is Layer)
-                        if (!ReferenceEquals(lType, ((Layer) o).Linetype))
-                            Console.WriteLine("Line type {0} not equal to {1}", lType.Name, o.CodeName);
-                    if (o is MLineStyle)
+                    if (o is Layer layer)
+                        if (!ReferenceEquals(lType, layer.Linetype))
+                            Console.WriteLine("Line type {0} not equal to {1}", lType.Name, layer.CodeName);
+                    if (o is MLineStyle style)
                     {
-                        foreach (MLineStyleElement e in ((MLineStyle) o).Elements)
+                        foreach (MLineStyleElement e in style.Elements)
                         {
                             if (!ReferenceEquals(lType, e.Linetype))
-                                Console.WriteLine("Line type {0} not equal to {1}", lType.Name, o.CodeName);
+                                Console.WriteLine("Line type {0} not equal to {1}", lType.Name, style.CodeName);
                         }
                     }
-                    if (o is EntityObject)
-                        if (!ReferenceEquals(lType, ((EntityObject) o).Linetype))
-                            Console.WriteLine("Line type {0} not equal entity to {1}", lType.Name, o.CodeName);
+                    if (o is EntityObject entityObject)
+                        if (!ReferenceEquals(lType, entityObject.Linetype))
+                            Console.WriteLine("Line type {0} not equal entity to {1}", lType.Name, entityObject.CodeName);
                 }
             }
 
@@ -5876,11 +5956,11 @@ namespace TestDxfDocument
             pattern.Scale = 1.5;
             pattern.Angle = 30;
 
-            LwPolyline poly = new LwPolyline();
-            poly.Vertexes.Add(new LwPolylineVertex(-10, -10));
-            poly.Vertexes.Add(new LwPolylineVertex(10, -10));
-            poly.Vertexes.Add(new LwPolylineVertex(10, 10));
-            poly.Vertexes.Add(new LwPolylineVertex(-10, 10));
+            Polyline2D poly = new Polyline2D();
+            poly.Vertexes.Add(new Polyline2DVertex(-10, -10));
+            poly.Vertexes.Add(new Polyline2DVertex(10, -10));
+            poly.Vertexes.Add(new Polyline2DVertex(10, 10));
+            poly.Vertexes.Add(new Polyline2DVertex(-10, 10));
             poly.IsClosed = true;
 
             List<HatchBoundaryPath> boundary = new List<HatchBoundaryPath>
@@ -5917,7 +5997,7 @@ namespace TestDxfDocument
             DxfDocument dxf = new DxfDocument();
             UCS ucs1 = new UCS("user1", Vector3.Zero, Vector3.UnitX, Vector3.UnitZ);
             UCS ucs2 = UCS.FromXAxisAndPointOnXYplane("user2", Vector3.Zero, new Vector3(1, 1, 0), new Vector3(1, 1, 1));
-            UCS ucs3 = UCS.FromNormal("user3", Vector3.Zero, new Vector3(1, 1, 1), 0);
+            UCS ucs3 = UCS.FromNormal("user3", Vector3.Zero, new Vector3(1, 1, 1));
             dxf.UCSs.Add(ucs1);
             dxf.UCSs.Add(ucs2);
             dxf.UCSs.Add(ucs3);
@@ -5976,11 +6056,11 @@ namespace TestDxfDocument
             Layer layer2 = new Layer("Layer2");
             layer2.Color = AciColor.Red;
 
-            LwPolyline poly = new LwPolyline();
-            poly.Vertexes.Add(new LwPolylineVertex(0, 0));
-            poly.Vertexes.Add(new LwPolylineVertex(10, 10));
-            poly.Vertexes.Add(new LwPolylineVertex(20, 0));
-            poly.Vertexes.Add(new LwPolylineVertex(30, 10));
+            Polyline2D poly = new Polyline2D();
+            poly.Vertexes.Add(new Polyline2DVertex(0, 0));
+            poly.Vertexes.Add(new Polyline2DVertex(10, 10));
+            poly.Vertexes.Add(new Polyline2DVertex(20, 0));
+            poly.Vertexes.Add(new Polyline2DVertex(30, 10));
             poly.Layer = layer1;
             dxf.Entities.Add(poly);
 
@@ -6225,7 +6305,7 @@ namespace TestDxfDocument
                 new Vector3(0, 10, 30)
             };
 
-            Polyline poly = new Polyline(vertexes, true);
+            Polyline3D poly = new Polyline3D(vertexes, true);
 
             XData xdata1 = new XData(new ApplicationRegistry("netDxf"));
             xdata1.XDataRecord.Add(new XDataRecord(XDataCode.String, "extended data with netDxf"));
@@ -6307,12 +6387,12 @@ namespace TestDxfDocument
         private static void TestOCStoWCS()
         {
             // vertexes of the light weight polyline, they are defined in OCS (Object Coordinate System)
-            LwPolylineVertex v1 = new LwPolylineVertex(1, -5);
-            LwPolylineVertex v2 = new LwPolylineVertex(-3, 2);
-            LwPolylineVertex v3 = new LwPolylineVertex(8, 15);
+            Polyline2DVertex v1 = new Polyline2DVertex(1, -5);
+            Polyline2DVertex v2 = new Polyline2DVertex(-3, 2);
+            Polyline2DVertex v3 = new Polyline2DVertex(8, 15);
 
-            LwPolyline lwp = new LwPolyline(new List<LwPolylineVertex> {v1, v2, v3}, false);
-            // the normal will define the plane where the lwpolyline is defined
+            Polyline2D lwp = new Polyline2D(new List<Polyline2DVertex> {v1, v2, v3}, false);
+            // the normal will define the plane where the polyline is defined
             lwp.Normal = new Vector3(1, 1, 0);
             // the entity elevation defines the z vector of the vertexes along the entity normal
             lwp.Elevation = 2.5;
@@ -6330,14 +6410,14 @@ namespace TestDxfDocument
 
         private static void WriteGradientPattern()
         {
-            List<LwPolylineVertex> vertexes = new List<LwPolylineVertex>
+            List<Polyline2DVertex> vertexes = new List<Polyline2DVertex>
             {
-                new LwPolylineVertex(new Vector2(0, 0)),
-                new LwPolylineVertex(new Vector2(0, 150)),
-                new LwPolylineVertex(new Vector2(150, 150)),
-                new LwPolylineVertex(new Vector2(150, 0))
+                new Polyline2DVertex(new Vector2(0, 0)),
+                new Polyline2DVertex(new Vector2(0, 150)),
+                new Polyline2DVertex(new Vector2(150, 150)),
+                new Polyline2DVertex(new Vector2(150, 0))
             };
-            LwPolyline pol = new LwPolyline(vertexes, true);
+            Polyline2D pol = new Polyline2D(vertexes, true);
 
 
             Line line1 = new Line(new Vector2(0, 0), new Vector2(0, 150));
@@ -6472,8 +6552,8 @@ namespace TestDxfDocument
             //dxf2.Entities.Add(mline3);
             ////dxf2.Save("void mline.dxf");
 
-            //Polyline pol = new Polyline();
-            //LwPolyline lwPol = new LwPolyline();
+            //Polyline3D pol = new Polyline3D();
+            //Polyline2D lwPol = new Polyline2D();
             //dxf2.Entities.Add(pol);
             //dxf2.Entities.Add(lwPol);
             //dxf2.Save("void mline.dxf");
@@ -7183,17 +7263,13 @@ namespace TestDxfDocument
 
             // maybe what you are trying to do is create a line with a width (something that we can read it as a line with thickness), the only way to do this is to create a polyline
             // the kind of result you will get if you give a width to a 2d polyline 
-            // you can only give a width to a vertex of a Polyline or a LightweigthPolyline
-            // I am planning to drop support to AutoCAD 12 dxf files, so to define a bidimensional polyline the only way will be to use lightweight polyline
-            // (the Polyline class and the LightWeightPolyline are basically the same).
-            LwPolyline widthLine = new LwPolyline();
-            LwPolylineVertex startVertex = new LwPolylineVertex(new Vector2(0, 0));
-            LwPolylineVertex endVertex = new LwPolylineVertex(new Vector2(10, 10));
+            // you can only give a width to a vertex of a Polyline2D
+            Polyline2D widthLine = new Polyline2D();
+            Polyline2DVertex startVertex = new Polyline2DVertex(new Vector2(0, 0));
+            Polyline2DVertex endVertex = new Polyline2DVertex(new Vector2(10, 10));
             widthLine.Vertexes.AddRange(new[] {startVertex, endVertex});
 
             // the easy way to give a constant width to a polyline, but you can also give a polyline width by vertex
-            // there is a mistake on my part, following the AutoCAD documentation I should have called the PolylineVertex.StartThickness and PolylineVertex.EndThickness as
-            // PolylineVertex.StartWidth and PolylineVertex.EndWidth
             // SetConstantWidth is a sort cut that will assign the given value to every start width and end width of every vertex of the polyline
             widthLine.SetConstantWidth(0.5);
 
@@ -7206,7 +7282,7 @@ namespace TestDxfDocument
             dxf.Save("line width.dxf");
         }
 
-        private static void ToPolyline()
+        private static void ToPolyline2D()
         {
             DxfDocument dxf = new DxfDocument();
 
@@ -7230,16 +7306,16 @@ namespace TestDxfDocument
             ellipseArc.Normal = normal;
 
             dxf.Entities.Add(circle);
-            dxf.Entities.Add(circle.ToPolyline(10));
+            dxf.Entities.Add(circle.ToPolyline2D(10));
 
             dxf.Entities.Add(arc);
-            dxf.Entities.Add(arc.ToPolyline(10));
+            dxf.Entities.Add(arc.ToPolyline2D(10));
 
             dxf.Entities.Add(ellipse);
-            dxf.Entities.Add(ellipse.ToPolyline(10));
+            dxf.Entities.Add(ellipse.ToPolyline2D(10));
 
             dxf.Entities.Add(ellipseArc);
-            dxf.Entities.Add(ellipseArc.ToPolyline(10));
+            dxf.Entities.Add(ellipseArc.ToPolyline2D(10));
 
             dxf.Save("to polyline.dxf");
 
@@ -7252,27 +7328,27 @@ namespace TestDxfDocument
         {
             DxfDocument dxf = new DxfDocument();
 
-            LwPolyline poly = new LwPolyline();
-            poly.Vertexes.Add(new LwPolylineVertex(-10, -10));
-            poly.Vertexes.Add(new LwPolylineVertex(10, -10));
-            poly.Vertexes.Add(new LwPolylineVertex(10, 10));
-            poly.Vertexes.Add(new LwPolylineVertex(-10, 10));
+            Polyline2D poly = new Polyline2D();
+            poly.Vertexes.Add(new Polyline2DVertex(-10, -10));
+            poly.Vertexes.Add(new Polyline2DVertex(10, -10));
+            poly.Vertexes.Add(new Polyline2DVertex(10, 10));
+            poly.Vertexes.Add(new Polyline2DVertex(-10, 10));
             poly.Vertexes[2].Bulge = 1;
             poly.IsClosed = true;
 
-            LwPolyline poly2 = new LwPolyline();
-            poly2.Vertexes.Add(new LwPolylineVertex(-5, -5));
-            poly2.Vertexes.Add(new LwPolylineVertex(5, -5));
-            poly2.Vertexes.Add(new LwPolylineVertex(5, 5));
-            poly2.Vertexes.Add(new LwPolylineVertex(-5, 5));
+            Polyline2D poly2 = new Polyline2D();
+            poly2.Vertexes.Add(new Polyline2DVertex(-5, -5));
+            poly2.Vertexes.Add(new Polyline2DVertex(5, -5));
+            poly2.Vertexes.Add(new Polyline2DVertex(5, 5));
+            poly2.Vertexes.Add(new Polyline2DVertex(-5, 5));
             poly2.Vertexes[1].Bulge = -0.25;
             poly2.IsClosed = true;
 
-            LwPolyline poly3 = new LwPolyline();
-            poly3.Vertexes.Add(new LwPolylineVertex(-8, -8));
-            poly3.Vertexes.Add(new LwPolylineVertex(-6, -8));
-            poly3.Vertexes.Add(new LwPolylineVertex(-6, -6));
-            poly3.Vertexes.Add(new LwPolylineVertex(-8, -6));
+            Polyline2D poly3 = new Polyline2D();
+            poly3.Vertexes.Add(new Polyline2DVertex(-8, -8));
+            poly3.Vertexes.Add(new Polyline2DVertex(-6, -8));
+            poly3.Vertexes.Add(new Polyline2DVertex(-6, -6));
+            poly3.Vertexes.Add(new Polyline2DVertex(-8, -6));
             poly3.IsClosed = true;
 
             List<HatchBoundaryPath> boundary = new List<HatchBoundaryPath>
@@ -7333,19 +7409,19 @@ namespace TestDxfDocument
         {
             DxfDocument dxf = new DxfDocument();
             //polyline
-            LwPolylineVertex polyVertex;
-            List<LwPolylineVertex> polyVertexes = new List<LwPolylineVertex>();
-            polyVertex = new LwPolylineVertex(new Vector2(-50, -23.5));
+            Polyline2DVertex polyVertex;
+            List<Polyline2DVertex> polyVertexes = new List<Polyline2DVertex>();
+            polyVertex = new Polyline2DVertex(new Vector2(-50, -23.5));
             polyVertex.Bulge = 1.33;
             polyVertexes.Add(polyVertex);
-            polyVertex = new LwPolylineVertex(new Vector2(34.8, -42.7));
+            polyVertex = new Polyline2DVertex(new Vector2(34.8, -42.7));
             polyVertexes.Add(polyVertex);
-            polyVertex = new LwPolylineVertex(new Vector2(65.3, 54.7));
+            polyVertex = new Polyline2DVertex(new Vector2(65.3, 54.7));
             polyVertex.Bulge = -0.47;
             polyVertexes.Add(polyVertex);
-            polyVertex = new LwPolylineVertex(new Vector2(-48.2, 42.5));
+            polyVertex = new Polyline2DVertex(new Vector2(-48.2, 42.5));
             polyVertexes.Add(polyVertex);
-            LwPolyline polyline2d = new LwPolyline(polyVertexes, false);
+            Polyline2D polyline2d = new Polyline2D(polyVertexes, false);
             polyline2d.Layer = new Layer("polyline2d");
             polyline2d.Layer.Color.Index = 5;
             polyline2d.Normal = new Vector3(1, 1, 1);
@@ -7406,27 +7482,27 @@ namespace TestDxfDocument
         {
             DxfDocument dxf = new DxfDocument();
 
-            LwPolyline poly = new LwPolyline();
-            poly.Vertexes.Add(new LwPolylineVertex(-10, -10));
-            poly.Vertexes.Add(new LwPolylineVertex(10, -10));
-            poly.Vertexes.Add(new LwPolylineVertex(10, 10));
-            poly.Vertexes.Add(new LwPolylineVertex(-10, 10));
+            Polyline2D poly = new Polyline2D();
+            poly.Vertexes.Add(new Polyline2DVertex(-10, -10));
+            poly.Vertexes.Add(new Polyline2DVertex(10, -10));
+            poly.Vertexes.Add(new Polyline2DVertex(10, 10));
+            poly.Vertexes.Add(new Polyline2DVertex(-10, 10));
             poly.Vertexes[2].Bulge = 1;
             //poly.IsClosed = true;
 
-            LwPolyline poly2 = new LwPolyline();
-            poly2.Vertexes.Add(new LwPolylineVertex(-5, -5));
-            poly2.Vertexes.Add(new LwPolylineVertex(5, -5));
-            poly2.Vertexes.Add(new LwPolylineVertex(5, 5));
-            poly2.Vertexes.Add(new LwPolylineVertex(-5, 5));
+            Polyline2D poly2 = new Polyline2D();
+            poly2.Vertexes.Add(new Polyline2DVertex(-5, -5));
+            poly2.Vertexes.Add(new Polyline2DVertex(5, -5));
+            poly2.Vertexes.Add(new Polyline2DVertex(5, 5));
+            poly2.Vertexes.Add(new Polyline2DVertex(-5, 5));
             poly2.Vertexes[1].Bulge = -0.25;
             poly2.IsClosed = true;
 
-            LwPolyline poly3 = new LwPolyline();
-            poly3.Vertexes.Add(new LwPolylineVertex(-8, -8));
-            poly3.Vertexes.Add(new LwPolylineVertex(-6, -8));
-            poly3.Vertexes.Add(new LwPolylineVertex(-6, -6));
-            poly3.Vertexes.Add(new LwPolylineVertex(-8, -6));
+            Polyline2D poly3 = new Polyline2D();
+            poly3.Vertexes.Add(new Polyline2DVertex(-8, -8));
+            poly3.Vertexes.Add(new Polyline2DVertex(-6, -8));
+            poly3.Vertexes.Add(new Polyline2DVertex(-6, -6));
+            poly3.Vertexes.Add(new Polyline2DVertex(-8, -6));
             poly3.IsClosed = true;
 
             Line line = new Line(new Vector2(-10, -10), new Vector2(-10, 10));
@@ -7462,11 +7538,11 @@ namespace TestDxfDocument
         {
             DxfDocument dxf = new DxfDocument();
 
-            LwPolyline poly = new LwPolyline();
-            poly.Vertexes.Add(new LwPolylineVertex(-10, -10));
-            poly.Vertexes.Add(new LwPolylineVertex(10, -10));
-            poly.Vertexes.Add(new LwPolylineVertex(10, 10));
-            poly.Vertexes.Add(new LwPolylineVertex(-10, 10));
+            Polyline2D poly = new Polyline2D();
+            poly.Vertexes.Add(new Polyline2DVertex(-10, -10));
+            poly.Vertexes.Add(new Polyline2DVertex(10, -10));
+            poly.Vertexes.Add(new Polyline2DVertex(10, 10));
+            poly.Vertexes.Add(new Polyline2DVertex(-10, 10));
             poly.Vertexes[2].Bulge = 1;
             poly.IsClosed = true;
 
@@ -7500,11 +7576,11 @@ namespace TestDxfDocument
         {
             DxfDocument dxf = new DxfDocument();
 
-            LwPolyline poly = new LwPolyline();
-            poly.Vertexes.Add(new LwPolylineVertex(-10, -10));
-            poly.Vertexes.Add(new LwPolylineVertex(10, -10));
-            poly.Vertexes.Add(new LwPolylineVertex(10, 10));
-            poly.Vertexes.Add(new LwPolylineVertex(-10, 10));
+            Polyline2D poly = new Polyline2D();
+            poly.Vertexes.Add(new Polyline2DVertex(-10, -10));
+            poly.Vertexes.Add(new Polyline2DVertex(10, -10));
+            poly.Vertexes.Add(new Polyline2DVertex(10, 10));
+            poly.Vertexes.Add(new Polyline2DVertex(-10, 10));
             poly.Vertexes[2].Bulge = 1;
             poly.IsClosed = true;
 
@@ -7513,10 +7589,10 @@ namespace TestDxfDocument
             ellipse.StartAngle = 0;
             ellipse.EndAngle = 180;
 
-            LwPolyline poly2 = new LwPolyline();
-            poly2.Vertexes.Add(new LwPolylineVertex(-8, 0));
-            poly2.Vertexes.Add(new LwPolylineVertex(0, -4));
-            poly2.Vertexes.Add(new LwPolylineVertex(8, 0));
+            Polyline2D poly2 = new Polyline2D();
+            poly2.Vertexes.Add(new Polyline2DVertex(-8, 0));
+            poly2.Vertexes.Add(new Polyline2DVertex(0, -4));
+            poly2.Vertexes.Add(new Polyline2DVertex(8, 0));
 
             //Arc arc = new Arc(Vector3.Zero,8,180,0);
             //Line line =new Line(new Vector3(8,0,0), new Vector3(-8,0,0));
@@ -7544,11 +7620,11 @@ namespace TestDxfDocument
         {
             DxfDocument dxf = new DxfDocument(DxfVersion.AutoCad2010);
 
-            LwPolyline poly = new LwPolyline();
-            poly.Vertexes.Add(new LwPolylineVertex(-10, -10));
-            poly.Vertexes.Add(new LwPolylineVertex(10, -10));
-            poly.Vertexes.Add(new LwPolylineVertex(10, 10));
-            poly.Vertexes.Add(new LwPolylineVertex(-10, 10));
+            Polyline2D poly = new Polyline2D();
+            poly.Vertexes.Add(new Polyline2DVertex(-10, -10));
+            poly.Vertexes.Add(new Polyline2DVertex(10, -10));
+            poly.Vertexes.Add(new Polyline2DVertex(10, 10));
+            poly.Vertexes.Add(new Polyline2DVertex(-10, 10));
             poly.IsClosed = true;
 
             List<HatchBoundaryPath> boundary = new List<HatchBoundaryPath> {new HatchBoundaryPath(new List<EntityObject> {poly})};
@@ -7575,36 +7651,36 @@ namespace TestDxfDocument
             dxf.Save("test2000.dxf");
         }
 
-        private static void LwPolyline()
+        private static void Polyline2D()
         {
             DxfDocument dxf = new DxfDocument();
 
-            LwPolyline poly = new LwPolyline();
-            poly.Vertexes.Add(new LwPolylineVertex(0, 0));
-            poly.Vertexes.Add(new LwPolylineVertex(10, 10));
-            poly.Vertexes.Add(new LwPolylineVertex(20, 0));
-            poly.Vertexes.Add(new LwPolylineVertex(30, 10));
+            Polyline2D poly = new Polyline2D();
+            poly.Vertexes.Add(new Polyline2DVertex(0, 0));
+            poly.Vertexes.Add(new Polyline2DVertex(10, 10));
+            poly.Vertexes.Add(new Polyline2DVertex(20, 0));
+            poly.Vertexes.Add(new Polyline2DVertex(30, 10));
             poly.SetConstantWidth(2);
             //poly.IsClosed = true;
             dxf.Entities.Add(poly);
 
-            dxf.Save("lwpolyline.dxf");
+            dxf.Save("polyline2D.dxf");
 
-            dxf = DxfDocument.Load("lwpolyline.dxf");
+            dxf = DxfDocument.Load("polyline2D.dxf");
         }
 
-        private static void Polyline()
+        private static void Polyline3D()
         {
             DxfDocument dxf = new DxfDocument();
             dxf.DrawingVariables.AcadVer = DxfVersion.AutoCad2010;
-            Polyline poly = new Polyline();
+            Polyline3D poly = new Polyline3D();
             poly.Vertexes.Add(new Vector3(0, 0, 0));
             poly.Vertexes.Add(new Vector3(10, 10, 0));
             poly.Vertexes.Add(new Vector3(20, 0, 0));
             poly.Vertexes.Add(new Vector3(30, 10, 0));
             dxf.Entities.Add(poly);
 
-            dxf.Save("polyline.dxf");
+            dxf.Save("polyline3D.dxf");
         }
 
         private static void Solid()
@@ -7627,12 +7703,12 @@ namespace TestDxfDocument
         {
             DxfDocument dxf = new DxfDocument();
 
-            Face3d face3d = new Face3d();
-            face3d.FirstVertex = new Vector3(0, 0, 0);
-            face3d.SecondVertex = new Vector3(1, 0, 0);
-            face3d.ThirdVertex = new Vector3(1, 1, 0);
-            face3d.FourthVertex = new Vector3(0, 1, 0);
-            dxf.Entities.Add(face3d);
+            Face3D face3D = new Face3D();
+            face3D.FirstVertex = new Vector3(0, 0, 0);
+            face3D.SecondVertex = new Vector3(1, 0, 0);
+            face3D.ThirdVertex = new Vector3(1, 1, 0);
+            face3D.FourthVertex = new Vector3(0, 1, 0);
+            dxf.Entities.Add(face3D);
 
             dxf.Save("face.dxf");
             dxf = DxfDocument.Load("face.dxf");
@@ -7699,7 +7775,7 @@ namespace TestDxfDocument
                 //    new Vector2(0,40),
                 //    new Vector2(0,50)
                 //};
-                //LwPolyline pol = new LwPolyline(vertexes);
+                //Polyline2D pol = new Polyline2D(vertexes);
                 //pol.Layer = new Layer(layerName);
                 //pol.Layer.Color.Index = 6;
                 //pols.Add(pol);
@@ -7717,7 +7793,7 @@ namespace TestDxfDocument
                 //    new Vector3(0,40,80),
                 //    new Vector3(0,50,90)
                 //};
-                //Polyline pol = new Polyline(vertexes);
+                //Polyline3D pol = new Polyline3D(vertexes);
                 //pol.Layer = new Layer(layerName);
                 //pol.Layer.Color.Index = 6;
                 //pols.Add(pol);
@@ -7884,7 +7960,7 @@ namespace TestDxfDocument
             dxf.Entities.Add(point2);
 
             //3dface
-            Face3d face3D = new Face3d(new Vector3(-5, -5, 5),
+            Face3D face3D = new Face3D(new Vector3(-5, -5, 5),
                 new Vector3(5, -5, 5),
                 new Vector3(5, 5, 5),
                 new Vector3(-5, 5, 5));
@@ -7893,46 +7969,45 @@ namespace TestDxfDocument
             dxf.Entities.Add(face3D);
 
             //polyline
-            LwPolylineVertex polyVertex;
-            List<LwPolylineVertex> polyVertexes = new List<LwPolylineVertex>();
-            polyVertex = new LwPolylineVertex(new Vector2(-50, -50));
+            Polyline2DVertex polyVertex;
+            List<Polyline2DVertex> polyVertexes = new List<Polyline2DVertex>();
+            polyVertex = new Polyline2DVertex(new Vector2(-50, -50));
             polyVertex.StartWidth = 2;
             polyVertexes.Add(polyVertex);
-            polyVertex = new LwPolylineVertex(new Vector2(50, -50));
+            polyVertex = new Polyline2DVertex(new Vector2(50, -50));
             polyVertex.StartWidth = 1;
             polyVertexes.Add(polyVertex);
-            polyVertex = new LwPolylineVertex(new Vector2(50, 50));
+            polyVertex = new Polyline2DVertex(new Vector2(50, 50));
             polyVertex.Bulge = 1;
             polyVertexes.Add(polyVertex);
-            polyVertex = new LwPolylineVertex(new Vector2(-50, 50));
+            polyVertex = new Polyline2DVertex(new Vector2(-50, 50));
             polyVertexes.Add(polyVertex);
-            LwPolyline polyline2d = new LwPolyline(polyVertexes, true);
-            polyline2d.Layer = new Layer("polyline2d");
+            Polyline2D polyline2d = new Polyline2D(polyVertexes, true);
+            polyline2d.Layer = new Layer("polyline2D");
             polyline2d.Layer.Color.Index = 5;
             polyline2d.Normal = new Vector3(1, 1, 1);
             polyline2d.Elevation = 100.0f;
             dxf.Entities.Add(polyline2d);
 
             //lightweight polyline
-            LwPolylineVertex lwVertex;
-            List<LwPolylineVertex> lwVertexes = new List<LwPolylineVertex>();
-            lwVertex = new LwPolylineVertex(new Vector2(-25, -25));
-            lwVertex.StartWidth = 2;
-            lwVertexes.Add(lwVertex);
-            lwVertex = new LwPolylineVertex(new Vector2(25, -25));
-            lwVertex.StartWidth = 1;
-            lwVertexes.Add(lwVertex);
-            lwVertex = new LwPolylineVertex(new Vector2(25, 25));
-            lwVertex.Bulge = 1;
-            lwVertexes.Add(lwVertex);
-            lwVertex = new LwPolylineVertex(new Vector2(-25, 25));
-            lwVertexes.Add(lwVertex);
-            LwPolyline lwPolyline = new LwPolyline(lwVertexes, true);
-            lwPolyline.Layer = new Layer("lwpolyline");
-            lwPolyline.Layer.Color.Index = 5;
-            lwPolyline.Normal = new Vector3(1, 1, 1);
-            lwPolyline.Elevation = 100.0f;
-            dxf.Entities.Add(lwPolyline);
+            List<Polyline2DVertex> lwVertexes = new List<Polyline2DVertex>();
+            polyVertex = new Polyline2DVertex(new Vector2(-25, -25));
+            polyVertex.StartWidth = 2;
+            lwVertexes.Add(polyVertex);
+            polyVertex = new Polyline2DVertex(new Vector2(25, -25));
+            polyVertex.StartWidth = 1;
+            lwVertexes.Add(polyVertex);
+            polyVertex = new Polyline2DVertex(new Vector2(25, 25));
+            polyVertex.Bulge = 1;
+            lwVertexes.Add(polyVertex);
+            polyVertex = new Polyline2DVertex(new Vector2(-25, 25));
+            lwVertexes.Add(polyVertex);
+            Polyline2D polyline2D = new Polyline2D(lwVertexes, true);
+            polyline2D.Layer = new Layer("polyline2D");
+            polyline2D.Layer.Color.Index = 5;
+            polyline2D.Normal = new Vector3(1, 1, 1);
+            polyline2D.Elevation = 100.0f;
+            dxf.Entities.Add(polyline2D);
 
             // polyfaceMesh
             List<Vector3> meshVertexes = new List<Vector3>
@@ -7951,7 +8026,7 @@ namespace TestDxfDocument
             };
 
             PolyfaceMesh mesh = new PolyfaceMesh(meshVertexes, faces);
-            mesh.Layer = new Layer("polyfacemesh");
+            mesh.Layer = new Layer("polyface mesh");
             mesh.Layer.Color.Index = 104;
             dxf.Entities.Add(mesh);
 
@@ -7972,10 +8047,10 @@ namespace TestDxfDocument
             vertexes.Add(vertex);
             vertex = new Vector3(-50, 50, 50);
             vertexes.Add(vertex);
-            Polyline polyline = new Polyline(vertexes, true);
-            polyline.Layer = new Layer("polyline3d");
-            polyline.Layer.Color.Index = 24;
-            dxf.Entities.Add(polyline);
+            Polyline3D polyline3D = new Polyline3D(vertexes, true);
+            polyline3D.Layer = new Layer("polyline3D");
+            polyline3D.Layer.Color.Index = 24;
+            dxf.Entities.Add(polyline3D);
 
             //block definition
             Block block = new Block("TestBlock");
@@ -8020,7 +8095,7 @@ namespace TestDxfDocument
                 new Vector3(0, 10, 30)
             };
 
-            Polyline poly = new Polyline(vertexes, true);
+            Polyline3D poly = new Polyline3D(vertexes, true);
 
             XData xdata = new XData(new ApplicationRegistry("netDxf"));
             xdata.XDataRecord.Add(new XDataRecord(XDataCode.String, "extended data with netDxf"));

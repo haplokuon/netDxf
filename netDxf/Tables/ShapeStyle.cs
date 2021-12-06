@@ -325,7 +325,7 @@ namespace netDxf.Tables
             {
                 Encoding encoding = new ASCIIEncoding();
 
-                byte[] sentinel = reader.ReadBytes(24);
+                byte[] sentinel = reader.ReadBytes(24); // the use of the last three bytes is unknown, the first 21 hold the file signature
                 StringBuilder sb = new StringBuilder(21);
                 for (int i = 0; i < 21; i++)
                 {
@@ -353,11 +353,11 @@ namespace netDxf.Tables
                 for (int i = 0; i < num; i++)
                 {
                     string n = NullTerminatedString(reader, encoding);
-                    reader.ReadBytes(numBytes[i] - (n.Length + 1)); // these bytes holds the shape geometry
                     if (name.Equals(n, StringComparison.InvariantCultureIgnoreCase))
                     {
                         return numbers[i];
                     }
+                    reader.ReadBytes(numBytes[i] - (n.Length + 1)); // these bytes holds the shape geometry
                 }
             }
 
@@ -394,7 +394,7 @@ namespace netDxf.Tables
             {
                 Encoding encoding = new ASCIIEncoding();
 
-                byte[] sentinel = reader.ReadBytes(24);
+                byte[] sentinel = reader.ReadBytes(24); // the use of the last three bytes is unknown, the first 21 hold the file signature
                 StringBuilder sb = new StringBuilder(21);
                 for (int i = 0; i < 21; i++)
                 {
@@ -429,12 +429,11 @@ namespace netDxf.Tables
                 for (int i = 0; i < num; i++)
                 {
                     string name = NullTerminatedString(reader, encoding);
-                    reader.ReadBytes(numBytes[i] - (name.Length + 1)); // these bytes holds the shape geometry
-
                     if (index == i)
                     {
                         return name;
                     }
+                    reader.ReadBytes(numBytes[i] - (name.Length + 1)); // these bytes holds the shape geometry
                 }
             }
 

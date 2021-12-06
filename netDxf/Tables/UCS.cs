@@ -24,6 +24,7 @@
 #endregion
 
 using System;
+using System.Collections.Generic;
 using netDxf.Collections;
 
 namespace netDxf.Tables
@@ -40,7 +41,6 @@ namespace netDxf.Tables
         private Vector3 xAxis;
         private Vector3 yAxis;
         private Vector3 zAxis;
-        private double elevation;
 
         #endregion
 
@@ -67,7 +67,6 @@ namespace netDxf.Tables
             this.xAxis = Vector3.UnitX;
             this.yAxis = Vector3.UnitY;
             this.zAxis = Vector3.UnitZ;
-            this.elevation = 0;
         }
 
         /// <summary>
@@ -99,7 +98,6 @@ namespace netDxf.Tables
             this.yAxis = yDirection;
             this.yAxis.Normalize();
             this.zAxis = Vector3.CrossProduct(this.xAxis, this.yAxis);
-            this.elevation = 0;
         }
 
         #endregion
@@ -140,15 +138,6 @@ namespace netDxf.Tables
         }
 
         /// <summary>
-        /// Gets or sets the user coordinate system elevation.
-        /// </summary>
-        public double Elevation
-        {
-            get { return this.elevation; }
-            set { this.elevation = value; }
-        }
-
-        /// <summary>
         /// Gets the owner of the actual user coordinate system.
         /// </summary>
         public new UCSs Owner
@@ -185,7 +174,7 @@ namespace netDxf.Tables
         /// <param name="name">User coordinate system name.</param>
         /// <param name="origin">Origin in WCS.</param>
         /// <param name="xDirection">X-axis direction in WCS.</param>
-        /// <param name="pointOnPlaneXY">Point on the XYplane.</param>
+        /// <param name="pointOnPlaneXY">Point on the XY plane.</param>
         /// <returns>A new user coordinate system.</returns>
         public static UCS FromXAxisAndPointOnXYplane(string name, Vector3 origin, Vector3 xDirection, Vector3 pointOnPlaneXY)
         {
@@ -196,6 +185,25 @@ namespace netDxf.Tables
             ucs.zAxis = Vector3.CrossProduct(xDirection, pointOnPlaneXY);
             ucs.zAxis.Normalize();
             ucs.yAxis = Vector3.CrossProduct(ucs.zAxis, ucs.xAxis);
+            return ucs;
+        }
+
+        /// <summary>
+        /// Creates a new user coordinate system from the XY plane normal (z-axis).
+        /// </summary>
+        /// <param name="name">User coordinate system name.</param>
+        /// <param name="origin">Origin in WCS.</param>
+        /// <param name="normal">XY plane normal (z-axis).</param>
+        /// <returns>A new user coordinate system.</returns>
+        /// <remarks>This method uses the ArbitraryAxis algorithm to obtain the user coordinate system x-axis and y-axis.</remarks>
+        public static UCS FromNormal(string name, Vector3 origin, Vector3 normal)
+        {
+            Matrix3 mat = MathHelper.ArbitraryAxis(normal);
+            UCS ucs = new UCS(name);
+            ucs.origin = origin;
+            ucs.xAxis = new Vector3(mat.M11, mat.M21, mat.M31);
+            ucs.yAxis = new Vector3(mat.M12, mat.M22, mat.M32);
+            ucs.zAxis = new Vector3(mat.M13, mat.M23, mat.M33);
             return ucs;
         }
 
@@ -221,6 +229,90 @@ namespace netDxf.Tables
             return ucs;
         }
 
+        /// <summary>
+        /// Gets the user coordinate system rotation matrix.
+        /// </summary>
+        /// <returns>A Matrix3.</returns>
+        public Matrix3 GetTransformation()
+        {
+            return new Matrix3(this.xAxis.X, this.yAxis.X, this.zAxis.X,
+                               this.xAxis.Y, this.yAxis.Y, this.zAxis.Y,
+                               this.xAxis.Z, this.yAxis.Z, this.zAxis.Z);
+        }
+
+        /// <summary>
+        /// Transforms a point between coordinate systems.
+        /// </summary>
+        /// <param name="point">Point to transform.</param>
+        /// <param name="from">Points coordinate system.</param>
+        /// <param name="to">Coordinate system of the transformed points.</param>
+        /// <returns>Transformed point list.</returns>
+        public Vector3 Transform(Vector3 point, CoordinateSystem from, CoordinateSystem to)
+        {
+            Matrix3 transformation = this.GetTransformation();
+            Vector3 translation = this.origin;
+
+            switch (from)
+            {
+                case CoordinateSystem.World when to == CoordinateSystem.Object:
+                {
+                    transformation = transformation.Transpose();
+                    return transformation * (point - translation);
+                }
+                case CoordinateSystem.Object when to == CoordinateSystem.World:
+                {
+                    return transformation * point + translation;
+                }
+                default:
+                    return point;
+            }
+        }
+
+        /// <summary>
+        /// Transforms a point list between coordinate systems.
+        /// </summary>
+        /// <param name="points">Points to transform.</param>
+        /// <param name="from">Points coordinate system.</param>
+        /// <param name="to">Coordinate system of the transformed points.</param>
+        /// <returns>Transformed point list.</returns>
+        public List<Vector3> Transform(IEnumerable<Vector3> points, CoordinateSystem from, CoordinateSystem to)
+        {
+            if (points == null)
+            {
+                throw new ArgumentNullException(nameof(points));
+            }
+
+            Matrix3 transformation = this.GetTransformation();
+            Vector3 translation = this.origin;
+            List<Vector3> transPoints;
+
+            switch (from)
+            {
+                case CoordinateSystem.World when to == CoordinateSystem.Object:
+                {
+                    transPoints = new List<Vector3>();
+                    transformation = transformation.Transpose();
+                    foreach (Vector3 p in points)
+                    {
+                        transPoints.Add(transformation * (p - translation));
+                    }
+
+                    return transPoints;
+                }
+                case CoordinateSystem.Object when to == CoordinateSystem.World:
+                {
+                    transPoints = new List<Vector3>();
+                    foreach (Vector3 p in points)
+                    {
+                        transPoints.Add(transformation * p + translation);
+                    }
+                    return transPoints;
+                }
+                default:
+                    return new List<Vector3>(points);
+            }
+        }
+
         #endregion
 
         #region overrides
@@ -238,7 +330,6 @@ namespace netDxf.Tables
                 xAxis = this.xAxis,
                 yAxis = this.yAxis,
                 zAxis = this.zAxis,
-                Elevation = this.elevation
             };
 
             foreach (XData data in this.XData.Values)

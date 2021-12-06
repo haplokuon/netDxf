@@ -51,16 +51,16 @@ namespace netDxf
         /// <param name="rotation">Rotation in degrees of the ellipse.</param>
         public BoundingRectangle(Vector2 center, double majorAxis, double minorAxis, double rotation)
         {
-            double rot = rotation*MathHelper.DegToRad;
-            double a = majorAxis*0.5*Math.Cos(rot);
-            double b = minorAxis*0.5*Math.Sin(rot);
-            double c = majorAxis*0.5*Math.Sin(rot);
-            double d = minorAxis*0.5*Math.Cos(rot);
+            double rot = rotation * MathHelper.DegToRad;
+            double a = majorAxis * 0.5 * Math.Cos(rot);
+            double b = minorAxis * 0.5 * Math.Sin(rot);
+            double c = majorAxis * 0.5 * Math.Sin(rot);
+            double d = minorAxis * 0.5 * Math.Cos(rot);
 
-            double width = Math.Sqrt(a*a + b*b)*2;
-            double height = Math.Sqrt(c*c + d*d)*2;
-            this.min = new Vector2(center.X - width*0.5, center.Y - height*0.5);
-            this.max = new Vector2(center.X + width*0.5, center.Y + height*0.5);
+            double width = Math.Sqrt(a * a + b * b) * 2;
+            double height = Math.Sqrt(c * c + d * d) * 2;
+            this.min = new Vector2(center.X - width * 0.5, center.Y - height * 0.5);
+            this.max = new Vector2(center.X + width * 0.5, center.Y + height * 0.5);
         }
 
         /// <summary>
@@ -82,8 +82,8 @@ namespace netDxf
         /// <param name="height">Height of the bounding rectangle.</param>
         public BoundingRectangle(Vector2 center, double width, double height)
         {
-            this.min = new Vector2(center.X - width*0.5, center.Y - height*0.5);
-            this.max = new Vector2(center.X + width*0.5, center.Y + height*0.5);
+            this.min = new Vector2(center.X - width * 0.5, center.Y - height * 0.5);
+            this.max = new Vector2(center.X + width * 0.5, center.Y + height * 0.5);
         }
 
         /// <summary>
@@ -176,7 +176,7 @@ namespace netDxf
         /// </summary>
         public Vector2 Center
         {
-            get { return (this.min + this.max)*0.5; }
+            get { return (this.min + this.max) * 0.5; }
         }
 
         /// <summary>
@@ -184,7 +184,7 @@ namespace netDxf
         /// </summary>
         public double Radius
         {
-            get { return Vector2.Distance(this.min, this.max)*0.5; }
+            get { return Vector2.Distance(this.min, this.max) * 0.5; }
         }
 
         /// <summary>
@@ -267,7 +267,7 @@ namespace netDxf
         }
 
         /// <summary>
-        /// Obtains the union of a bounding rectangles list .
+        /// Obtains the union of a bounding rectangles list.
         /// </summary>
         /// <param name="rectangles">A list of bounding rectangles.</param>
         /// <returns>The resulting bounding rectangle.</returns>

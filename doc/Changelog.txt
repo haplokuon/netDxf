@@ -1,5 +1,31 @@
 ## Change history
 
+### [2021/12/06]
+* Rename Face3d to Face3D.
+* Rename Face3dEdgeFlags to Face3DEdgeFlags.
+* Rename DxfDocument.Entities.Faces3d to DxfDocument.Entities.Faces3D.
+* Rename LwPolyline to Polyline2D.
+* Rename LwPolylineVertex to Polyline2DVertex.
+* Rename EntityType.LwPolyline to EntityType.Polyline2D.
+* Rename DxfDocument.Entities.LwPolylines to DxfDocument.Entities.Polylines2D.
+* Rename Polyline to Polyline3D.
+* Rename EntityType.Polyline to EntityType.Polyline3D.
+* Rename Polyline.ToLwPolyline to Polyline3D.ToPolyline2D.
+* Rename DxfDocument.Entities.Polylines to DxfDocument.Entities.Polylines3D.
+* Rename Spline.ToPolyline to Spline.ToPolyline3D.
+* Rename Spline.ToLwPolyline to Spline.ToPolyline2D.
+* Rename Circle.ToPolyline to Circle.ToPolyline2D.
+* Rename Arc.ToPolyline to Arc.ToPolyline2D.
+* Added the method Transform to the UCS class to transform points from world coordinates (WCS) to local/object coordinates (OCS), and vice versa.
+* Deleted the property Elevation from the UCS class, although it appears as a parameter in the DXF, it is unnecessary. It seems that it does not play any role and it is always zero.
+* Added the property CurrentUCS to the DrawingVariables, that represents the current/active UCS. It encapsulates the the DrawingVariables UcsOrg, UcsXDir, and UcsYDir.
+* Deleted the DrawingVariables UcsOrg, UcsXDir, and UcsYDir.
+* Added the property Description to the Layer class. In the DXF, this information is stored as extended data.
+* The list of control points of the Spline entity will not include duplicate points required to build closed periodic splines, they will be internally handled.
+* The creation method of all splines loaded from a DXF without fit points will be considered as constructed by control points, despite of the value stored in the DXF.
+* The SmoothType (None, Quadratic, or Cubic) can now be set for Polyline2D entity (formerly LwPolyline) and Polyline3D (formerly Polyline).
+* Updated the file "netDxf Documentation.chm".
+
 ### [2021/10/24]
 * The internal blocks that start with "*U" or "*T" can be safely renamed. They are internally created to represent dynamic blocks, arrays, and tables; although the information of those objects is lost when importing the DXF, the block that represent its graphical appearance is imported.
 * PolyfaceMesh vertexes are now a list of Vector3. The additional information that the DXF requires will be generated when the file is saved.
@@ -447,7 +473,7 @@ The MathHelper.NormalizeAngle method will check if the normalized angle is very 
 * The default RasterVariables units is now Unitless, to avoid any unwanted scaling when inserting external images into the drawing.
 * The ClippingBoundary Vertexes property will return now a ReadOnlyCollection.
 * Renamed PolylineVertex.Location property to PolylineVertex.Position.
-* Renamed LwPolylineVertex.Location property to LwPolylineVertex.Position.
+* Renamed LwPolylineVertex.Location property to Polyline2DVertex.Position.
 * Renamed SplineVertex.Location property to SplineVertex.Position.
 * Renamed Point.Location property to Point.Position.
 * Renamed the ImageClippingBoundary class to ClippingBoundary and moved to the netDXF namespace. 
@@ -508,7 +534,7 @@ The MathHelper.NormalizeAngle method will check if the normalized angle is very 
 * Added .gitignore file.
 * Corrected lots of misspelling errors in comments.
 * Renamed AciColor.DarkGrey and AciColor.LightGrey to AciColor.DarkGray and AciColor.LightGray, respectively.
-* Renamed LwPolylineVertex.BeginWidth to LwPolylineVertex.StartWidth, this is how it's called in AutoCAD.
+* Renamed LwPolylineVertex.BeginWidth to Polyline2DVertex.StartWidth, this is how it's called in AutoCAD.
 * Renamed Dimension property Value to Measurement.
 * The lightweight polyline vertex start and end width values can only be zero or greater. An exception will be thrown in case of an out of range value.
 * Added Block.Create(DXFDocument doc, string name) method to generate a block from the content of a DXFDocument (only entities in the "Model" layout will be used). This is the same as the Load method but without the need of loading an external DXF first.

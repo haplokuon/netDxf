@@ -332,7 +332,7 @@ namespace netDxf
                     trans = trans.Transpose();
                     foreach (Vector3 p in points)
                     {
-                        transPoints.Add(trans*p);
+                        transPoints.Add(trans * p);
                     }
                     return transPoints;
                 }
@@ -341,7 +341,7 @@ namespace netDxf
                     transPoints = new List<Vector3>();
                     foreach (Vector3 p in points)
                     {
-                        transPoints.Add(trans*p);
+                        transPoints.Add(trans * p);
                     }
                     return transPoints;
                 }

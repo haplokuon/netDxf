@@ -301,6 +301,5 @@ namespace netDxf.Entities
         public abstract object Clone();
 
         #endregion
-
     }
 }

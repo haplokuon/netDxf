@@ -125,9 +125,9 @@ namespace netDxf.Entities
                     throw new ArgumentNullException(nameof(entity));
                 }
 
-                if (entity.Type == EntityType.LwPolyline)
+                if (entity.Type == EntityType.Polyline2D)
                 {
-                    Entities.LwPolyline poly = (Entities.LwPolyline) entity;
+                    Entities.Polyline2D poly = (Entities.Polyline2D) entity;
                     this.IsClosed = poly.IsClosed;
                     this.Vertexes = new Vector3[poly.Vertexes.Count];
                     for (int i = 0; i < poly.Vertexes.Count; i++)
@@ -135,11 +135,11 @@ namespace netDxf.Entities
                         this.Vertexes[i] = new Vector3(poly.Vertexes[i].Position.X, poly.Vertexes[i].Position.Y, poly.Vertexes[i].Bulge);
                     }
                 }
-                else if (entity.Type == EntityType.Polyline)
+                else if (entity.Type == EntityType.Polyline3D)
                 {
                     Matrix3 trans = MathHelper.ArbitraryAxis(entity.Normal).Transpose();
 
-                    Entities.Polyline poly = (Entities.Polyline) entity;
+                    Entities.Polyline3D poly = (Entities.Polyline3D) entity;
                     this.IsClosed = poly.IsClosed;
                     this.Vertexes = new Vector3[poly.Vertexes.Count];
                     for (int i = 0; i < poly.Vertexes.Count; i++)
@@ -149,7 +149,7 @@ namespace netDxf.Entities
                     }
                 }
                 else
-                    throw new ArgumentException("The entity is not a LwPolyline or a Polyline", nameof(entity));
+                    throw new ArgumentException("The entity is not a Polyline2D or a Polyline3D", nameof(entity));
             }
 
             /// <summary>
@@ -167,12 +167,12 @@ namespace netDxf.Entities
             /// <returns>An <see cref="EntityObject">entity</see> equivalent to the actual edge.</returns>
             public override EntityObject ConvertTo()
             {
-                List<LwPolylineVertex> points = new List<LwPolylineVertex>(this.Vertexes.Length);
+                List<Polyline2DVertex> points = new List<Polyline2DVertex>(this.Vertexes.Length);
                 foreach (Vector3 point in this.Vertexes)
                 {
-                    points.Add(new LwPolylineVertex(point.X, point.Y, point.Z));
+                    points.Add(new Polyline2DVertex(point.X, point.Y, point.Z));
                 }
-                return new Entities.LwPolyline(points, this.IsClosed);
+                return new Entities.Polyline2D(points, this.IsClosed);
             }
 
             /// <summary>
@@ -816,8 +816,8 @@ namespace netDxf.Entities
                     case EntityType.Line:
                         this.edges.Add(Line.ConvertFrom(entity));
                         break;
-                    case EntityType.LwPolyline:
-                        Entities.LwPolyline lwpoly = (Entities.LwPolyline)entity;
+                    case EntityType.Polyline2D:
+                        Entities.Polyline2D lwpoly = (Entities.Polyline2D)entity;
                         if (lwpoly.IsClosed)
                         {
                             if (this.edges.Count != 0)
@@ -831,8 +831,8 @@ namespace netDxf.Entities
                         else
                             this.SetInternalInfo(lwpoly.Explode(), false); // open polylines will always be exploded, only one polyline can be present in a path
                         break;
-                    case EntityType.Polyline:
-                        Entities.Polyline poly = (Entities.Polyline) entity;
+                    case EntityType.Polyline3D:
+                        Entities.Polyline3D poly = (Entities.Polyline3D) entity;
                         if (poly.IsClosed)
                         {
                             if (this.edges.Count != 0)
@@ -850,7 +850,7 @@ namespace netDxf.Entities
                         this.edges.Add(Spline.ConvertFrom(entity));
                         break;
                     default:
-                        throw new ArgumentException(string.Format("The entity type {0} cannot be part of a hatch boundary. Only Arc, Circle, Ellipse, Line, LwPolyline, and Spline entities are allowed.", entity.Type));
+                        throw new ArgumentException(string.Format("The entity type {0} cannot be part of a hatch boundary. Only Arc, Circle, Ellipse, Line, Polyline2D, Polyline3D, and Spline entities are allowed.", entity.Type));
                 }
             }
         }

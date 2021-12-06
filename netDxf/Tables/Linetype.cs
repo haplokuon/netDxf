@@ -598,7 +598,10 @@ namespace netDxf.Tables
             double scale = 0.1;
 
             // at least two items must be present the shape name and file
-            if (data.Length < 2) return null;
+            if (data.Length < 2)
+            {
+                return null;
+            }
 
             string name = data[0].Trim('"');
             string style = data[1];
@@ -657,14 +660,17 @@ namespace netDxf.Tables
         {
             if (data.EndsWith("D", StringComparison.InvariantCultureIgnoreCase))
             {
+                // the angle is in degrees
                 return double.Parse(data.Remove(data.Length - 1, 1), NumberStyles.Float, CultureInfo.InvariantCulture);
             }
             if (data.EndsWith("F", StringComparison.InvariantCultureIgnoreCase))
             {
+                // the angle is in radians
                 return double.Parse(data.Remove(data.Length - 1, 1), NumberStyles.Float, CultureInfo.InvariantCulture) * MathHelper.RadToDeg;
             }
             if (data.EndsWith("G", StringComparison.InvariantCultureIgnoreCase))
             {
+                // the angle is in gradians
                 return double.Parse(data.Remove(data.Length - 1, 1), NumberStyles.Float, CultureInfo.InvariantCulture) * MathHelper.GradToDeg;
             }
                     

@@ -622,7 +622,7 @@ namespace netDxf.Entities
 
                 if (this.style.Flags.HasFlag(MLineStyleFlags.StartInnerArcsCap))
                 {
-                    int j = (int) (this.style.Elements.Count / 2.0); // Math.Floor
+                    int j = (int) (this.style.Elements.Count * 0.5); // Math.Floor
 
                     for (int i = 1; i < j; i++)
                     {
@@ -673,7 +673,7 @@ namespace netDxf.Entities
 
                 if (this.style.Flags.HasFlag(MLineStyleFlags.EndInnerArcsCap))
                 {
-                    int j = (int) (this.style.Elements.Count / 2.0); // Math.Floor
+                    int j = (int) (this.style.Elements.Count * 0.5); // Math.Floor
 
                     for (int i = 1; i < j; i++)
                     {

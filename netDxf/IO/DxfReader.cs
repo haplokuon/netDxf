@@ -422,6 +422,10 @@ namespace netDxf.IO
         {
             Debug.Assert(this.chunk.ReadString() == DxfObjectCode.HeaderSection);
 
+            Vector3 ucsOrg = Vector3.Zero;
+            Vector3 ucsXDir = Vector3.UnitX;
+            Vector3 ucsYDir = Vector3.UnitY;
+
             this.chunk.Next();
             while (this.chunk.ReadString() != DxfObjectCode.EndSection)
             {
@@ -653,13 +657,13 @@ namespace netDxf.IO
                         this.chunk.Next();
                         break;
                     case HeaderVariableCode.UcsOrg:
-                        this.doc.DrawingVariables.UcsOrg = this.ReadHeaderVector();
+                        ucsOrg = this.ReadHeaderVector();
                         break;
                     case HeaderVariableCode.UcsXDir:
-                        this.doc.DrawingVariables.UcsXDir = this.ReadHeaderVector();
+                        ucsXDir = this.ReadHeaderVector();
                         break;
                     case HeaderVariableCode.UcsYDir:
-                        this.doc.DrawingVariables.UcsYDir = this.ReadHeaderVector();
+                        ucsYDir = this.ReadHeaderVector();
                         break;
                     default:
 
@@ -719,11 +723,12 @@ namespace netDxf.IO
                 }
             }
 
-            if (!Vector3.ArePerpendicular(this.doc.DrawingVariables.UcsXDir, this.doc.DrawingVariables.UcsYDir))
+            if (!Vector3.ArePerpendicular(ucsXDir, ucsYDir))
             {
-                this.doc.DrawingVariables.UcsXDir = Vector3.UnitX;
-                this.doc.DrawingVariables.UcsYDir = Vector3.UnitY;
+                ucsXDir = Vector3.UnitX;
+                ucsYDir = Vector3.UnitY;
             }
+            this.doc.DrawingVariables.CurrentUCS = new UCS("Unnamed", ucsOrg, ucsXDir, ucsYDir);
         }
 
         private Vector3 ReadHeaderVector()
@@ -887,14 +892,42 @@ namespace netDxf.IO
             //post process table entries XData
             foreach (KeyValuePair<DxfObject, List<XData>> pair in this.tableEntryXData)
             {
-                ApplicationRegistry appReg = pair.Key as ApplicationRegistry;
-                if (appReg == null)
+                if (pair.Key is ApplicationRegistry appReg)
                 {
-                    pair.Key.XData.AddRange(pair.Value);
+                    this.doc.ApplicationRegistries[appReg.Name].XData.AddRange(pair.Value);
                 }
                 else
                 {
-                    this.doc.ApplicationRegistries[appReg.Name].XData.AddRange(pair.Value);
+                    pair.Key.XData.AddRange(pair.Value);
+                }
+
+                if (pair.Key is Layer layer)
+                {
+                    // read the layer description from the extended data
+                    if (layer.XData.TryGetValue("AcAecLayerStandard", out XData xDataDescription))
+                    {
+                        // there should be two entries the second holds the description value, the last 1000 code will be used
+                        foreach (XDataRecord record in xDataDescription.XDataRecord)
+                        {
+                            if (record.Code == XDataCode.String)
+                            {
+                                layer.Description = (string) record.Value;
+                            }
+                        }
+                    }
+
+                    // read the layer transparency from the extended data
+                    if (layer.XData.TryGetValue("AcCmTransparency", out XData xDataTransparency))
+                    {
+                        // there should be only one entry with the transparency value, the last 1071 code will be used
+                        foreach (XDataRecord record in xDataTransparency.XDataRecord)
+                        {
+                            if (record.Code == XDataCode.Int32)
+                            {
+                                layer.Transparency = Transparency.FromAlphaValue((int) record.Value);
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -1190,40 +1223,67 @@ namespace netDxf.IO
             {
                 case DxfObjectCode.ApplicationIdTable:
                     this.doc.ApplicationRegistries = new ApplicationRegistries(this.doc, handle);
-                    if (xData.Count > 0) this.tableXData.Add(this.doc.ApplicationRegistries, xData);
+                    if (xData.Count > 0)
+                    {
+                        this.tableXData.Add(this.doc.ApplicationRegistries, xData);
+                    }
                     break;
                 case DxfObjectCode.BlockRecordTable:
                     this.doc.Blocks = new BlockRecords(this.doc, handle);
-                    if (xData.Count > 0) this.tableXData.Add(this.doc.Blocks, xData);
+                    if (xData.Count > 0)
+                    {
+                        this.tableXData.Add(this.doc.Blocks, xData);
+                    }
                     break;
                 case DxfObjectCode.DimensionStyleTable:
                     this.doc.DimensionStyles = new DimensionStyles(this.doc, handle);
-                    if (xData.Count > 0) this.tableXData.Add(this.doc.DimensionStyles, xData);
+                    if (xData.Count > 0)
+                    {
+                        this.tableXData.Add(this.doc.DimensionStyles, xData);
+                    }
                     break;
                 case DxfObjectCode.LayerTable:
                     this.doc.Layers = new Layers(this.doc, handle);
-                    if (xData.Count > 0) this.tableXData.Add(this.doc.Layers, xData);
+                    if (xData.Count > 0)
+                    {
+                        this.tableXData.Add(this.doc.Layers, xData);
+                    }
                     break;
                 case DxfObjectCode.LinetypeTable:
                     this.doc.Linetypes = new Linetypes(this.doc, handle);
-                    if (xData.Count > 0) this.tableXData.Add(this.doc.Linetypes, xData);
+                    if (xData.Count > 0)
+                    {
+                        this.tableXData.Add(this.doc.Linetypes, xData);
+                    }
                     break;
                 case DxfObjectCode.TextStyleTable:
                     this.doc.TextStyles = new TextStyles(this.doc, handle);
-                    if (xData.Count > 0) this.tableXData.Add(this.doc.TextStyles, xData);
+                    if (xData.Count > 0)
+                    {
+                        this.tableXData.Add(this.doc.TextStyles, xData);
+                    }
                     this.doc.ShapeStyles = new ShapeStyles(this.doc);
                     break;
                 case DxfObjectCode.UcsTable:
                     this.doc.UCSs = new UCSs(this.doc, handle);
-                    if (xData.Count > 0) this.tableXData.Add(this.doc.UCSs, xData);
+                    if (xData.Count > 0)
+                    {
+                        this.tableXData.Add(this.doc.UCSs, xData);
+                    }
                     break;
                 case DxfObjectCode.ViewTable:
                     this.doc.Views = new Views(this.doc, handle);
-                    if (xData.Count > 0) this.tableXData.Add(this.doc.Views, xData);
+                    if (xData.Count > 0)
+                    {
+                        this.tableXData.Add(this.doc.Views, xData);
+                    }
                     break;
                 case DxfObjectCode.VportTable:
                     this.doc.VPorts = new VPorts(this.doc, handle);
-                    if (xData.Count > 0) this.tableXData.Add(this.doc.VPorts, xData);
+                    if (xData.Count > 0)
+                    {
+                        this.tableXData.Add(this.doc.VPorts, xData);
+                    }
                     break;
                 default:
                     throw new Exception(string.Format("Unknown Table name {0} at position {1}", tableName, this.chunk.CurrentPosition));
@@ -2418,19 +2478,6 @@ namespace netDxf.IO
                 this.tableEntryXData.Add(layer, xData);
             }
 
-            // read the layer transparency from the extended data
-            if (layer.XData.TryGetValue("AcCmTransparency", out XData xDataTransparency))
-            {
-                // there should be only one entry with the transparency value, the first 1071 code will be used
-                foreach (XDataRecord record in xDataTransparency.XDataRecord)
-                {
-                    if (record.Code == XDataCode.Int32)
-                    {
-                        layer.Transparency = Transparency.FromAlphaValue((int) record.Value);
-                    }
-                }
-            }
-            
             return layer;
         }
 
@@ -2836,7 +2883,6 @@ namespace netDxf.IO
             Vector3 origin = Vector3.Zero;
             Vector3 xDir = Vector3.UnitX;
             Vector3 yDir = Vector3.UnitY;
-            double elevation = 0.0;
             List<XData> xData = new List<XData>();
 
             this.chunk.Next();
@@ -2886,7 +2932,7 @@ namespace netDxf.IO
                         this.chunk.Next();
                         break;
                     case 146:
-                        elevation = this.chunk.ReadDouble();
+                        //elevation = this.chunk.ReadDouble();
                         this.chunk.Next();
                         break;
                     case 1001:
@@ -2907,7 +2953,7 @@ namespace netDxf.IO
                 return null;
             }
 
-            UCS ucs = new UCS(name, origin, xDir, yDir, false) {Elevation = elevation};
+            UCS ucs = new UCS(name, origin, xDir, yDir, false);
             if (xData.Count > 0)
             {
                 this.tableEntryXData.Add(ucs, xData);
@@ -7071,13 +7117,13 @@ namespace netDxf.IO
             return entity;
         }
 
-        private Face3d ReadFace3d()
+        private Face3D ReadFace3d()
         {
             Vector3 v0 = Vector3.Zero;
             Vector3 v1 = Vector3.Zero;
             Vector3 v2 = Vector3.Zero;
             Vector3 v3 = Vector3.Zero;
-            Face3dEdgeFlags flags = Face3dEdgeFlags.None;
+            Face3DEdgeFlags flags = Face3DEdgeFlags.None;
             List<XData> xData = new List<XData>();
 
             this.chunk.Next();
@@ -7134,7 +7180,7 @@ namespace netDxf.IO
                         this.chunk.Next();
                         break;
                     case 70:
-                        flags = (Face3dEdgeFlags) this.chunk.ReadShort();
+                        flags = (Face3DEdgeFlags) this.chunk.ReadShort();
                         this.chunk.Next();
                         break;
                     case 1001:
@@ -7149,7 +7195,7 @@ namespace netDxf.IO
                 }
             }
 
-            Face3d entity = new Face3d
+            Face3D entity = new Face3D
             {
                 FirstVertex = v0,
                 SecondVertex = v1,
@@ -7497,7 +7543,7 @@ namespace netDxf.IO
 
         private Spline ReadSpline()
         {
-            SplineTypeFlags flags = SplineTypeFlags.None;
+            SplineTypeFlags flags = SplineTypeFlags.Open;
             Vector3 normal = Vector3.UnitZ;
             short degree = 3;
             int ctrlPointIndex = -1;
@@ -7684,31 +7730,39 @@ namespace netDxf.IO
                 }
             }
 
-            Spline entity;
-            SplineCreationMethod method = flags.HasFlag(SplineTypeFlags.FitPointCreationMethod) ? SplineCreationMethod.FitPoints : SplineCreationMethod.ControlPoints;
-            if (method == SplineCreationMethod.FitPoints && ctrlPoints.Count == 0)
+            SplineCreationMethod method;
+            if (fitPoints.Count == 0)
             {
-                entity = new Spline(fitPoints)
-                {
-                    KnotTolerance = knotTolerance,
-                    CtrlPointTolerance = ctrlPointTolerance,
-                    FitTolerance = fitTolerance,
-                    StartTangent = startTangent,
-                    EndTangent = endTangent
-                };
+                method = SplineCreationMethod.ControlPoints;
             }
             else
             {
-                bool isPeriodic = flags.HasFlag(SplineTypeFlags.ClosedPeriodicSpline) || flags.HasFlag(SplineTypeFlags.Periodic);
-                entity = new Spline(ctrlPoints, knots, degree, fitPoints, method, isPeriodic)
-                {
-                    KnotTolerance = knotTolerance,
-                    CtrlPointTolerance = ctrlPointTolerance,
-                    FitTolerance = fitTolerance,
-                    StartTangent = startTangent,
-                    EndTangent = endTangent
-                };
+                method = flags.HasFlag(SplineTypeFlags.FitPointCreationMethod) ? SplineCreationMethod.FitPoints : SplineCreationMethod.ControlPoints;
             }
+
+            bool isPeriodic;
+            if (ctrlPoints[0].Position.Equals(ctrlPoints[ctrlPoints.Count - 1].Position))
+            {
+                isPeriodic = false;
+            }
+            else
+            {
+                isPeriodic = flags.HasFlag(SplineTypeFlags.ClosedPeriodicSpline);
+                if (isPeriodic)
+                {
+                    ctrlPoints.RemoveRange(0, degree);
+                }
+            }
+
+            Spline entity = new Spline(ctrlPoints, knots, degree, fitPoints, method, isPeriodic)
+            {
+                KnotTolerance = knotTolerance,
+                CtrlPointTolerance = ctrlPointTolerance,
+                FitTolerance = fitTolerance,
+                StartTangent = startTangent,
+                EndTangent = endTangent
+            };
+
 
             if (flags.HasFlag(SplineTypeFlags.FitChord))
             {
@@ -7837,7 +7891,7 @@ namespace netDxf.IO
                             this.chunk.Next();
                             break;
                         case 8:
-                            // the EndSquence layer and the Insert layer are the same
+                            // the EndSequence layer and the Insert layer are the same
                             this.chunk.Next();
                             break;
                         default:
@@ -8239,14 +8293,14 @@ namespace netDxf.IO
             return segments;
         }
 
-        private LwPolyline ReadLwPolyline()
+        private Polyline2D ReadLwPolyline()
         {
             double elevation = 0.0;
             double thickness = 0.0;
             PolylineTypeFlags flags = PolylineTypeFlags.OpenPolyline;
             double constantWidth = -1.0;
-            List<LwPolylineVertex> polVertexes = new List<LwPolylineVertex>();
-            LwPolylineVertex v = new LwPolylineVertex();
+            List<Polyline2DVertex> polVertexes = new List<Polyline2DVertex>();
+            Polyline2DVertex v = new Polyline2DVertex();
             double vX = 0.0;
             Vector3 normal = Vector3.UnitZ;
 
@@ -8285,7 +8339,7 @@ namespace netDxf.IO
                         break;
                     case 20:
                         double vY = this.chunk.ReadDouble();
-                        v = new LwPolylineVertex(vX, vY);
+                        v = new Polyline2DVertex(vX, vY);
                         polVertexes.Add(v);
                         this.chunk.Next();
                         break;
@@ -8335,7 +8389,7 @@ namespace netDxf.IO
                 }
             }
 
-            LwPolyline entity = new LwPolyline(polVertexes)
+            Polyline2D entity = new Polyline2D(polVertexes)
             {
                 Elevation = elevation,
                 Thickness = thickness,
@@ -8356,11 +8410,11 @@ namespace netDxf.IO
         private EntityObject ReadPolyline()
         {
             // the entity Polyline in DXF can actually hold three kinds of entities
-            // 3d polyline is the generic polyline
+            // 3D polyline is the generic polyline
             // Polyface mesh
-            // Polylines 2d is the old way of writing polylines the AutoCAD2000 and newer always use LwPolylines to define a 2d polyline
+            // 2D polylines is the old way of writing polylines the AutoCAD2000 and newer use LwPolylines to define a 2D polyline
             // this way of reading 2d polylines is here for compatibility reasons with older DXF versions.
-            // Also, SplineFit 2d polylines are saved as a polyline
+            // SplineFit and CurveFit 2D polylines are always saved as a polyline
             PolylineTypeFlags flags = PolylineTypeFlags.OpenPolyline;
             PolylineSmoothType smoothType = PolylineSmoothType.NoSmooth;
             double elevation = 0.0;
@@ -8436,14 +8490,13 @@ namespace netDxf.IO
             }
 
             // read the end sequence object until a new element is found
+            // this information is not needed
             this.chunk.Next();
-            string endSequenceHandle = null;
             while (this.chunk.Code != 0)
             {
                 switch (this.chunk.Code)
                 {
                     case 5:
-                        endSequenceHandle = this.chunk.ReadHex();
                         this.chunk.Next();
                         break;
                     case 8:
@@ -8459,149 +8512,148 @@ namespace netDxf.IO
             EntityObject pol;
             bool isClosed = flags.HasFlag(PolylineTypeFlags.ClosedPolylineOrClosedPolygonMeshInM);
 
-            //to avoid possible errors between the vertex type and the polyline type
             //the polyline type will decide which information to use from the read vertex
             if (flags.HasFlag(PolylineTypeFlags.SplineFit))
             {
-                List<Vector3> points = new List<Vector3>();
-                foreach (Vertex v in vertexes)
+                if (flags.HasFlag(PolylineTypeFlags.Polyline3D))
                 {
-                    // the vertex list will only store the vertexes of the original polyline
-                    if (v.Flags.HasFlag(VertexTypeFlags.SplineFrameControlPoint))
+                    // Smoothed Polyline3D, the vertexes are expressed in world coordinates
+                    List<Vector3> polyline3dPoints = new List<Vector3>();
+                    foreach (Vertex v in vertexes)
                     {
-                        points.Add(v.Position);
+                        // the vertex list will only store the vertexes of the original polyline
+                        if (v.Flags.HasFlag(VertexTypeFlags.SplineFrameControlPoint))
+                        {
+                            polyline3dPoints.Add(v.Position);
+                        }
                     }
+                    pol = new Polyline3D(polyline3dPoints, isClosed)
+                    {
+                        SmoothType = smoothType,
+                        Normal = normal,
+                        Flags = flags
+                    };
                 }
-
-                // the vertexes of SplineFit 2d polylines are expressed in local coordinates
-                if (!flags.HasFlag(PolylineTypeFlags.Polyline3D))
+                else
                 {
-                    points = MathHelper.Transform(points, normal, CoordinateSystem.Object, CoordinateSystem.World);
+                    // Smoothed Polyline2D, the vertexes are expressed in local coordinates
+                    List<Polyline2DVertex> polyline2dPoints = new List<Polyline2DVertex>();
+                    foreach (Vertex v in vertexes)
+                    {
+                        // the vertex list will only store the vertexes of the original polyline
+                        if (v.Flags.HasFlag(VertexTypeFlags.SplineFrameControlPoint))
+                        {
+                            Polyline2DVertex point = new Polyline2DVertex
+                            {
+                                Position = new Vector2(v.Position.X, v.Position.Y),
+                                StartWidth = v.StartWidth,
+                                EndWidth = v.EndWidth,
+                            };
+                            polyline2dPoints.Add(point);
+                        }
+                    }
+                    pol = new Polyline2D(polyline2dPoints, isClosed)
+                    {
+                        Elevation = elevation,
+                        SmoothType = smoothType,
+                        Normal = normal,
+                        Flags = flags
+                    };
                 }
-
-                pol = new Polyline(points, isClosed)
-                {
-                    SmoothType = smoothType,
-                    Flags = flags,
-                    Normal = normal
-                };
-                ((Polyline) pol).EndSequence.Handle = endSequenceHandle;
-
-
-                // TO IMPORT SPLINEFIT POLYLINES INTO SPLINES
-                //List<SplineVertex> ctrlPoint = new List<SplineVertex>();
-                //foreach (Vertex v in vertexes)
-                //{
-                //    // the polyline vertex list will only store the vertexes of the original 
-                //    if (v.Flags.HasFlag(VertexTypeFlags.SplineFrameControlPoint))
-                //    {
-                //        SplineVertex vertex = new SplineVertex(v.Position);
-                //        ctrlPoint.Add(vertex);
-                //    }
-                //}
-
-                //short degree = 3;
-                //switch (smoothType)
-                //{
-                //    case PolylineSmoothType.Cubic:
-                //        degree = 3;
-                //        break;
-                //    case PolylineSmoothType.Quadratic:
-                //        degree = 2;
-                //        break;
-                //}
-                //pol = new Spline(ctrlPoint, degree, isClosed)
-                //{
-                //    Normal = normal
-                //};
             }
             else if (flags.HasFlag(PolylineTypeFlags.CurveFit))
             {
-                // only applicable to 2d polylines, the vertexes are expressed in local coordinates
-                List<LwPolylineVertex> polylineVertexes = new List<LwPolylineVertex>();
+                // only applicable to Polyline2D, the vertexes are expressed in local coordinates
+                List<Polyline2DVertex> polylineVertexes = new List<Polyline2DVertex>();
                 foreach (Vertex v in vertexes)
                 {
-                    LwPolylineVertex vertex = new LwPolylineVertex
+                    Polyline2DVertex vertex = new Polyline2DVertex
                     {
                         Position = new Vector2(v.Position.X, v.Position.Y),
-                        StartWidth = v.StartWidth,
                         Bulge = v.Bulge,
-                        EndWidth = v.EndWidth,
+                        StartWidth = v.StartWidth,
+                        EndWidth = v.EndWidth
                     };
                     polylineVertexes.Add(vertex);
                 }
 
-                pol = new LwPolyline(polylineVertexes, isClosed)
+                pol = new Polyline2D(polylineVertexes, isClosed)
                 {
                     Thickness = thickness,
                     Elevation = elevation,
                     Normal = normal,
+                    Flags = flags
                 };
             }
             else if (flags.HasFlag(PolylineTypeFlags.Polyline3D))
             {
+                // Polyline3D, the vertexes are expressed in world coordinates
                 List<Vector3> polyline3dVertexes = new List<Vector3>();
                 foreach (Vertex v in vertexes)
                 {
                     // the polyline vertex list will only store the vertexes of the original 
-                    if (v.Flags.HasFlag(VertexTypeFlags.Polyline3dVertex))
+                    if (v.Flags.HasFlag(VertexTypeFlags.Polyline3DVertex))
                     {
                         polyline3dVertexes.Add(v.Position);
                     }
                 }
 
-                pol = new Polyline(polyline3dVertexes, isClosed)
+                pol = new Polyline3D(polyline3dVertexes, isClosed)
                 {
                     SmoothType = smoothType,
                     Flags = flags,
                     Normal = normal
                 };
-                ((Polyline) pol).EndSequence.Handle = endSequenceHandle;
             }
             else if (flags.HasFlag(PolylineTypeFlags.PolyfaceMesh))
             {
+                // PolyfaceMesh, the vertexes are expressed in world coordinates
                 //the vertex list created contains vertex and face information
                 List<Vector3> polyfaceVertexes = new List<Vector3>();
                 List<PolyfaceMeshFace> polyfaceFaces = new List<PolyfaceMeshFace>();
                 foreach (Vertex v in vertexes)
                 {
-                    if (v.Flags.HasFlag(VertexTypeFlags.PolyfaceMeshVertex | VertexTypeFlags.Polygon3dMesh))
+                    if (v.Flags.HasFlag(VertexTypeFlags.PolyfaceMeshVertex | VertexTypeFlags.Polygon3DMesh))
                     {
                         polyfaceVertexes.Add(v.Position);
                     }
                     else if (v.Flags.HasFlag(VertexTypeFlags.PolyfaceMeshVertex))
                     {
-                        polyfaceFaces.Add(new PolyfaceMeshFace(v.VertexIndexes) {Layer = v.Layer, Color = v.Color});
+                        polyfaceFaces.Add(new PolyfaceMeshFace(v.VertexIndexes)
+                        {
+                            Layer = v.Layer,
+                            Color = v.Color
+                        });
                     }
                 }
                 pol = new PolyfaceMesh(polyfaceVertexes, polyfaceFaces)
                 {
                     Normal = normal
                 };
-                ((PolyfaceMesh) pol).EndSequence.Handle = endSequenceHandle;
             }
             else
             {
-                List<LwPolylineVertex> polylineVertexes = new List<LwPolylineVertex>();
+                // Polyline2D, the vertexes are expressed in local coordinates
+                List<Polyline2DVertex> polylineVertexes = new List<Polyline2DVertex>();
                 foreach (Vertex v in vertexes)
                 {
-                    LwPolylineVertex vertex = new LwPolylineVertex
+                    Polyline2DVertex vertex = new Polyline2DVertex
                     {
                         Position = new Vector2(v.Position.X, v.Position.Y),
-                        StartWidth = v.StartWidth,
                         Bulge = v.Bulge,
+                        StartWidth = v.StartWidth,
                         EndWidth = v.EndWidth,
                     };
 
                     polylineVertexes.Add(vertex);
                 }
 
-                pol = new LwPolyline(polylineVertexes, isClosed)
+                pol = new Polyline2D(polylineVertexes, isClosed)
                 {
-                    //Flags = flags,
                     Thickness = thickness,
                     Elevation = elevation,
                     Normal = normal,
+                    Flags = flags
                 };
             }
 
@@ -8621,7 +8673,7 @@ namespace netDxf.IO
             double endWidth = 0.0;
             double bulge = 0.0;
             List<short> vertexIndexes = new List<short>();
-            VertexTypeFlags flags = VertexTypeFlags.PolylineVertex;
+            VertexTypeFlags flags = VertexTypeFlags.Polyline2DVertex;
 
             this.chunk.Next();
 

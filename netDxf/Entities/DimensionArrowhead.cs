@@ -68,12 +68,12 @@ namespace netDxf.Entities
             {
                 Block arrowhead = new Block("_DOT");
 
-                List<LwPolylineVertex> vertexes = new List<LwPolylineVertex>
+                List<Polyline2DVertex> vertexes = new List<Polyline2DVertex>
                 {
-                    new LwPolylineVertex(-0.25, 0.0, 1.0),
-                    new LwPolylineVertex(0.25, 0.0, 1.0)
+                    new Polyline2DVertex(-0.25, 0.0, 1.0),
+                    new Polyline2DVertex(0.25, 0.0, 1.0)
                 };
-                LwPolyline pol = new LwPolyline(vertexes, true)
+                Polyline2D pol = new Polyline2D(vertexes, true)
                 {
                     Layer = Layer.Default,
                     Linetype = Linetype.ByBlock,
@@ -104,12 +104,12 @@ namespace netDxf.Entities
             {
                 Block arrowhead = new Block("_DOTSMALL");
 
-                List<LwPolylineVertex> vertexes = new List<LwPolylineVertex>
+                List<Polyline2DVertex> vertexes = new List<Polyline2DVertex>
                 {
-                    new LwPolylineVertex(-0.0625, 0.0, 1.0),
-                    new LwPolylineVertex(0.0625, 0.0, 1.0)
+                    new Polyline2DVertex(-0.0625, 0.0, 1.0),
+                    new Polyline2DVertex(0.0625, 0.0, 1.0)
                 };
-                LwPolyline pol = new LwPolyline(vertexes, true)
+                Polyline2D pol = new Polyline2D(vertexes, true)
                 {
                     Layer = Layer.Default,
                     Linetype = Linetype.ByBlock,
@@ -678,12 +678,12 @@ namespace netDxf.Entities
             {
                 Block arrowhead = new Block("_ARCHTICK");
 
-                List<LwPolylineVertex> vertexes = new List<LwPolylineVertex>
+                List<Polyline2DVertex> vertexes = new List<Polyline2DVertex>
                 {
-                    new LwPolylineVertex(-0.5, -0.5),
-                    new LwPolylineVertex(0.5, 0.5)
+                    new Polyline2DVertex(-0.5, -0.5),
+                    new Polyline2DVertex(0.5, 0.5)
                 };
-                LwPolyline pol = new LwPolyline(vertexes, false)
+                Polyline2D pol = new Polyline2D(vertexes, false)
                 {
                     Layer = Layer.Default,
                     Linetype = Linetype.ByBlock,

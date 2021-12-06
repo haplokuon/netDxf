@@ -76,11 +76,6 @@ namespace netDxf.Entities
         Leader,
 
         /// <summary>
-        /// LwPolyline entity, aka lightweight polyline.
-        /// </summary>
-        LwPolyline,
-
-        /// <summary>
         /// Line entity.
         /// </summary>
         Line,
@@ -111,9 +106,14 @@ namespace netDxf.Entities
         PolyfaceMesh,
 
         /// <summary>
-        /// 3d polyline entity.
+        /// Polyline2D entity.
         /// </summary>
-        Polyline,
+        Polyline2D,
+
+        /// <summary>
+        /// Polyline3D entity.
+        /// </summary>
+        Polyline3D,
 
         /// <summary>
         /// Ray entity.

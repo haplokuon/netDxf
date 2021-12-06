@@ -113,7 +113,10 @@ namespace netDxf.Entities
             this.position = Vector3.Zero;
             this.scale = new Vector3(1.0);
             this.rotation = 0.0;
-            this.endSequence = new EndSequence(this);
+            this.endSequence = new EndSequence
+            {
+                Owner = this
+            };
         }
 
         /// <summary>
@@ -147,7 +150,10 @@ namespace netDxf.Entities
             this.position = position;
             this.scale = new Vector3(1.0);
             this.rotation = 0.0;
-            this.endSequence = new EndSequence(this);
+            this.endSequence = new EndSequence
+            {
+                Owner = this
+            };
 
             List<Attribute> atts = new List<Attribute>(block.AttributeDefinitions.Count);
             foreach (AttributeDefinition attdef in block.AttributeDefinitions.Values)
@@ -317,7 +323,7 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Calculates the insertion rotation matrix.
+        /// Gets the insert transformation matrix.
         /// </summary>
         /// <returns>The insert transformation matrix.</returns>
         /// <remarks>
@@ -485,9 +491,9 @@ namespace netDxf.Entities
                             entities.Add(ellipse);
                             break;
                         }
-                        case EntityType.LwPolyline:
+                        case EntityType.Polyline2D:
                         {
-                            List<EntityObject> newEntities = ((LwPolyline) entity).Explode();
+                            List<EntityObject> newEntities = ((Polyline2D) entity).Explode();
                             foreach (EntityObject newEntity in newEntities)
                             {
                                 if (newEntity.Type == EntityType.Arc)

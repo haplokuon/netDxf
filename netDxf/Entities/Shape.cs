@@ -72,7 +72,7 @@ namespace netDxf.Entities
         /// Initializes a new instance of the <c>Shape</c> class.
         /// </summary>
         /// <param name="name">Name of the shape which geometry is defined in the shape <see cref="ShapeStyle">style</see>.</param>
-        /// <param name="style">Shape <see cref="TextStyle">style</see>.</param>
+        /// <param name="style">Shape <see cref="ShapeStyle">style</see>.</param>
         public Shape(string name, ShapeStyle style) 
             : this(name, style, Vector3.Zero, 1.0, 0.0)
         {
@@ -82,7 +82,7 @@ namespace netDxf.Entities
         /// Initializes a new instance of the <c>Shape</c> class.
         /// </summary>
         /// <param name="name">Name of the shape which geometry is defined in the shape <see cref="ShapeStyle">style</see>.</param>
-        /// <param name="style">Shape <see cref="TextStyle">style</see>.</param>
+        /// <param name="style">Shape <see cref="ShapeStyle">style</see>.</param>
         /// <param name="position">Shape insertion point.</param>
         /// <param name="size">Shape size.</param>
         /// <param name="rotation">Shape rotation.</param>
@@ -272,7 +272,10 @@ namespace netDxf.Entities
             {
                 newRotation += 180;
                 newObliqueAngle = 270 - (newRotation - newObliqueAngle);
-                if (newObliqueAngle >= 360) newObliqueAngle -= 360;
+                if (newObliqueAngle >= 360)
+                {
+                    newObliqueAngle -= 360;
+                }
                 mirrorShape = true;
             }
             else
@@ -296,7 +299,7 @@ namespace netDxf.Entities
                 newObliqueAngle = 85;
             }
 
-            // the height must be greater than zero, the cos is always positive between -85 and 85
+            // the height must be greater than zero, the cosine is always positive between -85 and 85
             double newHeight = newVvector.Modulus() * Math.Cos(newObliqueAngle * MathHelper.DegToRad);
             newHeight = MathHelper.IsZero(newHeight) ? MathHelper.Epsilon : newHeight;
 

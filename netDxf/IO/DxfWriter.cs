@@ -59,10 +59,8 @@ namespace netDxf.IO
         // here we will store strings already encoded <string: original, string: encoded>
         private Dictionary<string, string> encodedStrings;
 
-        // preprocess polylines
-        private Dictionary<string, List<Vertex>> vertexesPolylines;
-        // preprocess polyface mesh
-        private Dictionary<string, List<Vertex>> vertexesPolyfaceMesh;
+        // preprocess smoothed polyline2D, polyline3D, and polyface meshes
+        private Dictionary<string, Polyline> polylines;
 
         #endregion
 
@@ -82,92 +80,25 @@ namespace netDxf.IO
                 throw new DxfVersionNotSupportedException(string.Format("DXF file version not supported : {0}.", version), version);
             }
 
-            if (!Vector3.ArePerpendicular(this.doc.DrawingVariables.UcsXDir, this.doc.DrawingVariables.UcsYDir))
-            {
-                throw new ArithmeticException("The drawing variables vectors UcsXDir and UcsYDir must be perpendicular.");
-            }
-
             this.encodedStrings = new Dictionary<string, string>();
-            this.vertexesPolylines = new Dictionary<string, List<Vertex>>();
-            this.vertexesPolyfaceMesh = new Dictionary<string, List<Vertex>>();
+            this.polylines = new Dictionary<string, Polyline>();
 
             // create the default PaperSpace layout in case it does not exist. The ModelSpace layout always exists
             if (this.doc.Layouts.Count == 1)
             {
                 this.doc.Layouts.Add(new Layout("Layout1"));
             }
-
-            // generate polyline3d vertexes
-            foreach (Polyline polyline in this.doc.Entities.Polylines)
-            {
-                List<Vertex> vertexes = new List<Vertex>();
-
-                // first create the polyline vertexes
-                foreach (Vector3 vertex in polyline.Vertexes)
-                {
-                    Vertex v = new Vertex(vertex)
-                    {
-                        Flags = polyline.SmoothType != PolylineSmoothType.NoSmooth ? VertexTypeFlags.SplineFrameControlPoint | VertexTypeFlags.Polyline3dVertex : VertexTypeFlags.Polyline3dVertex
-                    };
-                    this.doc.NumHandles = v.AssignHandle(this.doc.NumHandles);
-                    vertexes.Add(v);
-                }
-
-                // if the polyline is smooth then create the additional vertexes
-                if (polyline.SmoothType != PolylineSmoothType.NoSmooth)
-                {
-                    short splineSegs = this.doc.DrawingVariables.SplineSegs;
-                    int precision = polyline.IsClosed ? splineSegs * polyline.Vertexes.Count : splineSegs * (polyline.Vertexes.Count - 1);
-                    List<Vector3> points = polyline.PolygonalVertexes(precision);
-                    foreach (Vector3 p in points)
-                    {
-                        Vertex v = new Vertex(p)
-                        {
-                            Flags = VertexTypeFlags.SplineVertexFromSplineFitting | VertexTypeFlags.Polyline3dVertex
-                        };
-                        this.doc.NumHandles = v.AssignHandle(this.doc.NumHandles);
-                        vertexes.Add(v);
-                    }
-                }
-                this.vertexesPolylines.Add(polyline.Handle, vertexes);
-            }
-
-            // generate polyface mesh vertexes
-            foreach (PolyfaceMesh pMesh in this.doc.Entities.PolyfaceMeshes)
-            {
-                List<Vertex> vertexes = new List<Vertex>();
-
-                // first create the polyface mesh vertexes
-                foreach (Vector3 vertex in pMesh.Vertexes)
-                {
-                    Vertex v = new Vertex(vertex)
-                    {
-                        Flags = VertexTypeFlags.PolyfaceMeshVertex | VertexTypeFlags.Polygon3dMesh
-                    };
-                    this.doc.NumHandles = v.AssignHandle(this.doc.NumHandles);
-                    vertexes.Add(v);
-                }
-
-                // second create the polyface mesh faces
-                foreach (PolyfaceMeshFace face in pMesh.Faces)
-                {
-                    Vertex v = new Vertex
-                    {
-                        Layer = face.Layer,
-                        Color = face.Color,
-                        VertexIndexes = face.VertexIndexes,
-                        Flags = VertexTypeFlags.PolyfaceMeshVertex
-                    };
-                    this.doc.NumHandles = v.AssignHandle(this.doc.NumHandles);
-                    vertexes.Add(v);
-                }
-                this.vertexesPolyfaceMesh.Add(pMesh.Handle, vertexes);
-            }
+            
+            // Smoothed Polylines2d, polylines3d, and PolyfaceMesh entities are all saved as a DXF Polyline
+            this.PreprocessPolylines();
 
             // create the application registry AcCmTransparency in case it doesn't exists, it is required by the layer transparency
             this.doc.ApplicationRegistries.Add(new ApplicationRegistry("AcCmTransparency"));
 
-            // create the application registry GradientColor1ACI and GradientColor2ACI in case they don't exists , they are required by the hatch gradient pattern
+            // create the application registry AcCmTransparency in case it doesn't exists, it is required by the layer description
+            this.doc.ApplicationRegistries.Add(new ApplicationRegistry("AcAecLayerStandard"));
+
+            // create the application registry GradientColor1ACI and GradientColor2ACI in case they don't exists, they are required by the hatch gradient pattern
             this.doc.ApplicationRegistries.Add(new ApplicationRegistry("GradientColor1ACI"));
             this.doc.ApplicationRegistries.Add(new ApplicationRegistry("GradientColor2ACI"));
 
@@ -289,6 +220,26 @@ namespace netDxf.IO
             {
                 this.WriteSystemVariable(variable);
             }
+
+            // write the current UCS header variables
+            this.chunk.Write(9, HeaderVariableCode.UcsOrg);
+            Vector3 org = this.doc.DrawingVariables.CurrentUCS.Origin;
+            this.chunk.Write(10, org.X);
+            this.chunk.Write(20, org.Y);
+            this.chunk.Write(30, org.Z);
+
+            this.chunk.Write(9, HeaderVariableCode.UcsXDir);
+            Vector3 xdir = this.doc.DrawingVariables.CurrentUCS.XAxis;
+            this.chunk.Write(10, xdir.X);
+            this.chunk.Write(20, xdir.Y);
+            this.chunk.Write(30, xdir.Z);
+
+            this.chunk.Write(9, HeaderVariableCode.UcsYDir);
+            Vector3 ydir = this.doc.DrawingVariables.CurrentUCS.YAxis;
+            this.chunk.Write(10, ydir.X);
+            this.chunk.Write(20, ydir.Y);
+            this.chunk.Write(30, ydir.Z);
+
 
             // writing a copy of the active dimension style variables in the header section will avoid to be displayed as <style overrides> in AutoCAD
             if (this.doc.DimensionStyles.TryGetValue(this.doc.DrawingVariables.DimStyle, out DimensionStyle activeDimStyle))
@@ -787,27 +738,6 @@ namespace netDxf.IO
                 case HeaderVariableCode.TdinDwg:
                     this.chunk.Write(9, name);
                     this.chunk.Write(40, ((TimeSpan) value).TotalDays);
-                    break;
-                case HeaderVariableCode.UcsOrg:
-                    this.chunk.Write(9, name);
-                    Vector3 org = (Vector3)value;
-                    this.chunk.Write(10, org.X);
-                    this.chunk.Write(20, org.Y);
-                    this.chunk.Write(30, org.Z);
-                    break;
-                case HeaderVariableCode.UcsXDir:
-                    this.chunk.Write(9, name);
-                    Vector3 xdir = (Vector3)value;
-                    this.chunk.Write(10, xdir.X);
-                    this.chunk.Write(20, xdir.Y);
-                    this.chunk.Write(30, xdir.Z);
-                    break;
-                case HeaderVariableCode.UcsYDir:
-                    this.chunk.Write(9, name);
-                    Vector3 ydir = (Vector3)value;
-                    this.chunk.Write(10, ydir.X);
-                    this.chunk.Write(20, ydir.Y);
-                    this.chunk.Write(30, ydir.Z);
                     break;
             }
         }
@@ -1726,6 +1656,12 @@ namespace netDxf.IO
             // Hard pointer ID/handle of PlotStyleName object
             this.chunk.Write(390, "0");
 
+            // description is stored in XData
+            if (!string.IsNullOrEmpty(layer.Description))
+            {
+                AddLayerDescriptionXData(layer);
+            }
+
             // transparency is stored in XData
             if (layer.Transparency.Value > 0)
             {
@@ -1735,10 +1671,28 @@ namespace netDxf.IO
             this.WriteXData(layer.XData);
         }
 
+        private static void AddLayerDescriptionXData(Layer layer)
+        {
+            XData xdataEntry;
+            if (layer.XData.ContainsAppId("AcAecLayerStandard"))
+            {
+                xdataEntry = layer.XData["AcAecLayerStandard"];
+                xdataEntry.XDataRecord.Clear();
+            }
+            else
+            {
+                xdataEntry = new XData(new ApplicationRegistry("AcAecLayerStandard"));
+                layer.XData.Add(xdataEntry);
+            }
+
+            // the first entry seems to be always empty, its use is unknown
+            xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.String, string.Empty));
+            // the second entry holds the layer description
+            xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.String, layer.Description));
+        }
+
         private static void AddLayerTransparencyXData(Layer layer)
         {
-            int alpha = Transparency.ToAlphaValue(layer.Transparency);
-
             XData xdataEntry;
             if (layer.XData.ContainsAppId("AcCmTransparency"))
             {
@@ -1751,6 +1705,7 @@ namespace netDxf.IO
                 layer.XData.Add(xdataEntry);
             }
 
+            int alpha = Transparency.ToAlphaValue(layer.Transparency);
             xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int32, alpha));
         }
 
@@ -1893,8 +1848,6 @@ namespace netDxf.IO
 
             this.chunk.Write(79, (short) 0);
 
-            this.chunk.Write(146, ucs.Elevation);
-
             this.WriteXData(ucs.XData);
         }
 
@@ -1995,14 +1948,14 @@ namespace netDxf.IO
                 throw new ArgumentException("Leader entities with less than two vertexes are not allowed." + "Entity handle: " + entity.Handle, nameof(entity));
             }
 
-            if (entity.Type == EntityType.Polyline && ((Polyline) entity).Vertexes.Count < 2)
+            if (entity.Type == EntityType.Polyline3D && ((Polyline3D) entity).Vertexes.Count < 2)
             {
-                throw new ArgumentException("Polyline entities with less than two vertexes are not allowed." + "Entity handle: " + entity.Handle, nameof(entity));
+                throw new ArgumentException("Polyline3D entities with less than two vertexes are not allowed." + "Entity handle: " + entity.Handle, nameof(entity));
             }
 
-            if (entity.Type == EntityType.LwPolyline && ((LwPolyline) entity).Vertexes.Count < 2)
+            if (entity.Type == EntityType.Polyline2D && ((Polyline2D) entity).Vertexes.Count < 2)
             {
-                throw new ArgumentException("LwPolyline entities with less than two vertexes are not allowed." + "Entity handle: " + entity.Handle, nameof(entity));
+                throw new ArgumentException("Polyline2D entities with less than two vertexes are not allowed." + "Entity handle: " + entity.Handle, nameof(entity));
             }
 
             if (entity.Type == EntityType.Ellipse && ((Ellipse) entity).MajorAxis < ((Ellipse) entity).MinorAxis)
@@ -2027,7 +1980,7 @@ namespace netDxf.IO
                     this.WriteEllipse((Ellipse) entity);
                     break;
                 case EntityType.Face3D:
-                    this.WriteFace3D((Face3d) entity);
+                    this.WriteFace3D((Face3D) entity);
                     break;
                 case EntityType.Hatch:
                     this.WriteHatch((Hatch) entity);
@@ -2040,9 +1993,6 @@ namespace netDxf.IO
                     break;
                 case EntityType.Leader:
                     this.WriteLeader((Leader) entity);
-                    break;
-                case EntityType.LwPolyline:
-                    this.WriteLwPolyline((LwPolyline) entity);
                     break;
                 case EntityType.Line:
                     this.WriteLine((Line) entity);
@@ -2059,11 +2009,22 @@ namespace netDxf.IO
                 case EntityType.Point:
                     this.WritePoint((Point) entity);
                     break;
-                case EntityType.PolyfaceMesh:
-                    this.WritePolyfaceMesh((PolyfaceMesh) entity);
+                case EntityType.Polyline2D:
+                    Polyline2D polyline2D= (Polyline2D) entity;
+                    if (polyline2D.SmoothType == PolylineSmoothType.NoSmooth)
+                    {
+                        this.WriteLwPolyline(polyline2D);
+                    }
+                    else
+                    {
+                        this.WritePolyline(this.polylines[polyline2D.Handle]);
+                    }
                     break;
-                case EntityType.Polyline:
-                    this.WritePolyline((Polyline) entity);
+                case EntityType.PolyfaceMesh:
+                    this.WritePolyline(this.polylines[entity.Handle]);
+                    break;
+                case EntityType.Polyline3D:
+                    this.WritePolyline(this.polylines[entity.Handle]);
                     break;
                 case EntityType.Ray:
                     this.WriteRay((Ray) entity);
@@ -2106,6 +2067,7 @@ namespace netDxf.IO
         private void WriteEntityCommonCodes(EntityObject entity, Layout layout)
         {
             this.chunk.Write(0, entity.CodeName);
+
             this.chunk.Write(5, entity.Handle);
 
             if (entity.Reactors.Count > 0)
@@ -2641,9 +2603,9 @@ namespace netDxf.IO
             this.WriteXData(trace.XData);
         }
 
-        private void WriteFace3D(Face3d face)
+        private void WriteFace3D(Face3D face)
         {
-            this.chunk.Write(100, SubclassMarker.Face3d);
+            this.chunk.Write(100, SubclassMarker.Face3D);
 
             this.chunk.Write(10, face.FirstVertex.X);
             this.chunk.Write(20, face.FirstVertex.Y);
@@ -2672,7 +2634,7 @@ namespace netDxf.IO
 
             short flags = (short) SplineTypeFlags.Rational;
             if (spline.IsClosed) flags += (short) SplineTypeFlags.Closed;
-            if (spline.IsClosedPeriodic) flags += (short) SplineTypeFlags.ClosedPeriodicSpline;
+            if (spline.IsClosedPeriodic) flags = (short) SplineTypeFlags.ClosedPeriodicSpline + (short) SplineTypeFlags.Closed;
             
             flags += (short) spline.CreationMethod;
             flags += (short) spline.KnotParameterization;
@@ -2684,9 +2646,9 @@ namespace netDxf.IO
             // internally AutoCad allows for an integer number of knots, control points, and fit points;
             // but for some weird decision they decided to define them in the DXF with codes 72, 73, and 74 (16-bit integer value), a short.
             // I guess this is the result of legacy code, nevertheless AutoCad do not use those values when importing Spline entities
-            //this.chunk.Write(72, (short)spline.Knots.Length);
-            //this.chunk.Write(73, (short)spline.ControlPoints.Count);
-            //this.chunk.Write(74, (short)spline.FitPoints.Count);
+            //this.chunk.Write(72, numberOfKnots);
+            //this.chunk.Write(73, numberOfControlPoints);
+            //this.chunk.Write(74, numberOfFitPoints);
 
             this.chunk.Write(42, spline.KnotTolerance);
             this.chunk.Write(43, spline.CtrlPointTolerance);
@@ -2711,6 +2673,17 @@ namespace netDxf.IO
                 this.chunk.Write(40, knot);
             }
 
+            if (spline.IsClosedPeriodic)
+            {
+                for (int i = 0; i < spline.Degree; i++)
+                {
+                    SplineVertex point = spline.ControlPoints[spline.ControlPoints.Count - spline.Degree + i];
+                    this.chunk.Write(10, point.Position.X);
+                    this.chunk.Write(20, point.Position.Y);
+                    this.chunk.Write(30, point.Position.Z);
+                    this.chunk.Write(41, point.Weight);
+                }
+            }
             foreach (SplineVertex point in spline.ControlPoints)
             {
                 this.chunk.Write(10, point.Position.X);
@@ -2718,7 +2691,6 @@ namespace netDxf.IO
                 this.chunk.Write(30, point.Position.Z);
                 this.chunk.Write(41, point.Weight);
             }
-
             foreach (Vector3 point in spline.FitPoints)
             {
                 this.chunk.Write(11, point.X);
@@ -2830,17 +2802,17 @@ namespace netDxf.IO
             this.WriteXData(xline.XData);
         }
 
-        private void WriteLwPolyline(LwPolyline polyline)
+        private void WriteLwPolyline(Polyline2D polyline2D)
         {
-            this.chunk.Write(100, SubclassMarker.LwPolyline);
-            this.chunk.Write(90, polyline.Vertexes.Count);
-            this.chunk.Write(70, (short) polyline.Flags);
+            this.chunk.Write(100, SubclassMarker.Polyline);
+            this.chunk.Write(90, polyline2D.Vertexes.Count);
+            this.chunk.Write(70, (short) polyline2D.Flags);
 
-            this.chunk.Write(38, polyline.Elevation);
-            this.chunk.Write(39, polyline.Thickness);
+            this.chunk.Write(38, polyline2D.Elevation);
+            this.chunk.Write(39, polyline2D.Thickness);
 
 
-            foreach (LwPolylineVertex v in polyline.Vertexes)
+            foreach (Polyline2DVertex v in polyline2D.Vertexes)
             {
                 this.chunk.Write(10, v.Position.X);
                 this.chunk.Write(20, v.Position.Y);
@@ -2849,21 +2821,21 @@ namespace netDxf.IO
                 this.chunk.Write(42, v.Bulge);
             }
 
-            this.chunk.Write(210, polyline.Normal.X);
-            this.chunk.Write(220, polyline.Normal.Y);
-            this.chunk.Write(230, polyline.Normal.Z);
+            this.chunk.Write(210, polyline2D.Normal.X);
+            this.chunk.Write(220, polyline2D.Normal.Y);
+            this.chunk.Write(230, polyline2D.Normal.Z);
 
-            this.WriteXData(polyline.XData);
+            this.WriteXData(polyline2D.XData);
         }
 
         private void WritePolyline(Polyline polyline)
         {
-            this.chunk.Write(100, SubclassMarker.Polyline3d);
+            this.chunk.Write(100, polyline.SubclassMarker);
 
-            //dummy point, use unknown
+            //dummy point
             this.chunk.Write(10, 0.0);
             this.chunk.Write(20, 0.0);
-            this.chunk.Write(30, 0.0);
+            this.chunk.Write(30, polyline.Elevation);
 
             this.chunk.Write(70, (short) polyline.Flags);
             this.chunk.Write(75, (short) polyline.SmoothType);
@@ -2876,81 +2848,24 @@ namespace netDxf.IO
 
             string layerName = this.EncodeNonAsciiCharacters(polyline.Layer.Name);
 
-            List<Vertex> vertexes = this.vertexesPolylines[polyline.Handle];
-
             // More DXF weirdness, why polyline vertexes are considered as an entity? Legacy code?
-            foreach (Vertex v in vertexes)
+            foreach (Vertex v in polyline.Vertexes)
             {
                 this.chunk.Write(0, v.CodeName);
                 this.chunk.Write(5, v.Handle);
-                this.chunk.Write(100, SubclassMarker.Entity);
-
-                this.chunk.Write(8, layerName); // the vertex layer should be the same as the polyline layer
-
-                this.chunk.Write(62, polyline.Color.Index); // the vertex color should be the same as the polyline color
-                if (polyline.Color.UseTrueColor)
-                {
-                    this.chunk.Write(420, AciColor.ToTrueColor(polyline.Color));
-                }
-
-                this.chunk.Write(100, SubclassMarker.Vertex);
-                this.chunk.Write(100, SubclassMarker.Polyline3dVertex);
-                this.chunk.Write(10, v.Position.X);
-                this.chunk.Write(20, v.Position.Y);
-                this.chunk.Write(30, v.Position.Z);
-                this.chunk.Write(70, (short) v.Flags);
-            }
-
-            // More DXF weirdness, why polyline end sequence are considered as an entity, or why it even exists? Legacy code?
-            this.chunk.Write(0, polyline.EndSequence.CodeName);
-            this.chunk.Write(5, polyline.EndSequence.Handle);
-            this.chunk.Write(100, SubclassMarker.Entity);
-            this.chunk.Write(8, layerName); // the polyline EndSequence layer should be the same as the polyline layer
-        }
-
-        private void WritePolyfaceMesh(PolyfaceMesh mesh)
-        {
-            this.chunk.Write(100, SubclassMarker.PolyfaceMesh);
-            this.chunk.Write(70, (short) mesh.Flags);
-
-            this.chunk.Write(71, (short) mesh.Vertexes.Length);
-            this.chunk.Write(72, (short) mesh.Faces.Count);
-
-            //dummy point
-            this.chunk.Write(10, 0.0);
-            this.chunk.Write(20, 0.0);
-            this.chunk.Write(30, 0.0);
-
-            this.chunk.Write(210, mesh.Normal.X);
-            this.chunk.Write(220, mesh.Normal.Y);
-            this.chunk.Write(230, mesh.Normal.Z);
-
-            if (mesh.XData != null)
-            {
-                this.WriteXData(mesh.XData);
-            }
-
-            string layerName = this.EncodeNonAsciiCharacters(mesh.Layer.Name);
-
-            List<Vertex> vertexes = this.vertexesPolyfaceMesh[mesh.Handle];
-
-            foreach (Vertex v in vertexes)
-            {
-                this.chunk.Write(0, v.CodeName);
-                this.chunk.Write(5, v.Handle);
+                this.chunk.Write(330, v.Owner.Handle);
                 this.chunk.Write(100, SubclassMarker.Entity);
 
                 if (v.VertexIndexes == null)
                 {
-                    this.chunk.Write(8, layerName);
-
-                    this.chunk.Write(62, mesh.Color.Index);
-                    if (mesh.Color.UseTrueColor)
+                    this.chunk.Write(8, layerName); // the vertex layer should be the same as the polyline layer
+                    this.chunk.Write(62, polyline.Color.Index); // the vertex color should be the same as the polyline color
+                    if (polyline.Color.UseTrueColor)
                     {
-                        this.chunk.Write(420, AciColor.ToTrueColor(mesh.Color));
+                        this.chunk.Write(420, AciColor.ToTrueColor(polyline.Color));
                     }
                     this.chunk.Write(100, SubclassMarker.Vertex);
-                    this.chunk.Write(100, SubclassMarker.PolyfaceMeshVertex);
+                    this.chunk.Write(100, v.SubclassMarker);
                 }
                 else
                 {
@@ -2970,23 +2885,28 @@ namespace netDxf.IO
                         }
                     }
 
-                    this.chunk.Write(100, SubclassMarker.PolyfaceMeshFace);
+                    this.chunk.Write(100, v.SubclassMarker);
                     short code = 71;
                     foreach (short index in v.VertexIndexes)
                     {
                         this.chunk.Write(code++, index);
                     }
                 }
-                this.chunk.Write(70, (short) v.Flags);
+
                 this.chunk.Write(10, v.Position.X);
                 this.chunk.Write(20, v.Position.Y);
                 this.chunk.Write(30, v.Position.Z);
+                this.chunk.Write(70, (short) v.Flags);
+                this.chunk.Write(40, v.StartWidth);
+                this.chunk.Write(41, v.EndWidth);
             }
 
-            this.chunk.Write(0, mesh.EndSequence.CodeName);
-            this.chunk.Write(5, mesh.EndSequence.Handle);
+            // More DXF weirdness, why polyline end sequence are considered as an entity, or why it even exists? Legacy code?
+            this.chunk.Write(0, polyline.EndSequence.CodeName);
+            this.chunk.Write(5, polyline.EndSequence.Handle);
+            this.chunk.Write(330, polyline.EndSequence.Owner.Handle);
             this.chunk.Write(100, SubclassMarker.Entity);
-            this.chunk.Write(8, layerName); // the polyface mesh EndSequence layer should be the same as the polyface mesh layer
+            this.chunk.Write(8, layerName); // the polyline EndSequence layer should be the same as the polyline layer
         }
 
         private void WritePoint(Point point)
@@ -5112,6 +5032,202 @@ namespace netDxf.IO
         #endregion
 
         #region private methods
+
+        private void PreprocessPolylines()
+        {
+            // generate polyline3D vertexes
+            foreach (Polyline3D poly3D in this.doc.Entities.Polylines3D)
+            {
+                List<Vertex> vertexes = new List<Vertex>();
+
+                // first create the polyline vertexes
+                foreach (Vector3 vertex in poly3D.Vertexes)
+                {
+                    Vertex v = new Vertex
+                    {
+                        Position = vertex,
+                        Owner = poly3D,
+                        Flags = poly3D.SmoothType != PolylineSmoothType.NoSmooth ? VertexTypeFlags.SplineFrameControlPoint | VertexTypeFlags.Polyline3DVertex : VertexTypeFlags.Polyline3DVertex,
+                        SubclassMarker = SubclassMarker.Polyline3DVertex
+                    };
+                    this.doc.NumHandles = v.AssignHandle(this.doc.NumHandles);
+                    vertexes.Add(v);
+                }
+
+                // if the polyline is smooth then create the additional vertexes
+                if (poly3D.SmoothType != PolylineSmoothType.NoSmooth)
+                {
+                    short splineSegs = this.doc.DrawingVariables.SplineSegs;
+                    int precision = poly3D.IsClosed ? splineSegs * poly3D.Vertexes.Count : splineSegs * (poly3D.Vertexes.Count - 1);
+                    List<Vector3> points = poly3D.PolygonalVertexes(precision);
+                    foreach (Vector3 p in points)
+                    {
+                        Vertex v = new Vertex
+                        {
+                            Position = p,
+                            Owner = poly3D,
+                            Flags = VertexTypeFlags.SplineVertexFromSplineFitting | VertexTypeFlags.Polyline3DVertex,
+                            SubclassMarker = SubclassMarker.Polyline3DVertex
+                        };
+                        this.doc.NumHandles = v.AssignHandle(this.doc.NumHandles);
+                        vertexes.Add(v);
+                    }
+                }
+
+                EndSequence endSequence = new EndSequence()
+                {
+                    Owner = poly3D
+                };
+                this.doc.NumHandles = endSequence.AssignHandle(this.doc.NumHandles);
+
+                Polyline polyline = new Polyline
+                {
+                    Handle = poly3D.Handle,
+                    SubclassMarker = SubclassMarker.Polyline3D,
+                    Layer = poly3D.Layer,
+                    Normal = poly3D.Normal,
+                    Color = poly3D.Color,
+                    XData = poly3D.XData,
+                    EndSequence = endSequence,
+                    Vertexes = vertexes,
+                    Flags = poly3D.Flags,
+                    SmoothType = poly3D.SmoothType
+                };
+
+                this.polylines.Add(polyline.Handle, polyline);
+            }
+
+            // preprocess smoothed lwPolylines
+            // generate polyline2D vertexes
+            foreach (Polyline2D poly2D in this.doc.Entities.Polylines2D)
+            {
+                // only for smoothed polylines
+                if (poly2D.SmoothType == PolylineSmoothType.NoSmooth)
+                {
+                    continue;
+                }
+
+                // smoothed polyline2D can only have a constant width, the first vertex width will be used.
+                double width = poly2D.Vertexes[0].StartWidth;
+
+                List<Vertex> vertexes = new List<Vertex>();
+
+                // first create the polyline vertexes
+                foreach (Polyline2DVertex vertex in poly2D.Vertexes)
+                {
+                    Vertex v = new Vertex
+                    {
+                        Position = new Vector3(vertex.Position.X, vertex.Position.Y, poly2D.Elevation),
+                        Owner = poly2D,
+                        StartWidth = width,
+                        EndWidth = width,
+                        Flags = VertexTypeFlags.SplineFrameControlPoint,
+                        SubclassMarker = SubclassMarker.Polyline2DVertex
+                    };
+                    this.doc.NumHandles = v.AssignHandle(this.doc.NumHandles);
+                    vertexes.Add(v);
+                }
+
+                // if the polyline is smooth then create the additional vertexes
+                short splineSegs = this.doc.DrawingVariables.SplineSegs;
+                int precision = poly2D.IsClosed ? splineSegs * poly2D.Vertexes.Count : splineSegs * (poly2D.Vertexes.Count - 1);
+                List<Vector2> points = poly2D.PolygonalVertexes(precision);
+                foreach (Vector2 p in points)
+                {
+                    Vertex v = new Vertex
+                    {
+                        Position = new Vector3(p.X, p.Y, poly2D.Elevation),
+                        Owner = poly2D,
+                        StartWidth = width,
+                        EndWidth = width,
+                        Flags = VertexTypeFlags.SplineVertexFromSplineFitting,
+                        SubclassMarker = SubclassMarker.Polyline2DVertex
+                    };
+                    this.doc.NumHandles = v.AssignHandle(this.doc.NumHandles);
+                    vertexes.Add(v);
+                }
+
+                EndSequence endSequence = new EndSequence
+                {
+                    Owner = poly2D
+                };
+                this.doc.NumHandles = endSequence.AssignHandle(this.doc.NumHandles);
+
+                Polyline polyline = new Polyline
+                {
+                    Handle = poly2D.Handle,
+                    SubclassMarker = SubclassMarker.Polyline2D,
+                    Layer = poly2D.Layer,
+                    Elevation = poly2D.Elevation,
+                    Normal = poly2D.Normal,
+                    Color = poly2D.Color,
+                    XData = poly2D.XData,
+                    EndSequence = endSequence,
+                    Vertexes = vertexes,
+                    Flags = poly2D.Flags,
+                    SmoothType = poly2D.SmoothType
+                };
+
+                this.polylines.Add(polyline.Handle, polyline);
+            }
+
+            // generate polyface mesh vertexes
+            foreach (PolyfaceMesh pMesh in this.doc.Entities.PolyfaceMeshes)
+            {
+                List<Vertex> vertexes = new List<Vertex>();
+
+                // first create the polyface mesh vertexes
+                foreach (Vector3 vertex in pMesh.Vertexes)
+                {
+                    Vertex v = new Vertex
+                    {
+                        Position = vertex,
+                        Owner = pMesh,
+                        Flags = VertexTypeFlags.PolyfaceMeshVertex | VertexTypeFlags.Polygon3DMesh,
+                        SubclassMarker = SubclassMarker.PolyfaceMeshVertex
+                    };
+                    this.doc.NumHandles = v.AssignHandle(this.doc.NumHandles);
+                    vertexes.Add(v);
+                }
+
+                // second create the polyface mesh faces
+                foreach (PolyfaceMeshFace face in pMesh.Faces)
+                {
+                    Vertex v = new Vertex
+                    {
+                        Owner = pMesh,
+                        Layer = face.Layer,
+                        Color = face.Color,
+                        VertexIndexes = face.VertexIndexes,
+                        Flags = VertexTypeFlags.PolyfaceMeshVertex,
+                        SubclassMarker = SubclassMarker.PolyfaceMeshFace
+                    };
+                    this.doc.NumHandles = v.AssignHandle(this.doc.NumHandles);
+                    vertexes.Add(v);
+                }
+
+                EndSequence endSequence = new EndSequence()
+                {
+                    Owner = pMesh
+                };
+                this.doc.NumHandles = endSequence.AssignHandle(this.doc.NumHandles);
+
+                Polyline polyline = new Polyline
+                {
+                    Handle = pMesh.Handle,
+                    SubclassMarker = SubclassMarker.PolyfaceMesh,
+                    Layer = pMesh.Layer,
+                    Normal = pMesh.Normal,
+                    Color = pMesh.Color,
+                    XData = pMesh.XData,
+                    EndSequence = endSequence,
+                    Vertexes = vertexes,
+                    Flags = pMesh.Flags,
+                };
+
+                this.polylines.Add(pMesh.Handle, polyline);
+            }
+        }
 
         private static short GetSuppressZeroesValue(bool leading, bool trailing, bool feet, bool inches)
         {
