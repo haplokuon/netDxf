@@ -1000,6 +1000,25 @@ namespace netDxf
                                0.0, 0.0, 0.0, 1);
 		}
 
+        /// <summary>
+        /// Build a mirror matrix(Just for 2D shape)
+        /// </summary>
+        /// <param name="mirrorStart">The start point of mirror line</param>
+        /// <param name="mirrorEnd">The end point of mirror line</param>
+        /// <returns></returns>
+        public static Matrix4 Mirror2D(Vector2 mirrorStart, Vector2 mirrorEnd)
+        {
+            Vector2 ooAfterMirror = Vector2.Mirror(Vector2.Zero, mirrorStart, mirrorEnd);//(0,0) after mirror
+            Vector2 newXDir = Vector2.Mirror(Vector2.UnitX, mirrorStart, mirrorEnd) - ooAfterMirror;
+            Vector2 newYDir = Vector2.Mirror(Vector2.UnitY, mirrorStart, mirrorEnd) - ooAfterMirror;
+            return new Matrix4(
+                newXDir.X, newYDir.X, 0, ooAfterMirror.X,
+                newXDir.Y, newYDir.Y, 0, ooAfterMirror.Y,
+                0, 0, 1, 0,
+                0, 0, 0, 1
+                );
+        }
+
         #endregion
 
         #region comparison methods

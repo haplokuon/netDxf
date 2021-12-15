@@ -257,6 +257,22 @@ namespace netDxf
         }
 
         /// <summary>
+        /// Mirror a vector
+        /// </summary>
+        /// <param name="u">Vector2.</param>
+        /// <param name="mirrorStart">The start point of mirror line</param>
+        /// <param name="mirrorEnd">The end point of mirror line</param>
+        /// <returns></returns>
+        public static Vector2 Mirror(Vector2 u,Vector2 mirrorStart,Vector2 mirrorEnd)
+        {
+            if (MathHelper.PointLineDistance(u, mirrorStart, mirrorEnd-mirrorStart)<=MathHelper.Epsilon)
+                return u;
+            var footDir = Vector2.Perpendicular(mirrorEnd - mirrorStart);
+            var footPoint = MathHelper.FindIntersection(u, footDir, mirrorStart, mirrorEnd - mirrorStart);
+            return (footPoint - u) * 2 + u;
+        }
+
+        /// <summary>
         /// Obtains the polar point of another point. 
         /// </summary>
         /// <param name="u">Reference point.</param>
