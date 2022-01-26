@@ -931,13 +931,6 @@ namespace netDxf
                     Image image = (Image) entity;
                     image.Definition = this.imageDefs.Add(image.Definition, assignHandle);
                     this.imageDefs.References[image.Definition.Name].Add(image);
-
-                    if (!image.Definition.Reactors.ContainsKey(image.Handle))
-                    {
-                        ImageDefinitionReactor reactor = new ImageDefinitionReactor(image.Handle);
-                        this.NumHandles = reactor.AssignHandle(this.NumHandles);
-                        image.Definition.Reactors.Add(image.Handle, reactor);
-                    }
                     image.ImageDefinitionChanged += this.Image_ImageDefinitionChanged;
                     break;
                 case EntityType.MLine:
@@ -1136,7 +1129,6 @@ namespace netDxf
                 case EntityType.Image:
                     Image image = (Image)entity;
                     this.imageDefs.References[image.Definition.Name].Remove(image);
-                    image.Definition.Reactors.Remove(image.Handle);
                     image.ImageDefinitionChanged -= this.Image_ImageDefinitionChanged;
                     break;
                 case EntityType.MLine:
@@ -1732,13 +1724,6 @@ namespace netDxf
 
             e.NewValue = this.imageDefs.Add(e.NewValue);
             this.imageDefs.References[e.NewValue.Name].Add(sender);
-
-            if (!e.NewValue.Reactors.ContainsKey(sender.Handle))
-            {
-                ImageDefinitionReactor reactor = new ImageDefinitionReactor(sender.Handle);
-                this.NumHandles = reactor.AssignHandle(this.NumHandles);
-                e.NewValue.Reactors.Add(sender.Handle, reactor);
-            }
         }
 
         private void Underlay_UnderlayDefinitionChanged(Underlay sender, TableObjectChangedEventArgs<UnderlayDefinition> e)

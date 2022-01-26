@@ -567,10 +567,20 @@ namespace netDxf.Header
         /// <summary>
         /// Defines number of line segments to be generated for smoothed polylines.
         /// </summary>
+        /// <remarks>
+        /// Even thought AutoCad accepts negative values for the SplineSegs header values only positive ones are supported.
+        /// </remarks>
         public short SplineSegs
         {
             get { return (short) this.variables[HeaderVariableCode.SplineSegs].Value; }
-            set { this.variables[HeaderVariableCode.SplineSegs].Value = value; }
+            set
+            {
+                if (value <= 0)
+                {
+                    throw new ArgumentOutOfRangeException(nameof(value), value, "Values must be greater than 0.");
+                }
+                this.variables[HeaderVariableCode.SplineSegs].Value = value;
+            }
         }
 
         /// <summary>

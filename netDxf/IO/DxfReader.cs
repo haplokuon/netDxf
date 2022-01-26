@@ -89,8 +89,6 @@ namespace netDxf.IO
         // <string: dictionary handle, DictionaryObject: dictionary>
         private Dictionary<string, DictionaryObject> dictionaries;
 
-        private Dictionary<string, ImageDefinitionReactor> imageDefReactors;
-
         // variables for post-processing
         private Dictionary<Leader, string> leaderAnnotation;
         private Dictionary<Block, List<EntityObject>> blockEntities;
@@ -243,7 +241,6 @@ namespace netDxf.IO
             // objects
             this.dictionaries = new Dictionary<string, DictionaryObject>(StringComparer.OrdinalIgnoreCase);
             this.groupEntities = new Dictionary<Group, List<string>>();
-            this.imageDefReactors = new Dictionary<string, ImageDefinitionReactor>(StringComparer.OrdinalIgnoreCase);
             this.imgDefHandles = new Dictionary<string, ImageDefinition>(StringComparer.OrdinalIgnoreCase);
             this.imgToImgDefHandles = new Dictionary<Image, string>();
             this.mLineToStyleNames = new Dictionary<MLine, string>();
@@ -593,7 +590,12 @@ namespace netDxf.IO
                         this.chunk.Next();
                         break;
                     case HeaderVariableCode.SplineSegs:
-                        this.doc.DrawingVariables.SplineSegs = this.chunk.ReadShort();
+                        short splineSegs = this.chunk.ReadShort();
+                        if (splineSegs != 0)
+                        {
+                            // only positive values are supported
+                            this.doc.DrawingVariables.SplineSegs = Math.Abs(splineSegs);
+                        }
                         this.chunk.Next();
                         break;
                     case HeaderVariableCode.TdCreate:
@@ -1040,11 +1042,8 @@ namespace netDxf.IO
                         }
                         break;
                     case DxfObjectCode.ImageDefReactor:
+                        // this information is not needed
                         ImageDefinitionReactor reactor = this.ReadImageDefReactor();
-                        if (!this.imageDefReactors.ContainsKey(reactor.ImageHandle))
-                        {
-                            this.imageDefReactors.Add(reactor.ImageHandle, reactor);
-                        }
                         break;
                     case DxfObjectCode.MLineStyle:
                         MLineStyle style = this.ReadMLineStyle();
@@ -3132,7 +3131,6 @@ namespace netDxf.IO
         {
             Debug.Assert(this.chunk.ReadString() == DxfObjectCode.BeginBlock);
 
-            BlockRecord blockRecord;
             Layer layer = Layer.Default;
             string name = string.Empty;
             string description = String.Empty;
@@ -3246,7 +3244,7 @@ namespace netDxf.IO
                 }
             }
 
-            if (!this.blockRecords.TryGetValue(name, out blockRecord))
+            if (!this.blockRecords.TryGetValue(name, out BlockRecord blockRecord))
             {
                 throw new Exception(string.Format("The block record {0} is not defined.", name));
             }
@@ -5476,7 +5474,9 @@ namespace netDxf.IO
                     case 41:
                         lineSpacingFactor = this.chunk.ReadDouble();
                         if (lineSpacingFactor < 0.25 || lineSpacingFactor > 4.0)
+                        {
                             lineSpacingFactor = 1.0;
+                        }
                         this.chunk.Next();
                         break;
                     case 51:
@@ -7245,8 +7245,11 @@ namespace netDxf.IO
                         break;
                     case 40:
                         size = this.chunk.ReadDouble();
-                        if (MathHelper.IsZero(size)) size = 1.0;
-                        if (size < 0.0)
+                        if (MathHelper.IsZero(size))
+                        {
+                            size = 1.0;
+                        }
+                        else if (size < 0.0)
                         {
                             size = Math.Abs(size);
                             rotateNegativeSize = 180;
@@ -7263,7 +7266,10 @@ namespace netDxf.IO
                         break;
                     case 41:
                         widthFactor = this.chunk.ReadDouble();
-                        if (MathHelper.IsZero(widthFactor)) widthFactor = 1.0;
+                        if (MathHelper.IsZero(widthFactor))
+                        {
+                            widthFactor = 1.0;
+                        }
                         this.chunk.Next();
                         break;
                     case 51:
@@ -7309,7 +7315,7 @@ namespace netDxf.IO
             {
                 return null;
             }
-
+            
             Shape entity = new Shape(name, style)
             {
                 // The official DXF documentation is WRONG the SHAPE position is saved as OCS coordinates NOT as WCS
@@ -9996,7 +10002,7 @@ namespace netDxf.IO
             }
 
             // The documentation says that this is the size of one pixel in AutoCAD units, but it seems that this is always the size of one pixel in millimeters
-            // this value is used to calculate the image resolution in PPI or PPC, and the default image size.
+            // this value is used to calculate the image resolution in DPI or DPC, and the default image size.
             // The documentation in this regard and its relation with the final image size in drawing units is a complete nonsense
             double factor = UnitHelper.ConversionFactor((ImageUnits) units, DrawingUnits.Millimeters);
             ImageDefinition imageDefinition = new ImageDefinition(name, file, (int) width, factor/wPixel, (int) height, factor/hPixel, units)
@@ -10936,7 +10942,6 @@ namespace netDxf.IO
                 Image image = pair.Key;
 
                 image.Definition = this.imgDefHandles[pair.Value];
-                image.Definition.Reactors.Add(image.Handle, this.imageDefReactors[image.Handle]);
 
                 // we still need to set the definitive image size, now that we know all units involved
                 double factor = UnitHelper.ConversionFactor(this.doc.DrawingVariables.InsUnits, this.doc.RasterVariables.Units);

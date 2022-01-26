@@ -1,5 +1,10 @@
 ## Change history
 
+### [2022/01/26]
+* The Polyline2D and Polyline3D Explode method will preserve the smooth type.
+* Deleted the references to the ImageDefinitionReactor from the ImageDefinition they will be created when the DXF is saved.
+* (fixed) Issues, introduced in the last two updates, when saving Polyline2D, Polyline3D, and PolyfaceMesh entities that were part of a Block.
+
 ### [2021/12/06]
 * Rename Face3d to Face3D.
 * Rename Face3dEdgeFlags to Face3DEdgeFlags.

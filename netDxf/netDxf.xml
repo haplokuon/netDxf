@@ -8833,6 +8833,11 @@
             <param name="vertexes">Polyline2D <see cref="T:netDxf.Entities.Polyline2DVertex">vertex</see> list in object coordinates.</param>
             <param name="isClosed">Sets if the polyline is closed (default: false).</param>
         </member>
+        <member name="P:netDxf.Entities.Polyline2D.DefaultSplineSegs">
+            <summary>
+            Gets or sets if the default SplineSegs value, this value is used by the Explode method when the current Polyline2D does not belong to a DXF document.
+            </summary>
+        </member>
         <member name="P:netDxf.Entities.Polyline2D.Vertexes">
             <summary>
             Gets or sets the polyline <see cref="T:netDxf.Entities.Polyline2DVertex">vertex</see> list.
@@ -9026,6 +9031,11 @@
             </summary>
             <param name="vertexes">3d polyline <see cref="T:netDxf.Vector3">vertex</see> list.</param>
             <param name="isClosed">Sets if the polyline is closed, by default it will create an open polyline.</param>
+        </member>
+        <member name="P:netDxf.Entities.Polyline3D.DefaultSplineSegs">
+            <summary>
+            Gets or sets if the default SplineSegs value, this value is used by the Explode method when the current Polyline2D does not belong to a DXF document.
+            </summary>
         </member>
         <member name="P:netDxf.Entities.Polyline3D.Vertexes">
             <summary>
@@ -11727,6 +11737,9 @@
             <summary>
             Defines number of line segments to be generated for smoothed polylines.
             </summary>
+            <remarks>
+            Even thought AutoCad accepts negative values for the SplineSegs header values only positive ones are supported.
+            </remarks>
         </member>
         <member name="P:netDxf.Header.HeaderVariables.TdCreate">
             <summary>

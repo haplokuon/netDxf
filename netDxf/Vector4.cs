@@ -235,6 +235,7 @@ namespace netDxf
                     default:
                         throw new ArgumentOutOfRangeException(nameof(index));
                 }
+
                 this.isNormalized = false;
             }
         }
@@ -269,7 +270,7 @@ namespace netDxf
         /// <returns>The dot product.</returns>
         public static double DotProduct(Vector4 u, Vector4 v)
         {
-            return u.X*v.X + u.Y*v.Y + u.Z*v.Z + u.W*v.W;
+            return u.X * v.X + u.Y * v.Y + u.Z * v.Z + u.W * v.W;
         }
 
         /// <summary>
@@ -291,7 +292,7 @@ namespace netDxf
         /// <returns>Square distance.</returns>
         public static double SquareDistance(Vector4 u, Vector4 v)
         {
-            return (u.X - v.X)*(u.X - v.X) + (u.Y - v.Y)*(u.Y - v.Y) + (u.Z - v.Z)*(u.Z - v.Z) + (u.W - v.Z)*(u.W - v.W);
+            return (u.X - v.X) * (u.X - v.X) + (u.Y - v.Y) * (u.Y - v.Y) + (u.Z - v.Z) * (u.Z - v.Z) + (u.W - v.Z) * (u.W - v.W);
         }
 
         /// <summary>
@@ -323,7 +324,7 @@ namespace netDxf
                 return NaN;
             }
 
-            double modInv = 1/mod;
+            double modInv = 1 / mod;
             return new Vector4(u.X * modInv, u.Y * modInv, u.Z * modInv, u.W * modInv) {isNormalized = true};
         }
 
@@ -404,7 +405,7 @@ namespace netDxf
         /// <returns>The negative vector of u.</returns>
         public static Vector4 operator -(Vector4 u)
         {
-            return new Vector4(-u.X, -u.Y, -u.Z, -u.W) { isNormalized = u.IsNormalized };
+            return new Vector4(-u.X, -u.Y, -u.Z, -u.W) {isNormalized = u.IsNormalized};
         }
 
         /// <summary>
@@ -414,7 +415,7 @@ namespace netDxf
         /// <returns>The negative vector of u.</returns>
         public static Vector4 Negate(Vector4 u)
         {
-            return new Vector4(-u.X, -u.Y, -u.Z, -u.W) { isNormalized = u.IsNormalized };
+            return new Vector4(-u.X, -u.Y, -u.Z, -u.W) {isNormalized = u.IsNormalized};
         }
 
         /// <summary>
@@ -425,7 +426,7 @@ namespace netDxf
         /// <returns>The multiplication of u times a.</returns>
         public static Vector4 operator *(Vector4 u, double a)
         {
-            return new Vector4(u.X*a, u.Y*a, u.Z*a, u.W*a);
+            return new Vector4(u.X * a, u.Y * a, u.Z * a, u.W * a);
         }
 
         /// <summary>
@@ -436,7 +437,7 @@ namespace netDxf
         /// <returns>The multiplication of u times a.</returns>
         public static Vector4 Multiply(Vector4 u, double a)
         {
-            return new Vector4(u.X*a, u.Y*a, u.Z*a, u.W*a);
+            return new Vector4(u.X * a, u.Y * a, u.Z * a, u.W * a);
         }
 
         /// <summary>
@@ -447,7 +448,7 @@ namespace netDxf
         /// <returns>The multiplication of u times a.</returns>
         public static Vector4 operator *(double a, Vector4 u)
         {
-            return new Vector4(u.X*a, u.Y*a, u.Z*a, u.W*a);
+            return new Vector4(u.X * a, u.Y * a, u.Z * a, u.W * a);
         }
 
         /// <summary>
@@ -458,7 +459,7 @@ namespace netDxf
         /// <returns>The multiplication of u times a.</returns>
         public static Vector4 Multiply(double a, Vector4 u)
         {
-            return new Vector4(u.X*a, u.Y*a, u.Z*a, u.W*a);
+            return new Vector4(u.X * a, u.Y * a, u.Z * a, u.W * a);
         }
 
         /// <summary>
@@ -491,8 +492,8 @@ namespace netDxf
         /// <returns>The division of u times a.</returns>
         public static Vector4 operator /(Vector4 u, double a)
         {
-            double invScalar = 1/a;
-            return new Vector4(u.X*invScalar, u.Y*invScalar, u.Z*invScalar, u.W*invScalar);
+            double invScalar = 1 / a;
+            return new Vector4(u.X * invScalar, u.Y * invScalar, u.Z * invScalar, u.W * invScalar);
         }
 
         /// <summary>
@@ -503,8 +504,8 @@ namespace netDxf
         /// <returns>The division of u times a.</returns>
         public static Vector4 Divide(Vector4 u, double a)
         {
-            double invScalar = 1/a;
-            return new Vector4(u.X*invScalar, u.Y*invScalar, u.Z*invScalar, u.W*invScalar);
+            double invScalar = 1 / a;
+            return new Vector4(u.X * invScalar, u.Y * invScalar, u.Z * invScalar, u.W * invScalar);
         }
 
         /// <summary>
@@ -550,12 +551,13 @@ namespace netDxf
             }
             else
             {
-                double modInv = 1/mod;
+                double modInv = 1 / mod;
                 this.x *= modInv;
                 this.y *= modInv;
                 this.z *= modInv;
                 this.w *= modInv;
             }
+
             this.isNormalized = true;
         }
 

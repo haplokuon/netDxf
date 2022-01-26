@@ -24,7 +24,6 @@
 #endregion
 
 using System;
-using System.Collections.Generic;
 using System.IO;
 using netDxf.Collections;
 using netDxf.Tables;
@@ -46,9 +45,6 @@ namespace netDxf.Objects
         private ImageResolutionUnits resolutionUnits;
         private double horizontalResolution;
         private double verticalResolution;
-
-        // this will store the references to the images that makes use of this image definition (key: image handle, value: reactor)
-        private readonly Dictionary<string, ImageDefinitionReactor> reactors;
 
         #endregion
 
@@ -147,7 +143,6 @@ namespace netDxf.Objects
 
             this.resolutionUnits = units;
 
-            this.reactors = new Dictionary<string, ImageDefinitionReactor>();
         }
 
 #if NET45
@@ -231,7 +226,6 @@ namespace netDxf.Objects
                 throw new ArgumentException("Image file not supported.", file);
             }
 
-            this.reactors = new Dictionary<string, ImageDefinitionReactor>();
         }
 
 #endif
@@ -277,8 +271,8 @@ namespace netDxf.Objects
                 {
                     throw new ArgumentOutOfRangeException(nameof(value), value, "The ImageDefinition width must be greater than zero.");
                 }
-                this.width = value;
 
+                this.width = value;
             }
         }
 
@@ -294,6 +288,7 @@ namespace netDxf.Objects
                 {
                     throw new ArgumentOutOfRangeException(nameof(value), value, "The ImageDefinition height must be greater than zero.");
                 }
+
                 this.height = value;
             }
         }
@@ -310,6 +305,7 @@ namespace netDxf.Objects
                 {
                     throw new ArgumentOutOfRangeException(nameof(value), value, "The ImageDefinition horizontal resolution must be greater than zero.");
                 }
+
                 this.horizontalResolution = value;
             }
         }
@@ -326,6 +322,7 @@ namespace netDxf.Objects
                 {
                     throw new ArgumentOutOfRangeException(nameof(value), value, "The ImageDefinition vertical resolution must be greater than zero.");
                 }
+
                 this.verticalResolution = value;
             }
         }
@@ -366,15 +363,6 @@ namespace netDxf.Objects
         {
             get { return (ImageDefinitions) base.Owner; }
             internal set { base.Owner = value; }
-        }
-
-        #endregion
-
-        #region internal properties
-
-        internal Dictionary<string, ImageDefinitionReactor> Reactors
-        {
-            get { return this.reactors; }
         }
 
         #endregion

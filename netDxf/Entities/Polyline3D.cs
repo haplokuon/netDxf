@@ -37,6 +37,7 @@ namespace netDxf.Entities
     {
         #region private fields
 
+        private static short defaultSplineSegs = 8;
         private readonly List<Vector3> vertexes;
         private PolylineTypeFlags flags;
         private PolylineSmoothType smoothType;
@@ -83,6 +84,22 @@ namespace netDxf.Entities
         #endregion
 
         #region public properties
+
+        /// <summary>
+        /// Gets or sets if the default SplineSegs value, this value is used by the Explode method when the current Polyline2D does not belong to a DXF document.
+        /// </summary>
+        public static short DefaultSplineSegs
+        {
+            get { return defaultSplineSegs; }
+            set
+            {
+                if (value <= 0)
+                {
+                    throw new ArgumentOutOfRangeException(nameof(value), value, "Values must be greater than 0.");
+                }
+                defaultSplineSegs = value;
+            }
+        }
 
         /// <summary>
         /// Gets the polyline <see cref="Vector3">vertex</see> list.
@@ -191,27 +208,64 @@ namespace netDxf.Entities
         public List<EntityObject> Explode()
         {
             List<EntityObject> entities = new List<EntityObject>();
-            int index = 0;
-            foreach (Vector3 vertex in this.Vertexes)
+
+            if (this.smoothType == PolylineSmoothType.NoSmooth)
             {
-                Vector3 start;
-                Vector3 end;
-
-                if (index == this.Vertexes.Count - 1)
+                int index = 0;
+                foreach (Vector3 vertex in this.Vertexes)
                 {
-                    if (!this.IsClosed)
+                    Vector3 start;
+                    Vector3 end;
+
+                    if (index == this.Vertexes.Count - 1)
                     {
-                        break;
+                        if (!this.IsClosed)
+                        {
+                            break;
+                        }
+                        start = vertex;
+                        end = this.vertexes[0];
                     }
-                    start = vertex;
-                    end = this.vertexes[0];
-                }
-                else
-                {
-                    start = vertex;
-                    end = this.vertexes[index + 1];
+                    else
+                    {
+                        start = vertex;
+                        end = this.vertexes[index + 1];
+                    }
+
+                    entities.Add(new Line
+                    {
+                        Layer = (Layer) this.Layer.Clone(),
+                        Linetype = (Linetype) this.Linetype.Clone(),
+                        Color = (AciColor) this.Color.Clone(),
+                        Lineweight = this.Lineweight,
+                        Transparency = (Transparency) this.Transparency.Clone(),
+                        LinetypeScale = this.LinetypeScale,
+                        Normal = this.Normal,
+                        StartPoint = start,
+                        EndPoint = end,
+                    });
+
+                    index++;
                 }
 
+                return entities;
+            }
+
+            List<SplineVertex> wcsVertexes = new List<SplineVertex>();
+            foreach (Vector3 vertex in this.vertexes)
+            {
+                wcsVertexes.Add(new SplineVertex(vertex));
+            }
+
+            int degree = this.smoothType == PolylineSmoothType.Quadratic ? 2 : 3;
+            int splineSegs = this.Owner == null ? DefaultSplineSegs : this.Owner.Record.Owner.Owner.DrawingVariables.SplineSegs;
+            int precision = this.IsClosed ? splineSegs * this.Vertexes.Count : splineSegs * (this.Vertexes.Count - 1);
+            List<Vector3> splinePoints = Spline.NurbsEvaluator(wcsVertexes, null, degree, false, this.IsClosed, precision);
+
+            for (int i = 1; i < splinePoints.Count; i++)
+            {
+                Vector3 start = splinePoints[i - 1];
+                Vector3 end = splinePoints[i];
                 entities.Add(new Line
                 {
                     Layer = (Layer) this.Layer.Clone(),
@@ -222,10 +276,24 @@ namespace netDxf.Entities
                     LinetypeScale = this.LinetypeScale,
                     Normal = this.Normal,
                     StartPoint = start,
-                    EndPoint = end,
+                    EndPoint = end
                 });
+            }
 
-                index++;
+            if (this.IsClosed)
+            {
+                entities.Add(new Line
+                {
+                    Layer = (Layer) this.Layer.Clone(),
+                    Linetype = (Linetype) this.Linetype.Clone(),
+                    Color = (AciColor) this.Color.Clone(),
+                    Lineweight = this.Lineweight,
+                    Transparency = (Transparency) this.Transparency.Clone(),
+                    LinetypeScale = this.LinetypeScale,
+                    Normal = this.Normal,
+                    StartPoint = splinePoints[splinePoints.Count - 1],
+                    EndPoint = splinePoints[0]
+                });
             }
 
             return entities;

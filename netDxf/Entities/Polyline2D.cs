@@ -40,6 +40,7 @@ namespace netDxf.Entities
     {
         #region private fields
 
+        private static short defaultSplineSegs = 8;
         private readonly List<Polyline2DVertex> vertexes;
         private PolylineTypeFlags flags;
         private double elevation;
@@ -124,6 +125,22 @@ namespace netDxf.Entities
         #endregion
 
         #region public properties
+
+        /// <summary>
+        /// Gets or sets if the default SplineSegs value, this value is used by the Explode method when the current Polyline2D does not belong to a DXF document.
+        /// </summary>
+        public static short DefaultSplineSegs
+        {
+            get { return defaultSplineSegs; }
+            set
+            {
+                if (value <= 0)
+                {
+                    throw new ArgumentOutOfRangeException(nameof(value), value, "Values must be greater than 0.");
+                }
+                defaultSplineSegs = value;
+            }
+        }
 
         /// <summary>
         /// Gets or sets the polyline <see cref="Polyline2DVertex">vertex</see> list.
@@ -278,106 +295,38 @@ namespace netDxf.Entities
         public List<EntityObject> Explode()
         {
             List<EntityObject> entities = new List<EntityObject>();
-            int index = 0;
-            foreach (Polyline2DVertex vertex in this.Vertexes)
+
+            if (this.smoothType == PolylineSmoothType.NoSmooth)
             {
-                double bulge = vertex.Bulge;
-                Vector2 p1;
-                Vector2 p2;
-
-                if (index == this.Vertexes.Count - 1)
+                int index = 0;
+                foreach (Polyline2DVertex vertex in this.Vertexes)
                 {
-                    if (!this.IsClosed)
+                    double bulge = vertex.Bulge;
+                    Vector2 p1;
+                    Vector2 p2;
+
+                    if (index == this.Vertexes.Count - 1)
                     {
-                        break;
-                    }
-                    p1 = new Vector2(vertex.Position.X, vertex.Position.Y);
-                    p2 = new Vector2(this.vertexes[0].Position.X, this.vertexes[0].Position.Y);
-                }
-                else
-                {
-                    p1 = new Vector2(vertex.Position.X, vertex.Position.Y);
-                    p2 = new Vector2(this.vertexes[index + 1].Position.X, this.vertexes[index + 1].Position.Y);
-                }
-
-                if (MathHelper.IsZero(bulge))
-                {
-                    // the polyline edge is a line
-                    Vector3 start = MathHelper.Transform(new Vector3(p1.X, p1.Y, this.elevation), this.Normal, CoordinateSystem.Object, CoordinateSystem.World);
-                    Vector3 end = MathHelper.Transform(new Vector3(p2.X, p2.Y, this.elevation), this.Normal, CoordinateSystem.Object, CoordinateSystem.World);
-
-                    entities.Add(new Line
-                    {
-                        Layer = (Layer) this.Layer.Clone(),
-                        Linetype = (Linetype) this.Linetype.Clone(),
-                        Color = (AciColor) this.Color.Clone(),
-                        Lineweight = this.Lineweight,
-                        Transparency = (Transparency) this.Transparency.Clone(),
-                        LinetypeScale = this.LinetypeScale,
-                        Normal = this.Normal,
-                        StartPoint = start,
-                        EndPoint = end,
-                        Thickness = this.Thickness
-                    });
-                }
-                else
-                {
-                    // the polyline edge is an arc
-                    double theta = 4 * Math.Atan(Math.Abs(bulge));
-                    double c = Vector2.Distance(p1, p2) / 2.0;
-                    double r = c / Math.Sin(theta / 2.0);
-
-                    // avoid arcs with very small radius, draw a line instead
-                    if (MathHelper.IsZero(r))
-                    {
-                        // the polyline edge is a line
-                        List<Vector3> points = MathHelper.Transform(
-                            new []
-                            {
-                                new Vector3(p1.X, p1.Y, this.elevation),
-                                new Vector3(p2.X, p2.Y, this.elevation)
-                            },
-                            this.Normal,
-                            CoordinateSystem.Object, CoordinateSystem.World);
-
-                        entities.Add(new Line
+                        if (!this.IsClosed)
                         {
-                            Layer = (Layer)this.Layer.Clone(),
-                            Linetype = (Linetype)this.Linetype.Clone(),
-                            Color = (AciColor)this.Color.Clone(),
-                            Lineweight = this.Lineweight,
-                            Transparency = (Transparency)this.Transparency.Clone(),
-                            LinetypeScale = this.LinetypeScale,
-                            Normal = this.Normal,
-                            StartPoint = points[0],
-                            EndPoint = points[1],
-                            Thickness = this.Thickness,
-                        });
+                            break;
+                        }
+                        p1 = new Vector2(vertex.Position.X, vertex.Position.Y);
+                        p2 = new Vector2(this.vertexes[0].Position.X, this.vertexes[0].Position.Y);
                     }
                     else
                     {
-                        double gamma = (Math.PI - theta) / 2;
-                        double phi = Vector2.Angle(p1, p2) + Math.Sign(bulge) * gamma;
-                        Vector2 center = new Vector2(p1.X + r * Math.Cos(phi), p1.Y + r * Math.Sin(phi));
-                        double startAngle;
-                        double endAngle;
-                        if (bulge > 0)
-                        {
-                            startAngle = MathHelper.RadToDeg*Vector2.Angle(p1 - center);
-                            endAngle = startAngle + MathHelper.RadToDeg*theta;
-                        }
-                        else
-                        {
-                            endAngle = MathHelper.RadToDeg*Vector2.Angle(p1 - center);
-                            startAngle = endAngle - MathHelper.RadToDeg*theta;
-                        }
-                        Vector3 point = MathHelper.Transform(new Vector3(center.X, center.Y,
-                            this.elevation),
-                            this.Normal,
-                            CoordinateSystem.Object,
-                            CoordinateSystem.World);
+                        p1 = new Vector2(vertex.Position.X, vertex.Position.Y);
+                        p2 = new Vector2(this.vertexes[index + 1].Position.X, this.vertexes[index + 1].Position.Y);
+                    }
 
-                        entities.Add(new Arc
+                    if (MathHelper.IsZero(bulge))
+                    {
+                        // the polyline edge is a line
+                        Vector3 start = MathHelper.Transform(new Vector3(p1.X, p1.Y, this.elevation), this.Normal, CoordinateSystem.Object, CoordinateSystem.World);
+                        Vector3 end = MathHelper.Transform(new Vector3(p2.X, p2.Y, this.elevation), this.Normal, CoordinateSystem.Object, CoordinateSystem.World);
+
+                        entities.Add(new Line
                         {
                             Layer = (Layer) this.Layer.Clone(),
                             Linetype = (Linetype) this.Linetype.Clone(),
@@ -386,15 +335,138 @@ namespace netDxf.Entities
                             Transparency = (Transparency) this.Transparency.Clone(),
                             LinetypeScale = this.LinetypeScale,
                             Normal = this.Normal,
-                            Center = point,
-                            Radius = r,
-                            StartAngle = startAngle,
-                            EndAngle = endAngle,
-                            Thickness = this.Thickness,
+                            StartPoint = start,
+                            EndPoint = end,
+                            Thickness = this.Thickness
                         });
                     }
+                    else
+                    {
+                        // the polyline edge is an arc
+                        double theta = 4 * Math.Atan(Math.Abs(bulge));
+                        double c = Vector2.Distance(p1, p2) / 2.0;
+                        double r = c / Math.Sin(theta / 2.0);
+
+                        // avoid arcs with very small radius, draw a line instead
+                        if (MathHelper.IsZero(r))
+                        {
+                            // the polyline edge is a line
+                            List<Vector3> points = MathHelper.Transform(
+                                new []
+                                {
+                                    new Vector3(p1.X, p1.Y, this.elevation),
+                                    new Vector3(p2.X, p2.Y, this.elevation)
+                                },
+                                this.Normal,
+                                CoordinateSystem.Object, CoordinateSystem.World);
+
+                            entities.Add(new Line
+                            {
+                                Layer = (Layer)this.Layer.Clone(),
+                                Linetype = (Linetype)this.Linetype.Clone(),
+                                Color = (AciColor)this.Color.Clone(),
+                                Lineweight = this.Lineweight,
+                                Transparency = (Transparency)this.Transparency.Clone(),
+                                LinetypeScale = this.LinetypeScale,
+                                Normal = this.Normal,
+                                StartPoint = points[0],
+                                EndPoint = points[1],
+                                Thickness = this.Thickness,
+                            });
+                        }
+                        else
+                        {
+                            double gamma = (Math.PI - theta) / 2;
+                            double phi = Vector2.Angle(p1, p2) + Math.Sign(bulge) * gamma;
+                            Vector2 center = new Vector2(p1.X + r * Math.Cos(phi), p1.Y + r * Math.Sin(phi));
+                            double startAngle;
+                            double endAngle;
+                            if (bulge > 0)
+                            {
+                                startAngle = MathHelper.RadToDeg*Vector2.Angle(p1 - center);
+                                endAngle = startAngle + MathHelper.RadToDeg*theta;
+                            }
+                            else
+                            {
+                                endAngle = MathHelper.RadToDeg*Vector2.Angle(p1 - center);
+                                startAngle = endAngle - MathHelper.RadToDeg*theta;
+                            }
+                            Vector3 point = MathHelper.Transform(new Vector3(center.X, center.Y,
+                                this.elevation),
+                                this.Normal,
+                                CoordinateSystem.Object,
+                                CoordinateSystem.World);
+
+                            entities.Add(new Arc
+                            {
+                                Layer = (Layer) this.Layer.Clone(),
+                                Linetype = (Linetype) this.Linetype.Clone(),
+                                Color = (AciColor) this.Color.Clone(),
+                                Lineweight = this.Lineweight,
+                                Transparency = (Transparency) this.Transparency.Clone(),
+                                LinetypeScale = this.LinetypeScale,
+                                Normal = this.Normal,
+                                Center = point,
+                                Radius = r,
+                                StartAngle = startAngle,
+                                EndAngle = endAngle,
+                                Thickness = this.Thickness,
+                            });
+                        }
+                    }
+                    index++;
                 }
-                index++;
+                return entities;
+            }
+
+            List<SplineVertex> wcsVertexes = new List<SplineVertex>();
+            Matrix3 trans = MathHelper.ArbitraryAxis(this.Normal);
+
+            foreach (Polyline2DVertex vertex in this.vertexes)
+            {
+                Vector3 wcsVertex = trans * new Vector3(vertex.Position.X, vertex.Position.Y, this.elevation);
+                wcsVertexes.Add(new SplineVertex(wcsVertex));
+            }
+
+            int degree = this.smoothType == PolylineSmoothType.Quadratic ? 2 : 3;
+            int splineSegs = this.Owner == null ? DefaultSplineSegs : this.Owner.Record.Owner.Owner.DrawingVariables.SplineSegs;
+            int precision = this.IsClosed ? splineSegs * this.Vertexes.Count : splineSegs * (this.Vertexes.Count - 1);
+            List<Vector3> splinePoints = Spline.NurbsEvaluator(wcsVertexes, null, degree, false, this.IsClosed, precision);
+
+            for (int i = 1; i < splinePoints.Count; i++)
+            {
+                Vector3 start = splinePoints[i - 1];
+                Vector3 end = splinePoints[i];
+                entities.Add(new Line
+                {
+                    Layer = (Layer) this.Layer.Clone(),
+                    Linetype = (Linetype) this.Linetype.Clone(),
+                    Color = (AciColor) this.Color.Clone(),
+                    Lineweight = this.Lineweight,
+                    Transparency = (Transparency) this.Transparency.Clone(),
+                    LinetypeScale = this.LinetypeScale,
+                    Normal = this.Normal,
+                    StartPoint = start,
+                    EndPoint = end,
+                    Thickness = this.Thickness
+                });
+            }
+
+            if (this.IsClosed)
+            {
+                entities.Add(new Line
+                {
+                    Layer = (Layer) this.Layer.Clone(),
+                    Linetype = (Linetype) this.Linetype.Clone(),
+                    Color = (AciColor) this.Color.Clone(),
+                    Lineweight = this.Lineweight,
+                    Transparency = (Transparency) this.Transparency.Clone(),
+                    LinetypeScale = this.LinetypeScale,
+                    Normal = this.Normal,
+                    StartPoint = splinePoints[splinePoints.Count - 1],
+                    EndPoint = splinePoints[0],
+                    Thickness = this.Thickness
+                });
             }
 
             return entities;

@@ -326,7 +326,7 @@ namespace netDxf.Entities
             Vector2 ref2 = this.SecondReferencePoint;
             Vector2 dirRef = ref2 - ref1;
             Vector2 dirDesp = Vector2.Normalize(Vector2.Perpendicular(dirRef));
-            Vector2 vec = this.offset* dirDesp;
+            Vector2 vec = this.offset * dirDesp;
             Vector2 dimRef1 = ref1 + vec;
             Vector2 dimRef2 = ref2 + vec;
 
@@ -358,8 +358,8 @@ namespace netDxf.Entities
                     scale = (double) styleOverride.Value;
                 }
 
-                double gap = textGap*scale;
-                this.textRefPoint = Vector2.MidPoint(dimRef1, dimRef2) + gap*dirDesp;
+                double gap = textGap * scale;
+                this.textRefPoint = Vector2.MidPoint(dimRef1, dimRef2) + gap * dirDesp;
             }
         }
 

@@ -4030,18 +4030,18 @@ namespace TestDxfDocument
             // the application registry for this extended data always has the name "AcDbBlockRepBTag"
             XData xdata = block.Record.XData["AcDbBlockRepBTag"];
             string handle = null;
-            // the original dynamic block handle is stored in the extended data
+            // the original dynamic block record handle is stored in the extended data
             foreach (XDataRecord data in xdata.XDataRecord)
             {
                 if (data.Code == XDataCode.DatabaseHandle)
                     handle = (string) data.Value;
             }
 
-            // now we can the original dynamic block record
+            // now we can get the original dynamic block record
             BlockRecord originalDynamicBlockRecord = (BlockRecord) drawing.GetObjectByHandle(handle);
             string dynamicBlockName = originalDynamicBlockRecord.Name;
             // if we need the original block instead of just the record, we can get it from the list of block since we know now its name
-            Block originalBlockRecord = drawing.Blocks[dynamicBlockName];
+            Block originalBlock = drawing.Blocks[dynamicBlockName];
 
             // the dynamic parameter of this insert was NOT modified so the block will be the original
             insert = drawing.Entities.Inserts.ElementAt(1);
