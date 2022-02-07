@@ -5695,12 +5695,12 @@ namespace netDxf.IO
                                     string[] altTextPrefixSuffix = GetDimStylePrefixAndSuffix(dimapost, '[', ']');
                                     if (!string.IsNullOrEmpty(altTextPrefixSuffix[0]))
                                     {
-                                        overrides.Add(new DimensionStyleOverride(DimensionStyleOverrideType.DimPrefix, altTextPrefixSuffix[0]));
+                                        overrides.Add(new DimensionStyleOverride(DimensionStyleOverrideType.AltUnitsPrefix, altTextPrefixSuffix[0]));
                                     }
 
                                     if (!string.IsNullOrEmpty(altTextPrefixSuffix[1]))
                                     {
-                                        overrides.Add(new DimensionStyleOverride(DimensionStyleOverrideType.DimSuffix, altTextPrefixSuffix[1]));
+                                        overrides.Add(new DimensionStyleOverride(DimensionStyleOverrideType.AltUnitsSuffix, altTextPrefixSuffix[1]));
                                     }
 
                                     break;
