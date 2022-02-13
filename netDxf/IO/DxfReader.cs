@@ -5419,19 +5419,25 @@ namespace netDxf.IO
                     case 1:
                         userText = this.DecodeEncodedNonAsciiCharacters(this.chunk.ReadString());
                         if (string.IsNullOrEmpty(userText.Trim(' ', '\t')))
+                        {
                             userText = " ";
+                        }
                         this.chunk.Next();
                         break;
                     case 2:
                         drawingBlockName = this.DecodeEncodedNonAsciiCharacters(this.chunk.ReadString());
                         if (!isBlockEntity)
+                        {
                             drawingBlock = this.GetBlock(drawingBlockName);
+                        }
                         this.chunk.Next();
                         break;
                     case 3:
                         string styleName = this.DecodeEncodedNonAsciiCharacters(this.chunk.ReadString());
                         if (string.IsNullOrEmpty(styleName))
+                        {
                             styleName = this.doc.DrawingVariables.DimStyle;
+                        }
                         style = this.GetDimensionStyle(styleName);
                         this.chunk.Next();
                         break;
@@ -5944,7 +5950,9 @@ namespace netDxf.IO
                                     break;
                                 case 173: // DIMSAH
                                     if (data.Code != XDataCode.Int16)
+                                    {
                                         return overrides; // premature end
+                                    }
                                     dimsah = (short) data.Value != 0;
                                     break;
                                 case 174: // DIMTIX
@@ -6273,22 +6281,30 @@ namespace netDxf.IO
             {
                 if (!string.IsNullOrEmpty(handleDimblk1))
                 {
-                    BlockRecord dimblk1 = this.doc.GetObjectByHandle(handleDimblk1) as BlockRecord;
-                    overrides.Add(new DimensionStyleOverride(DimensionStyleOverrideType.DimArrow1, dimblk1 == null ? null : this.doc.Blocks[dimblk1.Name]));
+                    if (this.doc.GetObjectByHandle(handleDimblk1) is BlockRecord dimblk1)
+                    {
+                        overrides.Add(new DimensionStyleOverride(DimensionStyleOverrideType.DimArrow1, this.doc.Blocks[dimblk1.Name]));
+                    }
                 }
                 if (!string.IsNullOrEmpty(handleDimblk2))
                 {
-                    BlockRecord dimblk2 = this.doc.GetObjectByHandle(handleDimblk2) as BlockRecord;
-                    overrides.Add(new DimensionStyleOverride(DimensionStyleOverrideType.DimArrow2, dimblk2 == null ? null : this.doc.Blocks[dimblk2.Name]));
+                    if (this.doc.GetObjectByHandle(handleDimblk2) is BlockRecord dimblk2)
+                    {
+                        overrides.Add(new DimensionStyleOverride(DimensionStyleOverrideType.DimArrow2, this.doc.Blocks[dimblk2.Name]));
+                    }
                 }
             }
             else
             {
+                // just in case, but it seems that for dimension style overrides the variable DIMSAH seems to be always true,
+                // therefore the DIMBLK1 and DIMBLK2 variables will be used 
                 if (!string.IsNullOrEmpty(handleDimblk))
                 {
-                    BlockRecord dimblk = this.doc.GetObjectByHandle(handleDimblk) as BlockRecord;
-                    overrides.Add(new DimensionStyleOverride(DimensionStyleOverrideType.DimArrow1, dimblk == null ? null : this.doc.Blocks[dimblk.Name]));
-                    overrides.Add(new DimensionStyleOverride(DimensionStyleOverrideType.DimArrow2, dimblk == null ? null : this.doc.Blocks[dimblk.Name]));
+                    if (this.doc.GetObjectByHandle(handleDimblk) is BlockRecord dimblk)
+                    {
+                        overrides.Add(new DimensionStyleOverride(DimensionStyleOverrideType.DimArrow1, this.doc.Blocks[dimblk.Name]));
+                        overrides.Add(new DimensionStyleOverride(DimensionStyleOverrideType.DimArrow2, this.doc.Blocks[dimblk.Name]));
+                    }
                 }
             }
 

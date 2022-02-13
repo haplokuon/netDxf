@@ -25,7 +25,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Data.SqlTypes;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -805,13 +804,7 @@ namespace netDxf.IO
                     style.AlternateUnits.SuppressZeroInches));
 
             this.chunk.Write(9, "$DIMAPOST");
-
-            string dimapost = style.AlternateUnits.Suffix;
-            if (!string.IsNullOrEmpty(style.AlternateUnits.Prefix))
-            {
-                dimapost = style.AlternateUnits.Prefix + "<>" + dimapost;
-            }
-            this.chunk.Write(1, this.EncodeNonAsciiCharacters(dimapost));
+            this.chunk.Write(1, this.EncodeNonAsciiCharacters(style.AlternateUnits.Prefix + "[]" + style.AlternateUnits.Suffix));
 
             this.chunk.Write(9, "$DIMATFIT");
             this.chunk.Write(70, (short) style.FitOptions);
@@ -955,12 +948,7 @@ namespace netDxf.IO
             this.chunk.Write(70, (short) style.ExtLineLineweight);
 
             this.chunk.Write(9, "$DIMPOST");
-            string dimpost = style.DimSuffix;
-            if (!string.IsNullOrEmpty(style.DimPrefix))
-            {
-                dimpost = style.DimPrefix + "<>" + dimpost;
-            }
-            this.chunk.Write(1, this.EncodeNonAsciiCharacters(dimpost));
+            this.chunk.Write(1, this.EncodeNonAsciiCharacters(style.DimPrefix + "<>" + style.DimSuffix));
 
             this.chunk.Write(9, "$DIMRND");
             this.chunk.Write(40, style.DimRoundoff);
@@ -1270,19 +1258,9 @@ namespace netDxf.IO
 
             this.chunk.Write(2, this.EncodeNonAsciiCharacters(style.Name));
 
-            string dimpost = style.DimSuffix;
-            if (!string.IsNullOrEmpty(style.DimPrefix))
-            {
-                dimpost = style.DimPrefix + "<>" + dimpost;
-            }
-            this.chunk.Write(3, this.EncodeNonAsciiCharacters(dimpost));
+            this.chunk.Write(3, this.EncodeNonAsciiCharacters(style.DimPrefix + "<>" + style.DimSuffix));
 
-            string dimapost = style.AlternateUnits.Suffix;
-            if (!string.IsNullOrEmpty(style.AlternateUnits.Prefix))
-            {
-                dimapost = style.AlternateUnits.Prefix + "<>" + dimapost;
-            }
-            this.chunk.Write(4, this.EncodeNonAsciiCharacters(dimapost));
+            this.chunk.Write(4, this.EncodeNonAsciiCharacters(style.AlternateUnits.Prefix + "[]" + style.AlternateUnits.Suffix));
 
             this.chunk.Write(40, style.DimScaleOverall);
             this.chunk.Write(41, style.ArrowSize);
@@ -1448,7 +1426,7 @@ namespace netDxf.IO
                 this.chunk.Write(173, (short) 1);
                 if (style.DimArrow1 != null)
                 {
-                    this.chunk.Write(344, style.DimArrow1.Record.Handle);
+                    this.chunk.Write(343, style.DimArrow1.Record.Handle);
                 }
             }
             else if (string.Equals(style.DimArrow1.Name, style.DimArrow2.Name, StringComparison.OrdinalIgnoreCase))
@@ -3631,23 +3609,26 @@ namespace netDxf.IO
                         break;
                     case DimensionStyleOverrideType.LeaderArrow:
                         xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 341));
-                        xdataEntry.XDataRecord.Add(styleOverride.Value != null ?
-                            new XDataRecord(XDataCode.DatabaseHandle, ((Block) styleOverride.Value).Record.Handle) :
-                            new XDataRecord(XDataCode.DatabaseHandle, "0"));
+                        if (styleOverride.Value != null)
+                        {
+                            xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.DatabaseHandle, ((Block) styleOverride.Value).Record.Handle));
+                        }
                         break;
                     case DimensionStyleOverrideType.DimArrow1:
                         writeDIMSAH = true;
                         xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 343));
-                        xdataEntry.XDataRecord.Add(styleOverride.Value != null ?
-                            new XDataRecord(XDataCode.DatabaseHandle, ((Block) styleOverride.Value).Record.Handle) :
-                            new XDataRecord(XDataCode.DatabaseHandle, "0"));
+                        if (styleOverride.Value != null)
+                        {
+                            xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.DatabaseHandle, ((Block) styleOverride.Value).Record.Handle));
+                        }
                         break;
                     case DimensionStyleOverrideType.DimArrow2:
                         writeDIMSAH = true;
                         xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 344));
-                        xdataEntry.XDataRecord.Add(styleOverride.Value != null ?
-                            new XDataRecord(XDataCode.DatabaseHandle, ((Block) styleOverride.Value).Record.Handle) :
-                            new XDataRecord(XDataCode.DatabaseHandle, "0"));
+                        if (styleOverride.Value != null)
+                        {
+                            xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.DatabaseHandle, ((Block) styleOverride.Value).Record.Handle));
+                        }
                         break;
                     case DimensionStyleOverrideType.TextStyle:
                         xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 340));
@@ -3665,11 +3646,6 @@ namespace netDxf.IO
 
                             xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 69));
                             xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 2));
-                        }
-                        else
-                        {
-                            xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 69));
-                            xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 0));
                         }
                         break;
                     case DimensionStyleOverrideType.TextHeight:
@@ -3816,7 +3792,7 @@ namespace netDxf.IO
                         altPrefix = (string) styleOverride.Value;
                         break;
                     case DimensionStyleOverrideType.AltUnitsSuffix:
-                        writeDIMPOST = true;
+                        writeDIMAPOST = true;
                         altSuffix = (string) styleOverride.Value;
                         break;
                     case DimensionStyleOverrideType.AltUnitsSuppressLinearLeadingZeros:
@@ -3995,8 +3971,7 @@ namespace netDxf.IO
             {
                 xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 285));
                 xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16,
-                    GetSuppressZeroesValue(altSuppressLinearLeadingZeros, altSuppressLinearTrailingZeros,
-                        altSuppressZeroFeet, altSuppressZeroInches)));
+                    GetSuppressZeroesValue(altSuppressLinearLeadingZeros, altSuppressLinearTrailingZeros, altSuppressZeroFeet, altSuppressZeroInches)));
             }
 
             if (writeDIMTZIN)
@@ -5264,7 +5239,9 @@ namespace netDxf.IO
                 List<DxfObject> images = this.doc.ImageDefinitions.References[imageDef.Name];
                 foreach (DxfObject o in images)
                 {
-                    Image image = o as Image;
+                    // only Image entities are referenced by an ImageDefinition
+                    Debug.Assert(o is Image, "Only Image entities can be referenced by an ImageDefinition.");
+                    Image image = (Image) o;
                     Dictionary<string, ImageDefinitionReactor> reactors = this.imageDefReactors[image.Definition.Handle];
                     ImageDefinitionReactor reactor = new ImageDefinitionReactor(image.Handle);
                     this.doc.NumHandles = reactor.AssignHandle(this.doc.NumHandles);

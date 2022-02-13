@@ -1,5 +1,10 @@
 ## Change history
 
+### [2022/02/13]
+* Cleanup code when reading and writing some dimension style variables and overrides.
+* (fixed) Issue when writing the header variable $DIMAPOST.
+* (fixed) Some issues with reading and writing dimension style overrides.
+
 ### [2022/01/26]
 * The Polyline2D and Polyline3D Explode method will preserve the smooth type.
 * Deleted the references to the ImageDefinitionReactor from the ImageDefinition they will be created when the DXF is saved.
