@@ -3790,7 +3790,7 @@ namespace netDxf.IO
                         break;
                     case DimensionStyleOverrideType.AltUnitsEnabled:
                         xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) 170));
-                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (short) styleOverride.Value));
+                        xdataEntry.XDataRecord.Add(new XDataRecord(XDataCode.Int16, (bool) styleOverride.Value ? (short) 0 : (short) 1));
                         break;
                     case DimensionStyleOverrideType.AltUnitsLengthUnits:
                         writeDIMALTU = true;
