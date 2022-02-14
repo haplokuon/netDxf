@@ -56,7 +56,7 @@ namespace netDxf.Tables
 
         #region private fields
 
-        private static readonly char[] invalidCharacters = { '\\', '/', ':', '*', '?', '"', '<', '>', '|', ';', ',', '=', '`' };
+        private static readonly char[] invalidCharacters = { '\\', '/', ':', '*', '?', '"', '<', '>', ';', ',', '=', '`' };
         private bool reserved;
         private string name;
 
