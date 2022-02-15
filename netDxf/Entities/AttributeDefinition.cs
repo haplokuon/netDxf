@@ -338,9 +338,9 @@ namespace netDxf.Entities
             get { return this.width; }
             set
             {
-                if (value <= 0)
+                if (value < 0)
                 {
-                    throw new ArgumentOutOfRangeException(nameof(value), value, "The Text width must be greater than zero.");
+                    throw new ArgumentOutOfRangeException(nameof(value), value, "The Text width must be greater or equal zero.");
                 }
                 this.width = value;
             }
