@@ -9,7 +9,6 @@ using netDxf;
 using netDxf.Blocks;
 using netDxf.Collections;
 using netDxf.Entities;
-using GTE = netDxf.GTE;
 using netDxf.Header;
 using netDxf.Objects;
 using netDxf.Tables;
