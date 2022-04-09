@@ -1,5 +1,14 @@
 ## Change history
 
+### [2022/04/10]
+* Added CalculateTangent for Quadratic and Cubic Bezier curves.
+* Added PolygonMesh entity. See PolygonMesh() sample.
+* Added the drawing variables SurfU and SurfV.
+* The ellipse properties MajorAxis and MinorAxis are now write only, if you need to change its axis use the new method SetAxis. The major axis must always be greater or equal to the minor axis, given write access independently to them might lead to errors.
+* Deleted the EndSequence object from the Insert entity. It will be created when the DXF file is saved.
+* (fixed) Some issues when reading and writing attributes and attribute definitions, related with the fit and aligned Alignment property.
+* (fixed) Attribute and AttributeDefinition properties IsBackward and IsUpsideDown were not written nor read.
+
 ### [2022/02/13]
 * Cleanup code when reading and writing some dimension style variables and overrides.
 * (fixed) Issue when writing the header variable $DIMAPOST.
@@ -40,7 +49,7 @@
 * The internal blocks that start with "*U" or "*T" can be safely renamed. They are internally created to represent dynamic blocks, arrays, and tables; although the information of those objects is lost when importing the DXF, the block that represent its graphical appearance is imported.
 * PolyfaceMesh vertexes are now a list of Vector3. The additional information that the DXF requires will be generated when the file is saved.
 * Deleted the PolyfaceMeshVertex class, there is no use for it anymore.
-* PolyfaceMeshFace does not inherit from DxfObject anymore..  The additional information that the DXF requires will be generated when the file is saved.
+* PolyfaceMeshFace does not inherit from DxfObject anymore. The additional information that the DXF requires will be generated when the file is saved.
 * PolyfaceMeshFace can have its own Layer and/or Color. By default they are set to null to inherit from its parent PolyfaceMesh.
 * Polyline vertexes are now a list of Vector3. The additional information that the DXF requires will be generated when the file is saved.
 * Deleted the PolylineVertex class, there is no use for it anymore.

@@ -501,12 +501,9 @@ namespace netDxf.Entities
                     CoordinateSystem.Object);
                 double rotation = Vector2.Angle(new Vector2(ocsAxisPoint.X, ocsAxisPoint.Y))*MathHelper.RadToDeg;
                 double majorAxis = 2*axisPoint.Modulus();
-                return new Entities.Ellipse
+                return new Entities.Ellipse(center, majorAxis, majorAxis*this.MinorRatio)
                 {
-                    MajorAxis = majorAxis,
-                    MinorAxis = majorAxis*this.MinorRatio,
                     Rotation = rotation,
-                    Center = center,
                     StartAngle = this.IsCounterclockwise ? this.StartAngle : 360 - this.EndAngle,
                     EndAngle = this.IsCounterclockwise ? this.EndAngle : 360 - this.StartAngle,
                 };
@@ -636,7 +633,7 @@ namespace netDxf.Entities
                 {
                     ctrl.Add(new SplineVertex(point.X, point.Y, 0.0, point.Z));
                 }
-                return new Entities.Spline(ctrl, new List<double>(this.Knots), this.Degree);
+                return new Entities.Spline(ctrl, new List<double>(this.Knots), this.Degree, this.IsPeriodic);
             }
 
             /// <summary>

@@ -9,6 +9,7 @@ using netDxf;
 using netDxf.Blocks;
 using netDxf.Collections;
 using netDxf.Entities;
+using GTE = netDxf.GTE;
 using netDxf.Header;
 using netDxf.Objects;
 using netDxf.Tables;
@@ -34,6 +35,7 @@ namespace TestDxfDocument
 
             #region Samples for new and modified features 3.0.0
 
+            //PolygonMesh();
             //UcsTransform();
             //SmoothPolyline2D();
             //SmoothPolyline3D();
@@ -266,10 +268,69 @@ namespace TestDxfDocument
             //WriteInsert();
 
             #endregion
-
         }
 
         #region Samples for new and modified features 3.0.0
+
+        public static void PolygonMesh()
+        {
+            // number of vertexes along the mesh local X axis
+            short u = 6;
+            // number of vertexes along the mesh local Y axis
+            short v = 4;
+
+            // array of vertexes
+            Vector3[] vertexes = new Vector3[u * v];
+            // first row (local X axis)
+            vertexes[0] = new Vector3(0,0,0);
+            vertexes[1] = new Vector3(10,0,10);
+            vertexes[2] = new Vector3(20,0,0);
+            vertexes[3] = new Vector3(30,0,10);
+            vertexes[4] = new Vector3(40,0,0);
+            vertexes[5] = new Vector3(50,0,10);
+
+            // second row (local X axis)
+            vertexes[6] = new Vector3(0,10,10);
+            vertexes[7] = new Vector3(10,10,0);
+            vertexes[8] = new Vector3(20,10,10);
+            vertexes[9] = new Vector3(30,10,0);
+            vertexes[10] = new Vector3(40,10,10);
+            vertexes[11] = new Vector3(50,10,0);
+
+            // third row (local X axis)
+            vertexes[12] = new Vector3(0,20,0);
+            vertexes[13] = new Vector3(10,20,10);
+            vertexes[14] = new Vector3(20,20,0);
+            vertexes[15] = new Vector3(30,20,10);
+            vertexes[16] = new Vector3(40,20,0);
+            vertexes[17] = new Vector3(50,20,10);
+
+            // fourth row (local X axis)
+            vertexes[18] = new Vector3(0,30,10);
+            vertexes[19] = new Vector3(10,30,0);
+            vertexes[20] = new Vector3(20,30,10);
+            vertexes[21] = new Vector3(30,30,0);
+            vertexes[22] = new Vector3(40,30,10);
+            vertexes[23] = new Vector3(50,30,0);
+
+            PolygonMesh pMesh = new PolygonMesh(u, v, vertexes)
+            {
+                Color = AciColor.Blue,
+                DensityU = (short) (10 * u),
+                DensityV = (short) (10 * v),
+                SmoothType = PolylineSmoothType.Quadratic
+            };
+
+            // the Mesh entity doesn't have the restrictions the PolygonMesh has
+            // you can create smoothed polygon meshes with higher densities that the ones allowed by the polygon mesh
+            Mesh mesh = pMesh.ToMesh(50 * u, 50 * v);
+            mesh.Color = AciColor.Red;
+
+            DxfDocument doc = new DxfDocument();
+            doc.Entities.Add(pMesh);
+            doc.Entities.Add(mesh);
+            doc.Save("test.dxf");
+        }
 
         public static void UcsTransform()
         {
@@ -826,7 +887,13 @@ namespace TestDxfDocument
 
         public static void TransformEllipse()
         {
-            Ellipse ellipse = new Ellipse {Center = Vector3.Zero, MajorAxis = 2, MinorAxis = 1, StartAngle = 350, EndAngle = 80, Rotation = 30};
+            Ellipse ellipse = new Ellipse(Vector3.Zero, 2, 1)
+            {
+                StartAngle = 350, 
+                EndAngle = 80, 
+                Rotation = 30
+            };
+
             //Ellipse ellipse = new Ellipse {Center = new Vector3( 0.616, 0.933, 0.0), MajorAxis = 2, MinorAxis = 1, StartAngle = 30, EndAngle = 160, Rotation = 30};
             Block block = new Block("MyBlock");
             block.Entities.Add(ellipse);
@@ -3957,7 +4024,7 @@ namespace TestDxfDocument
             // the number of knots must be control points number + degree + 1
             // Conics are 2nd degree curves
             List<double> knots = new List<double> {0.0, 0.0, 0.0, 1.0/4.0, 1.0/2.0, 1.0/2.0, 3.0/4.0, 1.0, 1.0, 1.0};
-            Spline splineCircle = new Spline(circle, knots, 2);
+            Spline splineCircle = new Spline(circle, knots, 2, false);
 
             DxfDocument dxf = new DxfDocument();
 
@@ -4949,8 +5016,7 @@ namespace TestDxfDocument
                 List<DxfObject> entities = dxf.Layouts.GetReferences(o.Name);
                 foreach (var e in entities)
                 {
-                    EntityObject entity = e as EntityObject;
-                    if (entity != null)
+                    if (e is EntityObject entity)
                     {
                         Debug.Assert(ReferenceEquals(entity.Layer, dxf.Layers[entity.Layer.Name]), "Object reference not equal.");
                         Debug.Assert(ReferenceEquals(entity.Linetype, dxf.Linetypes[entity.Linetype.Name]), "Object reference not equal.");
@@ -4961,27 +5027,21 @@ namespace TestDxfDocument
                         }
                     }
 
-                    Text txt = e as Text;
-                    if (txt != null) Debug.Assert(ReferenceEquals(txt.Style, dxf.TextStyles[txt.Style.Name]), "Object reference not equal.");
+                    if (e is Text txt) Debug.Assert(ReferenceEquals(txt.Style, dxf.TextStyles[txt.Style.Name]), "Object reference not equal.");
 
-                    MText mtxt = e as MText;
-                    if (mtxt != null) Debug.Assert(ReferenceEquals(mtxt.Style, dxf.TextStyles[mtxt.Style.Name]), "Object reference not equal.");
+                    if (e is MText mtxt) Debug.Assert(ReferenceEquals(mtxt.Style, dxf.TextStyles[mtxt.Style.Name]), "Object reference not equal.");
 
-                    Dimension dim = e as Dimension;
-                    if (dim != null)
+                    if (e is Dimension dim)
                     {
                         Debug.Assert(ReferenceEquals(dim.Style, dxf.DimensionStyles[dim.Style.Name]), "Object reference not equal.");
                         Debug.Assert(ReferenceEquals(dim.Block, dxf.Blocks[dim.Block.Name]), "Object reference not equal.");
                     }
 
-                    MLine mline = e as MLine;
-                    if (mline != null) Debug.Assert(ReferenceEquals(mline.Style, dxf.MlineStyles[mline.Style.Name]), "Object reference not equal.");
+                    if (e is MLine mline) Debug.Assert(ReferenceEquals(mline.Style, dxf.MlineStyles[mline.Style.Name]), "Object reference not equal.");
 
-                    Image img = e as Image;
-                    if (img != null) Debug.Assert(ReferenceEquals(img.Definition, dxf.ImageDefinitions[img.Definition.Name]), "Object reference not equal.");
+                    if (e is Image img) Debug.Assert(ReferenceEquals(img.Definition, dxf.ImageDefinitions[img.Definition.Name]), "Object reference not equal.");
 
-                    Insert ins = e as Insert;
-                    if (ins != null)
+                    if (e is Insert ins)
                     {
                         Debug.Assert(ReferenceEquals(ins.Block, dxf.Blocks[ins.Block.Name]), "Object reference not equal.");
                         foreach (var a in ins.Attributes)
@@ -5044,13 +5104,14 @@ namespace TestDxfDocument
             Console.WriteLine("\t{0}; count: {1}", EntityType.Image, dxf.Entities.Images.Count());
             Console.WriteLine("\t{0}; count: {1}", EntityType.Insert, dxf.Entities.Inserts.Count());
             Console.WriteLine("\t{0}; count: {1}", EntityType.Leader, dxf.Entities.Leaders.Count());
-            Console.WriteLine("\t{0}; count: {1}", EntityType.Polyline2D, dxf.Entities.Polylines2D.Count());
             Console.WriteLine("\t{0}; count: {1}", EntityType.Line, dxf.Entities.Lines.Count());
             Console.WriteLine("\t{0}; count: {1}", EntityType.Mesh, dxf.Entities.Meshes.Count());
             Console.WriteLine("\t{0}; count: {1}", EntityType.MLine, dxf.Entities.MLines.Count());
             Console.WriteLine("\t{0}; count: {1}", EntityType.MText, dxf.Entities.MTexts.Count());
             Console.WriteLine("\t{0}; count: {1}", EntityType.Point, dxf.Entities.Points.Count());
             Console.WriteLine("\t{0}; count: {1}", EntityType.PolyfaceMesh, dxf.Entities.PolyfaceMeshes.Count());
+            Console.WriteLine("\t{0}; count: {1}", EntityType.PolygonMesh, dxf.Entities.PolygonMeshes.Count());
+            Console.WriteLine("\t{0}; count: {1}", EntityType.Polyline2D, dxf.Entities.Polylines2D.Count());
             Console.WriteLine("\t{0}; count: {1}", EntityType.Polyline3D, dxf.Entities.Polylines3D.Count());
             Console.WriteLine("\t{0}; count: {1}", EntityType.Shape, dxf.Entities.Shapes.Count());
             Console.WriteLine("\t{0}; count: {1}", EntityType.Solid, dxf.Entities.Solids.Count());
@@ -5482,13 +5543,14 @@ namespace TestDxfDocument
                     }
                 }
             }
-            Console.WriteLine("\t{0}; count: {1}", EntityType.Polyline2D, dxf.Entities.Polylines2D.Count());
             Console.WriteLine("\t{0}; count: {1}", EntityType.Line, dxf.Entities.Lines.Count());
             Console.WriteLine("\t{0}; count: {1}", EntityType.Mesh, dxf.Entities.Meshes.Count());
             Console.WriteLine("\t{0}; count: {1}", EntityType.MLine, dxf.Entities.MLines.Count());
             Console.WriteLine("\t{0}; count: {1}", EntityType.MText, dxf.Entities.MTexts.Count());
             Console.WriteLine("\t{0}; count: {1}", EntityType.Point, dxf.Entities.Points.Count());
             Console.WriteLine("\t{0}; count: {1}", EntityType.PolyfaceMesh, dxf.Entities.PolyfaceMeshes.Count());
+            Console.WriteLine("\t{0}; count: {1}", EntityType.PolygonMesh, dxf.Entities.PolygonMeshes.Count());
+            Console.WriteLine("\t{0}; count: {1}", EntityType.Polyline2D, dxf.Entities.Polylines2D.Count());
             Console.WriteLine("\t{0}; count: {1}", EntityType.Polyline3D, dxf.Entities.Polylines3D.Count());
             Console.WriteLine("\t{0}; count: {1}", EntityType.Shape, dxf.Entities.Shapes.Count());
             Console.WriteLine("\t{0}; count: {1}", EntityType.Solid, dxf.Entities.Solids.Count());

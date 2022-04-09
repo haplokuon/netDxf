@@ -127,8 +127,11 @@ namespace netDxf.Entities
         #region public properties
 
         /// <summary>
-        /// Gets or sets if the default SplineSegs value, this value is used by the Explode method when the current Polyline2D does not belong to a DXF document.
+        /// Gets or sets if the default SplineSegs value.
         /// </summary>
+        /// <remarks>
+        /// This value is used by the Explode method when the current Polyline2D does not belong to a DXF document.
+        /// </remarks>
         public static short DefaultSplineSegs
         {
             get { return defaultSplineSegs; }
@@ -212,7 +215,6 @@ namespace netDxf.Entities
         /// </summary>
         /// <remarks>
         /// The additional polyline vertexes corresponding to the SplineFit will be created when writing the DXF file.
-        /// It is not recommended to use any kind of smoothness in polylines other than NoSmooth. Use a Spline entity instead.
         /// </remarks>
         public PolylineSmoothType SmoothType
         {
@@ -475,8 +477,12 @@ namespace netDxf.Entities
         /// <summary>
         /// Obtains a list of vertexes that represent the polyline approximating the curve segments as necessary.
         /// </summary>
-        /// <param name="precision">Curve segments precision. The number of vertexes created, a value of zero means that no approximation will be made.</param>
+        /// <param name="precision">The number of vertexes created for curve segments.</param>
         /// <returns>A list of vertexes expressed in object coordinate system.</returns>
+        /// <remarks>
+        /// For vertexes with bulge values different than zero a precision of zero means that no approximation will be made.
+        /// For smoothed polylines the minimum number of vertexes generated is 2.
+        /// </remarks>
         public List<Vector2> PolygonalVertexes(int precision)
         {
             return this.PolygonalVertexes(precision, MathHelper.Epsilon, MathHelper.Epsilon);
@@ -485,15 +491,19 @@ namespace netDxf.Entities
         /// <summary>
         /// Obtains a list of vertexes that represent the polyline approximating the curve segments as necessary.
         /// </summary>
-        /// <param name="bulgePrecision">Curve segments precision. The number of vertexes created, a value of zero means that no approximation will be made.</param>
+        /// <param name="precision">The number of vertexes created for curve segments.</param>
         /// <param name="weldThreshold">Tolerance to consider if two new generated vertexes are equal.</param>
         /// <param name="bulgeThreshold">Minimum distance from which approximate curved segments of the polyline.</param>
         /// <returns>A list of vertexes expressed in object coordinate system.</returns>
-        public List<Vector2> PolygonalVertexes(int bulgePrecision, double weldThreshold, double bulgeThreshold)
+        /// <remarks>
+        /// For vertexes with bulge values different than zero a precision of zero means that no approximation will be made.
+        /// For smoothed polylines the minimum number of vertexes generated is 2.
+        /// </remarks>
+        public List<Vector2> PolygonalVertexes(int precision, double weldThreshold, double bulgeThreshold)
         {
-            if (bulgePrecision < 0)
+            if (precision < 0)
             {
-                throw new ArgumentOutOfRangeException(nameof(bulgePrecision), bulgePrecision, "The bulgePrecision must be equal or greater than zero.");
+                throw new ArgumentOutOfRangeException(nameof(precision), precision, "The bulgePrecision must be equal or greater than zero.");
             }
 
             List<Vector2> ocsVertexes = new List<Vector2>();
@@ -534,7 +544,7 @@ namespace netDxf.Entities
 
                     if (!p1.Equals(p2, weldThreshold))
                     {
-                        if (MathHelper.IsZero(bulge) || bulgePrecision == 0)
+                        if (MathHelper.IsZero(bulge) || precision == 0)
                         {
                             ocsVertexes.Add(p1);
                         }
@@ -550,10 +560,10 @@ namespace netDxf.Entities
                                 double phi = Vector2.Angle(p1, p2) + Math.Sign(bulge) * gamma;
                                 Vector2 center = new Vector2(p1.X + r * Math.Cos(phi), p1.Y + r * Math.Sin(phi));
                                 Vector2 a1 = p1 - center;
-                                double angle = Math.Sign(bulge) * theta / (bulgePrecision + 1);
+                                double angle = Math.Sign(bulge) * theta / (precision + 1);
                                 ocsVertexes.Add(p1);
                                 Vector2 prevCurvePoint = p1;
-                                for (int i = 1; i <= bulgePrecision; i++)
+                                for (int i = 1; i <= precision; i++)
                                 {
                                     Vector2 curvePoint = new Vector2
                                     {
@@ -580,6 +590,11 @@ namespace netDxf.Entities
                 return ocsVertexes;
             }
 
+            // the minimum number of vertexes generated for smoothed polylines is 2
+            if (precision < 2)
+            {
+                precision = 2;
+            }
             List<SplineVertex> ctrlPoints = new List<SplineVertex>();
             foreach (Polyline2DVertex vertex in this.vertexes)
             {
@@ -587,7 +602,7 @@ namespace netDxf.Entities
             }
 
             // closed polylines will be considered as closed and periodic
-            List<Vector3> points = Spline.NurbsEvaluator(ctrlPoints, null, degree, false, this.IsClosed, bulgePrecision);
+            List<Vector3> points = Spline.NurbsEvaluator(ctrlPoints, null, degree, false, this.IsClosed, precision);
             foreach (Vector3 point in points)
             {
                 ocsVertexes.Add(new Vector2(point.X, point.Y));

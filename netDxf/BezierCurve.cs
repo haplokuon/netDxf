@@ -82,5 +82,23 @@ namespace netDxf
         }
 
         #endregion
+
+        #region public methods
+
+        /// <summary>
+        /// Obtains a point along the curve at parameter t.
+        /// </summary>
+        /// <param name="t">Parameter t, between 0.0 and 1.0.</param>
+        /// <returns>A point along the curve.</returns>
+        public abstract Vector3 CalculatePoint(double t);
+
+        /// <summary>
+        /// Calculates the tangent vector at parameter t.
+        /// </summary>
+        /// <param name="t">Parameter t, between 0.0 and 1.0.</param>
+        /// <returns>A normalized tangent vector.</returns>
+        public abstract Vector3 CalculateTangent(double t);
+
+        #endregion
     }
 }

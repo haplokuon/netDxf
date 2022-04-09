@@ -93,7 +93,7 @@ namespace netDxf.Entities
         /// <summary>
         /// Aligned.
         /// </summary>
-        /// <remarks>The text width factor will be automatically adjusted so the text will fit in the specified width.</remarks>
+        /// <remarks>The text height will be automatically adjusted so the text will fit in the specified width.</remarks>
         Aligned,
 
         /// <summary>
@@ -104,7 +104,7 @@ namespace netDxf.Entities
         /// <summary>
         /// Fit.
         /// </summary>
-        /// <remarks>The text height will be automatically adjusted so the text will fit in the specified width.</remarks>
+        /// <remarks>The text width factor will be automatically adjusted so the text will fit in the specified width.</remarks>
         Fit
     }
 }

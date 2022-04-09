@@ -102,24 +102,31 @@ namespace netDxf
         /// </summary>
         /// <param name="t">Parameter t, between 0.0 and 1.0.</param>
         /// <returns>A point along the curve.</returns>
-        public Vector3 CalculatePoint(double t)
+        public override Vector3 CalculatePoint(double t)
         {
             if (t < 0.0 || t > 1.0)
             {
                 throw new ArgumentOutOfRangeException(nameof(t), t, "The parameter t must be between 0.0 and 1.0.");
             }
 
-            double c = 1.0f - t;
-            double c2 = c * c; 
-            double t2 = t * t;
-            Vector3 point = new Vector3
-            {
-                X = c2 * this.StartPoint.X + 2 * t * c * this.ControlPoint.X + t2 * this.EndPoint.X,
-                Y = c2 * this.StartPoint.Y + 2 * t * c * this.ControlPoint.Y + t2 * this.EndPoint.Y,
-                Z = c2 * this.StartPoint.Z + 2 * t * c * this.ControlPoint.Z + t2 * this.EndPoint.Z
-            };
+            double c = 1.0 - t;
+            return c * c * this.StartPoint + 2 * t * c * this.ControlPoint + t * t * this.EndPoint;
+        }
 
-            return point;
+        /// <summary>
+        /// Calculates the tangent vector at parameter t.
+        /// </summary>
+        /// <param name="t">Parameter t, between 0.0 and 1.0.</param>
+        /// <returns>A normalized tangent vector.</returns>
+        public override Vector3 CalculateTangent(double t)
+        {
+            if (t < 0.0 || t > 1.0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(t), t, "The parameter t must be between 0.0 and 1.0.");
+            }
+
+            double c = 1.0 - t;
+            return Vector3.Normalize(c * this.StartPoint + (1 - 2 * t) * this.ControlPoint + t * this.EndPoint);
         }
 
         /// <summary>

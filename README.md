@@ -43,7 +43,7 @@ Additionally the Net Standard 2.1 build requires a reference to the external lib
 Visual Studio 2019.
 ## Development Status 
 See [changelog.txt](https://github.com/haplokuon/netDxf/blob/master/doc/Changelog.txt) or the [wiki page](https://github.com/haplokuon/netDxf/wiki) for information on the latest changes.
-## Supported entities
+## Supported DXF entities
 * 3dFace
 * Arc
 * Circle
@@ -59,8 +59,7 @@ See [changelog.txt](https://github.com/haplokuon/netDxf/blob/master/doc/Changelo
 * MLine
 * MText
 * Point
-* PolyfaceMesh
-* Polyline
+* Polyline (Polyline2D, Polyline3D, PolyfaceMesh, and PolygonMesh)
 * Ray
 * Shape
 * Solid

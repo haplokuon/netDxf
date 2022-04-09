@@ -43,6 +43,7 @@ namespace netDxf.Entities
 
         private string subclassMarker;
         private Layer layer;
+        private double thickness;
         private double elevation;
         private Vector3 normal;
         private AciColor color;
@@ -50,6 +51,12 @@ namespace netDxf.Entities
         private List<Vertex> vertexes;
         private PolylineTypeFlags flags;
         private PolylineSmoothType smoothType;
+
+        // polygon mesh
+        private short m;
+        private short n;
+        private short densityM;
+        private short densityN;
 
         #endregion
 
@@ -87,6 +94,15 @@ namespace netDxf.Entities
         }
 
         /// <summary>
+        /// Gets or sets the polyline thickness.
+        /// </summary>
+        public double Thickness
+        {
+            get { return this.thickness; }
+            set { this.thickness = value; }
+        }
+
+        /// <summary>
         /// Gets or sets the polyline elevation.
         /// </summary>
         public double Elevation
@@ -101,7 +117,7 @@ namespace netDxf.Entities
         public Vector3 Normal
         {
             get { return this.normal; }
-            set => this.normal = value;
+            set { this.normal = value; }
         }
 
         /// <summary>
@@ -147,6 +163,42 @@ namespace netDxf.Entities
         {
             get { return this.smoothType; }
             set { this.smoothType = value; }
+        }
+
+        /// <summary>
+        /// Polygon mesh M vertex count.
+        /// </summary>
+        public short M
+        {
+            get { return this.m; }
+            set { this.m = value; }
+        }
+
+        /// <summary>
+        /// Polygon mesh N vertex count.
+        /// </summary>
+        public short N
+        {
+            get { return this.n; }
+            set { this.n = value; }
+        }
+
+        /// <summary>
+        /// Polygon mesh smooth surface M density.
+        /// </summary>
+        public short DensityM
+        {
+            get { return this.densityM; }
+            set { this.densityM = value; }
+        }
+
+        /// <summary>
+        /// Polygon mesh smooth surface N density.
+        /// </summary>
+        public short DensityN
+        {
+            get { return this.densityN; }
+            set { this.densityN = value; }
         }
 
         #endregion

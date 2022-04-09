@@ -114,7 +114,7 @@ namespace netDxf
         /// </summary>
         /// <param name="t">Parameter t, between 0.0 and 1.0.</param>
         /// <returns>A point along the curve.</returns>
-        public Vector3 CalculatePoint(double t)
+        public override Vector3 CalculatePoint(double t)
         {
             if (t < 0.0 || t > 1.0)
             {
@@ -122,18 +122,25 @@ namespace netDxf
             }
 
             double c = 1.0 - t;
-            double c2 = c * c; 
-            double c3 = c2 * c;
-            double t2 = t * t;
-            double t3 = t2 * t;
-            Vector3 point = new Vector3
-            {
-                X = this.StartPoint.X * c3 + this.FirstControlPoint.X * 3 * t * c2 + this.SecondControlPoint.X * 3 * t2 * c + this.EndPoint.X * t3,
-                Y = this.StartPoint.Y * c3 + this.FirstControlPoint.Y * 3 * t * c2 + this.SecondControlPoint.Y * 3 * t2 * c + this.EndPoint.Y * t3,
-                Z = this.StartPoint.Z * c3 + this.FirstControlPoint.Z * 3 * t * c2 + this.SecondControlPoint.Z * 3 * t2 * c + this.EndPoint.Z * t3
-            };
+            return c * c * c * this.StartPoint + 3 * t * c * c * this.FirstControlPoint + 3 * c * t * t * this.SecondControlPoint + t * t * t * this.EndPoint;
+        }
 
-            return point;
+        /// <summary>
+        /// Calculates the tangent vector at parameter t.
+        /// </summary>
+        /// <param name="t">Parameter t, between 0.0 and 1.0.</param>
+        /// <returns>A normalized tangent vector.</returns>
+        public override Vector3 CalculateTangent(double t)
+        {
+            if (t < 0.0 || t > 1.0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(t), t, "The parameter t must be between 0.0 and 1.0.");
+            }
+
+            double c = 1.0 - t;
+            return Vector3.Normalize(
+                -c * c * this.StartPoint + (c * c - 2 * c * t) * this.FirstControlPoint + (2 * c * t - t * t) * this.SecondControlPoint + t * t * this.EndPoint
+            );
         }
 
         /// <summary>
@@ -230,8 +237,8 @@ namespace netDxf
             if (n == 1)
             {
                 // Special case: Bezier curve should be a straight line.
-                firstControlPoint = points[0] + (points[1] - points[0]) / 3;
-                secondControlPoint =  points[1] + (points[0] - points[1]) / 3;
+                firstControlPoint = points[0] + (points[1] - points[0]) / 3.0;
+                secondControlPoint =  points[1] + (points[0] - points[1]) / 3.0;
 
                 curves.Add(new BezierCurveCubic(points[0], firstControlPoint, secondControlPoint, points[1]));
                 return curves;
@@ -257,7 +264,7 @@ namespace netDxf
             {
                 rhs[i] = 4.0 * points[i].Y + 2.0 * points[i + 1].Y;
             }
-            rhs[0] = points[0].Y + 2 * points[1].Y;
+            rhs[0] = points[0].Y + 2.0 * points[1].Y;
             rhs[n - 1] = (8.0 * points[n - 1].Y + points[n].Y) / 2.0;
             // Get first control points Y-values
             double[] y = GetFirstControlPoints(rhs);
@@ -267,7 +274,7 @@ namespace netDxf
             {
                 rhs[i] = 4.0 * points[i].Z + 2.0 * points[i + 1].Z;
             }
-            rhs[0] = points[0].Z + 2 * points[1].Z;
+            rhs[0] = points[0].Z + 2.0 * points[1].Z;
             rhs[n - 1] = (8.0 * points[n - 1].Z + points[n].Z) / 2.0;
             // Get first control points Z-values
             double[] z = GetFirstControlPoints(rhs);
@@ -294,7 +301,7 @@ namespace netDxf
                         (points[n].Z + z[n - 1]) / 2.0);
                 }
 
-                curves.Add(new BezierCurveCubic(points[i], firstControlPoint, secondControlPoint, points[i+1]));
+                curves.Add(new BezierCurveCubic(points[i], firstControlPoint, secondControlPoint, points[i + 1]));
             }
 
             return curves;

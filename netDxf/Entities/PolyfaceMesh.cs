@@ -58,7 +58,7 @@ namespace netDxf.Entities
 
         private readonly PolyfaceMeshFace[] faces;
         private readonly Vector3[] vertexes;
-        private readonly PolylineTypeFlags flags;
+        private PolylineTypeFlags flags;
 
         #endregion
 
@@ -165,11 +165,12 @@ namespace netDxf.Entities
         #region internal properties
 
         /// <summary>
-        /// Gets the polyface mesh flag type.
+        /// Gets the polyface mesh flags.
         /// </summary>
         internal PolylineTypeFlags Flags
         {
             get { return this.flags; }
+            set { this.flags = value; }
         }
 
         #endregion
@@ -322,6 +323,8 @@ namespace netDxf.Entities
                 Normal = this.Normal,
                 IsVisible = this.IsVisible,
                 //PolyfaceMesh properties
+                Flags = this.flags
+
             };
 
             foreach (XData data in this.XData.Values)

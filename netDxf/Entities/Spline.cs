@@ -42,15 +42,15 @@ namespace netDxf.Entities
         private readonly SplineCreationMethod creationMethod;
         private Vector3? startTangent;
         private Vector3? endTangent;
-        private SplineKnotParameterization knotParameterization = SplineKnotParameterization.FitChord;
-        private double knotTolerance = 0.0000001;
-        private double ctrlPointTolerance = 0.0000001;
-        private double fitTolerance = 0.0000000001;
-
         private readonly List<SplineVertex> controlPoints;
         private double[] knots;
         private readonly short degree;
         private bool isClosedPeriodic;
+
+        private SplineKnotParameterization knotParameterization = SplineKnotParameterization.FitChord;
+        private double knotTolerance = 0.0000001;
+        private double ctrlPointTolerance = 0.0000001;
+        private double fitTolerance = 0.0000000001;
 
         #endregion
 
@@ -175,23 +175,8 @@ namespace netDxf.Entities
             }
 
             this.isClosedPeriodic = closedPeriodic;
-
-            //// for periodic splines
-            //if (this.isPeriodic)
-            //{
-            //    this.isClosed = true;
-            //    int replicate = this.degree;
-            //    for (int i = 0; i < replicate; i++)
-            //    {
-            //        this.controlPoints.Add(ctrl[ctrl.Length - replicate + i]);
-            //    }
-            //}
-            //this.controlPoints.AddRange(ctrl);
-
             this.creationMethod = SplineCreationMethod.ControlPoints;
-
             this.fitPoints = new List<Vector3>();
-
             this.knots = CreateKnotVector(this.controlPoints.Count, this.degree, this.isClosedPeriodic);
         }
 
@@ -201,8 +186,9 @@ namespace netDxf.Entities
         /// <param name="controlPoints">Spline control points.</param>
         /// <param name="knots">Spline knot vector.</param>
         /// <param name="degree">Degree of the spline curve. Valid values are 1 (linear), degree 2 (quadratic), degree 3 (cubic), and so on up to degree 10.</param>
-        public Spline(IEnumerable<SplineVertex> controlPoints, IEnumerable<double> knots, short degree)
-            : this(controlPoints, knots, degree, null, SplineCreationMethod.ControlPoints, false)
+        /// <param name="closedPeriodic">Sets if the spline as periodic closed (default false).</param>
+        public Spline(IEnumerable<SplineVertex> controlPoints, IEnumerable<double> knots, short degree, bool closedPeriodic)
+            : this(controlPoints, knots, degree, null, SplineCreationMethod.ControlPoints, closedPeriodic)
         {
         }
 
@@ -269,11 +255,6 @@ namespace netDxf.Entities
                 {
                     throw new ArgumentException("Invalid number of knots.");
                 }
-
-                //if (this.knots.Length != this.controlPoints.Count + degree + 1)
-                //{
-                //    throw new ArgumentException("The number of knots must be equals to the number of control points + spline degree + 1.");
-                //}
             }
 
             // fit points
@@ -662,29 +643,6 @@ namespace netDxf.Entities
 
         #region private methods
 
-        //private static double[] GenerateKnotVectorUniform(int count, double min, double max)
-        //{
-        //    double[] knots = new double[count]; // Knots
-        //    double frac = (max - min) / (knots.Length - 1);
-        //    double total = min;
-
-        //    // Generates knot values - Uniformly
-        //    for (int i = 0; i < knots.Length; i++)
-        //    {
-        //        if (i == knots.Length - 1)
-        //        {
-        //            knots[i] = max;
-        //            break;
-        //        }
-
-        //        knots[i] = total;
-        //        total += frac;
-        //    }
-
-        //    // Returns knots
-        //    return knots;
-        //}
-
         private static double[] CreateKnotVector(int numControlPoints, int degree, bool isPeriodic)
         {
             // create knot vector
@@ -801,7 +759,7 @@ namespace netDxf.Entities
             }
 
             double leftCoefficient = 0.0;
-            if (!(Math.Abs(knots[i + p] - knots[i]) < MathHelper.Epsilon))
+            if (!(Math.Abs(knots[i + p] - knots[i]) < double.Epsilon))
             {
                 leftCoefficient = (u - knots[i]) / (knots[i + p] - knots[i]);
             }

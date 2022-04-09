@@ -324,7 +324,9 @@ namespace netDxf.Entities
             set
             {
                 if (value <= 0)
+                {
                     throw new ArgumentOutOfRangeException(nameof(value), value, "The height should be greater than zero.");
+                }
                 this.height = value;
             }
         }

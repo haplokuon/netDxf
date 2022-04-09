@@ -152,7 +152,6 @@ namespace netDxf.Entities
         /// </summary>
         /// <remarks>
         /// The additional polyline vertexes corresponding to the SplineFit will be created when writing the DXF file.
-        /// It is not recommended to use any kind of smoothness in polylines other than NoSmooth. Use a Spline entity instead.
         /// </remarks>
         public PolylineSmoothType SmoothType
         {
@@ -176,7 +175,7 @@ namespace netDxf.Entities
         #region internal properties
 
         /// <summary>
-        /// Gets the polyline type.
+        /// Gets the Polyline3D flags.
         /// </summary>
         internal PolylineTypeFlags Flags
         {
@@ -308,7 +307,7 @@ namespace netDxf.Entities
         {
             if (precision < 0)
             {
-                throw new ArgumentOutOfRangeException(nameof(precision), precision, "The bulgePrecision must be equal or greater than zero.");
+                throw new ArgumentOutOfRangeException(nameof(precision), precision, "The precision must be equal or greater than zero.");
             }
 
             int degree;
@@ -324,6 +323,12 @@ namespace netDxf.Entities
             {
                 List<Vector3> points = new List<Vector3>(this.vertexes);
                 return points;
+            }
+
+            // the minimum number of vertexes generated for smoothed polylines is 2
+            if (precision < 2)
+            {
+                precision = 2;
             }
 
             List<SplineVertex> ctrlPoints = new List<SplineVertex>();

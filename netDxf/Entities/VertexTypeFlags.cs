@@ -70,9 +70,9 @@ namespace netDxf.Entities
         Polyline3DVertex = 32,
 
         /// <summary>
-        /// 3D polygon mesh.
+        /// 3D polygon mesh vertex.
         /// </summary>
-        Polygon3DMesh = 64,
+        Polygon3DMeshVertex = 64,
 
         /// <summary>
         /// Polyface mesh vertex.

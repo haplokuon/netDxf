@@ -80,7 +80,6 @@ namespace netDxf.Entities
 
         #region private fields
 
-        private readonly EndSequence endSequence;
         private Block block;
         private Vector3 position;
         private Vector3 scale;
@@ -113,10 +112,6 @@ namespace netDxf.Entities
             this.position = Vector3.Zero;
             this.scale = new Vector3(1.0);
             this.rotation = 0.0;
-            this.endSequence = new EndSequence
-            {
-                Owner = this
-            };
         }
 
         /// <summary>
@@ -150,10 +145,6 @@ namespace netDxf.Entities
             this.position = position;
             this.scale = new Vector3(1.0);
             this.rotation = 0.0;
-            this.endSequence = new EndSequence
-            {
-                Owner = this
-            };
 
             List<Attribute> atts = new List<Attribute>(block.AttributeDefinitions.Count);
             foreach (AttributeDefinition attdef in block.AttributeDefinitions.Values)
@@ -193,9 +184,6 @@ namespace netDxf.Entities
         /// <summary>
         /// Gets the insert <see cref="Block">block definition</see>.
         /// </summary>
-        /// <remarks>
-        /// When changing the block associated to 
-        /// </remarks>
         public Block Block
         {
             get { return this.block; }
@@ -260,15 +248,6 @@ namespace netDxf.Entities
         {
             get { return this.rotation; }
             set { this.rotation = MathHelper.NormalizeAngle(value); }
-        }
-
-        #endregion
-
-        #region internal properties
-
-        internal EndSequence EndSequence
-        {
-            get { return this.endSequence; }
         }
 
         #endregion
@@ -442,7 +421,7 @@ namespace netDxf.Entities
                         case EntityType.Circle:
                         {
                             Circle circle = (Circle) entity;
-                            Ellipse ellipse = new Ellipse
+                            Ellipse ellipse = new Ellipse(circle.Center, 2 * circle.Radius, 2 * circle.Radius)
                             {
                                 //EntityObject properties
                                 Layer = (Layer) entity.Layer.Clone(),
@@ -454,9 +433,6 @@ namespace netDxf.Entities
                                 Normal = entity.Normal,
                                 IsVisible = entity.IsVisible,
                                 //Ellipse properties
-                                Center = circle.Center,
-                                MajorAxis = 2 * circle.Radius,
-                                MinorAxis = 2 * circle.Radius,
                                 Thickness = circle.Thickness
                             };
 
@@ -467,7 +443,7 @@ namespace netDxf.Entities
                         case EntityType.Arc:
                         {
                             Arc arc = (Arc) entity;
-                            Ellipse ellipse = new Ellipse
+                            Ellipse ellipse = new Ellipse(arc.Center, 2 * arc.Radius, 2 * arc.Radius)
                             {
                                 //EntityObject properties
                                 Layer = (Layer) entity.Layer.Clone(),
@@ -479,9 +455,6 @@ namespace netDxf.Entities
                                 Normal = entity.Normal,
                                 IsVisible = entity.IsVisible,
                                 //Ellipse properties
-                                Center = arc.Center,
-                                MajorAxis = 2 * arc.Radius,
-                                MinorAxis = 2 * arc.Radius,
                                 StartAngle = arc.StartAngle,
                                 EndAngle = arc.EndAngle,
                                 Thickness = arc.Thickness
@@ -499,7 +472,7 @@ namespace netDxf.Entities
                                 if (newEntity.Type == EntityType.Arc)
                                 {
                                     Arc arc = (Arc) newEntity;
-                                    Ellipse ellipse = new Ellipse
+                                    Ellipse ellipse = new Ellipse(arc.Center, 2 * arc.Radius, 2 * arc.Radius)
                                     {
                                         //EntityObject properties
                                         Layer = (Layer) entity.Layer.Clone(),
@@ -511,9 +484,6 @@ namespace netDxf.Entities
                                         Normal = entity.Normal,
                                         IsVisible = entity.IsVisible,
                                         //Ellipse properties
-                                        Center = arc.Center,
-                                        MajorAxis = 2 * arc.Radius,
-                                        MinorAxis = 2 * arc.Radius,
                                         StartAngle = arc.StartAngle,
                                         EndAngle = arc.EndAngle,
                                         Thickness = arc.Thickness
@@ -538,7 +508,7 @@ namespace netDxf.Entities
                                 if (newEntity.Type == EntityType.Arc)
                                 {
                                     Arc arc = (Arc) newEntity;
-                                    Ellipse ellipse = new Ellipse
+                                    Ellipse ellipse = new Ellipse(arc.Center, 2 * arc.Radius, 2 * arc.Radius)
                                     {
                                         //EntityObject properties
                                         Layer = (Layer) entity.Layer.Clone(),
@@ -550,9 +520,6 @@ namespace netDxf.Entities
                                         Normal = entity.Normal,
                                         IsVisible = entity.IsVisible,
                                         //Ellipse properties
-                                        Center = arc.Center,
-                                        MajorAxis = 2 * arc.Radius,
-                                        MinorAxis = 2 * arc.Radius,
                                         StartAngle = arc.StartAngle,
                                         EndAngle = arc.EndAngle,
                                         Thickness = arc.Thickness
@@ -682,7 +649,6 @@ namespace netDxf.Entities
         /// </remarks>
         internal override long AssignHandle(long entityNumber)
         {
-            entityNumber = this.endSequence.AssignHandle(entityNumber);
             foreach (Attribute attrib in this.attributes)
             {
                 entityNumber = attrib.AssignHandle(entityNumber);

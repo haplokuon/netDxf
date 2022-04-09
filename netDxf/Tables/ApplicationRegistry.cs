@@ -60,7 +60,7 @@ namespace netDxf.Tables
         /// <summary>
         /// Initializes a new instance of the <c>ApplicationRegistry</c> class.
         /// </summary>
-        /// <param name="name">Layer name.</param>
+        /// <param name="name">Application registry name.</param>
         public ApplicationRegistry(string name)
             : this(name, true)
         {
@@ -73,6 +73,13 @@ namespace netDxf.Tables
             {
                 throw new ArgumentNullException(nameof(name), "The application registry name should be at least one character long.");
             }
+
+            // the DXF official documentation says that the application registry name cannot have more than 31 characters
+            // but doesn't seem to hold true anymore. When this limitation was lifted I ignore it, if it was ever true.
+            //if (name.Length > 31)
+            //{
+            //    throw new ArgumentOutOfRangeException(nameof(name), "The application registry name cannot have more than 31 characters.");
+            //}
 
             this.IsReserved = name.Equals(DefaultName, StringComparison.OrdinalIgnoreCase);
         }

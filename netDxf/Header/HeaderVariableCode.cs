@@ -225,9 +225,19 @@ namespace netDxf.Header
         public const string PsLtScale = "$PSLTSCALE";
 
         /// <summary>
-        /// Defines number of line segments to be generated for smoothed out polylines.
+        /// Defines number of line segments generated for smoothed out polylines.
         /// </summary>
         public const string SplineSegs = "$SPLINESEGS";
+
+        /// <summary>
+        /// Define the number of segments generated for smoothed polygon meshes in M direction.
+        /// </summary>
+        public const string SurfU = "$SURFU";
+
+        /// <summary>
+        /// Define the number of segments generated for smoothed polygon meshes in N direction.
+        /// </summary>
+        public const string SurfV = "$SURFV";
 
         /// <summary>
         /// Local date/time of drawing creation.

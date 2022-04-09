@@ -106,6 +106,11 @@ namespace netDxf.Entities
         PolyfaceMesh,
 
         /// <summary>
+        /// Polygon mesh entity.
+        /// </summary>
+        PolygonMesh,
+
+        /// <summary>
         /// Polyline2D entity.
         /// </summary>
         Polyline2D,

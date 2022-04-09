@@ -83,9 +83,7 @@ namespace netDxf
                 case XDataCode.AppReg:
                     throw new ArgumentException("An application registry cannot be an extended data record.", nameof(value));
                 case XDataCode.BinaryData:
-                    byte[] bytes = value as byte[];
-
-                    if (bytes == null)
+                    if (!(value is byte[] bytes))
                     {
                         throw new ArgumentException("The value of a XDataCode.BinaryData must be a byte array.", nameof(value));
                     }
@@ -95,26 +93,20 @@ namespace netDxf
                     }
                     break;
                 case XDataCode.ControlString:
-                    string v = value as string;
-
-                    if (v == null)
+                    if (!(value is string v))
                     {
                         throw new ArgumentException("The value of a XDataCode.ControlString must be a string.", nameof(value));
                     }
-
                     if (!string.Equals(v, "{") && !string.Equals(v, "}"))
                     {
                         throw new ArgumentException("The only valid values of a XDataCode.ControlString are { or }.", nameof(value));
                     }
                     break;
                 case XDataCode.DatabaseHandle:
-                    string handle = value as string;
-
-                    if (handle == null)
+                    if (!(value is string handle))
                     {
                         throw new ArgumentException("The value of a XDataCode.DatabaseHandle must be an hexadecimal number.", nameof(value));
                     }
-
                     if (!long.TryParse(handle, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out long _))
                     {
                         throw new ArgumentException("The value of a XDataCode.DatabaseHandle must be an hexadecimal number.", nameof(value));
@@ -154,10 +146,15 @@ namespace netDxf
                     break;
                 case XDataCode.LayerName:
                 case XDataCode.String:
-                    if (!(value is string))
+                    if (!(value is string text))
                     {
                         throw new ArgumentException(string.Format("The value of a XDataCode.{0} must be a {1}.", code, typeof (string)), nameof(value));
                     }
+                    if (text.Length > 255)
+                    {
+                        throw new ArgumentOutOfRangeException(nameof(value), value, "The maximum length of a XDataCode.String is 255, if larger divide the data into multiple XDataCode.String records.");
+                    }
+
                     break;
             }
             this.code = code;

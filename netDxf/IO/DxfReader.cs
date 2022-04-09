@@ -598,6 +598,24 @@ namespace netDxf.IO
                         }
                         this.chunk.Next();
                         break;
+                    case HeaderVariableCode.SurfU:
+                        short surfU = this.chunk.ReadShort();
+                        if (surfU < 2 || surfU > 200)
+                        {
+                            surfU = 6;
+                        }
+                        this.doc.DrawingVariables.SplineSegs = surfU;
+                        this.chunk.Next();
+                        break;
+                    case HeaderVariableCode.SurfV:
+                        short surfV = this.chunk.ReadShort();
+                        if (surfV < 2 || surfV > 200)
+                        {
+                            surfV = 6;
+                        }
+                        this.doc.DrawingVariables.SplineSegs = surfV;
+                        this.chunk.Next();
+                        break;
                     case HeaderVariableCode.TdCreate:
                         julian = this.chunk.ReadDouble();
                         if (julian < 1721426 || julian > 5373484)
@@ -3340,6 +3358,8 @@ namespace netDxf.IO
             short verticalAlignment = 0;
             double rotation = 0.0;
             double obliqueAngle = 0.0;
+            bool isBackward = false;
+            bool isUpsideDown = false;
             Vector3 normal = Vector3.UnitZ;
             List<XData> xData = new List<XData>();
 
@@ -3417,6 +3437,23 @@ namespace netDxf.IO
                         }
                         this.chunk.Next();
                         break;
+                    case 71:
+                        short textGeneration = this.chunk.ReadShort();
+                        if (textGeneration - 2 == 0)
+                        {
+                            isBackward = true;
+                        }
+                        if (textGeneration - 4 == 0)
+                        {
+                            isUpsideDown = true;
+                        }
+                        if (textGeneration - 6 == 0)
+                        {
+                            isBackward = true;
+                            isUpsideDown = true;
+                        }
+                        this.chunk.Next();
+                        break;
                     case 72:
                         horizontalAlignment = this.chunk.ReadShort();
                         this.chunk.Next();
@@ -3453,18 +3490,23 @@ namespace netDxf.IO
 
             Vector3 ocsBasePoint;
 
-            if (alignment == TextAlignment.BaselineLeft)
+            switch (alignment)
             {
-                ocsBasePoint = firstAlignmentPoint;
-            }
-            else if (alignment == TextAlignment.Fit || alignment == TextAlignment.Aligned)
-            {
-                width = (secondAlignmentPoint - firstAlignmentPoint).Modulus();
-                ocsBasePoint = firstAlignmentPoint;
-            }
-            else
-            {
-                ocsBasePoint = secondAlignmentPoint;
+                case TextAlignment.BaselineLeft:
+                    ocsBasePoint = firstAlignmentPoint;
+                    break;
+                case TextAlignment.Fit:
+                case TextAlignment.Aligned:
+                    width = (secondAlignmentPoint - firstAlignmentPoint).Modulus();
+                    if (width <= 0.0)
+                    {
+                        width = 1.0;
+                    }
+                    ocsBasePoint = firstAlignmentPoint;
+                    break;
+                default:
+                    ocsBasePoint = secondAlignmentPoint;
+                    break;
             }
 
             AttributeDefinition attDef = new AttributeDefinition(tag)
@@ -3480,7 +3522,9 @@ namespace netDxf.IO
                 Width = width,
                 WidthFactor = MathHelper.IsZero(widthFactor) ? style.WidthFactor : widthFactor,
                 ObliqueAngle = obliqueAngle,
-                Rotation = rotation
+                Rotation = rotation,
+                IsBackward = isBackward,
+                IsUpsideDown = isUpsideDown
             };
 
             attDef.XData.AddRange(xData);
@@ -3509,6 +3553,8 @@ namespace netDxf.IO
             short horizontalAlignment = 0;
             short verticalAlignment = 0;
             double rotation = 0.0;
+            bool isBackward = false;
+            bool isUpsideDown = false;
             Vector3 normal = Vector3.UnitZ;
             List<XData> xData = new List<XData>();
 
@@ -3661,6 +3707,23 @@ namespace netDxf.IO
                         }
                         this.chunk.Next();
                         break;
+                    case 71:
+                        short textGeneration = this.chunk.ReadShort();
+                        if (textGeneration - 2 == 0)
+                        {
+                            isBackward = true;
+                        }
+                        if (textGeneration - 4 == 0)
+                        {
+                            isUpsideDown = true;
+                        }
+                        if (textGeneration - 6 == 0)
+                        {
+                            isBackward = true;
+                            isUpsideDown = true;
+                        }
+                        this.chunk.Next();
+                        break;
                     case 72:
                         horizontalAlignment = this.chunk.ReadShort();
                         this.chunk.Next();
@@ -3705,6 +3768,10 @@ namespace netDxf.IO
                 case TextAlignment.Fit:
                 case TextAlignment.Aligned:
                     width = (secondAlignmentPoint - firstAlignmentPoint).Modulus();
+                    if (width <= 0.0)
+                    {
+                        width = 1.0;
+                    }
                     ocsBasePoint = firstAlignmentPoint;
                     break;
                 default:
@@ -3739,7 +3806,9 @@ namespace netDxf.IO
                 Width = width,
                 WidthFactor = MathHelper.IsZero(widthFactor) ? style.WidthFactor : widthFactor,
                 ObliqueAngle = obliqueAngle,
-                Rotation = rotation
+                Rotation = rotation,
+                IsBackward = isBackward,
+                IsUpsideDown = isUpsideDown
             };
 
             attribute.XData.AddRange(xData);
@@ -4070,8 +4139,6 @@ namespace netDxf.IO
                 Position = wcsBasePoint,
                 Normal = normal
             };
-            // since we are converting the table entity to an insert we also need to assign a new handle to the internal EndSequence
-            this.doc.NumHandles = insert.EndSequence.AssignHandle(this.doc.NumHandles);
             insert.XData.AddRange(xData);
 
             //Vector3 ocsDirection = MathHelper.Transform(direction, normal, CoordinateSystem.World, CoordinateSystem.Object);
@@ -7017,15 +7084,12 @@ namespace netDxf.IO
             Vector3 ocsAxisPoint = MathHelper.Transform(axisPoint, normal, CoordinateSystem.World, CoordinateSystem.Object);
 
             double rotation = Vector2.Angle(new Vector2(ocsAxisPoint.X, ocsAxisPoint.Y));
-            double majorAxis = 2*axisPoint.Modulus();
-            double minorAxis = majorAxis*ratio;
+            double majorAxis = 2 * axisPoint.Modulus();
+            double minorAxis = majorAxis * ratio;
 
-            Ellipse ellipse = new Ellipse
+            Ellipse ellipse = new Ellipse(center, majorAxis, minorAxis)
             {
-                MajorAxis = majorAxis,
-                MinorAxis = minorAxis,
                 Rotation = rotation*MathHelper.RadToDeg,
-                Center = center,
                 Normal = normal
             };
 
@@ -7899,27 +7963,14 @@ namespace netDxf.IO
                 }
             }
 
-            string endSequenceHandle = string.Empty;
             if (this.chunk.ReadString() == DxfObjectCode.EndSequence)
             {
                 // read the end sequence object until a new element is found
                 this.chunk.Next();
+                // the EndSequence data is not needed
                 while (this.chunk.Code != 0)
                 {
-                    switch (this.chunk.Code)
-                    {
-                        case 5:
-                            endSequenceHandle = this.chunk.ReadHex();
-                            this.chunk.Next();
-                            break;
-                        case 8:
-                            // the EndSequence layer and the Insert layer are the same
-                            this.chunk.Next();
-                            break;
-                        default:
-                            this.chunk.Next();
-                            break;
-                    }
+                    this.chunk.Next();
                 }
             }
 
@@ -7933,7 +7984,6 @@ namespace netDxf.IO
                 Scale = scale,
                 Normal = normal
             };
-            insert.EndSequence.Handle = endSequenceHandle;
             insert.XData.AddRange(xData);
 
             // post process nested inserts
@@ -8299,9 +8349,9 @@ namespace netDxf.IO
 
                 // we need to convert WCS coordinates to OCS coordinates
                 Matrix3 trans = MathHelper.ArbitraryAxis(normal).Transpose();
-                vertex = trans*vertex;
-                dir = trans*dir;
-                miter = trans*miter;
+                vertex = trans * vertex;
+                dir = trans * dir;
+                miter = trans * miter;
 
                 MLineVertex segment = new MLineVertex(new Vector2(vertex.X, vertex.Y),
                     new Vector2(dir.X, dir.Y),
@@ -8371,7 +8421,6 @@ namespace netDxf.IO
                         {
                             v.StartWidth = startWidth;
                         }
-
                         this.chunk.Next();
                         break;
                     case 41:
@@ -8380,7 +8429,6 @@ namespace netDxf.IO
                         {
                             v.EndWidth = endWidth;
                         }
-
                         this.chunk.Next();
                         break;
                     case 42:
@@ -8429,19 +8477,205 @@ namespace netDxf.IO
             return entity;
         }
 
+        private Polyline2D ReadPolyline2D(Polyline polyline)
+        {
+            // Polyline2D, the vertexes are expressed in local coordinates
+            List<Polyline2DVertex> polylineVertexes = new List<Polyline2DVertex>();
+
+            if (polyline.Flags.HasFlag(PolylineTypeFlags.SplineFit))
+            {
+                foreach (Vertex v in polyline.Vertexes)
+                {
+                    // the vertex list will only store the vertexes of the original polyline
+                    if (v.Flags.HasFlag(VertexTypeFlags.SplineFrameControlPoint))
+                    {
+                        Polyline2DVertex point = new Polyline2DVertex
+                        {
+                            Position = new Vector2(v.Position.X, v.Position.Y),
+                            StartWidth = v.StartWidth,
+                            EndWidth = v.EndWidth,
+                        };
+                        polylineVertexes.Add(point);
+                    }
+                }
+            }
+            else
+            {
+                foreach (Vertex v in polyline.Vertexes)
+                {
+                    Polyline2DVertex vertex = new Polyline2DVertex
+                    {
+                        Position = new Vector2(v.Position.X, v.Position.Y),
+                        Bulge = v.Bulge,
+                        StartWidth = v.StartWidth,
+                        EndWidth = v.EndWidth,
+                    };
+
+                    polylineVertexes.Add(vertex);
+                }
+            }
+            
+            return new Polyline2D(polylineVertexes, polyline.Flags.HasFlag(PolylineTypeFlags.ClosedPolylineOrClosedPolygonMeshInM))
+            {
+                SmoothType = polyline.SmoothType,
+                Thickness = polyline.Thickness,
+                Elevation = polyline.Elevation,
+                Normal = polyline.Normal,
+                Flags = polyline.Flags,
+                XData = polyline.XData
+            };
+        }
+
+        private Polyline3D ReadPolyline3D(Polyline polyline)
+        {
+            // Polyline3D, the vertexes are expressed in world coordinates
+            List<Vector3> polyline3dVertexes = new List<Vector3>();
+
+            if (polyline.Flags.HasFlag(PolylineTypeFlags.SplineFit))
+            {
+                foreach (Vertex v in polyline.Vertexes)
+                {
+                    // the vertex list will only store the vertexes of the original polyline
+                    if (v.Flags.HasFlag(VertexTypeFlags.SplineFrameControlPoint))
+                    {
+                        polyline3dVertexes.Add(v.Position);
+                    }
+                }
+            }
+            else
+            {
+                foreach (Vertex v in polyline.Vertexes)
+                {
+                    // the polyline vertex list will only store the vertexes of the original 
+                    if (v.Flags.HasFlag(VertexTypeFlags.Polyline3DVertex))
+                    {
+                        polyline3dVertexes.Add(v.Position);
+                    }
+                }
+            }
+            
+            return new Polyline3D(polyline3dVertexes, polyline.Flags.HasFlag(PolylineTypeFlags.ClosedPolylineOrClosedPolygonMeshInM))
+            {
+                SmoothType = polyline.SmoothType,
+                Normal = polyline.Normal,
+                Flags = polyline.Flags,
+                XData = polyline.XData
+            };
+        }
+
+        private PolyfaceMesh ReadPolyfaceMesh(Polyline polyline)
+        {
+            // PolyfaceMesh, the vertexes are expressed in world coordinates
+            //the vertex list created contains vertex and face information
+            List<Vector3> polyfaceVertexes = new List<Vector3>();
+            List<PolyfaceMeshFace> polyfaceFaces = new List<PolyfaceMeshFace>();
+            foreach (Vertex v in polyline.Vertexes)
+            {
+                if (v.Flags.HasFlag(VertexTypeFlags.PolyfaceMeshVertex | VertexTypeFlags.Polygon3DMeshVertex))
+                {
+                    polyfaceVertexes.Add(v.Position);
+                }
+                else if (v.Flags.HasFlag(VertexTypeFlags.PolyfaceMeshVertex))
+                {
+                    polyfaceFaces.Add(new PolyfaceMeshFace(v.VertexIndexes)
+                    {
+                        Layer = v.Layer,
+                        Color = v.Color
+                    });
+                }
+            }
+
+            return new PolyfaceMesh(polyfaceVertexes, polyfaceFaces)
+            {
+                Normal = polyline.Normal,
+                Flags = polyline.Flags,
+                XData = polyline.XData
+            };
+        }
+
+        private PolygonMesh ReadPolygonMesh(Polyline polyline)
+        {
+            // the number of vertexes along the M direction must be between 2 and 256
+            if(polyline.M < 2 || polyline.M > 256)
+            {
+                return null;
+            }
+
+            // the number of vertexes along the N direction must be between 2 and 256
+            if(polyline.N < 2 || polyline.N > 256)
+            {
+                return null;
+            }
+
+            Vector3[] polygonMeshVertexes = new Vector3[polyline.M * polyline.N];
+
+            int i;
+            int j;
+
+            if (polyline.Flags.HasFlag(PolylineTypeFlags.SplineFit))
+            {
+                i = 0;
+                j = 0;
+                foreach (Vertex vertex in polyline.Vertexes)
+                {
+                    if (vertex.Flags.HasFlag(VertexTypeFlags.SplineFrameControlPoint))
+                    {
+                        polygonMeshVertexes[i + j * polyline.M] = vertex.Position;
+                        if (++j < polyline.N) continue;
+                        j = 0;
+                        i += 1;
+                    }
+                }
+                return new PolygonMesh(polyline.M, polyline.N, polygonMeshVertexes)
+                {
+                    SmoothType = polyline.SmoothType,
+                    DensityU = polyline.DensityM,
+                    DensityV = polyline.DensityN,
+                    Normal = polyline.Normal,
+                    Flags = polyline.Flags,
+                    XData = polyline.XData
+                };
+            }
+
+            i = 0;
+            j = 0;
+            foreach (Vertex vertex in polyline.Vertexes)
+            {
+                if (vertex.Flags.HasFlag(VertexTypeFlags.Polygon3DMeshVertex))
+                {
+                    polygonMeshVertexes[i + j * polyline.M] = vertex.Position;
+                    if (++j < polyline.N) continue;
+                    j = 0;
+                    i += 1;
+                }
+            }
+            return new PolygonMesh(polyline.M, polyline.N, polygonMeshVertexes)
+            {
+                SmoothType = polyline.SmoothType,
+                Normal = polyline.Normal,
+                Flags = polyline.Flags,
+                XData = polyline.XData
+            };
+        }
+
         private EntityObject ReadPolyline()
         {
-            // the entity Polyline in DXF can actually hold three kinds of entities
-            // 3D polyline is the generic polyline
-            // Polyface mesh
-            // 2D polylines is the old way of writing polylines the AutoCAD2000 and newer use LwPolylines to define a 2D polyline
-            // this way of reading 2d polylines is here for compatibility reasons with older DXF versions.
-            // SplineFit and CurveFit 2D polylines are always saved as a polyline
+            // the entity Polyline in DXF can actually hold four kinds of entities
+            // 1. 3D polyline is the generic polyline
+            // 2. Polygon mesh
+            // 3. Polyface mesh
+            // 4. 2D polylines is the old way of writing polylines the AutoCAD2000 and newer use LwPolylines to define a 2D polyline
+            //    this way of reading 2d polylines is here for compatibility reasons with older DXF versions.
+            //    SplineFit and CurveFit 2D polylines are always saved as a 2D polyline
             PolylineTypeFlags flags = PolylineTypeFlags.OpenPolyline;
             PolylineSmoothType smoothType = PolylineSmoothType.NoSmooth;
             double elevation = 0.0;
             double thickness = 0.0;
             Vector3 normal = Vector3.UnitZ;
+            short m = 0;
+            short n = 0;
+            short densityM = 0;
+            short densityN = 0;
             List<Vertex> vertexes = new List<Vertex>();
             List<XData> xData = new List<XData>();
             
@@ -8463,18 +8697,34 @@ namespace netDxf.IO
                         flags = (PolylineTypeFlags) this.chunk.ReadShort();
                         this.chunk.Next();
                         break;
+                    case 71:
+                        m = this.chunk.ReadShort();
+                        this.chunk.Next();
+                        break;
+                    case 72:
+                        n = this.chunk.ReadShort();
+                        this.chunk.Next();
+                        break;
+                    case 73:
+                        densityM = this.chunk.ReadShort();
+                        if (densityM < 3 || densityM > 201)
+                        {
+                            densityM = (short) (this.doc.DrawingVariables.SurfU + 1);
+                        }
+                        this.chunk.Next();
+                        break;
+                    case 74:
+                        densityN = this.chunk.ReadShort();
+                        if (densityN < 3 || densityN > 201)
+                        {
+                            densityN = (short) (this.doc.DrawingVariables.SurfV + 1);
+                        }
+                        this.chunk.Next();
+                        break;
                     case 75:
                         short smooth = this.chunk.ReadShort();
                         // SmoothType BezierSurface not implemented, reset to default
                         smoothType = smooth == 8 ? PolylineSmoothType.NoSmooth : (PolylineSmoothType) smooth;
-                        this.chunk.Next();
-                        break;
-                    case 71:
-                        //this field may not exist for polyface meshes, we cannot depend on it
-                        this.chunk.Next();
-                        break;
-                    case 72:
-                        //this field may not exist for polyface meshes, we cannot depend on it
                         this.chunk.Next();
                         break;
                     case 210:
@@ -8531,157 +8781,36 @@ namespace netDxf.IO
                 }
             }
 
-            EntityObject pol;
-            bool isClosed = flags.HasFlag(PolylineTypeFlags.ClosedPolylineOrClosedPolygonMeshInM);
-
-            //the polyline type will decide which information to use from the read vertex
-            if (flags.HasFlag(PolylineTypeFlags.SplineFit))
+            Polyline polyline = new Polyline
             {
-                if (flags.HasFlag(PolylineTypeFlags.Polyline3D))
-                {
-                    // Smoothed Polyline3D, the vertexes are expressed in world coordinates
-                    List<Vector3> polyline3dPoints = new List<Vector3>();
-                    foreach (Vertex v in vertexes)
-                    {
-                        // the vertex list will only store the vertexes of the original polyline
-                        if (v.Flags.HasFlag(VertexTypeFlags.SplineFrameControlPoint))
-                        {
-                            polyline3dPoints.Add(v.Position);
-                        }
-                    }
-                    pol = new Polyline3D(polyline3dPoints, isClosed)
-                    {
-                        SmoothType = smoothType,
-                        Normal = normal,
-                        Flags = flags
-                    };
-                }
-                else
-                {
-                    // Smoothed Polyline2D, the vertexes are expressed in local coordinates
-                    List<Polyline2DVertex> polyline2dPoints = new List<Polyline2DVertex>();
-                    foreach (Vertex v in vertexes)
-                    {
-                        // the vertex list will only store the vertexes of the original polyline
-                        if (v.Flags.HasFlag(VertexTypeFlags.SplineFrameControlPoint))
-                        {
-                            Polyline2DVertex point = new Polyline2DVertex
-                            {
-                                Position = new Vector2(v.Position.X, v.Position.Y),
-                                StartWidth = v.StartWidth,
-                                EndWidth = v.EndWidth,
-                            };
-                            polyline2dPoints.Add(point);
-                        }
-                    }
-                    pol = new Polyline2D(polyline2dPoints, isClosed)
-                    {
-                        Elevation = elevation,
-                        SmoothType = smoothType,
-                        Normal = normal,
-                        Flags = flags
-                    };
-                }
-            }
-            else if (flags.HasFlag(PolylineTypeFlags.CurveFit))
+                SubclassMarker = SubclassMarker.PolygonMesh,
+                Vertexes = vertexes,
+                Normal = normal,
+                Elevation = elevation,
+                Thickness = thickness,
+                Flags = flags,
+                SmoothType = smoothType,
+                M = m,
+                N = n,
+                DensityM = densityM,
+                DensityN = densityN
+            };
+            polyline.XData.AddRange(xData);
+
+            if (flags.HasFlag(PolylineTypeFlags.Polyline3D))
             {
-                // only applicable to Polyline2D, the vertexes are expressed in local coordinates
-                List<Polyline2DVertex> polylineVertexes = new List<Polyline2DVertex>();
-                foreach (Vertex v in vertexes)
-                {
-                    Polyline2DVertex vertex = new Polyline2DVertex
-                    {
-                        Position = new Vector2(v.Position.X, v.Position.Y),
-                        Bulge = v.Bulge,
-                        StartWidth = v.StartWidth,
-                        EndWidth = v.EndWidth
-                    };
-                    polylineVertexes.Add(vertex);
-                }
-
-                pol = new Polyline2D(polylineVertexes, isClosed)
-                {
-                    Thickness = thickness,
-                    Elevation = elevation,
-                    Normal = normal,
-                    Flags = flags
-                };
+                return ReadPolyline3D(polyline);
             }
-            else if (flags.HasFlag(PolylineTypeFlags.Polyline3D))
+            if (flags.HasFlag(PolylineTypeFlags.PolyfaceMesh))
             {
-                // Polyline3D, the vertexes are expressed in world coordinates
-                List<Vector3> polyline3dVertexes = new List<Vector3>();
-                foreach (Vertex v in vertexes)
-                {
-                    // the polyline vertex list will only store the vertexes of the original 
-                    if (v.Flags.HasFlag(VertexTypeFlags.Polyline3DVertex))
-                    {
-                        polyline3dVertexes.Add(v.Position);
-                    }
-                }
-
-                pol = new Polyline3D(polyline3dVertexes, isClosed)
-                {
-                    SmoothType = smoothType,
-                    Flags = flags,
-                    Normal = normal
-                };
+                return ReadPolyfaceMesh(polyline);
             }
-            else if (flags.HasFlag(PolylineTypeFlags.PolyfaceMesh))
+            if (flags.HasFlag(PolylineTypeFlags.PolygonMesh))
             {
-                // PolyfaceMesh, the vertexes are expressed in world coordinates
-                //the vertex list created contains vertex and face information
-                List<Vector3> polyfaceVertexes = new List<Vector3>();
-                List<PolyfaceMeshFace> polyfaceFaces = new List<PolyfaceMeshFace>();
-                foreach (Vertex v in vertexes)
-                {
-                    if (v.Flags.HasFlag(VertexTypeFlags.PolyfaceMeshVertex | VertexTypeFlags.Polygon3DMesh))
-                    {
-                        polyfaceVertexes.Add(v.Position);
-                    }
-                    else if (v.Flags.HasFlag(VertexTypeFlags.PolyfaceMeshVertex))
-                    {
-                        polyfaceFaces.Add(new PolyfaceMeshFace(v.VertexIndexes)
-                        {
-                            Layer = v.Layer,
-                            Color = v.Color
-                        });
-                    }
-                }
-                pol = new PolyfaceMesh(polyfaceVertexes, polyfaceFaces)
-                {
-                    Normal = normal
-                };
+                return ReadPolygonMesh(polyline);
             }
-            else
-            {
-                // Polyline2D, the vertexes are expressed in local coordinates
-                List<Polyline2DVertex> polylineVertexes = new List<Polyline2DVertex>();
-                foreach (Vertex v in vertexes)
-                {
-                    Polyline2DVertex vertex = new Polyline2DVertex
-                    {
-                        Position = new Vector2(v.Position.X, v.Position.Y),
-                        Bulge = v.Bulge,
-                        StartWidth = v.StartWidth,
-                        EndWidth = v.EndWidth,
-                    };
-
-                    polylineVertexes.Add(vertex);
-                }
-
-                pol = new Polyline2D(polylineVertexes, isClosed)
-                {
-                    Thickness = thickness,
-                    Elevation = elevation,
-                    Normal = normal,
-                    Flags = flags
-                };
-            }
-
-            pol.XData.AddRange(xData);
-
-            return pol;
+               
+            return ReadPolyline2D(polyline); 
         }
 
         private Vertex ReadVertex()
@@ -8940,18 +9069,23 @@ namespace netDxf.IO
 
             Vector3 ocsBasePoint;
 
-            if (alignment == TextAlignment.BaselineLeft)
+            switch (alignment)
             {
-                ocsBasePoint = firstAlignmentPoint;
-            }
-            else if (alignment == TextAlignment.Fit || alignment == TextAlignment.Aligned)
-            {
-                width = (secondAlignmentPoint - firstAlignmentPoint).Modulus();
-                ocsBasePoint = firstAlignmentPoint;
-            }
-            else
-            {
-                ocsBasePoint = secondAlignmentPoint;
+                case TextAlignment.BaselineLeft:
+                    ocsBasePoint = firstAlignmentPoint;
+                    break;
+                case TextAlignment.Fit:
+                case TextAlignment.Aligned:
+                    width = (secondAlignmentPoint - firstAlignmentPoint).Modulus();
+                    if (width <= 0.0)
+                    {
+                        width = 1.0;
+                    }
+                    ocsBasePoint = firstAlignmentPoint;
+                    break;
+                default:
+                    ocsBasePoint = secondAlignmentPoint;
+                    break;
             }
 
             textString = this.DecodeEncodedNonAsciiCharacters(textString);

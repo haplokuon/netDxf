@@ -291,6 +291,20 @@
             Gets the bezier curve degree.
             </summary>
         </member>
+        <member name="M:netDxf.BezierCurve.CalculatePoint(System.Double)">
+            <summary>
+            Obtains a point along the curve at parameter t.
+            </summary>
+            <param name="t">Parameter t, between 0.0 and 1.0.</param>
+            <returns>A point along the curve.</returns>
+        </member>
+        <member name="M:netDxf.BezierCurve.CalculateTangent(System.Double)">
+            <summary>
+            Calculates the tangent vector at parameter t.
+            </summary>
+            <param name="t">Parameter t, between 0.0 and 1.0.</param>
+            <returns>A normalized tangent vector.</returns>
+        </member>
         <member name="T:netDxf.BezierCurveCubic">
             <summary>
             Represent a cubic bezier curve.
@@ -344,6 +358,13 @@
             </summary>
             <param name="t">Parameter t, between 0.0 and 1.0.</param>
             <returns>A point along the curve.</returns>
+        </member>
+        <member name="M:netDxf.BezierCurveCubic.CalculateTangent(System.Double)">
+            <summary>
+            Calculates the tangent vector at parameter t.
+            </summary>
+            <param name="t">Parameter t, between 0.0 and 1.0.</param>
+            <returns>A normalized tangent vector.</returns>
         </member>
         <member name="M:netDxf.BezierCurveCubic.Split(System.Double)">
             <summary>
@@ -432,6 +453,13 @@
             </summary>
             <param name="t">Parameter t, between 0.0 and 1.0.</param>
             <returns>A point along the curve.</returns>
+        </member>
+        <member name="M:netDxf.BezierCurveQuadratic.CalculateTangent(System.Double)">
+            <summary>
+            Calculates the tangent vector at parameter t.
+            </summary>
+            <param name="t">Parameter t, between 0.0 and 1.0.</param>
+            <returns>A normalized tangent vector.</returns>
         </member>
         <member name="M:netDxf.BezierCurveQuadratic.Split(System.Double)">
             <summary>
@@ -1475,19 +1503,24 @@
             Gets the list of <see cref="T:netDxf.Entities.Shape">shapes</see> in the active layout.
             </summary>
         </member>
-        <member name="P:netDxf.Collections.DrawingEntities.Polylines3D">
-            <summary>
-            Gets the list of <see cref="T:netDxf.Entities.Polyline3D">polylines</see> in the active layout.
-            </summary>
-        </member>
         <member name="P:netDxf.Collections.DrawingEntities.Polylines2D">
             <summary>
             Gets the list of <see cref="T:netDxf.Entities.Polyline2D">polylines</see> in the active layout.
             </summary>
         </member>
+        <member name="P:netDxf.Collections.DrawingEntities.Polylines3D">
+            <summary>
+            Gets the list of <see cref="T:netDxf.Entities.Polyline3D">polylines</see> in the active layout.
+            </summary>
+        </member>
         <member name="P:netDxf.Collections.DrawingEntities.PolyfaceMeshes">
             <summary>
             Gets the list of <see cref="P:netDxf.Collections.DrawingEntities.PolyfaceMeshes">polyface meshes</see> in the active layout.
+            </summary>
+        </member>
+        <member name="P:netDxf.Collections.DrawingEntities.PolygonMeshes">
+            <summary>
+            Gets the list of <see cref="P:netDxf.Collections.DrawingEntities.PolygonMeshes">polygon meshes</see> in the active layout.
             </summary>
         </member>
         <member name="P:netDxf.Collections.DrawingEntities.Points">
@@ -5423,6 +5456,13 @@
             </summary>
             <remarks>An ellipse is considered full when its start and end angles are equal.</remarks>
         </member>
+        <member name="M:netDxf.Entities.Ellipse.SetAxis(System.Double,System.Double)">
+            <summary>
+            Sets the ellipse major and minor axis.
+            </summary>
+            <param name="major">Ellipse major axis.</param>
+            <param name="minor">Ellipse minor axis.</param>
+        </member>
         <member name="M:netDxf.Entities.Ellipse.PolarCoordinateRelativeToCenter(System.Double)">
             <summary>
             Calculate the local point on the ellipse for a given angle relative to the center.
@@ -5649,6 +5689,11 @@
         <member name="F:netDxf.Entities.EntityType.PolyfaceMesh">
             <summary>
             Polyface mesh entity.
+            </summary>
+        </member>
+        <member name="F:netDxf.Entities.EntityType.PolygonMesh">
+            <summary>
+            Polygon mesh entity.
             </summary>
         </member>
         <member name="F:netDxf.Entities.EntityType.Polyline2D">
@@ -6863,9 +6908,6 @@
             <summary>
             Gets the insert <see cref="P:netDxf.Entities.Insert.Block">block definition</see>.
             </summary>
-            <remarks>
-            When changing the block associated to 
-            </remarks>
         </member>
         <member name="P:netDxf.Entities.Insert.Position">
             <summary>
@@ -8656,7 +8698,7 @@
         </member>
         <member name="P:netDxf.Entities.PolyfaceMesh.Flags">
             <summary>
-            Gets the polyface mesh flag type.
+            Gets the polyface mesh flags.
             </summary>
         </member>
         <member name="M:netDxf.Entities.PolyfaceMesh.Explode">
@@ -8734,6 +8776,141 @@
             </summary>
             <returns>A new PolyfaceMeshFace that is a copy of this instance.</returns>
         </member>
+        <member name="T:netDxf.Entities.PolygonMesh">
+            <summary>
+            Represents a mesh grid <see cref="T:netDxf.Entities.EntityObject">entity</see>.
+            </summary>
+        </member>
+        <member name="M:netDxf.Entities.PolygonMesh.#ctor(System.Int16,System.Int16,System.Collections.Generic.IEnumerable{netDxf.Vector3})">
+            <summary>
+            Initializes a new instance of the <c>PolygonMesh</c> class.
+            </summary>
+            <param name="u">Number of vertexes along the U direction (local X axis).</param>
+            <param name="v">Number of vertexes along the V direction (local Y axis).</param>
+            <param name="vertexes">Array of UxV vertexes that represents the mesh grid.</param>
+        </member>
+        <member name="P:netDxf.Entities.PolygonMesh.Vertexes">
+            <summary>
+            Gets the mesh vertexes.
+            </summary>
+        </member>
+        <member name="P:netDxf.Entities.PolygonMesh.U">
+            <summary>
+            Gets the number of vertexes along the U direction (local X axis).
+            </summary>
+        </member>
+        <member name="P:netDxf.Entities.PolygonMesh.V">
+            <summary>
+            Gets the number of vertexes along the V direction (local Y axis).
+            </summary>
+        </member>
+        <member name="P:netDxf.Entities.PolygonMesh.DensityU">
+            <summary>
+            Smooth surface U density.
+            </summary>
+            <remarks>Valid values range from 3 to 201.</remarks>
+        </member>
+        <member name="P:netDxf.Entities.PolygonMesh.DensityV">
+            <summary>
+            Smooth surface V density
+            </summary>
+            <remarks>Valid values range from 3 to 201.</remarks>
+        </member>
+        <member name="P:netDxf.Entities.PolygonMesh.IsClosedInU">
+            <summary>
+            Gets or sets if the polygon mesh is closed along the U direction (local X axis).
+            </summary>
+        </member>
+        <member name="P:netDxf.Entities.PolygonMesh.IsClosedInV">
+            <summary>
+            Gets or sets if the polygon mesh is closed along the V direction (local Y axis).
+            </summary>
+        </member>
+        <member name="P:netDxf.Entities.PolygonMesh.SmoothType">
+            <summary>
+            Gets or sets the polyline smooth type.
+            </summary>
+            <remarks>
+            The additional polygon meshes vertexes corresponding to the SplineFit will be created when writing the DXF file.
+            </remarks>
+        </member>
+        <member name="P:netDxf.Entities.PolygonMesh.DefaultSurfU">
+            <summary>
+            Gets or sets if the default SurfU value.
+            </summary>
+            <remarks>
+            This value is used by smoothed polygon meshes when they not belong to a DXF document and the density values are left at the default 0.<br/>
+            The minimum vertexes generated for smoothed polygon meshes is 3.
+            </remarks>
+        </member>
+        <member name="P:netDxf.Entities.PolygonMesh.DefaultSurfV">
+            <summary>
+            Gets or sets if the default SurfV value.
+            </summary>
+            <remarks>
+            This value is used by smoothed polygon meshes when they not belong to a DXF document and the density values are left at the default 0.<br/>
+            The minimum vertexes generated for smoothed polygon meshes is 3.
+            </remarks>
+        </member>
+        <member name="P:netDxf.Entities.PolygonMesh.Flags">
+            <summary>
+            Gets the polygon mesh flags.
+            </summary>
+        </member>
+        <member name="M:netDxf.Entities.PolygonMesh.MeshVertexes">
+            <summary>
+            Obtains a list of vertexes that represent the polygon mesh approximating the surface faces as necessary.
+            </summary>
+            <returns>A list of vertexes that represent the mesh.</returns>
+            <remarks>
+            The minimum vertexes generated for smoothed polygon meshes is 3 in each direction.
+            </remarks>
+        </member>
+        <member name="M:netDxf.Entities.PolygonMesh.MeshVertexes(System.Int32,System.Int32)">
+            <summary>
+            Obtains a list of vertexes that represent the polygon mesh approximating the surface faces as necessary.
+            </summary>
+            <param name="precisionU">Number of vertexes created along the U direction.</param>
+            <param name="precisionV">Number of vertexes created along the V direction.</param>
+            <returns>A list of vertexes that represent the mesh.</returns>
+        </member>
+        <member name="M:netDxf.Entities.PolygonMesh.ToMesh">
+            <summary>
+            Converts the actual polygon mesh into a mesh entity approximating the surface faces as necessary.
+            </summary>
+            <returns>A <see cref="T:netDxf.Entities.Mesh">Mesh entity</see>.</returns>
+        </member>
+        <member name="M:netDxf.Entities.PolygonMesh.ToMesh(System.Int32,System.Int32)">
+            <summary>
+            Converts the actual polygon mesh into a mesh entity approximating the surface faces as necessary.
+            </summary>
+            <param name="precisionU">Number of vertexes created along the U direction.</param>
+            <param name="precisionV">Number of vertexes created along the V direction.</param>
+            <returns>A <see cref="T:netDxf.Entities.Mesh">Mesh entity</see>.</returns>
+            <remarks>
+            The minimum vertexes generated for smoothed polygon meshes is 3 in each direction.
+            </remarks>
+        </member>
+        <member name="M:netDxf.Entities.PolygonMesh.Explode">
+            <summary>
+            Decompose the actual polygon mesh into <see cref="T:netDxf.Entities.Face3D">faces 3D</see>.
+            </summary>
+            <returns>A list of <see cref="T:netDxf.Entities.Face3D">faces 3D</see> that made up the polygon mesh.</returns>
+        </member>
+        <member name="M:netDxf.Entities.PolygonMesh.TransformBy(netDxf.Matrix3,netDxf.Vector3)">
+            <summary>
+            Moves, scales, and/or rotates the current entity given a 3x3 transformation matrix and a translation vector.
+            </summary>
+            <param name="transformation">Transformation matrix.</param>
+            <param name="translation">Translation vector.</param>
+            <remarks>Matrix3 adopts the convention of using column vectors to represent a transformation matrix.</remarks>
+        </member>
+        <member name="M:netDxf.Entities.PolygonMesh.Clone">
+            <summary>
+            Creates a new PolygonMesh that is a copy of the current instance.
+            </summary>
+            <returns>A new PolygonMesh that is a copy of this instance.</returns>
+        </member>
         <member name="T:netDxf.Entities.Polyline">
             <summary>
             Represents a DXF Polyline.
@@ -8757,6 +8934,11 @@
         <member name="P:netDxf.Entities.Polyline.Layer">
             <summary>
             Gets or sets the polyline layer.
+            </summary>
+        </member>
+        <member name="P:netDxf.Entities.Polyline.Thickness">
+            <summary>
+            Gets or sets the polyline thickness.
             </summary>
         </member>
         <member name="P:netDxf.Entities.Polyline.Elevation">
@@ -8792,6 +8974,26 @@
         <member name="P:netDxf.Entities.Polyline.SmoothType">
             <summary>
             Gets or sets the polyline smooth type.
+            </summary>
+        </member>
+        <member name="P:netDxf.Entities.Polyline.M">
+            <summary>
+            Polygon mesh M vertex count.
+            </summary>
+        </member>
+        <member name="P:netDxf.Entities.Polyline.N">
+            <summary>
+            Polygon mesh N vertex count.
+            </summary>
+        </member>
+        <member name="P:netDxf.Entities.Polyline.DensityM">
+            <summary>
+            Polygon mesh smooth surface M density.
+            </summary>
+        </member>
+        <member name="P:netDxf.Entities.Polyline.DensityN">
+            <summary>
+            Polygon mesh smooth surface N density.
             </summary>
         </member>
         <member name="T:netDxf.Entities.Polyline2D">
@@ -8835,8 +9037,11 @@
         </member>
         <member name="P:netDxf.Entities.Polyline2D.DefaultSplineSegs">
             <summary>
-            Gets or sets if the default SplineSegs value, this value is used by the Explode method when the current Polyline2D does not belong to a DXF document.
+            Gets or sets if the default SplineSegs value.
             </summary>
+            <remarks>
+            This value is used by the Explode method when the current Polyline2D does not belong to a DXF document.
+            </remarks>
         </member>
         <member name="P:netDxf.Entities.Polyline2D.Vertexes">
             <summary>
@@ -8870,7 +9075,6 @@
             </summary>
             <remarks>
             The additional polyline vertexes corresponding to the SplineFit will be created when writing the DXF file.
-            It is not recommended to use any kind of smoothness in polylines other than NoSmooth. Use a Spline entity instead.
             </remarks>
         </member>
         <member name="P:netDxf.Entities.Polyline2D.Flags">
@@ -8902,17 +9106,25 @@
             <summary>
             Obtains a list of vertexes that represent the polyline approximating the curve segments as necessary.
             </summary>
-            <param name="precision">Curve segments precision. The number of vertexes created, a value of zero means that no approximation will be made.</param>
+            <param name="precision">The number of vertexes created for curve segments.</param>
             <returns>A list of vertexes expressed in object coordinate system.</returns>
+            <remarks>
+            For vertexes with bulge values different than zero a precision of zero means that no approximation will be made.
+            For smoothed polylines the minimum number of vertexes generated is 2.
+            </remarks>
         </member>
         <member name="M:netDxf.Entities.Polyline2D.PolygonalVertexes(System.Int32,System.Double,System.Double)">
             <summary>
             Obtains a list of vertexes that represent the polyline approximating the curve segments as necessary.
             </summary>
-            <param name="bulgePrecision">Curve segments precision. The number of vertexes created, a value of zero means that no approximation will be made.</param>
+            <param name="precision">The number of vertexes created for curve segments.</param>
             <param name="weldThreshold">Tolerance to consider if two new generated vertexes are equal.</param>
             <param name="bulgeThreshold">Minimum distance from which approximate curved segments of the polyline.</param>
             <returns>A list of vertexes expressed in object coordinate system.</returns>
+            <remarks>
+            For vertexes with bulge values different than zero a precision of zero means that no approximation will be made.
+            For smoothed polylines the minimum number of vertexes generated is 2.
+            </remarks>
         </member>
         <member name="M:netDxf.Entities.Polyline2D.TransformBy(netDxf.Matrix3,netDxf.Vector3)">
             <summary>
@@ -9058,12 +9270,11 @@
             </summary>
             <remarks>
             The additional polyline vertexes corresponding to the SplineFit will be created when writing the DXF file.
-            It is not recommended to use any kind of smoothness in polylines other than NoSmooth. Use a Spline entity instead.
             </remarks>
         </member>
         <member name="P:netDxf.Entities.Polyline3D.Flags">
             <summary>
-            Gets the polyline type.
+            Gets the Polyline3D flags.
             </summary>
         </member>
         <member name="M:netDxf.Entities.Polyline3D.Reverse">
@@ -9540,13 +9751,14 @@
             <param name="degree">Degree of the spline curve.  Valid values are 1 (linear), degree 2 (quadratic), degree 3 (cubic), and so on up to degree 10.</param>
             <param name="closedPeriodic">Sets if the spline as periodic closed (default false).</param>
         </member>
-        <member name="M:netDxf.Entities.Spline.#ctor(System.Collections.Generic.IEnumerable{netDxf.Entities.SplineVertex},System.Collections.Generic.IEnumerable{System.Double},System.Int16)">
+        <member name="M:netDxf.Entities.Spline.#ctor(System.Collections.Generic.IEnumerable{netDxf.Entities.SplineVertex},System.Collections.Generic.IEnumerable{System.Double},System.Int16,System.Boolean)">
             <summary>
             Initializes a new instance of the <c>Spline</c> class.
             </summary>
             <param name="controlPoints">Spline control points.</param>
             <param name="knots">Spline knot vector.</param>
             <param name="degree">Degree of the spline curve. Valid values are 1 (linear), degree 2 (quadratic), degree 3 (cubic), and so on up to degree 10.</param>
+            <param name="closedPeriodic">Sets if the spline as periodic closed (default false).</param>
         </member>
         <member name="M:netDxf.Entities.Spline.#ctor(System.Collections.Generic.IEnumerable{netDxf.Entities.SplineVertex},System.Collections.Generic.IEnumerable{System.Double},System.Int16,System.Collections.Generic.IEnumerable{netDxf.Vector3},netDxf.Entities.SplineCreationMethod,System.Boolean)">
             <summary>
@@ -10089,7 +10301,7 @@
             <summary>
             Aligned.
             </summary>
-            <remarks>The text width factor will be automatically adjusted so the text will fit in the specified width.</remarks>
+            <remarks>The text height will be automatically adjusted so the text will fit in the specified width.</remarks>
         </member>
         <member name="F:netDxf.Entities.TextAlignment.Middle">
             <summary>
@@ -10100,7 +10312,7 @@
             <summary>
             Fit.
             </summary>
-            <remarks>The text height will be automatically adjusted so the text will fit in the specified width.</remarks>
+            <remarks>The text width factor will be automatically adjusted so the text will fit in the specified width.</remarks>
         </member>
         <member name="T:netDxf.Entities.Tolerance">
             <summary>
@@ -10722,9 +10934,9 @@
             3D polyline vertex.
             </summary>
         </member>
-        <member name="F:netDxf.Entities.VertexTypeFlags.Polygon3DMesh">
+        <member name="F:netDxf.Entities.VertexTypeFlags.Polygon3DMeshVertex">
             <summary>
-            3D polygon mesh.
+            3D polygon mesh vertex.
             </summary>
         </member>
         <member name="F:netDxf.Entities.VertexTypeFlags.PolyfaceMeshVertex">
@@ -11148,7 +11360,7 @@
         </member>
         <member name="F:netDxf.Header.DxfVersion.Unknown">
             <summary>
-            Unknown AutoCAD DXF file.
+            Unknown AutoCAD DXF file version.
             </summary>
         </member>
         <member name="F:netDxf.Header.DxfVersion.AutoCad10">
@@ -11451,7 +11663,17 @@
         </member>
         <member name="F:netDxf.Header.HeaderVariableCode.SplineSegs">
             <summary>
-            Defines number of line segments to be generated for smoothed out polylines.
+            Defines number of line segments generated for smoothed out polylines.
+            </summary>
+        </member>
+        <member name="F:netDxf.Header.HeaderVariableCode.SurfU">
+            <summary>
+            Define the number of segments generated for smoothed polygon meshes in M direction.
+            </summary>
+        </member>
+        <member name="F:netDxf.Header.HeaderVariableCode.SurfV">
+            <summary>
+            Define the number of segments generated for smoothed polygon meshes in N direction.
             </summary>
         </member>
         <member name="F:netDxf.Header.HeaderVariableCode.TdCreate">
@@ -11735,17 +11957,38 @@
         </member>
         <member name="P:netDxf.Header.HeaderVariables.SplineSegs">
             <summary>
-            Defines number of line segments to be generated for smoothed polylines.
+            Defines number of line segments generated for smoothed polylines.
             </summary>
             <remarks>
+            Accepted values must be greater than 0. Default value: 6.<br />
             Even thought AutoCad accepts negative values for the SplineSegs header values only positive ones are supported.
+            </remarks>
+        </member>
+        <member name="P:netDxf.Header.HeaderVariables.SurfU">
+            <summary>
+            Define the number of segments generated for smoothed polygon meshes in U direction (local X axis).
+            </summary>
+            <remarks>
+            Accepted value range from 2 to 200. Default value: 6.<br />
+            Although in AutoCAD the header variable SurfU accepts values less than 2, the minimum vertexes generated is 3 equivalent to a SurfV value of 2.
+            </remarks>
+        </member>
+        <member name="P:netDxf.Header.HeaderVariables.SurfV">
+            <summary>
+            Define the number of segments generated for smoothed polygon meshes in V direction (local Y axis).
+            </summary>
+            <remarks>
+            Accepted value range from 2 to 200. Default value: 6.<br />
+            Although in AutoCAD the header variable SurfV accepts values less than 2, the minimum vertexes generated is 3 equivalent to a SurfV value of 2.
             </remarks>
         </member>
         <member name="P:netDxf.Header.HeaderVariables.TdCreate">
             <summary>
             Local date/time of drawing creation.
             </summary>
-            <remarks>This date/time is local to the time zone where the file was created.</remarks>
+            <remarks>
+            This date/time is local to the time zone where the file was created.
+            </remarks>
         </member>
         <member name="P:netDxf.Header.HeaderVariables.TduCreate">
             <summary>
@@ -15186,7 +15429,7 @@
             <summary>
             Initializes a new instance of the <c>ApplicationRegistry</c> class.
             </summary>
-            <param name="name">Layer name.</param>
+            <param name="name">Application registry name.</param>
         </member>
         <member name="P:netDxf.Tables.ApplicationRegistry.Owner">
             <summary>

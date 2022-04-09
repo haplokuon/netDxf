@@ -156,14 +156,6 @@ namespace netDxf.Collections
         }
 
         /// <summary>
-        /// Gets the list of <see cref="Polyline3D">polylines</see> in the active layout.
-        /// </summary>
-        public IEnumerable<Polyline3D> Polylines3D
-        {
-            get { return this.document.Layouts[this.activeLayout].AssociatedBlock.Entities.OfType<Polyline3D>(); }
-        }
-
-        /// <summary>
         /// Gets the list of <see cref="Polyline2D">polylines</see> in the active layout.
         /// </summary>
         public IEnumerable<Polyline2D> Polylines2D
@@ -172,11 +164,27 @@ namespace netDxf.Collections
         }
 
         /// <summary>
+        /// Gets the list of <see cref="Polyline3D">polylines</see> in the active layout.
+        /// </summary>
+        public IEnumerable<Polyline3D> Polylines3D
+        {
+            get { return this.document.Layouts[this.activeLayout].AssociatedBlock.Entities.OfType<Polyline3D>(); }
+        }
+
+        /// <summary>
         /// Gets the list of <see cref="PolyfaceMeshes">polyface meshes</see> in the active layout.
         /// </summary>
         public IEnumerable<PolyfaceMesh> PolyfaceMeshes
         {
             get { return this.document.Layouts[this.activeLayout].AssociatedBlock.Entities.OfType<PolyfaceMesh>(); }
+        }
+
+        /// <summary>
+        /// Gets the list of <see cref="PolygonMeshes">polygon meshes</see> in the active layout.
+        /// </summary>
+        public IEnumerable<PolygonMesh> PolygonMeshes
+        {
+            get { return this.document.Layouts[this.activeLayout].AssociatedBlock.Entities.OfType<PolygonMesh>(); }
         }
 
         /// <summary>

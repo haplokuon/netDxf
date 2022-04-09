@@ -88,6 +88,8 @@ namespace netDxf.Header
                 {HeaderVariableCode.PLineGen, new HeaderVariable(HeaderVariableCode.PLineGen, 70, (short) 0)},
                 {HeaderVariableCode.PsLtScale, new HeaderVariable(HeaderVariableCode.PsLtScale, 70, (short) 1)},
                 {HeaderVariableCode.SplineSegs, new HeaderVariable(HeaderVariableCode.SplineSegs, 70, (short) 8)},
+                {HeaderVariableCode.SurfU, new HeaderVariable(HeaderVariableCode.SurfU, 70, (short) 6)},
+                {HeaderVariableCode.SurfV, new HeaderVariable(HeaderVariableCode.SurfV, 70, (short) 6)},
                 {HeaderVariableCode.TdCreate, new HeaderVariable(HeaderVariableCode.TdCreate, 40, DateTime.Now)},
                 {HeaderVariableCode.TduCreate, new HeaderVariable(HeaderVariableCode.TduCreate, 40, DateTime.UtcNow)},
                 {HeaderVariableCode.TdUpdate, new HeaderVariable(HeaderVariableCode.TdUpdate, 40, DateTime.Now)},
@@ -565,9 +567,10 @@ namespace netDxf.Header
         }
 
         /// <summary>
-        /// Defines number of line segments to be generated for smoothed polylines.
+        /// Defines number of line segments generated for smoothed polylines.
         /// </summary>
         /// <remarks>
+        /// Accepted values must be greater than 0. Default value: 6.<br />
         /// Even thought AutoCad accepts negative values for the SplineSegs header values only positive ones are supported.
         /// </remarks>
         public short SplineSegs
@@ -584,9 +587,51 @@ namespace netDxf.Header
         }
 
         /// <summary>
+        /// Define the number of segments generated for smoothed polygon meshes in U direction (local X axis).
+        /// </summary>
+        /// <remarks>
+        /// Accepted value range from 2 to 200. Default value: 6.<br />
+        /// Although in AutoCAD the header variable SurfU accepts values less than 2, the minimum vertexes generated is 3 equivalent to a SurfV value of 2.
+        /// </remarks>
+        public short SurfU
+        {
+            get { return (short) this.variables[HeaderVariableCode.SurfU].Value; }
+            set
+            {
+                if (value < 2 || value > 200)
+                {
+                    throw new ArgumentOutOfRangeException(nameof(value), value, "Values must be between 0 and 200.");
+                }
+                this.variables[HeaderVariableCode.SurfU].Value = value;
+            }
+        }
+
+        /// <summary>
+        /// Define the number of segments generated for smoothed polygon meshes in V direction (local Y axis).
+        /// </summary>
+        /// <remarks>
+        /// Accepted value range from 2 to 200. Default value: 6.<br />
+        /// Although in AutoCAD the header variable SurfV accepts values less than 2, the minimum vertexes generated is 3 equivalent to a SurfV value of 2.
+        /// </remarks>
+        public short SurfV
+        {
+            get { return (short) this.variables[HeaderVariableCode.SurfV].Value; }
+            set
+            {
+                if (value < 2 || value > 200)
+                {
+                    throw new ArgumentOutOfRangeException(nameof(value), value, "Values must be between 0 and 200.");
+                }
+                this.variables[HeaderVariableCode.SurfV].Value = value;
+            }
+        }
+
+        /// <summary>
         /// Local date/time of drawing creation.
         /// </summary>
-        /// <remarks>This date/time is local to the time zone where the file was created.</remarks>
+        /// <remarks>
+        /// This date/time is local to the time zone where the file was created.
+        /// </remarks>
         public DateTime TdCreate
         {
             get { return (DateTime) this.variables[HeaderVariableCode.TdCreate].Value; }

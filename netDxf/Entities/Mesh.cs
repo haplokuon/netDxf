@@ -130,6 +130,26 @@ namespace netDxf.Entities
 
         #endregion
 
+        #region public methods
+
+        ///// <summary>
+        ///// Decompose the actual mesh into <see cref="Face3D">faces 3D</see>.
+        ///// </summary>
+        ///// <returns>A list of <see cref="Face3D">faces 3D</see> that made up the mesh.</returns>
+        //public List<Face3D> Explode()
+        //{
+        // TODO: requires triangulate polygon into triangles for faces with more than 4 vertexes
+        //    List<Face3D> faces3D = new List<Face3D>();
+        //    foreach (int[] face in this.faces)
+        //    {
+        //        faces3D.Add(new Face3D(this.vertexes[face[0]], this.vertexes[face[1]], this.vertexes[face[2]], this.vertexes[face[3]]));
+        //    }
+
+        //    return faces3D;
+        //}
+
+        #endregion
+
         #region overrides
 
         /// <summary>
