@@ -3156,13 +3156,6 @@
             Gets the <see cref="T:netDxf.Collections.DrawingEntities">entities</see> shortcuts.
             </summary>
         </member>
-        <member name="M:netDxf.DxfDocument.GetObjectByHandle(System.String)">
-            <summary>
-            Gets a DXF object by its handle.
-            </summary>
-            <param name="objectHandle">DxfObject handle.</param>
-            <returns>The DxfObject that has the provided handle, null otherwise.</returns>
-        </member>
         <member name="M:netDxf.DxfDocument.Load(System.String)">
             <summary>
             Loads a DXF file.
@@ -3300,6 +3293,13 @@
             <param name="isBinary">Returns true if the DXF is a binary file.</param>
             <returns>String that represents the DXF file version.</returns>
             <remarks>The caller will be responsible of closing the stream.</remarks>
+        </member>
+        <member name="M:netDxf.DxfDocument.GetObjectByHandle(System.String)">
+            <summary>
+            Gets a DXF object by its handle.
+            </summary>
+            <param name="objectHandle">DxfObject handle.</param>
+            <returns>The DxfObject that has the provided handle, null otherwise.</returns>
         </member>
         <member name="T:netDxf.DxfObject">
             <summary>
@@ -8794,6 +8794,21 @@
             Gets the mesh vertexes.
             </summary>
         </member>
+        <member name="M:netDxf.Entities.PolygonMesh.SetVertex(System.Int32,System.Int32,netDxf.Vector3)">
+            <summary>
+            Set a PolygonMesh vertex by its indexes.
+            </summary>
+            <param name="i0">Index of the vertex in the U direction.</param>
+            <param name="i1">Index of the vertex in the V direction.</param>
+            <param name="vertex">A Vector3.</param>
+        </member>
+        <member name="M:netDxf.Entities.PolygonMesh.GetVertex(System.Int32,System.Int32)">
+            <summary>
+            Gets a PolygonMesh vertex by its indexes.
+            </summary>
+            <param name="i0">Index of the vertex in the U direction.</param>
+            <param name="i1">Index of the vertex in the V direction.</param>
+        </member>
         <member name="P:netDxf.Entities.PolygonMesh.U">
             <summary>
             Gets the number of vertexes along the U direction (local X axis).
@@ -9181,6 +9196,12 @@
             </summary>
             <param name="position">Lightweight polyline <see cref="T:netDxf.Vector2">vertex</see> coordinates.</param>
             <param name="bulge">Vertex bulge  (default: 0.0).</param>
+        </member>
+        <member name="M:netDxf.Entities.Polyline2DVertex.#ctor(netDxf.Entities.Polyline2DVertex)">
+            <summary>
+            Copy constructor.
+            </summary>
+            <param name="vertex">A Polyline2D vertex.</param>
         </member>
         <member name="P:netDxf.Entities.Polyline2DVertex.Position">
             <summary>
@@ -9721,50 +9742,56 @@
             </summary>
             <param name="curves">List of cubic bezier curves.</param>
         </member>
-        <member name="M:netDxf.Entities.Spline.#ctor(System.Collections.Generic.IEnumerable{netDxf.Entities.SplineVertex})">
+        <member name="M:netDxf.Entities.Spline.#ctor(System.Collections.Generic.IEnumerable{netDxf.Vector3},System.Collections.Generic.IEnumerable{System.Double})">
             <summary>
             Initializes a new instance of the <c>Spline</c> class.
             </summary>
             <param name="controlPoints">Spline control points.</param>
+            <param name="weights">Spline control weights. Pass null to set the default weights as 1.0.</param>
             <remarks>By default the degree of the spline is equal three.</remarks>
         </member>
-        <member name="M:netDxf.Entities.Spline.#ctor(System.Collections.Generic.IEnumerable{netDxf.Entities.SplineVertex},System.Boolean)">
+        <member name="M:netDxf.Entities.Spline.#ctor(System.Collections.Generic.IEnumerable{netDxf.Vector3},System.Collections.Generic.IEnumerable{System.Double},System.Int16)">
             <summary>
             Initializes a new instance of the <c>Spline</c> class.
             </summary>
             <param name="controlPoints">Spline control points.</param>
+            <param name="weights">Spline control weights. Pass null to set the default weights as 1.0.</param>
+            <param name="degree">Degree of the spline curve.  Valid values are 1 (linear), degree 2 (quadratic), degree 3 (cubic), and so on up to degree 10.</param>
+        </member>
+        <member name="M:netDxf.Entities.Spline.#ctor(System.Collections.Generic.IEnumerable{netDxf.Vector3},System.Collections.Generic.IEnumerable{System.Double},System.Boolean)">
+            <summary>
+            Initializes a new instance of the <c>Spline</c> class.
+            </summary>
+            <param name="controlPoints">Spline control points.</param>
+            <param name="weights">Spline control weights.  If null the weights vector will be automatically initialized with 1.0.</param>
             <param name="closedPeriodic">Sets if the spline as periodic closed (default false).</param>
             <remarks>By default the degree of the spline is equal three.</remarks>
         </member>
-        <member name="M:netDxf.Entities.Spline.#ctor(System.Collections.Generic.IEnumerable{netDxf.Entities.SplineVertex},System.Int16)">
+        <member name="M:netDxf.Entities.Spline.#ctor(System.Collections.Generic.IEnumerable{netDxf.Vector3},System.Collections.Generic.IEnumerable{System.Double},System.Int16,System.Boolean)">
             <summary>
             Initializes a new instance of the <c>Spline</c> class.
             </summary>
             <param name="controlPoints">Spline control points.</param>
-            <param name="degree">Degree of the spline curve.  Valid values are 1 (linear), degree 2 (quadratic), degree 3 (cubic), and so on up to degree 10.</param>
-        </member>
-        <member name="M:netDxf.Entities.Spline.#ctor(System.Collections.Generic.IEnumerable{netDxf.Entities.SplineVertex},System.Int16,System.Boolean)">
-            <summary>
-            Initializes a new instance of the <c>Spline</c> class.
-            </summary>
-            <param name="controlPoints">Spline control points.</param>
+            <param name="weights">Spline control weights.  If null the weights vector will be automatically initialized with 1.0.</param>
             <param name="degree">Degree of the spline curve.  Valid values are 1 (linear), degree 2 (quadratic), degree 3 (cubic), and so on up to degree 10.</param>
             <param name="closedPeriodic">Sets if the spline as periodic closed (default false).</param>
         </member>
-        <member name="M:netDxf.Entities.Spline.#ctor(System.Collections.Generic.IEnumerable{netDxf.Entities.SplineVertex},System.Collections.Generic.IEnumerable{System.Double},System.Int16,System.Boolean)">
+        <member name="M:netDxf.Entities.Spline.#ctor(System.Collections.Generic.IEnumerable{netDxf.Vector3},System.Collections.Generic.IEnumerable{System.Double},System.Collections.Generic.IEnumerable{System.Double},System.Int16,System.Boolean)">
             <summary>
             Initializes a new instance of the <c>Spline</c> class.
             </summary>
             <param name="controlPoints">Spline control points.</param>
+            <param name="weigths">Spline control weights.  If null the weights vector will be automatically initialized with 1.0.</param>
             <param name="knots">Spline knot vector.</param>
             <param name="degree">Degree of the spline curve. Valid values are 1 (linear), degree 2 (quadratic), degree 3 (cubic), and so on up to degree 10.</param>
             <param name="closedPeriodic">Sets if the spline as periodic closed (default false).</param>
         </member>
-        <member name="M:netDxf.Entities.Spline.#ctor(System.Collections.Generic.IEnumerable{netDxf.Entities.SplineVertex},System.Collections.Generic.IEnumerable{System.Double},System.Int16,System.Collections.Generic.IEnumerable{netDxf.Vector3},netDxf.Entities.SplineCreationMethod,System.Boolean)">
+        <member name="M:netDxf.Entities.Spline.#ctor(System.Collections.Generic.IEnumerable{netDxf.Vector3},System.Collections.Generic.IEnumerable{System.Double},System.Collections.Generic.IEnumerable{System.Double},System.Int16,System.Collections.Generic.IEnumerable{netDxf.Vector3},netDxf.Entities.SplineCreationMethod,System.Boolean)">
             <summary>
             Initializes a new instance of the <c>Spline</c> class.
             </summary>
             <param name="controlPoints">Spline control points.</param>
+            <param name="weights">Spline control weights.  If null the weights vector will be automatically initialized with 1.0.</param>
             <param name="knots">Spline knot vector.</param>
             <param name="degree">Degree of the spline curve.  Valid values are 1 (linear), degree 2 (quadratic), degree 3 (cubic), and so on up to degree 10.</param>
             <param name="fitPoints">Spine fit points.</param>
@@ -9844,7 +9871,12 @@
         </member>
         <member name="P:netDxf.Entities.Spline.ControlPoints">
             <summary>
-            Gets the spline <see cref="T:netDxf.Entities.SplineVertex">control points</see> list.
+            Gets the spline <see cref="T:netDxf.Vector3">control points</see> list.
+            </summary>
+        </member>
+        <member name="P:netDxf.Entities.Spline.Weights">
+            <summary>
+            Gets the spline control points weights list.
             </summary>
         </member>
         <member name="P:netDxf.Entities.Spline.Knots">
@@ -9888,11 +9920,12 @@
             The resulting polyline will be a projection of the actual spline into the plane defined by its normal vector.
             </remarks>
         </member>
-        <member name="M:netDxf.Entities.Spline.NurbsEvaluator(System.Collections.Generic.List{netDxf.Entities.SplineVertex},System.Double[],System.Int32,System.Boolean,System.Boolean,System.Int32)">
+        <member name="M:netDxf.Entities.Spline.NurbsEvaluator(netDxf.Vector3[],System.Double[],System.Double[],System.Int32,System.Boolean,System.Boolean,System.Int32)">
             <summary>
             Calculate points along a NURBS curve.
             </summary>
-            <param name="ctrlPoints">List of spline control points.</param>
+            <param name="controls">List of spline control points.</param>
+            <param name="weights">Spline control weights. If null the weights vector will be automatically initialized with 1.0.</param>
             <param name="knots">List of spline knot points. If null the knot vector will be automatically generated.</param>
             <param name="degree">Spline degree.</param>
             <param name="isClosed">Specifies if the spline is closed.</param>
@@ -10014,83 +10047,6 @@
             <summary>
             Used for closed periodic splines.
             </summary>
-        </member>
-        <member name="T:netDxf.Entities.SplineVertex">
-            <summary>
-            Represents a control point of a <see cref="T:netDxf.Entities.Spline">spline</see>.
-            </summary>
-        </member>
-        <member name="M:netDxf.Entities.SplineVertex.#ctor(System.Double,System.Double,System.Double)">
-            <summary>
-            Initializes a new instance of the <c>SplineVertex</c> class.
-            </summary>
-            <param name="x">Control point x coordinate.</param>
-            <param name="y">Control point y coordinate.</param>
-            <param name="z">Control point z coordinate.</param>
-        </member>
-        <member name="M:netDxf.Entities.SplineVertex.#ctor(System.Double,System.Double,System.Double,System.Double)">
-            <summary>
-            Initializes a new instance of the <c>SplineVertex</c> class.
-            </summary>
-            <param name="x">Control point x coordinate.</param>
-            <param name="y">Control point y coordinate.</param>
-            <param name="z">Control point z coordinate.</param>
-            <param name="w">Control point weight (default 1.0).</param>
-        </member>
-        <member name="M:netDxf.Entities.SplineVertex.#ctor(netDxf.Vector2)">
-            <summary>
-            Initializes a new instance of the <c>SplineVertex</c> class.
-            </summary>
-            <param name="position">Spline control point <see cref="T:netDxf.Vector2">vertex</see> coordinates.</param>
-        </member>
-        <member name="M:netDxf.Entities.SplineVertex.#ctor(netDxf.Vector2,System.Double)">
-            <summary>
-            Initializes a new instance of the <c>SplineVertex</c> class.
-            </summary>
-            <param name="position">Spline control point <see cref="T:netDxf.Vector2">vertex</see> coordinates.</param>
-            <param name="weight">Weight of the spline control point (default 1.0).</param>
-        </member>
-        <member name="M:netDxf.Entities.SplineVertex.#ctor(netDxf.Vector3)">
-            <summary>
-            Initializes a new instance of the <c>SplineVertex</c> class.
-            </summary>
-            <param name="position">Spline control point <see cref="T:netDxf.Vector3">vertex</see> coordinates.</param>
-        </member>
-        <member name="M:netDxf.Entities.SplineVertex.#ctor(netDxf.Vector3,System.Double)">
-            <summary>
-            Initializes a new instance of the <c>SplineVertex</c> class.
-            </summary>
-            <param name="position">Spline control point <see cref="T:netDxf.Vector3">vertex</see> coordinates.</param>
-            <param name="weight">Weight of the spline control point (default 1.0).</param>
-        </member>
-        <member name="P:netDxf.Entities.SplineVertex.Position">
-            <summary>
-            Get or sets the spline control point <see cref="T:netDxf.Vector3">vertex</see> coordinates.
-            </summary>
-        </member>
-        <member name="P:netDxf.Entities.SplineVertex.Weight">
-            <summary>
-            Gets or sets the weight of the spline control point.
-            </summary>
-        </member>
-        <member name="M:netDxf.Entities.SplineVertex.ToString">
-            <summary>
-            Obtains a string that represents the spline vertex.
-            </summary>
-            <returns>A string text.</returns>
-        </member>
-        <member name="M:netDxf.Entities.SplineVertex.Clone">
-            <summary>
-            Creates a new Spline that is a copy of the current instance.
-            </summary>
-            <returns>A new Spline that is a copy of this instance.</returns>
-        </member>
-        <member name="M:netDxf.Entities.SplineVertex.ToString(System.IFormatProvider)">
-            <summary>
-            Obtains a string that represents the spline vertex.
-            </summary>
-            <param name="provider">An IFormatProvider interface implementation that supplies culture-specific formatting information. </param>
-            <returns>A string text.</returns>
         </member>
         <member name="T:netDxf.Entities.Text">
             <summary>
@@ -13945,51 +13901,6 @@
             </para>
             </remarks>
         </member>
-        <member name="M:netDxf.Objects.ImageDefinition.#ctor(System.String)">
-             <summary>
-             Initializes a new instance of the <c>ImageDefinition</c> class. Only available for Net Framework 4.5 builds.
-             </summary>
-             <param name="file">Image file name with full or relative path.</param>
-            <remarks>
-             <para>
-             The name of the file without extension will be used as the name of the image definition.
-             </para>
-             <para>
-             Supported image formats: BMP, JPG, PNG, TIFF.<br />
-             Even thought AutoCAD supports more image formats, this constructor is restricted to the ones the net framework supports in common with AutoCAD.
-             Use the generic constructor instead.
-             </para>
-             <para>
-             Note (this is from the ACAD docs): AutoCAD 2000, AutoCAD LT 2000, and later releases do not support LZW-compressed TIFF files,
-             with the exception of English language versions sold in the US and Canada.<br />
-             If you have TIFF files that were created using LZW compression and want to insert them into a drawing 
-             you must save the TIFF files with LZW compression disabled.
-             </para>
-            </remarks>
-        </member>
-        <member name="M:netDxf.Objects.ImageDefinition.#ctor(System.String,System.String)">
-             <summary>
-             Initializes a new instance of the <c>ImageDefinition</c> class. Only available for Net Framework 4.5 builds.
-             </summary>
-            <param name="name">Image definition name.</param>
-            <param name="file">Image file name with full or relative path.</param>
-            <remarks>
-             <para>
-             The name assigned to the image definition must be unique.
-             </para>
-             <para>
-             Supported image formats: BMP, JPG, PNG, TIFF.<br />
-             Even thought AutoCAD supports more image formats, this constructor is restricted to the ones the .net library supports in common with AutoCAD.
-             Use the generic constructor instead.
-             </para>
-             <para>
-             Note (this is from the ACAD docs): AutoCAD 2000, AutoCAD LT 2000, and later releases do not support LZW-compressed TIFF files,
-             with the exception of English language versions sold in the US and Canada.<br />
-             If you have TIFF files that were created using LZW compression and want to insert them into a drawing 
-             you must save the TIFF files with LZW compression disabled.
-             </para>
-            </remarks>
-        </member>
         <member name="P:netDxf.Objects.ImageDefinition.File">
             <summary>
             Gets or sets the image file.
@@ -17838,14 +17749,6 @@
             <summary>
             Gets the owner of the actual text style.
             </summary>
-        </member>
-        <member name="M:netDxf.Tables.TextStyle.TrueTypeFontFamilyName(System.String)">
-            <summary>
-            Find the font family name of an specified TTF font file. Only available for Net Framework 4.5 builds.
-            </summary>
-            <param name="ttfFont">TTF font file.</param>
-            <returns>The font family name of the specified TTF font file.</returns>
-            <remarks>This method will return an empty string if the specified font is not found in its path or the system font folder or if it is not a valid TTF font.</remarks>
         </member>
         <member name="M:netDxf.Tables.TextStyle.Clone(System.String)">
             <summary>

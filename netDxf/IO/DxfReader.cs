@@ -172,8 +172,8 @@ namespace netDxf.IO
                 string dwgCodePage = CheckHeaderVariable(stream, HeaderVariableCode.DwgCodePage, out this.isBinary);
                 if (string.IsNullOrEmpty(dwgCodePage))
                 {
-                    Debug.Assert(false, "No code page defined in the DXF.");
                     encoding = Encoding.GetEncoding(Encoding.ASCII.WindowsCodePage);
+                    Debug.Assert(false, "No code page defined in the DXF.");
                 }
                 else
                 {
@@ -185,14 +185,14 @@ namespace netDxf.IO
                         }
                         catch
                         {
-                            Debug.Assert(false, "Invalid or not compatible code page defined in the DXF.");
                             encoding = Encoding.GetEncoding(Encoding.ASCII.WindowsCodePage);
+                            Debug.Assert(false, "Invalid or not compatible code page defined in the DXF.");
                         }
                     }
                     else
                     {
-                        Debug.Assert(false, "Invalid code page defined in the DXF.");
                         encoding = Encoding.GetEncoding(Encoding.ASCII.WindowsCodePage);
+                        Debug.Assert(false, "Invalid code page defined in the DXF.");
                     }
                 }
 
@@ -7632,14 +7632,13 @@ namespace netDxf.IO
             SplineTypeFlags flags = SplineTypeFlags.Open;
             Vector3 normal = Vector3.UnitZ;
             short degree = 3;
-            int ctrlPointIndex = -1;
 
             List<double> knots = new List<double>();
-            List<SplineVertex> ctrlPoints = new List<SplineVertex>();
+            List<Vector3> ctrlPoints = new List<Vector3>();
+            List<double> weights = new List<double>();
             double ctrlX = 0;
             double ctrlY = 0;
             double ctrlZ;
-            double ctrlWeight = -1;
 
             // tolerances (not used)
             double knotTolerance = 0.0000001;
@@ -7760,35 +7759,13 @@ namespace netDxf.IO
                         break;
                     case 30:
                         ctrlZ = this.chunk.ReadDouble();
-                        if (ctrlWeight <= 0)
-                        {
-                            ctrlPoints.Add(new SplineVertex(ctrlX, ctrlY, ctrlZ));
-                            ctrlPointIndex = ctrlPoints.Count - 1;
-                        }
-                        else
-                        {
-                            ctrlPoints.Add(new SplineVertex(ctrlX, ctrlY, ctrlZ, ctrlWeight));
-                            ctrlPointIndex = -1;
-                        }
+                        ctrlPoints.Add(new Vector3(ctrlX, ctrlY, ctrlZ));
                         this.chunk.Next();
                         break;
                     case 41:
                         // code 41 might appear before or after the control point coordinates.
                         double weight = this.chunk.ReadDouble();
-                        if (weight <= 0.0)
-                        {
-                            weight = 1.0;
-                        }
-
-                        if (ctrlPointIndex == -1)
-                        {
-                            ctrlWeight = weight;
-                        }
-                        else
-                        {
-                            ctrlPoints[ctrlPointIndex].Weight = weight;
-                            ctrlWeight = -1;
-                        }
+                        weights.Add(weight);
                         this.chunk.Next();
                         break;
                     case 11:
@@ -7827,7 +7804,7 @@ namespace netDxf.IO
             }
 
             bool isPeriodic;
-            if (ctrlPoints[0].Position.Equals(ctrlPoints[ctrlPoints.Count - 1].Position))
+            if (ctrlPoints[0].Equals(ctrlPoints[ctrlPoints.Count - 1]))
             {
                 isPeriodic = false;
             }
@@ -7837,10 +7814,16 @@ namespace netDxf.IO
                 if (isPeriodic)
                 {
                     ctrlPoints.RemoveRange(0, degree);
+                    weights.RemoveRange(0, degree);
                 }
             }
 
-            Spline entity = new Spline(ctrlPoints, knots, degree, fitPoints, method, isPeriodic)
+            if (weights.Count == 0)
+            {
+                weights = null;
+            }
+
+            Spline entity = new Spline(ctrlPoints, weights, knots, degree, fitPoints, method, isPeriodic)
             {
                 KnotTolerance = knotTolerance,
                 CtrlPointTolerance = ctrlPointTolerance,
@@ -7848,7 +7831,6 @@ namespace netDxf.IO
                 StartTangent = startTangent,
                 EndTangent = endTangent
             };
-
 
             if (flags.HasFlag(SplineTypeFlags.FitChord))
             {
@@ -8515,15 +8497,18 @@ namespace netDxf.IO
                 }
             }
             
-            return new Polyline2D(polylineVertexes, polyline.Flags.HasFlag(PolylineTypeFlags.ClosedPolylineOrClosedPolygonMeshInM))
+            Polyline2D polyline2D = new Polyline2D(polylineVertexes, polyline.Flags.HasFlag(PolylineTypeFlags.ClosedPolylineOrClosedPolygonMeshInM))
             {
                 SmoothType = polyline.SmoothType,
                 Thickness = polyline.Thickness,
                 Elevation = polyline.Elevation,
                 Normal = polyline.Normal,
-                Flags = polyline.Flags,
-                XData = polyline.XData
+                Flags = polyline.Flags
             };
+
+            polyline2D.XData.AddRange(polyline.XData.Values);
+
+            return polyline2D;
         }
 
         private Polyline3D ReadPolyline3D(Polyline polyline)
@@ -8554,13 +8539,16 @@ namespace netDxf.IO
                 }
             }
             
-            return new Polyline3D(polyline3dVertexes, polyline.Flags.HasFlag(PolylineTypeFlags.ClosedPolylineOrClosedPolygonMeshInM))
+            Polyline3D polyline3D = new Polyline3D(polyline3dVertexes, polyline.Flags.HasFlag(PolylineTypeFlags.ClosedPolylineOrClosedPolygonMeshInM))
             {
                 SmoothType = polyline.SmoothType,
                 Normal = polyline.Normal,
-                Flags = polyline.Flags,
-                XData = polyline.XData
+                Flags = polyline.Flags
             };
+
+            polyline3D.XData.AddRange(polyline.XData.Values);
+
+            return polyline3D;
         }
 
         private PolyfaceMesh ReadPolyfaceMesh(Polyline polyline)
@@ -8585,12 +8573,15 @@ namespace netDxf.IO
                 }
             }
 
-            return new PolyfaceMesh(polyfaceVertexes, polyfaceFaces)
+            PolyfaceMesh pMesh = new PolyfaceMesh(polyfaceVertexes, polyfaceFaces)
             {
                 Normal = polyline.Normal,
-                Flags = polyline.Flags,
-                XData = polyline.XData
+                Flags = polyline.Flags
             };
+
+            pMesh.XData.AddRange(polyline.XData.Values);
+
+            return pMesh;
         }
 
         private PolygonMesh ReadPolygonMesh(Polyline polyline)
@@ -8609,6 +8600,7 @@ namespace netDxf.IO
 
             Vector3[] polygonMeshVertexes = new Vector3[polyline.M * polyline.N];
 
+            PolygonMesh pMesh;
             int i;
             int j;
 
@@ -8626,15 +8618,18 @@ namespace netDxf.IO
                         i += 1;
                     }
                 }
-                return new PolygonMesh(polyline.M, polyline.N, polygonMeshVertexes)
+                pMesh = new PolygonMesh(polyline.M, polyline.N, polygonMeshVertexes)
                 {
                     SmoothType = polyline.SmoothType,
                     DensityU = polyline.DensityM,
                     DensityV = polyline.DensityN,
                     Normal = polyline.Normal,
-                    Flags = polyline.Flags,
-                    XData = polyline.XData
+                    Flags = polyline.Flags
                 };
+
+                pMesh.XData.AddRange(polyline.XData.Values);
+
+                return pMesh;
             }
 
             i = 0;
@@ -8649,13 +8644,16 @@ namespace netDxf.IO
                     i += 1;
                 }
             }
-            return new PolygonMesh(polyline.M, polyline.N, polygonMeshVertexes)
+            pMesh = new PolygonMesh(polyline.M, polyline.N, polygonMeshVertexes)
             {
                 SmoothType = polyline.SmoothType,
                 Normal = polyline.Normal,
-                Flags = polyline.Flags,
-                XData = polyline.XData
+                Flags = polyline.Flags
             };
+
+            pMesh.XData.AddRange(polyline.XData.Values);
+
+            return pMesh;
         }
 
         private EntityObject ReadPolyline()

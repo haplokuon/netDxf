@@ -12,7 +12,7 @@ using System.Diagnostics;
 
 namespace netDxf.GTE
 {
-    internal struct UniqueKnot
+    public struct UniqueKnot
     {
         private double t;
         private int multiplicity;
@@ -36,7 +36,7 @@ namespace netDxf.GTE
         }
     }
 
-    internal struct BasisFunctionInput
+    public struct BasisFunctionInput
     {
         private int numControls;
         private int degree;
@@ -66,6 +66,7 @@ namespace netDxf.GTE
         public int NumControls
         {
             get { return this.numControls; }
+            set { this.numControls = value; }
         }
 
         public int Degree
@@ -89,11 +90,13 @@ namespace netDxf.GTE
         public int NumUniqueKnots
         {
             get { return this.numUniqueKnots; }
+            set { this.numUniqueKnots = value; }
         }
 
         public UniqueKnot[] UniqueKnots
         {
             get { return this.uniqueKnots; }
+            set { this.uniqueKnots = value; }
         }
     }
 
@@ -136,49 +139,49 @@ namespace netDxf.GTE
     //   t[i] - t[i-1] = t[n-d+i] - t[n-d+i-1]
     //   t[n+i] - t[n+i-1] = t[d+i] - t[d+i-1]
     // for 1 <= i <= d.
-    internal class BasisFunction
+    public class BasisFunction
     {
         private struct Key
         {
-            private double mKnotValue;
-            private int mKnotIndex;
+            private double knotValue;
+            private int knotIndex;
 
             public Key(double knotValue, int knotIndex)
             {
-                this.mKnotValue = knotValue;
-                this.mKnotIndex = knotIndex;
+                this.knotValue = knotValue;
+                this.knotIndex = knotIndex;
             }
 
             public double KnotValue
             {
-                get { return this.mKnotValue; }
+                get { return this.knotValue; }
             }
 
             public int KnotIndex
             {
-                get { return this.mKnotIndex; }
+                get { return this.knotIndex; }
             }
         }
 
 
         // Constructor inputs and values derived from them.
-        private int mNumControls;
-        private int mDegree;
-        private double mTMin, mTMax, mTLength;
-        private bool mOpen;
-        private bool mUniform;
-        private bool mPeriodic;
-        private UniqueKnot[] mUniqueKnots;
-        private double[] mKnots;
+        private int numControls;
+        private int degree;
+        private double tMin, tMax, tLength;
+        private bool open;
+        private bool uniform;
+        private bool periodic;
+        private UniqueKnot[] uniqueKnots;
+        private double[] knots;
 
         // Lookup information for the GetIndex() function.  The first element
         // of the pair is a unique knot value.  The second element is the
         // index in mKnots[] for the last occurrence of that knot value.
-        private Key[] mKeys;
+        private Key[] keys;
 
         // Storage for the basis functions and their first three derivatives;
         // mJet[i] is array[d+1][n+d].
-        private double[][][] mJet;
+        private double[][][] jet;
 
         // Construction and destruction.  The determination that the curve is
         // open or floating is based on the multiplicities.  The 'uniform'
@@ -202,69 +205,69 @@ namespace netDxf.GTE
             Debug.Assert(1 <= input.Degree && input.Degree < input.NumControls, "Invalid degree.");
             Debug.Assert(input.NumUniqueKnots >= 2, "Invalid number of unique knots.");
 
-            this.mNumControls = input.Periodic ? input.NumControls + input.Degree : input.NumControls;
-            this.mDegree = input.Degree;
-            this.mTMin = 0;
-            this.mTMax = 0;
-            this.mTLength = 0;
-            this.mOpen = false;
-            this.mUniform = input.Uniform;
-            this.mPeriodic = input.Periodic;
-            this.mJet = new double[4][][];
+            this.numControls = input.Periodic ? input.NumControls + input.Degree : input.NumControls;
+            this.degree = input.Degree;
+            this.tMin = 0;
+            this.tMax = 0;
+            this.tLength = 0;
+            this.open = false;
+            this.uniform = input.Uniform;
+            this.periodic = input.Periodic;
+            this.jet = new double[4][][];
 
-            this.mUniqueKnots = new UniqueKnot[input.UniqueKnots.Length];
-            input.UniqueKnots.CopyTo(this.mUniqueKnots, 0);
+            this.uniqueKnots = new UniqueKnot[input.UniqueKnots.Length];
+            input.UniqueKnots.CopyTo(this.uniqueKnots, 0);
 
-            double u = this.mUniqueKnots[0].T;
+            double u = this.uniqueKnots[0].T;
             for (int i = 1; i < input.NumUniqueKnots - 1; i++)
             {
-                double uNext = this.mUniqueKnots[i].T;
+                double uNext = this.uniqueKnots[i].T;
                 Debug.Assert(u < uNext, "Unique knots are not strictly increasing.");
                 u = uNext;
             }
 
-            int mult0 = this.mUniqueKnots[0].Multiplicity;
-            Debug.Assert(mult0 >= 1 && mult0 <= this.mDegree + 1, "Invalid first multiplicity.");
+            int mult0 = this.uniqueKnots[0].Multiplicity;
+            Debug.Assert(mult0 >= 1 && mult0 <= this.degree + 1, "Invalid first multiplicity.");
 
-            int mult1 = this.mUniqueKnots[this.mUniqueKnots.Length -1].Multiplicity;
-            Debug.Assert(mult1 >= 1 && mult1 <= this.mDegree + 1, "Invalid last multiplicity.");
+            int mult1 = this.uniqueKnots[this.uniqueKnots.Length -1].Multiplicity;
+            Debug.Assert(mult1 >= 1 && mult1 <= this.degree + 1, "Invalid last multiplicity.");
 
             for (int i = 1; i <= input.NumUniqueKnots - 2; i++)
             {
-                int mult = this.mUniqueKnots[i].Multiplicity;
-                Debug.Assert(mult >= 1 && mult <= this.mDegree + 1, "Invalid interior multiplicity.");
+                int mult = this.uniqueKnots[i].Multiplicity;
+                Debug.Assert(mult >= 1 && mult <= this.degree + 1, "Invalid interior multiplicity.");
             }
 
-            this.mOpen = mult0 == mult1 && mult0 == this.mDegree + 1;
+            this.open = mult0 == mult1 && mult0 == this.degree + 1;
 
-            this.mKnots = new double[this.mNumControls + this.mDegree + 1];
-            this.mKeys = new Key[input.NumUniqueKnots];
+            this.knots = new double[this.numControls + this.degree + 1];
+            this.keys = new Key[input.NumUniqueKnots];
             int sum = 0;
             for (int i = 0, j = 0; i < input.NumUniqueKnots; i++)
             {
-                double tCommon = this.mUniqueKnots[i].T;
-                int mult = this.mUniqueKnots[i].Multiplicity;
+                double tCommon = this.uniqueKnots[i].T;
+                int mult = this.uniqueKnots[i].Multiplicity;
                 for (int k = 0; k < mult; k++, j++)
                 {
-                    this.mKnots[j] = tCommon;
+                    this.knots[j] = tCommon;
                 }
 
-                this.mKeys[i] = new Key(tCommon, sum - 1);
+                this.keys[i] = new Key(tCommon, sum - 1);
                 sum += mult;
             }
             
-            this.mTMin = this.mKnots[this.mDegree];
-            this.mTMax = this.mKnots[this.mNumControls];
-            this.mTLength = this.mTMax - this.mTMin;
+            this.tMin = this.knots[this.degree];
+            this.tMax = this.knots[this.numControls];
+            this.tLength = this.tMax - this.tMin;
 
-            int numRows = this.mDegree + 1;
-            int numCols = this.mNumControls + this.mDegree;
+            int numRows = this.degree + 1;
+            int numCols = this.numControls + this.degree;
             for (int i = 0; i < 4; ++i)
             {
-                this.mJet[i] = new double[numRows][];
+                this.jet[i] = new double[numRows][];
                 for (int j = 0; j < numRows; j++)
                 {
-                    this.mJet[i][j] = new double[numCols];
+                    this.jet[i][j] = new double[numCols];
                 }
             }
         }
@@ -272,57 +275,57 @@ namespace netDxf.GTE
         // Member access.
         public int NumControls
         {
-            get { return this.mNumControls; }
+            get { return this.numControls; }
         }
 
         public int Degree
         {
-            get { return this.mDegree; }
+            get { return this.degree; }
         }
 
         public int NumUniqueKnots
         {
-            get { return this.mUniqueKnots.Length; }
+            get { return this.uniqueKnots.Length; }
         }
 
         public int NumKnots
         {
-            get { return this.mKnots.Length; }
+            get { return this.knots.Length; }
         }
 
         public double MinDomain
         {
-            get { return this.mTMin; }
+            get { return this.tMin; }
         }
 
         public double MaxDomain
         {
-            get { return this.mTMax; }
+            get { return this.tMax; }
         }
 
         public bool IsOpen
         {
-            get { return this.mOpen; }
+            get { return this.open; }
         }
 
         public bool IsUniform
         {
-            get { return this.mUniform; }
+            get { return this.uniform; }
         }
 
         public bool IsPeriodic
         {
-            get { return this.mPeriodic; }
+            get { return this.periodic; }
         }
 
         public UniqueKnot[] UniqueKnots
         {
-            get { return this.mUniqueKnots; }
+            get { return this.uniqueKnots; }
         }
 
         public double[] Knots
         {
-            get { return this.mKnots; }
+            get { return this.knots; }
         }
 
         // Evaluation of the basis function and its derivatives through 
@@ -333,100 +336,100 @@ namespace netDxf.GTE
             Debug.Assert(order <= 3, "Invalid order.");
 
             int i = this.GetIndex(ref t);
-            this.mJet[0][0][i] = 1;
+            this.jet[0][0][i] = 1.0;
 
             if (order >= 1)
             {
-                this.mJet[1][0][i] = 0;
+                this.jet[1][0][i] = 0.0;
                 if (order >= 2)
                 {
-                    this.mJet[2][0][i] = 0;
+                    this.jet[2][0][i] = 0.0;
                     if (order >= 3)
                     {
-                        this.mJet[3][0][i] = 0;
+                        this.jet[3][0][i] = 0.0;
                     }
                 }
             }
 
-            double n0 = t - this.mKnots[i], n1 = this.mKnots[i + 1] - t;
+            double n0 = t - this.knots[i], n1 = this.knots[i + 1] - t;
             double e0, e1, d0, d1, invD0, invD1;
             int j;
-            for (j = 1; j <= this.mDegree; j++)
+            for (j = 1; j <= this.degree; j++)
             {
-                d0 = this.mKnots[i + j] - this.mKnots[i];
-                d1 = this.mKnots[i + 1] - this.mKnots[i - j + 1];
-                invD0 = d0 > 0 ? 1 / d0 : 0;
-                invD1 = d1 > 0 ? 1 / d1 : 0;
+                d0 = this.knots[i + j] - this.knots[i];
+                d1 = this.knots[i + 1] - this.knots[i - j + 1];
+                invD0 = d0 > 0.0 ? 1.0 / d0 : 0.0;
+                invD1 = d1 > 0.0 ? 1.0 / d1 : 0.0;
 
-                e0 = n0 * this.mJet[0][j - 1][i];
-                this.mJet[0][j][i] = e0 * invD0;
-                e1 = n1 * this.mJet[0][j - 1][i - j + 1];
-                this.mJet[0][j][i - j] = e1 * invD1;
+                e0 = n0 * this.jet[0][j - 1][i];
+                this.jet[0][j][i] = e0 * invD0;
+                e1 = n1 * this.jet[0][j - 1][i - j + 1];
+                this.jet[0][j][i - j] = e1 * invD1;
 
                 if (order >= 1)
                 {
-                    e0 = n0 * this.mJet[1][j - 1][i] + this.mJet[0][j - 1][i];
-                    this.mJet[1][j][i] = e0 * invD0;
-                    e1 = n1 * this.mJet[1][j - 1][i - j + 1] - this.mJet[0][j - 1][i - j + 1];
-                    this.mJet[1][j][i - j] = e1 * invD1;
+                    e0 = n0 * this.jet[1][j - 1][i] + this.jet[0][j - 1][i];
+                    this.jet[1][j][i] = e0 * invD0;
+                    e1 = n1 * this.jet[1][j - 1][i - j + 1] - this.jet[0][j - 1][i - j + 1];
+                    this.jet[1][j][i - j] = e1 * invD1;
 
                     if (order >= 2)
                     {
-                        e0 = n0 * this.mJet[2][j - 1][i] + 2 * this.mJet[1][j - 1][i];
-                        this.mJet[2][j][i] = e0 * invD0;
-                        e1 = n1 * this.mJet[2][j - 1][i - j + 1] - 2 * this.mJet[1][j - 1][i - j + 1];
-                        this.mJet[2][j][i - j] = e1 * invD1;
+                        e0 = n0 * this.jet[2][j - 1][i] + 2 * this.jet[1][j - 1][i];
+                        this.jet[2][j][i] = e0 * invD0;
+                        e1 = n1 * this.jet[2][j - 1][i - j + 1] - 2 * this.jet[1][j - 1][i - j + 1];
+                        this.jet[2][j][i - j] = e1 * invD1;
 
                         if (order >= 3)
                         {
-                            e0 = n0 * this.mJet[3][j - 1][i] + 3 * this.mJet[2][j - 1][i];
-                            this.mJet[3][j][i] = e0 * invD0;
-                            e1 = n1 * this.mJet[3][j - 1][i - j + 1] - 3 * this.mJet[2][j - 1][i - j + 1];
-                            this.mJet[3][j][i - j] = e1 * invD1;
+                            e0 = n0 * this.jet[3][j - 1][i] + 3 * this.jet[2][j - 1][i];
+                            this.jet[3][j][i] = e0 * invD0;
+                            e1 = n1 * this.jet[3][j - 1][i - j + 1] - 3 * this.jet[2][j - 1][i - j + 1];
+                            this.jet[3][j][i - j] = e1 * invD1;
                         }
                     }
                 }
             }
 
-            for (j = 2; j <= this.mDegree; j++)
+            for (j = 2; j <= this.degree; j++)
             {
                 for (int k = i - j + 1; k < i; k++)
                 {
-                    n0 = t - this.mKnots[k];
-                    n1 = this.mKnots[k + j + 1] - t;
-                    d0 = this.mKnots[k + j] - this.mKnots[k];
-                    d1 = this.mKnots[k + j + 1] - this.mKnots[k + 1];
+                    n0 = t - this.knots[k];
+                    n1 = this.knots[k + j + 1] - t;
+                    d0 = this.knots[k + j] - this.knots[k];
+                    d1 = this.knots[k + j + 1] - this.knots[k + 1];
                     invD0 = d0 > 0 ? 1 / d0 : 0;
                     invD1 = d1 > 0 ? 1 / d1 : 0;
 
-                    e0 = n0 * this.mJet[0][j - 1][k];
-                    e1 = n1 * this.mJet[0][j - 1][k + 1];
-                    this.mJet[0][j][k] = e0 * invD0 + e1 * invD1;
+                    e0 = n0 * this.jet[0][j - 1][k];
+                    e1 = n1 * this.jet[0][j - 1][k + 1];
+                    this.jet[0][j][k] = e0 * invD0 + e1 * invD1;
 
                     if (order >= 1)
                     {
-                        e0 = n0 * this.mJet[1][j - 1][k] + this.mJet[0][j - 1][k];
-                        e1 = n1 * this.mJet[1][j - 1][k + 1] - this.mJet[0][j - 1][k + 1];
-                        this.mJet[1][j][k] = e0 * invD0 + e1 * invD1;
+                        e0 = n0 * this.jet[1][j - 1][k] + this.jet[0][j - 1][k];
+                        e1 = n1 * this.jet[1][j - 1][k + 1] - this.jet[0][j - 1][k + 1];
+                        this.jet[1][j][k] = e0 * invD0 + e1 * invD1;
 
                         if (order >= 2)
                         {
-                            e0 = n0 * this.mJet[2][j - 1][k] + 2 * this.mJet[1][j - 1][k];
-                            e1 = n1 * this.mJet[2][j - 1][k + 1] - 2 * this.mJet[1][j - 1][k + 1];
-                            this.mJet[2][j][k] = e0 * invD0 + e1 * invD1;
+                            e0 = n0 * this.jet[2][j - 1][k] + 2 * this.jet[1][j - 1][k];
+                            e1 = n1 * this.jet[2][j - 1][k + 1] - 2 * this.jet[1][j - 1][k + 1];
+                            this.jet[2][j][k] = e0 * invD0 + e1 * invD1;
 
                             if (order >= 3)
                             {
-                                e0 = n0 * this.mJet[3][j - 1][k] + 3 * this.mJet[2][j - 1][k];
-                                e1 = n1 * this.mJet[3][j - 1][k + 1] - 3 * this.mJet[2][j - 1][k + 1];
-                                this.mJet[3][j][k] = e0 * invD0 + e1 * invD1;
+                                e0 = n0 * this.jet[3][j - 1][k] + 3 * this.jet[2][j - 1][k];
+                                e1 = n1 * this.jet[3][j - 1][k + 1] - 3 * this.jet[2][j - 1][k + 1];
+                                this.jet[3][j][k] = e0 * invD0 + e1 * invD1;
                             }
                         }
                     }
                 }
             }
 
-            minIndex = i - this.mDegree;
+            minIndex = i - this.degree;
             maxIndex = i;
         }
 
@@ -439,9 +442,9 @@ namespace netDxf.GTE
         {
             if (order < 4)
             {
-                if (0 <= i && i < this.mNumControls + this.mDegree)
+                if (0 <= i && i < this.numControls + this.degree)
                 {
-                    return this.mJet[order][this.mDegree][i];
+                    return this.jet[order][this.degree][i];
                 }
 
                 throw new ArgumentException("Invalid index.", nameof(i));
@@ -456,34 +459,34 @@ namespace netDxf.GTE
         private int GetIndex(ref double t)
         {
             // Find the index i for which knot[i] <= t < knot[i+1].
-            if (this.mPeriodic)
+            if (this.periodic)
             {
                 // Wrap to [tmin,tmax].
-                double r = (t - this.mTMin) % this.mTLength;
+                double r = (t - this.tMin) % this.tLength;
                 if (r < 0.0)
                 {
-                    r += this.mTLength;
+                    r += this.tLength;
                 }
 
-                t = this.mTMin + r;
+                t = this.tMin + r;
             }
 
             // Clamp to [tmin,tmax]. For the periodic case, this handles
             // small numerical rounding errors near the domain endpoints.
-            if (t <= this.mTMin)
+            if (t <= this.tMin)
             {
-                t = this.mTMin;
-                return this.mDegree;
+                t = this.tMin;
+                return this.degree;
             }
 
-            if (t >= this.mTMax)
+            if (t >= this.tMax)
             {
-                t = this.mTMax;
-                return this.mNumControls - 1;
+                t = this.tMax;
+                return this.numControls - 1;
             }
 
             // At this point, tmin < t < tmax.
-            foreach (Key key in this.mKeys)
+            foreach (Key key in this.keys)
             {
                 if (t < key.KnotValue)
                 {

@@ -1,5 +1,10 @@
 ## Change history
 
+### [2022/04/19]
+* Added more GTE classes. See the Samples for GTE classes
+* Deleted the SplineVertex class. Now the Spline constructors take two lists: a Vector3 to define the controls points and a double array to define the weights.
+* PolygonMesh entities are now capable to handle closed in U and/or V surfaces.
+
 ### [2022/04/10]
 * Added CalculateTangent for Quadratic and Cubic Bezier curves.
 * Added PolygonMesh entity. See PolygonMesh() sample.

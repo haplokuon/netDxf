@@ -9,11 +9,11 @@
 
 namespace netDxf.GTE
 {
-    internal abstract class ParametricSurface
+    public abstract class ParametricSurface
     {
-        protected double mUMin, mUMax, mVMin, mVMax;
-        protected bool mRectangular;
-        protected bool mConstructed;
+        protected double uMin, uMax, vMin, vMax;
+        protected bool isRectangular;
+        protected bool isConstructed;
 
         // Abstract base class for a parameterized surface X(u,v).  The
         // parametric domain is either rectangular or triangular.  Valid
@@ -22,14 +22,14 @@ namespace netDxf.GTE
         // and valid (u,v) values for a triangular domain satisfy
         //   umin <= u <= umax,  vmin <= v <= vmax,
         //   (vmax-vmin)*(u-umin)+(umax-umin)*(v-vmax) <= 0
-        protected ParametricSurface(double umin, double umax, double vmin, double vmax, bool rectangular)
+        protected ParametricSurface(double umin, double umax, double vmin, double vmax, bool isRectangular)
         {
-            this.mUMin = umin;
-            this.mUMax = umax;
-            this.mVMin = vmin;
-            this.mVMax = vmax;
-            this.mRectangular = rectangular;
-            this.mConstructed = false;
+            this.uMin = umin;
+            this.uMax = umax;
+            this.vMin = vmin;
+            this.vMax = vmax;
+            this.isRectangular = isRectangular;
+            this.isConstructed = false;
         }
 
         // Member access.
@@ -39,32 +39,32 @@ namespace netDxf.GTE
         //     if (!surface) { <constructor failed, handle accordingly>; }
         public bool IsConstructed
         {
-            get { return this.mConstructed; }
+            get { return this.isConstructed; }
         }
 
         public double UMin
         {
-            get { return this.mUMin; }
+            get { return this.uMin; }
         }
 
         public double UMax
         {
-            get { return this.mUMax; }
+            get { return this.uMax; }
         }
 
         public double VMin
         {
-            get { return this.mVMin; }
+            get { return this.vMin; }
         }
 
         public double VMax
         {
-            get { return this.mVMax; }
+            get { return this.vMax; }
         }
 
-        public bool IsRectangular
+        public bool IsIsRectangular
         {
-            get { return this.mRectangular; }
+            get { return this.isRectangular; }
         }
 
         // Evaluation of the surface.  The function supports derivative

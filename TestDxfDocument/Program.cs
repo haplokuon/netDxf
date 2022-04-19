@@ -9,6 +9,7 @@ using netDxf;
 using netDxf.Blocks;
 using netDxf.Collections;
 using netDxf.Entities;
+using GTE = netDxf.GTE;
 using netDxf.Header;
 using netDxf.Objects;
 using netDxf.Tables;
@@ -31,6 +32,19 @@ namespace TestDxfDocument
         public static void Main()
         {
             DxfDocument doc = Test(@"sample.dxf");
+
+            #region Samples for GTE classes
+
+            //SplineToPolylineWithGTE();
+            //TextAlongAPath();
+            //LengthOfASpline();
+            //SplineControlsReduction();
+            //SplineCurveFitSampleData();
+            //SplineSurfaceFitSampleData();
+            //NURBSCurve();
+            //NURBSSurface();
+
+            #endregion
 
             #region Samples for new and modified features 3.0.0
 
@@ -269,9 +283,349 @@ namespace TestDxfDocument
             #endregion
         }
 
-        #region Samples for new and modified features 3.0.0
+        #region Samples for GTE classes
 
-        public static void PolygonMesh()
+        public static void SplineToPolylineWithGTE()
+        {
+            short degree = 2;
+            bool closed = true;
+            
+            List<Vector3> controls = new List<Vector3>
+            {
+                new Vector3(0,0,0), 
+                new Vector3(10,10,0), 
+                new Vector3(20,0,0), 
+                new Vector3(30,10,0), 
+                new Vector3(40,0,0)
+            };
+
+            // periodic splines does not seems to be handled automatically in the Geometric Tools Library
+            // we need to change manually the knot vector of the input and wrap around the controls 
+            if (closed)
+            {
+                for (int i = 0; i < degree; i++)
+                {
+                    controls.Add(controls[i]);
+                }
+            }
+
+            GTE.BasisFunctionInput input = new GTE.BasisFunctionInput(controls.Count, degree);
+            GTE.BSplineCurve curve = new GTE.BSplineCurve(input, controls.ToArray());
+           
+            // change the knot vector to handle periodic splines
+            if (closed)
+            {
+                double factor = 1.0 / (controls.Count - curve.BasisFunction.Degree);
+                for (int i = 0; i < curve.BasisFunction.NumKnots; i++)
+                {
+                    curve.BasisFunction.Knots[i] = (i - curve.BasisFunction.Degree) * factor;
+                }
+            }
+            
+            int precision =  100;
+            double step = closed ? 1.0 / precision : 1.0 / (precision - 1);
+            Vector3[] vertexes = new Vector3[precision];
+            for (int i = 0; i < precision; i++)
+            {
+                vertexes[i] = curve.GetPosition(i * step);
+            }
+
+            Polyline3D polylineCurve = new Polyline3D(vertexes)
+            {
+                IsClosed = closed,
+                Color = AciColor.Blue
+            };
+
+            Vector3[] polVerts;
+            if (closed)
+            {
+                polVerts = new Vector3[controls.Count - curve.BasisFunction.Degree];
+                Array.Copy(controls.ToArray(), polVerts, controls.Count - curve.BasisFunction.Degree);
+            }
+            else
+            {
+                polVerts = new Vector3[controls.Count];
+                Array.Copy(controls.ToArray(), polVerts, controls.Count);
+            }
+
+            Polyline3D polyline = new Polyline3D(polVerts)
+            {
+                IsClosed = closed,
+                Color = AciColor.Red
+            };
+            if (degree == 2)
+            {
+                polyline.SmoothType = PolylineSmoothType.Quadratic;
+            }
+
+            if (degree == 3)
+            {
+                polyline.SmoothType = PolylineSmoothType.Cubic;
+            }
+
+            Spline spline = new Spline(polVerts, null, degree, closed) {Color = AciColor.Yellow};
+
+            DxfDocument doc = new DxfDocument();
+            doc.Entities.Add(polylineCurve);
+            doc.Entities.Add(polyline);
+            doc.Entities.Add(spline);
+            doc.Save("test.dxf");
+        }
+
+        public static void TextAlongAPath()
+        {
+            string sampleText = "How to distribute a text along a path?";
+            short degree = 3;
+            Vector3[] controls =
+            {
+                new Vector3(0,0,0), 
+                new Vector3(10,40,0), 
+                new Vector3(20,0,0), 
+                new Vector3(30,-10,0), 
+                new Vector3(40,20,0),
+                new Vector3(50,-10,0),
+                new Vector3(60,0,0),
+                new Vector3(70,40,0),
+                new Vector3(80,0,0)
+            };
+
+            GTE.BasisFunctionInput input = new GTE.BasisFunctionInput(controls.Length, degree);
+            GTE.BSplineCurve curve = new GTE.BSplineCurve(input, controls);
+
+            Vector3[] positions = curve.SubdivideByLength(sampleText.Length, out double[] tParameters);
+            Vector3[] tangents = new Vector3[positions.Length];
+
+            for (int i = 0; i < tParameters.Length; i++)
+            {
+                tangents[i] = curve.GetTangent(tParameters[i]);
+            }
+
+            Spline spline = new Spline(controls, null, degree){Color = AciColor.Blue};
+
+            DxfDocument doc = new DxfDocument();
+            doc.Entities.Add(spline);
+
+            for (int i = 0; i < sampleText.Length; i++)
+            {
+                Text character = new Text(sampleText[i].ToString())
+                {
+                    Position = positions[i],
+                    Rotation = MathHelper.RadToDeg * Vector2.Angle(new Vector2(tangents[i].X, tangents[i].Y)),
+                    Height = 2.0,
+                    Alignment = TextAlignment.BaselineCenter,
+                    Color = AciColor.Yellow
+                };
+                doc.Entities.Add(character);
+            }
+
+            doc.Save("test.dxf");
+        }
+
+        public static void LengthOfASpline()
+        {
+            short degree = 2;
+
+            Vector3[] controls =
+            {
+                new Vector3(0,0,0), 
+                new Vector3(10,40,0), 
+                new Vector3(20,0,0), 
+                new Vector3(30,-10,0), 
+                new Vector3(40,20,0),
+                new Vector3(50,-10,0),
+                new Vector3(60,0,0),
+                new Vector3(70,40,0),
+                new Vector3(80,0,0)
+            };
+
+            GTE.BasisFunctionInput input = new GTE.BasisFunctionInput(controls.Length, degree);
+            GTE.BSplineCurve curve = new GTE.BSplineCurve(input, controls);
+            double totalLength = curve.GetTotalLength();
+
+
+            int precision = 100;
+            double step = 1.0 / (precision - 1);
+            double approxLengthBySubdivision = 0.0;
+            Vector3[] vertexes = new Vector3[precision];
+            Vector3 prevVertex = curve.GetPosition(0);
+            for (int i = 1; i < precision; i++)
+            {
+                Vector3 vertex = curve.GetPosition(i * step);
+                approxLengthBySubdivision += Vector3.Distance(prevVertex, vertex);
+                prevVertex = vertex;
+                vertexes[i] = vertex;
+            }
+
+            double diffSum = totalLength - approxLengthBySubdivision;
+
+            Polyline3D polyline = new Polyline3D(vertexes)
+            {
+                Color = AciColor.Blue
+            };
+
+            Spline spline = new Spline(controls, null, degree)
+            {
+                Color = AciColor.Yellow
+            };
+
+            DxfDocument doc = new DxfDocument();
+
+            doc.Entities.Add(spline);
+            doc.Entities.Add(polyline);
+
+            doc.Save("test.dxf");
+        }
+        
+        public static void SplineControlsReduction()
+        {
+            short degree = 3;
+            double radius = 20.0;
+            Vector3[] sampleData = new Vector3[100];
+
+            double step = Math.PI / (sampleData.Length - 1);
+            for (int i = 0; i < sampleData.Length; i++)
+            {
+                double angle = i * step;
+                double sin = radius * Math.Sin(angle);
+                double cos =  radius * Math.Cos(angle);
+                sampleData[i] = new Vector3(cos, sin, 0.0);
+            }
+
+            Spline splineFull = new Spline(sampleData, null, degree)
+            {
+                Color = AciColor.Blue
+            };
+
+            // the control points will be reduced to a 10% of the original sampleData
+            double fraction = 0.1;
+            GTE.BSplineReduction reduceBSpline = new GTE.BSplineReduction(sampleData, degree, fraction);
+            Spline splineReduced = new Spline(reduceBSpline.ControlData, null, degree)
+            {
+                Color = AciColor.Red
+            };
+
+            DxfDocument doc = new DxfDocument();
+            doc.Entities.Add(splineFull);
+            doc.Entities.Add(splineReduced);
+            doc.Save("test.dxf");
+        }
+
+        public static void SplineCurveFitSampleData()
+        {
+            short degree = 3;
+            double radius = 20.0;
+            Vector3[] sampleData = new Vector3[100];
+            Random randomDesviation = new Random();
+
+            double step = Math.PI / (sampleData.Length - 1);
+            for (int i = 0; i < sampleData.Length; i++)
+            {
+                double angle = i * step;
+                double desviation = randomDesviation.Next(-2, 2);
+                double sin = (radius + desviation) * Math.Sin(angle);
+                double cos = (radius + desviation) * Math.Cos(angle);
+                sampleData[i] = new Vector3(cos, sin, 0.0);
+            }
+
+            Spline splineFull = new Spline(sampleData, null, degree)
+            {
+                Color = AciColor.Blue
+            };
+
+            // will use 10 controls to approximate a curve that averages the points of the sample data
+            int numOutControls = 10;
+            GTE.BSplineCurveFit curveFit = new GTE.BSplineCurveFit(sampleData, degree, numOutControls);
+            Spline splineFit = new Spline(curveFit.ControlData, null, degree)
+            {
+                Color = AciColor.Red
+            };
+
+            DxfDocument doc = new DxfDocument();
+            doc.Entities.Add(splineFull);
+            doc.Entities.Add(splineFit);
+            doc.Save("test.dxf");
+        }
+
+        public static void SplineSurfaceFitSampleData()
+        {
+            int degree = 2;
+            short u = 20;
+            double stepU = 10.0;
+            short v = 10;
+            double stepV = 10.0;
+            Random deviation = new Random();
+            Vector3[] sampleData = new Vector3[u * v];
+            for (int i = 0; i < v; i++)
+            {
+                for (int j = 0; j < u; j++)
+                {
+                    sampleData[i * u + j] = new Vector3(j * stepU, i * stepV, deviation.Next(-1, 1) * deviation.NextDouble() * 10);
+                }
+            }
+
+            GTE.BSplineSurfaceFit surfaceFit = new GTE.BSplineSurfaceFit(degree, 10, u, degree, 10, v, sampleData);
+
+            PolygonMesh controlMesh = new PolygonMesh(u, v, sampleData)
+            {
+                Color = AciColor.Blue
+            };
+
+            PolygonMesh pMesh = new PolygonMesh(10, 10, surfaceFit.ControlData)
+            {
+                Color = AciColor.Red,
+                SmoothType = PolylineSmoothType.Quadratic
+            };
+
+            DxfDocument doc = new DxfDocument();
+            doc.Entities.Add(controlMesh);
+            doc.Entities.Add(pMesh);
+            doc.Save("test.dxf");
+
+        }
+
+        public static void NURBSCurve()
+        {
+            short degree = 2;
+            
+            List<Vector3> controls = new List<Vector3>
+            {
+                new Vector3(0,0,0), 
+                new Vector3(10,10,0), 
+                new Vector3(20,0,0), 
+                new Vector3(30,10,0), 
+                new Vector3(40,0,0)
+            };
+
+            double[] weights = new double[controls.Count];
+            double weigth = 0.1;
+            for (int i = 0; i < weights.Length; i++)
+            {
+                weights[i] = weigth;
+                weigth *= 5;
+            }
+
+            GTE.BasisFunctionInput input = new GTE.BasisFunctionInput(controls.Count, degree);
+            GTE.NURBSCurve curve = new GTE.NURBSCurve(input, controls.ToArray(), weights);
+
+            int precision = 100;
+            double step = 1.0 / (precision - 1.0);
+            Vector3[] vertexes = new Vector3[precision];
+            for (int i = 0; i < precision; i++)
+            {
+                vertexes[i] = curve.GetPosition(i * step);
+            }
+
+            Spline spline = new Spline(controls, weights, degree) {Color = AciColor.Blue};
+            Polyline3D polyline = new Polyline3D(vertexes){Color = AciColor.Red};
+
+            DxfDocument doc = new DxfDocument();
+            doc.Entities.Add(spline);
+            doc.Entities.Add(polyline);
+            doc.Save("test.dxf");
+
+        }
+
+        public static void NURBSSurface()
         {
             // number of vertexes along the mesh local X axis
             short u = 6;
@@ -279,50 +633,209 @@ namespace TestDxfDocument
             short v = 4;
 
             // array of vertexes
-            Vector3[] vertexes = new Vector3[u * v];
+            Vector3[] controls = new Vector3[u * v];
             // first row (local X axis)
-            vertexes[0] = new Vector3(0,0,0);
-            vertexes[1] = new Vector3(10,0,10);
-            vertexes[2] = new Vector3(20,0,0);
-            vertexes[3] = new Vector3(30,0,10);
-            vertexes[4] = new Vector3(40,0,0);
-            vertexes[5] = new Vector3(50,0,10);
+            controls[0] = new Vector3(0, 0, 0);
+            controls[1] = new Vector3(10, 0, 10);
+            controls[2] = new Vector3(20, 0, 0);
+            controls[3] = new Vector3(30, 0, 10);
+            controls[4] = new Vector3(40, 0, 0);
+            controls[5] = new Vector3(50, 0, 10);
 
             // second row (local X axis)
-            vertexes[6] = new Vector3(0,10,10);
-            vertexes[7] = new Vector3(10,10,0);
-            vertexes[8] = new Vector3(20,10,10);
-            vertexes[9] = new Vector3(30,10,0);
-            vertexes[10] = new Vector3(40,10,10);
-            vertexes[11] = new Vector3(50,10,0);
+            controls[6] = new Vector3(0, 10, 10);
+            controls[7] = new Vector3(10, 10, 0);
+            controls[8] = new Vector3(20, 10, 10);
+            controls[9] = new Vector3(30, 10, 0);
+            controls[10] = new Vector3(40, 10, 10);
+            controls[11] = new Vector3(50, 10, 0);
 
             // third row (local X axis)
-            vertexes[12] = new Vector3(0,20,0);
-            vertexes[13] = new Vector3(10,20,10);
-            vertexes[14] = new Vector3(20,20,0);
-            vertexes[15] = new Vector3(30,20,10);
-            vertexes[16] = new Vector3(40,20,0);
-            vertexes[17] = new Vector3(50,20,10);
+            controls[12] = new Vector3(0, 20, 0);
+            controls[13] = new Vector3(10, 20, 10);
+            controls[14] = new Vector3(20, 20, 0);
+            controls[15] = new Vector3(30, 20, 10);
+            controls[16] = new Vector3(40, 20, 0);
+            controls[17] = new Vector3(50, 20, 10);
 
             // fourth row (local X axis)
-            vertexes[18] = new Vector3(0,30,10);
-            vertexes[19] = new Vector3(10,30,0);
-            vertexes[20] = new Vector3(20,30,10);
-            vertexes[21] = new Vector3(30,30,0);
-            vertexes[22] = new Vector3(40,30,10);
-            vertexes[23] = new Vector3(50,30,0);
+            controls[18] = new Vector3(0, 30, 10);
+            controls[19] = new Vector3(10, 30, 0);
+            controls[20] = new Vector3(20, 30, 10);
+            controls[21] = new Vector3(30, 30, 0);
+            controls[22] = new Vector3(40, 30, 10);
+            controls[23] = new Vector3(50, 30, 0);
 
-            PolygonMesh pMesh = new PolygonMesh(u, v, vertexes)
+            // array of weights
+            double[] weights = new double[controls.Length];
+            for (int i = 0; i < weights.Length; i++)
+            {
+                weights[i] = 1.0;
+            }
+
+            GTE.BasisFunctionInput input0 = new GTE.BasisFunctionInput(u, 3);
+            GTE.BasisFunctionInput input1 = new GTE.BasisFunctionInput(v, 3);
+            GTE.NURBSSurface surface = new GTE.NURBSSurface(input0, input1, controls, weights);
+
+
+            short precisionU = (short) (10 * u);
+            short precisionV = (short) (10 * v);
+            double stepU = 1.0 / (precisionU - 1);
+            double stepV = 1.0 / (precisionV - 1);
+
+            Vector3[] vertexes = new Vector3[precisionU * precisionV];
+            for (int i = 0; i < precisionV; i++)
+            {
+                for (int j = 0; j < precisionU; j++)
+                {
+                    vertexes[i * precisionU + j] = surface.GetPosition( j * stepU, i * stepV);
+                }
+            }
+
+            PolygonMesh controlMesh = new PolygonMesh(u, v, controls) {Color = AciColor.Blue};
+
+            Vector3 test1 = controlMesh.GetVertex(1, 2);
+            Vector3 test2 = surface.GetControl(1, 2);
+
+
+            PolygonMesh pMesh = new PolygonMesh(precisionU, precisionV, vertexes) {Color = AciColor.Red};
+
+            DxfDocument doc = new DxfDocument();
+            doc.Entities.Add(controlMesh);
+            doc.Entities.Add(pMesh);
+            doc.Save("test.dxf");
+        }
+
+        #endregion
+
+        #region Samples for new and modified features 3.0.0
+
+        public static void PolygonMesh()
+        {
+            short u = 4;
+            short v = 4;
+
+            //Vector3[] controls =
+            //{
+            //    new Vector3(0, 0, 0),
+            //    new Vector3(10, 0, 10),
+            //    new Vector3(20, 0, 10),
+            //    new Vector3(30, 0, 0),
+
+            //    new Vector3(0, 10, 0),
+            //    new Vector3(10, 10, 10),
+            //    new Vector3(20, 10, 10),
+            //    new Vector3(30, 10, 0),
+
+            //    new Vector3(0, 20, 0),
+            //    new Vector3(10, 20, 10),
+            //    new Vector3(20, 20, 10),
+            //    new Vector3(30, 20, 0),
+
+            //    new Vector3(0, 30, 0),
+            //    new Vector3(10, 30, 10),
+            //    new Vector3(20, 30, 10),
+            //    new Vector3(30, 30, 0),
+            //};
+
+            //Vector3[] controls =
+            //{
+            //    new Vector3(0, 0, 0),
+            //    new Vector3(10, 0, 0),
+            //    new Vector3(20, 0, 0),
+            //    new Vector3(30, 0, 0),
+
+            //    new Vector3(0, 10, 10),
+            //    new Vector3(10, 10, 10),
+            //    new Vector3(20, 10, 10),
+            //    new Vector3(30, 10, 10),
+
+            //    new Vector3(0, 20, 10),
+            //    new Vector3(10, 20, 10),
+            //    new Vector3(20, 20, 10),
+            //    new Vector3(30, 20, 10),
+
+            //    new Vector3(0, 30, 0),
+            //    new Vector3(10, 30, 0),
+            //    new Vector3(20, 30, 0),
+            //    new Vector3(30, 30, 0),
+            //};
+
+            Vector3[] controls =
+            {
+                new Vector3(0, 0, 0),
+                new Vector3(10, 0, 10),
+                new Vector3(20, 0, 10),
+                new Vector3(30, 0, 0),
+
+                new Vector3(0, 10, 10),
+                new Vector3(10, 10, 10),
+                new Vector3(20, 10, 10),
+                new Vector3(30, 10, 10),
+
+                new Vector3(0, 20, 10),
+                new Vector3(10, 20, 10),
+                new Vector3(20, 20, 10),
+                new Vector3(30, 20, 10),
+
+                new Vector3(0, 30, 0),
+                new Vector3(10, 30, 10),
+                new Vector3(20, 30, 10),
+                new Vector3(30, 30, 0),
+            };
+
+            //// number of vertexes along the mesh local X axis
+            //short u = 6;
+            //// number of vertexes along the mesh local Y axis
+            //short v = 4;
+
+            //// array of vertexes
+            //Vector3[] vertexes = new Vector3[u * v];
+            //// first row (local X axis)
+            //vertexes[0] = new Vector3(0,0,0);
+            //vertexes[1] = new Vector3(10,0,10);
+            //vertexes[2] = new Vector3(20,0,0);
+            //vertexes[3] = new Vector3(30,0,10);
+            //vertexes[4] = new Vector3(40,0,0);
+            //vertexes[5] = new Vector3(50,0,10);
+
+            //// second row (local X axis)
+            //vertexes[6] = new Vector3(0,10,10);
+            //vertexes[7] = new Vector3(10,10,0);
+            //vertexes[8] = new Vector3(20,10,10);
+            //vertexes[9] = new Vector3(30,10,0);
+            //vertexes[10] = new Vector3(40,10,10);
+            //vertexes[11] = new Vector3(50,10,0);
+
+            //// third row (local X axis)
+            //vertexes[12] = new Vector3(0,20,0);
+            //vertexes[13] = new Vector3(10,20,10);
+            //vertexes[14] = new Vector3(20,20,0);
+            //vertexes[15] = new Vector3(30,20,10);
+            //vertexes[16] = new Vector3(40,20,0);
+            //vertexes[17] = new Vector3(50,20,10);
+
+            //// fourth row (local X axis)
+            //vertexes[18] = new Vector3(0,30,10);
+            //vertexes[19] = new Vector3(10,30,0);
+            //vertexes[20] = new Vector3(20,30,10);
+            //vertexes[21] = new Vector3(30,30,0);
+            //vertexes[22] = new Vector3(40,30,10);
+            //vertexes[23] = new Vector3(50,30,0);
+
+            PolygonMesh pMesh = new PolygonMesh(u, v, controls)
             {
                 Color = AciColor.Blue,
-                DensityU = (short) (10 * u),
-                DensityV = (short) (10 * v),
+                DensityU = (short) (5 * u),
+                DensityV = (short) (5 * v),
+                IsClosedInU = true,
+                IsClosedInV = true,
                 SmoothType = PolylineSmoothType.Quadratic
             };
 
             // the Mesh entity doesn't have the restrictions the PolygonMesh has
             // you can create smoothed polygon meshes with higher densities that the ones allowed by the polygon mesh
-            Mesh mesh = pMesh.ToMesh(50 * u, 50 * v);
+            Mesh mesh = pMesh.ToMesh(60 * u, 60 * v);
             mesh.Color = AciColor.Red;
 
             DxfDocument doc = new DxfDocument();
@@ -507,6 +1020,9 @@ namespace TestDxfDocument
             }
 
             doc.Save("test.dxf");
+
+            DxfDocument dxf = DxfDocument.Load("test.dxf");
+            dxf.Save("test.dxf");
         }
 
         public static void BezierCurve()
@@ -3012,17 +3528,22 @@ namespace TestDxfDocument
 
 
             // and this is a spline created with control points
-            List<SplineVertex> ctrlPoints = new List<SplineVertex>
+            Vector3[] ctrlPoints =
             {
-                new SplineVertex(new Vector3(0, 0, 0), 1.0),
-                new SplineVertex(new Vector3(25, 50, 50), 2.0),
-                new SplineVertex(new Vector3(50, 0, 100), 3.0),
-                new SplineVertex(new Vector3(75, 50, 50), 4.0),
-                new SplineVertex(new Vector3(100, 0, 0), 5.0)
+                new Vector3(0, 0, 0),
+                new Vector3(25, 50, 50),
+                new Vector3(50, 0, 100),
+                new Vector3(75, 50, 50),
+                new Vector3(100, 0, 0)
+            };
+
+            double[] weights =
+            {
+                1.0, 2.0, 3.0, 4.0, 5.0
             };
 
             // the constructor will generate a uniform knot vector 
-            Spline openSpline = new Spline(ctrlPoints, 3);
+            Spline openSpline = new Spline(ctrlPoints, weights, 3);
             Spline cloned2 = (Spline) openSpline.Clone();
 
             cloned2.Reverse();
@@ -3975,82 +4496,97 @@ namespace TestDxfDocument
 
         public static void NurbsEvaluator()
         {
+            Layer splines = new Layer("Splines");
+            splines.Color = AciColor.Blue;
+
             Layer result = new Layer("Nurbs evaluator");
             result.Color = AciColor.Red;
 
-            List<SplineVertex> ctrlPoints = new List<SplineVertex>
+            Vector3[] ctrlPoints =
             {
-                new SplineVertex(new Vector3(0, 0, 0), 1.0),
-                new SplineVertex(new Vector3(25, 50, 50), 2.0),
-                new SplineVertex(new Vector3(50, 0, 100), 3.0),
-                new SplineVertex(new Vector3(75, 50, 50), 4.0),
-                new SplineVertex(new Vector3(100, 0, 0), 5.0)
+                new Vector3(0, 0, 0),
+                new Vector3(25, 50, 50),
+                new Vector3(50, 0, 100),
+                new Vector3(75, 50, 50),
+                new Vector3(100, 0, 0)
+            };
+
+            double[] weigths1 =
+            {
+                1.0, 2.0, 3.0, 4.0, 5.0
             };
 
             // the constructor will generate a uniform knot vector 
-            Spline openSpline = new Spline(ctrlPoints, 3);
+            Spline openSpline = new Spline(ctrlPoints, weigths1, 3) {Layer = splines};
 
-            List<SplineVertex> ctrlPointsClosed = new List<SplineVertex>
+            Vector3[] ctrlPointsClosed =
             {
-                new SplineVertex(new Vector3(0, 0, 0)),
-                new SplineVertex(new Vector3(25, 50, 0)),
-                new SplineVertex(new Vector3(50, 0, 0)),
-                new SplineVertex(new Vector3(75, 50, 0)),
-                new SplineVertex(new Vector3(100, 0, 0)),
-                new SplineVertex(new Vector3(0, 0, 0)) // closed spline non periodic we repeat the last control point
+                new Vector3(0, 0, 0),
+                new Vector3(25, 50, 0),
+                new Vector3(50, 0, 0),
+                new Vector3(75, 50, 0),
+                new Vector3(100, 0, 0),
+                new Vector3(0, 0, 0) // closed spline non periodic we repeat the last control point
             };
-            Spline closedNonPeriodicSpline = new Spline(ctrlPointsClosed, 3);
+            Spline closedNonPeriodicSpline = new Spline(ctrlPointsClosed, null, 3) {Layer = splines};
 
             // the periodic spline will generate a periodic (unclamped) closed curve,
             // as far as my tests have gone not all programs handle them correctly, most of them only handle clamped splines
-            Spline closedPeriodicSpline = new Spline(ctrlPoints, 4, true);
+            Spline closedPeriodicSpline = new Spline(ctrlPoints, null, 4, true) {Layer = splines};
             // always use spline vertex weights of 1.0 (default value) looks like that AutoCAD does not handle them correctly for periodic splines,
             // but they work fine for non periodic splines
             closedPeriodicSpline.SetUniformWeights(1.0);
 
             // manually defining the control points and the knot vector (example a circle created with nurbs)
-            List<SplineVertex> circle = new List<SplineVertex>
+            Vector3[] circle =
             {
-                new SplineVertex(new Vector3(50, 0, 0), 1.0),
-                new SplineVertex(new Vector3(100, 0, 0), 0.5),
-                new SplineVertex(new Vector3(100, 100, 0), 0.5),
-                new SplineVertex(new Vector3(50, 100, 0), 1.0),
-                new SplineVertex(new Vector3(0, 100, 0), 0.5),
-                new SplineVertex(new Vector3(0, 0, 0), 0.5),
-                new SplineVertex(new Vector3(50, 0, 0), 1.0) // repeat the first point to close the circle
+                new Vector3(50, 0, 0),
+                new Vector3(100, 0, 0),
+                new Vector3(100, 100, 0),
+                new Vector3(50, 100, 0),
+                new Vector3(0, 100, 0),
+                new Vector3(0, 0, 0),
+                new Vector3(50, 0, 0) // repeat the first point to close the circle
+            };
+
+            double[] weigths2 =
+            {
+                1.0, 0.5, 0.5, 1.0, 0.5, 0.5, 1.0
             };
 
             // the number of knots must be control points number + degree + 1
             // Conics are 2nd degree curves
             List<double> knots = new List<double> {0.0, 0.0, 0.0, 1.0/4.0, 1.0/2.0, 1.0/2.0, 3.0/4.0, 1.0, 1.0, 1.0};
-            Spline splineCircle = new Spline(circle, knots, 2, false);
+            Spline splineCircle = new Spline(circle, weigths2, knots, 2, false) {Layer = splines};
 
             DxfDocument dxf = new DxfDocument();
-
+            // we will convert the Spline to a Polyline
             Polyline3D pol;
 
-            dxf.Entities.Add(openSpline);
-            // we will convert the Spline to a Polyline
-            pol = openSpline.ToPolyline3D(100);
-            pol.Layer = result;
-            dxf.Entities.Add(pol);
+            //dxf.Entities.Add(openSpline);
+            //pol = openSpline.ToPolyline3D(100);
+            //pol.Layer = result;
+            //dxf.Entities.Add(pol);
 
-            dxf.Entities.Add(closedNonPeriodicSpline);
-            pol = closedNonPeriodicSpline.ToPolyline3D(100);
-            pol.Layer = result;
-            dxf.Entities.Add(pol);
+            //dxf.Entities.Add(closedNonPeriodicSpline);
+            //pol = closedNonPeriodicSpline.ToPolyline3D(100);
+            //pol.Layer = result;
+            //dxf.Entities.Add(pol);
 
             dxf.Entities.Add(closedPeriodicSpline);
             pol = closedPeriodicSpline.ToPolyline3D(100);
             pol.Layer = result;
             dxf.Entities.Add(pol);
 
-            dxf.Entities.Add(splineCircle);
-            pol = splineCircle.ToPolyline3D(100);
-            pol.Layer = result;
-            dxf.Entities.Add(pol);
+            //dxf.Entities.Add(splineCircle);
+            //pol = splineCircle.ToPolyline3D(100);
+            //pol.Layer = result;
+            //dxf.Entities.Add(pol);
 
-            dxf.Save("spline.dxf");
+            dxf.Save("test.dxf");
+
+            DxfDocument doc = DxfDocument.Load("test.dxf");
+            doc.Save("test.dxf");
         }
 
         public static void XDataInformation()
@@ -6785,17 +7321,17 @@ namespace TestDxfDocument
 
         private static void WriteSplineBoundaryHatch()
         {
-            List<SplineVertex> ctrlPoints = new List<SplineVertex>
+            Vector3[] ctrlPoints =
             {
-                new SplineVertex(new Vector3(0, 0, 0)),
-                new SplineVertex(new Vector3(25, 50, 0)),
-                new SplineVertex(new Vector3(50, 0, 0)),
-                new SplineVertex(new Vector3(75, 50, 0)),
-                new SplineVertex(new Vector3(100, 0, 0))
+                new Vector3(0, 0, 0),
+                new Vector3(25, 50, 0),
+                new Vector3(50, 0, 0),
+                new Vector3(75, 50, 0),
+                new Vector3(100, 0, 0)
             };
 
             // hatch with single closed spline boundary path
-            Spline spline = new Spline(ctrlPoints, 3, true); // closed periodic
+            Spline spline = new Spline(ctrlPoints, null, 3, true); // closed periodic
 
             List<HatchBoundaryPath> boundary = new List<HatchBoundaryPath>();
 
@@ -6814,8 +7350,8 @@ namespace TestDxfDocument
             dxf.Save("hatch closed spline 2010.dxf");
 
             // hatch boundary path with spline and line
-            Spline openSpline = new Spline(ctrlPoints, 3);
-            Line line = new Line(ctrlPoints[0].Position, ctrlPoints[ctrlPoints.Count - 1].Position);
+            Spline openSpline = new Spline(ctrlPoints, null, 3);
+            Line line = new Line(ctrlPoints[0], ctrlPoints[ctrlPoints.Length - 1]);
 
             List<HatchBoundaryPath> boundary2 = new List<HatchBoundaryPath>();
             HatchBoundaryPath path2 = new HatchBoundaryPath(new List<EntityObject> {openSpline, line});

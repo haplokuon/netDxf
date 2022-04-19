@@ -2683,19 +2683,19 @@ namespace netDxf.IO
             {
                 for (int i = 0; i < spline.Degree; i++)
                 {
-                    SplineVertex point = spline.ControlPoints[spline.ControlPoints.Count - spline.Degree + i];
-                    this.chunk.Write(10, point.Position.X);
-                    this.chunk.Write(20, point.Position.Y);
-                    this.chunk.Write(30, point.Position.Z);
-                    this.chunk.Write(41, point.Weight);
+                    Vector3 point = spline.ControlPoints[spline.ControlPoints.Length - spline.Degree + i];
+                    this.chunk.Write(10, point.X);
+                    this.chunk.Write(20, point.Y);
+                    this.chunk.Write(30, point.Z);
+                    this.chunk.Write(41, spline.Weights[spline.Weights.Length - spline.Degree + i]);
                 }
             }
-            foreach (SplineVertex point in spline.ControlPoints)
+            for (int i = 0; i < spline.ControlPoints.Length; i++)
             {
-                this.chunk.Write(10, point.Position.X);
-                this.chunk.Write(20, point.Position.Y);
-                this.chunk.Write(30, point.Position.Z);
-                this.chunk.Write(41, point.Weight);
+                this.chunk.Write(10, spline.ControlPoints[i].X);
+                this.chunk.Write(20, spline.ControlPoints[i].Y);
+                this.chunk.Write(30, spline.ControlPoints[i].Z);
+                this.chunk.Write(41, spline.Weights[i]);
             }
             foreach (Vector3 point in spline.FitPoints)
             {
@@ -5126,12 +5126,13 @@ namespace netDxf.IO
                 Layer = poly3D.Layer,
                 Normal = poly3D.Normal,
                 Color = poly3D.Color,
-                XData = poly3D.XData,
                 EndSequence = endSequence,
                 Vertexes = vertexes,
                 Flags = poly3D.Flags,
                 SmoothType = poly3D.SmoothType
             };
+
+            polyline.XData.AddRange(poly3D.XData.Values);
 
             this.polylines.Add(polyline.Handle, polyline);
         }
@@ -5198,12 +5199,13 @@ namespace netDxf.IO
                 Elevation = poly2D.Elevation,
                 Normal = poly2D.Normal,
                 Color = poly2D.Color,
-                XData = poly2D.XData,
                 EndSequence = endSequence,
                 Vertexes = vertexes,
                 Flags = poly2D.Flags,
                 SmoothType = poly2D.SmoothType
             };
+
+            polyline.XData.AddRange(poly2D.XData.Values);
 
             this.polylines.Add(polyline.Handle, polyline);
         }
@@ -5255,11 +5257,12 @@ namespace netDxf.IO
                 Layer = pMesh.Layer,
                 Normal = pMesh.Normal,
                 Color = pMesh.Color,
-                XData = pMesh.XData,
                 EndSequence = endSequence,
                 Vertexes = vertexes,
                 Flags = pMesh.Flags,
             };
+
+            polyline.XData.AddRange(pMesh.XData.Values);
 
             this.polylines.Add(pMesh.Handle, polyline);
         }
@@ -5286,9 +5289,6 @@ namespace netDxf.IO
                     vertexes.Add(v);
                 }
             }
-
-            //if the polygon mesh is smoothed create the additional vertexes
-            
 
             if (pMesh.SmoothType != PolylineSmoothType.NoSmooth)
             {
@@ -5336,7 +5336,6 @@ namespace netDxf.IO
                 Layer = pMesh.Layer,
                 Normal = pMesh.Normal,
                 Color = pMesh.Color,
-                XData = pMesh.XData,
                 EndSequence = endSequence,
                 Vertexes = vertexes,
                 Flags = pMesh.Flags,
@@ -5346,6 +5345,8 @@ namespace netDxf.IO
                 DensityM = precisionU,
                 DensityN = precisionV
             };
+
+            polyline.XData.AddRange(pMesh.XData.Values);
 
             this.polylines.Add(pMesh.Handle, polyline);
         }

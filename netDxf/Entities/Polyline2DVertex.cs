@@ -95,6 +95,18 @@ namespace netDxf.Entities
             this.endWidth = 0.0;
         }
 
+        /// <summary>
+        /// Copy constructor.
+        /// </summary>
+        /// <param name="vertex">A Polyline2D vertex.</param>
+        public Polyline2DVertex(Polyline2DVertex vertex)
+        {
+            this.position = vertex.Position;
+            this.bulge = vertex.Bulge;
+            this.startWidth = vertex.startWidth;
+            this.endWidth = vertex.EndWidth;
+        }
+
         #endregion
 
         #region public properties
@@ -173,13 +185,7 @@ namespace netDxf.Entities
         /// <returns>A new Polyline2DVertex that is a copy of this instance.</returns>
         public object Clone()
         {
-            return new Polyline2DVertex
-            {
-                Position = this.position,
-                Bulge = this.bulge,
-                StartWidth = this.startWidth,
-                EndWidth = this.endWidth
-            };
+            return new Polyline2DVertex(this);
         }
 
         #endregion

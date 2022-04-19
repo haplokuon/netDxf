@@ -442,9 +442,9 @@ namespace netDxf.Entities
                         case EntityType.Spline:
                             Spline spline = (Spline) value;
                             List<Vector2> sPoints = new List<Vector2>();
-                            foreach (SplineVertex point in spline.ControlPoints)
+                            foreach (Vector3 point in spline.ControlPoints)
                             {
-                                sPoints.Add(new Vector2(point.Position.X, point.Position.Y));
+                                sPoints.Add(new Vector2(point.X, point.Y));
                             }
                             abbr = new BoundingRectangle(sPoints);
                             break;

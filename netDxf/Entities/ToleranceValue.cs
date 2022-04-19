@@ -85,7 +85,7 @@ namespace netDxf.Entities
         public string Value
         {
             get { return this.tolerance; }
-            set { this.tolerance = string.IsNullOrEmpty(value) ? string.Empty : value; ; }
+            set { this.tolerance = string.IsNullOrEmpty(value) ? string.Empty : value; }
         }
 
         /// <summary>

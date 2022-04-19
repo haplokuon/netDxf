@@ -38,11 +38,12 @@ namespace netDxf.Entities
     {
         #region private fields
 
-        private readonly List<Vector3> fitPoints;
+        private Vector3[] fitPoints;
         private readonly SplineCreationMethod creationMethod;
         private Vector3? startTangent;
         private Vector3? endTangent;
-        private readonly List<SplineVertex> controlPoints;
+        private Vector3[] controlPoints;
+        private double[] weights;
         private double[] knots;
         private readonly short degree;
         private bool isClosedPeriodic;
@@ -67,7 +68,7 @@ namespace netDxf.Entities
             : this(BezierCurveCubic.CreateFromFitPoints(fitPoints))
         {
             this.creationMethod = SplineCreationMethod.FitPoints;
-            this.fitPoints = new List<Vector3>(fitPoints);
+            this.fitPoints = fitPoints.ToArray();
         }
 
         /// <summary>
@@ -91,31 +92,36 @@ namespace netDxf.Entities
         private Spline(IEnumerable<BezierCurve> curves, short degree)
             : base(EntityType.Spline, DxfObjectCode.Spline)
         {
-            this.degree = degree;
-            this.isClosedPeriodic = false;
-            this.fitPoints = new List<Vector3>();
-
             // control points and fit points
-            this.controlPoints = new List<SplineVertex>();
+            List<Vector3> ctrList = new List<Vector3>();
+            List<double> wList = new List<double>();
+
             foreach (BezierCurve curve in curves)
             {
                 foreach (Vector3 point in curve.ControlPoints)
                 {
-                    this.controlPoints.Add(new SplineVertex(point));
+                    ctrList.Add(point);
+                    wList.Add(1.0);
                 }
             }
 
+            this.controlPoints = ctrList.ToArray();
+            this.weights = wList.ToArray();
+            this.degree = degree;
+            this.isClosedPeriodic = false;
+            this.fitPoints = new Vector3[0];
             this.creationMethod = SplineCreationMethod.ControlPoints;
-            this.knots = ÇreateBezierKnotVector(this.controlPoints.Count, this.degree);
+            this.knots = ÇreateBezierKnotVector(this.controlPoints.Length, this.degree);
         }
 
         /// <summary>
         /// Initializes a new instance of the <c>Spline</c> class.
         /// </summary>
         /// <param name="controlPoints">Spline control points.</param>
+        /// <param name="weights">Spline control weights. Pass null to set the default weights as 1.0.</param>
         /// <remarks>By default the degree of the spline is equal three.</remarks>
-        public Spline(IEnumerable<SplineVertex> controlPoints)
-            : this(controlPoints, 3, false)
+        public Spline(IEnumerable<Vector3> controlPoints, IEnumerable<double> weights)
+            : this(controlPoints, weights, 3, false)
         {
         }
 
@@ -123,30 +129,34 @@ namespace netDxf.Entities
         /// Initializes a new instance of the <c>Spline</c> class.
         /// </summary>
         /// <param name="controlPoints">Spline control points.</param>
+        /// <param name="weights">Spline control weights. Pass null to set the default weights as 1.0.</param>
+        /// <param name="degree">Degree of the spline curve.  Valid values are 1 (linear), degree 2 (quadratic), degree 3 (cubic), and so on up to degree 10.</param>
+        public Spline(IEnumerable<Vector3> controlPoints, IEnumerable<double> weights, short degree)
+            : this(controlPoints, weights, degree, false)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <c>Spline</c> class.
+        /// </summary>
+        /// <param name="controlPoints">Spline control points.</param>
+        /// <param name="weights">Spline control weights.  If null the weights vector will be automatically initialized with 1.0.</param>
         /// <param name="closedPeriodic">Sets if the spline as periodic closed (default false).</param>
         /// <remarks>By default the degree of the spline is equal three.</remarks>
-        public Spline(IEnumerable<SplineVertex> controlPoints, bool closedPeriodic)
-            : this(controlPoints, 3, closedPeriodic)
+        public Spline(IEnumerable<Vector3> controlPoints, IEnumerable<double> weights, bool closedPeriodic)
+            : this(controlPoints, weights, 3, closedPeriodic)
         {
         }
+
 
         /// <summary>
         /// Initializes a new instance of the <c>Spline</c> class.
         /// </summary>
         /// <param name="controlPoints">Spline control points.</param>
-        /// <param name="degree">Degree of the spline curve.  Valid values are 1 (linear), degree 2 (quadratic), degree 3 (cubic), and so on up to degree 10.</param>
-        public Spline(IEnumerable<SplineVertex> controlPoints, short degree)
-            : this(controlPoints, degree, false)
-        {
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <c>Spline</c> class.
-        /// </summary>
-        /// <param name="controlPoints">Spline control points.</param>
+        /// <param name="weights">Spline control weights.  If null the weights vector will be automatically initialized with 1.0.</param>
         /// <param name="degree">Degree of the spline curve.  Valid values are 1 (linear), degree 2 (quadratic), degree 3 (cubic), and so on up to degree 10.</param>
         /// <param name="closedPeriodic">Sets if the spline as periodic closed (default false).</param>
-        public Spline(IEnumerable<SplineVertex> controlPoints, short degree, bool closedPeriodic)
+        public Spline(IEnumerable<Vector3> controlPoints, IEnumerable<double> weights, short degree, bool closedPeriodic)
             : base(EntityType.Spline, DxfObjectCode.Spline)
         {
             // spline degree
@@ -163,32 +173,51 @@ namespace netDxf.Entities
             }
 
             // create control points
-            this.controlPoints = new List<SplineVertex>(controlPoints);
-            if (this.controlPoints.Count < 2)
+            this.controlPoints = controlPoints.ToArray();
+            if (this.controlPoints.Length < 2)
             {
                 throw new ArgumentException("The number of control points must be equal or greater than 2.");
             }
 
-            if (this.controlPoints.Count < degree + 1)
+            if (this.controlPoints.Length < degree + 1)
             {
                 throw new ArgumentException("The number of control points must be equal or greater than the spline degree + 1.");
             }
 
+            // create weights
+            if (weights == null)
+            {
+                this.weights = new double[this.controlPoints.Length];
+                for (int i = 0; i < this.controlPoints.Length; i++)
+                {
+                    this.weights[i] = 1.0;
+                }
+            }
+            else
+            {
+                this.weights = weights.ToArray();
+                if (this.weights.Length != this.controlPoints.Length)
+                {
+                    throw new ArgumentException("The number of control points must be the same as the number of weights.", nameof(weights));
+                }
+            }
+
             this.isClosedPeriodic = closedPeriodic;
             this.creationMethod = SplineCreationMethod.ControlPoints;
-            this.fitPoints = new List<Vector3>();
-            this.knots = CreateKnotVector(this.controlPoints.Count, this.degree, this.isClosedPeriodic);
+            this.fitPoints = new Vector3[0];
+            this.knots = CreateKnotVector(this.controlPoints.Length, this.degree, this.isClosedPeriodic);
         }
 
         /// <summary>
         /// Initializes a new instance of the <c>Spline</c> class.
         /// </summary>
         /// <param name="controlPoints">Spline control points.</param>
+        /// <param name="weigths">Spline control weights.  If null the weights vector will be automatically initialized with 1.0.</param>
         /// <param name="knots">Spline knot vector.</param>
         /// <param name="degree">Degree of the spline curve. Valid values are 1 (linear), degree 2 (quadratic), degree 3 (cubic), and so on up to degree 10.</param>
         /// <param name="closedPeriodic">Sets if the spline as periodic closed (default false).</param>
-        public Spline(IEnumerable<SplineVertex> controlPoints, IEnumerable<double> knots, short degree, bool closedPeriodic)
-            : this(controlPoints, knots, degree, null, SplineCreationMethod.ControlPoints, closedPeriodic)
+        public Spline(IEnumerable<Vector3> controlPoints, IEnumerable<double> weigths, IEnumerable<double> knots, short degree, bool closedPeriodic)
+            : this(controlPoints, weigths, knots, degree, null, SplineCreationMethod.ControlPoints, closedPeriodic)
         {
         }
 
@@ -196,12 +225,13 @@ namespace netDxf.Entities
         /// Initializes a new instance of the <c>Spline</c> class.
         /// </summary>
         /// <param name="controlPoints">Spline control points.</param>
+        /// <param name="weights">Spline control weights.  If null the weights vector will be automatically initialized with 1.0.</param>
         /// <param name="knots">Spline knot vector.</param>
         /// <param name="degree">Degree of the spline curve.  Valid values are 1 (linear), degree 2 (quadratic), degree 3 (cubic), and so on up to degree 10.</param>
         /// <param name="fitPoints">Spine fit points.</param>
         /// <param name="method">Spline creation method.</param>
         /// <param name="closedPeriodic">Sets if the spline as periodic closed (default false).</param>
-        internal Spline(IEnumerable<SplineVertex> controlPoints, IEnumerable<double> knots, short degree, IEnumerable<Vector3> fitPoints, SplineCreationMethod method, bool closedPeriodic)
+        internal Spline(IEnumerable<Vector3> controlPoints, IEnumerable<double> weights, IEnumerable<double> knots, short degree, IEnumerable<Vector3> fitPoints, SplineCreationMethod method, bool closedPeriodic)
             : base(EntityType.Spline, DxfObjectCode.Spline)
         {
             // spline degree
@@ -220,19 +250,39 @@ namespace netDxf.Entities
                     throw new ArgumentNullException(nameof(controlPoints), "Cannot create a spline without control points if its creation method is with control points.");
                 }
 
-                this.controlPoints = new List<SplineVertex>();
+                this.controlPoints = new Vector3[0];
             }
             else
             {
-                this.controlPoints = new List<SplineVertex>(controlPoints);
-                if (this.controlPoints.Count < 2)
+                this.controlPoints = controlPoints.ToArray();
+                int numControlPoints = this.controlPoints.Length;
+                if (numControlPoints < 2)
                 {
-                    throw new ArgumentOutOfRangeException(nameof(controlPoints), this.controlPoints.Count, "The number of control points must be equal or greater than 2.");
+                    throw new ArgumentOutOfRangeException(nameof(controlPoints), numControlPoints, "The number of control points must be equal or greater than 2.");
                 }
 
-                if (this.controlPoints.Count < degree + 1)
+                if (numControlPoints < degree + 1)
                 {
-                    throw new ArgumentOutOfRangeException(nameof(controlPoints), this.controlPoints.Count, "The number of control points must be equal or greater than the spline degree + 1.");
+                    throw new ArgumentOutOfRangeException(nameof(controlPoints), numControlPoints, "The number of control points must be equal or greater than the spline degree + 1.");
+                }
+
+                // create weights
+                if (weights == null)
+                {
+                    this.weights = new double[numControlPoints];
+                    for (int i = 0; i < numControlPoints; i++)
+                    {
+                        this.weights[i] = 1.0;
+                    }
+                }
+                else
+                {
+                    this.weights = weights.ToArray();
+                    int numWeights = this.weights.Length;
+                    if (numWeights != numControlPoints)
+                    {
+                        throw new ArgumentException("The number of control points must be the same as the number of weights.", nameof(weights));
+                    }
                 }
 
                 // knots
@@ -245,11 +295,11 @@ namespace netDxf.Entities
                 int numKnots;
                 if (closedPeriodic)
                 {
-                    numKnots = this.controlPoints.Count + 2 * degree + 1;
+                    numKnots = numControlPoints + 2 * degree + 1;
                 }
                 else
                 {
-                    numKnots = this.controlPoints.Count + degree + 1;
+                    numKnots = numControlPoints + degree + 1;
                 }
                 if (this.knots.Length != numKnots)
                 {
@@ -264,11 +314,11 @@ namespace netDxf.Entities
                 {
                     throw new ArgumentNullException(nameof(fitPoints), "Cannot create a spline without fit points if its creation method is with fit points.");
                 }
-                this.fitPoints = new List<Vector3>();
+                this.fitPoints = new Vector3[0];
             }
             else
             {
-                this.fitPoints = new List<Vector3>(fitPoints);
+                this.fitPoints = fitPoints.ToArray();
             }
 
             this.creationMethod = method;
@@ -400,7 +450,7 @@ namespace netDxf.Entities
         {
             get
             {
-                return this.controlPoints[0].Position.Equals(this.controlPoints[this.controlPoints.Count - 1].Position);
+                return this.controlPoints[0].Equals(this.controlPoints[this.controlPoints.Length - 1]);
             }
         }
 
@@ -416,25 +466,25 @@ namespace netDxf.Entities
             get { return this.isClosedPeriodic; }
             set
             {
-                if (this.isClosedPeriodic != value)
-                {
-                    if (value && this.IsClosed)
-                    {
-                        this.controlPoints.RemoveAt(this.controlPoints.Count - 1);
-                    }
-                    this.knots = CreateKnotVector(this.controlPoints.Count, this.degree, value);
-                }
-                
+                this.knots = CreateKnotVector(this.controlPoints.Length, this.degree, value);
                 this.isClosedPeriodic = value;
             }
         }
 
         /// <summary>
-        /// Gets the spline <see cref="SplineVertex">control points</see> list.
+        /// Gets the spline <see cref="Vector3">control points</see> list.
         /// </summary>
-        public IReadOnlyList<SplineVertex> ControlPoints
+        public Vector3[] ControlPoints
         {
             get { return this.controlPoints; }
+        }
+
+        /// <summary>
+        /// Gets the spline control points weights list.
+        /// </summary>
+        public double[] Weights
+        {
+            get { return this.weights; }
         }
 
         /// <summary>
@@ -455,8 +505,9 @@ namespace netDxf.Entities
         /// </summary>
         public void Reverse()
         {
-            this.fitPoints.Reverse();
-            this.controlPoints.Reverse();
+            this.fitPoints = this.fitPoints.Reverse().ToArray();
+            this.controlPoints = this.controlPoints.Reverse().ToArray();
+            this.weights = this.weights.Reverse().ToArray();
             Vector3? tmp = this.startTangent;
             this.startTangent = -this.endTangent;
             this.endTangent = -tmp;
@@ -468,9 +519,9 @@ namespace netDxf.Entities
         /// <param name="weight">Control point weight.</param>
         public void SetUniformWeights(double weight)
         {
-            foreach (SplineVertex controlPoint in this.controlPoints)
+            for (int i = 0; i < this.weights.Length; i++)
             {
-                controlPoint.Weight = weight;
+                this.weights[i] = weight;
             }
         }
 
@@ -481,7 +532,7 @@ namespace netDxf.Entities
         /// <returns>A list vertexes that represents the spline.</returns>
         public List<Vector3> PolygonalVertexes(int precision)
         {
-            return NurbsEvaluator(this.controlPoints, this.knots, this.degree, this.IsClosed, this.isClosedPeriodic, precision);
+            return NurbsEvaluator(this.controlPoints.ToArray(), this.weights.ToArray(), this.knots, this.degree, this.IsClosed, this.isClosedPeriodic, precision);
         }
 
         /// <summary>
@@ -539,7 +590,8 @@ namespace netDxf.Entities
         /// <summary>
         /// Calculate points along a NURBS curve.
         /// </summary>
-        /// <param name="ctrlPoints">List of spline control points.</param>
+        /// <param name="controls">List of spline control points.</param>
+        /// <param name="weights">Spline control weights. If null the weights vector will be automatically initialized with 1.0.</param>
         /// <param name="knots">List of spline knot points. If null the knot vector will be automatically generated.</param>
         /// <param name="degree">Spline degree.</param>
         /// <param name="isClosed">Specifies if the spline is closed.</param>
@@ -550,37 +602,56 @@ namespace netDxf.Entities
         /// NURBS evaluator provided by mikau16 based on Michael V. implementation, roughly follows the notation of http://cs.mtu.edu/~shene/PUBLICATIONS/2004/NURBS.pdf
         /// Added a few modifications to make it work for open, closed, and periodic closed splines.
         /// </remarks>
-        public static List<Vector3> NurbsEvaluator(List<SplineVertex> ctrlPoints, double[] knots, int degree, bool isClosed, bool isClosedPeriodic, int precision)
+        public static List<Vector3> NurbsEvaluator(Vector3[] controls, double[] weights, double[] knots, int degree, bool isClosed, bool isClosedPeriodic, int precision)
         {
-            if (ctrlPoints == null)
-            {
-                throw new ArgumentNullException(nameof(ctrlPoints), "A spline entity with control points is required.");
-            }
-
-            if (ctrlPoints.Count == 0)
-            {
-                throw new ArgumentException("A spline entity with control points is required.", nameof(ctrlPoints));
-            }
-
             if (precision < 2)
             {
                 throw new ArgumentOutOfRangeException(nameof(precision), precision, "The precision must be equal or greater than two.");
             }
 
+            // control points
+            if (controls == null)
+            {
+                throw new ArgumentNullException(nameof(controls), "A spline entity with control points is required.");
+            }
+
+            int numCtrlPoints = controls.Length;
+
+            if (numCtrlPoints == 0)
+            {
+                throw new ArgumentException("A spline entity with control points is required.", nameof(controls));
+            }
+
+            // weights
+            if (weights == null)
+            {
+                // give the default 1.0 to the control points weights
+                weights = new double[numCtrlPoints];
+                for (int i = 0; i < numCtrlPoints; i++)
+                {
+                    weights[i] = 1.0;
+                }
+            }
+            else if (weights.Length != numCtrlPoints)
+            {
+                throw new ArgumentException("The number of control points must be the same as the number of weights.", nameof(weights));
+            }
+
+            // knots
             if (knots == null)
             {
-                knots = CreateKnotVector(ctrlPoints.Count, degree, isClosedPeriodic);
+                knots = CreateKnotVector(numCtrlPoints, degree, isClosedPeriodic);
             }
             else
             {
                 int numKnots;
                 if (isClosedPeriodic)
                 {
-                    numKnots = ctrlPoints.Count + 2 * degree + 1;
+                    numKnots = numCtrlPoints + 2 * degree + 1;
                 }
                 else
                 {
-                    numKnots = ctrlPoints.Count + degree + 1;
+                    numKnots = numCtrlPoints + degree + 1;
                 }
                 if (knots.Length != numKnots)
                 {
@@ -588,18 +659,26 @@ namespace netDxf.Entities
                 }
             }
 
-            List<SplineVertex> ctrl = new List<SplineVertex>();
+            Vector3[] ctrl;
+            double[] w;
             if (isClosedPeriodic)
             {
+                ctrl = new Vector3[numCtrlPoints + degree];
+                w = new double[numCtrlPoints + degree];
                 for (int i = 0; i < degree; i++)
                 {
-                    ctrl.Add(ctrlPoints[ctrlPoints.Count - degree + i]);
+                    int index = numCtrlPoints - degree + i;
+                    ctrl[i] = controls[index];
+                    w[i] = weights[index];
                 }
-                ctrl.AddRange(ctrlPoints);
+
+                controls.CopyTo(ctrl, degree);
+                weights.CopyTo(w, degree);
             }
             else
             {
-                ctrl.AddRange(ctrlPoints);
+                ctrl = controls;
+                w = weights;
             }
 
             double uStart;
@@ -628,12 +707,12 @@ namespace netDxf.Entities
             for (int i = 0; i < precision; i++)
             {
                 double u = uStart + uDelta * i;
-                vertexes.Add(C(ctrl, knots, degree, u));
+                vertexes.Add(C(ctrl, w, knots, degree, u));
             }
 
             if (!(isClosed || isClosedPeriodic))
             {
-                vertexes.Add(ctrl[ctrl.Count - 1].Position);
+                vertexes.Add(ctrl[ctrl.Length - 1]);
             }
 
             return vertexes;
@@ -724,17 +803,17 @@ namespace netDxf.Entities
             return knots;
         }
 
-        private static Vector3 C(List<SplineVertex> ctrlPoints, double[] knots, int degree, double u)
+        private static Vector3 C(Vector3[] ctrlPoints, double[] weights, double[] knots, int degree, double u)
         {
             Vector3 vectorSum = Vector3.Zero;
             double denominatorSum = 0.0;
 
             // optimization suggested by ThVoss
-            for (int i = 0; i < ctrlPoints.Count; i++)
+            for (int i = 0; i < ctrlPoints.Length; i++)
             {
                 double n = N(knots, i, degree, u);
-                denominatorSum += n * ctrlPoints[i].Weight;
-                vectorSum += ctrlPoints[i].Weight * n * ctrlPoints[i].Position;
+                denominatorSum += n * weights[i];
+                vectorSum += weights[i] * n * ctrlPoints[i];
             }
 
             // avoid possible divided by zero error, this should never happen
@@ -785,12 +864,12 @@ namespace netDxf.Entities
         /// <remarks>Matrix3 adopts the convention of using column vectors to represent a transformation matrix.</remarks>
         public override void TransformBy(Matrix3 transformation, Vector3 translation)
         {
-            foreach (SplineVertex vertex in this.ControlPoints)
+            for (int i = 0; i < this.controlPoints.Length; i++)
             {
-                vertex.Position = transformation * vertex.Position + translation;
+                this.controlPoints[i] = transformation * this.controlPoints[i] + translation;
             }
 
-            for (int i = 0; i < this.fitPoints.Count; i++)
+            for (int i = 0; i < this.fitPoints.Length; i++)
             {
                 this.fitPoints[i] = transformation * this.fitPoints[i] + translation;
             }
@@ -831,13 +910,7 @@ namespace netDxf.Entities
             }
             else
             {
-                List<SplineVertex> copyControlPoints = new List<SplineVertex>(this.controlPoints.Count);
-                foreach (SplineVertex vertex in this.controlPoints)
-                {
-                    copyControlPoints.Add((SplineVertex) vertex.Clone());
-                }
-
-                entity = new Spline(copyControlPoints, this.knots, this.degree, this.fitPoints, this.creationMethod, this.isClosedPeriodic)
+                entity = new Spline(this.controlPoints, this.weights, this.knots, this.degree, this.fitPoints, this.creationMethod, this.isClosedPeriodic)
                 {
                     //EntityObject properties
                     Layer = (Layer) this.Layer.Clone(),
@@ -853,7 +926,6 @@ namespace netDxf.Entities
                     EndTangent = this.endTangent
                 };
             }
-
 
             foreach (XData data in this.XData.Values)
             {

@@ -306,9 +306,9 @@ namespace netDxf.Entities
 
         private static Spline ProcessSpline(Spline spline, Matrix3 trans, Vector3 pos)
         {
-            foreach (SplineVertex vertex in spline.ControlPoints)
+            for (int i = 0; i < spline.ControlPoints.Length; i++)
             {
-                vertex.Position = trans * vertex.Position + pos;
+                spline.ControlPoints[i] = trans * spline.ControlPoints[i] + pos;
             }
             spline.Normal = trans * spline.Normal;
             return spline;

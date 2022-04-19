@@ -1,4 +1,5 @@
 ﻿// This is a translation to C# from the original C++ code of the Geometric Tool Library
+// Original license
 // David Eberly, Geometric Tools, Redmond WA 98052
 // Copyright (c) 1998-2022
 // Distributed under the Boost Software License, Version 1.0.
@@ -8,11 +9,11 @@
 
 namespace netDxf.GTE
 {
-    internal class BSplineCurve
-        : ParametricCurve
+    public class BSplineCurve :
+        ParametricCurve
     {
-        private BasisFunction mBasisFunction;
-        private Vector3[] mControls;
+        private readonly BasisFunction basisFunction;
+        private readonly Vector3[] controls;
 
         // Construction.  If the input controls is non-null, a copy is made of
         // the controls.  To defer setting the control points, pass a null
@@ -21,39 +22,38 @@ namespace netDxf.GTE
         // where t[d] and t[n] are knots with d the degree and n the number of
         // control points.
         public BSplineCurve(BasisFunctionInput input, Vector3[] controls)
-            : base(0, 1)
+            : base(0.0, 1.0)
         {
-            this.mBasisFunction = new BasisFunction(input);
+            this.basisFunction = new BasisFunction(input);
 
             // The mBasisFunction stores the domain but so does ParametricCurve.
-            this.mTMin = mBasisFunction.MinDomain;
-            this.mTMax = mBasisFunction.MaxDomain;
+            this.SetTimeInterval(this.basisFunction.MinDomain, this.basisFunction.MaxDomain);
 
             // The replication of control points for periodic splines is
             // avoided by wrapping the i-loop index in Evaluate.
-            this.mControls = new Vector3[input.NumControls];
+            this.controls = new Vector3[input.NumControls];
             if (controls != null)
             {
-                controls.CopyTo(this.mControls, 0);
+                controls.CopyTo(this.controls, 0);
             }
 
-            this.mConstructed = true;
+            this.isConstructed = true;
         }
 
         // Member access.
         public BasisFunction BasisFunction
         {
-            get { return mBasisFunction; }
+            get { return this.basisFunction; }
         }
 
         public int NumControls
         {
-            get { return this.mControls.Length; }
+            get { return this.controls.Length; }
         }
 
         public Vector3[] Controls
         {
-            get { return this.mControls; }
+            get { return this.controls; }
         }
 
         // Evaluation of the curve.  The function supports derivative
@@ -68,32 +68,27 @@ namespace netDxf.GTE
             int supOrder = SUP_ORDER;
             jet = new Vector3[supOrder];
 
-            if (!this.mConstructed || order >= supOrder)
+            if (!this.isConstructed || order >= supOrder)
             {
                 // Return a zero-valued jet for invalid state.
-                for (int i = 0; i < supOrder; i++)
-                {
-                    jet[i] = Vector3.Zero;
-                }
-
                 return;
             }
 
-            mBasisFunction.Evaluate(t, order, out int imin, out int imax);
+            this.basisFunction.Evaluate(t, order, out int imin, out int imax);
 
             // Compute position.
-            jet[0] = Compute(0, imin, imax);
+            jet[0] = this.Compute(0, imin, imax);
             if (order >= 1)
             {
                 // Compute first derivative.
-                jet[1] = Compute(1, imin, imax);
+                jet[1] = this.Compute(1, imin, imax);
                 if (order >= 2)
                 {
                     // Compute second derivative.
-                    jet[2] = Compute(2, imin, imax);
+                    jet[2] = this.Compute(2, imin, imax);
                     if (order == 3)
                     {
-                        jet[3] = Compute(3, imin, imax);
+                        jet[3] = this.Compute(3, imin, imax);
                     }
                 }
             }
@@ -106,13 +101,13 @@ namespace netDxf.GTE
             // both aperiodic and periodic splines.  For aperiodic splines, j = i
             // always.
 
-            int numControls = this.mControls.Length;
+            int numControls = this.NumControls;
             Vector3 result = Vector3.Zero;
             for (int i = imin; i <= imax; i++)
             {
-                double tmp = mBasisFunction.GetValue(order, i);
+                double tmp = this.basisFunction.GetValue(order, i);
                 int j = i >= numControls ? i - numControls : i;
-                result += tmp * mControls[j];
+                result += tmp * this.controls[j];
             }
             return result;
         }

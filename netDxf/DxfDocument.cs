@@ -468,26 +468,6 @@ namespace netDxf
 
         #endregion
 
-        #region public entity methods
-
-        /// <summary>
-        /// Gets a DXF object by its handle.
-        /// </summary>
-        /// <param name="objectHandle">DxfObject handle.</param>
-        /// <returns>The DxfObject that has the provided handle, null otherwise.</returns>
-        public DxfObject GetObjectByHandle(string objectHandle)
-        {
-            if (string.IsNullOrEmpty(objectHandle))
-            {
-                return null;
-            }
-
-            this.AddedObjects.TryGetValue(objectHandle, out DxfObject o);
-            return o;
-        }
-
-        #endregion
-
         #region public methods
 
         /// <summary>
@@ -774,6 +754,22 @@ namespace netDxf
             }
 
             return StringEnum<DxfVersion>.Parse(value, StringComparison.OrdinalIgnoreCase);
+        }
+
+        /// <summary>
+        /// Gets a DXF object by its handle.
+        /// </summary>
+        /// <param name="objectHandle">DxfObject handle.</param>
+        /// <returns>The DxfObject that has the provided handle, null otherwise.</returns>
+        public DxfObject GetObjectByHandle(string objectHandle)
+        {
+            if (string.IsNullOrEmpty(objectHandle))
+            {
+                return null;
+            }
+
+            this.AddedObjects.TryGetValue(objectHandle, out DxfObject o);
+            return o;
         }
 
         #endregion

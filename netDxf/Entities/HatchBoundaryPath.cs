@@ -592,18 +592,18 @@ namespace netDxf.Entities
                 this.Degree = spline.Degree;
                 this.IsRational = true;
                 this.IsPeriodic = spline.IsClosedPeriodic;
-                if (spline.ControlPoints.Count == 0)
+                if (spline.ControlPoints.Length == 0)
                 {
                     throw new ArgumentException("The HatchBoundaryPath spline edge requires a spline entity with control points.", nameof(entity));
                 }
 
                 Matrix3 trans = MathHelper.ArbitraryAxis(entity.Normal).Transpose();
 
-                this.ControlPoints = new Vector3[spline.ControlPoints.Count];
-                for (int i = 0; i < spline.ControlPoints.Count; i++)
+                this.ControlPoints = new Vector3[spline.ControlPoints.Length];
+                for (int i = 0; i < spline.ControlPoints.Length; i++)
                 {
-                    Vector3 point = trans * spline.ControlPoints[i].Position;
-                    this.ControlPoints[i] = new Vector3(point.X, point.Y, spline.ControlPoints[i].Weight);
+                    Vector3 point = trans * spline.ControlPoints[i];
+                    this.ControlPoints[i] = new Vector3(point.X, point.Y, spline.Weights[i]);
                 }
 
                 this.Knots = new double[spline.Knots.Length];
@@ -628,12 +628,16 @@ namespace netDxf.Entities
             /// <returns>An <see cref="EntityObject">entity</see> equivalent to the actual edge.</returns>
             public override EntityObject ConvertTo()
             {
-                List<SplineVertex> ctrl = new List<SplineVertex>(this.ControlPoints.Length);
+                List<Vector3> ctrl = new List<Vector3>();
+                List<double> weights = new List<double>();
+                List<double> knots = new List<double>(this.Knots);
+
                 foreach (Vector3 point in this.ControlPoints)
                 {
-                    ctrl.Add(new SplineVertex(point.X, point.Y, 0.0, point.Z));
+                    ctrl.Add(new Vector3(point.X, point.Y, 0.0));
+                    weights.Add(point.Z);
                 }
-                return new Entities.Spline(ctrl, new List<double>(this.Knots), this.Degree, this.IsPeriodic);
+                return new Entities.Spline(ctrl, weights, knots, this.Degree, this.IsPeriodic);
             }
 
             /// <summary>

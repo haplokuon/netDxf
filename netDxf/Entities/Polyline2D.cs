@@ -421,19 +421,18 @@ namespace netDxf.Entities
                 return entities;
             }
 
-            List<SplineVertex> wcsVertexes = new List<SplineVertex>();
+            Vector3[] wcsVertexes = new Vector3[this.vertexes.Count];
             Matrix3 trans = MathHelper.ArbitraryAxis(this.Normal);
-
-            foreach (Polyline2DVertex vertex in this.vertexes)
+            for (int i = 0; i < this.vertexes.Count; i++)
             {
-                Vector3 wcsVertex = trans * new Vector3(vertex.Position.X, vertex.Position.Y, this.elevation);
-                wcsVertexes.Add(new SplineVertex(wcsVertex));
+                Vector3 wcsVertex = trans * new Vector3(this.vertexes[i].Position.X, this.vertexes[i].Position.Y, this.elevation);
+                wcsVertexes[i] = wcsVertex;
             }
 
             int degree = this.smoothType == PolylineSmoothType.Quadratic ? 2 : 3;
             int splineSegs = this.Owner == null ? DefaultSplineSegs : this.Owner.Record.Owner.Owner.DrawingVariables.SplineSegs;
             int precision = this.IsClosed ? splineSegs * this.Vertexes.Count : splineSegs * (this.Vertexes.Count - 1);
-            List<Vector3> splinePoints = Spline.NurbsEvaluator(wcsVertexes, null, degree, false, this.IsClosed, precision);
+            List<Vector3> splinePoints = Spline.NurbsEvaluator(wcsVertexes, null, null, degree, false, this.IsClosed, precision);
 
             for (int i = 1; i < splinePoints.Count; i++)
             {
@@ -595,14 +594,16 @@ namespace netDxf.Entities
             {
                 precision = 2;
             }
-            List<SplineVertex> ctrlPoints = new List<SplineVertex>();
-            foreach (Polyline2DVertex vertex in this.vertexes)
+
+            Vector3[] ctrlPoints = new Vector3[this.vertexes.Count];
+            for (int i = 0; i < this.vertexes.Count; i++)
             {
-                ctrlPoints.Add(new SplineVertex(vertex.Position));
+                Vector2 position = this.vertexes[i].Position;
+                ctrlPoints[i] = new Vector3(position.X, position.Y, 0.0);
             }
 
             // closed polylines will be considered as closed and periodic
-            List<Vector3> points = Spline.NurbsEvaluator(ctrlPoints, null, degree, false, this.IsClosed, precision);
+            List<Vector3> points = Spline.NurbsEvaluator(ctrlPoints, null, null, degree, false, this.IsClosed, precision);
             foreach (Vector3 point in points)
             {
                 ocsVertexes.Add(new Vector2(point.X, point.Y));

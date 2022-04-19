@@ -250,16 +250,10 @@ namespace netDxf.Entities
                 return entities;
             }
 
-            List<SplineVertex> wcsVertexes = new List<SplineVertex>();
-            foreach (Vector3 vertex in this.vertexes)
-            {
-                wcsVertexes.Add(new SplineVertex(vertex));
-            }
-
             int degree = this.smoothType == PolylineSmoothType.Quadratic ? 2 : 3;
             int splineSegs = this.Owner == null ? DefaultSplineSegs : this.Owner.Record.Owner.Owner.DrawingVariables.SplineSegs;
             int precision = this.IsClosed ? splineSegs * this.Vertexes.Count : splineSegs * (this.Vertexes.Count - 1);
-            List<Vector3> splinePoints = Spline.NurbsEvaluator(wcsVertexes, null, degree, false, this.IsClosed, precision);
+            List<Vector3> splinePoints = Spline.NurbsEvaluator(this.vertexes.ToArray(), null, null, degree, false, this.IsClosed, precision);
 
             for (int i = 1; i < splinePoints.Count; i++)
             {
@@ -331,14 +325,8 @@ namespace netDxf.Entities
                 precision = 2;
             }
 
-            List<SplineVertex> ctrlPoints = new List<SplineVertex>();
-            foreach (Vector3 vertex in this.vertexes)
-            {
-                ctrlPoints.Add(new SplineVertex(vertex));
-            }
-
             // closed polylines will be considered as closed and periodic
-            return Spline.NurbsEvaluator(ctrlPoints, null, degree, false, this.IsClosed, precision);
+            return Spline.NurbsEvaluator(this.vertexes.ToArray(), null, null, degree, false, this.IsClosed, precision);
         }
 
         /// <summary>

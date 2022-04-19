@@ -105,6 +105,35 @@ namespace netDxf.Entities
         }
 
         /// <summary>
+        /// Set a PolygonMesh vertex by its indexes.
+        /// </summary>
+        /// <param name="i0">Index of the vertex in the U direction.</param>
+        /// <param name="i1">Index of the vertex in the V direction.</param>
+        /// <param name="vertex">A Vector3.</param>
+        public void SetVertex(int i0, int i1, Vector3 vertex)
+        {
+            if (0 <= i0 && i0 < this.u && 0 <= i1 && i1 < this.v)
+            {
+                this.vertexes[i0 + this.u * i1] = vertex;
+            }
+        }
+
+        /// <summary>
+        /// Gets a PolygonMesh vertex by its indexes.
+        /// </summary>
+        /// <param name="i0">Index of the vertex in the U direction.</param>
+        /// <param name="i1">Index of the vertex in the V direction.</param>
+        public Vector3 GetVertex(int i0, int i1)
+        {
+            if (0 <= i0 && i0 < this.u && 0 <= i1 && i1 < this.v)
+            {
+                return this.vertexes[i0 + this.u * i1];
+            }
+
+            return this.vertexes[0];
+        }
+
+        /// <summary>
         /// Gets the number of vertexes along the U direction (local X axis).
         /// </summary>
         public short U
@@ -327,24 +356,88 @@ namespace netDxf.Entities
                 return new List<Vector3>(this.vertexes);
             }
 
-            GTE.BasisFunctionInput bfU = new GTE.BasisFunctionInput(this.u, degree);
-            GTE.BasisFunctionInput bfV = new GTE.BasisFunctionInput(this.v, degree);
+            List<Vector3> controlsUV = new List<Vector3>();
+            int numU = this.u;
+            int numV = this.v;
 
-            GTE.BSplineSurface surface = new GTE.BSplineSurface(new []{bfU, bfV}, this.vertexes);
+            // duplicate vertexes to handle periodic BSpline surfaces
+            if (this.IsClosedInU)
+            {
+                numU += degree;
+                for (int i = 0; i < this.v; i++)
+                {
+                    for (int j = 0; j < this.u + degree; j++)
+                    {
+                        if (j < this.u)
+                        {
+                            controlsUV.Add(this.vertexes[i * this.u + j]);
+                        }
+                        else
+                        {
+                            for (int k = 0; k < degree; k++, j++)
+                            {
+                                controlsUV.Add(this.vertexes[i * this.u + k]);
+                            }
+                        }
+                    }
+                }
+                if (this.IsClosedInV)
+                {
+                    numV += degree;
+                    for (int i = 0; i < degree; i++)
+                    {
+                        for (int j = 0; j < numU; j++)
+                        {
+                            controlsUV.Add(controlsUV[i * numU + j]);
+                        }
+                    }
+                }
+            }
+            else if (this.IsClosedInV)
+            {
+                controlsUV.AddRange(this.vertexes);
+                numV += degree;
+                for (int i = 0; i < degree; i++)
+                {
+                    for (int j = 0; j < this.u; j++)
+                    {
+                        controlsUV.Add(this.vertexes[i * this.u + j]);
+                    }
+                }
+            }
+            else
+            {
+                controlsUV.AddRange(this.vertexes);
+            }
 
-            // TODO: handle closed periodic surfaces in U and/or V
-            // use this knot vector and repeat "degree" vertexes at the end of U and/or V
-            //double fFactor = 1.0/(curve.NumControls-curve.BasisFunction.Degree);
-            //for (int i = 0; i < curve.BasisFunction.NumKnots; i++)
-            //{
-            //    curve.BasisFunction.Knots[i] = (i - curve.BasisFunction.Degree) * fFactor;
-            //}
+            GTE.BasisFunctionInput bfU = new GTE.BasisFunctionInput(numU, degree);
+            GTE.BasisFunctionInput bfV = new GTE.BasisFunctionInput(numV, degree);
 
-            double stepU =  1.0 / (precisionU - 1.0);
-            double stepV =  1.0 / (precisionV - 1.0);
+            GTE.BSplineSurface surface = new GTE.BSplineSurface(bfU, bfV, controlsUV.ToArray());
+
+            //change the knot vector to handle periodic BSplines
+            if (this.IsClosedInU)
+            {
+                double factor = 1.0 / this.u;
+                for (int i = 0; i < surface.BasisFunction(0).NumKnots; i++)
+                {
+                    surface.BasisFunction(0).Knots[i] = (i - surface.BasisFunction(0).Degree) * factor;
+                }
+            }
+
+            if (this.IsClosedInV)
+            {
+                double factor = 1.0 / this.v;
+                for (int i = 0; i < surface.BasisFunction(1).NumKnots; i++)
+                {
+                    surface.BasisFunction(1).Knots[i] = (i - surface.BasisFunction(1).Degree) * factor;
+                }
+            }
+
+            double stepU = this.IsClosedInU ? 1.0 / precisionU : 1.0 / (precisionU - 1);
+            double stepV = this.IsClosedInV ? 1.0 / precisionV : 1.0 / (precisionV - 1);
             double tU = 0.0;
             double tV = 0.0;
-
             List<Vector3> ocsVertexes = new List<Vector3>(precisionU * precisionV);
             for (int i = 0; i < precisionV; i++)
             {

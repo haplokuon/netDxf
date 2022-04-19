@@ -64,7 +64,7 @@ namespace netDxf
         private string codename;
         private string handle;
         private DxfObject owner;
-        private XDataDictionary xData;
+        private readonly XDataDictionary xData;
 
         #endregion
 
@@ -125,7 +125,6 @@ namespace netDxf
         public XDataDictionary XData
         {
             get { return this.xData; }
-            internal set { this.xData = value; }
         }
 
         #endregion
