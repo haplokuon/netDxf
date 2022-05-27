@@ -997,8 +997,28 @@ namespace netDxf
 			return new Matrix4(1.0, 0.0, 0.0, x,
                                0.0, 1.0, 0.0, y,
                                0.0, 0.0, 1.0, z,
-                               0.0, 0.0, 0.0, 1);
+                               0.0, 0.0, 0.0, 1.0);
 		}
+
+        /// <summary>
+        /// Build the reflection matrix of a mirror plane that passes through a point.
+        /// </summary>
+        /// <param name="normal">Mirror plane normal vector.</param>
+        /// <param name="point">A point on the mirror plane.</param>
+        /// <returns>A mirror plane reflection matrix that passes through a point.</returns>
+        public static Matrix4 Reflection(Vector3 normal, Vector3 point)
+        {
+            // plane equation that passes through a point ax + by + cz + d = 0 where d = -point·normal
+            Vector3 n = Vector3.Normalize(normal);
+            double a = n.X;
+            double b = n.Y;
+            double c = n.Z;
+            double d = -Vector3.DotProduct(point, n);
+            return new Matrix4(1 - 2 * a * a, -2 * a * b, -2 * a * c, -2 * a * d,
+                               -2 * a * b, 1 - 2 * b * b, -2 * b * c, -2 * b * d,
+                               -2 * a * c, -2 * b * c, 1 - 2 * c * c, -2 * c * d,
+                               0, 0, 0, 1.0);
+        }
 
         #endregion
 

@@ -31,7 +31,7 @@ namespace TestDxfDocument
     {
         public static void Main()
         {
-            DxfDocument doc = Test(@"sample.dxf");
+            DxfDocument doc = Test(@"sample.dxf"); 
 
             #region Samples for GTE classes
 
@@ -48,6 +48,7 @@ namespace TestDxfDocument
 
             #region Samples for new and modified features 3.0.0
 
+            //ReflectionMatrix();
             //PolygonMesh();
             //UcsTransform();
             //SmoothPolyline2D();
@@ -709,6 +710,38 @@ namespace TestDxfDocument
         #endregion
 
         #region Samples for new and modified features 3.0.0
+
+        public static void ReflectionMatrix()
+        {
+            Polyline2D polyline = new Polyline2D(new []{
+                new Polyline2DVertex(-5,-5), 
+                new Polyline2DVertex(-5,5), 
+                new Polyline2DVertex(0,0),
+                new Polyline2DVertex(5,5), 
+                new Polyline2DVertex(5,-5)}, true) {Color = AciColor.Blue};
+
+            polyline.TransformBy(Matrix3.Identity, new Vector3(20,20,0));
+
+            Line mirrorLine = new Line(new Vector3(20,5,0), new Vector3(0,15,0)) {Color = AciColor.Yellow};
+            Vector3 mirrorNormal = Vector3.CrossProduct(mirrorLine.Direction, Vector3.UnitZ);
+
+            Polyline2D reflection = (Polyline2D) polyline.Clone();
+            reflection.Color = AciColor.Red;
+
+            // reflection matrix of a mirror plane given its normal and a point on the plane
+            Matrix4 reflectionMatrix = Matrix4.Reflection(mirrorNormal, mirrorLine.StartPoint);
+
+            // for a mirror plane that passes through the origin, you can also use
+            //Matrix3 reflectionMatrix = Matrix3.Reflection(mirrorNormal);
+            reflection.TransformBy(reflectionMatrix);
+
+            DxfDocument doc = new DxfDocument();
+            doc.Entities.Add(polyline);
+            doc.Entities.Add(mirrorLine);
+            doc.Entities.Add(reflection);
+
+            doc.Save("test.dxf");
+        }
 
         public static void PolygonMesh()
         {

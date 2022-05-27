@@ -38,12 +38,12 @@ namespace netDxf.Entities
     {
         #region private fields
 
-        private Vector3[] fitPoints;
+        private readonly Vector3[] fitPoints;
         private readonly SplineCreationMethod creationMethod;
         private Vector3? startTangent;
         private Vector3? endTangent;
-        private Vector3[] controlPoints;
-        private double[] weights;
+        private readonly Vector3[] controlPoints;
+        private readonly double[] weights;
         private double[] knots;
         private readonly short degree;
         private bool isClosedPeriodic;
@@ -505,9 +505,9 @@ namespace netDxf.Entities
         /// </summary>
         public void Reverse()
         {
-            this.fitPoints = this.fitPoints.Reverse().ToArray();
-            this.controlPoints = this.controlPoints.Reverse().ToArray();
-            this.weights = this.weights.Reverse().ToArray();
+            Array.Reverse(this.fitPoints);
+            Array.Reverse(this.controlPoints);
+            Array.Reverse(this.weights);
             Vector3? tmp = this.startTangent;
             this.startTangent = -this.endTangent;
             this.endTangent = -tmp;

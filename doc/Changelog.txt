@@ -1,5 +1,11 @@
 ## Change history
 
+### [2022/05/27]
+* Added the Matrix3.Reflection method that builds a reflection matrix for a mirror plane that passes through the origin. See sample ReflectionMatrix().
+* Added the Matrix4.Reflection method that builds a reflection matrix for a mirror plane that passes through an arbitrary point. See sample ReflectionMatrix().
+* Corrected the comments in the Ellipse.Center property.
+* (fixed) In the Ellipse.SetAxis method the validity checks must be performed with the arguments of the method not the actual major and minor axis of the ellipse.
+
 ### [2022/04/19]
 * Added more GTE classes. See the Samples for GTE classes
 * Deleted the SplineVertex class. Now the Spline constructors take two lists: a Vector3 to define the controls points and a double array to define the weights.

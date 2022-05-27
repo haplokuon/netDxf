@@ -768,6 +768,23 @@ namespace netDxf
                                0.0, 0.0, z);
         }
 
+        /// <summary>
+        /// Build the reflection matrix of a mirror plane that passes through the origin.
+        /// </summary>
+        /// <param name="normal">Mirror plane normal vector.</param>
+        /// <returns>A mirror plane reflection matrix that passes through the origin.</returns>
+        public static Matrix3 Reflection(Vector3 normal)
+        {
+            // plane equation that passes through the origin ax + by + cz = 0
+            Vector3 n = Vector3.Normalize(normal);
+            double a = n.X;
+            double b = n.Y;
+            double c = n.Z;
+            return new Matrix3(1 - 2 * a * a, -2 * a * b, -2 * a * c,
+                               -2 * a * b, 1 - 2 * b * b, -2 * b * c,
+                               -2 * a * c, -2 * b * c, 1 - 2 * c * c);
+        }
+
         #endregion
 
         #region comparison methods

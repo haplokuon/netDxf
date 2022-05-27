@@ -1,4 +1,29 @@
-﻿// This is a translation to C# from the original C++ code of the Geometric Tool Library
+﻿#region netDxf library licensed under the MIT License
+// 
+//                       netDxf library
+// Copyright (c) Daniel Carvajal (haplokuon@gmail.com)
+// 
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+// 
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+// 
+#endregion
+
+// This is a translation to C# from the original C++ code of the Geometric Tool Library
 // Original license
 // David Eberly, Geometric Tools, Redmond WA 98052
 // Copyright (c) 1998-2022
@@ -141,10 +166,10 @@ namespace netDxf.GTE
     // for 1 <= i <= d.
     public class BasisFunction
     {
-        private struct Key
+        private readonly struct Key
         {
-            private double knotValue;
-            private int knotIndex;
+            private readonly double knotValue;
+            private readonly int knotIndex;
 
             public Key(double knotValue, int knotIndex)
             {
@@ -229,7 +254,7 @@ namespace netDxf.GTE
             int mult0 = this.uniqueKnots[0].Multiplicity;
             Debug.Assert(mult0 >= 1 && mult0 <= this.degree + 1, "Invalid first multiplicity.");
 
-            int mult1 = this.uniqueKnots[this.uniqueKnots.Length -1].Multiplicity;
+            int mult1 = this.uniqueKnots[this.uniqueKnots.Length - 1].Multiplicity;
             Debug.Assert(mult1 >= 1 && mult1 <= this.degree + 1, "Invalid last multiplicity.");
 
             for (int i = 1; i <= input.NumUniqueKnots - 2; i++)

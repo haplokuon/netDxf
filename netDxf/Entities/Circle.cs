@@ -85,7 +85,7 @@ namespace netDxf.Entities
         #region public properties
 
         /// <summary>
-        /// Gets or sets the circle <see cref="netDxf.Vector3">center</see> in world coordinates.
+        /// Gets or sets the circle <see cref="Vector3">center</see> in world coordinates.
         /// </summary>
         public Vector3 Center
         {

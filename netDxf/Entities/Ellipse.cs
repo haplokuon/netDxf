@@ -263,9 +263,8 @@ namespace netDxf.Entities
         #region public properties
 
         /// <summary>
-        /// Gets or sets the ellipse <see cref="Vector3">center</see>.
+        /// Gets or sets the ellipse <see cref="Vector3">center</see> in world coordinates.
         /// </summary>
-        /// <remarks>The center Z coordinate represents the elevation of the arc along the normal.</remarks>
         public Vector3 Center
         {
             get { return this.center; }
@@ -364,17 +363,17 @@ namespace netDxf.Entities
         /// <param name="minor">Ellipse minor axis.</param>
         public void SetAxis(double major, double minor)
         {
-            if (majorAxis <= 0)
+            if (major <= 0)
             {
-                throw new ArgumentOutOfRangeException(nameof(majorAxis), majorAxis, "The major axis value must be greater than zero.");
+                throw new ArgumentOutOfRangeException(nameof(major), major, "The major axis value must be greater than zero.");
             }
 
-            if (minorAxis <= 0)
+            if (minor <= 0)
             {
-                throw new ArgumentOutOfRangeException(nameof(minorAxis), minorAxis, "The minor axis value must be greater than zero.");
+                throw new ArgumentOutOfRangeException(nameof(minor), minor, "The minor axis value must be greater than zero.");
             }
 
-            if ( minorAxis > majorAxis)
+            if ( minor > major)
             {
                 throw new ArgumentException("The ellipse major axis must be greater than the minor axis.");
             }

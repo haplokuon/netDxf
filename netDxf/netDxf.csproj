@@ -7,7 +7,7 @@
     <Owners>haplokuon</Owners>
     <Company>netDxf</Company>
     <Product />
-    <Copyright>Daniel Carvajal © 2021</Copyright>
+    <Copyright>Daniel Carvajal © 2022</Copyright>
     <Description>.net Dxf Reader-Writer</Description>
     <SignAssembly>true</SignAssembly>
     <DelaySign>false</DelaySign>
@@ -42,11 +42,6 @@
   
   <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.1'">
     <PackageReference Include="System.Text.Encoding.CodePages" Version="5.0.0" />
-  </ItemGroup>
-  
-  <ItemGroup>
-    <Compile Remove="GTE\FIQuery.cs" />
-    <Compile Remove="GTE\TIQuery.cs" />
   </ItemGroup>
 
 </Project>
