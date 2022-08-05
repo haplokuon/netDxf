@@ -196,3 +196,6 @@ FakesAssemblies/
 # Visual Studio 6 workspace options file
 *.opt
 
+# qcad autosave / backups
+~*.dxf
+*.bak*.dxf
