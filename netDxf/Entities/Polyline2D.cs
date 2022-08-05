@@ -383,15 +383,14 @@ namespace netDxf.Entities
                             Vector2 center = new Vector2(p1.X + r * Math.Cos(phi), p1.Y + r * Math.Sin(phi));
                             double startAngle;
                             double endAngle;
+                            startAngle = MathHelper.RadToDeg*Vector2.Angle(p1 - center);
                             if (bulge > 0)
-                            {
-                                startAngle = MathHelper.RadToDeg*Vector2.Angle(p1 - center);
+                            {                                
                                 endAngle = startAngle + MathHelper.RadToDeg*theta;
                             }
                             else
-                            {
-                                endAngle = MathHelper.RadToDeg*Vector2.Angle(p1 - center);
-                                startAngle = endAngle - MathHelper.RadToDeg*theta;
+                            {                                
+                                endAngle = startAngle - MathHelper.RadToDeg*theta;
                             }
                             Vector3 point = MathHelper.Transform(new Vector3(center.X, center.Y,
                                 this.elevation),
