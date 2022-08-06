@@ -12,6 +12,7 @@
     <SignAssembly>true</SignAssembly>
     <DelaySign>false</DelaySign>
     <AssemblyOriginatorKeyFile>netDxf.snk</AssemblyOriginatorKeyFile>
+    <PackageId>netDxf-official</PackageId>
     <PackageProjectUrl>https://github.com/haplokuon/netDxf</PackageProjectUrl>
     <RepositoryUrl>https://github.com/haplokuon/netDxf</RepositoryUrl>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
