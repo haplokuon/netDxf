@@ -20,15 +20,21 @@ namespace netDxf.Tests
 
             var arcs = lwp.Explode().Where(r => r.Type == Entities.EntityType.Arc).Cast<Arc>().ToList();
 
-            arcs[0].StartAngle.AssertEqualsTol(tol, 214.7237306);
-            arcs[0].EndAngle.AssertEqualsTol(tol, 210.84103981);
+            var vertexes = lwp.Vertexes.ToList();            
 
-            arcs[1].StartAngle.AssertEqualsTol(tol, 212.93067534);
-            arcs[1].EndAngle.AssertEqualsTol(tol, 147.06932466);
+            // reversed
+            arcs[0].StartAngle.AssertEqualsTol(tol, 210.84103981);
+            arcs[0].EndAngle.AssertEqualsTol(tol, 214.7237306);            
+                        
+            // reversed
+            arcs[1].StartAngle.AssertEqualsTol(tol, 147.06932466);
+            arcs[1].EndAngle.AssertEqualsTol(tol, 212.93067534);
 
-            arcs[2].StartAngle.AssertEqualsTol(tol, 149.15896019);
-            arcs[2].EndAngle.AssertEqualsTol(tol, 145.2762694);
+            // reservsed
+            arcs[2].StartAngle.AssertEqualsTol(tol, 145.2762694);
+            arcs[2].EndAngle.AssertEqualsTol(tol, 149.15896019);
 
+            // not reversed
             arcs[3].StartAngle.AssertEqualsTol(tol, 145.2762694);
             arcs[3].EndAngle.AssertEqualsTol(tol, 214.7237306);
         }
