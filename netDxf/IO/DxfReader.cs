@@ -10318,9 +10318,15 @@ namespace netDxf.IO
                     this.chunk.Next();
                 }
 
-                string linetypeName = this.DecodeEncodedNonAsciiCharacters(this.chunk.ReadString()); // code 6
-                Linetype linetype = this.GetLinetype(linetypeName);
-                this.chunk.Next();
+                // code 6 expected now for line type
+                // if not found (missing in occ ouput), use defaults:
+                Linetype linetype = Linetype.Continuous;
+                if (this.chunk.Code == 6)
+                {
+                    string linetypeName = this.DecodeEncodedNonAsciiCharacters(this.chunk.ReadString()); // code 6
+                    linetype = this.GetLinetype(linetypeName);
+                    this.chunk.Next();
+                }
 
                 MLineStyleElement element = new MLineStyleElement(offset)
                 {
