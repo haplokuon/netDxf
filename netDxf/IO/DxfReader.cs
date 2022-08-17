@@ -10319,7 +10319,7 @@ namespace netDxf.IO
                 }
 
                 // code 6 expected now for line type
-                // if not found (missing in occ ouput), use defaults:
+                // if not found, use defaults:
                 Linetype linetype = Linetype.Continuous;
                 if (this.chunk.Code == 6)
                 {
