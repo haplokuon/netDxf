@@ -219,8 +219,7 @@ namespace netDxf.Entities
 
         private AciColor Color2FromTint(double value)
         {
-            double h, s, l;
-            AciColor.ToHsl(this.color1, out h, out s, out l);
+            AciColor.ToHsl(this.color1, out double h, out double s, out double _);
             return AciColor.FromHsl(h, s, value);
         }
 

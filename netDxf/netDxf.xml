@@ -593,6 +593,11 @@
             Additionally Paper Space blocks do not contain attribute definitions.
             </remarks>
         </member>
+        <member name="P:netDxf.Blocks.Block.Owner">
+            <summary>
+            Gets the owner of the actual DXF object.
+            </summary>
+        </member>
         <member name="P:netDxf.Blocks.Block.Record">
             <summary>
             Gets the block record associated with this block.
@@ -5399,7 +5404,11 @@
             <param name="center">Ellipse <see cref="T:netDxf.Vector2">center</see> in object coordinates.</param>
             <param name="majorAxis">Ellipse major axis.</param>
             <param name="minorAxis">Ellipse minor axis.</param>
-            <remarks>The center Z coordinate represents the elevation of the arc along the normal.</remarks>
+            <remarks>
+            The center Z coordinate represents the elevation of the ellipse along the normal.
+            The major axis is always measured along the ellipse local X axis,
+            while the minor axis is along the local Y axis.
+            </remarks>
         </member>
         <member name="M:netDxf.Entities.Ellipse.#ctor(netDxf.Vector3,System.Double,System.Double)">
             <summary>
@@ -5408,7 +5417,11 @@
             <param name="center">Ellipse <see cref="T:netDxf.Vector3">center</see> in object coordinates.</param>
             <param name="majorAxis">Ellipse major axis.</param>
             <param name="minorAxis">Ellipse minor axis.</param>
-            <remarks>The center Z coordinate represents the elevation of the arc along the normal.</remarks>
+            <remarks>
+            The center Z coordinate represents the elevation of the ellipse along the normal.
+            The major axis is always measured along the ellipse local X axis,
+            while the minor axis is along the local Y axis.
+            </remarks>
         </member>
         <member name="P:netDxf.Entities.Ellipse.Center">
             <summary>
@@ -5419,13 +5432,13 @@
             <summary>
             Gets or sets the ellipse mayor axis.
             </summary>
-            <remarks>The MajorAxis value must be positive and greater than the MinorAxis.</remarks>
+            <remarks>The major axis is always measured along the ellipse local X axis.</remarks>
         </member>
         <member name="P:netDxf.Entities.Ellipse.MinorAxis">
             <summary>
             Gets or sets the ellipse minor axis.
             </summary>
-            <remarks>The MinorAxis value must be positive and smaller than the MajorAxis.</remarks>
+            <remarks>The minor axis is always measured along the ellipse local Y axis.</remarks>
         </member>
         <member name="P:netDxf.Entities.Ellipse.Rotation">
             <summary>
@@ -5457,10 +5470,13 @@
         </member>
         <member name="M:netDxf.Entities.Ellipse.SetAxis(System.Double,System.Double)">
             <summary>
-            Sets the ellipse major and minor axis.
+            Sets the ellipse major and minor axis from the two parameters.
             </summary>
-            <param name="major">Ellipse major axis.</param>
-            <param name="minor">Ellipse minor axis.</param>
+            <param name="axis1">Ellipse axis.</param>
+            <param name="axis2">Ellipse axis.</param>
+            <remarks>
+            It is not required that axis1 is greater than axis2. The larger value will be assigned as major axis and the lower as minor axis.
+            </remarks>
         </member>
         <member name="M:netDxf.Entities.Ellipse.PolarCoordinateRelativeToCenter(System.Double)">
             <summary>
@@ -13915,51 +13931,6 @@
             </para>
             </remarks>
         </member>
-        <member name="M:netDxf.Objects.ImageDefinition.#ctor(System.String)">
-             <summary>
-             Initializes a new instance of the <c>ImageDefinition</c> class. Only available for Net Framework 4.5 builds.
-             </summary>
-             <param name="file">Image file name with full or relative path.</param>
-            <remarks>
-             <para>
-             The name of the file without extension will be used as the name of the image definition.
-             </para>
-             <para>
-             Supported image formats: BMP, JPG, PNG, TIFF.<br />
-             Even thought AutoCAD supports more image formats, this constructor is restricted to the ones the net framework supports in common with AutoCAD.
-             Use the generic constructor instead.
-             </para>
-             <para>
-             Note (this is from the ACAD docs): AutoCAD 2000, AutoCAD LT 2000, and later releases do not support LZW-compressed TIFF files,
-             with the exception of English language versions sold in the US and Canada.<br />
-             If you have TIFF files that were created using LZW compression and want to insert them into a drawing 
-             you must save the TIFF files with LZW compression disabled.
-             </para>
-            </remarks>
-        </member>
-        <member name="M:netDxf.Objects.ImageDefinition.#ctor(System.String,System.String)">
-             <summary>
-             Initializes a new instance of the <c>ImageDefinition</c> class. Only available for Net Framework 4.5 builds.
-             </summary>
-            <param name="name">Image definition name.</param>
-            <param name="file">Image file name with full or relative path.</param>
-            <remarks>
-             <para>
-             The name assigned to the image definition must be unique.
-             </para>
-             <para>
-             Supported image formats: BMP, JPG, PNG, TIFF.<br />
-             Even thought AutoCAD supports more image formats, this constructor is restricted to the ones the .net library supports in common with AutoCAD.
-             Use the generic constructor instead.
-             </para>
-             <para>
-             Note (this is from the ACAD docs): AutoCAD 2000, AutoCAD LT 2000, and later releases do not support LZW-compressed TIFF files,
-             with the exception of English language versions sold in the US and Canada.<br />
-             If you have TIFF files that were created using LZW compression and want to insert them into a drawing 
-             you must save the TIFF files with LZW compression disabled.
-             </para>
-            </remarks>
-        </member>
         <member name="P:netDxf.Objects.ImageDefinition.File">
             <summary>
             Gets or sets the image file.
@@ -15741,7 +15712,7 @@
         </member>
         <member name="P:netDxf.Tables.DimensionStyle.TextInsideAlign">
             <summary>
-            Gets or sets the positioning of the dimension text inside extension lines. (DIMTIH)
+            Gets or sets if the dimension text is placed horizontally when inside extension lines. (DIMTIH)
             </summary>
             <remarks>
             Default: false
@@ -15749,7 +15720,7 @@
         </member>
         <member name="P:netDxf.Tables.DimensionStyle.TextOutsideAlign">
             <summary>
-            Gets or sets the positioning of the dimension text outside extension lines. (DIMTOH)
+            Gets or sets if the dimension text is placed horizontally when outside extension lines. (DIMTOH)
             </summary>
             <remarks>
             Default: false
@@ -17808,14 +17779,6 @@
             <summary>
             Gets the owner of the actual text style.
             </summary>
-        </member>
-        <member name="M:netDxf.Tables.TextStyle.TrueTypeFontFamilyName(System.String)">
-            <summary>
-            Find the font family name of an specified TTF font file. Only available for Net Framework 4.5 builds.
-            </summary>
-            <param name="ttfFont">TTF font file.</param>
-            <returns>The font family name of the specified TTF font file.</returns>
-            <remarks>This method will return an empty string if the specified font is not found in its path or the system font folder or if it is not a valid TTF font.</remarks>
         </member>
         <member name="M:netDxf.Tables.TextStyle.Clone(System.String)">
             <summary>

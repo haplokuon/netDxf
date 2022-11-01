@@ -40,26 +40,33 @@ namespace netDxf.IO
             Encoding reVal = Encoding.ASCII; //.Default;
 
             BinaryReader r = new BinaryReader(fs, Encoding.Default);
-            int i;
-            if (!int.TryParse(fs.Length.ToString(CultureInfo.InvariantCulture), out i))
+            if (!int.TryParse(fs.Length.ToString(CultureInfo.InvariantCulture), out int i))
+            {
                 return null;
+            }
 
             byte[] ss = r.ReadBytes(i);
             if (IsUTF8Bytes(ss) || (ss[0] == utf8[0] && ss[1] == utf8[1] && ss[2] == utf8[2]))
+            {
                 reVal = Encoding.UTF8;
+            }
             else if (ss[0] == unicodeBig[0] && ss[1] == unicodeBig[1] && ss[2] == unicodeBig[2])
+            {
                 reVal = Encoding.BigEndianUnicode;
+            }
             else if (ss[0] == unicode[0] && ss[1] == unicode[1] && ss[2] == unicode[2])
+            {
                 reVal = Encoding.Unicode;
+            }
             return reVal;
         }
 
         private static bool IsUTF8Bytes(byte[] data)
         {
             int charByteCounter = 1;
-            for (int i = 0; i < data.Length; i++)
+            foreach (byte t in data)
             {
-                byte curByte = data[i];
+                byte curByte = t;
                 if (charByteCounter == 1)
                 {
                     if (curByte >= 0x80)
@@ -74,12 +81,17 @@ namespace netDxf.IO
                 else
                 {
                     if ((curByte & 0xC0) != 0x80)
+                    {
                         return false;
+                    }
                     charByteCounter--;
                 }
             }
+
             if (charByteCounter > 1)
+            {
                 throw new Exception("Error byte format.");
+            }
 
             return true;
         }

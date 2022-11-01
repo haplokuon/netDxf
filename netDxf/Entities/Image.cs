@@ -276,7 +276,7 @@ namespace netDxf.Entities
             get { return this.brightness; }
             set
             {
-                if (value < 0 && value > 100)
+                if (value < 0 || value > 100)
                 {
                     throw new ArgumentOutOfRangeException(nameof(value), value, "Accepted brightness values range from 0 to 100.");
                 }
@@ -292,7 +292,7 @@ namespace netDxf.Entities
             get { return this.contrast; }
             set
             {
-                if (value < 0 && value > 100)
+                if (value < 0 || value > 100)
                 {
                     throw new ArgumentOutOfRangeException(nameof(value), value, "Accepted contrast values range from 0 to 100.");
                 }
@@ -308,7 +308,7 @@ namespace netDxf.Entities
             get { return this.fade; }
             set
             {
-                if (value < 0 && value > 100)
+                if (value < 0 || value > 100)
                 {
                     throw new ArgumentOutOfRangeException(nameof(value), value, "Accepted fade values range from 0 to 100.");
                 }

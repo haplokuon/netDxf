@@ -397,8 +397,8 @@ namespace netDxf
         {
             Matrix3 trans = ArbitraryAxis(zAxis).Transpose();
             Vector3 p = trans * point;
-            elevation = point.Z;
-            return new Vector2(point.X, point.Y);
+            elevation = p.Z;
+            return new Vector2(p.X, p.Y);
         }
 
         /// <summary>

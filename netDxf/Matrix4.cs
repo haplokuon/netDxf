@@ -969,36 +969,36 @@ namespace netDxf
                                0.0, 0.0, z, 0.0,
                                0.0, 0.0, 0.0, 1.0);
         }
-		
-		/// <summary>
-		/// Build a translation matrix.
-		/// </summary>
-		/// <param name="vector">Translation vector along the X, Y, and Z axis.</param>
-		/// <returns>A translation matrix.</returns>
-		/// <remarks>Matrix4 adopts the convention of using column vectors to represent a transformation matrix.</remarks>
-		public static Matrix4 Translation(Vector3 vector)
-		{
-			return new Matrix4(1.0, 0.0, 0.0, vector.X,
+        
+        /// <summary>
+        /// Build a translation matrix.
+        /// </summary>
+        /// <param name="vector">Translation vector along the X, Y, and Z axis.</param>
+        /// <returns>A translation matrix.</returns>
+        /// <remarks>Matrix4 adopts the convention of using column vectors to represent a transformation matrix.</remarks>
+        public static Matrix4 Translation(Vector3 vector)
+        {
+            return new Matrix4(1.0, 0.0, 0.0, vector.X,
                                0.0, 1.0, 0.0, vector.Y,
                                0.0, 0.0, 1.0, vector.Z,
                                0.0, 0.0, 0.0, 1.0);
-		}
-		
-		/// <summary>
-		/// Build a translation matrix.
-		/// </summary>
-		/// <param name="x">Translation along the X axis.</param>
-		/// <param name="y">Translation along the Y axis.</param>
-		/// <param name="z">Translation along the Z axis.</param>
-		/// <returns>A translation matrix.</returns>
-		/// <remarks>Matrix4 adopts the convention of using column vectors to represent a transformation matrix.</remarks>
-		public static Matrix4 Translation(double x, double y, double z)
-		{
-			return new Matrix4(1.0, 0.0, 0.0, x,
+        }
+        
+        /// <summary>
+        /// Build a translation matrix.
+        /// </summary>
+        /// <param name="x">Translation along the X axis.</param>
+        /// <param name="y">Translation along the Y axis.</param>
+        /// <param name="z">Translation along the Z axis.</param>
+        /// <returns>A translation matrix.</returns>
+        /// <remarks>Matrix4 adopts the convention of using column vectors to represent a transformation matrix.</remarks>
+        public static Matrix4 Translation(double x, double y, double z)
+        {
+            return new Matrix4(1.0, 0.0, 0.0, x,
                                0.0, 1.0, 0.0, y,
                                0.0, 0.0, 1.0, z,
                                0.0, 0.0, 0.0, 1.0);
-		}
+        }
 
         /// <summary>
         /// Build the reflection matrix of a mirror plane that passes through a point.

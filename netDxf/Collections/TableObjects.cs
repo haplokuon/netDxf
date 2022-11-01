@@ -78,11 +78,7 @@ namespace netDxf.Collections
         /// <remarks>Table object names are case insensitive.</remarks>
         public T this[string name]
         {
-            get
-            {
-                T item;
-                return this.list.TryGetValue(name, out item) ? item : null;
-            }
+            get { return this.list.TryGetValue(name, out T item) ? item : null; }
         }
 
         /// <summary>

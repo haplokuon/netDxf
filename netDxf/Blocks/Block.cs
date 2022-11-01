@@ -359,12 +359,21 @@ namespace netDxf.Blocks
         }
 
         /// <summary>
+        /// Gets the owner of the actual DXF object.
+        /// </summary>
+        public new BlockRecord Owner
+        {
+            get { return (BlockRecord) base.Owner; }
+            internal set { base.Owner = value; }
+        }
+
+        /// <summary>
         /// Gets the block record associated with this block.
         /// </summary>
         /// <remarks>It returns the same object as the owner property.</remarks>
         public BlockRecord Record
         {
-            get { return (BlockRecord) this.Owner; }
+            get { return this.Owner; }
         }
 
         /// <summary>

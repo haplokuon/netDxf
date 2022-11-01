@@ -684,14 +684,7 @@ namespace netDxf.Header
         public UCS CurrentUCS
         {
             get { return this.currentUCS; } 
-            set
-            {
-                if (value == null)
-                {
-                    throw new ArgumentNullException(nameof(value));
-                }
-                this.currentUCS = value;
-            } 
+            set { this.currentUCS = value ?? throw new ArgumentNullException(nameof(value)); } 
         }
 
         #endregion

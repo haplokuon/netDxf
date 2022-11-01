@@ -418,7 +418,7 @@ namespace netDxf.Collections
             {
                 return false;
             }
-            
+
             // if an entity belongs to a document always has a handle
             Debug.Assert(entity.Handle != null, "The entity has no handle.");
 

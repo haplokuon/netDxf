@@ -1,5 +1,14 @@
 ## Change history
 
+### [2022/11/01]
+* Workaround for bad DXF files that contain polyface with invalid geometry, they will be removed. 
+* Workaround for bad DXF files that contains entities without handles. This may derive in unexpected side effects.
+* Workaround for bad DXF files lacking BLOCK_RECORD tables for the defined blocks. The default block record values will be given what may have other side effects.
+* Workaround for possible duplicate layers in layer states properties when reading a DXF.
+* The Ellipse SetAxis method will automatically assign the larger axis value as the major axis and the lower as the minor axis.
+* Added NET 6.0 as a target framework.
+* Updated netDxf solution for Visual Studio 2022. The solution file is still usable by Visual Studio 2019 but it does not support NET 6.0.
+
 ### [2022/05/27]
 * Added the Matrix3.Reflection method that builds a reflection matrix for a mirror plane that passes through the origin. See sample ReflectionMatrix().
 * Added the Matrix4.Reflection method that builds a reflection matrix for a mirror plane that passes through an arbitrary point. See sample ReflectionMatrix().

@@ -85,7 +85,7 @@ namespace netDxf.Entities
 
             if (faces == null)
             {
-                throw new ArgumentNullException(nameof(vertexes));
+                throw new ArgumentNullException(nameof(faces));
             }
 
             int numFaces = faces.Count();
@@ -125,7 +125,7 @@ namespace netDxf.Entities
 
             if (faces == null)
             {
-                throw new ArgumentNullException(nameof(vertexes));
+                throw new ArgumentNullException(nameof(faces));
             }
 
             this.faces = faces.ToArray();

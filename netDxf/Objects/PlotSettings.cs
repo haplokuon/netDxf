@@ -313,9 +313,9 @@ namespace netDxf.Objects
             get { return this.shadePlotDPI; }
             set
             {
-                if (value < 100 || value > 32767)
+                if (value < 100)
                 {
-                    throw new ArgumentOutOfRangeException(nameof(value), value, "The valid shade plot DPI values range from 100 to 23767.");
+                    throw new ArgumentOutOfRangeException(nameof(value), value, "The valid shade plot DPI values range from 100 to the maximum value allowed by the plot device.");
                 }
                 this.shadePlotDPI = value;
             }

@@ -1353,6 +1353,8 @@ namespace netDxf.IO
                     }
                 }
 
+                Debug.Assert(!string.IsNullOrEmpty(handle), "Table entry without handle.");
+
                 this.chunk.Next();
 
                 switch (dxfCode)
@@ -1387,7 +1389,6 @@ namespace netDxf.IO
                         {
                             layer.Handle = handle;
                             this.layers.Add(layer);
-                            //this.doc.Layers.Add(layer, false);
                         }
                         break;
                     case DxfObjectCode.LinetypeTable:
@@ -3262,10 +3263,19 @@ namespace netDxf.IO
                 }
             }
 
-            if (!this.blockRecords.TryGetValue(name, out BlockRecord blockRecord))
+            // Workaround for Blocks without its associated BLOCK_RECORD, this may end up in a loose of information
+            this.blockRecords.TryGetValue(name, out BlockRecord blockRecord);
+            if (blockRecord == null)
             {
-                throw new Exception(string.Format("The block record {0} is not defined.", name));
+                Debug.Assert(false, string.Format("The block record {0} is not defined.", name));
+                blockRecord = new BlockRecord(name);
+                this.doc.NumHandles = blockRecord.AssignHandle(this.doc.NumHandles);
             }
+
+            //if (!this.blockRecords.TryGetValue(name, out BlockRecord blockRecord))
+            //{
+            //    throw new Exception(string.Format("The block record {0} is not defined.", name));
+            //}
 
             Block block;
 
@@ -4022,11 +4032,27 @@ namespace netDxf.IO
                     return null;
             }
 
-            if (dxfObject == null || string.IsNullOrEmpty(handle))
+            //if (dxfObject == null || string.IsNullOrEmpty(handle))
+            //{
+            //    return null;
+            //}
+
+            if (dxfObject == null)
             {
                 return null;
             }
 
+            //if (string.IsNullOrEmpty(handle))
+            //{
+            //    Debug.Assert(false, "Entity without handle.");
+            //    this.doc.NumHandles = dxfObject.AssignHandle(this.doc.NumHandles);
+            //}
+            //else
+            //{
+            //    dxfObject.Handle = handle;
+            //}
+            
+            Debug.Assert(!string.IsNullOrEmpty(handle), "Entity without handle.");
             dxfObject.Handle = handle;
 
             if (dxfObject is EntityObject entity)
@@ -6270,11 +6296,7 @@ namespace netDxf.IO
                                         return overrides; // premature end
                                     }
 
-                                    Linetype dimltype = this.doc.GetObjectByHandle((string) data.Value) as Linetype;
-                                    if (dimltype == null)
-                                    {
-                                        dimltype = this.doc.Linetypes[Linetype.DefaultName];
-                                    }
+                                    Linetype dimltype = this.doc.GetObjectByHandle((string) data.Value) as Linetype ?? this.doc.Linetypes[Linetype.DefaultName];
 
                                     overrides.Add(new DimensionStyleOverride(DimensionStyleOverrideType.DimLineLinetype, dimltype));
                                     break;
@@ -6284,11 +6306,7 @@ namespace netDxf.IO
                                         return overrides; // premature end
                                     }
 
-                                    Linetype dimltex1 = this.doc.GetObjectByHandle((string) data.Value) as Linetype;
-                                    if (dimltex1 == null)
-                                    {
-                                        dimltex1 = this.doc.Linetypes[Linetype.DefaultName];
-                                    }
+                                    Linetype dimltex1 = this.doc.GetObjectByHandle((string) data.Value) as Linetype ?? this.doc.Linetypes[Linetype.DefaultName];
 
                                     overrides.Add(new DimensionStyleOverride(DimensionStyleOverrideType.ExtLine1Linetype, dimltex1));
                                     break;
@@ -6298,11 +6316,7 @@ namespace netDxf.IO
                                         return overrides; // premature end
                                     }
 
-                                    Linetype dimltex2 = this.doc.GetObjectByHandle((string) data.Value) as Linetype;
-                                    if (dimltex2 == null)
-                                    {
-                                        dimltex2 = this.doc.Linetypes[Linetype.DefaultName];
-                                    }
+                                    Linetype dimltex2 = this.doc.GetObjectByHandle((string) data.Value) as Linetype ?? this.doc.Linetypes[Linetype.DefaultName];
 
                                     overrides.Add(new DimensionStyleOverride(DimensionStyleOverrideType.ExtLine2Linetype, dimltex2));
                                     break;
@@ -8572,6 +8586,18 @@ namespace netDxf.IO
                     });
                 }
             }
+            
+            if (polyfaceVertexes.Count < 3)
+            {
+                Debug.Assert(false, "The polyface must contain at least three vertexes.");
+                return null;
+            }
+
+            if (polyfaceFaces.Count == 0)
+            {
+                Debug.Assert(false, "The polyface must contain at least one face.");
+                return null;
+            }
 
             PolyfaceMesh pMesh = new PolyfaceMesh(polyfaceVertexes, polyfaceFaces)
             {
@@ -8589,14 +8615,17 @@ namespace netDxf.IO
             // the number of vertexes along the M direction must be between 2 and 256
             if(polyline.M < 2 || polyline.M > 256)
             {
+                Debug.Assert(false, "The number of vertexes along the M direction must be between 2 and 256.");
                 return null;
             }
 
             // the number of vertexes along the N direction must be between 2 and 256
             if(polyline.N < 2 || polyline.N > 256)
             {
+                Debug.Assert(false, "The number of vertexes along the M direction must be between 2 and 256.");
                 return null;
             }
+
 
             Vector3[] polygonMeshVertexes = new Vector3[polyline.M * polyline.N];
 
@@ -8618,6 +8647,13 @@ namespace netDxf.IO
                         i += 1;
                     }
                 }
+
+                if (polygonMeshVertexes.Length != polyline.M * polyline.N)
+                {
+                    Debug.Assert(false, "The number of vertexes must be equal to MxN.");
+                    return null;
+                }
+
                 pMesh = new PolygonMesh(polyline.M, polyline.N, polygonMeshVertexes)
                 {
                     SmoothType = polyline.SmoothType,
@@ -8797,18 +8833,18 @@ namespace netDxf.IO
 
             if (flags.HasFlag(PolylineTypeFlags.Polyline3D))
             {
-                return ReadPolyline3D(polyline);
+                return this.ReadPolyline3D(polyline);
             }
             if (flags.HasFlag(PolylineTypeFlags.PolyfaceMesh))
             {
-                return ReadPolyfaceMesh(polyline);
+                return this.ReadPolyfaceMesh(polyline);
             }
             if (flags.HasFlag(PolylineTypeFlags.PolygonMesh))
             {
-                return ReadPolygonMesh(polyline);
+                return this.ReadPolygonMesh(polyline);
             }
                
-            return ReadPolyline2D(polyline); 
+            return this.ReadPolyline2D(polyline); 
         }
 
         private Vertex ReadVertex()
@@ -11356,7 +11392,11 @@ namespace netDxf.IO
                                     {
                                         properties.LinetypeName = Linetype.DefaultName;
                                     }
-                                    layerState.Properties.Add(properties.Name, properties);
+
+                                    if (!layerState.Properties.ContainsKey(properties.Name))
+                                    {
+                                        layerState.Properties.Add(properties.Name, properties);
+                                    }
                                 }
                                 else
                                 {
@@ -11374,9 +11414,13 @@ namespace netDxf.IO
                                     {
                                         properties.LinetypeName = Linetype.DefaultName;
                                     }
-                                    layerState.Properties.Add(properties.Name, properties);
+                                    
+                                    if (!layerState.Properties.ContainsKey(properties.Name))
+                                    {
+                                        layerState.Properties.Add(properties.Name, properties);
+                                    }
                                 }
-
+                                enumerator.MoveNext();
                                 break;
                             default:
                                 enumerator.MoveNext();

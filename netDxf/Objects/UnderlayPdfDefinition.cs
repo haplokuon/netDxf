@@ -23,7 +23,6 @@
 // 
 #endregion
 
-using System;
 using System.IO;
 using netDxf.Collections;
 using netDxf.Tables;

@@ -801,7 +801,7 @@ namespace netDxf.Entities
 
                     position = hook + this.offset + Vector2.Rotate(textOffset, mText.Rotation * MathHelper.DegToRad);
 
-                    mText.Position = MathHelper.Transform(position, Normal, this.elevation);
+                    mText.Position = MathHelper.Transform(position, this.Normal, this.elevation);
                     mText.Height = textHeight * dimScale;
                     mText.Color = textColor.IsByBlock ? AciColor.ByLayer : textColor;
                     break;

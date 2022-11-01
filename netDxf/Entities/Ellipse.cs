@@ -217,7 +217,11 @@ namespace netDxf.Entities
         /// <param name="center">Ellipse <see cref="Vector2">center</see> in object coordinates.</param>
         /// <param name="majorAxis">Ellipse major axis.</param>
         /// <param name="minorAxis">Ellipse minor axis.</param>
-        /// <remarks>The center Z coordinate represents the elevation of the arc along the normal.</remarks>
+        /// <remarks>
+        /// The center Z coordinate represents the elevation of the ellipse along the normal.
+        /// The major axis is always measured along the ellipse local X axis,
+        /// while the minor axis is along the local Y axis.
+        /// </remarks>
         public Ellipse(Vector2 center, double majorAxis, double minorAxis)
             : this(new Vector3(center.X, center.Y, 0.0), majorAxis, minorAxis)
         {
@@ -229,7 +233,11 @@ namespace netDxf.Entities
         /// <param name="center">Ellipse <see cref="Vector3">center</see> in object coordinates.</param>
         /// <param name="majorAxis">Ellipse major axis.</param>
         /// <param name="minorAxis">Ellipse minor axis.</param>
-        /// <remarks>The center Z coordinate represents the elevation of the arc along the normal.</remarks>
+        /// <remarks>
+        /// The center Z coordinate represents the elevation of the ellipse along the normal.
+        /// The major axis is always measured along the ellipse local X axis,
+        /// while the minor axis is along the local Y axis.
+        /// </remarks>
         public Ellipse(Vector3 center, double majorAxis, double minorAxis)
             : base(EntityType.Ellipse, DxfObjectCode.Ellipse)
         {
@@ -274,35 +282,19 @@ namespace netDxf.Entities
         /// <summary>
         /// Gets or sets the ellipse mayor axis.
         /// </summary>
-        /// <remarks>The MajorAxis value must be positive and greater than the MinorAxis.</remarks>
+        /// <remarks>The major axis is always measured along the ellipse local X axis.</remarks>
         public double MajorAxis
         {
             get { return this.majorAxis; }
-            //set
-            //{
-            //    if (value <= 0)
-            //    {
-            //        throw new ArgumentOutOfRangeException(nameof(value), value, "The major axis value must be greater than zero.");
-            //    }
-            //    this.majorAxis = value;
-            //}
         }
 
         /// <summary>
         /// Gets or sets the ellipse minor axis.
         /// </summary>
-        /// <remarks>The MinorAxis value must be positive and smaller than the MajorAxis.</remarks>
+        /// <remarks>The minor axis is always measured along the ellipse local Y axis.</remarks>
         public double MinorAxis
         {
             get { return this.minorAxis; }
-            //set
-            //{
-            //    if (value <= 0)
-            //    {
-            //        throw new ArgumentOutOfRangeException(nameof(value), value, "The minor axis value must be greater than zero.");
-            //    }
-            //    this.minorAxis = value;
-            //}
         }
 
         /// <summary>
@@ -357,29 +349,35 @@ namespace netDxf.Entities
         #region public methods
 
         /// <summary>
-        /// Sets the ellipse major and minor axis.
+        /// Sets the ellipse major and minor axis from the two parameters.
         /// </summary>
-        /// <param name="major">Ellipse major axis.</param>
-        /// <param name="minor">Ellipse minor axis.</param>
-        public void SetAxis(double major, double minor)
+        /// <param name="axis1">Ellipse axis.</param>
+        /// <param name="axis2">Ellipse axis.</param>
+        /// <remarks>
+        /// It is not required that axis1 is greater than axis2. The larger value will be assigned as major axis and the lower as minor axis.
+        /// </remarks>
+        public void SetAxis(double axis1, double axis2)
         {
-            if (major <= 0)
+            if (axis1 <= 0)
             {
-                throw new ArgumentOutOfRangeException(nameof(major), major, "The major axis value must be greater than zero.");
+                throw new ArgumentOutOfRangeException(nameof(axis1), axis1, "The axis value must be greater than zero.");
             }
 
-            if (minor <= 0)
+            if (axis2 <= 0)
             {
-                throw new ArgumentOutOfRangeException(nameof(minor), minor, "The minor axis value must be greater than zero.");
+                throw new ArgumentOutOfRangeException(nameof(axis2), axis2, "The axis value must be greater than zero.");
             }
 
-            if ( minor > major)
+            if (axis2 > axis1)
             {
-                throw new ArgumentException("The ellipse major axis must be greater than the minor axis.");
+                this.majorAxis = axis2;
+                this.minorAxis = axis1;
             }
-
-            this.majorAxis = major;
-            this.minorAxis = minor;
+            else
+            {
+                this.majorAxis = axis1;
+                this.minorAxis = axis2;
+            }
         }
 
         /// <summary>
@@ -581,7 +579,7 @@ namespace netDxf.Entities
                 axis2 = MathHelper.IsZero(axis2) ? MathHelper.Epsilon : axis2;
 
                 this.Center = transformation * this.Center + translation;
-                this.SetAxis(axis2, axis1);
+                this.SetAxis(axis1, axis2);
                 this.Rotation = newRotation * MathHelper.RadToDeg;
                 this.Normal = newNormal;
             }

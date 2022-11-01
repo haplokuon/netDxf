@@ -775,7 +775,7 @@ namespace netDxf.Tables
         }
 
         /// <summary>
-        /// Gets or sets the positioning of the dimension text inside extension lines. (DIMTIH)
+        /// Gets or sets if the dimension text is placed horizontally when inside extension lines. (DIMTIH)
         /// </summary>
         /// <remarks>
         /// Default: false
@@ -787,7 +787,7 @@ namespace netDxf.Tables
         }
 
         /// <summary>
-        /// Gets or sets the positioning of the dimension text outside extension lines. (DIMTOH)
+        /// Gets or sets if the dimension text is placed horizontally when outside extension lines. (DIMTOH)
         /// </summary>
         /// <remarks>
         /// Default: false
