@@ -29,8 +29,7 @@ namespace TestDxfDocument
     /// </summary>
     public class Program
     {
-
-        public static void Main()
+       public static void Main()
         {
             DxfDocument doc = Test(@"sample.dxf"); 
 

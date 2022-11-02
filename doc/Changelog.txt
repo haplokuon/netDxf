@@ -1,5 +1,8 @@
 ## Change history
 
+### [2022/11/02]
+* Fixed a bug in the AciColor.FromHsl method, under certain circumstances the RGB values where not calculated correctly.
+
 ### [2022/11/01]
 * Workaround for bad DXF files that contain polyface with invalid geometry, they will be removed. 
 * Workaround for bad DXF files that contains entities without handles. This may derive in unexpected side effects.

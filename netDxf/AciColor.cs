@@ -670,7 +670,7 @@ namespace netDxf
                 double mid2 = v - vsf;
                 switch (sextant)
                 {
-                    case 0 | 6:
+                    case 0:
                         red = v;
                         green = mid1;
                         blue = m;
@@ -699,6 +699,11 @@ namespace netDxf
                         red = v;
                         green = m;
                         blue = mid2;
+                        break;
+                    case 6:
+                        red = v;
+                        green = mid1;
+                        blue = m;
                         break;
                 }
             }
