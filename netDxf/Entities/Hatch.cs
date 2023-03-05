@@ -1,7 +1,7 @@
 #region netDxf library licensed under the MIT License
 // 
 //                       netDxf library
-// Copyright (c) 2019-2021 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (c) 2019-2023 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -126,10 +126,22 @@ namespace netDxf.Entities
 
             foreach (HatchBoundaryPath path in paths)
             {
-                if (!associative)
+                if (associative)
+                {
+                    // create the entities that make the path if it has been defined as associative but the edges do not have an associated entity
+                    if (path.Entities.Count == 0)
+                    {
+                        foreach (HatchBoundaryPath.Edge edge in path.Edges)
+                        {
+                            path.AddContour(edge.ConvertTo());
+                        }
+                    }
+                }
+                else
                 {
                     path.ClearContour();
                 }
+
                 this.boundaryPaths.Add(path);
             }
         }
@@ -224,7 +236,7 @@ namespace netDxf.Entities
             this.associative = linkBoundary;
             List<EntityObject> boundary = new List<EntityObject>();
             Matrix3 trans = MathHelper.ArbitraryAxis(this.Normal);
-            Vector3 pos = trans*new Vector3(0.0, 0.0, this.elevation);
+            Vector3 pos = trans * new Vector3(0.0, 0.0, this.elevation);
             foreach (HatchBoundaryPath path in this.boundaryPaths)
             {
                 foreach (HatchBoundaryPath.Edge edge in path.Edges)

@@ -1,7 +1,7 @@
 #region netDxf library licensed under the MIT License
 // 
 //                       netDxf library
-// Copyright (c) 2019-2021 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (c) 2019-2023 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -152,7 +152,6 @@ namespace netDxf.Entities
             }
             this.center = centerPoint;
             this.refPoint = referencePoint;
-
             this.Style = style ?? throw new ArgumentNullException(nameof(style));
 
             this.Update();
@@ -222,9 +221,13 @@ namespace netDxf.Entities
                     arrowSize = (double)styleOverride.Value;
                 }
 
-                Vector2 vec = Vector2.Normalize(this.refPoint - this.center);
+                Vector2 vect = Vector2.Normalize(this.refPoint - this.center);
+                if (Vector2.IsNaN(vect))
+                {
+                    vect = Vector2.Zero;
+                }
                 double minOffset = (2 * arrowSize + textGap) * scale;
-                this.textRefPoint = this.refPoint + minOffset * vec;
+                this.textRefPoint = this.refPoint + minOffset * vect;
             }
         }
 
@@ -286,6 +289,9 @@ namespace netDxf.Entities
             this.Normal = newNormal;
         }
 
+        /// <summary>
+        /// Calculate the dimension reference points.
+        /// </summary>
         protected override void CalculateReferencePoints()
         {
             if (Vector2.Equals(this.center, this.refPoint))

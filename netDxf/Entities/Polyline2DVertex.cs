@@ -1,7 +1,7 @@
 #region netDxf library licensed under the MIT License
 // 
 //                       netDxf library
-// Copyright (c) 2019-2021 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (c) 2019-2023 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -67,7 +67,7 @@ namespace netDxf.Entities
         /// </summary>
         /// <param name="x">X coordinate.</param>
         /// <param name="y">Y coordinate.</param>
-        /// <param name="bulge">Vertex bulge  (default: 0.0).</param>
+        /// <param name="bulge">Vertex bulge (default: 0.0).</param>
         public Polyline2DVertex(double x, double y, double bulge)
             : this(new Vector2(x, y), bulge)
         {
@@ -86,7 +86,7 @@ namespace netDxf.Entities
         /// Initializes a new instance of the <c>Polyline2DVertex</c> class.
         /// </summary>
         /// <param name="position">Lightweight polyline <see cref="Vector2">vertex</see> coordinates.</param>
-        /// <param name="bulge">Vertex bulge  (default: 0.0).</param>
+        /// <param name="bulge">Vertex bulge (default: 0.0).</param>
         public Polyline2DVertex(Vector2 position, double bulge)
         {
             this.position = position;
@@ -112,7 +112,7 @@ namespace netDxf.Entities
         #region public properties
 
         /// <summary>
-        /// Gets or sets the light weight polyline vertex <see cref="Vector2">position</see>.
+        /// Gets or sets the polyline 2D vertex <see cref="Vector2">position</see>.
         /// </summary>
         public Vector2 Position
         {
@@ -121,7 +121,7 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets or sets the light weight polyline start segment width.
+        /// Gets or sets the polyline 2D vertex start segment width.
         /// </summary>
         /// <remarks>Widths greater than zero produce wide lines.</remarks>
         public double StartWidth
@@ -138,7 +138,7 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets or sets the light weight polyline end segment width.
+        /// Gets or sets the polyline 2D vertex end segment width.
         /// </summary>
         /// <remarks>Widths greater than zero produce wide lines.</remarks>
         public double EndWidth
@@ -153,7 +153,7 @@ namespace netDxf.Entities
         }
 
         /// <summary>
-        /// Gets or set the light weight polyline bulge.
+        /// Gets or set the polyline 2D vertex bulge.
         /// </summary>
         /// <remarks>
         /// The bulge is the tangent of one fourth the included angle for an arc segment, 

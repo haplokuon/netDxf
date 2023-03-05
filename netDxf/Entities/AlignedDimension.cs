@@ -1,7 +1,7 @@
 #region netDxf library licensed under the MIT License
 // 
 //                       netDxf library
-// Copyright (c) 2019-2021 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (c) 2019-2023 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -112,11 +112,6 @@ namespace netDxf.Entities
                 CoordinateSystem.Object);
             this.firstRefPoint = new Vector2(ocsPoints[0].X, ocsPoints[0].Y);
             this.secondRefPoint = new Vector2(ocsPoints[1].X, ocsPoints[1].Y);
-
-            if (offset < 0)
-            {
-                throw new ArgumentOutOfRangeException(nameof(offset), "The offset value must be equal or greater than zero.");
-            }
             this.offset = offset;
             this.Style = style ?? throw new ArgumentNullException(nameof(style));
             this.Normal = normal;
@@ -149,11 +144,6 @@ namespace netDxf.Entities
         {
             this.firstRefPoint = firstPoint;
             this.secondRefPoint = secondPoint;
-            if (offset < 0)
-            {
-                throw new ArgumentOutOfRangeException(nameof(offset), "The offset value must be equal or greater than zero.");
-            }
-
             this.offset = offset;
             this.Style = style ?? throw new ArgumentNullException(nameof(style));
 
@@ -194,26 +184,17 @@ namespace netDxf.Entities
         /// Gets or sets the distance between the reference line and the dimension line.
         /// </summary>
         /// <remarks>
-        /// The offset value must be equal or greater than zero.<br />
-        /// The side at which the dimension line is drawn depends of the direction of its reference line.
+        /// The positive side at which the dimension line is drawn depends of the direction of its reference line.
         /// </remarks>
         public double Offset
         {
             get { return this.offset; }
-            set
-            {
-                if (value < 0)
-                {
-                    throw new ArgumentOutOfRangeException(nameof(value), "The offset value must be equal or greater than zero.");
-                }
-                this.offset = value;
-            }
+            set { this.offset = value; }
         }
 
         /// <summary>
         /// Actual measurement.
         /// </summary>
-        /// <remarks>The dimension is always measured in the plane defined by the normal.</remarks>
         public override double Measurement
         {
             get { return Vector2.Distance(this.firstRefPoint, this.secondRefPoint); }
@@ -233,15 +214,10 @@ namespace netDxf.Entities
             Vector2 offsetDir = point - this.firstRefPoint;
 
             double cross = Vector2.CrossProduct(refDir, offsetDir);
-            if (cross < 0)
-            {
-                MathHelper.Swap(ref this.firstRefPoint, ref this.secondRefPoint);
-                refDir *= -1;
-            }
             refDir.Normalize();
 
             Vector2 vec = Vector2.Perpendicular(refDir);
-            this.offset = MathHelper.PointLineDistance(point, this.firstRefPoint, refDir);
+            this.offset = Math.Sign(cross) * MathHelper.PointLineDistance(point, this.firstRefPoint, refDir);
             this.defPoint = this.secondRefPoint + this.offset * vec;
 
             if (!this.TextPositionManuallySet)

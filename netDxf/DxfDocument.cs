@@ -1,7 +1,7 @@
 #region netDxf library licensed under the MIT License
 // 
 //                       netDxf library
-// Copyright (c) 2019-2021 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (c) 2019-2023 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -257,9 +257,14 @@ namespace netDxf
             set
             {
                 if (value == null)
+                {
                     throw new ArgumentNullException(nameof(value));
+                }
+
                 if (string.IsNullOrEmpty(value.Handle))
+                {
                     this.NumHandles = value.AssignHandle(this.NumHandles);
+                }
                 this.AddedObjects.Add(value.Handle, value);
                 this.rasterVariables = value;
             }

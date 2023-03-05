@@ -66,18 +66,26 @@
         </member>
         <member name="P:netDxf.AciColor.IndexRgb">
             <summary>
-            A dictionary that contains the indexed colors, the key represents the color index and the value the RGB components of the color.
+            A list that contains the indexed colors, the key represents the color index and the value the RGB components of the color.
             </summary>
             <remarks>
             This is the AutoCad default ACI color index to RGB values table.
             Changes in the actual view background color in AutoCad might produce changes in the RGB equivalents in some ACI color indexes,
-            specially the darkest ones.
+            specially the darkest ones.<br />
+            The color at index zero is not used, represents the RGB values for abstract colors such as ByLayer or ByBlock
             </remarks>
         </member>
         <member name="M:netDxf.AciColor.#ctor">
             <summary>
             Initializes a new instance of the <c>AciColor</c> class with black/white color index 7.
             </summary>
+        </member>
+        <member name="M:netDxf.AciColor.#ctor(System.Byte[])">
+            <summary>
+            Initializes a new instance of the <c>AciColor</c> class from an array of three values.
+            </summary>
+            <param name="rgb">RGB components (input values range from 0 to 255). The array must contain three values.</param>
+            <remarks>By default the UseTrueColor will be set to true.</remarks>
         </member>
         <member name="M:netDxf.AciColor.#ctor(System.Byte,System.Byte,System.Byte)">
              <summary>
@@ -87,6 +95,13 @@
             <param name="g">Green component (input values range from 0 to 255).</param>
             <param name="b">Blue component (input values range from 0 to 255).</param>
              <remarks>By default the UseTrueColor will be set to true.</remarks>
+        </member>
+        <member name="M:netDxf.AciColor.#ctor(System.Double[])">
+            <summary>
+            Initializes a new instance of the <c>AciColor</c> class from an array of three values.
+            </summary>
+            <param name="rgb">RGB components (input values range from 0 to 1). The array must contain three values.</param>
+            <remarks>By default the UseTrueColor will be set to true.</remarks>
         </member>
         <member name="M:netDxf.AciColor.#ctor(System.Double,System.Double,System.Double)">
             <summary>
@@ -3783,6 +3798,11 @@
             Dimension.
             </summary>
         </member>
+        <member name="F:netDxf.DxfObjectCode.ArcDimension">
+            <summary>
+            Arc Length Dimension.
+            </summary>
+        </member>
         <member name="F:netDxf.DxfObjectCode.Dictionary">
             <summary>
             Dictionary.
@@ -3913,15 +3933,13 @@
             Gets or sets the distance between the reference line and the dimension line.
             </summary>
             <remarks>
-            The offset value must be equal or greater than zero.<br />
-            The side at which the dimension line is drawn depends of the direction of its reference line.
+            The positive side at which the dimension line is drawn depends of the direction of its reference line.
             </remarks>
         </member>
         <member name="P:netDxf.Entities.AlignedDimension.Measurement">
             <summary>
             Actual measurement.
             </summary>
-            <remarks>The dimension is always measured in the plane defined by the normal.</remarks>
         </member>
         <member name="M:netDxf.Entities.AlignedDimension.SetDimensionLinePosition(netDxf.Vector2)">
             <summary>
@@ -4064,7 +4082,6 @@
             <summary>
             Actual measurement.
             </summary>
-            <remarks>The dimension is always measured in the plane defined by the normal.</remarks>
         </member>
         <member name="M:netDxf.Entities.Angular2LineDimension.SetDimensionLinePosition(netDxf.Vector2)">
             <summary>
@@ -4175,24 +4192,20 @@
             Gets or sets the distance between the center point and the dimension line.
             </summary>
             <remarks>
-            Offset values cannot be negative and, even thought, zero values are allowed, they are not recommended.
+            Positive values will measure the angle between the start point and the end point while negative values will measure the opposite arc angle.
+            Even thought, zero values are allowed, they are not recommended.
             </remarks>
         </member>
         <member name="P:netDxf.Entities.Angular3PointDimension.Measurement">
             <summary>
             Actual measurement.
             </summary>
-            <remarks>The dimension is always measured in the plane defined by the normal.</remarks>
         </member>
         <member name="M:netDxf.Entities.Angular3PointDimension.SetDimensionLinePosition(netDxf.Vector2)">
             <summary>
             Calculates the dimension offset from a point along the dimension line.
             </summary>
             <param name="point">Point along the dimension line.</param>
-            <remarks>
-            The start and end points of the reference lines will be modified,
-            the angle measurement is always made from the direction of the center-first point line to the direction of the center-second point line.
-            </remarks>
         </member>
         <member name="M:netDxf.Entities.Angular3PointDimension.TransformBy(netDxf.Matrix3,netDxf.Vector3)">
             <summary>
@@ -4252,6 +4265,14 @@
             <param name="startAngle">Arc start angle in degrees.</param>
             <param name="endAngle">Arc end angle in degrees.</param>
         </member>
+        <member name="M:netDxf.Entities.Arc.#ctor(netDxf.Vector2,netDxf.Vector2,System.Double)">
+            <summary>
+            Initializes a new instance of the <c>Arc</c> class.
+            </summary>
+            <param name="startPoint">Arc start point.</param>
+            <param name="endPoint">Arc end point.</param>
+            <param name="bulge">Bulge value.</param>
+        </member>
         <member name="P:netDxf.Entities.Arc.Center">
             <summary>
             Gets or sets the arc <see cref="T:netDxf.Vector3">center</see> in world coordinates.
@@ -4307,6 +4328,162 @@
             Creates a new Arc that is a copy of the current instance.
             </summary>
             <returns>A new Arc that is a copy of this instance.</returns>
+        </member>
+        <member name="T:netDxf.Entities.ArcLengthDimension">
+            <summary>
+            Represents an arc length dimension <see cref="T:netDxf.Entities.EntityObject">entity</see>.
+            </summary>
+        </member>
+        <member name="M:netDxf.Entities.ArcLengthDimension.#ctor">
+            <summary>
+            Initializes a new instance of the <c>ArcLengthDimension</c> class.
+            </summary>
+        </member>
+        <member name="M:netDxf.Entities.ArcLengthDimension.#ctor(netDxf.Entities.Arc,System.Double)">
+            <summary>
+            Initializes a new instance of the <c>ArcLengthDimension</c> class.
+            </summary>
+            <param name="arc"><see cref="T:netDxf.Entities.Arc">Arc</see> to measure.</param>
+            <param name="offset">Distance between the measured arc and the dimension line.</param>
+        </member>
+        <member name="M:netDxf.Entities.ArcLengthDimension.#ctor(netDxf.Entities.Arc,System.Double,netDxf.Tables.DimensionStyle)">
+            <summary>
+            Initializes a new instance of the <c>ArcLengthDimension</c> class.
+            </summary>
+            <param name="arc">Angle <see cref="T:netDxf.Entities.Arc">arc</see> to measure.</param>
+            <param name="offset">Distance between the measured arc and the dimension line.</param>
+            <param name="style">The <see cref="T:netDxf.Tables.DimensionStyle">style</see> to use with the dimension.</param>
+        </member>
+        <member name="M:netDxf.Entities.ArcLengthDimension.#ctor(netDxf.Entities.Polyline2DVertex,netDxf.Entities.Polyline2DVertex,System.Double)">
+            <summary>
+            Initializes a new instance of the <c>ArcLengthDimension</c> class.
+            </summary>
+            <param name="startPoint">Arc start point, the start point bulge must be different than zero.</param>
+            <param name="endPoint">Arc end point.</param>
+            <param name="offset">Distance between the measured arc and the dimension line.</param>
+        </member>
+        <member name="M:netDxf.Entities.ArcLengthDimension.#ctor(netDxf.Vector2,netDxf.Vector2,System.Double,System.Double)">
+            <summary>
+            Initializes a new instance of the <c>ArcLengthDimension</c> class.
+            </summary>
+            <param name="startPoint">Arc start point.</param>
+            <param name="endPoint">Arc end point.</param>
+            <param name="bulge">Bulge value.</param>
+            <param name="offset">Distance between the measured arc and the dimension line.</param>
+        </member>
+        <member name="M:netDxf.Entities.ArcLengthDimension.#ctor(netDxf.Vector2,netDxf.Vector2,System.Double,System.Double,netDxf.Tables.DimensionStyle)">
+            <summary>
+            Initializes a new instance of the <c>ArcLengthDimension</c> class.
+            </summary>
+            <param name="startPoint">Arc start point.</param>
+            <param name="endPoint">Arc end point.</param>
+            <param name="bulge">Bulge value.</param>
+            <param name="offset">Distance between the measured arc and the dimension line.</param>
+            <param name="style">The <see cref="T:netDxf.Tables.DimensionStyle">style</see> to use with the dimension.</param>
+        </member>
+        <member name="M:netDxf.Entities.ArcLengthDimension.#ctor(netDxf.Vector2,System.Double,System.Double,System.Double,System.Double)">
+            <summary>
+            Initializes a new instance of the <c>ArcLengthDimension</c> class.
+            </summary>
+            <param name="center">Center of the angle arc to measure.</param>
+            <param name="radius">Arc radius.</param>
+            <param name="startAngle">Arc start angle in degrees.</param>
+            <param name="endAngle">Arc end angle in degrees.</param>
+            <param name="offset">Distance between the measured arc and the dimension line.</param>
+        </member>
+        <member name="M:netDxf.Entities.ArcLengthDimension.#ctor(netDxf.Vector2,System.Double,System.Double,System.Double,System.Double,netDxf.Tables.DimensionStyle)">
+            <summary>
+            Initializes a new instance of the <c>ArcLengthDimension</c> class.
+            </summary>
+            <param name="center">Center of the angle arc to measure.</param>
+            <param name="radius">Arc radius.</param>
+            <param name="startAngle">Arc start angle in degrees.</param>
+            <param name="endAngle">Arc end angle in degrees.</param>
+            <param name="offset">Distance between the measured arc and the dimension line.</param>
+            <param name="style">The <see cref="T:netDxf.Tables.DimensionStyle">style</see> to use with the dimension.</param>
+        </member>
+        <member name="P:netDxf.Entities.ArcLengthDimension.CenterPoint">
+            <summary>
+            Gets or sets the center <see cref="T:netDxf.Vector2">point</see> of the arc in OCS (object coordinate system).
+            </summary>
+        </member>
+        <member name="P:netDxf.Entities.ArcLengthDimension.Radius">
+            <summary>
+            Gets or sets the arc radius.
+            </summary>
+        </member>
+        <member name="P:netDxf.Entities.ArcLengthDimension.StartAngle">
+            <summary>
+            Gets or sets the arc start angle in degrees.
+            </summary>
+        </member>
+        <member name="P:netDxf.Entities.ArcLengthDimension.EndAngle">
+            <summary>
+            Gets or sets the arc end angle in degrees.
+            </summary>
+        </member>
+        <member name="P:netDxf.Entities.ArcLengthDimension.ArcDefinitionPoint">
+            <summary>
+            Gets the location of the dimension line arc.
+            </summary>
+        </member>
+        <member name="P:netDxf.Entities.ArcLengthDimension.Offset">
+            <summary>
+            Gets or sets the distance between the center of the measured arc and the dimension line.
+            </summary>
+            <remarks>
+            Positive values will measure the arc length between the start point and the end point while negative values will measure the opposite arc length.
+            Even thought, zero values are allowed, they are not recommended.
+            </remarks>
+        </member>
+        <member name="P:netDxf.Entities.ArcLengthDimension.ArcAngle">
+            <summary>
+            Gets the angle of the measured arc in degrees.
+            </summary>
+        </member>
+        <member name="P:netDxf.Entities.ArcLengthDimension.Measurement">
+            <summary>
+            Actual measurement.
+            </summary>
+        </member>
+        <member name="M:netDxf.Entities.ArcLengthDimension.SetDimensionLinePosition(netDxf.Vector2)">
+            <summary>
+            Calculates the dimension offset from a point along the dimension line.
+            </summary>
+            <param name="point">Point along the dimension line.</param>
+            <remarks>
+            The start and end points of the reference lines will be modified,
+            the angle measurement is always made from the direction of the center-first point line to the direction of the center-second point line.
+            </remarks>
+        </member>
+        <member name="M:netDxf.Entities.ArcLengthDimension.TransformBy(netDxf.Matrix3,netDxf.Vector3)">
+            <summary>
+            Moves, scales, and/or rotates the current entity given a 3x3 transformation matrix and a translation vector.
+            </summary>
+            <param name="transformation">Transformation matrix.</param>
+            <param name="translation">Translation vector.</param>
+            <remarks>
+            Non-uniform and zero scaling local to the dimension entity is not supported, the measured circular arc will become an elliptical arc.<br />
+            Matrix3 adopts the convention of using column vectors to represent a transformation matrix.
+            </remarks>
+        </member>
+        <member name="M:netDxf.Entities.ArcLengthDimension.CalculateReferencePoints">
+            <summary>
+            Calculate the dimension reference points.
+            </summary>
+        </member>
+        <member name="M:netDxf.Entities.ArcLengthDimension.BuildBlock(System.String)">
+            <summary>
+            Gets the block that contains the entities that make up the dimension picture.
+            </summary>
+            <param name="name">Name to be assigned to the generated block.</param>
+            <returns>The block that represents the actual dimension.</returns>
+        </member>
+        <member name="M:netDxf.Entities.ArcLengthDimension.Clone">
+            <summary>
+            Creates a new ArcLengthDimension that is a copy of the current instance.
+            </summary>
+            <returns>A new ArcLengthDimension that is a copy of this instance.</returns>
         </member>
         <member name="T:netDxf.Entities.Attribute">
             <summary>
@@ -5292,6 +5469,20 @@
             Also the list of <see cref="T:netDxf.Tables.DimensionStyleOverride">dimension style overrides</see> associated with the specified dimension will be applied where necessary.
             </remarks>
         </member>
+        <member name="M:netDxf.Entities.DimensionBlock.Build(netDxf.Entities.ArcLengthDimension,System.String)">
+            <summary>
+            Creates a block that represents the drawing of the specified dimension.
+            </summary>
+            <param name="dim"><see cref="T:netDxf.Entities.ArcLengthDimension">ArcLengthDimension</see> from which the block will be created.</param>
+            <param name="name">The blocks name.</param>
+            <returns>A block that represents the specified dimension.</returns>
+            <remarks>
+            The block's name is irrelevant when the dimension belongs to a document,
+            it will be automatically renamed to accommodate to the nomenclature of the DXF.<br />
+            The dimension block creation only supports a limited number of <see cref="T:netDxf.Tables.DimensionStyle">dimension style</see> properties.
+            Also the list of <see cref="T:netDxf.Tables.DimensionStyleOverride">dimension style overrides</see> associated with the specified dimension will be applied where necessary.
+            </remarks>
+        </member>
         <member name="T:netDxf.Entities.DimensionType">
             <summary>
             Dimension type.
@@ -5330,6 +5521,11 @@
         <member name="F:netDxf.Entities.DimensionType.Ordinate">
             <summary>
             Ordinate.
+            </summary>
+        </member>
+        <member name="F:netDxf.Entities.DimensionType.ArcLength">
+            <summary>
+            Arc Length.
             </summary>
         </member>
         <member name="T:netDxf.Entities.DimensionTypeFlags">
@@ -6051,6 +6247,12 @@
             </summary>
             <param name="entity"><see cref="T:netDxf.Entities.EntityObject">Entity</see> that represents the edge.</param>
         </member>
+        <member name="M:netDxf.Entities.HatchBoundaryPath.Polyline.Explode">
+            <summary>
+            Decompose the actual polyline in its internal entities, <see cref="T:netDxf.Entities.HatchBoundaryPath.Line">lines</see> and <see cref="T:netDxf.Entities.HatchBoundaryPath.Arc">arcs</see>.
+            </summary>
+            <returns>A list of <see cref="T:netDxf.Entities.HatchBoundaryPath.Line">lines</see> and <see cref="T:netDxf.Entities.HatchBoundaryPath.Arc">arcs</see> that made up the polyline.</returns>
+        </member>
         <member name="M:netDxf.Entities.HatchBoundaryPath.Polyline.ConvertFrom(netDxf.Entities.EntityObject)">
             <summary>
             Initializes a new instance of the <c>HatchBoundaryPath.Polyline</c> class.
@@ -6301,9 +6503,15 @@
         </member>
         <member name="M:netDxf.Entities.HatchBoundaryPath.#ctor(System.Collections.Generic.IEnumerable{netDxf.Entities.EntityObject})">
             <summary>
-            Initializes a new instance of the <c>Hatch</c> class.
+            Initializes a new instance of the <c>HatchBoundaryPath</c> class.
             </summary>
             <param name="edges">List of entities that makes a loop for the hatch boundary paths.</param>
+        </member>
+        <member name="M:netDxf.Entities.HatchBoundaryPath.#ctor(System.Collections.Generic.IEnumerable{netDxf.Entities.HatchBoundaryPath.Edge})">
+            <summary>
+            Initializes a new instance of the <c>HatchBoundaryPath</c> class.
+            </summary>
+            <param name="edges">List of edges that makes a loop for the hatch boundary paths.</param>
         </member>
         <member name="P:netDxf.Entities.HatchBoundaryPath.Edges">
             <summary>
@@ -7374,15 +7582,13 @@
             Gets or sets the distance between the mid point of the reference line and the dimension line.
             </summary>
             <remarks>
-            The offset value must be equal or greater than zero.<br />
-            The side at which the dimension line is drawn depends of its rotation.
+            The positive side at which the dimension line is drawn depends of the direction of its reference line and the dimension rotation.
             </remarks>
         </member>
         <member name="P:netDxf.Entities.LinearDimension.Measurement">
             <summary>
             Gets the actual measurement.
             </summary>
-            <remarks>The dimension is always measured in the plane defined by the normal.</remarks>
         </member>
         <member name="M:netDxf.Entities.LinearDimension.SetDimensionLinePosition(netDxf.Vector2)">
             <summary>
@@ -9139,7 +9345,9 @@
             <param name="precision">The number of vertexes created for curve segments.</param>
             <returns>A list of vertexes expressed in object coordinate system.</returns>
             <remarks>
-            For vertexes with bulge values different than zero a precision of zero means that no approximation will be made.
+            For polylines containing arc segments the precision value defines the number of divisions for a full circle,
+            therefore, the final number of divisions for the arc will depend on the angle of the arc.<br />
+            For vertexes with bulge values different than zero a precision of zero means that no approximation will be made.<br />
             For smoothed polylines the minimum number of vertexes generated is 2.
             </remarks>
         </member>
@@ -9152,7 +9360,9 @@
             <param name="bulgeThreshold">Minimum distance from which approximate curved segments of the polyline.</param>
             <returns>A list of vertexes expressed in object coordinate system.</returns>
             <remarks>
-            For vertexes with bulge values different than zero a precision of zero means that no approximation will be made.
+            For polylines containing arc segments the precision value defines the number of divisions for a full circle,
+            therefore, the final number of divisions for the arc will depend on the angle of the arc.<br />
+            For vertexes with bulge values different than zero a precision of zero means that no approximation will be made.<br />
             For smoothed polylines the minimum number of vertexes generated is 2.
             </remarks>
         </member>
@@ -9197,7 +9407,7 @@
             </summary>
             <param name="x">X coordinate.</param>
             <param name="y">Y coordinate.</param>
-            <param name="bulge">Vertex bulge  (default: 0.0).</param>
+            <param name="bulge">Vertex bulge (default: 0.0).</param>
         </member>
         <member name="M:netDxf.Entities.Polyline2DVertex.#ctor(netDxf.Vector2)">
             <summary>
@@ -9210,7 +9420,7 @@
             Initializes a new instance of the <c>Polyline2DVertex</c> class.
             </summary>
             <param name="position">Lightweight polyline <see cref="T:netDxf.Vector2">vertex</see> coordinates.</param>
-            <param name="bulge">Vertex bulge  (default: 0.0).</param>
+            <param name="bulge">Vertex bulge (default: 0.0).</param>
         </member>
         <member name="M:netDxf.Entities.Polyline2DVertex.#ctor(netDxf.Entities.Polyline2DVertex)">
             <summary>
@@ -9220,24 +9430,24 @@
         </member>
         <member name="P:netDxf.Entities.Polyline2DVertex.Position">
             <summary>
-            Gets or sets the light weight polyline vertex <see cref="T:netDxf.Vector2">position</see>.
+            Gets or sets the polyline 2D vertex <see cref="T:netDxf.Vector2">position</see>.
             </summary>
         </member>
         <member name="P:netDxf.Entities.Polyline2DVertex.StartWidth">
             <summary>
-            Gets or sets the light weight polyline start segment width.
+            Gets or sets the polyline 2D vertex start segment width.
             </summary>
             <remarks>Widths greater than zero produce wide lines.</remarks>
         </member>
         <member name="P:netDxf.Entities.Polyline2DVertex.EndWidth">
             <summary>
-            Gets or sets the light weight polyline end segment width.
+            Gets or sets the polyline 2D vertex end segment width.
             </summary>
             <remarks>Widths greater than zero produce wide lines.</remarks>
         </member>
         <member name="P:netDxf.Entities.Polyline2DVertex.Bulge">
             <summary>
-            Gets or set the light weight polyline bulge.
+            Gets or set the polyline 2D vertex bulge.
             </summary>
             <remarks>
             The bulge is the tangent of one fourth the included angle for an arc segment, 
@@ -9519,6 +9729,11 @@
             The transformation will not be applied if the resulting center and reference points are the same.<br />
             Matrix3 adopts the convention of using column vectors to represent a transformation matrix.
             </remarks>
+        </member>
+        <member name="M:netDxf.Entities.RadialDimension.CalculateReferencePoints">
+            <summary>
+            Calculate the dimension reference points.
+            </summary>
         </member>
         <member name="M:netDxf.Entities.RadialDimension.BuildBlock(System.String)">
             <summary>
@@ -11334,6 +11549,46 @@
             Unknown AutoCAD DXF file version.
             </summary>
         </member>
+        <member name="F:netDxf.Header.DxfVersion.AutoCad1_1">
+            <summary>
+            AutoCAD R1.1 DXF file. AutoCAD release 1.1.
+            </summary>
+        </member>
+        <member name="F:netDxf.Header.DxfVersion.AutoCad1_2">
+            <summary>
+            AutoCAD R1.2 DXF file. AutoCAD release 1.2.
+            </summary>
+        </member>
+        <member name="F:netDxf.Header.DxfVersion.AutoCad1_4">
+            <summary>
+            AutoCAD R1.4 DXF file. AutoCAD release 1.4.
+            </summary>
+        </member>
+        <member name="F:netDxf.Header.DxfVersion.AutoCad2_0">
+            <summary>
+            AutoCAD R2.0 DXF file. AutoCAD release 2.0.
+            </summary>
+        </member>
+        <member name="F:netDxf.Header.DxfVersion.AutoCad2_10">
+            <summary>
+            AutoCAD R2.10 DXF file. AutoCAD release 2.10.
+            </summary>
+        </member>
+        <member name="F:netDxf.Header.DxfVersion.AutoCad2_5">
+            <summary>
+            AutoCAD R2.5 DXF file. AutoCAD release 2.5.
+            </summary>
+        </member>
+        <member name="F:netDxf.Header.DxfVersion.AutoCad2_6">
+            <summary>
+            AutoCAD R2.6 DXF file. AutoCAD release 2.6.
+            </summary>
+        </member>
+        <member name="F:netDxf.Header.DxfVersion.AutoCad9">
+            <summary>
+            AutoCAD R9 DXF file. AutoCAD release 9.
+            </summary>
+        </member>
         <member name="F:netDxf.Header.DxfVersion.AutoCad10">
             <summary>
             AutoCAD R10 DXF file. AutoCAD release 10.
@@ -11381,7 +11636,7 @@
         </member>
         <member name="F:netDxf.Header.DxfVersion.AutoCad2018">
             <summary>
-            AutoCAD 2018 DXF file. AutoCAD 2018/2019/2020/2021.
+            AutoCAD 2018 DXF file. AutoCAD 2018/2019/2020/2021/2022/2023.
             </summary>
         </member>
         <member name="T:netDxf.Header.HeaderVariable">
@@ -12751,23 +13006,24 @@
             <param name="roundTo">The number will be rounded to the nearest of this value.</param>
             <returns>The number rounded to the nearest value.</returns>
         </member>
-        <member name="M:netDxf.MathHelper.RotateAboutAxis(netDxf.Vector3,netDxf.Vector3,System.Double)">
+        <member name="M:netDxf.MathHelper.ArcFromBulge(netDxf.Vector2,netDxf.Vector2,System.Double)">
             <summary>
-            Rotate given vector of angle in radians about a specified axis.
+            Obtains the data for an arc that has a start point, an end point, and a bulge value.
             </summary>
-            <param name="v">Vector to rotate.</param>
-            <param name="axis">Rotation axis. This vector should be normalized.</param>
-            <param name="angle">Rotation angle in radians.</param>        
-            <returns>A copy of the vector, rotated.</returns>
-            <remarks>Method provided by: Idelana. Original Author: Paul Bourke ( http://paulbourke.net/geometry/rotate/ )</remarks>
+            <param name="startPoint">Arc start point.</param>
+            <param name="endPoint">Arc end point.</param>
+            <param name="bulge">Arc bulge value.</param>
+            <returns>A Tuple(center, radius, startAngle in degrees, endAngle in degrees) with the arc data.</returns>
         </member>
-        <member name="M:netDxf.MathHelper.Swap``1(``0@,``0@)">
+        <member name="M:netDxf.MathHelper.ArcToBulge(netDxf.Vector2,System.Double,System.Double,System.Double)">
             <summary>
-            Swaps two variables.
+            Obtains the start point, end point, and bulge value from an arc.
             </summary>
-            <typeparam name="T">Variable type.</typeparam>
-            <param name="obj1">An object of type T.</param>
-            <param name="obj2">An object of type T.</param>
+            <param name="center">Arc center.</param>
+            <param name="radius">Arc radius.</param>
+            <param name="startAngle">Arc start angle in degrees.</param>
+            <param name="endAngle">Arc end angle in degrees.</param>
+            <returns>A Tuple(start point, end point, bulge value) for the specified arc data.</returns>
         </member>
         <member name="T:netDxf.Matrix2">
             <summary>
@@ -18779,6 +19035,13 @@
             <param name="u">Vector2.</param>
             <returns>Returns true if any component of the specified vector evaluates to <see cref="F:System.Double.NaN"/>; otherwise, false.</returns>
         </member>
+        <member name="M:netDxf.Vector2.IsZero(netDxf.Vector2)">
+            <summary>
+             Returns a value indicating if all components of the specified vector evaluates to zero.
+            </summary>
+            <param name="u">Vector2.</param>
+            <returns>Returns true if all components of the specified vector evaluates to zero; otherwise, false.</returns>
+        </member>
         <member name="M:netDxf.Vector2.DotProduct(netDxf.Vector2,netDxf.Vector2)">
             <summary>
             Obtains the dot product of two vectors.
@@ -18793,14 +19056,14 @@
             </summary>
             <param name="u">Vector2.</param>
             <param name="v">Vector2.</param>
-            <returns>Vector2.</returns>
+            <returns>The cross product.</returns>
         </member>
         <member name="M:netDxf.Vector2.Perpendicular(netDxf.Vector2)">
             <summary>
             Obtains the counter clockwise perpendicular vector.
             </summary>
             <param name="u">Vector2.</param>
-            <returns>Vector2.</returns>
+            <returns>The perpendicular vector.</returns>
         </member>
         <member name="M:netDxf.Vector2.Rotate(netDxf.Vector2,System.Double)">
             <summary>
@@ -18808,7 +19071,7 @@
             </summary>
             <param name="u">Vector2.</param>
             <param name="angle">Rotation angles in radians.</param>
-            <returns></returns>
+            <returns>The rotated vector.</returns>
         </member>
         <member name="M:netDxf.Vector2.Polar(netDxf.Vector2,System.Double,System.Double)">
             <summary>
@@ -19215,6 +19478,13 @@
             <param name="u">Vector3.</param>
             <returns>Returns true if any component of the specified vector evaluates to <see cref="F:System.Double.NaN"/>; otherwise, false.</returns>
         </member>
+        <member name="M:netDxf.Vector3.IsZero(netDxf.Vector3)">
+            <summary>
+             Returns a value indicating if all components of the specified vector evaluates to zero.
+            </summary>
+            <param name="u">Vector3.</param>
+            <returns>Returns true if all components of the specified vector evaluates to zero; otherwise, false.</returns>
+        </member>
         <member name="M:netDxf.Vector3.DotProduct(netDxf.Vector3,netDxf.Vector3)">
             <summary>
             Obtains the dot product of two vectors.
@@ -19229,7 +19499,7 @@
             </summary>
             <param name="u">Vector3.</param>
             <param name="v">Vector3.</param>
-            <returns>Vector3.</returns>
+            <returns>The cross product.</returns>
         </member>
         <member name="M:netDxf.Vector3.Distance(netDxf.Vector3,netDxf.Vector3)">
             <summary>
@@ -19254,6 +19524,16 @@
             <param name="u">Vector3.</param>
             <param name="v">Vector3.</param>
             <returns>Angle in radians.</returns>
+        </member>
+        <member name="M:netDxf.Vector3.RotateAroundAxis(netDxf.Vector3,netDxf.Vector3,System.Double)">
+            <summary>
+            Rotate given vector around the specified axis.
+            </summary>
+            <param name="v">Vector to rotate.</param>
+            <param name="axis">Rotation axis.</param>
+            <param name="angle">Rotation angle in radians.</param>        
+            <returns>The rotated vector.</returns>
+            <remarks>Method provided by: Idelana. Original Author: Paul Bourke ( http://paulbourke.net/geometry/rotate/ )</remarks>
         </member>
         <member name="M:netDxf.Vector3.MidPoint(netDxf.Vector3,netDxf.Vector3)">
             <summary>
@@ -19617,6 +19897,13 @@
             <param name="u">Vector4.</param>
             <returns>Returns true if any component of the specified vector evaluates to <see cref="F:System.Double.NaN"/>; otherwise, false.</returns>
         </member>
+        <member name="M:netDxf.Vector4.IsZero(netDxf.Vector4)">
+            <summary>
+             Returns a value indicating if all components of the specified vector evaluates to zero.
+            </summary>
+            <param name="u">Vector4.</param>
+            <returns>Returns true if all components of the specified vector evaluates to zero; otherwise, false.</returns>
+        </member>
         <member name="M:netDxf.Vector4.DotProduct(netDxf.Vector4,netDxf.Vector4)">
             <summary>
             Obtains the dot product of two vectors.
@@ -19654,7 +19941,7 @@
             Normalizes the vector.
             </summary>
             <param name="u">Vector to normalize</param>
-            <returns>A normalized vector.</returns>
+            <returns>The normalized vector.</returns>
         </member>
         <member name="M:netDxf.Vector4.op_Equality(netDxf.Vector4,netDxf.Vector4)">
             <summary>

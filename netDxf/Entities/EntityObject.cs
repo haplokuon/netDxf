@@ -1,7 +1,7 @@
 #region netDxf library licensed under the MIT License
 // 
 //                       netDxf library
-// Copyright (c) 2019-2021 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (c) 2019-2023 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -219,11 +219,11 @@ namespace netDxf.Entities
             get { return this.normal; }
             set
             {
-                if (Vector3.Equals(Vector3.Zero, value))
+                this.normal = Vector3.Normalize(value);
+                if (Vector3.IsZero(this.normal))
                 {
                     throw new ArgumentException("The normal can not be the zero vector.", nameof(value));
                 }
-                this.normal = Vector3.Normalize(value);
             }
         }
 

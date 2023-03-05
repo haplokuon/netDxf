@@ -1,7 +1,7 @@
 #region netDxf library licensed under the MIT License
 // 
 //                       netDxf library
-// Copyright (c) 2019-2021 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (c) 2019-2023 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -24,6 +24,7 @@
 #endregion
 
 using System;
+using System.Diagnostics;
 using System.Text;
 using System.Text.RegularExpressions;
 using netDxf.Tables;
@@ -507,6 +508,9 @@ namespace netDxf.Entities
             DatumReferenceValue d2 = null;
             DatumReferenceValue d3 = null;
 
+            // the values array should contain up to 6 elements 
+            Debug.Assert(values.Length <= 6, "The tolerance string representation is not well formatted");
+
             if (!string.IsNullOrEmpty(values[0]))
             {
                 if (values[0].StartsWith("{"))
@@ -539,8 +543,6 @@ namespace netDxf.Entities
                     case 5:
                         d3 = ParseDatumReferenceValue(value);
                         break;
-                    default:
-                        throw new FormatException("The tolerance string representation is not well formatted");
                 }
             }
 
@@ -572,15 +574,18 @@ namespace netDxf.Entities
                             {
                                 return s;
                             }
-
-                            throw new FormatException("The tolerance string representation is not well formatted");
+                            Debug.Assert(false, "The tolerance string representation is not well formatted");
+                            return '\0';
                         }
-                        throw new FormatException("The tolerance string representation is not well formatted");
+                        Debug.Assert(false, "The tolerance string representation is not well formatted");
+                        return '\0';
                     }
-                    throw new FormatException("The tolerance string representation is not well formatted");
+                    Debug.Assert(false, "The tolerance string representation is not well formatted");
+                    return '\0';
                 }
             }
-            throw new FormatException("The tolerance string representation is not well formatted");
+            Debug.Assert(false, "The tolerance string representation is not well formatted");
+            return '\0';
         }
 
         private static ToleranceGeometricSymbol ParseGeometricSymbol(char symbol)

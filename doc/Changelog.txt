@@ -1,5 +1,22 @@
 ## Change history
 
+### [2023/03/05]
+* Changed the default target framework 'net45' for 'net48'. The library is compatible will all 4.x net framework versions.
+* Renamed the constant 'NET45' with 'NET4X' in netDxf.csproj. This constant must be applicable when compiling against any net framework 4.x versions.
+* Normalizing a zero vector will return the Zero vector instead of NaN.
+* Added the ArcLengthDimension entity.
+* Added an Arc constructor that takes a start point, an end point, and a bulge value to build the arc.
+* Added the methods MathHelper.ArcFromBulge and MathHelper.ArcToBulge.
+* The offset value for the AlignedDimension entity can now be positive or negative. The first and second reference point will not be swapped depending on the placement of the definition point, instead the sign of the offset will be changed.
+* The offset value for the LinearDimension entity can now be positive or negative. A negative offset is like adding 180º to the dimension rotation. The first and second reference point will not be swapped depending on the placement of the definition point, instead the sign of the offset will be changed.
+* The offset value for the Angular3PointDimension can now be posibive or negative. A negative offset will measure the oposite arc angle. The first and second reference point will not be swapped depending on the placement of the definition point, instead the sign of the offset will be changed.
+* Now it is posible to initialize a HatchBoundaryPath directly form a list of HatchBoundaryPath.Edges.
+* When converting a Polyline2D containing arc segments the precision value defines the number of divisions for a full circle, therefore, the final number of divisions for the arc will depend on the angle of the arc. This way small arcs will have less divisions than larger ones.
+* Removed the method MathHelper.Swap, just use (obj1, obj2) = (obj2, obj1);
+* Moved method MathHelper.RotateAboutAxis to Vector3.RotateAroundAxis.
+* (fixed) Workaround for possible bad formatted tolerance string representations.
+* (fixed) The vectors that define the start and end angle for 3 point angular dimensions can be parallel. This restriction still true for angular 2 line dimensions.
+
 ### [2022/11/02]
 * Fixed a bug in the AciColor.FromHsl method, under certain circumstances the RGB values where not calculated correctly.
 

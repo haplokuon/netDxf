@@ -1,7 +1,7 @@
 #region netDxf library licensed under the MIT License
 // 
 //                       netDxf library
-// Copyright (c) 2019-2021 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (c) 2019-2023 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -345,12 +345,14 @@ namespace netDxf.Entities
                     else
                     {
                         // the polyline edge is an arc
-                        double theta = 4 * Math.Atan(Math.Abs(bulge));
-                        double c = Vector2.Distance(p1, p2) / 2.0;
-                        double r = c / Math.Sin(theta / 2.0);
+                        Tuple<Vector2, double, double, double> arcData = MathHelper.ArcFromBulge(p1, p2, bulge);
+                        Vector2 center = arcData.Item1;
+                        double radius = arcData.Item2;
+                        double startAngle = arcData.Item3;
+                        double endAngle = arcData.Item4;
 
-                        // avoid arcs with very small radius, draw a line instead
-                        if (MathHelper.IsZero(r))
+                       // avoid arcs with very small radius, draw a line instead
+                        if (MathHelper.IsZero(radius))
                         {
                             // the polyline edge is a line
                             List<Vector3> points = MathHelper.Transform(
@@ -378,23 +380,8 @@ namespace netDxf.Entities
                         }
                         else
                         {
-                            double gamma = (Math.PI - theta) / 2;
-                            double phi = Vector2.Angle(p1, p2) + Math.Sign(bulge) * gamma;
-                            Vector2 center = new Vector2(p1.X + r * Math.Cos(phi), p1.Y + r * Math.Sin(phi));
-                            double startAngle;
-                            double endAngle;
-                            if (bulge > 0)
-                            {
-                                startAngle = MathHelper.RadToDeg*Vector2.Angle(p1 - center);
-                                endAngle = startAngle + MathHelper.RadToDeg*theta;
-                            }
-                            else
-                            {
-                                endAngle = MathHelper.RadToDeg*Vector2.Angle(p1 - center);
-                                startAngle = endAngle - MathHelper.RadToDeg*theta;
-                            }
-                            Vector3 point = MathHelper.Transform(new Vector3(center.X, center.Y,
-                                this.elevation),
+                            Vector3 point = MathHelper.Transform(
+                                new Vector3(center.X, center.Y, this.elevation),
                                 this.Normal,
                                 CoordinateSystem.Object,
                                 CoordinateSystem.World);
@@ -409,7 +396,7 @@ namespace netDxf.Entities
                                 LinetypeScale = this.LinetypeScale,
                                 Normal = this.Normal,
                                 Center = point,
-                                Radius = r,
+                                Radius = radius,
                                 StartAngle = startAngle,
                                 EndAngle = endAngle,
                                 Thickness = this.Thickness,
@@ -479,7 +466,9 @@ namespace netDxf.Entities
         /// <param name="precision">The number of vertexes created for curve segments.</param>
         /// <returns>A list of vertexes expressed in object coordinate system.</returns>
         /// <remarks>
-        /// For vertexes with bulge values different than zero a precision of zero means that no approximation will be made.
+        /// For polylines containing arc segments the precision value defines the number of divisions for a full circle,
+        /// therefore, the final number of divisions for the arc will depend on the angle of the arc.<br />
+        /// For vertexes with bulge values different than zero a precision of zero means that no approximation will be made.<br />
         /// For smoothed polylines the minimum number of vertexes generated is 2.
         /// </remarks>
         public List<Vector2> PolygonalVertexes(int precision)
@@ -495,14 +484,16 @@ namespace netDxf.Entities
         /// <param name="bulgeThreshold">Minimum distance from which approximate curved segments of the polyline.</param>
         /// <returns>A list of vertexes expressed in object coordinate system.</returns>
         /// <remarks>
-        /// For vertexes with bulge values different than zero a precision of zero means that no approximation will be made.
+        /// For polylines containing arc segments the precision value defines the number of divisions for a full circle,
+        /// therefore, the final number of divisions for the arc will depend on the angle of the arc.<br />
+        /// For vertexes with bulge values different than zero a precision of zero means that no approximation will be made.<br />
         /// For smoothed polylines the minimum number of vertexes generated is 2.
         /// </remarks>
         public List<Vector2> PolygonalVertexes(int precision, double weldThreshold, double bulgeThreshold)
         {
             if (precision < 0)
             {
-                throw new ArgumentOutOfRangeException(nameof(precision), precision, "The bulgePrecision must be equal or greater than zero.");
+                throw new ArgumentOutOfRangeException(nameof(precision), precision, "The bulge precision must be equal or greater than zero.");
             }
 
             List<Vector2> ocsVertexes = new List<Vector2>();
@@ -549,27 +540,24 @@ namespace netDxf.Entities
                         }
                         else
                         {
-                            double c = Vector2.Distance(p1, p2) * 0.5;
-                            if (c >= bulgeThreshold)
+                            double dist = 0.5 * Vector2.Distance(p1, p2);
+                            Tuple<Vector2, double, double, double> arcData = MathHelper.ArcFromBulge(p1, p2, bulge);
+                            Vector2 center = arcData.Item1;
+                            double radius = arcData.Item2;
+                            double startAngle = arcData.Item3;
+                            double endAngle = arcData.Item4;
+
+                            if (dist >= bulgeThreshold || !MathHelper.IsZero(radius))
                             {
-                                double s = c * Math.Abs(bulge);
-                                double r = (c * c + s * s) / (2.0 * s);
-                                double theta = 4 * Math.Atan(Math.Abs(bulge));
-                                double gamma = (Math.PI - theta) * 0.5;
-                                double phi = Vector2.Angle(p1, p2) + Math.Sign(bulge) * gamma;
-                                Vector2 center = new Vector2(p1.X + r * Math.Cos(phi), p1.Y + r * Math.Sin(phi));
-                                Vector2 a1 = p1 - center;
-                                double angle = Math.Sign(bulge) * theta / (precision + 1);
+                                double arcAngle = MathHelper.NormalizeAngle(endAngle - startAngle) * MathHelper.DegToRad;
+                                int arcPrecision = (int)(precision * arcAngle / MathHelper.TwoPI);
+                                double angle = Math.Sign(bulge) * arcAngle / (arcPrecision + 1);
                                 ocsVertexes.Add(p1);
                                 Vector2 prevCurvePoint = p1;
-                                for (int i = 1; i <= precision; i++)
+                                Vector2 startDir = p1 - center;
+                                for (int i = 1; i <= arcPrecision; i++)
                                 {
-                                    Vector2 curvePoint = new Vector2
-                                    {
-                                        X = center.X + Math.Cos(i * angle) * a1.X - Math.Sin(i * angle) * a1.Y,
-                                        Y = center.Y + Math.Sin(i * angle) * a1.X + Math.Cos(i * angle) * a1.Y
-                                    };
-
+                                    Vector2 curvePoint = center + Vector2.Rotate(startDir, i * angle);
                                     if (!curvePoint.Equals(prevCurvePoint, weldThreshold) && !curvePoint.Equals(p2, weldThreshold))
                                     {
                                         ocsVertexes.Add(curvePoint);

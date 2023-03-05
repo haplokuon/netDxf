@@ -1,7 +1,7 @@
 #region netDxf library licensed under the MIT License
 // 
 //                       netDxf library
-// Copyright (c) 2019-2021 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (c) 2019-2023 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -88,6 +88,27 @@ namespace netDxf.Entities
             this.thickness = 0.0;
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <c>Arc</c> class.
+        /// </summary>
+        /// <param name="startPoint">Arc start point.</param>
+        /// <param name="endPoint">Arc end point.</param>
+        /// <param name="bulge">Bulge value.</param>
+        public Arc(Vector2 startPoint, Vector2 endPoint, double bulge)
+            : base(EntityType.Arc, DxfObjectCode.Arc)
+        {
+            Tuple<Vector2, double, double, double> data = MathHelper.ArcFromBulge(startPoint, endPoint, bulge);
+            if (data.Item2 <= 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(radius), radius, "The circle radius must be greater than zero.");
+            }
+            this.center = new Vector3(data.Item1.X, data.Item1.Y, 0.0) ;
+            this.radius = data.Item2;
+            this.startAngle = data.Item3;
+            this.endAngle = data.Item4;
+            this.thickness = 0.0;
+        }
+
         #endregion
 
         #region public properties
@@ -110,7 +131,9 @@ namespace netDxf.Entities
             set
             {
                 if (value <= 0)
+                {
                     throw new ArgumentOutOfRangeException(nameof(value), value, "The arc radius must be greater than zero.");
+                }
                 this.radius = value;
             }
         }
@@ -170,8 +193,8 @@ namespace netDxf.Entities
             for (int i = 0; i < precision; i++)
             {
                 double angle = start + delta*i;
-                double sine = this.radius*Math.Sin(angle);
-                double cosine = this.radius*Math.Cos(angle);
+                double sine = this.radius * Math.Sin(angle);
+                double cosine = this.radius * Math.Cos(angle);
                 ocsVertexes.Add(new Vector2(cosine, sine));
             }
 

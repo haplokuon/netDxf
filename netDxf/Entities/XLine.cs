@@ -1,7 +1,7 @@
 #region netDxf library licensed under the MIT License
 // 
 //                       netDxf library
-// Copyright (c) 2019-2021 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (c) 2019-2023 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -72,7 +72,7 @@ namespace netDxf.Entities
         {
             this.origin = origin;
             this.direction = Vector3.Normalize(direction);
-            if (Vector3.IsNaN(this.direction))
+            if (Vector3.IsZero(this.direction))
             {
                 throw new ArgumentException("The direction can not be the zero vector.", nameof(direction));
             }
@@ -99,12 +99,11 @@ namespace netDxf.Entities
             get { return this.direction; }
             set
             {
-                if (Vector3.Equals(Vector3.Zero, value))
+                this.direction = Vector3.Normalize(value);
+                if (Vector3.IsZero(this.direction))
                 {
                     throw new ArgumentException("The direction can not be the zero vector.", nameof(value));
                 }
-
-                this.direction = Vector3.Normalize(value);
             }
         }
 

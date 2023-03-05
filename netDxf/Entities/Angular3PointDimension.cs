@@ -1,7 +1,7 @@
 #region netDxf library licensed under the MIT License
 // 
 //                       netDxf library
-// Copyright (c) 2019-2021 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (c) 2019-2023 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -24,7 +24,6 @@
 #endregion
 
 using System;
-using System.Diagnostics;
 using netDxf.Blocks;
 using netDxf.Tables;
 
@@ -81,15 +80,9 @@ namespace netDxf.Entities
 
             Vector3 refPoint = MathHelper.Transform(arc.Center, arc.Normal, CoordinateSystem.World, CoordinateSystem.Object);
             this.center = new Vector2(refPoint.X, refPoint.Y);
-            this.start = Vector2.Polar(this.center, arc.Radius, arc.StartAngle*MathHelper.DegToRad);
-            this.end = Vector2.Polar(this.center, arc.Radius, arc.EndAngle*MathHelper.DegToRad);
-
-            if (offset < 0)
-            {
-                throw new ArgumentOutOfRangeException(nameof(offset), "The offset value must be equal or greater than zero.");
-            }
+            this.start = Vector2.Polar(this.center, arc.Radius, arc.StartAngle * MathHelper.DegToRad);
+            this.end = Vector2.Polar(this.center, arc.Radius, arc.EndAngle * MathHelper.DegToRad);
             this.offset = offset;
-
             this.Style = style ?? throw new ArgumentNullException(nameof(style));
             this.Normal = arc.Normal;
             this.Elevation = refPoint.Z;
@@ -119,19 +112,9 @@ namespace netDxf.Entities
         public Angular3PointDimension(Vector2 centerPoint, Vector2 startPoint, Vector2 endPoint, double offset, DimensionStyle style)
             : base(DimensionType.Angular3Point)
         {
-            Vector2 dir1 = startPoint - centerPoint;
-            Vector2 dir2 = endPoint - centerPoint;
-            if (Vector2.AreParallel(dir1, dir2))
-            {
-                throw new ArgumentException("The two lines that define the dimension are parallel.");
-            }
             this.center = centerPoint;
             this.start = startPoint;
             this.end = endPoint;
-            if (offset < 0)
-            {
-                throw new ArgumentOutOfRangeException(nameof(offset), "The offset value must be equal or greater than zero.");
-            }
             this.offset = offset;
             this.Style = style ?? throw new ArgumentNullException(nameof(style));
             this.Update();
@@ -180,88 +163,69 @@ namespace netDxf.Entities
         /// Gets or sets the distance between the center point and the dimension line.
         /// </summary>
         /// <remarks>
-        /// Offset values cannot be negative and, even thought, zero values are allowed, they are not recommended.
+        /// Positive values will measure the angle between the start point and the end point while negative values will measure the opposite arc angle.
+        /// Even thought, zero values are allowed, they are not recommended.
         /// </remarks>
         public double Offset
         {
             get { return this.offset; }
-            set
-            {
-                if (value < 0)
-                {
-                    throw new ArgumentOutOfRangeException(nameof(value), "The offset value must be equal or greater than zero.");
-                }
-                this.offset = value;
-            }
+            set { this.offset = value; }
         }
 
         /// <summary>
         /// Actual measurement.
         /// </summary>
-        /// <remarks>The dimension is always measured in the plane defined by the normal.</remarks>
         public override double Measurement
         {
             get
             {
-                double angle = (Vector2.Angle(this.center, this.end) - Vector2.Angle(this.center, this.start))*MathHelper.RadToDeg;
-                return MathHelper.NormalizeAngle(angle);
+                Vector2 dirRef1 = this.start - this.center;
+                Vector2 dirRef2 = this.end - this.center;
+                if (Vector2.Equals(dirRef1, dirRef2))
+                {
+                    return 0.0;
+                }
+
+                if (Vector2.AreParallel(dirRef1, dirRef2))
+                {
+                    return 180.0;
+                }
+
+                double angle = Vector2.AngleBetween(dirRef1, dirRef2) * MathHelper.RadToDeg;
+
+                if (this.offset < 0)
+                {
+                    return 360 - angle;
+                }
+                return angle;
             }
         }
 
         #endregion
 
-        #region public method
+        #region public methods
 
         /// <summary>
         /// Calculates the dimension offset from a point along the dimension line.
         /// </summary>
         /// <param name="point">Point along the dimension line.</param>
-        /// <remarks>
-        /// The start and end points of the reference lines will be modified,
-        /// the angle measurement is always made from the direction of the center-first point line to the direction of the center-second point line.
-        /// </remarks>
         public void SetDimensionLinePosition(Vector2 point)
         {
-            this.SetDimensionLinePosition(point, true);
-        }
-
-        #endregion
-
-        #region private methods
-
-        private void SetDimensionLinePosition(Vector2 point, bool updateRefs)
-        {
-            if (updateRefs)
-            {
-                Vector2 refStart = this.start;
-                Vector2 refEnd = this.end;
-                Vector2 dirStart = refStart - this.center;
-                Vector2 dirEnd = refEnd - this.center;
-                Vector2 dirPoint = point - this.center;
-                double cross = Vector2.CrossProduct(dirStart, dirEnd);
-                double cross1 = Vector2.CrossProduct(dirStart, dirPoint);
-                double cross2 = Vector2.CrossProduct(dirEnd, dirPoint);
-                if (cross >= 0)
-                {
-                    if (!(cross1 >= 0 && cross2 < 0))
-                    {
-                        this.start = refEnd;
-                        this.end = refStart;
-                    }
-                }              
-                else if (cross1 < 0 && cross2 >= 0)
-                {
-                    this.start = refEnd;
-                    this.end = refStart;
-                }
-            }
-            
             double newOffset = Vector2.Distance(this.center, point);
-            this.offset = MathHelper.IsZero(newOffset) ? MathHelper.Epsilon : newOffset;
 
-            double startAngle = Vector2.Angle(this.center, this.start);
-            double midRot = startAngle + this.Measurement * MathHelper.DegToRad * 0.5;
-            Vector2 midDim = Vector2.Polar(this.center, this.offset, midRot);
+            this.offset = newOffset;
+            Vector2 dirPoint = point - this.center;
+            double cross1 = Vector2.CrossProduct(this.start - this.center, dirPoint);
+            double cross2 = Vector2.CrossProduct(this.end - this.center, dirPoint);
+
+            if (!(cross1 >= 0) || !(cross2 < 0))
+            {
+                this.offset *= -1;
+            }
+
+            double startAngle = this.offset >= 0 ? Vector2.Angle(this.center, this.start) : Vector2.Angle(this.center, this.end);
+            double midRot = startAngle + 0.5 * this.Measurement * MathHelper.DegToRad;
+            Vector2 midDim = Vector2.Polar(this.center, Math.Abs(this.offset), midRot);
             this.defPoint = midDim;
 
             if (!this.TextPositionManuallySet)
@@ -300,7 +264,10 @@ namespace netDxf.Entities
         public override void TransformBy(Matrix3 transformation, Vector3 translation)
         {
             Vector3 newNormal = transformation * this.Normal;
-            if (Vector3.Equals(Vector3.Zero, newNormal)) newNormal = this.Normal;
+            if (Vector3.Equals(Vector3.Zero, newNormal))
+            {
+                newNormal = this.Normal;
+            }
 
             Matrix3 transOW = MathHelper.ArbitraryAxis(this.Normal);
             Matrix3 transWO = MathHelper.ArbitraryAxis(newNormal).Transpose();
@@ -320,14 +287,6 @@ namespace netDxf.Entities
             v = transformation * v + translation;
             v = transWO * v;
             Vector2 newCenter = new Vector2(v.X, v.Y);
-
-            Vector2 dir1 = newStart - newCenter;
-            Vector2 dir2 = newEnd - newCenter;
-            if (Vector2.AreParallel(dir1, dir2))
-            {
-                Debug.Assert(false, "The transformation cannot be applied, the resulting reference lines are parallel.");
-                return;
-            }
 
             if (this.TextPositionManuallySet)
             {
@@ -356,19 +315,10 @@ namespace netDxf.Entities
         /// </summary>
         protected override void CalculateReferencePoints()
         {
-            Vector2 dir1 = this.start - this.center;
-            Vector2 dir2 = this.end - this.center;
-            if (Vector2.AreParallel(dir1, dir2))
-            {
-                throw new ArgumentException("The two lines that define the dimension are parallel.");
-            }
-
             DimensionStyleOverride styleOverride;
-
-            double measure = this.Measurement;
-            double startAngle = Vector2.Angle(this.center, this.start);
-            double midRot = startAngle + measure * MathHelper.DegToRad * 0.5;
-            Vector2 midDim = Vector2.Polar(this.center, this.offset, midRot);
+            double startAngle = this.offset >= 0 ? Vector2.Angle(this.center, this.start) : Vector2.Angle(this.center, this.end);
+            double midRot = startAngle + 0.5 * this.Measurement * MathHelper.DegToRad;
+            Vector2 midDim = Vector2.Polar(this.center, Math.Abs(this.offset), midRot);
 
             this.defPoint = midDim;
 
@@ -382,7 +332,7 @@ namespace netDxf.Entities
 
                 if (moveText == DimensionStyleFitTextMove.BesideDimLine)
                 {
-                    this.SetDimensionLinePosition(this.textRefPoint, false);
+                    this.SetDimensionLinePosition(this.textRefPoint);
                 }
             }
             else

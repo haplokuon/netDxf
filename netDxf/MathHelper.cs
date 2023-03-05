@@ -1,7 +1,7 @@
 #region netDxf library licensed under the MIT License
 // 
 //                       netDxf library
-// Copyright (c) 2019-2021 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (c) 2019-2023 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -474,7 +474,7 @@ namespace netDxf
         public static double PointLineDistance(Vector3 p, Vector3 origin, Vector3 dir)
         {
             double t = Vector3.DotProduct(dir, p - origin);
-            Vector3 pPrime = origin + t*dir;
+            Vector3 pPrime = origin + t * dir;
             Vector3 vec = p - pPrime;
             double distanceSquared = Vector3.DotProduct(vec, vec);
             return Math.Sqrt(distanceSquared);
@@ -490,7 +490,7 @@ namespace netDxf
         public static double PointLineDistance(Vector2 p, Vector2 origin, Vector2 dir)
         {
             double t = Vector2.DotProduct(dir, p - origin);
-            Vector2 pPrime = origin + t*dir;
+            Vector2 pPrime = origin + t * dir;
             Vector2 vec = p - pPrime;
             double distanceSquared = Vector2.DotProduct(vec, vec);
             return Math.Sqrt(distanceSquared);
@@ -590,7 +590,7 @@ namespace netDxf
             Vector2 v = point1 - point0;
             double cross = Vector2.CrossProduct(dir0, dir1);
             double s = (v.X * dir1.Y - v.Y * dir1.X) / cross;
-            return point0 + s*dir0;
+            return point0 + s * dir0;
         }
 
         /// <summary>
@@ -626,47 +626,64 @@ namespace netDxf
             double multiplier = Math.Round(number/roundTo, 0);
             return multiplier * roundTo;
         }
-
+        
         /// <summary>
-        /// Rotate given vector of angle in radians about a specified axis.
+        /// Obtains the data for an arc that has a start point, an end point, and a bulge value.
         /// </summary>
-        /// <param name="v">Vector to rotate.</param>
-        /// <param name="axis">Rotation axis. This vector should be normalized.</param>
-        /// <param name="angle">Rotation angle in radians.</param>        
-        /// <returns>A copy of the vector, rotated.</returns>
-        /// <remarks>Method provided by: Idelana. Original Author: Paul Bourke ( http://paulbourke.net/geometry/rotate/ )</remarks>
-        public static Vector3 RotateAboutAxis(Vector3 v, Vector3 axis, double angle)
+        /// <param name="startPoint">Arc start point.</param>
+        /// <param name="endPoint">Arc end point.</param>
+        /// <param name="bulge">Arc bulge value.</param>
+        /// <returns>A Tuple(center, radius, startAngle in degrees, endAngle in degrees) with the arc data.</returns>
+        public static Tuple<Vector2, double, double, double> ArcFromBulge(Vector2 startPoint, Vector2 endPoint, double bulge)
         {
-            Vector3 q = new Vector3();
-            double cos = Math.Cos(angle);
-            double sin = Math.Sin(angle);
+            if (IsZero(bulge))
+            {
+                throw new ArgumentOutOfRangeException(nameof(bulge), bulge, "The bulge value must be different than zero to make an arc.");
+            }
+            double theta = 4 * Math.Atan(Math.Abs(bulge));
+            double dist = 0.5 * Vector2.Distance(startPoint, endPoint);
+            double gamma = 0.5 * (Math.PI - theta);
+            double phi = Vector2.Angle(startPoint, endPoint) + Math.Sign(bulge) * gamma;
 
-            q.X += (cos + (1 - cos) * axis.X * axis.X) * v.X;
-            q.X += ((1 - cos) * axis.X * axis.Y - axis.Z * sin) * v.Y;
-            q.X += ((1 - cos) * axis.X * axis.Z + axis.Y * sin) * v.Z;
+            double radius = dist / Math.Sin(0.5 * theta);
+            Vector2 center = new Vector2(startPoint.X + radius * Math.Cos(phi), startPoint.Y + radius * Math.Sin(phi));
+            double startAngle;
+            double endAngle;
+            if (bulge > 0)
+            {
+                startAngle = NormalizeAngle(Vector2.Angle(startPoint - center) * RadToDeg);
+                endAngle = NormalizeAngle(startAngle + theta * RadToDeg);
+            }
+            else
+            {
+                endAngle = NormalizeAngle(Vector2.Angle(startPoint - center) * RadToDeg);
+                startAngle = NormalizeAngle(endAngle - theta * RadToDeg);
+            }
 
-            q.Y += ((1 - cos) * axis.X * axis.Y + axis.Z * sin) * v.X;
-            q.Y += (cos + (1 - cos) * axis.Y * axis.Y) * v.Y;
-            q.Y += ((1 - cos) * axis.Y * axis.Z - axis.X * sin) * v.Z;
-
-            q.Z += ((1 - cos) * axis.X * axis.Z - axis.Y * sin) * v.X;
-            q.Z += ((1 - cos) * axis.Y * axis.Z + axis.X * sin) * v.Y;
-            q.Z += (cos + (1 - cos) * axis.Z * axis.Z) * v.Z;
-
-            return q;
+            return new Tuple<Vector2, double, double, double>(center, radius, startAngle, endAngle);
         }
 
         /// <summary>
-        /// Swaps two variables.
+        /// Obtains the start point, end point, and bulge value from an arc.
         /// </summary>
-        /// <typeparam name="T">Variable type.</typeparam>
-        /// <param name="obj1">An object of type T.</param>
-        /// <param name="obj2">An object of type T.</param>
-        public static void Swap<T>(ref T obj1, ref T obj2)
+        /// <param name="center">Arc center.</param>
+        /// <param name="radius">Arc radius.</param>
+        /// <param name="startAngle">Arc start angle in degrees.</param>
+        /// <param name="endAngle">Arc end angle in degrees.</param>
+        /// <returns>A Tuple(start point, end point, bulge value) for the specified arc data.</returns>
+        public static Tuple<Vector2, Vector2, double> ArcToBulge(Vector2 center, double radius, double startAngle, double endAngle)
         {
-            T tmp = obj1;
-            obj1 = obj2;
-            obj2 = tmp;
+            if (radius <= 0.0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(radius), radius, "The arc radius larger than zero.");
+            }
+
+            double arcAngle = (endAngle - startAngle) * DegToRad;
+            double bulge = Math.Tan(arcAngle / 4);
+            Vector2 startPoint = Vector2.Polar(center, radius, startAngle * DegToRad);
+            Vector2 endPoint = Vector2.Polar(center, radius, endAngle * DegToRad);
+
+            return new Tuple<Vector2, Vector2, double>(startPoint, endPoint, bulge);
         }
 
         #endregion

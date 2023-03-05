@@ -1,7 +1,7 @@
 #region netDxf library licensed under the MIT License
 // 
 //                       netDxf library
-// Copyright (c) 2019-2021 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (c) 2019-2023 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -165,7 +165,7 @@ namespace netDxf.IO
             if (version < DxfVersion.AutoCad2007)
             {
 
-#if !NET45
+#if !NET4X
                 Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 #endif
 
@@ -3946,6 +3946,9 @@ namespace netDxf.IO
                 case DxfObjectCode.Dimension:
                     dxfObject = this.ReadDimension(isBlockEntity);
                     break;
+                case DxfObjectCode.ArcDimension:
+                    dxfObject = this.ReadDimension(isBlockEntity);
+                    break;
                 case DxfObjectCode.Ellipse:
                     dxfObject = this.ReadEllipse();
                     break;
@@ -4515,11 +4518,17 @@ namespace netDxf.IO
             xAxis = MathHelper.Transform(xAxis, normal, CoordinateSystem.World, CoordinateSystem.Object);
             double rotation = Vector2.Angle(new Vector2(xAxis.X, xAxis.Y));
 
-            Tolerance entity = Tolerance.ParseStringRepresentation(value);
+            if (!Tolerance.TryParseStringRepresentation(value, out Tolerance entity))
+            {
+                // if there is a problem creating the Tolerance entity from the string data, remove it
+                Debug.Assert(false, "The tolerance string representation is not well formatted");
+                return null;
+            }
+
             entity.Style = style;
             entity.TextHeight = style.TextHeight;
             entity.Position = position;
-            entity.Rotation = rotation*MathHelper.RadToDeg;
+            entity.Rotation = rotation * MathHelper.RadToDeg;
             entity.Normal = normal;
             entity.XData.AddRange(xData);
 
@@ -5489,6 +5498,7 @@ namespace netDxf.IO
         private Dimension ReadDimension(bool isBlockEntity)
         {
             string drawingBlockName = string.Empty;
+            string subclassMarker = string.Empty;
             Block drawingBlock = null;
             Vector3 defPoint = Vector3.Zero;
             Vector3 midtxtPoint = Vector3.Zero;
@@ -5513,7 +5523,7 @@ namespace netDxf.IO
                         userText = this.DecodeEncodedNonAsciiCharacters(this.chunk.ReadString());
                         if (string.IsNullOrEmpty(userText.Trim(' ', '\t')))
                         {
-                            userText = " ";
+                            userText = string.Empty;
                         }
                         this.chunk.Next();
                         break;
@@ -5599,13 +5609,14 @@ namespace netDxf.IO
                         this.chunk.Next();
                         break;
                     case 100:
-                        string marker = this.chunk.ReadString();
-                        if (marker == SubclassMarker.AlignedDimension ||
-                            marker == SubclassMarker.RadialDimension ||
-                            marker == SubclassMarker.DiametricDimension ||
-                            marker == SubclassMarker.Angular3PointDimension ||
-                            marker == SubclassMarker.Angular2LineDimension ||
-                            marker == SubclassMarker.OrdinateDimension)
+                        subclassMarker = this.chunk.ReadString();
+                        if (subclassMarker == SubclassMarker.AlignedDimension ||
+                            subclassMarker == SubclassMarker.RadialDimension ||
+                            subclassMarker == SubclassMarker.DiametricDimension ||
+                            subclassMarker == SubclassMarker.Angular3PointDimension ||
+                            subclassMarker == SubclassMarker.Angular2LineDimension ||
+                            subclassMarker == SubclassMarker.OrdinateDimension ||
+                            subclassMarker == SubclassMarker.ArcDimension)
                         {
                             // we have finished reading the basic dimension info
                             dimInfo = true; 
@@ -5637,28 +5648,31 @@ namespace netDxf.IO
             }
 
             Dimension dim;
-            switch (type)
+            switch (subclassMarker)
             {
-                case DimensionTypeFlags.Aligned:
+                case SubclassMarker.AlignedDimension:
                     dim = this.ReadAlignedDimension(defPoint, normal);
                     break;
-                case DimensionTypeFlags.Linear:
+                case SubclassMarker.LinearDimension:
                     dim = this.ReadLinearDimension(defPoint, normal);
                     break;
-                case DimensionTypeFlags.Radius:
+                case SubclassMarker.RadialDimension:
                     dim = this.ReadRadialDimension(defPoint, normal);
                     break;
-                case DimensionTypeFlags.Diameter:
+                case SubclassMarker.DiametricDimension:
                     dim = this.ReadDiametricDimension(defPoint, normal);
                     break;
-                case DimensionTypeFlags.Angular3Point:
+                case SubclassMarker.Angular3PointDimension:
                     dim = this.ReadAngular3PointDimension(defPoint, normal);
                     break;
-                case DimensionTypeFlags.Angular:
+                case SubclassMarker.Angular2LineDimension:
                     dim = this.ReadAngular2LineDimension(defPoint, normal);
                     break;
-                case DimensionTypeFlags.Ordinate:
+                case SubclassMarker.OrdinateDimension:
                     dim = this.ReadOrdinateDimension(defPoint, axis, normal, dimRot);
+                    break;
+                case SubclassMarker.ArcDimension:
+                    dim = this.ReadArcLengthDimension(defPoint, normal);
                     break;
                 default:
                     throw new ArgumentException(string.Format("The dimension type: {0} is not implemented or unknown.", type));
@@ -7020,6 +7034,90 @@ namespace netDxf.IO
             return entity;
         }
 
+        private ArcLengthDimension ReadArcLengthDimension(Vector3 defPoint, Vector3 normal)
+        {
+            Vector3 center = Vector3.Zero;
+            Vector3 firstRef = Vector3.Zero;
+            Vector3 secondRef = Vector3.Zero;
+
+            List<XData> xData = new List<XData>();
+
+            while (this.chunk.Code != 0)
+            {
+                switch (this.chunk.Code)
+                {
+                    case 13:
+                        firstRef.X = this.chunk.ReadDouble();
+                        this.chunk.Next();
+                        break;
+                    case 23:
+                        firstRef.Y = this.chunk.ReadDouble();
+                        this.chunk.Next();
+                        break;
+                    case 33:
+                        firstRef.Z = this.chunk.ReadDouble();
+                        this.chunk.Next();
+                        break;
+                    case 14:
+                        secondRef.X = this.chunk.ReadDouble();
+                        this.chunk.Next();
+                        break;
+                    case 24:
+                        secondRef.Y = this.chunk.ReadDouble();
+                        this.chunk.Next();
+                        break;
+                    case 34:
+                        secondRef.Z = this.chunk.ReadDouble();
+                        this.chunk.Next();
+                        break;
+                    case 15:
+                        center.X = this.chunk.ReadDouble();
+                        this.chunk.Next();
+                        break;
+                    case 25:
+                        center.Y = this.chunk.ReadDouble();
+                        this.chunk.Next();
+                        break;
+                    case 35:
+                        center.Z = this.chunk.ReadDouble();
+                        this.chunk.Next();
+                        break;
+                    case 1001:
+                        string appId = this.DecodeEncodedNonAsciiCharacters(this.chunk.ReadString());
+                        XData data = this.ReadXDataRecord(this.GetApplicationRegistry(appId));
+                        xData.Add(data);
+                        break;
+                    default:
+                        Debug.Assert(!(this.chunk.Code >= 1000 && this.chunk.Code <= 1071), "The extended data of an entity must start with the application registry code.");
+                        this.chunk.Next();
+                        break;
+                }
+            }
+
+            List<Vector3> ocsPoints = MathHelper.Transform(
+                new[] { center, firstRef, secondRef, defPoint },
+                normal, CoordinateSystem.World, CoordinateSystem.Object);
+
+            Vector2 arcCenter = new Vector2(ocsPoints[0].X, ocsPoints[0].Y);
+            Vector2 arcStart = new Vector2(ocsPoints[1].X, ocsPoints[1].Y);
+            Vector2 arcEnd = new Vector2(ocsPoints[2].X, ocsPoints[2].Y);
+
+            ArcLengthDimension entity = new ArcLengthDimension
+            {
+                CenterPoint = arcCenter,
+                Radius = Vector2.Distance(arcCenter, arcStart),
+                StartAngle = Vector2.Angle(arcStart - arcCenter) * MathHelper.RadToDeg,
+                EndAngle = Vector2.Angle(arcEnd - arcCenter) * MathHelper.RadToDeg,
+                Elevation = ocsPoints[3].Z
+            };
+
+            entity.SetDimensionLinePosition(new Vector2(ocsPoints[3].X, ocsPoints[3].Y));
+
+            entity.XData.AddRange(xData);
+
+            return entity;
+        }
+
         private Ellipse ReadEllipse()
         {
             Vector3 center = Vector3.Zero;
@@ -7103,13 +7201,14 @@ namespace netDxf.IO
 
             Ellipse ellipse = new Ellipse(center, majorAxis, minorAxis)
             {
-                Rotation = rotation*MathHelper.RadToDeg,
+                Rotation = rotation * MathHelper.RadToDeg,
                 Normal = normal
             };
 
             ellipse.XData.AddRange(xData);
 
             SetEllipseParameters(ellipse, param);
+
             return ellipse;
         }
 
@@ -7122,8 +7221,8 @@ namespace netDxf.IO
             }
             else
             {
-                double a = ellipse.MajorAxis*0.5;
-                double b = ellipse.MinorAxis*0.5;
+                double a = ellipse.MajorAxis * 0.5;
+                double b = ellipse.MinorAxis * 0.5;
 
                 Vector2 startPoint = new Vector2(a * Math.Cos(param[0]), b * Math.Sin(param[0]));
                 Vector2 endPoint = new Vector2(a * Math.Cos(param[1]), b * Math.Sin(param[1]));

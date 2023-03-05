@@ -1,7 +1,7 @@
 #region netDxf library licensed under the MIT License
 // 
 //                       netDxf library
-// Copyright (c) 2019-2021 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (c) 2019-2023 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -110,7 +110,7 @@ namespace netDxf
         /// </summary>
         public static Vector3 UnitX
         {
-            get { return new Vector3(1.0, 0.0, 0.0) {isNormalized = true}; }
+            get { return new Vector3(1.0, 0.0, 0.0) { isNormalized = true }; }
         }
 
         /// <summary>
@@ -118,7 +118,7 @@ namespace netDxf
         /// </summary>
         public static Vector3 UnitY
         {
-            get { return new Vector3(0.0, 1.0, 0.0) {isNormalized = true}; }
+            get { return new Vector3(0.0, 1.0, 0.0) { isNormalized = true }; }
         }
 
         /// <summary>
@@ -126,7 +126,7 @@ namespace netDxf
         /// </summary>
         public static Vector3 UnitZ
         {
-            get { return new Vector3(0.0, 0.0, 1.0) {isNormalized = true}; }
+            get { return new Vector3(0.0, 0.0, 1.0) { isNormalized = true }; }
         }
 
         /// <summary>
@@ -244,6 +244,16 @@ namespace netDxf
         }
 
         /// <summary>
+        ///  Returns a value indicating if all components of the specified vector evaluates to zero.
+        /// </summary>
+        /// <param name="u">Vector3.</param>
+        /// <returns>Returns true if all components of the specified vector evaluates to zero; otherwise, false.</returns>
+        public static bool IsZero(Vector3 u)
+        {
+            return MathHelper.IsZero(u.X) && MathHelper.IsZero(u.Y) && MathHelper.IsZero(u.Z);
+        }
+
+        /// <summary>
         /// Obtains the dot product of two vectors.
         /// </summary>
         /// <param name="u">Vector3.</param>
@@ -259,7 +269,7 @@ namespace netDxf
         /// </summary>
         /// <param name="u">Vector3.</param>
         /// <param name="v">Vector3.</param>
-        /// <returns>Vector3.</returns>
+        /// <returns>The cross product.</returns>
         public static Vector3 CrossProduct(Vector3 u, Vector3 v)
         {
             double a = u.Y * v.Z - u.Z * v.Y;
@@ -310,6 +320,36 @@ namespace netDxf
             }
 
             return Math.Acos(cos);
+        }
+
+        /// <summary>
+        /// Rotate given vector around the specified axis.
+        /// </summary>
+        /// <param name="v">Vector to rotate.</param>
+        /// <param name="axis">Rotation axis.</param>
+        /// <param name="angle">Rotation angle in radians.</param>        
+        /// <returns>The rotated vector.</returns>
+        /// <remarks>Method provided by: Idelana. Original Author: Paul Bourke ( http://paulbourke.net/geometry/rotate/ )</remarks>
+        public static Vector3 RotateAroundAxis(Vector3 v, Vector3 axis, double angle)
+        {
+            Vector3 q = new Vector3();
+            axis.Normalize();
+            double cos = Math.Cos(angle);
+            double sin = Math.Sin(angle);
+
+            q.X += (cos + (1 - cos) * axis.X * axis.X) * v.X;
+            q.X += ((1 - cos) * axis.X * axis.Y - axis.Z * sin) * v.Y;
+            q.X += ((1 - cos) * axis.X * axis.Z + axis.Y * sin) * v.Z;
+
+            q.Y += ((1 - cos) * axis.X * axis.Y + axis.Z * sin) * v.X;
+            q.Y += (cos + (1 - cos) * axis.Y * axis.Y) * v.Y;
+            q.Y += ((1 - cos) * axis.Y * axis.Z - axis.X * sin) * v.Z;
+
+            q.Z += ((1 - cos) * axis.X * axis.Z - axis.Y * sin) * v.X;
+            q.Z += ((1 - cos) * axis.Y * axis.Z + axis.X * sin) * v.Y;
+            q.Z += (cos + (1 - cos) * axis.Z * axis.Z) * v.Z;
+
+            return q;
         }
 
         /// <summary>
@@ -416,7 +456,7 @@ namespace netDxf
             }
 
             double modInv = 1 / mod;
-            return new Vector3(u.x * modInv, u.y * modInv, u.z * modInv) {isNormalized = true};
+            return new Vector3(u.x * modInv, u.y * modInv, u.z * modInv) { isNormalized = true };
         }
 
         #endregion
@@ -638,15 +678,14 @@ namespace netDxf
             double mod = this.Modulus();
             if (MathHelper.IsZero(mod))
             {
-                this = NaN;
+                this = Zero;
+                return;
             }
-            else
-            {
-                double modInv = 1 / mod;
-                this.x *= modInv;
-                this.y *= modInv;
-                this.z *= modInv;
-            }
+
+            double modInv = 1 / mod;
+            this.x *= modInv;
+            this.y *= modInv;
+            this.z *= modInv;
 
             this.isNormalized = true;
         }

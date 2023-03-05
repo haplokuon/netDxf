@@ -1,7 +1,7 @@
 #region netDxf library licensed under the MIT License
 // 
 //                       netDxf library
-// Copyright (c) 2019-2021 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (c) 2019-2023 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -263,6 +263,16 @@ namespace netDxf
         }
 
         /// <summary>
+        ///  Returns a value indicating if all components of the specified vector evaluates to zero.
+        /// </summary>
+        /// <param name="u">Vector4.</param>
+        /// <returns>Returns true if all components of the specified vector evaluates to zero; otherwise, false.</returns>
+        public static bool IsZero(Vector4 u)
+        {
+            return MathHelper.IsZero(u.X) && MathHelper.IsZero(u.Y) && MathHelper.IsZero(u.Z) && MathHelper.IsZero(u.W);
+        }
+
+        /// <summary>
         /// Obtains the dot product of two vectors.
         /// </summary>
         /// <param name="u">Vector4.</param>
@@ -310,7 +320,7 @@ namespace netDxf
         /// Normalizes the vector.
         /// </summary>
         /// <param name="u">Vector to normalize</param>
-        /// <returns>A normalized vector.</returns>
+        /// <returns>The normalized vector.</returns>
         public static Vector4 Normalize(Vector4 u)
         {
             if (u.isNormalized)
@@ -321,7 +331,7 @@ namespace netDxf
             double mod = u.Modulus();
             if (MathHelper.IsZero(mod))
             {
-                return NaN;
+                return Zero;
             }
 
             double modInv = 1 / mod;
@@ -547,16 +557,15 @@ namespace netDxf
             double mod = this.Modulus();
             if (MathHelper.IsZero(mod))
             {
-                this = NaN;
+                this = Zero;
+                return;
             }
-            else
-            {
-                double modInv = 1 / mod;
-                this.x *= modInv;
-                this.y *= modInv;
-                this.z *= modInv;
-                this.w *= modInv;
-            }
+
+            double modInv = 1 / mod;
+            this.x *= modInv;
+            this.y *= modInv;
+            this.z *= modInv;
+            this.w *= modInv;
 
             this.isNormalized = true;
         }

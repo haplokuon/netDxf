@@ -1,7 +1,7 @@
 #region netDxf library licensed under the MIT License
 // 
 //                       netDxf library
-// Copyright (c) 2019-2021 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (c) 2019-2023 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -292,6 +292,7 @@ namespace netDxf.IO
 
             //CLASSES SECTION
             this.BeginSection(DxfObjectCode.ClassesSection);
+
             this.WriteRasterVariablesClass(1);
             if (this.doc.ImageDefinitions.Items.Count > 0)
             {
@@ -822,7 +823,8 @@ namespace netDxf.IO
                     style.AlternateUnits.SuppressZeroInches));
 
             this.chunk.Write(9, "$DIMAPOST");
-            this.chunk.Write(1, this.EncodeNonAsciiCharacters(style.AlternateUnits.Prefix + "[]" + style.AlternateUnits.Suffix));
+            string altUnits = string.IsNullOrEmpty(style.DimPrefix) ? "" : "[]";
+            this.chunk.Write(1, this.EncodeNonAsciiCharacters(style.AlternateUnits.Prefix + altUnits + style.AlternateUnits.Suffix));
 
             this.chunk.Write(9, "$DIMATFIT");
             this.chunk.Write(70, (short) style.FitOptions);
@@ -966,7 +968,8 @@ namespace netDxf.IO
             this.chunk.Write(70, (short) style.ExtLineLineweight);
 
             this.chunk.Write(9, "$DIMPOST");
-            this.chunk.Write(1, this.EncodeNonAsciiCharacters(style.DimPrefix + "<>" + style.DimSuffix));
+            string units = string.IsNullOrEmpty(style.DimPrefix) ? "" : "<>";
+            this.chunk.Write(1, this.EncodeNonAsciiCharacters(style.DimPrefix + units + style.DimSuffix));
 
             this.chunk.Write(9, "$DIMRND");
             this.chunk.Write(40, style.DimRoundoff);
@@ -1122,7 +1125,7 @@ namespace netDxf.IO
             this.chunk.Write(280, (short) 0);
             this.chunk.Write(281, (short) 1);
         }
-
+        
         private void WriteImageDefClass(int count)
         {
             this.chunk.Write(0, DxfObjectCode.Class);
@@ -1276,9 +1279,11 @@ namespace netDxf.IO
 
             this.chunk.Write(2, this.EncodeNonAsciiCharacters(style.Name));
 
-            this.chunk.Write(3, this.EncodeNonAsciiCharacters(style.DimPrefix + "<>" + style.DimSuffix));
+            string units = string.IsNullOrEmpty(style.DimPrefix) ? "" : "<>";
+            this.chunk.Write(3, this.EncodeNonAsciiCharacters(style.DimPrefix + units + style.DimSuffix));
 
-            this.chunk.Write(4, this.EncodeNonAsciiCharacters(style.AlternateUnits.Prefix + "[]" + style.AlternateUnits.Suffix));
+            string altUnits = string.IsNullOrEmpty(style.DimPrefix) ? "" : "[]";
+            this.chunk.Write(4, this.EncodeNonAsciiCharacters(style.AlternateUnits.Prefix + altUnits + style.AlternateUnits.Suffix));
 
             this.chunk.Write(40, style.DimScaleOverall);
             this.chunk.Write(41, style.ArrowSize);
@@ -3464,10 +3469,8 @@ namespace netDxf.IO
             this.chunk.Write(71, (short) dim.AttachmentPoint);
             this.chunk.Write(72, (short) dim.LineSpacingStyle);
             this.chunk.Write(41, dim.LineSpacingFactor);
-            if (dim.UserText != null)
-            {
-                this.chunk.Write(1, this.EncodeNonAsciiCharacters(dim.UserText));
-            }
+            this.chunk.Write(1, this.EncodeNonAsciiCharacters(dim.UserText));
+
             this.chunk.Write(210, dim.Normal.X);
             this.chunk.Write(220, dim.Normal.Y);
             this.chunk.Write(230, dim.Normal.Z);
@@ -3483,25 +3486,28 @@ namespace netDxf.IO
             switch (dim.DimensionType)
             {
                 case DimensionType.Aligned:
-                    this.WriteAlignedDimension((AlignedDimension) dim);
+                    this.WriteAlignedDimension((AlignedDimension)dim);
                     break;
                 case DimensionType.Linear:
-                    this.WriteLinearDimension((LinearDimension) dim);
+                    this.WriteLinearDimension((LinearDimension)dim);
                     break;
                 case DimensionType.Radius:
-                    this.WriteRadialDimension((RadialDimension) dim);
+                    this.WriteRadialDimension((RadialDimension)dim);
                     break;
                 case DimensionType.Diameter:
-                    this.WriteDiametricDimension((DiametricDimension) dim);
+                    this.WriteDiametricDimension((DiametricDimension)dim);
                     break;
                 case DimensionType.Angular3Point:
-                    this.WriteAngular3PointDimension((Angular3PointDimension) dim);
+                    this.WriteAngular3PointDimension((Angular3PointDimension)dim);
                     break;
                 case DimensionType.Angular:
-                    this.WriteAngular2LineDimension((Angular2LineDimension) dim);
+                    this.WriteAngular2LineDimension((Angular2LineDimension)dim);
                     break;
                 case DimensionType.Ordinate:
-                    this.WriteOrdinateDimension((OrdinateDimension) dim);
+                    this.WriteOrdinateDimension((OrdinateDimension)dim);
+                    break;
+                case DimensionType.ArcLength:
+                    this.WriteArcLengthDimension((ArcLengthDimension)dim);
                     break;
             }
         }
@@ -4109,7 +4115,7 @@ namespace netDxf.IO
             this.chunk.Write(25, wcsPoints[2].Y);
             this.chunk.Write(35, wcsPoints[2].Z);
 
-            this.chunk.Write(40, 0.0);
+            //this.chunk.Write(40, 0.0);
 
             this.WriteXData(dim.XData);
         }
@@ -4136,7 +4142,7 @@ namespace netDxf.IO
             this.chunk.Write(26, dim.ArcDefinitionPoint.Y);
             this.chunk.Write(36, dim.Elevation);
 
-            this.chunk.Write(40, 0.0);
+            //this.chunk.Write(40, 0.0);
 
             this.WriteXData(dim.XData);
         }
@@ -4154,6 +4160,31 @@ namespace netDxf.IO
             this.chunk.Write(14, wcsPoints[1].X);
             this.chunk.Write(24, wcsPoints[1].Y);
             this.chunk.Write(34, wcsPoints[1].Z);
+
+            this.WriteXData(dim.XData);
+        }
+
+        private void WriteArcLengthDimension(ArcLengthDimension dim)
+        {
+            this.chunk.Write(100, SubclassMarker.ArcDimension);
+
+            Vector2 refStart = Vector2.Polar(dim.CenterPoint, dim.Radius, dim.StartAngle * MathHelper.DegToRad);
+            Vector2 refEnd = Vector2.Polar(dim.CenterPoint, dim.Radius, dim.EndAngle * MathHelper.DegToRad);
+            List<Vector3> wcsPoints = MathHelper.Transform(new[] {refStart, refEnd, dim.CenterPoint}, dim.Normal, dim.Elevation);
+
+            this.chunk.Write(13, wcsPoints[0].X);
+            this.chunk.Write(23, wcsPoints[0].Y);
+            this.chunk.Write(33, wcsPoints[0].Z);
+
+            this.chunk.Write(14, wcsPoints[1].X);
+            this.chunk.Write(24, wcsPoints[1].Y);
+            this.chunk.Write(34, wcsPoints[1].Z);
+
+            this.chunk.Write(15, wcsPoints[2].X);
+            this.chunk.Write(25, wcsPoints[2].Y);
+            this.chunk.Write(35, wcsPoints[2].Z);
+
+            //this.chunk.Write(40, 0.0);
 
             this.WriteXData(dim.XData);
         }

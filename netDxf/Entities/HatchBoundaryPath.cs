@@ -1,7 +1,7 @@
 #region netDxf library licensed under the MIT License
 // 
 //                       netDxf library
-// Copyright (c) 2019-2021 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (c) 2019-2023 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -25,6 +25,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace netDxf.Entities
 {
@@ -110,7 +111,6 @@ namespace netDxf.Entities
             public Polyline()
                 : base(EdgeType.Polyline)
             {
-                this.IsClosed = true;
             }
 
             /// <summary>
@@ -150,6 +150,85 @@ namespace netDxf.Entities
                 }
                 else
                     throw new ArgumentException("The entity is not a Polyline2D or a Polyline3D", nameof(entity));
+            }
+
+            /// <summary>
+            /// Decompose the actual polyline in its internal entities, <see cref="HatchBoundaryPath.Line">lines</see> and <see cref="HatchBoundaryPath.Arc">arcs</see>.
+            /// </summary>
+            /// <returns>A list of <see cref="HatchBoundaryPath.Line">lines</see> and <see cref="HatchBoundaryPath.Arc">arcs</see> that made up the polyline.</returns>
+            public List<HatchBoundaryPath.Edge> Explode()
+            {
+                List<HatchBoundaryPath.Edge> edges = new List<HatchBoundaryPath.Edge>();
+
+                int index = 0;
+                foreach (Vector3 vertex in this.Vertexes)
+                {
+                    double bulge = vertex.Z;
+                    Vector2 p1;
+                    Vector2 p2;
+
+                    if (index == this.Vertexes.Length - 1)
+                    {
+                        if (!this.IsClosed)
+                        {
+                            break;
+                        }
+
+                        p1 = new Vector2(vertex.X, vertex.Y);
+                        p2 = new Vector2(this.Vertexes[0].X, this.Vertexes[0].Y);
+                    }
+                    else
+                    {
+                        p1 = new Vector2(vertex.X, vertex.Y);
+                        p2 = new Vector2(this.Vertexes[index + 1].X, this.Vertexes[index + 1].Y);
+                    }
+
+                    if (MathHelper.IsZero(bulge))
+                    {
+                        // the polyline edge is a line
+                        HatchBoundaryPath.Line line = new Line
+                        {
+                            Start = p1,
+                            End = p2
+                        };
+                        edges.Add(line);
+                    }
+                    else
+                    {
+                        // the polyline edge is an arc
+                        Tuple<Vector2, double, double, double> arcData = MathHelper.ArcFromBulge(p1, p2, bulge);
+                        Vector2 center = arcData.Item1;
+                        double radius = arcData.Item2;
+                        double startAngle = arcData.Item3;
+                        double endAngle = arcData.Item4;
+
+                        // avoid arcs with very small radius, draw a line instead
+                        if (MathHelper.IsZero(radius))
+                        {
+                            // the polyline edge is a line
+                            HatchBoundaryPath.Line line = new Line
+                            {
+                                Start = p1,
+                                End = p2
+                            };
+                            edges.Add(line);
+                        }
+                        else
+                        {
+                            HatchBoundaryPath.Arc arc = new HatchBoundaryPath.Arc
+                            {
+                                Center = center,
+                                Radius = radius,
+                                StartAngle = startAngle,
+                                EndAngle = endAngle,
+                            };
+                            edges.Add(arc);
+                        }
+                    }
+
+                    index++;
+                }
+                return edges;
             }
 
             /// <summary>
@@ -679,7 +758,7 @@ namespace netDxf.Entities
         #region constructor
 
         /// <summary>
-        /// Initializes a new instance of the <c>Hatch</c> class.
+        /// Initializes a new instance of the <c>HatchBoundaryPath</c> class.
         /// </summary>
         /// <param name="edges">List of entities that makes a loop for the hatch boundary paths.</param>
         public HatchBoundaryPath(IEnumerable<EntityObject> edges)
@@ -694,7 +773,11 @@ namespace netDxf.Entities
             this.Update();
         }
 
-        internal HatchBoundaryPath(IEnumerable<Edge> edges)
+        /// <summary>
+        /// Initializes a new instance of the <c>HatchBoundaryPath</c> class.
+        /// </summary>
+        /// <param name="edges">List of edges that makes a loop for the hatch boundary paths.</param>
+        public HatchBoundaryPath(IEnumerable<Edge> edges)
         {
             if (edges == null)
             {
@@ -702,16 +785,26 @@ namespace netDxf.Entities
             }
             this.pathType = HatchBoundaryPathTypeFlags.Derived | HatchBoundaryPathTypeFlags.External;
             this.entities = new List<EntityObject>();
-            this.edges = new List<Edge>(edges);
-            if (this.edges.Count == 1 && this.edges[0].Type == EdgeType.Polyline)
+            this.edges = new List<Edge>();
+            foreach (Edge edge in edges)
             {
-                this.pathType |= HatchBoundaryPathTypeFlags.Polyline;
-            }
-            else
-            {
-                foreach (Edge edge in this.edges)
+                if (edges.Count() == 1 && edge.Type == EdgeType.Polyline)
                 {
-                    if(edge.Type == EdgeType.Polyline) throw new ArgumentException("Only a single polyline edge can be part of a HatchBoundaryPath.", nameof(edges));
+                    this.pathType |= HatchBoundaryPathTypeFlags.Polyline;
+                    this.edges.Add(edge);
+                }
+                else
+                {
+                    if (edge.Type == EdgeType.Polyline)
+                    {
+                        // Only a single polyline edge can be part of a HatchBoundaryPath. The polyline will be automatically exploded.
+                        HatchBoundaryPath.Polyline polyline = (HatchBoundaryPath.Polyline)edge;
+                        this.edges.AddRange(polyline.Explode());
+                    }
+                    else
+                    {
+                        this.edges.Add(edge);
+                    }
                 }
             }
         }

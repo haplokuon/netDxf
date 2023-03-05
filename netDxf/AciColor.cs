@@ -1,7 +1,7 @@
 #region netDxf library licensed under the MIT License
 // 
 //                       netDxf library
-// Copyright (c) 2019-2021 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (c) 2019-2023 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -40,263 +40,264 @@ namespace netDxf
     {
         #region list of the indexed colors
 
-        private static readonly IReadOnlyDictionary<byte, byte[]> indexRgb = new Dictionary<byte, byte[]>
+        private static readonly IReadOnlyList<byte[]> indexRgb = new List<byte[]>
         {
-            {1, new byte[] {255, 0, 0}},
-            {2, new byte[] {255, 255, 0}},
-            {3, new byte[] {0, 255, 0}},
-            {4, new byte[] {0, 255, 255}},
-            {5, new byte[] {0, 0, 255}},
-            {6, new byte[] {255, 0, 255}},
-            {7, new byte[] {255, 255, 255}},
-            {8, new byte[] {128, 128, 128}},
-            {9, new byte[] {192, 192, 192}},
-            {10, new byte[] {255, 0, 0}},
-            {11, new byte[] {255, 127, 127}},
-            {12, new byte[] {165, 0, 0}},
-            {13, new byte[] {165, 82, 82}},
-            {14, new byte[] {127, 0, 0}},
-            {15, new byte[] {127, 63, 63}},
-            {16, new byte[] {76, 0, 0}},
-            {17, new byte[] {76, 38, 38}},
-            {18, new byte[] {38, 0, 0}},
-            {19, new byte[] {38, 19, 19}},
-            {20, new byte[] {255, 63, 0}},
-            {21, new byte[] {255, 159, 127}},
-            {22, new byte[] {165, 41, 0}},
-            {23, new byte[] {165, 103, 82}},
-            {24, new byte[] {127, 31, 0}},
-            {25, new byte[] {127, 79, 63}},
-            {26, new byte[] {76, 19, 0}},
-            {27, new byte[] {76, 47, 38}},
-            {28, new byte[] {38, 9, 0}},
-            {29, new byte[] {38, 28, 19}},
-            {30, new byte[] {255, 127, 0}},
-            {31, new byte[] {255, 191, 127}},
-            {32, new byte[] {165, 82, 0}},
-            {33, new byte[] {165, 124, 82}},
-            {34, new byte[] {127, 63, 0}},
-            {35, new byte[] {127, 95, 63}},
-            {36, new byte[] {76, 38, 0}},
-            {37, new byte[] {76, 57, 38}},
-            {38, new byte[] {38, 19, 0}},
-            {39, new byte[] {38, 28, 19}},
-            {40, new byte[] {255, 191, 0}},
-            {41, new byte[] {255, 223, 127}},
-            {42, new byte[] {165, 124, 0}},
-            {43, new byte[] {165, 145, 82}},
-            {44, new byte[] {127, 95, 0}},
-            {45, new byte[] {127, 111, 63}},
-            {46, new byte[] {76, 57, 0}},
-            {47, new byte[] {76, 66, 38}},
-            {48, new byte[] {38, 28, 0}},
-            {49, new byte[] {38, 33, 19}},
-            {50, new byte[] {255, 255, 0}},
-            {51, new byte[] {255, 255, 127}},
-            {52, new byte[] {165, 165, 0}},
-            {53, new byte[] {165, 165, 82}},
-            {54, new byte[] {127, 127, 0}},
-            {55, new byte[] {127, 127, 63}},
-            {56, new byte[] {76, 76, 0}},
-            {57, new byte[] {76, 76, 38}},
-            {58, new byte[] {38, 38, 0}},
-            {59, new byte[] {38, 38, 19}},
-            {60, new byte[] {191, 255, 0}},
-            {61, new byte[] {223, 255, 127}},
-            {62, new byte[] {124, 165, 0}},
-            {63, new byte[] {145, 165, 82}},
-            {64, new byte[] {95, 127, 0}},
-            {65, new byte[] {111, 127, 63}},
-            {66, new byte[] {57, 76, 0}},
-            {67, new byte[] {66, 76, 38}},
-            {68, new byte[] {28, 38, 0}},
-            {69, new byte[] {33, 38, 19}},
-            {70, new byte[] {127, 255, 0}},
-            {71, new byte[] {191, 255, 127}},
-            {72, new byte[] {82, 165, 0}},
-            {73, new byte[] {124, 165, 82}},
-            {74, new byte[] {63, 127, 0}},
-            {75, new byte[] {95, 127, 63}},
-            {76, new byte[] {38, 76, 0}},
-            {77, new byte[] {57, 76, 38}},
-            {78, new byte[] {19, 38, 0}},
-            {79, new byte[] {28, 38, 19}},
-            {80, new byte[] {63, 255, 0}},
-            {81, new byte[] {159, 255, 127}},
-            {82, new byte[] {41, 165, 0}},
-            {83, new byte[] {103, 165, 82}},
-            {84, new byte[] {31, 127, 0}},
-            {85, new byte[] {79, 127, 63}},
-            {86, new byte[] {19, 76, 0}},
-            {87, new byte[] {47, 76, 38}},
-            {88, new byte[] {9, 38, 0}},
-            {89, new byte[] {23, 38, 19}},
-            {90, new byte[] {0, 255, 0}},
-            {91, new byte[] {125, 255, 127}},
-            {92, new byte[] {0, 165, 0}},
-            {93, new byte[] {82, 165, 82}},
-            {94, new byte[] {0, 127, 0}},
-            {95, new byte[] {63, 127, 63}},
-            {96, new byte[] {0, 76, 0}},
-            {97, new byte[] {38, 76, 38}},
-            {98, new byte[] {0, 38, 0}},
-            {99, new byte[] {19, 38, 19}},
-            {100, new byte[] {0, 255, 63}},
-            {101, new byte[] {127, 255, 159}},
-            {102, new byte[] {0, 165, 41}},
-            {103, new byte[] {82, 165, 103}},
-            {104, new byte[] {0, 127, 31}},
-            {105, new byte[] {63, 127, 79}},
-            {106, new byte[] {0, 76, 19}},
-            {107, new byte[] {38, 76, 47}},
-            {108, new byte[] {0, 38, 9}},
-            {109, new byte[] {19, 88, 23}},
-            {110, new byte[] {0, 255, 127}},
-            {111, new byte[] {127, 255, 191}},
-            {112, new byte[] {0, 165, 82}},
-            {113, new byte[] {82, 165, 124}},
-            {114, new byte[] {0, 127, 63}},
-            {115, new byte[] {63, 127, 95}},
-            {116, new byte[] {0, 76, 38}},
-            {117, new byte[] {38, 76, 57}},
-            {118, new byte[] {0, 38, 19}},
-            {119, new byte[] {19, 88, 28}},
-            {120, new byte[] {0, 255, 191}},
-            {121, new byte[] {127, 255, 223}},
-            {122, new byte[] {0, 165, 124}},
-            {123, new byte[] {82, 165, 145}},
-            {124, new byte[] {0, 127, 95}},
-            {125, new byte[] {63, 127, 111}},
-            {126, new byte[] {0, 76, 57}},
-            {127, new byte[] {38, 76, 66}},
-            {128, new byte[] {0, 38, 28}},
-            {129, new byte[] {19, 88, 88}},
-            {130, new byte[] {0, 255, 255}},
-            {131, new byte[] {127, 255, 255}},
-            {132, new byte[] {0, 165, 165}},
-            {133, new byte[] {82, 165, 165}},
-            {134, new byte[] {0, 127, 127}},
-            {135, new byte[] {63, 127, 127}},
-            {136, new byte[] {0, 76, 76}},
-            {137, new byte[] {38, 76, 76}},
-            {138, new byte[] {0, 38, 38}},
-            {139, new byte[] {19, 88, 88}},
-            {140, new byte[] {0, 191, 255}},
-            {141, new byte[] {127, 223, 255}},
-            {142, new byte[] {0, 124, 165}},
-            {143, new byte[] {82, 145, 165}},
-            {144, new byte[] {0, 95, 127}},
-            {145, new byte[] {63, 111, 217}},
-            {146, new byte[] {0, 57, 76}},
-            {147, new byte[] {38, 66, 126}},
-            {148, new byte[] {0, 28, 38}},
-            {149, new byte[] {19, 88, 88}},
-            {150, new byte[] {0, 127, 255}},
-            {151, new byte[] {127, 191, 255}},
-            {152, new byte[] {0, 82, 165}},
-            {153, new byte[] {82, 124, 165}},
-            {154, new byte[] {0, 63, 127}},
-            {155, new byte[] {63, 95, 127}},
-            {156, new byte[] {0, 38, 76}},
-            {157, new byte[] {38, 57, 126}},
-            {158, new byte[] {0, 19, 38}},
-            {159, new byte[] {19, 28, 88}},
-            {160, new byte[] {0, 63, 255}},
-            {161, new byte[] {127, 159, 255}},
-            {162, new byte[] {0, 41, 165}},
-            {163, new byte[] {82, 103, 165}},
-            {164, new byte[] {0, 31, 127}},
-            {165, new byte[] {63, 79, 127}},
-            {166, new byte[] {0, 19, 76}},
-            {167, new byte[] {38, 47, 126}},
-            {168, new byte[] {0, 9, 38}},
-            {169, new byte[] {19, 23, 88}},
-            {170, new byte[] {0, 0, 255}},
-            {171, new byte[] {127, 127, 255}},
-            {172, new byte[] {0, 0, 165}},
-            {173, new byte[] {82, 82, 165}},
-            {174, new byte[] {0, 0, 127}},
-            {175, new byte[] {63, 63, 127}},
-            {176, new byte[] {0, 0, 76}},
-            {177, new byte[] {38, 38, 126}},
-            {178, new byte[] {0, 0, 38}},
-            {179, new byte[] {19, 19, 88}},
-            {180, new byte[] {63, 0, 255}},
-            {181, new byte[] {159, 127, 255}},
-            {182, new byte[] {41, 0, 165}},
-            {183, new byte[] {103, 82, 165}},
-            {184, new byte[] {31, 0, 127}},
-            {185, new byte[] {79, 63, 127}},
-            {186, new byte[] {19, 0, 76}},
-            {187, new byte[] {47, 38, 126}},
-            {188, new byte[] {9, 0, 38}},
-            {189, new byte[] {23, 19, 88}},
-            {190, new byte[] {127, 0, 255}},
-            {191, new byte[] {191, 127, 255}},
-            {192, new byte[] {165, 0, 82}},
-            {193, new byte[] {124, 82, 165}},
-            {194, new byte[] {63, 0, 127}},
-            {195, new byte[] {95, 63, 127}},
-            {196, new byte[] {38, 0, 76}},
-            {197, new byte[] {57, 38, 126}},
-            {198, new byte[] {19, 0, 38}},
-            {199, new byte[] {28, 19, 88}},
-            {200, new byte[] {191, 0, 255}},
-            {201, new byte[] {223, 127, 255}},
-            {202, new byte[] {124, 0, 165}},
-            {203, new byte[] {142, 82, 165}},
-            {204, new byte[] {95, 0, 127}},
-            {205, new byte[] {111, 63, 127}},
-            {206, new byte[] {57, 0, 76}},
-            {207, new byte[] {66, 38, 76}},
-            {208, new byte[] {28, 0, 38}},
-            {209, new byte[] {88, 19, 88}},
-            {210, new byte[] {255, 0, 255}},
-            {211, new byte[] {255, 127, 255}},
-            {212, new byte[] {165, 0, 165}},
-            {213, new byte[] {165, 82, 165}},
-            {214, new byte[] {127, 0, 127}},
-            {215, new byte[] {127, 63, 127}},
-            {216, new byte[] {76, 0, 76}},
-            {217, new byte[] {76, 38, 76}},
-            {218, new byte[] {38, 0, 38}},
-            {219, new byte[] {88, 19, 88}},
-            {220, new byte[] {255, 0, 191}},
-            {221, new byte[] {255, 127, 223}},
-            {222, new byte[] {165, 0, 124}},
-            {223, new byte[] {165, 82, 145}},
-            {224, new byte[] {127, 0, 95}},
-            {225, new byte[] {127, 63, 111}},
-            {226, new byte[] {76, 0, 57}},
-            {227, new byte[] {76, 38, 66}},
-            {228, new byte[] {38, 0, 28}},
-            {229, new byte[] {88, 19, 88}},
-            {230, new byte[] {255, 0, 127}},
-            {231, new byte[] {255, 127, 191}},
-            {232, new byte[] {165, 0, 82}},
-            {233, new byte[] {165, 82, 124}},
-            {234, new byte[] {127, 0, 63}},
-            {235, new byte[] {127, 63, 95}},
-            {236, new byte[] {76, 0, 38}},
-            {237, new byte[] {76, 38, 57}},
-            {238, new byte[] {38, 0, 19}},
-            {239, new byte[] {88, 19, 28}},
-            {240, new byte[] {255, 0, 63}},
-            {241, new byte[] {255, 127, 159}},
-            {242, new byte[] {165, 0, 41}},
-            {243, new byte[] {165, 82, 103}},
-            {244, new byte[] {127, 0, 31}},
-            {245, new byte[] {127, 63, 79}},
-            {246, new byte[] {76, 0, 19}},
-            {247, new byte[] {76, 38, 47}},
-            {248, new byte[] {38, 0, 9}},
-            {249, new byte[] {88, 19, 23}},
-            {250, new byte[] {0, 0, 0}},
-            {251, new byte[] {101, 101, 101}},
-            {252, new byte[] {102, 102, 102}},
-            {253, new byte[] {153, 153, 153}},
-            {254, new byte[] {204, 204, 204}},
-            {255, new byte[] {255, 255, 255}}
+            new byte[] { 255, 255, 255 },
+            new byte[] { 255, 0, 0 },
+            new byte[] { 255, 255, 0 },
+            new byte[] { 0, 255, 0 },
+            new byte[] { 0, 255, 255 },
+            new byte[] { 0, 0, 255 },
+            new byte[] { 255, 0, 255 },
+            new byte[] { 255, 255, 255 },
+            new byte[] { 128, 128, 128 },
+            new byte[] { 192, 192, 192 },
+            new byte[] { 255, 0, 0 },
+            new byte[] { 255, 127, 127 },
+            new byte[] { 165, 0, 0 },
+            new byte[] { 165, 82, 82 },
+            new byte[] { 127, 0, 0 },
+            new byte[] { 127, 63, 63 },
+            new byte[] { 76, 0, 0 },
+            new byte[] { 76, 38, 38 },
+            new byte[] { 38, 0, 0 },
+            new byte[] { 38, 19, 19 },
+            new byte[] { 255, 63, 0 },
+            new byte[] { 255, 159, 127 },
+            new byte[] { 165, 41, 0 },
+            new byte[] { 165, 103, 82 },
+            new byte[] { 127, 31, 0 },
+            new byte[] { 127, 79, 63 },
+            new byte[] { 76, 19, 0 },
+            new byte[] { 76, 47, 38 },
+            new byte[] { 38, 9, 0 },
+            new byte[] { 38, 28, 19 },
+            new byte[] { 255, 127, 0 },
+            new byte[] { 255, 191, 127 },
+            new byte[] { 165, 82, 0 },
+            new byte[] { 165, 124, 82 },
+            new byte[] { 127, 63, 0 },
+            new byte[] { 127, 95, 63 },
+            new byte[] { 76, 38, 0 },
+            new byte[] { 76, 57, 38 },
+            new byte[] { 38, 19, 0 },
+            new byte[] { 38, 28, 19 },
+            new byte[] { 255, 191, 0 },
+            new byte[] { 255, 223, 127 },
+            new byte[] { 165, 124, 0 },
+            new byte[] { 165, 145, 82 },
+            new byte[] { 127, 95, 0 },
+            new byte[] { 127, 111, 63 },
+            new byte[] { 76, 57, 0 },
+            new byte[] { 76, 66, 38 },
+            new byte[] { 38, 28, 0 },
+            new byte[] { 38, 33, 19 },
+            new byte[] { 255, 255, 0 },
+            new byte[] { 255, 255, 127 },
+            new byte[] { 165, 165, 0 },
+            new byte[] { 165, 165, 82 },
+            new byte[] { 127, 127, 0 },
+            new byte[] { 127, 127, 63 },
+            new byte[] { 76, 76, 0 },
+            new byte[] { 76, 76, 38 },
+            new byte[] { 38, 38, 0 },
+            new byte[] { 38, 38, 19 },
+            new byte[] { 191, 255, 0 },
+            new byte[] { 223, 255, 127 },
+            new byte[] { 124, 165, 0 },
+            new byte[] { 145, 165, 82 },
+            new byte[] { 95, 127, 0 },
+            new byte[] { 111, 127, 63 },
+            new byte[] { 57, 76, 0 },
+            new byte[] { 66, 76, 38 },
+            new byte[] { 28, 38, 0 },
+            new byte[] { 33, 38, 19 },
+            new byte[] { 127, 255, 0 },
+            new byte[] { 191, 255, 127 },
+            new byte[] { 82, 165, 0 },
+            new byte[] { 124, 165, 82 },
+            new byte[] { 63, 127, 0 },
+            new byte[] { 95, 127, 63 },
+            new byte[] { 38, 76, 0 },
+            new byte[] { 57, 76, 38 },
+            new byte[] { 19, 38, 0 },
+            new byte[] { 28, 38, 19 },
+            new byte[] { 63, 255, 0 },
+            new byte[] { 159, 255, 127 },
+            new byte[] { 41, 165, 0 },
+            new byte[] { 103, 165, 82 },
+            new byte[] { 31, 127, 0 },
+            new byte[] { 79, 127, 63 },
+            new byte[] { 19, 76, 0 },
+            new byte[] { 47, 76, 38 },
+            new byte[] { 9, 38, 0 },
+            new byte[] { 23, 38, 19 },
+            new byte[] { 0, 255, 0 },
+            new byte[] { 125, 255, 127 },
+            new byte[] { 0, 165, 0 },
+            new byte[] { 82, 165, 82 },
+            new byte[] { 0, 127, 0 },
+            new byte[] { 63, 127, 63 },
+            new byte[] { 0, 76, 0 },
+            new byte[] { 38, 76, 38 },
+            new byte[] { 0, 38, 0 },
+            new byte[] { 19, 38, 19 },
+            new byte[] { 0, 255, 63 },
+            new byte[] { 127, 255, 159 },
+            new byte[] { 0, 165, 41 },
+            new byte[] { 82, 165, 103 },
+            new byte[] { 0, 127, 31 },
+            new byte[] { 63, 127, 79 },
+            new byte[] { 0, 76, 19 },
+            new byte[] { 38, 76, 47 },
+            new byte[] { 0, 38, 9 },
+            new byte[] { 19, 88, 23 },
+            new byte[] { 0, 255, 127 },
+            new byte[] { 127, 255, 191 },
+            new byte[] { 0, 165, 82 },
+            new byte[] { 82, 165, 124 },
+            new byte[] { 0, 127, 63 },
+            new byte[] { 63, 127, 95 },
+            new byte[] { 0, 76, 38 },
+            new byte[] { 38, 76, 57 },
+            new byte[] { 0, 38, 19 },
+            new byte[] { 19, 88, 28 },
+            new byte[] { 0, 255, 191 },
+            new byte[] { 127, 255, 223 },
+            new byte[] { 0, 165, 124 },
+            new byte[] { 82, 165, 145 },
+            new byte[] { 0, 127, 95 },
+            new byte[] { 63, 127, 111 },
+            new byte[] { 0, 76, 57 },
+            new byte[] { 38, 76, 66 },
+            new byte[] { 0, 38, 28 },
+            new byte[] { 19, 88, 88 },
+            new byte[] { 0, 255, 255 },
+            new byte[] { 127, 255, 255 },
+            new byte[] { 0, 165, 165 },
+            new byte[] { 82, 165, 165 },
+            new byte[] { 0, 127, 127 },
+            new byte[] { 63, 127, 127 },
+            new byte[] { 0, 76, 76 },
+            new byte[] { 38, 76, 76 },
+            new byte[] { 0, 38, 38 },
+            new byte[] { 19, 88, 88 },
+            new byte[] { 0, 191, 255 },
+            new byte[] { 127, 223, 255 },
+            new byte[] { 0, 124, 165 },
+            new byte[] { 82, 145, 165 },
+            new byte[] { 0, 95, 127 },
+            new byte[] { 63, 111, 217 },
+            new byte[] { 0, 57, 76 },
+            new byte[] { 38, 66, 126 },
+            new byte[] { 0, 28, 38 },
+            new byte[] { 19, 88, 88 },
+            new byte[] { 0, 127, 255 },
+            new byte[] { 127, 191, 255 },
+            new byte[] { 0, 82, 165 },
+            new byte[] { 82, 124, 165 },
+            new byte[] { 0, 63, 127 },
+            new byte[] { 63, 95, 127 },
+            new byte[] { 0, 38, 76 },
+            new byte[] { 38, 57, 126 },
+            new byte[] { 0, 19, 38 },
+            new byte[] { 19, 28, 88 },
+            new byte[] { 0, 63, 255 },
+            new byte[] { 127, 159, 255 },
+            new byte[] { 0, 41, 165 },
+            new byte[] { 82, 103, 165 },
+            new byte[] { 0, 31, 127 },
+            new byte[] { 63, 79, 127 },
+            new byte[] { 0, 19, 76 },
+            new byte[] { 38, 47, 126 },
+            new byte[] { 0, 9, 38 },
+            new byte[] { 19, 23, 88 },
+            new byte[] { 0, 0, 255 },
+            new byte[] { 127, 127, 255 },
+            new byte[] { 0, 0, 165 },
+            new byte[] { 82, 82, 165 },
+            new byte[] { 0, 0, 127 },
+            new byte[] { 63, 63, 127 },
+            new byte[] { 0, 0, 76 },
+            new byte[] { 38, 38, 126 },
+            new byte[] { 0, 0, 38 },
+            new byte[] { 19, 19, 88 },
+            new byte[] { 63, 0, 255 },
+            new byte[] { 159, 127, 255 },
+            new byte[] { 41, 0, 165 },
+            new byte[] { 103, 82, 165 },
+            new byte[] { 31, 0, 127 },
+            new byte[] { 79, 63, 127 },
+            new byte[] { 19, 0, 76 },
+            new byte[] { 47, 38, 126 },
+            new byte[] { 9, 0, 38 },
+            new byte[] { 23, 19, 88 },
+            new byte[] { 127, 0, 255 },
+            new byte[] { 191, 127, 255 },
+            new byte[] { 165, 0, 82 },
+            new byte[] { 124, 82, 165 },
+            new byte[] { 63, 0, 127 },
+            new byte[] { 95, 63, 127 },
+            new byte[] { 38, 0, 76 },
+            new byte[] { 57, 38, 126 },
+            new byte[] { 19, 0, 38 },
+            new byte[] { 28, 19, 88 },
+            new byte[] { 191, 0, 255 },
+            new byte[] { 223, 127, 255 },
+            new byte[] { 124, 0, 165 },
+            new byte[] { 142, 82, 165 },
+            new byte[] { 95, 0, 127 },
+            new byte[] { 111, 63, 127 },
+            new byte[] { 57, 0, 76 },
+            new byte[] { 66, 38, 76 },
+            new byte[] { 28, 0, 38 },
+            new byte[] { 88, 19, 88 },
+            new byte[] { 255, 0, 255 },
+            new byte[] { 255, 127, 255 },
+            new byte[] { 165, 0, 165 },
+            new byte[] { 165, 82, 165 },
+            new byte[] { 127, 0, 127 },
+            new byte[] { 127, 63, 127 },
+            new byte[] { 76, 0, 76 },
+            new byte[] { 76, 38, 76 },
+            new byte[] { 38, 0, 38 },
+            new byte[] { 88, 19, 88 },
+            new byte[] { 255, 0, 191 },
+            new byte[] { 255, 127, 223 },
+            new byte[] { 165, 0, 124 },
+            new byte[] { 165, 82, 145 },
+            new byte[] { 127, 0, 95 },
+            new byte[] { 127, 63, 111 },
+            new byte[] { 76, 0, 57 },
+            new byte[] { 76, 38, 66 },
+            new byte[] { 38, 0, 28 },
+            new byte[] { 88, 19, 88 },
+            new byte[] { 255, 0, 127 },
+            new byte[] { 255, 127, 191 },
+            new byte[] { 165, 0, 82 },
+            new byte[] { 165, 82, 124 },
+            new byte[] { 127, 0, 63 },
+            new byte[] { 127, 63, 95 },
+            new byte[] { 76, 0, 38 },
+            new byte[] { 76, 38, 57 },
+            new byte[] { 38, 0, 19 },
+            new byte[] { 88, 19, 28 },
+            new byte[] { 255, 0, 63 },
+            new byte[] { 255, 127, 159 },
+            new byte[] { 165, 0, 41 },
+            new byte[] { 165, 82, 103 },
+            new byte[] { 127, 0, 31 },
+            new byte[] { 127, 63, 79 },
+            new byte[] { 76, 0, 19 },
+            new byte[] { 76, 38, 47 },
+            new byte[] { 38, 0, 9 },
+            new byte[] { 88, 19, 23 },
+            new byte[] { 0, 0, 0 },
+            new byte[] { 101, 101, 101 },
+            new byte[] { 102, 102, 102 },
+            new byte[] { 153, 153, 153 },
+            new byte[] { 204, 204, 204 },
+            new byte[] { 255, 255, 255 }
         };
 
         #endregion
@@ -318,7 +319,7 @@ namespace netDxf
         /// </summary>
         public static AciColor ByLayer
         {
-            get { return new AciColor {index = 256}; }
+            get { return new AciColor { index = 256 }; }
         }
 
         /// <summary>
@@ -326,7 +327,7 @@ namespace netDxf
         /// </summary>
         public static AciColor ByBlock
         {
-            get { return new AciColor {index = 0}; }
+            get { return new AciColor { index = 0 }; }
         }
 
         /// <summary>
@@ -402,14 +403,15 @@ namespace netDxf
         }
 
         /// <summary>
-        /// A dictionary that contains the indexed colors, the key represents the color index and the value the RGB components of the color.
+        /// A list that contains the indexed colors, the key represents the color index and the value the RGB components of the color.
         /// </summary>
         /// <remarks>
         /// This is the AutoCad default ACI color index to RGB values table.
         /// Changes in the actual view background color in AutoCad might produce changes in the RGB equivalents in some ACI color indexes,
-        /// specially the darkest ones.
+        /// specially the darkest ones.<br />
+        /// The color at index zero is not used, represents the RGB values for abstract colors such as ByLayer or ByBlock
         /// </remarks>
-        public static IReadOnlyDictionary<byte, byte[]> IndexRgb
+        public static IReadOnlyList<byte[]> IndexRgb
         {
             get { return indexRgb; }
         }
@@ -427,6 +429,16 @@ namespace netDxf
         }
 
         /// <summary>
+        /// Initializes a new instance of the <c>AciColor</c> class from an array of three values.
+        /// </summary>
+        /// <param name="rgb">RGB components (input values range from 0 to 255). The array must contain three values.</param>
+        /// <remarks>By default the UseTrueColor will be set to true.</remarks>
+        public AciColor(byte[] rgb)
+            : this(rgb[0], rgb[1], rgb[2])
+        {
+        }
+
+        /// <summary>
         /// Initializes a new instance of the <c>AciColor</c> class.
         /// </summary>
         ///<param name="r">Red component (input values range from 0 to 255).</param>
@@ -440,6 +452,16 @@ namespace netDxf
             this.b = b;
             this.useTrueColor = true;
             this.index = RgbToAci(this.r, this.g, this.b);
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <c>AciColor</c> class from an array of three values.
+        /// </summary>
+        /// <param name="rgb">RGB components (input values range from 0 to 1). The array must contain three values.</param>
+        /// <remarks>By default the UseTrueColor will be set to true.</remarks>
+        public AciColor(double[] rgb)
+            : this(rgb[0], rgb[1], rgb[2])
+        {
         }
 
         /// <summary>
@@ -493,7 +515,9 @@ namespace netDxf
         public AciColor(short index)
         {
             if (index <= 0 || index >= 256)
+            {
                 throw new ArgumentOutOfRangeException(nameof(index), index, "Accepted color index values range from 1 to 255.");
+            }
 
             byte[] rgb = IndexRgb[(byte) index];
             this.r = rgb[0];
@@ -599,25 +623,44 @@ namespace netDxf
         /// <returns>The approximate color index from the RGB components.</returns>
         public static byte RgbToAci(byte r, byte g, byte b)
         {
-            int prevDist = Int32.MaxValue;
+            int prevDist = int.MaxValue;
             byte index = 0;
-            foreach (byte key in IndexRgb.Keys)
+            for (int i = 1; i < 256; i++)
             {
-                byte[] color = IndexRgb[key];
+                byte[] color = IndexRgb[i];
                 int red = r - color[0];
                 int green = g - color[1];
                 int blue = b - color[2];
                 int dist = red * red + green * green + blue * blue;
                 if (dist == 0) // the RGB components correspond to one of the indexed colors
                 {
-                    return key;
+                    return (byte)i;
                 }
                 if (dist < prevDist)
                 {
                     prevDist = dist;
-                    index = key;
+                    index = (byte)i;
                 }
             }
+
+            //byte index = 0;
+            //foreach (byte[]  in IndexRgb.Keys)
+            //{
+            //    byte[] color = IndexRgb[key];
+            //    int red = r - color[0];
+            //    int green = g - color[1];
+            //    int blue = b - color[2];
+            //    int dist = red * red + green * green + blue * blue;
+            //    if (dist == 0) // the RGB components correspond to one of the indexed colors
+            //    {
+            //        return key;
+            //    }
+            //    if (dist < prevDist)
+            //    {
+            //        prevDist = dist;
+            //        index = key;
+            //    }
+            //}
 
             return index;
         }

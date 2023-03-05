@@ -1,7 +1,7 @@
 #region netDxf library licensed under the MIT License
 // 
 //                       netDxf library
-// Copyright (c) 2019-2021 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (c) 2019-2023 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -36,7 +36,6 @@ namespace netDxf.Header
         [StringValue("Unknown")]
         Unknown,
 
-        /*
         /// <summary>
         /// AutoCAD R1.1 DXF file. AutoCAD release 1.1.
         /// </summary>
@@ -84,7 +83,6 @@ namespace netDxf.Header
         /// </summary>
         [StringValue("AC1004")]
         AutoCad9,
-        */
 
         /// <summary>
         /// AutoCAD R10 DXF file. AutoCAD release 10.
@@ -141,7 +139,7 @@ namespace netDxf.Header
         AutoCad2013,
 
         /// <summary>
-        /// AutoCAD 2018 DXF file. AutoCAD 2018/2019/2020/2021.
+        /// AutoCAD 2018 DXF file. AutoCAD 2018/2019/2020/2021/2022/2023.
         /// </summary>
         [StringValue("AC1032")]
         AutoCad2018
