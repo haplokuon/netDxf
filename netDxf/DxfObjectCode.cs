@@ -512,5 +512,9 @@ namespace netDxf
         /// MLeader style.
         /// </summary>
         public const string MLeaderStyle = "MLEADERSTYLE";
+        /// <summary>
+        /// Ole2Frame.
+        /// </summary>
+        public const string Ole2FrameSection = "OLE2FRAME";
     }
 }
