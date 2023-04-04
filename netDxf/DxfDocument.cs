@@ -33,6 +33,7 @@ using netDxf.Header;
 using netDxf.IO;
 using netDxf.Objects;
 using netDxf.Tables;
+using netDxf.Entities.MLeader;
 using Attribute = netDxf.Entities.Attribute;
 
 namespace netDxf
@@ -89,6 +90,7 @@ namespace netDxf
         private Groups groups;
         private Layouts layouts;
         private RasterVariables rasterVariables;
+        private MLeaderStyles mleaderStyles;
 
         #endregion
 
@@ -468,6 +470,14 @@ namespace netDxf
         {
             get { return this.entities; }
         }
+
+
+        public MLeaderStyles MLeaderStyles
+        {
+            get { return this.mleaderStyles; }
+            internal set { this.mleaderStyles = value; }
+        }
+
 
         #endregion
 
@@ -976,6 +986,21 @@ namespace netDxf
                     viewport.ClippingBoundaryAdded += this.Viewport_ClippingBoundaryAdded;
                     viewport.ClippingBoundaryRemoved += this.Viewport_ClippingBoundaryRemoved;
                     break;
+                case EntityType.MLeader:
+                    var mleader = (MLeader)entity;
+                    if (mleader.StyleHandle is not null)
+                    {
+                        foreach (var style in this.MLeaderStyles)
+                        {
+                            if (style.Handle == mleader.StyleHandle)
+                            {
+                                mleader.MLeaderStyle = style;
+                                break;
+                            }
+                        }
+                    }
+                    break;
+
                 default:
                     throw new ArgumentException("The entity " + entity.Type + " is not implemented or unknown.");
             }
@@ -1367,6 +1392,7 @@ namespace netDxf
             this.underlayPdfDefs = new UnderlayPdfDefinitions(this);
             this.groups = new Groups(this);
             this.layouts = new Layouts(this);
+            this.mleaderStyles = new MLeaderStyles(this);
 
             //add default viewport (the active viewport is automatically added when the collection is created, is the only one supported)
             //this.vports.Add(VPort.Active);

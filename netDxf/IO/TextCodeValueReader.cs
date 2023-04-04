@@ -53,6 +53,14 @@ namespace netDxf.IO
             this.currentPosition = 0;
         }
 
+        private TextCodeValueReader(TextReader reader, short code, object value, long currentPosition)
+        {
+            this.reader = reader;
+            this.code = code;
+            this.value = value;
+            this.currentPosition = currentPosition;
+        }
+        
         #endregion
 
         #region public properties
@@ -435,5 +443,6 @@ namespace netDxf.IO
         }
 
         #endregion
+        public ICodeValueReader Clone() => new TextCodeValueReader(reader, Code, Value, CurrentPosition);
     }
 }

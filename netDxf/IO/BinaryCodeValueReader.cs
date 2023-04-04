@@ -46,6 +46,14 @@ namespace netDxf.IO
 
         #region constructors
 
+        private BinaryCodeValueReader(BinaryReader reader, short code, object value, Encoding encoding)
+        {
+            this.reader = reader;
+            this.code = code;
+            this.value = value;
+            this.encoding = encoding;
+        }
+        
         public BinaryCodeValueReader(BinaryReader reader, Encoding encoding)
         {
             this.reader = reader;
@@ -352,6 +360,8 @@ namespace netDxf.IO
 
         }
 
-        #endregion       
+        #endregion  
+        
+        public ICodeValueReader Clone() => new BinaryCodeValueReader(reader, Code, Value, encoding);
     }
 }
