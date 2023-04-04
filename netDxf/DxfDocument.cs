@@ -1200,6 +1200,8 @@ namespace netDxf
                     viewport.ClippingBoundaryRemoved -= this.Viewport_ClippingBoundaryRemoved;
 
                     break;
+                case EntityType.Ole2Frame:
+                    break;
                 default:
                     throw new ArgumentException("The entity " + entity.Type + " is not implemented or unknown");
             }
