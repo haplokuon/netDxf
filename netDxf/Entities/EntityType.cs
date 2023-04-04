@@ -30,6 +30,12 @@ namespace netDxf.Entities
     /// </summary>
     public enum EntityType
     {
+        
+        /// <summary>
+        /// MLeader entity.
+        /// </summary>
+        MLeader,
+        
         /// <summary>
         /// Arc entity.
         /// </summary>

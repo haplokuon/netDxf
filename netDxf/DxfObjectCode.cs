@@ -354,6 +354,15 @@ namespace netDxf
         /// MLine.
         /// </summary>
         public const string MLine = "MLINE";
+        /// <summary>
+        /// MLeader styles as table.
+        /// </summary>
+        public const string MLeaderStyleTable = "MLEADERSTYLE";
+        
+        /// <summary>
+        /// MLeader.
+        /// </summary>
+        public const string MLeader = "MULTILEADER";
 
         /// <summary>
         /// 3d face.
@@ -499,5 +508,9 @@ namespace netDxf
         /// Layouts.
         /// </summary>
         public const string Layout = "LAYOUT";
+        /// <summary>
+        /// MLeader style.
+        /// </summary>
+        public const string MLeaderStyle = "MLEADERSTYLE";
     }
 }

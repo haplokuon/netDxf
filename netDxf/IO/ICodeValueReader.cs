@@ -52,5 +52,7 @@ namespace netDxf.IO
         double ReadDouble();
         string ReadString();
         string ReadHex();
+        
+        public ICodeValueReader Clone();
     }
 }

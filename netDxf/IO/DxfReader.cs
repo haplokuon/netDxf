@@ -124,6 +124,10 @@ namespace netDxf.IO
         private Dictionary<Underlay, string> underlayToDefinitionHandles;
         private Dictionary<string, UnderlayDefinition> underlayDefHandles;
 
+        // the MLineStyles are defined, in the objects section, AFTER the MLine that references them,
+        // temporarily this variables will store information to post process the MLine list
+        private Dictionary<MLeader, string> mLeaderToStyleHandle;
+
         // temporarily this dictionary will store information to check any possible errors on model and paper space layouts
         private Dictionary<string, BlockRecord> blockRecordPointerToLayout;
         private List<Layout> orphanLayouts;
@@ -139,6 +143,16 @@ namespace netDxf.IO
         #region constructors
 
         #endregion
+
+        public const short START_CONTEXT_DATA = 300;
+        public const short END_CONTEXT_DATA = 301;
+        public const short START_LEADER = 302;
+        public const short END_LEADER = 303;
+        public const short START_LEADER_LINE = 304;
+        public const short END_LEADER_LINE = 305;
+        public const string CONTEXT_STR = "CONTEXT_DATA{";
+        public const string LEADER_STR = "LEADER{";
+        public const string LEADER_LINE_STR = "LEADER_LINE{";
 
         #region public methods
 
@@ -244,6 +258,7 @@ namespace netDxf.IO
             this.imgDefHandles = new Dictionary<string, ImageDefinition>(StringComparer.OrdinalIgnoreCase);
             this.imgToImgDefHandles = new Dictionary<Image, string>();
             this.mLineToStyleNames = new Dictionary<MLine, string>();
+            this.mLeaderToStyleHandle = new Dictionary<MLeader, string>();
             this.underlayToDefinitionHandles = new Dictionary<Underlay, string>();
             this.underlayDefHandles = new Dictionary<string, UnderlayDefinition>();
             this.layerStateManagerDictionaryHandle = string.Empty;
@@ -1062,6 +1077,14 @@ namespace netDxf.IO
                     case DxfObjectCode.ImageDefReactor:
                         // this information is not needed
                         ImageDefinitionReactor reactor = this.ReadImageDefReactor();
+                        break;
+                    case DxfObjectCode.MLeaderStyleTable:
+                        var mstyle = this.ReadMLeaderStyle();
+                        if (mstyle != null)
+                        {
+                            this.doc.MLeaderStyles.Add(mstyle, false);
+                        }
+
                         break;
                     case DxfObjectCode.MLineStyle:
                         MLineStyle style = this.ReadMLineStyle();
@@ -2662,6 +2685,323 @@ namespace netDxf.IO
             return segment;
         }
 
+ private MLeaderStyle ReadMLeaderStyle()
+    {
+
+        var contentType = MLeaderContentType.MTextContent;
+        var drawMLeaderOrderType = 1;
+        var drawLeaderOrderType = 0;
+        var maxLeaderSegmentsPoints = 2;
+        var firstSegmentAngleConstraint = 0.0;
+        var secondSegmentAngleConstraint = 0.0;
+        // # leader_type:
+        // # 0 = invisible
+        // # 1 = straight line leader
+        // # 2 = spline leader
+        var leaderType = MLeaderType.StraightLine;
+        var leaderLineColor = -1056964608;
+        string? leaderLinetypeHandle = null;
+        var leaderLineweight = -2;
+        var hasLanding = true;
+        var landingGapSize = 2.0;
+        var hasDogLeg = true;
+        double doglegLength = 8;
+        var name = "Standard";
+        string? arrowHeadHandle = null; // no handle is default arrow 'closed filled':
+        double arrowHeadSize = 4;
+        var defaultTextContent = "";
+        string? textStyleHandle = null;
+        short textLeftAttachmentType = 1;
+        short textAngleType = 1;
+        short textAlignmentType = 0;
+        short textRightAttachmentType = 1;
+        var textColor = -1056964608;
+        double charHeight = 4;
+        var hasTextFrame = false;
+        var textAlignAlwaysLeft = false;
+        double alignSpace = 4;
+        var hasBlockScaling = false;
+        string? blockRecordHandle = null;
+        var blockColor = -1056964608;
+        double blockScaleX = 1;
+        double blockScaleY = 1;
+        double blockScaleZ = 1;
+        var hasBlockRotation = true;
+        double blockRotation = 0;
+        short blockConnectionType = 0;
+        double scale = 1;
+        var overwritePropertyValue = false;
+        var isAnnotative = false;
+        var breakGapSize = 3.75;
+        short textAttachmentDirection = 0; //# 0 = Horizontal; 1 = Vertical:
+        short textBottomAttachmentType = 9; //# 9 = Center; 10 = Underline and Center:
+        short textTopAttachmentType = 9; //# 9 = Center; 10 = Overline and Center:
+
+        string? handle = null;
+
+        var xData = new List<XData>();
+
+        this.chunk.Next();
+        while (this.chunk.Code != 0)
+        {
+            switch (this.chunk.Code)
+            {
+                case 5:
+                    handle = this.chunk.ReadHex();
+                    this.chunk.Next();
+                    break;
+                case 170:
+                    contentType = (MLeaderContentType)this.chunk.ReadShort();
+                    this.chunk.Next();
+                    break;
+                case 171:
+                    drawMLeaderOrderType = this.chunk.ReadShort();
+                    this.chunk.Next();
+                    break;
+                case 172:
+                    drawLeaderOrderType = this.chunk.ReadShort();
+                    this.chunk.Next();
+                    break;
+                case 90:
+                    maxLeaderSegmentsPoints = this.chunk.ReadInt();
+                    this.chunk.Next();
+                    break;
+                case 40:
+                    firstSegmentAngleConstraint = this.chunk.ReadDouble();
+                    this.chunk.Next();
+                    break;
+                case 41:
+                    secondSegmentAngleConstraint = this.chunk.ReadDouble();
+                    this.chunk.Next();
+                    break;
+                case 173:
+                    leaderType = (MLeaderType)this.chunk.ReadShort();
+                    this.chunk.Next();
+                    break;
+                case 91:
+                    leaderLineColor = this.chunk.ReadInt();
+                    this.chunk.Next();
+                    break;
+                case 340:
+                    leaderLinetypeHandle = this.chunk.ReadString();
+                    this.chunk.Next();
+                    break;
+                case 92:
+                    leaderLineweight = this.chunk.ReadInt();
+                    this.chunk.Next();
+                    break;
+                case 290:
+                    hasLanding = this.chunk.ReadBool();
+                    this.chunk.Next();
+                    break;
+                case 42:
+                    landingGapSize = this.chunk.ReadDouble();
+                    this.chunk.Next();
+                    break;
+                case 291:
+                    hasDogLeg = this.chunk.ReadBool();
+                    this.chunk.Next();
+                    break;
+                case 43:
+                    doglegLength = this.chunk.ReadDouble();
+                    this.chunk.Next();
+                    break;
+                case 3:
+                    var readValue = this.chunk.ReadString();
+
+                    if (readValue.Length > 0)
+                    {
+                        name = readValue;
+                    }
+
+                    this.chunk.Next();
+                    break;
+                case 341:
+                    arrowHeadHandle = this.chunk.ReadString();
+                    this.chunk.Next();
+                    break;
+                case 44:
+                    arrowHeadSize = this.chunk.ReadDouble();
+                    this.chunk.Next();
+                    break;
+                case 300:
+                    defaultTextContent = this.chunk.ReadString();
+                    this.chunk.Next();
+                    break;
+                case 342:
+                    textStyleHandle = this.chunk.ReadString();
+                    this.chunk.Next();
+                    break;
+                case 174:
+                    textLeftAttachmentType = this.chunk.ReadShort();
+                    this.chunk.Next();
+                    break;
+                case 175:
+                    textAngleType = this.chunk.ReadShort();
+                    this.chunk.Next();
+                    break;
+                case 176:
+                    textAlignmentType = this.chunk.ReadShort();
+                    this.chunk.Next();
+                    break;
+                case 178:
+                    textRightAttachmentType = this.chunk.ReadShort();
+                    this.chunk.Next();
+                    break;
+                case 93:
+                    textColor = this.chunk.ReadInt();
+                    this.chunk.Next();
+                    break;
+                case 45:
+                    charHeight = this.chunk.ReadDouble();
+                    this.chunk.Next();
+                    break;
+                case 292:
+                    hasTextFrame = this.chunk.ReadBool();
+                    this.chunk.Next();
+                    break;
+                case 297:
+                    textAlignAlwaysLeft = this.chunk.ReadBool();
+                    this.chunk.Next();
+                    break;
+                case 46:
+                    alignSpace = this.chunk.ReadDouble();
+                    this.chunk.Next();
+                    break;
+                case 293:
+                    hasBlockScaling = this.chunk.ReadBool();
+                    this.chunk.Next();
+                    break;
+                case 343:
+                    blockRecordHandle = this.chunk.ReadString();
+                    this.chunk.Next();
+                    break;
+                case 94:
+                    blockColor = this.chunk.ReadInt();
+                    this.chunk.Next();
+                    break;
+                case 47:
+                    blockScaleX = this.chunk.ReadDouble();
+                    this.chunk.Next();
+                    break;
+                case 49:
+                    blockScaleY = this.chunk.ReadDouble();
+                    this.chunk.Next();
+                    break;
+                case 140:
+                    blockScaleZ = this.chunk.ReadDouble();
+                    this.chunk.Next();
+                    break;
+                case 294:
+                    hasBlockRotation = this.chunk.ReadBool();
+                    this.chunk.Next();
+                    break;
+                case 141:
+                    blockRotation = this.chunk.ReadDouble();
+                    this.chunk.Next();
+                    break;
+                case 177:
+                    blockConnectionType = this.chunk.ReadShort();
+                    this.chunk.Next();
+                    break;
+                case 142:
+                    scale = this.chunk.ReadDouble();
+                    this.chunk.Next();
+                    break;
+                case 295:
+                    overwritePropertyValue = this.chunk.ReadBool();
+                    this.chunk.Next();
+                    break;
+                case 296:
+                    isAnnotative = this.chunk.ReadBool();
+                    this.chunk.Next();
+                    break;
+                case 143:
+                    breakGapSize = this.chunk.ReadDouble();
+                    this.chunk.Next();
+                    break;
+                case 271:
+                    textAttachmentDirection = this.chunk.ReadShort();
+                    this.chunk.Next();
+                    break;
+                case 272:
+                    textBottomAttachmentType = this.chunk.ReadShort();
+                    this.chunk.Next();
+                    break;
+                case 273:
+                    textTopAttachmentType = this.chunk.ReadShort();
+                    this.chunk.Next();
+                    break;
+                case 1001:
+                    var appId = this.DecodeEncodedNonAsciiCharacters(this.chunk.ReadString());
+                    var data = this.ReadXDataRecord(new ApplicationRegistry(appId));
+                    xData.Add(data);
+                    break;
+                default:
+                    Debug.Assert(!(this.chunk.Code >= 1000 && this.chunk.Code <= 1071),
+                        "The extended data of an entity must start with the application registry code.");
+                    this.chunk.Next();
+                    break;
+            }
+        }
+
+        if (handle is null)
+        {
+            return null;
+        }
+
+        var newStyle = new MLeaderStyle(name)
+        {
+            Handle = handle,
+            ContentType = contentType,
+            DrawMLeaderOrderType = drawMLeaderOrderType,
+            DrawLeaderOrderType = drawLeaderOrderType,
+            MaxLeaderSegmentsPoints = maxLeaderSegmentsPoints,
+            FirstSegmentAngleConstraint = firstSegmentAngleConstraint,
+            SecondSegmentAngleConstraint = secondSegmentAngleConstraint,
+            LeaderType = leaderType,
+            LeaderLineColor = leaderLineColor,
+            LeaderLinetypeHandle = leaderLinetypeHandle,
+            LeaderLineweight = leaderLineweight,
+            HasLanding = hasLanding,
+            LandingGapSize = landingGapSize,
+            HasDogLeg = hasDogLeg,
+            DoglegLength = doglegLength,
+            ArrowHeadHandle = arrowHeadHandle,
+            ArrowHeadSize = arrowHeadSize,
+            DefaultTextContent = defaultTextContent,
+            TextStyleHandle = textStyleHandle,
+            TextLeftAttachmentType = textLeftAttachmentType,
+            TextAngleType = textAngleType,
+            TextAlignmentType = textAlignmentType,
+            TextRightAttachmentType = textRightAttachmentType,
+            TextColor = textColor,
+            CharHeight = charHeight,
+            HasTextFrame = hasTextFrame,
+            TextAlignAlwaysLeft = textAlignAlwaysLeft,
+            AlignSpace = alignSpace,
+            HasBlockScaling = hasBlockScaling,
+            BlockRecordHandle = blockRecordHandle,
+            BlockColor = blockColor,
+            BlockScaleX = blockScaleX,
+            BlockScaleY = blockScaleY,
+            BlockScaleZ = blockScaleZ,
+            HasBlockRotation = hasBlockRotation,
+            BlockRotation = blockRotation,
+            BlockConnectionType = blockConnectionType,
+            Scale = scale,
+            OverwritePropertyValue = overwritePropertyValue,
+            IsAnnotative = isAnnotative,
+            BreakGapSize = breakGapSize,
+            TextAttachmentDirection = textAttachmentDirection,
+            TextBottomAttachmentType = textBottomAttachmentType,
+            TextTopAttachmentType = textTopAttachmentType
+        };
+
+        return newStyle;
+
+    }
+
         private DxfObject ReadTextStyle()
         {
             // this method will read both text and shape styles their definitions appear in the same table list
@@ -3976,6 +4316,9 @@ namespace netDxf.IO
                 case DxfObjectCode.Mesh:
                     dxfObject = this.ReadMesh();
                     break;
+                                case DxfObjectCode.MLeader:
+                                    dxfObject = this.ReadMLeader();
+                                    break;
                 case DxfObjectCode.MLine:
                     dxfObject = this.ReadMLine();
                     break;
@@ -8090,6 +8433,134 @@ namespace netDxf.IO
             return insert;
         }
 
+  private MLeader ReadMLeader()
+    {
+
+        // How to render MLEADER: https://atlight.github.io/formats/dxf-leader.html
+        //https://documentation.help/AutoCAD-DXF/WS1a9193826455f5ffc751fd10f4618e369-5bdf.htm
+
+        var xData = new List<XData>();
+        var rebuildedMLeaderContext = new List<object>();
+        var normalOtherTags = new List<ICodeValueReader>();
+
+        this.chunk.Next();
+
+
+        while (this.chunk.Code != 0)
+        {
+            switch (this.chunk.Code)
+            {
+                case START_CONTEXT_DATA when (string)this.chunk.Value == CONTEXT_STR:
+                    {
+                        rebuildedMLeaderContext =
+                            CompileMLeaderContextTags(); //MLeaderContextData is always first - lets get it and move chunks
+
+                        this.chunk.Next(); // ignore END_CONTEXT code
+                        break;
+                    }
+                case 1001:
+                    var appId = this.DecodeEncodedNonAsciiCharacters(this.chunk.ReadString());
+                    var data = this.ReadXDataRecord(this.GetApplicationRegistry(appId));
+                    xData.Add(data);
+
+                    break;
+
+                default:
+                    {
+                        Debug.Assert(!(this.chunk.Code >= 1000 && this.chunk.Code <= 1071), "The extended data of an entity must start with the application registry code.");
+                        normalOtherTags.Add(this.chunk.Clone());
+                        this.chunk.Next();
+                        break;
+                    }
+            }
+
+        }
+
+    private List<object> CompileMLeaderContextTags() // returns Tree structure
+    {
+
+        List<object> BuildStructure(int stopCode)
+        {
+            var collector = new List<object>() { this.chunk.Clone() };
+            this.chunk.Next();
+            while (this.chunk.Code != stopCode)
+            {
+                if (this.chunk.Code == START_LEADER)
+                {
+                    collector.Add(BuildStructure(END_LEADER));
+                }
+                // # Group code 304 is used also for MTEXT content, therefore always
+                // # test for group code AND and value string:
+                else if (this.chunk.Code == START_LEADER_LINE && this.chunk.Value is string && (string)this.chunk.Value == LEADER_LINE_STR)
+                {
+                    collector.Add(BuildStructure(END_LEADER_LINE));
+                }
+                else
+                {
+                    collector.Add(this.chunk.Clone());
+                }
+                this.chunk.Next();
+            }
+            return collector;
+
+        }
+
+        return BuildStructure(END_CONTEXT_DATA);
+    }
+
+    private static void DebugMLeaderMContext(List<object> rebuildedMLeaderContext)
+    {
+        Console.WriteLine($" {rebuildedMLeaderContext.Count} rebuilded MContext chunks");
+        foreach (var obj in rebuildedMLeaderContext)
+        {
+            try
+            {
+                if (obj is ICodeValueReader tag)
+                {
+                    Console.WriteLine($"{tag.Code} : {tag.Value}");
+                }
+                else
+                {
+                    var lobj = (List<object>)obj;
+                    if (lobj is not null)
+                    {
+                        Console.WriteLine($" === LEADER Structure START: {lobj.Count} === ");
+                        foreach (var o in lobj)
+                        {
+                            if (o is ICodeValueReader t)
+                            {
+                                Console.WriteLine($"{t.Code} : {t.Value}");
+                            }
+                            else
+                            {
+                                var lo = (List<object>)obj;
+                                Console.WriteLine($" === LEADER LINE Structure START : {lo.Count} === ");
+                                foreach (var loData in lo)
+                                {
+                                    if (loData is ICodeValueReader loTagData)
+                                        Console.WriteLine($"{loTagData.Code} : {loTagData.Value}");
+                                }
+                                Console.WriteLine($" === LEADER LINE Structure END : {lo.Count} === ");
+
+                            }
+                        }
+                        Console.WriteLine($" === LEADER Structure END === ");
+                    }
+
+
+                }
+
+
+            }
+            catch (Exception e)
+            {
+                throw;
+            }
+
+
+        }
+    }
+
         private Line ReadLine()
         {
             Vector3 start = Vector3.Zero;
@@ -10004,6 +10475,7 @@ namespace netDxf.IO
             string underlayDgnDefsHandle = null;
             string underlayDwfDefsHandle = null;
             string underlayPdfDefsHandle = null;
+            string mleaderStylesHandle = null;
             foreach (KeyValuePair<string, string> entry in namedDict.Entries)
             {
                 switch (entry.Value)
@@ -10029,6 +10501,9 @@ namespace netDxf.IO
                     case DxfObjectCode.UnderlayPdfDefinitionDictionary:
                         underlayPdfDefsHandle = entry.Key;
                         break;
+                    case DxfObjectCode.MLeaderStyleDictionary:
+                                            mleaderStylesHandle = entry.Key;
+                                            break;
                 }
             }
 
@@ -10036,6 +10511,7 @@ namespace netDxf.IO
             this.doc.Groups = new Groups(this.doc, groupsHandle);
             this.doc.Layouts = new Layouts(this.doc, layoutsHandle);
             this.doc.Layouts.XData.AddRange(namedDict.XData.Values);
+            this.doc.MLeaderStyles = new MLeaderStyles(this.doc, mleaderStylesHandle);
             this.doc.MlineStyles = new MLineStyles(this.doc, mlineStylesHandle);
             this.doc.ImageDefinitions = new ImageDefinitions(this.doc, imageDefsHandle);
             this.doc.UnderlayDgnDefinitions = new UnderlayDgnDefinitions(this.doc, underlayDgnDefsHandle);
@@ -11246,6 +11722,13 @@ namespace netDxf.IO
                 mline.Style = this.GetMLineStyle(pair.Value);
             }
 
+            // post process the MLeader to assign their MLeaderStyles
+            foreach (var mpair in this.mLeaderToStyleHandle)
+            {
+                var mleader = mpair.Key;
+                mleader.MLeaderStyle = this.GetMLeaderStyle(mpair.Value);
+            }
+
             // post process the entities of the blocks
             foreach (KeyValuePair<Block, List<EntityObject>> pair in this.blockEntities)
             {
@@ -12043,6 +12526,21 @@ namespace netDxf.IO
             }
 
             return this.doc.MlineStyles.Add(new MLineStyle(name));
+        }
+        
+        private MLeaderStyle GetMLeaderStyle(string handle)
+        {
+
+            foreach (var style in this.doc.MLeaderStyles)
+            {
+                if (style.Handle == handle)
+                {
+                    return style;
+                }
+            }
+
+            return MLeaderStyle.Default;
+
         }
 
         #endregion
