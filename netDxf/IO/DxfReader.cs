@@ -4373,6 +4373,9 @@ namespace netDxf.IO
                 case DxfObjectCode.AcadTable:
                     dxfObject = this.ReadAcadTable(isBlockEntity);
                     break;
+                case DxfObjectCode.Ole2FrameSection:
+                    dxfObject = this.ReadOle2Frame();
+                    break;
                 default:
                     this.ReadUnknowData();
                     return null;
@@ -7744,6 +7747,126 @@ namespace netDxf.IO
 
             return entity;
         }
+
+ private Ole2Frame ReadOle2Frame()
+    {
+        //https://help.autodesk.com/view/OARX/2023/ENU/?guid=GUID-77747CE6-82C6-4452-97ED-4CEEB38BE960
+        var upperLeftcorner = Vector3.Zero;
+        var lowerRightCorner = Vector3.Zero;
+        short? version = null;
+        Ole2FrameType? oleType = null;
+        var normal = Vector3.UnitZ;
+        var oleFrameBytes = new List<Byte>();
+
+        int? exceptedBinaryLenght = null;
+        var xData = new List<XData>();
+
+        this.chunk.Next();
+        while (this.chunk.Code != 0)
+        {
+            switch (this.chunk.Code)
+            {
+
+                case 10:
+                    upperLeftcorner.X = this.chunk.ReadDouble();
+                    this.chunk.Next();
+                    break;
+                case 20:
+                    upperLeftcorner.Y = this.chunk.ReadDouble();
+                    this.chunk.Next();
+                    break;
+                case 30:
+                    upperLeftcorner.Z = this.chunk.ReadDouble();
+                    this.chunk.Next();
+                    break;
+
+                case 11:
+                    lowerRightCorner.X = this.chunk.ReadDouble();
+                    this.chunk.Next();
+                    break;
+                case 21:
+                    lowerRightCorner.Y = this.chunk.ReadDouble();
+                    this.chunk.Next();
+                    break;
+                case 31:
+                    lowerRightCorner.Z = this.chunk.ReadDouble();
+                    this.chunk.Next();
+                    break;
+
+                case 70:
+                    version = this.chunk.ReadShort();
+                    this.chunk.Next();
+                    break;
+
+
+
+                case 73: //Docs says 71... but it may be wrong
+
+                    switch (this.chunk.ReadShort())
+                    {
+                        case 1:
+                            oleType = Ole2FrameType.Link;
+                            break;
+                        case 2:
+                            oleType = Ole2FrameType.Embedded;
+                            break;
+                        case 3:
+                            oleType = Ole2FrameType.Static;
+                            break;
+                    }
+
+
+
+
+                    this.chunk.Next();
+                    break;
+
+                case 90:
+                    exceptedBinaryLenght = this.chunk.ReadInt();
+                    this.chunk.Next();
+                    break;
+
+                case 310:
+
+                    oleFrameBytes.AddRange(this.chunk.ReadBytes());
+                    this.chunk.Next();
+                    break;
+
+                case 1001:
+                    var appId = this.DecodeEncodedNonAsciiCharacters(this.chunk.ReadString());
+                    var data = this.ReadXDataRecord(this.GetApplicationRegistry(appId));
+                    xData.Add(data);
+                    break;
+                default:
+                    Debug.Assert(!(this.chunk.Code >= 1000 && this.chunk.Code <= 1071), "The extended data of an entity must start with the application registry code.");
+                    this.chunk.Next();
+                    break;
+            }
+        }
+
+        if (exceptedBinaryLenght is null)
+        {
+            throw new Exception("Failed to load Ole2Frame - exceptedBinaryLenght is null");
+        }
+        if (version is null)
+        {
+            throw new Exception("Failed to load Ole2Frame - Ole version is null");
+        }
+        else if (oleType is null)
+        {
+            throw new Exception("Failed to load Ole2Frame - Ole Type is null");
+        }
+        else if (oleFrameBytes.Count == 0 || exceptedBinaryLenght.Value! != oleFrameBytes.Count)
+        {
+            throw new Exception("Failed to load Ole2Frame - HexData doesn't exist");
+        }
+
+        var entity = new Ole2Frame(version.Value, upperLeftcorner, lowerRightCorner, oleFrameBytes.ToArray(), oleType.Value);
+        entity.XData.AddRange(xData);
+
+        return entity;
+
+    }
 
         private Shape ReadShape()
         {
