@@ -8556,7 +8556,7 @@ namespace netDxf.IO
             return insert;
         }
 
-  private MLeader ReadMLeader()
+    private MLeader ReadMLeader()
     {
 
         // How to render MLEADER: https://atlight.github.io/formats/dxf-leader.html
@@ -8598,6 +8598,36 @@ namespace netDxf.IO
             }
 
         }
+
+
+        //DxfMLeaderRebuilder.DebugMLeaderMContext(rebuildedMLeaderContext, allMleaderChunks);
+
+        var mleader = MLeader.Load(normalOtherTags, rebuildedMLeaderContext);
+
+        if (mleader.Context.MText is not null) // we must update MText style here
+        {
+
+            foreach (var style in this.doc.TextStyles)
+            {
+                if (style.Handle == mleader.Context.MText.StyleHandle)
+                {
+                    mleader.Context.MText.TextStyle = style;
+                    break;
+                }
+            }
+        }
+
+
+
+        mleader.XData.AddRange(xData);
+        if (mleader.StyleHandle is not null)
+        {
+            this.mLeaderToStyleHandle.Add(mleader, mleader.StyleHandle);
+        }
+
+        return mleader;
+
+    }
 
     private List<object> CompileMLeaderContextTags() // returns Tree structure
     {
