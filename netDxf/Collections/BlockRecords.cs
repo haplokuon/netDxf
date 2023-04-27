@@ -1,7 +1,7 @@
 #region netDxf library licensed under the MIT License
 // 
 //                       netDxf library
-// Copyright (c) 2019-2021 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (c) 2019-2023 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -25,6 +25,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using netDxf.Blocks;
 using netDxf.Entities;
 using netDxf.Tables;
@@ -69,7 +70,7 @@ namespace netDxf.Collections
                 throw new ArgumentNullException(nameof(block));
             }
 
-            if (this.list.TryGetValue(block.Name, out Block add))
+            if (this.List.TryGetValue(block.Name, out Block add))
             {
                 return add;
             }
@@ -79,8 +80,8 @@ namespace netDxf.Collections
                 this.Owner.NumHandles = block.AssignHandle(this.Owner.NumHandles);
             }
 
-            this.list.Add(block.Name, block);
-            this.references.Add(block.Name, new List<DxfObject>());
+            this.List.Add(block.Name, block);
+            this.References.Add(block.Name, new DxfObjectReferences());
 
             block.Layer = this.Owner.Layers.Add(block.Layer);
             this.Owner.Layers.References[block.Layer.Name].Add(block);
@@ -88,7 +89,7 @@ namespace netDxf.Collections
             //for new block definitions configure its entities
             foreach (EntityObject entity in block.Entities)
             {
-                this.Owner.AddEntityToDocument(entity, block, assignHandle);
+                this.Owner.AddEntityToDocument(entity, assignHandle);
             }
 
             //for new block definitions configure its attributes
@@ -106,6 +107,7 @@ namespace netDxf.Collections
             block.AttributeDefinitionAdded += this.Block_AttributeDefinitionAdded; 
             block.AttributeDefinitionRemoved += this.Block_AttributeDefinitionRemoved;
 
+            Debug.Assert(!string.IsNullOrEmpty(block.Handle), "The block handle cannot be null or empty.");
             this.Owner.AddedObjects.Add(block.Handle, block);
             this.Owner.AddedObjects.Add(block.Owner.Handle, block.Owner);
 
@@ -146,7 +148,7 @@ namespace netDxf.Collections
                 return false;
             }
 
-            if (this.references[item.Name].Count != 0)
+            if (this.HasReferences(item))
             {
                 return false;
             }
@@ -167,8 +169,8 @@ namespace netDxf.Collections
             }
 
             this.Owner.AddedObjects.Remove(item.Handle);
-            this.references.Remove(item.Name);
-            this.list.Remove(item.Name);
+            this.References.Remove(item.Name);
+            this.List.Remove(item.Name);
 
             item.Record.Handle = null;
             item.Record.Owner = null;
@@ -197,12 +199,13 @@ namespace netDxf.Collections
                 throw new ArgumentException("There is already another block with the same name.");
             }
 
-            this.list.Remove(sender.Name);
-            this.list.Add(e.NewValue, (Block) sender);
+            this.List.Remove(sender.Name);
+            this.List.Add(e.NewValue, (Block) sender);
 
-            List<DxfObject> refs = this.references[sender.Name];
-            this.references.Remove(sender.Name);
-            this.references.Add(e.NewValue, refs);
+            List<DxfObjectReference> refs = this.GetReferences(sender.Name);
+            this.References.Remove(sender.Name);
+            this.References.Add(e.NewValue, new DxfObjectReferences());
+            this.References[e.NewValue].Add(refs);
         }
 
         private void Block_LayerChanged(Block sender, TableObjectChangedEventArgs<Layer> e)
@@ -215,7 +218,7 @@ namespace netDxf.Collections
 
         private void Block_EntityAdded(TableObject sender, BlockEntityChangeEventArgs e)
         {
-            this.Owner.AddEntityToDocument(e.Item, (Block) sender, string.IsNullOrEmpty(e.Item.Handle));
+            this.Owner.AddEntityToDocument(e.Item, string.IsNullOrEmpty(e.Item.Handle));
         }
 
         private void Block_EntityRemoved(TableObject sender, BlockEntityChangeEventArgs e)

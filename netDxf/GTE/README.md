@@ -4,10 +4,10 @@ The Geometric Tool Library makes a lot of use of C++ templates and generics to h
 
 Geometric Tools Library homepage https://www.geometrictools.com
 
-Original license:
-David Eberly, Geometric Tools, Redmond WA 98052
-Copyright (c) 1998-2022
-Distributed under the Boost Software License, Version 1.0.
-https://www.boost.org/LICENSE_1_0.txt
-https://www.geometrictools.com/License/Boost/LICENSE_1_0.txt
+Original license:<br>
+David Eberly, Geometric Tools, Redmond WA 98052<br>
+Copyright (c) 1998-2022<br>
+Distributed under the Boost Software License, Version 1.0.<br>
+https://www.boost.org/LICENSE_1_0.txt<br>
+https://www.geometrictools.com/License/Boost/LICENSE_1_0.txt<br>
 Version: 6.0.2022.01.06

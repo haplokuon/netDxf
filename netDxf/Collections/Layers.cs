@@ -1,7 +1,7 @@
 #region netDxf library licensed under the MIT License
 // 
 //                       netDxf library
-// Copyright (c) 2019-2021 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (c) 2019-2023 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -25,6 +25,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using netDxf.Tables;
 
 namespace netDxf.Collections
@@ -86,7 +87,7 @@ namespace netDxf.Collections
                 throw new ArgumentNullException(nameof(layer));
             }
 
-            if (this.list.TryGetValue(layer.Name, out Layer add))
+            if (this.List.TryGetValue(layer.Name, out Layer add))
             {
                 return add;
             }
@@ -96,8 +97,8 @@ namespace netDxf.Collections
                 this.Owner.NumHandles = layer.AssignHandle(this.Owner.NumHandles);
             }
 
-            this.list.Add(layer.Name, layer);
-            this.references.Add(layer.Name, new List<DxfObject>());
+            this.List.Add(layer.Name, layer);
+            this.References.Add(layer.Name, new DxfObjectReferences());
             layer.Linetype = this.Owner.Linetypes.Add(layer.Linetype);
             this.Owner.Linetypes.References[layer.Linetype.Name].Add(layer);
 
@@ -106,6 +107,7 @@ namespace netDxf.Collections
             layer.NameChanged += this.Item_NameChanged;
             layer.LinetypeChanged += this.LayerLinetypeChanged;
 
+            Debug.Assert(!string.IsNullOrEmpty(layer.Handle), "The layer handle cannot be null or empty.");
             this.Owner.AddedObjects.Add(layer.Handle, layer);
 
             return layer;
@@ -145,15 +147,15 @@ namespace netDxf.Collections
                 return false;
             }
 
-            if (this.references[item.Name].Count != 0)
+            if (this.HasReferences(item))
             {
                 return false;
             }
 
             this.Owner.Linetypes.References[item.Linetype.Name].Remove(item);
             this.Owner.AddedObjects.Remove(item.Handle);
-            this.references.Remove(item.Name);
-            this.list.Remove(item.Name);
+            this.References.Remove(item.Name);
+            this.List.Remove(item.Name);
 
             item.Handle = null;
             item.Owner = null;
@@ -175,12 +177,13 @@ namespace netDxf.Collections
                 throw new ArgumentException("There is already another layer with the same name.");
             }
 
-            this.list.Remove(sender.Name);
-            this.list.Add(e.NewValue, (Layer) sender);
+            this.List.Remove(sender.Name);
+            this.List.Add(e.NewValue, (Layer) sender);
 
-            List<DxfObject> refs = this.references[sender.Name];
-            this.references.Remove(sender.Name);
-            this.references.Add(e.NewValue, refs);
+            List<DxfObjectReference> refs = this.GetReferences(sender.Name);
+            this.References.Remove(sender.Name);
+            this.References.Add(e.NewValue, new DxfObjectReferences());
+            this.References[e.NewValue].Add(refs);
         }
 
         private void LayerLinetypeChanged(TableObject sender, TableObjectChangedEventArgs<Linetype> e)

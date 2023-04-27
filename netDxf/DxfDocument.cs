@@ -781,7 +781,7 @@ namespace netDxf
 
         #region internal methods
 
-        internal void AddEntityToDocument(EntityObject entity, Block block, bool assignHandle)
+        internal void AddEntityToDocument(EntityObject entity, bool assignHandle)
         {
             // null entities are not allowed
             if (entity == null)
@@ -816,8 +816,12 @@ namespace netDxf
                     }
                     else if (dim.Block != null)
                     {
-                        // if a block is present give it a proper name
-                        dim.Block.SetName("*D" + ++this.DimensionBlocksIndex, false);
+                        if (!this.blocks.Contains(dim.Block) || !dim.Block.Name.StartsWith("*D", StringComparison.InvariantCultureIgnoreCase))
+                        {
+                            // if a block is not present or have a wrong name give it a proper name
+                            dim.Block.SetName("*D" + ++this.DimensionBlocksIndex, false);
+                        }
+                        //dim.Block.SetName("*D" + ++this.DimensionBlocksIndex, false);
                         dim.Block = this.blocks.Add(dim.Block);
                         this.blocks.References[dim.Block.Name].Add(dim);
                     }
@@ -1035,11 +1039,16 @@ namespace netDxf
                     break;
                 case EntityType.Dimension:
                     Dimension dim = (Dimension)entity;
-                    this.blocks.References[dim.Block.Name].Remove(entity);
+                    if (dim.Block != null)
+                    {
+                        this.blocks.References[dim.Block.Name].Remove(entity);
+                        dim.Block = null;
+                    }
+
                     dim.DimensionBlockChanged -= this.Dimension_DimBlockChanged;
                     this.dimStyles.References[dim.Style.Name].Remove(entity);
                     dim.DimensionStyleChanged -= this.Dimension_DimStyleChanged;
-                    dim.Block = null;
+
                     this.RemoveDimensionStyleOverridesReferencedDxfObjects(dim, dim.StyleOverrides);
                     dim.DimensionStyleOverrideAdded -= this.Dimension_DimStyleOverrideAdded;
                     dim.DimensionStyleOverrideRemoved -= this.Dimension_DimStyleOverrideRemoved;
@@ -1728,7 +1737,7 @@ namespace netDxf
             this.imageDefs.References[e.OldValue.Name].Remove(sender);
 
             e.NewValue = this.imageDefs.Add(e.NewValue);
-            this.imageDefs.References[e.NewValue.Name].Add(sender);
+            this.imageDefs.References[e.OldValue.Name].Add(sender);
         }
 
         private void Underlay_UnderlayDefinitionChanged(Underlay sender, TableObjectChangedEventArgs<UnderlayDefinition> e)

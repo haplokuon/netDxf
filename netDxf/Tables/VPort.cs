@@ -24,6 +24,7 @@
 #endregion
 
 using System;
+using System.Collections.Generic;
 using netDxf.Collections;
 
 namespace netDxf.Tables
@@ -217,6 +218,36 @@ namespace netDxf.Tables
         #endregion
 
         #region overrides
+
+        /// <summary>
+        /// Checks if this instance has been referenced by other DxfObjects. 
+        /// </summary>
+        /// <returns>
+        /// Returns true if this instance has been referenced by other DxfObjects, false otherwise.
+        /// It will always return false if this instance does not belong to a document.
+        /// </returns>
+        /// <remarks>
+        /// This method returns the same value as the HasReferences method that can be found in the TableObjects class.
+        /// </remarks>
+        public override bool HasReferences()
+        {
+            return this.Owner != null && this.Owner.HasReferences(this.Name);
+        }
+
+        /// <summary>
+        /// Gets the list of DxfObjects referenced by this instance.
+        /// </summary>
+        /// <returns>
+        /// A list of DxfObjectReference that contains the DxfObject referenced by this instance and the number of times it does.
+        /// It will return null if this instance does not belong to a document.
+        /// </returns>
+        /// <remarks>
+        /// This method returns the same list as the GetReferences method that can be found in the TableObjects class.
+        /// </remarks>
+        public override List<DxfObjectReference> GetReferences()
+        {
+            return this.Owner?.GetReferences(this.Name);
+        }
 
         /// <summary>
         /// Creates a new VPort that is a copy of the current instance.

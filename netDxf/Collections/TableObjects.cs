@@ -1,7 +1,7 @@
 #region netDxf library licensed under the MIT License
 // 
 //                       netDxf library
-// Copyright (c) 2019-2021 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (c) 2019-2023 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -40,18 +40,24 @@ namespace netDxf.Collections
     {
         #region private fields
 
-        protected readonly Dictionary<string, T> list;
-        protected Dictionary<string, List<DxfObject>> references;
+        private readonly Dictionary<string, T> list;
+        private readonly Dictionary<string, DxfObjectReferences> references;
 
         #endregion
 
         #region constructor
 
+        /// <summary>
+        /// Initializes a new instance of the <c>TableObjects</c> class.
+        /// </summary>
+        /// <param name="document">DxfDocument associated with this instance.</param>
+        /// <param name="codeName">DxfCode assigned to this instance.</param>
+        /// <param name="handle">Handle assigned to this instance.</param>
         protected TableObjects(DxfDocument document, string codeName, string handle)
             : base(codeName)
         {
             this.list = new Dictionary<string, T>(StringComparer.OrdinalIgnoreCase);
-            this.references = new Dictionary<string, List<DxfObject>>(StringComparer.OrdinalIgnoreCase);
+            this.references = new Dictionary<string, DxfObjectReferences>();
             this.Owner = document;
 
             if (string.IsNullOrEmpty(handle))
@@ -118,10 +124,12 @@ namespace netDxf.Collections
 
         #region internal properties
 
-        /// <summary>
-        /// Gets the <see cref="DxfObject">dxf objects</see> referenced by a T.
-        /// </summary>
-        internal Dictionary<string, List<DxfObject>> References
+        internal Dictionary<string, T> List
+        {
+            get { return this.list; }
+        }
+
+        internal Dictionary<string, DxfObjectReferences> References
         {
             get { return this.references; }
         }
@@ -129,6 +137,30 @@ namespace netDxf.Collections
         #endregion
 
         #region public methods
+
+        /// <summary>
+        /// Checks if the specified TableObject has been referenced by other DxfObjects. 
+        /// </summary>
+        /// <param name="name">Table object name.</param>
+        /// <returns>
+        /// Returns true if the specified TableObject has been referenced by other DxfObjects, false otherwise.
+        /// </returns>
+        public bool HasReferences(string name)
+        {
+            return !this.references[name].IsEmpty();
+        }
+
+        /// <summary>
+        /// Checks if the specified TableObject has been referenced by other DxfObjects. 
+        /// </summary>
+        /// <param name="item">Table object.</param>
+        /// <returns>
+        /// Returns true if the specified TableObject has been referenced by other DxfObjects, false otherwise.
+        /// </returns>
+        public bool HasReferences(T item)
+        {
+            return !this.references[item.Name].IsEmpty();
+        }
 
         /// <summary>
         /// Gets the <see cref="DxfObject">dxf objects</see> referenced by a T.
@@ -139,14 +171,9 @@ namespace netDxf.Collections
         /// If there is no table object with the specified name in the list the method an empty list.<br />
         /// The Groups collection method GetReferences will always return an empty list since there are no DxfObjects that references them.
         /// </remarks>
-        public List<DxfObject> GetReferences(string name)
+        public List<DxfObjectReference> GetReferences(string name)
         {
-            if (!this.Contains(name))
-            {
-                return new List<DxfObject>();
-            }
-
-            return new List<DxfObject>(this.references[name]);
+            return this.references[name].ToList();
         }
 
         /// <summary>
@@ -158,14 +185,9 @@ namespace netDxf.Collections
         /// If there is no table object with the specified name in the list the method an empty list.<br />
         /// The Groups collection method GetReferences will always return an empty list since there are no DxfObjects that references them.
         /// </remarks>
-        public List<DxfObject> GetReferences(T item)
+        public List<DxfObjectReference> GetReferences(T item)
         {
-            if (item == null)
-            {
-                throw new ArgumentNullException(nameof(item));
-            }
-
-            return this.GetReferences(item.Name);
+            return this.references[item.Name].ToList();
         }
 
         /// <summary>

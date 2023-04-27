@@ -1,7 +1,7 @@
 #region netDxf library licensed under the MIT License
 // 
 //                       netDxf library
-// Copyright (c) 2019-2021 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (c) 2019-2023 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -108,9 +108,14 @@ namespace netDxf.Collections
             set
             {
                 if (value == null)
+                {
                     throw new ArgumentNullException(nameof(value));
+                }
+
                 if (!string.Equals(value.ApplicationRegistry.Name, appId, StringComparison.OrdinalIgnoreCase))
+                {
                     throw new ArgumentException(string.Format("The extended data application registry name {0} must be equal to the specified appId {1}.", value.ApplicationRegistry.Name, appId));
+                }
 
                 this.innerDictionary[appId] = value;
             }

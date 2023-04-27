@@ -1,7 +1,7 @@
 #region netDxf library licensed under the MIT License
 // 
 //                       netDxf library
-// Copyright (c) 2019-2021 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (c) 2019-2023 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -25,6 +25,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using netDxf.Tables;
 
 namespace netDxf.Collections
@@ -67,7 +68,7 @@ namespace netDxf.Collections
                 throw new ArgumentNullException(nameof(appReg));
             }
 
-            if (this.list.TryGetValue(appReg.Name, out ApplicationRegistry add))
+            if (this.List.TryGetValue(appReg.Name, out ApplicationRegistry add))
             {
                 return add;
             }
@@ -77,13 +78,14 @@ namespace netDxf.Collections
                 this.Owner.NumHandles = appReg.AssignHandle(this.Owner.NumHandles);
             }
 
-            this.list.Add(appReg.Name, appReg);
-            this.references.Add(appReg.Name, new List<DxfObject>());
+            this.List.Add(appReg.Name, appReg);
+            this.References.Add(appReg.Name, new DxfObjectReferences());
 
             appReg.Owner = this;
 
             appReg.NameChanged += this.Item_NameChanged;
 
+            Debug.Assert(!string.IsNullOrEmpty(appReg.Handle), "The application registry handle cannot be null or empty.");
             this.Owner.AddedObjects.Add(appReg.Handle, appReg);
 
             return appReg;
@@ -123,14 +125,14 @@ namespace netDxf.Collections
                 return false;
             }
 
-            if (this.references[item.Name].Count != 0)
+            if (this.HasReferences(item))
             {
                 return false;
             }
 
             this.Owner.AddedObjects.Remove(item.Handle);
-            this.references.Remove(item.Name);
-            this.list.Remove(item.Name);
+            this.References.Remove(item.Name);
+            this.List.Remove(item.Name);
 
             item.Handle = null;
             item.Owner = null;
@@ -151,12 +153,13 @@ namespace netDxf.Collections
                 throw new ArgumentException("There is already another application registry with the same name.");
             }
 
-            this.list.Remove(sender.Name);
-            this.list.Add(e.NewValue, (ApplicationRegistry) sender);
+            this.List.Remove(sender.Name);
+            this.List.Add(e.NewValue, (ApplicationRegistry) sender);
 
-            List<DxfObject> refs = this.references[sender.Name];
-            this.references.Remove(sender.Name);
-            this.references.Add(e.NewValue, refs);
+            List<DxfObjectReference> refs = this.References[sender.Name].ToList();
+            this.References.Remove(sender.Name);
+            this.References.Add(e.NewValue, new DxfObjectReferences());
+            this.References[e.NewValue].Add(refs);
         }
 
         #endregion

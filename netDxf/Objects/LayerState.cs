@@ -1,7 +1,7 @@
 #region netDxf library licensed under the MIT License
 // 
 //                       netDxf library
-// Copyright (c) 2019-2021 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (c) 2019-2023 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -414,6 +414,41 @@ namespace netDxf.Objects
         #endregion
 
         #region overrides
+
+        /// <summary>
+        /// Checks if this instance has been referenced by other DxfObjects. 
+        /// </summary>
+        /// <returns>
+        /// Returns true if this instance has been referenced by other DxfObjects, false otherwise.
+        /// It will always return false if this instance does not belong to a document.
+        /// </returns>
+        /// <remarks>
+        /// This method returns the same value as the HasReferences method that can be found in the TableObjects class.
+        /// </remarks>
+        public override bool HasReferences()
+        {
+            return this.Owner != null && this.Owner.HasReferences(this.Name);
+        }
+
+        /// <summary>
+        /// Gets the list of DxfObjects referenced by this instance.
+        /// </summary>
+        /// <returns>
+        /// A list of DxfObjectReference that contains the DxfObject referenced by this instance and the number of times it does.
+        /// It will return null if this instance does not belong to a document.
+        /// </returns>
+        /// <remarks>
+        /// This method returns the same list as the GetReferences method that can be found in the TableObjects class.
+        /// </remarks>
+        public override List<DxfObjectReference> GetReferences()
+        {
+            if (this.Owner == null)
+            {
+                return null;
+            }
+
+            return this.Owner.GetReferences(this.Name);
+        } // TODO: Check this
 
         /// <summary>
         /// Creates a new LayerState that is a copy of the current instance.

@@ -7876,7 +7876,7 @@ namespace netDxf.IO
                         this.chunk.Next();
                         break;
                     case 41:
-                        // code 41 might appear before or after the control point coordinates.
+                        // code 41 might appear before or after the control point coordinates
                         double weight = this.chunk.ReadDouble();
                         weights.Add(weight);
                         this.chunk.Next();
@@ -7906,6 +7906,13 @@ namespace netDxf.IO
                 }
             }
 
+            if (weights.Count == 0 || weights.Count != ctrlPoints.Count)
+            {
+                // if the weights are not present the default 1.0 will be used
+                // but if they appear they must be present for all control points regardless of its value
+                weights = null;
+            }
+
             SplineCreationMethod method;
             if (fitPoints.Count == 0)
             {
@@ -7927,13 +7934,8 @@ namespace netDxf.IO
                 if (isPeriodic)
                 {
                     ctrlPoints.RemoveRange(0, degree);
-                    weights.RemoveRange(0, degree);
+                    weights?.RemoveRange(0, degree);
                 }
-            }
-
-            if (weights.Count == 0)
-            {
-                weights = null;
             }
 
             Spline entity = new Spline(ctrlPoints, weights, knots, degree, fitPoints, method, isPeriodic)

@@ -287,13 +287,14 @@
             Represent a bezier curve.
             </summary>
         </member>
-        <member name="M:netDxf.BezierCurve.#ctor(System.Collections.Generic.IEnumerable{netDxf.Vector3})">
+        <member name="M:netDxf.BezierCurve.#ctor(System.Collections.Generic.IEnumerable{netDxf.Vector3},System.Int32)">
             <summary>
             Initializes a new instance of the <c>BezierCurve</c> class.
             </summary>
             <param name="controlPoints">A list of control points.</param>
+            <param name="degree">Bezier curve degree.</param>
             <remarks>
-            The curve degree will be equal to the number of control points minus one.
+            The curve degree must be equal to the number of control points minus one.
             </remarks>
         </member>
         <member name="P:netDxf.BezierCurve.ControlPoints">
@@ -407,10 +408,9 @@
             <param name="fitPoints">List of points.</param>
             <returns>A list of cubic bezier curves.</returns>
             <returns>
-            Original https://www.codeproject.com/Articles/31859/Draw-a-Smooth-Curve-through-a-Set-of-2D-Points-wit by Oleg V. Polikarpotchkin and Peter Lee.
+            Original code: https://www.codeproject.com/Articles/31859/Draw-a-Smooth-Curve-through-a-Set-of-2D-Points-wit by Oleg V. Polikarpotchkin and Peter Lee.<br />
             Modified to allow the use of 3D points, and other minor changes to accomodate the existing classes of this library.<br />
-            The total number of curves returned will be equal to the number of fit points minus 1,
-            therefore this method is not suitable to use over large number of fit points,
+            The total number of curves returned will be equal to the number of fit points minus 1, therefore this method is not suitable to use over large number of fit points,
             where other, more computational heavy methods, like the least-squares bezier curve fitting would return a less amount of curves.
             In such cases, it is advisable to perform some method to reduce the number of points and to avoid duplicates or very close points.
             </returns>
@@ -714,6 +714,30 @@
             <param name="version">Version of the DXF database version.</param>
             <param name="isBinary">Defines if the file will be saved as binary.</param>
             <returns>Return true if the file has been successfully save, false otherwise.</returns>
+        </member>
+        <member name="M:netDxf.Blocks.Block.HasReferences">
+            <summary>
+            Checks if this instance has been referenced by other DxfObjects. 
+            </summary>
+            <returns>
+            Returns true if this instance has been referenced by other DxfObjects, false otherwise.
+            It will always return false if this instance does not belong to a document.
+            </returns>
+            <remarks>
+            This method returns the same value as the HasReferences method that can be found in the TableObjects class.
+            </remarks>
+        </member>
+        <member name="M:netDxf.Blocks.Block.GetReferences">
+            <summary>
+            Gets the list of DxfObjects referenced by this instance.
+            </summary>
+            <returns>
+            A list of DxfObjectReference that contains the DxfObject referenced by this instance and the number of times it does.
+            It will return null if this instance does not belong to a document.
+            </returns>
+            <remarks>
+            This method returns the same list as the GetReferences method that can be found in the TableObjects class.
+            </remarks>
         </member>
         <member name="M:netDxf.Blocks.Block.Clone(System.String)">
             <summary>
@@ -1438,7 +1462,7 @@
             <summary>
             Adds a dimension style to the list.
             </summary>
-            <param name="style"><see cref="T:netDxf.Tables.DimensionStyle">DimensionStyle</see> to add to the list.</param>
+            <param name="item"><see cref="T:netDxf.Tables.DimensionStyle">DimensionStyle</see> to add to the list.</param>
             <param name="assignHandle">Specifies if a handle needs to be generated for the dimension style parameter.</param>
             <returns>
             If a dimension style already exists with the same name as the instance that is being added the method returns the existing dimension style,
@@ -1621,11 +1645,6 @@
         <member name="P:netDxf.Collections.DrawingEntities.Wipeouts">
             <summary>
             Gets the list of <see cref="T:netDxf.Entities.Wipeout">wipeouts</see> in the active layout.
-            </summary>
-        </member>
-        <member name="P:netDxf.Collections.DrawingEntities.AttributeDefinitions">
-            <summary>
-            Gets the list of <see cref="T:netDxf.Entities.AttributeDefinition">attribute definitions</see> in the active layout.
             </summary>
         </member>
         <member name="M:netDxf.Collections.DrawingEntities.Add(System.Collections.Generic.IEnumerable{netDxf.Entities.EntityObject})">
@@ -1984,31 +2003,14 @@
             Represents a collection of layouts.
             </summary>
             <remarks>
-            You can add a maximum of 255 layouts to your drawing, the "Model" layout is always present what limits the maximum number of layouts to 256.
+            You can add a maximum of 255 layouts to your drawing, the "Model" layout is always present, that limits the maximum number of layouts to 256.
             Even though this limit is imposed through the AutoCad UI, it can import larger numbers, but exceeding this limit might make it to crash.
             </remarks>
         </member>
-        <member name="M:netDxf.Collections.Layouts.GetReferences(System.String)">
+        <member name="F:netDxf.Collections.Layouts.MaxCapacity">
             <summary>
-            Gets the <see cref="T:netDxf.DxfObject">dxf objects</see> referenced by a T.
+            Maximum number of layouts that can be added to the document.
             </summary>
-            <param name="name">Table object name.</param>
-            <returns>The list of DxfObjects that reference the specified table object.</returns>
-            <remarks>
-            If there is no table object with the specified name in the list the method an empty list.<br />
-            The Groups collection method GetReferences will always return an empty list since there are no DxfObjects that references them.
-            </remarks>
-        </member>
-        <member name="M:netDxf.Collections.Layouts.GetReferences(netDxf.Objects.Layout)">
-            <summary>
-            Gets the <see cref="T:netDxf.DxfObject">dxf objects</see> referenced by a T.
-            </summary>
-            <param name="item">Table object.</param>
-            <returns>The list of DxfObjects that reference the specified table object.</returns>
-            <remarks>
-            If there is no table object with the specified name in the list the method an empty list.<br />
-            The Groups collection method GetReferences will always return an empty list since there are no DxfObjects that references them.
-            </remarks>
         </member>
         <member name="M:netDxf.Collections.Layouts.Add(netDxf.Objects.Layout,System.Boolean)">
             <summary>
@@ -2039,7 +2041,10 @@
             </summary>
             <param name="item"><see cref="T:netDxf.Objects.Layout">Layout</see> to remove from the document.</param>
             <returns>True if the layout has been successfully removed, or false otherwise.</returns>
-            <remarks>Reserved layouts or any other referenced by objects cannot be removed.</remarks>
+            <remarks>
+            Removing a layout will also remove all entities and attribute definition that may contain.
+            Reserved layouts cannot be removed.
+            </remarks>
         </member>
         <member name="T:netDxf.Collections.Linetypes">
             <summary>
@@ -2499,6 +2504,14 @@
             </summary>
             <typeparam name="T"><see cref="T:netDxf.Tables.TableObject">TableObject</see>.</typeparam>
         </member>
+        <member name="M:netDxf.Collections.TableObjects`1.#ctor(netDxf.DxfDocument,System.String,System.String)">
+            <summary>
+            Initializes a new instance of the <c>TableObjects</c> class.
+            </summary>
+            <param name="document">DxfDocument associated with this instance.</param>
+            <param name="codeName">DxfCode assigned to this instance.</param>
+            <param name="handle">Handle assigned to this instance.</param>
+        </member>
         <member name="P:netDxf.Collections.TableObjects`1.Item(System.String)">
             <summary>
             Gets a table object from the list by name.
@@ -2527,10 +2540,23 @@
             Gets the owner of the actual DXF object.
             </summary>
         </member>
-        <member name="P:netDxf.Collections.TableObjects`1.References">
+        <member name="M:netDxf.Collections.TableObjects`1.HasReferences(System.String)">
             <summary>
-            Gets the <see cref="T:netDxf.DxfObject">dxf objects</see> referenced by a T.
+            Checks if the specified TableObject has been referenced by other DxfObjects. 
             </summary>
+            <param name="name">Table object name.</param>
+            <returns>
+            Returns true if the specified TableObject has been referenced by other DxfObjects, false otherwise.
+            </returns>
+        </member>
+        <member name="M:netDxf.Collections.TableObjects`1.HasReferences(`0)">
+            <summary>
+            Checks if the specified TableObject has been referenced by other DxfObjects. 
+            </summary>
+            <param name="item">Table object.</param>
+            <returns>
+            Returns true if the specified TableObject has been referenced by other DxfObjects, false otherwise.
+            </returns>
         </member>
         <member name="M:netDxf.Collections.TableObjects`1.GetReferences(System.String)">
             <summary>
@@ -3846,6 +3872,28 @@
         <member name="F:netDxf.DxfObjectCode.Layout">
             <summary>
             Layouts.
+            </summary>
+        </member>
+        <member name="T:netDxf.DxfObjectReference">
+            <summary>
+            Represent a reference to a TableObject.
+            </summary>
+        </member>
+        <member name="M:netDxf.DxfObjectReference.#ctor(netDxf.DxfObject,System.Int32)">
+            <summary>
+            Initializes a new instance of the <c>DxfObjectReference</c> class.
+            </summary>
+            <param name="reference">DxfObject reference.</param>
+            <param name="uses">Number of times the specified reference uses the table object.</param>
+        </member>
+        <member name="P:netDxf.DxfObjectReference.Reference">
+            <summary>
+            Gets the DxfObject that references the table object.
+            </summary>
+        </member>
+        <member name="P:netDxf.DxfObjectReference.Uses">
+            <summary>
+            Gets the number of times this reference uses the table object.
             </summary>
         </member>
         <member name="T:netDxf.Entities.AlignedDimension">
@@ -14106,6 +14154,30 @@
             Gets the owner of the actual DXF object.
             </summary>
         </member>
+        <member name="M:netDxf.Objects.Group.HasReferences">
+            <summary>
+            Checks if this instance has been referenced by other DxfObjects. 
+            </summary>
+            <returns>
+            Returns true if this instance has been referenced by other DxfObjects, false otherwise.
+            It will always return false if this instance does not belong to a document.
+            </returns>
+            <remarks>
+            This method returns the same value as the HasReferences method that can be found in the TableObjects class.
+            </remarks>
+        </member>
+        <member name="M:netDxf.Objects.Group.GetReferences">
+            <summary>
+            Gets the list of DxfObjects referenced by this instance.
+            </summary>
+            <returns>
+            A list of DxfObjectReference that contains the DxfObject referenced by this instance and the number of times it does.
+            It will return null if this instance does not belong to a document.
+            </returns>
+            <remarks>
+            This method returns the same list as the GetReferences method that can be found in the TableObjects class.
+            </remarks>
+        </member>
         <member name="M:netDxf.Objects.Group.Clone(System.String)">
             <summary>
             Creates a new Group that is a copy of the current instance.
@@ -14224,6 +14296,30 @@
             <summary>
             Gets the owner of the actual image definition.
             </summary>
+        </member>
+        <member name="M:netDxf.Objects.ImageDefinition.HasReferences">
+            <summary>
+            Checks if this instance has been referenced by other DxfObjects. 
+            </summary>
+            <returns>
+            Returns true if this instance has been referenced by other DxfObjects, false otherwise.
+            It will always return false if this instance does not belong to a document.
+            </returns>
+            <remarks>
+            This method returns the same value as the HasReferences method that can be found in the TableObjects class.
+            </remarks>
+        </member>
+        <member name="M:netDxf.Objects.ImageDefinition.GetReferences">
+            <summary>
+            Gets the list of DxfObjects referenced by this instance.
+            </summary>
+            <returns>
+            A list of DxfObjectReference that contains the DxfObject referenced by this instance and the number of times it does.
+            It will return null if this instance does not belong to a document.
+            </returns>
+            <remarks>
+            This method returns the same list as the GetReferences method that can be found in the TableObjects class.
+            </remarks>
         </member>
         <member name="M:netDxf.Objects.ImageDefinition.Clone(System.String)">
             <summary>
@@ -14433,6 +14529,30 @@
             <param name="file">LAS file to save.</param>
             <returns>Returns true if the file has been successfully saved, false otherwise.</returns>
         </member>
+        <member name="M:netDxf.Objects.LayerState.HasReferences">
+            <summary>
+            Checks if this instance has been referenced by other DxfObjects. 
+            </summary>
+            <returns>
+            Returns true if this instance has been referenced by other DxfObjects, false otherwise.
+            It will always return false if this instance does not belong to a document.
+            </returns>
+            <remarks>
+            This method returns the same value as the HasReferences method that can be found in the TableObjects class.
+            </remarks>
+        </member>
+        <member name="M:netDxf.Objects.LayerState.GetReferences">
+            <summary>
+            Gets the list of DxfObjects referenced by this instance.
+            </summary>
+            <returns>
+            A list of DxfObjectReference that contains the DxfObject referenced by this instance and the number of times it does.
+            It will return null if this instance does not belong to a document.
+            </returns>
+            <remarks>
+            This method returns the same list as the GetReferences method that can be found in the TableObjects class.
+            </remarks>
+        </member>
         <member name="M:netDxf.Objects.LayerState.Clone(System.String)">
             <summary>
             Creates a new LayerState that is a copy of the current instance.
@@ -14620,6 +14740,30 @@
             Gets the associated ModelSpace or PaperSpace block.
             </summary>
         </member>
+        <member name="M:netDxf.Objects.Layout.HasReferences">
+            <summary>
+            Checks if this instance has been referenced by other DxfObjects. 
+            </summary>
+            <returns>
+            Returns true if this instance has been referenced by other DxfObjects, false otherwise.
+            It will always return false if this instance does not belong to a document.
+            </returns>
+            <remarks>
+            This method returns the same value as the HasReferences method that can be found in the TableObjects class.
+            </remarks>
+        </member>
+        <member name="M:netDxf.Objects.Layout.GetReferences">
+            <summary>
+            Gets the list of DxfObjects referenced by this instance.
+            </summary>
+            <returns>
+            A list of DxfObjectReference that contains the DxfObject referenced by this instance and the number of times it does.
+            It will return null if this instance does not belong to a document.
+            </returns>
+            <remarks>
+            This method returns the same list as the GetReferences method that can be found in the TableObjects class.
+            </remarks>
+        </member>
         <member name="M:netDxf.Objects.Layout.Clone(System.String)">
             <summary>
             Creates a new Layout that is a copy of the current instance.
@@ -14753,6 +14897,30 @@
             <summary>
             Gets the owner of the actual multi line style.
             </summary>
+        </member>
+        <member name="M:netDxf.Objects.MLineStyle.HasReferences">
+            <summary>
+            Checks if this instance has been referenced by other DxfObjects. 
+            </summary>
+            <returns>
+            Returns true if this instance has been referenced by other DxfObjects, false otherwise.
+            It will always return false if this instance does not belong to a document.
+            </returns>
+            <remarks>
+            This method returns the same value as the HasReferences method that can be found in the TableObjects class.
+            </remarks>
+        </member>
+        <member name="M:netDxf.Objects.MLineStyle.GetReferences">
+            <summary>
+            Gets the list of DxfObjects referenced by this instance.
+            </summary>
+            <returns>
+            A list of DxfObjectReference that contains the DxfObject referenced by this instance and the number of times it does.
+            It will return null if this instance does not belong to a document.
+            </returns>
+            <remarks>
+            This method returns the same list as the GetReferences method that can be found in the TableObjects class.
+            </remarks>
         </member>
         <member name="M:netDxf.Objects.MLineStyle.Clone(System.String)">
             <summary>
@@ -15417,6 +15585,30 @@
             Gets the owner of the actual underlay DGN definition.
             </summary>
         </member>
+        <member name="M:netDxf.Objects.UnderlayDgnDefinition.HasReferences">
+            <summary>
+            Checks if this instance has been referenced by other DxfObjects. 
+            </summary>
+            <returns>
+            Returns true if this instance has been referenced by other DxfObjects, false otherwise.
+            It will always return false if this instance does not belong to a document.
+            </returns>
+            <remarks>
+            This method returns the same value as the HasReferences method that can be found in the TableObjects class.
+            </remarks>
+        </member>
+        <member name="M:netDxf.Objects.UnderlayDgnDefinition.GetReferences">
+            <summary>
+            Gets the list of DxfObjects referenced by this instance.
+            </summary>
+            <returns>
+            A list of DxfObjectReference that contains the DxfObject referenced by this instance and the number of times it does.
+            It will return null if this instance does not belong to a document.
+            </returns>
+            <remarks>
+            This method returns the same list as the GetReferences method that can be found in the TableObjects class.
+            </remarks>
+        </member>
         <member name="M:netDxf.Objects.UnderlayDgnDefinition.Clone(System.String)">
             <summary>
             Creates a new UnderlayDgnDefinition that is a copy of the current instance.
@@ -15458,6 +15650,30 @@
             <summary>
             Gets the owner of the actual underlay DWF definition.
             </summary>
+        </member>
+        <member name="M:netDxf.Objects.UnderlayDwfDefinition.HasReferences">
+            <summary>
+            Checks if this instance has been referenced by other DxfObjects. 
+            </summary>
+            <returns>
+            Returns true if this instance has been referenced by other DxfObjects, false otherwise.
+            It will always return false if this instance does not belong to a document.
+            </returns>
+            <remarks>
+            This method returns the same value as the HasReferences method that can be found in the TableObjects class.
+            </remarks>
+        </member>
+        <member name="M:netDxf.Objects.UnderlayDwfDefinition.GetReferences">
+            <summary>
+            Gets the list of DxfObjects referenced by this instance.
+            </summary>
+            <returns>
+            A list of DxfObjectReference that contains the DxfObject referenced by this instance and the number of times it does.
+            It will return null if this instance does not belong to a document.
+            </returns>
+            <remarks>
+            This method returns the same list as the GetReferences method that can be found in the TableObjects class.
+            </remarks>
         </member>
         <member name="M:netDxf.Objects.UnderlayDwfDefinition.Clone(System.String)">
             <summary>
@@ -15505,6 +15721,30 @@
             <summary>
             Gets the owner of the actual underlay PDF definition.
             </summary>
+        </member>
+        <member name="M:netDxf.Objects.UnderlayPdfDefinition.HasReferences">
+            <summary>
+            Checks if this instance has been referenced by other DxfObjects. 
+            </summary>
+            <returns>
+            Returns true if this instance has been referenced by other DxfObjects, false otherwise.
+            It will always return false if this instance does not belong to a document.
+            </returns>
+            <remarks>
+            This method returns the same value as the HasReferences method that can be found in the TableObjects class.
+            </remarks>
+        </member>
+        <member name="M:netDxf.Objects.UnderlayPdfDefinition.GetReferences">
+            <summary>
+            Gets the list of DxfObjects referenced by this instance.
+            </summary>
+            <returns>
+            A list of DxfObjectReference that contains the DxfObject referenced by this instance and the number of times it does.
+            It will return null if this instance does not belong to a document.
+            </returns>
+            <remarks>
+            This method returns the same list as the GetReferences method that can be found in the TableObjects class.
+            </remarks>
         </member>
         <member name="M:netDxf.Objects.UnderlayPdfDefinition.Clone(System.String)">
             <summary>
@@ -15677,6 +15917,30 @@
             <summary>
             Gets the owner of the actual DXF object.
             </summary>
+        </member>
+        <member name="M:netDxf.Tables.ApplicationRegistry.HasReferences">
+            <summary>
+            Checks if this instance has been referenced by other DxfObjects. 
+            </summary>
+            <returns>
+            Returns true if this instance has been referenced by other DxfObjects, false otherwise.
+            It will always return false if this instance does not belong to a document.
+            </returns>
+            <remarks>
+            This method returns the same value as the HasReferences method that can be found in the TableObjects class.
+            </remarks>
+        </member>
+        <member name="M:netDxf.Tables.ApplicationRegistry.GetReferences">
+            <summary>
+            Gets the list of DxfObjects referenced by this instance.
+            </summary>
+            <returns>
+            A list of DxfObjectReference that contains the DxfObject referenced by this instance and the number of times it does.
+            It will return null if this instance does not belong to a document.
+            </returns>
+            <remarks>
+            This method returns the same list as the GetReferences method that can be found in the TableObjects class.
+            </remarks>
         </member>
         <member name="M:netDxf.Tables.ApplicationRegistry.Clone(System.String)">
             <summary>
@@ -16216,6 +16480,30 @@
             <summary>
             Gets the owner of the actual dimension style.
             </summary>
+        </member>
+        <member name="M:netDxf.Tables.DimensionStyle.HasReferences">
+            <summary>
+            Checks if this instance has been referenced by other DxfObjects. 
+            </summary>
+            <returns>
+            Returns true if this instance has been referenced by other DxfObjects, false otherwise.
+            It will always return false if this instance does not belong to a document.
+            </returns>
+            <remarks>
+            This method returns the same value as the HasReferences method that can be found in the TableObjects class.
+            </remarks>
+        </member>
+        <member name="M:netDxf.Tables.DimensionStyle.GetReferences">
+            <summary>
+            Gets the list of DxfObjects referenced by this instance.
+            </summary>
+            <returns>
+            A list of DxfObjectReference that contains the DxfObject referenced by this instance and the number of times it does.
+            It will return null if this instance does not belong to a document.
+            </returns>
+            <remarks>
+            This method returns the same list as the GetReferences method that can be found in the TableObjects class.
+            </remarks>
         </member>
         <member name="M:netDxf.Tables.DimensionStyle.Clone(System.String)">
             <summary>
@@ -17178,6 +17466,30 @@
             Gets the owner of the actual layer.
             </summary>
         </member>
+        <member name="M:netDxf.Tables.Layer.HasReferences">
+            <summary>
+            Checks if this instance has been referenced by other DxfObjects. 
+            </summary>
+            <returns>
+            Returns true if this instance has been referenced by other DxfObjects, false otherwise.
+            It will always return false if this instance does not belong to a document.
+            </returns>
+            <remarks>
+            This method returns the same value as the HasReferences method that can be found in the TableObjects class.
+            </remarks>
+        </member>
+        <member name="M:netDxf.Tables.Layer.GetReferences">
+            <summary>
+            Gets the list of DxfObjects referenced by this instance.
+            </summary>
+            <returns>
+            A list of DxfObjectReference that contains the DxfObject referenced by this instance and the number of times it does.
+            It will return null if this instance does not belong to a document.
+            </returns>
+            <remarks>
+            This method returns the same list as the GetReferences method that can be found in the TableObjects class.
+            </remarks>
+        </member>
         <member name="M:netDxf.Tables.Layer.Clone(System.String)">
             <summary>
             Creates a new Layer that is a copy of the current instance.
@@ -17369,6 +17681,30 @@
             Saves the current linetype to the specified file, if the file does not exist it creates a new one.
             </summary>
             <param name="file">File where the current linetype will be saved.</param>
+        </member>
+        <member name="M:netDxf.Tables.Linetype.HasReferences">
+            <summary>
+            Checks if this instance has been referenced by other DxfObjects. 
+            </summary>
+            <returns>
+            Returns true if this instance has been referenced by other DxfObjects, false otherwise.
+            It will always return false if this instance does not belong to a document.
+            </returns>
+            <remarks>
+            This method returns the same value as the HasReferences method that can be found in the TableObjects class.
+            </remarks>
+        </member>
+        <member name="M:netDxf.Tables.Linetype.GetReferences">
+            <summary>
+            Gets the list of DxfObjects referenced by this instance.
+            </summary>
+            <returns>
+            A list of DxfObjectReference that contains the DxfObject referenced by this instance and the number of times it does.
+            It will return null if this instance does not belong to a document.
+            </returns>
+            <remarks>
+            This method returns the same list as the GetReferences method that can be found in the TableObjects class.
+            </remarks>
         </member>
         <member name="M:netDxf.Tables.Linetype.Clone(System.String)">
             <summary>
@@ -17750,6 +18086,30 @@
             <returns>The name of the shape, empty in case the shape has not been found.</returns>
             <remarks>If the actual shape style belongs to a document, it will look for the SHX file also in the document support folders.</remarks>
         </member>
+        <member name="M:netDxf.Tables.ShapeStyle.HasReferences">
+            <summary>
+            Checks if this instance has been referenced by other DxfObjects. 
+            </summary>
+            <returns>
+            Returns true if this instance has been referenced by other DxfObjects, false otherwise.
+            It will always return false if this instance does not belong to a document.
+            </returns>
+            <remarks>
+            This method returns the same value as the HasReferences method that can be found in the TableObjects class.
+            </remarks>
+        </member>
+        <member name="M:netDxf.Tables.ShapeStyle.GetReferences">
+            <summary>
+            Gets the list of DxfObjects referenced by this instance.
+            </summary>
+            <returns>
+            A list of DxfObjectReference that contains the DxfObject referenced by this instance and the number of times it does.
+            It will return null if this instance does not belong to a document.
+            </returns>
+            <remarks>
+            This method returns the same list as the GetReferences method that can be found in the TableObjects class.
+            </remarks>
+        </member>
         <member name="M:netDxf.Tables.ShapeStyle.Clone(System.String)">
             <summary>
             Creates a new TextStyle that is a copy of the current instance.
@@ -17798,6 +18158,30 @@
             </summary>
             <param name="name">String to check.</param>
             <returns>True if the string is valid as a table object name, or false otherwise.</returns>
+        </member>
+        <member name="M:netDxf.Tables.TableObject.HasReferences">
+            <summary>
+            Checks if this instance has been referenced by other DxfObjects. 
+            </summary>
+            <returns>
+            Returns true if this instance has been referenced by other DxfObjects, false otherwise.
+            It will always return false if this instance does not belong to a document.
+            </returns>
+            <remarks>
+            This method returns the same value as the HasReferences method that can be found in the TableObjects class.
+            </remarks>
+        </member>
+        <member name="M:netDxf.Tables.TableObject.GetReferences">
+            <summary>
+            Gets the list of DxfObjects referenced by this instance.
+            </summary>
+            <returns>
+            A list of DxfObjectReference that contains the DxfObject referenced by this instance and the number of times it does.
+            It will return null if this instance does not belong to a document.
+            </returns>
+            <remarks>
+            This method returns the same list as the GetReferences method that can be found in the TableObjects class.
+            </remarks>
         </member>
         <member name="M:netDxf.Tables.TableObject.ToString">
             <summary>
@@ -18036,6 +18420,30 @@
             Gets the owner of the actual text style.
             </summary>
         </member>
+        <member name="M:netDxf.Tables.TextStyle.HasReferences">
+            <summary>
+            Checks if this instance has been referenced by other DxfObjects. 
+            </summary>
+            <returns>
+            Returns true if this instance has been referenced by other DxfObjects, false otherwise.
+            It will always return false if this instance does not belong to a document.
+            </returns>
+            <remarks>
+            This method returns the same value as the HasReferences method that can be found in the TableObjects class.
+            </remarks>
+        </member>
+        <member name="M:netDxf.Tables.TextStyle.GetReferences">
+            <summary>
+            Gets the list of DxfObjects referenced by this instance.
+            </summary>
+            <returns>
+            A list of DxfObjectReference that contains the DxfObject referenced by this instance and the number of times it does.
+            It will return null if this instance does not belong to a document.
+            </returns>
+            <remarks>
+            This method returns the same list as the GetReferences method that can be found in the TableObjects class.
+            </remarks>
+        </member>
         <member name="M:netDxf.Tables.TextStyle.Clone(System.String)">
             <summary>
             Creates a new TextStyle that is a copy of the current instance.
@@ -18159,6 +18567,30 @@
             <param name="to">Coordinate system of the transformed points.</param>
             <returns>Transformed point list.</returns>
         </member>
+        <member name="M:netDxf.Tables.UCS.HasReferences">
+            <summary>
+            Checks if this instance has been referenced by other DxfObjects. 
+            </summary>
+            <returns>
+            Returns true if this instance has been referenced by other DxfObjects, false otherwise.
+            It will always return false if this instance does not belong to a document.
+            </returns>
+            <remarks>
+            This method returns the same value as the HasReferences method that can be found in the TableObjects class.
+            </remarks>
+        </member>
+        <member name="M:netDxf.Tables.UCS.GetReferences">
+            <summary>
+            Gets the list of DxfObjects referenced by this instance.
+            </summary>
+            <returns>
+            A list of DxfObjectReference that contains the DxfObject referenced by this instance and the number of times it does.
+            It will return null if this instance does not belong to a document.
+            </returns>
+            <remarks>
+            This method returns the same list as the GetReferences method that can be found in the TableObjects class.
+            </remarks>
+        </member>
         <member name="M:netDxf.Tables.UCS.Clone(System.String)">
             <summary>
             Creates a new UCS that is a copy of the current instance.
@@ -18181,6 +18613,30 @@
             <summary>
             Gets the owner of the actual view.
             </summary>
+        </member>
+        <member name="M:netDxf.Tables.View.HasReferences">
+            <summary>
+            Checks if this instance has been referenced by other DxfObjects. 
+            </summary>
+            <returns>
+            Returns true if this instance has been referenced by other DxfObjects, false otherwise.
+            It will always return false if this instance does not belong to a document.
+            </returns>
+            <remarks>
+            This method returns the same value as the HasReferences method that can be found in the TableObjects class.
+            </remarks>
+        </member>
+        <member name="M:netDxf.Tables.View.GetReferences">
+            <summary>
+            Gets the list of DxfObjects referenced by this instance.
+            </summary>
+            <returns>
+            A list of DxfObjectReference that contains the DxfObject referenced by this instance and the number of times it does.
+            It will return null if this instance does not belong to a document.
+            </returns>
+            <remarks>
+            This method returns the same list as the GetReferences method that can be found in the TableObjects class.
+            </remarks>
         </member>
         <member name="M:netDxf.Tables.View.Clone(System.String)">
             <summary>
@@ -18301,6 +18757,30 @@
             <summary>
             Gets the owner of the actual viewport.
             </summary>
+        </member>
+        <member name="M:netDxf.Tables.VPort.HasReferences">
+            <summary>
+            Checks if this instance has been referenced by other DxfObjects. 
+            </summary>
+            <returns>
+            Returns true if this instance has been referenced by other DxfObjects, false otherwise.
+            It will always return false if this instance does not belong to a document.
+            </returns>
+            <remarks>
+            This method returns the same value as the HasReferences method that can be found in the TableObjects class.
+            </remarks>
+        </member>
+        <member name="M:netDxf.Tables.VPort.GetReferences">
+            <summary>
+            Gets the list of DxfObjects referenced by this instance.
+            </summary>
+            <returns>
+            A list of DxfObjectReference that contains the DxfObject referenced by this instance and the number of times it does.
+            It will return null if this instance does not belong to a document.
+            </returns>
+            <remarks>
+            This method returns the same list as the GetReferences method that can be found in the TableObjects class.
+            </remarks>
         </member>
         <member name="M:netDxf.Tables.VPort.Clone(System.String)">
             <summary>

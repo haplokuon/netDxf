@@ -1,7 +1,7 @@
 #region netDxf library licensed under the MIT License
 // 
 //                       netDxf library
-// Copyright (c) 2019-2021 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (c) 2019-2023 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -67,7 +67,7 @@ namespace netDxf.Collections
                 throw new ArgumentNullException(nameof(view));
             }
 
-            if (this.list.TryGetValue(view.Name, out View add))
+            if (this.List.TryGetValue(view.Name, out View add))
             {
                 return add;
             }
@@ -77,8 +77,8 @@ namespace netDxf.Collections
                 this.Owner.NumHandles = view.AssignHandle(this.Owner.NumHandles);
             }
 
-            this.list.Add(view.Name, view);
-            this.references.Add(view.Name, new List<DxfObject>());
+            this.List.Add(view.Name, view);
+            this.References.Add(view.Name, new DxfObjectReferences());
 
             view.Owner = this;
 
@@ -123,14 +123,14 @@ namespace netDxf.Collections
                 return false;
             }
 
-            if (this.references[item.Name].Count != 0)
+            if (this.HasReferences(item))
             {
                 return false;
             }
 
             this.Owner.AddedObjects.Remove(item.Handle);
-            this.references.Remove(item.Name);
-            this.list.Remove(item.Name);
+            this.References.Remove(item.Name);
+            this.List.Remove(item.Name);
 
             item.Handle = null;
             item.Owner = null;
@@ -151,12 +151,13 @@ namespace netDxf.Collections
                 throw new ArgumentException("There is already another View with the same name.");
             }
 
-            this.list.Remove(sender.Name);
-            this.list.Add(e.NewValue, (View) sender);
+            this.List.Remove(sender.Name);
+            this.List.Add(e.NewValue, (View) sender);
 
-            List<DxfObject> refs = this.references[sender.Name];
-            this.references.Remove(sender.Name);
-            this.references.Add(e.NewValue, refs);
+            List<DxfObjectReference> refs = this.GetReferences(sender.Name);
+            this.References.Remove(sender.Name);
+            this.References.Add(e.NewValue, new DxfObjectReferences());
+            this.References[e.NewValue].Add(refs);
         }
 
         #endregion

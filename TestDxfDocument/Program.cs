@@ -4,7 +4,6 @@ using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Text;
 using netDxf;
 using netDxf.Blocks;
@@ -49,6 +48,7 @@ namespace TestDxfDocument
 
             #region Samples for new and modified features 3.0.0
 
+            //TableObjectReferences();
             //ArcLengthDimension();
             //ReflectionMatrix();
             //PolygonMesh();
@@ -547,18 +547,15 @@ namespace TestDxfDocument
                 Debug.Assert(ReferenceEquals(o.AssociatedBlock, dxf.Blocks[o.AssociatedBlock.Name]), "Object reference not equal.");
 
                 Console.WriteLine("\t{0}; References count: {1}", o.Name, dxf.Layouts.GetReferences(o.Name).Count);
-                List<DxfObject> entities = dxf.Layouts.GetReferences(o.Name);
+                EntityCollection entities = dxf.Layouts[o.Name].AssociatedBlock.Entities;
                 foreach (var e in entities)
                 {
-                    if (e is EntityObject entity)
+                    Debug.Assert(ReferenceEquals(e.Layer, dxf.Layers[e.Layer.Name]), "Object reference not equal.");
+                    Debug.Assert(ReferenceEquals(e.Linetype, dxf.Linetypes[e.Linetype.Name]), "Object reference not equal.");
+                    Debug.Assert(ReferenceEquals(e.Owner, dxf.Blocks[o.AssociatedBlock.Name]), "Object reference not equal.");
+                    foreach (var x in e.XData.Values)
                     {
-                        Debug.Assert(ReferenceEquals(entity.Layer, dxf.Layers[entity.Layer.Name]), "Object reference not equal.");
-                        Debug.Assert(ReferenceEquals(entity.Linetype, dxf.Linetypes[entity.Linetype.Name]), "Object reference not equal.");
-                        Debug.Assert(ReferenceEquals(entity.Owner, dxf.Blocks[o.AssociatedBlock.Name]), "Object reference not equal.");
-                        foreach (var x in entity.XData.Values)
-                        {
-                            Debug.Assert(ReferenceEquals(x.ApplicationRegistry, dxf.ApplicationRegistries[x.ApplicationRegistry.Name]), "Object reference not equal.");
-                        }
+                        Debug.Assert(ReferenceEquals(x.ApplicationRegistry, dxf.ApplicationRegistries[x.ApplicationRegistry.Name]), "Object reference not equal.");
                     }
 
                     if (e is Text txt)
@@ -1241,6 +1238,102 @@ namespace TestDxfDocument
         #endregion
 
         #region Samples for new and modified features 3.0.0
+
+        private static void TableObjectReferences()
+        {
+            bool hasReferences;
+            bool ok;
+            int uses;
+
+            // The document keeps track of the DxfObjects that reference a TableObject
+            DxfDocument doc = new DxfDocument();
+            Layout layout = new Layout("MyLayout");
+            doc.Layouts.Add(layout);
+            doc.Entities.ActiveLayout = layout.Name;
+
+            Linetype linetype = Linetype.Dashed;
+            linetype.Name = "MyLineType";
+
+            DimensionStyle style = new DimensionStyle("MyStyle");
+            style.DimLineLinetype = linetype;
+            style.ExtLine1Linetype = linetype;
+            style.ExtLine2Linetype = linetype;
+
+            
+            doc.DimensionStyles.Add(style);
+
+            // The linetype has been referenced by one DxfObject,
+            // if the linetype does not belong to a document it will always return false.
+            // This is applicable to all classes that inherit from TableObject.
+            hasReferences = linetype.HasReferences();
+
+            // This returns the same list as: List<DxfObjectReference> linetypeReferences = doc.Linetypes.GetReferences(linetype.Name);
+            // Its collection is who holds and handles the references, not the actual linetype.
+            // This method has been added for convenience, it will return null if the linetype does not belong to a document.
+            // This is applicable to all classes that inherits from TableObject
+            List<DxfObjectReference> linetypeReferences = linetype.GetReferences();
+
+            // The linetype is referenced three times by style
+            ok = ReferenceEquals(style, linetypeReferences[0].Reference);
+            uses = linetypeReferences[0].Uses;
+
+
+            Layer layer = new Layer("MyLayer")
+            {
+                Color = AciColor.Yellow
+            };
+            Line line1 = new Line(new Vector2(-10, -10), new Vector2(10, 10))
+            {
+                Layer = layer
+            };
+            doc.Entities.Add(line1);
+            Line line2 = new Line(new Vector2(-10, 10), new Vector2(10, -10))
+            {
+                Layer = layer
+            };
+            doc.Entities.Add(line2);
+
+            List<DxfObjectReference> layeReferences = layer.GetReferences();
+            // The layer "MyLayer" is referenced once by line1 and line2
+            ok = ReferenceEquals(line1, layeReferences[0].Reference);
+            uses = layeReferences[0].Uses;
+            ok = ReferenceEquals(line2, layeReferences[1].Reference);
+            uses = layeReferences[1].Uses;
+
+
+            AlignedDimension dim1 = new AlignedDimension(line1, 2)
+            {
+                Style = style
+            };
+            doc.Entities.Add(dim1);
+            AlignedDimension dim2 = new AlignedDimension(line2, 2)
+            {
+                Style = style
+            };
+            doc.Entities.Add(dim2);
+
+            List<DxfObjectReference> styleReferences = style.GetReferences();
+            // The dimension style "MyStyle" is referenced once by dim1 and dim2
+            ok = ReferenceEquals(dim1, styleReferences[0].Reference);
+            uses = styleReferences[0].Uses;
+            ok = ReferenceEquals(dim2, styleReferences[1].Reference);
+            uses = styleReferences[1].Uses;
+
+            doc.Save("test.dxf");
+
+            List<DxfObjectReference> layoutReferences;
+            // The layout references will return the block associated with it. It is the same as the layout.AssociatedBlock.
+            // Although, it is not really useful to pickup the references of the layout since it is easier to do it trough its associated block,
+            // it is possible to do it due to, that the layout out is handle as TableObject
+            layoutReferences = layout.GetReferences();
+            // Removing a layout from the document will also remove all its entities and attribute definitions.
+            doc.Layouts.Remove(layout);
+            // If the layout has been removed, it references will return null. It is not in use any more.
+            layoutReferences = layout.GetReferences();
+
+            doc.Save("test1.dxf");
+
+        }
 
         public static void ArcLengthDimension()
         {
@@ -2506,9 +2599,6 @@ namespace TestDxfDocument
             EntityCollection entities1 = loaded.Layouts[Layout.ModelSpaceName].AssociatedBlock.Entities;
             EntityCollection entities2 = loaded.Blocks[Block.DefaultModelSpaceName].Entities;
 
-            // getting the layout references not only include the entities of the associated block but also its attribute definitions
-            List<DxfObject> entities3 = loaded.Layouts.GetReferences(Layout.ModelSpaceName);
-
             // this will iterate through the lines we previously added to the doc DxfDocument (using Linq)
             foreach (Line line in entities1.OfType<Line>())
             {
@@ -3453,9 +3543,9 @@ namespace TestDxfDocument
             {
                 // this is the list of users of the block,
                 // this list should only contain one entity, the Insert that represents the table
-                List<DxfObject> refs = doc.Blocks.GetReferences(block.Name);
+                List<DxfObjectReference> refs = doc.Blocks.GetReferences(block);
                 Debug.Assert(refs.Count == 1);
-                tables.Add((Insert) refs[0]);
+                tables.Add((Insert) refs[0].Reference);
             }
 
             // Renaming and cloning anonymous blocks
@@ -5848,7 +5938,7 @@ namespace TestDxfDocument
             // or you can get the complete list of entities of a layout
             foreach (Layout layout in dxfLoad.Layouts)
             {
-                List<DxfObject> entities = dxfLoad.Layouts.GetReferences(layout.Name);
+                EntityCollection entities = dxfLoad.Layouts[layout.Name].AssociatedBlock.Entities;
             }
 
             // You can also remove any layout from the list, except the "Model".
@@ -6210,18 +6300,24 @@ namespace TestDxfDocument
             dxf.Save("test.dxf");
 
             dxf = DxfDocument.Load("sample.dxf");
+            List<DxfObjectReference> refs;
 
             foreach (ApplicationRegistry registry in dxf.ApplicationRegistries)
             {
-                foreach (DxfObject o in dxf.ApplicationRegistries.GetReferences(registry))
+                refs = dxf.ApplicationRegistries.GetReferences(registry);
+                foreach (DxfObjectReference o in refs)
                 {
-                    if (o is EntityObject entityObject)
+                    if (o.Reference is EntityObject entityObject)
                     {
                         foreach (KeyValuePair<string, XData> data in entityObject.XData)
                         {
                             if (data.Key == registry.Name)
+                            {
                                 if (!ReferenceEquals(registry, data.Value.ApplicationRegistry))
+                                {
                                     Console.WriteLine("Application registry {0} not equal entity to {1}", registry.Name, entityObject.CodeName);
+                                }
+                            }
                         }
                     }
                 }
@@ -6229,37 +6325,53 @@ namespace TestDxfDocument
 
             foreach (Block block in dxf.Blocks)
             {
-                foreach (DxfObject o in dxf.Blocks.GetReferences(block))
+                refs = dxf.Blocks.GetReferences(block);
+                foreach (DxfObjectReference o in refs )
                 {
-                    if (o is Insert insert)
+                    if (o.Reference is Insert insert)
+                    {
                         if (!ReferenceEquals(block, insert.Block))
+                        {
                             Console.WriteLine("Block {0} not equal entity to {1}", block.Name, insert.CodeName);
+                        }
+                    }
                 }
             }
 
             foreach (ImageDefinition def in dxf.ImageDefinitions)
             {
-                foreach (DxfObject o in dxf.ImageDefinitions.GetReferences(def))
+                refs = dxf.ImageDefinitions.GetReferences(def);
+                foreach (DxfObjectReference o in refs)
                 {
-                    if (o is Image image)
+                    if (o.Reference is Image image)
+                    {
                         if (!ReferenceEquals(def, image.Definition))
+                        {
                             Console.WriteLine("Image definition {0} not equal entity to {1}", def.Name, image.CodeName);
+                        }
+                    }
                 }
             }
 
             foreach (DimensionStyle dimStyle in dxf.DimensionStyles)
             {
-                foreach (DxfObject o in dxf.DimensionStyles.GetReferences(dimStyle))
+                refs = dxf.DimensionStyles.GetReferences(dimStyle);
+                foreach (DxfObjectReference o in refs)
                 {
-                    if (o is Dimension dimension)
+                    if (o.Reference is Dimension dimension)
+                    {
                         if (!ReferenceEquals(dimStyle, dimension.Style))
+                        {
                             Console.WriteLine("Dimension style {0} not equal entity to {1}", dimStyle.Name, dimension.CodeName);
+                        }
+                    }
                 }
             }
 
             foreach (Group g in dxf.Groups)
             {
-                foreach (DxfObject o in dxf.Groups.GetReferences(g))
+                refs = dxf.Groups.GetReferences(g);
+                foreach (DxfObjectReference o in refs)
                 {
                     // no references
                 }
@@ -6267,7 +6379,8 @@ namespace TestDxfDocument
 
             foreach (UCS u in dxf.UCSs)
             {
-                foreach (DxfObject o in dxf.UCSs.GetReferences(u))
+                refs = dxf.UCSs.GetReferences(u);
+                foreach (DxfObjectReference o in refs)
                 {
                     // no references
                 }
@@ -6275,53 +6388,86 @@ namespace TestDxfDocument
 
             foreach (TextStyle style in dxf.TextStyles)
             {
-                foreach (DxfObject o in dxf.TextStyles.GetReferences(style))
+                refs = dxf.TextStyles.GetReferences(style);
+                foreach (DxfObjectReference o in refs)
                 {
-                    if (o is Text text)
+                    if (o.Reference is Text text)
+                    {
                         if (!ReferenceEquals(style, text.Style))
+                        {
                             Console.WriteLine("Text style {0} not equal entity to {1}", style.Name, text.CodeName);
+                        }
+                    }
 
-                    if (o is MText mText)
+                    if (o.Reference is MText mText)
+                    {
                         if (!ReferenceEquals(style, mText.Style))
+                        {
                             Console.WriteLine("Text style {0} not equal entity to {1}", style.Name, mText.CodeName);
+                        }
+                    }
 
-                    if (o is DimensionStyle dimensionStyle)
+                    if (o.Reference is DimensionStyle dimensionStyle)
+                    {
                         if (!ReferenceEquals(style, dimensionStyle.TextStyle))
+                        {
                             Console.WriteLine("Text style {0} not equal entity to {1}", style.Name, dimensionStyle.CodeName);
+                        }
+                    }
                 }
             }
 
             foreach (Layer layer in dxf.Layers)
             {
-                foreach (DxfObject o in dxf.Layers.GetReferences(layer))
+                refs = dxf.Layers.GetReferences(layer);
+                foreach (DxfObjectReference o in refs)
                 {
-                    if (o is Block block)
+                    if (o.Reference is Block block)
+                    {
                         if (!ReferenceEquals(layer, block.Layer))
+                        {
                             Console.WriteLine("Layer {0} not equal entity to {1}", layer.Name, block.CodeName);
-                    if (o is EntityObject entityObject)
+                        }
+                    }
+                    if (o.Reference is EntityObject entityObject)
+                    {
                         if (!ReferenceEquals(layer, entityObject.Layer))
+                        {
                             Console.WriteLine("Layer {0} not equal entity to {1}", layer.Name, entityObject.CodeName);
+                        }
+                    }
                 }
             }
 
             foreach (Linetype lType in dxf.Linetypes)
             {
-                foreach (DxfObject o in dxf.Linetypes.GetReferences(lType))
+                refs = dxf.Linetypes.GetReferences(lType);
+                foreach (DxfObjectReference o in refs)
                 {
-                    if (o is Layer layer)
+                    if (o.Reference is Layer layer)
+                    {
                         if (!ReferenceEquals(lType, layer.Linetype))
+                        {
                             Console.WriteLine("Line type {0} not equal to {1}", lType.Name, layer.CodeName);
-                    if (o is MLineStyle style)
+                        }
+                    }
+                    if (o.Reference is MLineStyle style)
                     {
                         foreach (MLineStyleElement e in style.Elements)
                         {
                             if (!ReferenceEquals(lType, e.Linetype))
+                            {
                                 Console.WriteLine("Line type {0} not equal to {1}", lType.Name, style.CodeName);
+                            }
                         }
                     }
-                    if (o is EntityObject entityObject)
+                    if (o.Reference is EntityObject entityObject)
+                    {
                         if (!ReferenceEquals(lType, entityObject.Linetype))
+                        {
                             Console.WriteLine("Line type {0} not equal entity to {1}", lType.Name, entityObject.CodeName);
+                        }
+                    }
                 }
             }
 
@@ -6463,7 +6609,7 @@ namespace TestDxfDocument
             dxf.Entities.Remove(insert);
             dxf.Blocks.Remove(insert.Block.Name);
             // imageDef1 has no references in the document
-            List<DxfObject> uses = dxf.ImageDefinitions.GetReferences(imageDef1.Name);
+            List<DxfObjectReference> uses = dxf.ImageDefinitions.GetReferences(imageDef1);
             dxf.Save("test netDxf with unreferenced imageDef.dxf");
             dxf = DxfDocument.Load("test netDxf with unreferenced imageDef.dxf");
 
@@ -6507,10 +6653,10 @@ namespace TestDxfDocument
             // this will return false since layer1 is not empty
             ok = dxf.Layers.Remove(layer1.Name);
 
-            List<DxfObject> entities = dxf.Layers.GetReferences(layer1.Name);
-            foreach (DxfObject o in entities)
+            List<DxfObjectReference> entities = dxf.Layers.GetReferences(layer1);
+            foreach (DxfObjectReference o in entities)
             {
-                dxf.Entities.Remove(o as EntityObject);
+                dxf.Entities.Remove(o.Reference as EntityObject);
             }
 
             // now this should return true since layer1 is empty
@@ -6544,16 +6690,16 @@ namespace TestDxfDocument
             DxfDocument dxf2 = DxfDocument.Load("test.dxf");
 
             // this list will contain the circle entity
-            List<DxfObject> dxfObjects;
+            List<DxfObjectReference> dxfObjects;
             dxfObjects = dxf.Layers.GetReferences("circle");
 
             // but we cannot removed since it is part of a block
             ok = dxf.Entities.Remove(circle);
             // we need to remove first the block, but to do this we need to make sure there are no references of that block in the document
             dxfObjects = dxf.Blocks.GetReferences(block.Name);
-            foreach (DxfObject o in dxfObjects)
+            foreach (DxfObjectReference o in dxfObjects)
             {
-                dxf.Entities.Remove(o as EntityObject);
+                dxf.Entities.Remove(o.Reference as EntityObject);
             }
 
 
@@ -6698,7 +6844,7 @@ namespace TestDxfDocument
             DxfDocument dxf2 = DxfDocument.Load("MLine.dxf");
 
             // "MyStyle" is used only once
-            List<DxfObject> uses;
+            List<DxfObjectReference> uses;
             uses = dxf.MlineStyles.GetReferences(mline.Style.Name);
 
             // if we try to get the LinetypeUses, we will find out that "MyStyle" appears several times,
@@ -6706,12 +6852,19 @@ namespace TestDxfDocument
             uses = dxf.Linetypes.GetReferences(Linetype.ByLayerName);
 
             bool ok;
+            bool isUsed;
+
+            // you cannot remove items that are used by other objects
+            ok = dxf.MlineStyles.Remove(mline.Style.Name);
+            isUsed = dxf.MlineStyles.HasReferences(mline.Style.Name);
+
+            // first we need to remove the MLine that make use of the MLineStyle
             ok = dxf.Entities.Remove(mline);
 
             // "MyStyle" is not used its reference has been deleted
-            uses = dxf.MlineStyles.GetReferences(mline.Style.Name);
+            isUsed = dxf.MlineStyles.HasReferences(mline.Style.Name);
             // we can safely remove it
-            dxf.MlineStyles.Remove(mline.Style.Name);
+            ok = dxf.MlineStyles.Remove(mline.Style.Name);
 
             dxf.Save("MLine2.dxf");
 
@@ -6767,7 +6920,7 @@ namespace TestDxfDocument
             dxf.Entities.Remove(line);
             dxf.Entities.Remove(circle);
             // "MyAppReg" is not used anymore
-            List<DxfObject> uses = dxf.ApplicationRegistries.GetReferences(myAppReg.Name);
+            List<DxfObjectReference> uses = dxf.ApplicationRegistries.GetReferences(myAppReg.Name);
             // it is safe to delete it
             ok = dxf.ApplicationRegistries.Remove(myAppReg.Name);
 
@@ -6892,7 +7045,7 @@ namespace TestDxfDocument
             dxf.Groups.Add(group1);
             dxf.Groups.Add(group2);
 
-            List<DxfObject> list = dxf.Groups.GetReferences(group1);
+            List<DxfObjectReference> list = dxf.Groups.GetReferences(group1);
             dxf.Save("group.dxf");
 
             dxf = DxfDocument.Load("group.dxf");
@@ -8181,7 +8334,7 @@ namespace TestDxfDocument
         private static void SpeedTest()
         {
             Stopwatch crono = new Stopwatch();
-            const int numLines = (int) 1e6; // create # lines
+            const int numLines = (int) 1e5; // create # lines
             string layerName = "MyLayer";
             float totalTime = 0;
 
@@ -8285,6 +8438,15 @@ namespace TestDxfDocument
             crono.Start();
             dxf = DxfDocument.Load("speedtest (netDxf 2010).dxf");
             Console.WriteLine("Time loading file 2010: " + crono.ElapsedMilliseconds / 1000.0f);
+            totalTime += crono.ElapsedMilliseconds;
+            crono.Stop();
+            crono.Reset();
+
+
+            List<Line> remove = dxf.Entities.Lines.ToList();
+            crono.Start();
+            dxf.Entities.Remove(remove);
+            Console.WriteLine("Removing entities: " + crono.ElapsedMilliseconds / 1000.0f);
             totalTime += crono.ElapsedMilliseconds;
             crono.Stop();
             crono.Reset();

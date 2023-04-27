@@ -1,7 +1,7 @@
 #region netDxf library licensed under the MIT License
 // 
 //                       netDxf library
-// Copyright (c) 2019-2021 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (c) 2019-2023 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -47,18 +47,28 @@ namespace netDxf
         /// Initializes a new instance of the <c>BezierCurve</c> class.
         /// </summary>
         /// <param name="controlPoints">A list of control points.</param>
+        /// <param name="degree">Bezier curve degree.</param>
         /// <remarks>
-        /// The curve degree will be equal to the number of control points minus one.
+        /// The curve degree must be equal to the number of control points minus one.
         /// </remarks>
-        protected BezierCurve(IEnumerable<Vector3> controlPoints)
+        protected BezierCurve(IEnumerable<Vector3> controlPoints, int degree)
         {
             if (controlPoints == null)
             {
                 throw new ArgumentNullException(nameof(controlPoints));
             }
+            if (degree < 1)
+            {
+                throw new ArgumentOutOfRangeException(nameof(degree), degree, "The bezier curve degree must be at least one.");
+            }
 
             this.controlPoints = controlPoints.ToArray();
-            this.degree = this.controlPoints.Length - 1;
+            this.degree = degree;
+            
+            if (this.degree != this.controlPoints.Length - 1)
+            {
+                throw new ArgumentException("The bezier curve degree must be equal to the number of control points minus one.");
+            }
         }
 
         #endregion

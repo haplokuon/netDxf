@@ -1,7 +1,7 @@
 #region netDxf library licensed under the MIT License
 // 
 //                       netDxf library
-// Copyright (c) 2019-2021 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (c) 2019-2023 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -315,13 +315,13 @@ namespace netDxf.Collections
             get { return this.document.Layouts[this.activeLayout].AssociatedBlock.Entities.OfType<Wipeout>(); }
         }
 
-        /// <summary>
-        /// Gets the list of <see cref="AttributeDefinition">attribute definitions</see> in the active layout.
-        /// </summary>
-        public IEnumerable<AttributeDefinition> AttributeDefinitions
-        {
-            get { return this.document.Layouts[this.activeLayout].AssociatedBlock.AttributeDefinitions.Values; }
-        }
+        ///// <summary>
+        ///// Gets the list of <see cref="AttributeDefinition">attribute definitions</see> in the active layout.
+        ///// </summary>
+        //public IEnumerable<AttributeDefinition> AttributeDefinitions
+        //{
+        //    get { return this.document.Layouts[this.activeLayout].AssociatedBlock.AttributeDefinitions.Values; }
+        //}
 
         #endregion
 

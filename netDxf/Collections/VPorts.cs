@@ -1,7 +1,7 @@
 #region netDxf library licensed under the MIT License
 // 
 //                       netDxf library
-// Copyright (c) 2019-2021 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (c) 2019-2023 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -24,7 +24,6 @@
 #endregion
 
 using System;
-using System.Collections.Generic;
 using netDxf.Tables;
 
 namespace netDxf.Collections
@@ -53,8 +52,8 @@ namespace netDxf.Collections
             this.Owner.NumHandles = active.AssignHandle(this.Owner.NumHandles);
 
             this.Owner.AddedObjects.Add(active.Handle, active);
-            this.list.Add(active.Name, active);
-            this.references.Add(active.Name, new List<DxfObject>());
+            this.List.Add(active.Name, active);
+            this.References.Add(active.Name, new DxfObjectReferences());
             active.Owner = this;
         }
 

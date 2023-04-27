@@ -1,7 +1,7 @@
 #region netDxf library licensed under the MIT License
 // 
 //                       netDxf library
-// Copyright (c) 2019-2021 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (c) 2019-2023 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -47,7 +47,7 @@ namespace netDxf
         /// and the last the end point.
         /// </remarks>
         public BezierCurveQuadratic(IEnumerable<Vector3> controlPoints)
-            : base(controlPoints)
+            : base(controlPoints, 2)
         {
         }
 
@@ -58,7 +58,7 @@ namespace netDxf
         /// <param name="controlPoint">Second control point.</param>
         /// <param name="endPoint">End anchor point.</param>
         public BezierCurveQuadratic(Vector3 startPoint, Vector3 controlPoint, Vector3 endPoint)
-            : base (new []{startPoint, controlPoint, endPoint})
+            : base (new []{startPoint, controlPoint, endPoint}, 2)
         {
         }
 

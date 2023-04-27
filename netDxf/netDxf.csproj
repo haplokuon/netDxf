@@ -1,13 +1,13 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net48;netstandard2.1;netcoreapp3.1;net5.0;net6.0</TargetFrameworks>
+    <TargetFrameworks>net48;net6.0</TargetFrameworks>
     <Version>3.0.0</Version>
     <Authors>Daniel Carvajal</Authors>
     <Owners>haplokuon</Owners>
     <Company>netDxf</Company>
     <Product />
-    <Copyright>Daniel Carvajal © 2022</Copyright>
+    <Copyright>Daniel Carvajal © 2023</Copyright>
     <Description>.net Dxf Reader-Writer</Description>
     <SignAssembly>true</SignAssembly>
     <DelaySign>false</DelaySign>
@@ -44,9 +44,5 @@
   <PropertyGroup Condition=" '$(TargetFramework)' == 'net48'">
     <DefineConstants>NET4X</DefineConstants>
   </PropertyGroup>
-
-  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.1'">
-    <PackageReference Include="System.Text.Encoding.CodePages" Version="5.0.0" />
-  </ItemGroup>
-
+  
 </Project>

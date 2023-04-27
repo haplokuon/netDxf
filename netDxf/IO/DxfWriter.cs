@@ -4770,17 +4770,17 @@ namespace netDxf.IO
             this.chunk.Write(0, underlayDef.CodeName);
             this.chunk.Write(5, underlayDef.Handle);
             this.chunk.Write(102, "{ACAD_REACTORS");
-            List<DxfObject> objects = null;
+            List<DxfObjectReference> objects = null;
             switch (underlayDef.Type)
             {
                 case UnderlayType.DGN:
-                    objects = this.doc.UnderlayDgnDefinitions.References[underlayDef.Name];
+                    objects = this.doc.UnderlayDgnDefinitions.GetReferences(underlayDef.Name);
                     break;
                 case UnderlayType.DWF:
-                    objects = this.doc.UnderlayDwfDefinitions.References[underlayDef.Name];
+                    objects = this.doc.UnderlayDwfDefinitions.GetReferences(underlayDef.Name);
                     break;
                 case UnderlayType.PDF:
-                    objects = this.doc.UnderlayPdfDefinitions.References[underlayDef.Name];
+                    objects = this.doc.UnderlayPdfDefinitions.GetReferences(underlayDef.Name);
                     break;
             }
 
@@ -4788,13 +4788,14 @@ namespace netDxf.IO
             {
                 throw new NullReferenceException("Underlay references list cannot be null");
             }
-            foreach (DxfObject o in objects)
+            foreach (DxfObjectReference o in objects)
             {
-                if (o is Underlay underlay)
+                if (o.Reference is Underlay underlay)
                 {
                     this.chunk.Write(330, underlay.Handle);
                 }
             }
+
             this.chunk.Write(102, "}");
             this.chunk.Write(330, ownerHandle);
 
@@ -5402,12 +5403,12 @@ namespace netDxf.IO
                     this.imageDefReactors.Add(imageDef.Handle, new Dictionary<string, ImageDefinitionReactor>());
                 }
 
-                List<DxfObject> images = this.doc.ImageDefinitions.References[imageDef.Name];
-                foreach (DxfObject o in images)
+                List<DxfObjectReference> images = this.doc.ImageDefinitions.GetReferences(imageDef);
+                foreach (DxfObjectReference o in images)
                 {
                     // only Image entities are referenced by an ImageDefinition
-                    Debug.Assert(o is Image, "Only Image entities can be referenced by an ImageDefinition.");
-                    Image image = (Image) o;
+                    Debug.Assert(o.Reference is Image, "Only Image entities can be referenced by an ImageDefinition.");
+                    Image image = (Image) o.Reference;
                     Dictionary<string, ImageDefinitionReactor> reactors = this.imageDefReactors[image.Definition.Handle];
                     ImageDefinitionReactor reactor = new ImageDefinitionReactor(image.Handle);
                     this.doc.NumHandles = reactor.AssignHandle(this.doc.NumHandles);

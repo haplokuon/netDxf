@@ -1,7 +1,7 @@
 #region netDxf library licensed under the MIT License
 // 
 //                       netDxf library
-// Copyright (c) 2019-2021 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (c) 2019-2023 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -49,7 +49,7 @@ namespace netDxf
         /// and the last the end point.
         /// </remarks>
         public BezierCurveCubic(IEnumerable<Vector3> controlPoints)
-            : base(controlPoints)
+            : base(controlPoints, 3)
         {
         }
 
@@ -61,7 +61,7 @@ namespace netDxf
         /// <param name="secondControlPoint">Second control point.</param>
         /// <param name="endPoint">End anchor point.</param>
         public BezierCurveCubic(Vector3 startPoint, Vector3 firstControlPoint, Vector3 secondControlPoint, Vector3 endPoint)
-            : base(new[]{startPoint, firstControlPoint, secondControlPoint, endPoint})
+            : base(new[]{startPoint, firstControlPoint, secondControlPoint, endPoint}, 3)
         {
         }
 
@@ -207,10 +207,9 @@ namespace netDxf
         /// <param name="fitPoints">List of points.</param>
         /// <returns>A list of cubic bezier curves.</returns>
         /// <returns>
-        /// Original https://www.codeproject.com/Articles/31859/Draw-a-Smooth-Curve-through-a-Set-of-2D-Points-wit by Oleg V. Polikarpotchkin and Peter Lee.
+        /// Original code: https://www.codeproject.com/Articles/31859/Draw-a-Smooth-Curve-through-a-Set-of-2D-Points-wit by Oleg V. Polikarpotchkin and Peter Lee.<br />
         /// Modified to allow the use of 3D points, and other minor changes to accomodate the existing classes of this library.<br />
-        /// The total number of curves returned will be equal to the number of fit points minus 1,
-        /// therefore this method is not suitable to use over large number of fit points,
+        /// The total number of curves returned will be equal to the number of fit points minus 1, therefore this method is not suitable to use over large number of fit points,
         /// where other, more computational heavy methods, like the least-squares bezier curve fitting would return a less amount of curves.
         /// In such cases, it is advisable to perform some method to reduce the number of points and to avoid duplicates or very close points.
         /// </returns>
@@ -269,7 +268,7 @@ namespace netDxf
             // Get first control points Y-values
             double[] y = GetFirstControlPoints(rhs);
 
-            // Set right hand side Y values
+            // Set right hand side Z values
             for (int i = 1; i < n - 1; i++)
             {
                 rhs[i] = 4.0 * points[i].Z + 2.0 * points[i + 1].Z;

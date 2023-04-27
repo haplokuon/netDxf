@@ -643,25 +643,6 @@ namespace netDxf
                 }
             }
 
-            //byte index = 0;
-            //foreach (byte[]  in IndexRgb.Keys)
-            //{
-            //    byte[] color = IndexRgb[key];
-            //    int red = r - color[0];
-            //    int green = g - color[1];
-            //    int blue = b - color[2];
-            //    int dist = red * red + green * green + blue * blue;
-            //    if (dist == 0) // the RGB components correspond to one of the indexed colors
-            //    {
-            //        return key;
-            //    }
-            //    if (dist < prevDist)
-            //    {
-            //        prevDist = dist;
-            //        index = key;
-            //    }
-            //}
-
             return index;
         }
 

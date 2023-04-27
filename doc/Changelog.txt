@@ -1,5 +1,14 @@
 ## Change history
 
+### [2023/04/27]
+* Removed the taget frameworks netstandard2.1, netcoreapp3.1, and net5.0. Manually edit the netDxf.proj if you need them.
+* Reworked how the references to a TableObject are tracked. Now they are internally stored in a dictionary instead of a list. While this will make adding entities to the document a little slower removing them will be much faster. See the sample TableObjectReferences().
+* Add the method GetReferences to classes that inherit from TableObject. It returns the same list as the GetReferences method of its respective collection. See the sample TableObjectReferences().
+* Added the method HasReferences to TableObjects and TableObject collections. It indicates if the actual table object has been referenced by other DxfObjects. TableObjects in use cannot be removed.
+* Added a check to avoid initializing a bezier curve with the wrong number of control points.
+* (fixed) Removing dimension entities with no associated block. This is the case of dimensions whick block has left null to force the program that loads the resulting DXF to generate its own dimension block.
+* (fixed) Error when loading a closed periodic spline from a DXF without weights.
+
 ### [2023/03/05]
 * Changed the default target framework 'net45' for 'net48'. The library is compatible will all 4.x net framework versions.
 * Renamed the constant 'NET45' with 'NET4X' in netDxf.csproj. This constant must be applicable when compiling against any net framework 4.x versions.

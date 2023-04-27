@@ -1,7 +1,7 @@
 #region netDxf library licensed under the MIT License
 // 
 //                       netDxf library
-// Copyright (c) 2019-2021 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (c) 2019-2023 Daniel Carvajal (haplokuon@gmail.com)
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -150,7 +150,7 @@ namespace netDxf.Collections
         public void Save(string file, bool overwrite)
         {
             if(overwrite) File.Delete(file);
-            foreach (Linetype lt in this.list.Values)
+            foreach (Linetype lt in this.List.Values)
             {
                 if (!lt.IsReserved)
                 {
@@ -179,7 +179,7 @@ namespace netDxf.Collections
                 throw new ArgumentNullException(nameof(linetype));
             }
 
-            if (this.list.TryGetValue(linetype.Name, out Linetype add))
+            if (this.List.TryGetValue(linetype.Name, out Linetype add))
             {
                 return add;
             }
@@ -209,8 +209,8 @@ namespace netDxf.Collections
                 }
             }
 
-            this.list.Add(linetype.Name, linetype);
-            this.references.Add(linetype.Name, new List<DxfObject>());
+            this.List.Add(linetype.Name, linetype);
+            this.References.Add(linetype.Name, new DxfObjectReferences());
 
             linetype.Owner = this;
 
@@ -258,7 +258,7 @@ namespace netDxf.Collections
                 return false;
             }
 
-            if (this.references[item.Name].Count != 0)
+            if (this.HasReferences(item))
             {
                 return false;
             }
@@ -268,8 +268,8 @@ namespace netDxf.Collections
             item.Segments.Remove(segments);
 
             this.Owner.AddedObjects.Remove(item.Handle);
-            this.references.Remove(item.Name);
-            this.list.Remove(item.Name);
+            this.References.Remove(item.Name);
+            this.List.Remove(item.Name);
 
             item.Handle = null;
             item.Owner = null;
@@ -290,12 +290,13 @@ namespace netDxf.Collections
                 throw new ArgumentException("There is already another line type with the same name.");
             }
 
-            this.list.Remove(sender.Name);
-            this.list.Add(e.NewValue, (Linetype) sender);
+            this.List.Remove(sender.Name);
+            this.List.Add(e.NewValue, (Linetype) sender);
 
-            List<DxfObject> refs = this.references[sender.Name];
-            this.references.Remove(sender.Name);
-            this.references.Add(e.NewValue, refs);
+            List<DxfObjectReference> refs = this.GetReferences(sender.Name);
+            this.References.Remove(sender.Name);
+            this.References.Add(e.NewValue, new DxfObjectReferences());
+            this.References[e.NewValue].Add(refs);
         }
 
         private void Linetype_SegmentAdded(Linetype sender, LinetypeSegmentChangeEventArgs e)
@@ -311,7 +312,7 @@ namespace netDxf.Collections
             {
                 LinetypeShapeSegment shapeSegment = (LinetypeShapeSegment)e.Item;
                 shapeSegment.Style = this.Owner.ShapeStyles.Add(shapeSegment.Style);
-                this.Owner.ShapeStyles.References[shapeSegment.Name].Add(sender);
+                this.Owner.ShapeStyles.References[shapeSegment.Style.Name].Add(sender);
             }
         }
 
@@ -323,7 +324,7 @@ namespace netDxf.Collections
             }
             if (e.Item.Type == LinetypeSegmentType.Shape)
             {
-                this.Owner.ShapeStyles.References[((LinetypeShapeSegment)e.Item).Name].Remove(sender);
+                this.Owner.ShapeStyles.References[((LinetypeShapeSegment)e.Item).Style.Name].Remove(sender);
             }
         }
 
