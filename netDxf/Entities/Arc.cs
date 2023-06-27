@@ -1,7 +1,7 @@
 #region netDxf library licensed under the MIT License
 // 
 //                       netDxf library
-// Copyright (c) 2019-2023 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (c) Daniel Carvajal (haplokuon@gmail.com)
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -80,7 +80,7 @@ namespace netDxf.Entities
             this.center = center;
             if (radius <= 0)
             {
-                throw new ArgumentOutOfRangeException(nameof(radius), radius, "The circle radius must be greater than zero.");
+                throw new ArgumentOutOfRangeException(nameof(radius), radius, "The arc radius must be greater than zero.");
             }
             this.radius = radius;
             this.startAngle = MathHelper.NormalizeAngle(startAngle);
@@ -100,7 +100,7 @@ namespace netDxf.Entities
             Tuple<Vector2, double, double, double> data = MathHelper.ArcFromBulge(startPoint, endPoint, bulge);
             if (data.Item2 <= 0)
             {
-                throw new ArgumentOutOfRangeException(nameof(radius), radius, "The circle radius must be greater than zero.");
+                throw new ArgumentOutOfRangeException(nameof(radius), radius, "The arc radius must be greater than zero.");
             }
             this.center = new Vector3(data.Item1.X, data.Item1.Y, 0.0) ;
             this.radius = data.Item2;

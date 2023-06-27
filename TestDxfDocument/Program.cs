@@ -19,8 +19,6 @@ using FontStyle = netDxf.Tables.FontStyle;
 using Image = netDxf.Entities.Image;
 using Point = netDxf.Entities.Point;
 using Trace = netDxf.Entities.Trace;
-using Vector2 = netDxf.Vector2;
-using Vector3 = netDxf.Vector3;
 
 namespace TestDxfDocument
 {
@@ -2230,7 +2228,7 @@ namespace TestDxfDocument
 
         public static void ShapeMirror()
         {
-            ShapeStyle style = new ShapeStyle("shape.shx");
+            ShapeStyle style = new ShapeStyle("MyShapeStyle", "shape.shx");
             Shape shape1 = new Shape("MyShape", style);
             shape1.ObliqueAngle = 20;
 
@@ -3244,7 +3242,7 @@ namespace TestDxfDocument
         private static void Shape()
         {
             // create the shape style from the file where the shape definitions are stored
-            ShapeStyle style = new ShapeStyle("shape.shx");
+            ShapeStyle style = new ShapeStyle("MyShapeStyle", "shape.shx");
             // create the shape entity from the style where the same named "MyShape" is stored (name case is ignored)
             Shape shape = new Shape("MyShape", style);
 
@@ -5699,7 +5697,7 @@ namespace TestDxfDocument
 
         private static void MTextEntity()
         {
-            TextStyle style = new TextStyle("Arial");
+            TextStyle style = new TextStyle("MyTextStyle", "Arial", FontStyle.Regular);
 
             MText text1 = new MText(Vector2.Zero, 10, 0, style);
             // you can set manually the text value with all available formatting commands
@@ -6240,9 +6238,9 @@ namespace TestDxfDocument
         private static void TestingTrueTypeFonts()
         {
             DxfDocument dxfText = new DxfDocument();
-            TextStyle textStyle1 = new TextStyle(@"arial.ttf");
-            TextStyle textStyle2 = new TextStyle("arialbi.ttf");
-            TextStyle textStyle3 = new TextStyle(@"C:\Windows\Fonts\91118.ttf");
+            TextStyle textStyle1 = new TextStyle("MyTextStyle", "arial.ttf");
+            TextStyle textStyle2 = new TextStyle("MyTextStyle", "arialbi.ttf");
+            TextStyle textStyle3 = new TextStyle("MyTextStyle", "C:\\Windows\\Fonts\\91118.ttf");
             textStyle3.Name = textStyle3.FontFamilyName;
             Text text1 = new Text("testing", Vector2.Zero, 6, textStyle1);
             Text text2 = new Text("testing", Vector2.Zero, 6, textStyle2);
@@ -6744,7 +6742,7 @@ namespace TestDxfDocument
             block.AttributeDefinitions.Add(attdef);
 
             Insert insert = new Insert(block, new Vector2(5, 5));
-            insert.Attributes[0].Style = new TextStyle("Arial.ttf");
+            insert.Attributes[0].Style = new TextStyle("MyTextStyle", "Arial.ttf");
 
             dxf.Entities.Add(insert);
 
@@ -6761,7 +6759,7 @@ namespace TestDxfDocument
             dxf.Entities.Add(line);
 
             DimensionStyle myStyle = new DimensionStyle("MyStyle");
-            myStyle.TextStyle = new TextStyle("Tahoma.ttf");
+            myStyle.TextStyle = new TextStyle("MyTextStyle", "Tahoma.ttf");
             myStyle.DimSuffix = "mm";
             myStyle.LengthPrecision = 2;
             double offset = 7;
@@ -7272,7 +7270,7 @@ namespace TestDxfDocument
 
         private static void WriteNoAsciiText()
         {
-            TextStyle textStyle = new TextStyle("Arial.ttf");
+            TextStyle textStyle = new TextStyle("MyTextStyle", "Arial.ttf");
             DxfDocument dxf = new DxfDocument();
             dxf.DrawingVariables.LastSavedBy = "ЉЊЋЌЍжзицрлЯ";
             //Text text = new Text("ÁÉÍÓÚ áéíóú Ññ àèìòù âêîôû", Vector2.Zero,10);
@@ -7762,7 +7760,7 @@ namespace TestDxfDocument
             xdata.XDataRecord.Add(XDataRecord.CloseControlString);
 
             //text
-            TextStyle style = new TextStyle("Times.ttf");
+            TextStyle style = new TextStyle("MyTextStyle", "Times.ttf");
             //TextStyle style = TextStyle.Default;
             MText mText = new MText(new Vector3(3, 2, 0), 1.0f, 100.0f, style);
             mText.Layer = new Layer("Multiline Text");

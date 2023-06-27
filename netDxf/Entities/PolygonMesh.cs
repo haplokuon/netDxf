@@ -132,7 +132,7 @@ namespace netDxf.Entities
 
             return this.vertexes[0];
         }
-
+        
         /// <summary>
         /// Gets the number of vertexes along the U direction (local X axis).
         /// </summary>
@@ -256,7 +256,7 @@ namespace netDxf.Entities
             get { return defaultSurfU; }
             set
             {
-                if (value < 2 || value > 200)
+                if (value < 0 || value > 200)
                 {
                     throw new ArgumentOutOfRangeException(nameof(value), value, "Values must be between 0 and 200.");
                 }
@@ -276,7 +276,7 @@ namespace netDxf.Entities
             get { return defaultSurfV; }
             set
             {
-                if (value < 2 || value > 200)
+                if (value < 0 || value > 200)
                 {
                     throw new ArgumentOutOfRangeException(nameof(value), value, "Values must be between 0 and 200.");
                 }

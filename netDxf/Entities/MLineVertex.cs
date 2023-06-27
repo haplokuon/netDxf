@@ -1,7 +1,7 @@
 #region netDxf library licensed under the MIT License
 // 
 //                       netDxf library
-// Copyright (c) 2019-2021 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (c) Daniel Carvajal (haplokuon@gmail.com)
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -59,7 +59,7 @@ namespace netDxf.Entities
         /// Gets the MLine vertex position.
         /// </summary>
         /// <remarks>
-        /// If this property is modified the function MLine.CalculateVertexesInfo() will need to be called manually to update the internal information.
+        /// If this property is modified the function MLine.Update() will need to be called manually to update the internal information.
         /// </remarks>
         public Vector2 Position
         {

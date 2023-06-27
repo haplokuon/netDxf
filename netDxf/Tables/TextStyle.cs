@@ -1,7 +1,7 @@
 #region netDxf library licensed under the MIT License
 // 
 //                       netDxf library
-// Copyright (c) 2019-2023 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (c) Daniel Carvajal (haplokuon@gmail.com)
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -59,28 +59,21 @@ namespace netDxf.Tables
         public const string DefaultName = "Standard";
 
         /// <summary>
+        /// Default text style font.
+        /// </summary>
+        public const string DefaultFont = "simplex.shx";
+
+        /// <summary>
         /// Gets the default text style.
         /// </summary>
         public static TextStyle Default
         {
-            get { return new TextStyle(DefaultName, "simplex.shx"); }
+            get { return new TextStyle(DefaultName, DefaultFont); }
         }
 
         #endregion
 
         #region constructors
-
-        /// <summary>
-        /// Initializes a new instance of the <c>TextStyle</c> class.
-        /// </summary>
-        /// <param name="font">Text style font file name with full or relative path.</param>
-        /// <remarks>
-        /// The font file name, without the extension, will also be used as the name of the text style.
-        /// </remarks>
-        public TextStyle(string font)
-            : this(Path.GetFileNameWithoutExtension(font), font)
-        {
-        }
 
         /// <summary>
         /// Initializes a new instance of the <c>TextStyle</c> class.
@@ -133,23 +126,9 @@ namespace netDxf.Tables
         /// <summary>
         /// Initializes a new instance of the <c>TextStyle</c> class exclusively to be used with true type fonts.
         /// </summary>
-        /// <param name="fontFamily">True type font family name.</param>
-        /// <param name="fontStyle">True type font style</param>
-        /// <remarks>
-        /// This constructor is to be use only with true type fonts.
-        /// The fontFamily value will also be used as the name of the text style.
-        /// </remarks>
-        public TextStyle(string fontFamily, FontStyle fontStyle)
-            : this(fontFamily, fontFamily, fontStyle, true)
-        {
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <c>TextStyle</c> class exclusively to be used with true type fonts.
-        /// </summary>
         /// <param name="name">Text style name.</param>
         /// <param name="fontFamily">True type font family name.</param>
-        /// <param name="fontStyle">True type font style</param>
+        /// <param name="fontStyle">True type font style.</param>
         /// <remarks>This constructor is to be use only with true type fonts.</remarks>
         public TextStyle(string name, string fontFamily, FontStyle fontStyle)
             : this(name, fontFamily, fontStyle, true)

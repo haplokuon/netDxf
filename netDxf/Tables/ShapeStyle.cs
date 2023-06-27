@@ -1,7 +1,7 @@
 #region netDxf library licensed under the MIT License
 // 
 //                       netDxf library
-// Copyright (c) 2019-2023 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (c) Daniel Carvajal (haplokuon@gmail.com)
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -49,27 +49,23 @@ namespace netDxf.Tables
         #region constants
 
         /// <summary>
+        /// Default text style font.
+        /// </summary>
+        public const string DefaultShapeFile = "ltypeshp.shx";
+
+        /// <summary>
         /// Gets the default shape style.
         /// </summary>
         /// <remarks>AutoCad stores the shapes for the predefined complex linetypes in the ltypeshp.shx file.</remarks>
         internal static ShapeStyle Default
         {
-            get { return new ShapeStyle("LTYPESHP.SHX");}
+            get { return new ShapeStyle("ltypeshp", ShapeStyle.DefaultShapeFile);}
         }
 
         #endregion
 
         #region constructors
-
-        /// <summary>
-        /// Initializes a new instance of the <c>ShapeStyle</c> class.
-        /// </summary>
-        /// <param name="file">Shape definitions SHX file.</param>
-        public ShapeStyle(string file)
-            : this(Path.GetFileNameWithoutExtension(file), file, 0.0, 1.0, 0.0)
-        {
-        }
-
+        
         /// <summary>
         /// Initializes a new instance of the <c>ShapeStyle</c> class.
         /// </summary>

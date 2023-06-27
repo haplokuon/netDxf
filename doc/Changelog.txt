@@ -1,6 +1,14 @@
 ## Change history
 
-### [2023/04/27]
+### [3.0.0 - 2023/06/28]
+
+[2023/06/28]
+* Added the property WorkingFolder to DxfDocument.SupportFolders. When a file is loaded or saved, it will hold the full path where the file resides, by default it points to the current System.Environment.CurrentDirectory when the DxfDocument was created.
+* Now you can change the Name and Style properties of LinetypeShapeSegment classes.
+* Deleted the TextStyle constructors public TextStyle(string font) and public TextStyle(string fontFamily, FontStyle fontStyle), now you must also provide the table name.
+* Deleted the ShapeStyle constructor public ShapeStyle(string file), now you must also provide the table name.
+
+[2023/04/27]
 * Removed the taget frameworks netstandard2.1, netcoreapp3.1, and net5.0. Manually edit the netDxf.proj if you need them.
 * Reworked how the references to a TableObject are tracked. Now they are internally stored in a dictionary instead of a list. While this will make adding entities to the document a little slower removing them will be much faster. See the sample TableObjectReferences().
 * Add the method GetReferences to classes that inherit from TableObject. It returns the same list as the GetReferences method of its respective collection. See the sample TableObjectReferences().
@@ -9,7 +17,7 @@
 * (fixed) Removing dimension entities with no associated block. This is the case of dimensions whick block has left null to force the program that loads the resulting DXF to generate its own dimension block.
 * (fixed) Error when loading a closed periodic spline from a DXF without weights.
 
-### [2023/03/05]
+[2023/03/05]
 * Changed the default target framework 'net45' for 'net48'. The library is compatible will all 4.x net framework versions.
 * Renamed the constant 'NET45' with 'NET4X' in netDxf.csproj. This constant must be applicable when compiling against any net framework 4.x versions.
 * Normalizing a zero vector will return the Zero vector instead of NaN.
@@ -26,10 +34,10 @@
 * (fixed) Workaround for possible bad formatted tolerance string representations.
 * (fixed) The vectors that define the start and end angle for 3 point angular dimensions can be parallel. This restriction still true for angular 2 line dimensions.
 
-### [2022/11/02]
+[2022/11/02]
 * Fixed a bug in the AciColor.FromHsl method, under certain circumstances the RGB values where not calculated correctly.
 
-### [2022/11/01]
+[2022/11/01]
 * Workaround for bad DXF files that contain polyface with invalid geometry, they will be removed. 
 * Workaround for bad DXF files that contains entities without handles. This may derive in unexpected side effects.
 * Workaround for bad DXF files lacking BLOCK_RECORD tables for the defined blocks. The default block record values will be given what may have other side effects.
@@ -38,18 +46,18 @@
 * Added NET 6.0 as a target framework.
 * Updated netDxf solution for Visual Studio 2022. The solution file is still usable by Visual Studio 2019 but it does not support NET 6.0.
 
-### [2022/05/27]
+[2022/05/27]
 * Added the Matrix3.Reflection method that builds a reflection matrix for a mirror plane that passes through the origin. See sample ReflectionMatrix().
 * Added the Matrix4.Reflection method that builds a reflection matrix for a mirror plane that passes through an arbitrary point. See sample ReflectionMatrix().
 * Corrected the comments in the Ellipse.Center property.
 * (fixed) In the Ellipse.SetAxis method the validity checks must be performed with the arguments of the method not the actual major and minor axis of the ellipse.
 
-### [2022/04/19]
+[2022/04/19]
 * Added more GTE classes. See the Samples for GTE classes
 * Deleted the SplineVertex class. Now the Spline constructors take two lists: a Vector3 to define the controls points and a double array to define the weights.
 * PolygonMesh entities are now capable to handle closed in U and/or V surfaces.
 
-### [2022/04/10]
+[2022/04/10]
 * Added CalculateTangent for Quadratic and Cubic Bezier curves.
 * Added PolygonMesh entity. See PolygonMesh() sample.
 * Added the drawing variables SurfU and SurfV.
@@ -58,17 +66,17 @@
 * (fixed) Some issues when reading and writing attributes and attribute definitions, related with the fit and aligned Alignment property.
 * (fixed) Attribute and AttributeDefinition properties IsBackward and IsUpsideDown were not written nor read.
 
-### [2022/02/13]
+[2022/02/13]
 * Cleanup code when reading and writing some dimension style variables and overrides.
 * (fixed) Issue when writing the header variable $DIMAPOST.
 * (fixed) Some issues with reading and writing dimension style overrides.
 
-### [2022/01/26]
+[2022/01/26]
 * The Polyline2D and Polyline3D Explode method will preserve the smooth type.
 * Deleted the references to the ImageDefinitionReactor from the ImageDefinition they will be created when the DXF is saved.
 * (fixed) Issues, introduced in the last two updates, when saving Polyline2D, Polyline3D, and PolyfaceMesh entities that were part of a Block.
 
-### [2021/12/06]
+[2021/12/06]
 * Rename Face3d to Face3D.
 * Rename Face3dEdgeFlags to Face3DEdgeFlags.
 * Rename DxfDocument.Entities.Faces3d to DxfDocument.Entities.Faces3D.
@@ -94,7 +102,7 @@
 * The SmoothType (None, Quadratic, or Cubic) can now be set for Polyline2D entity (formerly LwPolyline) and Polyline3D (formerly Polyline).
 * Updated the file "netDxf Documentation.chm".
 
-### [2021/10/24]
+[2021/10/24]
 * The internal blocks that start with "*U" or "*T" can be safely renamed. They are internally created to represent dynamic blocks, arrays, and tables; although the information of those objects is lost when importing the DXF, the block that represent its graphical appearance is imported.
 * PolyfaceMesh vertexes are now a list of Vector3. The additional information that the DXF requires will be generated when the file is saved.
 * Deleted the PolyfaceMeshVertex class, there is no use for it anymore.
@@ -115,7 +123,7 @@
 * (fixed) Workaround for multiline styles with no name in bad formated DXF files.
 * (fixed) The precision argument of the Arc.PolygonalVertexes method represents the number of vertexes genarated not the number of division, as it is the case of similar methods of other entities.
 
-### [2021/09/18]
+[2021/09/18]
 * Leader entitities with less than two vertices will be deleted when loading a DXF file.
 * (fixed) Changed the default DxfDocument comment to show that netDxf is licensed under MIT.
 * (fixed) Possible out of range error for the LuPrec header variable when reading a DXF file. Out of range values will default to 4.
@@ -124,10 +132,10 @@
 * (fixed) The default linetype will be given to a layer state if the specified one in the DXF is not found. 
 * (fixed) Complex linetypes assigned to a layer were not properly initialized.
 
-### [2021/06/20]
+[2021/06/20]
 * Loading AutoCad2000 (AC1015) or AutoCad2004 (AC1018) DXF files containing non-ASCII characters will work once again. Additionally the Net Standard 2.1 build requires a reference to the external library "System.Text.Encoding.CodePages".
 
-### [2021/05/23]
+[2021/05/23]
 * Added two methods to the MathHelper class to transform object 2d coordinates to world coordinates given the entity normal and elevation.
 * Added two methods to the MathHelper class to transform world coordinates to object 2d coordinates given the entity normal, they also return as an out parameter the average Z axis value of the transformed points.
 * Deleted netDxf.nuspec file.
@@ -138,7 +146,7 @@
 	Also a call to the Update method is not done automatically. It is needed to reflect the actual properties and style of the Leader, but there might be special cases when it is needed to have control over it.
 	See "AssignAnnotationToLeader()" sample.
 
-### [2021/05/02]
+[2021/05/02]
 * Added netDxf.nuspec file.
 * Ellipses with its major axis smaller than its minor axis are not allowed.
 * Streams with not accessible Position property are not supported.
@@ -146,7 +154,7 @@
 	This behaviour differs when the LayerState comes from an external LAS file, in the latter case the non existent layer is added to the document. This is to allow the LAS file to be used layers templates.
 	Additionally if the LayerState points to a non existent linetype, the default "Standard" will be assigned.
 
-### [2021/03/27]
+[2021/03/27]
 * The netDxf library is now licensed under the MIT License.
 * Updated solution file to Visual Studio 2019.
 * netDxf targets multiple frameworks, predefined frameworks for Net Framework 4.5, Net Standard 2.1, Net Core 3.1, and NET 5.0.
@@ -162,7 +170,7 @@
 	It doesn't seems to play any role, open a new issue at GitHub if non-ASCII characters does not show up correctly.
 	This will avoid the use of additional libraries to handle the encoding code pages.
 
-###  [2.4.2 - 2021/03/23]
+### [2.4.2 - 2021/03/23]
 * Now the ShapeStyle does not require the SHP file to read the shape information only the SHX must be present.
 * The Insert Sync method will not modify any value assigned to the attribute Value property.
 * (fixed) A couple errors when writing the style overrides of a dimension to the extended data.

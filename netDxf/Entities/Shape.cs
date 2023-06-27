@@ -1,7 +1,7 @@
 #region netDxf library licensed under the MIT License
 // 
 //                       netDxf library
-// Copyright (c) 2019-2021 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (c) Daniel Carvajal (haplokuon@gmail.com)
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -322,6 +322,10 @@ namespace netDxf.Entities
             this.ObliqueAngle = mirrorShape ? -newObliqueAngle : newObliqueAngle;
         }
 
+        /// <summary>
+        /// Creates a new Shape that is a copy of the current instance.
+        /// </summary>
+        /// <returns>A new Shape that is a copy of this instance.</returns>
         public override object Clone()
         {
             Shape entity = new Shape(this.name, (ShapeStyle)this.style.Clone())
@@ -341,7 +345,7 @@ namespace netDxf.Entities
                 Rotation = this.rotation,
                 ObliqueAngle = this.obliqueAngle,
                 Thickness = this.thickness
-        };
+            };
 
             foreach (XData data in this.XData.Values)
             {

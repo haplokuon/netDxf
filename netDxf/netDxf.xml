@@ -2387,17 +2387,17 @@
             Initializes a new instance of <c>SupportFolders</c> class.
             </summary>
         </member>
-        <member name="M:netDxf.Collections.SupportFolders.#ctor(System.Int32)">
-            <summary>
-            Initializes a new instance of <c>SupportFolders</c> class.
-            </summary>
-            <param name="capacity">Initial capacity of the list.</param>
-        </member>
         <member name="M:netDxf.Collections.SupportFolders.#ctor(System.Collections.Generic.IEnumerable{System.String})">
             <summary>
             Initializes a new instance of <c>SupportFolders</c> class.
             </summary>
             <param name="folders">The collection whose elements should be added to the list. The items in the collection cannot be null.</param>
+        </member>
+        <member name="P:netDxf.Collections.SupportFolders.WorkingFolder">
+            <summary>
+            Gets or sets the base folder to resolver relative paths of external references.
+            </summary>
+            <remarks>By default it points to the current System.Environment.CurrentDirectory when the DxfDocument was created.</remarks>
         </member>
         <member name="M:netDxf.Collections.SupportFolders.FindFile(System.String)">
             <summary>
@@ -3043,7 +3043,7 @@
             <param name="drawingVariables"><see cref="T:netDxf.Header.HeaderVariables">Drawing variables</see> of the document.</param>
             <param name="supportFolders">List of the document support folders.</param>
         </member>
-        <member name="M:netDxf.DxfDocument.#ctor(netDxf.Header.HeaderVariables,System.Boolean,System.Collections.Generic.IEnumerable{System.String})">
+        <member name="M:netDxf.DxfDocument.#ctor(netDxf.Header.HeaderVariables,System.Boolean,netDxf.Collections.SupportFolders)">
             <summary>
             Initializes a new instance of the <c>DxfDocument</c> class.
             </summary>
@@ -4392,14 +4392,14 @@
             Initializes a new instance of the <c>ArcLengthDimension</c> class.
             </summary>
             <param name="arc"><see cref="T:netDxf.Entities.Arc">Arc</see> to measure.</param>
-            <param name="offset">Distance between the measured arc and the dimension line.</param>
+            <param name="offset">Distance between the center of the measured arc and the dimension line.</param>
         </member>
         <member name="M:netDxf.Entities.ArcLengthDimension.#ctor(netDxf.Entities.Arc,System.Double,netDxf.Tables.DimensionStyle)">
             <summary>
             Initializes a new instance of the <c>ArcLengthDimension</c> class.
             </summary>
             <param name="arc">Angle <see cref="T:netDxf.Entities.Arc">arc</see> to measure.</param>
-            <param name="offset">Distance between the measured arc and the dimension line.</param>
+            <param name="offset">Distance between the center of the measured arc and the dimension line.</param>
             <param name="style">The <see cref="T:netDxf.Tables.DimensionStyle">style</see> to use with the dimension.</param>
         </member>
         <member name="M:netDxf.Entities.ArcLengthDimension.#ctor(netDxf.Entities.Polyline2DVertex,netDxf.Entities.Polyline2DVertex,System.Double)">
@@ -4408,7 +4408,7 @@
             </summary>
             <param name="startPoint">Arc start point, the start point bulge must be different than zero.</param>
             <param name="endPoint">Arc end point.</param>
-            <param name="offset">Distance between the measured arc and the dimension line.</param>
+            <param name="offset">Distance between the center of the measured arc and the dimension line.</param>
         </member>
         <member name="M:netDxf.Entities.ArcLengthDimension.#ctor(netDxf.Vector2,netDxf.Vector2,System.Double,System.Double)">
             <summary>
@@ -4417,7 +4417,7 @@
             <param name="startPoint">Arc start point.</param>
             <param name="endPoint">Arc end point.</param>
             <param name="bulge">Bulge value.</param>
-            <param name="offset">Distance between the measured arc and the dimension line.</param>
+            <param name="offset">Distance between the center of the measured arc and the dimension line.</param>
         </member>
         <member name="M:netDxf.Entities.ArcLengthDimension.#ctor(netDxf.Vector2,netDxf.Vector2,System.Double,System.Double,netDxf.Tables.DimensionStyle)">
             <summary>
@@ -4426,7 +4426,7 @@
             <param name="startPoint">Arc start point.</param>
             <param name="endPoint">Arc end point.</param>
             <param name="bulge">Bulge value.</param>
-            <param name="offset">Distance between the measured arc and the dimension line.</param>
+            <param name="offset">Distance between the center of the measured arc and the dimension line.</param>
             <param name="style">The <see cref="T:netDxf.Tables.DimensionStyle">style</see> to use with the dimension.</param>
         </member>
         <member name="M:netDxf.Entities.ArcLengthDimension.#ctor(netDxf.Vector2,System.Double,System.Double,System.Double,System.Double)">
@@ -4437,7 +4437,7 @@
             <param name="radius">Arc radius.</param>
             <param name="startAngle">Arc start angle in degrees.</param>
             <param name="endAngle">Arc end angle in degrees.</param>
-            <param name="offset">Distance between the measured arc and the dimension line.</param>
+            <param name="offset">Distance between the center of the measured arc and the dimension line.</param>
         </member>
         <member name="M:netDxf.Entities.ArcLengthDimension.#ctor(netDxf.Vector2,System.Double,System.Double,System.Double,System.Double,netDxf.Tables.DimensionStyle)">
             <summary>
@@ -4447,7 +4447,7 @@
             <param name="radius">Arc radius.</param>
             <param name="startAngle">Arc start angle in degrees.</param>
             <param name="endAngle">Arc end angle in degrees.</param>
-            <param name="offset">Distance between the measured arc and the dimension line.</param>
+            <param name="offset">Distance between the center of the measured arc and the dimension line.</param>
             <param name="style">The <see cref="T:netDxf.Tables.DimensionStyle">style</see> to use with the dimension.</param>
         </member>
         <member name="P:netDxf.Entities.ArcLengthDimension.CenterPoint">
@@ -7827,7 +7827,7 @@
             </summary>
             <param name="vertexes">Multiline <see cref="T:netDxf.Vector2">vertex</see> location list in object coordinates.</param>
             <param name="scale">Multiline scale.</param>
-            <param name="isClosed">Sets if the multiline is closed  (default: false).</param>
+            <param name="isClosed">Sets if the multiline is closed (default: false).</param>
         </member>
         <member name="M:netDxf.Entities.MLine.#ctor(System.Collections.Generic.IEnumerable{netDxf.Vector2},netDxf.Objects.MLineStyle,System.Double)">
             <summary>
@@ -7844,7 +7844,7 @@
             <param name="vertexes">MLine <see cref="T:netDxf.Vector2">vertex</see> location list in object coordinates.</param>
             <param name="style">MLine <see cref="T:netDxf.Objects.MLineStyle">style.</see></param>
             <param name="scale">MLine scale.</param>
-            <param name="isClosed">Sets if the multiline is closed  (default: false).</param>
+            <param name="isClosed">Sets if the multiline is closed (default: false).</param>
         </member>
         <member name="P:netDxf.Entities.MLine.Vertexes">
             <summary>
@@ -7984,7 +7984,7 @@
             Gets the MLine vertex position.
             </summary>
             <remarks>
-            If this property is modified the function MLine.CalculateVertexesInfo() will need to be called manually to update the internal information.
+            If this property is modified the function MLine.Update() will need to be called manually to update the internal information.
             </remarks>
         </member>
         <member name="P:netDxf.Entities.MLineVertex.Direction">
@@ -9921,6 +9921,12 @@
             <param name="transformation">Transformation matrix.</param>
             <param name="translation">Translation vector.</param>
             <remarks>Matrix3 adopts the convention of using column vectors to represent a transformation matrix.</remarks>
+        </member>
+        <member name="M:netDxf.Entities.Shape.Clone">
+            <summary>
+            Creates a new Shape that is a copy of the current instance.
+            </summary>
+            <returns>A new Shape that is a copy of this instance.</returns>
         </member>
         <member name="T:netDxf.Entities.Solid">
             <summary>
@@ -12243,7 +12249,7 @@
             Define the number of segments generated for smoothed polygon meshes in U direction (local X axis).
             </summary>
             <remarks>
-            Accepted value range from 2 to 200. Default value: 6.<br />
+            Accepted value range from 0 to 200. Default value: 6.<br />
             Although in AutoCAD the header variable SurfU accepts values less than 2, the minimum vertexes generated is 3 equivalent to a SurfV value of 2.
             </remarks>
         </member>
@@ -12252,7 +12258,7 @@
             Define the number of segments generated for smoothed polygon meshes in V direction (local Y axis).
             </summary>
             <remarks>
-            Accepted value range from 2 to 200. Default value: 6.<br />
+            Accepted value range from 0 to 200. Default value: 6.<br />
             Although in AutoCAD the header variable SurfV accepts values less than 2, the minimum vertexes generated is 3 equivalent to a SurfV value of 2.
             </remarks>
         </member>
@@ -12464,7 +12470,7 @@
             Low level DXF reader
             </summary>
         </member>
-        <member name="M:netDxf.IO.DxfReader.Read(System.IO.Stream,System.Collections.Generic.IEnumerable{System.String})">
+        <member name="M:netDxf.IO.DxfReader.Read(System.IO.Stream,netDxf.Collections.SupportFolders)">
             <summary>
             Reads the whole stream.
             </summary>
@@ -17856,12 +17862,12 @@
         </member>
         <member name="P:netDxf.Tables.LinetypeShapeSegment.Name">
             <summary>
-            Gets the name of the shape.
+            Gets or sets the name of the shape.
             </summary>
             <remarks>
             The shape must be defined in the .shx shape definitions file.<br />
             The DXF instead of saving the shape name, as the Shape entity or the shape linetype segments definition in a .lin file,
-            it stores the shape number. Therefore when saving a DXF file the shape number will be obtained reading the .shp file.
+            it stores the shape number. Therefore when saving a DXF file the shape number will be obtained reading the .shx file.
             </remarks>
         </member>
         <member name="P:netDxf.Tables.LinetypeShapeSegment.Style">
@@ -17991,17 +17997,16 @@
             Represent a shape style.
             </summary>
         </member>
+        <member name="F:netDxf.Tables.ShapeStyle.DefaultShapeFile">
+            <summary>
+            Default text style font.
+            </summary>
+        </member>
         <member name="P:netDxf.Tables.ShapeStyle.Default">
             <summary>
             Gets the default shape style.
             </summary>
             <remarks>AutoCad stores the shapes for the predefined complex linetypes in the ltypeshp.shx file.</remarks>
-        </member>
-        <member name="M:netDxf.Tables.ShapeStyle.#ctor(System.String)">
-            <summary>
-            Initializes a new instance of the <c>ShapeStyle</c> class.
-            </summary>
-            <param name="file">Shape definitions SHX file.</param>
         </member>
         <member name="M:netDxf.Tables.ShapeStyle.#ctor(System.String,System.String)">
             <summary>
@@ -18287,19 +18292,15 @@
             Default text style name.
             </summary>
         </member>
+        <member name="F:netDxf.Tables.TextStyle.DefaultFont">
+            <summary>
+            Default text style font.
+            </summary>
+        </member>
         <member name="P:netDxf.Tables.TextStyle.Default">
             <summary>
             Gets the default text style.
             </summary>
-        </member>
-        <member name="M:netDxf.Tables.TextStyle.#ctor(System.String)">
-            <summary>
-            Initializes a new instance of the <c>TextStyle</c> class.
-            </summary>
-            <param name="font">Text style font file name with full or relative path.</param>
-            <remarks>
-            The font file name, without the extension, will also be used as the name of the text style.
-            </remarks>
         </member>
         <member name="M:netDxf.Tables.TextStyle.#ctor(System.String,System.String)">
             <summary>
@@ -18316,24 +18317,13 @@
             <param name="font">Text style font file name with full or relative path.</param>
             <param name="checkName">Specifies if the style name has to be checked.</param>
         </member>
-        <member name="M:netDxf.Tables.TextStyle.#ctor(System.String,netDxf.Tables.FontStyle)">
-            <summary>
-            Initializes a new instance of the <c>TextStyle</c> class exclusively to be used with true type fonts.
-            </summary>
-            <param name="fontFamily">True type font family name.</param>
-            <param name="fontStyle">True type font style</param>
-            <remarks>
-            This constructor is to be use only with true type fonts.
-            The fontFamily value will also be used as the name of the text style.
-            </remarks>
-        </member>
         <member name="M:netDxf.Tables.TextStyle.#ctor(System.String,System.String,netDxf.Tables.FontStyle)">
             <summary>
             Initializes a new instance of the <c>TextStyle</c> class exclusively to be used with true type fonts.
             </summary>
             <param name="name">Text style name.</param>
             <param name="fontFamily">True type font family name.</param>
-            <param name="fontStyle">True type font style</param>
+            <param name="fontStyle">True type font style.</param>
             <remarks>This constructor is to be use only with true type fonts.</remarks>
         </member>
         <member name="M:netDxf.Tables.TextStyle.#ctor(System.String,System.String,netDxf.Tables.FontStyle,System.Boolean)">
@@ -20785,6 +20775,85 @@
         <member name="F:netDxf.XDataCode.WorldDirectionY">
             <summary>
             Also a 3D point that is rotated and mirrored along with the parent (but is not moved, scaled, or stretched)
+            </summary>
+        </member>
+        <member name="F:netDxf.XDataCode.WorldDirectionZ">
+            <summary>
+            Also a 3D point that is rotated and mirrored along with the parent (but is not moved, scaled, or stretched)
+            </summary>
+        </member>
+        <member name="F:netDxf.XDataCode.Real">
+            <summary>
+            A real value.
+            </summary>
+        </member>
+        <member name="F:netDxf.XDataCode.Distance">
+            <summary>
+            A real value that is scaled along with the parent entity
+            </summary>
+        </member>
+        <member name="F:netDxf.XDataCode.ScaleFactor">
+            <summary>
+            Also a real value that is scaled along with the parent.
+            The difference between a distance and a scale factor is application-defined
+            </summary>
+        </member>
+        <member name="F:netDxf.XDataCode.Int16">
+            <summary>
+            A 16-bit integer (signed or unsigned).
+            </summary>
+        </member>
+        <member name="F:netDxf.XDataCode.Int32">
+            <summary>
+            A 32-bit signed integer.
+            </summary>
+        </member>
+        <member name="T:netDxf.XDataRecord">
+            <summary>
+            Represents an entry in the extended data of an entity.
+            </summary>
+        </member>
+        <member name="P:netDxf.XDataRecord.OpenControlString">
+            <summary>
+            An extended data control string can be either "{"or "}".
+            These braces enable applications to organize their data by subdividing the data into lists.
+            The left brace begins a list, and the right brace terminates the most recent list. Lists can be nested.
+            </summary>
+        </member>
+        <member name="P:netDxf.XDataRecord.CloseControlString">
+            <summary>
+            An extended data control string can be either "{" or "}".
+            These braces enable applications to organize their data by subdividing the data into lists.
+            The left brace begins a list, and the right brace terminates the most recent list. Lists can be nested.
+            </summary>
+        </member>
+        <member name="M:netDxf.XDataRecord.#ctor(netDxf.XDataCode,System.Object)">
+            <summary>
+            Initializes a new XDataRecord.
+            </summary>
+            <param name="code">XData code.</param>
+            <param name="value">XData value.</param>
+        </member>
+        <member name="P:netDxf.XDataRecord.Code">
+            <summary>
+            Gets the XData code.
+            </summary>
+            <remarks>The only valid values are the ones defined in the <see cref="T:netDxf.XDataCode">XDataCode</see> class.</remarks>
+        </member>
+        <member name="P:netDxf.XDataRecord.Value">
+            <summary>
+            Gets the XData value.
+            </summary>
+        </member>
+        <member name="M:netDxf.XDataRecord.ToString">
+            <summary>
+            Obtains a string that represents the XDataRecord.
+            </summary>
+            <returns>A string text.</returns>
+        </member>
+    </members>
+</doc>
+along with the parent (but is not moved, scaled, or stretched)
             </summary>
         </member>
         <member name="F:netDxf.XDataCode.WorldDirectionZ">

@@ -1,7 +1,7 @@
 #region netDxf library licensed under the MIT License
 // 
 //                       netDxf library
-// Copyright (c) 2019-2023 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (c) Daniel Carvajal (haplokuon@gmail.com)
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -33,6 +33,24 @@ namespace netDxf.Tables
     public class LinetypeShapeSegment :
         LinetypeSegment
     {
+        #region delegates and events
+
+        public delegate void ShapeStyleChangedEventHandler(LinetypeShapeSegment sender, TableObjectChangedEventArgs<ShapeStyle> e);
+        public event ShapeStyleChangedEventHandler ShapeStyleChanged;
+        protected virtual ShapeStyle OnShapeStyleChangedEvent(ShapeStyle oldShapeStyle, ShapeStyle newShapeStyle)
+        {
+            ShapeStyleChangedEventHandler ae = this.ShapeStyleChanged;
+            if (ae != null)
+            {
+                TableObjectChangedEventArgs<ShapeStyle> eventArgs = new TableObjectChangedEventArgs<ShapeStyle>(oldShapeStyle, newShapeStyle);
+                ae(this, eventArgs);
+                return eventArgs.NewValue;
+            }
+            return newShapeStyle;
+        }
+
+        #endregion
+
         #region private fields
 
         private string name;
@@ -57,7 +75,7 @@ namespace netDxf.Tables
         /// it stores the shape number. Therefore when saving a DXF file the shape number will be obtained reading the .shp file.<br />
         /// It is required that the equivalent .shp file to be also present in the same folder or one of the support folders defined in the DxfDocument.
         /// </remarks>
-        public LinetypeShapeSegment(string name, ShapeStyle style) : this(name, style, 0.0, Vector2.Zero, LinetypeSegmentRotationType.Relative, 0.0, 1.0)
+        public LinetypeShapeSegment(string name, ShapeStyle style) : this(name, style, 1.0, Vector2.Zero, LinetypeSegmentRotationType.Relative, 0.0, 1.0)
         {
         }
 
@@ -93,7 +111,8 @@ namespace netDxf.Tables
         /// it stores the shape number. Therefore when saving a DXF file the shape number will be obtained reading the .shp file.<br />
         /// It is required that the equivalent .shp file to be also present in the same folder or one of the support folders defined in the DxfDocument.
         /// </remarks>
-        public LinetypeShapeSegment(string name, ShapeStyle style, double length, Vector2 offset, LinetypeSegmentRotationType rotationType, double rotation, double scale) : base(LinetypeSegmentType.Shape, length)
+        public LinetypeShapeSegment(string name, ShapeStyle style, double length, Vector2 offset, LinetypeSegmentRotationType rotationType, double rotation, double scale) 
+            : base(LinetypeSegmentType.Shape, length)
         {
             if (string.IsNullOrEmpty(name))
             {
@@ -112,17 +131,17 @@ namespace netDxf.Tables
         #region public properties
 
         /// <summary>
-        /// Gets the name of the shape.
+        /// Gets or sets the name of the shape.
         /// </summary>
         /// <remarks>
         /// The shape must be defined in the .shx shape definitions file.<br />
         /// The DXF instead of saving the shape name, as the Shape entity or the shape linetype segments definition in a .lin file,
-        /// it stores the shape number. Therefore when saving a DXF file the shape number will be obtained reading the .shp file.
+        /// it stores the shape number. Therefore when saving a DXF file the shape number will be obtained reading the .shx file.
         /// </remarks>
         public string Name
         {
             get { return this.name; }
-            internal set
+            set
             {
                 if (string.IsNullOrEmpty(value))
                 {
@@ -141,10 +160,13 @@ namespace netDxf.Tables
         public ShapeStyle Style
         {
             get { return this.style; }
-            internal set
+            set
             {
-                // TODO: allow changing the shape style in a similar way as the LinetypeTextSegment
-                this.style = value ?? throw new ArgumentNullException(nameof(value));
+                if (value == null)
+                {
+                    throw new ArgumentNullException(nameof(value));
+                }
+                this.style = this.OnShapeStyleChangedEvent(this.style, value);
             }
         }
 

@@ -1,7 +1,7 @@
 #region netDxf library licensed under the MIT License
 // 
 //                       netDxf library
-// Copyright (c) 2019-2021 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (c) Daniel Carvajal (haplokuon@gmail.com)
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -590,7 +590,7 @@ namespace netDxf.Header
         /// Define the number of segments generated for smoothed polygon meshes in U direction (local X axis).
         /// </summary>
         /// <remarks>
-        /// Accepted value range from 2 to 200. Default value: 6.<br />
+        /// Accepted value range from 0 to 200. Default value: 6.<br />
         /// Although in AutoCAD the header variable SurfU accepts values less than 2, the minimum vertexes generated is 3 equivalent to a SurfV value of 2.
         /// </remarks>
         public short SurfU
@@ -598,7 +598,7 @@ namespace netDxf.Header
             get { return (short) this.variables[HeaderVariableCode.SurfU].Value; }
             set
             {
-                if (value < 2 || value > 200)
+                if (value < 0 || value > 200)
                 {
                     throw new ArgumentOutOfRangeException(nameof(value), value, "Values must be between 0 and 200.");
                 }
@@ -610,7 +610,7 @@ namespace netDxf.Header
         /// Define the number of segments generated for smoothed polygon meshes in V direction (local Y axis).
         /// </summary>
         /// <remarks>
-        /// Accepted value range from 2 to 200. Default value: 6.<br />
+        /// Accepted value range from 0 to 200. Default value: 6.<br />
         /// Although in AutoCAD the header variable SurfV accepts values less than 2, the minimum vertexes generated is 3 equivalent to a SurfV value of 2.
         /// </remarks>
         public short SurfV
@@ -618,7 +618,7 @@ namespace netDxf.Header
             get { return (short) this.variables[HeaderVariableCode.SurfV].Value; }
             set
             {
-                if (value < 2 || value > 200)
+                if (value < 0 || value > 200)
                 {
                     throw new ArgumentOutOfRangeException(nameof(value), value, "Values must be between 0 and 200.");
                 }

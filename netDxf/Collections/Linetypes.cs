@@ -1,7 +1,7 @@
 #region netDxf library licensed under the MIT License
 // 
 //                       netDxf library
-// Copyright (c) 2019-2023 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (c) Daniel Carvajal (haplokuon@gmail.com)
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -202,10 +202,11 @@ namespace netDxf.Collections
                     LinetypeShapeSegment shapeSegment = (LinetypeShapeSegment) segment;
                     shapeSegment.Style = this.Owner.ShapeStyles.Add(shapeSegment.Style);
                     this.Owner.ShapeStyles.References[shapeSegment.Style.Name].Add(linetype);
-                    if (!shapeSegment.Style.ContainsShapeName(shapeSegment.Name))
-                    {
-                        throw new ArgumentException("The linetype contains a shape segment which style does not contain a shape with the stored name.", nameof(linetype));
-                    }
+                    //TODO: shape names and indexes, require check to external SHX file
+                    //if (!shapeSegment.Style.ContainsShapeName(shapeSegment.Name))
+                    //{
+                    //    throw new ArgumentException("The linetype contains a shape segment which style does not contain a shape with the stored name.", nameof(linetype));
+                    //}
                 }
             }
 
@@ -218,6 +219,7 @@ namespace netDxf.Collections
             linetype.LinetypeSegmentAdded += this.Linetype_SegmentAdded;
             linetype.LinetypeSegmentRemoved += this.Linetype_SegmentRemoved;
             linetype.LinetypeTextSegmentStyleChanged += this.Linetype_TextSegmentStyleChanged;
+            linetype.LinetypeShapeSegmentStyleChanged += this.Linetype_ShapeSegmentStyleChanged;
 
             this.Owner.AddedObjects.Add(linetype.Handle, linetype);
 
@@ -275,6 +277,10 @@ namespace netDxf.Collections
             item.Owner = null;
 
             item.NameChanged -= this.Item_NameChanged;
+            item.LinetypeSegmentAdded -= this.Linetype_SegmentAdded;
+            item.LinetypeSegmentRemoved -= this.Linetype_SegmentRemoved;
+            item.LinetypeTextSegmentStyleChanged -= this.Linetype_TextSegmentStyleChanged;
+            item.LinetypeShapeSegmentStyleChanged -= this.Linetype_ShapeSegmentStyleChanged;
 
             return true;
         }
@@ -333,6 +339,13 @@ namespace netDxf.Collections
             this.Owner.TextStyles.References[e.OldValue.Name].Remove(sender);
             e.NewValue = this.Owner.TextStyles.Add(e.NewValue);
             this.Owner.TextStyles.References[e.NewValue.Name].Add(sender);
+        }
+
+        private void Linetype_ShapeSegmentStyleChanged(Linetype sender, TableObjectChangedEventArgs<ShapeStyle> e)
+        {
+            this.Owner.ShapeStyles.References[e.OldValue.Name].Remove(sender);
+            e.NewValue = this.Owner.ShapeStyles.Add(e.NewValue);
+            this.Owner.ShapeStyles.References[e.NewValue.Name].Add(sender);
         }
 
         #endregion

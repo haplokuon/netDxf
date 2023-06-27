@@ -1,7 +1,7 @@
 #region netDxf library licensed under the MIT License
 // 
 //                       netDxf library
-// Copyright (c) 2019-2021 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (c) Daniel Carvajal (haplokuon@gmail.com)
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -67,7 +67,7 @@ namespace netDxf.Tables
         /// <summary>
         /// Initializes a new instance of the <c>LinetypeShapeSegment</c> class.
         /// </summary>
-        public LinetypeTextSegment() : this(string.Empty, TextStyle.Default, 0.0, Vector2.Zero, LinetypeSegmentRotationType.Relative, 0.0, 1.0)
+        public LinetypeTextSegment() : this(string.Empty, TextStyle.Default, 1.0, Vector2.Zero, LinetypeSegmentRotationType.Relative, 0.0, 1.0)
         {
         }
 
@@ -91,7 +91,8 @@ namespace netDxf.Tables
         /// <param name="rotationType">Type of rotation defined by the rotation value.</param>
         /// <param name="rotation">Rotation of the text.</param>
         /// <param name="scale">Scale of the text.</param>
-        public LinetypeTextSegment(string text, TextStyle style, double length, Vector2 offset, LinetypeSegmentRotationType rotationType, double rotation, double scale) : base(LinetypeSegmentType.Text, length)
+        public LinetypeTextSegment(string text, TextStyle style, double length, Vector2 offset, LinetypeSegmentRotationType rotationType, double rotation, double scale)
+            : base(LinetypeSegmentType.Text, length)
         {
             this.text = string.IsNullOrEmpty(text) ? string.Empty : text;
             this.style = style ?? throw new ArgumentNullException(nameof(style), "The style must be a valid TextStyle.");

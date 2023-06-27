@@ -1,7 +1,7 @@
 #region netDxf library licensed under the MIT License
 // 
 //                       netDxf library
-// Copyright (c) 2019-2023 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (c) Daniel Carvajal (haplokuon@gmail.com)
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -147,7 +147,7 @@ namespace netDxf.IO
         /// </summary>
         /// <param name="stream">Stream.</param>
         /// <param name="supportFolders">List of the document support folders.</param>
-        public DxfDocument Read(Stream stream, IEnumerable<string> supportFolders)
+        public DxfDocument Read(Stream stream, SupportFolders supportFolders)
         {
             if (stream == null)
             {
@@ -12011,7 +12011,7 @@ namespace netDxf.IO
             }
 
             // if an entity references a table object not defined in the tables section a new one will be created
-            return this.doc.TextStyles.Add(new TextStyle(name));
+            return this.doc.TextStyles.Add(new TextStyle(name, TextStyle.DefaultFont));
         }
 
         private DimensionStyle GetDimensionStyle(string name)

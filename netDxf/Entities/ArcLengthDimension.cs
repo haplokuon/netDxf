@@ -1,7 +1,7 @@
 #region netDxf library licensed under the MIT License
 // 
 //                       netDxf library
-// Copyright (c) 2019-2023 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (c) Daniel Carvajal (haplokuon@gmail.com)
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -59,7 +59,7 @@ namespace netDxf.Entities
         /// Initializes a new instance of the <c>ArcLengthDimension</c> class.
         /// </summary>
         /// <param name="arc"><see cref="Arc">Arc</see> to measure.</param>
-        /// <param name="offset">Distance between the measured arc and the dimension line.</param>
+        /// <param name="offset">Distance between the center of the measured arc and the dimension line.</param>
         public ArcLengthDimension(Arc arc, double offset)
             : this(arc, offset, DimensionStyle.Default)
         {
@@ -69,7 +69,7 @@ namespace netDxf.Entities
         /// Initializes a new instance of the <c>ArcLengthDimension</c> class.
         /// </summary>
         /// <param name="arc">Angle <see cref="Arc">arc</see> to measure.</param>
-        /// <param name="offset">Distance between the measured arc and the dimension line.</param>
+        /// <param name="offset">Distance between the center of the measured arc and the dimension line.</param>
         /// <param name="style">The <see cref="DimensionStyle">style</see> to use with the dimension.</param>
         public ArcLengthDimension(Arc arc, double offset, DimensionStyle style)
             : base(DimensionType.ArcLength)
@@ -100,7 +100,7 @@ namespace netDxf.Entities
         /// </summary>
         /// <param name="startPoint">Arc start point, the start point bulge must be different than zero.</param>
         /// <param name="endPoint">Arc end point.</param>
-        /// <param name="offset">Distance between the measured arc and the dimension line.</param>
+        /// <param name="offset">Distance between the center of the measured arc and the dimension line.</param>
         public ArcLengthDimension(Polyline2DVertex startPoint, Polyline2DVertex endPoint, double offset)
             : this(startPoint.Position, endPoint.Position, startPoint.Bulge, offset)
         {
@@ -113,7 +113,7 @@ namespace netDxf.Entities
         /// <param name="startPoint">Arc start point.</param>
         /// <param name="endPoint">Arc end point.</param>
         /// <param name="bulge">Bulge value.</param>
-        /// <param name="offset">Distance between the measured arc and the dimension line.</param>
+        /// <param name="offset">Distance between the center of the measured arc and the dimension line.</param>
         public ArcLengthDimension(Vector2 startPoint, Vector2 endPoint, double bulge, double offset)
             : this(startPoint, endPoint, bulge, offset, DimensionStyle.Default)
         {
@@ -125,13 +125,13 @@ namespace netDxf.Entities
         /// <param name="startPoint">Arc start point.</param>
         /// <param name="endPoint">Arc end point.</param>
         /// <param name="bulge">Bulge value.</param>
-        /// <param name="offset">Distance between the measured arc and the dimension line.</param>
+        /// <param name="offset">Distance between the center of the measured arc and the dimension line.</param>
         /// <param name="style">The <see cref="DimensionStyle">style</see> to use with the dimension.</param>
         public ArcLengthDimension(Vector2 startPoint, Vector2 endPoint, double bulge, double offset, DimensionStyle style)
             : base(DimensionType.ArcLength)
         {
             // This is the result of how the ArcLengthDimension is implemented in the DXF, although it is no more than other kind of dimension
-            // for some reason it is considered its own entity. Its code 0 instead is "ARC_DIMENSION" instead of "DIMENSION" as it is in the rest of dimension entities.
+            // for some reason it is considered its own entity. Its code 0 is "ARC_DIMENSION" instead of "DIMENSION" as it is in the rest of dimension entities.
             this.CodeName = DxfObjectCode.ArcDimension;
 
             Tuple<Vector2, double, double, double> arcData = MathHelper.ArcFromBulge(startPoint, endPoint, bulge);
@@ -151,7 +151,7 @@ namespace netDxf.Entities
         /// <param name="radius">Arc radius.</param>
         /// <param name="startAngle">Arc start angle in degrees.</param>
         /// <param name="endAngle">Arc end angle in degrees.</param>
-        /// <param name="offset">Distance between the measured arc and the dimension line.</param>
+        /// <param name="offset">Distance between the center of the measured arc and the dimension line.</param>
         public ArcLengthDimension(Vector2 center, double radius, double startAngle, double endAngle, double offset)
             : this(center, radius, startAngle, endAngle, offset, DimensionStyle.Default)
         {
@@ -164,16 +164,20 @@ namespace netDxf.Entities
         /// <param name="radius">Arc radius.</param>
         /// <param name="startAngle">Arc start angle in degrees.</param>
         /// <param name="endAngle">Arc end angle in degrees.</param>
-        /// <param name="offset">Distance between the measured arc and the dimension line.</param>
+        /// <param name="offset">Distance between the center of the measured arc and the dimension line.</param>
         /// <param name="style">The <see cref="DimensionStyle">style</see> to use with the dimension.</param>
         public ArcLengthDimension(Vector2 center, double radius, double startAngle, double endAngle, double offset, DimensionStyle style)
             : base(DimensionType.ArcLength)
         {
             // This is the result of how the ArcLengthDimension is implemented in the DXF, although it is no more than other kind of dimension
-            // for some reason it is considered its own entity. Its code 0 instead is "ARC_DIMENSION" instead of "DIMENSION" as it is in the rest of dimension entities.
+            // for some reason it is considered its own entity. Its code 0 is "ARC_DIMENSION" instead of "DIMENSION" as it is in the rest of dimension entities.
             this.CodeName = DxfObjectCode.ArcDimension;
 
             this.center = center;
+            if (radius <= 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(radius), radius, "The arc radius must be greater than zero.");
+            }
             this.radius = radius;
             this.startAngle = MathHelper.NormalizeAngle(startAngle);
             this.endAngle = MathHelper.NormalizeAngle(endAngle);
@@ -261,7 +265,7 @@ namespace netDxf.Entities
 
                 if (this.offset < 0)
                 {
-                    return 360 - angle;
+                    return 360.0 - angle;
                 }
                 return angle;
             }

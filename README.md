@@ -37,8 +37,7 @@ public static void Main()
 Are contained in the source code.
 Well, at the moment they are just tests for the work in progress.
 ## Dependencies and distribution 
-Multitarget project, predefined frameworks for Net Framework 4.8, Net Standard 2.1, Net Core 3.1, NET 5.0, and NET 6.0.
-Additionally the Net Standard 2.1 build requires a reference to the external library "System.Text.Encoding.CodePages".
+Multitarget project, predefined frameworks for Net Framework 4.8 and NET 6.0.
 ## Compiling
 Visual Studio 2022. The solution file is still usable by Visual Studio 2019 but it does not support NET 6.0.
 netDxf is compatible with any net version from Net Framework 4.0.

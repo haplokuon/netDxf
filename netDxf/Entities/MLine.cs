@@ -1,7 +1,7 @@
 #region netDxf library licensed under the MIT License
 // 
 //                       netDxf library
-// Copyright (c) 2019-2021 Daniel Carvajal (haplokuon@gmail.com)
+// Copyright (c) Daniel Carvajal (haplokuon@gmail.com)
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -109,7 +109,7 @@ namespace netDxf.Entities
         /// </summary>
         /// <param name="vertexes">Multiline <see cref="Vector2">vertex</see> location list in object coordinates.</param>
         /// <param name="scale">Multiline scale.</param>
-        /// <param name="isClosed">Sets if the multiline is closed  (default: false).</param>
+        /// <param name="isClosed">Sets if the multiline is closed (default: false).</param>
         public MLine(IEnumerable<Vector2> vertexes, double scale, bool isClosed)
             : this(vertexes, MLineStyle.Default, scale, isClosed)
         {
@@ -132,7 +132,7 @@ namespace netDxf.Entities
         /// <param name="vertexes">MLine <see cref="Vector2">vertex</see> location list in object coordinates.</param>
         /// <param name="style">MLine <see cref="MLineStyle">style.</see></param>
         /// <param name="scale">MLine scale.</param>
-        /// <param name="isClosed">Sets if the multiline is closed  (default: false).</param>
+        /// <param name="isClosed">Sets if the multiline is closed (default: false).</param>
         public MLine(IEnumerable<Vector2> vertexes, MLineStyle style, double scale, bool isClosed)
             : base(EntityType.MLine, DxfObjectCode.MLine)
         {
@@ -502,10 +502,10 @@ namespace netDxf.Entities
                 double cos = Math.Cos(angleMiter - (MathHelper.HalfPI + angleDir));
                 for (int j = 0; j < this.style.Elements.Count; j++)
                 {
-                    double distance = (this.style.Elements[j].Offset + reference)/cos;
+                    double distance = (this.style.Elements[j].Offset + reference) / cos;
                     distances[j] = new List<double>
                     {
-                        distance*this.scale,
+                        distance * this.scale,
                         0.0
                     };
                 }
