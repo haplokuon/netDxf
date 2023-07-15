@@ -139,16 +139,34 @@ namespace netDxf.Tables
         /// <returns>A new ApplicationRegistry that is a copy of this instance.</returns>
         public override TableObject Clone(string newName)
         {
-            ApplicationRegistry copy = new ApplicationRegistry(newName);
-
-            foreach (XData data in this.XData.Values)
-            {
-                copy.XData.Add((XData)data.Clone());
-            }
-
-            return copy ;
+            // container to temporary store application registries that has already been cloned,
+            // this will handle possible circular references inside de extended data structure
+            Dictionary<string, ApplicationRegistry> cloned = new Dictionary<string, ApplicationRegistry>();
+            return CloneApplicationRegistry(this, ref cloned) ;
         }
 
+        private static ApplicationRegistry CloneApplicationRegistry(ApplicationRegistry appReg, ref Dictionary<string, ApplicationRegistry> cloned)
+        {
+            if (!cloned.TryGetValue(appReg.Name, out ApplicationRegistry copy))
+            {
+                copy = new ApplicationRegistry(appReg.Name);
+                cloned.Add(copy.Name, copy);
+                
+                foreach (XData data in appReg.XData.Values)
+                {
+                    ApplicationRegistry xdataAppReg = CloneApplicationRegistry(data.ApplicationRegistry, ref cloned);
+                    XData xdataCopy = new XData(xdataAppReg);
+                    foreach (XDataRecord record in data.XDataRecord)
+                    {
+                        xdataCopy.XDataRecord.Add(new XDataRecord(record.Code, record.Value));
+                    }
+                    copy.XData.Add(xdataCopy);
+                }
+            }
+
+            return copy;
+        }
+        
         /// <summary>
         /// Creates a new ApplicationRegistry that is a copy of the current instance.
         /// </summary>

@@ -1,5 +1,8 @@
 ## Change history
 
+### [2023/07/15]
+* (fixed) StackOverflow exception when cloning the extended data associated to an application registry with circular references.
+
 ### [3.0.0 - 2023/06/28]
 
 [2023/06/28]
