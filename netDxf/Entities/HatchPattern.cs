@@ -337,12 +337,16 @@ namespace netDxf.Entities
                 {
                     string line = reader.ReadLine();
                     if (line == null)
+                    {
                         throw new FileLoadException("Unknown error reading pat file.", file);
+                    }
                     line = line.Trim();
 
                     // every pattern definition starts with '*'
                     if (!line.StartsWith("*"))
+                    {
                         continue;
+                    }
 
                     // reading pattern name and description
                     int endName = line.IndexOf(','); // the first semicolon divides the name from the description that might contain more semicolons
@@ -352,12 +356,17 @@ namespace netDxf.Entities
                     // remove start and end spaces
                     description = description.Trim();
                     if (!name.Equals(patternName, StringComparison.OrdinalIgnoreCase))
+                    {
                         continue;
+                    }
 
                     // we have found the pattern name, the next lines of the file contains the pattern definition
                     line = reader.ReadLine();
                     if (line == null)
+                    {
                         throw new FileLoadException("Unknown error reading PAT file.", file);
+                    }
+
                     line = line.Trim();
 
                     pattern = new HatchPattern(name, description);
@@ -365,8 +374,10 @@ namespace netDxf.Entities
                     while (!string.IsNullOrEmpty(line) && !line.StartsWith("*") &&  !line.StartsWith(";"))
                     {
                         string[] tokens = line.Split(',');
-                        if(tokens.Length < 5)
+                        if (tokens.Length < 5)
+                        {
                             throw new FileLoadException("The hatch pattern definition lines must contain at least 5 values.", file);
+                        }
 
                         double angle = double.Parse(tokens[0], NumberStyles.Float, CultureInfo.InvariantCulture);
                         Vector2 origin = new Vector2(
@@ -390,11 +401,16 @@ namespace netDxf.Entities
                         pattern.LineDefinitions.Add(lineDefinition);
                         pattern.Type = HatchType.UserDefined;
 
-                        if(reader.EndOfStream) break;
+                        if (reader.EndOfStream)
+                        {
+                            break;
+                        }
 
                         line = reader.ReadLine();
                         if (line == null)
+                        {
                             throw new FileLoadException("Unknown error reading PAT file.", file);
+                        }
                         line = line.Trim();
                     } 
 

@@ -7799,6 +7799,10 @@ namespace netDxf.IO
                         break;
                     case 71:
                         degree = this.chunk.ReadShort();
+                        if (degree > Spline.MaxDegree)
+                        {
+                            degree = Spline.MaxDegree;
+                        }
                         this.chunk.Next();
                         break;
                     case 72:
@@ -9391,6 +9395,11 @@ namespace netDxf.IO
                 textString = textString.Replace("^I", "\t");
                 // "^J" undocumented code in MText, they will be replaced by the standard end paragraph command "\P"
                 textString = textString.Replace("^J", "\\P");
+            }
+
+            if (spacingStyle == MTextLineSpacingStyle.Default || spacingStyle == MTextLineSpacingStyle.Multiple)
+            {
+                spacingStyle = MTextLineSpacingStyle.AtLeast;
             }
 
             Vector3 ocsDirection = MathHelper.Transform(direction, normal, CoordinateSystem.World, CoordinateSystem.Object);

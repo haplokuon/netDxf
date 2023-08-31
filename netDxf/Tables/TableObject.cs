@@ -74,6 +74,7 @@ namespace netDxf.Tables
         protected TableObject(string name, string codeName, bool checkName)
             : base(codeName)
         {
+            name = name.Trim();
             if (checkName)
             {
                 if (!IsValidName(name))

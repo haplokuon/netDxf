@@ -1,5 +1,10 @@
 ## Change history
 
+### [2023/08/31]
+* When creating a table object any leading or trailing white space will be automatically removed.
+* When reading a spline from a DXF if its degree is larger than 10 it will be set to the maximun allowed.
+* (fixed) The key of the references dictionary in the TableObjects must be case independent. 
+
 ### [2023/07/15]
 * (fixed) StackOverflow exception when cloning the extended data associated to an application registry with circular references.
 

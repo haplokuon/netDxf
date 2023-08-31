@@ -57,7 +57,7 @@ namespace netDxf.Collections
             : base(codeName)
         {
             this.list = new Dictionary<string, T>(StringComparer.OrdinalIgnoreCase);
-            this.references = new Dictionary<string, DxfObjectReferences>();
+            this.references = new Dictionary<string, DxfObjectReferences>(StringComparer.OrdinalIgnoreCase);
             this.Owner = document;
 
             if (string.IsNullOrEmpty(handle))

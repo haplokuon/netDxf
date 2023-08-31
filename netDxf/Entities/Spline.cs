@@ -38,6 +38,8 @@ namespace netDxf.Entities
     {
         #region private fields
 
+        public const short MaxDegree = 10;
+
         private readonly Vector3[] fitPoints;
         private readonly SplineCreationMethod creationMethod;
         private Vector3? startTangent;
@@ -160,7 +162,7 @@ namespace netDxf.Entities
             : base(EntityType.Spline, DxfObjectCode.Spline)
         {
             // spline degree
-            if (degree < 1 || degree > 10)
+            if (degree < 1 || degree > MaxDegree)
             {
                 throw new ArgumentOutOfRangeException(nameof(degree), degree, "The spline degree valid values range from 1 to 10.");
             }
@@ -235,7 +237,7 @@ namespace netDxf.Entities
             : base(EntityType.Spline, DxfObjectCode.Spline)
         {
             // spline degree
-            if (degree < 1 || degree > 10)
+            if (degree < 1 || degree > MaxDegree)
             {
                 throw new ArgumentOutOfRangeException(nameof(degree), degree, "The spline degree valid values range from 1 to 10.");
             }
