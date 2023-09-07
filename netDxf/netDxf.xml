@@ -17662,6 +17662,11 @@
             Gets the owner of the actual DXF object.
             </summary>
         </member>
+        <member name="P:netDxf.Tables.Linetype.SegmentsPatternLength">
+            <summary>
+            Gets the or sets segments pattern total length of the line type.
+            </summary>
+        </member>
         <member name="M:netDxf.Tables.Linetype.Length">
             <summary>
             Gets the total length of the line type.
