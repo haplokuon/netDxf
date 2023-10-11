@@ -14265,6 +14265,51 @@
             </para>
             </remarks>
         </member>
+        <member name="M:netDxf.Objects.ImageDefinition.#ctor(System.String)">
+             <summary>
+             Initializes a new instance of the <c>ImageDefinition</c> class. Only available for Net Framework 4.5 builds.
+             </summary>
+             <param name="file">Image file name with full or relative path.</param>
+            <remarks>
+             <para>
+             The name of the file without extension will be used as the name of the image definition.
+             </para>
+             <para>
+             Supported image formats: BMP, JPG, PNG, TIFF.<br />
+             Even thought AutoCAD supports more image formats, this constructor is restricted to the ones the net framework supports in common with AutoCAD.
+             Use the generic constructor instead.
+             </para>
+             <para>
+             Note (this is from the ACAD docs): AutoCAD 2000, AutoCAD LT 2000, and later releases do not support LZW-compressed TIFF files,
+             with the exception of English language versions sold in the US and Canada.<br />
+             If you have TIFF files that were created using LZW compression and want to insert them into a drawing 
+             you must save the TIFF files with LZW compression disabled.
+             </para>
+            </remarks>
+        </member>
+        <member name="M:netDxf.Objects.ImageDefinition.#ctor(System.String,System.String)">
+             <summary>
+             Initializes a new instance of the <c>ImageDefinition</c> class. Only available for Net Framework 4.5 builds.
+             </summary>
+            <param name="name">Image definition name.</param>
+            <param name="file">Image file name with full or relative path.</param>
+            <remarks>
+             <para>
+             The name assigned to the image definition must be unique.
+             </para>
+             <para>
+             Supported image formats: BMP, JPG, PNG, TIFF.<br />
+             Even thought AutoCAD supports more image formats, this constructor is restricted to the ones the .net library supports in common with AutoCAD.
+             Use the generic constructor instead.
+             </para>
+             <para>
+             Note (this is from the ACAD docs): AutoCAD 2000, AutoCAD LT 2000, and later releases do not support LZW-compressed TIFF files,
+             with the exception of English language versions sold in the US and Canada.<br />
+             If you have TIFF files that were created using LZW compression and want to insert them into a drawing 
+             you must save the TIFF files with LZW compression disabled.
+             </para>
+            </remarks>
+        </member>
         <member name="P:netDxf.Objects.ImageDefinition.File">
             <summary>
             Gets or sets the image file.
@@ -18409,6 +18454,14 @@
             <summary>
             Gets the owner of the actual text style.
             </summary>
+        </member>
+        <member name="M:netDxf.Tables.TextStyle.TrueTypeFontFamilyName(System.String)">
+            <summary>
+            Find the font family name of an specified TTF font file. Only available for Net Framework 4.5 builds.
+            </summary>
+            <param name="ttfFont">TTF font file.</param>
+            <returns>The font family name of the specified TTF font file.</returns>
+            <remarks>This method will return an empty string if the specified font is not found in its path or the system font folder or if it is not a valid TTF font.</remarks>
         </member>
         <member name="M:netDxf.Tables.TextStyle.HasReferences">
             <summary>
